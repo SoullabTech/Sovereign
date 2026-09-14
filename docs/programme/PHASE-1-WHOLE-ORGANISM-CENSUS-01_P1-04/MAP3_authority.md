@@ -14,9 +14,9 @@ BOUND BY P1-04 INSTRUMENT · Amendment 2 (INF-6, sparse graphs, SYN-1…SYN-4) �
 
 > ⭐⭐ **The graph represents the evidence density of the organism, not the coherence we wish the
 > organism had.** ⛔ No source code, governing document, test or runtime witness was read. ⛔ No
-> contradiction adjudicated. ⛔ No GOVERNED ACT inferred. ⛔ The word *unauthorized* appears at no
-> node, edge, caption, heading or summary line in this file. ⛔ The separately-owned
-> authorization/exposure lane is neither cited, awaited nor answered.
+> contradiction adjudicated. ⛔ No GOVERNED ACT inferred. ⛔ No node, edge,
+> caption, heading or summary line in this file renders a verdict of legitimacy on anything. ⛔ The
+> separately-owned authorization/exposure lane is neither cited, awaited nor answered.
 
 ---
 
@@ -502,7 +502,7 @@ P3-F-12 · F-12 `POST /api/oracle/runes` — UNAUTHENTICATED · ART app/api/orac
   BASIS F §2 classifies it "interpretive · member-facing" (⛔ not concluding); F §4's no-refusal-surface list includes it. ⛔ Not reconciled
 P3-F-13 · F-13 `app/api/iching/cast/`, `/search/`, `/hexagram/[number]/` · ART app/api/iching/cast/route.ts:8
   UNKNOWN — SILENT [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "\"Does not require authentication — the oracle is available to all\""; "not classified concluding by F" — openness is DECLARED; a claim-type gate is not determined
-P3-F-14 · F-14 `maiaAstrologyContextService` in the live member turn · ART lib/services/maiaAstrologyContextService.ts (1,205 ln); app/api/sovereign/app/maia/list/route.ts:109,552,695,726-738,732,1419   [EWLA]
+P3-F-14 · F-14 `maiaAstrologyContextService` in the live member turn · ART lib/services/maiaAstrologyContextService.ts (1,205 ln); app/api/sovereign/app/maia/list/route.ts:109,552,695,726-738,732,1419
   CONTRIBUTES [SYN-2 — criterion]   AUTH ⭐ GOVERNED [SYN-1]
   SCOPE OF GOVERNANCE — UNKNOWN. The located source is quoted as naming the WRAPPER, ⛔ not this service's act: "MAIA_SOVEREIGNTY_INVARIANTS.md:241-252 — Invariant 13 (Claim-Type Floor) names the wrapper as its operationalization" · ⛔ GOVERNED ACT not inferred
   INF-6 CONTRIBUTES established · HAS AUTHORITY not established for the act · INF-6 prevents promotion
@@ -520,7 +520,7 @@ P3-F-24 · F-24 `lib/wisdom/sacredTexts/` + `SacredEncounterService` · ART lib/
 P3-F-27 · F-27 `chineseAstrology.ts`, `types/daYun.ts`, `types/vedic.ts`, BaZi · ART lib/astrology/chineseAstrology.ts + type modules; BaZi tables via migration 20260130000001
   UNKNOWN — SILENT [SYN-4]   AUTH NONE LOCATED for an implementing binding [SYN-1] · ⭐ a governing TEXT is located
   SCOPE OF GOVERNANCE — UNKNOWN · BASIS "MAIA_SOVEREIGNTY_INVARIANTS.md:245 names Vedic; no implementing binding located" (C-F4) — ⭐ the mirror image of EWLA: authority located without effect
-P3-F-28 · F-28 `mayanAstrology` (via F-14) · ART lib/astrology/mayanAstrology, computed inside maiaAstrologyContextService and carried in the same addendum at route.ts:732   [EWLA]
+P3-F-28 · F-28 `mayanAstrology` (via F-14) · ART lib/astrology/mayanAstrology, computed inside maiaAstrologyContextService and carried in the same addendum at route.ts:732
   CONTRIBUTES [SYN-2 — criterion, inside F-14's addendum]   AUTH GOVERNED [SYN-1]
   SCOPE OF GOVERNANCE — UNKNOWN. Located source quoted as naming the wrapper and the tradition: "`SYMBOLIC_LENS_BOUNDARY` at route.ts:732"; "MAIA_SOVEREIGNTY_INVARIANTS.md:245 (Invariant 13 names Mayan)" · ⛔ GOVERNED ACT not inferred
   INF-6 CONTRIBUTES established · HAS AUTHORITY not established for the act · INF-6 prevents promotion
@@ -724,3 +724,337 @@ P3-I-11 · relationship_spaces (invite_token · participant_member_id · status 
 P3-I-12 · app/api/_backend/** — facilitatorDashboard.routes.ts + {calendarIntegration,retreatSupport}Service.ts, keyed on facilitator_id · ART facilitatorDashboard.routes.ts:15,54,63
   EXISTS [SYN-1]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
   BASIS "find app/api/_backend -name route.ts → no results; the directory is _-prefixed and contains no Next route module, so it is not routable by the App Router." · ⚠️ UNKNOWN carried: "its Dockerfiles and package.json mean it may be built and run as a separate service; whether any deployment does so is UNKNOWN." · "GOVERNANCE GATE — ⛔ NONE FOUND."
+
+---
+
+# EDGE LIST
+
+⛔ **An edge exists only where a ladder slice's own quoted text establishes the relation.** ⛔ Two
+well-evidenced nodes do not license an edge between them. ⛔ No unknown edge is drawn, dotted or
+labelled *probable*. Declared reading rule, so it is subtractable: an edge is `SYN-1` where one
+quote names **both** ends (a row id, a section label, or a tier name that is a row's own name), and
+`SYN-2` where the relation is in a quote and the identification of an end rests on a file or
+coordinate that **both** rows' ladder text carries.
+
+```text
+A-01 → A-02   SYN-1  "SYSTEM AUTHORITY — chooses the tier (§A-02) …"
+A-06 → A-02   SYN-2  "…**returns before the tier switch** (`:3241`)" — precedence, not selection
+A-09 → A-03 · A-04 · A-05   SYN-1  "`MAIA_RUNTIME_PROMPT.ts` reaches FAST via `maiaService.ts:1070` and CORE/DEEP-repair via `maiaVoice.ts:585`."
+A-03 → A-16   SYN-2  "`fastPathResponse` → `generateText({ systemPrompt: baseSystemPrompt })` at `maiaService.ts:1560-1562`."
+A-04 → A-16   SYN-2  "→ `generateText` at `maiaService.ts:1988`."
+A-05 → A-16   SYN-2  "→ `generateText` at `maiaService.ts:2554`."
+A-16 → G-01   SYN-2  slice 04 titles the row "(boundary to Domain G)"; both rows quote `lib/ai/modelService.ts` `generateText`. ⛔ NO claim that the two rows are one object — that is P1-05's
+B-01 → A-03   SYN-2  "`maiaService.ts:1058` | **FAST** — `contextPrompt` | … + `recentThreadBlock`"
+B-02 → A-03   SYN-2  "SURFACED WHERE route :709 formatForPrompt → … → `contextPrompt`. ⛔ FAST ONLY."
+B-03 → A-03 · A-04 · A-05   SYN-2  "FAST maiaService.ts:1444 → :1507; CORE/DEEP-repair via maiaVoice.ts:427 ADDENDA_SPECS; DEEP-consultation maiaService.ts:2388."
+B-04 → A-03 · A-04 · A-05   SYN-2  "FAST maiaService.ts:1423 → :1507; CORE/DEEP-repair via lib/sovereign/maiaVoice.ts:425 …; DEEP-consultation via maiaService.ts:2386."
+B-05 → A-03 · A-04   SYN-2  "FAST maiaService.ts:1433 → :1507; CORE/DEEP-repair via maiaVoice.ts:426."
+B-06 → A-03   SYN-2  "→ maiaService.ts:1398 read → :1507 FAST template. ⛔ FAST ONLY."
+B-07 → B-06   SYN-1  "loadRecentDevelopmentalMemories(userId, 3) and loadRecentThemeSignals(userId, 10), in parallel"; "**do** reach the FAST prompt inside the influence block."
+B-07 → A-03   SYN-2  "Theme signals … **do** reach the FAST prompt inside the influence block."
+B-10 → A-03 · A-04 · A-05   SYN-2  "All three tiers: … member web (B-10)" (⛔ NOT DEEP-consultation: "NOT named in S-5")
+B-12 → A-03 · A-04   SYN-2  "FAST + CORE: relationship memory (B-12)"
+B-13 → A-03 · A-04 · A-05   SYN-2  "All three tiers: … relational context bridge (B-13)"
+B-14 → A-03 · A-04 · A-05   SYN-2  "All three tiers: … divination (B-14)"
+B-17 → A-03 · A-04   SYN-2  "FAST + CORE: relationship memory (B-12), selflet (B-17)."
+B-22 → B-02   SYN-1  "`MemoryGate.resolveMemoryMode` gates whether it runs, not what it selects." ⭐ the quote bounds its own scope
+B-23 → B-09   SYN-1  "`MemoryWritebackService` is skipped (`route :1697`)"
+B-23 → B-02   SYN-1  "`MemoryBundle` is skipped (`:541`)"
+B-24 → A-13   SYN-3  Side B: "SURFACED WHERE app/api/oracle/conversation/route.ts:902 … :2787 … interpolated into the prompt template." Side A: "BLOCKED. The 410 is the first executable statement of `POST`." ⛔ Both stand
+C-03 → E-06   SYN-2  C: "Its prompt renderer … emits **only** `element`/`phase`/`motion` (`encounterContext.ts:196-198`)" · E: "⭐ **renders it into the prompt**: `:196-198` `Spiral state: element=…`"
+C-04 → A-01   SYN-2  "`salientThemes` is formatted into MAIA's prompt (`list/route.ts:916`)"
+D-02 → D-01   SYN-1  "SURFACED WHERE Into D-OBJ-1's FieldContext.pfi { … } → prompt."
+D-03 → D-01   SYN-1  "SURFACED WHERE FieldContext.resonance → \"[Field Intelligence]\" prompt JSON."
+D-04 → D-01   SYN-1  "SURFACED WHERE FieldContext.unified → prompt JSON (D-OBJ-1:44-49)"
+D-01 → A-03 · A-04   SYN-2  "paths (a) `maiaService.ts:1521 → :1534` FAST and (b) `:1946 → :1962` CORE"
+D-34 → D-07   SYN-1  "`WISDOM_FIELD_MOVES` consumed at `maiaService.ts:1083,1091`"; "those lines are inside D-OBJ-7's Talk-Mode assembly" — containment observed; ⚠️ D-07's own surfacing is contested (X-DEF-1)
+D-07 ↔ E-04   SYN-3  "⭐ X-DEF-1 — the same module, two opposite surfacing findings → P3-D-07 and P3-E-04" ⛔ not derived across, ⛔ neither side dropped
+E-05 → E-06   SYN-1  E §4.2 "reader 1 — Living Field encounter/refine context", which "renders it into the prompt"
+E-05 → E-08   SYN-1  E §4.2 "reader 3 — `GET /api/members/spiral-state`", which "returns `currentElement`, `phase`, `motion`, ⚠️ `relationalPhase`, ⚠️ `autonomyStreak`"
+E-02 → A-04 · A-05   SYN-2  "a member-derived elemental label reaching MAIA's system prompt on every CORE and DEEP turn"
+E-03 → A-04   SYN-2  "SURFACED WHERE ⭐ CORE only: maiaService.ts:1957 … :1962"
+E-03 → D-01   SYN-2  both ladder texts carry `maiaService.ts:1962` and the block name "[Field Intelligence]" — E: "adaptivePrompt += \"\\n\\n[Field Intelligence]\\n{json}\"" · D: "(b) `:1946 → :1962` CORE"
+F-10 → F-06   SYN-1  "its written readings are what F-06 later recalls"
+F-06 → A-01   SYN-2  "A member's own durable I Ching readings are made available to the ordinary `/list` conversation."
+F-14 → A-01   SYN-2  "injected into the prompt of the ordinary conversational route"; "⭐ This is the **live conversational route**"
+F-28 → F-14   SYN-1  "computed inside maiaAstrologyContextService and carried in the same addendum at route.ts:732"
+F-31 → F-14   SYN-1  "→ :732 astrologyAddendum = SYMBOLIC_LENS_BOUNDARY + '\\n\\n' + contextHeader + detail → :1419 passed into generation"
+G-01 → G-02   SYN-1  "modelService.ts:83-85 → generateTextWithSovereignty(req, MAIA_INFERENCE_MODE, t0)."
+G-01 → G-06   SYN-1  "an unrecognized value falls through every branch to the local Ollama call at :187."
+G-01 → G-07   SYN-1  "CALL PATH | modelService.ts:127-151. Two independent triggers …"
+G-01 → G-08   SYN-1  "CALL PATH | modelService.ts:94-123, gated by ENABLE_MULTI_ENGINE …"
+G-02 → G-05   SYN-1  "Selected at sovereignRouter.ts:80,120"
+G-02 → G-14   SYN-1  "CALL SITES | sovereignRouter.ts:105 (provider)"  ⚠️ the same quote names a second call site in another domain — see *Edges NOT drawn*
+G-16 → G-17   SYN-1  "It also exports DEPLOY_LANE_TOKEN='deploy-lane' (:185) — the single mechanism that makes the Dockerfile tripwire (G-17) satisfiable."
+G-16 → G-18   SYN-1  "ENTRY POINTS THAT TAKE IT | deploy-production.sh deploy (:452), update (:555), migrate (:640), rollback (:746)"
+H-04 → H-05   SYN-2  "⭐ As implemented, everything above the seam is capture and admission … it hands a string across." — the N1–N12 exits are what sits above it
+H-06 → H-10   SYN-1  "voice-mode saveConversationMemory(…) rides the same seam :6380-:6395" · H-10: ":6382 and :6428 (response, voice and chat)"
+H-09 → H-07   SYN-1  "the eleven Class C `await maiaSpeak(` sites (of twelve; one is canonical)"
+H-12 → H-07   SYN-2  "locally-authored text, spoken via a different TTS entry" — H-07's named object carries `handleSpeakMessage`
+I-04 → I-01   SYN-1  "the row created is exactly the row read … by CAP-I-01's inline gate … This capability is upstream of CAP-I-01's only check."
+I-04 → I-06   SYN-1  "the row created is exactly the row read by getCurrentPractitioner()"
+I-08 → I-01   SYN-1  ⭐ ONE-DIRECTIONAL AND THE RECORD SAYS SO: ":350 names can_be_shown_to_practitioner as 'the existing flag that holds this line' — so the module knows about CAP-I-01's column, and CAP-I-01 does not know about the module."
+I-10 → B-03   SYN-2  both rows' ladder text carries `member_memory_atoms` / `memoryAtomsLoader`; I: "an observation is written into the member's memory and reaches MAIA's cognition about that member, in a labelled section" (:442-447)
+I-11 → A-01   SYN-2  "MAIA's prompt for that member gains the practitioner's practice-field snapshot … (maia/list/route.ts:801,806)"
+```
+
+**59 edges.** ⭐ Every one carries its quote. ⛔ No edge stands on endpoint quality.
+
+---
+
+## GOVERNED nodes, by scope
+
+⭐⭐ **Eight nodes reach a located governing source. Not one of them has a scope that authorizes the
+act it performs, and two of them authorize no participation position at all — what is governed
+there is the SHAPE OF THE RECORD.** ⛔ That is a reading of where authorization text was found,
+⛔ not a claim about any node's legitimacy.
+
+```text
+GOVERNED SHAPE — ⭐ the record's form is governed; ⛔ the act is not
+  P3-C-01  developmental_readings — "what is governed is the SHAPE of the record — which keys may
+           be written, that UPDATE is refused" · PARTICIPATION KNOWS · ⭐ "the strongest governance
+           binding in domain C" and it authorizes no position
+  P3-C-02  developmental_observation_standing_events — "the migration states the absence of an
+           `actor` column makes a system write **UNSAYABLE, not UNWRITABLE**" · PARTICIPATION KNOWS
+           ⭐⭐ the corpus's only NEGATIVE authority statement: "SYSTEM AUTHORITY — ⛔ none by design."
+           ⛔ An absence is not a grant
+
+GOVERNED · SCOPE OF GOVERNANCE — UNKNOWN as to the four labels
+  P3-C-08  living_field_affinities — SPLIT. "`ECOLOGY_OF_MIRRORS.md` governs *inspectability*, not
+           *selection weight*" · DECIDES carries NONE LOCATED ⭐⭐ the sharpest demonstration that
+           the axes are orthogonal: a located source covering a DIFFERENT aspect of the same object
+  P3-E-29  lib/spiralogic/registration/ — "the only Spiralogic artifact E found with ratified
+           backing" · PARTICIPATION UNKNOWN ⭐ Amendment 3 §2's third coherent combination
+  P3-F-14  maiaAstrologyContextService — Invariant 13 "names the wrapper as its operationalization";
+           ⚠️ the wrapper is "a model-compliance instruction, ⛔ not a structural refusal"
+  P3-F-28  mayanAstrology — "`SYMBOLIC_LENS_BOUNDARY` at route.ts:732"; "Invariant 13 names Mayan"
+  P3-F-31  SYMBOLIC_LENS_BOUNDARY itself — named by Invariant 13 as its operationalization, AND
+           "⛔ NONE FOUND governing the wrapper itself: no artifact states who may edit it or
+           requires new symbolic paths to apply it." ⛔ Both carried, ⛔ neither resolved
+  P3-H-05  await handleTextMessage — "the located source governs the REQUIREMENT of convergence";
+           ⭐ the only GOVERNED node in slice 06, and ⚠️ per INF-2 the test enforcing it is not
+           runtime governance
+
+GOVERNING TEXT LOCATED · IMPLEMENTATION NONE FOUND — ⛔ a fourth value slice 05 wrote and this map
+does not collapse. ⭐ The mirror image of EWLA: authority located without effect
+  P3-F-34  Invariant 13 Tier-2 refusal — "the governing source exists; the implementation does not"
+  P3-F-32  safe_for_retrieval — "HAS NO IMPLEMENTATION … **Verified at the census subject**"
+  P3-F-27  Vedic — "MAIA_SOVEREIGNTY_INVARIANTS.md:245 names Vedic; no implementing binding located"
+```
+
+⛔ **`GOVERNED ACT` is written nowhere in this map.** No slice's quoted source said it.
+
+---
+
+## NONE LOCATED vs UNKNOWN — counted separately
+
+```text
+NONE LOCATED   the census LOOKED and did not find authority in the permitted evidence
+               ⛔ it does NOT mean authority does not exist
+UNKNOWN        even that search conclusion cannot be supported
+```
+
+⛔ The two are not merged in any count, and ⛔ neither is rendered as absence.
+
+```text
+AUTHORITY STANDING           A·B·C      D·E·F      G·H·I     nodes here
+NONE LOCATED                    54         71*        42         167
+GOVERNED                         2          4          1           7
+SPLIT (two halves kept apart)    1  C-08     —         1  G-18      2
+GOVERNING TEXT LOCATED /
+  IMPLEMENTATION NONE FOUND      —          3          —           3
+UNKNOWN                          5         33*         4          (4 emitted as nodes:
+                                                                   B-23 · G-12 · H-07 · H-10)
+```
+
+⚠️ **Carried, ⛔ not reconciled**: slice 05's own summary block tallies `NONE LOCATED 46 · UNKNOWN
+58`, while its 111 per-row `AUTHORITY` lines read `71 · 33` (marked \* above). This map is built
+from the **rows**, which is what the nodes quote. ⛔ The discrepancy is recorded and left to P1-05;
+⛔ no row's value was changed to make a column agree.
+
+⭐ The governing-source void stays visible, as Amendment 2 §4b requires: of the 183 nodes, **167
+carry `NONE LOCATED`** — and the four `UNKNOWN`-authority nodes emitted here are emitted *because*
+they carry `CONTRIBUTES` or `DECIDES`, ⛔ not because the search concluded.
+
+---
+
+## Where INF-6 fired — the full inventory, as named rows
+
+⛔ **Not reducible to a count** (Amendment 4 §3). Each row below carries, in its node block above,
+the three recorded lines: *effect established · HAS AUTHORITY not established · INF-6 prevents
+promotion*. ⛔ None is called unauthorized; ⛔ none is rated, ordered by importance, or recommended
+for repair.
+
+**A · B · C — 18 rows whose effect reaches an OUTCOME or the organism's OUTPUT**
+```text
+A-01  CONTRIBUTES·DECIDES  the canonical member turn, end to end
+A-02  DECIDES              ⭐ which mind answers a given turn
+A-03  CONTRIBUTES          FAST prompt assembly — one of four standing texts reaches it
+A-04  CONTRIBUTES          CORE prompt assembly — ⚠️ two specs cited in-source, ⛔ NOT VERIFIED
+A-05  CONTRIBUTES          DEEP — "DEEP-primary stage 1: NONE FOUND"
+A-06  CONTRIBUTES·DECIDES  RCN returns before the tier switch — egress discipline only
+A-07  CONTRIBUTES          Writers-Studio turn; witness exists in-repo, ⛔ not read in the slice
+A-09  CONTRIBUTES          ⭐ "no guard, registry or refusal constrains a new file declaring 'You are MAIA'"
+A-10  CONTRIBUTES·DECIDES  egress finalization — Canon v1.1 governs the HEADERS, not the constraints
+A-11  CONTRIBUTES          /api/between/chat — "the wrapper's own contract … is not satisfied"
+A-15  CONTRIBUTES          25 peripheral MAIA-claiming routes, as a class
+A-16  CONTRIBUTES·DECIDES  provider dispatch — "THE GATEWAY CLAIM IS FALSE AT THE SUBJECT"
+B-09  DECIDES              ⭐⭐ what rises to a formed memory — "with no traced governing rule"
+B-21  CONTRIBUTES          memoryCanonGuard, prompt side; output side not established (OQ-4)
+B-22  DECIDES              whether memory building runs — INF-3: selection authorizes nothing
+B-23  DECIDES              Sanctuary contentWritable — AUTHORITY UNKNOWN (CLAUDE.md is evidence)
+C-06  KNOWS·DECIDES        ⭐⭐ what a member may not see about themselves — "only as a code comment"
+C-08  KNOWS·CONSIDERS·DECIDES  ⭐⭐ what enters MAIA's prompt, and in what order — SPLIT authority
+```
+⭐ Four are load-bearing because the record's own sentence carries the effect and the missing
+located authorization in one breath: **A-02 · B-09 · C-06 · C-08**.
+
+**D · E · F — 12 rows**
+```text
+D-06  DECIDES       ⭐⭐ "it DECIDES, and its text replaces MAIA's" — returned before a model
+F-24  DECIDES       "decides whether a sacred passage meets the member"; "the system's own judgement is the gate"
+F-07  PARTICIPATES  CONCLUDE "yes, and instructed to", PERSISTED at :159 with no author-class column
+F-08  PARTICIPATES  the same prompt, practitioner-facing, persisted
+D-01  CONTRIBUTES   the canonical field seam — "no governance gate of any kind"
+D-02  CONTRIBUTES   FieldContext.pfi → prompt, via the ungated caller
+D-03  CONTRIBUTES   FieldContext.resonance → prompt JSON
+D-04  CONTRIBUTES   FieldContext.unified → prompt JSON
+E-02  CONTRIBUTES   element into the system prompt every CORE and DEEP turn
+E-03  CONTRIBUTES   element into [Field Intelligence] on CORE
+E-06  CONTRIBUTES   persisted spiral state rendered into a prompt
+F-06  CONTRIBUTES   three divination addenda into the live /list turn (⭐ gates TESTED; ⛔ a gate is not an authorization)
+```
+⭐⭐ **D-06 is the case the prohibition exists for, and the record itself failed it**: D §6 ans.4 wrote
+*"(e) is the only object in Domain D at HAS AUTHORITY"* immediately after describing the effect,
+while D §7 recorded that no ratified source was located. ⭐ F §3.3 is the opposite case, and shows
+the discipline already existing inside a P1-02 record: *"authentication establishes `PARTICIPATES`,
+not `HAS AUTHORITY`."*
+
+**G · H · I — 32 rows**
+```text
+G-01  DECIDES               provider branching on the conversational path        NONE LOCATED (runtime)
+G-02  DECIDES·CONTRIBUTES   degraded first-person MAIA turn                      NONE LOCATED
+G-03  DECIDES               Claude model selection for a conversational turn     NONE LOCATED
+G-04  DECIDES               hard refusal on the structured path                  NONE LOCATED (gate present)
+G-06  CONTRIBUTES           answer-producing local/template fallback             NONE LOCATED
+G-08  CONTRIBUTES           the text of a conversational TextResult              NONE LOCATED
+G-10  DECIDES               57 grandfathered surfaces pinning their own models   NONE LOCATED (runtime)
+G-12  DECIDES               commit/CI admission                                  UNKNOWN (named doc unread)
+G-13  DECIDES               commit admission                                     NONE LOCATED
+G-16  DECIDES               deploy-lane refusal                                  NONE LOCATED
+G-17  DECIDES               out-of-lane build refusal; provenance blocks         NONE LOCATED
+G-18  DECIDES               deploy abort; bulk migration application             SPLIT
+H-01  DECIDES               which recognizer hears the member                    NONE LOCATED
+H-02  DECIDES               auth/entitlement/quota admission of an utterance     NONE LOCATED
+H-03  DECIDES               Web Speech refused on Desktop by shell class         NONE LOCATED
+H-04  DECIDES               whether a spoken utterance becomes a member turn     NONE LOCATED
+H-06  DECIDES               whether MAIA's turn reaches the member               NONE LOCATED
+H-07  DECIDES               TTS provider on the branch that runs first           UNKNOWN (records disagree)
+H-08  DECIDES               whether the microphone re-arms                       NONE LOCATED
+H-09  CONTRIBUTES           eleven member-facing first-person utterances         NONE LOCATED
+H-10  CONTRIBUTES           retention of member utterances                       UNKNOWN (records disagree)
+H-12  CONTRIBUTES           locally-authored member-facing text (X1–X6)          NONE LOCATED
+H-16  CONTRIBUTES           member transcript stored via POST /api/notes         NONE LOCATED
+I-01  DECIDES               which member-authored threads a practitioner sees    NONE LOCATED
+I-02  CONTRIBUTES           clinical transcript segments returned                NONE LOCATED
+I-03  DECIDES               caseload disclosure on a query-string identity       NONE LOCATED
+I-04  DECIDES               who becomes a practitioner                           NONE LOCATED
+I-05  DECIDES               client message/digest/prep/report access             NONE LOCATED
+I-06  DECIDES               Studio scoping by server-derived identity            NONE LOCATED
+I-07  DECIDES               the three distinguishable outcomes of D-1…D-8        NONE LOCATED
+I-10  DECIDES               which observation atoms load into MAIA's prompt      NONE LOCATED
+I-11  DECIDES               practice-field injection into MAIA's prompt          NONE LOCATED
+```
+⭐ Recorded plainly, without ranking: **I-06 is the row the record calls "the best-behaved
+practitioner surface in the tree" and it stands in this inventory beside the rest.**
+
+**INF-6 also fired on rows that are NOT in the 62** — where the block prevented a promotion that
+would have looked natural but reached no outcome or output. Named, ⛔ not counted away:
+`A-08` (KNOWS, ⛔ not CONSIDERS/CONTRIBUTES) · `A-12` `A-13` (EXISTS; ⛔ nothing written from a
+handler that "would serve a request", or from ~2600 lines of unreachable cognition) · `B-01` `B-02`
+`B-03` `B-04` `B-05` `B-06` `B-07` `B-10` `B-12` `B-13` `B-14` (KNOWS/CONSIDERS, ⛔ CONTRIBUTES not
+established, and ⛔ tier reach not widened) · `B-08` `B-11` `B-16` `B-17` `B-18` `B-19` `B-24`
+`B-26` `B-27` `B-29` `B-30` `B-31` · `C-01` `C-02` `C-03` `C-04` `C-05` `C-07` `C-10` `C-11` `C-12`
+`C-14` · `G-05` `G-06` `G-07` `G-08` `G-09` `G-14` `G-15` (positions expressly withheld on a named
+sub-question) · `H-05` `H-11` · `I-02` `I-08` `I-09`.
+
+---
+
+## Edges NOT drawn
+
+⭐ **This section is the evidence that the sparse rule was applied rather than merely stated.** Each
+line is a relation that looked natural and has no quoted basis of the required kind.
+
+```text
+A-02 → A-03 · A-04 · A-05   the quote says only "select which cognition path a turn takes" — ⛔ it
+                            names no tier. The tier mapping sits in the register's COVERAGE field,
+                            which this pass may read for a path or status, ⛔ not as edge evidence
+A-11 → A-10                 would require joining TWO quotes ("converges on `getMaiaResponse`" +
+                            "`finalizeMemberFacingText` governs only the `getMaiaResponse` family").
+                            ⛔ The relation must be in ONE quote
+A-07 → A-16                 the generateText call for the Writers-Studio turn appears only in the
+                            register's ARTIFACT field. ⛔ Not edge evidence
+A-05 → A-04                 both quote `appendAllContextAddenda`, at DIFFERENT call sites
+                            (`:972` / `:910`). ⛔ A shared function is not a relation between rows
+B-01 → B-02                 both enter the same FAST `contextPrompt` at `:1058`. ⛔ Co-location is
+                            not a relation
+B-08 → B-03                 the only sentence linking them — "it rides the atoms addendum" — is
+                            quoted INSIDE the slice's own refusal. ⛔ No relation is drawn from a
+                            sentence whose purpose was to withhold one
+B-16 ↔ C-03 · B-05 ↔ C-10 · B-07 ↔ C-09   same TABLE, different rows, "deliberately not merged" by
+                            P1-03. ⛔ Sharing a table is not an edge
+D-05 → D-06                 the slice calls one "the classifier" and the other "the enforcement
+                            object"; ⛔ no quote traces the decision from one into the other
+D-06 → a model call         "returned before the turn reaches a model" is a real precedence
+                            relation — ⛔ but "a model" names no row. Recorded, ⛔ not drawn
+D-09 → G-14                 G-14 quotes `lib/maia/fieldContextAdapter.ts:101,118,127` and calls it
+                            "(field — a different domain)"; ⛔ D-09's ladder text does not carry
+                            that file, so the identification rests on the register's ARTIFACT field
+F-01 → F-07 · F-08          "used by F-07/F-08 via `getHexagram()`" appears only in the register's
+                            ARTIFACT field. ⛔ Not edge evidence
+F-30 → F-06 · F-02 → F-06   both quotes name F-06 — F-30: ":186 persistReading is one of the
+                            writers behind the readings F-06 recalls"; F-02: "reaching a turn only
+                            via F-06's copy-at-write-time" — ⛔ but both rows' AUTHORITY is UNKNOWN,
+                            so neither is a node here and no edge is drawn to or from them
+F-06 ↔ B-14                 ⭐ two rows in DIFFERENT slices quote the same route coordinate
+                            (`:1105`) for divination recall. ⛔ Whether they name the same object is
+                            not established by either slice — ⛔ not merged, ⛔ not drawn
+I-07 → I-01                 I-07's channels are quoted at coordinates in the same page file as
+                            I-01, but I-07's ladder text does not name the file. ⛔ Not drawn
+H-01 → H-02 · H-03          the slice records selection of four transports, and separately records
+                            Web Speech refused on Desktop; ⛔ no quote traces the selection into a
+                            named transport row
+H-05 → A-01 · A-03          "it hands a string across" — ⛔ the string's destination is not named as
+                            a row anywhere in slice 06
+G-01 → G-03                 G-03's PARTICIPATES quote is a provider table row
+                            ("Anthropic | @anthropic-ai/sdk | claudeClient.ts:149"); ⛔ no call-path
+                            quote reaches it from modelService
+```
+
+**Quoted negatives, recorded and ⛔ NOT drawn as edges** — a record stating that something does
+**not** reach somewhere is preserved as a node fact, never as a negative edge:
+`A-09` "DEEP-primary stage 1 reaches **none of them**" · `B-15` "SURFACED WHERE ⛔ NOWHERE" ·
+`C-05` "does not read `member_relational_signals`" · `E-04` ":1198 `// Note: fieldAwareness
+intentionally NOT appended`" · `E-07` "`formatMemberWebForPrompt` (`:436`) contains **no**
+spiral/element/phase reference" · `G-03` "never reads an awareness level" · `G-14` "Nothing in this
+path reaches a member surface" · `I-08` "CAP-I-01 does not know about the module."
+
+---
+
+```text
+P1-04 · MAP 3 · AUTHORITY GRAPH · COMPLETE
+183 nodes · 59 edges · 62 EFFECT-WITHOUT-LOCATED-AUTHORIZATION rows, each individually legible
+AUTHORITY  NONE LOCATED 167 · GOVERNED 7 · SPLIT 2 · GOVERNING TEXT LOCATED/UNIMPLEMENTED 3 · UNKNOWN 4
+GOVERNED with an explicit scope 2 (both GOVERNED SHAPE) · SCOPE OF GOVERNANCE UNKNOWN 181
+18 relations declined for want of a quoted basis or an endpoint · 8 quoted negatives recorded, none drawn
+
+⭐⭐ THE MAP'S ONE SENTENCE: governance of a thing is not necessarily authorization of what that
+   thing does — and where this organism's authorization text was found, it governs the SHAPE of a
+   record, the OPERATIONALIZATION of a wrapper, or the REQUIREMENT of a convergence.
+
+⛔ NO SOURCE CODE · GOVERNING DOCUMENT · TEST · RUNTIME WITNESS READ   ⛔ NO CONTRADICTION ADJUDICATED
+⛔ NO GOVERNED ACT INFERRED   ⛔ NO EDGE INTERPOLATED   ⛔ NO COUNT STANDING IN FOR NAMED ROWS
+⛔ NO VERDICT OF LEGITIMACY AT ANY ALTITUDE   ⛔ THE SEPARATE AUTHORIZATION/EXPOSURE LANE IS NEITHER
+   CITED, AWAITED NOR ANSWERED
+P1-04 SHOWS THE TOPOLOGY. P1-05 DECIDES WHAT THE EVIDENCE PERMITS.
+```

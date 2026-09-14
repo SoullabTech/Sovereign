@@ -18,6 +18,8 @@ SYN       SYN-3   the sources conflict, and the conflict is established
           SYN-4   whether there is a conflict at all is itself undetermined
 ```
 
+⭐ That `SYN` gloss is the reading of the class **on an item block**, where the two live classes are `SYN-3` and `SYN-4`. Per the P1-04 instrument §1, **every EDGE carries a `SYN` class too**, drawn from the full four-class set; the set and the rule by which each edge is classed are declared at the head of **PART X**, and the class of an edge is the standing of the RELATION, ⛔ never a restatement of its endpoints' classes.
+
 ⛔ **There is NO RESOLUTION FIELD in this map, at any altitude — not in a block, not in the edge list, not in a heading, not in the hand-off.** ⛔ Nothing here is ranked by severity, likelihood,
 consequence or repair order. ⛔ No item is called legitimate or illegitimate. ⛔ `ABSENT` is not written. ⛔ `AUTH-EXPOSURE-01` is neither cited, awaited nor answered.
 
@@ -829,81 +831,109 @@ ID  D-2 · `P3-C-09` `member_theme_signals`   → the same object as X-1; block 
 ```
 ---
 # PART X — CONTRADICTION TOPOLOGY (edge list)
-⭐ **Every edge carries its own quoted basis. ⛔ An edge whose relation is not quoted in the corpus is OMITTED — endpoint quality is not edge evidence.** ⛔ No edge asserts a direction of causation, a priority, or a resolution.
+⭐ **Every edge carries TWO things, and they are different requirements.** ⛔ A basis is the EVIDENCE for an edge; a `SYN` class is the STANDING of that edge as a claim, and an edge can carry an impeccable quote and still be `SYN-2 DERIVED` rather than `SYN-1 OBSERVED`.
+
+**(1) BASIS — the sparsity rule.** Every edge carries its own quoted basis. ⛔ An edge whose relation is not quoted in the corpus is OMITTED — endpoint quality is not edge evidence.
+
+**(2) STANDING — P1-04 instrument §1, "every node and EVERY EDGE carries one".** The class is assigned on the evidence already quoted, by this rule, declared before use:
 
 ```text
-E-01  X-DEF-2 ── CONTRA-2                      shared row P3-D-10 "P3-D-10 additionally: substrateMap.ts:383-391 'consumers: [] … Service preserved; no live
+SYN-1  OBSERVED     a source record states the relation ITSELF, in its own words — naming both
+                    endpoints, or attaching an item to its own row
+SYN-2  DERIVED      this pass COMPOSES the relation from two or more separately quoted facts (a
+                    shared row id · a shared artifact · a shared sentence) that no record states
+                    as a relation. ⭐ Per INF-7 this RELATES two observations; ⛔ it collapses
+                    nothing, asserts no verdict, and adds no finding to either endpoint
+SYN-3  CONTRADICTION / TENSION   the relation ITSELF is that the endpoints stand against one
+                    another, in the corpus's own adversarial words ("against" · "while" ·
+                    "expressly does not let settle" · "nevertheless")
+SYN-4  UNKNOWN      the corpus DECLARES the relation's own content undetermined. ⭐ The edge stays
+                    drawn and carries the class; ⛔ it is not deleted to avoid classing it
+```
+
+```text
+STANDING TALLY — 47 edges      SYN-1  14      SYN-2  27      SYN-3   4      SYN-4   2
+⛔ NAVIGATION ONLY — every one of the 47 edges is individually legible below, with its own
+   quoted basis and its own class. ⛔ The tally stands in for nothing.
+```
+
+⛔ No edge asserts a direction of causation, a priority, or a resolution. ⛔ A `SYN-2` edge is not weaker evidence of a contradiction than a `SYN-1` edge — it is a differently-standing claim about the RELATION, and the contradiction content itself lives in the item block, under the item's own class.
+
+```text
+E-01  SYN-3  X-DEF-2 ── CONTRA-2                      shared row P3-D-10 "P3-D-10 additionally: substrateMap.ts:383-391 'consumers: [] … Service preserved; no live
        consumer wired' (CONTRA-2) against D's own traced path to route.ts:2787" — 05_ladder
-E-02  X-DEF-2 ── C-F5                          shared artifact, third characterization "F C-F5 a third statement about the same route — the anchor's '~zero live traffic' — which F
+E-02  SYN-3  X-DEF-2 ── C-F5                          shared artifact, third characterization "F C-F5 a third statement about the same route — the anchor's '~zero live traffic' — which F
        expressly does not let settle the question" — 05_ladder / 02_normalized
-E-03  X-DEF-2 ── A-4                           shared artifact oracle/conversation/route.ts
+E-03  SYN-2  X-DEF-2 ── A-4                           shared artifact oracle/conversation/route.ts
       A-4: "Side A: CLAUDE.md — '~zero live traffic'. Side B: oracle/conversation/route.ts:452 — hard 410 as the first executable statement of POST" — 01_normalized
-E-04  X-DEF-2 ── X-3                           shared question, route traffic X-3: "Domain A: hard-refused at POST (410). Domain B and C both carry live-path material whose only located consumer is that route" — 01_normalized
-E-05  X-DEF-2 ── D-1                           shared row P3-B-24, explicit cross-reference D-1 closes: "(Register X-3; B OQ-2.)" and quotes ":902 … :2787 … :1499" against "the 410 is the first executable statement of POST" — 04_ladder
-E-06  X-DEF-2 ── B-1 / X-2                     shared consumer claim B-1 Side B: "oracle/conversation/route.ts:902,:1499,:2787 consumes and prompt-injects" + "Whether that route serves traffic is UNKNOWN" — 01_normalized
-E-07  X-DEF-2 ── C-4 (§8.4)                    shared artifact, guard placement C-4 Side B: "the R16 guard's sole call site is in oracle/conversation/route.ts" — 01_normalized
-E-08  X-DEF-2 ── C-E6                          shared refusal coordinates :446-453 C-E6: "CLAUDE.md documents a live wire into oracle/conversation/route.ts; that route refuses
+E-04  SYN-2  X-DEF-2 ── X-3                           shared question, route traffic X-3: "Domain A: hard-refused at POST (410). Domain B and C both carry live-path material whose only located consumer is that route" — 01_normalized
+E-05  SYN-2  X-DEF-2 ── D-1                           shared row P3-B-24, explicit cross-reference D-1 closes: "(Register X-3; B OQ-2.)" and quotes ":902 … :2787 … :1499" against "the 410 is the first executable statement of POST" — 04_ladder
+E-06  SYN-2  X-DEF-2 ── B-1 / X-2                     shared consumer claim B-1 Side B: "oracle/conversation/route.ts:902,:1499,:2787 consumes and prompt-injects" + "Whether that route serves traffic is UNKNOWN" — 01_normalized
+E-07  SYN-2  X-DEF-2 ── C-4 (§8.4)                    shared artifact, guard placement C-4 Side B: "the R16 guard's sole call site is in oracle/conversation/route.ts" — 01_normalized
+E-08  SYN-2  X-DEF-2 ── C-E6                          shared refusal coordinates :446-453 C-E6: "CLAUDE.md documents a live wire into oracle/conversation/route.ts; that route refuses
        at :446-453" — 02_normalized; X-DEF-2 Side B quotes the same ":446-453"
-E-09  X-DEF-2 ── A-4 ── DEV-54/51              shared row P3-A-13 A-4 is recorded "(P3-A-13)"; DEV-54/51 names "P3-A-13 (refusal-19, which the register itself
+E-09  SYN-2  X-DEF-2 ── A-4 ── DEV-54/51              shared row P3-A-13 A-4 is recorded "(P3-A-13)"; DEV-54/51 names "P3-A-13 (refusal-19, which the register itself
        calls 'a CI instrument, not a governing document')" — 01_normalized / 04_ladder §0
-E-10  X-DEF-1 ── CONTRA-3                      shared artifact maiaService.ts:1082-1112 CONTRA-3 Side B: "analyzeFieldIntelligence is dynamically imported and used at
+E-10  SYN-2  X-DEF-1 ── CONTRA-3                      shared artifact maiaService.ts:1082-1112 CONTRA-3 Side B: "analyzeFieldIntelligence is dynamically imported and used at
        maiaService.ts:1082-1112, producing a prompt block on the canonical member path"; X-DEF-1 Side A quotes the same block at ":1094-1110" — 02_normalized
-E-11  X-DEF-1 ── P3-D-34                       dependency stated by the slice "P3-D-34 is listed here too: its only traced consumption (maiaService.ts:1083,1091) sits inside the same disputed block" — 05_ladder
-E-12  X-DEF-3 ── P1-D-GOV-02                   same P1-02 record, two sections D §7: "No ratified source authorizing realm-based refusal was located"; D §6 ans.4: "(e) is
+E-11  SYN-1  X-DEF-1 ── P3-D-34                       dependency stated by the slice "P3-D-34 is listed here too: its only traced consumption (maiaService.ts:1083,1091) sits inside the same disputed block" — 05_ladder
+E-12  SYN-3  X-DEF-3 ── P1-D-GOV-02                   same P1-02 record, two sections D §7: "No ratified source authorizing realm-based refusal was located"; D §6 ans.4: "(e) is
        the only object in Domain D at HAS AUTHORITY" — D_field.md, recovered verbatim
-E-13  X-DEF-3 ── the INF-6 firing record       shared row P3-D-06 "P3-D-06  DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion" — 05_ladder
-E-14  X-DEF-3 ── F §3.3 counter-example        same corpus, opposite discipline P1-03_CLOSE §2: "the counter-example stands beside it in the same corpus: another P1-02
+E-13  SYN-1  X-DEF-3 ── the INF-6 firing record       shared row P3-D-06 "P3-D-06  DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion" — 05_ladder
+E-14  SYN-1  X-DEF-3 ── F §3.3 counter-example        same corpus, opposite discipline P1-03_CLOSE §2: "the counter-example stands beside it in the same corpus: another P1-02
        record had already refused the same promotion — 'authentication establishes PARTICIPATES, not HAS AUTHORITY.'"
-E-15  CONCLUDE COUNT ── P3-F-12                the row the two lists classify differently
+E-15  SYN-3  CONCLUDE COUNT ── P3-F-12                the row the two lists classify differently
       "P3-F-12 — F §2 classifies runes 'interpretive · member-facing' (⛔ not concluding) while F §4's no-refusal-surface list includes it. Both preserved." — 05_ladder
-E-16  CONCLUDE COUNT ── C-F1                   shared rows P3-F-07 · P3-F-08 C-F1 is recorded at "rows P3-F-07, P3-F-08, P3-F-31"; the CONCLUDE inventory names
+E-16  SYN-2  CONCLUDE COUNT ── C-F1                   shared rows P3-F-07 · P3-F-08 C-F1 is recorded at "rows P3-F-07, P3-F-08, P3-F-31"; the CONCLUDE inventory names
       "P3-F-07 (member-facing, authenticated, persists the conclusion at :159 with no author-class column) · P3-F-08 (same prompt, practitioner-facing, persists)" — 02_normalized
-E-17  C-F1 ── C-F4 ── P3-F-31                  shared wrapper object C-F1 names row P3-F-31; C-F4: "declared over six families at :282; applied at two call sites
+E-17  SYN-2  C-F1 ── C-F4 ── P3-F-31                  shared wrapper object C-F1 names row P3-F-31; C-F4: "declared over six families at :282; applied at two call sites
        (:646, :732). Archetypes, cycles, and the I Ching / Tarot that Invariant 13 adds are not reached." — 02_normalized
-E-18  C-F4 ── P3-F-14 · P3-F-28                the wrapper as sole constraint "CONCLUDE is constrained 'only by that same wrapper' (SYMBOLIC_LENS_BOUNDARY, P3-F-31), which
+E-18  SYN-1  C-F4 ── P3-F-14 · P3-F-28                the wrapper as sole constraint "CONCLUDE is constrained 'only by that same wrapper' (SYMBOLIC_LENS_BOUNDARY, P3-F-31), which
        is ⚠️ 'a model-compliance instruction, not a structural refusal. Nothing measures obedience; no test, falsifier or post-generation check found.'" — 02_normalized
-E-19  C-F4 ── P3-F-34                          Invariant 13 Tier-2, located and unimplemented "P3-F-34: Invariant 13's Tier-2 hard refusal for consequential forecasts 'regardless of
+E-19  SYN-2  C-F4 ── P3-F-34                          Invariant 13 Tier-2, located and unimplemented "P3-F-34: Invariant 13's Tier-2 hard refusal for consequential forecasts 'regardless of
        source' has ⛔ no implementing code anywhere in Domain F, while spreads.ts:45-46 defines a `Future` position as 'Likely outcome based on current trajectory'" — 02_normalized
-E-20  C-1 (G) ── PROVIDER-FAILURE PLURALITY    shared rows, stated by the slice "C-1 · provider failure — P3-G-02 · P3-G-04 · P3-G-06" — 06_ladder
-E-21  C-5 (G) ── DISPOSITION 2                 shared row P3-G-02 "C-5 · P3-G-02." and: "The emitting seam makes a persistence claim it does not itself discharge" — 06_ladder / 03_normalized
-E-22  C-2 (G) second limb ── C-6 (G)           shared row P3-G-07, shared `meta` flag
+E-20  SYN-1  C-1 (G) ── PROVIDER-FAILURE PLURALITY    shared rows, stated by the slice "C-1 · provider failure — P3-G-02 · P3-G-04 · P3-G-06" — 06_ladder
+E-21  SYN-1  C-5 (G) ── DISPOSITION 2                 shared row P3-G-02 "C-5 · P3-G-02." and: "The emitting seam makes a persistence claim it does not itself discharge" — 06_ladder / 03_normalized
+E-22  SYN-2  C-2 (G) second limb ── C-6 (G)           shared row P3-G-07, shared `meta` flag
       C-2: "contradicted by Moonshot, in the tree, reachable by a per-request `meta` flag, in no tier and no guard"; C-6: ":127 `req.meta?.useKimi`, where `meta` is
        `Record<string, unknown>` with no validation and no provenance" — 03_normalized; slice 06 records both at P3-G-07
-E-23  C-3 (G) ── A-6                           shared sentence, two registers C-3: "'Main gateway for ALL text generation' (modelService.ts:71-73)"; A-6 Side A:
+E-23  SYN-2  C-3 (G) ── A-6                           shared sentence, two registers C-3: "'Main gateway for ALL text generation' (modelService.ts:71-73)"; A-6 Side A:
       "modelService.ts:72 — 'Main gateway for ALL text generation in MAIA'" — 03_normalized / 01_normalized
-E-24  A-6 ── P3-A-16                           the row's own recorded sentence "A-16   CONTRIBUTES · DECIDES   NONE LOCATED — 'THE GATEWAY CLAIM IS FALSE AT THE SUBJECT'" — 04_ladder INF-6 inventory
-E-25  C2 (H) ── C4 (H)                         shared rows P3-H-02 · P3-H-03 slice 06 records C2 at "P3-H-01 · P3-H-02 · P3-H-03 · P3-H-07" and C4 at "P3-H-02 · P3-H-03"; C2: "The code gates the mouth and does not gate the ear"
-E-26  C3 (H) ── C6 (H)                         shared row P3-H-05 slice 06: "C3 (H) · P3-H-05" and "C6 (H) · citation coordinates — P3-H-05 · P3-H-09"
-E-27  C5 (H) ── B-23                           shared cited source, the Sanctuary invariants C5 "Against: CLAUDE.md Sanctuary invariant 1 ('No content retention') and invariant 6
+E-24  SYN-1  A-6 ── P3-A-16                           the row's own recorded sentence "A-16   CONTRIBUTES · DECIDES   NONE LOCATED — 'THE GATEWAY CLAIM IS FALSE AT THE SUBJECT'" — 04_ladder INF-6 inventory
+E-25  SYN-2  C2 (H) ── C4 (H)                         shared rows P3-H-02 · P3-H-03 slice 06 records C2 at "P3-H-01 · P3-H-02 · P3-H-03 · P3-H-07" and C4 at "P3-H-02 · P3-H-03"; C2: "The code gates the mouth and does not gate the ear"
+E-26  SYN-2  C3 (H) ── C6 (H)                         shared row P3-H-05 slice 06: "C3 (H) · P3-H-05" and "C6 (H) · citation coordinates — P3-H-05 · P3-H-09"
+E-27  SYN-2  C5 (H) ── B-23                           shared cited source, the Sanctuary invariants C5 "Against: CLAUDE.md Sanctuary invariant 1 ('No content retention') and invariant 6
        ('Absolute boundary')"; B-23: "the six Sanctuary invariants live in CLAUDE.md, which D-P1-06 classes as evidence, ⛔ not a governing source" — 03_normalized / 04_ladder
-E-28  C-I-3 ── C-5 (§8.5)                      shared artifacts, two registers C-I-3: "lib/relationship/scope.ts and lib/coachField/* encode member/practitioner read
+E-28  SYN-2  C-I-3 ── C-5 (§8.5)                      shared artifacts, two registers C-I-3: "lib/relationship/scope.ts and lib/coachField/* encode member/practitioner read
        scopes … imports neither"; C-5: "practitionerProjection.ts and relationship/scope.ts state strict, non-merging, server-derived scope rules — and are dormant" — 03_normalized / 01_normalized
-E-29  C-I-7 ── C-1 (§8.1)                      shared token `practitioner_id` C-1 Side B: "the schema is `practitioner_id UUID NOT NULL REFERENCES practitioners(id)`";
+E-29  SYN-4  C-I-7 ── C-1 (§8.1)                      shared token `practitioner_id` C-1 Side B: "the schema is `practitioner_id UUID NOT NULL REFERENCES practitioners(id)`";
       C-I-7: "`practitioner_id` references `practitioners(id)` in some tables and `members(id)` in others" — ⚠️ carried with C-I-7's own caution: "⛔ Per the vocabulary rule no finding attaches to the token."
-E-30  CONTRA-6 ── B-4 ── C-2 (§8.2)            shared function `calculate_decayed_confidence` CONTRA-6 is recorded "⚠️ Domain B/C substrate, recorded because D was tasked to verify it";
+      ⭐ SYN-4 BECAUSE the schema's own sentence — "the declared shape in this repository is therefore NOT authoritative" — leaves whether the two items' tokens co-refer undetermined.
+E-30  SYN-1  CONTRA-6 ── B-4 ── C-2 (§8.2)            shared function `calculate_decayed_confidence` CONTRA-6 is recorded "⚠️ Domain B/C substrate, recorded because D was tasked to verify it";
       B-4: "MemoryBundle.ts:266 applies the SQL `calculate_decayed_confidence`"; C-2: "TS `halfLifeDays * 1.5` … vs SQL reference-date shift" — 02_normalized / 01_normalized
-E-31  CONTRA-6 ── UC-ABC-Q (the 0.0225 referent)   shared quoted claim CONTRA-6: "'the SQL confirmation term caps at 0.0225' is NOT confirmed"; register 01 gap
+E-31  SYN-2  CONTRA-6 ── UC-ABC-Q (the 0.0225 referent)   shared quoted claim CONTRA-6: "'the SQL confirmation term caps at 0.0225' is NOT confirmed"; register 01 gap
       list: "the referent of 'the SQL confirmation term caps at 0.0225' (C §10, NOT FOUND at the subject)"
-E-32  C-E1 ── C-E2 ── VC-phase                 one word, the enumerations naming each other
+E-32  SYN-1  C-E1 ── C-E2 ── VC-phase                 one word, the enumerations naming each other
       C-E2: "a third vocabulary on the canonical lane … Both stand alongside C-E1"; VC-phase: "three incompatible vocabularies and a fourth trap" — 02_normalized
-E-33  CONTRA-1 ── CONTRA-4                     shared row P3-D-01 CONTRA-1 "(D §8; rows P3-D-01, P3-D-02)"; CONTRA-4 "(D §8; row P3-D-01)" — 02_normalized
-E-34  CONTRA-5 ── VC-names-asserting…          named inside the collision inventory "`persistentFieldStates`, an in-process `Map` (CONTRA-5)" — 02_normalized
-E-35  C-E6 ── VC-names-asserting…              named inside the collision inventory "`member_spiral_state`, the anti-regression continuity substrate with no reachable writer (C-E6)" — 02_normalized
-E-36  C-F6 ── VC-field/PersonalOracleAgent ── P3-D-14 · P3-E-19      undetermined referent "The same name also appears as a value-importer of P3-D-14 and a consumer of P3-E-19 — ⛔
+E-33  SYN-2  CONTRA-1 ── CONTRA-4                     shared row P3-D-01 CONTRA-1 "(D §8; rows P3-D-01, P3-D-02)"; CONTRA-4 "(D §8; row P3-D-01)" — 02_normalized
+E-34  SYN-1  CONTRA-5 ── VC-names-asserting…          named inside the collision inventory "`persistentFieldStates`, an in-process `Map` (CONTRA-5)" — 02_normalized
+E-35  SYN-1  C-E6 ── VC-names-asserting…              named inside the collision inventory "`member_spiral_state`, the anti-regression continuity substrate with no reachable writer (C-E6)" — 02_normalized
+E-36  SYN-4  C-F6 ── VC-field/PersonalOracleAgent ── P3-D-14 · P3-E-19      undetermined referent "The same name also appears as a value-importer of P3-D-14 and a consumer of P3-E-19 — ⛔
        which of the two objects those citations mean is NOT DETERMINED BY SOURCE RECORD" — 02_normalized; slice 05 repeats it at P3-D-14
-E-37  B-2 ── B-3                               shared row P3-B-20 B-2 "(P3-B-20, P3-B-07)"; B-3 "(P3-B-20)" — 01_normalized
-E-38  B-8 ── all B rows                        stated scope of the item "⛔ No code enumeration nominated as authoritative. (carried across all B rows)" — 01_normalized
-E-39  C-3 (§8.3) ── C-4 (§8.4) ── C-E7         shared guard R16 C-3 and C-4 are both recorded at row P3-C-03; C-E7: "R16 strips inferred developmental state
+      ⭐ SYN-4 BECAUSE the corpus itself declares the relation's content — which of the two collided objects those citations name — not determined. ⛔ The edge stays drawn.
+E-37  SYN-2  B-2 ── B-3                               shared row P3-B-20 B-2 "(P3-B-20, P3-B-07)"; B-3 "(P3-B-20)" — 01_normalized
+E-38  SYN-1  B-8 ── all B rows                        stated scope of the item "⛔ No code enumeration nominated as authoritative. (carried across all B rows)" — 01_normalized
+E-39  SYN-2  C-3 (§8.3) ── C-4 (§8.4) ── C-E7         shared guard R16 C-3 and C-4 are both recorded at row P3-C-03; C-E7: "R16 strips inferred developmental state
        from shaping; the member API returns it unstripped … 'Two different boundaries, one field class.'" — 01_normalized / 02_normalized
-E-40  X-1 ── D-2                               explicit cross-reference D-2 closes: "(Register X-1.)" — 04_ladder
-E-41  VC-field ── CONTRA-2 · CONTRA-5 · X-DEF-1     rows named inside the enumeration VC-field enumerates its referents with their row ids — "`CoherenceFieldService`" (P3-D-10,
+E-40  SYN-1  X-1 ── D-2                               explicit cross-reference D-2 closes: "(Register X-1.)" — 04_ladder
+E-41  SYN-2  VC-field ── CONTRA-2 · CONTRA-5 · X-DEF-1     rows named inside the enumeration VC-field enumerates its referents with their row ids — "`CoherenceFieldService`" (P3-D-10,
       CONTRA-2) · "`QuantumFieldMemory`" (P3-D-12, CONTRA-5) · the Talk-Mode block's `fieldContext`/`fieldContextAdapter` pair (P3-D-01 / P3-D-09) — 02_normalized / 01_normalized
-E-42  VC-RFI/UFI ── "NOT A PARTICIPATION QUESTION" rows       shared rows P3-D-41 · P3-D-42 "P3-D-41 RFI — ⛔ 0 code objects · P3-D-42 UFI — one comment that explicitly excludes it" — 05_ladder
-E-43  DEV-54/51 ── P3-A-08 · P3-A-10 · P3-A-13        the three rows the deviation names "three of the eleven named sources are, by the records' own sentences, not authorization text" — 04_ladder §0
-E-44  C-I-1 … C-I-8 ── P3-I-01                 eight items, one row in common at the centre slice 06 records C-I-1, C-I-2 at "P3-I-01"; C-I-3 at "P3-I-01 · P3-I-08 · P3-I-09"; C-I-8 at "P3-I-01 · P3-I-03 (and the matrix generally)"
-E-45  C-I-4 ── UC-17 (I-03)                    the same unresolved production value C-I-4: "⚠️ Production `ACCESS_CONTROL_MODE` is UNKNOWN"; UC-17: "I-03 production `ACCESS_CONTROL_MODE`" — 03_normalized / 06_ladder
-E-46  PROVIDER-FAILURE PLURALITY ── UC-GHI-ENV        the same unresolved production value "`MAIA_INFERENCE_MODE` appears in no tracked deployment config" / "production value of `MAIA_INFERENCE_MODE`" — 03_normalized
-E-47  C1 (H) ── UC-GHI-ENV                     the same class of unresolved environment fact C1 (H): "the env var each depends on is set for one side and absent for the other in the production compose file" — 06_ladder
+E-42  SYN-2  VC-RFI/UFI ── "NOT A PARTICIPATION QUESTION" rows       shared rows P3-D-41 · P3-D-42 "P3-D-41 RFI — ⛔ 0 code objects · P3-D-42 UFI — one comment that explicitly excludes it" — 05_ladder
+E-43  SYN-1  DEV-54/51 ── P3-A-08 · P3-A-10 · P3-A-13        the three rows the deviation names "three of the eleven named sources are, by the records' own sentences, not authorization text" — 04_ladder §0
+E-44  SYN-2  C-I-1 … C-I-8 ── P3-I-01                 eight items, one row in common at the centre slice 06 records C-I-1, C-I-2 at "P3-I-01"; C-I-3 at "P3-I-01 · P3-I-08 · P3-I-09"; C-I-8 at "P3-I-01 · P3-I-03 (and the matrix generally)"
+E-45  SYN-2  C-I-4 ── UC-17 (I-03)                    the same unresolved production value C-I-4: "⚠️ Production `ACCESS_CONTROL_MODE` is UNKNOWN"; UC-17: "I-03 production `ACCESS_CONTROL_MODE`" — 03_normalized / 06_ladder
+E-46  SYN-2  PROVIDER-FAILURE PLURALITY ── UC-GHI-ENV        the same unresolved production value "`MAIA_INFERENCE_MODE` appears in no tracked deployment config" / "production value of `MAIA_INFERENCE_MODE`" — 03_normalized
+E-47  SYN-2  C1 (H) ── UC-GHI-ENV                     the same class of unresolved environment fact C1 (H): "the env var each depends on is set for one side and absent for the other in the production compose file" — 06_ladder
 ```
 
 **EDGES OMITTED FOR WANT OF A QUOTED RELATION** — recorded so the omission is visible as a discipline rather than an oversight: any edge between C-E3 (`Phase detected` at
