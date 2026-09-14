@@ -188,3 +188,29 @@ Neither requires the phone. Neither spends a witness.
 > *Replace the physical substrate; do not let the substitution rewrite the organism that governs it.*
 > A substrate written from remembered symbol names, compiled by nothing, would be neither a
 > replacement nor a qualification — only a file that looks like one.
+
+---
+
+## ADJUDICATION APPENDED (founder, 2026-09-14) — record above unchanged
+
+*Appended by the VOICE-2026 session after the founder's header read against the installed iPhoneOS 26.2 SDK; nothing above this line was edited.*
+
+```
+BLOCKER 2  byte-pin
+            CLOSED by the already-ruled gate-by-history implementation
+            (VPIO-01 plan §11 item 5 → 0f535e705 gate; assertions read 24a6fcfa1 / 4596b9bdb from the object database)
+
+BLOCKER 1  G1–G11
+            G1–G8, G10, G11   VERIFIED against the installed header — the source as written was correct
+            G9                VERIFIED (Global · UInt32 · read/write) — and it exposed ONE REAL SOURCE DEFECT:
+                              the fixed 8192-sample scratch + min(requested, capacity) truncation in 0f535e705
+            bypass-before-initialize: no header blocker (documented lifecycle: uninitialize → configure → initialize);
+                              runtime effect stays witness evidence
+
+source      CORRECTABLE · not withdrawn
+            → corrected at 5ca7851a8 (AudioGraph.swift G9 only + gate pin; 45/45)
+            → MAC-COMPILE AUTHORIZED on exactly 5ca7851a8; a991d09a4 / 0f535e705 are NOT compile subjects
+            → install · device act · N=30 remain NOT AUTHORIZED
+```
+
+Full record: `KERNEL-00_VPIO-01_PLAN_2026-09-14.md` §12.5 (side-by-side) and §12.6 (adjudication + correction).
