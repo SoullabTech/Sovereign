@@ -75,7 +75,7 @@ supply them.**
 
 ```text
 D4  omission / authorship semantics     ⭐ RATIFIED — MODEL B
-D1  pathspec language
+D1  pathspec language            ⭐ RATIFIED — see JOP-04_D1_MAGIC_PATHSPEC_RULING
 D5  grep pattern language
 D6  symbol language
 D2  git.log.format
@@ -353,7 +353,9 @@ D4                          ⭐ RATIFIED — MODEL B · omission is caller-autho
                             default resolution is host-authored, recorded in the plan
 DERIVED CONSEQUENCE         H1 re-classified: unrecorded host contribution, not a
                             canonicalization bug — smaller, safer repair shape
-REMAINING ORDER             D1 → D5 → D6 → D2 → D3
+D1                          ⭐ RATIFIED — literal identity ≠ selection authority
+                            five arguments reclassify PATHSPEC → PATH (literal)
+REMAINING ORDER             D5 → D6 → D2 → D3
 LANE                        ⭐ OPEN — five rulings owed · D4 ≠ programme closure
 
 F-B EVIDENCE                absence of pinning PROVEN from source
