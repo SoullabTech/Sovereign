@@ -201,3 +201,7 @@ Both 121709Z snapshots read `UNOBSERVABLE: listing succeeded, neither mediaserve
 
 Standing: A YES (one collect only) · A2 YES (absence scoped) · A3 YES (string supplied) · C, D, E still owed · CALIBRATION HELD until E passes and the probe is named.
 
+### 7.10 C · D · E complete — fresh sealed post-amendment probe `log-probe-20260914T123612Z` (founder-run, 2026-09-14)
+
+C: custody `2e78688a6` on `feature/k00-driver-ledger` (three probe directories + `log-cal-20260914T121709Z`), cherry-picked here. D: worktree at `06d80f16d`. E: probe executed on HEAD `06d80f16d1085f8c2248d48fdd459671e2a1762f`; criterion `PASS2-COND3-POSITIONAL-ARCHIVE@09c1bd251` is an ancestor (`yes`); from the installed help: `--device-udid <UDID>` (line 11) · `--start <time>` / `--last` (12, 15) · `usage: log show [options] <archive>` (line 2) · `--[no-]info` / `--[no-]debug` documented for the separately ruled escalation ladder; manifest sealed `da30b4848a4548e290418cbd202b3d624583ea0b3602fe59e6542a0b355ed334`. Provenance note (founder): the remote command runner initially refused direct execution; the 46-line script was inspected as help-page-only and invoked as `bash scripts/witness/k00-log-probe.sh`. No device act; calibration sample UNSPENT. **The evidence question is answered. The authority question is answered separately by the founder's string at invocation. Neither answered the other.**
+
