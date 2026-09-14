@@ -361,3 +361,72 @@ where it already is. ⛔ And the shell's existing law governs it:
 actionable, because shipping `24` and `12` to a member "as if they were their
 own materials and notes" is exactly the failure it was written against. **A
 Materials count in the rail must be the writer's real count or absent.**
+
+### ⛔ RULING · "Influences" is NOT BUILT — absorbed by Materials + relational intelligence
+
+**Founder, 2026-09-14.**
+
+> **Influence is not another container. It is a relationship.**
+
+```
+MATERIAL
+   ├── informs    ──► a section
+   ├── resonates  ──► a theme
+   ├── supports   ──► a claim
+   ├── challenges ──► an idea
+   └── influences ──► the Work
+```
+
+A source can influence one sentence, a section, several chapters, a theme, the
+writer's language, or the conceptual architecture of the whole book. ⛔ A room
+called *Influences* would be a fourth container for a thing that is not a
+container.
+
+```
+WORK                      MAIA
+  Home                      Conversations
+  Manuscript                Discover
+  Materials   ← deepen      Insights
+  Structure                 Suggestions
+  Notes
+  Versions
+```
+
+⭐ The same principle as the editorial UX: **change the centre according to the
+scale of the question instead of proliferating rooms.** Fewer concepts exposed
+to the person; a richer system underneath.
+
+> *A writer does not usually experience an influence as a place they go. They
+> experience it as something that begins speaking again inside the Work.*
+> **Materials holds the things. MAIA reveals the relationships.**
+
+### ⚠️ The one thing to settle before this becomes a build
+
+**Those five verbs are not all the same kind of statement, and the difference is
+the one this programme spent 2026-09-14 closing.**
+
+```
+the writer's declaration        MAIA's reading
+  "this supports my point"        "this challenges that idea"
+  "this informs this chapter"     "you've returned to this image
+                                   in three notes and two chapters"
+```
+
+⛔ A member declaration and a MAIA observation must not share one object. That
+is the four-kinds ladder restated at the material: the writer's relationship is
+a **fact she may read**; MAIA's noticing is an **INSIGHT** — which can be wrong,
+can be dismissed, and must be correctable without deleting anything the writer
+said. `relationship_sentence` is already the writer's. MAIA's side needs to be
+separately authored, or her guess becomes indistinguishable from the writer's
+claim the moment both are rendered in the same list.
+
+⚠️ **And the grain differs.** `living_work_materials` is
+`UNIQUE (living_work_id, material_type, material_id)` — one row per material per
+Work. A material that informs a SECTION is a different cardinality. ⛔ Do not
+add `section_id` to that row; the relationship is its own object.
+
+⚠️ **`Related material · 3` is a count, and a count is a claim.** Three the
+writer placed there, or three MAIA suspects? The existing shell law
+(`assertShellPromisesNothing`) refuses a promised count for exactly this reason.
+The affordance must not let MAIA's confidence borrow the authority of the
+writer's declaration.
