@@ -176,7 +176,10 @@ CLOSING WITNESS ⛔ UNSPENT
 COMMIT / PUSH   ⛔ none
 
 RATIFICATION    ✅ GRANTED (§4) — with anti-precedent clause
-⚠️ OWED  CUSTODY — the work exists ONLY in a temp worktree at 0bd2b657 (§7)
+CUSTODY         ✅ SEALED — fix/c10-whole-exact-return-01 @ 4df4e91d · JARVIS-VERIFIED (§7)
+                ⚠️ eleven paths, not eight — disclosed, digest unaffected
+NEXT            ⭐ CLOSING WITNESS against the durable candidate — the ONLY remaining
+                evidentiary act before PR
 ```
 
 ---
@@ -206,6 +209,53 @@ RATIFICATION    ✅ GRANTED (§4) — with anti-precedent clause
 7  THEN spend the CLOSING WITNESS against that durable candidate.
 8  ONLY after the closing witness passes may the work become a PR / integration candidate.
 ```
+
+### ⭐⭐ CUSTODY SEALED — and for the FIRST TIME IN THIS LANE, JARVIS-VERIFIED
+
+```text
+repair branch      fix/c10-whole-exact-return-01
+durable candidate  4df4e91d5da69bbc93126b9574ba40273f8098f6
+```
+
+⭐ This session **fetched the pushed branch and checked it directly.** Every line below is
+`JARVIS-VERIFIED`, ⛔ not founder-read — the first independently corroborated evidence in the
+lane, because it is the first artefact that exists somewhere this session can reach.
+
+```text
+FETCHED SHA           4df4e91d5da69bbc93126b9574ba40273f8098f6            ✅ matches
+MERGE-BASE vs base    0bd2b65789ec1a60acc8621fb04b50095ebe5b29            ✅ exact repair lineage
+
+⭐⭐ IMPLEMENTATION DIGEST, read from the PUSHED BLOB:
+   2e8e3e426d08566f07531313a4ee5a54f84b024bd8254093dfd2aeb2ae6729ad       ✅ IDENTICAL
+   to the pre-mutant / post-mutant digest sealed in 3b1947d0
+   ⭐ "mutant restoration intact" is now a property OF THE ARTEFACT, not of a remembered run.
+
+LINEAGE SEPARATION    3b1947d0 in repair lineage?  NO
+                      60e0838e in repair lineage?  NO                     ✅ records ABOUT the
+                                                                            work, not IN it
+/private/tmp refs     0 occurrences in the commit                         ✅ no dependency
+```
+
+### ⚠️ Disclosed addition — ELEVEN paths, not eight
+
+⛔ Step 6 expected *"the eight paths, no others."* The candidate carries **eleven**:
+
+```text
+8  the source + test paths that earned GREEN
++  docs/design/contracts/writer-proposal-return.md          Experience Contract
++  …/screenshots/writer-proposal-return-desktop.png         witness screenshot
++  …/screenshots/writer-proposal-return-mobile.png          witness screenshot
+```
+
+⭐ **Disclosed by the founder, not discovered afterwards** — required by the repository's
+design-canon gate. ⭐ And the load-bearing check is unaffected: the **implementation digest is
+identical**, so the witnessed implementation was not altered to satisfy that gate.
+
+```text
+⭐ Recorded as a DISCLOSED DEVIATION from the step-6 criterion, not absorbed into it.
+```
+
+---
 
 ```text
 ⭐ BRANCH NOW · PR AFTER CLOSING WITNESS
