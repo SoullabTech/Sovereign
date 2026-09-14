@@ -44,6 +44,10 @@
                 if (a.maxLength !== undefined) out.maxLength = a.maxLength;
                 if (a.min !== undefined) out.min = a.min;
                 if (a.max !== undefined) out.max = a.max;
+                // The manifest is a LENS on the registry's schema. A declared constraint the
+                // lens drops is a constraint the local boundary can never enforce, so the
+                // mirror would admit what the authoritative boundary refuses.
+                if (a.integer !== undefined) out.integer = a.integer;
                 if (Array.isArray(a.enum)) out.enum = a.enum.slice();
                 return out;
               })
@@ -95,6 +99,10 @@
       } else if (a.type === 'number') {
         if (typeof value !== 'number' || !Number.isFinite(value)) errors.push(`Argument ${a.name} must be a number`);
         else {
+          // A local validator that claims to mirror the registry may not ADMIT what the
+          // authoritative boundary REFUSES. `integer` comes from the registry's own schema,
+          // so this mirrors the declared domain rather than inventing a second one.
+          if (a.integer && !Number.isInteger(value)) errors.push(`Argument ${a.name} must be an integer`);
           if (a.min !== undefined && value < a.min) errors.push(`Argument ${a.name} must be at least ${a.min}`);
           if (a.max !== undefined && value > a.max) errors.push(`Argument ${a.name} must be at most ${a.max}`);
         }
@@ -118,6 +126,19 @@
     const errors = [];
     if (!entry) return { ok: false, args, errors: ['No capability selected.'] };
     const raw = rawValues && typeof rawValues === 'object' ? rawValues : {};
+
+    // D2.6: an argument the registry does not authorize is REFUSED HERE, at the admission
+    // boundary — never silently dropped. Dropping it would turn a request the caller
+    // authored into a different request the capability happens to accept, which is the
+    // accept-and-erase shape the ruling closes. A stale or hand-crafted `rawValues` key
+    // (e.g. `format` after it left git.log's schema) must fail admission, not vanish.
+    const known = new Set(entry.args.map((a) => a.name));
+    for (const key of Object.keys(raw)) {
+      const rawValue = raw[key];
+      const text = rawValue === undefined || rawValue === null ? '' : String(rawValue).trim();
+      if (text === '') continue; // a blank field was never an argument
+      if (!known.has(key)) errors.push(`Unexpected argument: ${key}`);
+    }
 
     for (const a of entry.args) {
       const rawValue = raw[a.name];

@@ -1,0 +1,19 @@
+{
+  "_note": "Out-of-scope shape pin. Out of jurisdiction means UNCHANGED, not still named the same.",
+  "check.run": {
+    "args": "68fbc7d6a6337299",
+    "handler": "69b06d4db19ecc4d"
+  },
+  "verify.file_exists": {
+    "args": "3eec579960e15067",
+    "handler": "73f6922e02fc5d50"
+  },
+  "verify.sha256": {
+    "args": "3eec579960e15067",
+    "handler": "b56a35f915c23e2b"
+  },
+  "verify.count_matches": {
+    "args": "7af5f51c618726bb",
+    "handler": "1f18f7fb91040f3f"
+  }
+}

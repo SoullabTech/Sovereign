@@ -1,0 +1,801 @@
+{
+  "run": "JOP-04 RB RED-before-GREEN calibration (amended — RB-CAL-2 added)",
+  "instrument_lineage": [
+    "0b9aaec4",
+    "1ed81732"
+  ],
+  "cal2_specimen": "git.rev_parse",
+  "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+  "subject_sha_short": "e1c6f527",
+  "subject_role": "FROZEN_BASELINE",
+  "instrument_sha": "795a0270",
+  "layer_b_capability": "git.rev_parse",
+  "expectation_profile": "BASELINE MATRIX (immutable)",
+  "calibration": "SUCCESS",
+  "rb_acceptance_pass": false,
+  "non_discharging": [
+    "RB-F5",
+    "RB-F6",
+    "RB-F7",
+    "RB-CAL-2b",
+    "RB-CAL-3b",
+    "RB-CAL-3c",
+    "RB-CAL-3d",
+    "RB-CAL-4a",
+    "RB-CAL-4b",
+    "RB-CAL-4c",
+    "RB-CAL-4d",
+    "RB-CAL-4e"
+  ],
+  "mismatches": 0,
+  "stop": null,
+  "ipc_structural_tripwire": {
+    "readable": true,
+    "submit_task_handler_present": true,
+    "c0_branch_consumes_lane": true,
+    "calls_run_capability": true,
+    "evidence_class": "STRUCTURAL",
+    "discharges": false,
+    "note": "the IPC hop is NOT exercised (no Electron host). This records the consuming branch only and discharges nothing."
+  },
+  "real_ipc_host_witness": {
+    "id": "RB-IPC-WITNESS",
+    "observed": "HOST_WITNESS_UNAVAILABLE",
+    "required_path": [
+      "renderer/request → ipcMain('jarvis:submit-task')",
+      "route()",
+      "C0 branch / successor",
+      "execution decision boundary",
+      "runCapability()"
+    ],
+    "capability_policy": "existing harmless registered read capability ONLY — ⛔ no effect-bearing capability, ever",
+    "electron_declared_in_subject": true,
+    "substitution_policy": "⛔ the simulated route()+runCapability() composition MUST NOT be substituted; it is exactly what cannot discharge RB-F3/RB-F6",
+    "consequence": "RB-6B cannot close GREEN until a founder-run host witness captures both pre- and post-repair semantics",
+    "discharges": false,
+    "_unused": false
+  },
+  "symbol_for_canary": {
+    "readable": false,
+    "discharges": false
+  },
+  "router_self_mint_tripwire": {
+    "id": "RB-TRIPWIRE-ROUTER-SELF-MINT",
+    "readable": true,
+    "router_calls_producer": false,
+    "router_binds_producer_locally": false,
+    "pure_re_export": false,
+    "scanned": "comment-stripped source",
+    "evidence_class": "STRUCTURAL (supplementary; ⛔ discharges nothing)",
+    "law": "the router may make the producer AVAILABLE to the trusted host; it may never mint from facts it derives itself — that would repair the lineage fracture while reintroducing RB-6A's original constitutional defect",
+    "discharges": false
+  },
+  "rb6b_target_matrix": {
+    "RB-F1": "GREEN",
+    "RB-F2": "GREEN",
+    "RB-F3": "GREEN",
+    "RB-F4": "RED",
+    "RB-F5": "nondischarging until a legitimate specimen exists",
+    "RB-F6": "GREEN",
+    "RB-F7": "N/A",
+    "RB-F8": "GREEN",
+    "RB-CAL-2a": "GREEN",
+    "RB-CAL-2b": "GREEN",
+    "RB-CAL-3a": "GREEN",
+    "RB-CAL-3b": "GREEN",
+    "RB-CAL-3c": "GREEN",
+    "RB-CAL-3d": "GREEN",
+    "caller-forged execution authority": "REFUSED / no execution",
+    "host-minted execution decision": "execution possible"
+  },
+  "records": [
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "falsifier": "RB-F1",
+      "statement": "Registration is not execution. Registration alone cannot produce an executable invocation.",
+      "expected_state": "RED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "REACHED",
+        "evidence": {
+          "capability_registered": true,
+          "registration_alone_path_exercised": true,
+          "route_decision": {
+            "lane": "C0",
+            "status": "routed"
+          }
+        },
+        "provenance": "route() called with an ordinary task carrying only a registered capability name; nothing else supplied"
+      },
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F1].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "capability": "git.rev_parse",
+        "eligibility_state_supplied": null,
+        "executed": true,
+        "stdout_present": true
+      },
+      "note": "registration alone yielded an executed invocation; no eligibility state was supplied or required"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "falsifier": "RB-F2",
+      "statement": "Registry membership is not a lane grant. name ∈ CAPABILITIES cannot by itself confer C0.",
+      "expected_state": "RED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "REACHED",
+        "evidence": {
+          "both_tasks_presented_to_real_router": true,
+          "routing_judgment_observed": {
+            "a": "routed",
+            "b": "routed"
+          }
+        },
+        "provenance": "router.route() invoked directly on the subject module for both arms"
+      },
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F2].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "task_a": {
+          "capability": "git.rev_parse",
+          "registered": true,
+          "lane": "C0",
+          "reason": "Deterministic capability 'git.rev_parse' is registered; no model required."
+        },
+        "task_b": {
+          "capability": "jop04.definitely_not_registered_xyz999",
+          "registered": false,
+          "lane": "C3",
+          "reason": "No deterministic capability matched and task is not declared bounded-for-local; requires frontier-model reasoning."
+        },
+        "sole_differentiator": "registry membership"
+      },
+      "note": "membership is the sole causal differentiator of the C0 lane grant"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "falsifier": "RB-F3",
+      "statement": "Lane selection is not authority. Placement cannot satisfy authorization requirements.",
+      "expected_state": "RED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "REACHED",
+        "evidence": {
+          "requirement": "a valid executable placement (C0) reached through the subject production composition",
+          "witness": {
+            "lane": "C0",
+            "status": "routed",
+            "reason": "Deterministic capability 'git.rev_parse' is registered; no model required."
+          },
+          "eligibility_basis": null,
+          "fabricated": false
+        },
+        "provenance": "route() with an ordinary task — subject grants placement without a separate condition"
+      },
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F3].run()",
+      "layer": "B (route→runCapability composition; IPC hop NOT exercised)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "lane": "C0",
+        "authority_supplied": {
+          "packet": null,
+          "gate": null,
+          "permission_envelope": null,
+          "actor": null,
+          "execution_authority": null
+        },
+        "executed": true,
+        "error": null
+      },
+      "note": "a valid lane was reached and execution occurred with zero invocation authority"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "falsifier": "RB-F4",
+      "statement": "Missing effect contract is not read-only. Absence of classification cannot inherit safety.",
+      "expected_state": "RED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "REACHED",
+        "evidence": {
+          "probe_capability": "git.rev_parse",
+          "probe_has_effect_declaration": false,
+          "registered_total": 15,
+          "with_effect_declaration": 0,
+          "without_effect_declaration": 15,
+          "route_witness": {
+            "lane": "C0",
+            "status": "routed"
+          },
+          "eligibility_basis": null
+        },
+        "provenance": "route() with an ordinary task — subject grants placement without a separate condition"
+      },
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F4].run()",
+      "layer": "B (route→runCapability composition; IPC hop NOT exercised)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "effect_declaration_present": false,
+        "otherwise_eligible": true,
+        "executed": true,
+        "error": null,
+        "question": "did absence of an effect contract prevent execution?",
+        "answer": "no"
+      },
+      "note": "an otherwise-eligible invocation executed with NO effect declaration — absence was accepted as sufficient"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "falsifier": "RB-F5",
+      "statement": "Caller/packet cannot elevate registration semantics.",
+      "expected_state": "UNINSTANTIATED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "precondition": {
+        "requirement": "NOT_REQUIRED",
+        "state": "N/A",
+        "evidence": {
+          "rationale": "frozen in the probe specification: no legitimate specimen exists, so there is no state to reach"
+        },
+        "provenance": "RB spec §5 — structurally frozen, deliberately uninstantiated"
+      },
+      "observed_state": "UNINSTANTIATED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F5].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "the repaired request shape does not exist; no legitimate specimen can be constructed",
+        "forbidden_substitute": "inventing a legacy RED by asserting a self-grant the census never showed"
+      },
+      "note": "structurally frozen, deliberately uninstantiated — ⛔ never discharges (FR-14)"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "falsifier": "RB-F6",
+      "statement": "Routing remains non-authoritative. The router may not possess authority-making power.",
+      "expected_state": "PRECONDITION-UNMET",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "requirement": "ARM A reaches a valid routing result AND ARM B reaches a non-routable/refused state, for the SAME registered capability",
+          "witness": {
+            "arm_a": {
+              "lane": "C0",
+              "status": "routed"
+            },
+            "arm_b": {
+              "lane": "C0",
+              "status": "routed"
+            }
+          },
+          "arm_a_reached": true,
+          "arm_b_reached": false,
+          "capability_identity_constant": true,
+          "fabricated": false
+        },
+        "provenance": "route() with an ordinary task — subject grants placement without a separate condition | arm B: no producer exists — no way to withhold routing for a registered capability"
+      },
+      "observed_state": "PRECONDITION-UNMET",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F6].run()",
+      "layer": "B (route→runCapability composition; IPC hop NOT exercised)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "arm B could not reach a non-routable state for a registered capability"
+      },
+      "note": "⛔ PRECONDITION-UNMET — both arms are required, on one capability identity"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "falsifier": "RB-F7",
+      "statement": "Existing read capability remains semantically read (complements Effect Substrate F12, content inline in RB-F7).",
+      "expected_state": "N/A",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "precondition": {
+        "requirement": "NOT_REQUIRED",
+        "state": "N/A",
+        "evidence": {
+          "rationale": "frozen in the probe specification: the obligation does not yet apply"
+        },
+        "provenance": "RB spec §5 — not applicable until re-expression exists"
+      },
+      "observed_state": "N/A",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F7].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "requires re-expression through the new registration model, which does not exist"
+      },
+      "note": "not applicable at this baseline — ⛔ never discharges"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "falsifier": "RB-F8",
+      "statement": "Unregistered remains impossible.",
+      "expected_state": "GREEN",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "REACHED",
+        "evidence": {
+          "unknown_name_presented_to_router": true,
+          "unknown_name_presented_to_seam": true,
+          "router_witness": {
+            "lane": "C3",
+            "status": "routed"
+          },
+          "seam_witness": "Unknown capability: jop04.definitely_not_registered_xyz999"
+        },
+        "provenance": "unregistered name passed to the subject router AND to runCapability directly"
+      },
+      "observed_state": "GREEN",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F8].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "DISCHARGED",
+      "evidence": {
+        "capability": "jop04.definitely_not_registered_xyz999",
+        "routed_lane": "C3",
+        "routed_to_executable_placement": false,
+        "seam_refused": true,
+        "seam_error": "Unknown capability: jop04.definitely_not_registered_xyz999",
+        "chain_executed": false
+      },
+      "note": "unregistered name reached neither executable placement nor the handler seam"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-2a",
+      "statement": "registered ∧ ¬routable is reachable",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "REACHED",
+        "evidence": {
+          "registered_capability_exercised_through_production_routing_entry": true,
+          "arms_presented": 5
+        },
+        "provenance": "every arm is an ordinary task object passed to the subject router.route(); no harness-internal state"
+      },
+      "expected_state": "RED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal2.mjs → runCal2()",
+      "layer": "A (route() only — no execution)",
+      "layer_b_capability": null,
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "capability": "git.rev_parse",
+        "capability_identity_constant": true,
+        "eligibility_producer_present": false,
+        "arms": [
+          {
+            "arm": "bare (no routing condition)",
+            "lane": "C0",
+            "status": "routed",
+            "executable_placement": true
+          },
+          {
+            "arm": "bounded_for_local:true",
+            "lane": "C0",
+            "status": "routed",
+            "executable_placement": true
+          },
+          {
+            "arm": "oversized input_chars",
+            "lane": "C0",
+            "status": "routed",
+            "executable_placement": true
+          },
+          {
+            "arm": "caller asserts routing_eligibility:false",
+            "lane": "C0",
+            "status": "routed",
+            "executable_placement": true
+          },
+          {
+            "arm": "FORGED unbranded { satisfied: true }",
+            "lane": "C0",
+            "status": "routed",
+            "executable_placement": true,
+            "forgery": true
+          }
+        ],
+        "arms_executable": 5,
+        "arms_non_routable": 0,
+        "reachable": false
+      },
+      "note": "no task shape reachable through route() made a registered capability non-routable — registration alone still determines placement",
+      "precondition_enforced": "RED"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-2b",
+      "statement": "no-auto-manufacture — routing truth is not registry membership renamed",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "registered_and_routable_reached": true,
+          "registered_and_non_routable_reached": false
+        },
+        "provenance": "no task shape produced a non-routable state for a registered capability"
+      },
+      "expected_state": "PRECONDITION-UNMET",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "PRECONDITION-UNMET",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal2.mjs → runCal2()",
+      "layer": "A (route() only — no execution)",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "no non-routable witness exists, so the anti-tautology check has nothing to evaluate"
+      },
+      "note": "⛔ PRECONDITION-UNMET — never discharges; it did not run, and did not pass",
+      "precondition_enforced": "PRECONDITION-UNMET"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-3a",
+      "statement": "a legitimate routing result is not by itself sufficient to cause execution",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "REACHED",
+        "evidence": {
+          "capability": "git.rev_parse",
+          "route_witness": {
+            "lane": "C0",
+            "status": "routed"
+          },
+          "independent_host_execution_decision_supplied": null
+        },
+        "provenance": "route() with an ordinary task — subject grants placement without a separate condition"
+      },
+      "expected_state": "RED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal3.mjs → runCal3()",
+      "layer": "A/B (subject composition; ⛔ NOT the real IPC boundary)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "executed": true,
+        "error": null,
+        "execution_decision_boundary": {
+          "readable": true,
+          "c0_branch_found": true,
+          "statements_between_lane_test_and_seam": 3,
+          "any_decision_gate_between": false,
+          "evidence_class": "STRUCTURAL (supplementary; discharges nothing)"
+        }
+      },
+      "note": "a legitimately routed invocation executed with NO independent host execution decision"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-3b",
+      "statement": "same capability, same route — only the independent host execution decision differs",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "arm_a_reached": true,
+          "arm_a_result": "EXECUTED (defect)",
+          "arm_b_reached": false,
+          "arm_b_reason": "no host-minted execution decision mechanism exists in the subject"
+        },
+        "provenance": "ARM A observed through the subject composition; ARM B has no mechanism to observe"
+      },
+      "expected_state": "UNINSTANTIATED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "UNINSTANTIATED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal3.mjs → runCal3()",
+      "layer": "A/B (subject composition; ⛔ NOT the real IPC boundary)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "host_origin_contract": {
+          "disqualified": [
+            "a field on the submitted task (e.g. task.execution_authorized)",
+            "a nested object supplied through jarvis:submit-task",
+            "a branded object created in the renderer",
+            "a caller-supplied value merely rewrapped by main.js — mintPermit(task.callerSuppliedDecision)",
+            "any value whose truth is a function of the routing result alone"
+          ],
+          "required": "the decision depends on at least one fact the router did not produce and the caller could not supply"
+        }
+      },
+      "note": "⛔ UNINSTANTIATED — ARM B has no mechanism yet; ⛔ it was NOT fabricated to make the probe runnable"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-3c",
+      "statement": "caller-controlled data resembling execution authority cannot cause a routed invocation to execute",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "reason": "the repaired host-side authority form does not exist, so its closest caller-controlled counterfeit cannot be constructed"
+        },
+        "provenance": "frozen in the probe specification"
+      },
+      "expected_state": "UNINSTANTIATED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "UNINSTANTIATED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal3.mjs → runCal3()",
+      "layer": "A/B (subject composition; ⛔ NOT the real IPC boundary)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "forbidden_shortcut": "⛔ spraying arbitrary fields (approved:true, authorized:true) and calling that proof",
+        "when_instantiable": "once a real host-side authority form exists, the probe must attempt the CLOSEST caller-controlled counterfeit of THAT form",
+        "note": "this will likely become the first concrete specimen for RB-F5, which has remained abstract"
+      },
+      "note": "⛔ UNINSTANTIATED — a counterfeit must mirror a real shape; there is no shape yet"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-3d",
+      "statement": "the host execution decision may not be auto-minted from the routing result",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "reason": "no host execution decision exists, so it cannot yet be shown to depend on a fact independent of the route"
+        },
+        "provenance": "frozen in the probe specification"
+      },
+      "expected_state": "UNINSTANTIATED",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "UNINSTANTIATED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal3.mjs → runCal3()",
+      "layer": "A/B (subject composition; ⛔ NOT the real IPC boundary)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "counterfeit": "if (route.lane === 'C0') { decision = mintHostDecision() }",
+        "why_worthless": "⭐ technically host-minted and architecturally worthless — the truth of the decision is still a function of the route",
+        "required_when_instantiable": "withholding the decision must be REACHABLE while the same valid route is produced"
+      },
+      "note": "⛔ UNINSTANTIATED — host-minted is necessary and not sufficient; independence from the route is the real test"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-4a",
+      "statement": "legitimate CROSS-LOADER object is recognized",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "identity_bearing_module_present": false
+        },
+        "provenance": "no routing-eligibility producer exists in this subject"
+      },
+      "expected_state": "PRECONDITION-UNMET",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "PRECONDITION-UNMET",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal4.mjs → runCal4()",
+      "layer": "A (PRODUCTION-SHAPED module loading)",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "there is no identity-bearing module whose continuity could fracture"
+      },
+      "note": "⛔ PRECONDITION-UNMET — no identity lineage exists to test"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-4b",
+      "statement": "same-lineage positive control",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "identity_bearing_module_present": false
+        },
+        "provenance": "no routing-eligibility producer exists in this subject"
+      },
+      "expected_state": "PRECONDITION-UNMET",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "PRECONDITION-UNMET",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal4.mjs → runCal4()",
+      "layer": "A (PRODUCTION-SHAPED module loading)",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "there is no identity-bearing module whose continuity could fracture"
+      },
+      "note": "⛔ PRECONDITION-UNMET — no identity lineage exists to test"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-4c",
+      "statement": "forgery negative control",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "identity_bearing_module_present": false
+        },
+        "provenance": "no routing-eligibility producer exists in this subject"
+      },
+      "expected_state": "PRECONDITION-UNMET",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "PRECONDITION-UNMET",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal4.mjs → runCal4()",
+      "layer": "A (PRODUCTION-SHAPED module loading)",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "there is no identity-bearing module whose continuity could fracture"
+      },
+      "note": "⛔ PRECONDITION-UNMET — no identity lineage exists to test"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-4d",
+      "statement": "reload stability — N fresh authoritative router graphs all accept",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "identity_bearing_module_present": false
+        },
+        "provenance": "no routing-eligibility producer exists in this subject"
+      },
+      "expected_state": "PRECONDITION-UNMET",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "PRECONDITION-UNMET",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal4.mjs → runCal4()",
+      "layer": "A (PRODUCTION-SHAPED module loading)",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "there is no identity-bearing module whose continuity could fracture"
+      },
+      "note": "⛔ PRECONDITION-UNMET — no identity lineage exists to test"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-4e",
+      "statement": "NON-AUTHORITATIVE LINEAGE control",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "identity_bearing_module_present": false
+        },
+        "provenance": "no routing-eligibility producer exists in this subject"
+      },
+      "expected_state": "PRECONDITION-UNMET",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "PRECONDITION-UNMET",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal4.mjs → runCal4()",
+      "layer": "A (PRODUCTION-SHAPED module loading)",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "there is no identity-bearing module whose continuity could fracture"
+      },
+      "note": "⛔ PRECONDITION-UNMET — no identity lineage exists to test"
+    }
+  ]
+}
