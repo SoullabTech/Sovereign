@@ -8,7 +8,12 @@ TYPE        CONSTITUTIONAL SEMANTICS — ⛔ not component placement, ⛔ not im
 STATE       DRAFTED · ⛔ NOT RATIFIED
 ```
 
-> ⚠️⚠️ **AMENDED — read `P2-00_AMENDMENT-1_EXISTS_AND_CONSEQUENTIAL.md` with this file.**
+> ⚠️⚠️ **AMENDED TWICE — read `P2-00_AMENDMENT-1_EXISTS_AND_CONSEQUENTIAL.md` AND
+> `P2-00_AMENDMENT-2_REFERENTIAL_DEFINITIONS.md` with this file.** Amendment 2 defines the six
+> referents the predicates depend on, removes `TURN` as a constitutional primitive, and records
+> the founder decisions on FD-13 and FD-15.
+>
+> ⚠️ **AMENDED — read `P2-00_AMENDMENT-1_EXISTS_AND_CONSEQUENTIAL.md` with this file.**
 > Founder review 2026-09-14 withheld ratification and authorized one bounded amendment: the
 > primitive set was missing two terms the ruling itself depends on. Amendment 1 adds **`EXISTS`**
 > (KIND 5, ontological standing) and **`CONSEQUENTIAL`** (KIND 6, scope predicate), declares
