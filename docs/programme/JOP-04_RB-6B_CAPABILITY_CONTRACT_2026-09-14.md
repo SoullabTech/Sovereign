@@ -2,6 +2,8 @@
 
 **Date:** 2026-09-14 · **Mode:** ⛔ **CONTRACT ONLY — NO IMPLEMENTATION, NO HANDLER REPAIR**
 **Status:** CENSUS CLOSED · CONTRACT DISCOVERY COMPLETE · **RB-6B IMPLEMENTATION BLOCKED**
+**Lane status:** ⭐ **KEEP OPEN.** ⛔ **D4 closed ONE DECISION, not the programme.** Five semantic
+rulings remain owed before implementation can mean anything safely (§4).
 
 ⛔ Where the code does not determine an answer, this contract records **OPEN** and routes it to §4.
 **Inventing an answer here would convert contract into design.**
@@ -352,6 +354,7 @@ D4                          ⭐ RATIFIED — MODEL B · omission is caller-autho
 DERIVED CONSEQUENCE         H1 re-classified: unrecorded host contribution, not a
                             canonicalization bug — smaller, safer repair shape
 REMAINING ORDER             D1 → D5 → D6 → D2 → D3
+LANE                        ⭐ OPEN — five rulings owed · D4 ≠ programme closure
 
 F-B EVIDENCE                absence of pinning PROVEN from source
                             effective grep.patternType ⛔ UNOBSERVED
