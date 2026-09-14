@@ -1,6 +1,6 @@
 # DRIVER-01 · PHASE-A-REPRO-01 · R1 — AUTOMATED-COLD-LAUNCH N=30 on the source-condition reproduction of `4596b9bdb`
 
-**Status: EXECUTED · VERIFIED HERE · READ AGAINST THE PREDECLARED TABLE · awaiting founder attestation.**
+**Status: CLOSED · VERIFIED · ATTESTED (founder, 2026-09-14, §7) · "ABOUT THE SAME".**
 Stratum `AUTOMATED-COLD-LAUNCH` · Mode L · VP ON · `--subject phase-a` · one lawful batch, no reinstall inside.
 Subject **R1** (repro plan §12): source SHA `4596b9bdb` · MAC-COMPILE-06 pins 7/7 · signed dylib UUID `64EEC026-5F56-3706-BD2A-C5A6A20FC08B` · dylib SHA-256 `283dd24e…` · 7-file manifest `09e286b6…`. **Historical equivalence to the Phase-A binary `11A057AA-…` is NOT claimed** (ruling, repro plan §12). Mechanism claim: NONE.
 
@@ -56,3 +56,14 @@ Row **"about the same"**: R1's gen-1 take rate (13/30) sits inside the P5-B0 ban
 ## §6 Standing
 
 R1 EXECUTED · VERIFIED · READ ("about the same") · attestation OWED · B2 HOLD · E1–E4 HELD · VoiceKernel + harness FROZEN (`24a6fcfa1` remains the pinned P5-B0 subject; R1 is a separate installed product) · mechanism claim NONE · no threshold moved · no code. **The device now holds R1, not P5-B0** — any further P5-B0 stage requires a fresh `k00-reinstall.sh` with `K00_EXPECT_UUID=CC0D3604-7902-373E-A2BB-2C093D9BF804`.
+
+## §7 Founder attestation (2026-09-14, verbatim) — PHASE-A-REPRO-01 CLOSED
+
+> Founder attestation — 2026-09-14: I witnessed PHASE-A-REPRO-01 R1 as recorded. On the reproduced `4596b9bdb` source condition, the lawful automated cold-launch batch produced 13 generation-1 listens in 30 runs, with 5 failures recovering, 5 degrading, and 7 still recovering at export. All 30 runs were valid R1 samples under the recorded custody, and the independent verification confirmed the Phase-A 14-step trace, VP ON, cold launch, hashes, and classifications. I attest that this record fairly represents what occurred. R1 does not materially separate from the P5-B0 automated baseline on generation-1 take rate; the original 5/5 MANUAL-COLD Phase-A result therefore loses substantial explanatory weight. The pre-VP format read is not established as causal or as a probabilistic influence, the historical Phase-A binary remains unavailable, and no mechanism claim is made.
+
+**Ruling (founder, same message):** PHASE-A-REPRO-01 is CLOSED — it answered the question it was created to answer.
+
+**Device disposition (founder):** HOLD R1 in place. No P5-B0 reinstall merely to restore a preferred resting state; no authorized P5-B0 stage is waiting, so a reinstall would mutate the device without serving an active question. Any future P5-B0 experiment begins with a fresh custody-gated reinstall expecting `CC0D3604-7902-373E-A2BB-2C093D9BF804`. Until then the phone is left alone. `NEW VOICE RUNS: NONE AUTHORIZED · NEXT DEVICE ACT: NONE`.
+
+**Next investigation (founder):** the hidden-runtime-state question is pursued, but as a **bounded read-only hidden-state census inside KERNEL-00** — not another PRE-WITNESS repair, not another architecture phase, not another N=30. Question: *what state exists before or during generation-1 startup that differs between a take and a miss, without changing the startup itself?* Governing constraint (observer-effect firewall, from P5-F1): FIRST externally observable / already-recorded state · SECOND existing trace fields · LAST new in-process reads; any proposed read that could initialize or touch AVAudio state is INTRUSIVE and never silently admitted as instrumentation. Four buckets (audio-session · engine/IO · OS lifecycle · timing/state races); classification first, instrumentation later; five questions per candidate (available before the outcome? · distinguishes success from failure? · observable without mutating startup? · already present in existing evidence? · what would falsify its relevance?). Anything visible only after the engine has failed is diagnostic, not hidden antecedent state. Held: B2 · E1–E4 · VoiceKernel repair · harness repair · thresholds · mechanism claim NONE; no call reordering, no same-engine restart, no new recovery behaviour, no "reliability" work.
+
