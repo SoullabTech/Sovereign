@@ -9,10 +9,19 @@ The law follows FR-14's discipline (JARVIS-CIRCLES-01): *PASS = 0 failed AND eve
 ---
 
 **Amendment note (founder act, 2026-09-14 — trigger only).** §1 and §5 previously admitted the lower Voice I/O path only after a K00-06 or K00-11 failure. KERNEL-00 / VPIO-01 was opened on 2026-09-14 from a recorded, persistent K00-04 entry failure on the higher-level subject (four automated cold-launch strata, census pass 1 and pass 2, SEAM-01 closed with no controllable mechanism). The trigger is therefore amended to **K00-04, K00-06 or K00-11**, narrowly: a failure must first be recorded on the higher-level subject; the lower path is a new subject and a new witness, never a retry or a silent fallback; a fallback inside one build remains forbidden. Unchanged by this act: obligations K00-01…18, the six ratified thresholds, the pass rule, the authority model. This is not a general licence to move lower whenever convenient.
+>
+> ⚠️ **Superseded wording, kept here for provenance and NOT in §5:** *"K00-11's
+> Voice-I/O fallback: if the `AVAudioEngine` voice-processing path cannot pass
+> K00-06 or K00-11, the run is recorded as FAIL on that path and a second run on
+> the lower path is a **new** witness, not a retry."* ⛔ It is quoted in this
+> note rather than beside the active bullet because an operational bullet that
+> carries both the current law and a contradictory superseded one asks every
+> future reader to tell them apart, every time it is read. History belongs in
+> the amendment note; §5 states the law that is in force.
 
 ## 1. Scope
 
-**In the build:** `VoiceKernel` (actor) · `AudioSessionAuthority` · a duplex `AVAudioEngine` graph with voice processing (or, after a recorded K00-04, K00-06 or K00-11 failure under the higher-level subject, a separately identified lower Voice I/O subject — research §20.1; **trigger amended by founder act 2026-09-14, see the amendment note below**) · `HealthSupervisor` · `StateProjection` · the flight recorder · a test harness page (`/voice-kernel-test`, native) with: Start · Stop · Play known PCM · Cancel · inject faults · show the three-dimension state and generation.
+**In the build:** `VoiceKernel` (actor) · `AudioSessionAuthority` · a duplex `AVAudioEngine` graph with voice processing (or, after a recorded K00-04, K00-06 or K00-11 failure under the higher-level subject, a separately identified lower Voice I/O subject — research §20.1; **trigger amended by founder act 2026-09-14, see the amendment note above**) · `HealthSupervisor` · `StateProjection` · the flight recorder · a test harness page (`/voice-kernel-test`, native) with: Start · Stop · Play known PCM · Cancel · inject faults · show the three-dimension state and generation.
 
 **Not in the build (each is a falsifier if present):** any STT (`SFSpeechRecognizer`, `SpeechAnalyzer`, whisper, …) · any TTS model · any LLM or call to canonical MAIA · WebKit `SpeechRecognition`, `getUserMedia`, Web Audio or `<audio>` on the harness page · `@capacitor-community/speech-recognition` · `AudioSessionManager.swift` / `VoiceController.swift` · any restart driver from the legacy runtime · any network egress.
 
@@ -75,7 +84,7 @@ STT/TTS/transport faults (research §14.6) belong to KERNEL-01 and BENCH-01; the
 
 - **PASS** = every K00 obligation present in the run's checklist and discharged by PASS; 0 FAIL; 0 WARN; 0 SKIP; thresholds as ratified; journal attached.
 - Any FAIL is recorded with its journal excerpt and adjudicated on what failed. *Repair versus redesign is decided then, never pre-chosen* (the CIRCLES rule applies here too).
-- Lower Voice I/O path — **AMENDED (founder act, 2026-09-14; trigger only)**: *the lower Voice Processing I/O path may be opened as a new KERNEL-00 subject if the higher-level `AVAudioEngine` path cannot pass K00-04, K00-06, or K00-11. A failure under one of those obligations must first be recorded on the higher-level subject; the lower path is a new witness, never a retry or silent fallback.* The run on the higher-level path is recorded as FAIL on that path; the lower-path run carries its own build identity and witness lineage. *(Superseded wording, kept for the record: "K00-11's Voice-I/O fallback: if the `AVAudioEngine` voice-processing path cannot pass K00-06 or K00-11, the run is recorded as FAIL on that path and a second run on the lower path is a **new** witness, not a retry.")*
+- Lower Voice I/O path — **AMENDED (founder act, 2026-09-14; trigger only)**: *the lower Voice Processing I/O path may be opened as a new KERNEL-00 subject if the higher-level `AVAudioEngine` path cannot pass K00-04, K00-06, or K00-11. A failure under one of those obligations must first be recorded on the higher-level subject; the lower path is a new witness, never a retry or silent fallback.* The run on the higher-level path is recorded as FAIL on that path; the lower-path run carries its own build identity and witness lineage.
 - The record is `docs/programme/VOICE-2026/KERNEL-00_WITNESS_<date>.md`: build identity (native SHA, Xcode, iOS version, device), the checklist, thresholds used, journal, founder attestation. Deployed ≠ demonstrated; a kernel verified only by its author's tests is a claim about code, not about the organism.
 
 ## 6. What KERNEL-00 acceptance does not license
