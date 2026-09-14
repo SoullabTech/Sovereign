@@ -329,17 +329,85 @@ P2    → predeclare a new away-condition
 ### P1 recovery attempts — status
 
 ```text
-FOUNDER   prior-context trail checked. Contains Writer's Studio and SHOW CHANGE references;
-          ⛔ does NOT contain the exact away-condition. Cannot supply P1 without inventing it.
-
-JARVIS    this session's own transcript searched (53 lines carry the classification).
-          ⛔ EXHAUSTED — the EARLIEST mention already reads "Whole / first is ALREADY RECORDED
-          as SECTION-ADDRESSED — FAIL". ⭐ The cell entered this session as an INHERITED SEAL;
-          the originating gesture was never in this conversation to begin with.
+FOUNDER prior-context trail    ⛔ no historical ACT REPORT recovered
+JARVIS  current-session record ⛔ INHERITED SEAL ONLY — 53 lines carry the classification and
+                                  the EARLIEST already reads "Whole / first is ALREADY
+                                  RECORDED"; the originating gesture was never in this
+                                  conversation to begin with
+ORIGINATING transcript         ⚠️ PARTIAL RECOVERY — see §3c
+SCREENSHOT sequence            ⛔ shows the Whole proposal surface and Section 23 context,
+                                  ⛔ but does NOT preserve the PRECEDING SCROLL GESTURE
+FOUNDER recollection           available if needed
 ```
 
-⛔ **Remaining P1 sources are outside both:** the originating session's own transcript, a
-screenshot sequence from that walk, or founder recollection stated as such.
+---
+
+## 3c · ⚠️ P1 PARTIAL RECOVERY — protocol recovered, performance unproved
+
+The originating walk **was found** in the prior-conversation trail (morning, Sep 14). It
+predeclared the `Whole / first` act as:
+
+```text
+Whole / first
+→ scroll well away from the change
+→ invoke SHOW CHANGE
+→ observe where it lands
+```
+
+and that cell is the one carried forward as `SECTION-ADDRESSED — FAIL`.
+
+```text
+RECOVERED
+  ✅ a CONTEMPORANEOUS PREDECLARED PROCEDURE: "scroll well away" → SHOW CHANGE → classify
+  ✅ it immediately precedes the lineage of the sealed Whole / first FAIL
+
+NOT YET RECOVERED
+  ⛔ direct evidence that the historical observation was ACTUALLY PERFORMED under that
+     exact away-condition
+
+EVIDENCE CLASS
+  CONTEMPORANEOUS PROTOCOL
+  ⛔ NOT YET CONTEMPORANEOUS ACT RECORD
+```
+
+⚠️ The prior-context trail also records that the founder could not personally run that walk, and
+that some runtime classifications came through relayed / screenshot evidence. ⛔ That is a reason
+for the distinction to be kept, not smoothed.
+
+```text
+BEFORE   away-condition ABSENT ENTIRELY
+NOW      away-condition RECOVERED AS PROTOCOL · historical performance UNPROVED
+```
+
+⭐ **The blocker narrowed. It did not disappear.**
+
+### ⭐⭐ THE SAME LAW, A THIRD TIME IN THIS LANE
+
+```text
+execution_authority = member_acceptance   structurally PERMITTED to cross
+                                          ⛔ ≠ a member PERFORMED the acceptance
+Sep-13 witness                            SYSTEM ACCEPTANCE RECORD REAL
+                                          ⛔ AUTHORIAL RATIFICATION UNRESOLVED
+⭐ HERE                                   the PRESCRIBED gesture
+                                          ⛔ ≠ the PERFORMED gesture
+```
+
+> **The specification of an act is not the occurrence of it.**
+
+⛔ Reading the recovered protocol as history would be exactly the move the P1 rule prohibits —
+*"this was the prescribed gesture"* silently becoming *"this is what happened."*
+
+### ⭐ RULING — do NOT spend O1 on this recovery alone. Two lawful endpoints remain:
+
+```text
+E1  Find the ACTION REPORT immediately following the predeclared protocol — a founder message,
+    or sufficiently sequenced visual evidence, establishing the protocol WAS FOLLOWED.
+    → P1 succeeds with CONTEMPORANEOUS provenance.
+
+E2  If that cannot be recovered, FOUNDER RECOLLECTION may bridge the final gap —
+    ⛔ but only AS `FOUNDER RECOLLECTION`, permanently attached to the recovered
+    contemporaneous protocol, ⛔ never promoted into a contemporaneous act record.
+```
 
 ---
 
@@ -354,8 +422,8 @@ O1     ✅ RATIFIED AS AMENDED · FROZEN
 O2     ⛔ unconstructible on present corpus
 O3     ⛔ frozen · unspent · unconstructible
 EDIT   ⛔ none
-P1     NEXT LAWFUL ACT — two sources exhausted (founder context · this transcript);
-       remaining: originating session transcript · screenshot sequence · recollection
+P1     ⚠️ PARTIAL — protocol recovered ("scroll well away"), PERFORMANCE UNPROVED (§3c)
+       remaining endpoints: E1 action report · E2 founder recollection (as such)
 P2     available ONLY as an explicit change of evidential object
 NEXT   ⛔ BLOCKED until P1 succeeds or is FORMALLY EXHAUSTED
 RUNTIME ⛔ UNTOUCHED — no reason to touch it until then
