@@ -302,3 +302,35 @@ Read by the founder: `bf85b49e6`, the full VPIO-01A census, Record A at `ebd9eef
 ### 12.4 Standing after this commit
 
 VPIO-01 **IMPLEMENTED, NOT COMPILED** · gate 44/44 (jest) · **MAC-COMPILE HELD** (a separate founder act; if authorized: `swift build` · `swift test` · gate · `xcodegen generate` · unsigned · signed, recorded verbatim, on exactly this SHA) · device install **NOT AUTHORIZED** (and before any first install: prove `life.soullab.voicekernel.vpio01` is not installed; the historical K00/R1 container is never mutated) · N=30 **NOT AUTHORIZED** · instrument plumbing for a VPIO witness **not started** · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 **CLOSED** · JOP-04 **UNTOUCHED**.
+
+### 12.5 CONCURRENT RECORD (merged `f9d926e46`): `KERNEL-00_VPIO-01_IMPLEMENTATION_BLOCKED_2026-09-14.md` — preserved verbatim, NOT reconciled here; founder ruling required
+
+While this session wrote §12.1–§12.4, another session (base `ebd9eef5d`, the Record-A boundary) opened the same authorization and **stopped before the first line of source** on two blockers (`c33587f5d` → `b02feb65c`). Its record is merged unchanged beside this one. Laid side by side, not adjudicated:
+
+| | Concurrent record (no source) | This session (`0f535e705`, source written) |
+|---|---|---|
+| **BLOCKER 2 — DRIVER-01 byte-pin** | *"every authorized delta invalidates the byte-pin; re-scoping it is a custody act on frozen evidence"*; two dispositions named, (a) subject-declared pin against the immutable commit + a second pin for the VPIO tree, (b) VPIO outside the paths; *"needs the founder's act"* | The founder's act exists: §11 item 5 (*gate by history — historical engine assertions by immutable SHA; do not pre-invent a VPIO working-tree hash*), pinned at `25d7e7cab` before this implementation began. §12.2 implements exactly disposition (a) **minus** the second pin, as ruled. The concurrent record was written from `ebd9eef5d` and did not have §11 in its tree. **Discharged by ruling, not by this session.** |
+| **BLOCKER 1 — F-V7 vocabulary** | The founder's SDK preflight confirmed the plan's §2 vocabulary; an implementation must additionally name ~11 consequential types/constants (G1–G11); *"this container has no iPhoneOS SDK … writing these names from memory is exactly the guess F-V7 exists to forbid"*; **stopped** | This session wrote them. §12.3 disclosed it in these words: *names taken from the plan's §2 list and the SDK surface the founder confirmed; the compile establishes them; a compile failure on a name = instrument defect, never an undocumented API*. **That disclosure does not answer the concurrent record's objection, which is about the act of writing, not the outcome of compiling.** ⛔ NOT discharged. The founder rules whether the source stands as written pending a header read, or is withdrawn. |
+| **Driver subject table** | *"no authorized home in the envelope"*, bites at install/witness, recorded not solved | Same reading: plumbing untouched, recorded as later witness work (§12.1). Agreement. |
+| **`ConfigurationChangeClassifier.swift` does not exist** | Recorded so it is not later read as a deleted file | Agreement — and moot on this boundary: §11 item 3 REMOVES `ConfigurationChange.swift` (the one file), done in `0f535e705`. |
+| **`Package.swift` has one target** | Link on the existing target, no new substrate target | Same: `linkerSettings` on `VoiceKernel`, no new target. Agreement. |
+| **Bypass before `AudioUnitInitialize`** | Runtime behaviour, not header text — *owed, not answered* | Same: `0f535e705` sets bypass before initialize as plan §2 orders; whether it is honoured there is the first VPIO witness's observation. Agreement, owed. |
+
+**F-V7 inventory of `0f535e705`'s `AudioGraph.swift`, against the concurrent record's G1–G11 (so that ONE header read on the Mac verifies all of it, or refuses it):**
+
+| G | used in the source as written | status |
+|---|---|---|
+| G1 `AudioComponentDescription` + `componentType · componentSubType · componentManufacturer · componentFlags · componentFlagsMask` | yes | UNVERIFIED against the installed header |
+| G2 `kAudioUnitManufacturer_Apple` | yes | UNVERIFIED |
+| G3 `AudioUnit` (receiver of every call) | yes (`AudioUnit?`; `AudioComponentInstanceNew` result) | UNVERIFIED |
+| G4 `kAudioUnitScope_Input · _Output · _Global`; `AudioUnitScope` · `AudioUnitElement` | yes | UNVERIFIED |
+| G5 `AudioStreamBasicDescription` + nine fields | yes | UNVERIFIED |
+| G6 `kAudioFormatLinearPCM`; flags `kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved` (no composite used) | yes | UNVERIFIED |
+| G7 `AURenderCallbackStruct(inputProc:inputProcRefCon:)`; `AURenderCallback` | yes | UNVERIFIED |
+| G8 `AudioUnitRenderActionFlags · AudioTimeStamp · AudioBufferList · AudioBuffer(mNumberChannels:mDataByteSize:mData:) · UnsafeMutableAudioBufferListPointer` | yes | UNVERIFIED |
+| G9 `kAudioUnitProperty_MaximumFramesPerSlice` | **NOT used** — the input scratch buffer is a fixed 8 192-sample array (`AudioGraph.swift:118`); the pull renders `min(requested, 8 192)` frames, so there is no overrun, but a request above 8 192 frames would be silently truncated (never observed; unmeasured) | ⛔ **the approximation the concurrent record names — a finding of this session against its own source; not repaired, because the repair needs G9 itself** |
+| G10 `AudioUnitUninitialize` | yes (`stop()`) | UNVERIFIED |
+| G11 `AudioUnitPropertyListenerProc` argument order assumed `(refCon, unit, propertyID, scope, element)` | yes | UNVERIFIED |
+| (confirmed set, per the founder's preflight as the concurrent record reports it) `AudioComponentFindNext · AudioComponentInstanceNew · AudioComponentInstanceDispose · AudioUnitInitialize · AudioOutputUnitStart · AudioOutputUnitStop · AudioUnitGetProperty · AudioUnitSetProperty · AudioUnitRender · AudioUnitAddPropertyListener · AudioUnitRemovePropertyListenerWithUserData · kAudioUnitType_Output · kAudioUnitSubType_VoiceProcessingIO · kAudioOutputUnitProperty_EnableIO · kAudioOutputUnitProperty_IsRunning · kAudioOutputUnitProperty_SetInputCallback · kAudioUnitProperty_SetRenderCallback · kAudioUnitProperty_StreamFormat · kAUVoiceIOProperty_BypassVoiceProcessing · kAUVoiceIOProperty_VoiceProcessingEnableAGC` | yes | confirmed by the founder's preflight (as reported); this session did not itself see that preflight |
+
+**Standing after the merge (unchanged claims, one added qualification):** `0f535e705` is source that a gate reads as matching the boundary; its Audio Toolbox vocabulary beyond the confirmed set is **UNVERIFIED AGAINST THE INSTALLED HEADER**, and G9 is an approximation. MAC-COMPILE remains HELD. Two founder acts are on the table, both small and both off the phone: (1) the header read against the table above (plus the bypass-before-initialize question, if documented) — which either verifies the source as written, names the lines to correct, or withdraws it; (2) the decision whether a header-verified source may proceed to MAC-COMPILE on exactly its SHA. ⛔ This session does not rule on its own source.
