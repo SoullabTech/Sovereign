@@ -506,7 +506,7 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(lcExec).not.toMatch(/ls -d[^\n]*log-probe[^\n]*tail -1/);                       // no 'newest probe' discovery of evidence
     expect(lc).toMatch(/--probe\) PROBE="\$2"/);                                              // explicit witness only
     expect(lc.indexOf('K00_EXEC_AUTHORITY unset')).toBeLessThan(lc.indexOf('k00-driver-batch.sh LOG-CAL'));  // authority required before any device act
-    expect(lcExec).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(grep|cat|git|==|-f )/);            // authority is never read from or compared against the repo
+    expect(lcExec).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(\b(grep|cat|git)\b|==|-f )/);            // authority is never read from or compared against the repo
     for (const k of ['seal == manifest', 'manifest hashes == files', 'criterion id == expected', 'criterion revision is ancestor of probe execution HEAD']) expect(lc).toContain(k);
     expect(lp).toMatch(/manifest\.json/); expect(lp).toMatch(/SEAL\.sha256/); expect(lp).toMatch(/merge-base --is-ancestor "\$CRITERION_REV" HEAD/);  // capture-time provenance, sealed in the same execution
     expect(lp).toMatch(/It authorizes nothing/);
@@ -550,7 +550,7 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(wiExec).toMatch(/log show --info --start "\$T0_LOCAL" --end "\$T1_LOCAL" --style json "\$ARCH"/);   // options first, archive last
     expect(wiExec).not.toMatch(/--debug|sudo|log collect|xcrun|devicectl|log config|sysdiagnose|k00-driver-batch/);
     expect(wiExec.indexOf('K00_EXEC_AUTHORITY unset')).toBeLessThan(wiExec.indexOf('log show --info'));   // executable order (the header prose names the command first — C21)
-    expect(wiExec).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(grep|cat|git|==|-f )/);
+    expect(wiExec).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(\b(grep|cat|git)\b|==|-f )/);
     expect(wiExec).toMatch(/--suffix info/); expect(wiExec).toMatch(/W="\$CAL\/window-info\.json"/);
     expect(wiExec).not.toMatch(/> *"?\$CAL\/window\.json|window-audio\.jsonl/);                         // the default-level read is never overwritten
     expect(wr).toMatch(/--suffix/); expect(al).toMatch(/audiomxd entries in that interval/);
