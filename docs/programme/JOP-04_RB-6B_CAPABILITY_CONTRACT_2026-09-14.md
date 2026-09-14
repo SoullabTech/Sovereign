@@ -206,7 +206,7 @@ of `symbol` is "a git grep pattern fragment," not "an identifier."** ⛔ §4 **D
 | Field | Role | Accepted language | Canonical representation | Validation invariant | Execution consumer | Omission meaningful? | Delegated? |
 |---|---|---|---|---|---|---|---|
 | `pattern` | GREP_PATTERN | ⭐ **POSIX BRE** — pinned by this contract; ambient config has **NO AUTHORITY** (**D5 RATIFIED**) | **REGISTRY_DEFINED** | required · string | `git grep … <pattern> .` | n/a | ⭐ **resolved — D5** |
-| `max_results` | LIMIT | integer | **OPEN — D3** | ⚠️ `n ≤ 200` **enforced at the boundary** | 🔴 **NONE — H3** | **OPEN — D3** | — |
+| `max_results` | LIMIT | integer `1…200` | ⭐ **GLOBAL returned-result cardinality** — prefix only, **no ranking authority** (**D3 RATIFIED**) | `n ≤ 200` enforced at the boundary | 🔴 **NONE — H3 DEFECT**: read, defaulted, re-validated, then **never reaches the command**. Witnessed: `max_results:1` → **34 records** | ⭐ **yes** — omission is caller-authored absence; `200` is `source=host_default` (D4 · D3.2 · D3-F7) | — |
 
 ⛔ **`max_results` currently carries an enforced invariant with no execution consumer.** The contract
 records the invariant as **real at the boundary and absent from the act** — it must not be written as
@@ -399,7 +399,15 @@ D5                          ⭐ RATIFIED — repo.grep.pattern = POSIX BRE, pinn
 D6                          ⭐ RATIFIED — repo.locate_symbol.symbol = LITERAL SYMBOL
                             caller has no regex authority · match policy is host-authored
                             ⛔ execution engine does not determine argument role
-REMAINING ORDER             D2 → D3        ⚠️ two rulings owed, not five
+D3                          ⭐ RATIFIED — B · HANDLER WRONG. max_results is a real GLOBAL limit
+                            on returned result records · prefix only · omission ≠ 200
+                            witnessed live: max_results:1 returned 34 records
+D2                          🔎 DISCOVERY CLOSED — the authoring bytes have 0 commits anywhere.
+                            ⚠️ A CONSTITUTIONAL RULING IS STILL OWED; it cannot be discovered.
+REMAINING ORDER             D2 (constitution) → F-D → F-E     ⚠️ no ruling owed on D1/D3/D5/D6
+⛔ IMPLEMENTATION GATE      BLOCKED past D2 as well, until F-D is ruled: a repair written while
+                            'symbol absent' still has two public semantics would decide F-D
+                            ACCIDENTALLY — the merge-to-canonical failure mode in miniature.
 LANE                        ⭐ OPEN — D4 ≠ programme closure
 
 F-B DISPOSED BY D5          ambient dialect forbidden; language is REGISTRY_DEFINED (POSIX BRE)
