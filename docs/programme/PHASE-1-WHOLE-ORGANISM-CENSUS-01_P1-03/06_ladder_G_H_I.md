@@ -668,3 +668,520 @@ BASIS               "onTranscript: (result: TranscriptResult) => … — labtool
 SOURCE RECORD       H_sensory_voice.md §2
 AUTHORITY STANDING  NONE LOCATED — register P3-H-18.
 ```
+
+---
+
+## DOMAIN I — MEMBER / PRACTITIONER
+
+⛔ **Restated only.** Domain I's discipline was *record only; open nothing*. ⛔ No exploitability
+assessed, no severity rated, no repair proposed, and ⛔ the lane that now owns the
+authorization/exposure question is neither cited nor awaited. Per Amendment 3 §1, a `DECIDES` beside
+an `AUTHORITY STANDING: NONE LOCATED` records **effect observed / authorization located NO**;
+⛔ it is **not** a finding of *unauthorized*.
+
+```text
+ROW                 P3-I-01
+NAMED OBJECT        GET /studio/fields/<memberId> + member_field_note_threads.
+                    can_be_shown_to_practitioner
+PARTICIPATION       EXISTS · PARTICIPATES · KNOWS · CONTRIBUTES · DECIDES
+BASIS               KNOWS — "app/studio/fields/[memberId]/page.tsx:79-85 runs SELECT id, name,
+                    username FROM members WHERE id = $1."
+                    CONTRIBUTES — "Name renders at :142,159,166,199"; "SURFACED :134-205".
+                    DECIDES — "SELECT … FROM member_field_note_threads WHERE member_id = $1 AND
+                    released_at IS NULL AND can_be_shown_to_practitioner = TRUE (:65-73)"; "SYSTEM
+                    AUTHORITY — released_at IS NULL (:68) silently excludes released threads".
+                    ⭐⭐ THE STRUCTURAL FINDING, verbatim: "The gate at :104-107 asks 'is the viewer
+                    an active practitioner?', never 'is this practitioner this member's
+                    practitioner?' … The consent column limits which threads, never which
+                    practitioner."
+                    MEMBER AUTHORITY — "the per-thread boolean can_be_shown_to_practitioner,
+                    DEFAULT false", withdrawal "ownership enforced inside the mutation … idempotent,
+                    ledgered".
+SOURCE RECORD       I_member_practitioner.md CAP-I-01; Q1 row 1; Q2 row 1; C-I-1, C-I-2
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND. The page header (:9-11) asserts
+                    'This is the consented facilitator view.' That is a source comment, not a ruled
+                    source. … 'consented' is an assertion the corpus does not back."
+INF-6               DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+```
+
+```text
+ROW                 P3-I-02
+NAMED OBJECT        GET /api/supervision/sessions · GET /api/supervision/transcript/list (+9 siblings)
+PARTICIPATION       EXISTS · PARTICIPATES · KNOWS · CONTRIBUTES
+BASIS               PARTICIPATES / CONTRIBUTES — "practitionerId and caseId read straight from
+                    searchParams (:22-23) → listSessions({practitionerId, caseId, limit, offset})
+                    (:26-31) → response."
+                    KNOWS — Q1 row 2: "supervision session metadata; clinical transcript segments
+                    (speaker, timing, text) — client speech captured in session".
+                    ⛔ DECIDES NOT ASSIGNED — the record establishes the opposite: "nothing can fail
+                    closed on identity, because identity is never established"; "⛔ NO HANDLER-LEVEL
+                    AUTHORIZATION. Neither file imports requireFounder, requirePractitioner,
+                    getCurrentPractitioner, requireMemberId, getCurrentSession or
+                    getMemberIdFromRequest. Grepped: zero matches in either route."
+                    MEMBER AUTHORITY — "⛔ NONE FOUND. … nothing on the path asks them anything."
+                    ⚠️ SCOPE HONESTY: "the remaining seven were not individually read; their status
+                    is UNKNOWN, not 'the same'."
+SOURCE RECORD       I_member_practitioner.md CAP-I-02; Q1 row 2; Q5; C-I-5
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND. P1-01 recorded 'Governance of
+                    the supervision stream — who may open it, on what consent, with what client
+                    knowledge' as UNLOCATED."
+INF-6               EFFECT established (CONTRIBUTES · disclosure of clinical transcript segments) ·
+                    HAS AUTHORITY not established · INF-6 prevents promotion
+```
+
+```text
+ROW                 P3-I-03
+NAMED OBJECT        GET /api/caseload/* (9 routes) — practitioner identity from the query string
+PARTICIPATION       EXISTS · PARTICIPATES · KNOWS · CONTRIBUTES · DECIDES
+BASIS               DECIDES — "memberId from searchParams (:36) → CaseStore.isPractitioner(memberId)
+                    (:45) → 403 if false (:46-51) → CaseStore.listCases(memberId, filters) +
+                    getCaseCounts(memberId) (:61-64)."
+                    ⭐⭐ verbatim: "The check is 'is the member named in the URL a practitioner', not
+                    'is the caller that member'." And: "⛔ No failure mode exists for 'caller is not
+                    the member named' — that question is never asked."
+                    KNOWS / CONTRIBUTES — Q1 row 3: "case list + counts, case memories, case notes,
+                    captures, patterns, consultations".
+                    ⚠️ "Production ACCESS_CONTROL_MODE is UNKNOWN."
+SOURCE RECORD       I_member_practitioner.md CAP-I-03; Q1 row 3; C-I-4
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND."
+INF-6               DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+```
+
+```text
+ROW                 P3-I-04
+NAMED OBJECT        POST /api/practitioners/create
+PARTICIPATION       EXISTS · PARTICIPATES · CONTRIBUTES (stored record) · DECIDES
+BASIS               DECIDES / CONTRIBUTES — "INSERT INTO practitioners (…) (:144) → UPDATE members
+                    SET is_practitioner = true … WHERE id = $1 (:161)."
+                    ⭐⭐ verbatim: "The handler performs no authentication and no authorization. …
+                    The memberId written is the one supplied in the body."
+                    ⭐ "the row created is exactly the row read by getCurrentPractitioner() … and by
+                    CAP-I-01's inline gate … This capability is upstream of CAP-I-01's only check."
+                    MEMBER AUTHORITY — "⛔ NONE FOUND. The member whose is_practitioner flips is not
+                    consulted, and need not be the caller."
+                    ⚠️ NOT TRACED: whether any client flow requires verify-passcode first is
+                    "UNKNOWN — the create route does not."
+SOURCE RECORD       I_member_practitioner.md CAP-I-04; Q1 row 6; Q2 last row; §5
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND"; §5: "⛔ Authority to create a
+                    practitioner. POST /api/practitioners/create has no gate and no located ruling."
+INF-6               DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+```
+
+```text
+ROW                 P3-I-05
+NAMED OBJECT        app/api/practitioner/clients/[clientId]/{messages,digest,prep,emergency,policy,
+                    spiralogic-report}/route.ts
+PARTICIPATION       EXISTS · PARTICIPATES · KNOWS · CONTRIBUTES · DECIDES
+BASIS               DECIDES — "AUTHORIZATION — requireMemberId() from lib/auth/session (digest:15,30
+                    · messages:15 · spiralogic-report:16,28)."
+                    KNOWS / CONTRIBUTES — Q1 row 4: "client→practitioner messages; message digest
+                    since last session; session prep; emergency contacts (PHI accessors); generated
+                    spiralogic reports".
+                    ⚠️ UNKNOWN, carried: "whether requireMemberId()'s value is the correct referent
+                    at each call site could not be settled from the tree and is recorded as UNKNOWN,
+                    ⛔ not as a defect" — the schema itself records "the declared shape in this
+                    repository is therefore NOT authoritative."
+                    MEMBER AUTHORITY — "⛔ NONE FOUND on the read side … no column records a consent
+                    state and no withdrawal path exists." Member link is write-once.
+SOURCE RECORD       I_member_practitioner.md CAP-I-05; Q1 row 4; Q2; C-I-7
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND."
+INF-6               DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+```
+
+```text
+ROW                 P3-I-06
+NAMED OBJECT        app/api/studio/** (≈76 routes) with getCurrentPractitioner(request)
+PARTICIPATION       EXISTS · PARTICIPATES · KNOWS · CONTRIBUTES · DECIDES
+BASIS               DECIDES — "SCOPING identity.practitionerId, server-derived, used in the WHERE
+                    clause (e.g. app/api/studio/clients/route.ts:27-32). ⭐ The best-behaved
+                    practitioner surface in the tree: identity is never accepted from the caller."
+                    KNOWS / CONTRIBUTES — "practitioner-authored records about clients … intake_
+                    responses, studio_inquiry_responses, encounters, moments, transcripts,
+                    pattern_ledger".
+                    ⭐⭐ boundary finding, verbatim: "the only file selecting from a member-owned
+                    table … is app/studio/fields/[memberId]/page.tsx … That boundary is structural
+                    (no join exists), not permissioned."
+                    ⚠️ "most of the ≈76 Studio routes were classified by their shared authorization
+                    import rather than read individually."
+SOURCE RECORD       I_member_practitioner.md CAP-I-06; Q1 row 5; Q2; §8
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND."
+INF-6               DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+                    ⭐ Recorded plainly: the soundest identity derivation in the domain still has no
+                    located authorization. Those are two different facts and stay separate.
+```
+
+```text
+ROW                 P3-I-07
+NAMED OBJECT        the eight derived-visibility channels D-1 … D-8
+PARTICIPATION       EXISTS · PARTICIPATES · KNOWS · CONTRIBUTES · DECIDES
+BASIS               DECIDES — D-2: "Three distinguishable outcomes: unknown id → notFound() (:117);
+                    known id + zero shared threads → the member's name plus 'has not yet carried
+                    anything from a Vision Studio session' (:165-168); known id + ≥1 thread → the
+                    threads."
+                    KNOWS / CONTRIBUTES — D-1: "Supplying an id reveals that it resolves to a real
+                    member, and that member's name." D-3 counts/ordering; D-5 authorship class;
+                    D-6 "the first 8 characters of the member's uuid".
+                    D-4: "no practitioner notification writer was found … a practitioner who saw the
+                    page before and after observes a count decrease and a missing title."
+                    ⭐ D-8 is the one enforced-by-construction non-visibility: "no route here reads,
+                    counts, or aggregates them, and none may be added" — "⛔ Still GOVERNANCE GATE:
+                    NONE FOUND — 'catalog spec §8' is a spec reference and P1-01 located no ruling
+                    binding it."
+SOURCE RECORD       I_member_practitioner.md CAP-I-07 (D-1…D-8); Q3
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE for all of D-1…D-8 — ⛔ NONE FOUND. P1-01 slice
+                    08 §3 recorded: 'No document read in this slice addresses whether a practitioner
+                    could infer the existence of member-private material through metadata, counts,
+                    ordering, timestamps, notifications, suggested actions, or latency.'"
+INF-6               DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+```
+
+```text
+ROW                 P3-I-08
+NAMED OBJECT        lib/relationship/scope.ts (ReadScope · resolveReadScope · canRead ·
+                    practitionerMay · wisdomMayCiteMemberMaterial …)
+PARTICIPATION       EXISTS
+BASIS               "CONSUMERS lib/relationship/__tests__/scope.test.ts — and nothing else. …
+                    every hit outside the module is in its own test file."
+                    ⭐⭐ NON-MONOTONIC, verbatim: "MEMBER / PRACTITIONER / MAIA / SYSTEM AUTHORITY —
+                    all notional; it governs no live read." A module that models the whole authority
+                    question participates at EXISTS and nothing above it.
+                    ⭐ ":350 names can_be_shown_to_practitioner as 'the existing flag that holds this
+                    line' — so the module knows about CAP-I-01's column, and CAP-I-01 does not know
+                    about the module."
+SOURCE RECORD       I_member_practitioner.md CAP-I-08; C-I-3
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND — a source file is not a ruled
+                    source, and no located ruling cites it."
+```
+
+```text
+ROW                 P3-I-09
+NAMED OBJECT        lib/coachField/{identity,practitionerProjection,bringForward,invitation}.ts
+PARTICIPATION       EXISTS
+BASIS               "CONSUMERS scripts/verify-practitioner-projection.ts ;
+                    scripts/verify-bring-forward.ts — and nothing else"; "zero importers in app/ or
+                    lib/".
+                    ⭐⭐ verbatim, and the reason DECIDES is NOT assigned: "bringForward is, by its
+                    own header, 'the only place a member decides' that anything crosses to a
+                    practitioner … No member-facing route reaches it. The member gesture the
+                    coach-field model is built around has no surface."
+                    ⭐ "the client-sovereign field is protected by the absence of a join … ⭐ A
+                    genuine discipline. ⚠️ It protects a projection no route calls."
+SOURCE RECORD       I_member_practitioner.md CAP-I-09; Q1 row 8; C-I-3
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND."
+```
+
+```text
+ROW                 P3-I-10
+NAMED OBJECT        member_memory_atoms.source_type='practitioner_observation' + .facilitator_id +
+                    .epistemological_status
+PARTICIPATION       EXISTS · PARTICIPATES (read side) · CONTRIBUTES (MAIA prompt) · DECIDES
+BASIS               CONTRIBUTES — "SURFACED :442-447 — projectAtomSections() splits '# MEMBER-PLACED
+                    PORTFOLIO' from '# PRACTITIONER OBSERVATIONS'"; "⭐ The direction is practitioner
+                    → member … an observation is written into the member's memory and reaches MAIA's
+                    cognition about that member, in a labelled section."
+                    DECIDES — "GUARDED PRACTITIONER_ATTRIBUTION_GUARD (:186) '(source_type <>
+                    'practitioner_observation' OR facilitator_id IS NOT NULL)'"; "WRITE REFUSED
+                    lib/psyche/portfolio.ts:386-392 — keepSource() throws for this source type."
+                    ⛔ CRITICAL LIMIT, verbatim: "⛔ NO WRITER WAS LOCATED. … No live INSERT of a
+                    practitioner_observation atom exists at the subject." ⛔ So the contribution path
+                    is established; whether any row exists to traverse it is UNKNOWN.
+                    "⛔ No member consent gate on creation was found — there is no creation path to
+                    gate."
+SOURCE RECORD       I_member_practitioner.md CAP-I-10; Q2; Q4(2); §6
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND. The migration header (:5-9)
+                    asserts a 'Constitutional intent' … a migration comment is implementation
+                    evidence, not a ruled source, and P1-01 located no ruling behind it."
+INF-6               DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+```
+
+```text
+ROW                 P3-I-11
+NAMED OBJECT        relationship_spaces (invite_token · participant_member_id · status ·
+                    consent_status · relationship_type · created_from)
+PARTICIPATION       EXISTS · PARTICIPATES · KNOWS · CONTRIBUTES (MAIA prompt) · DECIDES
+BASIS               CONTRIBUTES / DECIDES — "MAIA's prompt for that member gains the practitioner's
+                    practice-field snapshot, gated on status='active' AND consent_status='accepted'
+                    and suppressed in Sanctuary (maia/list/route.ts:801,806)."
+                    KNOWS — the consent and status columns as traced above.
+                    ⭐ MEMBER CONSENT — "Member consent gesture: PRESENT and NAMED —
+                    relationship_spaces.consent_status, moved by the member's accept."
+                    ⚠️ "Its schema default was not read — no migration matching the grep set defines
+                    relationship_spaces … UNKNOWN, not assumed."
+SOURCE RECORD       I_member_practitioner.md CAP-I-11; Q2; Q5; §5
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND, and specifically so … P1-01
+                    slice 08 §5 D-3 records that relationship_spaces is excluded from the
+                    Relationship Room Constitution's jurisdiction by a non-deciding instrument … and
+                    that no read document claims it."
+                    ⭐ THE ONE AUTHORIZATION-LANGUAGE CLAUSE IN THIS SLICE, quoted and bounded by its
+                    own sentence: "WHAT THE CONSENT AUTHORIZES — practitioner material flowing
+                    toward MAIA/member. ⛔ It authorizes no practitioner read of member material, and
+                    none was found on this object." ⛔ A member act, ⛔ not a located governing
+                    source — so the standing stays NONE LOCATED and the clause is recorded, not
+                    promoted. The one adjacent founder ruling (2026-08-09, containment attribution)
+                    "governs the practitioner's own material — ⛔ not practitioner visibility of
+                    member material."
+INF-6               DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+```
+
+```text
+ROW                 P3-I-12
+NAMED OBJECT        app/api/_backend/** — src/routes/facilitatorDashboard.routes.ts +
+                    {calendarIntegration,retreatSupport}Service.ts, keyed on facilitator_id
+PARTICIPATION       EXISTS
+BASIS               "find app/api/_backend -name route.ts → no results; the directory is
+                    _-prefixed and contains no Next route module, so it is not routable by the App
+                    Router."
+                    ⚠️ UNKNOWN, carried: "its Dockerfiles and package.json mean it may be built and
+                    run as a separate service; whether any deployment does so is UNKNOWN."
+SOURCE RECORD       I_member_practitioner.md CAP-I-12
+AUTHORITY STANDING  NONE LOCATED — "GOVERNANCE GATE — ⛔ NONE FOUND."
+```
+
+---
+
+## Counts — positions recovered, by position, and UNKNOWN total
+
+```text
+ROWS 48   ·   G 18 · H 18 · I 12
+
+PARTICIPATION AXIS                    rows     of which
+EXISTS                                  48     all — subject-identity verified by all three records
+PARTICIPATES                            41     ⛔ not: G-09 · H-13 · H-14 · H-15 · I-08 · I-09 · I-12
+KNOWS                                   13     G-03 G-15 · H-01 H-04 H-07 H-08 · I-01 I-02 I-03
+                                               I-05 I-06 I-07 I-11
+CONSIDERS                                0     ⭐⭐ ZERO across all 48
+CONTRIBUTES                             24     G 5 · H 10 · I 9
+DECIDES                                 25     G 10 · H 7 · I 8
+UNKNOWN (whole row)                      0
+
+AUTHORITY STANDING AXIS               rows
+GOVERNED                                 1     P3-H-05 only
+NONE LOCATED                            42
+UNKNOWN                                  4     P3-G-11 · P3-G-12 · P3-H-07 · P3-H-10
+SPLIT                                    1     P3-G-18 — UNKNOWN (fail-closed, in-file attribution)
+                                               / NONE LOCATED (migration selection)
+```
+
+⭐⭐ **`CONSIDERS` is zero, and that is a recovered fact, not a shortfall.** No record in this slice
+establishes that a fact a capability holds is read into a computation. The single place the question
+is squarely posed is answered in the negative: *"At the subject, `selectClaudeModel()` never reads
+an awareness level"* (P3-G-03) — **KNOWS without CONSIDERS**, which is precisely the promotion
+`INF-6` forbids.
+
+⚠️ **`EXISTS` on 48 of 48 is the weakest possible recovery and must not be read as coverage.** Above
+`EXISTS`, 41 rows recover participation, 25 recover a determination, and **1** recovers a located
+governing source.
+
+**Positions withheld as UNKNOWN on a named sub-question (17):** G-02 persistence · G-03 `CONSIDERS`
+· G-05 `DECIDES` · G-08 `DECIDES` · G-09 whether `minimumBloomLevel` was ever evaluated · G-11
+`DECIDES` and authority · G-15 identity across provider change · H-11 `CONTRIBUTES`/`DECIDES` ·
+H-15 reachability of the remaining `lib/voice/` surface (119 entries) · I-02 seven of eleven
+supervision routes · I-03 production `ACCESS_CONTROL_MODE` · I-04 whether any flow requires
+`verify-passcode` first · I-05 the referent of `requireMemberId()` at each call site · I-06 most of
+≈76 Studio routes classified rather than read · I-10 whether any `practitioner_observation` row
+exists (no writer located) · I-11 the `consent_status` schema default · I-12 whether any deployment
+runs `app/api/_backend/**`.
+
+---
+
+## Rows where the records DISAGREE (both sides quoted; the disputed question UNKNOWN)
+
+⛔ **No derivation across any of these.** Neither side is dropped; neither is reconciled.
+
+**C-1 · provider failure — P3-G-02 · P3-G-04 · P3-G-06.** *Side A*: `sovereignRouter.ts:15-17,50-61`
+returns `DEGRADED_TEXT` "as an ordinary `TextResult` on four failure branches". *Side B*:
+`structured/router.ts:116-131` — *"THE FAILURE STOPS HERE. No second provider, no local text path,
+no degraded template."* A **third** behaviour: with `MAIA_INFERENCE_MODE` unset, `modelService.ts:
+180-193` "falls back to a local Ollama text model with no drift event." ⭐ *"Both behaviours are
+implemented, on different seams, at the same subject."* **Which governs production: UNKNOWN.**
+
+**C-2 · cloud providers — P3-G-11 (and P3-G-07, second limb).** *Side A*: `CLAUDE.md` — *"Never use
+OpenAI or other cloud AI providers."* *Side B*: `provider-policy.json` tiers OpenAI as `lab` /
+`removal_in_progress` with a 32-file allowlist — *"a governed migration debt, not a prohibition"* —
+and 30 live-tree files import the SDK or call `api.openai.com`. **Authority standing UNKNOWN.**
+
+**C-3 · P3-G-01 · P3-G-10.** *"Main gateway for ALL text generation"* (`modelService.ts:71-73`)
+versus the allowlist's own 2 + 1 + 57. *"Both are the project's own text."*
+
+**C-4 · P3-G-03.** ADR-001 (**Accepted**) prescribes 7-level awareness → Opus/Sonnet routing "in
+`lib/ai/claudeClient.ts`" and "says all routing decisions MUST follow it"; the code "routes on
+`reasoningMode` and force flags and defaults to Sonnet". *"No superseding ADR or ruling was located."*
+
+**C-5 · P3-G-02.** *"I've saved your message"* versus *"The router performs no persistence."*
+**End-to-end truth caller-dependent and unresolved.**
+
+**C-6 · P3-G-07.** *"Never used for live chat - only when explicitly requested"* versus
+`req.meta?.useKimi`, "where `meta` is `Record<string, unknown>` with no validation and no provenance."
+
+**C1 (H) · default voice provider — P3-H-07.** *Side A*: `cloudVoicePolicy.ts` — *"⛔ THE DEFAULT IS
+THE CANON. Cloud voice is forbidden unless `MAIA_ALLOW_CLOUD_VOICE=1` is set explicitly."* *Side B*:
+`openai-tts/route.ts:115` — *"MAIA vow: default voice is always maia_core (OpenAI Alloy)."*
+⭐ *"Both sides call themselves the vow"*, and "the env var each depends on is set for one side and
+absent for the other in the production compose file." **UNKNOWN.**
+
+**C2 (H) · STT/TTS latitude — P3-H-01 · P3-H-02 · P3-H-03 · P3-H-07.** *Side A*: `CLAUDE.md` —
+*"STT/TTS are sensory infrastructure and may change freely."* *Side B*: canon `:87` — *"the ear may
+be improved freely"* — the ear only. ⭐ *"The code gates the mouth and does not gate the ear."*
+
+**C3 (H) · P3-H-05.** *Side A*: the gate "asserts convergence: one cognition call, reached once."
+*Side B*: "convergence says nothing about EGRESS. The 2026-09-07 defect … left this gate GREEN
+throughout." ⭐ Repair exists, *"but the gate that closes it is a SECOND, SEPARATE gate."* **Both
+halves recorded.**
+
+**C4 (H) · sovereignty of the ear — P3-H-02 · P3-H-03.** *Side A*: *"inbound member audio never
+leaves the host"*, *"never OpenAI cloud"*. *Side B*: "the DEFAULT transport for Chrome and Safari
+members is `web-speech` … recognition is performed by the browser vendor off-device." ⛔ *"Both
+sentences are true of different transports."*
+
+**C5 (H) · Sanctuary — P3-H-10.** *Found*: four `saveConversationMemory` sites, "⛔ NONE is gated on
+`isSanctuary`", and the definition "contains no occurrence of `'sanctuary'` in any case". *Against*:
+`CLAUDE.md` Sanctuary invariant 1 *"No content retention"* and invariant 6 *"Absolute boundary"*.
+⚠️ MODALITY-SYMMETRIC; routed out, ⛔ not repaired.
+
+**C6 (H) · citation coordinates — P3-H-05 · P3-H-09.** Canon names the convergence at `:7268`; it is
+at `:7397`. Exit map and test header name the crisis script at `:6712`; it is at `:6854`. ⛔ Recorded
+as staleness, ⛔ not divergence.
+
+**C-I-1 · P3-I-01.** Migration `:8,40,96` states the capability **DEFERRED**, the column *"held
+FALSE, no path"*; `vision-studio/field-note/route.ts:107-130` "binds it to a client-supplied value"
+and the page `:69` reads it.
+
+**C-I-2 · P3-I-01.** *"This is the consented facilitator view"* (`:9-11`) versus `:104-107` checking
+"only that the viewer is *some* active practitioner", and `:79-85` applying "no predicate at all to
+`members.name` / `members.username`."
+
+**C-I-3 · P3-I-01 · P3-I-08 · P3-I-09.** Two written access models encode read scopes and verb
+limits; "`app/studio/fields/[memberId]/page.tsx` performs a practitioner read of member material and
+imports neither."
+
+**C-I-4 · P3-I-03.** `accessMatrix.ts:470` declares `{prefix:'/caseload', minTier:'pro',
+rolesAnyOf:['practitioner']}`; "the API family lives at `/api/caseload/*`, which that prefix does not
+match and no other rule matches; the unmapped default is permissive." ⚠️ Production mode **UNKNOWN**.
+
+**C-I-5 · P3-I-02.** `accessMatrix.ts:578` free-tier, no role, versus the routes' *"HIPAA compliant"*
+headers and their absent handler authorization. ⛔ Not adjudicated.
+
+**C-I-6 · P3-I-10.** `facilitator_id` attributing `source_type='practitioner_observation'` versus
+`CircleRole`, "where `facilitator` is a distinct enforced role unrelated to `practitioners`."
+
+**C-I-7 · P3-I-05.** `practitioner_id` "references `practitioners(id)` in some tables and
+`members(id)` in others"; the schema itself: *"the declared shape in this repository is therefore NOT
+authoritative."* ⛔ Per the vocabulary rule no finding attaches to the token.
+
+**C-I-8 · P3-I-01 · P3-I-03 (and the matrix generally).** `accessMatrix.ts:288,299,392-404,531` —
+"four cases the file records itself, one labelled *'Unreconciled'* in its own note."
+
+⭐ **X-DEF-2 — carried, and its identity is NOT RESOLVABLE from this slice's authorized inputs.**
+Amendment 2 §5 names it as *"one route carries three materially different characterizations; six
+dependent rows carried with all three."* ⛔ No `X-DEF` label appears anywhere in
+`03_normalized_G_H_I.md` or in the three P1-02 records read here, so the route it names and its six
+dependent rows are **not identified within domain G, H or I as authorized for this pass**. ⛔ Not
+guessed at, ⛔ not mapped onto any row above, ⛔ not derived across. **Carried to P1-05 intact.**
+⚠️ If X-DEF-2's route does lie in this slice, the candidate carrying three characterizations would
+have to be named by the register that recorded it — which is a register this pass was not authorized
+to read. **UNKNOWN, by scope.**
+
+---
+
+## ⭐⭐ EFFECT-WITHOUT-LOCATED-AUTHORIZATION — the INF-6 inventory
+
+```text
+⛔ NOT      "effect without authorization"        ⛔ NOT "unauthorized"
+✅ IS       effect              OBSERVED
+            authorization located   NO
+            authorization status    UNKNOWN / NONE LOCATED
+```
+
+⛔ **`DECIDES` + `GOVERNANCE GATE: NONE FOUND` + no quoted authorization located ≠ PROVED
+UNAUTHORIZED.** Per Amendment 3 §1 this is a reading, never a verdict. ⛔ Nothing below is rated,
+scored, ordered by importance, or recommended for repair, and ⛔ no other lane's finding is
+anticipated.
+
+**KEY**: a row appears here when its record establishes an effect — a decision, a refusal, a
+selection, a member-facing utterance, a disclosure, or a stored member record — **and** no
+authorization was located. Each carries the three-line `INF-6` block in its entry above.
+
+```text
+DOMAIN G (12)
+P3-G-01   DECIDES — provider branching on the conversational path        NONE LOCATED (runtime)
+P3-G-02   DECIDES + CONTRIBUTES — degraded first-person MAIA turn        NONE LOCATED
+P3-G-03   DECIDES — Claude model selection for a conversational turn     NONE LOCATED
+P3-G-04   DECIDES — hard refusal on the structured path                  NONE LOCATED (gate present,
+                                                                         governing source unlocated)
+P3-G-06   CONTRIBUTES — answer-producing local/template fallback         NONE LOCATED
+P3-G-08   CONTRIBUTES — the text of a conversational TextResult          NONE LOCATED
+P3-G-10   DECIDES — 57 grandfathered surfaces pinning their own models   NONE LOCATED (runtime)
+P3-G-12   DECIDES — commit/CI admission                                  UNKNOWN (named doc unread)
+P3-G-13   DECIDES — commit admission                                     NONE LOCATED
+P3-G-16   DECIDES — deploy-lane refusal                                  NONE LOCATED
+P3-G-17   DECIDES — out-of-lane build refusal; provenance blocks         NONE LOCATED
+P3-G-18   DECIDES — deploy abort; bulk migration application             UNKNOWN / NONE LOCATED
+
+DOMAIN H (11)
+P3-H-01   DECIDES — which recognizer hears the member                    NONE LOCATED
+P3-H-02   DECIDES — auth/entitlement/quota admission of an utterance     NONE LOCATED
+P3-H-03   DECIDES — Web Speech refused on Desktop by shell class         NONE LOCATED
+P3-H-04   DECIDES — whether a spoken utterance becomes a member turn     NONE LOCATED
+P3-H-06   DECIDES — whether MAIA's turn reaches the member               NONE LOCATED
+P3-H-07   DECIDES — TTS provider on the branch that runs first           UNKNOWN (records disagree)
+P3-H-08   DECIDES — whether the microphone re-arms                       NONE LOCATED
+P3-H-09   CONTRIBUTES — eleven member-facing first-person utterances     NONE LOCATED
+P3-H-10   CONTRIBUTES — retention of member utterances                   UNKNOWN (records disagree)
+P3-H-12   CONTRIBUTES — locally-authored member-facing text (X1–X6)      NONE LOCATED
+P3-H-16   CONTRIBUTES — member transcript stored via POST /api/notes     NONE LOCATED
+
+DOMAIN I (9 of 12)
+P3-I-01   DECIDES — which member-authored threads a practitioner sees    NONE LOCATED
+P3-I-02   CONTRIBUTES — clinical transcript segments returned            NONE LOCATED
+P3-I-03   DECIDES — caseload disclosure on a query-string identity       NONE LOCATED
+P3-I-04   DECIDES — who becomes a practitioner                           NONE LOCATED
+P3-I-05   DECIDES — client message/digest/prep/report access             NONE LOCATED
+P3-I-06   DECIDES — Studio scoping by server-derived identity            NONE LOCATED
+P3-I-07   DECIDES — the three distinguishable outcomes of D-1…D-8        NONE LOCATED
+P3-I-10   DECIDES — which observation atoms load into MAIA's prompt      NONE LOCATED
+P3-I-11   DECIDES — practice-field injection into MAIA's prompt          NONE LOCATED
+
+TOTAL 32 of 48.
+⛔ The three domain-I rows NOT listed — P3-I-08 · P3-I-09 · P3-I-12 — are absent because they
+   establish no effect (ORPHANED · DORMANT · SUPERSEDED), ⛔ not because an authorization was found.
+```
+
+⭐ Recorded plainly, without ranking: **P3-I-06 is the row the record calls *"the best-behaved
+practitioner surface in the tree"* and it stands in this inventory beside the rest.** Soundness of
+identity derivation and located authorization are two different facts, and this pass keeps them
+separate.
+
+---
+
+## Rows that are NOT A PARTICIPATION QUESTION
+
+⛔ These rows carry positions, but their participation is **not** a question about MAIA cognition;
+the register determined `COVERAGE: NOT APPLICABLE` for each. Positions above are read with respect
+to the lane the record actually traces.
+
+```text
+P3-G-12  P3-G-13   register: "NOT APPLICABLE — a commit/CI-time instrument over tracked source,
+                    not a per-family runtime capability"          → read against the commit lane
+P3-G-16  P3-G-17   register: "NOT APPLICABLE — a deploy instrument, not a per-family runtime
+                    capability"                                   → read against the deploy lane
+P3-G-18            register: "NOT APPLICABLE — deployment/schema execution, not a per-family
+                    runtime capability"                           → read against the deploy lane
+```
+
+⚠️ **Domain I, stated rather than assumed.** For P3-I-01 … P3-I-07 the register records `COVERAGE:
+NOT APPLICABLE — no MAIA cognition on this path` (CAP-I-01: *"MAIA AUTHORITY — none here"*). Their
+positions above are therefore read against the **member/practitioner visibility path**, ⛔ never as
+claims about MAIA's cognition. The two domain-I rows that do reach MAIA's prompt — **P3-I-10** and
+**P3-I-11** — say so in their own entries, and the register records that *which* MAIA-claiming
+cognition family consumes them is `NOT DETERMINED BY SOURCE RECORD` (INF-5).
+
+---
+
+```text
+P1-03 · LADDER PASS · DOMAINS G · H · I · COMPLETE
+AUTHORITY EXERCISED   READ (three P1-02 records + the normalized register) · RESTATE
+⛔ NO SOURCE CODE · NO GOVERNING DOCUMENT · NO TEST · NO RUNTIME WITNESS READ
+⛔ NO POSITION INVENTED · NO AUTHORITY INFERRED FROM DECIDES · NO DISAGREEMENT DERIVED ACROSS
+⛔ NO EXPLOITABILITY, SEVERITY OR RISK ASSESSED · ⛔ NO REPAIR PROPOSED · ⛔ NO LANE OPENED
+⛔ NO FILE EDITED EXCEPT THIS ONE
+```
