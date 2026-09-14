@@ -10,7 +10,14 @@
 //    own baseline from the thing it judges is fail-open.
 // ⭐ One test per falsifiable boundary. Every behavioural arm runs against a HERMETIC fixture.
 //
-// Usage: node scripts/jop04/r1/acceptance.mjs [--json <external-path>]
+// ⭐ TWO TEMPORAL PHASES, both stated explicitly and neither derived from the other:
+//      --phase pre    the unrepaired custody state — eight obligations RED, five invariants GREEN
+//      --phase post   the acceptance state         — ALL THIRTEEN boundaries GREEN
+//    The SEMANTIC OBSERVATIONS are identical in both modes. Only the expected custody state differs.
+//    ⛔ The phase is MANDATORY. A judge that defaults to a temporal mode can be run in the wrong one
+//    and have its exit status treated as authority.
+//
+// Usage: node scripts/jop04/r1/acceptance.mjs --phase <pre|post> [--json <external-path>]
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,12 +38,44 @@ const reg = await import(path.join(REPO, 'scripts/builder/deterministic.mjs'));
 const { CAPABILITIES, runCapability } = reg;
 const CF = require(path.join(REPO, 'jarvis-desktop/src/capability-form.js'));
 
+// ── PHASE TARGETS ──────────────────────────────────────────────────────────────────────
+// ⛔ `post` is written out in full, NOT computed by inverting `pre`. A mechanically inverted
+//    postcondition would encode "whatever pre was not", which is a restatement of the defect
+//    rather than a statement of the law. The acceptance state is: every boundary GREEN.
+const BOUNDARY_IDS = ['D4', 'D1', 'D5', 'D6', 'F-D', 'F-D.5', 'D3', 'D3/D4', 'D2.6', 'D2.3', 'H1-effective', 'check.run', 'verify.*'];
+const PHASE_TARGETS = {
+  pre: {
+    'D4': 'RED', 'D1': 'RED', 'D5': 'RED', 'D6': 'RED', 'F-D': 'RED', 'F-D.5': 'GREEN',
+    'D3': 'RED', 'D3/D4': 'RED', 'D2.6': 'RED', 'D2.3': 'GREEN', 'H1-effective': 'GREEN',
+    'check.run': 'GREEN', 'verify.*': 'GREEN',
+  },
+  post: {
+    'D4': 'GREEN', 'D1': 'GREEN', 'D5': 'GREEN', 'D6': 'GREEN', 'F-D': 'GREEN', 'F-D.5': 'GREEN',
+    'D3': 'GREEN', 'D3/D4': 'GREEN', 'D2.6': 'GREEN', 'D2.3': 'GREEN', 'H1-effective': 'GREEN',
+    'check.run': 'GREEN', 'verify.*': 'GREEN',
+  },
+};
+const pi = process.argv.indexOf('--phase');
+const PHASE = pi > -1 ? process.argv[pi + 1] : undefined;
+if (!PHASE || !Object.prototype.hasOwnProperty.call(PHASE_TARGETS, PHASE)) {
+  console.error(PHASE ? `⛔ UNKNOWN PHASE: '${PHASE}'` : '⛔ NO --phase GIVEN');
+  console.error('   This judge encodes two temporal custody states and will not guess which one you mean.');
+  console.error('   node scripts/jop04/r1/acceptance.mjs --phase pre    # the unrepaired state');
+  console.error('   node scripts/jop04/r1/acceptance.mjs --phase post   # the acceptance state (all GREEN)');
+  process.exit(2);
+}
+const TARGET = PHASE_TARGETS[PHASE];
+
 const PIN_GITLOG = path.join(HERE, 'pinned-gitlog-output.json');
 const PIN_SCOPE = path.join(HERE, 'pinned-out-of-scope.json');
 
 const results = [];
-const B = (id, law, predeclared) => {
-  const r = { id, law, predeclared, actual: null, detail: [] };
+const B = (id, law) => {
+  if (!Object.prototype.hasOwnProperty.call(TARGET, id)) {
+    console.error(`⛔ INSTRUMENT ERROR: boundary '${id}' has no target in either phase table.`);
+    process.exit(2);
+  }
+  const r = { id, law, phase: PHASE, predeclared: TARGET[id], actual: null, detail: [] };
   results.push(r);
   return {
     conform: (m) => { if (r.actual !== 'RED') r.actual = 'GREEN'; r.detail.push(`✔ ${m}`); },
@@ -62,11 +101,22 @@ for (const [p, what] of [[PIN_GITLOG, 'D2.3 git.log output pin'], [PIN_SCOPE, 'o
 
 const fx = buildFixture();
 const nonRepo = buildNonRepo();
+// [capability, default-bearing field, host default, BASE caller terms]
+// ⭐ The base terms are whatever OTHER required arguments make the probe a VALID invocation.
+//    Without them, describe('git.branch_contains', {}) and describe('repo.grep', {}) are not
+//    invocations at all — and a correct observation seam that refuses inadmissible requests would
+//    stay RED forever, or be forced to describe request shapes that are not invocations.
+//    ⛔ That would make the INSTRUMENT author a new semantic requirement ("describeInvocation must
+//    accept invalid partial requests"). Nothing in D4 authorized that. This repairs the probe, not D4.
 const H1_DEFAULTS = [
-  ['git.rev_parse', 'ref', 'HEAD'], ['git.show_stat', 'ref', 'HEAD'],
-  ['git.diff_stat', 'ref1', 'HEAD~1'], ['git.diff_stat', 'ref2', 'HEAD'],
-  ['git.branch_contains', 'commit', 'HEAD'], ['repo.grep', 'max_results', 200],
-  ['inventory.migrations', 'dir', 'database/migrations'], ['inventory.routes', 'dir', 'app'],
+  ['git.rev_parse', 'ref', 'HEAD', {}],
+  ['git.show_stat', 'ref', 'HEAD', {}],
+  ['git.diff_stat', 'ref1', 'HEAD~1', {}],
+  ['git.diff_stat', 'ref2', 'HEAD', {}],
+  ['git.branch_contains', 'commit', 'HEAD', { branch: 'main' }],
+  ['repo.grep', 'max_results', 200, { pattern: MANY_TOKEN }],
+  ['inventory.migrations', 'dir', 'database/migrations', {}],
+  ['inventory.routes', 'dir', 'app', {}],
 ];
 // (capability, omittedArgs, explicitArgs) — 7 invocation pairs covering all 8 defaults.
 const PAIRS = [
@@ -82,7 +132,7 @@ const PAIRS = [
 try {
 // ── 1 · D4 — the authorship seam, bound to EFFECTIVE EXECUTION ──────────────────────────
 {
-  const t = B('D4', 'caller omission preserved · host default recorded with source=host_default · the described plan corresponds to the act performed', 'RED');
+  const t = B('D4', 'caller omission preserved · host default recorded with source=host_default · the described plan corresponds to the act performed',);
   const describe = reg.describeInvocation;
   if (typeof describe !== 'function') {
     t.breach('no pure observation seam: deterministic.mjs exports no describeInvocation()');
@@ -90,9 +140,9 @@ try {
     t.note(`the same law must hold for all ${H1_DEFAULTS.length} host-applied defaults — one boundary, not eight concepts`);
   } else {
     const bad = [];
-    for (const [cap, field, dflt] of H1_DEFAULTS) {
-      const om = attempt(() => describe(cap, {})).value;
-      const ex = attempt(() => describe(cap, { [field]: dflt })).value;
+    for (const [cap, field, dflt, base] of H1_DEFAULTS) {
+      const om = attempt(() => describe(cap, { ...base })).value;
+      const ex = attempt(() => describe(cap, { ...base, [field]: dflt })).value;
       const okOm = om?.caller_terms?.[field] === undefined
         && om?.host_terms?.[field]?.value === dflt
         && om?.host_terms?.[field]?.source === 'host_default'
@@ -122,7 +172,7 @@ try {
 
 // ── 2 · D1 — literal identity: selection injection AND namespace annexation ─────────────
 {
-  const t = B('D1', 'PATH fields carry literal identity — glob spelling is not selection authority, magic spelling is not namespace authority', 'RED');
+  const t = B('D1', 'PATH fields carry literal identity — glob spelling is not selection authority, magic spelling is not namespace authority',);
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const LEAK_FILE_GLOB = /(^|\s|\0)app\/a\.ts|app\/b\.ts/;
   const LEAK_COMMIT_GLOB = new RegExp(esc(C_ORDINARY));
@@ -156,7 +206,7 @@ try {
 
 // ── 3 · D5 — BRE pinned by contract; ambient dialect has no authority ───────────────────
 {
-  const t = B('D5', 'repo.grep.pattern is POSIX BRE; ambient grep.patternType has no authority', 'RED');
+  const t = B('D5', 'repo.grep.pattern is POSIX BRE; ambient grep.patternType has no authority',);
   t.note(`fixture ambient dialect = ${execFileSync('git', ['-C', fx.root, 'config', '--get', 'grep.patternType'], { encoding: 'utf8' }).trim()}`);
   const r = attempt(() => runCapability('repo.grep', { pattern: BRE_PATTERN }, fx.root));
   if (!r.ok) t.breach(`threw: ${String(r.error.message).split('\n')[0].slice(0, 60)}`);
@@ -170,7 +220,7 @@ try {
 
 // ── 4 · D6 — literal AND whole-symbol AND ambient-independent ───────────────────────────
 {
-  const t = B('D6', 'symbol is sought literally, as a WHOLE symbol, with no authority from ambient matcher config', 'RED');
+  const t = B('D6', 'symbol is sought literally, as a WHOLE symbol, with no authority from ambient matcher config',);
   const r = attempt(() => runCapability('repo.locate_symbol', { symbol: SYMBOL }, fx.root));
   if (!r.ok) t.breach(`threw: ${String(r.error.message).split('\n')[0].slice(0, 60)}`);
   else {
@@ -204,7 +254,7 @@ try {
 
 // ── 5 · F-D ARM 2 · valid absence ───────────────────────────────────────────────────────
 {
-  const t = B('F-D', 'ARM 2 · a valid search finding nothing SUCCEEDS with zero records', 'RED');
+  const t = B('F-D', 'ARM 2 · a valid search finding nothing SUCCEEDS with zero records',);
   const r = attempt(() => runCapability('repo.locate_symbol', { symbol: 'ZZ_DEFINITELY_ABSENT_SYMBOL' }, fx.root));
   if (!r.ok) t.breach(`ordinary absence THREW — absence collapsed into failure`);
   else records(r.value).length === 0 ? t.conform('absence returned success with zero records')
@@ -213,7 +263,7 @@ try {
 
 // ── 6 · F-D.5 ARM 3 · genuine failure ───────────────────────────────────────────────────
 {
-  const t = B('F-D.5', 'ARM 3 · a GENUINE execution failure propagates and is NEVER normalized to zero', 'GREEN');
+  const t = B('F-D.5', 'ARM 3 · a GENUINE execution failure propagates and is NEVER normalized to zero',);
   t.note('invoked against a directory that is not a git repository');
   const r = attempt(() => runCapability('repo.locate_symbol', { symbol: MANY_TOKEN }, nonRepo.root));
   r.ok ? t.breach(`a non-repository returned success (${records(r.value).length} records) — a broad catch swallowed a real failure`)
@@ -222,7 +272,7 @@ try {
 
 // ── 7 · D3 — global bound + prefix law ──────────────────────────────────────────────────
 {
-  const t = B('D3', 'max_results is a GLOBAL bound; results(N) is a prefix of results(M) for N<M', 'RED');
+  const t = B('D3', 'max_results is a GLOBAL bound; results(N) is a prefix of results(M) for N<M',);
   const one = attempt(() => runCapability('repo.grep', { pattern: MANY_TOKEN, max_results: 1 }, fx.root));
   const three = attempt(() => runCapability('repo.grep', { pattern: MANY_TOKEN, max_results: 3 }, fx.root));
   if (!one.ok || !three.ok) t.breach('repo.grep threw while bounded');
@@ -238,7 +288,7 @@ try {
 
 // ── 8 · D3/D4 — authorship of 200 survives identical effective output ───────────────────
 {
-  const t = B('D3/D4', 'omitted → host 200 · explicit 200 → caller 200 · identical execution does not collapse identity', 'RED');
+  const t = B('D3/D4', 'omitted → host 200 · explicit 200 → caller 200 · identical execution does not collapse identity',);
   const describe = reg.describeInvocation;
   if (typeof describe !== 'function') t.breach('no observation seam: identical output cannot be distinguished from identical authorship');
   else {
@@ -255,7 +305,7 @@ try {
 
 // ── 9 · D2.6 — `format` REFUSED at admission, and NOT SOLICITED at all ──────────────────
 {
-  const t = B('D2.6', 'git.log { format } is refused at every admission layer AND is not solicited by the form', 'RED');
+  const t = B('D2.6', 'git.log { format } is refused at every admission layer AND is not solicited by the form',);
   const r = attempt(() => runCapability('git.log', { format: '%H' }, fx.root));
   r.ok ? t.breach(`runCapability ACCEPTED an unauthorized format (${records(r.value).length} records)`)
        : t.conform('runCapability refused');
@@ -281,7 +331,7 @@ try {
 
 // ── 10 · D2.3 — the existing observable git.log output is PINNED (read-only) ────────────
 {
-  const t = B('D2.3', 'removing `format` may not redesign git.log output: fields, order, dates, quoting, record order', 'GREEN');
+  const t = B('D2.3', 'removing `format` may not redesign git.log output: fields, order, dates, quoting, record order',);
   const pin = JSON.parse(fs.readFileSync(PIN_GITLOG, 'utf8'));
   const r = attempt(() => runCapability('git.log', pin.args, fx.root));
   if (!r.ok) t.breach(`git.log threw: ${String(r.error.message).split('\n')[0]}`);
@@ -292,7 +342,7 @@ try {
 
 // ── 11 · H1 effective behaviour — unchanged for all eight defaults ──────────────────────
 {
-  const t = B('H1-effective', 'adding authorship truth alters no current effective result, across all eight defaults', 'GREEN');
+  const t = B('H1-effective', 'adding authorship truth alters no current effective result, across all eight defaults',);
   const bad = [];
   for (const [cap, a, b] of PAIRS) {
     const ra = attempt(() => runCapability(cap, a, fx.root)), rb = attempt(() => runCapability(cap, b, fx.root));
@@ -304,7 +354,7 @@ try {
 
 // ── 12 · out-of-scope boundaries — UNCHANGED, not merely still named the same ───────────
 {
-  const t = B('check.run', 'check.run is OUT OF SCOPE: its declaration AND handler are unchanged', 'GREEN');
+  const t = B('check.run', 'check.run is OUT OF SCOPE: its declaration AND handler are unchanged',);
   const pin = JSON.parse(fs.readFileSync(PIN_SCOPE, 'utf8'));
   // ⛔ Deliberately NOT executed: running it would itself cross the delegated-execution boundary.
   //    Out of jurisdiction means UNCHANGED, so the shape is source-pinned. This is the one place
@@ -318,7 +368,7 @@ try {
     : t.breach('check.run CHANGED — R1 crossed a boundary it was told to stay out of');
 }
 {
-  const t = B('verify.*', 'unrelated verify.* behaviour is untouched', 'GREEN');
+  const t = B('verify.*', 'unrelated verify.* behaviour is untouched',);
   const pin = JSON.parse(fs.readFileSync(PIN_SCOPE, 'utf8'));
   const drift = ['verify.file_exists', 'verify.sha256', 'verify.count_matches']
     .filter(n => sha(String(CAPABILITIES[n]?.handler ?? '')) !== pin[n].handler);
@@ -334,7 +384,8 @@ try {
 
 // ── report ──────────────────────────────────────────────────────────────────────────────
 const pad = (s, n) => String(s).padEnd(n);
-console.log('JOP-04 · R1a ACCEPTANCE INSTRUMENT');
+console.log(`JOP-04 · R1b ACCEPTANCE INSTRUMENT — phase: ${PHASE.toUpperCase()}`);
+console.log(`target: ${PHASE === 'pre' ? '8 RED · 5 GREEN (the unrepaired custody state)' : 'ALL 13 BOUNDARIES GREEN (the acceptance state)'}`);
 console.log(`subject: ${execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim()}   fixture: hermetic, deterministic   custody: read-only\n`);
 for (const r of results) {
   const match = r.actual === r.predeclared;
@@ -343,11 +394,19 @@ for (const r of results) {
   for (const d of r.detail) console.log(`     ${d}`);
 }
 const mismatches = results.filter(r => r.actual !== r.predeclared);
-console.log(`\n---- ${results.filter(r => r.actual === 'RED').length} RED · ${results.filter(r => r.actual === 'GREEN').length} GREEN · ${mismatches.length} mismatch(es) against the predeclared matrix ----`);
-if (mismatches.length) {
-  console.log('⚠️  A mismatch is a finding about the INSTRUMENT or the SPEC, never a licence to change the product:');
+// Guard: every declared boundary must actually have run.
+const ran = new Set(results.map(r => r.id));
+const missing = BOUNDARY_IDS.filter(id => !ran.has(id));
+if (missing.length) { console.error(`⛔ INSTRUMENT ERROR: declared boundaries never ran: ${missing.join(', ')}`); process.exit(2); }
+console.log(`\n---- ${results.filter(r => r.actual === 'RED').length} RED · ${results.filter(r => r.actual === 'GREEN').length} GREEN · ${mismatches.length} mismatch(es) against the ${PHASE.toUpperCase()} target ----`);
+if (mismatches.length && PHASE === 'pre') {
+  console.log('⚠️  In PRE phase a mismatch is a finding about the INSTRUMENT or the SPEC, never a licence to change the product:');
   console.log('    protected invariant RED → the instrument widened its jurisdiction; fix the instrument');
   console.log('    known defect GREEN      → the witness cannot judge that repair; strengthen the instrument');
+}
+if (mismatches.length && PHASE === 'post') {
+  console.log('⚠️  In POST phase a mismatch is an UNDISCHARGED REPAIR OBLIGATION — the named boundaries are');
+  console.log('    not yet conforming. Fix the product, never the judge; the instrument is frozen custody.');
 }
 const ji = process.argv.indexOf('--json');
 if (ji > -1) {
