@@ -55,6 +55,7 @@
  */
 
 import { query, transaction } from '@/lib/db/postgres';
+import type { QueryResult, QueryResultRow } from 'pg';
 import {
   appendVersion, validateChain,
 } from './succession';
@@ -167,19 +168,32 @@ export interface OpenChainInput {
 }
 
 /**
- * Open a chain against one locus.
+ * ⭐⭐ W5-4 · ANYTHING THAT CAN RUN ONE PARAMETERIZED STATEMENT — the pool, or
+ * a single transaction's client. Structurally identical to `TransactionClient`
+ * and deliberately NOT named after it: the pool is not a transaction.
  *
- * ⛔ THIS AUTHORIZES NOTHING AND CHANGES NO WORK. It records the exact
- * characters a future authorization would be permitted to replace, and the
- * state of the Work that claim was made against.
- *
- * ⭐ The server mints the identity, following the decision store: a client that
- * could manufacture a stable id could also collide with one.
+ * ⛔ IT EXISTS SO THERE IS EXACTLY ONE `INSERT INTO proposal_chains`. W5-4 must
+ * open a chain and record MAIA's first observation as ONE durable act, which
+ * needs the insert inside a caller's transaction — and the tempting way to get
+ * that is to write the INSERT again in the editorial store. Two chain-insert
+ * implementations is two places for the locus, the governing-ruling reference
+ * and the minted identity to drift, behind a database, where it is hardest to
+ * see. Census §6 is the same lesson about `readChain`.
  */
-export async function openChain(
-  memberId: string, input: OpenChainInput,
+export interface SqlExecutor {
+  query<T extends QueryResultRow = any>(
+    sql: string, params?: any[]): Promise<QueryResult<T>>;
+}
+
+/**
+ * The one chain INSERT. ⛔ Do not call this to "open a chain" — call
+ * `openChain`, or `openChainWithInsight` when the chain and its first authored
+ * editorial act must stand or fall together.
+ */
+export async function openChainWithExecutor(
+  exec: SqlExecutor, memberId: string, input: OpenChainInput,
 ): Promise<ProposalChain> {
-  const r = await query<ChainRow>(
+  const r = await exec.query<ChainRow>(
     `INSERT INTO proposal_chains
        (member_id, work_id, draft_id, base_version, target_section_id,
         expected_text, decision_chain_id)
@@ -189,6 +203,26 @@ export async function openChain(
       input.locus.targetSectionId, input.locus.expectedText,
       input.governedBy?.decisionChainId ?? null]);
   return hydrateChain(r.rows[0]);
+}
+
+/**
+ * Open a chain against one locus.
+ *
+ * ⛔ THIS AUTHORIZES NOTHING AND CHANGES NO WORK. It records the exact
+ * characters a future authorization would be permitted to replace, and the
+ * state of the Work that claim was made against.
+ *
+ * ⭐ The server mints the identity, following the decision store: a client that
+ * could manufacture a stable id could also collide with one.
+ *
+ * ⭐ W5-4 · ITS PUBLIC SEMANTICS ARE UNCHANGED — same arguments, same statement,
+ * same hydration, same autocommit-per-call behaviour. Only the executor moved
+ * behind a parameter so a transaction can supply its own.
+ */
+export async function openChain(
+  memberId: string, input: OpenChainInput,
+): Promise<ProposalChain> {
+  return openChainWithExecutor({ query }, memberId, input);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
