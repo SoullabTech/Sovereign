@@ -30,10 +30,49 @@ explicitly choose the grep language. ⛔ Which one is **D5**; that it must be ch
 > ⭐ **`same registry request + different environment = potentially different meaning` violates the
 > whole goal of canonical execution.**
 
+### ⭐⭐ D4 — RATIFIED: MODEL B (founder, 2026-09-14)
+
+> **Omission belongs to the caller. Default resolution belongs to the host.**
+
+```text
+caller request        {}
+host resolution       { ref: 'HEAD' }
+
+⛔ MUST NOT BECOME
+canonical caller request   { ref: 'HEAD' }      ← FALSE ATTRIBUTION
+```
+
+**The two acts are preserved separately:**
+
+```text
+INVOCATION        caller_terms: {}
+EXECUTION PLAN    host_terms: { ref: HEAD, source: host_default }
+```
+
+```text
+{}                caller left `ref` UNSPECIFIED
+{ ref: 'HEAD' }   caller EXPLICITLY selected HEAD
+```
+
+⭐ These currently execute identically. **They are not the same invocation** — and the distinction is
+load-bearing for provenance, auditing, future default changes, and **especially any later write
+capability.**
+
+**Derived invariant, ratified:**
+
+> **Canonicalization may normalize what the caller supplied; it may NOT manufacture omitted caller
+> intent.** A host may resolve an omission to make execution possible, **but that resolution belongs
+> to the execution plan and must retain its authorship.**
+
+⚠️ **Narrow exception:** a future capability contract may explicitly declare that omission
+semantically *means* a particular value **at the public interface** — separately ratified. ⛔ **The
+existing eight hidden defaults do not acquire that status merely because the handlers currently
+supply them.**
+
 ### ⭐ Decision order — FROZEN
 
 ```text
-D4  omission / authorship semantics     ← FIRST · establishes the model the rest live inside
+D4  omission / authorship semantics     ⭐ RATIFIED — MODEL B
 D1  pathspec language
 D5  grep pattern language
 D6  symbol language
@@ -108,10 +147,10 @@ of `symbol` is "a git grep pattern fragment," not "an identifier."** ⛔ §4 **D
 
 | Field | Role | Accepted language | Canonical representation | Validation invariant | Execution consumer | Omission meaningful? | Delegated? |
 |---|---|---|---|---|---|---|---|
-| `ref` (rev_parse, show_stat) | REF | git revision expression (`gitrevisions`) | **OPEN — D4** | string · `maxLength 1000` | `['rev-parse', ref]` / `['show','--stat',ref]` | **OPEN — D4** (`{}` → `HEAD`) | resolution of `HEAD` is repo state, not language |
-| `ref1` / `ref2` (diff_stat) | REF | ″ | **OPEN — D4** | ″ | `['diff','--stat',r1,r2]` | **OPEN — D4** (`HEAD~1` / `HEAD`) | ″ |
+| `ref` (rev_parse, show_stat) | REF | git revision expression (`gitrevisions`) | **caller terms — omission PRESERVED** | string · `maxLength 1000` | `['rev-parse', ref]` / `['show','--stat',ref]` | ⭐ **YES — D4/B**; host term `HEAD`, `source: host_default` | resolution of `HEAD` is repo state, not language |
+| `ref1` / `ref2` (diff_stat) | REF | ″ | **caller terms — omission PRESERVED** | ″ | `['diff','--stat',r1,r2]` | ⭐ **YES — D4/B**; host terms `HEAD~1` / `HEAD` | ″ |
 | `branch` (branch_contains) | REF | ″ | the supplied value | required · string | `merge-base --is-ancestor` | n/a — required | ″ |
-| `commit` (branch_contains) | REF | ″ | **OPEN — D4** | ″ | ″ | **OPEN — D4** (`HEAD`) | ″ |
+| `commit` (branch_contains) | REF | ″ | **caller terms — omission PRESERVED** | ″ | ″ | ⭐ **YES — D4/B**; host term `HEAD` | ″ |
 
 ⚠️ **The REF language is wider than it looks.** `gitrevisions` admits `HEAD@{2.days.ago}`, `:/text`,
 `ref^{tree}`. ⛔ Whether the authorized language is *all* of `gitrevisions` or a restricted subset is
@@ -162,7 +201,7 @@ declared name and the semantic role disagree.
 
 | Field | Role | Accepted language | Canonical representation | Validation invariant | Execution consumer | Omission meaningful? | Delegated? |
 |---|---|---|---|---|---|---|---|
-| `dir` | **PATHSPEC** | **OPEN — D1** | **OPEN — D1 + D4** | string · `maxLength 1000` | `ls-files <spec>` | **OPEN — D4** (`database/migrations` · `app`) | git pathspec matching |
+| `dir` | **PATHSPEC** | **OPEN — D1** | **OPEN — D1** · omission **PRESERVED** (D4/B) | string · `maxLength 1000` | `ls-files <spec>` | ⭐ **YES — D4/B**; host terms `database/migrations` · `app` | git pathspec matching |
 
 ## 2 · The three READY capabilities — recorded for contrast
 
@@ -192,6 +231,44 @@ STATUS            BLOCKED — DELEGATED REPOSITORY EXECUTION
 ⛔ No contract is written for it. **A repository-defined capability may not receive a canonical act
 identity as though the registry fully determines its semantics.**
 
+## 3b · ⭐⭐ Consequence of D4/B — H1 is RE-CLASSIFIED
+
+**Derived from the ruling, stated for founder confirmation:**
+
+> **Under Model B, H1 is not a canonicalization bug. It is an UNRECORDED HOST CONTRIBUTION.**
+
+The handler doing `args.ref || 'HEAD'` is **the host resolving an omission to make execution
+possible** — which Model B expressly permits. ⛔ **What is missing is not the resolution. It is the
+record of its authorship.**
+
+**This changes what "REQUIRES CONTRACT REPAIR" means for the seven H1 capabilities:**
+
+```text
+UNDER MODEL A   move defaults out of handlers into a canonicalizer      ← larger, riskier
+UNDER MODEL B   record the resolution as a host term in the execution   ← smaller, safer
+                plan, wherever it is applied
+```
+
+⭐ **The defaults are not in the wrong place. They are in the wrong document.**
+
+### ⚠️ And it re-scores the census
+
+`BOUND = EXECUTED` was scored against a **single** document. Model B establishes **two**, and the law
+applies per document:
+
+```text
+INVOCATION      binds {}      faithfully   ✅
+EXECUTION PLAN  binds HEAD    faithfully   ✅  — PROVIDED the plan records it
+```
+
+> ⛔ **The eight hidden defaults therefore cease to be `BOUND ≠ EXECUTED` violations of L4 and become a
+> COMPLETENESS requirement on the execution plan.**
+
+⚠️ **H2 and H3 are NOT re-scored** — nothing consumes those values in either document, so they remain
+contract ambiguities. **H1 is the only hazard class D4 resolves.**
+
+⛔ **Recorded as a derived consequence, not applied to the census scores until confirmed.**
+
 ## 4 · ⭐ Open decisions — authority questions, not sanitizer questions
 
 ### D1 · Git magic pathspecs — **the decision the founder named as unavoidable**
@@ -215,7 +292,7 @@ type. ⛔ **A sanitizer must not decide this accidentally.**
 behaves as though the field does not exist reads as **unfinished**, not vestigial. ⛔ **A lean is not
 authority to choose.**
 
-### D4 · ⭐⭐ Omission semantics — **FIRST. A constitutional question, not a technical one**
+### D4 · ⭐⭐ Omission semantics — **RATIFIED: MODEL B.** Kept below as the question it answered.
 
 For all eight hidden defaults:
 
@@ -270,8 +347,11 @@ RATIFIED                    PATTERN splits → GREP_PATTERN + JS_REGEX (taxonomy
                             SYMBOL currently = GREP_PATTERN_FRAGMENT
                             F-B ambientness must be ELIMINATED, not just declared
 
-DECISION ORDER (frozen)     D4 → D1 → D5 → D6 → D2 → D3
-                            ⭐ D4 establishes the model the rest live inside
+D4                          ⭐ RATIFIED — MODEL B · omission is caller-authored absence
+                            default resolution is host-authored, recorded in the plan
+DERIVED CONSEQUENCE         H1 re-classified: unrecorded host contribution, not a
+                            canonicalization bug — smaller, safer repair shape
+REMAINING ORDER             D1 → D5 → D6 → D2 → D3
 
 F-B EVIDENCE                absence of pinning PROVEN from source
                             effective grep.patternType ⛔ UNOBSERVED
