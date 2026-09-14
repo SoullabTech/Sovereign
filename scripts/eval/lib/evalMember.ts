@@ -21,6 +21,10 @@
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
+import { teardownFixture, type TeardownReport } from './teardown';
+
+export { describeTeardown, type TeardownReport } from './teardown';
+
 export const SYNTHETIC_LABEL = 'EVAL-SYNTHETIC';
 
 export interface Db {
@@ -151,10 +155,33 @@ export async function authenticateEvalMember(
  * practice_fields row the guidance probes wrote). Default-on so repeated runs
  * leave no synthetic residue in the dev DB; pass --keep-member to retain the
  * rows for inspection (they remain labeled synthetic + tester=true).
+ *
+ * The delete ORDER is not written here — it is derived from the live FK graph
+ * (see ./teardown.ts). The earlier hardcoded order missed
+ * practice_field_revisions -> practice_fields, aborted on the first statement,
+ * and silently skipped the three deletes that followed while still printing a
+ * success line. Deriving the order is what stops the next child table from
+ * reproducing that.
+ *
+ * Returns a report instead of throwing: an unclean teardown is a result the
+ * caller must surface next to the probe verdict, not an exception to warn past.
  */
-export async function cleanupEvalMember(db: Db, member: EvalMember): Promise<void> {
-  await db.query('DELETE FROM practice_fields WHERE practitioner_member_id = $1', [member.id]);
-  await db.query('DELETE FROM auth_sessions WHERE member_id = $1', [member.id]);
-  await db.query('DELETE FROM magic_link_tokens WHERE email = $1', [member.email]);
-  await db.query('DELETE FROM members WHERE id = $1', [member.id]);
+export async function cleanupEvalMember(db: Db, member: EvalMember): Promise<TeardownReport> {
+  return teardownFixture(
+    db,
+    [
+      // Roots are listed child-first; the FK walk handles everything below them.
+      // auth_sessions and magic_link_tokens are named explicitly because they
+      // are keyed off the member's session/email rather than reliably reachable
+      // as non-cascading children.
+      { table: 'auth_sessions', whereSql: 'member_id = $1', params: [member.id] },
+      { table: 'magic_link_tokens', whereSql: 'email = $1', params: [member.email] },
+      { table: 'members', whereSql: 'id = $1', params: [member.id] },
+    ],
+    {
+      // members is reachable from itself (invited_by) and from member_guardians.
+      // Only the fixture member may ever be deleted from it.
+      guardedTables: ['members', 'public.members'],
+    },
+  );
 }
