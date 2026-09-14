@@ -137,6 +137,7 @@ for i in $(seq 1 "$N"); do
   daemon_snapshot "$i" before
   log "sample $i/$N — driver ($TEST, mode $MODE)"
   T0=$(date +%s); run_test "$TEST" > "$LEDGER_DIR/sample-$i-xcodebuild.log"; RC=$?; T1=$(date +%s)
+  printf "%s\t%s\t%s\n" "$i" "$T0" "$T1" >> "$LEDGER_DIR/sample-timing.tsv"   # PASS-2 seam experiment: the per-sample wall window, for offline log show only
   if grep -q '^xcodebuild: error:' "$LEDGER_DIR/sample-$i-xcodebuild.log"; then
     # The invocation itself was refused (usage/destination/xctestrun) — nothing reached the device. Burning N rows
     # on the same refusal is not a batch; abort as infrastructure at the first one.

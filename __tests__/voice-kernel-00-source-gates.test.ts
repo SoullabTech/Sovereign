@@ -565,6 +565,29 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(wdExec).toMatch(/--suffix debug/); expect(wdExec).toMatch(/W="\$CAL\/window-debug\.json"/);
     expect(wdExec).not.toMatch(/> *"?\$CAL\/window\.json|window-audio\.jsonl|window-info/);                 // default and info reads never overwritten
     expect(wd).not.toMatch(/no --debug/);                                                   // C-D16: the debug record must not describe itself as 'no --debug'
+    // PASS-2 SEAM EXPERIMENT (protocol PASS2_SEAM_EXPERIMENT_PROTOCOL_2026-09-14.md; design + witness implementation authorized, EXECUTION HELD):
+    // N fixed at 30, blocks control|logged only, authority at invocation, ONE collect after the last sample, default-level show only,
+    // named sealed probe (never newest-probe discovery), frozen fields F1–F6, classes from the kernel ledger.
+    const lb = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-batch.sh'), 'utf8');
+    const lbExec = lb.split('\n').filter((l) => !/^\s*#/.test(l) && !/^\s*say /.test(l)).join('\n');
+    expect(lbExec).toMatch(/\[ "\$N" = 30 \] \|\| \{ echo "STOP/);
+    expect(lbExec).toMatch(/\[ "\$BLOCK" = control \] \|\| \[ "\$BLOCK" = logged \] \|\|/);
+    expect(lbExec.indexOf('K00_EXEC_AUTHORITY unset')).toBeLessThan(lbExec.indexOf('k00-driver-batch.sh'));
+    expect(lbExec).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(\b(grep|cat|git)\b|==|-f )/);
+    expect((lbExec.match(/\bsudo\b/g) || []).length).toBe(1); expect(lbExec).toMatch(/sudo log collect --device-udid/);
+    expect(lbExec.indexOf('k00-driver-batch.sh')).toBeLessThan(lbExec.indexOf('sudo log collect'));            // collect AFTER the batch
+    expect(lbExec).not.toMatch(/--info|--debug|log config|sysdiagnose|lldb|install app|k00-reinstall/);
+    expect(lbExec).not.toMatch(/ls -d[^\n]*log-probe[^\n]*tail -1/); expect(lbExec).toMatch(/K00_LOG_PROBE must name the sealed probe/);
+    expect(lbExec).toMatch(/log show --start "\$S0" --end "\$S1" --style json "\$UD\/device\.logarchive"/);
+    expect(lbExec).toMatch(/k00-seam-ledger\.py/);
+    const db = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-driver-batch.sh'), 'utf8');
+    expect(db).toMatch(/sample-timing\.tsv/);
+    const sl = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-seam-ledger.py'), 'utf8');
+    const slExec = sl.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+    expect(slExec).not.toMatch(/subprocess|os\.system|xcrun|log collect|log show/);
+    expect(al).toMatch(/SEAM_FIELDS = \('F1_aurio_start_ms', 'F2_iounit_post_ms', 'F3_iounit_post_vs_start_return_ms', 'F4_first_callback_vs_start_return_ms', 'F5_iounit_posts_in_seam', 'F6_order_signature'\)/);
+    expect(sl).toMatch(/TAKE = 'gen-1 listen'/); expect(sl).toMatch(/classes from the kernel ledger, never from the log/);
+    expect(readFileSync(join(process.cwd(), 'docs', 'programme', 'VOICE-2026', 'PASS2_SEAM_EXPERIMENT_PROTOCOL_2026-09-14.md'), 'utf8')).toMatch(/N = \*\*30 per block\*\*/);
     const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
     // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
     // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).

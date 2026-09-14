@@ -64,6 +64,36 @@ def align(aud, rs, out=print):
         out(f"## audiomxd entries in that interval: {sum(1 for e in d if name(e) == 'audiomxd')} · per process: " + json.dumps(__import__('collections').Counter(name(e) for e in d).most_common()))
         for e in d[:30]: out(f"   {e['timestamp'][11:23]} {name(e)} {e.get('subsystem', '')} {(e.get('eventMessage') or '').strip()[:120]}")
     return off
+SEAM_FIELDS = ('F1_aurio_start_ms', 'F2_iounit_post_ms', 'F3_iounit_post_vs_start_return_ms', 'F4_first_callback_vs_start_return_ms', 'F5_iounit_posts_in_seam', 'F6_order_signature')
+def seam_fields(aud, rs):
+    """FROZEN derived fields (protocol §4, predeclared before any outcome is read). All times are ms relative to the journal's
+    start_begin, via the two synchronous anchors; None = the line/event is absent at this level for this sample."""
+    h = [e for e in aud if name(e) == 'VoiceKernelHarness']
+    act = [e for e in h if 'Activated session' in (e.get('eventMessage') or '')]
+    if not act: return {'seam': 'UNREADABLE: no Activated session line'}
+    pid = act[-1]['processID']; hp = [e for e in h if e['processID'] == pid]
+    mono = lambda ev, **kw: next((r['timeMonotonicMs'] for r in rs if r['event'] == ev and all((r.get('evidence') or {}).get(k) == v for k, v in kw.items())), None)
+    sb, sr, fc = mono('graph_start_trace', step='start_begin'), mono('graph_start_trace', step='start_return'), mono('first_input_callback')
+    sa = mono('session_activated')
+    la = next((e for e in hp if e.get('subsystem') == 'com.apple.coreaudio' and 'Activated session 0x' in (e.get('eventMessage') or '')), None)
+    lb = next((e for e in hp if e.get('subsystem') == 'com.apple.avfaudio' and re.search(r'AVAudioEngine\.mm.*start, was running', e.get('eventMessage') or '')), None)
+    if not (sa and sb and la and lb): return {'seam': 'UNREADABLE: synchronous anchors incomplete'}
+    off = ((wall(la['timestamp']) - sa / 1000.0) + (wall(lb['timestamp']) - sb / 1000.0)) / 2
+    rel = lambda e: (wall(e['timestamp']) - (sb / 1000.0 + off)) * 1000.0
+    lo, hi = sb / 1000.0 + off - 0.05, (max(sr or sb, fc or sb)) / 1000.0 + off + 0.5
+    seam = [e for e in hp if lo <= wall(e['timestamp']) <= hi and (e.get('subsystem') in ('com.apple.coreaudio', 'com.apple.avfaudio', 'com.apple.audio.caulk') or 'AURemoteIO' in (e.get('eventMessage') or ''))]
+    aurio = next((e for e in seam if 'Starting AURemoteIO' in (e.get('eventMessage') or '') and rel(e) >= -1), None)
+    posts = [e for e in seam if 'iounit configuration changed > posting notification' in (e.get('eventMessage') or '') and rel(e) >= -1]
+    f = {'F1_aurio_start_ms': round(rel(aurio)) if aurio else None,
+         'F2_iounit_post_ms': round(rel(posts[0])) if posts else None,
+         'F3_iounit_post_vs_start_return_ms': (round(rel(posts[0]) - (sr - sb)) if (posts and sr) else None),
+         'F4_first_callback_vs_start_return_ms': ((fc - sr) if (fc and sr) else None),
+         'F5_iounit_posts_in_seam': len(posts)}
+    ev = [('start_begin', 0.0)] + ([('aurio', rel(aurio))] if aurio else []) + ([('iounit_post', rel(posts[0]))] if posts else []) + ([('start_return', float(sr - sb))] if sr else []) + ([('callback', float(fc - sb))] if fc else [])
+    f['F6_order_signature'] = '<'.join(k for k, _ in sorted(ev, key=lambda kv: kv[1]))
+    f['seam'] = 'READ'; f['seam_transcript'] = [f"{e['timestamp'][11:23]} {rel(e):+7.1f} ms {e.get('subsystem','')} {(e.get('eventMessage') or '').strip()[:160]}" for e in seam]
+    f['anchor_agreement_ms'] = round(abs((wall(la['timestamp']) - sa / 1000.0) - (wall(lb['timestamp']) - sb / 1000.0)) * 1000)
+    return f
 if __name__ == '__main__':
     A, Jf = sys.argv[1:3]
     aud = [json.loads(l) for l in open(A) if l.strip()]
