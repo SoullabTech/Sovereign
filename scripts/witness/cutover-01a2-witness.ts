@@ -18,7 +18,8 @@
  * being connected.
  */
 import {
-  fetchWriteState, proposalSelector, roomOrientation, chooseMount, sectionEngine,
+  fetchWriteState, proposalSelector, legacyProposalFor, roomOrientation,
+  chooseMount, sectionEngine,
   type WriteState,
 } from '@/lib/writersStudio/writeStateClient';
 
@@ -123,6 +124,23 @@ async function main() {
     { sectionId: 'sec-legacy',
       range: { space: 'projected_section_body', start: 3, end: 9 } });
 
+  /* ══ A12-9 · ⭐⭐ ONE VISIT, ONE PROPOSAL SUBJECT, EVERYWHERE ═════════════
+     The most serious of the three cutover defects, because it reached the
+     DECISION surface: with both identities in the URL the Work showed chain C
+     while the legacy panel — and its own Accept Changes against
+     /revision-proposal/OLD/accept — stayed mounted on OLD.
+
+     Choosing one identity for the Work is insufficient if another identity
+     still owns the decision panel. */
+  const sBoth = proposalSelector({ chainId: 'C1', versionId: 'V2' }, 'old-proposal-1');
+  eq('A12-9 · ⭐⭐ both identities present → chain/version wins AND no legacy panel',
+    [sBoth?.kind, legacyProposalFor(sBoth)], ['chain_version', null]);
+  /* ⛔ And the staged old path is NOT removed — on its own URL it still mounts. */
+  eq('A12-9b · ⛔ a legacy-only visit still mounts its panel — nothing was removed',
+    legacyProposalFor(proposalSelector(null, 'old-proposal-1')), 'old-proposal-1');
+  eq('A12-9c · a visit naming neither mounts neither',
+    legacyProposalFor(proposalSelector(null, null)), null);
+
   /* ⛔ ONE AUTHORITY. The room must not re-derive orientation from the old
      preview object; `useProposedChange` may stay alive for the old panel while
      the cutover is staged, but it is no longer a second authority on where the
@@ -141,6 +159,12 @@ async function main() {
   eq('A12-8 · [SOURCE] the room consumes roomOrientation and assembles no orientation of its own',
     [/roomOrientation\(/.test(ROOM),
       /proposalTarget\s*=[^;]*\{\s*sectionId\s*:/.test(ROOM)], [true, false]);
+  /* ⭐ The behavioural half above proves the SELECTION law; this proves the room
+     actually consumes it rather than reading the raw parameter again — the seam
+     the whole 01A.3 defect walked through. */
+  eq('A12-10 · [SOURCE] the legacy panel identity comes from the selector, never the raw URL',
+    [/useProposedChange\(\s*legacyProposalFor\(/.test(ROOM),
+      /useProposedChange\(\s*(raw)?[Pp]roposalId\s*\)/.test(ROOM)], [true, false]);
 
   console.log(`\n  ${pass} passed · ${fail} failed`);
   process.exit(fail === 0 ? 0 : 1);

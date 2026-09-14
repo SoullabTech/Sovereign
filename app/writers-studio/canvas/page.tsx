@@ -55,6 +55,7 @@ import {
   markableRange,
   roomOrientation,
   proposalSelector,
+  legacyProposalFor,
   type WriteState,
   type WriteMount,
 } from '@/lib/writersStudio/writeStateClient';
@@ -293,8 +294,8 @@ function CanvasRoom() {
   /* ⭐ EDITORIAL-WRITE-01A — one proposal, pointed at by id, shown beside the
      Work it would change. ⛔ Nothing appears unless the URL names one AND the
      server serves it; the routes 404 unless the write flag is constituted. */
-  const proposalId = searchParams ? requestedProposalId(searchParams) : null;
-  const proposed = useProposedChange(proposalId);
+  /* ⛔ THE RAW URL PARAMETER, and it governs nothing on its own. */
+  const rawLegacyProposalId = searchParams ? requestedProposalId(searchParams) : null;
 
   /* ⭐⭐ CUTOVER-01A — the room names a CHAIN and the EXACT VERSION it is
      showing. ⛔ Both or neither: a chain alone would let the room display
@@ -308,8 +309,15 @@ function CanvasRoom() {
      cutover is staged — which is the half of 01A's standing that 6fc919f7d
      silently stopped honouring. */
   const selector = useMemo(
-    () => proposalSelector(proposalFocus, proposalId),
-    [proposalFocus, proposalId]);
+    () => proposalSelector(proposalFocus, rawLegacyProposalId),
+    [proposalFocus, rawLegacyProposalId]);
+
+  /* ⭐⭐ CUTOVER-01A.3 · THE WHOLE ROOM TAKES ONE SUBJECT, NOT JUST THE WORK.
+     The legacy preview is fetched only when the selector actually resolved to
+     the legacy path — so a visit naming chain+version never mounts the old
+     panel, and never exposes its Accept Changes against a different proposal.
+     ⛔ The hook call stays unconditional; only its ARGUMENT is governed. */
+  const proposed = useProposedChange(legacyProposalFor(selector));
 
   /* ── WS2-04B: which engine may write this draft. Resolved by the server in
      one response; the room never assembles it from parts. */

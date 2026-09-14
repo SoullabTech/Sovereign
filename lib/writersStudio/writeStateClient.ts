@@ -213,6 +213,34 @@ export function proposalSelector(
   return null;
 }
 
+/**
+ * ⭐⭐ WHICH LEGACY PANEL THIS VISIT MAY MOUNT — and usually none.
+ *
+ * ⚠️ FOUNDER REVIEW OF 45cb0ec33, AND THE MOST SERIOUS OF THE THREE. 01A.2
+ * chose precedence once for `fetchWriteState`, and that was mistaken for
+ * choosing it once for the ROOM. With both identities in the URL the Canvas
+ * still read the raw legacy parameter for its preview hook, so:
+ *
+ *     Work · mount · orientation   →  chain C, version V
+ *     decision panel               →  legacy proposal OLD
+ *
+ * ⛔ That is not a visual disagreement. The old panel carries its own Accept
+ * Changes against `/revision-proposal/OLD/accept`, so the writer could be shown
+ * one proposal in the manuscript while the decision surface was able to act on
+ * a different one.
+ *
+ *     Choosing one proposal identity for the Work is insufficient if another
+ *     proposal identity still owns the decision panel.
+ *     ⭐ ONE VISIT GETS ONE PROPOSAL SUBJECT, EVERYWHERE.
+ *
+ * ⛔ This removes nothing: a `legacy` selector still yields its id, so the
+ * staged old path stays fully reachable on its own URL. It only stops the old
+ * panel from riding along beside a chain/version visit.
+ */
+export function legacyProposalFor(selector: ProposalSelector | null): string | null {
+  return selector && selector.kind === 'legacy' ? selector.proposalId : null;
+}
+
 /** GET the resolved state. A 404 is `no_draft`, not an error. */
 export async function fetchWriteState(
   manuscriptId: string,
