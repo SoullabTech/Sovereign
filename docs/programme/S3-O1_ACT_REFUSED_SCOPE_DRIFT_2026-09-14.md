@@ -234,3 +234,114 @@ PRODUCTION               UNTOUCHED
 confirming query returns both rows, the three-file set becomes the *correct* law
 and changing it is a governed act with its own witness run — ⛔ not a convenience
 edit.
+
+---
+
+# DEPLOYMENT-SAFETY-02A · ACT-SCOPE CORRECTION (founder ruling, 2026-09-14)
+
+## The sort-free query closed it
+
+```text
+20260121_trusted_colleagues.sql      PRESENT · applied_at 2026-01-23 22:17:54+00
+20260122_transcript_encryption.sql   PRESENT · applied_at 2026-01-23 22:18:28+00
+all three 2026091300000* S3 rows     ABSENT
+schema_migrations                    529 rows
+```
+
+⭐⭐ **January 23 — eight months before this lane existed.** The production runner
+inserts by filename with `applied_at DEFAULT NOW()`, so today's stopped invocation
+could not have written these rows; had it done so they would read 2026-09-14.
+
+**Established:** the five-file premise is **WITHDRAWN**. There was **no**
+ledger/schema divergence, **no** unauthorized intervening migration act, and
+**nothing** was mutated by the refused invocation.
+
+⛔ **Why the earlier preflight disagreed is NOT established and is NOT invented.**
+Two explanations stay logically open — the earlier read was wrong despite its
+recorded output, or the database state was replaced between observations — and
+nothing in evidence distinguishes them. ⭐ *Record the contradiction; do not
+manufacture provenance for it.* My own collation hypothesis was tested here and
+**did not hold** (identical ordering under `C` and `en_US.UTF-8`), so it is not
+offered as the answer either.
+
+⚠️ **On authority, precisely:** commit `211f3b26` is an **evidence correction**, not
+authority for this change. The authority is the founder ruling that the lawful
+pending set is exactly the three S3 migrations.
+
+## Why no new compatibility census
+
+DEPLOYMENT-SAFETY-02 §3 classified each migration **individually**:
+
+```text
+M1  new tables + triggers on its own objects      ✅ old-reader compatible
+M2  CHECK widened by one boundary value           ✅ old-reader compatible
+M3  CHECK widened by one gesture value            ✅ old-reader compatible
+```
+
+The old proof was `A + B + M1 + M2 + M3 = safe`; A and B are already applied, so
+the act is `M1 + M2 + M3`. ⭐ Removing two already-present, independently
+compatible migrations introduces no new condition. **Three is not a new design —
+it is the corrected execution truth.**
+
+## The change
+
+`RB_EXPECTED_PENDING` five → three, with the correction's reasoning and its
+⛔ **not-established** provenance recorded in the file itself.
+
+⛔⛔ **THE GATE IS NOT MADE PERMISSIVE.** Exact-set refusal remains the law. The
+list was corrected by a governed act with its own witness — ⛔ never edited to
+match whatever production happened to show. *The list is the law; the ledger is
+the observation.* A future mismatch means STOP, not narrow.
+
+## Witness — **67 passed · 0 failed**
+
+```text
+ACT SCOPE — every neighbouring set refused, in BOTH directions
+  a FOURTH pending migration                          refused
+  the STALE five-file set                             refused
+  a narrower set (two of three)                       refused
+  a single file                                       refused
+  an EMPTY pending set                                refused
+  the three plus one already-applied January name     refused
+  ⭐ the runbook's own RB_EXPECTED_PENDING is read OUT OF THE RUNBOOK and must
+     equal the proved three — the harness cannot pass against a stale
+     expectation it carries itself
+  ⭐ neither already-applied January filename remains in the act scope
+
+UNCHANGED AND STILL GREEN
+  self-pin + hash-proof of runbook and all 4 helpers
+  build → capture + recovery tag → migrate → swap → provenance → Co-Lab
+  every pre-swap refusal leaves shared role tags untouched
+  recovery retags :prod, restarts, confirms commit and health
+  ⭐ swap-before-migrate mutant                        DETECTED
+  ⭐ recovery leaving :prod on the candidate           DETECTED
+  only the happy path declares the act complete
+```
+
+⭐ **A guard that only rejects "more" is half a guard.** The first production
+invocation was stopped by a set that was *smaller* than expected — so the
+corrected witness proves refusal in both directions explicitly.
+
+Neighbours re-run: `verify:migrate-fail-closed` **14/0** ·
+`verify:deploy-provenance` **27/0** · `verify:deploy-lock` **25/0**.
+⛔ Untouched: S3 route/application code, every migration, `deploy-production.sh`,
+the routed-out rollback primitive, and the stale CLAUDE.md closure anchor.
+
+## Standing
+
+```text
+first O1 invocation          ✅ REFUSED AS DESIGNED · nothing changed
+five-file premise            ❌ WITHDRAWN
+ledger/schema divergence     ❌ DID NOT EXIST
+cause of the bad read        ⛔ NOT ESTABLISHED · not invented
+true pending set             ✅ EXACTLY THREE S3 MIGRATIONS
+three-file compatibility     ✅ ALREADY PROVED (DS-02 §3, per-migration)
+
+O1 scope correction          ✅ MADE · witness 67/0
+canonical admission          ⏸ PR owed · protected checks not yet run
+SCHEMA EXECUTION             ⏸ HOLD until the correction merges and its exact
+                                merge-result SHA is captured
+c2cb81f2c…                   no longer the executable O1 candidate — its
+                                hardcoded scope is falsified by production truth
+PRODUCTION                   UNTOUCHED
+```
