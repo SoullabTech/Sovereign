@@ -65,6 +65,15 @@ file, one identity helper, and two different authorities on GET and POST
 rewriting; ⛔ no reconstruction of a prettier commit sequence. The explicit-path staging rule is
 sufficient corrective process.
 
+⚠️⚠️ **SUPERSEDED 2026-09-14 by founder custody ruling — see
+`PHASE-1-WHOLE-ORGANISM-CENSUS-01_P1-03_CLOSE_2026-09-14.md`.** The records were located on
+`claude/quirky-lovelace-yxaes0` (base `1a555430`), merged into this lane with history intact,
+and **P1-03 had already been executed there — 221 normalized rows, now CLOSED.** The block
+below was true of this checkout and false of the lane. ⛔ Kept verbatim, never edited to read as
+if it had always said otherwise: the refusal to reconstruct the records from the rulings is what
+kept the register's provenance intact, and a block is the correct output of a session that
+cannot see the branch. What follows is the state as recorded at the time.
+
 ⚠️ **BLOCKING CUSTODY FACT, recorded rather than worked around.** At the subject SHA, in this
 container, **the P1-00 / P1-01 / P1-02 records are not present** and `84532740` **is not a valid
 object in this clone**:
