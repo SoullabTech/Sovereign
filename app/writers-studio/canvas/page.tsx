@@ -90,8 +90,10 @@ const PROPOSAL_MARK = 'A' as const;
 import FocusSetPanel, { FocusSetRefused } from '../field/FocusSetPanel';
 import { resolveFocusSet, type FocusSet } from '../field/focusSet';
 import { requestedOrigin } from '../workWithThis';
-import { requestedProposalId, requestedProposalFocus } from '../canvasIdentity';
+import { requestedProposalId, requestedProposalFocus, CANVAS_PROPOSAL_VERSION_PARAM } from '../canvasIdentity';
 import ProposedChange from '../ProposedChange';
+import { EditorialWorkspace } from '../EditorialWorkspace';
+import { workspaceSubject } from '@/lib/writersStudio/editorialWorkspace';
 import { useProposedChange } from '../useProposedChange';
 import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
 import StructureReview from './StructureReview';
@@ -395,6 +397,22 @@ function CanvasRoom() {
      point inside would be motion without evidence. */
   const proposalTarget = roomOrientation(engine?.target);
 
+  /* ⭐⭐ W3 · THE WORKSPACE SUBJECT COMES FROM THE RESOLVED TARGET.
+     ⛔ Not from `?proposalChain=…`. The URL selector was resolved by the server
+     against THIS manuscript — including the 01A.1 Work-namespace binding — and
+     mounting from the raw parameters would let that defect reappear one layer
+     above the mount, where the binding cannot see it. */
+  const subject = workspaceSubject(engine?.target);
+
+  /* Moves the room's subject to a newly authored version. ⭐ Set, never rebuild:
+     every other parameter of the visit survives (the EW-F1 lesson). */
+  const focusVersion = useCallback((versionId: string) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set(CANVAS_PROPOSAL_VERSION_PARAM, versionId);
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+    setRefocus((n) => n + 1);
+  }, []);
+
   /** Performs the decision. Returns whether the writer was actually moved. */
   const moveToProposal = useCallback((): boolean => {
     const move = proposalMove(
@@ -423,6 +441,7 @@ function CanvasRoom() {
    * chosen to read elsewhere.
    */
   const [revealToken, setRevealToken] = useState(0);
+  const [refocus, setRefocus] = useState(0);
 
   const showProposedChange = useCallback(() => {
     moveToProposal();
@@ -453,7 +472,7 @@ function CanvasRoom() {
     return () => { cancelled = true; };
     /* The proposal is part of what the write state RESOLVES, so a change to
        it re-asks the server rather than being reinterpreted here. */
-  }, [manuscript?.id, selector]);
+  }, [manuscript?.id, selector, refocus]);
 
   /* WS2-NAV-01 — the member act that makes a Work navigable.
 
@@ -975,7 +994,15 @@ function CanvasRoom() {
               onClose={() => undefined}
             />
           ) : (
-            proposed.mount.state === 'ready' ? (
+            subject?.kind === 'chain' ? (
+              <EditorialWorkspace
+                chainId={subject.chainId}
+                versionId={subject.versionId}
+                apiFetch={apiFetch}
+                onFocusVersion={focusVersion}
+                onWorkChanged={refreshWriteState}
+              />
+            ) : proposed.mount.state === 'ready' ? (
               <ProposedChange
                 comparison={proposalComparison}
                 preview={proposed.mount.preview}
@@ -1387,7 +1414,15 @@ function CanvasRoom() {
                 onClose={() => dismiss('conversation')}
               />
             ) : (
-              proposed.mount.state === 'ready' ? (
+              subject?.kind === 'chain' ? (
+              <EditorialWorkspace
+                chainId={subject.chainId}
+                versionId={subject.versionId}
+                apiFetch={apiFetch}
+                onFocusVersion={focusVersion}
+                onWorkChanged={refreshWriteState}
+              />
+            ) : proposed.mount.state === 'ready' ? (
               <ProposedChange
                 comparison={proposalComparison}
                 preview={proposed.mount.preview}

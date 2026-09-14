@@ -71,8 +71,6 @@ export async function POST(
 
   /* ⭐ The loud refusal. A caller that believed it authored a rationale or a
      direction learns that it did not. */
-  /* ⭐ The loud refusal. A caller that believed it authored a rationale or a
-     direction learns that it did not. */
   const unknown = Object.keys(b).filter((k) => !AUTHORING_FIELDS.has(k));
   if (unknown.length > 0) {
     return NextResponse.json({ error: 'unknown_field', fields: unknown }, { status: 400 });
