@@ -84,6 +84,7 @@ say "## collect rc=$CRC · $((CT1-CT0)) s · archive size: $(du -sh "$OUT/device
 [ $CRC -eq 0 ] && [ -d "$OUT/device.logarchive" ] || { say "## STOP — collect did not produce an archive; mechanism returned for ruling"; exit 6; }
 # Ruling 1 precision: follow the help grammar literally — `log show [options] <archive>`, options first, archive last.
 # Ruling 2: first read at DEFAULT level only (no --info, no --debug); escalation, if any, is a separately recorded re-read.
+say "## show window (local): $T0_LOCAL → $T1_LOCAL"
 log show --start "$T0_LOCAL" --end "$T1_LOCAL" --style json "$OUT/device.logarchive" > "$OUT/window.json" 2> "$OUT/show-stderr.txt"; SRC=$?
 say "## show rc=$SRC · window.json $(du -sh "$OUT/window.json" | cut -f1) · window $((T1_EPOCH-T0_EPOCH+7)) s"
 # E. what was observed + time alignment to the journal (post-hoc filtering by known process names; no predicate was given to the tool)

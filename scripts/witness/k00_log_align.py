@@ -61,6 +61,7 @@ def align(aud, rs, out=print):
         lo = J['session_activated'] / 1000.0 + off - 0.15; hi = J['first_input_callback'] / 1000.0 + off + 0.05
         d = [e for e in aud if name(e) not in ('VoiceKernelHarness', 'SpringBoard', 'bluetoothd') and lo <= wall(e['timestamp']) <= hi]
         out(f"## audio-DAEMON entries (audiomxd/audioaccessoryd/…; not the harness) from activation−150 ms to first callback+50 ms: {len(d)}")
+        out(f"## audiomxd entries in that interval: {sum(1 for e in d if name(e) == 'audiomxd')} · per process: " + json.dumps(__import__('collections').Counter(name(e) for e in d).most_common()))
         for e in d[:30]: out(f"   {e['timestamp'][11:23]} {name(e)} {e.get('subsystem', '')} {(e.get('eventMessage') or '').strip()[:120]}")
     return off
 if __name__ == '__main__':

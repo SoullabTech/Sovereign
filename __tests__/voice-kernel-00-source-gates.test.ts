@@ -543,6 +543,17 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(wrExec).not.toMatch(/activ\|AVAudioSession\|audio/);                          // the loose anchor regex is gone
     expect(wrExec).toMatch(/--expect-archive/); expect(wr).toMatch(/named\.endswith\(want\)/);   // ruling step 4: the banner must name THIS calibration's archive
     expect(rrExec).toMatch(/--expect-archive "\$CAL\/device\.logarchive"/);
+    // Founder ruling 2 (2026-09-14): ONE --info re-read of the EXISTING archive, same window, separate record; never --debug,
+    // never a sample/collect/sudo/device act; authority supplied at invocation (AUTH-3); outputs never overwrite the default read.
+    const wi = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-window-info.sh'), 'utf8');
+    const wiExec = wi.split('\n').filter((l) => !/^\s*#/.test(l) && !/^\s*say /.test(l)).join('\n');
+    expect(wiExec).toMatch(/log show --info --start "\$T0_LOCAL" --end "\$T1_LOCAL" --style json "\$ARCH"/);   // options first, archive last
+    expect(wiExec).not.toMatch(/--debug|sudo|log collect|xcrun|devicectl|log config|sysdiagnose|k00-driver-batch/);
+    expect(wi.indexOf('K00_EXEC_AUTHORITY unset')).toBeLessThan(wi.indexOf('log show --info'));
+    expect(wiExec).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(grep|cat|git|==|-f )/);
+    expect(wiExec).toMatch(/--suffix info/); expect(wiExec).toMatch(/W="\$CAL\/window-info\.json"/);
+    expect(wiExec).not.toMatch(/> *"?\$CAL\/window\.json|window-audio\.jsonl/);                         // the default-level read is never overwritten
+    expect(wr).toMatch(/--suffix/); expect(al).toMatch(/audiomxd entries in that interval/);
     const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
     // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
     // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).
