@@ -65,23 +65,33 @@ const PATH_ROLE_ARGUMENTS = Object.freeze({
 //    '+', '-', '.', '*'. And no symbol is excluded from the domain: one whose edge is not a
 //    word constituent is always boundary-satisfied on that side, which is exactly why `+foo`
 //    is findable inside `x+foo` while `alpha.beta` is still not found inside `prefixalpha.beta`.
+// ⛔ CODE POINTS, NEVER UTF-16 HALVES. A policy that classifies with \p{L} while indexing code
+//    UNITS misreads its OWN rule: `'𝒜'[0]` is a lone high surrogate that no letter test
+//    matches. There are FOUR classification sites — the symbol's first and last code points,
+//    and the content code points immediately before and after the occurrence — and every one
+//    of them must be a whole code point. Both operands are decomposed with Array.from(), so
+//    the search itself runs over code points and no site can silently regress to a half.
+// ⛔ No ASCII-only substitute: that would narrow the literal-symbol domain D6 protects.
 const WORD_CONSTITUENT = /[\p{L}\p{N}_]/u;
-const isWordChar = (ch) => ch !== undefined && WORD_CONSTITUENT.test(ch);
+const isWordChar = (codePoint) => codePoint !== undefined && WORD_CONSTITUENT.test(codePoint);
 
 function occursAsWholeSymbol(content, symbol) {
   if (symbol === '') return false;
-  const leftEdgeIsWord = isWordChar(symbol[0]);
-  const rightEdgeIsWord = isWordChar(symbol[symbol.length - 1]);
-  let from = 0;
-  for (;;) {
-    const i = content.indexOf(symbol, from);
-    if (i === -1) return false;
-    const j = i + symbol.length;
-    const leftOk = i === 0 || !(leftEdgeIsWord && isWordChar(content[i - 1]));
-    const rightOk = j === content.length || !(rightEdgeIsWord && isWordChar(content[j]));
+  const text = Array.from(content);          // code points, not code units
+  const sym = Array.from(symbol);            // code points, not code units
+  const leftEdgeIsWord = isWordChar(sym[0]);
+  const rightEdgeIsWord = isWordChar(sym[sym.length - 1]);
+
+  for (let i = 0; i + sym.length <= text.length; i++) {
+    let k = 0;
+    while (k < sym.length && text[i + k] === sym[k]) k++;
+    if (k !== sym.length) continue;
+    const j = i + sym.length;
+    const leftOk = i === 0 || !(leftEdgeIsWord && isWordChar(text[i - 1]));
+    const rightOk = j === text.length || !(rightEdgeIsWord && isWordChar(text[j]));
     if (leftOk && rightOk) return true;
-    from = i + 1;
   }
+  return false;
 }
 
 /** git grep --null emits `path\0line\0content` per record. */
@@ -186,7 +196,10 @@ export const CAPABILITIES = {
   'repo.grep': {
     args: {
       pattern: { type: 'string', required: true, maxLength: 1000 },
-      max_results: { type: 'number', required: false, min: 1, max: 200 }
+      // D3 ratified `CALLER RANGE integer 1…200`. `integer` states that domain for THIS field.
+      // ⛔ Deliberately not a blanket rule that every numeric argument must be an integer —
+      //    D3 ratified this domain for max_results specifically.
+      max_results: { type: 'number', required: false, min: 1, max: 200, integer: true }
     },
     handler: (args, cwd) => {
       const max_results = eff('repo.grep', args, 'max_results');
@@ -409,8 +422,15 @@ export function validateSchema(name, args) {
           throw new Error(`Argument ${argName} exceeds maximum length`);
         }
       } else if (argSchema.type === 'number') {
-        if (typeof value !== 'number') {
+        if (typeof value !== 'number' || !Number.isFinite(value)) {
           throw new Error(`Argument ${argName} must be a number`);
+        }
+        // A field declaring an integer domain admits only integers. Without this a fractional
+        // or non-finite bound is admitted and then SILENTLY COERCED at use — the record would
+        // say 1.5 while the act performed 1, which is the D4 correspondence law failing on a
+        // numeric domain rather than mere input hygiene.
+        if (argSchema.integer && !Number.isInteger(value)) {
+          throw new Error(`Argument ${argName} must be an integer`);
         }
         if (argSchema.min !== undefined && value < argSchema.min) {
           throw new Error(`Argument ${argName} must be at least ${argSchema.min}`);
