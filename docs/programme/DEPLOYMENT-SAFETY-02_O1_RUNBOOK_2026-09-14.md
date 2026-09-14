@@ -172,3 +172,115 @@ PRODUCTION WRITE            ⛔ NONE IN THIS ACT
 ```
 
 Stop for authorization.
+
+---
+
+# ADDENDUM · THREE CUSTODY GAPS REPAIRED (founder inspection, 2026-09-14)
+
+⭐ **All three were real, and the 19/0 harness did not prove what it appeared to.**
+The witness is now **48 / 0**. ⛔ `deploy-production.sh` remains byte-unchanged.
+
+## G1 · The runbook was not itself candidate-pinned
+
+⭐⭐ *`git fetch` updates refs, not the working tree.* The old command pinned the
+**payload** to the candidate while the **shell authority performing the act** came
+from whatever the shared checkout held. "One SHA governs the whole act" was not
+literally true.
+
+**Repair — self-pinning, then self-proving.** Phase 0 re-execs out of a disposable
+detached worktree at the named commit; phase 0b, running pinned, **proves it**:
+the worktree HEAD must equal the named commit, and this file plus
+`deploy-context.sh`, `deploy-lock.sh`, `deploy-tag.sh` must **hash-match that
+commit's blobs** (`git hash-object` vs `git rev-parse <sha>:scripts/<f>`).
+⭐ A hostile launcher that sets `RB_PINNED=1` to skip the worktree is refused by
+the hash comparison — **not by convention**. The worktree is removed on exit.
+
+## G2 · The post-migration claim was stronger than the mechanism
+
+⛔ Proving *swap failure → non-zero* is not proving *old reader remains live*. `up -d`
+can fail after doing work, and provenance fails **after** the swap.
+
+⭐ **And `tag_images_for_rollback` cannot establish rollback custody**: all three
+`docker tag` calls end in `|| true`, so its exit code says nothing about whether
+`:previous`, `:current` and `:<sha>` are truthful.
+
+**Repair — custody is PROVED before the boundary, not inferred.** Between migrate
+and swap: capture the **live reader's** image id, run the tagging, then assert
+`:previous` == the pre-act reader and `:current` == `:<sha>` == the built
+candidate. ⛔ Any mismatch **refuses before the swap**. No live reader to capture
+also refuses.
+
+⭐ **And the failure statement now says only what was established.**
+`rb_recovery_required` states: the five-file set applied; that schema is the
+proved-compatible superset so restoring the previous reader is safe and no schema
+rollback is implied; `:previous` was proved truthful before the crossing. Then
+⛔ *"The live reader's state is UNKNOWN to this script — read it, do not assume
+it"*, with the two commands to read it. ⛔ Automatic rollback is not part of this
+act, as ruled.
+
+## G3 · The "Co-Lab release gate" was not a gate
+
+It warned and then printed that the act was complete. **Repair:** Co-Lab failure →
+non-zero · `RECOVERY REQUIRED` · ⛔ no completion claim. Only a passing gate
+reaches *"act complete"*.
+
+## The witness — **48 passed · 0 failed**
+
+Beyond the original nineteen:
+
+```text
+PIN            unpinned invocation re-execs from the candidate BEFORE the lock
+               pin failure → nothing else runs
+SOURCE CUSTODY a stale/shared-checkout source refuses before the lock
+               self-provenance asserted on every pinned run
+               ⭐ the REAL check refuses a SHA that is not the running tree's commit
+
+ORDER          build → migrate → rollback custody → swap
+ROLLBACK       pre-act live reader captured and passed to the proof
+               custody failure REFUSES before the swap · non-zero
+               no capturable live reader → refuses before the swap
+   ⭐ REAL      accepts truthful tags; REFUSES an untruthful :previous, :current
+               or :<sha> — the `|| true` tagging defect, caught
+
+COMPLETION     ⭐ only the happy path declares "act complete"
+               build · migrate · custody · swap · provenance · Co-Lab failures
+               each CANNOT declare it
+RECOVERY       the statement does NOT claim the old reader is still live
+               and says its state is UNKNOWN and must be read
+```
+
+⚠️ One check was deliberately **left unscored**: the positive real-provenance case
+against this tree's own HEAD, because a working copy with uncommitted edits
+legitimately fails it — a pass there would have proved nothing. The discriminating
+negative case carries it instead.
+
+## The exact production command
+
+⛔ The earlier paste failed on shell line-continuation and a literal `<SHA>`
+placeholder. **One line, real SHA, no angle brackets:**
+
+```bash
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && git fetch origin clean-main-no-secrets && scripts/s3-schema-first-runbook.sh THE_REAL_MERGE_SHA'
+```
+
+Replace `THE_REAL_MERGE_SHA` with the merge commit that carries all five files.
+⭐ The shared checkout's copy of the script is only a bootstrap: it re-execs the
+candidate's copy, which then proves its own provenance — so a stale checkout is
+**safe by refusal**, and `git fetch` alone (no checkout) is sufficient.
+
+## Standing after the repair
+
+```text
+runbook source custody      ✅ CLOSED — pinned and self-proved
+rollback-target custody     ✅ CLOSED — proved before the swap boundary
+Co-Lab failure semantics    ✅ CLOSED — it gates completion
+witness                     ✅ 48 / 0 · discrimination intact
+deploy-production.sh        UNCHANGED · neighbours 14/0 · 27/0 · 25/0
+S3                          untouched · Class-B freeze diff EMPTY
+
+MERGE                       ⏸ HOLD
+SCHEMA DEPLOY               ⛔ NOT AUTHORIZED
+PRODUCTION                  UNTOUCHED — no write in this act
+```
+
+Stop for authorization.

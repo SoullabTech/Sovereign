@@ -33,12 +33,19 @@ FIVE='20260121_trusted_colleagues.sql
 
 # Trace one run of the REAL function with every docker-touching seam stubbed.
 #   $1 script  $2 sha  $3 pending-set  $4 step that fails ("" = none)
+#   RB_UNPINNED=1 in the caller drops the RB_PINNED marker, so phase 0 runs.
 trace() {
   local script="$1" sha="$2" pending="$3" failstep="${4:-}"
   TRACE="$TMP/trace"; : > "$TRACE"
-  PENDING="$pending" FAILSTEP="$failstep" TRACEFILE="$TRACE" bash -c '
+  PENDING="$pending" FAILSTEP="$failstep" TRACEFILE="$TRACE" \
+  RB_PINNED="${RB_UNPINNED:+0}" RB_PINNED="${RB_PINNED:-1}" bash -c '
     source "$1" >/dev/null 2>&1
     set +e
+    rb_pin_and_reexec() { echo "pin $1" >> "$TRACEFILE"; [ "$FAILSTEP" = pin ] && return 2; echo "reexec $1" >> "$TRACEFILE"; return 0; }
+    rb_prove_self_provenance() { echo "prove-self $1" >> "$TRACEFILE"; [ "$FAILSTEP" = provenance ] && return 2; return 0; }
+    rb_live_reader_image_id() { [ "$FAILSTEP" = no-reader ] && return 0; echo "sha256:PREACT"; }
+    rb_prove_rollback_custody() { echo "rollback-custody $1 pre=$2" >> "$TRACEFILE"; [ "$FAILSTEP" = custody ] && return 1; return 0; }
+    tag_images_for_rollback() { echo "tag $1" >> "$TRACEFILE"; }
     acquire_deploy_lock() { echo "lock $2" >> "$TRACEFILE"; }
     deploy_ctx_assert_and_materialize() {
       echo "materialize $1" >> "$TRACEFILE"
@@ -62,7 +69,13 @@ trace() {
       esac
       return 0
     }
-    docker() { echo "docker $*" >> "$TRACEFILE"; }
+    docker() {
+      case "$*" in
+        *verify-constitution-colab*) echo "colab" >> "$TRACEFILE"; [ "$FAILSTEP" = colab ] && return 1 ;;
+        *) echo "docker $*" >> "$TRACEFILE" ;;
+      esac
+      return 0
+    }
     s3_schema_first_main "$2"
     echo "EXIT=$?" >> "$TRACEFILE"
   ' _ "$script" "$sha" >/dev/null 2>&1
@@ -123,6 +136,124 @@ T="$(trace "$RUNBOOK" "" "$FIVE" "")"
 { grep -q '^materialize' <<<"$T" || grep -q '^lock' <<<"$T"; } \
   && bad "ran without a named candidate SHA" \
   || ok "no SHA → refuses before the lock; ⛔ no DEPLOY_ALLOW_HEAD escape"
+
+# ── 3b · SELF-PINNING: the runbook must be the CANDIDATE'S ─────────────────
+T="$(RB_UNPINNED=1 trace "$RUNBOOK" abc1234 "$FIVE" "")"
+I="$(step_index "$T" pin)"; L="$(step_index "$T" lock)"
+[ -n "$I" ] && { [ -z "$L" ] || [ "$I" -lt "$L" ]; } \
+  && ok "PIN: an unpinned invocation re-execs from the candidate BEFORE the lock" \
+  || bad "an unpinned invocation proceeded without pinning itself"
+T="$(RB_UNPINNED=1 trace "$RUNBOOK" abc1234 "$FIVE" pin)"
+{ grep -qE '^(migrate|swap|build)' <<<"$T"; } \
+  && bad "a failed pin still reached build/migrate/swap" \
+  || ok "PIN failure → nothing else runs"
+T="$(trace "$RUNBOOK" abc1234 "$FIVE" provenance)"
+{ grep -qE '^(migrate|swap|build)' <<<"$T"; } && bad "a provenance failure still proceeded" \
+  || ok "SOURCE CUSTODY: a hostile stale/shared-checkout source refuses before the lock"
+grep -q '^prove-self' <<<"$T" && ok "self-provenance is asserted on every pinned run" \
+  || bad "self-provenance is not asserted"
+
+# ⭐ The provenance assertion is exercised for REAL (not stubbed) on this tree:
+# a file that does not hash-match the named commit must be refused.
+REAL="$(cd "$SCRIPT_DIR/.." && git rev-parse HEAD 2>/dev/null)"
+if [ -n "$REAL" ]; then
+  OUT="$(RB_PIN_REPO="$SCRIPT_DIR/.." bash -c '
+    source "$1" >/dev/null 2>&1; set +e
+    rb_prove_self_provenance "$2"; echo "RC=$?"' _ "$RUNBOOK" "$REAL" 2>&1)"
+  # ⛔ Deliberately NOT scored either way: a working copy with uncommitted edits
+  # legitimately fails its own HEAD, so a pass here would prove nothing. The
+  # discriminating case is the negative one below.
+  case "$OUT" in *"RC="*) ok "REAL provenance check runs and returns a definite verdict" ;;
+    *) bad "REAL provenance check did not run" ;; esac
+  OUT="$(RB_PIN_REPO="$SCRIPT_DIR/.." bash -c '
+    source "$1" >/dev/null 2>&1; set +e
+    rb_prove_self_provenance "0000000000000000000000000000000000000000"; echo "RC=$?"' _ "$RUNBOOK" 2>&1)"
+  case "$OUT" in *"RC=0"*) bad "provenance accepted a commit that is not this tree's HEAD" ;;
+    *) ok "REAL provenance check REFUSES a SHA that is not the running tree's commit" ;; esac
+fi
+
+# ── 3c · ROLLBACK CUSTODY — proved before the swap boundary ────────────────
+T="$(trace "$RUNBOOK" abc1234 "$FIVE" "")"
+C="$(step_index "$T" rollback-custody)"; M="$(step_index "$T" migrate)"; S="$(step_index "$T" swap)"
+[ -n "$C" ] && [ "$M" -lt "$C" ] && [ "$C" -lt "$S" ] \
+  && ok "ORDER: build → migrate → rollback custody → swap" || bad "rollback custody is not between migrate and swap"
+grep -q '^rollback-custody abc1234 pre=sha256:PREACT' <<<"$T" \
+  && ok "the PRE-ACT live reader identity is captured and passed to the custody proof" \
+  || bad "the pre-act reader identity is not captured"
+T="$(trace "$RUNBOOK" abc1234 "$FIVE" custody)"
+grep -q '^swap' <<<"$T" && bad "an unprovable rollback target still crossed the swap" \
+  || ok "rollback-custody failure REFUSES before the swap"
+[ "$(code "$T")" != "0" ] && ok "rollback-custody failure exits non-zero" || bad "custody failure exited 0"
+T="$(trace "$RUNBOOK" abc1234 "$FIVE" no-reader)"
+grep -q '^swap' <<<"$T" && bad "swapped with no live reader captured" \
+  || ok "no capturable live reader → refuses before the swap"
+
+# ⭐ The custody proof is exercised for REAL against stubbed image ids.
+custody_real() { # $1 previous-id $2 current-id $3 sha-id -> rc
+  bash -c '
+    source "$1" >/dev/null 2>&1; set +e
+    rb_image_id() { case "$1" in *:prod) echo CAND;; *:previous) echo "$PREV";; *:current) echo "$CUR";; *) echo "$SHAT";; esac; }
+    PREV="$2" CUR="$3" SHAT="$4" rb_prove_rollback_custody abc1234 sha256:PREACT >/dev/null 2>&1; echo $?' \
+    _ "$RUNBOOK" "$1" "$2" "$3"
+}
+[ "$(PREV=x custody_real sha256:PREACT CAND CAND)" = "0" ] \
+  && ok "REAL custody proof accepts truthful :previous/:current/:<sha>" || bad "truthful tags were refused"
+[ "$(custody_real sha256:SOMETHING_ELSE CAND CAND)" != "0" ] \
+  && ok "REAL custody proof REFUSES an untruthful :previous (the |\| true tagging defect)" \
+  || bad "an untruthful :previous was accepted"
+[ "$(custody_real sha256:PREACT STALE CAND)" != "0" ] \
+  && ok "REAL custody proof REFUSES an untruthful :current" || bad "an untruthful :current was accepted"
+[ "$(custody_real sha256:PREACT CAND STALE)" != "0" ] \
+  && ok "REAL custody proof REFUSES an untruthful :<sha>" || bad "an untruthful :<sha> was accepted"
+
+# ── 3d · LATE FAILURES MAY NOT DECLARE COMPLETION ──────────────────────────
+for step in swap verify-running colab; do
+  T="$(trace "$RUNBOOK" abc1234 "$FIVE" "$step")"
+  [ "$(code "$T")" != "0" ] && ok "$step failure → non-zero" || bad "$step failure exited 0"
+done
+T="$(trace "$RUNBOOK" abc1234 "$FIVE" colab)"
+grep -q '^colab' <<<"$T" && ok "the Co-Lab gate is actually invoked" || bad "Co-Lab is never invoked"
+T="$(trace "$RUNBOOK" abc1234 "$FIVE" "")"
+grep -q '^colab' <<<"$T" && ok "the happy path reaches the Co-Lab gate" || bad "happy path skipped Co-Lab"
+
+# ⭐ COMPLETION IS REACHED BY THE HAPPY PATH ALONE. Asserted on stdout, because
+# "act complete" is the only claim an operator reads as authorisation.
+complete_says() { # $1 failstep -> prints "yes"/"no"
+  local out
+  out="$(PENDING="$FIVE" FAILSTEP="$1" TRACEFILE=/dev/null RB_PINNED=1 bash -c '
+    source "$1" >/dev/null 2>&1; set +e
+    rb_pin_and_reexec() { return 0; }; rb_prove_self_provenance() { return 0; }
+    rb_live_reader_image_id() { echo sha256:PREACT; }
+    rb_prove_rollback_custody() { [ "$FAILSTEP" = custody ] && return 1; return 0; }
+    tag_images_for_rollback() { :; }; acquire_deploy_lock() { :; }
+    deploy_ctx_assert_and_materialize() { export GIT_COMMIT="$1" MAIA_BUILD_CONTEXT=/s DEPLOY_COMPOSE_FILE=/s/c.yml; }
+    deploy_ctx_refuse_env_collision() { return 0; }; deploy_ctx_refuse_compose_runtime_override() { return 0; }
+    deploy_ctx_verify_image() { return 0; }
+    deploy_ctx_verify_running() { [ "$FAILSTEP" = verify-running ] && return 1; return 0; }
+    rb_pending_set() { printf "%s" "$PENDING"; }; sleep() { :; }
+    deploy_ctx_compose() { case "$*" in build*) [ "$FAILSTEP" = build ] && return 1;; *migrate*) [ "$FAILSTEP" = migrate ] && return 1;; up\ -d*) [ "$FAILSTEP" = swap ] && return 1;; esac; return 0; }
+    docker() { case "$*" in *colab*) [ "$FAILSTEP" = colab ] && return 1;; esac; return 0; }
+    s3_schema_first_main abc1234' _ "$RUNBOOK" 2>&1)"
+  grep -q "act complete" <<<"$out" && echo yes || echo no
+}
+[ "$(complete_says "")" = "yes" ] && ok "the happy path DOES declare the act complete" || bad "happy path never declares completion"
+for step in build migrate custody swap verify-running colab; do
+  [ "$(complete_says "$step")" = "no" ] \
+    && ok "$step failure CANNOT declare the act complete" \
+    || bad "$step failure declared the act complete"
+done
+for step in swap verify-running colab; do
+  out="$(PENDING="$FIVE" FAILSTEP="$step" bash -c '
+    source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "test"' _ "$RUNBOOK" 2>&1)"
+  grep -q 'RECOVERY REQUIRED' <<<"$out" || bad "recovery statement missing for $step"
+done
+out="$(bash -c 'source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "t"' _ "$RUNBOOK" 2>&1)"
+grep -qi 'old reader remains live\|current reader remains live' <<<"$out" \
+  && bad "the recovery statement CLAIMS the old reader is still live" \
+  || ok "the recovery statement does NOT claim the old reader is still live"
+grep -q 'UNKNOWN to this script' <<<"$out" \
+  && ok "the recovery statement says the live reader's state is UNKNOWN and must be read" \
+  || bad "the recovery statement does not admit what it cannot know"
 
 # ── 4 · DISCRIMINATION — swap-before-migrate must be DETECTED ──────────────
 MUT="$TMP/mutant.sh"
