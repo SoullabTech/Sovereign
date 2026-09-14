@@ -213,3 +213,22 @@ xcodebuild build-for-testing -project VoiceKernelDriver.xcodeproj -scheme Driver
 ```
 
 Expected readings, in order: `8b111709b6e5010b4b6ee7281d257141945276ff` · `reader-present` · `selftest: 33/33 expectations met` · `** TEST BUILD SUCCEEDED **`. Any other reading → STOP, return the transcript. Product hashes afterwards (`shasum -a 256` of the `.xctestrun`, `DriverUITests.xctest/DriverUITests`, `DriverUITests-Runner.app/DriverUITests-Runner`, `DriverHost.app/DriverHost` under the run2 derived path) are instrument evidence, never organism identity. Still NOT authorized: `test-without-building`, `devicectl`, install, launch, Play, Cancel, journal pull, sample.
+
+### 9.2 DRIVER-ONLY COMPILE GREEN on exactly `8b111709b` (founder transcript, 2026-09-14) — custody artefacts OWED · STOP
+
+**Transcript readings (founder, verbatim order):** `git fetch` brought `d36866f46..2aad16d64`; `worktree add --detach /private/tmp/k0506-driver-compile-8b111709b 8b111709b…` → `HEAD is now at 8b111709b …` · `git rev-parse HEAD` → `8b111709b6e5010b4b6ee7281d257141945276ff` ✓ · `reader-present` ✓ · `selftest: 33/33 expectations met` ✓ · `xcodegen generate` → `Created project at /tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj` ✓ · `xcodebuild build-for-testing … generic/platform=iOS … CODE_SIGNING_ALLOWED=NO` → `** TEST BUILD SUCCEEDED **` ✓ (once; log teed to `/private/tmp/k0506-build-for-testing-8b111709b.log`). No `test-without-building`, `devicectl`, install, launch, Play, Cancel, journal pull or sample appears in the transcript. The §9.1 void run is superseded as a compile record by this one; its record stays.
+
+**Established:** the K00-05/06 Option C instrument at `8b111709b` compiles for iOS as a driver bundle. Instrument evidence only — not organism identity, not physiology, not authorization.
+
+**Owed for custody (founder, Mac; paste as a block, no comments):**
+
+```bash
+cd /private/tmp/k0506-driver-compile-8b111709b-derived-run2/Build/Products
+grep -c 'TEST BUILD SUCCEEDED' /private/tmp/k0506-build-for-testing-8b111709b.log
+grep -cE 'devicectl|test-without-building|install app' /private/tmp/k0506-build-for-testing-8b111709b.log
+shasum -a 256 *.xctestrun Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests Debug-iphoneos/DriverUITests-Runner.app/DriverUITests-Runner Debug-iphoneos/DriverHost.app/DriverHost /private/tmp/k0506-build-for-testing-8b111709b.log
+```
+
+Expected: `1` · `0` · five hashes. Record `KERNEL-00_VPIO-02_K00-05-06_DRIVER-COMPILE-01_2026-09-14.md` (transcript + log + hashes) on a `feature/*` branch → cherry-picked here. Only `DriverUITests` is expected to differ from the VPIO-02B products (`6d669e39…`); the xctestrun, XCTRunner and DriverHost hashes may match `7105c95e…` / `6fa0f967…` / `57793876…` — a match is consistency evidence, never identity.
+
+**Standing after §9.2:** instrument `8b111709b` COMPILED (driver-only) · custody record OWED · organism `ac12dedf4` FROZEN · installed `.vpio02` UNTOUCHED · **K00-05/06 device witness NOT AUTHORIZED** (a separate founder ruling would name: the installed artifact, the exact batch invocation `k00-driver-batch.sh K00-0506 10 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02`, the read-only preflight, N = 10, the authority string) · route/interruption/reset/endurance NOT AUTHORIZED · KERNEL-00 NOT ACCEPTED. **STOP.**
