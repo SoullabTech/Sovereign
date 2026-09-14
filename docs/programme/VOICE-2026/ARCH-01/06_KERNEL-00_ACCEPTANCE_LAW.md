@@ -12,7 +12,7 @@ The law follows FR-14's discipline (JARVIS-CIRCLES-01): *PASS = 0 failed AND eve
 
 ## 1. Scope
 
-**In the build:** `VoiceKernel` (actor) · `AudioSessionAuthority` · a duplex `AVAudioEngine` graph with voice processing (or, after a recorded K00-04, K00-06 or K00-11 failure under the higher-level subject, a separately identified lower Voice I/O subject — research §20.1; **trigger amended by founder act 2026-09-14, see the amendment note below**) · `HealthSupervisor` · `StateProjection` · the flight recorder · a test harness page (`/voice-kernel-test`, native) with: Start · Stop · Play known PCM · Cancel · inject faults · show the three-dimension state and generation.
+**In the build:** `VoiceKernel` (actor) · `AudioSessionAuthority` · a duplex `AVAudioEngine` graph with voice processing (or, after a recorded K00-04, K00-06 or K00-11 failure under the higher-level subject, a separately identified lower Voice I/O subject — research §20.1; **trigger amended by founder act 2026-09-14, see the amendment note above**) · `HealthSupervisor` · `StateProjection` · the flight recorder · a test harness page (`/voice-kernel-test`, native) with: Start · Stop · Play known PCM · Cancel · inject faults · show the three-dimension state and generation.
 
 **Not in the build (each is a falsifier if present):** any STT (`SFSpeechRecognizer`, `SpeechAnalyzer`, whisper, …) · any TTS model · any LLM or call to canonical MAIA · WebKit `SpeechRecognition`, `getUserMedia`, Web Audio or `<audio>` on the harness page · `@capacitor-community/speech-recognition` · `AudioSessionManager.swift` / `VoiceController.swift` · any restart driver from the legacy runtime · any network egress.
 
