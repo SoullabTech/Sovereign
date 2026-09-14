@@ -189,3 +189,27 @@ python3 ../../scripts/witness/k00-output-ledger.py --selftest | tail -1      # e
 ```
 
 Owed back: the xcodegen + build log (`** TEST BUILD SUCCEEDED **` once), product hashes (xctestrun · DriverUITests · XCTRunner · DriverHost — instrument evidence, never organism identity), the self-test line, and a statement that no `devicectl`/`test-without-building`/install/launch verb ran — on a `feature/*` branch, cherry-picked here. **Then STOP.** The K00-05/06 device witness remains NOT AUTHORIZED.
+
+### 9.1 First compile attempt VOID as evidence for `8b111709b` — two instruction defects of this session (2026-09-14, founder transcript)
+
+**What happened.** The founder ran the §9 invocation from `/tmp/vpio02b-driver-compile-08483cfe4/ios/VoiceKernelDriver` — the existing VPIO-02B worktree — and `xcodebuild build-for-testing` reported `** TEST BUILD SUCCEEDED **`; the trailing self-test line then failed: `can't open file '…/scripts/witness/k00-output-ledger.py': No such file or directory`, and `tail: #: No such file or directory …` for every word of the `# expect: …` comment.
+
+**Reading.** The reader is new in `8b111709b`, so its absence proves the worktree was NOT at `8b111709b`: the sources compiled were the historical driver, not the Option C instrument. The green build is therefore **not a compile record for `8b111709b`** and is VOID as evidence; nothing was harmed (generic iOS, signing off, no device verb, nothing installed or launched). The self-test never ran there.
+
+**Defects (this session, instruction side):** (a) §9 wrote `git -C /path/to/fresh/worktree rev-parse HEAD` as a placeholder and never created the worktree — an invocation that cannot be pasted is an invitation to run in whatever worktree is open; (b) `# expect: …` comments on executable lines — zsh with `interactivecomments` off passes them as arguments (the MAC-COMPILE-03 defect, repeated). Neither touches the instrument or the organism.
+
+**Corrected invocation (paste as a block; no comments; creates a fresh detached worktree at exactly the instrument SHA; fresh derived path so no product of the void run is reused):**
+
+```bash
+git -C /Users/soullab/MAIA-SOVEREIGN fetch origin claude/voice-2026-census-01
+git -C /Users/soullab/MAIA-SOVEREIGN worktree add --detach /private/tmp/k0506-driver-compile-8b111709b 8b111709b6e5010b4b6ee7281d257141945276ff
+cd /private/tmp/k0506-driver-compile-8b111709b
+git rev-parse HEAD
+test -f scripts/witness/k00-output-ledger.py && echo reader-present
+python3 scripts/witness/k00-output-ledger.py --selftest | tail -1
+cd ios/VoiceKernelDriver
+xcodegen generate
+xcodebuild build-for-testing -project VoiceKernelDriver.xcodeproj -scheme DriverUITests -destination 'generic/platform=iOS' -derivedDataPath /private/tmp/k0506-driver-compile-8b111709b-derived-run2 CODE_SIGNING_ALLOWED=NO 2>&1 | tee /private/tmp/k0506-build-for-testing-8b111709b.log | tail -3
+```
+
+Expected readings, in order: `8b111709b6e5010b4b6ee7281d257141945276ff` · `reader-present` · `selftest: 33/33 expectations met` · `** TEST BUILD SUCCEEDED **`. Any other reading → STOP, return the transcript. Product hashes afterwards (`shasum -a 256` of the `.xctestrun`, `DriverUITests.xctest/DriverUITests`, `DriverUITests-Runner.app/DriverUITests-Runner`, `DriverHost.app/DriverHost` under the run2 derived path) are instrument evidence, never organism identity. Still NOT authorized: `test-without-building`, `devicectl`, install, launch, Play, Cancel, journal pull, sample.
