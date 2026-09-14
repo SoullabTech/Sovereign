@@ -537,3 +537,45 @@ scripts/witness/k00-reinstall.sh docs/programme/VOICE-2026/driver-ledger \
 **13.6.1 First invocation attempt — NOTHING REACHED THE DEVICE (two instruction/operator defects, recorded).** The founder's first invocation ran from `~` and zsh refused `scripts/witness/k00-reinstall.sh: no such file or directory` before any line of the script executed — no custody read, no apps read, no install, no artefact; not an attempt under the ruling (the one authorized install is unspent). Second defect, this session's: the reply that carried the invocation abbreviated the authority string as `…your string verbatim…`, and the founder pasted it literally; the instrument checks only that `K00_EXEC_AUTHORITY` is non-empty, so a placeholder would have been accepted and the artefact would have read `authority supplied at invocation: yes` on a string that is not the ruling. Rule applied from here: **the authority string is never abbreviated in an invocation; the invocation names its working directory and verifies the instrument's identity before running.** Corrected invocation: from a worktree whose `scripts/witness/k00-reinstall.sh` is byte-identical to `de3efd3fb` (the driver-compile record worktree at `/private/tmp/vpio-01b-driver-compile-record` qualifies — its branch tip includes `de3efd3fb`; verify with `git diff --quiet de3efd3fb -- scripts/witness/k00-reinstall.sh` before running), with the full string from this section.
 
 **Standing after this section:** FIRST-INSTALL-01 AUTHORIZED · NOT YET EXECUTED · record OWED · launch / test / journal pull / sample / N=30 NOT AUTHORIZED · F-W1 UNSPENT · K00/R1 UNTOUCHED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED.
+
+### 13.7 FIRST-INSTALL-01 EXECUTED (founder, 2026-09-14 19:45:54Z) — custody MATCH × all fields · `.vpio01` ABSENT at the just-in-time read · exactly ONE install · no harness process after · NOTHING LAUNCHED · artefact file OWED to the repo
+
+**Source of this section:** the founder's terminal transcript, pasted verbatim into this session; the artefact `docs/programme/VOICE-2026/driver-ledger/reinstall-20260914T194554Z.txt` was written in the worktree `/private/tmp/vpio-01b-driver-compile-record` and is not yet in this repository (owed on a `feature/*` branch → cherry-pick → hash recorded beside this section). The transcript also shows the §13.6.1 placeholder invocation once more — the same event, not a second attempt.
+
+**Precondition, as printed:** `instrument identical to de3efd3fb` (the `git diff --quiet` guard passed before the script ran).
+
+**Custody gate (local product, before any device verb):**
+
+```text
+bundle id            life.soullab.voicekernel.vpio01                                  MATCH
+executable SHA-256   e43dec667e1e8ba727d7253f39199be3a34333c804c220b41233945d42a1a4ac MATCH
+manifest self SHA    4710d9a68f5b6bb9de8ef64b143f8dd9b688476b3a7f3ee0257b3922b7a60bed (7 files) MATCH
+dylib UUID           E8074AD1-D179-3267-A15C-142D033A9665                             MATCH
+dylib SHA-256        6efe33b1b25fdb4dc4376abfb248e6c530e59f492ebc876314619fd1bef64b3d MATCH
+manifest content     every file hashes identically, file set identical                MATCH
+dwarfdump            UUID: E8074AD1-D179-3267-A15C-142D033A9665 (arm64) …/VoiceKernelHarness.debug.dylib
+codesign             Identifier=life.soullab.voicekernel.vpio01 · TeamIdentifier=ZVK2X646Z2
+```
+
+**Just-in-time installed-app read:** `installed-app state at first install: ABSENT` — the VPIO bundle was not on the device before the one install verb; `authority supplied at invocation: yes` (the string is the one recorded in §13.6, supplied in full).
+
+**The one install (exact output):**
+
+```text
+15:45:55  Acquired tunnel connection to device.
+15:45:55  Enabling developer disk image services.
+15:45:55  Acquired usage assertion.
+App installed:
+• bundleID: life.soullab.voicekernel.vpio01
+• installationURL: file:///private/var/containers/Bundle/Application/6A2E406B-D1B8-43A4-92F3-29D50333AF19/VoiceKernelHarness.app/
+• launchServicesIdentifier: unknown
+• databaseUUID: 42158240-DA3F-491F-8B75-F106CD31316A
+• databaseSequenceNumber: 6720
+• options:
+```
+
+**Post-install process read:** `(no VoiceKernelHarness process)` — nothing running, nothing launched; the script exited on its normal path (`reinstall artefacts written: …/reinstall-20260914T194554Z.txt`). Local clock 15:45:55 = 19:45:55Z, consistent with the stamp.
+
+**What this establishes, and only this:** the device now holds the MAC-COMPILE-02 VPIO artifact (`85e5e7154`, dylib `E8074AD1-…`) under its own bundle id, beside the historical K00/R1 install, which was neither listed for mutation nor touched (the just-in-time read is a listing; the only device write is the install of `.vpio01`). No process has run; no journal exists; no physiology has been observed; **F-W1 is UNSPENT**. Bundle-container identity (`6A2E406B-…`, database seq 6720) is custody evidence for any later act on this install — a later listing that reads a different bundle container means the install moved and the act must stop.
+
+**Standing after this section:** FIRST-INSTALL-01 DONE · artefact file OWED (transcript-read here; hash to be recorded on receipt) · VPIO launch · driver test · journal pull · single sample · N=30 NOT AUTHORIZED (each a separate founder act) · F-W1 UNSPENT (24/30 · 23/29 · 23/28 / ≤16/29 / between INDETERMINATE) · K00/R1 UNTOUCHED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED. A first VPIO sample, if ruled, runs the existing batch with `--subject vpio-01` on this install with no reinstall inside (`k00-driver-batch.sh <STRATUM> <N> --mode L --subject vpio-01`); the cold precondition (no `VoiceKernelHarness` process of any bundle) already holds.
