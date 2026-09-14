@@ -144,13 +144,47 @@ reconciled while A is open; **no combination of B and C closes A.**
 
 ---
 
+## Gate A · observation record (founder classifications, verbatim)
+
+```text
+Whole / first    SECTION-ADDRESSED — FAIL     [existing witness, SEALED]
+Whole / second   LOCUS-ADDRESSED   — PASS     [2026-09-14 screenshot]
+```
+
+**Classification basis for `Whole / second`.** The canvas did not merely reach Section 23 — the
+**actual change locus is exposed**: the affected wording is visibly marked in the manuscript.
+
+```text
+FAILURE CONDITION   section reached, exact change still OFF-SCREEN
+OBSERVED            exact affected text VISIBLE
+⭐ Centering is NOT the criterion. Exposure of the locus is.
+```
+
+**Collateral evidence (founder).** Invocations land at roughly the same visible place. ⭐ That
+makes the navigation behaviour **repeatable**, not a lucky scroll position — a stronger reading
+than a single PASS supports on its own.
+
+### ⛔ Sealing rule — a later PASS does not rewrite an earlier FAIL
+
+```text
+Whole / first stays SECTION-ADDRESSED — FAIL.
+A later invocation behaving better is a NEW CELL, never a correction of a sealed one.
+Rewriting is permitted only where the witness procedure EXPLICITLY calls for a rerun.
+```
+
+⭐ Same discipline the programme applies to production witnesses: *a witness is a reading at a
+time.* The honest repair is to date it, never to edit it.
+
+---
+
 ## Roadmap standing (precise)
 
 ```text
-Writer's Studio interaction lane   ⏳ AWAITING the six browser observations
-                                   Whole / first = SECTION-ADDRESSED — FAIL (recorded)
-                                   NEXT OBSERVATION → Whole / second: scroll well away,
-                                   `SHOW CHANGE`, report LOCUS-ADDRESSED or SECTION-ADDRESSED
+Writer's Studio interaction lane   ⏳ GATE A OPEN — six-cell browser witness in progress
+                                   Whole / first  = SECTION-ADDRESSED — FAIL  [sealed]
+                                   Whole / second = LOCUS-ADDRESSED   — PASS  [2026-09-14]
+                                   remaining cells per the witness procedure (external to
+                                   this checkout; the walk holds the six-cell table)
 Proposal authorship census         ✅ COMPLETE
 Step-3 intent                      ✅ BOUNDED — we know WHICH QUESTIONS must be answered
 Gate B (authorship / succession)   ⛔ CLOSED / NOT OPENED — requirement precedes object (FR-W3a)
