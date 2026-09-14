@@ -1,0 +1,122 @@
+## window.json sha256 1fe98bbdd00fa448b543f8fe44154fde9b5b98141f84fc2334d19f245c7c7089 · bytes 40864531
+## decoded one JSON value ending at char 40863756 · residue 143 chars recorded verbatim (window-s9-trailer.txt): '==========\n/private/tmp/voice-seam-01/docs/programme/VOICE-2026/driver-ledger/unifiedlog-SEAM-01-20260914T141516Z/device.logarchive\n==========\n'
+## trailer names /private/tmp/voice-seam-01/docs/programme/VOICE-2026/driver-ledger/unifiedlog-SEAM-01-20260914T141516Z/device.logarchive · expected …/unifiedlog-SEAM-01-20260914T141516Z/device.logarchive · MATCH
+## entries in window: 34257
+## event types: [('logEvent', 31691), ('activityCreateEvent', 2559), ('stateEvent', 7)]
+## top processes: [('CommCenter', 4264), ('SpringBoard', 2638), ('assetsubscriptiond', 1336), ('VoiceKernelHarness', 1188), ('pkd', 1095), ('appleh16camerad', 1012), ('bluetoothd', 949), ('powerexperienced', 868), ('locationd', 779), ('sharingd', 774), ('mediaplaybackd', 737), ('mobileassetd', 680), ('wifid', 678), ('SharingUIService', 661), ('testmanagerd', 655)]
+## top subsystems: [('com.apple.CommCenter', 4003), ('', 3188), ('com.apple.xpc', 2287), ('com.apple.PlugInKit', 1331), ('com.apple.runningboard', 1228), ('com.apple.coreaudio', 1201), ('com.apple.dt.xctest', 949), ('com.apple.bluetooth', 866), ('com.apple.powerexperienced', 836), ('com.apple.network', 764), ('com.apple.MobileAsset', 759), ('com.apple.ShareSheet', 638), ('com.apple.UnifiedAssetFramework', 615), ('com.apple.isp', 600), ('com.apple.SpringBoard', 570)]
+## first timestamp: 2026-09-14 10:20:46.009979-0400 · last: 2026-09-14 10:21:18.995474-0400
+## audio-related entries kept (window-s9-audio.jsonl): 4829 · per process: [('SpringBoard', 2638), ('VoiceKernelHarness', 1188), ('bluetoothd', 949), ('audioaccessoryd', 54)]
+## mediaserverd: NOT PRESENT IN THE S9-LEVEL WINDOW
+## coreaudiod: NOT PRESENT IN THE S9-LEVEL WINDOW
+## harness-process entries: 1188 · first: 2026-09-14 10:20:51.529142-0400 · last: 2026-09-14 10:21:14.248355-0400
+## harness pids in window: 63992: 1188 entries 10:20:51.529…10:21:14.248
+## sample pid = 63992 (the last harness pid that activated an audio session); other harness pids are NOT the sample
+## journal monotonic ms: {"session_activated": 997679544, "start_begin": 997679682, "start_return": 997679839, "engine_configuration_changed": 997679845, "route_changed": 997679645, "first_input_callback": 997679934, "app_lifecycle": 997674939}
+## log anchor session_activated: 2026-09-14 10:20:56.576718-0400 · com.apple.coreaudio · AVAudioSession_iOS.mm:996   Activated session 0xd909916
+## log anchor start_begin: 2026-09-14 10:20:56.714668-0400 · com.apple.avfaudio · AVAudioEngine.mm:1182  Engine@0x10e182ff0: start, was running 0
+## log anchor engine_configuration_changed: 2026-09-14 10:20:56.819804-0400 · com.apple.avfaudio · AVAudioEngine.mm:1438  Engine@0x10e182ff0: iounit configuration changed > posting notification
+## log anchor route_changed: 2026-09-14 10:20:56.654889-0400 · com.apple.coreaudio · SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909916 posting AVAudioSessionRouteChangeNotification.
+## mono→wall offset from ['session_activated', 'start_begin']: 1788397977.033 s · agreement between them: 0 ms
+   residual session_activated: log − journal = +0 ms
+   residual start_begin: log − journal = -0 ms
+   residual engine_configuration_changed: log − journal = -58 ms (posted before the kernel received it — expected sign)
+   residual route_changed: log − journal = -23 ms (posted before the kernel received it — expected sign)
+   app_lifecycle: wall ≈ 10:20:51.971
+   session_activated: wall ≈ 10:20:56.576
+   start_begin: wall ≈ 10:20:56.714
+   start_return: wall ≈ 10:20:56.871
+   engine_configuration_changed: wall ≈ 10:20:56.877
+   first_input_callback: wall ≈ 10:20:56.966
+## entries inside engine.start() [10:20:56.714 … 10:20:56.871] (157 ms): 270 · per process: [["SpringBoard", 142], ["bluetoothd", 99], ["VoiceKernelHarness", 19], ["audioaccessoryd", 10]]
+   10:20:56.714 +   0 ms VoiceKernelHarness com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x10f0ad500] Created node rio-outclient with nodeID 3 - reporting period = 10.000000
+   10:20:56.714 +   0 ms VoiceKernelHarness com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x10f0ad500] Created node rio-inclient with nodeID 4 - reporting period = 10.000000,
+   10:20:56.714 +   0 ms VoiceKernelHarness com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x10f1011a8] AudioConverterNew wasn't needed since incoming an
+   10:20:56.714 +   0 ms VoiceKernelHarness com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x10f19eda8] AudioConverterNew wasn't needed since incoming an
+   10:20:56.714 +   0 ms VoiceKernelHarness com.apple.coreaudio [Detector.cpp:56    rtaid::Detector:0x10f0ad500] initialized with error = 0
+   10:20:56.714 +   0 ms VoiceKernelHarness com.apple.coreaudio AURemoteIO.cpp:1666  Starting AURemoteIO(0x10f634040)
+output client:  2 ch,  44100 Hz, Float32, deinterleaved, output HW
+   10:20:56.714 +   0 ms VoiceKernelHarness com.apple.coreaudio AURemoteIO.cpp:1727  workgroup port 0xeb07
+   10:20:56.715 +   0 ms VoiceKernelHarness  AUOOPWorkgroups.mm:30    AUOOPWorkgroupManager: AddRemoteIOWorkgroup called with token 262111236.
+   10:20:56.715 +   0 ms VoiceKernelHarness  AUOOPWorkgroups.mm:66    AUOOPWorkgroupManager: mutating workgroups.
+   10:20:56.715 +   0 ms VoiceKernelHarness com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+   10:20:56.715 +   1 ms bluetoothd com.apple.bluetooth GetDevices: flags 0x0 < >, total 28
+   10:20:56.716 +   2 ms SpringBoard com.apple.SpringBoard _effectiveVolumeChanged for 'PhoneCall' for reason: RouteChange/0x789c38e20
+   10:20:56.716 +   2 ms SpringBoard com.apple.SpringBoard Caching newEffectiveVolume: 0.625000 from AVSystemController
+   10:20:56.716 +   2 ms SpringBoard com.apple.SpringBoard Ignoring notification 'SomeSessionIsPlayingDidChange' from sender: <__NSCFType:0x78b3bffc0>; data provider: <AVSystemCon
+   10:20:56.716 +   2 ms SpringBoard com.apple.amp.mediaplayer <MPVolumeControllerSystemDataSource: 0x789c8df80> AVSystemController volume changed to: 0.625000 | category: PhoneCall |
+   10:20:56.716 +   2 ms SpringBoard com.apple.SpringBoard Updated audioSessionPlaying to true
+   10:20:56.716 +   2 ms SpringBoard com.apple.SpringBoard -[SBDisplayManager cache:didUpdateAudioSessionPlaying:] audioSessionPlaying 1
+   10:20:56.716 +   2 ms SpringBoard com.apple.SpringBoard.buttons Re-evaluating overrides with audioSessionPlaying: YES
+   10:20:56.716 +   2 ms SpringBoard com.apple.SpringBoard.buttons Physical button scene targets: (null)
+   10:20:56.716 +   2 ms SpringBoard  observedProcessStatesDidChange
+   10:20:56.716 +   2 ms SpringBoard com.apple.runningboard Received state update for 63992 (app<life.soullab.voicekernel.k00(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>, running-active
+   10:20:56.717 +   3 ms VoiceKernelHarness  observedProcessStatesDidChange
+   10:20:56.717 +   3 ms VoiceKernelHarness com.apple.runningboard Received state update for 63992 (app<life.soullab.voicekernel.k00(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>, unknown-NotVis
+   10:20:56.718 +   4 ms SpringBoard com.apple.ControlCenter Updated sensor activity data provider
+   10:20:56.718 +   4 ms SpringBoard com.apple.ControlCenter [AV Modules] Looking for CAMERA matching sensor types, bundleIdentifier: life.soullab.voicekernel.k00
+   10:20:56.718 +   4 ms SpringBoard com.apple.cameracapture <<<< AVControlCenterModules >>>> AVControlCenterVideoEffectsModuleShouldBeShownForBundleID: called for bundleID: life.so
+   10:20:56.718 +   4 ms SpringBoard com.apple.cameracapture <<<< AVControlCenterModules >>>> AVControlCenterVideoEffectsModuleShouldBeShownForBundleID: life.soullab.voicekernel.k00
+   10:20:56.718 +   4 ms SpringBoard com.apple.ControlCenter [AV Modules] AVFoundation says video module should be shown: YES
+   10:20:56.718 +   4 ms SpringBoard com.apple.ControlCenter [AV Modules] Looking for MICROPHONE matching sensor types, bundleIdentifier: life.soullab.voicekernel.k00
+   10:20:56.718 +   4 ms SpringBoard com.apple.cameracapture <<<< AVControlCenterModules >>>> AVControlCenterMicrophoneModuleShouldBeShownForBundleID: called for bundleID: life.soul
+   10:20:56.718 +   4 ms SpringBoard com.apple.cameracapture <<<< AVControlCenterModules >>>> AVControlCenterMicrophoneModuleShouldBeShownForBundleID: life.soullab.voicekernel.k00 a
+   10:20:56.718 +   4 ms SpringBoard com.apple.ControlCenter [AV Modules] AVFoundation says audio module should be shown: YES
+   10:20:56.718 +   4 ms SpringBoard com.apple.ControlCenter [AV Modules] Setting visibility of AV modules (audio: YES for VoiceKernel K00, video: NO for (null))
+   10:20:56.718 +   4 ms SpringBoard  com.apple.ControlCenter.RemoteServiceConnection.setVisibility
+   10:20:56.718 +   4 ms SpringBoard  com.apple.ControlCenter.RemoteServiceConnection.setVisibility
+   10:20:56.718 +   4 ms SpringBoard com.apple.ControlCenter Requesting setting of visibility YES for module with identifier 'com.apple.replaykit.AudioConferenceControlCenterModule'
+   10:20:56.718 +   4 ms SpringBoard com.apple.ControlCenter Setting visibility YES for module with identifier 'com.apple.replaykit.AudioConferenceControlCenterModule'
+   10:20:56.719 +   5 ms SpringBoard com.apple.ControlCenter Requesting setting of visibility NO for module with identifier 'com.apple.replaykit.VideoConferenceControlCenterModule'
+   10:20:56.719 +   5 ms SpringBoard com.apple.ControlCenter Cannot set visibility with identifier 'com.apple.replaykit.VideoConferenceControlCenterModule' as it's already NO
+   10:20:56.722 +   8 ms audioaccessoryd com.apple.bluetooth [Hijackv2] Received audio category changed: app=life.soullab.voicekernel.k00 isPlaying=501
+   10:20:56.722 +   8 ms audioaccessoryd com.apple.bluetooth Updating local audio category 100 -> 501 app life.soullab.voicekernel.k00
+   10:20:56.722 +   8 ms audioaccessoryd com.apple.bluetooth Running preemptive evaluator for onDemand Connect for transition from idle to media playing!
+   10:20:56.722 +   8 ms audioaccessoryd com.apple.SmartRouting EvaluateNearbyDevicesForConnection paired 28 connectedWx 0 nearbyWx 0 srDisDeviceCount 4 nearbySource 0 btState PoweredO
+   10:20:56.729 +  15 ms SpringBoard com.apple.SpringBoard [Recording Indicator] Active camera/microphone activity changed:
+{(
+    <SBSensorActivityAttribution: 0x798af3420; displ
+   10:20:56.729 +  15 ms SpringBoard com.apple.SpringBoard [Recording Indicator] Turning on...
+   10:20:56.729 +  15 ms SpringBoard com.apple.SpringBoard [Recording Indicator] Registering SystemAperture element
+   10:20:56.729 +  15 ms SpringBoard com.apple.SpringBoard [Recording Indicator] element dwell time satisfied changed: NO; oldValue: YES
+   10:20:56.729 +  15 ms SpringBoard com.apple.SpringBoard [Recording Indicator] element MOT changed: NO; oldValue: YES
+   10:20:56.729 +  15 ms SpringBoard com.apple.SystemAperture Asked to register element: <SBRecordingIndicatorSystemApertureElement: 0x789edf7e0; elementIdentifier: SBRecordingIndica
+   10:20:56.729 +  15 ms SpringBoard com.apple.SystemAperture Attempt to uniquely identify element that already has a unique identifier – ignoring: element: <SBRecordingIndicatorSyst
+   10:20:56.729 +  15 ms SpringBoard com.apple.SystemAperture Created assertion (<SAUIElementAssertion: 0x7879786c0>) for element: <SBRecordingIndicatorSystemApertureElement: 0x789ed
+   10:20:56.729 +  15 ms SpringBoard com.apple.SystemAperture Asked to add view controller for element: <SBRecordingIndicatorSystemApertureElement: 0x789edf7e0; elementIdentifier: SB
+   10:20:56.729 +  15 ms SpringBoard com.apple.SpringBoard <BSCompoundAssertion:0x7898bb200> (SBSecureIndicatorBacklightCoordinator) acquire for reason:SBRecordingIndicatorViewCon
+   10:20:56.729 +  15 ms SpringBoard com.apple.SpringBoard [Recording Indicator] updating live rendering assertion... hasSecureIndicator: YES, isActive: YES, windowScene: <private
+   10:20:56.730 +  16 ms VoiceKernelHarness com.apple.dt.xctest Received request to notify when the main run loop is idle
+   10:20:56.730 +  16 ms VoiceKernelHarness com.apple.dt.xctest Idle notifier finished setting up run loop observer
+   10:20:56.730 +  16 ms VoiceKernelHarness com.apple.dt.xctest Idle notifier run loop observer fired
+   10:20:56.730 +  16 ms VoiceKernelHarness com.apple.dt.xctest Sending main run loop idle reply
+   10:20:56.730 +  16 ms SpringBoard com.apple.BacklightServices 0x78b2ac7e0 will acquire assertion:<BLSAssertion: 0x798b026f0; state: requestAcquire; requested: 37552794353261 approx:1
+   10:20:56.731 +  17 ms VoiceKernelHarness com.apple.dt.xctest Received request to notify when animations are idle
+## audio-DAEMON entries (audiomxd/audioaccessoryd/…; not the harness) from activation−150 ms to first callback+50 ms: 26
+## audiomxd entries in that interval: 0 · per process: [["audioaccessoryd", 26]]
+   10:20:56.582 audioaccessoryd com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909015 posting AVAudioSessionRouteChangeNotification. Reason: A
+   10:20:56.599 audioaccessoryd com.apple.bluetooth Received Call State changed yes
+   10:20:56.599 audioaccessoryd com.apple.SmartRouting onDemandEventStarted yes event Call
+   10:20:56.599 audioaccessoryd com.apple.SmartRouting OnDemandEventTimer: Start. Will reset it in 8s
+   10:20:56.599 audioaccessoryd com.apple.AudioAccessory Mute Control: call state changed, isCallActive: yes, isCallHighPriority: no
+   10:20:56.599 audioaccessoryd com.apple.AudioAccessory Mute Control: shouldSuppressBanner: no, shouldSuppressChime: no
+   10:20:56.599 audioaccessoryd com.apple.SmartRouting EvaluateNearbyDevicesForConnection paired 28 connectedWx 0 nearbyWx 0 srDisDeviceCount 4 nearbySource 0 btState PoweredO
+   10:20:56.612 audioaccessoryd com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909015 posting AVAudioSessionAvailableOutputsChangeNotification
+   10:20:56.618 audioaccessoryd com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909015 posting AVAudioSessionAvailableInputsChangeNotification
+   10:20:56.618 audioaccessoryd com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909015 posting AVAudioSessionAvailableOutputsChangeNotification
+   10:20:56.677 audioaccessoryd com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909015 posting AVAudioSessionAudioHardwareFormatChangeNotificat
+   10:20:56.677 audioaccessoryd com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909015 posting AVAudioSessionRouteChangeNotification. Reason: A
+   10:20:56.688 audioaccessoryd com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909015 posting AVAudioSessionAudioHardwareFormatChangeNotificat
+   10:20:56.701 audioaccessoryd com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909015 posting AVAudioSessionAvailableOutputsChangeNotification
+   10:20:56.707 audioaccessoryd com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909015 posting AVAudioSessionAvailableInputsChangeNotification
+   10:20:56.707 audioaccessoryd com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909015 posting AVAudioSessionAvailableOutputsChangeNotification
+   10:20:56.722 audioaccessoryd com.apple.bluetooth [Hijackv2] Received audio category changed: app=life.soullab.voicekernel.k00 isPlaying=501
+   10:20:56.722 audioaccessoryd com.apple.bluetooth Updating local audio category 100 -> 501 app life.soullab.voicekernel.k00
+   10:20:56.722 audioaccessoryd com.apple.bluetooth Running preemptive evaluator for onDemand Connect for transition from idle to media playing!
+   10:20:56.722 audioaccessoryd com.apple.SmartRouting EvaluateNearbyDevicesForConnection paired 28 connectedWx 0 nearbyWx 0 srDisDeviceCount 4 nearbySource 0 btState PoweredO
+   10:20:56.732 audioaccessoryd com.apple.AudioAccessory LocalAudioCategoryChanged: Audio category changed from 100 to 501
+   10:20:56.732 audioaccessoryd com.apple.AudioAccessory NotifyOtherTipiDeviceAudioCategoryChanged: Processing audio category 501 for all discovered 3P devices
+   10:20:56.732 audioaccessoryd com.apple.AudioAccessory NotifyOtherTipiDeviceAudioCategoryChanged: No discovered 3P devices found
+   10:20:56.732 audioaccessoryd com.apple.bluetooth Audio is playing on the system
+   10:20:56.732 audioaccessoryd com.apple.bluetooth NearbyInfoActivityChanged: AL 11, current score is 6 (High)
+   10:20:56.732 audioaccessoryd  Sharing/SFDeviceDiscovery/deviceDiscoveryUpdate

@@ -1,0 +1,132 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/voice-seam-01/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testOneSample"
+
+2026-09-14 09:52:47.283 xcodebuild[97296:29130132] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 09:52:47.287 xcodebuild[97296:29130132] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 09:52:47.385 xcodebuild[97296:29130132] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-14 09:52:47.915 xcodebuild[97296:29130132] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 09:52:48.115 xcodebuild[97296:29130132] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 09:52:52.402 xcodebuild[97296:29130133]  IDELaunchReport: ca4d42f3e30b8800:ca4d42f3e30b8800: Finished with error: The application could not be launched because the Developer App Certificate is not trusted.
+Domain: IDELaunchCoreDevice
+Code: 0
+Recovery Suggestion: Verify that the Developer App certificate for your account is trusted on your device. Open Settings on the device and navigate to General -> VPN & Device Management, then select your Developer App certificate to trust it.
+User Info: {
+    DVTErrorCreationDateKey = "2026-09-14 13:52:52 +0000";
+    IDERunOperationFailingWorker = IDELaunchCoreDeviceWorker;
+}
+--
+The application failed to launch.
+Domain: com.apple.dt.CoreDeviceError
+Code: 10002
+User Info: {
+    BundleIdentifier = "life.soullab.voicekernel.driver.xctest.xctrunner";
+}
+--
+The request to open "life.soullab.voicekernel.driver.xctest.xctrunner" failed.
+Domain: FBSOpenApplicationServiceErrorDomain
+Code: 1
+Failure Reason: The request was denied by service delegate (SBMainWorkspace) for reason: Security ("Unable to launch life.soullab.voicekernel.driver.xctest.xctrunner because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user").
+User Info: {
+    BSErrorCodeDescription = RequestDenied;
+    FBSOpenApplicationRequestID = 0x3567;
+}
+--
+The operation couldn’t be completed. Unable to launch life.soullab.voicekernel.driver.xctest.xctrunner because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user.
+Domain: FBSOpenApplicationErrorDomain
+Code: 3
+Failure Reason: Unable to launch life.soullab.voicekernel.driver.xctest.xctrunner because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user.
+User Info: {
+    BSErrorCodeDescription = Security;
+}
+--
+
+2026-09-14 09:52:52.402 xcodebuild[97296:29130133]  IDELaunchReport: ca4d42f3e30b8800:ca4d42f3e30b8800: com.apple.dt.IDERunOperationWorkerFinished {
+    "device_identifier" = "00008140-00163D9922E0801C";
+    "device_isCoreDevice" = 1;
+    "device_model" = "iPhone17,2";
+    "device_osBuild" = "26.6.1 (23G83)";
+    "device_osBuild_monotonic" = 2306008300;
+    "device_os_variant" = 1;
+    "device_platform" = "com.apple.platform.iphoneos";
+    "device_platform_family" = 2;
+    "device_reality" = 1;
+    "device_thinningType" = "iPhone17,2";
+    "device_transport" = 1;
+    "launchSession_schemeCommand" = Test;
+    "launchSession_schemeCommand_enum" = 2;
+    "launchSession_targetArch" = arm64e;
+    "launchSession_targetArch_enum" = 7;
+    "operation_duration_ms" = 4263;
+    "operation_errorCode" = 0;
+    "operation_errorDomain" = IDELaunchCoreDevice;
+    "operation_errorWorker" = IDELaunchCoreDeviceWorker;
+    "operation_error_reportable" = 0;
+    "operation_name" = IDERunOperationWorkerGroup;
+    "param_consoleMode" = 0;
+    "param_debugger_attachToExtensions" = 0;
+    "param_debugger_attachToXPC" = 0;
+    "param_debugger_type" = 1;
+    "param_destination_isProxy" = 0;
+    "param_destination_platform" = "com.apple.platform.iphoneos";
+    "param_diag_MTE_enable" = 0;
+    "param_diag_MainThreadChecker_stopOnIssue" = 0;
+    "param_diag_MallocStackLogging_enableDuringAttach" = 0;
+    "param_diag_MallocStackLogging_enableForXPC" = 0;
+    "param_diag_allowLocationSimulation" = 1;
+    "param_diag_checker_mtc_enable" = 0;
+    "param_diag_checker_tpc_enable" = 0;
+    "param_diag_gpu_frameCapture_enable" = 3;
+    "param_diag_gpu_shaderValidation_enable" = 0;
+    "param_diag_gpu_validation_enable" = 1;
+    "param_diag_guardMalloc_enable" = 0;
+    "param_diag_memoryGraphOnResourceException" = 0;
+    "param_diag_queueDebugging_enable" = 1;
+    "param_diag_runtimeProfile_generate" = 0;
+    "param_diag_sanitizer_asan_enable" = 0;
+    "param_diag_sanitizer_tsan_enable" = 0;
+    "param_diag_sanitizer_tsan_stopOnIssue" = 0;
+    "param_diag_sanitizer_ubsan_enable" = 0;
+    "param_diag_sanitizer_ubsan_stopOnIssue" = 0;
+    "param_diag_showNonLocalizedStrings" = 0;
+    "param_diag_viewDebugging_enabled" = 0;
+    "param_diag_viewDebugging_insertDylibOnLaunch" = 0;
+    "param_install_style" = 2;
+    "param_launcher_UID" = 2;
+    "param_launcher_allowDeviceSensorReplayData" = 0;
+    "param_launcher_kind" = 0;
+    "param_launcher_style" = 0;
+    "param_launcher_substyle" = 64;
+    "param_lldbVersion_component_idx_1" = 0;
+    "param_lldbVersion_monotonic" = 170302360103;
+    "param_runnable_appExtensionHostRunMode" = 0;
+    "param_runnable_productType" = "com.apple.product-type.application";
+    "param_testing_launchedForTesting" = 1;
+    "param_testing_suppressSimulatorApp" = 1;
+    "param_testing_usingCLI" = 0;
+    "sdk_canonicalName" = "iphoneos26.2";
+    "sdk_osVersion" = "26.2";
+    "sdk_platformID" = 2;
+    "sdk_variant" = iphoneos;
+    "sdk_version_monotonic" = 2302005700;
+}
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-dinwkggyooftzwbakmnviylclbzw/Logs/Test/Test-DriverUITests-2026.09.14_09-52-47--0400.xcresult
+
+2026-09-14 09:52:52.701 xcodebuild[97296:29130132] [MT] IDETestOperationsObserverDebug: 4.785 elapsed -- Testing started completed.
+2026-09-14 09:52:52.701 xcodebuild[97296:29130132] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-14 09:52:52.701 xcodebuild[97296:29130132] [MT] IDETestOperationsObserverDebug: 4.785 sec, +4.785 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-dinwkggyooftzwbakmnviylclbzw/Logs/Test/Test-DriverUITests-2026.09.14_09-52-47--0400.xcresult
+
+Testing failed:
+	The application could not be launched because the Developer App Certificate is not trusted.
+	DriverUITests-Runner encountered an error (Failed to install or launch the test runner. (Underlying Error: The application could not be launched because the Developer App Certificate is not trusted. Verify that the Developer App certificate for your account is trusted on your device. Open Settings on the device and navigate to General -> VPN & Device Management, then select your Developer App certificate to trust it. (Underlying Error: The application failed to launch. (Underlying Error: The request to open "life.soullab.voicekernel.driver.xctest.xctrunner" failed. The request was denied by service delegate (SBMainWorkspace) for reason: Security ("Unable to launch life.soullab.voicekernel.driver.xctest.xctrunner because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user"). (Underlying Error: The operation couldn’t be completed. Unable to launch life.soullab.voicekernel.driver.xctest.xctrunner because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user.)))))
+
+** TEST EXECUTE FAILED **
+
+Testing started

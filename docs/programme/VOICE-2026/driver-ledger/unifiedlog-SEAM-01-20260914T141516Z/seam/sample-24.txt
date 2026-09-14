@@ -1,0 +1,375 @@
+10:32:07.362   -35.7 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313da840: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:07.363   -35.4 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:07.363   -34.8 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:07.364   -34.2 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:07.364   -33.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:07.366   -32.0 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1303df810, from  1 ch,      0 Hz, Float32 (actually:  1 ch,      0 Hz, Float32) to  1 ch,  4800
+10:32:07.366   -32.0 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df810: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:07.366   -32.0 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df810: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:07.366   -32.0 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df810: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:07.366   -32.0 ms com.apple.coreaudio AudioConverter -> 0x1303df810: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:07.366   -32.0 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1303df9c0, from  1 ch,  48000 Hz, Float32 to  1 ch,      0 Hz, Float32 (actually:  1 ch,      0
+10:32:07.366   -32.0 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df9c0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:07.366   -32.0 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df9c0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:07.366   -31.9 ms com.apple.coreaudio AudioConverter -> 0x1303df9c0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:07.366   -31.9 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df9c0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:07.366   -31.9 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313da840)
+10:32:07.368   -30.0 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313da840: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x650002, err = 0
+10:32:07.385   -12.6 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:07.390    -8.2 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:07.390    -8.2 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:07.391    -6.6 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:07.394    -4.2 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:07.396    -1.6 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:07.398    +0.3 ms com.apple.avfaudio AVAudioEngine.mm:1182  Engine@0x13016b590: start, was running 0
+10:32:07.398    +0.3 ms com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x1302f9200] Created node rio-outclient with nodeID 3 - reporting period = 10.000000, sample rate = 44100.000000
+10:32:07.398    +0.4 ms com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x1302f9200] Created node rio-inclient with nodeID 4 - reporting period = 10.000000, sample rate = 48000.000000
+10:32:07.398    +0.4 ms com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x131280fe8] AudioConverterNew wasn't needed since incoming and outgoing format are equivalent:  1 ch,
+10:32:07.398    +0.4 ms com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x1312803a8] AudioConverterNew wasn't needed since incoming and outgoing format are equivalent:  2 ch,
+10:32:07.398    +0.4 ms com.apple.coreaudio [Detector.cpp:56    rtaid::Detector:0x1302f9200] initialized with error = 0
+10:32:07.398    +0.4 ms com.apple.coreaudio AURemoteIO.cpp:1666  Starting AURemoteIO(0x1313da840)
+output client:  2 ch,  44100 Hz, Float32, deinterleaved, output HW:  2 ch,  44100 Hz, Float32, deinterleav
+10:32:07.399    +0.6 ms com.apple.coreaudio AURemoteIO.cpp:1727  workgroup port 0x9e1b
+10:32:07.399    +0.7 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:07.504  +106.5 ms com.apple.avfaudio AVAudioEngine.mm:1438  Engine@0x13016b590: iounit configuration changed > posting notification
+10:32:07.552  +154.5 ms com.apple.avfaudio AVAudioEngine.mm:1462  Engine@0x13016b590: iounit configuration changed > stopping the engine
+10:32:07.552  +154.5 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016b590: stop, was running 1
+10:32:07.552  +154.5 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016b590: pause, was running 1
+10:32:07.552  +154.5 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313da840)
+10:32:07.575  +177.2 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313da840)
+10:32:07.689  +291.3 ms com.apple.avfaudio AVAudioEngine.mm:1438  Engine@0x13016b590: iounit configuration changed > posting notification
+10:32:08.204  +805.7 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016b590: stop, was running 0
+10:32:08.204  +805.7 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016b590: pause, was running 0
+10:32:08.209  +811.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:08.209  +811.5 ms com.apple.coreaudio AURemoteIO.cpp:446   AURemoteIO0x130f3f040: reporterID=238632677934145
+10:32:08.210  +812.0 ms com.apple.avfaudio AVAudioIONodeImpl.mm:235   Engine@0x131591ec0: associating with audio session (0xd909952), error 0
+10:32:08.210  +812.4 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.211  +813.6 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324720, from  1 ch,  48000 Hz, Float32 (actually:  1 ch,  48000 Hz, Float32) to  2 ch,      
+10:32:08.211  +813.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324720: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.211  +813.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324720: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.211  +813.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324720: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.212  +813.7 ms com.apple.coreaudio AudioConverter -> 0x131324720: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.212  +814.3 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:08.213  +815.2 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.214  +815.8 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1313246c0, from  1 ch,  48000 Hz, Float32 (actually:  1 ch,  48000 Hz, Float32) to  2 ch,      
+10:32:08.214  +815.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313246c0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.214  +815.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313246c0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.214  +815.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313246c0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.214  +815.8 ms com.apple.coreaudio AudioConverter -> 0x1313246c0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.214  +815.8 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:08.215  +816.7 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.216  +817.6 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324720, from  2 ch,      0 Hz, Float32, deinterleaved to  2 ch,  48000 Hz, Float32, deinterl
+10:32:08.216  +817.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324720: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.216  +817.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324720: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.216  +817.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324720: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.216  +817.6 ms com.apple.coreaudio AudioConverter -> 0x131324720: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.216  +817.7 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:08.217  +818.9 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:08.222  +824.3 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:08.222  +824.3 ms com.apple.coreaudio AURemoteIO.cpp:446   AURemoteIO0x1313d8a40: reporterID=238632677934145
+10:32:08.222  +824.5 ms com.apple.avfaudio AVAudioIONodeImpl.mm:235   Engine@0x131591ec0: associating with audio session (0xd909952), error 0
+10:32:08.223  +824.7 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313d8a40: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.264  +866.2 ms com.apple.coreaudio AURemoteIO.cpp:1135  failed: -66635 (enable 3, outf< 1 ch,      0 Hz, Float32> inf< 1 ch,      0 Hz, Float32>)
+10:32:08.268  +870.1 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:08.274  +875.9 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313d8a40: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.303  +905.1 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:08.308  +909.7 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:08.308  +909.8 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:08.322  +924.1 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:08.322  +924.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324a50, from  1 ch,      0 Hz, Float32 (actually:  1 ch,      0 Hz, Float32) to  1 ch,  4800
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324a50: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324a50: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324a50: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter -> 0x131324a50: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1313247e0, from  1 ch,  48000 Hz, Float32 to  1 ch,      0 Hz, Float32 (actually:  1 ch,      0
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313247e0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313247e0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313247e0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.325  +927.6 ms com.apple.coreaudio AudioConverter -> 0x1313247e0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.326  +927.7 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313d8a40)
+10:32:08.329  +931.3 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016b2d0: stop, was running 0
+10:32:08.329  +931.3 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016b2d0: pause, was running 0
+10:32:08.329  +931.3 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313d8a40)
+10:32:08.362  +963.9 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:08.363  +965.0 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:08.366  +968.5 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:08.377  +979.0 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:08.405 +1007.0 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:08.411 +1012.9 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:08.416 +1018.5 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:08.416 +1018.5 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:08.425 +1027.3 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:08.428 +1030.6 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:08.428 +1030.6 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:08.867 +1469.3 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016b590: stop, was running 0
+10:32:08.867 +1469.3 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016b590: pause, was running 0
+10:32:08.875 +1477.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:08.875 +1477.4 ms com.apple.coreaudio AURemoteIO.cpp:446   AURemoteIO0x130f3f040: reporterID=238632677934145
+10:32:08.876 +1477.6 ms com.apple.avfaudio AVAudioIONodeImpl.mm:235   Engine@0x131592f40: associating with audio session (0xd909952), error 0
+10:32:08.876 +1477.7 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.877 +1478.9 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324a80, from  1 ch,  48000 Hz, Float32 (actually:  1 ch,  48000 Hz, Float32) to  2 ch,      
+10:32:08.877 +1478.9 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324a80: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.877 +1478.9 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324a80: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.877 +1478.9 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324a80: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.877 +1478.9 ms com.apple.coreaudio AudioConverter -> 0x131324a80: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.877 +1479.0 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:08.877 +1479.2 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.877 +1479.5 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131327060, from  1 ch,  48000 Hz, Float32 (actually:  1 ch,  48000 Hz, Float32) to  2 ch,      
+10:32:08.877 +1479.5 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131327060: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.877 +1479.5 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131327060: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.877 +1479.5 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131327060: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.877 +1479.5 ms com.apple.coreaudio AudioConverter -> 0x131327060: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.877 +1479.5 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:08.878 +1479.8 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.878 +1480.2 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324a80, from  2 ch,      0 Hz, Float32, deinterleaved to  2 ch,  48000 Hz, Float32, deinterl
+10:32:08.878 +1480.2 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324a80: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.878 +1480.2 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324a80: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.878 +1480.2 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324a80: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.878 +1480.2 ms com.apple.coreaudio AudioConverter -> 0x131324a80: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.878 +1480.2 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:08.879 +1480.9 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:08.881 +1483.3 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:08.881 +1483.3 ms com.apple.coreaudio AURemoteIO.cpp:446   AURemoteIO0x1313db240: reporterID=238632677934145
+10:32:08.881 +1483.4 ms com.apple.avfaudio AVAudioIONodeImpl.mm:235   Engine@0x131592f40: associating with audio session (0xd909952), error 0
+10:32:08.881 +1483.5 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313db240: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.960 +1561.8 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:08.960 +1562.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:08.963 +1564.9 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:08.963 +1565.2 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1313278d0, from  1 ch,      0 Hz, Float32 (actually:  1 ch,      0 Hz, Float32) to  1 ch,  4800
+10:32:08.963 +1565.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313278d0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.963 +1565.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313278d0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.963 +1565.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313278d0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.963 +1565.3 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324c00, from  1 ch,  48000 Hz, Float32 to  1 ch,      0 Hz, Float32 (actually:  1 ch,      0
+10:32:08.963 +1565.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324c00: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.963 +1565.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324c00: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.963 +1565.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324c00: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.963 +1565.3 ms com.apple.coreaudio AudioConverter -> 0x1313278d0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.963 +1565.3 ms com.apple.coreaudio AudioConverter -> 0x131324c00: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.963 +1565.4 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313db240)
+10:32:08.966 +1567.9 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313db240: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:08.966 +1568.3 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:08.966 +1568.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1313260d0, from  1 ch,      0 Hz, Float32 (actually:  1 ch,      0 Hz, Float32) to  1 ch,  4800
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313260d0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313260d0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313260d0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter -> 0x1313260d0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1313245a0, from  1 ch,  48000 Hz, Float32 to  1 ch,      0 Hz, Float32 (actually:  1 ch,      0
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313245a0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313245a0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313245a0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:08.967 +1568.6 ms com.apple.coreaudio AudioConverter -> 0x1313245a0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:08.967 +1568.7 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313db240)
+10:32:08.968 +1569.9 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313db240: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x650002, err = 0
+10:32:08.991 +1592.9 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:08.991 +1593.2 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:08.995 +1597.0 ms com.apple.avfaudio AVAudioEngine.mm:1182  Engine@0x13016b2e0: start, was running 0
+10:32:08.995 +1597.0 ms com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x1302fa400] Created node rio-outclient with nodeID 3 - reporting period = 10.000000, sample rate = 44100.000000
+10:32:08.995 +1597.0 ms com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x1302fa400] Created node rio-inclient with nodeID 4 - reporting period = 10.000000, sample rate = 48000.000000
+10:32:08.995 +1597.0 ms com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x131281368] AudioConverterNew wasn't needed since incoming and outgoing format are equivalent:  1 ch,
+10:32:08.995 +1597.1 ms com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x131280e28] AudioConverterNew wasn't needed since incoming and outgoing format are equivalent:  2 ch,
+10:32:08.995 +1597.1 ms com.apple.coreaudio [Detector.cpp:56    rtaid::Detector:0x1302fa400] initialized with error = 0
+10:32:08.995 +1597.1 ms com.apple.coreaudio AURemoteIO.cpp:1666  Starting AURemoteIO(0x1313db240)
+output client:  2 ch,  44100 Hz, Float32, deinterleaved, output HW:  2 ch,  44100 Hz, Float32, deinterleav
+10:32:08.995 +1597.3 ms com.apple.coreaudio AURemoteIO.cpp:1727  workgroup port 0x9e1b
+10:32:08.995 +1597.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:08.997 +1598.8 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:09.002 +1603.9 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:09.002 +1603.9 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:09.144 +1746.1 ms com.apple.avfaudio AVAudioEngine.mm:1462  Engine@0x13016b2e0: iounit configuration changed > stopping the engine
+10:32:09.144 +1746.1 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016b2e0: stop, was running 1
+10:32:09.144 +1746.1 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016b2e0: pause, was running 1
+10:32:09.144 +1746.1 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313db240)
+10:32:09.180 +1781.8 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313db240)
+10:32:09.181 +1782.9 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016b590: stop, was running 0
+10:32:09.181 +1782.9 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016b590: pause, was running 0
+10:32:09.183 +1785.5 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:09.200 +1801.6 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313da840)
+10:32:09.306 +1907.8 ms com.apple.avfaudio AVAudioEngine.mm:1438  Engine@0x13016b2e0: iounit configuration changed > posting notification
+10:32:09.463 +2065.4 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:09.527 +2129.1 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:09.530 +2132.5 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:09.530 +2132.5 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:09.530 +2132.5 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:11.556 +4158.5 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016b2e0: stop, was running 0
+10:32:11.556 +4158.5 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016b2e0: pause, was running 0
+10:32:11.562 +4164.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:11.562 +4164.5 ms com.apple.coreaudio AURemoteIO.cpp:446   AURemoteIO0x130f3f040: reporterID=238632677934145
+10:32:11.563 +4164.7 ms com.apple.avfaudio AVAudioIONodeImpl.mm:235   Engine@0x1310533c0: associating with audio session (0xd909952), error 0
+10:32:11.563 +4164.9 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:11.565 +4167.2 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131326ca0, from  1 ch,  48000 Hz, Float32 (actually:  1 ch,  48000 Hz, Float32) to  2 ch,      
+10:32:11.565 +4167.2 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131326ca0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:11.565 +4167.2 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131326ca0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:11.565 +4167.2 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131326ca0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:11.565 +4167.2 ms com.apple.coreaudio AudioConverter -> 0x131326ca0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:11.565 +4167.3 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:11.566 +4168.4 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:11.567 +4169.2 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324cf0, from  1 ch,  48000 Hz, Float32 (actually:  1 ch,  48000 Hz, Float32) to  2 ch,      
+10:32:11.567 +4169.2 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324cf0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:11.567 +4169.2 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324cf0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:11.567 +4169.2 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324cf0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:11.567 +4169.2 ms com.apple.coreaudio AudioConverter -> 0x131324cf0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:11.567 +4169.2 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:11.568 +4169.8 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:11.569 +4170.8 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131326ca0, from  2 ch,      0 Hz, Float32, deinterleaved to  2 ch,  48000 Hz, Float32, deinterl
+10:32:11.569 +4170.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131326ca0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:11.569 +4170.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131326ca0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:11.569 +4170.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131326ca0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:11.569 +4170.8 ms com.apple.coreaudio AudioConverter -> 0x131326ca0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:11.569 +4170.9 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:11.570 +4172.0 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:11.576 +4178.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:11.576 +4178.5 ms com.apple.coreaudio AURemoteIO.cpp:446   AURemoteIO0x1313da840: reporterID=238632677934145
+10:32:11.577 +4178.6 ms com.apple.avfaudio AVAudioIONodeImpl.mm:235   Engine@0x1310533c0: associating with audio session (0xd909952), error 0
+10:32:11.577 +4178.7 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313da840: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:11.650 +4252.1 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:11.650 +4252.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:11.654 +4256.5 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1303df9c0, from  1 ch,      0 Hz, Float32 (actually:  1 ch,      0 Hz, Float32) to  1 ch,  4800
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df9c0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df9c0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df9c0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter -> 0x1303df9c0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1303df900, from  1 ch,  48000 Hz, Float32 to  1 ch,      0 Hz, Float32 (actually:  1 ch,      0
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df900: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df900: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df900: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:11.655 +4256.8 ms com.apple.coreaudio AudioConverter -> 0x1303df900: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:11.655 +4256.8 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313da840)
+10:32:11.657 +4259.0 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313da840: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:11.658 +4259.9 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:11.658 +4260.1 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1303df3f0, from  1 ch,      0 Hz, Float32 (actually:  1 ch,      0 Hz, Float32) to  1 ch,  4800
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df3f0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df3f0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303df3f0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter -> 0x1303df3f0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1303dccc0, from  1 ch,  48000 Hz, Float32 to  1 ch,      0 Hz, Float32 (actually:  1 ch,      0
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303dccc0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303dccc0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1303dccc0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:11.658 +4260.3 ms com.apple.coreaudio AudioConverter -> 0x1303dccc0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:11.658 +4260.3 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313da840)
+10:32:11.659 +4260.8 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313da840: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x650002, err = 0
+10:32:11.682 +4284.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:11.682 +4284.5 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:11.685 +4287.2 ms com.apple.avfaudio AVAudioEngine.mm:1182  Engine@0x13016a2a0: start, was running 0
+10:32:11.685 +4287.3 ms com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x1302f9200] Created node rio-outclient with nodeID 3 - reporting period = 10.000000, sample rate = 44100.000000
+10:32:11.685 +4287.3 ms com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x1302f9200] Created node rio-inclient with nodeID 4 - reporting period = 10.000000, sample rate = 48000.000000
+10:32:11.685 +4287.3 ms com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x131280568] AudioConverterNew wasn't needed since incoming and outgoing format are equivalent:  1 ch,
+10:32:11.685 +4287.3 ms com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x1312803a8] AudioConverterNew wasn't needed since incoming and outgoing format are equivalent:  2 ch,
+10:32:11.685 +4287.3 ms com.apple.coreaudio [Detector.cpp:56    rtaid::Detector:0x1302f9200] initialized with error = 0
+10:32:11.685 +4287.3 ms com.apple.coreaudio AURemoteIO.cpp:1666  Starting AURemoteIO(0x1313da840)
+output client:  2 ch,  44100 Hz, Float32, deinterleaved, output HW:  2 ch,  44100 Hz, Float32, deinterleav
+10:32:11.685 +4287.5 ms com.apple.coreaudio AURemoteIO.cpp:1727  workgroup port 0x9e1b
+10:32:11.685 +4287.6 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:11.697 +4299.0 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:11.697 +4299.0 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:11.697 +4299.0 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:11.830 +4432.0 ms com.apple.avfaudio AVAudioEngine.mm:1462  Engine@0x13016a2a0: iounit configuration changed > stopping the engine
+10:32:11.830 +4432.0 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016a2a0: stop, was running 1
+10:32:11.830 +4432.0 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016a2a0: pause, was running 1
+10:32:11.830 +4432.0 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313da840)
+10:32:11.850 +4451.9 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313da840)
+10:32:11.851 +4453.3 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:11.853 +4454.7 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016b2e0: stop, was running 0
+10:32:11.853 +4454.7 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016b2e0: pause, was running 0
+10:32:11.854 +4455.9 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313db240)
+10:32:11.956 +4557.8 ms com.apple.avfaudio AVAudioEngine.mm:1438  Engine@0x13016a2a0: iounit configuration changed > posting notification
+10:32:12.053 +4654.8 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:12.059 +4661.0 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:12.076 +4678.0 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:12.080 +4681.6 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:12.080 +4681.7 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:12.139 +4741.1 ms com.apple.avfaudio AVAudioEngine.mm:1438  Engine@0x13016a2a0: iounit configuration changed > posting notification
+10:32:13.143 +5745.4 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016a2a0: stop, was running 0
+10:32:13.143 +5745.4 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016a2a0: pause, was running 0
+10:32:13.150 +5752.3 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:13.150 +5752.3 ms com.apple.coreaudio AURemoteIO.cpp:446   AURemoteIO0x130f3f040: reporterID=238632677934145
+10:32:13.151 +5752.7 ms com.apple.avfaudio AVAudioIONodeImpl.mm:235   Engine@0x131591c80: associating with audio session (0xd909952), error 0
+10:32:13.151 +5752.9 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:13.153 +5755.4 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324510, from  1 ch,  48000 Hz, Float32 (actually:  1 ch,  48000 Hz, Float32) to  2 ch,      
+10:32:13.153 +5755.4 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324510: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:13.153 +5755.4 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324510: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:13.153 +5755.4 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324510: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:13.153 +5755.4 ms com.apple.coreaudio AudioConverter -> 0x131324510: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:13.153 +5755.6 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:13.155 +5756.7 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:13.155 +5757.5 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324030, from  1 ch,  48000 Hz, Float32 (actually:  1 ch,  48000 Hz, Float32) to  2 ch,      
+10:32:13.155 +5757.5 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324030: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:13.155 +5757.5 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324030: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:13.155 +5757.5 ms com.apple.coreaudio AudioConverter -> 0x131324030: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:13.155 +5757.5 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324030: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:13.155 +5757.5 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:13.156 +5758.2 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x130f3f040: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:13.157 +5759.0 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324510, from  2 ch,      0 Hz, Float32, deinterleaved to  2 ch,  48000 Hz, Float32, deinterl
+10:32:13.157 +5759.0 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324510: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:13.157 +5759.0 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324510: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:13.157 +5759.0 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324510: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:13.157 +5759.0 ms com.apple.coreaudio AudioConverter -> 0x131324510: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:13.157 +5759.1 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:13.158 +5760.3 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x130f3f040)
+10:32:13.163 +5764.9 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:13.163 +5764.9 ms com.apple.coreaudio AURemoteIO.cpp:446   AURemoteIO0x1313db240: reporterID=238632677934145
+10:32:13.163 +5765.1 ms com.apple.avfaudio AVAudioIONodeImpl.mm:235   Engine@0x131591c80: associating with audio session (0xd909952), error 0
+10:32:13.165 +5767.2 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313db240: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:13.240 +5841.7 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:13.240 +5842.0 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:13.243 +5844.9 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:13.245 +5846.8 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324cf0, from  1 ch,      0 Hz, Float32 (actually:  1 ch,      0 Hz, Float32) to  1 ch,  4800
+10:32:13.245 +5846.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324cf0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:13.245 +5846.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324cf0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:13.245 +5846.8 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324cf0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:13.245 +5846.8 ms com.apple.coreaudio AudioConverter -> 0x131324cf0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:13.245 +5846.9 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x1313242a0, from  1 ch,  48000 Hz, Float32 to  1 ch,      0 Hz, Float32 (actually:  1 ch,      0
+10:32:13.245 +5846.9 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313242a0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:13.245 +5846.9 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313242a0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:13.245 +5846.9 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x1313242a0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:13.245 +5846.9 ms com.apple.coreaudio AudioConverter -> 0x1313242a0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:13.245 +5846.9 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313db240)
+10:32:13.245 +5847.3 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313db240: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+10:32:13.246 +5848.1 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:13.246 +5848.4 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:13.247 +5848.6 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324c30, from  1 ch,      0 Hz, Float32 (actually:  1 ch,      0 Hz, Float32) to  1 ch,  4800
+10:32:13.247 +5848.7 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324c30: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:13.247 +5848.7 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324c30: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:13.247 +5848.7 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324c30: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:13.247 +5848.7 ms com.apple.coreaudio AudioConverter -> 0x131324c30: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:13.247 +5848.7 ms com.apple.coreaudio AudioConverter.cpp:1077  Created a new in process converter -> 0x131324cf0, from  1 ch,  48000 Hz, Float32 to  1 ch,      0 Hz, Float32 (actually:  1 ch,      0
+10:32:13.247 +5848.7 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324cf0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+10:32:13.247 +5848.7 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324cf0: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+10:32:13.247 +5848.7 ms com.apple.coreaudio AudioConverter.cpp:1327  AudioConverter -> 0x131324cf0: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+10:32:13.247 +5848.7 ms com.apple.coreaudio AudioConverter -> 0x131324cf0: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+10:32:13.247 +5848.7 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313db240)
+10:32:13.248 +5850.0 ms com.apple.coreaudio AURemoteIO.cpp:1130  AURemoteIO@0x1313db240: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x650002, err = 0
+10:32:13.270 +5871.9 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1684431725 from AVAudioSession
+10:32:13.270 +5872.3 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:219   SetProperty 1684431725 on AVAudioSession
+10:32:13.274 +5876.0 ms com.apple.avfaudio AVAudioEngine.mm:1182  Engine@0x13016b860: start, was running 0
+10:32:13.275 +5876.8 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:13.275 +5877.0 ms com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x1302fa400] Created node rio-outclient with nodeID 3 - reporting period = 10.000000, sample rate = 44100.000000
+10:32:13.275 +5877.0 ms com.apple.coreaudio [Detector.cpp:154   rtaid::Detector:0x1302fa400] Created node rio-inclient with nodeID 4 - reporting period = 10.000000, sample rate = 48000.000000
+10:32:13.275 +5877.0 ms com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x131280fe8] AudioConverterNew wasn't needed since incoming and outgoing format are equivalent:  1 ch,
+10:32:13.275 +5877.0 ms com.apple.coreaudio [NodeFormatConverter.cpp:81    rtaid::NodeFormatConverter:0x131280e28] AudioConverterNew wasn't needed since incoming and outgoing format are equivalent:  2 ch,
+10:32:13.275 +5877.0 ms com.apple.coreaudio [Detector.cpp:56    rtaid::Detector:0x1302fa400] initialized with error = 0
+10:32:13.275 +5877.0 ms com.apple.coreaudio AURemoteIO.cpp:1666  Starting AURemoteIO(0x1313db240)
+output client:  2 ch,  44100 Hz, Float32, deinterleaved, output HW:  2 ch,  44100 Hz, Float32, deinterleav
+10:32:13.275 +5877.2 ms com.apple.coreaudio AURemoteIO.cpp:1727  workgroup port 0x9e1b
+10:32:13.276 +5877.9 ms com.apple.coreaudio ATAudioSessionPropertyManager.mm:60    GetProperty 1920166244 from AVAudioSession
+10:32:13.285 +5886.6 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:13.285 +5886.6 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:13.433 +6035.1 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016a2a0: stop, was running 0
+10:32:13.433 +6035.1 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016a2a0: pause, was running 0
+10:32:13.436 +6037.9 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:13.438 +6040.0 ms com.apple.avfaudio AVAudioEngine.mm:1462  Engine@0x13016b860: iounit configuration changed > stopping the engine
+10:32:13.438 +6040.0 ms com.apple.avfaudio AVAudioEngine.mm:1237  Engine@0x13016b860: stop, was running 1
+10:32:13.438 +6040.0 ms com.apple.avfaudio AVAudioEngine.mm:1220  Engine@0x13016b860: pause, was running 1
+10:32:13.440 +6042.0 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313da840)
+10:32:13.740 +6341.8 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:475   Session 0xd909952 posting AVAudioSessionRouteChangeNotification. Reason: AVAudioSessionRouteChangeReasonRouteConfi
+10:32:13.741 +6343.3 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313db240)
+10:32:13.780 +6382.2 ms com.apple.coreaudio AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1313db240)
+10:32:13.814 +6416.4 ms com.apple.coreaudio SessionCore_iOS.mm:342   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:13.818 +6420.1 ms com.apple.coreaudio SessionCore_iOS.mm:311   Session 0xd909952 posting AVAudioSessionAvailableInputsChangeNotification
+10:32:13.818 +6420.1 ms com.apple.coreaudio SessionCore_iOS.mm:315   Session 0xd909952 posting AVAudioSessionAvailableOutputsChangeNotification
+10:32:13.853 +6454.6 ms com.apple.coreaudio SessionCore_iOS_NotificationHandlers.mm:323   Session 0xd909952 posting AVAudioSessionAudioHardwareFormatChangeNotification
+10:32:13.890 +6491.9 ms com.apple.avfaudio AVAudioEngine.mm:1438  Engine@0x13016b860: iounit configuration changed > posting notification
