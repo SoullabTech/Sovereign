@@ -101,3 +101,24 @@ AUTH-EXPOSURE-01   🟠 independent · ⛔ neither lane waits
 ```
 
 ⛔ **HOLDING.** No further ruling is required, and none is sought, until the three slices return.
+
+---
+
+## 6 · ⭐ The strict close sequence (founder, 2026-09-14)
+
+```text
+1   FREEZE the returned slice AS RECEIVED
+2   run checks 1–6
+3   report PASS / FAIL per check
+4   if FAIL   → re-run the affected slice under IDENTICAL bounds
+                ⛔ NO HAND CORRECTION
+5   if all PASS → close P1-03
+6   open P1-04 under the already-fixed sparse-graph contract
+```
+
+⭐⭐ **Step 1 is the one that makes steps 2–4 meaningful.** The slice is committed exactly as the
+worker wrote it — ⛔ before any check is run, ⛔ before any tidying, ⛔ before any judgement — so
+the artifact under test is immutable and the check result is auditable against it afterwards.
+
+⛔ A slice adjusted *before* being judged has been judged by its adjuster. *Freezing first is what
+keeps the assembler a reader of the evidence rather than a co-author of it.*
