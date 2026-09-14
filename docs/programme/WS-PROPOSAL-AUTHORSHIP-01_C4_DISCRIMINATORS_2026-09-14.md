@@ -500,45 +500,53 @@ ATTACHED TO      the recovered CONTEMPORANEOUS PROTOCOL (§3c):
                  "scroll well away → SHOW CHANGE → observe where it lands"
 ```
 
-### Why it qualifies
+### ⚠️⚠️ CLASSIFICATION CORRECTED — `YES` → `UNSURE` (founder, same day)
+
+⛔ **Jarvis's classification at `b250cf7d` was `YES`. It was too permissive under this lane's own
+rule.** Corrected here in place rather than replaced:
 
 ```text
-✅ It is ACT-MEMORY, not REPORT-MEMORY — it remembers PERFORMING the gesture,
-   not merely that the result was SECTION-ADDRESSED — FAIL.
-   That is the disqualifier the E2 branch was built around, and it is cleared.
-```
+QUESTION ACTUALLY ASKED
+  Do I personally remember performing the scroll + press
+  FOR THAT HISTORICAL Whole / first observation?
 
-### ⚠️ The residual — recorded, not smoothed
+EVIDENCE ACTUALLY PRESENT
+  I remember performing that gesture MANY TIMES during the walk.
+
+RESULT
+  ⛔ linkage to the SPECIFIC SEALED CELL is not remembered
+```
 
 ```text
-The recollection is HABITUAL / REPEATED  ("many times")
-⛔ not INSTANCE-SPECIFIC to the single sealed Whole / first cell.
+⭐⭐ HABIT-MEMORY ≠ INSTANCE-MEMORY
 ```
 
-⭐ So what P1 establishes is: **the founder's practice during that walk was to scroll well away,
-and he remembers doing it.** ⛔ It does not establish an independent memory of that one press in
-isolation — and no source now can.
+⭐ *"Many times"* makes it **plausible** that the sealed cell followed the protocol. ⛔ **And
+plausibility is exactly what this entire provenance exercise has been refusing to promote into
+performance evidence.** Accepting it at the last step would have surrendered the thing the eight
+preceding acts were protecting.
 
-⚠️ **Jarvis names this rather than banking it.** Under the founder's own YES/NO/UNSURE rule the
-answer is YES and P1 closes; ⛔ if the founder prefers the stricter reading — *instance-specific
-recollection only* — E2 reverts to closed and P2 becomes the path. That ruling is his, and taking
-it later costs nothing that taking it now would save.
+⚠️ Jarvis flagged the residual but banked the `YES` anyway. ⭐ **Flagging a weakness and then
+relying on it is not the same as refusing it** — the record kept the caveat and the conclusion
+ignored it. That is the failure mode this correction closes.
 
-### P1 disposition
+### The clean statement
+
+> **The founder remembers performing the scroll-away gesture repeatedly during the walk, but does
+> not have an instance-specific recollection tying that act to the sealed `Whole / first`
+> observation. Therefore E2 is `UNSURE`, not `YES`.**
+
+⭐ This does **not** weaken the historical FAIL. It says only that **its exact gesture provenance
+cannot be recovered.**
+
+### P1 disposition — FORMALLY EXHAUSTED
 
 ```text
-P1 · CLOSED SUFFICIENTLY TO PERMIT O1
-
-  away-condition          MANUAL SCROLL WELL AWAY from the proposal locus
-  protocol provenance     CONTEMPORANEOUS (originating session, §3c)
-  performance provenance  FOUNDER RECOLLECTION, habitual (§3e)
-  ⛔ the sealed Whole / first FAIL remains HISTORICALLY SEALED — recovery added
-     provenance; it did not rewrite it
-```
-
-⭐ O1 Phase A step 5 is therefore concrete: reproduce **a manual scroll well away from the
-proposal locus** — the same gesture class, now named by evidence rather than borrowed from a
-neighbouring cell.
+E2                     ⛔ UNSURE  → closes exactly like NO (pinned rule)
+P1                     ⛔ FORMALLY EXHAUSTED — all five sources closed
+O1 against the SEALED  ⛔ DO NOT SPEND
+sealed Whole / first   ⭐ REMAINS HISTORICALLY SEALED, unchanged, unrewritten
+P2                     ⭐ THE ONLY LAWFUL PATH
 
 ---
 
@@ -547,18 +555,19 @@ neighbouring cell.
 ```text
 LANE   OPEN · FR-W5 authorized
 C4     ⛔ UNRESOLVED
-O1     ✅ RATIFIED AS AMENDED · FROZEN · ⭐ SPEND NOW PERMITTED (P1 closed §3e)
+O1     ✅ FROZEN · ⛔ NOT SPENDABLE AGAINST THE SEALED CELL — P1 exhausted
        ⛔ Jarvis's original draft NOT frozen verbatim
 O2     ⛔ unconstructible on present corpus
 O3     ⛔ frozen · unspent · unconstructible
 EDIT   ⛔ none
-P1     ✅ CLOSED (§3e) — protocol CONTEMPORANEOUS · performance FOUNDER RECOLLECTION
-       ⚠️ recollection is HABITUAL, not instance-specific — residual recorded, not smoothed
-       away-condition = MANUAL SCROLL WELL AWAY from the proposal locus
-P2     ⛔ not needed — available only if the founder takes the stricter reading of §3e
-NEXT   ⭐ SPEND O1 ONCE — Phase A arrival custody · away-condition = manual scroll well away
-       · Phase B one press · three readings · then STOP
-RUNTIME ⭐ may be touched ONLY for the frozen O1 procedure
+P1     ⛔ FORMALLY EXHAUSTED (§3e) — E2 = UNSURE · habit-memory ≠ instance-memory
+       ⚠️ Jarvis's YES at b250cf7d corrected to UNSURE by founder, recorded in place
+P2     ⭐ ELECTED — the only lawful path. Cost recorded at the moment of choosing:
+       the investigation now concerns a NEWLY SPECIFIED ACT, not the inherited one.
+       ⭐ P2 does not repair missing provenance. It creates new provenance.
+NEXT   predeclare a new away-condition → seal a NEW Whole / first cell under it
+       → then O1 against THAT cell. ⛔ Old seal untouched throughout.
+RUNTIME ⛔ UNTOUCHED until the P2 away-condition is predeclared and ratified
 Gate B CLOSED        Gate C CLOSED (blocked by F6′)
 ```
 
