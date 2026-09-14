@@ -497,6 +497,11 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(lcExec).not.toMatch(/log config|sysdiagnose|lldb|devicectl device process/);   // `--mode L` is the driver's Mode L, not a logging mode
     expect(lc.indexOf('STOP — the installed log(1) does not document')).toBeLessThan(lc.indexOf('log collect "$DEVOPT"'));
     expect(lc).toMatch(/LOG-CAL 1 --mode L --subject phase-a/);                    // exactly one bounded sample, its own stratum
+    expect(lc).toMatch(/OUT="\$ROOT\/unifiedlog-cal-\$STAMP"/);                       // C-D12: never a case-variant of the batch's LOG-CAL-<stamp>
+    expect(lc).toMatch(/batch complete — /);                                          // ledger located from the batch's completion line, not a glob
+    expect(lc.indexOf('did not yield an audio sample')).toBeLessThan(lc.indexOf('log collect "$DEVOPT"'));  // no collect without a real sample
+    expect(lcExec).toMatch(/K00_LOG_SUDO/); expect((lcExec.match(/\bsudo\b/g) || []).length).toBeLessThanOrEqual(3); // root only on the collect, only by founder act
+    expect(lcExec).not.toMatch(/sudo (xcrun|log show|log config|scripts)/);
     expect(lc).toMatch(/usage: log show \\\[options\\\] <archive>/);                    // condition 3 in the installed grammar (positional archive), founder ruling 2026-09-14
     expect(lcExec).not.toMatch(/log show --archive/);                                // the superseded spelling never runs
     expect(lcExec).toMatch(/log show --start "\$T0_LOCAL" --end "\$T1_LOCAL" --style json "\$OUT\/device\.logarchive"/); // options first, archive last, as documented

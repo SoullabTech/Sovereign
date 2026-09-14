@@ -8,7 +8,7 @@
 # persisted log store into an archive on the Mac) and `log show` (read that archive) are invoked.
 #   usage: scripts/witness/k00-log-calibrate.sh [<ledger-root>]
 set -uo pipefail
-ROOT="${1:-docs/programme/VOICE-2026/driver-ledger}"; STAMP="$(date -u +%Y%m%dT%H%M%SZ)"; OUT="$ROOT/log-cal-$STAMP"; mkdir -p "$OUT"
+ROOT="${1:-docs/programme/VOICE-2026/driver-ledger}"; STAMP="$(date -u +%Y%m%dT%H%M%SZ)"; OUT="$ROOT/unifiedlog-cal-$STAMP"; mkdir -p "$OUT"   # C-D12: never `log-cal-<stamp>` — on a case-insensitive volume that IS the batch's `LOG-CAL-<stamp>`
 UDID="${K00_UDID:-00008140-00163D9922E0801C}"      # the Xcode destination id = device UDID (never the devicectl CoreDevice id)
 REC="$OUT/CALIBRATION.md"; say(){ echo "$*" | tee -a "$REC"; }
 say "# unified-log calibration — $STAMP (instrument validation only; the sample is stratum LOG-CAL, never counted)"
@@ -31,14 +31,22 @@ T0_EPOCH=$(date +%s); T0_LOCAL="$(date -r $((T0_EPOCH-5)) "+%Y-%m-%d %H:%M:%S")"
 say "## T0 (Mac wall clock, before the sample): $T0_ISO (local $T0_LOCAL used for the collect window)"
 scripts/witness/k00-driver-batch.sh LOG-CAL 1 --mode L --subject phase-a > "$OUT/batch-stdout.txt" 2>&1; BRC=$?
 T1_EPOCH=$(date +%s); T1_LOCAL="$(date -r $((T1_EPOCH+2)) "+%Y-%m-%d %H:%M:%S")"
-CALDIR="$(ls -d "$ROOT"/LOG-CAL-* 2>/dev/null | sort | tail -1)"
-say "## sample: batch rc=$BRC · ledger $CALDIR · row: $(grep '^| LOG-CAL' "$CALDIR/ledger.md" 2>/dev/null | cut -c1-220 || echo '(no row)')"
+# C-D12: locate the ledger from the batch's own completion line, never by a case-sensitive glob on a case-insensitive volume
+CALDIR="$(grep -o 'batch complete — .*/ledger.md' "$OUT/batch-stdout.txt" | sed 's/^batch complete — //; s#/ledger.md$##' | tail -1)"
+ROW="$(grep -E '^\| ' "$CALDIR/ledger.md" 2>/dev/null | tail -1 || true)"
+say "## sample: batch rc=$BRC · ledger ${CALDIR:-NONE} · row: $(cut -c1-260 <<<"${ROW:-(no row)}")"
+if ! grep -qE '\*\*(gen-1 listen|failure then recovery|failure then degradation|other observed shape)\*\*' <<<"$ROW"; then
+  say "## STOP — the LOG-CAL invocation did not yield an audio sample (infrastructure/precondition row); no archive is collected against a sample that did not occur. Not counted; nothing captured; device untouched."; exit 8
+fi
 say "## T1 (after export): $(date -u -r $T1_EPOCH +%Y-%m-%dT%H:%M:%SZ)"
 # D. the capture — exactly one collect, then one show over the window
-CMD=(log collect "$DEVOPT" "$DEVVAL" "$WINOPT" "$T0_LOCAL" --output "$OUT/device.logarchive")
-[ "$WINOPT" = "--last" ] && CMD=(log collect "$DEVOPT" "$DEVVAL" --last "$(( (T1_EPOCH-T0_EPOCH)/60 + 2 ))m" --output "$OUT/device.logarchive")
+# 20260914T121709Z established: `log collect` from an attached device requires root on this Mac (rc 77, "Must be root").
+# Root on the host is a founder act, taken at invocation by K00_LOG_SUDO=1; it prefixes ONLY the collect. Nothing else escalates.
+SUDO=(); if [ "${K00_LOG_SUDO:-0}" = "1" ]; then SUDO=(sudo); say "## root: K00_LOG_SUDO=1 set by the founder — the collect runs under sudo (host privilege only; no device configuration)"; else say "## root: not granted (K00_LOG_SUDO unset) — if the tool requires root the collect will be refused and returned"; fi
+CMD=("${SUDO[@]}" log collect "$DEVOPT" "$DEVVAL" "$WINOPT" "$T0_LOCAL" --output "$OUT/device.logarchive")
+[ "$WINOPT" = "--last" ] && CMD=("${SUDO[@]}" log collect "$DEVOPT" "$DEVVAL" --last "$(( (T1_EPOCH-T0_EPOCH)/60 + 2 ))m" --output "$OUT/device.logarchive")
 say "## collect: ${CMD[*]}"; CT0=$(date +%s); "${CMD[@]}" > "$OUT/collect-stdout.txt" 2>&1; CRC=$?; CT1=$(date +%s)
-say "## collect rc=$CRC · $((CT1-CT0)) s · archive size: $(du -sh "$OUT/device.logarchive" 2>/dev/null | cut -f1 || echo none)"; tail -5 "$OUT/collect-stdout.txt" | tee -a "$REC"
+say "## collect rc=$CRC · $((CT1-CT0)) s · archive size: $(du -sh "$OUT/device.logarchive" 2>/dev/null | cut -f1 || echo none) · owner: $(stat -f '%Su' "$OUT/device.logarchive" 2>/dev/null || echo n/a)"; tail -5 "$OUT/collect-stdout.txt" | tee -a "$REC"
 [ $CRC -eq 0 ] && [ -d "$OUT/device.logarchive" ] || { say "## STOP — collect did not produce an archive; mechanism returned for ruling"; exit 6; }
 # Ruling 1 precision: follow the help grammar literally — `log show [options] <archive>`, options first, archive last.
 # Ruling 2: first read at DEFAULT level only (no --info, no --debug); escalation, if any, is a separately recorded re-read.
