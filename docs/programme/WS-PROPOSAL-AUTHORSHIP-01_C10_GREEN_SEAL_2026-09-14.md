@@ -131,7 +131,20 @@ Both     viewport / orientation ONLY — ⛔ no write · no mode change · no ac
 ```text
 ⭐ WHY THIS IS FLAGGED ANYWAY: modifying an existing contract test during a repair is exactly
    how an invariant gets quietly relaxed. This one was strengthened, not weakened — ⛔ but the
-   acceptance set said "unchanged", and it was not. The deviation is the founder's to ratify.
+   acceptance set said "unchanged", and it was not.
+```
+
+### ⭐⭐ RATIFIED (founder, 2026-09-14) — with an ANTI-PRECEDENT clause
+
+> **The proposal-work-mode contract test was changed during repair because its prior
+> single-callback assumption was falsified by the census. The replacement does not weaken the
+> protected behavior; it generalizes and strengthens the contract across the actual callback
+> structure. This deviation is expressly ratified and MUST NOT be treated as precedent for
+> altering acceptance tests merely because a repair fails them.**
+
+```text
+⭐ The last clause is the load-bearing one. A ratified deviation that carries no anti-precedent
+   clause becomes a doorway. This one is sealed behind it.
 ```
 
 ---
@@ -162,9 +175,68 @@ F1 RENAME       ⛔ untouched — separate micro-lane
 CLOSING WITNESS ⛔ UNSPENT
 COMMIT / PUSH   ⛔ none
 
-⚠️ OWED  founder ratification of the proposalWorkMode contract change (§4)
-⚠️ OWED  disposition of the work itself — it exists ONLY in a temp worktree at 0bd2b657
+RATIFICATION    ✅ GRANTED (§4) — with anti-precedent clause
+⚠️ OWED  CUSTODY — the work exists ONLY in a temp worktree at 0bd2b657 (§7)
 ```
+
+---
+
+## 7 · ⭐ CUSTODY PROCEDURE — ordered, before the closing witness
+
+```text
+⛔ Do NOT leave the repair in /private/tmp.        ⛔ Do NOT merge it yet.
+```
+
+```text
+1  FREEZE the exact current bytes.
+   ⛔ No cleanup · no refactor · no formatting · no "one more improvement."
+2  From the temp worktree, create a DEDICATED DURABLE BRANCH from the actual repair lineage
+   (detached at 0bd2b657…).
+3  COMMIT the exact source + test state that earned GREEN and killed the mutant.
+4  PUSH that branch to origin.
+5  RECORD the ratification separately as a record-only commit.
+   ⭐ Done here — it was NOT present in 3b1947d0, which flagged it as owed.
+6  VERIFY the pushed candidate reproduces the witnessed state:
+     • clean tree
+     • expected source diff (the eight paths, no others)
+     • ⭐ mutant restoration intact — re-assert the implementation digest
+       2e8e3e426d08566f07531313a4ee5a54f84b024bd8254093dfd2aeb2ae6729ad
+       ⛔ so "restoration intact" is CHECKED on the candidate, not remembered from the run
+     • ⛔ NO accidental /private/tmp dependency
+7  THEN spend the CLOSING WITNESS against that durable candidate.
+8  ONLY after the closing witness passes may the work become a PR / integration candidate.
+```
+
+```text
+⭐ BRANCH NOW · PR AFTER CLOSING WITNESS
+   A branch solves custody without converting an ACCEPTED-BUT-NOT-CLOSED candidate into an
+   INTEGRATION PROPOSAL prematurely.
+```
+
+⚠️ **Branch separation:** this governance record lives on `claude/bold-bohr-pmtynu`. ⛔ The repair
+gets its **own** branch from `0bd2b657`; the two must not be conflated.
+
+### ⭐⭐ The three evidentiary roles — preserved exactly
+
+```text
+RED       proves the capability was ABSENT on untouched source
+MUTANT    proves the REPAIRED implementation DISCRIMINATES the forbidden near-miss
+CLOSING   proves the FINISHED BEHAVIOUR in its final witnessed environment
+```
+
+⭐ **A stronger chain than forcing this into a conventional RED → GREEN story** — three
+independent claims rather than one transition asked to carry all of them.
+
+```text
+GREEN         earned
+ADJUDICATION  sealed
+RATIFICATION  ✅ granted
+CUSTODY       ⚠️ OWED IMMEDIATELY
+CLOSING       ⛔ still unspent
+MERGE         ⛔ not authorized
+```
+
+---
 
 > ⭐⭐ **A voluntary return is not complete because Whole reached the right section. It completes
 > only when that request's exact locus is actually addressed — or the issuer tells the member
