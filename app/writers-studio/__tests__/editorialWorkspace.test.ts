@@ -75,15 +75,52 @@ describe('W3 · law 1 — the subject comes from the resolved target', () => {
 });
 
 describe('W3 · law 2 — the screen agrees with storage', () => {
-  it('W3-5 · ⭐⭐ a successful append REFOCUSES and REREADS; it never patches', () => {
+  it('W3-5 · ⭐⭐ a successful append REFOCUSES and LAUNCHES NOTHING ITSELF', () => {
+    /* W3.1 · the subject transition is the only success-path trigger; the
+       governed effects (which cancel) do both rereads for the NEW subject. */
     expect(afterAppend({ status: 'appended', versionId: 'V4' })).toEqual({
-      refocusTo: 'V4', rereadWriteState: true, rereadLineage: true,
+      refocusTo: 'V4', rereadWriteState: false, rereadLineage: false,
       keepComposerTarget: false,
     });
   });
 
+  it('W3.1 · ⭐⭐ MODELLED RACE — the old subject can never commit after the new', () => {
+    /* ⚠️ EVIDENCE CLASS: MODELLED SEQUENCE, named as one. Rendering the room
+       needs a browser, a session and a manuscript; what is modelled here is the
+       exact founder scenario, driven by the REAL law:
+           start a read for the old subject V3 · transition to V4 ·
+           let V4 resolve first and V3 resolve last.
+       The pre-repair law launched an ungoverned V3 write-state read on success,
+       so V3 committed last and the room fell back under a URL saying V4. */
+    const committed: string[] = [];
+    let subject = 'V3';
+    const inflight: { subject: string; resolve: () => void }[] = [];
+    /* the ONE governed path: it cancels when the subject moves on */
+    const governedRead = (forSubject: string) => inflight.push({
+      subject: forSubject,
+      resolve: () => { if (subject === forSubject) committed.push(forSubject); },
+    });
+    /* an UNGOVERNED read captures the subject at call time and never cancels */
+    const ungovernedRead = (captured: string) => inflight.push({
+      subject: captured, resolve: () => committed.push(captured),
+    });
+
+    const next = afterAppend({ status: 'appended', versionId: 'V4' });
+    if (next.rereadWriteState) ungovernedRead(subject);          // the defect
+    if (next.refocusTo) { subject = next.refocusTo; governedRead(subject); }
+
+    /* V4 resolves first, the stale V3 read last */
+    [...inflight].sort((a) => (a.subject === 'V4' ? -1 : 1)).forEach((r) => r.resolve());
+
+    expect(committed[committed.length - 1]).toBe('V4');
+    expect(committed).not.toContain('V3');
+    expect(subject).toBe('V4');
+  });
+
   it('W3-6 · ⭐⭐ a refusal rereads the lineage ONLY — focus and target untouched', () => {
-    /* Seeing new history is not consenting to a new succession relationship. */
+    /* Seeing new history is not consenting to a new succession relationship.
+       ⭐ And the lineage read here is lawful precisely BECAUSE the subject does
+       not change: there is no newer subject for it to arrive behind. */
     expect(afterAppend({ status: 'refused', reason: 'not_successor_of_head' })).toEqual({
       refocusTo: null, rereadWriteState: false, rereadLineage: true,
       keepComposerTarget: true,
@@ -102,6 +139,11 @@ describe('W3 · law 2 — the screen agrees with storage', () => {
     expect(WS).toMatch(/const \{ id \} = \(await res\.json\(\)\)/);
     expect(WS).not.toMatch(/setChain\(\s*\{[\s\S]{0,200}versions:\s*\[/);
     expect(WS).not.toMatch(/\.versions\.concat|\.\.\.chain\.versions|insertVersion|optimistic/i);
+  });
+
+  it('W3.1 · ⛔ [SOURCE] the refocus is issued BEFORE any other effect', () => {
+    expect(WS).toMatch(
+      /if \(next\.refocusTo !== null\) onFocusVersion\(next\.refocusTo\);[\s\S]{0,400}?if \(next\.rereadLineage\)/);
   });
 
   it('⛔ [SOURCE] no retry and no head substitution anywhere in the assembly', () => {

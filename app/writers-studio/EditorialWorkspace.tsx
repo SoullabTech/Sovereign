@@ -86,12 +86,17 @@ export function EditorialWorkspace({
     } catch { outcome = { status: 'refused', reason: 'unreachable' }; }
 
     const next = afterAppend(outcome);
+    /* ⭐⭐ W3.1 · THE SUBJECT TRANSITION GOES FIRST, AND ON SUCCESS IT GOES
+       ALONE. Refocusing changes the selector, and the governed effects — the
+       ones with cancellation — re-read the Work and the lineage for the NEW
+       subject. ⛔ Any read launched here would carry the OLD captured selector
+       and could commit after the new one, seating V3 under a URL that says V4. */
+    if (next.refocusTo !== null) onFocusVersion(next.refocusTo);
     /* ⭐ On refusal the lineage is re-read so the writer can SEE that the
        exchange moved — ⛔ and the focus, the composer's predecessor and their
        unsaved words are all left exactly as they were. */
     if (next.rereadLineage) setLineageToken((n) => n + 1);
     if (next.rereadWriteState) onWorkChanged();
-    if (next.refocusTo !== null) onFocusVersion(next.refocusTo);
 
     return outcome.status === 'appended'
       ? { ok: true as const }
