@@ -271,3 +271,48 @@ be satisfied without altering that producer, leave it untouched.
 That branch carries a large bounded-cognition history and migrations unrelated to
 this repair. The transferable unit is **C10's accepted invariant + falsifier +
 smallest implementation patch** — never the branch ancestry.
+
+---
+
+# 9. HELD · W5-0 PREDECLARATION — UNOPENED ACT
+
+**Status: preserved for continuity only.**
+
+⛔ **W5-0 is not opened by this record. No census, schema, migration,
+implementation, or persistence work is authorized.** The presence of this text is
+not authorization and may not be cited as such.
+
+## 9.1 Chronology correction
+
+The discourse-object ruling was transferred **after** W3 and W3.1 had already
+landed. Its operative binding target is **W5 and everything downstream of W5**.
+Earlier wording referring to *"W3/W5"* — in PR #1294's title and in the merged
+ruling's closing section — names the broader editorial programme lane, **not an
+uncompleted W3 act**. The merged record is deliberately left unedited.
+
+## 9.2 Predeclared discriminator for any future W5-0 census
+
+> Can any existing durable substrate represent **MAIA recommending that the current
+> wording remain unchanged**, as an authored editorial turn, while creating **zero
+> `ProposalVersion` rows**?
+
+A **YES** answer must prove all four:
+
+1. **Explicit authorship** — the durable act can truthfully distinguish
+   MAIA-authored from member-authored discourse.
+2. **Structural non-authorizability** — the act cannot itself be passed to proposal
+   authorization or execution.
+3. **Causal relation** — if a later `ProposalVersion` arises from the turn, that
+   causal relation can be represented without placing the turn inside the version
+   or falsifying either author.
+4. **Zero-version case** — *"keep the current wording"* is durably representable
+   with **no `ProposalVersion` created**.
+
+**Anything less is NO.**
+
+## 9.3 Why predeclared
+
+Declaring the test before the census runs prevents it being satisfied by forgetting
+to ask the hard question. A census that asks only *does something exist* is answered
+by any table with a content column; requiring proof on all four means an existing
+object earns the role or the answer is NO.
