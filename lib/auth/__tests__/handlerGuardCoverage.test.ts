@@ -88,7 +88,8 @@ const TRIAGE: Record<string, 'guarded' | 'pending-inventory'> = {
   '/steward': 'pending-inventory',
   '/caseload': 'pending-inventory',
   '/supervision': 'pending-inventory',
-  '/partners/': 'pending-inventory',
+  // '/partners/' removed — its ACCESS_RULES entry was deleted with the retired
+  // Partners Prelude surface, so the ledger no longer owes it an inventory pass.
   '/labtools/admin': 'pending-inventory',
   '/labtools/gifts': 'pending-inventory',
   '/consciousness/portals/admin': 'pending-inventory',
