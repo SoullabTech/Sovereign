@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# KERNEL-00 hidden-state census · PASS 2 · steps C–E — ONE bounded unified-log calibration capture around ONE driver sample.
+# Instrument validation, NOT physiological evidence (founder: "EXTERNAL READ ≠ PRESUMED INERT"). The LOG-CAL sample is its
+# own stratum, never counted, never pooled.
+# FAIL-CLOSED: refuses unless the newest k00-log-probe.sh output documents (a) a device option on `log collect`,
+# (b) a start/last window on `log collect`, (c) --archive and --start on `log show`. Never calls `log config`,
+# never `sysdiagnose`, never changes a level/mode, never attaches anything. Only `log collect` (read the device's
+# persisted log store into an archive on the Mac) and `log show` (read that archive) are invoked.
+#   usage: scripts/witness/k00-log-calibrate.sh [<ledger-root>]
+set -uo pipefail
+ROOT="${1:-docs/programme/VOICE-2026/driver-ledger}"; STAMP="$(date -u +%Y%m%dT%H%M%SZ)"; OUT="$ROOT/log-cal-$STAMP"; mkdir -p "$OUT"
+UDID="${K00_UDID:-00008140-00163D9922E0801C}"      # the Xcode destination id = device UDID (never the devicectl CoreDevice id)
+REC="$OUT/CALIBRATION.md"; say(){ echo "$*" | tee -a "$REC"; }
+say "# unified-log calibration — $STAMP (instrument validation only; the sample is stratum LOG-CAL, never counted)"
+PROBE="$(ls -d "$ROOT"/log-probe-* 2>/dev/null | sort | tail -1)"
+[ -n "$PROBE" ] || { say "## STOP — no k00-log-probe.sh output under $ROOT; discovery (step A/B) must precede calibration"; exit 5; }
+DEVOPT="$(grep -oE -- '--device-udid|--device-name|--device\b' "$PROBE/log-collect-help.txt" | head -1 || true)"
+grep -qE -- '--start' "$PROBE/log-collect-help.txt" && WINOPT="--start" || { grep -qE -- '--last' "$PROBE/log-collect-help.txt" && WINOPT="--last"; } || WINOPT=""
+grep -qE -- '--archive' "$PROBE/log-show-help.txt" && grep -qE -- '--start' "$PROBE/log-show-help.txt" && SHOWOK=1 || SHOWOK=0
+say "## gate: probe $PROBE · collect device option: ${DEVOPT:-NONE} · collect window option: ${WINOPT:-NONE} · show --archive/--start: $SHOWOK"
+[ -n "$DEVOPT" ] && [ -n "$WINOPT" ] && [ "$SHOWOK" = 1 ] || { say "## STOP — the installed log(1) does not document the required options; mechanism returned for ruling, nothing captured"; exit 5; }
+[ "$DEVOPT" = "--device" ] && DEVVAL="$UDID" || DEVVAL="$UDID"
+# C. read-only posture, recorded before anything runs
+say "## commands this run will issue (verbatim): log collect $DEVOPT $DEVVAL $WINOPT <T0-5s> --output $OUT/device.logarchive · log show --archive … --start <T0> --end <T1> --style json"
+say "## never issued: log config · sysdiagnose · any debugger/profile/level change"
+# one bounded sample via the existing batch (its own daemon snapshots before/after apply)
+T0_EPOCH=$(date +%s); T0_LOCAL="$(date -r $((T0_EPOCH-5)) "+%Y-%m-%d %H:%M:%S")"; T0_ISO="$(date -u -r $T0_EPOCH +%Y-%m-%dT%H:%M:%SZ)"
+say "## T0 (Mac wall clock, before the sample): $T0_ISO (local $T0_LOCAL used for the collect window)"
+scripts/witness/k00-driver-batch.sh LOG-CAL 1 --mode L --subject phase-a > "$OUT/batch-stdout.txt" 2>&1; BRC=$?
+T1_EPOCH=$(date +%s); T1_LOCAL="$(date -r $((T1_EPOCH+2)) "+%Y-%m-%d %H:%M:%S")"
+CALDIR="$(ls -d "$ROOT"/LOG-CAL-* 2>/dev/null | sort | tail -1)"
+say "## sample: batch rc=$BRC · ledger $CALDIR · row: $(grep '^| LOG-CAL' "$CALDIR/ledger.md" 2>/dev/null | cut -c1-220 || echo '(no row)')"
+say "## T1 (after export): $(date -u -r $T1_EPOCH +%Y-%m-%dT%H:%M:%SZ)"
+# D. the capture — exactly one collect, then one show over the window
+CMD=(log collect "$DEVOPT" "$DEVVAL" "$WINOPT" "$T0_LOCAL" --output "$OUT/device.logarchive")
+[ "$WINOPT" = "--last" ] && CMD=(log collect "$DEVOPT" "$DEVVAL" --last "$(( (T1_EPOCH-T0_EPOCH)/60 + 2 ))m" --output "$OUT/device.logarchive")
+say "## collect: ${CMD[*]}"; CT0=$(date +%s); "${CMD[@]}" > "$OUT/collect-stdout.txt" 2>&1; CRC=$?; CT1=$(date +%s)
+say "## collect rc=$CRC · $((CT1-CT0)) s · archive size: $(du -sh "$OUT/device.logarchive" 2>/dev/null | cut -f1 || echo none)"; tail -5 "$OUT/collect-stdout.txt" | tee -a "$REC"
+[ $CRC -eq 0 ] && [ -d "$OUT/device.logarchive" ] || { say "## STOP — collect did not produce an archive; mechanism returned for ruling"; exit 6; }
+log show --archive "$OUT/device.logarchive" --start "$T0_LOCAL" --end "$T1_LOCAL" --style json > "$OUT/window.json" 2> "$OUT/show-stderr.txt"; SRC=$?
+say "## show rc=$SRC · window.json $(du -sh "$OUT/window.json" | cut -f1) · window $((T1_EPOCH-T0_EPOCH+7)) s"
+# E. what was observed + time alignment to the journal (post-hoc filtering by known process names; no predicate was given to the tool)
+J="$(ls "$CALDIR"/journals/kernel00-*.jsonl 2>/dev/null | head -1)"
+python3 - "$OUT/window.json" "$J" "$OUT" <<'PY' | tee -a "$REC"
+import json,sys,collections,os,re
+W,J,OUT=sys.argv[1:4]
+try: ents=json.load(open(W))
+except Exception as e: print("## window.json unreadable:",e); sys.exit(0)
+print(f"## entries in window: {len(ents)}")
+procs=collections.Counter(e.get('processImagePath','?').split('/')[-1] for e in ents); subs=collections.Counter(e.get('subsystem','') for e in ents)
+print("## top processes:", procs.most_common(15)); print("## top subsystems:", subs.most_common(15))
+AUD={'VoiceKernelHarness','mediaserverd','coreaudiod','audiomxd','runningboardd','SpringBoard','bluetoothd','audioclocksyncd'}
+aud=[e for e in ents if e.get('processImagePath','').split('/')[-1] in AUD]
+with open(os.path.join(OUT,'window-audio.jsonl'),'w') as f:
+    for e in aud: f.write(json.dumps({k:e.get(k) for k in ('timestamp','machTimestamp','processImagePath','processID','subsystem','category','eventMessage')})+'\n')
+print(f"## audio-related entries kept (window-audio.jsonl): {len(aud)} · per process: {collections.Counter(e.get('processImagePath','').split('/')[-1] for e in aud).most_common()}")
+h=[e for e in aud if e.get('processImagePath','').endswith('VoiceKernelHarness')]
+print(f"## harness-process entries: {len(h)}" + (f" · first: {h[0]['timestamp']} · last: {h[-1]['timestamp']}" if h else " — NO harness entries: alignment falls back to the export epoch (±1 s)"))
+if not J or not os.path.exists(J): print("## no journal pulled for the LOG-CAL sample; alignment not demonstrable"); sys.exit(0)
+rs=[json.loads(l) for l in open(J)]; mono=lambda ev,**kw: next((r['timeMonotonicMs'] for r in rs if r['event']==ev and all(r['evidence'].get(k)==v for k,v in kw.items())),None)
+anchors={'app_lifecycle':mono('app_lifecycle'),'session_activated':mono('session_activated'),'start_begin':mono('graph_start_trace',step='start_begin'),'start_return':mono('graph_start_trace',step='start_return'),'graph_started':mono('graph_started'),'engine_configuration_changed':mono('engine_configuration_changed'),'first_input_callback':mono('first_input_callback')}
+print("## journal monotonic ms:", anchors)
+from datetime import datetime
+def wall(ts): return datetime.strptime(ts[:26], '%Y-%m-%d %H:%M:%S.%f').timestamp()
+cands=[e for e in h if re.search(r'activ|AVAudioSession|audio', e.get('eventMessage',''), re.I)]
+print(f"## harness entries mentioning audio/activation: {len(cands)}"); 
+for e in cands[:12]: print("   ", e['timestamp'], e.get('subsystem'), e.get('eventMessage','')[:140])
+if h and anchors['session_activated'] and anchors['app_lifecycle']:
+    off_launch = wall(h[0]['timestamp']) - anchors['app_lifecycle']/1000.0
+    print(f"## alignment anchor A (first harness log entry ↔ app_lifecycle): mono→wall offset {off_launch:.3f} s (first entry precedes didBecomeActive by an unknown launch interval; upper bound only)")
+    if cands:
+        off_act = wall(cands[0]['timestamp']) - anchors['session_activated']/1000.0
+        print(f"## alignment anchor B (first activation-like harness entry ↔ session_activated): offset {off_act:.3f} s · A−B = {(off_launch-off_act)*1000:.0f} ms")
+        for k in ('start_begin','start_return','graph_started','engine_configuration_changed','first_input_callback'):
+            if anchors[k]: print(f"   {k}: wall ≈ {datetime.fromtimestamp(anchors[k]/1000.0+off_act).strftime('%H:%M:%S.%f')[:-3]}")
+        lo=anchors['start_begin']/1000.0+off_act-0.05; hi=(anchors['first_input_callback'] or anchors['engine_configuration_changed'] or anchors['start_return'])/1000.0+off_act+0.25
+        win=[e for e in aud if lo<=wall(e['timestamp'])<=hi]
+        print(f"## audio-daemon/harness entries inside the aligned start window [{datetime.fromtimestamp(lo).strftime('%H:%M:%S.%f')[:-3]} … {datetime.fromtimestamp(hi).strftime('%H:%M:%S.%f')[:-3]}]: {len(win)}")
+        for e in win[:40]: print("   ", e['timestamp'][11:23], e.get('processImagePath','').split('/')[-1], e.get('subsystem',''), (e.get('eventMessage') or '')[:120])
+PY
+say "## configuration changed by this run: NONE issued (no log config, no profile, no debugger); daemon identity before/after is in $CALDIR/daemons/"
+say "## custody: window.json sha256 $(shasum -a 256 "$OUT/window.json" | cut -d' ' -f1) · archive left on the Mac at $OUT/device.logarchive (not committed)"
+echo "calibration record: $REC"

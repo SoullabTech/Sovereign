@@ -480,6 +480,22 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(r).toMatch(/shasum -a 256 -c "\$EXPECT_MAN"/);
     expect(r).toMatch(/FILE-SET MISMATCH/);
     expect(r.indexOf('FILE-SET MISMATCH')).toBeLessThan(r.indexOf('install app'));
+    // PASS-2 daemon witness (founder ruling 2026-09-14): the batch snapshots mediaserverd/coreaudiod rows before each sample and
+    // after export, records UNOBSERVABLE rather than substituting a mechanism, and never signals/terminates/kills a daemon.
+    expect(b).toMatch(/daemon_snapshot "\$i" before/); expect(b).toMatch(/daemon_snapshot "\$i" after/);
+    expect(b).toMatch(/mediaserverd\|coreaudiod/); expect(b).toMatch(/UNOBSERVABLE/);
+    const bExec = b.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+    expect(bExec).not.toMatch(/process (signal|terminate|suspend)|\bkill\b|sendMemoryWarning/);
+    // PASS-2 unified-log instruments: discovery captures help pages only; calibration is fail-closed on the probe, issues
+    // only `log collect` + `log show`, and never `log config` / sysdiagnose / a level change.
+    const lp = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-probe.sh'), 'utf8');
+    const lpExec = lp.split('\n').filter((l) => !/^\s*(#|echo\b|\{?\s*echo\b)/.test(l)).join('\n');   // prose in echo lines never reads as a capture (C21)
+    expect(lpExec).not.toMatch(/\blog (collect|show|stream|config)\b(?! *--help)/);   // help pages only (`log help x`), no capture
+    const lc = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-calibrate.sh'), 'utf8');
+    const lcExec = lc.split('\n').filter((l) => !/^\s*#/.test(l) && !/^\s*say /.test(l)).join('\n');
+    expect(lcExec).not.toMatch(/log config|sysdiagnose|lldb|devicectl device process/);   // `--mode L` is the driver's Mode L, not a logging mode
+    expect(lc.indexOf('STOP — the installed log(1) does not document')).toBeLessThan(lc.indexOf('log collect "$DEVOPT"'));
+    expect(lc).toMatch(/LOG-CAL 1 --mode L --subject phase-a/);                    // exactly one bounded sample, its own stratum
     const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
     // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
     // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).

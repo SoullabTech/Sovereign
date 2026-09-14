@@ -47,6 +47,21 @@ TEST="$([ -n "$W4" ] && echo testW4Sample || echo testOneSample)"
 
 log(){ echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$LEDGER_DIR/batch.log"; }
 harness_present(){ xcrun devicectl device info processes --device "$DEV" 2>/dev/null | grep -qi VoiceKernelHarness; }
+# PASS-2 daemon identity witness (founder ruling 2026-09-14): Mac-side snapshot of the audio daemons' process rows, taken
+# immediately BEFORE each sample and AFTER its export. External witness state only — this reads the same process
+# listing the precondition already reads; it never launches, signals, terminates, attaches to or reconfigures any
+# daemon. If the listing fails or shows neither daemon the snapshot records UNOBSERVABLE; no other mechanism is substituted.
+daemon_snapshot(){ # $1 = sample index · $2 = before|after
+  mkdir -p "$LEDGER_DIR/daemons"; local out="$LEDGER_DIR/daemons/sample-$1-$2.txt" rc raw
+  raw="$(xcrun devicectl device info processes --device "$DEV" 2>&1)"; rc=$?
+  { echo "# daemon snapshot sample $1 $2 — $(date -u +%Y-%m-%dT%H:%M:%SZ) — listing rc=$rc"
+    if [ $rc -ne 0 ]; then echo "UNOBSERVABLE: listing failed (rc=$rc)"; echo "$raw" | tail -3
+    else local m; m="$(grep -E 'mediaserverd|coreaudiod' <<<"$raw" || true)"
+      if [ -z "$m" ]; then echo "UNOBSERVABLE: listing succeeded, neither mediaserverd nor coreaudiod row present"; else echo "$m"; fi
+    fi
+  } > "$out"
+  [ "$1" = 1 ] && [ "$2" = before ] && xcrun devicectl device info processes --device "$DEV" --json-output "$LEDGER_DIR/daemons/sample-1-before.json" >/dev/null 2>&1 || true
+}
 # C-D5 (Stage B attempt 2, 20260912T191955Z): the container listing can FAIL ("The system failed to get a list of files
 # on the remote device"). The old list_journals swallowed that failure and returned an EMPTY listing, which the batch then
 # read as "the container is empty": the failed sample was ledgered as "no new journal", BEFORE was overwritten with the
@@ -106,6 +121,7 @@ for i in $(seq 1 "$N"); do
       log "ABORT: lingering harness process; infrastructure failure recorded"; exit 4
     fi
   fi
+  daemon_snapshot "$i" before
   log "sample $i/$N — driver ($TEST, mode $MODE)"
   T0=$(date +%s); run_test "$TEST" > "$LEDGER_DIR/sample-$i-xcodebuild.log"; RC=$?; T1=$(date +%s)
   if grep -q '^xcodebuild: error:' "$LEDGER_DIR/sample-$i-xcodebuild.log"; then
@@ -116,6 +132,7 @@ for i in $(seq 1 "$N"); do
     log "ABORT: xcodebuild refused the invocation ($WHY); infrastructure failure recorded"; exit 6
   fi
   grep -q 'Failure collecting diagnostics from devices: Timed out' "$LEDGER_DIR/sample-$i-xcodebuild.log" && log "sample $i: xcodebuild spent its 600 s diagnostics-collection timeout after the run (wall $((T1-T0)) s)"
+  daemon_snapshot "$i" after
   AFTER="$(list_journals)"
   if [ "$LIST_RC" -ne 0 ]; then   # C-D5: a failed listing is not an empty container; BEFORE is kept, the journal stays on the device
     echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | container listing failed three times after the invocation (rc=$RC · wall $((T1-T0)) s); the journal this invocation wrote, if any, remains on the device unpulled — custody by later listing, never counted |" >> "$LEDGER"

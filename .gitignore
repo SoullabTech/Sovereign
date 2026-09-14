@@ -471,3 +471,5 @@ ios/VoiceKernelDriver/DriverHost/Info.plist
 # DRIVER-01 per-device batch lock (runtime state, never evidence)
 docs/programme/VOICE-2026/driver-ledger/.device-*.lock
 docs/programme/VOICE-2026/driver-ledger/.device-*.lock.d/
+docs/programme/VOICE-2026/driver-ledger/log-cal-*/device.logarchive/
+docs/programme/VOICE-2026/driver-ledger/log-cal-*/window.json
