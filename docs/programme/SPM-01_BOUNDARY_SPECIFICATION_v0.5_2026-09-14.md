@@ -3,7 +3,13 @@
 **Date:** 2026-09-14 · **Authorized by:** founder ruling 2026-09-14 — *bounded revision; v0.4 NOT STABLE.*
 **Supersedes:** v0.4, preserved unedited. **New version, not an addendum** — object semantics change
 (charter §6).
-**Status:** ⛔ **RETURNED FOR STABILIZATION REVIEW. No schema · no migration · no runtime change.**
+**Status:** ✅ **STABLE — founder ruling 2026-09-14.** Record + dated addendum:
+`docs/programme/SPM-01_STABILIZATION_RULING_2026-09-14.md`, which pins one derived invariant:
+⭐ **a newly created `ORIGIN = member adopted` claim enters with `STATUS = confirmed`; `member adopted + unreviewed` is an INVALID STATE.**
+⛔ **Stability is a threshold, not an authorization** — no schema · no migration · no runtime
+change · no ledger repair · no merge or deploy · `SPM-02+` not automatically authorized.
+
+**Original status line:** ⛔ **RETURNED FOR STABILIZATION REVIEW. No schema · no migration · no runtime change.**
 
 > ⚠️ **Why v0.4 was withheld:** *no old dependency remained open.* **Integrating G2 exposed a new
 > unresolved distinction between authorship/provenance and member adoption/representation** — and
@@ -124,8 +130,9 @@ test that matters for stabilizing a boundary object.
 ## 8 · Standing
 
 ```text
-v0.5   RETURNED FOR STABILIZATION REVIEW
-       ⛔ does not declare itself stable — stability is a founder ruling (charter §6)
+v0.5   ✅ STABLE — founder ruling 2026-09-14 (charter §6)
+       ⛔ stability is a THRESHOLD, not an authorization; SPM-02+ not automatically authorized
+       DERIVED INVARIANT PINNED: member adopted → initial STATUS confirmed
 DEPENDENCIES  all discharged; none reopened
 SCHEMA        still prohibited · substrate mapping still closed
 ```

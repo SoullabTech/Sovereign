@@ -144,6 +144,14 @@ F2  S5 ratification mismatch        ✅ RULED 2026-09-14 — MIXED STANDING; not
                                     nothing changed on either side; header restatement owed
 F3  refusal re-derivability         REQUIREMENT SHARPENED · solution open · no mechanism proposed
 F4  relational tempo invariant      EXTERNAL · owner unassigned · open
+
+⭐ 2026-09-14 — SPM-01 STABILIZED AT v0.5 (founder ruling; record
+   docs/programme/SPM-01_STABILIZATION_RULING_2026-09-14.md).
+   F1 · F3 · F4 are CARRIED and were ruled NOT BLOCKING:
+     F1  the object-level requirement is clear; only the substrate is missing
+     F3  a complete prohibition with no chosen mechanism — correct before implementation
+     F4  a relationship-over-time invariant, not a missing per-claim property
+   ⛔ Stability is a THRESHOLD, not an authorization — none of F1/F3/F4 opens on it.
 ```
 
 ⛔ **None of these is a stabilization dependency for SPM-01 v0.3.** Those remain exactly two: **Memory
