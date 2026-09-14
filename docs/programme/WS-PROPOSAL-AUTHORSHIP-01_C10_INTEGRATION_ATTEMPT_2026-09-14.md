@@ -133,6 +133,12 @@ NEITHER PARENT EVER VALIDATED.
 ⭐ The same family as this lane's C21 scar, one level up: there a source scan went RED on prose;
 here a source scan survives a merge it can no longer describe.
 
+```text
+⭐⭐ TEXTUAL MERGEABILITY IS NOT BEHAVIORAL COMPOSABILITY.
+   A source-scanning test and the source it scans can each auto-merge cleanly
+   while their COMBINATION becomes semantically impossible.
+```
+
 ## 5 · ⛔ What does NOT inherit from the seal
 
 ```text
@@ -142,14 +148,115 @@ The integration changed two of the four overlapping files (R1, R2).
   and the CLOSING WITNESS DOES NOT TRANSFER to the integration head.
 ```
 
-## 6 · Standing
+## 6 · ⭐⭐ RULING APPLIED — `navigationPreserved` SUPERSEDED IN SCOPE, NOT DISCARDED
 
 ```text
-4df4e91d        ⭐ SEALED · unchanged · ancestor of 15e67b837 · digest verified
-15e67b837       ⚠️ LOCAL ONLY · not pushed · PR #1296 head UNCHANGED
-TYPECHECK       ✅ no regressions
-TESTS           4 pre-existing base failures · ⛔ 1 genuine collision
-OWED RULING     navigationPreserved vs FR-W5 — which authored intention governs
-PUSH            ⛔ held — it would move PR #1296's head onto an unadjudicated integration
+FOUNDER RULING (2026-09-14)
+  LEGITIMATE LAW        ordinary Whole navigation (jumpTo) → one shell reveal
+                        → revealWithin(node, 'start') → C10 must not disturb it
+  OBSOLETE ASSUMPTION   the entire Whole surface may contain only ONE revealWithin
+
+⭐ Not relaxing the old protection — RECOVERING ITS ACTUAL JURISDICTION.
+```
+
+⭐⭐ **The collapse the old assertion made:**
+
+```text
+number of `revealWithin` CALL SITES     collapsed into     number of NAVIGATION SEMANTICS
+```
+
+⛔ Those are not the same object. `navigationPreserved` said *"the navigation mechanism the
+integration must not touch"* — ⭐ **and C10 did not alter that mechanism. It added another
+mechanism for another act.**
+
+⛔ **A global `toHaveLength(2)` was refused as almost as weak as the old `1`**: it would count acts
+without saying which act is which.
+
+### The amendment — `181fbaa2c`
+
+```text
+A · ORDINARY NAVIGATION   revealWithin(node, 'start') · exactly once in that effect
+                          from shells.current.get(pendingScroll)
+                          ⛔ no proposalLoci · no proposalReturn · no locusKey leaking in
+
+B · VOLUNTARY RETURN      proposalLoci.current.get(proposalReturn.locusKey)
+                          revealWithin(locus, 'center', 'smooth') · exactly once
+                          ⛔ never touches shells.current
+                          ⛔ never calls revealWithin(node, …)
+                          ⛔ a missing locus stays `status: 'refused'`, never a fallback
+
+C · ANTI-COLLAPSE         the two effect bodies are DISTINCT CARRIERS, neither containing
+                          the other, and the surface still moves the writer only through
+                          those two
+```
+
+⭐ Comments stripped before scanning — this lane's **C21 scar**: a source scan must never read
+prose describing a behaviour as the behaviour.
+
+⭐ Amended **by the lane that owns it**, exactly as the guard's own header requires.
+
+## 7 · Gates after the amendment
+
+```text
+navigationPreserved.test.ts   ✅ 12/12 PASS
+
+app/writers-studio/__tests__  42 suites · 768 tests
+  ✅ 40 suites · 764 PASS
+  ⚠️  2 suites ·   4 FAIL — ⛔ THE INHERITED BASE-RED SET, UNCHANGED
+       proposalWorkMode  PW-2 · PW-8…PW-13
+       consentSurface    F1-1/F1-5/F1-6 · F1-2/F1-9
+  ⭐ ZERO NEW FAILURES introduced by the integration
+
+npm run typecheck          4342 files · 229 vs baseline 239 · ✅ NO REGRESSIONS
+npm run check:no-supabase  ✅ clean
+```
+
+⛔ **The four inherited failures are NOT repaired here** — recorded as base debt exactly as
+observed, per the founder's instruction.
+
+## 8 · The integration head as a NEW evidentiary object
+
+```text
+HEAD               181fbaa2c   ⚠️ LOCAL ONLY — not pushed
+  181fbaa2c        test(ws): scope the navigation guard to its two mechanisms (FR-W5)
+  15e67b837        fix(ws): union-safe range accessor at the Whole locus key
+  c8b058389        merge — parent 1  4df4e91d  ⭐ SEALED
+                            parent 2  b7072a184  base
+
+4df4e91d ancestor of HEAD          ✅ YES
+4df4e91d implementation digest     2e8e3e42…  ✅ UNCHANGED
+diff vs base                       12 files · +700 / −30
+```
+
+### ⛔ What does NOT inherit
+
+```text
+The RED · MUTANT · CUSTODY · CLOSING claims are claims about 4df4e91d's BYTES.
+The integration changed three files beyond that commit (R1, R2, the guard).
+
+⭐⭐ THE CLOSING WITNESS DOES NOT TRANSFER AUTOMATICALLY TO THE INTEGRATION HEAD.
+```
+
+⭐ **Owed before this head can be treated as witnessed — a SMALL integration witness, not a replay
+of the whole evidentiary programme:**
+
+```text
+1  Whole / first exact-locus return      the repaired capability
+2  Whole passive-scroll sovereignty      its highest-risk preserved invariant
+```
+
+⭐ The `4df4e91d` witness **remains sealed exactly where it belongs.**
+
+## 9 · Standing
+
+```text
+4df4e91d        🔒 SEALED · unchanged · ancestor · digest verified
+181fbaa2c       ⚠️ LOCAL ONLY · not pushed · PR #1296 head UNCHANGED
+nav guard       ✅ SUPERSEDED IN SCOPE under FR-W5 — amended, not discarded
+base-red tests  ⚠️ 4 inherited · ⛔ NOT repaired here, by instruction
+TYPECHECK       ✅ no regressions        SUPABASE GATE ✅ clean
+NEW FAILURES    ⭐ ZERO
+OWED            small integration witness (exact-locus return · passive-scroll sovereignty)
+PUSH            ⛔ still held
 PR MERGE ⛔      F1 ⛔      CI-GATE LANE ⛔ separate, preserved
 ```
