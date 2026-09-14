@@ -20,8 +20,14 @@ fresh replay              ✓        FAIL      FAIL       —      collaborative
 walk · maia_consciousness ABSENT   ABSENT    ABSENT   ABSENT      ABSENT       n/a
 fw   · focus_witness      ABSENT   ABSENT    ABSENT   ABSENT      ABSENT       n/a
 production                ABSENT   ABSENT    ABSENT   ABSENT      ABSENT       n/a
-maia_focus_witness (Mac)     ⛔ U N R E A D   —   the one row still owed
+maia_focus_witness (Mac)  ABSENT   ABSENT    ABSENT   ABSENT   ⭐AUTHORIZATION  4 · 2 accepted
+maia_07a_witness (Mac)    ABSENT   ABSENT    ABSENT   ABSENT      ABSENT       n/a
 ```
+
+⭐⭐ **THE MATRIX IS CLOSED, AND THE LAST ROW CONTRADICTS ITS OWN LEDGER.** In
+`maia_focus_witness` all four migrations are **ABSENT from `schema_migrations`**
+while the authorization table **is fully present, with every EW-F1a constraint
+and two accepted rows.** See addendum 3.
 
 ⭐⭐ **PRODUCTION READ 2026-09-14T13:24:37Z** by the founder, this instrument
 unmodified, through `docker exec maia-postgres psql -U soullab
@@ -374,3 +380,100 @@ honest matrix entry is `UNLOCATED`, not a guess** — and the question becomes
 which of the 24 local databases ran them. The list itself is suggestive
 (`maia_i05_shadow_321cb1536`, `maia_containment_walk_95e7f5fdf`,
 `maia_cutover_test`, `maia_bring_forward`), ⛔ but suggestive is not read.
+
+---
+
+# Addendum 3 — `maia_focus_witness` READ. The matrix is closed.
+
+**Founder-run 2026-09-14T09:34:11-04:00**, PostgreSQL 17.7 (Homebrew), target
+proven first (`current_database() = maia_focus_witness`), `-X`,
+`ON_ERROR_STOP=1`. File verified at 167 lines · `SHAPE VERDICT` present ·
+mutating SQL `0`.
+
+```
+1b  20260910000004   ABSENT      20260913000002   ABSENT
+    20260913000003   ABSENT      20260914000001   ABSENT
+
+2   manuscript_revision_proposals  ⭐ PRESENT
+    proposal_chains                   ABSENT
+    proposal_versions                 ABSENT
+
+3   collaborative 0 · authorization 5 · columns 14 · ⭐ AUTHORIZATION
+
+7   manuscript_revision_proposals    4 rows
+8   accepted_rows                    ⭐⭐ 2
+```
+
+## ⭐⭐ THE FINDING: THE LEDGER AND THE SCHEMA DISAGREE
+
+**All four migrations are ABSENT from `schema_migrations`. The authorization
+table is fully present** — all 14 columns of the `20260913000002` shape, the
+`execution_authority` column and default from `20260913000003`, and every
+constraint those two migrations create:
+
+```
+manuscript_revision_proposals_expected_text_check
+manuscript_revision_proposals_operation_check
+mrp_acceptance_whole
+mrp_execution_authority_vocabulary          ← 20260913000003
+mrp_inspection_only_never_accepted          ← 20260913000003
+mrp_execution_authority_immutable  (trigger) ← 20260913000003
+```
+
+⛔ **So this schema arrived by an act the ledger does not record.** Applied by
+hand, or by a script that did not write its row. **The migrations did not
+"execute" here in any sense the ledger can attest.**
+
+⭐⭐ **THIS IS EXACTLY WHY THE RULING SAID *"do not classify from migration
+filenames — classify from the table"*.** §1b alone reports this database as
+clean. §3 reports the truth. **An instrument that had trusted the ledger would
+have closed the matrix with a false all-clear on the one environment that
+matters.**
+
+⚠️ **And it is the 2026-09-07 class again**: schema reaching an environment
+without a recorded authorizing act. ⛔ Local witness database, not production —
+the exposure is nil and must not be inflated — **but the mechanism is the same,
+and the record is again the thing that broke.**
+
+## ⭐ Two accepted authorizations exist, and they are already known
+
+`accepted_rows = 2`, in a database of 4 proposals. ⚠️ These are consistent with
+the two acceptances the anchor already records for 2026-09-13 — *"twice a
+proposal staged for inspection was accepted and the manuscript moved; the second
+has no authorial act anywhere in the record"* — and with the standing v35/v36
+finding (`system acceptance REAL · authorial ratification UNRESOLVED`).
+
+⛔ **Consistent with, not proven to be.** This census read counts, never
+content. Establishing that these two rows ARE those two acceptances is a
+separate reading, and is not performed here.
+
+## ⛔ What this does and does not unblock
+
+```
+no PROTECTED database has executed any of the four
+  production                ABSENT · ledger and schema agree
+  walk · maia_consciousness ABSENT · stops one migration short
+
+the authorization shape exists in exactly ONE place read so far
+  maia_focus_witness · local Mac witness · created OUTSIDE the ledger
+  4 rows · 2 accepted
+
+therefore
+  ⭐ the executable migration history is STILL CORRECTABLE — the repository's
+     precedent applies: correct it BEFORE it can execute, rather than let the
+     bad state land and repair afterwards
+  ⛔ but "these migrations have never run anywhere" is FALSE, and must not be
+     written. Their effect exists, by an unrecorded act, with accepted rows
+     under it
+```
+
+⛔ **The ruling is still the founder's to make, and this census makes none.**
+What it hands over is the distinction the ruling turns on: **the protected
+environments are clean and the executable history can still be corrected; the
+one environment carrying the authorization shape got it outside the ledger, and
+already holds two accepted authorizations.**
+
+⚠️ **One question is now open that was not open before**: if the EW-F1a schema
+reached `maia_focus_witness` without a ledger row, **what else in that database
+arrived the same way** — and is its ledger a reliable account of it at all?
+⛔ Not this lane's question, and not asked here.
