@@ -468,6 +468,10 @@ production writes to today.
 
 ## 7. Standing
 
+⚠️ **SUPERSEDED by §8** (founder ruling, 2026-09-14). Kept verbatim as the
+standing at the time this record was authored — ⛔ never edited to read as if
+it had always said otherwise.
+
 ```
 W4-1.2                          ✅ CLOSED · a79163ff6
 W4-2 schema design              ✅ THIS RECORD
@@ -481,4 +485,79 @@ canonical / schema landing      ⛔
 protected migration             ⛔
 production                      UNTOUCHED
 maia_focus_witness              FROZEN
+```
+
+---
+
+## 8. ⭐ FOUNDER RULING — CLOSURE AT THE DESIGN BOUNDARY
+
+**Recorded 2026-09-14, after `f210df118` was committed**, by an authorized
+**record-only** act on a branch descending from `f210df118` unchanged.
+
+⛔ This section adds no design. It writes down an adjudication that was made in
+session and would otherwise have survived only in a transcript — which in this
+project is the same as not having been recorded at all. ⛔ No migration file, no
+fixture edit, no `lib/`, no `database/`, no merge, no execution.
+
+### 8.1 W4-2 schema design is ACCEPTED AND CLOSED AT THE DESIGN BOUNDARY
+
+⛔ **Acceptance of the design authorizes nothing else.** It does not authorize a
+migration act, a merge, protected execution, or any implementation act. §5's
+custody chain is unchanged and still controlling:
+*design accepted ≠ migration authorized ≠ merge ≠ protected execution.*
+
+### 8.2 ⭐ MIGRATION-BASE LOCK
+
+> Any eventual migration act must begin from **`f210df118`**, or from a
+> descendant carrying this design record.
+
+⛔ **`claude/ecstatic-sagan-ohakll` @ `1a555430` is explicitly disqualified as a
+migration base**, because `f210df118` is not in its lineage.
+
+⭐ **This is a lineage ruling, not a judgment about the content of `1a555430`.**
+The disqualification would hold equally if that head were perfect: a migration
+authored from a base that does not carry its own design record has no stated
+origin for the obligations in §8.4, and the W5-3 break in §8.3 would arrive
+unexplained.
+
+### 8.3 ⭐⭐ W5-3 FIXTURE CUSTODY — WHY THE BREAK IS LEFT STANDING
+
+The W5-3 schema-witness fixture (§3b) remains **untouched** by the design act.
+
+> ⭐⭐ **The fixture break is evidence of the migration's semantic effect, not
+> preparatory work for the migration.**
+
+That sentence is the reason a later maintainer must not *helpfully* repair the
+witness before the migration exists. §3b records that the break was **found**;
+§6 records that its repair is owed elsewhere; ⭐ **neither states why leaving it
+is discipline rather than oversight**, and an untouched failing witness reads as
+unfinished work to anyone who arrives without this ruling.
+
+Therefore:
+
+- ⛔ **do not pre-edit the fixture**;
+- ✅ **allow the migration act to produce the RED** — the RED is the
+  demonstration that the new CHECK forbids a row the current schema accepts;
+- ✅ **repair the fixture inside the same authorized migration act** that makes
+  the old fixture invalid.
+
+### 8.4 MIGRATION OBLIGATIONS REMAIN OWED, NOT PERFORMED
+
+- **`ask_threads` two-subject repair** — `NOT VALID`, then **`VALIDATE` as a
+  separate statement**. ⛔ A constraint left `NOT VALID` is enforced for new rows
+  and silently unenforced as an invariant over the old ones.
+- **W5-3 fixture repair** — after the witnessed break, per §8.3.
+- **`UNIQUE (proposal_chain_id, id)` on `proposal_chain_directions`** — the real
+  gap of §2.2. ⛔ Until it exists, B4's composite FK has no target.
+
+### 8.5 Standing after this ruling
+
+```
+W4-2 SCHEMA DESIGN     ✅ CLOSED · f210df118
+migration              ⛔ NOT AUTHORIZED
+migration base         🔒 f210df118 or descendant carrying this record
+W5-3 fixture repair    ⏸ owed inside the migration act
+merge                  ⛔ not implied
+protected execution    ⛔ not implied
+production             UNTOUCHED
 ```
