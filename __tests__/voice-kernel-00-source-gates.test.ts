@@ -554,6 +554,16 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(wiExec).toMatch(/--suffix info/); expect(wiExec).toMatch(/W="\$CAL\/window-info\.json"/);
     expect(wiExec).not.toMatch(/> *"?\$CAL\/window\.json|window-audio\.jsonl/);                         // the default-level read is never overwritten
     expect(wr).toMatch(/--suffix/); expect(al).toMatch(/audiomxd entries in that interval/);
+    // Founder ruling (2026-09-14): ONE --debug re-read, the LAST rung — --debug ALONE (never combined with --info), same archive/window,
+    // separate DEBUG record; never a sample/collect/sudo/device act/log config/batch/control; authority at invocation.
+    const wd = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-window-debug.sh'), 'utf8');
+    const wdExec = wd.split('\n').filter((l) => !/^\s*#/.test(l) && !/^\s*say /.test(l)).join('\n');
+    expect(wdExec).toMatch(/log show --debug --start "\$T0_LOCAL" --end "\$T1_LOCAL" --style json "\$ARCH"/);
+    expect(wdExec).not.toMatch(/--info|sudo|log collect|xcrun|devicectl|log config|sysdiagnose|k00-driver-batch/);
+    expect(wdExec.indexOf('K00_EXEC_AUTHORITY unset')).toBeLessThan(wdExec.indexOf('log show --debug'));
+    expect(wdExec).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(\b(grep|cat|git)\b|==|-f )/);
+    expect(wdExec).toMatch(/--suffix debug/); expect(wdExec).toMatch(/W="\$CAL\/window-debug\.json"/);
+    expect(wdExec).not.toMatch(/> *"?\$CAL\/window\.json|window-audio\.jsonl|window-info/);                 // default and info reads never overwritten
     const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
     // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
     // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).
