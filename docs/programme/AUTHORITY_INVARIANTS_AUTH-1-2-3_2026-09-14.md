@@ -98,3 +98,78 @@ lane                                FROZEN
 
 > *Evidence may license a decision. It must never manufacture the authority that makes the
 > decision executable.*
+
+---
+
+# REVISION — founder, same day
+
+## AUTH-3, sharpened
+
+> **Authority is an unmintable capability.** A repository may **validate** execution
+> authority but may not **create, derive, infer, broaden, replay, or satisfy** it from
+> repository-controlled state. The authority artifact must be impossible for the change set
+> that consumes it to mint or forge.
+
+⛔ None of these is authority — the thing asking permission can manufacture every one:
+
+```
+K00_AUTHORIZED=1 · .authorized · /tmp/k00-authorized · git tag authorized
+a JSON/YAML approval file · a DB row writable by repo code · a commit message
+a test passing · a record saying "founder approved"
+```
+
+## ⚠️ My "interactive human act" was too weak — corrected
+
+A terminal prompt (`Type YES to continue:`) is answerable by `expect`, a pipe, or a PTY.
+So:
+
+- **Procedural human authority** — valid as *ceremony*, but the repo **cannot prove** a
+  human rather than automation supplied stdin.
+- **Machine-verifiable authority** — a signature through a boundary the repo cannot forge
+  (hardware key, Secure Enclave, independent authority service). **Preferred.**
+
+## The two closing rules
+
+**Authority:** the protected act requires a capability the consuming repository cannot mint,
+forge, derive, broaden, or replay. Repository code may validate only.
+
+**Witness provenance:** written and sealed **by the capture operation at capture time**. A
+downstream consumer may verify it and may never create, repair, or retrospectively certify
+it.
+
+## ⛔ THREE RESIDUAL HOLES — named, not solved
+
+**H1 · The trust root must not be repo-controlled.** If the verifying public key lives in
+the repository, a change set need not forge a signature — it **redefines who may sign**,
+swapping in a key whose private half it holds. That is AUTH-2 one level up. ⛔ Pinning the
+key in a test does not help: the same change set edits the test.
+
+**H2 · Single-use needs unmintable STATE, not just an unmintable capability.** `nonce` and
+`expires` require a record of what has already been spent. If that ledger is repo-controlled,
+a change set deletes the entry and replays a valid capability. **Non-replay is a stateful
+property, and the state inherits the same requirement as the capability.**
+
+**H3 · ⭐⭐ The verifier is the code being constrained.** `repo_commit: <calibration SHA>`
+binds the capability to an exact SHA — but the thing checking that field **is that code**.
+Nothing forces the running instrument to *be* the SHA the capability names, and a change set
+that edits the verifier can simply not verify. This is the deploy-provenance shape already
+recorded in CLAUDE.md: *the image was stamped while the container was not.*
+
+⭐ **The limit this implies:** an in-process check can raise the cost of self-authorization
+but cannot eliminate it, because the enforcement point sits inside the constrained thing.
+The strongest available form is **the authority holder performing or proxying the act**
+rather than licensing code to perform it — permission that is exercised, not held.
+
+⛔ Recorded as an acknowledged limit, not a reason to reject the architecture: signed
+capabilities plus capture-time provenance plus human review are a large improvement over
+`tail -1` and a commit that declares itself authorized. **The residue should be named in the
+record rather than designed away in prose.**
+
+## Root is a separate authority class
+
+```
+authorized: LOG-CAL   ≠   authorized: LOG-CAL + whatever privilege turns out to be necessary
+```
+
+⛔ A capability for one non-root sample must never imply `sudo log collect`. Elevation binds
+the exact command or privilege class, explicitly and narrowly.
