@@ -30,7 +30,7 @@ cell is awarded on what was aimed at, never on what was seen.
 | | first asked return | second asked return | passive scroll |
 |---|---|---|---|
 | **Section view** | — | — | — |
-| **Whole view** | ⛔ **SECTION-ADDRESSED** | ⛔ **SECTION-ADDRESSED** | — |
+| **Whole view** | ⛔ **SECTION-ADDRESSED** | ⛔ **SECTION-ADDRESSED** | ✅ **STAYS PUT** |
 
 ### Whole / first — ⛔ FAIL against the predeclared criterion
 
@@ -74,11 +74,58 @@ did.** Both candidate explanations predict exactly this pair:
 `renderProposalWork` and not to `renderProposalEvidence`, favouring (a) — remains **the
 explanation to verify after the walk, never the evidence.**
 
+### Whole / passive — ✅ PASS
+
+Scrolled away, pressed nothing, read normally. **Stayed put.** ⭐ The guard against
+involuntary return holds. The law is broken in one direction only: the writer cannot get
+back on request, but is never dragged back uninvited.
+
+⭐ A further Whole repeat was also SECTION-ADDRESSED. Corroborating, not counted — the
+frozen matrix has enough there.
+
+### ⚠️ Section / first — NOT RECORDED. Possible measurement artefact.
+
+Observed: `[, fixated]` brought into view but **substantially below centre**, with §23's
+start **above** the viewport — neither predeclared label, and materially unlike Whole.
+
+⭐⭐ **The code at `0bd2b6578` explains BOTH the difference and the off-centre result, and
+the second explanation is a defect in the MEASUREMENT, not in the product:**
+
+```
+Section  ProposalWorkSurface:193,213   revealWithin(ref.current, 'center', 'smooth')
+Whole    WholeManuscriptSurface:302    revealWithin(node, 'start')        ← default 'auto'
+```
+
+⛔ **Section's reveal is SMOOTH — an animation.** `scroller.scrollTo({behavior:'smooth'})`
+takes hundreds of milliseconds, and it approaches a target below by scrolling down, so the
+locus **enters from the bottom and rises toward centre**. A screenshot taken immediately
+after the press catches it **mid-flight**, and mid-flight looks exactly like *"in view,
+below centre."*
+
+⭐ **Whole is instant** (`'auto'`), so its cells are NOT subject to this and stand.
+⚠️ **That asymmetry is itself the tell**: only the animated path produced the ambiguous
+signature.
+
+⛔ **So Section / first is UNMEASURED, not FAILED.** Re-observe with the scroll settled —
+wait ~1s after the press, then judge. Recording a FAIL here would blame the product for the
+observer's shutter speed.
+
+## ⭐ Partial causal discrimination — from behaviour, now corroborated by source
+
+Whole/first+second could not separate *(a) no locus reveal wired in Whole* from *(b) a
+reveal spent by the arrival guard*. **Section behaving differently settles it toward (a)**:
+a spend-guard would suppress both views alike, and these are two different call sites with
+two different targets and two different geometries.
+
+⛔ Still not the evidence — the walk is. But the competing explanation (b) is now
+behaviourally disfavoured rather than merely unlikely on a reading.
+
 ## Still owed
 
 ```
-Whole  / passive   scroll normally · leave alone · must stay put
-Section / first · second · passive
+Section / first    RE-OBSERVE with the smooth scroll SETTLED (~1s after the press)
+Section / second   scroll away · press again · settle · judge
+Section / passive  scroll normally · leave alone · must stay put
 ```
 
 ⭐ **`Whole / passive` is the negative control and matters more now, not less.** Two fails
