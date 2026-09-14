@@ -518,3 +518,53 @@ interior language carry the concept.
 Most writing software stores resources. ⭐ Understanding the writer's
 relationship to them is the distinctive thing, and it is not another sidebar
 destination.
+
+---
+
+## Immersive writing · census and the constraint today's work imposes
+
+### ⭐ Both doors already exist
+
+```
+region withdrawal   summon('maia') / dismiss('maia'), open('outline'),
+                    and a column layout computed from which regions are open
+                    — page.tsx:512-566. Immersive is a COMPOSITE STANCE over
+                    this, not a new mechanism.
+
+held Focus          useHeldFocus / heldFocus.ts — the passage the room keeps
+                    after the browser's selection is gone. This is the OTHER
+                    concept, and it is what lets MAIA arrive already knowing
+                    what the writer was attending to.
+```
+
+### ⛔⛔ THE CONSTRAINT · immersive may not be a mount boundary
+
+The founder's *"no navigation event, no reload, no new route"* is not only a
+polish preference here. Three things established earlier the same day make it
+structural:
+
+```
+write-state           fetched in an effect on [manuscript?.id, proposalId]
+useSectionWriting     takes sections and version AT MOUNT; resets on draftKey
+chooseMount           "The decision has to be a mount boundary, not a prop
+                       update" — its own comment
+captureForUnmount     the exit guard FLUSHES ON UNMOUNT
+```
+
+⛔ If immersive remounts the writing surface it (1) loses place, scroll and
+selection, (2) re-asks the server for write authority, and (3) — the sharp one —
+**triggers capture-on-unmount, which is a write.**
+
+> ⭐⭐ **A change of attentional stance must not write to the manuscript.**
+> Entering focus is not an edit.
+
+So immersive is a **layout stance over the same mounted session**: the regions
+withdraw, the Easel widens, and nothing below the surface learns that anything
+happened.
+
+### Naming
+
+`Immersive Writing` internally. The member-facing affordance may be an expand
+icon, or *Focus* if testing shows that reads immediately — ⚠️ but the internal
+name stays distinct, because the Studio already has a Focus and conflating them
+would make two different questions share one word.

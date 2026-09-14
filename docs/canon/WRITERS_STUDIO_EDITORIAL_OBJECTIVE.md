@@ -115,6 +115,96 @@ NOT THIS                          THIS
 The architecture can do all of those things. ⛔ Turning a beautiful idea into
 settings management is how it stops being one.
 
+## ⭐⭐ Immersive writing — the Studio's attentional stances
+
+**Ratified founder, 2026-09-14.**
+
+> **Writer's Studio has an immersive attentional stance in which the Work may
+> occupy the full application frame. Studio navigation, structure, metrics and
+> MAIA's persistent panel withdraw. The writer's location, Focus, conversation
+> and unsaved state remain continuous. MAIA stays one intentional gesture away.
+> Returning restores the Studio exactly as it was.**
+
+### The failure test
+
+> **If entering focus makes the writer manage the interface, wonder where their
+> work went, lose context, or become more aware of MAIA than of their own
+> writing, it has failed.**
+
+⭐ For the people this is built for, **the ability of the software to disappear
+may be one of Writer's Studio's most important capabilities.**
+
+### Two different words, deliberately
+
+```
+Focus                 what in the Work am I attending to?
+Immersive writing     how much of the Studio should remain visible while I attend?
+```
+
+⛔ They coexist and must not be conflated. `useHeldFocus` already owns the first
+— the passage the room keeps holding after the browser's own selection is gone.
+
+### The three stances
+
+```
+normal writing      Navigator · Easel · MAIA
+structural work     Structure workspace · MAIA/context
+immersive writing   collapsed rail · Easel
+```
+
+**Studio fullscreen, not browser fullscreen.** What withdraws is OUR chrome.
+
+### ⛔ And the chrome does not come back as a different toolbar
+
+The mistake distraction-free editors make: hide twenty controls, float eight
+across the top. Immersive keeps at most:
+
+```
+‹ Exit              Section 22              ···
+```
+
+quieting further after a moment, returning on pointer or key. ⛔ No structure
+tree · no statistics · no goal meter · no suggestions stack · no Materials count
+· no export · no persistent save status unless something needs attention.
+
+> *The room withdraws so the Work can come forward.*
+
+### MAIA's PANEL is removed. MAIA is not.
+
+A quiet presence mark remains. Summoning brings her **over or beside** the Work
+without permanently shrinking the writing field; closing returns the full frame
+immediately. ⭐ She arrives already knowing what the writer was attending to,
+because held Focus persisted.
+
+### The attentional hierarchy
+
+```
+WRITE     the Work alone
+   ↓ writer invites
+ATTEND    Work + marked locus
+   ↓ writer invites
+DEVELOP   Work + MAIA conversation
+   ↓ an exact proposal emerges
+COMPARE   Current / Would read
+   ↓ writer chooses
+RETURN    the Work alone
+```
+
+⛔ MAIA does not pepper the manuscript with badges while the writer is writing.
+
+### Immersive is a SCALE, not a page of prose
+
+The centre still shows the Work at the scale of the question — full-frame prose,
+full-frame passage, full-frame outline with three loci illuminated, full-frame
+map of the Work. ⭐ **Same spatial room; what the Easel represents changes.**
+
+### ⛔ It expands. It does not close.
+
+Do not animate panels closing — animate the **Work expanding**. Closing drawers
+says *I am hiding tools*; the canvas widening says *I am giving the Work more
+room*. A restrained 200–300ms settle, no theatre, just enough continuity that
+the nervous system understands nothing was lost.
+
 ## The scales — and the UI adapts to them
 
 Grammar and mechanics · sentence craft · paragraph craft · context · voice ·
