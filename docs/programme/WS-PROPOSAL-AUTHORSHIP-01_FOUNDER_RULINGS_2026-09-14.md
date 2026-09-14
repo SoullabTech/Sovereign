@@ -164,6 +164,40 @@ OBSERVED            exact affected text VISIBLE
 makes the navigation behaviour **repeatable**, not a lucky scroll position — a stronger reading
 than a single PASS supports on its own.
 
+### The predeclared six-cell matrix (founder, from the walk context)
+
+```text
+WHOLE-MANUSCRIPT ROW              SECTION-VIEW ROW
+  first asked return    FAIL        first asked return      [owed]
+  second asked return   PASS        second asked return     [owed]
+  passive scroll       [NEXT]       passive scroll          [owed]
+```
+
+⭐ The matrix is **predeclared**, not assembled after the fact. Cells are classified against it;
+it is not adjusted to fit what was observed.
+
+### ⭐ NEXT CELL — `Whole / passive scroll` · EXPECTED: **MUST STAY PUT**
+
+```text
+⛔ DO NOT invoke SHOW CHANGE again.
+From the Whole-manuscript state, manually scroll AWAY from the revealed locus,
+then LEAVE THE CANVAS ALONE.
+```
+
+```text
+PASS   canvas remains where you manually left it
+FAIL   canvas autonomously returns / repositions toward the proposal locus
+```
+
+⛔ Classify **only the observed behaviour.** No inference about mechanism from this cell.
+
+**What it tests, and why it is not a repeat of the first two.** The asked-return cells ask whether
+navigation **arrives**. This cell asks whether ordinary user scrolling **remains sovereign** — or
+whether the proposal-navigation mechanism pulls the canvas back unasked.
+
+⭐ It is the falsifier for the repair the census recorded at §5: *the reveal guard was SPLIT into
+automatic acts vs voluntary acts.* A FAIL here says that split does not hold at runtime.
+
 ### ⛔ Sealing rule — a later PASS does not rewrite an earlier FAIL
 
 ```text
@@ -183,8 +217,8 @@ time.* The honest repair is to date it, never to edit it.
 Writer's Studio interaction lane   ⏳ GATE A OPEN — six-cell browser witness in progress
                                    Whole / first  = SECTION-ADDRESSED — FAIL  [sealed]
                                    Whole / second = LOCUS-ADDRESSED   — PASS  [2026-09-14]
-                                   remaining cells per the witness procedure (external to
-                                   this checkout; the walk holds the six-cell table)
+                                   Whole / passive scroll  = [NEXT] must stay put
+                                   Section row (×3)        = [owed]
 Proposal authorship census         ✅ COMPLETE
 Step-3 intent                      ✅ BOUNDED — we know WHICH QUESTIONS must be answered
 Gate B (authorship / succession)   ⛔ CLOSED / NOT OPENED — requirement precedes object (FR-W3a)
