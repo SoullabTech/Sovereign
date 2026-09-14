@@ -304,7 +304,11 @@ describe('F1-1 · F1-5 · F1-6 — orientation, once, and never the Work', () =>
     }
     /* And the only two things the move performs are the two navigations. */
     expect(move![0]).toMatch(/setJumpTo\(move\.sectionId\)/);
-    expect(move![0]).toMatch(/writing\?\.goToSection\(move\.sectionId\)/);
+    /* SC-7 narrowed this at the `Show change` repair: navigating to the
+       section the writer is already in would run the capture seam for no
+       reason. The property — the move performs the section-view navigation and
+       nothing else — is unchanged; the guard beside it is new. */
+    expect(move![0]).toMatch(/activeId !== move\.sectionId\) writing\.goToSection\(move\.sectionId\)/);
   });
 
   it('⛔ the target comes from the server, never from the URL', () => {

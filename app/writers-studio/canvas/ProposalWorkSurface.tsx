@@ -53,6 +53,11 @@ import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
 
 export interface ProposalWorkSurfaceProps {
+  /**
+   * ⭐ Incremented by the room when the writer asks to be returned to the
+   * change. A NONCE, not a flag: a boolean could not express "again".
+   */
+  revealToken: number;
   /** The section body, exactly as the Work holds it. */
   body: string;
   /** ⛔ Must be `projected_section_body`. */
@@ -164,25 +169,49 @@ function Locus(
  * pinned the violation rather than the property. The property is that opening a
  * proposal reveals the locus without moving the room around it.
  */
-function useBringIntoView(key: string) {
+function useBringIntoView(key: string, revealToken: number) {
   const ref = useRef<HTMLSpanElement | null>(null);
   const done = useRef<string | null>(null);
+  const seenToken = useRef(revealToken);
+
+  /* AUTOMATIC ARRIVAL · once per locus. */
   useEffect(() => {
     if (done.current === key || !ref.current) return;
     done.current = key;
     revealWithin(ref.current, 'center', 'smooth');
   }, [key]);
+
+  /**
+   * ⭐⭐ VOLUNTARY RETURN · every time the writer asks.
+   *
+   * FOUNDER-CAUGHT. The one-shot guard is correct for arrival and WRONG for
+   * `Show change`: once the automatic reveal was spent, the writer could scroll
+   * away and the control that exists to bring them back did nothing. Two
+   * different acts were sharing one guard.
+   *
+   * ⛔ THE GUARD IS NOT WEAKENED — the two acts are separated. The automatic
+   * effect keeps its key and still fires once, so an ordinary re-render never
+   * drags a writer who has chosen to read elsewhere. This effect fires only on
+   * a token the room increments when the writer presses the control, and never
+   * on mount, where the automatic reveal already owns the arrival.
+   */
+  useEffect(() => {
+    if (revealToken === seenToken.current) return;
+    seenToken.current = revealToken;
+    if (ref.current) revealWithin(ref.current, 'center', 'smooth');
+  }, [revealToken]);
+
   return ref;
 }
 
 export default function ProposalWorkSurface(
-  { body, range, replacementText, sectionLabel }: ProposalWorkSurfaceProps,
+  { body, range, replacementText, sectionLabel, revealToken }: ProposalWorkSurfaceProps,
 ) {
   /* ⛔ A surface that cannot state the space it was handed refuses to draw.
      There is no default coordinate space anywhere in this system. */
   const ok = range.space === 'projected_section_body';
   const { a, b } = units(body, ok ? range : { ...range, start: 0, end: 0 });
-  const locus = useBringIntoView(`${sectionLabel}:${a}:${b}`);
+  const locus = useBringIntoView(`${sectionLabel}:${a}:${b}`, revealToken);
   if (!ok) return null;
 
   return (

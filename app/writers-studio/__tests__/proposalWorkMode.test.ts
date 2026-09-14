@@ -395,3 +395,94 @@ describe('PW-14 … PW-19 · the system performs the comparison', () => {
     expect((WORK_SURFACE.match(/<Locus/g) ?? [])).toHaveLength(2);
   });
 });
+
+
+/**
+ * ⭐⭐ SC-1 … SC-7 — ARRIVAL AND VOLUNTARY RETURN ARE DIFFERENT ACTS.
+ *
+ * FOUNDER-CAUGHT. `Show change` called `moveToProposal()` and stopped there,
+ * while the locus reveal sat inside the surface behind a one-shot guard keyed
+ * to the locus. Automatic arrival spent that guard, so once the writer scrolled
+ * away the control that exists to bring them back did nothing.
+ *
+ *   automatic arrival     reveal the locus ONCE
+ *   explicit Show change  reveal the locus EVERY time the writer asks
+ *   ordinary re-render    never drag the writer
+ *
+ * ⛔ THE GUARD IS NOT WEAKENED. It is correct for the first case. The repair
+ * separates the acts rather than loosening the one that was right.
+ *
+ * ⚠️ AND THE INSTRUMENT THAT MISSED IT ASSERTED THE CALLBACK EXISTS. Naming a
+ * callback is not naming arrival — the same class as asserting an API by name
+ * (PW-16) and asserting proximity (F1-6). What is asserted below is that a
+ * press produces a reveal, and that an ordinary render does not.
+ */
+describe('SC-1 … SC-7 · voluntary return to the change', () => {
+  const SURFACE = WORK_SURFACE;
+
+  it('SC-1 · arrival reveals the locus once, keyed to the locus', () => {
+    expect(SURFACE).toMatch(/done\.current === key/);
+    expect(SURFACE).toMatch(/done\.current = key/);
+    const auto = SURFACE.slice(SURFACE.indexOf('done.current === key'));
+    expect(auto.slice(0, 200)).toContain('revealWithin(');
+  });
+
+  it('SC-2/SC-3 · a press reveals again, and again', () => {
+    /* ⛔ A NONCE, NOT A FLAG. A boolean cannot express "again": the second
+       press would find it already true and do nothing — which is the shipped
+       defect with an extra step. */
+    expect(SURFACE).toMatch(/revealToken === seenToken\.current\) return/);
+    expect(SURFACE).toMatch(/seenToken\.current = revealToken/);
+    const voluntary = SURFACE.slice(SURFACE.indexOf('revealToken === seenToken.current'));
+    expect(voluntary.slice(0, 200)).toContain('revealWithin(');
+    expect(ROOM).toMatch(/setRevealToken\(\(n\) => n \+ 1\)/);
+  });
+
+  it('⭐ SC-4 · the two acts are separate effects with separate keys', () => {
+    /* If one effect served both, either arrival would repeat on every render
+       or the press would be swallowed by the arrival guard. */
+    const effects = SURFACE.match(/useEffect\(\(\) => \{[\s\S]*?\}, \[(key|revealToken)\]\);/g) ?? [];
+    expect(effects).toHaveLength(2);
+    expect(SURFACE).toMatch(/\}, \[key\]\);/);
+    expect(SURFACE).toMatch(/\}, \[revealToken\]\);/);
+  });
+
+  it('⭐⭐ SC-5 · the press reveals the LOCUS, not merely the section shell', () => {
+    /**
+     * ⛔ THE SHIPPED SHAPE, PINNED: automatic reveal spent → writer scrolls
+     * away → Show change → section top visible → locus still below the fold.
+     *
+     * `moveToProposal` alone only opens the section. The press must also carry
+     * the token that moves the viewport to the marked range.
+     */
+    const show = ROOM.match(/const showProposedChange = useCallback\([\s\S]*?\}, \[moveToProposal\]\);/);
+    expect(show).not.toBeNull();
+    expect(show![0]).toContain('moveToProposal()');
+    expect(show![0]).toContain('setRevealToken');
+  });
+
+  it('SC-6 · every reveal goes through the room\'s seam', () => {
+    expect((SURFACE.match(/revealWithin\(/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect(SURFACE).not.toContain('scrollIntoView');
+  });
+
+  it('SC-7 · viewport only — no write, no mode change, no proposal mutation', () => {
+    const show = ROOM.match(/const showProposedChange = useCallback\([\s\S]*?\}, \[moveToProposal\]\);/);
+    expect(show![0]).not.toMatch(/save|apiFetch|accept|changeView|setWriteState/i);
+    /* ⭐ AND IT DOES NOT NAVIGATE TO WHERE THE WRITER ALREADY IS. Calling
+       `goToSection` on the active section would run the capture seam for no
+       reason — the writer's own prose written back because they asked to LOOK
+       at something. */
+    expect(ROOM).toMatch(/writing\.activeId !== move\.sectionId\) writing\.goToSection/);
+  });
+
+  it('⛔ and the token reaches the surface that consumes it', () => {
+    /* The wire, not the declaration — this lane has paid for that once. */
+    const el = ROOM.match(/<ProposalWorkSurface[\s\S]*?\/>/);
+    expect(el).not.toBeNull();
+    expect(el![0]).toContain('revealToken={revealToken}');
+    /* FieldBody builds the renderer, so BOTH of its call sites must carry it
+       or one layout silently loses voluntary return. */
+    expect((ROOM.match(/revealToken=\{revealToken\}/g) ?? []).length).toBe(3);
+  });
+});

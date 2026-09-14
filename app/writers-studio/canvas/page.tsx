@@ -349,12 +349,31 @@ function CanvasRoom() {
     );
     if (move.kind === 'wait') return false;
     if (move.kind === 'scroll') { setJumpTo(move.sectionId); return true; }
-    writing?.goToSection(move.sectionId);
+    /* ⛔ SC-7 · VIEWPORT ONLY. Navigating to the section the writer is already
+       in would run the capture seam for no reason — their own prose written
+       back because they asked to LOOK at something. Only move when moving is
+       what was asked for; the reveal is what returns them to the locus. */
+    if (writing && writing.activeId !== move.sectionId) writing.goToSection(move.sectionId);
     return true;
   }, [proposalTarget, session?.view, writing]);
 
   const jumpedFor = useRef<string | null>(null);
-  const showProposedChange = useCallback(() => { moveToProposal(); }, [moveToProposal]);
+  /**
+   * ⭐⭐ SC-2/SC-3 · VOLUNTARY RETURN IS A DIFFERENT ACT FROM ARRIVAL.
+   *
+   * FOUNDER-CAUGHT. `Show change` called `moveToProposal()` and stopped there,
+   * so once the automatic reveal was spent the control that exists to bring the
+   * writer back did nothing. A nonce, not a flag: a boolean cannot say "again".
+   *
+   * ⛔ The one-shot guard on arrival is NOT weakened — the two acts are simply
+   * separated, so an ordinary re-render still never drags a writer who has
+   * chosen to read elsewhere.
+   */
+  const [revealToken, setRevealToken] = useState(0);
+  const showProposedChange = useCallback(() => {
+    moveToProposal();
+    setRevealToken((n) => n + 1);
+  }, [moveToProposal]);
   useEffect(() => {
     if (!proposalTarget || jumpedFor.current === proposalTarget.sectionId) return;
     if (!moveToProposal()) return;
@@ -924,6 +943,7 @@ function CanvasRoom() {
             onCheckpointed={() => setHistoryKey((k) => k + 1)}
             onWriteAuthorityChanged={refreshWriteState}
             renderSectionOverlay={renderSectionOverlay}
+            revealToken={revealToken}
           />
         }
       />
@@ -1261,6 +1281,7 @@ function CanvasRoom() {
               onMeta={setDraftMeta}
               onCheckpointed={() => setHistoryKey((k) => k + 1)}
               onWriteAuthorityChanged={refreshWriteState}
+              revealToken={revealToken}
             />
           </div>
         </main>
@@ -1347,6 +1368,7 @@ function FieldBody({
   jumpTo,
   onJumpHandled,
   renderSectionOverlay,
+  revealToken,
 }: {
   listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
   resolution: ManuscriptResolution<CurrentManuscript>;
@@ -1366,6 +1388,7 @@ function FieldBody({
   jumpTo?: string | null;
   onJumpHandled?: () => void;
   /** Presentation only — see WholeManuscriptSurface's seam. */
+  revealToken: number;
   renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
 }) {
   if (listPhase === 'loading') {
@@ -1546,6 +1569,7 @@ function FieldBody({
               if (!section) return null;
               return (
                 <ProposalWorkSurface
+                  revealToken={revealToken}
                   body={section.body}
                   range={target.range}
                   replacementText={target.replacementText}
