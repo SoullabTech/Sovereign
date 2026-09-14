@@ -174,7 +174,19 @@ function useBringIntoView(key: string, revealToken: number) {
   const done = useRef<string | null>(null);
   const seenToken = useRef(revealToken);
 
-  /* AUTOMATIC ARRIVAL · once per locus. */
+  /**
+   * AUTOMATIC ARRIVAL · once per locus.
+   *
+   * ⚠️ WHAT THIS GUARD ACTUALLY DOES, established by mutation rather than
+   * assumed. Removing `done.current` alone changes nothing: the dependency
+   * array already stops the effect re-running on an ordinary render, so a
+   * first mutation of it was a NO-OP and passed green. The guard becomes
+   * load-bearing only when the effect runs for some OTHER reason — React's
+   * development double-invoke, or a dependency that recomputes to the same
+   * locus — and the falsifier that proves it must remove the dependency array
+   * as well (M32b). Recorded because a guard whose necessity has not been
+   * demonstrated is decoration, and this one is not.
+   */
   useEffect(() => {
     if (done.current === key || !ref.current) return;
     done.current = key;
