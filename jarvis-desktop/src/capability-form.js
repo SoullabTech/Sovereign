@@ -119,6 +119,19 @@
     if (!entry) return { ok: false, args, errors: ['No capability selected.'] };
     const raw = rawValues && typeof rawValues === 'object' ? rawValues : {};
 
+    // D2.6: an argument the registry does not authorize is REFUSED HERE, at the admission
+    // boundary — never silently dropped. Dropping it would turn a request the caller
+    // authored into a different request the capability happens to accept, which is the
+    // accept-and-erase shape the ruling closes. A stale or hand-crafted `rawValues` key
+    // (e.g. `format` after it left git.log's schema) must fail admission, not vanish.
+    const known = new Set(entry.args.map((a) => a.name));
+    for (const key of Object.keys(raw)) {
+      const rawValue = raw[key];
+      const text = rawValue === undefined || rawValue === null ? '' : String(rawValue).trim();
+      if (text === '') continue; // a blank field was never an argument
+      if (!known.has(key)) errors.push(`Unexpected argument: ${key}`);
+    }
+
     for (const a of entry.args) {
       const rawValue = raw[a.name];
       const text = rawValue === undefined || rawValue === null ? '' : String(rawValue).trim();
