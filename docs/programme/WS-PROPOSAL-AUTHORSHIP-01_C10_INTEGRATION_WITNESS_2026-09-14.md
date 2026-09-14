@@ -142,10 +142,33 @@ The body still reads:
 *presents* it. The body's evidence chain also names five records and now omits the integration
 witness sealed here.
 
-⛔ **Not edited.** *"No additional edits"* was the boundary, and a PR description is a public
-record: correcting it is its own small act needing its own word. ⭐ Flagged rather than left to be
-discovered — a record that was true when written and is false now is exactly what this lane
-corrects in place rather than tolerates.
+⭐⭐ **CORRECTED under founder authorization** (PR body only · ⛔ no code, no branch, no merge).
+The description now distinguishes the two objects explicitly:
+
+```text
+CURRENT PR HEAD          181fbaa2c   🔒 sealed integration candidate · 12 files · +700/−30
+SEALED REPAIR ANCESTOR   4df4e91d    🔒 original C10 repair candidate · byte-identical ·
+                                        still citable · digest 2e8e3e42… unchanged
+```
+
+and states the transition plainly, so the body no longer implies the PR presents `4df4e91d`.
+The evidence chain now carries **six** records, the sixth being the integration witness:
+
+```text
+dd0ebffc  RED / absence                    4adca351  repair-candidate custody
+3b1947d0  GREEN + mutant discrimination    fec6bf7d  closing witness on 4df4e91d
+60e0838e  contract-test ratification       a8f1c41ae ⭐ integration witness on 181fbaa2c
+```
+
+⭐ And the boundary is stated in the public record, not only here:
+
+```text
+4df4e91d evidence does not automatically transfer to 181fbaa2c.
+181fbaa2c earned its own static integration evidence and its own bounded runtime witness.
+```
+
+⭐ A record that was true when written and is false now is corrected **in place**, with what
+changed and why — never silently replaced, and never left to be discovered.
 
 ## 6 · Standing
 
@@ -154,7 +177,7 @@ corrects in place rather than tolerates.
 181fbaa2c       🔒 SEALED INTEGRATION CANDIDATE · 2/2 witness PASS
 PR #1296 head   ⭐ 181fbaa2c — FAST-FORWARDED · conflict banner CLEARED
 
-OWED            ⚠️ PR body correction — it still presents 4df4e91d (§5)
+PR BODY         ✅ CORRECTED — two objects distinguished · six-record chain · boundary stated
 NEXT            ⛔ nothing authorized — PR merge remains unauthorized
 
 PR MERGE  ⛔       F1 ⛔ — ⚠️ and its premise has moved (§4)
