@@ -554,7 +554,7 @@ P2                     ⭐ THE ONLY LAWFUL PATH
 
 ```text
 LANE   OPEN · FR-W5 authorized
-C4     ⛔ UNRESOLVED
+C4     ✅ DISCHARGED — see `…_C4_RESULT_AND_DISCHARGE_2026-09-14.md`
 O1     ✅ FROZEN · ⛔ NOT SPENDABLE AGAINST THE SEALED CELL — P1 exhausted
        ⛔ Jarvis's original draft NOT frozen verbatim
 O2     ⛔ unconstructible on present corpus
