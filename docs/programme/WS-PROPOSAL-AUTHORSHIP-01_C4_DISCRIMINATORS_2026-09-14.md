@@ -397,7 +397,7 @@ Sep-13 witness                            SYSTEM ACCEPTANCE RECORD REAL
 ⛔ Reading the recovered protocol as history would be exactly the move the P1 rule prohibits —
 *"this was the prescribed gesture"* silently becoming *"this is what happened."*
 
-### ⭐ RULING — do NOT spend O1 on this recovery alone. Two lawful endpoints remain:
+### ⭐ RULING — do NOT spend O1 on this recovery alone. Two lawful endpoints:
 
 ```text
 E1  Find the ACTION REPORT immediately following the predeclared protocol — a founder message,
@@ -407,6 +407,61 @@ E1  Find the ACTION REPORT immediately following the predeclared protocol — a 
 E2  If that cannot be recovered, FOUNDER RECOLLECTION may bridge the final gap —
     ⛔ but only AS `FOUNDER RECOLLECTION`, permanently attached to the recovered
     contemporaneous protocol, ⛔ never promoted into a contemporaneous act record.
+```
+
+---
+
+## 3d · ⛔ E1 EXHAUSTED — temporal adjacency is not act provenance
+
+A targeted pass was run on the originating conversation for the missing transition:
+
+```text
+prescribed   "scroll well away → SHOW CHANGE"
+sought       "I scrolled well away…" · "after scrolling away…" · any contemporaneous
+             statement establishing the gesture OCCURRED
+```
+
+```text
+FOUND        the PROTOCOL, and the OUTCOME REPORT
+⛔ NOT FOUND  any user-authored past-tense statement establishing that the historical
+             Whole / first observation actually followed the prescribed away-condition
+⛔ SCREENSHOTS preserve Writer's Studio state, the proposal control and Section 23 /
+             change context — ⛔ NOT the preceding scrolling act
+```
+
+```text
+E1 STATUS   ⛔ EXHAUSTED as an ACT-RECORD source
+```
+
+### ⭐⭐ The loophole this closes
+
+> **An outcome reported after a procedure does not prove every prerequisite of that procedure
+> was executed — unless the record says so.**
+>
+> ⭐⭐ **TEMPORAL ADJACENCY IS NOT ACT PROVENANCE.**
+
+⭐ This is the sharpest form the lane's recurring law has taken. It is the same sentence as
+*a permission is not an act* and *a prescribed gesture is not a performed one*, now applied to
+**sequence** rather than to permission or specification: proximity in a record is not causation,
+and it is not performance either.
+
+### ⚠️ OPEN — E2's own availability is NOT established
+
+```text
+The prior-context trail records that the founder COULD NOT PERSONALLY RUN that walk,
+and that some runtime classifications arrived through RELAYED / SCREENSHOT evidence.
+```
+
+⛔ If the historical `Whole / first` walk was run by relay, then **founder recollection of the
+GESTURE may not exist at all** — only recollection of the **report**. Recollection of a report is
+not recollection of an act, and substituting one for the other would repeat, at the last possible
+step, the exact error this section just closed.
+
+```text
+So E2 must first answer:  did the founder PERSONALLY perform that scroll and that press?
+  YES → recollection may bridge, as FOUNDER RECOLLECTION
+  NO  → ⛔ E2 is CLOSED TOO, P1 is FORMALLY EXHAUSTED, and P2 becomes the only lawful path
+  UNSURE → ⛔ treat as NO. An uncertain memory of an act is not evidence of the act.
 ```
 
 ---
@@ -422,8 +477,9 @@ O1     ✅ RATIFIED AS AMENDED · FROZEN
 O2     ⛔ unconstructible on present corpus
 O3     ⛔ frozen · unspent · unconstructible
 EDIT   ⛔ none
-P1     ⚠️ PARTIAL — protocol recovered ("scroll well away"), PERFORMANCE UNPROVED (§3c)
-       remaining endpoints: E1 action report · E2 founder recollection (as such)
+P1     ⚠️ REDUCED TO E2 — protocol recovered; performance unproved; E1 ⛔ EXHAUSTED (§3d)
+       ⚠️ E2's own availability UNESTABLISHED — did the founder personally perform it?
+       ⛔ if not (or unsure), P1 is formally exhausted and P2 is the only lawful path
 P2     available ONLY as an explicit change of evidential object
 NEXT   ⛔ BLOCKED until P1 succeeds or is FORMALLY EXHAUSTED
 RUNTIME ⛔ UNTOUCHED — no reason to touch it until then
