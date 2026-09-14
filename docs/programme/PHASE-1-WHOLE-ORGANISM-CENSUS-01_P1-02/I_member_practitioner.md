@@ -14,33 +14,30 @@ BOUND BY  D-P1-08 · P1-GOV-ACCESS-01 · constraints 1–8 · LIVE calibration
 > **P1-02 asks what the organism does. It does not infer from doing that the organism
 > is authorized to do it.**
 
-**SUBJECT VERIFICATION.** `git diff --stat 1a555430 HEAD` at capture time returns 14 files,
-all under `docs/programme/**` (P1-00 custody, C-2 ruling, FLOW, the eight P1-01 slices, the
-P1-02 instrument). **No file under `app/**`, `lib/**`, `config/**`, `database/**` or
+**SUBJECT VERIFICATION.** `git diff --stat 1a555430 HEAD` returns 14 files, all under
+`docs/programme/**`. **No file under `app/**`, `lib/**`, `config/**`, `database/**` or
 `middleware.ts` differs between the census subject and the working tree.** Every `file:line`
-below is therefore a claim about the subject.
+below is a claim about the subject.
 
 **CONTENT DISCIPLINE.** Paths, field names, column names, route shapes and authorization
-predicates only. No member content, no prose excerpt from any member-authored object, no
-credential, no token value, no identifier of any real person.
+predicates only. No member content, no excerpt from any member-authored object, no
+credential, no identifier of any real person.
 
 ---
 
 ## 0 · What this domain found, in one paragraph
 
 The corpus contains **two member/practitioner access models written in code** —
-`lib/relationship/scope.ts` and `lib/coachField/` (projection + bring-forward) — and
-**neither is reachable from any route or page**; both are imported only by their own tests
-and by `scripts/verify-*`. The practitioner visibility that is actually **wired** runs
-through a different, thinner set of paths that do not import either model. Of those wired
-paths, exactly **one** consults a member consent column (`can_be_shown_to_practitioner`,
-`DEFAULT false`), and that same page performs **no check that the viewing practitioner has
-any relationship to the member whose id is in the URL**. Several practitioner-facing API
-families take the actor's identity from a **client-supplied query parameter or request
-body** rather than from the session. **Per constraint 6, none of this is governed:**
-P1-01 located no ruled access model for practitioner visibility of member material, and
-nothing in the code supplies one. Every capability below therefore carries
-`GOVERNANCE GATE: NONE FOUND`.
+`lib/relationship/scope.ts` and `lib/coachField/*` — and **neither is reachable from any route
+or page**; both are imported only by their own tests and by `scripts/verify-*`. The visibility
+that is actually **wired** runs through a thinner set of paths importing neither. Of those,
+exactly **one** consults a member consent column (`can_be_shown_to_practitioner`,
+`DEFAULT false`), and that same page performs **no check that the viewing practitioner has any
+relationship to the member whose id is in the URL**. Three practitioner-facing route families
+take the actor's identity from a **client-supplied query parameter or request body** rather
+than the session. **Per constraint 6, none of this is governed:** P1-01 located no ruled access
+model for practitioner visibility of member material, and nothing in the code supplies one.
+Every capability below carries `GOVERNANCE GATE: NONE FOUND`.
 
 ---
 
@@ -59,22 +56,20 @@ nothing in the code supplies one. Every capability below therefore carries
 
 ### 1.2 · `config/accessMatrix.ts` — declared policy, and its unmapped default
 
-- `Role = 'admin' | 'steward' | 'curator' | 'practitioner' | 'partner' | 'member'`
-  (`config/accessMatrix.ts:11`).
-- `checkAccess()` tests **public → authenticated → tier → roles** in that order
-  (`config/accessMatrix.ts`, tail of the function).
+- `Role = 'admin' | 'steward' | 'curator' | 'practitioner' | 'partner' | 'member'` (`:11`).
+- `checkAccess()` tests **public → authenticated → tier → roles** in that order (function tail).
 - **Unmapped routes default to ALLOW.** `getAccessMode()` returns `'permissive'` unless
-  `ACCESS_CONTROL_MODE === 'strict'` (`config/accessMatrix.ts:727-729`); in permissive mode
-  an unmatched path returns `{ allowed: true, reason: 'no-rule-match', unmapped: true }`.
-  ⚠️ The env value in the production environment is **UNKNOWN** — no runtime access.
-- Header contract: middleware writes `x-access-tier` / `x-access-roles` / `x-access-authed`
-  onto the **forwarded request** (`middleware.ts:62-87`).
-- **Dev bypass** at `middleware.ts:173-184`: when `NODE_ENV === 'development'`, requests to
+  `ACCESS_CONTROL_MODE === 'strict'` (`:727-729`); an unmatched path then returns
+  `{allowed: true, reason: 'no-rule-match', unmapped: true}`. ⚠️ The production value is
+  **UNKNOWN** — no runtime.
+- Middleware writes `x-access-tier` / `x-access-roles` / `x-access-authed` onto the **forwarded
+  request** (`middleware.ts:62-87`).
+- **Dev bypass** (`middleware.ts:173-184`): under `NODE_ENV === 'development'`,
   `/api/stellium/*` and `/api/notifications/*` are forwarded with
   `x-access-roles: 'practitioner'`, `x-access-tier: 'pro'`, `x-access-authed: 'true'` and no
-  session at all. Guarded on `NODE_ENV`; recorded, not scored as a production path.
+  session. Guarded on `NODE_ENV`; recorded, ⛔ not scored as a production path.
 
-Relevant declared rules, verbatim from the matrix:
+Relevant declared rules, verbatim from the matrix:Relevant declared rules, verbatim from the matrix:
 
 | Line | Rule | Note |
 |---|---|---|
@@ -253,35 +248,32 @@ SURFACED WHERE    app/caseload/**, app/studio/caseload/**, app/model-studio/case
 ```
 
 **CANONICAL CALL PATH** — `GET /api/caseload/list?memberId=…` → middleware: **no matrix rule
-matches `/api/caseload/*`**, so in the default permissive mode the request passes as
-`unmapped` → handler → `memberId` read from `searchParams` (`:36`) → `CaseStore.isPractitioner(memberId)`
-(`:45`) → 403 if false (`:46-51`) → `CaseStore.listCases(memberId, filters)` and
-`CaseStore.getCaseCounts(memberId)` (`:61-64`).
+matches `/api/caseload/*`**, so in the default permissive mode it passes as `unmapped` →
+handler → `memberId` from `searchParams` (`:36`) → `CaseStore.isPractitioner(memberId)`
+(`:45`) → 403 if false (`:46-51`) → `CaseStore.listCases(memberId, filters)` +
+`getCaseCounts(memberId)` (`:61-64`).
 
-⭐⭐ **The check is `is the member named in the URL a practitioner`, not `is the caller that
-member`.** The handler's own doc comment names the parameter
-*"memberId (required): Practitioner's member ID"* (`:22`). Same shape in
+⭐⭐ **The check is *is the member named in the URL a practitioner*, not *is the caller that
+member*.** The handler's own comment names the parameter *"memberId (required):
+Practitioner's member ID"* (`:22`). Same shape at
 `app/api/caseload/[caseId]/memories/list/route.ts:36` and
 `app/api/caseload/[caseId]/notes/route.ts:47`.
 
-**MEMBER AUTHORITY** — ⛔ **NONE FOUND.** Caseload content is practitioner-authored *about*
-a client; the client is represented by `ClientNameEncryption` (`lib/caseload/ClientNameEncryption.ts`)
-rather than by a `members` row. No consent column, no client gesture, no client-facing view.
+**MEMBER AUTHORITY** — ⛔ **NONE FOUND.** Caseload content is practitioner-authored *about* a
+client; the client is represented via `lib/caseload/ClientNameEncryption.ts` rather than a
+`members` row. No consent column, no client gesture, no client-facing view.
 
-**PRACTITIONER AUTHORITY** — self-asserted.
+**PRACTITIONER AUTHORITY** — self-asserted.  **GOVERNANCE GATE — ⛔ NONE FOUND.**
 
-**GOVERNANCE GATE — ⛔ NONE FOUND.**
-
-**FAILURE MODE** — 400 on missing `memberId`, 403 when the named member is not a
-practitioner. ⛔ There is no failure mode for *"caller is not the member named"*, because
-that question is never asked.
+**FAILURE MODE** — 400 on missing `memberId`; 403 when the named member is not a
+practitioner. ⛔ No failure mode exists for *"caller is not the member named"* — that question
+is never asked.
 
 **CURRENT STATUS — `WIRED-BUT-UNOBSERVED`.**
 
 **SOURCE EVIDENCE** — `app/api/caseload/list/route.ts:20-70`;
 `app/api/caseload/[caseId]/memories/list/route.ts:36`;
-`app/api/caseload/[caseId]/notes/route.ts:47`; `config/accessMatrix.ts:470`;
-`config/accessMatrix.ts:727-729` (permissive default).
+`app/api/caseload/[caseId]/notes/route.ts:47`; `config/accessMatrix.ts:470,727-729`.
 
 ---
 
@@ -343,40 +335,35 @@ PERSISTED WHERE   practitioner_clients ; practitioner_sessions ; message tables 
 ```
 
 **AUTHORIZATION** — `requireMemberId()` from `lib/auth/session`
-(`digest/route.ts:15,30` · `messages/route.ts:15` · `spiralogic-report/route.ts:16,28`).
-The returned value is **assigned to a variable named `practitionerId`** and passed straight
-into `getMessageDigest(practitionerId, clientId)` and into
+(`digest/route.ts:15,30` · `messages/route.ts:15` · `spiralogic-report/route.ts:16,28`). The
+returned value is **assigned to a variable named `practitionerId`** and passed into
+`getMessageDigest(practitionerId, clientId)` and into
 `SELECT … FROM spiralogic_reports` (`spiralogic-report/route.ts:31-35`).
 
 ⚠️ **VOCABULARY COLLISION, DOCUMENTED IN THE SCHEMA ITSELF.**
-`database/migrations/20260802000002_practitioner_client_relationship.sql:45-52` records:
-
-```text
-practitioner_id -> practitioners(id)      in practitioner_clients, practitioner_client_notes
-practitioner_id -> members(id)            in client_invites, practitioner_sessions
-"Same column name, different referent. Service code must therefore resolve
- practitioner identity THROUGH the relationship row and never by trusting a
- column called practitioner_id."
-```
-
-The same migration records that `practitioner_clients` has **three competing
-`CREATE TABLE IF NOT EXISTS` definitions** and that *"the declared shape in this repository
-is therefore NOT authoritative — not even for the target of the practitioner_id foreign
-key"* (`:26-39`). Per the vocabulary rule, **`practitioner_id` is an overloaded token and no
-finding here attaches to it as such.** Whether `requireMemberId()`'s member id is the
-correct referent at each of these call sites **could not be settled from the tree** and is
-recorded as **UNKNOWN**, not as a defect.
+`20260802000002_practitioner_client_relationship.sql:45-52` records that `practitioner_id`
+references `practitioners(id)` in `practitioner_clients` / `practitioner_client_notes` but
+`members(id)` in `client_invites` / `practitioner_sessions` — *"Same column name, different
+referent. Service code must therefore resolve practitioner identity THROUGH the relationship
+row and never by trusting a column called practitioner_id."* The same migration records
+**three competing `CREATE TABLE IF NOT EXISTS` definitions** of `practitioner_clients` and
+that *"the declared shape in this repository is therefore NOT authoritative — not even for
+the target of the practitioner_id foreign key"* (`:26-39`). Per the vocabulary rule,
+`practitioner_id` is an overloaded token and **no finding attaches to it as such**; whether
+`requireMemberId()`'s value is the correct referent at each call site **could not be settled
+from the tree** and is recorded as **UNKNOWN**, ⛔ not as a defect.
 
 **MEMBER AUTHORITY** — ⛔ **NONE FOUND** on the read side. The messages are ones the client
-sent to the practitioner, so the sending act is itself the gesture; but no column records a
-consent state, and no withdrawal path exists. The link to a member is
-`practitioner_clients.member_id`, which is **write-once** — a trigger refuses re-pointing
-and refuses unlinking (`20260802000002_…:333-347`), with `ON DELETE SET NULL` to `members(id)`
-(`:150-154`) and `CHECK ((member_id IS NULL) = (linked_at IS NULL))` (`:265`).
+sent, so the sending act is the gesture; no column records a consent state and no withdrawal
+path exists. The member link is `practitioner_clients.member_id`, **write-once** — a trigger
+refuses re-pointing and unlinking (`20260802000002…:333-347`), `ON DELETE SET NULL` to
+`members(id)` (`:150-154`), `CHECK ((member_id IS NULL) = (linked_at IS NULL))` (`:265`).
 
-**GOVERNANCE GATE — ⛔ NONE FOUND.**
+**GOVERNANCE GATE — ⛔ NONE FOUND.**  **CURRENT STATUS — `WIRED-BUT-UNOBSERVED`.**
 
-**CURRENT STATUS — `WIRED-BUT-UNOBSERVED`.**
+---
+
+### CAP-I-06**CURRENT STATUS — `WIRED-BUT-UNOBSERVED`.**
 
 ---
 
@@ -498,20 +485,18 @@ CONSUMERS         lib/relationship/__tests__/scope.test.ts — and nothing else
 
 Grepped each exported symbol (`resolveReadScope`, `practitionerMay`, `admitsToCommitment`,
 `maySystemDraw`, `ScopeViolation`) across `lib/`, `app/`, `scripts/`, `tests/`, `__tests__`:
-**every hit outside the module itself is in its own test file.**
+**every hit outside the module is in its own test file.**
 
-What it encodes (`:336-344`, `:345-362`, `:369-412`): the practitioner may never declare the
-member's material into a shared commitment; a Keep never crosses on its own — *"the crossing
-IS the consent event"*; a practitioner may `reflect`, `offer_question`, `offer_observation`,
+What it encodes (`:336-344,345-362,369-412`): the practitioner may never declare the member's
+material into a shared commitment; a Keep never crosses on its own — *"the crossing IS the
+consent event"*; a practitioner may `reflect`, `offer_question`, `offer_observation`,
 `offer_encouragement` over `my_question | my_work | my_story | my_coaching`, and never edit.
-`:350` names `can_be_shown_to_practitioner` as *"the existing flag that holds this line"* —
-so the module knows about CAP-I-01's column, and CAP-I-01 does not know about the module.
+`:350` names `can_be_shown_to_practitioner` as *"the existing flag that holds this line"* — so
+the module knows about CAP-I-01's column, and CAP-I-01 does not know about the module.
 
-**MEMBER / PRACTITIONER / MAIA / SYSTEM AUTHORITY** — all **notional**; the module governs
-no live read.
-
-**GOVERNANCE GATE — ⛔ NONE FOUND.** It is a source file, not a ruled source, and it is not
-cited as authoritative by any located ruling.
+**MEMBER / PRACTITIONER / MAIA / SYSTEM AUTHORITY** — all **notional**; it governs no live read.
+**GOVERNANCE GATE — ⛔ NONE FOUND** — a source file is not a ruled source, and no located
+ruling cites it.
 
 **CURRENT STATUS — `ORPHANED`.** The code exists; its declared consumer (any route or page
 that reads member material for a practitioner) does not import it. ⛔ Not `DORMANT`: CAP-I-01
@@ -573,26 +558,25 @@ GUARDED BY        PRACTITIONER_ATTRIBUTION_GUARD (memoryAtomsLoader.ts:186):
 WRITE REFUSED AT  lib/psyche/portfolio.ts:386-392 — keepSource() throws for this source_type
 ```
 
-⭐ **The direction is practitioner → member**, the inverse of every other capability here: a
-practitioner's observation is written into the member's memory and reaches MAIA's cognition
-about that member, in a labelled section.
+⭐ **The direction is practitioner → member**, inverse of every other capability here: an
+observation is written into the member's memory and reaches MAIA's cognition about that
+member, in a labelled section.
 
 ⛔ **NO WRITER WAS LOCATED.** `lib/psyche/portfolio.ts:389-390` names the authorized writer as
 *"the facilitated With-Me path (which sets facilitator_id)"*. Grepping `facilitator_id` across
-`lib/`, `app/`, `scripts/` returns only: the two read guards, the loader's projection, the
-refusal message, a literal `'maia-facilitator'` string in
-`lib/consciousness/ConsciousnessSessionIntegration.ts:73`, and the vendored legacy backend
-(§CAP-I-12). **No live INSERT of a `practitioner_observation` atom exists at the subject.**
+`lib/`, `app/`, `scripts/` returns only the two read guards, the loader projection, the
+refusal message, a literal `'maia-facilitator'` string
+(`lib/consciousness/ConsciousnessSessionIntegration.ts:73`), and the vendored legacy backend
+(CAP-I-12). **No live INSERT of a `practitioner_observation` atom exists at the subject.**
 
-**MEMBER AUTHORITY** — the atom is `member_memory_atoms`, and `lib/psyche/portfolio.ts:718-780`
-provides member-side set-aside/archive scoped to `source_type = 'practitioner_observation'`
-(`:748`, `:777`). ⛔ **No member consent gate on creation was found** — there is no creation
+**MEMBER AUTHORITY** — the atom lives in `member_memory_atoms`, and
+`lib/psyche/portfolio.ts:718-780` gives the member set-aside/archive scoped to this source
+type (`:748,777`). ⛔ **No member consent gate on creation was found** — there is no creation
 path to gate.
 
-**GOVERNANCE GATE — ⛔ NONE FOUND.** The migration header (`:5-9`) states a
-*"Constitutional intent"* about the `witnessed` register. Per D-P1-06 and constraint 6, a
-migration comment asserting constitutional intent is **implementation evidence, not a ruled
-source**, and P1-01 located no ruling behind it.
+**GOVERNANCE GATE — ⛔ NONE FOUND.** The migration header (`:5-9`) asserts a *"Constitutional
+intent"* about the `witnessed` register. Per D-P1-06 and constraint 6 a migration comment is
+**implementation evidence, not a ruled source**, and P1-01 located no ruling behind it.
 
 **CURRENT STATUS — `ORPHANED`.** Schema, read guards, loader projection, refusal path and
 member-side disposal all exist; the declared producer does not.
@@ -618,30 +602,29 @@ opens `/join/<token>` → accepts → `consent_status` moves → MAIA's prompt f
 the practitioner's practice-field snapshot, gated on `status='active' AND
 consent_status='accepted'` and suppressed in Sanctuary (`maia/list/route.ts:801,806`).
 
-⭐ **Member consent gesture: PRESENT and NAMED.** `consent_status` on `relationship_spaces`,
-moved by the member's accept at `app/api/join/[token]/accept/route.ts:50` and by
-`app/api/relationship-spaces/[spaceId]/consent/route.ts:52`. Its DEFAULT at creation is set
-by the practitioner's insert (`invite/route.ts:90-95`); ⚠️ the column's schema default was
-**not read** — `relationship_spaces` has no dedicated migration file matching the grep set,
-and its DDL was not located at the subject. Recorded as **UNKNOWN**, not assumed.
+⭐ **Member consent gesture: PRESENT and NAMED** — `relationship_spaces.consent_status`, moved
+by the member's accept (`app/api/join/[token]/accept/route.ts:50`;
+`app/api/relationship-spaces/[spaceId]/consent/route.ts:52`). ⚠️ Its **schema default was not
+read** — no migration matching the grep set defines `relationship_spaces`, and its DDL was not
+located at the subject. **UNKNOWN**, not assumed.
 
 **WHAT THE CONSENT AUTHORIZES** — practitioner material flowing **toward** MAIA/member. ⛔ It
 authorizes no practitioner read of member material, and none was found on this object.
 
 **GOVERNANCE GATE — ⛔ NONE FOUND, and specifically so.** P1-01 slice 08 §5 D-3 records that
 `relationship_spaces` is **excluded** from the Relationship Room Constitution's jurisdiction
-by a non-deciding reconciliation instrument
-(`…PRE_RATIFICATION_RECONCILIATION_2026-08-10.md:104-105`), and that **no read document claims
-it**. The code shows a live, member-consent-bearing object sitting in that gap.
+by a non-deciding instrument (`…PRE_RATIFICATION_RECONCILIATION_2026-08-10.md:104-105`) and
+that **no read document claims it**. The code shows a live, member-consent-bearing object
+sitting in that gap.
 
 **CURRENT STATUS — `WIRED-BUT-UNOBSERVED`.**
 
-**Governance containment** exists as a separate attributed act on the practice field:
-`app/api/practitioner/practice-field/[id]/containment/route.ts:1-20` cites a founder ruling
-of 2026-08-09 requiring an authenticated, attributable actor for containment transitions.
-⭐ **This is the only located founder ruling that binds a practitioner-side surface in this
-domain**, and it governs *containment of the practitioner's own field material*, ⛔ **not**
-practitioner visibility of member material.
+⭐ One adjacent founder ruling exists: governance containment as an attributed act on the
+practitioner's own practice field
+(`app/api/practitioner/practice-field/[id]/containment/route.ts:1-20`, citing a founder ruling
+of 2026-08-09 requiring an authenticated, attributable actor). **It is the only located
+founder ruling binding a practitioner-side surface in this domain, and it governs the
+practitioner's own material — ⛔ not practitioner visibility of member material.**
 
 ---
 
@@ -730,52 +713,45 @@ surfacing, not this).
 
 ### Q4 · FACILITATOR vs PRACTITIONER in code
 
-**There are two unrelated uses of "facilitator", and a third place where the two vocabularies
-sit on the same object.**
+**Two unrelated uses of "facilitator", plus one object where both vocabularies sit together.**
 
-1. **Circle role — a real, distinct, enforced role.**
-   `lib/circles/types.ts:5` — `export type CircleRole = 'helper' | 'facilitator' | 'member'`.
-   Enforced: `lib/circles/removalService.ts:114` requires `actorRow.role !== 'facilitator'` →
-   refuse; `lib/circles/inquiryService.ts:30` admits `helper` **or** `facilitator`.
-   ⚠️ P1-01 recorded that no code path writes `facilitator`; at this subject the **type and
-   the checks** exist, and no writer of the value was located by this census either.
-   **This role has no connection to `practitioners` — different table, different gate
-   (`requireCircleAccess`), different surface.**
+1. **Circle role — a real, distinct, enforced role.** `lib/circles/types.ts:5` —
+   `export type CircleRole = 'helper' | 'facilitator' | 'member'`. Enforced at
+   `lib/circles/removalService.ts:114` (removal requires `role === 'facilitator'`) and
+   `lib/circles/inquiryService.ts:30` (admits `helper` or `facilitator`). ⚠️ P1-01 recorded
+   that no code path writes `facilitator`; this census located no writer either — the **type
+   and the checks** exist. **This role has no connection to `practitioners`:** different
+   table, different gate (`requireCircleAccess`), different surface.
 
 2. **`member_memory_atoms.facilitator_id` — the collapse, on one object.**
-   `database/migrations/20260624000001_practitioner_observation_provenance.sql:11-14` adds a
-   column named **`facilitator_id`** whose purpose is to attribute a `source_type` named
-   **`practitioner_observation`** (`:28,45`). The migration header uses both words in three
-   consecutive lines: *"facilitator-authored observations"* (`:2`), *"approved practitioner
-   observations"* (`:5`), *"witnessed directly by a facilitator in session"* (`:21`).
-   `lib/psyche/portfolio.ts:385-391` closes the loop: *"canon: facilitator_id is canonical"*.
-   ⭐⭐ **One column, one source type, two role words, treated as the same actor.**
+   `20260624000001_practitioner_observation_provenance.sql:11-14` adds a column named
+   **`facilitator_id`** to attribute a `source_type` named **`practitioner_observation`**
+   (`:28,45`). The header uses both words in three consecutive lines: *"facilitator-authored
+   observations"* (`:2`), *"approved practitioner observations"* (`:5`), *"witnessed directly
+   by a facilitator in session"* (`:21`). `lib/psyche/portfolio.ts:385-391` closes it:
+   *"canon: facilitator_id is canonical"*. ⭐⭐ **One column, one source type, two role words,
+   one actor.**
 
 3. **The Studio field page calls a practitioner gate a facilitator view.**
-   `app/studio/fields/[memberId]/page.tsx` — title *"Living Field facilitator view"* (`:2`),
-   heading *"Living Field — Facilitator View"* (`:143`), closing section *"Facilitation
-   guidance"* (`:197`), header sentence *"This is the consented facilitator view"* (`:11`) —
-   while the gate it actually executes is
+   `app/studio/fields/[memberId]/page.tsx` — *"Living Field facilitator view"* (`:2`),
+   *"Living Field — Facilitator View"* (`:143`), *"Facilitation guidance"* (`:197`), *"This is
+   the consented facilitator view"* (`:11`) — while the gate executed is
    `SELECT id FROM practitioners WHERE member_id = $1 AND status = 'active'` (`:104-107`).
 
-**Additional occurrences, classified and set aside** (separate referents of an overloaded
-token; ⛔ per the vocabulary rule no finding attaches to them):
+**Set aside** (separate referents of an overloaded token; ⛔ no finding attaches):
 `CollectiveFieldOrchestrator.ts:39,85,140,597` · `AdvancedConsciousnessDetection.ts:69,105,126`
 · `AgentBackchannelingIntegration.ts:99` and `ShadowConversationOrchestrator.ts:582,613`
 (`'facilitators_visible'` enum) · `BackchannelingDemonstration.ts:57,611` ·
-`master-member-archetype-intelligence.ts:65,213` (`'coach-facilitator'` archetype label).
+`master-member-archetype-intelligence.ts:65,213` (`'coach-facilitator'` label).
 
-**ANSWER.** ⭐ **Code draws a real facilitator/practitioner distinction in exactly one place
-— the Circle role type — and that place is unrelated to practitioner access. Everywhere the
-two words meet a member's material, they name the same actor:** one `practitioners` row
-reached through one gate, described in facilitator language on the surface and in
-practitioner language in the schema, attributed by a column called `facilitator_id` to a
-source type called `practitioner_observation`.
-
-P1-01 recorded *"Whether facilitator (FR-05/FR-12) and practitioner are the same authority,
-different authorities, or unrelated"* as **UNLOCATED**. ⛔ The code does not answer it — it
-**uses both words for one actor without deciding**, which is a different fact and is
-recorded as such.
+**ANSWER.** ⭐ **Code draws a real facilitator/practitioner distinction in exactly one place —
+the Circle role type — and that place is unrelated to practitioner access. Everywhere the two
+words meet a member's material they name the same actor:** one `practitioners` row reached
+through one gate, described in facilitator language on the surface and practitioner language
+in the schema, attributed by a column called `facilitator_id` to a source type called
+`practitioner_observation`. P1-01 recorded whether facilitator and practitioner are the same
+authority as **UNLOCATED**; ⛔ the code does not answer it — it **uses both words for one actor
+without deciding**, which is a different fact, recorded as such.
 
 ### Q5 · GOVERNANCE GATE, per capability
 
@@ -804,53 +780,46 @@ practitioner's own material, in the opposite direction.
 ## 4 · Contradictions (both sides visible, ⛔ unreconciled)
 
 **C-I-1 · "Deferred, held FALSE, no path" vs. a live path.**
-`database/migrations/20260626000001_member_field_note_threads.sql:8,40,96` states the
-practitioner-visibility capability is **DEFERRED** and the column is *"held FALSE, no path"*.
-`app/api/maia/vision-studio/field-note/route.ts:107-130` binds the column to a client-supplied
-`shareWithPractitioner` value, and `app/studio/fields/[memberId]/page.tsx:69` reads it.
-Both statements are present at the subject. ⛔ Not reconciled.
+`20260626000001_member_field_note_threads.sql:8,40,96` states the capability is **DEFERRED**
+and the column *"held FALSE, no path"*. `app/api/maia/vision-studio/field-note/route.ts:107-130`
+binds it to a client-supplied value and `app/studio/fields/[memberId]/page.tsx:69` reads it.
 
 **C-I-2 · "The consented facilitator view" vs. a role-only gate.**
-`app/studio/fields/[memberId]/page.tsx:9-11` asserts the view is consented; `:104-107` checks
-only that the viewer is some active practitioner, with no relationship predicate and no
-consent predicate on `members.name` / `members.username` (`:79-85`). ⛔ Not reconciled.
+`app/studio/fields/[memberId]/page.tsx:9-11` asserts consent; `:104-107` checks only that the
+viewer is *some* active practitioner, and `:79-85` applies no predicate at all to
+`members.name` / `members.username`.
 
-**C-I-3 · Two written access models vs. the wired one.**
-`lib/relationship/scope.ts` and `lib/coachField/*` encode member/practitioner read scopes,
-crossing rules and verb limits. `app/studio/fields/[memberId]/page.tsx` performs a
-practitioner read of member material and imports neither. ⛔ Not reconciled.
+**C-I-3 · Two written access models vs. the wired one.** `lib/relationship/scope.ts` and
+`lib/coachField/*` encode member/practitioner read scopes, crossing rules and verb limits;
+`app/studio/fields/[memberId]/page.tsx` performs a practitioner read of member material and
+imports neither.
 
 **C-I-4 · `/caseload` declared with a role; `/api/caseload` matched by nothing.**
-`config/accessMatrix.ts:470` declares `{ prefix: '/caseload', minTier: 'pro',
-rolesAnyOf: ['practitioner'] }`. The API family lives at `/api/caseload/*`, which that prefix
-does not match, and no other rule matches it; the unmapped default is permissive
-(`:727-729`). ⛔ Not reconciled. ⚠️ Whether `ACCESS_CONTROL_MODE=strict` is set in production
-is **UNKNOWN**.
+`config/accessMatrix.ts:470` declares `{prefix: '/caseload', minTier: 'pro',
+rolesAnyOf: ['practitioner']}`; the API family lives at `/api/caseload/*`, which that prefix
+does not match and no other rule matches; the unmapped default is permissive (`:727-729`).
+⚠️ Production `ACCESS_CONTROL_MODE` is **UNKNOWN**.
 
 **C-I-5 · `/api/supervision` declared free-tier, no role; content is clinical.**
-`config/accessMatrix.ts:578` vs. the routes' own *"HIPAA compliant"* headers
-(`sessions/route.ts:5`; `transcript/list/route.ts:7`) and their absent handler
-authorization. ⛔ Not reconciled.
+`config/accessMatrix.ts:578` vs. the routes' *"HIPAA compliant"* headers
+(`sessions/route.ts:5`; `transcript/list/route.ts:7`) and their absent handler authorization.
 
 **C-I-6 · Facilitator and practitioner: one actor, two vocabularies.**
 `member_memory_atoms.facilitator_id` attributing `source_type='practitioner_observation'`
-(`20260624000001…:11-14,28,45`; *"canon: facilitator_id is canonical"*,
-`lib/psyche/portfolio.ts:390`) vs. `CircleRole` where `facilitator` is a distinct enforced
-role unrelated to `practitioners` (`lib/circles/types.ts:5`;
-`lib/circles/removalService.ts:114`). ⛔ Not reconciled.
+(`20260624000001…:11-14,28,45`; `lib/psyche/portfolio.ts:390`) vs. `CircleRole`, where
+`facilitator` is a distinct enforced role unrelated to `practitioners`
+(`lib/circles/types.ts:5`; `removalService.ts:114`).
 
-**C-I-7 · `practitioner_id` refers to two different tables.**
-Recorded by the schema itself: `20260802000002_practitioner_client_relationship.sql:45-52`,
-with three competing `CREATE TABLE IF NOT EXISTS` definitions at `:26-39` and the explicit
-warning that *"the declared shape in this repository is therefore NOT authoritative."*
-⛔ Not reconciled; per the vocabulary rule no finding is attached to the token itself.
+**C-I-7 · `practitioner_id` refers to two different tables.** Recorded by the schema itself:
+`20260802000002_practitioner_client_relationship.sql:45-52`, with three competing table
+definitions at `:26-39` and the explicit warning that *"the declared shape in this repository
+is therefore NOT authoritative."* ⛔ Per the vocabulary rule no finding attaches to the token.
 
 **C-I-8 · The matrix's own DECLARED-vs-ENFORCED divergences.**
-`config/accessMatrix.ts:288,299,392-404,531` — the file records four cases where the declared
-policy and the enforced policy differ, one of which it labels *"Unreconciled"* in its own
-note (`:404`). ⛔ Carried forward, not reconciled.
+`config/accessMatrix.ts:288,299,392-404,531` — four cases the file records itself, one labelled
+*"Unreconciled"* in its own note (`:404`).
 
----
+⛔ All eight are carried forward with both sides visible. **None is reconciled here.**
 
 ## 5 · Unlocated governance
 
@@ -902,37 +871,29 @@ note (`:404`). ⛔ Carried forward, not reconciled.
 
 ## 7 · Open questions for P1-04
 
-1. **Q1-row-1 is the domain's sharpest single fact.** `/studio/fields/<memberId>` applies a
-   **role** check where the surface's own language implies a **relationship**. P1-04 must
-   decide whether that gap is a defect against something, ⛔ and this census records only
-   that P1-01 located nothing for it to be a defect *against*.
+1. **Q1 row 1 is the domain's sharpest fact.** `/studio/fields/<memberId>` applies a **role**
+   check where the surface's own language implies a **relationship**. ⛔ This census records
+   only that P1-01 located nothing for it to be a defect *against*.
    **`REPAIR QUESTION MAY EXIST — NOT YET AUTHORIZED`.**
-2. **Two complete access models exist in code and neither is wired.** Is
-   `lib/relationship/scope.ts` a discarded design, an unratified candidate, or the intended
-   model of a surface that was built past it? The tree cannot say. **`REPAIR QUESTION MAY
-   EXIST — NOT YET AUTHORIZED`.**
+2. **Two complete access models exist in code and neither is wired.** Discarded design,
+   unratified candidate, or the intended model of a surface built past it? The tree cannot say.
+   **`REPAIR QUESTION MAY EXIST — NOT YET AUTHORIZED`.**
 3. **`bringForward()` — the only member gesture in the coach-field model — has no surface.**
-   Whether the model was intended to reach members is **UNKNOWN**.
+   Whether it was intended to reach members is **UNKNOWN**.
 4. **Handler-level authorization is absent on three route families** (supervision, caseload,
-   `practitioners/create`) whose declared matrix rules do not supply it either. P1-04 must
-   determine whether these are within any lane's scope. **`REPAIR QUESTION MAY EXIST — NOT
-   YET AUTHORIZED`.**
-5. **`ACCESS_CONTROL_MODE` in production.** Requires a runtime witness this container cannot
-   produce. Its value determines whether `/api/caseload/*` is reachable unauthenticated.
-6. **Is `facilitator` one role or two?** Q4 shows the code uses one actor and two vocabularies
-   on the same column. P1-04 may need this settled before any practitioner-visibility
-   question can be stated precisely — ⛔ this census does not settle it.
-7. **Who may become a practitioner?** CAP-I-04 is upstream of CAP-I-01's only check, so any
-   later reasoning about practitioner visibility depends on it.
-8. **`relationship_spaces` sits in a governance gap that is documented as a gap.** It is live,
-   it carries member consent, and no ruled source claims it.
-9. **`practitioner_observation` atoms: schema and readers without a writer.** Whether the
-   With-Me path was removed, never built, or lives outside this tree is **UNKNOWN**
-   (**E-1**: no history claim made).
-10. **Derived visibility (D-1 … D-8) is recorded and ungoverned.** ⛔ Per D-P1-08 and F9 this
+   `practitioners/create`) whose matrix rules do not supply it either.
+   **`REPAIR QUESTION MAY EXIST — NOT YET AUTHORIZED`.**
+5. **`ACCESS_CONTROL_MODE` in production** — needs a runtime witness this container cannot
+   produce; its value decides whether `/api/caseload/*` is reachable unauthenticated.
+6. **Is `facilitator` one role or two?** Q4 shows one actor and two vocabularies on one column.
+   P1-04 may need this settled before the visibility question can even be stated precisely.
+7. **Who may become a practitioner?** CAP-I-04 is upstream of CAP-I-01's only check.
+8. **`relationship_spaces` sits in a documented governance gap** — live, member-consent-bearing,
+   claimed by no ruled source.
+9. **`practitioner_observation` atoms: schema and readers without a writer.** Removed, never
+   built, or outside this tree — **UNKNOWN** (**E-1**: no history claim made).
+10. **Derived visibility (D-1…D-8) is recorded and ungoverned.** ⛔ Per D-P1-08 and F9 this
     census opens nothing and proposes nothing; P1-04 inherits the list intact.
-
----
 
 ## 8 · Method and limits
 
