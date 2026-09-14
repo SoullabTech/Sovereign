@@ -59,9 +59,23 @@ expected_text · replacement_text · decision_chain_id · created_at · accepted
 ```
 
 ⛔ **No proposal-succession columns exist.** A **different** table of the **same name** is defined
-by an older Sep-10 migration in the checkout. ⭐ **Build against the observed running schema, never
-against the checkout migration that merely shares its name** — a table name asserting a shape it
-does not have is the same failure family this programme has repeatedly caught.
+by an older Sep-10 migration in the checkout. ⭐ **Never infer the running schema from a same-named historical migration. Census the running
+schema directly** — a table name asserting a shape it does not have is the same failure family this
+programme has repeatedly caught.
+
+### ⚠️ AMENDMENT 2 (founder, 2026-09-14) — the runtime schema is evidence, not authority
+
+⛔ *"Build against the observed running schema"* was too strong on its own. The runtime schema is
+**authoritative evidence of what exists now**; it is **not** the schema authority.
+
+```text
+Before any schema change, reconcile the observed state with the canonical migration path,
+so the resulting schema is REPRODUCIBLE FROM SOURCE.
+```
+
+⭐ Otherwise the old-migration lie is solved by creating its opposite: **a production schema nobody
+can reconstruct.** The Sep-10 same-named table still may not be borrowed as though it described the
+live Sep-13 object.
 
 ---
 
@@ -106,8 +120,39 @@ browser ever gaining the power to write arbitrary text into the Work.
 
 ### The surface law
 
-> **MAIA proposes visibly → the writer edits proposal state → the writer explicitly accepts their
-> exact proposal state → only then does it become the Work.**
+> **MAIA proposes visibly → the writer edits proposal state → the writer explicitly accepts the
+> exact proposal state they selected → only then does it become the Work.**
+
+### ⭐⭐ AMENDMENT 1 (founder, 2026-09-14) — acceptance is an AUTHORITY act, not an authorship act
+
+⚠️ **Jarvis's first wording was too strong** and is corrected here rather than replaced silently:
+
+```text
+⛔ WRONG   "Nothing may touch the Work until the writer accepts a proposal state THEY AUTHORED."
+```
+
+That sentence made an **unedited MAIA proposal impossible to accept** — or else retroactively
+relabelled MAIA's wording as writer-authored. Both are false.
+
+```text
+✅ RIGHT   Nothing may touch the Work until the writer explicitly accepts the exact durable
+           proposal state that is to enter it. Acceptance grants that state AUTHORITY to enter
+           the Work; it does not rewrite WHO AUTHORED ITS WORDING.
+```
+
+The provenance this yields:
+
+```text
+MAIA proposal                     wording author MAIA        · Work authority NONE
+writer accepts it unchanged       wording author MAIA        · admission MEMBER AUTHORIZED
+writer edits it                   original MAIA, frozen      · successor MEMBER AUTHORED
+                                                             · Work authority NONE
+writer accepts the successor      accepted state MEMBER AUTHORED · admission MEMBER AUTHORIZED
+```
+
+⭐ **Three acts, never collapsed: proposal authorship · proposal selection · manuscript authority.**
+Keeping them apart is what stops both MAIA and the browser from quietly becoming authors of the
+Work.
 
 ⭐ The middle step is load-bearing: accept-or-reject alone makes the writer a reviewer of MAIA's
 text; editing before accepting makes the resulting words the writer's own.
@@ -146,6 +191,14 @@ successors) · `Current/Proposed` duplicate panels (F2).
    WITHOUT weakening any check it already performs
 4  the Step-3 note in proposalWork.ts, read in full rather than by its summary
 5  the ProposalWorkSurface founder-walk history — what failed, so it is not rebuilt
+
+6  ⭐ ACCEPTANCE / AUTHORSHIP SEMANTICS (founder, 2026-09-14)
+   What does accepting
+     (a) an untouched MAIA proposal
+     (b) a writer-authored successor
+   mean for provenance, authorship, and Work authority?
+   ⛔ Invent no mechanism. Establish only what the existing system and prior rulings
+      ALREADY say.
 ```
 
 ### Not authorized by this charter
@@ -163,8 +216,13 @@ LANE              WS-PROPOSAL-AUTHORSHIP-01 — CHARTERED, not opened for build
 SUBJECT           377d811d (Mac Studio runtime) — NOT present in this checkout
 EVIDENCE          founder-read; Jarvis verified only the absence
 JARVIS CORRECTION recorded §2 — the ordinary-writing-path shape was wrong
-NEXT              census the five owed items against the running subject
+AMENDMENTS        A1 authorship ≠ authority · A2 runtime schema is evidence, not authority
+NEXT              ⭐ CENSUS AUTHORIZED — six owed items against the running subject
+                  ⛔ design NOT open · schema NOT authorized · code NOT authorized
 CODE              NONE
 ```
 
-> **Nothing may touch the Work until the writer accepts a proposal state they authored.**
+> **Nothing may touch the Work until the writer explicitly accepts the exact durable proposal
+> state that is to enter it.**
+>
+> ⭐ Acceptance grants authority. It does not rewrite authorship.
