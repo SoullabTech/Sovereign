@@ -4,7 +4,19 @@
 **Custody subject:** `2939d0ee83dcd01eea373f87cbd339dbc6572abe`
 **Instrument:** `scripts/jop04/d2-gitlog-format-census.sh` — read-only · **6 passed · 0 failed**
 
-> ⚠️ **Two self-contamination guards were built in before this record was committed**, the species
+> ⛔ **AND IT STILL HAPPENED.** The sealed-SHA rerun at `416e01612` failed on **P1**: the probe
+> counts readers of `args.format` across `scripts/`, and its own printed line contains that token, so
+> **the instrument counted itself as a consumer of the field it was proving unconsumed.** Fifth
+> occurrence; third in this session; second one I shipped after writing the warning.
+>
+> ⭐ **Fixing these per-probe is HOW the species recurs.** The repair is structural: a single
+> `not_self()` filter declared **once** at the top of the instrument and applied to **every** tree
+> probe, with the rule stated in the file that no tree probe may skip it. *An instrument that must
+> NAME a token in order to search for it will always be found by its own search — so the exclusion
+> belongs to the instrument, not to each question it asks.* Rerun after the structural fix:
+> **6 passed · 0 failed.**
+>
+> ⚠️ **Two further self-contamination guards were built in before this record was committed**, the species
 > having now cost this programme four incidents (C21 · the `Symbol.for` canary · the D6-F1 probe ·
 > and this, caught before sealing). **P3 is PINNED to the named commit `f2b453be3` rather than
 > searched** — a `--grep` over all commit messages would have been satisfied by *this census's own

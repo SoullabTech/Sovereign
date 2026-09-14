@@ -13,6 +13,12 @@ set -uo pipefail
 ROOT="${1:-$(git rev-parse --show-toplevel)}"
 G() { git -C "$ROOT" "$@"; }
 REG="scripts/builder/deterministic.mjs"
+# ⭐ ONE SHARED SELF-EXCLUSION, declared once and applied to EVERY tree probe below.
+#    This programme has now lost five probes to the same species: an instrument that scans the
+#    tree for a token it must also NAME counts itself. Fixing that per-probe is how it recurs —
+#    the exclusion is declared here, once, and no tree probe may skip it.
+SELF="scripts/jop04/d2-gitlog-format-census.sh"
+not_self() { grep -v -F "$SELF"; }
 PASS=0; FAIL=0; UNDET=0
 ok()  { PASS=$((PASS+1));  echo "  PASS       $1"; }
 bad() { FAIL=$((FAIL+1));  echo "  FAIL       $1"; }
@@ -30,8 +36,8 @@ if [ "$(G rev-parse --is-shallow-repository)" != "false" ]; then
 fi
 
 echo "P1 · the field is declared exactly once and consumed nowhere"
-DECL=$(G grep -c 'format: { type' -- "$REG" 2>/dev/null | wc -l | tr -d ' ')
-READS=$(G grep -n 'args\.format' -- scripts jarvis-desktop 2>/dev/null | wc -l | tr -d ' ')
+DECL=$(G grep -n 'format: { type' -- "$REG" 2>/dev/null | not_self | wc -l | tr -d ' ')
+READS=$(G grep -n 'args\.format' -- scripts jarvis-desktop 2>/dev/null | not_self | wc -l | tr -d ' ')
 printf '      declarations=%s   readers of args.format=%s\n' "$DECL" "$READS"
 [ "$DECL" -eq 1 ] && [ "$READS" -eq 0 ] \
   && ok "declared, never read — the sealed contract's premise still holds" \
@@ -69,7 +75,7 @@ echo "U1 · no caller anywhere supplies format"
 # Scoped to code only, and this census instrument is excluded by name: a probe that discusses
 # the capability must not count as a caller of it.
 CALLERS=$(G grep -n "capabilityName: 'git.log'\|capability: 'git.log'" -- scripts jarvis-desktop 2>/dev/null \
-  | grep -v 'jop04/d2-gitlog-format-census' | grep -c "format" || true)
+  | not_self | grep -c "format" || true)
 printf '      git.log references carrying a format argument: %s\n' "$CALLERS"
 [ "$CALLERS" -eq 0 ] && ok "zero callers supply format — in the tree and in the scoped history" \
                      || bad "a caller supplying format exists; D2 evidence must be re-read"
