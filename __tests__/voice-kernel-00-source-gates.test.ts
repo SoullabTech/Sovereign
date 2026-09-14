@@ -510,6 +510,7 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     for (const k of ['seal == manifest', 'manifest hashes == files', 'criterion id == expected', 'criterion revision is ancestor of probe execution HEAD']) expect(lc).toContain(k);
     expect(lp).toMatch(/manifest\.json/); expect(lp).toMatch(/SEAL\.sha256/); expect(lp).toMatch(/merge-base --is-ancestor "\$CRITERION_REV" HEAD/);  // capture-time provenance, sealed in the same execution
     expect(lp).toMatch(/It authorizes nothing/);
+    expect(lc.indexOf('root not granted')).toBeLessThan(lc.indexOf('k00-driver-batch.sh LOG-CAL'));   // no sample spent against a collect known to need root
     expect(lc).toMatch(/usage: log show \\\[options\\\] <archive>/);                    // condition 3 in the installed grammar (positional archive), founder ruling 2026-09-14
     expect(lcExec).not.toMatch(/log show --archive/);                                // the superseded spelling never runs
     expect(lcExec).toMatch(/log show --start "\$T0_LOCAL" --end "\$T1_LOCAL" --style json "\$OUT\/device\.logarchive"/); // options first, archive last, as documented

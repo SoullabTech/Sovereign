@@ -57,6 +57,9 @@ say "## gate: probe $PROBE · collect device option: ${DEVOPT:-NONE} · collect 
 # C. read-only posture, recorded before anything runs
 say "## commands this run will issue (verbatim): log collect $DEVOPT $DEVVAL $WINOPT <T0-5s> --output $OUT/device.logarchive · log show --start <T0> --end <T1> --style json $OUT/device.logarchive (ruling 2: default level only, no --info/--debug on the first read)"
 say "## never issued: log config · sysdiagnose · any debugger/profile/level change"
+# 121709Z established that the collect needs root on this Mac. Refuse BEFORE the sample when root is not granted, so a sample is
+# never spent against a collect that is already known to be refused (root = separate jurisdiction, K00_LOG_SUDO=1 at invocation).
+[ "${K00_LOG_SUDO:-0}" = "1" ] || { say "## STOP — root not granted (K00_LOG_SUDO unset) and the installed tool requires root to collect from an attached device (121709Z, rc 77). No sample is spent; nothing captured; device untouched."; exit 4; }
 # one bounded sample via the existing batch (its own daemon snapshots before/after apply)
 T0_EPOCH=$(date +%s); T0_LOCAL="$(date -r $((T0_EPOCH-5)) "+%Y-%m-%d %H:%M:%S")"; T0_ISO="$(date -u -r $T0_EPOCH +%Y-%m-%dT%H:%M:%SZ)"
 say "## T0 (Mac wall clock, before the sample): $T0_ISO (local $T0_LOCAL used for the collect window)"
