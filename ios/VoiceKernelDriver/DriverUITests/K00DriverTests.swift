@@ -23,6 +23,10 @@ import XCTest
 //              configures the driver only; the app under test still receives no launch arguments, no launch
 //              environment, no hooks — the harness never learns the subject. An unknown value is a
 //              DRIVER/INFRASTRUCTURE FAILURE before any launch; it never falls through to the K00 bundle.
+//   K00_CANCEL_AT_MS · K00_SETTLE_S — K00-05/06 output act only (founder ruling 2026-09-14, Option C): the batch forwards
+//              them solely under `--act output`; testOutputSample reads them with the ruled defaults 1000 / 2. They configure
+//              the DRIVER's taps and sleeps; the harness still receives nothing. The driver's sleeps are never evidence —
+//              every K00-05/06 reading comes from the journal (k00-output-ledger.py).
 final class K00DriverTests: XCTestCase {
 
     /// The explicit subject table (VPIO-01B). Historical p5b0 / phase-a share the K00 bundle and label.
@@ -45,6 +49,8 @@ final class K00DriverTests: XCTestCase {
     private var vpOn: Bool { (env["K00_VP"] ?? "on").lowercased() != "off" }
     private var holdSeconds: TimeInterval { TimeInterval(env["K00_HOLD_S"] ?? "15") ?? 15 }
     private var w4TargetMs: Int { Int(env["K00_W4_MS"] ?? "500") ?? 500 }
+    private var cancelAtMs: Int { Int(env["K00_CANCEL_AT_MS"] ?? "1000") ?? 1000 }
+    private var settleSeconds: TimeInterval { TimeInterval(env["K00_SETTLE_S"] ?? "2") ?? 2 }
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -81,6 +87,46 @@ final class K00DriverTests: XCTestCase {
         guard leave.waitForExistence(timeout: 2) else { return driverFail("Leave button not found after Enter") }
         leave.tap()
         Thread.sleep(forTimeInterval: 3)
+        try exportAndTerminate()
+    }
+
+    /// K00-05/06 output act (founder ruling 2026-09-14, Option C): precondition → launch → VP → Enter →
+    /// wait until the harness itself enables "Play 3 s tone" (it does so only at floor == listening with output
+    /// enabled; ≤ 5 s, else the row is ENTRY-NOT-REACHED and the journal is still exported) → settle →
+    /// Play → (cancel-at ms) → "Cancel active" if the harness offers it (else NOT-A-CANCEL marker) →
+    /// 1 s (the P5 measurement is due at 300 ms) → second Play left to complete → 4.5 s → Export → terminate.
+    /// The driver taps only the harness's existing visible buttons; it never fails a sample on an audio
+    /// outcome — markers prefixed "K00-OUTPUT:" name what the driver could not do, and the ledger decides.
+    func testOutputSample() throws {
+        try requireCold()
+        try launchCold()
+        try setVoiceProcessing(on: vpOn)
+        try tap("Enter conversation", timeout: 5)
+        let play = harness.buttons["Play 3 s tone"]
+        guard play.waitForExistence(timeout: 5) else { return driverFail("'Play 3 s tone' not found after Enter") }
+        guard waitEnabled(play, timeout: 5) else {
+            note("K00-OUTPUT: entry not reached — 'Play 3 s tone' not enabled within 5 s; no Play tapped (ENTRY-NOT-REACHED)")
+            try exportAndTerminate(); return
+        }
+        Thread.sleep(forTimeInterval: settleSeconds)
+        play.tap()
+        note("K00-OUTPUT: Play 1 tapped")
+        Thread.sleep(forTimeInterval: TimeInterval(cancelAtMs) / 1000.0)
+        let cancel = harness.buttons["Cancel active"]
+        if cancel.exists && cancel.isEnabled {
+            cancel.tap()
+            note("K00-OUTPUT: Cancel active tapped at ≈\(cancelAtMs) ms after Play 1")
+        } else {
+            note("K00-OUTPUT: Cancel active not enabled at ≈\(cancelAtMs) ms after Play 1 (NOT-A-CANCEL-ROW)")
+        }
+        Thread.sleep(forTimeInterval: 1.0)
+        if waitEnabled(play, timeout: 3) {
+            play.tap()
+            note("K00-OUTPUT: Play 2 tapped (left to complete)")
+        } else {
+            note("K00-OUTPUT: 'Play 3 s tone' not enabled for Play 2 within 3 s; second stream not scheduled")
+        }
+        Thread.sleep(forTimeInterval: 4.5)
         try exportAndTerminate()
     }
 
@@ -152,6 +198,23 @@ final class K00DriverTests: XCTestCase {
         Thread.sleep(forTimeInterval: 0.3)
         let want = on ? onLabel : offLabel
         guard app.buttons[want].waitForExistence(timeout: 3) else { return driverFail("voice processing did not reach '\(want)'") }
+    }
+
+    /// Poll the harness's own enabled state for a button (it is the harness's projection of kernel
+    /// state, e.g. Play is enabled only at floor == listening). Read only; never a wait on an audio outcome.
+    private func waitEnabled(_ b: XCUIElement, timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if b.exists && b.isEnabled { return true }
+            Thread.sleep(forTimeInterval: 0.1)
+        }
+        return b.exists && b.isEnabled
+    }
+
+    /// A driver marker in the xcodebuild log (never an XCTFail): the ledger reads the journal, the marker only
+    /// records what the driver did or could not do.
+    private func note(_ line: String) {
+        NSLog("%@", line)
     }
 
     private func tap(_ label: String, timeout: TimeInterval) throws {

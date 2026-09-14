@@ -2,6 +2,10 @@
 # DRIVER-01 — Mac orchestration and evidence custody. One command per declared batch.
 #
 #   usage: scripts/witness/k00-driver-batch.sh <stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a|vpio-01|vpio-02] [--ledger DIR]
+#                                              [--act entry|output] [--cancel-at MS] [--settle S]
+#          K00-05/06 (founder ruling 2026-09-14, Option C): `--act output --cancel-at 1000 --settle 2` selects testOutputSample and
+#          forwards the two values through the runner env only; every row is additionally read by k00-output-ledger.py into
+#          output-ledger.md (evidence-only). Without `--act output` the batch behaves exactly as before (entry act, no extra env).
 #   e.g.   scripts/witness/k00-driver-batch.sh CALIBRATION 3
 #          scripts/witness/k00-driver-batch.sh STAGE-A 30
 #          scripts/witness/k00-driver-batch.sh W4-AUTO 3 --w4 500
@@ -15,11 +19,14 @@
 # cannot terminate a lingering harness (an infrastructure abort, recorded as such).
 set -uo pipefail
 STRATUM="${1:?stratum label}"; N="${2:?N}"; shift 2
-VP=on; MODE=I; HOLD=15; W4=""; SUBJECT=p5b0; LEDGER_DIR=""
+VP=on; MODE=I; HOLD=15; W4=""; SUBJECT=p5b0; LEDGER_DIR=""; ACT=entry; CANCEL_AT=1000; SETTLE=2
 while [ $# -gt 0 ]; do case "$1" in
   --vp) VP="$2"; shift 2;; --mode) MODE="$2"; shift 2;; --hold) HOLD="$2"; shift 2;;
   --w4) W4="$2"; shift 2;; --subject) SUBJECT="$2"; shift 2;; --ledger) LEDGER_DIR="$2"; shift 2;;
+  --act) ACT="$2"; shift 2;; --cancel-at) CANCEL_AT="$2"; shift 2;; --settle) SETTLE="$2"; shift 2;;
   *) echo "unknown arg $1" >&2; exit 2;; esac; done
+case "$ACT" in entry|output) ;; *) echo "unknown act '$ACT' (entry|output); refusing" >&2; exit 2;; esac
+if [ "$ACT" = output ] && [ -n "$W4" ]; then echo "--act output and --w4 are separate acts; refusing to combine them" >&2; exit 2; fi
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DEV="${K00_DEVICE:-A0736AC8-793B-516F-AC72-C076DB6CEE38}"          # devicectl id
 XDEST="${K00_XCODE_DEST:-00008140-00163D9922E0801C}"                 # xcodebuild destination id (NOT the devicectl id)
@@ -56,6 +63,9 @@ else
 fi
 LABEL="AUTOMATED-COLD-$([ "$MODE" = "L" ] && echo LAUNCH || echo ICON)"
 TEST="$([ -n "$W4" ] && echo testW4Sample || echo testOneSample)"
+# K00-05/06 output act: the driver method and the two runner-env values exist only under --act output (Option C).
+OUTPUT_LEDGER=""; OUTPUT_ENV=""
+if [ "$ACT" = output ]; then TEST=testOutputSample; OUTPUT_LEDGER="$LEDGER_DIR/output-ledger.md"; OUTPUT_ENV="TEST_RUNNER_K00_CANCEL_AT_MS=$CANCEL_AT TEST_RUNNER_K00_SETTLE_S=$SETTLE"; fi
 
 log(){ echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$LEDGER_DIR/batch.log"; }
 # Cold precondition: NO VoiceKernelHarness process of ANY bundle may be alive before a sample (both harness bundles share the
@@ -107,7 +117,7 @@ pull_journal(){ xcrun devicectl device copy from --device "$DEV" --domain-type a
 DIAG_FLAGS=""
 if xcodebuild -help 2>&1 | grep -q -- '-collect-test-diagnostics'; then DIAG_FLAGS="-collect-test-diagnostics never"; fi
 run_test(){ # $1 = test method
-  TEST_RUNNER_K00_MODE="$MODE" TEST_RUNNER_K00_VP="$VP" TEST_RUNNER_K00_HOLD_S="$HOLD" TEST_RUNNER_K00_W4_MS="${W4:-500}" TEST_RUNNER_K00_SUBJECT="$SUBJECT" \
+  env $OUTPUT_ENV TEST_RUNNER_K00_MODE="$MODE" TEST_RUNNER_K00_VP="$VP" TEST_RUNNER_K00_HOLD_S="$HOLD" TEST_RUNNER_K00_W4_MS="${W4:-500}" TEST_RUNNER_K00_SUBJECT="$SUBJECT" \
   xcodebuild test-without-building -xctestrun "$XCTESTRUN" -destination "id=$XDEST" $DIAG_FLAGS -only-testing:"DriverUITests/K00DriverTests/$1" 2>&1
 }
 # Name the failure the runner actually reported, so the ledger row carries the signature and not only rc.
@@ -123,6 +133,7 @@ failure_signature(){ # $1 = sample log
   echo "# DRIVER-01 batch — $STRATUM — $STAMP"
   echo
   echo "stratum=$LABEL · N=$N · vp=$VP · mode=$MODE · hold=${HOLD}s · w4=${W4:-off} · subject=$SUBJECT · bundle=$BID · device=$DEV · xcodeDest=$XDEST"
+  [ "$ACT" = output ] && echo "act=output · cancelAt=${CANCEL_AT}ms · settle=${SETTLE}s · driver=testOutputSample · reader=k00-output-ledger.py → output-ledger.md (K00-05 / K00-06 / coupling rows, evidence-only)"
   echo "installed harness identity (the app under test is NOT rebuilt by this batch):"
   echo '```'
   xcrun devicectl device info apps --device "$DEV" 2>/dev/null | grep -i "$BID" || echo "(devicectl apps listing unavailable)"
@@ -195,6 +206,12 @@ for i in $(seq 1 "$N"); do
     pull_journal "$f" || { echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | journal $f could not be copied from the container |" >> "$LEDGER"; continue; }
     python3 "$ROOT/scripts/witness/k00-ledger.py" --stratum "$LABEL" --index "$i" --mode "$MODE" --subject "$SUBJECT" $([ -n "$W4" ] && echo --w4) "$LEDGER_DIR/journals/$f" >> "$LEDGER"
     log "sample $i ledgered: $f"
+    if [ -n "$OUTPUT_LEDGER" ]; then   # K00-05/06: the same journal, a second evidence-only reader; the entry row above is untouched
+      [ -s "$OUTPUT_LEDGER" ] || python3 "$ROOT/scripts/witness/k00-output-ledger.py" --header > "$OUTPUT_LEDGER"
+      python3 "$ROOT/scripts/witness/k00-output-ledger.py" --stratum "$LABEL" --index "$i" --subject "$SUBJECT" "$LEDGER_DIR/journals/$f" >> "$OUTPUT_LEDGER"
+      grep -o 'K00-OUTPUT: [^"]*' "$LEDGER_DIR/sample-$i-xcodebuild.log" | sed "s/^/| $LABEL | $i | DRIVER-MARKER | — | /; s/\$/ |/" | tr -d '\r' >> "$OUTPUT_LEDGER"
+      log "sample $i output rows read: $f"
+    fi
   done
   if [ -n "$W4" ] && grep -q 'w4Qualified=True' "$LEDGER"; then log "W4 condition qualified from the journal; stopping per D4"; break; fi
 done

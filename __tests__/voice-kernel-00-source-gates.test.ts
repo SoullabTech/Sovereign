@@ -1067,6 +1067,8 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
                         'initialize_begin', 'initialize_return', 'start_begin', 'start_return', 'is_running_immediate'];
   const tracked = (paths: string[]) => execFileSync('git', ['ls-files', '--', ...paths], { cwd: process.cwd() }).toString('utf8').split('\n').filter(Boolean).sort();
   const INSTRUMENT = ['ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift', 'scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh'];
+  const OUTPUT_READER = 'scripts/witness/k00-output-ledger.py';                      // K00-05/06 (Option C): the one file the instrument may add
+  const INSTRUMENT_VPIO02B = '08483cfe4f6c3e98198805337ced99bae92ce911';             // the F-W1 instrument; the entry classifier + reinstall stay at its bytes
   it('the organism is byte-identical to ac12dedf4: every tracked file under ios/VoiceKernel and ios/VoiceKernelHarness equals its historical bytes; no file added or removed', () => {
     const roots = ['ios/VoiceKernel', 'ios/VoiceKernelHarness'];
     const listed = histList(ORGANISM, roots).sort();
@@ -1074,10 +1076,10 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(tracked(roots)).toEqual(listed);
     for (const p of listed) expect(histRaw(ORGANISM, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
   });
-  it('the instrument moved only in the four authorized files relative to de3efd3fb (scripts/witness · ios/VoiceKernelDriver); nothing added or removed under those roots', () => {
+  it('the instrument moved only in the four authorized files relative to de3efd3fb (scripts/witness · ios/VoiceKernelDriver); exactly one file added under those roots — the K00-05/06 output reader (founder ruling 2026-09-14, Option C); nothing removed', () => {
     const roots = ['scripts/witness', 'ios/VoiceKernelDriver'];
     const listed = histList(INSTRUMENT_BASE, roots).sort();
-    expect(tracked(roots)).toEqual(listed);
+    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER].sort());
     const moved = listed.filter((p) => !histRaw(INSTRUMENT_BASE, p).equals(readFileSync(join(process.cwd(), p))));
     expect(moved.sort()).toEqual(INSTRUMENT);
   });
@@ -1177,5 +1179,80 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     const engine = all.filter((p) => !vpio01.includes(p) && !vpio02.includes(p));
     expect(engine.length).toBeGreaterThan(400);
     expect(new Set(classes('vpio-02', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
+  });
+  // ---- K00-05 / K00-06 instrument (founder ruling 2026-09-14, Option C): driver test + batch flags + evidence-only reader; everything else frozen ----
+  it('K00-05/06 Option C: the entry classifier and the reinstall gate are byte-identical to the F-W1 instrument 08483cfe4; the organism block above still pins ac12dedf4', () => {
+    for (const p of ['scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_VPIO02B, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+  });
+  it('K00-05/06 Option C: the driver gains exactly testOutputSample with the ruled sequence (wait Play enabled ≤5 s · settle · Play · cancel-at · Cancel active if enabled · 1 s · Play · 4.5 s · Export); the three historical tests are byte-identical to 08483cfe4; the app under test still receives nothing', () => {
+    const now = W('ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift');
+    const was = histRaw(INSTRUMENT_VPIO02B, 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').toString('utf8');
+    const fn = (src: string, name: string) => { const m = src.match(new RegExp(`    func ${name}\\(\\) throws \\{[\\s\\S]*?\\n    \\}\\n`)); return m ? m[0] : null; };
+    for (const name of ['testOneSample', 'testW4Sample', 'testTerminateOnly']) { expect(fn(was, name)).not.toBeNull(); expect(fn(now, name)).toEqual(fn(was, name)); }
+    for (const helper of ['requireCold', 'launchCold', 'setVoiceProcessing', 'exportAndTerminate']) expect(fn(now, helper) ?? now.match(new RegExp(`    private func ${helper}[\\s\\S]*?\\n    \\}\\n`))![0]).toEqual(was.match(new RegExp(`    private func ${helper}[\\s\\S]*?\\n    \\}\\n`))![0]);
+    const t = stripComments(now);
+    expect((t.match(/func test[A-Za-z0-9]+\(\) throws/g) ?? []).sort()).toEqual(['func testOneSample() throws', 'func testOutputSample() throws', 'func testTerminateOnly() throws', 'func testW4Sample() throws']);
+    expect(t).toMatch(/env\["K00_CANCEL_AT_MS"\] \?\? "1000"/); expect(t).toMatch(/env\["K00_SETTLE_S"\] \?\? "2"/);
+    const body = t.slice(t.indexOf('func testOutputSample()'), t.indexOf('func testTerminateOnly()'));
+    const order = ['requireCold()', 'launchCold()', 'setVoiceProcessing(on: vpOn)', 'tap("Enter conversation", timeout: 5)', 'harness.buttons["Play 3 s tone"]', 'waitEnabled(play, timeout: 5)',
+                   'ENTRY-NOT-REACHED', 'Thread.sleep(forTimeInterval: settleSeconds)', 'play.tap()', 'TimeInterval(cancelAtMs) / 1000.0', 'harness.buttons["Cancel active"]', 'cancel.exists && cancel.isEnabled',
+                   'cancel.tap()', 'NOT-A-CANCEL-ROW', 'Thread.sleep(forTimeInterval: 1.0)', 'waitEnabled(play, timeout: 3)', 'Thread.sleep(forTimeInterval: 4.5)', 'exportAndTerminate()'];
+    let at = -1; for (const step of order) { const i = body.indexOf(step, at + 1); expect(i).toBeGreaterThan(at); at = i; }
+    expect((body.match(/driverFail\(/g) ?? []).length).toBe(1);                                  // only the missing-button precondition; never an audio outcome
+    expect(body).not.toMatch(/XCTFail|XCTAssert/);
+    expect(body).not.toMatch(/Voice processing: OFF|Apply faults|Digital-zero|Stall output|Speaker|System default|Leave|Re-enter/);   // no fault, route, VP-off or exit act inside the output act
+    expect(t).toMatch(/private func waitEnabled\(_ b: XCUIElement, timeout: TimeInterval\) -> Bool/);
+    expect(t).toMatch(/private func note\(_ line: String\) \{\s*NSLog\("%@", line\)\s*\}/);
+    expect(t).not.toMatch(/launchArguments|launchEnvironment|UserDefaults|dlopen|NSClassFromString|import AVFoundation|import AudioToolbox|AVAudioSession/);
+  });
+  it('K00-05/06 Option C: the batch carries --act entry|output · --cancel-at · --settle; without --act output the historical invocation is unchanged (same test, same env, same header line); the output act forwards exactly two runner-env values, refuses --w4, and reads every ledgered journal a second time with the evidence-only reader', () => {
+    const b = W('scripts/witness/k00-driver-batch.sh'); const bx = execLines(b);
+    const was = execLines(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-driver-batch.sh').toString('utf8'));
+    expect(bx).toContain('ACT=entry; CANCEL_AT=1000; SETTLE=2');
+    expect(bx).toMatch(/--act\) ACT="\$2"; shift 2;; --cancel-at\) CANCEL_AT="\$2"; shift 2;; --settle\) SETTLE="\$2"; shift 2;;/);
+    expect(bx).toMatch(/case "\$ACT" in entry\|output\) ;; \*\) echo "unknown act '\$ACT' \(entry\|output\); refusing" >&2; exit 2;; esac/);
+    expect(bx).toMatch(/if \[ "\$ACT" = output \] && \[ -n "\$W4" \]; then[^\n]*exit 2; fi/);
+    expect(bx).toContain('TEST="$([ -n "$W4" ] && echo testW4Sample || echo testOneSample)"');                    // historical selection first, untouched
+    expect(bx).toMatch(/if \[ "\$ACT" = output \]; then TEST=testOutputSample; OUTPUT_LEDGER="\$LEDGER_DIR\/output-ledger\.md"; OUTPUT_ENV="TEST_RUNNER_K00_CANCEL_AT_MS=\$CANCEL_AT TEST_RUNNER_K00_SETTLE_S=\$SETTLE"; fi/);
+    expect(bx).toContain('OUTPUT_LEDGER=""; OUTPUT_ENV=""');                                                                 // empty under the historical act
+    expect(bx).toMatch(/env \$OUTPUT_ENV TEST_RUNNER_K00_MODE="\$MODE" TEST_RUNNER_K00_VP="\$VP" TEST_RUNNER_K00_HOLD_S="\$HOLD" TEST_RUNNER_K00_W4_MS="\$\{W4:-500\}" TEST_RUNNER_K00_SUBJECT="\$SUBJECT"/);
+    expect((bx.match(/TEST_RUNNER_K00_CANCEL_AT_MS/g) ?? []).length).toBe(1);                                              // set in one place, only under output
+    const header = 'echo "stratum=$LABEL · N=$N · vp=$VP · mode=$MODE · hold=${HOLD}s · w4=${W4:-off} · subject=$SUBJECT · bundle=$BID · device=$DEV · xcodeDest=$XDEST"';
+    expect(bx).toContain(header); expect(was).toContain(header);                                                              // the historical header line is verbatim
+    expect(bx).toMatch(/\[ "\$ACT" = output \] && echo "act=output · cancelAt=\$\{CANCEL_AT\}ms · settle=\$\{SETTLE\}s/);
+    const ledgerCall = 'python3 "$ROOT/scripts/witness/k00-ledger.py" --stratum "$LABEL" --index "$i" --mode "$MODE" --subject "$SUBJECT" $([ -n "$W4" ] && echo --w4) "$LEDGER_DIR/journals/$f" >> "$LEDGER"';
+    expect(bx).toContain(ledgerCall); expect(was).toContain(ledgerCall);                                                      // the entry row is produced exactly as before
+    const outCall = bx.indexOf('k00-output-ledger.py" --stratum'); const guard = bx.indexOf('if [ -n "$OUTPUT_LEDGER" ]; then');
+    expect(guard).toBeGreaterThan(-1); expect(outCall).toBeGreaterThan(guard); expect(outCall).toBeGreaterThan(bx.indexOf(ledgerCall));
+    expect((bx.match(/python3 "\$ROOT\/scripts\/witness\/k00-output-ledger\.py"/g) ?? []).length).toBe(2);              // --header once, one row-call once, both inside the guard
+    expect(bx).not.toMatch(/install app|uninstall|k00-reinstall/);
+    for (const line of was.split('\n').filter((l) => /devicectl|xcodebuild/.test(l))) expect(bx).toContain(line.replace(/^\s+TEST_RUNNER_K00_MODE=/, 'env $OUTPUT_ENV TEST_RUNNER_K00_MODE='));   // every device/xcodebuild line survives (the env prefix is the one edit)
+  });
+  it('K00-05/06 Option C: the output reader is evidence-only — closed verdict vocabulary, ratified 100 ms and the 0.90 witness criterion as named constants, no subprocess/device/xcodebuild, no journal write, no import of the entry classifier; --selftest 33/33 naming the founder’s twelve offline cases; every real VPIO journal yields no PASS and no FAIL', () => {
+    const r = W(OUTPUT_READER);
+    expect(r).toContain('CANCEL_WINDOW_MS = 100'); expect(r).toContain('GAP_FRACTION = 0.90');
+    expect(r).not.toMatch(/subprocess|devicectl|xcodebuild|xcrun|os\.system|import k00|k00_ledger|open\([^)]*['"]w/);
+    for (const v of ['PASS-05', 'FAIL-05', 'NOT-A-CANCEL-ROW', 'NO-COMPLETION-ROW', 'NON-EVIDENCE', 'INCOMPLETE-05', 'NO-OUTPUT', 'PASS-06', 'FAIL-06', 'CHARACTERIZE-06', 'UNMEASURED-06', 'INVALID', 'EN-ROW', 'DESCRIPTIVE']) expect(r).toContain(`'${v}'`);
+    const out = execFileSync('python3', [OUTPUT_READER, '--selftest'], { cwd: process.cwd() }).toString('utf8');
+    expect(out).toMatch(/selftest: 33\/33 expectations met/); expect(out).not.toMatch(/^FAIL/m);
+    for (const line of ['cancel with framesRendered > 0 but no pre-cancel sample → admissible: k05_cancel=PASS-05',
+                        'cancel > 100 ms → FAIL-05: k05_cancel=FAIL-05',
+                        'handle mismatch → FAIL-05: k05_cancel=FAIL-05',
+                        'completion frame mismatch → FAIL-05: k05_complete=FAIL-05',
+                        'completion latency > 3.15 s alone → descriptive, NOT FAIL: k05_complete=PASS-05',
+                        'one transient digital-zero callback → NOT collapse: k06=CHARACTERIZE-06',
+                        'partial-zero full window → CHARACTERIZE: k06=CHARACTERIZE-06',
+                        'all-zero full window → FAIL-06: k06=FAIL-06',
+                        'callback rate < 90 % baseline → FAIL-06: k06=FAIL-06',
+                        'missing coupling record → FAIL-06: k06=FAIL-06',
+                        'synthetic/faulted row → INVALID: k05_cancel=INVALID',
+                        'entry not reached → EN-ROW: k05_cancel=EN-ROW',
+                        'F-W1 shape (listening, no Play) → NO-OUTPUT / UNMEASURED-06, never PASS or FAIL',
+                        'foreign input_dead during the cancelled stream → NON-EVIDENCE for K00-05, never automatic FAIL: k05_cancel=NON-EVIDENCE']) expect(out).toContain(line);
+    const journals = tracked([':(glob)docs/programme/VOICE-2026/driver-ledger/VPIO-0*/journals/kernel00-*.jsonl']);
+    expect(journals.length).toBe(60);
+    const rows = execFileSync('python3', [OUTPUT_READER, '--subject', 'vpio-02', ...journals], { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 }).toString('utf8');
+    expect(rows).not.toMatch(/\*\*(PASS|FAIL)-0[56]\*\*/);
+    expect((rows.match(/\*\*NO-OUTPUT\*\*/g) ?? []).length).toBe(60); expect((rows.match(/\*\*EN-ROW\*\*/g) ?? []).length).toBe(120);
   });
 });
