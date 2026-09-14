@@ -40,22 +40,37 @@ import type { ProposalVersion } from '@/lib/manuscript/proposalChain/contract';
    guard below exists to make that conversion impossible to write by accident.
    ══════════════════════════════════════════════════════════════════════════ */
 
-/** ⛔ The brand every non-authorizable editorial object carries. */
+/**
+ * ⛔ The brand every non-authorizable editorial object carries.
+ *
+ * ⚠️ NARROWED BY FOUNDER REVIEW. The first writing called this a *"phantom
+ * discriminant … never read"* while `isAuthorizableContent` reads it — a
+ * contradiction — and, worse, implied it was an installed authorization
+ * boundary. ⛔ IT IS NOT. `authorizeVersion` does not consult it; these are
+ * PURE CONTRACT EVIDENCE, falsifiable here and nowhere else yet.
+ *
+ * ⭐⭐ THE DURABLE PROTECTION IS STRONGER AND IS ELSEWHERE:
+ *
+ *     Insight    not in proposal_versions
+ *     Direction  not in proposal_versions
+ *     ask_turn   not in proposal_versions
+ *                        ↓
+ *     authorizeVersion can IDENTIFY none of them as candidate wording
+ *
+ * The brand makes accidental conceptual laundering CONSPICUOUS at the type and
+ * contract level. ⭐ The persistence separation is what makes it structurally
+ * impossible. ⛔ Do not add the brand to runtime authorization in the belief
+ * that it is the membrane — that would be mistaking the evidence for the wall.
+ */
 export interface NotAuthorizable {
-  /**
-   * ⭐ A phantom discriminant. It is never persisted and never read; it exists
-   * so that passing an Insight, a Direction or a discourse turn where a
-   * `ProposalVersion` is expected is a TYPE ERROR rather than a runtime
-   * surprise — and so that a "convenience adapter" has to say out loud that it
-   * is stripping this brand.
-   */
   readonly __notAuthorizable: true;
 }
 
 /**
- * ⭐ The runtime half of the same law, for boundaries that receive `unknown`.
- * ⛔ It admits ONLY the shape `authorizeVersion` actually consumes: an id that
- * belongs to a chain and carries a formulation.
+ * ⭐ The contract's runtime check, for boundaries that receive `unknown`.
+ * ⛔ NOT the authorization membrane — see `NotAuthorizable`. It admits only the
+ * shape `authorizeVersion` consumes: an id belonging to a chain, carrying a
+ * formulation.
  */
 export function isAuthorizableContent(v: unknown): v is ProposalVersion {
   if (!v || typeof v !== 'object') return false;
@@ -121,7 +136,14 @@ export interface EditorialInsight extends NotAuthorizable {
  *     EditorialDecision.intent        Direction
  *     subject: the Work               subject: this exchange's next formulation
  *     act: a RULING that governs      act: an INSTRUCTION that asks
- *     lifetime: standing              lifetime: spent when answered
+ *
+ * ⚠️ AN EARLIER LINE HERE SAID Direction's lifetime is *"spent when answered"*.
+ * ⛔ WITHDRAWN: W5-1 defines no answer relationship, and prose like that is
+ * exactly what a schema designer turns into an `answered_at` column or a mutable
+ * status. ⭐ A Direction is an IMMUTABLE AUTHORED INSTRUCTION. Whether a later
+ * turn or formulation answers it is a SEPARATE RELATIONSHIP, not yet ruled —
+ * W4 can earn it when MAIA actually answers inside the object. ⛔ A historical
+ * act must not be mutated merely because something later responded to it.
  *
  * ⛔ Reusing it would dress a request as a governing decision — collapsing
  * *"try this again, less absolute"* into a member ruling about the Work.
@@ -248,22 +270,49 @@ export const FREEZE_RELATIONSHIP = {
    ══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * ⭐ A Direction or a discourse turn may refer to any earlier formulation. The
- * next candidate still supersedes THE HEAD.
+ * ⭐⭐ THE AUTHORED PREDECESSOR — and it is NOT "the head".
  *
- *     "Go back to what MAIA V1 was doing, but gentler."   ⭐ a reference
- *     V5 supersedes V4                                     ⭐ a succession
+ * ⚠️ FOUNDER REVIEW OF 68c4a802b. The first writing was
+ * `successorOf(headVersionId, …)` and explained that the next candidate
+ * "supersedes THE HEAD". ⛔ That quietly reintroduced, one layer above the
+ * store, the exact question W2 spent an act removing:
  *
- * ⛔ This function exists to be the place that says so once. It takes a
- * reference and the current head and returns what the next candidate must
- * supersede — ⛔ which is never the referenced version.
+ *     appendAuthoredVersion was repaired SPECIFICALLY so the store does not ask
+ *     what the head is in order to populate `supersedes`.
+ *
+ * The parameter name was the tell. A contract that names the head as the
+ * predecessor invites a caller to go and find one.
+ *
+ *     ⭐ LAWFUL
+ *     conversation refers to V1              a conversational fact
+ *     author authors against V4              an AUTHORED succession fact
+ *         → supersedes = V4
+ *     store later finds the head is V5
+ *         → not_successor_of_head            ⭐ the store judges, truthfully
+ *
+ *     ⛔ UNLAWFUL
+ *     conversation refers to V1
+ *     system asks "what is the head?" → V5
+ *         → supersedes = V5                  ⛔ machine timing authored it
+ *
+ * ⭐ THE SIGNIFICANT WORD IS `authoredAgainst`. This function returns the
+ * predecessor the author ACTED AGAINST, unchanged — ⛔ never the head, never the
+ * referenced version. It is deliberately given no means of learning what the
+ * head is, because the protection is the ABSENCE of that access, not a promise
+ * not to use it.
+ *
+ * ⛔ A STALE PREDECESSOR IS RETURNED UNCHANGED. Judging whether it is still
+ * lawful is the store's authority and nobody else's:
+ *
+ *     The system may judge whether the predecessor is still the head;
+ *     it may never choose the head on the author's behalf.
  */
-export function successorOf(
-  headVersionId: string | null,
+export function successionPredecessor(
+  authoredAgainstVersionId: string | null,
   _conversationalReference: string | null,
 ): string | null {
   /* ⛔ `_conversationalReference` is deliberately unused. It is a parameter so
      that a caller holding one cannot quietly pass it as the predecessor, and so
      that this refusal is visible in the signature rather than in a comment. */
-  return headVersionId;
+  return authoredAgainstVersionId;
 }
