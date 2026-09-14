@@ -169,3 +169,62 @@ answering it too late.
 ---
 
 > *notice → understand → discuss → explore → revise → refine → decide → apply*
+
+---
+
+## Appendix · first design reference (founder, 2026-09-14)
+
+A full-surface mockup: MAIA rail · Manuscript outline grouped into Parts · the
+Work typeset as a book (part label, chapter title, epigraph, pull-quote,
+marginal ornament) · a MAIA panel with **Suggestions / Conversation / Research**
+tabs · a suggestion card reading *Your original → MAIA suggests → Why this
+matters* with **Try this · Keep mine · Edit together · Ask MAIA why**.
+
+### What it already gets right, and should be kept
+
+- **The triad is exactly the objective's shape** — original, suggestion,
+  rationale — in the writer's language rather than the system's.
+- **The verbs are human.** *Try this · Keep mine · Edit together* are what the
+  writer is doing, not what the system is doing.
+- **`1 of 3` with prev/next is sequential review**, arrived at independently —
+  the Word pattern, and the seed of the recurrence walk-through in step 7.
+- **Three MAIA modes in one place** (suggest · converse · research) without
+  ejecting the writer from the manuscript.
+- **It feels like a book.** The Work is typeset, not rendered.
+
+### ⚠️ Three things to resolve in the research, not after
+
+1. **The suggestion is not anchored in the Work.** The card quotes *Your
+   original*; nothing marks where it lives. Survivable for one sentence, and it
+   breaks at every larger scale. ⭐ The in-place locus already built must carry
+   over — *the writer should never hold two texts in their head to compare them.*
+2. **`1 of 3` is ambiguous, and the ambiguity is the whole product.** Three
+   unrelated suggestions in a queue is Grammarly. Three occurrences of ONE
+   pattern is developmental editing. The same control means both, and the writer
+   must be able to tell instantly which one they are in.
+3. **The progress bar and deadline are engagement mechanics on creative work.**
+   `22% · Complete first draft by Dec 31` invites the sovereignty check: does
+   this increase agency, push life outward, and reduce the system's
+   psychological centrality over time? ⛔ Founder's call, flagged not decided.
+
+### ⭐⭐ Candidate scale rule, for the research to test
+
+> **The panel holds MAIA's voice and the writer's choices. The centre holds the
+> evidence — at whatever scale the question has.**
+
+```
+sentence      centre = the prose, locus marked        panel = the card as drawn
+paragraph     centre = the passage marked whole       panel = the same card, grown
+several places  centre = the OUTLINE, occurrences pinned and the rest dimmed,
+                         so the writer sees them in the book's real geometry
+                panel = the guide through them, one at a time — and `1 of 3`
+                         now means something
+whole book    centre = a MAP of the Work with the pattern drawn across it
+              panel = what she noticed, before any change exists
+```
+
+⭐ This is the existing law generalised: *evidence belongs in the Work* — where
+"the Work" stops meaning "this section's prose" and starts meaning **the Work at
+the scale of the question being asked.**
+
+⛔ Not a decision. The research lane tests it against the eleven scenarios.
