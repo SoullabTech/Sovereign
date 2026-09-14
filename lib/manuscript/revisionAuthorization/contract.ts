@@ -52,6 +52,7 @@
  * absent row cannot be any of those things.
  */
 
+import { occurrences } from '@/lib/manuscript/exactText';
 import type { ProposalChain, ProposalVersion } from '@/lib/manuscript/proposalChain/contract';
 
 /**
@@ -282,14 +283,11 @@ export type AuthorizeResult =
    PURE FUNCTIONS
    ══════════════════════════════════════════════════════════════════════════ */
 
-/** Occurrences counted without overlap. ⛔ NOT `indexOf` — found is not identified. */
-export function occurrences(haystack: string, needle: string): number {
-  if (needle.length === 0) return 0;
-  let n = 0;
-  let i = haystack.indexOf(needle);
-  while (i !== -1) { n += 1; i = haystack.indexOf(needle, i + needle.length); }
-  return n;
-}
+/* ⭐ Exact-text fit is NEUTRAL WORK LAW, owned by neither this module nor the
+   retired one. ⛔ NOT re-implemented here — a second copy is a second thing that
+   can drift, and this programme has already paid for one decay definition with
+   two divergent implementations. */
+export { occurrences, applyExactlyOnce, type ExactMatch } from '@/lib/manuscript/exactText';
 
 /**
  * ⭐⭐ THE ONLY WAY TO OBTAIN A GUARD.
