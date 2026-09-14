@@ -188,7 +188,7 @@ of `symbol` is "a git grep pattern fragment," not "an identifier."** ⛔ §4 **D
 
 | Field | Role | Accepted language | Canonical representation | Validation invariant | Execution consumer | Omission meaningful? | Delegated? |
 |---|---|---|---|---|---|---|---|
-| `pattern` | PATTERN | 🔴 **`LANGUAGE_AMBIENT`** — `grep.patternType` (**OPEN — D5**) | **OPEN — D5** | required · string | `git grep … <pattern> .` | n/a | 🔴 **yes — F-B** |
+| `pattern` | GREP_PATTERN | ⭐ **POSIX BRE** — pinned by this contract; ambient config has **NO AUTHORITY** (**D5 RATIFIED**) | **REGISTRY_DEFINED** | required · string | `git grep … <pattern> .` | n/a | ⭐ **resolved — D5** |
 | `max_results` | LIMIT | integer | **OPEN — D3** | ⚠️ `n ≤ 200` **enforced at the boundary** | 🔴 **NONE — H3** | **OPEN — D3** | — |
 
 ⛔ **`max_results` currently carries an enforced invariant with no execution consumer.** The contract
@@ -333,9 +333,12 @@ means *materialize the default* or *record the default as a separate host-suppli
 
 ### D5 · Pattern language — pinned or ambient?
 ```text
-☐ the registry PINS the flavour (e.g. -F fixed, or -E extended) per capability
-☐ the language remains ambient (grep.patternType) and the contract declares it DELEGATED
-☐ the two PATTERN capabilities must share one language   ☐ they may differ, declared
+⭐ RULED 2026-09-14 — docs/programme/JOP-04_D5_GREP_PATTERN_LANGUAGE_DECISION_PACKET_2026-09-14.md §8
+☑ the registry PINS the flavour, per capability      repo.grep.pattern = POSIX BRE
+☒ the language remains ambient, declared DELEGATED   REFUSED — ambient config has zero authority
+☒ the two PATTERN capabilities must share one language
+☑ they may differ, declared                          repo.locate_symbol stays OPEN to D6;
+                                                     shared implementation ≠ shared semantic language
 ```
 
 ### D6 · `SYMBOL` — identifier or pattern fragment?
@@ -369,6 +372,10 @@ D1                          ⭐ RATIFIED — literal identity ≠ selection auth
 REMAINING ORDER             D5 → D6 → D2 → D3
 LANE                        ⭐ OPEN — five rulings owed · D4 ≠ programme closure
 
+F-B DISPOSED BY D5          ambient dialect forbidden; language is REGISTRY_DEFINED (POSIX BRE)
+F-D NEW · OPEN              the two grep handlers disagree whether no-match is an OUTCOME or an
+                            ERROR — repo.grep catches status===1, repo.locate_symbol throws.
+                            Adjacent to D5 and NOT disposed by it.
 F-B EVIDENCE                absence of pinning PROVEN from source
                             effective grep.patternType ⛔ UNOBSERVED
 
