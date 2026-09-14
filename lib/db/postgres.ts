@@ -88,6 +88,66 @@ export async function query<T extends QueryResultRow = any>(
 }
 
 /**
+ * A GOVERNED REFUSAL IS NOT AN UNEXPECTED ERROR.
+ *
+ * Some statements are designed to be refused by the database — a trigger whose
+ * RAISE *is* the authority, not a malfunction. Routed through `query()` those
+ * refusals print at error level WITH THE SQL AND THE PARAMS, which does two
+ * wrong things: it trains operators to ignore errors, and it emits the very
+ * identities the refusal declined to act on. ⭐ *A refusal is not an occasion to
+ * disclose.*
+ *
+ * ⛔ THIS IS NOT A `quiet` OR `suppressErrors` FLAG, and must never become one.
+ * A blanket switch spreads; this makes the exceptional semantics visible at the
+ * call site and silent nowhere else. It follows the discipline the missing-table
+ * ruling already set for this file: an explicit opt-in that NAMES the exact
+ * condition, rather than a policy decided down here for callers who never asked.
+ *
+ * The discriminator is SEMANTIC — a fragment of the refusal's own message —
+ * never a line number and never a bare SQLSTATE, because `P0001` is every
+ * `RAISE EXCEPTION` in the database and would silence refusals this caller has
+ * never heard of.
+ *
+ *   expected refusal   → `{ refused: true }`. ⛔ Nothing is logged.
+ *   ordinary success   → `{ refused: false, result }`.
+ *   anything else      → logged exactly as `query()` logs it, and rethrown.
+ *                        ⭐ An unexpected failure on this path stays LOUD.
+ *
+ * ⛔ It cannot delegate to `query()` — that function has already logged by the
+ * time it rethrows, which is the whole defect this exists to avoid.
+ */
+export type ExpectedRefusalOutcome<T extends QueryResultRow> =
+  | { readonly refused: false; readonly result: QueryResult<T> }
+  | { readonly refused: true };
+
+export async function queryWithExpectedRefusal<T extends QueryResultRow = any>(
+  sql: string,
+  params: any[],
+  expectedRefusal: { readonly fragment: string; readonly why: string },
+): Promise<ExpectedRefusalOutcome<T>> {
+  if (!pool) {
+    throw new Error('[POSTGRES] Database queries can only be executed server-side');
+  }
+  if (!expectedRefusal.fragment) {
+    throw new Error('[POSTGRES] an expected refusal must name the message it expects');
+  }
+
+  try {
+    return { refused: false, result: await pool.query<T>(sql, params) };
+  } catch (error: any) {
+    const message = typeof error?.message === 'string' ? error.message : '';
+    if (message.includes(expectedRefusal.fragment)) {
+      // The refusal the caller declared. ⛔ No SQL, no params, no identities.
+      return { refused: true };
+    }
+    console.error('❌ [POSTGRES] Query error:', error);
+    console.error('   SQL:', sql);
+    console.error('   Params:', params);
+    throw error;
+  }
+}
+
+/**
  * Execute multiple queries in a transaction
  *
  * @param callback - Function that receives a transaction client

@@ -20,7 +20,7 @@
  * establish the disclosure boundary and mint `may_cross`.
  */
 
-import { query } from '@/lib/db/postgres';
+import { query, queryWithExpectedRefusal } from '@/lib/db/postgres';
 
 /** Opaque. ⛔ Carries no meaning a client could read or forge. */
 export type ActRef = string;
@@ -151,8 +151,14 @@ export type CompletionOutcome =
   /** No consumption exists — the opportunity was never claimed, or is unknown. */
   | { readonly kind: 'no_consumption' };
 
-/** The trigger's refusal, matched on its own marker. Coupled to the migration by design. */
-const CONFLICT = /\[S3\] a completion identity may not be replaced/;
+/**
+ * The trigger's refusal, matched on its own message.
+ *
+ * ⭐ SEMANTIC, never a SQLSTATE: `P0001` is every `RAISE EXCEPTION` in the
+ * database, and matching it would silence refusals this module has never heard
+ * of. Coupled to the migration by design, and that coupling is the point.
+ */
+const COMPLETION_CONFLICT = 'a completion identity may not be replaced';
 
 /**
  * Record the completion of a claimed opportunity.
@@ -170,39 +176,42 @@ const CONFLICT = /\[S3\] a completion identity may not be replaced/;
  *
  * The prior state is read in the same statement, so one snapshot answers both
  * "what is recorded now" and "was it already recorded".
+ *
+ * ⭐ The conflict is a GOVERNED REFUSAL, not a malfunction, so it goes through
+ * `queryWithExpectedRefusal` — which logs nothing for the declared case and
+ * therefore emits neither the act reference nor the completion identity.
+ * ⛔ An unexpected failure on this same path stays loud.
  */
 export async function recordCompletion(
   ref: ActRef, completionRef: string,
 ): Promise<CompletionOutcome> {
-  try {
-    const r = await query<{
-      completed_at: Date; completion_ref: string; was_completed: boolean;
-    }>(
-      `WITH prior AS (
-         SELECT act_id, completed_at IS NOT NULL AS was_completed
-           FROM ask_authorization_consumptions WHERE act_id = $1
-       ), upd AS (
-         UPDATE ask_authorization_consumptions
-            SET completed_at = COALESCE(completed_at, NOW()), completion_ref = $2
-          WHERE act_id = $1
-        RETURNING act_id, completed_at, completion_ref
-       )
-       SELECT upd.completed_at, upd.completion_ref, prior.was_completed
-         FROM upd JOIN prior USING (act_id)`,
-      [ref, completionRef],
-    );
+  const outcome = await queryWithExpectedRefusal<{
+    completed_at: Date; completion_ref: string; was_completed: boolean;
+  }>(
+    `WITH prior AS (
+       SELECT act_id, completed_at IS NOT NULL AS was_completed
+         FROM ask_authorization_consumptions WHERE act_id = $1
+     ), upd AS (
+       UPDATE ask_authorization_consumptions
+          SET completed_at = COALESCE(completed_at, NOW()), completion_ref = $2
+        WHERE act_id = $1
+      RETURNING act_id, completed_at, completion_ref
+     )
+     SELECT upd.completed_at, upd.completion_ref, prior.was_completed
+       FROM upd JOIN prior USING (act_id)`,
+    [ref, completionRef],
+    { fragment: COMPLETION_CONFLICT, why: 'a second, different completion is a second crossing' },
+  );
 
-    const row = r.rows[0];
-    if (!row) return { kind: 'no_consumption' };
-    return {
-      kind: row.was_completed ? 'already' : 'recorded',
-      completedAt: row.completed_at,
-      completionRef: row.completion_ref,
-    };
-  } catch (e) {
-    if (e instanceof Error && CONFLICT.test(e.message)) return { kind: 'conflict' };
-    throw e;
-  }
+  if (outcome.refused) return { kind: 'conflict' };
+
+  const row = outcome.result.rows[0];
+  if (!row) return { kind: 'no_consumption' };
+  return {
+    kind: row.was_completed ? 'already' : 'recorded',
+    completedAt: row.completed_at,
+    completionRef: row.completion_ref,
+  };
 }
 
 /**

@@ -24,7 +24,8 @@ import { join } from 'node:path';
 const M1 = 'database/migrations/20260913000001_ask_authorization_acts.sql';
 const M2 = 'database/migrations/20260913000002_disclosure_boundary_developmental_ask.sql';
 const M2B = 'database/migrations/20260913000003_disclosure_gesture_authorize_sections.sql';
-const CLAIMANT = 'lib/manuscript/ask/authorizationAct.ts';
+const CLAIMANT = 'lib/disclosure/authorizationAct.ts';
+const ROUTE = 'app/api/sovereign/manuscripts/[id]/ask/route.ts';
 
 const stripSql = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/--[^\n]*/g, ' ');
 const stripTs = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
@@ -161,7 +162,68 @@ const G7: Guard = {
   },
 };
 
-const GUARDS: readonly Guard[] = [G1, G2, G3, G4, G5, G6, G7];
+/**
+ * ⭐ ROUTE-INTEGRATION GUARDS. Structural only — the ORDER of the crossing, which
+ * is checkable without a database. ⛔ They do not replace R1–R12, which need one.
+ */
+const G8: Guard = {
+  id: 'G8',
+  law: 'body is reachable exactly once, and only after claim and every boundary',
+  run() {
+    const src = stripTs(read(ROUTE));
+    const loads = [...src.matchAll(/loadRevisionContent\s*\(/g)];
+    if (loads.length !== 1)
+      refuse(`G8: loadRevisionContent must be reachable exactly once; found ${loads.length}`);
+    const at = (re: RegExp) => { const m = re.exec(src); return m ? m.index : -1; };
+    const claim = at(/claimAct\s*\(/);
+    const boundary = at(/establishDisclosureBoundary\s*\(/);
+    const load = loads[0]!.index;
+    if (claim < 0 || boundary < 0) refuse('G8: the claim or the boundary is absent from the route');
+    if (!(claim < boundary && boundary < load))
+      refuse('G8: order must be claim → boundary → body read');
+  },
+};
+
+const G9: Guard = {
+  id: 'G9',
+  law: 'the client never submits authority',
+  run() {
+    const src = stripTs(read(ROUTE));
+    for (const forbidden of ['allowBody', 'may_cross', 'mayCross']) {
+      if (new RegExp(`body\\.${forbidden}|\\b${forbidden}\\s*[:=]`).test(src))
+        refuse(`G9: the route reads a client-supplied ${forbidden}`);
+    }
+  },
+};
+
+const G10: Guard = {
+  id: 'G10',
+  law: 'the completion identity is the persisted turn, never the answer text',
+  run() {
+    const src = stripTs(read(ROUTE));
+    const m = /recordCompletion\s*\(([^)]*)\)/.exec(src);
+    if (!m) return refuse('G10: recordCompletion is never called');
+    if (/answer|outcome\./i.test(m[1]!))
+      refuse('G10: a completion identity derived from the answer is transient text, not an execution');
+    if (!/turnIndex/.test(m[1]!))
+      refuse('G10: the completion identity does not name the persisted turn');
+  },
+};
+
+const G11: Guard = {
+  id: 'G11',
+  law: 'scope is checked BEFORE the single-use act is spent',
+  run() {
+    const src = stripTs(read(ROUTE));
+    const scope = src.indexOf('authorizationCovers');
+    const claim = src.indexOf('claimAct(');
+    if (scope < 0 || claim < 0) refuse('G11: the scope check or the claim is absent');
+    if (!(scope < claim))
+      refuse('G11: an incomplete client set would spend the member\'s opportunity');
+  },
+};
+
+const GUARDS: readonly Guard[] = [G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11];
 
 let failed = 0;
 console.log('S3 M-PHASE SUBSTRATE GUARDS\n⛔ not part of the frozen Class-B suite\n');

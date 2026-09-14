@@ -9,15 +9,31 @@
  * That is gate 7 as a property of the module graph rather than a promise in a
  * comment, and `__tests__/askRuntimeCannotWrite.test.ts` asserts it.
  *
- * The only rows this route writes are `ask_threads` and `ask_turns` — the
- * conversation, never the Work.
+ * ⚠️ THE ASK LIBRARY writes only `ask_threads` and `ask_turns` — the
+ * conversation, never the Work; `askRuntimeCannotWrite` asserts that over
+ * `lib/manuscript/ask`, and it stays true.
+ *
+ * ⛔ THE ROUTE IS NO LONGER THAT NARROW, and saying otherwise would be false.
+ * Under S3 it also causes writes, through `lib/disclosure`, to the authorization
+ * opportunity, its consumption, the consent state and the disclosure receipts.
+ * ⭐ None of them is the Work: every one is a record of AUTHORITY, and the Work
+ * itself is still only ever read.
  *
  * CLOSED AT THE BOUNDARY, like 5b: the whole envelope is parsed and refused
  * whole. A conversation request is not a place to be generous about shape.
  *
- * ZERO BODY READS. No section prose is loaded, sent, or storable here. There is
- * no read-request path in this slice at all — see `askReader`, which sends no
- * tools.
+ * ZERO BODY READS ON THE STRUCTURE PATH. No section prose is loaded, sent, or
+ * storable there — see `askReader`, which sends no tools.
+ *
+ * ⭐ S3 · THE DEVELOPMENTAL PATH READS BODY ONLY UNDER FRESH SECTION AUTHORITY.
+ * `loadRevisionContent` is reachable from exactly one place in this file, and
+ * only after: the requirement was derived SERVER-SIDE from the observation's own
+ * evidence refs · the member's explicit act covered it · a single-use
+ * authorization opportunity was ATOMICALLY consumed · the consumed opportunity's
+ * coordinates matched this exact Ask · and every required section minted a
+ * disclosure boundary that returned `may_cross`.
+ * ⛔ No other branch loads body. ⛔ A client's account of what it needs never
+ * widens what crosses.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -40,6 +56,16 @@ import {
 } from '@/lib/manuscript/ask/developmentalContext';
 import { askMaiaDevelopmental } from '@/lib/manuscript/ask/developmentalAskReader';
 import { loadRevisionContent, loadLiveWork } from '@/lib/manuscript/development/capture';
+import { requirementOf, sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
+import { deriveBodyRequirement, authorizationCovers } from '@/lib/manuscript/ask/bodyRequirement';
+import { mintAct, claimAct, recordCompletion } from '@/lib/disclosure/authorizationAct';
+import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
+import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { randomUUID } from 'node:crypto';
+
+/** How long one authorization opportunity stays claimable. Continuity hygiene — ⛔ never authority. */
+const AUTHORIZATION_TTL_MINUTES = 30;
 
 export const dynamic = 'force-dynamic';
 
@@ -202,6 +228,23 @@ export async function POST(
     return NextResponse.json({ refusal: 'question_too_long' }, { status: 413 });
   }
 
+  /* ⭐ S3 · ACT 3. A DISTINCT, CLOSED act — not a flag on an ordinary Ask.
+     ⛔ The client never submits `may_cross`, and there is no `allowBody: true`. */
+  const act = typeof body.act === 'string' ? body.act : null;
+  if (act !== null && act !== 'authorize_sections_and_resume') {
+    return NextResponse.json({ refusal: 'malformed', detail: 'act' }, { status: 400 });
+  }
+  const authorizes = act === null ? null
+    : Array.isArray(body.authorizes) && body.authorizes.every((x) => typeof x === 'string')
+      ? (body.authorizes as string[]) : null;
+  const pendingAskRef = act === null ? null
+    : typeof body.pendingAskRef === 'string' ? body.pendingAskRef : null;
+  if (act !== null && (!authorizes || !pendingAskRef)) {
+    return NextResponse.json(
+      { refusal: 'malformed', detail: 'authorizes and pendingAskRef are required for this act' },
+      { status: 400 });
+  }
+
   const threadId = typeof body.threadId === 'string' ? body.threadId : null;
   const anchor = threadId ? null : parseAnyAnchor(body.anchor);
   if (!threadId && !anchor) {
@@ -225,6 +268,11 @@ export async function POST(
   if (effectiveAnchor.on === 'observation') {
     return developmentalTurn({
       manuscriptId: id, memberId, anchor: effectiveAnchor, existing, question,
+      authorizes, pendingAskRef,
+      /* ⭐ ONE identity, minted at the boundary and carried through consent and
+         receipt. ⛔ Correlation only — it is never act identity. */
+      requestId: randomUUID(),
+      posture: TurnPosture.resolve(body),
     });
   }
 
@@ -386,8 +434,17 @@ async function developmentalTurn(input: {
   anchor: Extract<AskAnchor, { on: 'observation' }>;
   existing: Awaited<ReturnType<typeof loadThread>>;
   question: string;
+  /** ACT 3 only. The member's explicit act — ⭐ a CLAIM, never an authority. */
+  authorizes: readonly string[] | null;
+  /** ACT 3 only. Identity of the paused opportunity. ⛔ Possessing it permits nothing. */
+  pendingAskRef: string | null;
+  requestId: string;
+  posture: TurnPosture;
 }) {
-  const { manuscriptId, memberId, anchor, existing, question } = input;
+  const {
+    manuscriptId, memberId, anchor, existing, question,
+    authorizes, pendingAskRef, requestId, posture,
+  } = input;
 
   const reading = await loadFrozenDevelopmentalReading(manuscriptId, anchor.readingId, memberId);
   const check = checkObservationAnchor(anchor, reading);
@@ -395,32 +452,31 @@ async function developmentalTurn(input: {
     return NextResponse.json({ refusal: check.refusal, detail: check.detail },
       { status: ANCHOR_STATUS[check.refusal] });
   }
-  /* `checkObservationAnchor` has already established both. The non-null
-     assertions restate what it proved rather than re-deriving it here. */
   const observation = selectObservation(reading!, anchor.observationKey)!;
 
   let canonicalNow: string | null = null;
   try { canonicalNow = await canonicalFingerprint(manuscriptId); } catch { canonicalNow = null; }
 
-  /* NO FABRICATED BASELINE — the structure path's ruling, and the same reason:
-     a thread that cannot establish its BEFORE does not open. */
   if (!existing && canonicalNow === null) {
     return NextResponse.json({ refusal: 'canonical_unmeasurable' }, { status: 503 });
   }
   const canonicalAtOpen = existing ? existing.canonicalAtOpen : canonicalNow!;
 
-  /* The revision the reading FROZE, not the newest. `recoverEvidence` verifies
-     it against the frozen digest before slicing, so a wrong or moved revision
-     yields a refusal and no text — never a substitution. */
-  const revisionContent = await loadRevisionContent(
-    reading!.readState.draftId, reading!.readState.revisionNumber);
+  /* ⭐⭐ S3 · THE REQUIREMENT IS DERIVED, NOT ASSERTED. From the observation's own
+     evidence refs, server-side, every time — on the pause AND again on the
+     resume. ⛔ The client's account never reaches this. */
+  const bodyReq = deriveBodyRequirement(observation.evidenceRefs);
+
   const now = await loadLiveWork(manuscriptId, memberId);
 
-  const ctx = assembleDevelopmentalContext({
-    reading: reading!, observation, revisionContent, now,
+  /* The packet as it stands WITHOUT body. This is the whole context on the
+     structure-sufficient path, and the staleness source on every path: location
+     is derived from refs and the live Work, never from prose. */
+  const ctxWithoutBody = assembleDevelopmentalContext({
+    reading: reading!, observation, revisionContent: null, now,
   });
   const staleness = developmentalStaleness(
-    ctx,
+    ctxWithoutBody,
     canonicalNow === null ? { state: 'unmeasured' }
       : canonicalAtOpen === canonicalNow ? { state: 'unchanged' } : { state: 'changed' });
 
@@ -438,47 +494,216 @@ async function developmentalTurn(input: {
       readerProvenance: reading!.provenance.reader,
     },
     canonicalAtOpen,
-    /* The author opened their mouth. That the marker was one of MAIA's
-       observations is carried by the ANCHOR, not by pretending she spoke. */
     initiatedBy: 'author',
   });
 
+  /* The author's words are recorded BEFORE anything else can fail, so a pause —
+     like a transport failure — loses the answer and never the question.
+     ⚠️ `isHeldRetry` decides only whether this is the SAME turn being re-sent.
+     ⛔ It decides nothing constitutional: prose never gates authority here. */
   const priorTurns = existing?.turns ?? [];
-  const retryingHeld = isHeldRetry(priorTurns, question);
-  if (!retryingHeld) {
+  if (!isHeldRetry(priorTurns, question)) {
     await appendTurn({
       threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
     });
   }
+  const history = historyFor(
+    priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question);
 
-  const outcome = await askMaiaDevelopmental(
-    ctx,
-    historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question),
-    question,
-  );
+  /* ── ACT 1 · no body required. The existing path, and it NEVER loads prose. */
+  if (!bodyReq.required && !pendingAskRef) {
+    return answerFrom(ctxWithoutBody, {
+      liveThreadId, memberId, staleness, history, question, crossed: [],
+    });
+  }
+
+  /* ── ACT 2 · body required, no member act yet. PAUSE.
+     ⛔ No loadRevisionContent · no boundary · no receipt · no cognition with body. */
+  if (!pendingAskRef) {
+    const ref = await mintAct({
+      memberId, manuscriptId, threadId: liveThreadId,
+      readingId: reading!.id, observationKey: anchor.observationKey,
+    }, AUTHORIZATION_TTL_MINUTES);
+    return NextResponse.json({
+      result: 'BODY_AUTHORITY_REQUIRED',
+      threadId: liveThreadId,
+      pendingAskRef: ref,
+      workRef: manuscriptId,
+      /* ⭐ Section IDENTITIES only (Q1 disposition (a)). ⛔ No headings: a heading
+         is authored disclosure, and whether returning one to its own author is a
+         disclosure at all is PARKED, not decided here. */
+      sections: bodyReq.sections,
+      staleness,
+    });
+  }
+
+  /* ── ACT 3 · the member authorized. Re-derive, compare, THEN claim. */
+  if (!bodyReq.required) {
+    /* An authorization for an Ask that needs no body. ⛔ Nothing is consumed. */
+    return NextResponse.json(
+      { refusal: 'body_not_required', threadId: liveThreadId }, { status: 409 });
+  }
+
+  /* ⭐ SCOPE BEFORE CLAIM. ⛔ Do not spend the member's single-use act to discover
+     the client supplied an incomplete set — the opportunity stays claimable. */
+  if (!authorizationCovers(authorizes ?? [], bodyReq.sections)) {
+    return NextResponse.json({
+      result: 'BODY_SCOPE_INCOMPLETE',
+      threadId: liveThreadId,
+      pendingAskRef,
+      sections: bodyReq.sections,
+    });
+  }
+
+  /* ⭐⭐ THE CLAIM. The successful mutation IS the consumption. */
+  const claim = await claimAct(pendingAskRef, memberId, requestId);
+
+  if (claim.kind === 'unclaimable') {
+    return claim.reason === 'unknown_act'
+      ? NextResponse.json({ refusal: 'not_found' }, { status: 404 })
+      : NextResponse.json({
+          result: 'AUTHORIZATION_EXPIRED', threadId: liveThreadId,
+        });
+  }
+  if (claim.kind === 'already') {
+    /* ⛔ A replay never crosses again. `completed` recovers the SAME execution;
+       `interrupted` requires a FRESH member act and is never resumable here. */
+    const st = claim.state;
+    if (st.kind === 'completed') {
+      const thread = await loadThread(liveThreadId, memberId);
+      return NextResponse.json({
+        result: 'ALREADY_COMPLETED',
+        threadId: liveThreadId, thread, staleness,
+        completionRef: st.completionRef,
+      });
+    }
+    return NextResponse.json({ result: 'INTERRUPTED', threadId: liveThreadId, staleness });
+  }
+
+  /* ⭐ THE OPPORTUNITY MUST HAVE BEEN FOR THIS EXACT ASK. A mismatch cannot put a
+     consumed human act back — that would turn one act into reusable permission. */
+  const c = claim.act;
+  if (c.memberId !== memberId || c.manuscriptId !== manuscriptId
+      || c.threadId !== liveThreadId || c.readingId !== reading!.id
+      || c.observationKey !== anchor.observationKey) {
+    return NextResponse.json(
+      { refusal: 'authorization_not_for_this_ask', threadId: liveThreadId }, { status: 409 });
+  }
+
+  /* ⭐ ONE BOUNDARY PER AUTHORIZED SECTION. Ruling 5: one consumption, N receipts.
+     ALL must return may_cross before prose is reachable. */
+  const crossed: string[] = [];
+  for (const sectionRef of bodyReq.sections) {
+    const boundary = await establishDisclosureBoundary({
+      requestId, posture, memberId, sessionId: liveThreadId,
+      disclosure: {
+        disclosureId: randomUUID(),
+        boundary: 'writers_studio.developmental_ask->maia_cognition',
+        sourceClass: 'work',
+        participationBasis: 'member_invoked',
+        sourceRef: manuscriptId,
+        scopeKind: 'section',
+        sectionRef,
+        gesture: 'authorize_sections',
+      },
+    });
+    if (!mayCrossBoundary(boundary)) {
+      /* ⛔ The act stays spent and NO body loads. Earlier receipts remain
+         `attempted`, which is the truthful state. ⛔ This is NOT
+         BODY_AUTHORITY_REQUIRED — the member already acted. */
+      return NextResponse.json({
+        refusal: 'disclosure_unavailable', threadId: liveThreadId, crossedSoFar: crossed.length,
+      }, { status: 503 });
+    }
+    crossed.push(boundary.disclosureId);
+  }
+
+  /* ⭐⭐ ONLY NOW. The single reachable body read in this file. */
+  const revisionContent = await loadRevisionContent(
+    reading!.readState.draftId, reading!.readState.revisionNumber);
+
+  const ctx = assembleDevelopmentalContext({
+    reading: reading!, observation, revisionContent, now,
+  });
+
+  /* ⭐ W2 ENFORCED INDEPENDENTLY OF THE DERIVATION THAT AUTHORIZED IT. If a
+     recovered body reference names a section outside the authorized set, the
+     derivation and the authority have diverged — refuse rather than cross. */
+  const authorized = new Set(bodyReq.sections);
+  const outside = ctx.evidence.some((e) => e.kind === 'verified'
+    && requirementOf(e.ref) === 'body'
+    && sectionIdsOf(e.ref).some((id) => !authorized.has(id)));
+  if (outside) {
+    console.error('[S3] W2 boundary violation — recovered body outside the authorized set', {
+      threadId: liveThreadId,
+    });
+    return NextResponse.json(
+      { refusal: 'disclosure_unavailable', threadId: liveThreadId }, { status: 500 });
+  }
+
+  /* Authority existed; the evidence could not be faithfully recovered.
+     ⛔ CATEGORICALLY different from absent authority, and never reported as it. */
+  const bodyRecovered = ctx.evidence.some(
+    (e) => e.kind === 'verified' && requirementOf(e.ref) === 'body');
+  if (!bodyRecovered) {
+    return NextResponse.json({
+      result: 'BODY_UNVERIFIABLE', threadId: liveThreadId, staleness, location: ctx.location,
+    });
+  }
+
+  return answerFrom(ctx, {
+    liveThreadId, memberId, staleness, history, question, crossed, pendingAskRef,
+  });
+}
+
+/**
+ * The answer, the persisted turn, the confirmations, and the completion — in
+ * that order, because each is evidence for the next.
+ *
+ * ⭐⭐ THE COMPLETION IDENTITY IS THE PERSISTED TURN, never "the model returned
+ * text". W-B's law is that a retry recovers the SAME completed execution, so
+ * there must BE a completed execution object to recover. If cognition succeeded
+ * and the turn did not persist, S3 completion is NOT recorded — the act stays
+ * consumed-and-incomplete, which is `interrupted`, which needs a fresh member
+ * act. ⛔ Transient text is not a completion.
+ */
+async function answerFrom(
+  ctx: ReturnType<typeof assembleDevelopmentalContext>,
+  o: {
+    liveThreadId: string; memberId: string; staleness: ReturnType<typeof developmentalStaleness>;
+    history: { speaker: 'author' | 'maia'; body: string }[]; question: string;
+    crossed: readonly string[]; pendingAskRef?: string;
+  },
+) {
+  const outcome = await askMaiaDevelopmental(ctx, o.history, o.question);
 
   if (!outcome.ok) {
-    /* The question is already recorded. A failed answer is reported as a
-       failure, never rendered as one of hers. */
+    /* The question is already recorded. ⛔ No completion, so a consumed act
+       remains interrupted rather than silently finished. */
     return NextResponse.json(
-      { threadId: liveThreadId, refusal: outcome.refusal, staleness, location: ctx.location },
+      { threadId: o.liveThreadId, refusal: outcome.refusal, staleness: o.staleness, location: ctx.location },
       { status: 502 });
   }
 
-  await appendTurn({
-    threadId: liveThreadId, memberId, speaker: 'maia', body: outcome.answer,
-    staleness, answerProvenance: outcome.provenance,
+  const turnIndex = await appendTurn({
+    threadId: o.liveThreadId, memberId: o.memberId, speaker: 'maia', body: outcome.answer,
+    staleness: o.staleness, answerProvenance: outcome.provenance,
   });
 
-  const thread = await loadThread(liveThreadId, memberId);
+  /* The crossing is confirmed only now, against the turn that exists. */
+  for (const disclosureId of o.crossed) await confirmDisclosureCrossed(disclosureId);
+
+  if (o.pendingAskRef) {
+    /* ⭐ The canonical completed execution: the append-only turn, whose UPDATE the
+       database refuses. ⛔ Not the answer text. */
+    await recordCompletion(o.pendingAskRef, `${o.liveThreadId}:${turnIndex}`);
+  }
+
+  const thread = await loadThread(o.liveThreadId, o.memberId);
   return NextResponse.json({
-    threadId: liveThreadId,
+    threadId: o.liveThreadId,
     thread,
-    staleness,
-    /* The developmental lane's PRIMARY vocabulary travels to the surface intact.
-       Collapsing it into `staleness` alone would hand the room five structure
-       dimensions and no answer to the question it actually has to render:
-       is what she noticed still true of this Work? */
+    staleness: o.staleness,
     location: ctx.location,
     observation: {
       key: ctx.observation.key,

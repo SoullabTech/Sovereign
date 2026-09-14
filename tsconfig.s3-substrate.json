@@ -23,6 +23,6 @@
   },
   "include": [
     "tests/constitutional/s3-substrate/**/*.ts",
-    "lib/manuscript/ask/authorizationAct.ts"
+    "lib/disclosure/authorizationAct.ts"
   ]
 }

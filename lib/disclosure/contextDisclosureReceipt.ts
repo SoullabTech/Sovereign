@@ -68,7 +68,16 @@ export type DisclosureSourceClass = 'work';
 export type DisclosureParticipationBasis = 'member_invoked';
 
 /** The only boundary constituted in v1. */
-export type DisclosureBoundary = 'writers_studio.focus->maia_cognition';
+export type DisclosureBoundary =
+  | 'writers_studio.focus->maia_cognition'
+  /**
+   * ⭐ S3. The DEVELOPMENTAL ASK crossing — a different path into cognition, and
+   * therefore a different boundary. ⛔ Reusing the Focus value because its other
+   * dimensions happen to fit would falsify provenance: a receipt must name the
+   * boundary its disclosure actually crossed. Mirrors migration
+   * `20260913000002`, one value and nothing else.
+   */
+  | 'writers_studio.developmental_ask->maia_cognition';
 
 /** The SHAPE of the selection — never its location. */
 export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';
@@ -77,7 +86,17 @@ export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';
  * The writer gesture that authorized the crossing. Closed vocabulary: the kind
  * of gesture, never its content.
  */
-export type DisclosureGesture = 'ask_maia' | 'work_with_this' | 'widen_focus';
+export type DisclosureGesture =
+  | 'ask_maia' | 'work_with_this' | 'widen_focus'
+  /**
+   * ⭐ S3. The member explicitly authorized MAIA to read the named section set
+   * for ONE developmental Ask. ⛔ Not consent, not standing permission, not
+   * passage authority, not generic access. One such gesture may yield several
+   * section-scoped receipts, each carrying it truthfully — the gesture names the
+   * member's act, never the count of boundaries it caused. Mirrors migration
+   * `20260913000003`.
+   */
+  | 'authorize_sections';
 
 export interface ContextDisclosureAttempt {
   /** Unique per attempt; a retry MUST reuse it so evidence cannot be duplicated. */
