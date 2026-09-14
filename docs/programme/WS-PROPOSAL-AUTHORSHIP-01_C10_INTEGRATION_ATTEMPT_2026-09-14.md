@@ -247,16 +247,84 @@ of the whole evidentiary programme:**
 
 ⭐ The `4df4e91d` witness **remains sealed exactly where it belongs.**
 
-## 9 · Standing
+## 9 · ⭐ INTEGRATION CUSTODY — SEALED TO ITS OWN BRANCH, PR HEAD UNMOVED
+
+```text
+BRANCH   fix/c10-whole-exact-return-01-integration   →  181fbaa2c   ✅ PUSHED
+```
+
+⭐ **JARVIS-VERIFIED after the push**, read back from the remote:
+
+```text
+origin/fix/c10-whole-exact-return-01-integration   181fbaa2c…   ✅ exact
+origin/fix/c10-whole-exact-return-01               4df4e91d…    ✅ UNMOVED — PR #1296 intact
+4df4e91d ancestor of the pushed integration         ✅ YES
+sealed implementation digest                        2e8e3e42…    ✅ unchanged
+⛔ no new commit · no rebase · no amend · no force-push
+```
+
+### ⭐⭐ Why the two acts are decoupled — evidentiary, not merely cautious
+
+```text
+4df4e91d    = SEALED REPAIR — runtime-witnessed
+181fbaa2c   = GREEN STATIC INTEGRATION CANDIDATE — ⛔ NOT yet runtime-witnessed
+PR #1296    currently points at 4df4e91d
+```
+
+⛔ Moving the PR head before the integration witness would make **the public review object advance
+to bytes whose runtime evidence is still owed.** ⭐ There is no need to couple those two acts, so
+they are not coupled.
+
+## 10 · ⛔ OWED — the bounded integration witness
+
+Against exactly `181fbaa2c`, from the durable integration branch:
+
+```text
+1  Whole / first asked return   → expect LOCUS-ADDRESSED
+2  Whole passive scroll         → manually move away · ⛔ no SHOW CHANGE · dwell
+                                → expect STAYED PUT
+```
+
+⭐ **Sufficient here, and deliberately not a replay of the historical programme.** Static
+integration testing already established **zero new failures across 764 Writer's Studio tests**;
+these two observations cover **the changed capability** and **the highest-risk sovereignty
+invariant** — the one the repair newly put at risk by creating a viewport-moving path in Whole.
+
+```text
+EITHER FAILS   ⛔ STOP. 4df4e91d remains valid — only the INTEGRATION CANDIDATE fails.
+BOTH PASS      ⭐ seal 181fbaa2c as the integration candidate.
+```
+
+### Then, and only then
+
+```text
+FAST-FORWARD   fix/c10-whole-exact-return-01   4df4e91d → 181fbaa2c
+```
+
+⭐ Especially clean because it introduces **no additional bytes beyond the witnessed integration
+head**, and `4df4e91d` remains an ancestor and byte-identical forever.
+
+```text
+181fbaa2c static gates   ✅
+integration custody      ✅ PUSHED to its own branch
+integration witness      ⛔ OWED
+integration seal         ⛔ after witness
+PR head fast-forward     ⛔ after seal
+PR merge                 ⛔ still unauthorized
+F1                       ⛔ separate        CI-GATE FINDING ⛔ separate lane
+```
+
+## 11 · Standing
 
 ```text
 4df4e91d        🔒 SEALED · unchanged · ancestor · digest verified
-181fbaa2c       ⚠️ LOCAL ONLY · not pushed · PR #1296 head UNCHANGED
+181fbaa2c       ✅ PUSHED to fix/c10-whole-exact-return-01-integration
+                ⛔ NOT runtime-witnessed · PR #1296 head still 4df4e91d
 nav guard       ✅ SUPERSEDED IN SCOPE under FR-W5 — amended, not discarded
 base-red tests  ⚠️ 4 inherited · ⛔ NOT repaired here, by instruction
 TYPECHECK       ✅ no regressions        SUPABASE GATE ✅ clean
 NEW FAILURES    ⭐ ZERO
-OWED            small integration witness (exact-locus return · passive-scroll sovereignty)
-PUSH            ⛔ still held
+OWED            bounded integration witness (exact-locus return · passive-scroll sovereignty)
+PR HEAD MOVE    ⛔ held until that witness seals 181fbaa2c
 PR MERGE ⛔      F1 ⛔      CI-GATE LANE ⛔ separate, preserved
 ```
