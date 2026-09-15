@@ -1,0 +1,23 @@
+From https://github.com/SoullabTech/Sovereign
+ * branch                claude/voice-2026-census-01 -> FETCH_HEAD
+   7ec59882d..49ebd592b  claude/voice-2026-census-01 -> origin/claude/voice-2026-census-01
+Preparing worktree (detached HEAD f0c6ae13b)
+Updating files:  30% (4291/14200)Updating files:  31% (4402/14200)Updating files:  32% (4544/14200)Updating files:  33% (4686/14200)Updating files:  34% (4828/14200)Updating files:  35% (4970/14200)Updating files:  36% (5112/14200)Updating files:  37% (5254/14200)Updating files:  38% (5396/14200)Updating files:  39% (5538/14200)Updating files:  40% (5680/14200)Updating files:  41% (5822/14200)Updating files:  42% (5964/14200)Updating files:  43% (6106/14200)Updating files:  44% (6248/14200)Updating files:  45% (6390/14200)Updating files:  46% (6532/14200)Updating files:  47% (6674/14200)Updating files:  48% (6816/14200)Updating files:  49% (6958/14200)Updating files:  50% (7100/14200)Updating files:  51% (7242/14200)Updating files:  52% (7384/14200)Updating files:  53% (7526/14200)Updating files:  54% (7668/14200)Updating files:  55% (7810/14200)Updating files:  56% (7952/14200)Updating files:  57% (8094/14200)Updating files:  58% (8236/14200)Updating files:  59% (8378/14200)Updating files:  60% (8520/14200)Updating files:  61% (8662/14200)Updating files:  62% (8804/14200)Updating files:  63% (8946/14200)Updating files:  64% (9088/14200)Updating files:  65% (9230/14200)Updating files:  66% (9372/14200)Updating files:  67% (9514/14200)Updating files:  68% (9656/14200)Updating files:  69% (9798/14200)Updating files:  69% (9822/14200)Updating files:  70% (9940/14200)Updating files:  71% (10082/14200)Updating files:  72% (10224/14200)Updating files:  73% (10366/14200)Updating files:  74% (10508/14200)Updating files:  75% (10650/14200)Updating files:  76% (10792/14200)Updating files:  77% (10934/14200)Updating files:  78% (11076/14200)Updating files:  79% (11218/14200)Updating files:  80% (11360/14200)Updating files:  81% (11502/14200)Updating files:  82% (11644/14200)Updating files:  83% (11786/14200)Updating files:  84% (11928/14200)Updating files:  85% (12070/14200)Updating files:  86% (12212/14200)Updating files:  87% (12354/14200)Updating files:  88% (12496/14200)Updating files:  89% (12638/14200)Updating files:  90% (12780/14200)Updating files:  91% (12922/14200)Updating files:  92% (13064/14200)Updating files:  93% (13206/14200)Updating files:  94% (13348/14200)Updating files:  95% (13490/14200)Updating files:  96% (13632/14200)Updating files:  97% (13774/14200)Updating files:  98% (13916/14200)Updating files:  99% (14058/14200)Updating files: 100% (14200/14200)Updating files: 100% (14200/14200), done.
+HEAD is now at f0c6ae13b voice-2026(kernel-00): SOURCE-ID-02A offline repair (founder ruling 2026-09-15) — batch: ONE closed stimulus dispatch (s2-nearend only with vpio-02 · sid-nearend-gated only with vpio-02-sid · refusal names both pairings; defect 1: the gated token was unreachable behind the earlier catch-all); source reader: frameReset indeterminate BEFORE either attribution verdict (defect 2), own-tone control clears only numeric-and-quiet or undefined-with-no-own-band-energy, else own_control_unmeasured; self-test 20→24/24; gate pins the dispatch and the law order; Swift untouched; 82/82
+f0c6ae13b88db29cbd1537bec585d98376c8bc4f
+Xcode 26.3
+Build version 17C529
+Version: 2.46.0
+swift-driver version: 1.127.15 Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)
+Test Suites: 1 passed, 1 total
+Tests:       82 passed, 82 total
+Snapshots:   0 total
+Time:        6.3 s
+Ran all test suites matching /__tests__\/voice-kernel-00-source-gates.test.ts/i.
+Tests:       82 passed, 82 total
+[12/13] Emitting module VoiceKernel
+[13/13] Compiling VoiceKernel AudioGraph.swift
+Build complete! (4.06s)
+/private/tmp/sid-mac-compile-01-f0c6ae13b88db29cbd1537bec585d98376c8bc4f/ios/VoiceKernel/Tests/VoiceKernelTests/PureLogicTests.swift:485:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+error: fatalError

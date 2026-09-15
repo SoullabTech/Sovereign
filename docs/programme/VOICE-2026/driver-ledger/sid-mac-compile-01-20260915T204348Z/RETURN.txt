@@ -1,0 +1,8 @@
+ACT SID-MAC-COMPILE-01
+STAMP 20260915T204348Z
+RESULT STOP swift-test-compile PureLogicTests.swift:485:13
+SUBJECT f0c6ae13b88db29cbd1537bec585d98376c8bc4f
+OUT /private/tmp/sid-mac-compile-01-out-20260915T204348Z
+XCODEBUILD never-entered
+DUPLICATE_INVOCATION not-established
+TRANSPORT Mac Studio terminal directly

@@ -1,0 +1,13 @@
+total 72
+drwxr-xr-x    8 soullab  wheel    256 Sep 15 16:44 .
+drwxrwxrwt  468 root     wheel  14976 Sep 15 17:32 ..
+-rw-r--r--    1 soullab  wheel  19579 Sep 15 16:44 gate.log
+-rw-r--r--    1 soullab  wheel     41 Sep 15 16:43 head.txt
+-rw-r--r--    1 soullab  wheel      0 Sep 15 16:43 status-before.txt
+-rw-r--r--    1 soullab  wheel    643 Sep 15 16:44 swift-build.log
+-rw-r--r--    1 soullab  wheel   1445 Sep 15 16:44 swift-test.log
+-rw-r--r--    1 soullab  wheel    144 Sep 15 16:43 toolchain.txt
+-rw-r--r--  1 soullab  wheel     0 Sep 15 16:43 /private/tmp/sid-mac-compile-01-transcript-20260915T204311Z.log
+-rw-r--r--  1 soullab  wheel  4351 Sep 15 16:44 /private/tmp/sid-mac-compile-01-transcript-20260915T204348Z.log
+-rw-r--r--  1 soullab  wheel     0 Sep 15 17:32 /private/tmp/sid-mac-compile-01-transcript-20260915T213208Z.log
+-rw-r--r--  1 soullab  wheel  3692 Sep 15 16:43 /private/tmp/sid-mac-compile-01.sh
