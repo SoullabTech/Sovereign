@@ -210,11 +210,22 @@ COMMIT;
 --
 --   W4-S2  →  W4-S1  →  W5-3
 --
--- ⭐ The order is forced, not stylistic: this footer drops the binding, whose
--- FKs target constraints that W4-S1's footer removes; W4-S1's footer restores
--- `anchor SET NOT NULL`, which cannot succeed while editorial threads exist;
--- and W5-3's footer drops `proposal_chain_directions`, which THIS table
--- references. Run out of order, each step is refused by the next one's objects.
+-- ⚠️⚠️ THE ORDER IS REQUIRED BUT ONLY PARTLY ENFORCED, and the difference was
+-- measured rather than assumed:
+--
+--   W5-3's footer, run while W4 stands   → REFUSED. It drops
+--     `proposal_chain_directions`, which this table references. The database
+--     stops it.
+--
+--   W4-S1's footer, run before this one  → ⛔ NOT REFUSED. It SUCCEEDS, and
+--     leaves this table standing on a guarantee that has been silently
+--     removed: B2 holds only because the XOR forces an anchored thread's
+--     `proposal_chain_id` to NULL. Without it the FK still passes and the
+--     binding still admits rows it was built to make unrepresentable.
+--
+-- ⭐ So one boundary of the order is structural and one is discipline. ⛔ Do not
+-- describe them as if both were enforced — an earlier draft of these footers
+-- did, and the shadow falsified it in one statement.
 --
 -- ⛔ Dropping the binding DESTROYS the record of which turn performed which
 -- authored act. The authored acts themselves survive — no FK points from them

@@ -28,13 +28,60 @@ admits() { local out; out="$(q "$2")"
 
 echo "── W5-3 · rollback ───────────────────────────────────────────"
 
-# Run the manual rollback exactly as the migration's footer records it.
-ROLLBACK_SQL="$(sed -n '/^-- BEGIN;$/,/^-- COMMIT;$/p' \
-  "$ROOT/database/migrations/20260914000005_editorial_ontology.sql" | sed 's/^-- \{0,1\}//')"
-[ -n "$ROLLBACK_SQL" ] || { echo "REFUSED · no rollback block found in the migration"; exit 2; }
+footer_of() { sed -n '/^-- BEGIN;$/,/^-- COMMIT;$/p' "$1" | sed 's/^-- \{0,1\}//'; }
+run_sql()  { printf '%s\n' "$1" | psql -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGDB" -q -v ON_ERROR_STOP=1 2>&1; }
+rebuild()  { PGDB="$PGDB" bash "$ROOT/scripts/witness/w5-rebuild-db.sh" >/dev/null 2>&1 \
+             || { echo "REFUSED · could not rebuild $PGDB"; exit 2; }; }
+
+S2_ROLLBACK="$(footer_of "$ROOT/database/migrations/20260915000002_w4_s2_validation_and_binding.sql")"
+S1_ROLLBACK="$(footer_of "$ROOT/database/migrations/20260915000001_w4_s1_thread_subject_preparation.sql")"
+ROLLBACK_SQL="$(footer_of "$ROOT/database/migrations/20260914000005_editorial_ontology.sql")"
+for v in "$S2_ROLLBACK" "$S1_ROLLBACK" "$ROLLBACK_SQL"; do
+  [ -n "$v" ] || { echo "REFUSED · a rollback block is missing"; exit 2; }
+done
+
+# ⭐⭐ THE ORDER IS W4-S2 → W4-S1 → W5-3, and the two boundaries are NOT the same
+# kind of thing. Asserting both is the point: describing a discipline as if it
+# were an enforced constraint is how a rollback comes to be trusted further than
+# it can carry.
+
+# ── Boundary 1 · STRUCTURAL. The database refuses it.
+OUT_EARLY="$(run_sql "$ROLLBACK_SQL")"
+if printf '%s' "$OUT_EARLY" | grep -q 'ERROR'; then
+  ok "R0a · ⭐⭐ W5-3's footer is REFUSED while W4 stands — the binding references what it drops"
+else bad "R0a · W5-3's footer ran with W4 still applied" "NOT REFUSED"; fi
+rebuild
+
+# ── Boundary 2 · ⚠️ DISCIPLINE ONLY. Nothing refuses it, and the damage is silent.
+OUT_S1_FIRST="$(run_sql "$S1_ROLLBACK")"
+if printf '%s' "$OUT_S1_FIRST" | grep -q 'ERROR'; then
+  bad "R0b · S1's footer out of order" "expected it to SUCCEED and damage silently; it errored: $(printf '%s' "$OUT_S1_FIRST" | head -1)"
+else ok "R0b · ⚠️⚠️ S1's footer out of order is NOT REFUSED — it succeeds"; fi
+STILL="$(q "SELECT count(*) FROM information_schema.tables WHERE table_name='editorial_turn_bindings';")"
+XOR="$(q "SELECT count(*) FROM pg_constraint WHERE conname='ask_threads_one_subject';")"
+eq "R0c · ⭐⭐ and leaves the binding standing on a guarantee that is GONE" "$STILL/$XOR" "1/0"
+rebuild
+
+# ── The correct order, run in full.
+OUT_S2="$(run_sql "$S2_ROLLBACK")"
+if printf '%s' "$OUT_S2" | grep -q 'ERROR'; then
+  bad "R0d · W4-S2's footer runs first" "$(printf '%s' "$OUT_S2" | head -2)"
+else ok "R0d · ⭐ W4-S2's footer, from its own file, runs FIRST"; fi
+eq "R0e · the binding and its four UNIQUE targets are gone" \
+  "$(q "SELECT (SELECT count(*) FROM information_schema.tables WHERE table_name='editorial_turn_bindings')
+        + (SELECT count(*) FROM pg_constraint WHERE conname IN
+           ('ask_threads_id_chain_key','ask_turns_thread_index_speaker_key',
+            'proposal_chain_directions_chain_id_id_author_key',
+            'proposal_versions_chain_id_id_author_key'));")" "0"
+OUT_S1="$(run_sql "$S1_ROLLBACK")"
+if printf '%s' "$OUT_S1" | grep -q 'ERROR'; then
+  bad "R0f · W4-S1's footer runs second" "$(printf '%s' "$OUT_S1" | head -2)"
+else ok "R0f · ⭐ W4-S1's footer runs SECOND — anchor NOT NULL restored on an empty table"; fi
+# ⛔ Its SET NOT NULL is allowed to FAIL when an editorial thread exists; that is
+# the design's rollback law and it is not exercised here, where none was created.
 # ⭐ Executed FROM THE MIGRATION'S OWN FOOTER, so a rollback that drifts from
 # what the file documents is a failure here rather than a surprise later.
-OUT="$(printf '%s\n' "$ROLLBACK_SQL" | psql -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGDB" -q -v ON_ERROR_STOP=1 2>&1)"
+OUT="$(run_sql "$ROLLBACK_SQL")"
 if printf '%s' "$OUT" | grep -q 'ERROR'; then
   bad "R0 · the documented rollback runs" "$(printf '%s' "$OUT" | head -2)"
 else ok "R0 · ⭐ the rollback recorded in the migration's own footer RUNS"; fi

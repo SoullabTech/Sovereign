@@ -83,10 +83,19 @@ COMMIT;
 -- ══════════════════════════════════════════════════════════════════════════
 -- ROLLBACK — W4-S1
 --
--- ⛔⛔ ORDER: this footer runs only AFTER W4-S2's, never before. Rolling back
--- S1 while S2's objects stand would drop the CHECKs that S2's binding assumes,
--- and `editorial_turn_bindings` would still reference `ask_threads (id,
--- proposal_chain_id)` — a UNIQUE constraint S2's footer removes, not this one.
+-- ⛔⛔ ORDER: this footer runs only AFTER W4-S2's, never before — and ⚠️ THE
+-- DATABASE WILL NOT STOP YOU. Measured on a shadow: run out of order this
+-- footer SUCCEEDS, dropping the XOR while `editorial_turn_bindings` still
+-- stands referencing `ask_threads (id, proposal_chain_id)`.
+--
+-- ⭐⭐ That is worse than a refusal. B2 — "the thread is EDITORIAL, not an
+-- anchored Ask thread" — is not enforced by the binding's FK alone; it holds
+-- only BECAUSE the XOR makes an anchored thread's `proposal_chain_id` NULL.
+-- Drop the XOR and the FK still passes, the table still stands, and the
+-- guarantee it advertises is gone with nothing failing.
+--
+-- ⛔ So the order is a DISCIPLINE THE SCHEMA CANNOT ENFORCE, which is exactly
+-- why it is written here and asserted in the rollback witness.
 --
 -- ⭐⭐ `SET NOT NULL` FAILS IF ANY EDITORIAL THREAD EXISTS, and it must be
 -- allowed to. Rollback is clean while this refinement has been applied and NOT
