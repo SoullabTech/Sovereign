@@ -461,3 +461,56 @@ Exactly the expected shape: only the test bundle moved. Gate read on the Mac bef
 **C. What is now true, and what is not.** Instrument `83a382a14` is compiled (generic, unsigned) and its custody is pinned; the device is clean; the organism and the installed `.vpio02` are untouched. **Nothing about K00-05/06 has been measured** — no journal exists on any subject with `stream_cancel_measured` / `stream_complete`. §10.5 (4)'s conditions: new SHA ✓ · compile custody ✓ · clean process state ✓ (as of 00:29Z; a future preflight re-reads it) · **runner-readiness preflight NOT YET AUTHORIZED, NOT RUN** · fresh authority string NONE. One instrument fact for the next ruling, recorded so the invocation is not mis-pinned: the compile-green product is signing-OFF and cannot execute on the phone; a device act on `83a382a14` (the readiness `testTerminateOnly`, then any batch) runs on the runner the batch builds itself — `k00-driver-batch.sh` performs its own signed `build-for-testing` into `ios/VoiceKernelDriver/.derived` from the worktree it runs in, exactly as the K00-0506 batch did at `[23:50:14] xctestrun:` — so the readiness ruling must name the worktree (`/private/tmp/k0506-driver-compile-83a382a14`), a signed build step, and the one `testTerminateOnly` invocation, and the batch's sample-1 precondition is again a terminate-only act the ruling must place.
 
 **Standing:** K00-04 PASS on VPIO-02 · K00-05 INCOMPLETE · K00-06 built-in INCOMPLETE · C-D20 LANDED + COMPILED (`83a382a14`, custody pinned) · lingering harness CLEARED · runner-readiness preflight NOT AUTHORIZED · fresh K00-0506 N=10 HELD (needs a fresh authority string) · reinstall / route / interruption / reset / endurance NOT AUTHORIZED · `.vpio02` installed, untouched · `.vpio01` FROZEN · K00/R1 UNTOUCHED · KERNEL-00 NOT ACCEPTED. **STOP.**
+
+### 10.8 FOUNDER RULING — RUNNER-READINESS PREFLIGHT OPEN (one invocation) · FRESH K00-0506 N=10 SELECTED, EXECUTION HELD (no authority string exists)
+
+§10.7 discharges the two missing prerequisites (compiled successor `83a382a14`; lingering `.vpio02` process cleared). The instrument stays driver-only; organism and installed artifact did not move.
+
+**1. Runner-readiness preflight — AUTHORIZED.** One instrument-readiness act; not a K00-05/06 sample, not a pilot. Subject: instrument source `83a382a1455161996d499f30cbf00504bbd0332a` · worktree `/private/tmp/k0506-driver-compile-83a382a14` · device `A0736AC8-793B-516F-AC72-C076DB6CEE38` · Xcode destination `00008140-00163D9922E0801C` · subject `vpio-02` · bundle `life.soullab.voicekernel.vpio02`. Because the §10.7 compile was signing-OFF, the act first creates the signed runner from this exact worktree with the batch's own recipe. **Verified here by reading `k00-driver-batch.sh` (frozen at `8b111709b`), never by running it:** line 147 `xcodegen generate` in `ios/VoiceKernelDriver`; line 149 `xcodebuild build-for-testing -project "$PROJ" -scheme DriverUITests -destination "id=$XDEST" -derivedDataPath "$DD" DEVELOPMENT_TEAM="${K00_TEAM:-ZVK2X646Z2}"` with `DD="$ROOT/ios/VoiceKernelDriver/.derived"`; line 150 `XCTESTRUN="$(ls -t "$DD"/Build/Products/*.xctestrun | head -1)"`; line 121 the `test-without-building` form — the ruling's sequence below is that recipe, term for term. Pinned by the founder, exactly one sequence:
+
+```bash
+cd /private/tmp/k0506-driver-compile-83a382a14
+git rev-parse HEAD
+git diff --quiet 83a382a1455161996d499f30cbf00504bbd0332a -- \
+  ios/VoiceKernelDriver \
+  scripts/witness/k00-driver-batch.sh \
+  scripts/witness/k00-ledger.py \
+  scripts/witness/k00-output-ledger.py \
+  scripts/witness/k00-reinstall.sh
+echo "readiness surface identical to 83a382a14"
+cd ios/VoiceKernelDriver
+xcodegen generate
+xcodebuild build-for-testing \
+  -project VoiceKernelDriver.xcodeproj \
+  -scheme DriverUITests \
+  -destination id=00008140-00163D9922E0801C \
+  -derivedDataPath .derived \
+  DEVELOPMENT_TEAM=ZVK2X646Z2
+XCTESTRUN="$(ls -t .derived/Build/Products/*.xctestrun | head -1)"
+TEST_RUNNER_K00_SUBJECT=vpio-02 \
+xcodebuild test-without-building \
+  -xctestrun "$XCTESTRUN" \
+  -destination id=00008140-00163D9922E0801C \
+  -collect-test-diagnostics never \
+  -only-testing:DriverUITests/K00DriverTests/testTerminateOnly
+```
+
+Then exactly one process read:
+
+```bash
+xcrun devicectl device info processes \
+  --device A0736AC8-793B-516F-AC72-C076DB6CEE38 \
+  --json-output /private/tmp/k0506-readiness-processes-after.json
+```
+
+read with the same basename rule as §10.5 C (documented JSON rows; basename `VoiceKernelHarness`).
+
+**Reading note (this session, recorded beside the pinned sequence, not substituted into it):** the `echo "readiness surface identical to 83a382a14"` line is unconditional — it prints whether or not `git diff --quiet` exited 0. The reading "witness surface unchanged" therefore rests on the diff's exit status (e.g. `echo $?` immediately after it, or the founder's transcript showing no diff output), never on the echo line. The `xcodegen` step rewrites the tracked `Harness/Info.plist`-style footprint only inside `ios/VoiceKernelDriver`, so the diff must be read BEFORE `xcodegen generate` runs, which the pinned order already does.
+
+**2. Predeclared readiness reading (founder):** PASS = HEAD exact `83a382a14…` ∧ witness surface unchanged ∧ signed build succeeds ∧ `testTerminateOnly` executes exactly once ∧ 0 test failures ∧ after-read = 0 `VoiceKernelHarness` processes. FAIL = any compile/build refusal · runner initialization failure · `testTerminateOnly` failure · unreadable after-state · any harness process remaining afterward. **No retry.** A FAIL returns as instrument evidence and authorizes no second attempt, cleanup act, source edit or N=10 batch. If zero harness processes already exist, `testTerminateOnly` still runs once — its purpose here is to prove the corrected signed runner initializes on the device, not to terminate anything.
+
+**3. Fresh K00-0506 N=10 — SELECTED as the next physiological experiment if readiness passes; EXECUTION HELD.** No further architectural decision on population, output sequence, thresholds or the separate K00-05/K00-06 readings; frozen: N 10 · act output · cancel-at 1000 ms · settle 2 s · VP ON · mode L · subject vpio-02 · K00-05 own reading · K00-06 own reading · coupling descriptive only · no top-up · no automatic rerun. **The batch is not executable from this ruling: readiness PASS establishes a fact; it does not itself create execution authority.** After the readiness evidence returns and is recorded, the founder issues the fresh batch authority string. None exists now; the old 2 086-byte string stays spent.
+
+**4. What the eventual N=10 ruling will pin (assuming readiness PASS):** corrected instrument `83a382a14…` · signed-runner readiness PASS · installed artifact = existing `.vpio02` / `E3B88028…` · one §10-shaped read-only preflight clean immediately before the batch · N = 10 · exact invocation `K00-0506 10 --act output …` · a new full authority string as invocation input. The batch's ordinary per-sample cold precondition stays lawful (terminate-only after sample 1 when needed), but a clean external preflight before sample 1 is required again so a lingering process is never normalized into the governed population.
+
+**Standing:** K00-04 PASS · K00-05 INCOMPLETE · K00-06 built-in INCOMPLETE · C-D20 instrument `83a382a14` COMPILED · lingering harness CLEARED · **runner-readiness preflight OPEN · one invocation** · **fresh K00-0506 N=10 SELECTED · EXECUTION HELD** · fresh authority string DOES NOT EXIST · reinstall / route / interruption / reset / endurance NOT AUTHORIZED · KERNEL-00 NOT ACCEPTED. The only live Mac act is the single corrected-runner readiness preflight; its evidence (transcript · signed `build-for-testing.log` · `test-without-building` log · after-listing JSON · product hashes of the signed runner) returns on a `feature/*` branch → §10.9.
