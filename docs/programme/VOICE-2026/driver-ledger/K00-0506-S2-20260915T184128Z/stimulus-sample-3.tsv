@@ -1,0 +1,53 @@
+sample	3
+fixture	/private/tmp/k0506-s2pop2-b198e2e37/scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav
+fixtureSha256	1a505b3d38a97b75cb935f85bd33deb889628322e558f74af9a5f05afbfbd00e
+afplay	/usr/bin/afplay
+afplaySha256	88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb
+afplayVolume	0.50
+afplaySeconds	180
+pid	30995
+startEpoch	1789497777
+preRunState	1789497778	alive
+liveness	1789497779	alive
+liveness	1789497780	alive
+liveness	1789497781	alive
+liveness	1789497782	alive
+liveness	1789497783	alive
+liveness	1789497784	alive
+liveness	1789497785	alive
+liveness	1789497786	alive
+liveness	1789497787	alive
+liveness	1789497788	alive
+liveness	1789497789	alive
+liveness	1789497790	alive
+liveness	1789497791	alive
+liveness	1789497792	alive
+liveness	1789497793	alive
+liveness	1789497794	alive
+liveness	1789497795	alive
+liveness	1789497796	alive
+liveness	1789497797	alive
+liveness	1789497798	alive
+liveness	1789497799	alive
+liveness	1789497801	alive
+liveness	1789497802	alive
+liveness	1789497803	alive
+liveness	1789497804	alive
+liveness	1789497805	alive
+liveness	1789497806	alive
+liveness	1789497807	alive
+liveness	1789497808	alive
+liveness	1789497809	alive
+liveness	1789497810	alive
+liveness	1789497811	alive
+liveness	1789497812	alive
+liveness	1789497813	alive
+liveness	1789497814	alive
+liveness	1789497815	alive
+liveness	1789497816	alive
+liveness	1789497817	alive
+postRunState	1789497817	alive
+stopRequestedEpoch	1789497817
+waitExitStatus	143
+stopEpoch	1789497817
+custody	VALID

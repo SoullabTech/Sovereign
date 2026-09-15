@@ -1,0 +1,55 @@
+[18:41:29] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[18:41:29] build-for-testing (driver only; the harness is untouched)
+[18:41:35] xctestrun: /private/tmp/k0506-s2pop2-b198e2e37/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+[18:41:35] stimulus preflight PASS: fixture 1a505b3d38a97b75cb935f85bd33deb889628322e558f74af9a5f05afbfbd00e · afplay 88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb · default output Mac Studio Speakers (coreaudio_device_type_builtin) · volume 69 · muted false
+[18:41:36] sample 1/10 — precondition
+[18:41:37] sample 1/10 — driver (testOutputSample, mode L)
+[18:42:19] sample 1 stimulus custody VALID (pid 30133 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:42:20] sample 1 ledgered: kernel00-K00-8d09e590-1789497735.jsonl
+[18:42:20] sample 1 output rows read: kernel00-K00-8d09e590-1789497735.jsonl
+[18:42:20] sample 2/10 — precondition
+[18:42:22] sample 2/10 — driver (testOutputSample, mode L)
+[18:42:54] sample 2 stimulus custody VALID (pid 30583 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:42:56] sample 2 ledgered: kernel00-K00-48b857c6-1789497770.jsonl
+[18:42:56] sample 2 output rows read: kernel00-K00-48b857c6-1789497770.jsonl
+[18:42:56] sample 3/10 — precondition
+[18:42:58] sample 3/10 — driver (testOutputSample, mode L)
+[18:43:37] sample 3 stimulus custody VALID (pid 30995 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:43:39] sample 3 ledgered: kernel00-K00-ea4d3805-1789497813.jsonl
+[18:43:39] sample 3 output rows read: kernel00-K00-ea4d3805-1789497813.jsonl
+[18:43:39] sample 4/10 — precondition
+[18:43:41] sample 4/10 — driver (testOutputSample, mode L)
+[18:44:13] sample 4 stimulus custody VALID (pid 31467 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:44:16] sample 4 ledgered: kernel00-K00-4989dad6-1789497849.jsonl
+[18:44:16] sample 4 output rows read: kernel00-K00-4989dad6-1789497849.jsonl
+[18:44:16] sample 5/10 — precondition
+[18:44:17] sample 5/10 — driver (testOutputSample, mode L)
+[18:44:49] sample 5 stimulus custody VALID (pid 31819 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:44:52] sample 5 ledgered: kernel00-K00-bbd4ec34-1789497885.jsonl
+[18:44:52] sample 5 output rows read: kernel00-K00-bbd4ec34-1789497885.jsonl
+[18:44:52] sample 6/10 — precondition
+[18:44:54] sample 6/10 — driver (testOutputSample, mode L)
+[18:45:26] sample 6 stimulus custody VALID (pid 32222 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:45:29] sample 6 ledgered: kernel00-K00-46d00487-1789497922.jsonl
+[18:45:29] sample 6 output rows read: kernel00-K00-46d00487-1789497922.jsonl
+[18:45:29] sample 7/10 — precondition
+[18:45:31] sample 7/10 — driver (testOutputSample, mode L)
+[18:46:03] sample 7 stimulus custody VALID (pid 32632 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:46:07] sample 7 ledgered: kernel00-K00-923c4e4b-1789497959.jsonl
+[18:46:07] sample 7 output rows read: kernel00-K00-923c4e4b-1789497959.jsonl
+[18:46:07] sample 8/10 — precondition
+[18:46:08] sample 8/10 — driver (testOutputSample, mode L)
+[18:46:40] sample 8 stimulus custody VALID (pid 32986 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:46:44] sample 8 ledgered: kernel00-K00-388b3ac9-1789497996.jsonl
+[18:46:44] sample 8 output rows read: kernel00-K00-388b3ac9-1789497996.jsonl
+[18:46:44] sample 9/10 — precondition
+[18:46:46] sample 9/10 — driver (testOutputSample, mode L)
+[18:47:19] sample 9 stimulus custody VALID (pid 33430 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:47:23] sample 9 ledgered: kernel00-K00-e5e6f9bb-1789498035.jsonl
+[18:47:23] sample 9 output rows read: kernel00-K00-e5e6f9bb-1789498035.jsonl
+[18:47:23] sample 10/10 — precondition
+[18:47:25] sample 10/10 — driver (testOutputSample, mode L)
+[18:47:57] sample 10 stimulus custody VALID (pid 33803 alive through the governed interval; stopped by the batch, wait rc=143)
+[18:48:02] sample 10 ledgered: kernel00-K00-08e81fa8-1789498073.jsonl
+[18:48:02] sample 10 output rows read: kernel00-K00-08e81fa8-1789498073.jsonl
+[18:48:02] batch complete — /private/tmp/k0506-s2pop2-b198e2e37/docs/programme/VOICE-2026/driver-ledger/K00-0506-S2-20260915T184128Z/ledger.md
