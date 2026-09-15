@@ -186,3 +186,28 @@ act** — it authorizes nothing and is not performed on the programme's behalf.
 
 **Standing: PHASE 0 ⭐⭐ CLOSED · CORPUS CUSTODY UNADJUDICATED · HOST MATERIALIZATION ⛔ BLOCKED ·
 PART A RUN #2 ⛔ UNAUTHORIZED · ACT 2A ⛔ UNOPENED · ⛔ NO CENSUS · ⛔ NO ARCHITECTURE ACT.**
+
+### Amendment — same day — guarded re-reading after daemon restart
+
+⭐ **A guarded control reading now carries the finding.** Both paths were confirmed to exist with
+`[ -f ]` *before* the read, so neither result can be a missing-path artifact — an earlier pair of
+readings was discarded for exactly that reason (empty `$F`/`$ROOT` in a fresh shell produced
+`CONTROL BLOCKED` / `STILL BLOCKED` from the shell failing to open an empty path).
+
+```text
+control file present                                    guard passed
+corpus file present                                     guard passed
+control → Operation timed out · 0.010s               → CONTROL BLOCKED
+corpus  → Error reading                              → STILL BLOCKED
+```
+
+⛔ `killall bird cloudd` did **not** clear it. The finding above stands.
+
+⚠️ **`last-sync` is NOT evidence and is withdrawn as such.** It read `2026-09-03` (stale), then
+`2026-09-15 11:25:06` (current) minutes later, then `2026-09-03` again — unstable across reads
+within the same hour. An intermediate session reported "sync recovered" on the middle reading;
+⛔ that inference is withdrawn. *Sync state and content fetch are the two things this diagnosis has
+kept apart from the start: metadata paths worked throughout while fetch stayed dead.* Only the
+guarded content read counts.
+
+**Standing unchanged.**
