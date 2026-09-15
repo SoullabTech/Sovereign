@@ -1,0 +1,83 @@
+{
+  "SPAudioDataType" : [
+    {
+      "_items" : [
+        {
+          "_name" : "ED343CUR V",
+          "coreaudio_device_manufacturer" : "ACR",
+          "coreaudio_device_output" : 2,
+          "coreaudio_device_srate" : 48000,
+          "coreaudio_device_transport" : "coreaudio_device_type_hdmi",
+          "coreaudio_output_source" : "spaudio_default"
+        },
+        {
+          "_name" : "B06Ultra",
+          "coreaudio_default_audio_output_device" : "spaudio_yes",
+          "coreaudio_device_manufacturer" : "Apple Inc.",
+          "coreaudio_device_output" : 2,
+          "coreaudio_device_srate" : 44100,
+          "coreaudio_device_transport" : "coreaudio_device_type_bluetooth",
+          "coreaudio_output_source" : "spaudio_default"
+        },
+        {
+          "_name" : "Kelly Nezat’s iPhone Microphone",
+          "coreaudio_device_input" : 1,
+          "coreaudio_device_manufacturer" : "Apple Inc.",
+          "coreaudio_device_srate" : 48000,
+          "coreaudio_device_transport" : "coreaudio_device_type_unknown",
+          "coreaudio_input_source" : "spaudio_default"
+        },
+        {
+          "_name" : "Scarlett 2i2 USB",
+          "coreaudio_default_audio_input_device" : "spaudio_yes",
+          "coreaudio_device_input" : 2,
+          "coreaudio_device_manufacturer" : "Focusrite",
+          "coreaudio_device_output" : 2,
+          "coreaudio_device_srate" : 192000,
+          "coreaudio_device_transport" : "coreaudio_device_type_usb",
+          "coreaudio_input_source" : "spaudio_default",
+          "coreaudio_output_source" : "spaudio_default"
+        },
+        {
+          "_name" : "Mac Studio Speakers",
+          "_properties" : "coreaudio_default_audio_system_device",
+          "coreaudio_default_audio_system_device" : "spaudio_yes",
+          "coreaudio_device_manufacturer" : "Apple Inc.",
+          "coreaudio_device_output" : 2,
+          "coreaudio_device_srate" : 48000,
+          "coreaudio_device_transport" : "coreaudio_device_type_builtin",
+          "coreaudio_output_source" : "Mac Studio Speakers"
+        },
+        {
+          "_name" : "Camo Microphone",
+          "coreaudio_device_input" : 2,
+          "coreaudio_device_manufacturer" : "Reincubate",
+          "coreaudio_device_output" : 2,
+          "coreaudio_device_srate" : 48000,
+          "coreaudio_device_transport" : "coreaudio_device_type_virtual",
+          "coreaudio_input_source" : "Camo Microphone",
+          "coreaudio_output_source" : "Camo Microphone"
+        },
+        {
+          "_name" : "Microsoft Teams Audio",
+          "coreaudio_device_input" : 1,
+          "coreaudio_device_manufacturer" : "Microsoft Corp.",
+          "coreaudio_device_output" : 1,
+          "coreaudio_device_srate" : 48000,
+          "coreaudio_device_transport" : "coreaudio_device_type_virtual",
+          "coreaudio_input_source" : "Microsoft Teams Audio Device",
+          "coreaudio_output_source" : "Microsoft Teams Audio Device"
+        },
+        {
+          "_name" : "Loopback Audio",
+          "coreaudio_device_input" : 2,
+          "coreaudio_device_manufacturer" : "Rogue Amoeba Software, Inc.",
+          "coreaudio_device_srate" : 44100,
+          "coreaudio_device_transport" : "coreaudio_device_type_virtual",
+          "coreaudio_input_source" : "spaudio_default"
+        }
+      ],
+      "_name" : "coreaudio_device"
+    }
+  ]
+}

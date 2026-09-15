@@ -1,0 +1,4 @@
+DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin 48000
+MAC_STUDIO_DEFAULT_OUTPUT True
+B06ULTRA_PRESENT True
+B06ULTRA_DEFAULT_OUTPUT False
