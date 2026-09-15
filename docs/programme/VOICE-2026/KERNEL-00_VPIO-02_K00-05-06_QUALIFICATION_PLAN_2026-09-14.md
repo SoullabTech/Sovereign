@@ -363,3 +363,44 @@ for d in docs/programme/VOICE-2026/driver-ledger/K00-0506-*/; do echo "== $d"; t
 ### 10.4 K00-0506 N=10 EXECUTED · RECEIVED and READ HERE → TEN INFRASTRUCTURE ROWS · CHARACTERIZE ONLY · K00-05 / K00-06 INCOMPLETE · C-D20 named · adjudication OWED
 
 Record: `KERNEL-00_VPIO-02_K00-05-06_WITNESS_2026-09-14.md`. Evidence `36d0d683d` cherry-picked `6960e13e7`, four hashes verified. Samples 1–2 automation-mode timeout (known start-of-batch shape); samples 3–10 `'Play 3 s tone' not found after Enter` ×8 (Enter tapped, five existence checks, hierarchy snapshot requested but discarded with the `.xcresult`); seven terminate-only preconditions passed; one harness process left alive after sample 10. No journal, no output rows, nothing read about the organism; K00-04 standing untouched. C-D20 candidate (inference): the Output section is the fourth section of a lazy SwiftUI `List` and is offscreen after Enter; correction shape = driver-only scroll-to-reveal + hierarchy-on-failure, new SHA, new compile, new ruling. Authority SPENT. Returned: classification · C-D20 · lingering-process disposal · whether a fresh N=10 opens.
+
+### 10.5 ADJUDICATED (founder) — classification ACCEPTED · C-D20 bounded driver repair AUTHORIZED · one corrective termination AUTHORIZED (pinned below) · fresh N=10 HELD
+
+Ruling substance in the witness record §8. Three acts follow, in this order; none opens a device witness.
+
+**A. Record pin (this section).** Then the C-D20 source change (§10.6 when landed).
+
+**B. C-D20 specification (driver only).** In `testOutputSample`, the single line `guard play.waitForExistence(timeout: 5) else { return driverFail(…) }` becomes: if the button does not exist within 5 s → up to `revealSwipeLimit = 4` calls of `harness.swipeUp()`, each followed by a short settle and an exact-label existence check (`harness.buttons["Play 3 s tone"].exists`), stopping at the first hit; if revealed → fall through to the unchanged `waitEnabled(play, timeout: 5)` guard; if not revealed after the fourth swipe → every line of `harness.debugDescription` is written to the runner log by `note(…)` under the prefix `K00-HIERARCHY:`, then the one existing `driverFail("'Play 3 s tone' not found after Enter …")` returns the same `DRIVER/INFRASTRUCTURE FAILURE`. `driverFail(` count in the body stays 1; no `XCTFail`/`XCTAssert`; everything from `waitEnabled` onward byte-for-byte as at `8b111709b`; `testOneSample` · `testW4Sample` · `testTerminateOnly` and the four historical helpers byte-identical to `08483cfe4`; the app under test still receives nothing. Gate amendments in the same commit: the ordered-step pin gains `play.waitForExistence(timeout: 5)` → `harness.swipeUp()` → `K00-HIERARCHY:` between `harness.buttons["Play 3 s tone"]` and `waitEnabled(play, timeout: 5)`; `static let revealSwipeLimit = 4` and the bounded `for … in 1...Self.revealSwipeLimit` loop pinned; the batch, both readers and the reinstall gate pinned byte-identical to `8b111709b6e5010b4b6ee7281d257141945276ff` (new constant). Then: gate read alone → one instrument commit → its SHA is the compile subject → driver-only `xcodegen` + generic-iOS `build-for-testing`, signing OFF → custody → STOP.
+
+**C. Corrective termination — pinned invocation (founder Mac act; the `8b111709b` signed batch runner already on the Mac; `TEST_RUNNER_K00_SUBJECT=vpio-02` is the only runner env; the harness receives nothing).** Read first; act only on exactly one; read once after; STOP. The process count is read from the listing's documented JSON exactly as the batch's `daemon_snapshot` reads it (`{"executable": "file://…", "processIdentifier": N}` rows; basename match on `VoiceKernelHarness`). Paste-able, no comments:
+
+```
+xcrun devicectl device info processes --device A0736AC8-793B-516F-AC72-C076DB6CEE38 --json-output /private/tmp/k0506-disposal-before.json
+python3 - /private/tmp/k0506-disposal-before.json <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print('VoiceKernelHarness processes BEFORE:', len(hits), hits)
+PY
+```
+
+If and only if the line reads `VoiceKernelHarness processes BEFORE: 1 […]`:
+
+```
+cd /private/tmp/k0506-driver-compile-8b111709b
+git rev-parse HEAD
+TEST_RUNNER_K00_SUBJECT=vpio-02 xcodebuild test-without-building -xctestrun /private/tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never -only-testing:DriverUITests/K00DriverTests/testTerminateOnly 2>&1 | tee /private/tmp/k0506-disposal-terminate.log
+xcrun devicectl device info processes --device A0736AC8-793B-516F-AC72-C076DB6CEE38 --json-output /private/tmp/k0506-disposal-after.json
+python3 - /private/tmp/k0506-disposal-after.json <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print('VoiceKernelHarness processes AFTER:', len(hits), hits)
+PY
+```
+
+`git rev-parse HEAD` must print `8b111709b6e5010b4b6ee7281d257141945276ff`; the xctestrun path is the one the K00-0506 batch logged at `[23:50:14] xctestrun:` (signed, device-targeted; the generic `build-for-testing` product is unsigned and is not this runner); the destination is the Xcode destination id, never the `devicectl` id. Zero, more than one, or an unreadable listing → return the BEFORE read and stop; a `testTerminateOnly` that reports `DRIVER/INFRASTRUCTURE FAILURE: harness did not terminate` → return the log and the AFTER read and stop; no second invocation. Return the three files on a `feature/*` branch.
+
+**D. Runner-readiness preflight (rule only; for the future N=10 ruling, NOT an authorization).** Before any fresh K00-0506 batch: on the corrected compiled runner (new SHA, custody recorded), exactly one `testTerminateOnly` against vpio-02 → PASS means the runner initialized on the device and no harness is running; FAIL → STOP, no retry inside the same authority. Then the §10-shaped read-only preflight (HEAD = new SHA · witness surface identical · apps listing carries `E3B88028` · zero harness processes). The batch itself needs a new authority string at invocation.
