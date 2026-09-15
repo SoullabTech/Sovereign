@@ -122,6 +122,49 @@ this is obvious from the member's side and easy for the architecture to miss.
 > organism to include the temporal middle: the part of the current relationship that has
 > fallen out of working context but has not ceased to matter.**
 
+### 3a.2 ⭐⭐ WHY ACT 2's CENSUS MISSED THIS — classes are blind to carrier gaps
+
+⚠️ `AIN-CONTEXT-01_ACT2_ARCHITECTURE` classified **C1 evidentiary** as
+*"⭐ **Sound as-is.** Do not derive over it destructively."* ⛔ **And the Lane 1 defect
+lives entirely inside C1.**
+
+That was not carelessness. Two taxonomies are in play and they are **orthogonal axes**,
+⛔ not rivals:
+
+```
+ACT 2 C1–C10          kinds of CONTINUITY   (what sort of past is this?)
+the ten memory layers kinds of CARRIER      (what brings it forward?)
+```
+
+Mapping them:
+
+```
+Working context            → C1 evidentiary (aperture slice)
+Current-session recovery   → C1 evidentiary   ⛔ NO CLASS OF ITS OWN
+Cross-session recall       → C1 evidentiary (other sessions)
+Marked / episodic          → C4 significance
+Breakthrough               → C4 significance
+Developmental              → C2 interpretive
+Interpretive / standing    → C2 + C3 corrective
+Relationship               → C8 relational
+Spiral / process           → C6
+Symbolic / elemental       → C7
+```
+
+⭐⭐ **"Current-session recovery" has no continuity class because it is not a new KIND of
+continuity — it is C1 reached through a carrier that does not exist.** The class was
+sound; its displaced region had no carrier. **A class-based census cannot see that**, by
+construction.
+
+⚠️ **The methodological consequence, which outlives this lane:** classifying continuity
+by kind and finding every kind covered does **not** establish that every kind is
+*reachable*. ⛔ The same blindness may be concealing another carrier gap — most plausibly
+under a class ACT 2 also marked adequate. ⭐ **Later lanes should census CARRIERS and
+CLASSES on separate passes**, and treat "class sound" as saying nothing about
+reachability.
+
+⛔ Naming this is not authorization to re-run the ACT 2 census.
+
 ---
 
 ## 4. The smallest honest next architecture
