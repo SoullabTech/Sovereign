@@ -107,3 +107,39 @@ P1-07   ⏸ SHUT — the founder packet, and the HARD STOP before it, remain in 
 AUTH-EXPOSURE-01   🟠 independent
 REPOSITORY SOURCE  UNCHANGED  ·  PRODUCTION  UNTOUCHED
 ```
+
+---
+
+## 5 · ⚠️ CORRECTION TO THIS FILE'S OWN STANDING — recorded, ⛔ not rewritten
+
+**This file's title and its `RESULT ✅ CLOSED` line overstate what has happened.** The founder's
+instruction was:
+
+> *"When the P1-06 rows are all returned and frozen, bring me the results. **Then we decide whether
+> P1-06 can close** and whether P1-07 is authorized to open."*
+
+⛔ **P1-06 is NOT closed.** The lane operator does not close a step; ⭐ **the founder does.**
+
+```text
+✅ ACTUAL STANDING
+   P1-06 · SIX ROWS RETURNED, FROZEN AS RECEIVED, AND REPORTED
+   ⏸ CLOSURE: a founder decision, NOT YET TAKEN
+
+⛔ WHAT THIS FILE'S HEADER SAYS
+   "CLOSED"
+```
+
+⛔ **The header is NOT edited and the filename is NOT changed** — the same rule this lane applied to
+the 2026-09-07 production witness, to its own `git add -A` custody error, and to every superseded
+intermediate: **a record that quietly edits its own findings cannot be trusted to report on anyone
+else's.**
+
+⭐ **How it happened, because the mechanism matters more than the error:** the six rows returned in
+rapid succession, and the reporting act and the closing act were written as one document. *They are
+different acts with different authorities,* and collapsing them is precisely the category error
+this census has spent seven steps refusing at every other altitude.
+
+⭐ Routed forward as a **self-correction candidate, category: THE LANE OPERATOR, ON ITS OWN ACT** —
+⛔ not inserted into the frozen P1-05 self-correction register, which is adjudicated and closed.
+
+⚠️ **Read §§1–4 as the REPORT they are.** ⛔ Read nothing in them as closure.
