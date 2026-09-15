@@ -1,0 +1,7 @@
+PREFLIGHT_DIFF_RC=0
+OTHER_BATCHES=0
+APPS_READ_RC=0
+E3B88028_CONTAINER_HITS=1
+PROCESS_READ_RC=0
+VoiceKernelHarness processes: 2
+STOP: harness process present

@@ -1,0 +1,40 @@
+== block A diff (only the three tokens may appear)
+2,3c2,3
+< git -C /Users/soullab/MAIA-SOVEREIGN worktree add --detach /private/tmp/k0506-s2w-b198e2e37 b198e2e37058f2e059d986b4b148e224215f3ee3
+< cd /private/tmp/k0506-s2w-b198e2e37
+---
+> git -C /Users/soullab/MAIA-SOVEREIGN worktree add --detach /private/tmp/k0506-s2w2-b198e2e37 b198e2e37058f2e059d986b4b148e224215f3ee3
+> cd /private/tmp/k0506-s2w2-b198e2e37
+== block B diff (only the three tokens may appear)
+1c1
+< cd /private/tmp/k0506-s2w-b198e2e37
+---
+> cd /private/tmp/k0506-s2w2-b198e2e37
+25c25
+< PF="docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-01-preflight-$(date -u +%Y%m%dT%H%M%SZ)"
+---
+> PF="docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-02-preflight-$(date -u +%Y%m%dT%H%M%SZ)"
+== block C diff (only the three tokens may appear)
+1c1
+< cd /private/tmp/k0506-s2w-b198e2e37
+---
+> cd /private/tmp/k0506-s2w2-b198e2e37
+3c3
+< scripts/witness/k00-driver-batch.sh S2-WITNESS-01 1 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02 --stimulus s2-nearend 2>&1 | tee /private/tmp/s2-witness-01-transcript.txt
+---
+> scripts/witness/k00-driver-batch.sh S2-WITNESS-02 1 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02 --stimulus s2-nearend 2>&1 | tee /private/tmp/s2-witness-02-transcript.txt
+== block D diff (only the three tokens may appear)
+1,2c1,2
+< cd /private/tmp/k0506-s2w-b198e2e37
+< LD="$(ls -td docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-01-2* | head -1)"
+---
+> cd /private/tmp/k0506-s2w2-b198e2e37
+> LD="$(ls -td docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-02-2* | head -1)"
+13c13
+< cp /private/tmp/s2-witness-01-transcript.txt "$LD/transcript.txt"
+---
+> cp /private/tmp/s2-witness-02-transcript.txt "$LD/transcript.txt"
+fedb50c09bdf6220c7a775778cd974d14186340b0f08e14ce36cbb3ce830debd  /private/tmp/s2w2-blockA.sh
+52237fe973494d908d3bf72520580e6dd9e4532498fd8ae1c6e96c1820f51767  /private/tmp/s2w2-blockB.sh
+3d74aa9cc06baf866cd829bf6cfec60393ebed4c077e8de0f14af9aea21a76f9  /private/tmp/s2w2-blockC.sh
+e8caa14c0b8de8b299caac382c5bbbc5ffc71b21838cc045aaff97a37332d326  /private/tmp/s2w2-blockD.sh
