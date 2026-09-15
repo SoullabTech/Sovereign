@@ -77,6 +77,43 @@ happened?*) unanswerable at retrieval** — the two systems collapsing in the ot
      retrieval score rather than hidden temporal policy
 ```
 
+### 3.0 ⭐⭐ THE TWO ACTS, AS RULED (founder, 2026-09-15)
+
+```text
+ACT 1   ratify temporal law
+          ↓ bind both decay implementations
+          ↓ compare EACH INDEPENDENTLY against "salience, never validity"
+          ↓ STOP before choosing or changing either
+
+ACT 2   use existing selectionTrace
+          ↓ measure whether live decay changes what reaches MemoryBundle / MAIA
+```
+
+⛔ **Only after those two acts is reconciliation justified.**
+
+⭐ **INDEPENDENTLY is load-bearing, and it is the same discipline `RELATIONAL-DISCOURSE-MEMORY-01`
+carries**: *neither corpus may name the other before both have been independently described.*
+⛔ **Do not diff the two implementations against each other in ACT 1.** Diffing them produces
+*"they mostly agree — take the live one,"* which is the exact inheritance the finding refuses.
+⭐ Each is judged against the LAW, alone. ⛔ And **if neither obeys it, neither inherits authority
+merely because one is live.**
+
+### 3.0a ⚠️⚠️ THE HAZARD BETWEEN THE ACTS — the evidence ACT 2 needs is PERISHABLE
+
+⛔⛔ **No change to decay may land between ACT 1 and ACT 2.**
+
+⭐ ACT 1 can plausibly conclude *neither implementation obeys the law* — and that conclusion
+creates immediate pressure to repair. ⚠️ **But ACT 2 measures the behaviour of the UNRECONCILED
+mechanism, and a repair destroys that state permanently.** Once decay is reconciled, ⛔ **what
+the unreconciled decay was doing to members' prompts can never be measured again.**
+
+⭐⭐ *This lane has already lost evidence exactly this way*: the `🌉 [L1/bridge]` line was
+destroyed by a rollback — a legitimate act taken before the evidence was captured.
+⛔ **A correct repair is as destructive to a perishable baseline as an incorrect one.**
+
+⭐ So ACT 1's stop condition is not merely *stop before choosing*; it is **stop before changing,
+and hold that freeze through ACT 2.**
+
 ### 3.1 ⭐ THE INSTRUMENTS ALREADY EXIST, AND ARE CO-LOCATED
 
 ```text
@@ -117,6 +154,9 @@ frozen temporal-memory direction note.
 lane ............................. ⛔ PREPARED · NOT OPENED
 governing law .................... ⭐ DRAFTED (§1) · ⛔ not ratified
 supersession labels ≠ filters .... ⚠️ TRAP NAMED (§2.1)
+two acts ......................... ⭐ RULED (§3.0) · ACT 1 judges · ACT 2 measures
+independent judgment ............. ⛔ do NOT diff the implementations against each other
+decay frozen ACT 1 → ACT 2 ....... ⛔⛔ NO CHANGE MAY LAND BETWEEN THEM (§3.0a)
 witness before redesign .......... ⭐ REQUIRED (§3)
 instruments ...................... ⭐ EXIST · co-located · ⛔ no new instrumentation
 decay ............................ ⛔ NOT REPAIRED · ⛔ NOT REMOVED · ⛔ NOT REDEFINED
