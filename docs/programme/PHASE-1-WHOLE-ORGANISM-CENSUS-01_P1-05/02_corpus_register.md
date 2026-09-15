@@ -339,3 +339,362 @@ two tokens name one object, and the hard vocabulary rule forbids merging them on
 RESIDUE · OWED READ (§5): the referent of `talkModeFieldIntelligence` at `fieldMonitorTelemetry.ts:165`.
 ⛔ Not performed. Side B's onward claim ("producing a prompt block on the canonical member path") is the
 disputed side of X-DEF-1 (owned) — §6.
+
+```text
+ITEM      CONTRA-4 · "The ONLY file that knows how the field engines connect"
+OUTCOME   C5 GENUINE CONTRADICTION
+```
+BASIS · Side A `fieldOrchestrator.ts:3` "asserts sole-seam status"; Side B — "at least four other seams
+connect field engines into cognition — `maiaService.ts:1082`, `maiaService.ts:2838`,
+`oracle/conversation/route.ts:853`, `:902`, `voice/stream-conversation/route.ts:82`". A universal
+descriptive claim against named counter-seams (P-A).
+RESIDUE · Two of the named counter-seams sit on a route whose liveness is UNKNOWN, and one (`:1082`) is the
+block disputed at X-DEF-1 (owned); ⛔ the sole-seam claim is not rescued by either, since
+`maiaService.ts:2838` (`enforceFieldSafety`) is undisputed in the corpus.
+
+```text
+ITEM      CONTRA-5 · `persistentFieldStates` is not persistent
+OUTCOME   C5 GENUINE CONTRADICTION
+```
+BASIS · Side A `QuantumFieldMemory.ts:2-6` — "maintaining persistent field states"; Side B — "`:91` is
+`new Map()`; the file's only import is `crypto`; no `query`/`INSERT`/`SELECT` in 810 lines". The `C5`
+attaches to the header SENTENCE, a descriptive claim (P-A).
+RESIDUE · ⛔ Per the vocabulary rule no finding attaches to the identifier `persistentFieldStates` itself;
+that limb is carried at VC-names-asserting-what-they-do-not-carry (E-34).
+
+```text
+ITEM      CONTRA-6 · two SQL decay definitions and one TS helper
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · Named objects, and the record states which runs where: Side A — "SQL, both copies identical:
+baseline:711-737 and `20251231_memory_architecture_enhancements.sql:178-214` — no confirmed-memory bonus of
+any kind; **the SQL function is what runs in retrieval**"; Side B — "`lib/memory/confidenceDecay.ts:78-79`
+— `effectiveHalfLife = confirmedByUser ? halfLifeDays * 1.5 : halfLifeDays`".
+RESIDUE · ⭐ Side C is a separate, unresolved limb: the anchor's "the SQL confirmation term caps at 0.0225"
+is "NOT confirmed — no confirmation term of any form exists in either SQL copy", while register 01 records
+"the referent of 'the SQL confirmation term caps at 0.0225' (C §10, **NOT FOUND at the subject**)". With the
+referent NOT LOCATED, whether the anchor's claim conflicts with the quoted SQL is ⛔ undetermined — owed read, §5.
+
+```text
+ITEM      C-E1 · Phase is 1–3, and phase is 1–12
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · Two named objects, and the record states the conversion between them: "`spiralogic-core.ts:17` —
+`export type Phase = 1 | 2 | 3`, a 12-cell grid of 4 elements × 3 phases"; "`20260213200001_member_spiral_state.sql:19`
+— `phase INTEGER CHECK BETWEEN 1 AND 12`; `conductor.ts:24-28` normalizes to 1..12. **The conductor writes
+the former into the latter.**"
+RESIDUE · ⛔ The corpus does not establish that a 1..12 grid coordinate and a 1..12 scalar are the same
+quantity, nor that the normalization is invertible. VC-phase carries the wider collision.
+
+```text
+ITEM      C-E2 · And phase is `Intelligence | Intention | Goal`
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · A third named vocabulary at a named site: "`maiaService.ts:1134-1137` — a third vocabulary on the
+canonical lane, computed and deliberately not appended. Both stand alongside C-E1."
+RESIDUE · ⭐ "MAIA assigns a phase" remains unevaluable until the referent is named (VC-phase). The
+"deliberately not appended" limb is a separate fact about surfacing, ⛔ not adjudicated here.
+
+```text
+ITEM      C-E3 · the route both has no phase and injects one
+OUTCOME   C6 UNKNOWN
+```
+BASIS · "`maiaService.ts:1727/:1737/:2275` state in code that the route has no phase and default to 1"
+against "`maiaService.ts:1098` computes `Phase detected: …` for the same route's prompt", carried as "made
+by the same file about the same turn". ⛔ But the corpus also declares, at VC-phase, that it "cannot evaluate
+'MAIA assigns a phase' until the referent is named", and it names ⛔ no referent for either site. Whether the
+two statements concern one phase vocabulary or two therefore requires a likelihood judgement.
+RESIDUE · OWED READ (§5): the phase vocabulary in force at `:1727/:1737/:2275` and at `:1098`. ⛔ Not
+performed. Depends on VC-phase.
+
+```text
+ITEM      C-E4 · "8 voices" vs the code
+OUTCOME   C5 GENUINE CONTRADICTION
+```
+BASIS · Side A `CLAUDE.md` — "MythicAtlas + MaiaVoice + ShadowAgent + Fire/Water/Earth/Air/Aether";
+Side B code — "MythicAtlas + MaiaVoice + **WisdomRouter** + up to six elemental rows in which `shadow` is an
+ELEMENT VALUE, not a separate ShadowAgent". Both are descriptive enumerations of one composition (P-A).
+RESIDUE · ⭐ D-P1-06 constrains the reading, ⛔ not the class: the anchor "is not permitted to override a
+ratified or otherwise stronger governing source merely because every session reads it first", and the
+conflict is PRESERVED + REPORTED. ⛔ No repair. ⛔ No dated evidence of an earlier composition exists, so no
+`C3` reading is available.
+
+```text
+ITEM      C-E5 · "imported only by soulPortrait/schema" vs zero importers
+OUTCOME   C5 GENUINE CONTRADICTION
+```
+BASIS · Side A "the cited import"; Side B "at the subject `lib/soulPortrait/schema.ts:19` is a **comment,
+not an import**". Carried: "The subject reading governs E's record; both preserved."
+RESIDUE · The artifact that carries the citation is ⛔ not identified in the permitted evidence, so no
+provenance or dating of the claim is available and no `C3` reading can be tested.
+
+```text
+ITEM      C-E6 · continuity substrate with no writer
+OUTCOME   C6 UNKNOWN
+```
+BASIS · Side A "migration :1-5 'prevents treating returning members like new people'; `CLAUDE.md` documents
+a live wire into `oracle/conversation/route.ts`"; Side B "that route refuses at `:446-453`". Side B is
+exactly the characterization X-DEF-2 holds open — the same route is recorded there as a live cognition
+path, as unconditionally refused, and as ~zero traffic, with the corpus refusing to let any settle it.
+RESIDUE · Depends on X-DEF-2 (owned by `01_named_objects`) — §6. OWED READ (§5): a dated runtime witness for
+the route. ⛔ Not performed. ⛔ "no reachable writer" is NOT LOCATED, not ABSENT.
+
+```text
+ITEM      C-E7 · R16 strips; the member API returns unstripped
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · The corpus names the scoping itself: "**Two different boundaries, one field class.**" Side A
+`developmentalStateAdmission.ts:31-39,:61` (prompt-shaping admission); Side B
+`app/api/members/spiral-state/route.ts:28-29` (member-facing read). Both true of their own boundary.
+RESIDUE · Whether one field class ought to cross both boundaries is a governance question with ⛔ no located
+source; P1-GOV-ACCESS-01 stands adjacent. ⛔ Not adjudicated (the corpus's own words).
+
+```text
+ITEM      C-E8 · S-16 shape against a nonexistent Prisma model
+OUTCOME   C2 RESOLVED BY ALTITUDE
+```
+BASIS · ALTITUDE 1 — implementation: "code present and route-exposed". ALTITUDE 2 — data-model declaration:
+"`prisma.spiralProcess` has no declared model among 53". Both hold; a route may exist while the model it
+names is undeclared.
+RESIDUE · What happens if the path is reached is ⛔ not established — no runtime witness, and reachability is
+not traced. ⛔ No inference drawn from the absence of a model to the behaviour of the route.
+
+```text
+ITEM      C-F1 · I Ching prompt vs the symbolic lens boundary
+OUTCOME   C2 RESOLVED BY ALTITUDE
+```
+BASIS · ALTITUDE 1 — ratified canon: `MAIA_SOVEREIGNTY_INVARIANTS.md:245`, "Tier 1 names I Ching: only
+'this tradition associates…'". ALTITUDE 2 — deployed implementation:
+`app/api/changes/[id]/interpret/route.ts:21,40` (+ identical studio route) — "Do not explain the I Ching
+tradition — speak from within it." / "Speak as if the hexagram itself is addressing the person." The corpus
+states the altitude difference itself: "⛔ Side B is canon-bound; Side A is deployed on a
+member-authenticated, persisting route."
+RESIDUE · ⭐ A same-altitude limb remains: two deployed prompts differ from each other —
+`maia/list/route.ts:283` "frame it explicitly as a traditional association" against `interpret/route.ts:21`.
+Two routes are two objects (`C1`), yet one canon clause is quoted over both. ⛔ Preserved, ⛔ not repaired,
+⛔ no verdict of legitimacy.
+
+```text
+ITEM      C-F2 · `safe_for_retrieval`
+OUTCOME   C2 RESOLVED BY ALTITUDE
+```
+BASIS · ALTITUDE 1 — protocol document: `CORPUS_DISCIPLINE_PROTOCOL_v1.0.md:104` — "indexed but never
+retrieved". ALTITUDE 2 — implementation: "zero occurrences in code or SQL". The corpus itself refuses the
+truth-contest framing: "not resolved by deciding which is 'really' true."
+RESIDUE · ⭐ The protocol's mechanism is NONE LOCATED in code, ⛔ not ABSENT; whether the discipline is
+achieved by some other located mechanism is ⛔ not established.
+
+```text
+ITEM      C-F3 · P1-01 slice 05 versus the code on tarot
+OUTCOME   C4 RECORD DEFECT  (C4-CENSUS)
+```
+BASIS · Side A `P1-01` — "tarot named in three canon docs, **zero files**"; Side B the subject re-read —
+"1,901 ln across 5 files plus a live route". Carried: "The re-read governs F's record; both recorded." The
+disagreement is between two census passes, ⛔ not between two organism behaviours.
+RESIDUE · ⛔ The P1-01 record is NOT corrected here and is NOT described as needing correction; both
+readings stand side by side, as the close record requires of census self-catches. Artifact 2 material.
+
+```text
+ITEM      C-F4 · SYMBOLIC_LENS_BOUNDARY scope vs wiring     (source class: TENSION)
+OUTCOME   C2 RESOLVED BY ALTITUDE
+```
+BASIS · ALTITUDE 1 — declared scope: "declared over six families at `:282`". ALTITUDE 2 — wiring: "applied
+at two call sites (`:646`, `:732`). Archetypes, cycles, and the I Ching / Tarot that Invariant 13 adds are
+not reached." Both hold.
+RESIDUE · Carried and ⛔ not converted into a defect claim: the wrapper is "a model-compliance instruction,
+not a structural refusal. Nothing measures obedience; no test, falsifier or post-generation check found"
+(E-18), and Invariant 13's Tier-2 refusal "has ⛔ no implementing code anywhere in Domain F" (E-19).
+
+```text
+ITEM      C-F5 · the oracle/conversation route's traffic
+OUTCOME   C6 UNKNOWN
+```
+BASIS · Side A `CLAUDE.md` — "receives ~zero live traffic"; Side B "`oracle/conversation/route.ts:30`
+imports `evaluateEncounter`; `OracleConversation.tsx:9723` renders `SacredPassageBlock`". The corpus
+forecloses the only available resolution: "⛔ the anchor may not settle this by assertion", and an import
+plus a render are not traffic (INF-1).
+RESIDUE · OWED READ (§5): a dated in-repo runtime witness for the route under the LIVE calibration.
+⛔ Not performed. This item is X-DEF-2's SIDE C — depends on X-DEF-2 (owned), §6.
+
+```text
+ITEM      C-F6 · Two objects named `PersonalOracleAgent`
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · The records distinguish the objects by path: "`lib/agents/PersonalOracleAgent.ts` — consumes
+`lib/knowledge`, unreached from `app/`" against "`app/api/_backend/src/agents/PersonalOracleAgent` —
+reached from two routes; declared sovereignty-violating and retired at `app/api/maia/chat/route.ts:7,26`".
+Carried: "⛔ Not merged."
+RESIDUE · ⭐ A `C6` sub-question rides inside and is ⛔ not dissolved by the classification: "⛔ which of the
+two objects those citations mean is NOT DETERMINED BY SOURCE RECORD" for P3-D-14 · P3-E-19 (E-36, itself
+classed SYN-4) — owed read, §5.
+
+---
+
+## 3 · PART III-C · register 03 / slice 06 · domains G · H · I (19 items)
+
+⚠️ The declared ID collision is kept: `C-1 (G)` … `C-6 (G)` are register 03's labels, ⛔ not register 01's
+`C-1 (§8.1)` … `C-5 (§8.5)`. ⛔ Neither was renamed.
+
+```text
+ITEM      C-1 (G) · provider failure
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · The corpus names the seams and forecloses the altitude reading itself: "**This is not a
+document-versus-code conflict. Both behaviours are implemented, on different seams**, at the same subject."
+DEGRADE — `lib/ai/sovereignRouter.ts:15-17,50-61` returns `DEGRADED_TEXT` "as an ordinary TextResult on four
+failure branches"; REFUSE — `lib/ai/structured/router.ts:116-131` returns
+"`{ ok:false, refusal:'provider_unavailable' }`" with "THE FAILURE STOPS HERE"; SIDE C — "with
+`MAIA_INFERENCE_MODE` unset, `modelService.ts:180-193` falls back to a local Ollama text model with no drift
+event". PART V records the two coverage families: CONVERSATIONAL TEXT vs STRUCTURED-READING.
+RESIDUE · ⭐ "Which governs production: UNKNOWN" — owed read (§5), and the value lies outside the permitted
+evidence entirely. ⛔ INF-3: an environment variable selecting the disposition authorizes nothing.
+
+```text
+ITEM      C-2 (G) · CLAUDE.md vs the tree on cloud providers    (also PART IV, one of the two anchor-level divergences)
+OUTCOME   C6 UNKNOWN
+```
+BASIS · Side A `CLAUDE.md` — "Never use OpenAI or other cloud AI providers." Side B `provider-policy.json`
+"tiers OpenAI as `lab` / `removal_in_progress` with a 32-file allowlist — **a governed migration debt, not a
+prohibition**", with "30 live-tree files import the SDK or call api.openai.com", `Dockerfile:57`
+`OPENAI_API_KEY=dummy-build-key`, and "`docs/adr/012` is Open / Deferred". ⛔ The item cannot be classed by
+altitude because the corpus declares one altitude undetermined: "**Authority standing UNKNOWN.**" Per the
+instrument, an altitude that cannot be established is `C6`.
+RESIDUE · ⭐ The norm-vs-tree limb ALONE would be `C2` — a prohibition quoted at governance altitude against
+30 named importing files at implementation altitude (INF-4) — and the SECOND LIMB likewise: "'or other cloud
+AI providers' is contradicted by Moonshot, in the tree, reachable by a per-request `meta` flag, in no tier
+and no guard." ⛔ Neither limb is promoted to the item's class. D-P1-06 binds: the anchor may not override a
+stronger governing source by assertion, the divergence is PRESERVED + REPORTED, ⛔ repair unauthorized.
+OWED READ (§5): whether `provider-policy.json` and ADR-012 are ratified governing sources.
+
+```text
+ITEM      C-3 (G) · "Main gateway for ALL text generation"
+OUTCOME   C5 GENUINE CONTRADICTION
+```
+BASIS · Side A `lib/ai/modelService.ts:71-73`; Side B `scripts/anthropic-import-allowlist.json` "(2 + 1 +
+57)". Carried: "**Both are the project's own text.**" A universal descriptive claim against the project's
+own enumeration of direct importers (P-A).
+RESIDUE · ⚠️ The allowlist is a CI instrument — INF-2, CI-GATED ↛ RUNTIME GOVERNED — so it evidences
+importers, ⛔ not governance. Shares its Side A sentence with A-6 (E-23); ⛔ the two items are not merged.
+
+```text
+ITEM      C-4 (G) · ADR-001 (Accepted) vs `selectClaudeModel`
+OUTCOME   C2 RESOLVED BY ALTITUDE
+```
+BASIS · ALTITUDE 1 — governance: ADR-001 "prescribes 7-level awareness → Opus/Sonnet routing 'in
+`lib/ai/claudeClient.ts`'" and "says all routing decisions **MUST** follow it". ALTITUDE 2 —
+implementation: "`claudeClient.ts:50-86` routes on `reasoningMode` and force flags and defaults to Sonnet,
+awareness level surviving only in a log string". Both hold (INF-4).
+RESIDUE · ⭐ The code asserts a "NEW PHILOSOPHY (Jan 2026)" while "**No superseding ADR or ruling was
+located**" — NONE LOCATED, ⛔ not ABSENT, and ⛔ an in-code assertion is not a governing act. OWED READ (§5):
+a governing-source search for a superseding ADR or ruling. ⛔ Not performed.
+
+```text
+ITEM      C-5 (G) · the degraded string's claim vs the seam
+OUTCOME   C6 UNKNOWN
+```
+BASIS · Side A `sovereignRouter.ts:16` — "I've saved your message."; Side B — "The router performs no
+persistence." The corpus withholds the fact that would settle the end-to-end claim: "**Whether a caller
+persists the turn is caller-dependent and is not resolved.**"
+RESIDUE · ⭐ The ratified wording is carried exactly and ⛔ not strengthened: "The emitting seam makes a
+persistence claim it does not itself discharge; end-to-end truth of that claim is caller-dependent and
+presently unresolved." ⛔ NOT "MAIA lies about saving" — "That stronger statement has not been earned."
+OWED READ (§5): whether the callers of `sovereignRouter` persist the turn on the four degraded exits.
+
+```text
+ITEM      C-6 (G) · declared scope of Kimi vs its trigger
+OUTCOME   C6 UNKNOWN
+```
+BASIS · Side A `modelService.ts:126` — "Never used for live chat - only when explicitly requested";
+Side B `:127` "`req.meta?.useKimi`, where `meta` is `Record<string, unknown>` with **no validation and no
+provenance**". ⛔ With the flag's provenance undetermined by the corpus's own words, whether a live-chat
+request can set it — and therefore whether Side A is contradicted — requires a likelihood judgement.
+RESIDUE · OWED READ (§5): the provenance of `req.meta` at the live-chat entrypoints — who may set it.
+⛔ Not performed. ⛔ INF-3: a request flag selecting a provider authorizes nothing.
+
+```text
+ITEM      C1 (H) · MAIA'S DEFAULT VOICE PROVIDER
+OUTCOME   C6 UNKNOWN
+```
+BASIS · Two sources each claiming canon status over the same default: Side A `lib/tts/cloudVoicePolicy.ts:1-40`
+("VOICE-SOVEREIGNTY-01, Founder canon ruling, 2026-08-27") — "⛔ THE DEFAULT IS THE CANON. Cloud voice is
+forbidden unless `MAIA_ALLOW_CLOUD_VOICE=1` is set explicitly"; Side B `app/api/voice/openai-tts/route.ts:115,128-131`
+— "MAIA vow: default voice is always maia_core (OpenAI Alloy)", with "unset or unknown archetype resolve to
+OpenAI". The corpus declares the adjudicating facts missing: "**Both sides call themselves the vow**"; "the
+archetype branch returns before the qualification, canon and consent gates are reached"; "the env var each
+depends on is set for one side and absent for the other in the production compose file"; "**UNKNOWN.**"
+RESIDUE · OWED READ (§5): which path serves a production voice turn (runtime witness), and the standing of
+the in-route "MAIA vow" sentence as a governing source. ⛔ Not performed. ⛔ `MAIA_VOICE_OVERRIDE`'s absence
+from the production compose is NONE LOCATED, not ABSENT.
+
+```text
+ITEM      C3 (H) · non-degradation gate reads green
+OUTCOME   C2 RESOLVED BY ALTITUDE
+```
+BASIS · ALTITUDE 1 — CI instrument: "the gate asserts convergence — one cognition call, reached once".
+ALTITUDE 2 — runtime egress: "convergence says nothing about EGRESS. The 2026-09-07 defect … left this gate
+GREEN throughout." Both hold — INF-2, CI-GATED ↛ RUNTIME GOVERNED.
+RESIDUE · Carried whole: "The repair exists and the gap is structurally closed — but by a **SECOND,
+SEPARATE gate**, and the non-degradation gate is still green independently of it." ⛔ Whether any instrument
+now asserts egress as a gate condition is not restated in the permitted evidence.
+
+```text
+ITEM      C4 (H) · sovereignty of the ear
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · The corpus names the scoping itself: "**Both sentences are true of different transports**; neither
+is qualified in the other's presence." Side A `transcribe-simple/route.ts:11-14` and `transcribe/route.ts:27`
+— "inbound member audio never leaves the host", "never OpenAI cloud"; Side B — "the DEFAULT transport for
+Chrome and Safari members is `web-speech`, where recognition is performed by the browser vendor off-device;
+Desktop alone is refused Web Speech, by shell classification".
+RESIDUE · ⭐ The qualification that makes both true exists ONLY in this census — the source sentences are
+unqualified where they sit, on the routes, while the default member transport is the other one. ⛔ No repair.
+Related to C2 (H), which is adjudicated separately and differently.
+
+```text
+ITEM      C5 (H) · Sanctuary and the voice path
+OUTCOME   C2 RESOLVED BY ALTITUDE
+```
+BASIS · ALTITUDE 1 — declared invariant: `CLAUDE.md` Sanctuary invariant 1 ("No content retention") and
+invariant 6 ("Absolute boundary"). ALTITUDE 2 — implementation: "four `saveConversationMemory` call sites,
+none gated on `isSanctuary`; `lib/services/memoryService.ts` contains no occurrence of 'sanctuary' in any
+case". Both hold (INF-4).
+RESIDUE · ⭐⭐ The altitude is weaker than it looks and the weakness is carried, ⛔ not hidden: "the six
+Sanctuary invariants live in `CLAUDE.md`, which D-P1-06 classes as **evidence, ⛔ not a governing source**"
+(B-23, E-27). So this is an unlocated-governance finding as much as a divergence: ⛔ NONE LOCATED, not
+ABSENT. Carried: "⚠️ MODALITY-SYMMETRIC — the typed path is identical; routed out, not repaired."
+⛔ No verdict of legitimacy, ⛔ no exposure claim.
+
+```text
+ITEM      C6 (H) · citation coordinates
+OUTCOME   C4 RECORD DEFECT  (C4-ORGREC)
+```
+BASIS · "Canon names the convergence at `:7268`; it is at `:7397`." · "The exit map and the test header both
+name the crisis script at `:6712`; it is at `:6854`." · "The stale comment the canon flags at `:7266` is
+still present at `:7395`". Coordinates in documents and test headers are bookkeeping about records,
+⛔ not organism behaviour.
+RESIDUE · ⚠️ Two characterizations are carried and ⛔ neither is chosen: slice 06 says "⛔ Recorded as
+staleness, ⛔ not divergence", while the register classes it DIVERGENCE. ⭐ This `C4` is a defect in the
+ORGANISM's records, ⛔ NOT in the census's — it is not artifact-2 material. The stale comment still reads
+"Browser STT → /api/between/chat → Browser TTS"; ⛔ no repair.
+
+```text
+ITEM      C-I-1 · "Deferred, held FALSE, no path" vs a live path
+OUTCOME   C5 GENUINE CONTRADICTION
+```
+BASIS · Side A `20260626000001_member_field_note_threads.sql:8,40,96` "states the capability DEFERRED and the
+column '**held FALSE, no path**'"; Side B `app/api/maia/vision-studio/field-note/route.ts:107-130` "binds it
+to a client-supplied value" and `app/studio/fields/[memberId]/page.tsx:69` "reads it". "No path" is a
+descriptive claim about the column, against a located path (P-A).
+RESIDUE · Whether the route is reached is ⛔ not established (INF-1) — and ⛔ it need not be: the `C5`
+attaches to "no path", which a located binding refutes. The deferral's authority is ⛔ not established (INF-4).
+
+```text
+ITEM      C-I-2 · "the consented facilitator view" vs a role-only gate
+OUTCOME   C5 GENUINE CONTRADICTION
+```
+BASIS · Side A `page.tsx:9-11` "asserts consent"; Side B the same file at `:104-107` checks "only that the
+viewer is *some* active practitioner", and `:79-85` applies "**no predicate at all** to `members.name` /
+`members.username`". One file's header sentence against its own located gate (P-A).
+RESIDUE · No consent predicate is located anywhere on this page — NONE LOCATED, ⛔ not ABSENT.
+P1-GOV-ACCESS-01 stands adjacent. ⛔ No verdict of legitimacy; ⛔ no exposure claim — that is not this
+census's territory and `AUTH-EXPOSURE-01` is neither cited nor awaited.
