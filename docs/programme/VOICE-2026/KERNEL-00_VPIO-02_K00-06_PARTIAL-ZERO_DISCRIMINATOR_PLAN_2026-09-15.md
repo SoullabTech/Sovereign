@@ -1115,3 +1115,41 @@ Relayed from the Mac session: Step 0 passed on the reread (implied by Step 1 hav
 The Mac session reports terminal access only, no GUI/mouse surface; every method available to it for changing the volume (`osascript`, accessibility scripting) would be an instrument mutation, which §18.5.1 forbids. It therefore did not change the volume and did not run Steps 3–4. Custody: Step 0 ✅ (pane closed, `rc=1`) · Step 1 ✅ (`20260915T132000Z`, volume 44, muted false) · Step 2 ⛔ NOT PERFORMED · Step 3 ⛔ NOT RUN · Step 4 ⛔ NOT RUN. This session has no GUI either. Lawful paths, exactly as §14.7: **path 1** a human hand at the Mac Studio (physical or ordinary screen sharing) sets 69 once, then the Mac session runs Steps 3–4 under the same stamp; **path 2** a new founder ruling authorizing a different mechanism as a new act. Neither session chooses. Conduct note: the before-read is a reading at a time; if the hand comes much later, Steps 0–1 are re-run under a fresh stamp rather than pairing a stale before-read with a new after-read (conduct within §18.5.2, not a change to it). Standing unchanged: 69 RULED · `S2-VOLUME-RESTORE-01` AUTHORIZED · HELD at Step 2 · `S2-WITNESS-02` NOT ISSUED.
 
 **Founder confirmation (2026-09-15) of §18.5.7:** act status BLOCKED, not failed · Step 2 ⏸ HOLD, human hand unavailable · the boundary is explicit — neither the remote record-keeper nor the Mac terminal session may substitute automation for the founder hand act · stale-read continuation confirmed as the lawful one (fresh Step 0 → fresh Step 1 → one hand act → Step 3 → Step 4 under a new stamp; `20260915T132000Z` remains custody of the blocked attempt, never paired with a later after-read) · nothing further in this lane until a lawful human hand is available at the Mac Studio or a new founder ruling authorizes a different restoration mechanism as a separate act · `S2-WITNESS-02` · S2 population · S3 · KERNEL-00 acceptance remain CLOSED.
+
+### 18.6 `S2-VOLUME-RESTORE-01` EXECUTED (fresh stamp `20260915T134328Z`) → **STOP** (`OUTPUT_VOLUME 73 ≠ 69`) · evidence RECEIVED and VERIFIED HERE · authority SPENT · volume to be left alone
+
+#### 18.6.1 Custody
+
+- Evidence branch `feature/k00-s2-volume-restore-01-evidence-20260915T134328Z`, HEAD `47ba68d30f1812b7dce5647db49d83754679bf4f`, cherry-picked here as `a8dad7942` (`-x`). Directory `driver-ledger/s2-volume-restore-20260915T134328Z/`, nine files + `SHA256SUMS`. **All nine hashes recomputed here = sealed = the founder's supplied list** (byte-identical set). The blocked attempt `20260915T132000Z` (§18.5.6–18.5.7) was not paired with this after-read: the stale-read continuation was followed — fresh Step 0 → fresh Step 1 → one hand act → Steps 3–4 under the new stamp — exactly as confirmed in §18.5.7.
+- The pinned §18.5.2 parser was re-run here on the returned `audio-after.json` + `volume-after.txt` and reproduces the founder's seven lines exactly.
+
+#### 18.6.2 What the files say
+
+```text
+before-utc            2026-09-15T13:43:28Z
+volume-before         output volume:44 · alert 59 · output muted:false
+sound-pane-before     rc=1  (pane closed)
+after-utc             2026-09-15T13:46:03Z   (2 min 35 s later)
+volume-after          output volume:73 · alert 59 · output muted:false
+sound-pane-after      rc=0  (System Settings 69392 · GeneralSettings 69394 · Sound.appex 69408 — a NEW instance; the §18.5.5 PIDs 48974/49015 had been quit)
+audio-after.json      sha 5b7be6ac… == audio-before.json (byte-identical: device state did not move)
+DEFAULT_OUTPUT        Mac Studio Speakers coreaudio_device_type_builtin 48000 (exactly one line)
+MAC_STUDIO_DEFAULT_OUTPUT True
+OUTPUT_VOLUME         73
+OUTPUT_MUTED          false
+RESTORE_ACCEPTANCE    STOP
+```
+
+B06Ultra connected (A2DP) at the before-read, not default. Default output, transport and muted state satisfy the acceptance condition; **the scalar does not: 73 ≠ 69 → STOP** under §18.5.3. No second adjustment under this act; no playback; no device selection; no phone act.
+
+#### 18.6.3 Adjudication (predeclared §18.5.3; nothing invented after the result)
+
+**`S2-VOLUME-RESTORE-01` → STOP. Authority SPENT.** The decisive criterion is the scalar. The Sound pane open at the after-read contradicts the §18.4.4 execution discipline and is recorded, but it is not the acceptance criterion and it is explained by the act itself: the hand act was performed through the System Settings → Sound slider, which the founder reports does not expose an exact numerical 69. Founder-disclosed, preserved and not absorbed: a later "fixed" adjustment was made after the after-read; it is outside this act, changes nothing adjudicable, was not read by any governed instrument, and **the current volume is therefore UNKNOWN to the record until the next lawful read**. Founder instruction: leave the volume alone.
+
+#### 18.6.4 What the STOP is evidence of (recorded; one inference flagged as such)
+
+- The fail-closed acceptance works at the hand seam too: a real hand act that lands near, not on, the ruled value is refused, not rounded. Same boundary as §17.
+- The five governed integer readings to date — 25 · 31 · 44 · 69 (accepted) · 73 (refused) — are all `osascript` reports of the system output scalar, which is also exactly what the S2 batch preflight compares (`output volume:69`). **INFERENCE, untested, for the next authority:** macOS's keyboard volume keys move the scalar in sixteenths (6.25 per step); 4/16 = 25, 5/16 = 31.25 → 31, 7/16 = 43.75 → 44, **11/16 = 68.75 → reported 69**, while 73 fits no sixteenth (73 ÷ 6.25 = 11.68) — consistent with 69 having been produced by a stepped control and 73 by a continuous slider drag. If true, a hand act by the volume keys (from 44 = 7/16, four presses up; or from any state, count to 11/16) would land on the reported integer 69 exactly, and the reported integer is the criterion the preflight reads. This is arithmetic on five readings, not a mechanism claim; a fresh restoration authority may test it or ignore it.
+- Whether the ruled value should remain an exact integer, become a band, or be reached by a stepped control is a **founder decision** (a band would change the batch's precondition = new orchestration SHA; a stepped-control hand act would not). This record chooses none.
+
+**Standing after §18.6:** `S2-VOLUME-DRIFT-01` CLOSED · candidate mechanism · 69 RULED · **`S2-VOLUME-RESTORE-01` STOP · SPENT** · current volume UNKNOWN to the record (a post-act adjustment disclosed, unread) · restoration re-open = a fresh founder authority (not issued) · `S2-WITNESS-02` NOT ISSUED · `b198e2e37` reusable if the batch is byte-unchanged · S2 population · S3 · KERNEL-00 acceptance CLOSED.
