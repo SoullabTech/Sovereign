@@ -152,3 +152,73 @@ route the acceptance law does not authorize.
 *That MAIA nevertheless answered correctly is the most dangerous property of this failure, not
 a mitigating one: it is the shape of a defect that would never have surfaced from member
 satisfaction alone.*
+
+---
+
+## 9. ROLLBACK · AUTHORIZED BY FOUNDER RULING (2026-09-15)
+
+The precommitted trigger **`bridge-positive path cannot recover its grounded target`** was met.
+
+```text
+W1                     ⛔ FAIL · durable at 60252820
+0f58a7f93              ⛔ NOT PRODUCTION-ACCEPTED
+rollback               ⭐ AUTHORIZED / INDICATED
+rollback target        e57ca1baa  (⛔ not canonical · ⛔ not a newer branch)
+W2 / W3                ⛔ remain unspent
+S                      ⛔ remains unspent
+repair investigation   ⛔ NOT AUTHORIZED
+root-cause diagnosis   ⛔ NOT AUTHORIZED
+W1 re-run after rollback ⛔ NOT REQUIRED — the failure is spent and recorded
+```
+
+⛔ **The probe difference does not change the disposition.** It may matter for a later
+diagnosis of *why* the live bridge chose a different path; it does not make the deployed
+behaviour acceptable. The capability was meant to serve a generic retrospective request, and
+the first production witness showed its provenance can terminate on a MAIA echo while still
+producing a satisfying answer.
+
+### 9.1 Custody to verify after rollback (⚠️ manual — the script does not gate on it)
+
+⚠️ `cmd_rollback` verifies only container health (`deploy-production.sh:778`). It reads the
+`:previous` image's `git.commit` label and **logs it without gating on it**, so a wrong
+`:previous` would be restored and still reported as success. The label must therefore be
+pre-checked, and these three facts confirmed by hand afterwards:
+
+```text
+running commit      e57ca1baa
+bridge integration  ABSENT — `grep -rl "L1/bridge" .next/server` inside the container
+                    must return NOTHING (positive proof the code is not in the image,
+                    not merely that it did not log)
+one-hop scorer      unchanged (byte-identical across the whole episode; it was never
+                    modified by the bridge deploy — §1)
+```
+
+### 9.2 ⚠️ Tag state created by the rollback itself
+
+`cmd_rollback` re-tags the failed build as `:previous` on success
+(`deploy-production.sh:783`):
+
+```text
+:current   e57ca1baa   restored
+:previous  0f58a7f93   THE FAILED BUILD
+```
+
+⛔ **A second `rollback` would roll FORWARD into the failed build.** Recorded so the recovery
+primitive does not become the next trap.
+
+## 10. ⭐⭐ THE DISTINCTION THIS LANE CARRIES FORWARD
+
+**The bridge MECHANISM is not disproven. Its production SELECTION LAW is.**
+
+The frozen P1 established that a lawful member-grounded path to `22` exists. Production
+established that under another ordinary opaque formulation, live selection can choose a
+different path terminating in **assistant-carried material**. Those are different claims and
+must not be collapsed: rolling back the integration is not a finding that a bridge cannot be
+built.
+
+⭐⭐ **A provenance defect that produces a wrong answer announces itself. A provenance defect
+that produces the RIGHT answer can become invisible infrastructure.** That is why this witness
+existed, and why member satisfaction was never permitted to discharge it.
+
+The selection law is the next architectural question. ⛔ It belongs to a separately authorized
+repair/investigation act, and is not opened here.
