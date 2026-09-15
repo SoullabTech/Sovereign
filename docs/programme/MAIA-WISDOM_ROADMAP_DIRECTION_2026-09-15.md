@@ -87,6 +87,76 @@ and it belongs in the acceptance criteria before a mechanism is chosen — ⛔ n
 
 ---
 
+## 2a. AMENDMENT — revised programme shape (founder, same day)
+
+*The arc in §1 is superseded in its middle and kept above as recorded. ⛔ Not edited to read as
+though it had always said this.* D1–D3 were accepted, and the founder's ruling is that the
+original arc **skipped two constitutional seams** which would otherwise have been inherited
+accidentally: **behavioral-witness acceptance** and **contribution authority**.
+
+```text
+PHASE 0  corpus witness instrument            ⭐⭐ CLOSED
+   ↓
+HOST MATERIALIZATION
+   ↓
+READ OK witness
+   ↓
+NEW CUSTODY ACT
+   ↓
+PART A RUN #2        corpus / custody evidence ONLY
+   ↓
+corpus findings adjudicated
+────────────────────────────────────────────────────────
+NEW BEHAVIORAL WITNESS LANE                   ⛔ unopened
+   ↓
+ACT 3 CONTRIBUTION AUTHORITY                  ⛔ unopened — required if member-derived
+   ↓                                             evidence is proposed
+behavioral evidence acquisition
+   ↓
+behavioral corpus adjudication
+   ↓
+INTERNALIZATION MECHANISM RULING              must satisfy one-mind / non-degradation
+   ↓
+canonical integration
+   ↓
+held-out witness
+   ↓
+production witness
+```
+
+⭐ **D2 sharpened:** provenance precedes distillation. Before *"collect 150–300 examples"* is even
+a coherent instruction, five questions are owed — *whose conversations · under what consent · for
+what purpose · with what contribution standing · with what retention and provenance*. ⛔ **ACT 3
+cannot be bypassed by renaming the operation** *evaluation*, *distillation*, or *training*.
+
+⭐ **D3 sharpened** — the invariant is not merely *do not diverge*, it is:
+
+```text
+different model substrate
+        ↓
+same constitutional / cognitive contract
+        ↓
+same recognizable MAIA
+```
+
+Training may eventually participate, but only if the capability is expressed across the canonical
+path, or is made substrate-independent enough that the fallback does not become a **second
+personality or second mind**.
+
+### Current authority (canonical re-entry state)
+
+```text
+materialization              ⏳ in progress, host-side
+named-file READ OK witness   NEXT — evidence only
+Part A Run #2                ⛔ requires new custody act
+behavioral witness lane      ⛔ unopened
+ACT 3 contribution           ⛔ unopened
+internalization mechanism    ⛔ undecided
+deployment                   ⛔ downstream
+```
+
+---
+
 ## 3. What "fully running" is being held to mean
 
 ```text
