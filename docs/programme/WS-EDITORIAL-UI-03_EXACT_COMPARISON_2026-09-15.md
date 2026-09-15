@@ -106,8 +106,15 @@ supersedes), and the empty-formulation obligation identifies its row **by the id
 the server returned** instead of by position. This also gave `B3`, which checks
 the closed-shape probes are aimed at the real head.
 
-⭐ Worth stating plainly: **UI-02's B11 was a true conclusion reached by an
-unsound instrument.** The finding is about the witness, not about the product.
+⭐⭐ **Worth stating exactly, because "UI-02 still passed" is the wrong
+reading** (founder ruling): UI-02's B11 was a true conclusion reached by an
+unsound instrument, so **its original proof is RETIRED as non-load-bearing
+evidence**, and the operative evidence for that conclusion is this run's
+corrected instrument. The product conclusion survives; the original proof does
+not. The UI-02 record carries this beside the claim it qualifies.
+
+⭐ The tautological `K1` is cleaner still: it **never became evidence**, because
+it was caught before execution.
 
 **(2) A tautology, caught before it ran.** A first `K1` compared the left side's
 text *to itself* — it would have passed on any rendering at all. Deleted rather
@@ -140,9 +147,23 @@ drop. ⛔ Left alone — panel density is the held class.
 
 ## 8 · Standing
 
-**WS-EDITORIAL-UI-03 · EXACT COMPARISON LIVE BEHIND THE FLAG · NO AUTHORITY
-CONSEQUENCE · BROWSER-WITNESSED 91/0 · MERGE NOT AUTHORIZED · PRODUCTION
-UNTOUCHED.**
+```
+WS-EDITORIAL-UI-03        ✅ CLOSED
+comparison semantics      ✅ witnessed
+source obligations        ✅ six mutants killed
+UI-02 conclusions         ✅ re-verified
+UI-02 original B11 proof  ⛔ superseded as unsound evidence
+
+adopt                      ⛔ CLOSED
+authorization/execution    ⛔ CLOSED
+merge                      ⛔ NOT AUTHORIZED
+production                 ⛔ UNTOUCHED
+cluster                    ✅ DESTROYED
+```
+
+⛔ **NO ENGINEERING CONTINUATION IS IMPLIED BY THIS RESULT.** The next possible
+act is a merge ruling, and it requires fresh authority — ⛔ UI-03 does not confer
+it.
 
 Held: Keep Original · a Revise decision affordance · Adopt exact version ·
 authorization/execution UI · legacy retirement · the global audio toast · the

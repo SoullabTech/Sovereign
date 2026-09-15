@@ -145,6 +145,30 @@ their words still in the field; the target still V2; the lineage re-read to thre
 `replacementText` → 201**, durable and authored, with the manuscript still the
 writer's own sentence.
 
+> ⚠️⚠️ **B11's ORIGINAL PROOF IS RETIRED AS UNSOUND EVIDENCE (founder ruling,
+> WS-EDITORIAL-UI-03).** The obligation *"and it is durable, authored, and
+> empty"* identified its row by POSITION in a list ordered `BY id` — a UUID, so
+> neither succession order nor creation order. It happened to land on the right
+> row.
+>
+> ```
+> UI-02 B11, original witness
+>   → conclusion happened to be true
+>   → instrument was unsound
+>   → this evidence is RETIRED / NON-LOAD-BEARING
+>
+> UI-03 corrected witness
+>   → succession head derived structurally
+>   → the row identified by the identity the server returned
+>   → the prior conclusion INDEPENDENTLY RE-VERIFIED
+>   → this is now the operative evidence
+> ```
+>
+> ⛔ It is not enough to say "UI-02 still passed". In the evidentiary sense it
+> did **not**, on this one assertion. **Its product conclusion survives; its
+> original proof does not.** Left in place above rather than edited, so what was
+> claimed and on what basis both stay visible.
+
 Seven known-bad mutants killed by the nine new source obligations (28 total in
 `canvasEditorialMount.test.ts`): head-derived target · prefilled field · draft
 cleared on refusal · truthiness-checked wording · seam resolving the predecessor
