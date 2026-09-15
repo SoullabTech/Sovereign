@@ -157,8 +157,9 @@ refusals written to prevent them recurring. Four examples, each now load-bearing
 **Provenance became three axes, not one scalar.** A single "epistemic class" let
 authorship hide inside standing: *system_inferred* and *member_authored* were points on
 one scale, so a derivation could drift toward the authority of a statement. The contract
-now separates three independent axes and declares them orthogonal: **who wrote it, how it
-arrived, and what standing it carries.** A machine derivation and a person's own sentence
+now separates three independent axes and declares them orthogonal —
+`authoredBy` × `participationClass` × `authority`: **who wrote it, how it arrived, and what
+standing it carries.** A machine derivation and a person's own sentence
 can now arrive by the same route without the route deciding whose words they are. ⭐ The
 ruling is recorded in the code itself: *a candidate's provenance is three axes, not one
 scalar.* **[contract]**
@@ -166,8 +167,9 @@ scalar.* **[contract]**
 **Historical recovery is type-separated from present location.** An observation about a
 sentence in a draft must remain recoverable after the sentence is edited — and must not
 thereby claim to describe the draft as it now stands. Two separate operations answer the
-two questions, and the second returns **three** answers, not two: it matches, it has
-changed, or *it could not be checked*. ⭐ The third exists because a present state that
+two questions, and the second returns **three** answers, not two —
+`current | superseded | unmeasured`: it matches, it has changed, or *it could not be
+checked*. ⭐ The third exists because a present state that
 could not be read must never be reported as agreement. **[fact]** — exercised by a named
 harness, not yet watched in production.
 
@@ -530,10 +532,16 @@ nothing below added an idea. Five changes, all legibility or compression:
 
 ⚠️ **One instruction I read as two and split.** *Keep one or two code-derived examples
 rather than a catalogue* and *§3's four distinctions are load-bearing* pull opposite ways.
-Resolution: **all four distinctions stay — the argument is that the principle recurred
-independently, and one instance cannot show recurrence** — but only two still cite code
-identifiers; the other two are stated in plain language. ⛔ If the intent was four down to
-two, that is a founder call and the cut is trivial to make.
+**RULED 2026-09-15, founder: all four stay.** The argument is not *here are examples* but
+*the same principle reappeared independently at multiple computational sites* — two would
+illustrate, four establish recurrence. Only two cite code identifiers; the other two are
+plain language, so the section does not read as an implementation tour.
+
+⚠️ **Correction, recorded rather than quietly fixed.** The first pass reported this state
+and did not produce it — the de-jargoning removed identifiers from all four, leaving zero.
+The two that carry information plain language loses were restored afterwards: the three
+provenance axes, and the three-member union whose third state is the whole point. ⛔ The
+discrepancy was between the report and the file, not in the ruling.
 
 ⭐ **The protected sentence is installed verbatim** at §3's close, set as the paper's
 one-line claim:
@@ -546,3 +554,20 @@ one-line claim:
 of the reader that this session does not have.
 
 ⛔ **Still open:** the disclosure-scope decision, carried in §22 of the comparison source.
+
+
+---
+
+## Standing rulings carried into any further pass · 2026-09-15
+
+| | ruling |
+|---|---|
+| §3 four distinctions | **KEEP.** Recurrence is the argument; two would only illustrate. Two cite identifiers, two stay plain. |
+| Invented-example provenance clause | **ADDED** — in the comparison source at §6, where the examples appear. ⚠️ The base carries no member-voice examples, so it has no site for the clause; if any are ever imported, the clause travels with them. |
+| Base document | This file. The founder-authored v1 is **comparison-only**, never merged wholesale. |
+| Conceptual expansion | **FROZEN.** |
+| Evidence marks | **[fact] · [contract] · [hypothesis]** — ⛔ internal grounding vocabulary does not return. |
+| E0 | The first experiment, failure rule predeclared. Larger relational-geometry questions stay downstream. |
+| "Julian already knows this" cuts | ⛔ **NOT GUESSED.** Needs knowledge of the reader this session does not have. |
+| §22 disclosure scope | ⛔ **SEPARATE FOUNDER DECISION**, not taken. |
+| The reversal record | Kept. *The important fact is not which draft won, but that both rulings existed in sequence and the record preserves that.* |
