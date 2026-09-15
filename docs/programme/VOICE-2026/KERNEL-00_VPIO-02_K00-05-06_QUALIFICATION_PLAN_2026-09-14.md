@@ -404,3 +404,38 @@ PY
 `git rev-parse HEAD` must print `8b111709b6e5010b4b6ee7281d257141945276ff`; the xctestrun path is the one the K00-0506 batch logged at `[23:50:14] xctestrun:` (signed, device-targeted; the generic `build-for-testing` product is unsigned and is not this runner); the destination is the Xcode destination id, never the `devicectl` id. Zero, more than one, or an unreadable listing → return the BEFORE read and stop; a `testTerminateOnly` that reports `DRIVER/INFRASTRUCTURE FAILURE: harness did not terminate` → return the log and the AFTER read and stop; no second invocation. Return the three files on a `feature/*` branch.
 
 **D. Runner-readiness preflight (rule only; for the future N=10 ruling, NOT an authorization).** Before any fresh K00-0506 batch: on the corrected compiled runner (new SHA, custody recorded), exactly one `testTerminateOnly` against vpio-02 → PASS means the runner initialized on the device and no harness is running; FAIL → STOP, no retry inside the same authority. Then the §10-shaped read-only preflight (HEAD = new SHA · witness surface identical · apps listing carries `E3B88028` · zero harness processes). The batch itself needs a new authority string at invocation.
+
+### 10.6 C-D20 LANDED at `83a382a1455161996d499f30cbf00504bbd0332a` — driver test only · gate 65/65 · NOT COMPILED · driver-only compile OWED (invocation pinned) · STOP
+
+**What moved (one instrument commit; `git diff --stat 8b111709b -- ios scripts` = `K00DriverTests.swift | 20 +++-`, nothing else):** `static let revealSwipeLimit = 4`; in `testOutputSample` the single `guard play.waitForExistence(timeout: 5) else { return driverFail(…) }` became: not present within 5 s → `for i in 1...Self.revealSwipeLimit { harness.swipeUp(); sleep 0.5 s; revealed = harness.buttons["Play 3 s tone"].exists; note(reveal swipe i/4 — exists: …); if revealed { break } }` → not revealed → every line of `harness.debugDescription` to the runner log as `K00-HIERARCHY: …` → the one existing `driverFail("'Play 3 s tone' not found after Enter (absent after 4 reveal swipes; hierarchy written under K00-HIERARCHY:)")` — the same `DRIVER/INFRASTRUCTURE FAILURE` class. From `guard waitEnabled(play, timeout: 5)` onward the act is byte-for-byte the `8b111709b` act (gate-asserted by slicing both bodies). Driver file SHA-256 `ead48cf59498f9c81ea2eb06dfb610ec6da87bd50b7c1cf8af59c480488b72c5`.
+
+**Frozen, verified before commit:** `git diff --quiet ac12dedf4… -- ios/VoiceKernel ios/VoiceKernelHarness` clean · `git diff --quiet 8b111709b… -- scripts/witness` clean (batch · `k00-ledger.py` · `k00-output-ledger.py` · `k00-reinstall.sh`). Gate 64 → **65/65** read alone before commit: new pin `INSTRUMENT_K0506 = 8b111709b…` (those four files byte-identical; the driver test must differ); the ordered-step pin now runs `harness.buttons["Play 3 s tone"]` → `play.waitForExistence(timeout: 5)` → `for i in 1...Self.revealSwipeLimit` → `harness.swipeUp()` → exact-label `.exists` → `if revealed { break }` → `if !revealed` → `harness.debugDescription` → `K00-HIERARCHY:` → `driverFail("'Play 3 s tone' not found after Enter` → `waitEnabled(play, timeout: 5)` → the unchanged tail; `revealSwipeLimit = 4` pinned; exactly one `swipeUp()` site; no `swipeDown|swipeLeft|swipeRight|scrollTo|while`; hierarchy written before the failure returns; `debugDescription` read once; `driverFail(` count 1; no `XCTFail|XCTAssert`; three historical tests + four helpers byte-identical to `08483cfe4`; app under test receives nothing.
+
+**Driver-only compile invocation (founder Mac act; fresh detached worktree at exactly this SHA; fresh derived path; signing OFF; paste as a block; no comments):**
+
+```bash
+git -C /Users/soullab/MAIA-SOVEREIGN fetch origin claude/voice-2026-census-01
+git -C /Users/soullab/MAIA-SOVEREIGN worktree add --detach /private/tmp/k0506-driver-compile-83a382a14 83a382a1455161996d499f30cbf00504bbd0332a
+cd /private/tmp/k0506-driver-compile-83a382a14
+git rev-parse HEAD
+grep -c 'static let revealSwipeLimit = 4' ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift
+python3 scripts/witness/k00-output-ledger.py --selftest | tail -1
+cd ios/VoiceKernelDriver
+xcodegen generate
+xcodebuild build-for-testing -project VoiceKernelDriver.xcodeproj -scheme DriverUITests -destination 'generic/platform=iOS' -derivedDataPath /private/tmp/k0506-driver-compile-83a382a14-derived CODE_SIGNING_ALLOWED=NO 2>&1 | tee /private/tmp/k0506-build-for-testing-83a382a14.log | tail -3
+```
+
+Expected readings, in order: `83a382a1455161996d499f30cbf00504bbd0332a` · `1` · `selftest: 33/33 expectations met` · `** TEST BUILD SUCCEEDED **`. Any other reading → STOP, return the transcript; a compile red is a bounded driver-source defect to record, corrected only on a new SHA under a fresh authorization.
+
+**Custody afterwards (same shape as §9.2):**
+
+```bash
+cd /private/tmp/k0506-driver-compile-83a382a14-derived/Build/Products
+grep -c 'TEST BUILD SUCCEEDED' /private/tmp/k0506-build-for-testing-83a382a14.log
+grep -cE 'devicectl|test-without-building|install app' /private/tmp/k0506-build-for-testing-83a382a14.log
+shasum -a 256 *.xctestrun Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests Debug-iphoneos/DriverUITests-Runner.app/DriverUITests-Runner Debug-iphoneos/DriverHost.app/DriverHost /private/tmp/k0506-build-for-testing-83a382a14.log
+```
+
+Expected: `1` · `0` · five hashes; only `DriverUITests` is expected to differ from §9.3 (`ab573914…`). Return on a `feature/*` branch → cherry-picked here → §10.7.
+
+**What this SHA does NOT open:** no device act; the corrective termination of §10.5 C runs on the `8b111709b` runner, not this one, and is independent of this compile; the fresh N=10 stays HELD behind §10.5 (4): this SHA · its compile custody · clean process state · the runner-readiness preflight on THIS runner (one `testTerminateOnly` vs vpio-02) · a fresh authority string. **STOP.**
