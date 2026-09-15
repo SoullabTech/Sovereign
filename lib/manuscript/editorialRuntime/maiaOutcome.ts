@@ -45,6 +45,15 @@ export interface MaiaOutcomeInput {
   readonly invocation: EditorialInvocation;
   /** ⭐ Already admitted. ⛔ This service never sees raw blocks. */
   readonly outcome: EditorialOutcome;
+  /**
+   * ⭐⭐ THE PROVENANCE OF THE ANSWER THAT ACTUALLY CAME BACK.
+   *
+   * ⛔ NOT the configured default. The durable MAIA turn must name the model
+   * that AUTHORED it, not the model we intended to call — a fallback, a
+   * version pin resolving differently, or an overridden base URL each make
+   * those two different facts.
+   */
+  readonly answerProvenance?: unknown;
 }
 
 export type MaiaOutcomeRefusal =
@@ -114,6 +123,7 @@ export async function persistMaiaEditorialOutcome(
       const turnIndex = await appendTurnWithClient(tx, {
         threadId: invocation.threadId, memberId, speaker: 'maia',
         body: outcome.reply, staleness: UNMEASURED,
+        answerProvenance: input.answerProvenance ?? null,
       });
 
       /* ⭐ THE ONLY THING CONSULTED IS `outcome.kind`. */
