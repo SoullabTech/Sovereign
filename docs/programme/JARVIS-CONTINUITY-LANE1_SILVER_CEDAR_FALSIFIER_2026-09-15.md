@@ -220,18 +220,116 @@ A6's acceptance — A6 is correct for the composition that exists today.
 
 ---
 
+## 4.5 Design sketch — five changes (⛔ DESIGN ONLY, NOT AUTHORIZED)
+
+**1 · Keep the recent aperture unchanged.** FAST/CORE/DEEP stay 3/4/5. ⛔ This is what
+prevents the repair from becoming "stuff 40–200 turns into every prompt."
+
+**2 · Expose the displaced set.** The complete session is already read and paired before
+slicing (§3). Retain rather than discard:
+
+```
+displaced = allSessionExchanges − recentAperture
+```
+
+**3 · Retrieve from `displaced` using the current utterance.** This session only.
+Return **1–3 exchanges, not 30.** Semantic relevance plus lexical/direct-reference
+signals is enough for a first cut.
+
+**4 · Carry durable identity and provenance on every recovered exchange.**
+
+```ts
+{ exchangeId, sessionId, timestamp, userMessage, maiaResponse,
+  source: 'current-session-recovery' }
+```
+
+⭐ This is what makes dedupe reliable and keeps **primary evidence distinguishable from
+summaries or inferred memory** — the property every later lane depends on.
+
+**5 · Move A6 accounting after composition.** Per §4.3 and §4.4.
+
+```
+recent aperture + recovered → dedupe by exchange identity → FINAL cognition
+represented = unique current-session exchanges actually present
+absent      = durableDepth − represented
+```
+
+CORE carrying 4 with 2 recovered ⇒ `depth 39 · represented 6 · absent 33`, ⛔ never
+`4 / 35`.
+
+### 4.5.1 ⚠️ PRECEDENT GAP — relevance ranking has no reusable implementation
+
+⚠️ Change 3 sounds like reuse. It is not. ACT 1 §7 established that the live
+developmental retrieval is **query-INDEPENDENT top-12** and that **the vector path is
+UNREACHABLE**. ⭐ So Lane 1's relevance search would be the **first query-dependent
+retrieval in the system**, with no working precedent to lean on.
+
+⛔ "Start small" is therefore building something new, not reusing something proven, and
+should be scoped accordingly. ⛔ Not a reason to widen Lane 1 — a reason not to
+underestimate change 3.
+
+---
+
+## 4.6 ⛔ WHAT NOT TO DO — each solves the symptom and creates a new defect
+
+- ⛔ raise the 10-turn server window to 50 or 100 and call that continuity
+- ⛔ dump the entire transcript into every prompt
+- ⛔ turn on current-session material in every cross-session memory loader (§4.1)
+- ⛔ retrieve a **summary** when the **primary turn** is available
+- ⛔ let recovered material bypass provenance
+- ⛔ calculate A6 **before** retrieval has finished (§4.3)
+
+---
+
+## 4.7 Lane 1's contract, deliberately narrow
+
+> When relevant evidence exists earlier in the current session but outside the working
+> aperture, MAIA can **selectively recover the primary exchange** into present cognition.
+
+⛔ Lane 1 does not solve all of MAIA's memory. That contract alone repairs the observed
+defect.
+
+---
+
 ## 5. ⭐ THE SILVER CEDAR TEST — Lane 1's acceptance falsifier
 
 At **35+ absent exchanges**, in one unreloaded session:
 
 > *"What was the phrase I gave you earlier in this conversation?"*
 
-```
-PASS   MAIA retrieves "silver cedar" from the durable same-session transcript
-       WITHOUT the member supplying it again
+**Full procedure:**
 
+```
+1. start a long session
+2. early:  "Silver cedar is an image that's been on my mind today."
+3. continue until that exchange is well outside the CORE aperture
+4. ask:    "What was the phrase I gave you earlier in this conversation?"
+5. MAIA must recover "silver cedar" from conversation_turns
+6. the member must NOT supply it again
+7. A6's counts must REFLECT the recovered exchange
+```
+
+**⭐⭐ TWO acceptance conditions, and BOTH must hold:**
+
+```
+C1 · RECOVERY    MAIA retrieves "silver cedar" from the durable same-session
+                 transcript without the member supplying it again
+
+C2 · ACCOUNTING  A6's represented count INCLUDES the recovered exchange
+                 e.g. depth 39 · represented 6 · absent 33   ⛔ never 4 / 35
+```
+
+⭐ **C2 is not decoration.** An implementation can pass C1 and fail C2 — recovering the
+phrase while still telling the member that 4 are present and 35 absent. That is a
+**correct answer delivered alongside a false statement about her own view**, which
+re-breaks A6 through the back door (§4.3). ⛔ **C1 alone is not a PASS.**
+
+```
 FAIL   she asks the member to reconstruct something still durably available
-       to her own system
+       to her own system  (C1 fails)
+
+FAIL   she recovers it but the A6 block still reports the pre-recovery counts
+       (C2 fails)
 ```
 
 ⭐ **The FAIL condition is today's observed behaviour**, which is what makes this
