@@ -536,3 +536,128 @@ The 0.023 s pass is the expected shape with zero harness processes: the correcte
 **RUNNER-READINESS PREFLIGHT: PASS · CLOSED.** What it establishes: the corrected instrument `83a382a14` has a signed runner that initializes and executes on this device against subject vpio-02, and the device holds zero harness processes as of 00:37Z. What it does not establish: anything about K00-05/06 (no journal, no Play, no Cancel); and per §10.8 item 3 it creates **no execution authority** — the fresh K00-0506 N=10 stays SELECTED · EXECUTION HELD until the founder issues the new authority string, which does not exist. The eventual ruling pins (§10.8 item 4): instrument `83a382a14` · readiness PASS (this section) · installed `.vpio02` / `E3B88028…` · one §10-shaped read-only preflight clean immediately before the batch (HEAD `83a382a14` · surface diff rc 0 · apps listing by `--bundle-id` + `--json-output` carrying `E3B88028` · zero harness processes) · N = 10 · exact invocation `k00-driver-batch.sh K00-0506 10 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02` from the `83a382a14` worktree with `K00_DEVICE` / `K00_XCODE_DEST` as in §10 · the new full authority string at invocation, never abbreviated in any chat rendering. The batch rebuilds its own signed runner into `.derived` at start; the readiness runner's hashes above are custody evidence for the instrument, not a precondition that the batch's rebuild reproduce them byte-for-byte.
 
 **Standing:** K00-04 PASS · K00-05 INCOMPLETE · K00-06 built-in INCOMPLETE · C-D20 instrument `83a382a14` COMPILED · corrected-runner readiness PASS · harness 0 processes · fresh K00-0506 N=10 SELECTED · EXECUTION HELD · fresh authority string DOES NOT EXIST · reinstall / route / interruption / reset / endurance NOT AUTHORIZED · KERNEL-00 NOT ACCEPTED. **No Mac act is live.** Next decision point = the founder's fresh-batch ruling with its authority string (§10.10 when issued).
+
+
+### 10.10 FOUNDER RULING — FRESH K00-0506 N=10 OPEN AFTER THIS RECORD PIN · preflight + exact invocation + complete authority string recorded · Mac act, NOT YET EXECUTED
+
+Readiness passed every predeclared field (§10.9); the corrected instrument is fixed at `83a382a1455161996d499f30cbf00504bbd0332a`; the installed `.vpio02` subject is the existing `E3B88028…` artifact. The held condition is satisfied. **The fresh physiological witness opens only after this section is recorded and pushed; then the preflight is the live Mac act, and the batch is live only if that preflight is clean.**
+
+**Authorized population.** Organism `ac12dedf4b7b4efc9855c08bb4285a704e7039f1` · installed subject `life.soullab.voicekernel.vpio02`, container `E3B88028-A10F-46B1-AB27-CF0A1F83FB78` · witness instrument `83a382a1455161996d499f30cbf00504bbd0332a` · runner readiness PASS (§10.9) · population K00-0506 · N=10 · act output · cancel-at 1000 ms · settle 2 s · VP ON · Mode L · subject vpio-02. No pilot, top-up, automatic rerun, reinstall, or organism rebuild.
+
+**Source custody — fresh detached batch worktree** (so the readiness run's `xcodegen` footprint cannot contaminate the preflight; custody preparation only, no new subject or instrument):
+
+```bash
+git -C /Users/soullab/MAIA-SOVEREIGN fetch origin claude/voice-2026-census-01
+git -C /Users/soullab/MAIA-SOVEREIGN worktree add --detach /private/tmp/k0506-batch-83a382a14 83a382a1455161996d499f30cbf00504bbd0332a
+cd /private/tmp/k0506-batch-83a382a14
+```
+
+**One read-only preflight immediately before the batch (founder-pinned; paste as a block):**
+
+```bash
+cd /private/tmp/k0506-batch-83a382a14
+HEAD_NOW="$(git rev-parse HEAD)"
+echo "HEAD=$HEAD_NOW"
+if [ "$HEAD_NOW" != "83a382a1455161996d499f30cbf00504bbd0332a" ]; then
+  echo "STOP: wrong instrument HEAD"
+  exit 90
+fi
+
+git diff --quiet 83a382a1455161996d499f30cbf00504bbd0332a -- \
+  ios/VoiceKernelDriver \
+  scripts/witness/k00-driver-batch.sh \
+  scripts/witness/k00-ledger.py \
+  scripts/witness/k00-output-ledger.py \
+  scripts/witness/k00-reinstall.sh
+DIFF_RC=$?
+echo "PREFLIGHT_DIFF_RC=$DIFF_RC"
+if [ "$DIFF_RC" -ne 0 ]; then
+  echo "STOP: witness surface differs"
+  exit 91
+fi
+
+if pgrep -fl 'k00-driver-batch.sh K00-0506' > /private/tmp/k0506-preflight-other-batches.txt; then
+  cat /private/tmp/k0506-preflight-other-batches.txt
+  echo "STOP: another K00-0506 batch process exists"
+  exit 92
+else
+  echo "OTHER_K00_0506_BATCHES=0"
+fi
+
+DEV=A0736AC8-793B-516F-AC72-C076DB6CEE38
+PF="docs/programme/VOICE-2026/driver-ledger/K00-0506-preflight-$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$PF"
+
+xcrun devicectl device info apps \
+  --device "$DEV" \
+  --bundle-id life.soullab.voicekernel.vpio02 \
+  --json-output "$PF/apps.json" >/dev/null
+APPS_RC=$?
+echo "APPS_READ_RC=$APPS_RC"
+if [ "$APPS_RC" -ne 0 ]; then
+  echo "STOP: apps listing unreadable"
+  exit 93
+fi
+
+CONTAINER_HITS="$(grep -c 'E3B88028-A10F-46B1-AB27-CF0A1F83FB78' "$PF/apps.json")"
+echo "E3B88028_CONTAINER_HITS=$CONTAINER_HITS"
+if [ "$CONTAINER_HITS" -lt 1 ]; then
+  echo "STOP: ruled VPIO-02 container not found"
+  exit 94
+fi
+
+xcrun devicectl device info processes \
+  --device "$DEV" \
+  --json-output "$PF/processes.json" >/dev/null
+PROCESS_RC=$?
+echo "PROCESS_READ_RC=$PROCESS_RC"
+if [ "$PROCESS_RC" -ne 0 ]; then
+  echo "STOP: process listing unreadable"
+  exit 95
+fi
+
+HCOUNT="$(python3 - "$PF/processes.json" <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print(len(hits))
+PY
+)"
+echo "VoiceKernelHarness processes: $HCOUNT"
+if [ "$HCOUNT" != "0" ]; then
+  echo "STOP: harness process present"
+  exit 96
+fi
+
+echo "PREFLIGHT_CLEAN=$PF"
+```
+
+Proceed only on: HEAD exact `83a382a14…` · `PREFLIGHT_DIFF_RC` 0 · `OTHER_K00_0506_BATCHES` 0 · `APPS_READ_RC` 0 · `E3B88028_CONTAINER_HITS` ≥ 1 · `PROCESS_READ_RC` 0 · `VoiceKernelHarness processes` 0. **Anything else is STOP.** No cleanup, termination, reinstall, second preflight, or corrective device act follows a failed preflight. (Session reading of the block, not a change to it: the preflight `PF` directory lands inside the batch worktree's `driver-ledger/`, so it is returned with the batch evidence on a `feature/*` branch; run in a fresh shell, `pgrep` sees only other batch processes, never itself.)
+
+**Fresh execution authority — verbatim (2 927 UTF-8 bytes, no apostrophe, no ellipsis; reproduced here byte-for-byte from the ruling, sha256 `fb1373850a3646fe…`; an invocation input, never reconstructed from this record):**
+
+```text
+FOUNDER-AUTH: VPIO-02 K00-05/06 fresh witness after C-D20 and corrected-runner readiness PASS; execute exactly one N=10 K00-0506 automated output-and-duplex witness batch on the existing VPIO-02 artifact installed by FIRST-INSTALL-02, using corrected Option C instrument at 83a382a1455161996d499f30cbf00504bbd0332a, subject vpio-02, bundle life.soullab.voicekernel.vpio02, Mode L, voice processing ON, act output, settle 2 seconds, cancel the first 3-second known-PCM tone at 1000 ms, then exercise the second 3-second tone to completion. This authority is valid only after the immediately preceding ruled read-only preflight returns HEAD exactly 83a382a1455161996d499f30cbf00504bbd0332a, witness-surface diff rc 0, an apps listing in which life.soullab.voicekernel.vpio02 still resolves to the FIRST-INSTALL-02 container E3B88028-A10F-46B1-AB27-CF0A1F83FB78, and zero VoiceKernelHarness processes. If any preflight field is unreadable or different, STOP before the batch and return the preflight evidence; do not normalize state, terminate a harness, reinstall, overwrite, change source, or take another corrective device act. If preflight is clean, execute the declared ten invocations and finish all ten unless the frozen instrument itself aborts. No pilot, no top-up, no automatic rerun, no source change, no reinstall, no threshold change, no fault injection, no manual intervention, no route-change act, no interruption act, no media-services-reset act, no endurance act, no unified-log experiment, no mutation of the frozen .vpio01 artifact, and no historical K00/R1 mutation. The batch may regenerate and signed-build only the external driver from the pinned 83a382a14 worktree as its frozen orchestration requires; the installed .vpio02 app under test must not be rebuilt, replaced, or reinstalled. The batch ordinary per-sample cold precondition is authorized for samples 2 through 10 to terminate a harness process left by the immediately preceding declared invocation before starting the next declared invocation. The external preflight is the custody condition for sample 1; if the batch nevertheless reports a harness process present before sample 1, preserve and return that event as a protocol deviation for founder adjudication and do not treat the resulting sample as K00-05 or K00-06 evidence. A valid K00-05 or K00-06 failure does not stop selection of the remaining declared rows. K00-05 and K00-06 remain separate readings: output and cancellation evidence may not mechanically decide duplex physiology, and duplex physiology may not mechanically decide output and cancellation. Echo coupling is descriptive only and creates no acoustic threshold. The 100 ms K00-05 cancellation ceiling and the frozen K00-06 continuity reading remain unchanged. Return the complete preflight and K00-0506 evidence for independent reading and founder adjudication. No outcome from this batch authorizes any subsequent act.
+```
+
+**Exact batch invocation — same shell, immediately after `PREFLIGHT_CLEAN` (the complete string is carried in the invocation; a chat rendering that abbreviates it is not an invocation, per §13.6.1 / §10.1):**
+
+```bash
+K00_DEVICE=A0736AC8-793B-516F-AC72-C076DB6CEE38 \
+K00_XCODE_DEST=00008140-00163D9922E0801C \
+K00_EXEC_AUTHORITY='FOUNDER-AUTH: VPIO-02 K00-05/06 fresh witness after C-D20 and corrected-runner readiness PASS; execute exactly one N=10 K00-0506 automated output-and-duplex witness batch on the existing VPIO-02 artifact installed by FIRST-INSTALL-02, using corrected Option C instrument at 83a382a1455161996d499f30cbf00504bbd0332a, subject vpio-02, bundle life.soullab.voicekernel.vpio02, Mode L, voice processing ON, act output, settle 2 seconds, cancel the first 3-second known-PCM tone at 1000 ms, then exercise the second 3-second tone to completion. This authority is valid only after the immediately preceding ruled read-only preflight returns HEAD exactly 83a382a1455161996d499f30cbf00504bbd0332a, witness-surface diff rc 0, an apps listing in which life.soullab.voicekernel.vpio02 still resolves to the FIRST-INSTALL-02 container E3B88028-A10F-46B1-AB27-CF0A1F83FB78, and zero VoiceKernelHarness processes. If any preflight field is unreadable or different, STOP before the batch and return the preflight evidence; do not normalize state, terminate a harness, reinstall, overwrite, change source, or take another corrective device act. If preflight is clean, execute the declared ten invocations and finish all ten unless the frozen instrument itself aborts. No pilot, no top-up, no automatic rerun, no source change, no reinstall, no threshold change, no fault injection, no manual intervention, no route-change act, no interruption act, no media-services-reset act, no endurance act, no unified-log experiment, no mutation of the frozen .vpio01 artifact, and no historical K00/R1 mutation. The batch may regenerate and signed-build only the external driver from the pinned 83a382a14 worktree as its frozen orchestration requires; the installed .vpio02 app under test must not be rebuilt, replaced, or reinstalled. The batch ordinary per-sample cold precondition is authorized for samples 2 through 10 to terminate a harness process left by the immediately preceding declared invocation before starting the next declared invocation. The external preflight is the custody condition for sample 1; if the batch nevertheless reports a harness process present before sample 1, preserve and return that event as a protocol deviation for founder adjudication and do not treat the resulting sample as K00-05 or K00-06 evidence. A valid K00-05 or K00-06 failure does not stop selection of the remaining declared rows. K00-05 and K00-06 remain separate readings: output and cancellation evidence may not mechanically decide duplex physiology, and duplex physiology may not mechanically decide output and cancellation. Echo coupling is descriptive only and creates no acoustic threshold. The 100 ms K00-05 cancellation ceiling and the frozen K00-06 continuity reading remain unchanged. Return the complete preflight and K00-0506 evidence for independent reading and founder adjudication. No outcome from this batch authorizes any subsequent act.' \
+scripts/witness/k00-driver-batch.sh K00-0506 10 \
+  --act output \
+  --cancel-at 1000 \
+  --settle 2 \
+  --vp on \
+  --mode L \
+  --subject vpio-02
+```
+
+Instrument facts verified here by reading, never by running: the batch is executable at `83a382a14`; it parses `--act` · `--cancel-at` · `--settle` (line 26) and derives `$BID` from `--subject vpio-02`; it regenerates and signed-builds only the external driver into `ios/VoiceKernelDriver/.derived` from the worktree it runs in (lines 147–150), never the app under test; it does NOT read `K00_EXEC_AUTHORITY` mechanically (the string is a recorded invocation input, as for the first K00-0506 batch); its per-sample precondition is terminate-only, which this authority admits for samples 2–10 and treats as a protocol deviation before sample 1; its device lock (`.device-<DEV>.lock.d`) refuses a concurrent batch. The output act runs `testOutputSample` on the C-D20 driver (bounded ≤ 4 reveal swipes; hierarchy to the runner log on a not-found; same infrastructure failure class) and reads each journal a second time with `k00-output-ledger.py` into `output-ledger.md`.
+
+**Frozen adjudication law (unchanged from §10):** K00-05 PASS = 10/10 valid cancel rows PASS-05 ∧ 10/10 valid completion rows PASS-05; K00-05 FAIL = any valid FAIL-05 · K00-06 built-in PASS = 10/10 valid duplex rows PASS-06; K00-06 FAIL = any valid FAIL-06 · > 2 infrastructure / EN / not-a-cancel rows → CHARACTERIZE ONLY, affected obligation INCOMPLETE · no top-up · no automatic rerun · one population only. The 100 ms cancellation ceiling is constitutional; completion timing descriptive; K00-06 coupling descriptive; route-wide K00-06 closure travels later with K00-11. **No outcome from this batch authorizes any subsequent act.**
+
+**Standing at the pin:** fresh K00-0506 N=10 OPEN after this record pin · new authority EXISTS only as the verbatim string above · preflight REQUIRED immediately before the batch · reinstall / route / interruption / reset / endurance NOT AUTHORIZED · KERNEL-00 NOT ACCEPTED. Evidence (preflight directory · batch ledger directory complete · `output-ledger.md` · journals · logs) returns on a `feature/*` branch → §10.11.
