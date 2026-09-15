@@ -1,0 +1,23 @@
+K00-0506 C-D20 runner-readiness preflight — founder Mac act
+Ruling: claude/voice-2026-census-01 @ 10631fb04, qualification plan §10.8
+Instrument source: 83a382a1455161996d499f30cbf00504bbd0332a
+Worktree: /private/tmp/k0506-driver-compile-83a382a14
+Device: A0736AC8-793B-516F-AC72-C076DB6CEE38
+Xcode destination: 00008140-00163D9922E0801C
+Subject: vpio-02
+
+Observed sequence/readings:
+HEAD=83a382a1455161996d499f30cbf00504bbd0332a
+READINESS_DIFF_RC=0
+readiness surface identical to 83a382a14
+xcodegen generate: PASS
+signed build-for-testing: SIGNED_BUILD_RC=0
+TEST BUILD SUCCEEDED count=1
+xctestrun=.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+TEST_RUNNER_K00_SUBJECT=vpio-02 testTerminateOnly: READINESS_TEST_RC=0
+Executed 1 test, 0 failures
+TEST EXECUTE SUCCEEDED
+after process read rc=0
+VoiceKernelHarness processes AFTER: 0 []
+
+No retry. No K00-0506 batch invocation. No Play, Cancel, journal pull, reinstall, route, interruption, reset, or endurance act.
