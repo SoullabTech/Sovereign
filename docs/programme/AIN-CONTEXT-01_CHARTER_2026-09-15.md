@@ -202,9 +202,12 @@ Continuity envelope       RATIFIED (six panes)
 A6 temporal sovereignty   OPEN THROUGH ACCEPTANCE (founder ruling 2026-09-15 R1-R7)
 F1a false self-location   RED · historical · not re-run · not rewritten
 A6 implementation         COMPLETE · 4 files · apertures unchanged
-F1b acceptance            GREEN · 59 passed · 0 failed
-Project typecheck gate    OWED — founder's to run
-Merge · deploy            NOT AUTHORIZED
+F1b acceptance            GREEN · 59/59 · admitted for the executed path
+F1c serving reach         6/6 · FAST DELIVERED · DEEP primary NOT REACHED
+Project typecheck gate    PASS · 229 vs baseline 239 · 0 regressions · exit 0
+A6 coverage               FAST + CORE · DEEP primary EXCLUDED · recorded not absorbed
+DEEP addenda divergence   pre-existing II.C · routed out · NOT REPAIRED
+Merge · deploy            NOT AUTHORIZED — founder act
 A3 reproduction harness   PROPOSED · NOT OPENED
 A4-A8                     PROPOSED · NOT OPENED
 F1-F8 falsifiers          SPECIFIED · NOT AUTHORED · NOT RUN
