@@ -2991,3 +2991,13 @@ At the Mac Studio terminal the founder fetched `462ba5951`, displayed §18.26.2 
 4. **C-D28 — ACCEPTED for future pins**, not an amendment to the current one: a PASS line must be causally downstream of the evidence that earns it, not merely textually downstream in a shell block (e.g. require the custody file to exist and hold exactly four rows before emitting PASS). Present act: §18.26.2 UNCHANGED · DISPOSAL-03 AUTHORIZED · NOT EXECUTED · authority INTACT · fresh stamp · Mac Studio terminal · `K00-0506-S2-02` still UNOPENED.
 
 Outstanding: the Mac-side return only — PASS branch + commit, or the first genuine `STOP:` line that fires → §18.29.
+
+### §18.28.5 Founder rulings on the three open housekeeping questions (2026-09-15) — no act opened
+
+```text
+DISPOSAL-03        OPEN · authorized · not executed · Mac Studio Terminal act only · return outstanding
+C-D26              HOLD · no repair authority (non-blocking, understood; no bearing on DISPOSAL-03 or the S2 population; not to be repaired while the population lane is open)
+CLAUDE compaction  APPROVED IN PRINCIPLE · DEFERRED until DISPOSAL-03 and the S2-population disposition are closed (compact from a stable standing into a pointer to this plan's standing table + VOICE_CLAIM_STATE_2026-09-15.md; not before)
+```
+
+Founder: *"That keeps the only active work exactly where it belongs: getting the Mac-side DISPOSAL-03 return, without opening another maintenance or records sub-lane around it."* Claim-state record `eeb176cd1` accepted; case-study reference line `978046bea` in place.
