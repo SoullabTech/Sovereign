@@ -1,0 +1,22 @@
+# DRIVER-01 batch — K00-0506 — 20260915T004738Z
+
+stratum=AUTOMATED-COLD-LAUNCH · N=10 · vp=on · mode=L · hold=15s · w4=off · subject=vpio-02 · bundle=life.soullab.voicekernel.vpio02 · device=A0736AC8-793B-516F-AC72-C076DB6CEE38 · xcodeDest=00008140-00163D9922E0801C
+act=output · cancelAt=1000ms · settle=2s · driver=testOutputSample · reader=k00-output-ledger.py → output-ledger.md (K00-05 / K00-06 / coupling rows, evidence-only)
+installed harness identity (the app under test is NOT rebuilt by this batch):
+```
+VoiceKernel VPIO-02    life.soullab.voicekernel.vpio02                    0.0.1     1             
+last reinstall: 20260913T145025Z
+```
+
+| Stratum | # | Mode | Session | Records | SHA-256 | Class | Evidence |
+|---|---|---|---|---|---|---|---|
+| AUTOMATED-COLD-LAUNCH | 1 | L | `K00-8272014d` (`kernel00-K00-8272014d-1789433294.jsonl`) | 75 | `649685381082163a9eb66a17f9b3a4a845da9009ba5e8cb9d206e7129e5a6274` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=1 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=19.0 · listeningMs=436 |
+| AUTOMATED-COLD-LAUNCH | 2 | L | `K00-207ee2a0` (`kernel00-K00-207ee2a0-1789433355.jsonl`) | 88 | `2074362e7e873d6bcc9a8f7328b962b1793e4aa0b624c76c93383e4eee1e527b` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=3 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=18.9 · listeningMs=351 |
+| AUTOMATED-COLD-LAUNCH | 3 | L | `K00-89fbd878` (`kernel00-K00-89fbd878-1789433415.jsonl`) | 84 | `c3857ff560f2e7fc89ed3b144035c32afa267df491fc11f0bf1a471c929c1ba6` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=8 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=18.9 · listeningMs=340 |
+| AUTOMATED-COLD-LAUNCH | 4 | L | `K00-1d290831` (`kernel00-K00-1d290831-1789433477.jsonl`) | 91 | `f35978f3f33c21d33f7c7b73d1a024bd7b4f2cf4ac5499156bd0c83285b91432` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=3 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=18.9 · listeningMs=329 |
+| AUTOMATED-COLD-LAUNCH | 5 | L | `K00-0a5e35ac` (`kernel00-K00-0a5e35ac-1789433539.jsonl`) | 89 | `0840195c647f944a8cc07bbacda167eee536a49af8e77efa6efa32fe708eb255` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=11 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=19.9 · listeningMs=329 |
+| AUTOMATED-COLD-LAUNCH | 6 | L | `K00-41171f10` (`kernel00-K00-41171f10-1789433602.jsonl`) | 82 | `788181f2e328c28a1ef949b223a7ff3d0665c80b3bc67f91360ad4b780d2c924` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=9 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=18.9 · listeningMs=332 |
+| AUTOMATED-COLD-LAUNCH | 7 | L | `K00-9bea86e9` (`kernel00-K00-9bea86e9-1789433667.jsonl`) | 75 | `f9b02bf4d615873efb32af83a77b134f66b941bf58e9d63b39c74202a6345b97` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=6 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=19.9 · listeningMs=342 |
+| AUTOMATED-COLD-LAUNCH | 8 | L | `K00-4b6eeff5` (`kernel00-K00-4b6eeff5-1789433732.jsonl`) | 87 | `d22b8f3bba5deec8ed682bec8beff1b08c1df20088defaa2d979c93c980cf30a` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=6 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=19.9 · listeningMs=348 |
+| AUTOMATED-COLD-LAUNCH | 9 | L | `K00-6c48827c` (`kernel00-K00-6c48827c-1789433797.jsonl`) | 74 | `bf0c90232f4351161e120380d61a56a3485a1d5d1243b77e273bac9924ae209e` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=5 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=18.9 · listeningMs=347 |
+| AUTOMATED-COLD-LAUNCH | 10 | L | `K00-370825c6` (`kernel00-K00-370825c6-1789433864.jsonl`) | 81 | `bdf9ddda49cb0f86bc81b49c277b34a00af98a866e40153299c7d93dcc6250e0` | **gen-1 listen** | cold=True · isRunningImmediate=true · graphStartedRunning=true · firstCallbackMs=5 · listeningHeldAtExport=True · listeningLostLater=True · generations=1 · holdS=19.9 · listeningMs=341 |
