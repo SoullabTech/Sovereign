@@ -21,6 +21,7 @@
 
 import { query, transaction } from '@/lib/db/postgres';
 import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+import { locusIsAdoptable } from '../proposalChain/legacyLocus';
 import { openChainWithExecutor } from '../proposalChain/store';
 import { readProposalWork } from '../proposalChain/proposalWork';
 import type { VersionAuthor } from '../proposalChain/contract';
@@ -198,6 +199,31 @@ export interface EditorialThreadView {
   readonly chainId: string;
   /** ⭐ The writer's own wording at the locus, as the chain froze it. */
   readonly locusText: string;
+  /**
+   * ⭐ ADOPTION-01 · PHASE B — WHERE THIS EXCHANGE IS ABOUT, named by the
+   * server. The id is the chain's own target; the label is the writer's own
+   * heading for it.
+   *
+   * ⛔ `sectionLabel` is `null` when the section carries no heading, and it is
+   * NEVER filled with a manufactured name. A confirmation that invents a place
+   * name is the browser interpreting manuscript location, which is exactly what
+   * the `ChangeLocator` law forbids.
+   */
+  readonly targetSectionId: string | null;
+  readonly sectionLabel: string | null;
+  /**
+   * ⚠️ EDITORIAL-LEGACY-LOCUS-DISPOSITION-01 — this relationship's frozen locus
+   * was written in the pre-alignment stored coordinate space and can never be
+   * located in the projected one.
+   *
+   * ⭐ THE SURFACE NEEDS IT BEFORE SHE CHOOSES. Without it she would pick a
+   * version, confirm an adoption, and only then meet a refusal — so the fact
+   * that belongs to the relationship is reported with the relationship.
+   *
+   * ⛔ It withholds adoption and NOTHING ELSE. The exchange stays readable and
+   * comparable; the chain is untouched; ⛔ nothing here says her Work moved.
+   */
+  readonly legacyLocus: boolean;
   readonly turns: readonly EditorialThreadTurn[];
   /**
    * ⭐⭐ THE COMPLETE STRUCTURAL LINEAGE, in succession order.
@@ -228,10 +254,19 @@ export async function readEditorialThread(
   identity: VerifiedIdentity, threadId: string,
 ): Promise<ReadEditorialResult> {
   const memberId = identity.memberId;
-  const t = await query<{ proposal_chain_id: string | null; expected_text: string | null }>(
-    `SELECT th.proposal_chain_id, c.expected_text
+  /* ⭐ ADOPTION-01 · PHASE B — the target section and the writer's own name for
+     it, DERIVED HERE, in the read that already proves thread ownership.
+     ⛔ The browser must never name the place a change belongs; that is the
+     `ChangeLocator` law one layer up, and it starts with the label. */
+  const t = await query<{
+    proposal_chain_id: string | null; expected_text: string | null;
+    target_section_id: string | null; heading: string | null;
+  }>(
+    `SELECT th.proposal_chain_id, c.expected_text, c.target_section_id, ms.heading
        FROM ask_threads th
        LEFT JOIN proposal_chains c ON c.id = th.proposal_chain_id
+       LEFT JOIN manuscript_draft_sections ds ON ds.id = c.target_section_id
+       LEFT JOIN manuscript_sections ms ON ms.id = ds.source_section_id
       WHERE th.id = $1 AND th.member_id = $2`,
     [threadId, memberId]);
   if (t.rows.length === 0) return { ok: false, reason: 'thread_not_found' };
@@ -287,6 +322,12 @@ export async function readEditorialThread(
     view: {
       threadId, chainId,
       locusText: t.rows[0]!.expected_text ?? '',
+      targetSectionId: t.rows[0]!.target_section_id,
+      sectionLabel: t.rows[0]!.heading,
+      /* ⭐ THE SAME PURE PREDICATE THE ADOPTION SEAM ASKS — one implementation,
+         so the panel and the act can never disagree about which relationships
+         are adoptable. */
+      legacyLocus: !locusIsAdoptable(t.rows[0]!.expected_text ?? '', t.rows[0]!.heading),
       turns,
       versions,
       /* ⛔ Read off the LINEAGE, never off `versions[length-1]` of an unordered

@@ -65,6 +65,11 @@ interface ThreadView {
   threadId: string;
   chainId: string;
   locusText: string;
+  /** ⭐ Server-derived. ⛔ The browser never names the place a change belongs. */
+  targetSectionId: string | null;
+  sectionLabel: string | null;
+  /** ⚠️ Pre-alignment locus: readable and comparable, ⛔ never adoptable. */
+  legacyLocus: boolean;
   turns: ThreadTurn[];
   versions: ThreadVersion[];
   headVersionId: string | null;
@@ -105,7 +110,74 @@ interface ComparisonTarget {
   ordinal: number;
 }
 
+/* ══ ADOPTION-01 · PHASE B ══════════════════════════════════════════════════
+   ⭐⭐ THE OUTCOME, AS THE SERVER REPORTED IT. ⛔ Not reconstructed, not
+   summarised into a boolean, and ⛔ `permission` is never dropped: it is the
+   difference between *you never authorized this* and *you authorized it and it
+   could not run*. */
+interface AdoptionPermission {
+  established: boolean;
+  authorizationId?: string;
+  authorizedAt?: string;
+}
+interface AdoptionOutcome {
+  kind: 'applied' | 'work_moved' | 'system_refusal' | 'relationship_refusal';
+  permission?: AdoptionPermission;
+  reason?: string;
+  resultingVersion?: number;
+  acceptedAt?: string;
+  byThisGesture?: boolean;
+}
+
+/**
+ * ⭐⭐ WHICH EXACT VERSION THE WRITER IS ADOPTING — frozen by their click, the
+ * same law `ComposerTarget` and `ComparisonTarget` hold.
+ *
+ * ⛔ NEVER `headVersionId`, ⛔ never `versions[versions.length - 1]`. An
+ * adoption that followed the head would change what the writer permitted
+ * between reading it and confirming it, which is the one thing adoption may
+ * never do.
+ */
+interface AdoptionTarget {
+  versionId: string;
+  author: 'maia' | 'member';
+  ordinal: number;
+}
+
 const authorLabel = (a: 'maia' | 'member') => (a === 'maia' ? 'MAIA' : 'Your version');
+
+/** ⭐ Where the change belongs, in the writer's own words — or plainly. */
+const placeLabel = (label: string | null) => (label && label.trim().length > 0 ? label : 'this passage');
+
+/**
+ * ⭐⭐ THREE OUTCOME FAMILIES, KEPT VISIBLY DISTINCT.
+ *
+ *     applied         something changed, and it says what
+ *     work_moved      ⭐ a TRUE fact about her manuscript — ⛔ and it never
+ *                     implies the authorization did not happen
+ *     system_refusal  ⛔ SYSTEM LANGUAGE. A write the Studio could not perform
+ *                     is not anthropomorphized into a claim about the book.
+ *
+ * The source obligation, from the Phase B ruling:
+ *
+ *     manuscript-state refusal  ≠  system failure
+ */
+function adoptionCopy(o: AdoptionOutcome, place: string): string {
+  switch (o.kind) {
+    case 'applied':
+      return o.byThisGesture === false
+        /* ⭐ *"Nothing was changed"* would be FALSE here: the version is in the
+           Work and the receipt is real — this click simply was not the write. */
+        ? `This version was already adopted into ${place}.`
+        : `Adopted into ${place}.`;
+    case 'work_moved':
+      return 'You\u2019ve written here since this version was made. Nothing was changed.';
+    case 'system_refusal':
+      return 'The Studio couldn\u2019t apply this version. Nothing was changed.';
+    case 'relationship_refusal':
+      return 'This exchange could not be read. Nothing was changed.';
+  }
+}
 
 /** Plain, and never reassuring: the exchange really did move. */
 function refusalCopy(reason: string): string {
@@ -154,6 +226,12 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
   /* ⭐ Presentation state, set ONLY by an explicit gesture on one version.
      ⛔ Nothing derives it, and `reload()` does not touch it. */
   const [comparisonTarget, setComparisonTarget] = useState<ComparisonTarget | null>(null);
+  /* ⭐⭐ ADOPTION — frozen by the writer's click, and set by nothing else.
+     ⛔ `reload()` does not touch it: a version landing while she is reading the
+     confirmation must not change what she is about to permit. */
+  const [adoptionTarget, setAdoptionTarget] = useState<AdoptionTarget | null>(null);
+  const [adoptionBusy, setAdoptionBusy] = useState(false);
+  const [adoptionOutcome, setAdoptionOutcome] = useState<AdoptionOutcome | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   /* ⭐ THE ONLY SOURCE OF WHAT IS SHOWN. */
@@ -223,6 +301,43 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
     } catch {
       setWordingRefusal('unknown');
     } finally { setWordingBusy(false); }
+  };
+
+  /**
+   * ⭐⭐ ONE GESTURE, TWO LEGAL ACTS BEHIND IT.
+   *
+   * She clicks once. The server authorizes the exact version she named and then
+   * immediately attempts execution under a fresh fit check. ⛔ This function
+   * sends TWO IDS and nothing else: no base version, no range, no expected
+   * text, no idempotency token. Every other fact is the server's.
+   *
+   * ⛔ AND IT NEVER RETRIES. A refusal is an outcome to report, never a
+   * condition to work around — a second automatic attempt would be this surface
+   * deciding that the manuscript's answer was inconvenient.
+   */
+  const adopt = async () => {
+    if (!adoptionTarget || adoptionBusy) return;
+    setAdoptionBusy(true); setAdoptionOutcome(null);
+    try {
+      const res = await apiFetch('/api/writers-studio/editorial/adoption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        /* ⛔ THE FROZEN TARGET, EXACTLY. Never `view.headVersionId`. */
+        body: JSON.stringify({ threadId, versionId: adoptionTarget.versionId }),
+      });
+      const body = await res.json().catch(() => null);
+      setAdoptionOutcome(
+        body && typeof body.kind === 'string'
+          ? (body as AdoptionOutcome)
+          /* ⛔ An unreadable response is a SYSTEM refusal, never a claim that
+             the manuscript moved. The two families must not borrow each
+             other's language when the surface is uncertain. */
+          : { kind: 'system_refusal', reason: 'unreadable_response' });
+      /* ⭐ The screen agrees with storage either way. */
+      await reload(threadId);
+    } catch {
+      setAdoptionOutcome({ kind: 'system_refusal', reason: 'unreachable' });
+    } finally { setAdoptionBusy(false); }
   };
 
   return (
@@ -405,12 +520,116 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
                 </StudioText>
               </div>
             </div>
-            {/* ⛔ AND NO DECISION LIVES HERE. Keep, Accept, Revise, Adopt and
-                Apply are all closed; comparison is clarity before a decision,
-                never the decision. */}
-            <StudioText role="metadata" style={{ color: INK.quiet }}>
-              Nothing changes until you explicitly adopt a version.
-            </StudioText>
+            {/* ⚠️ UI-03 said *no decision lives here*, and ADOPTION-01 · Phase B
+                deliberately changes that: the ruled flow is COMPARE → ADOPT, so
+                the decision belongs beside the two facts it is made from. ⛔ The
+                sentence is corrected rather than left standing while false.
+
+                ⭐ What has NOT changed: comparison still shows two immutable
+                facts, and the adoption acts on the SAME frozen version the
+                writer opened — ⛔ never the head. */}
+            {/* ⚠️⚠️ A RELATIONSHIP FROM BEFORE THE LOCUS ALIGNMENT.
+                ⭐ SYSTEM AND HISTORICAL LANGUAGE, deliberately. ⛔ Never "you
+                changed the text", ⛔ never "conversion failed", and ⛔ never a
+                suggestion that the exchange is corrupt or lost — it is neither.
+                Only adoption is withheld. */}
+            {view.legacyLocus ? (
+              <StudioText role="metadata" style={{ color: INK.secondary }}
+                data-adopt-unavailable="legacy_locus">
+                This older editorial relationship can&rsquo;t be safely adopted
+                into the manuscript. You can still read and compare it.
+              </StudioText>
+            ) : adoptionTarget?.versionId === shown.id ? (
+              <div data-adopt-confirm={shown.id}
+                style={{ display: 'flex', flexDirection: 'column', gap: SPACE.snug,
+                         border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+                         padding: SPACE.snug, background: GROUND.base }}>
+                {/* ⭐⭐ THE PLACE IS THE SERVER'S. ⛔ The browser does not search
+                    the manuscript to say where this belongs, and it shows no
+                    offsets it did not receive. */}
+                <StudioText role="panelLabel">
+                  {`Adopt this version into ${placeLabel(view.sectionLabel)}?`}
+                </StudioText>
+                <StudioText role="metadata" style={{ color: INK.muted }}>
+                  This replaces the passage at the location the manuscript
+                  identifies with the version you selected.
+                </StudioText>
+                <div style={{ display: 'flex', gap: SPACE.snug }}>
+                  <button type="button" data-adopt-confirm-commit={shown.id}
+                    onClick={() => void adopt()} disabled={adoptionBusy}
+                    style={{ ...typeStyle('panelLabel'), background: 'none',
+                             border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+                             padding: `${SPACE.tight}px ${SPACE.snug}px`,
+                             color: INK.primary, cursor: 'pointer' }}>
+                    {adoptionBusy ? 'Adopting\u2026' : 'Adopt this version'}
+                  </button>
+                  <button type="button"
+                    onClick={() => { setAdoptionTarget(null); setAdoptionOutcome(null); }}
+                    style={{ ...typeStyle('panelLabel'), background: 'none', border: 'none',
+                             color: INK.muted, cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button type="button"
+                data-adopt={shown.id}
+                onClick={() => {
+                  /* ⛔ FROZEN FROM THE COMPARISON SHE OPENED, not from the
+                     lineage as it stands at click time. */
+                  setAdoptionTarget({
+                    versionId: comparisonTarget.versionId,
+                    author: comparisonTarget.author,
+                    ordinal: comparisonTarget.ordinal,
+                  });
+                  setAdoptionOutcome(null);
+                }}
+                style={{ ...typeStyle('panelLabel'), alignSelf: 'flex-start',
+                         background: 'none', border: `1px solid ${RULE.soft}`,
+                         borderRadius: RADIUS.sm, padding: `${SPACE.tight}px ${SPACE.snug}px`,
+                         color: INK.primary, cursor: 'pointer' }}>
+                Adopt this version&hellip;
+              </button>
+            )}
+
+            {/* ══ THE OUTCOME ══════════════════════════════════════════════
+                ⭐⭐ THREE FAMILIES, NEVER COLLAPSED. And where a permission was
+                established it is SAID SO — an execution that refused does not
+                erase the authorization that preceded it. */}
+            {adoptionOutcome && (
+              <div data-adopt-outcome={adoptionOutcome.kind}
+                style={{ display: 'flex', flexDirection: 'column', gap: SPACE.hairline }}>
+                <StudioText role="metadata" style={{ color: INK.secondary }}>
+                  {adoptionCopy(adoptionOutcome, placeLabel(view.sectionLabel))}
+                </StudioText>
+                {adoptionOutcome.kind === 'applied'
+                  && typeof adoptionOutcome.resultingVersion === 'number' && (
+                  <StudioText role="metadata" style={{ color: INK.quiet }}
+                    data-adopt-resulting-version={adoptionOutcome.resultingVersion}>
+                    {`Your manuscript is at version ${adoptionOutcome.resultingVersion}.`}
+                  </StudioText>
+                )}
+                {/* ⭐⭐ THE HALF THE RULING INSISTS ON: an authorize-then-refuse
+                    must never read as though nothing was permitted. */}
+                {adoptionOutcome.kind !== 'applied'
+                  && adoptionOutcome.permission?.established === true && (
+                  <StudioText role="metadata" style={{ color: INK.quiet }}
+                    data-adopt-permission="established">
+                    Your permission to adopt this version is on record. Nothing
+                    was written.
+                  </StudioText>
+                )}
+                {/* ⛔ A SUPPORT CODE, NOT AN EXPLANATION. She is never asked to
+                    understand an internal failure name, and it is shown only
+                    for the system family — a manuscript fact needs no code. */}
+                {adoptionOutcome.kind === 'system_refusal' && adoptionOutcome.reason && (
+                  <StudioText role="metadata" style={{ color: INK.quiet }}
+                    data-adopt-reason={adoptionOutcome.reason}>
+                    {`Reference: ${adoptionOutcome.reason}`}
+                  </StudioText>
+                )}
+              </div>
+            )}
           </section>
         );
       })()}
