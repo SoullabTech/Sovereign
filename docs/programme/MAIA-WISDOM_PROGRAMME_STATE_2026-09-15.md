@@ -102,3 +102,36 @@ Part B is complete and is not rerun.
 
 ⛔ **No further census-instrument design is earned.** The next problem is **custody**, not
 measurement.
+
+## Witness — 2026-09-15 — MATERIALIZATION GATE: `STILL BLOCKED`
+
+Run on `Kellys-Mac-Studio` as `soullab`, against the pinned absolute path.
+
+```text
+ls -d  .../AIN Consciousness Intelligence System 1     → exists
+du -sh .../Mobile Documents/iCloud~md~obsidian         → 432K
+head -c 100 "$ROOT/00-Context-Map.md"                  → Error reading
+                                                       → STILL BLOCKED
+```
+
+**Established:** the authoritative tree is **on the Mac Studio**, at
+`/Users/soullab/Library/Mobile Documents/iCloud~md~obsidian/Documents/AIN/_MAIA_SYSTEM/05-Soullab-Dev-Team/AIN Consciousness Intelligence System 1`.
+⛔ The "different host / different user account" hypothesis is **closed**: it arose from searching
+`MAIA_WISDOM_CORPUS` under `com~apple~CloudDocs`, ⛔ neither of which this programme ever recorded.
+
+⚠️ **Not established:** readability. `ls -d` proves a NAME exists; dataless eviction removes
+contents and leaves names intact. That is the trap, not the exception.
+
+⚠️ **432K is the size of the WHOLE Obsidian container**, not of one folder — so essentially
+nothing in it is materialized. The condition is **container-level**, ⛔ not specific to the corpus
+directory.
+
+⚠️ **Candidate ambiguity, recorded for the future custody act:** six near-identical directories
+exist (`AIN` · `AIN Intelligence` · `AIN Consciousness Intelligence System` with and without the
+trailing ` 1`, under three different parents, two containers). ⛔ The custody act must pin the
+**absolute path verbatim, trailing ` 1` included** — ⛔ never a name, never a glob. A corpus
+identity satisfiable by six directories is not an identity.
+
+⛔ **Standing unchanged:** lane stopped at the materialization gate. ⛔ No census. ⛔ Run #2
+unauthorized. ⛔ Nothing created. ⛔ `maia_sovereign_corpus` (audio eval dataset) is not the corpus
+and is not used.
