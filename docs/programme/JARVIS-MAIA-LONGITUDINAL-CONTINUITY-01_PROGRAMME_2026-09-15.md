@@ -331,9 +331,10 @@ asserted through a real `getMaiaResponse` rather than through the context object
 
 ---
 
-## 5a. ⭐ WHOLE-ORGANISM CENSUS — the act that precedes the lanes
+## 5a. `MEMORY-ORGANISM-CENSUS-01` — read-only, precedes the lanes
 
-⛔ **NAMED, NOT OPENED.** For every memory carrier, establish:
+⛔ **NAMED, NOT OPENED.** ⭐ **Read-only census / orchestration act**, ⛔ never an
+implementation act. For every memory carrier, establish:
 
 ```
 what does it store?           what is its epistemic role?
@@ -350,6 +351,27 @@ what PROVENANCE survives?     what STANDING survives?
 lives inside C1, because the class was sound while its displaced region had no carrier
 (Lane 1 record §3a.2). ⭐ **A class census cannot see a carrier gap.** This census is
 carrier-first, which is the missing pass.
+
+### 5a.1 ⛔⛔ THE ORGANISM IS A PROGRAMME LAYER, NEVER AN IMPLEMENTATION LANE
+
+```
+JARVIS-MAIA-LONGITUDINAL-CONTINUITY-01
+        ↓
+memory-organism integration principle  (§2a)   ← programme layer
+        ↓
+0B · 0C · L1 · L2 · L3 · L4 · L5 · L6 · L7 · L8  ← where implementation happens
+```
+
+⭐ **New programme-level integration + census: YES.**
+⛔⛔ **New broad implementation lane called "memory organism": NO.**
+
+⛔ Do not open a lane that codes across everything. It would be too broad and would
+**blur precisely the boundaries this programme exists to preserve.** Implementation
+happens through the **bounded existing lanes, one organ or circulation problem at a
+time.**
+
+⭐ The principle (§2a), the organ contract (§4a) and the composition point (§4b) are
+**constraints every lane inherits** — ⛔ they are not work items of their own.
 
 ---
 
@@ -404,7 +426,8 @@ AIN-CONTEXT-01                     predecessor · census + constitution
 A6                                 ✅ ACCEPTED (FAST + CORE) · ✅ CANONICAL @ 286e4381
 A6 DEEP primary                    ⛔ NOT DELIVERED · measured · routed out
 
-whole-organism census              ⛔ NAMED, NOT OPENED
+MEMORY-ORGANISM-CENSUS-01          ⛔ NAMED, NOT OPENED (read-only act)
+broad "memory organism" impl lane  ⛔⛔ REFUSED BY CONSTRUCTION — §5a.1
 organ contract                     ⛔ NOT ESTABLISHED (L2's work)
 single composition point           ⛔ NOT BUILT
 organism-level acceptance suite    ⛔ NOT AUTHORED
