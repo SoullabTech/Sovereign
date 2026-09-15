@@ -10,6 +10,19 @@ import path from 'path';
 import { chooseMount, type WriteState } from '../writeStateClient';
 
 const REPO = path.resolve(__dirname, '../../..');
+/**
+ * ⚠️ THE C21 CLASS, EIGHTH OCCURRENCE IN THIS PROGRAMME — and three times in
+ * this one file. A prohibition scanned against raw source fires on the comment
+ * that STATES the prohibition: the notice names `planConversion` while
+ * explaining it must not re-implement it, the route names
+ * `sections/convertDraft` while explaining it does not import it, and the copy
+ * says ⛔ NOT "conversion failed" while forbidding that phrase. Comments are
+ * stripped before every prohibition scan, the remedy this programme has used
+ * since C6.
+ */
+const strip = (src: string) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
 const read = (p: string) => fs.readFileSync(path.join(REPO, p), 'utf8');
 
 describe('import alone does NOT make a Work section-addressable', () => {
@@ -39,9 +52,19 @@ describe('import alone does NOT make a Work section-addressable', () => {
 
 describe('only the explicit member act converts', () => {
   it('the act is reachable from exactly one place, and it is a member gesture', () => {
-    const page = read('app/writers-studio/canvas/CanvasClient.tsx');
-    expect(page).toMatch(/data-action="confirm-section-breaks"/);
-    expect(page).toMatch(/onClick=\{onConfirmSectionBreaks\}/);
+    /* ⚠️ RELOCATED BY WRITING-STATE-ANNOUNCE-01, and STRENGTHENED rather than
+       weakened. The act moved from the dismissible Outline panel to the writing
+       field, so the anchor is `DraftStateNotice`. "Exactly one place" was only
+       ever CLAIMED before; it is now COUNTED across both files, so a future
+       re-duplication fails here instead of shipping. */
+    const notice = read('app/writers-studio/canvas/DraftStateNotice.tsx');
+    const room = read('app/writers-studio/canvas/CanvasClient.tsx');
+    expect(notice).toMatch(/data-action="confirm-section-breaks"/);
+    expect(notice).toMatch(/onClick=\{onConfirmSectionBreaks\}/);
+    const occurrences =
+      (notice.match(/data-action="confirm-section-breaks"/g) ?? []).length
+      + (room.match(/data-action="confirm-section-breaks"/g) ?? []).length;
+    expect(occurrences).toBe(1);
   });
 
   it('no automatic conversion fires on mount or on save', () => {
@@ -96,32 +119,58 @@ describe('after conversion the Work is navigable — and navigability comes from
   });
 });
 
-describe('the unconverted outline explains itself instead of sitting inert', () => {
-  it('names its state and offers the act', () => {
-    const page = read('app/writers-studio/canvas/CanvasClient.tsx');
-    expect(page).toMatch(/data-outline-state="unconverted"/);
-    expect(page).toMatch(/SECTION_BREAKS_COPY\.action/);
+describe('the draft says what state it is in, where the writer is', () => {
+  /* ⚠️ WRITING-STATE-ANNOUNCE-01. This used to assert that the OUTLINE explained
+     the state. It did — and that was the defect: the explanation lived in a
+     dismissible panel keyed on the SOURCE having sections while describing the
+     DRAFT, so a Work begun in the Studio met the Worktable with no explanation
+     at all. The copy and the gate are unchanged; the carrier moved. */
+  it('the writing field names the state and offers the act', () => {
+    const notice = read('app/writers-studio/canvas/DraftStateNotice.tsx');
+    expect(notice).toMatch(/SECTION_BREAKS_COPY\.action/);
+    expect(notice).toMatch(/data-draft-state=/);
   });
 
   it('prefers the server\'s own reason when it has one', () => {
-    const page = read('app/writers-studio/canvas/CanvasClient.tsx');
-    expect(page).toMatch(/writeMount\.notice\?\.title \?\? SECTION_BREAKS_COPY\.title/);
+    const notice = read('app/writers-studio/canvas/DraftStateNotice.tsx');
+    expect(notice).toMatch(/writeMount\.notice\?\.title/);
+    expect(notice).toMatch(/writeMount\.notice\?\.body/);
+  });
+
+  it('the outline still marks unconverted rows, and no longer owns the state', () => {
+    const room = read('app/writers-studio/canvas/CanvasClient.tsx');
+    expect(room).toMatch(/data-outline-state="unconverted"/);
+    expect(room).not.toMatch(/SECTION_BREAKS_COPY\.action/);
+  });
+
+  it('⭐ understanding the state does not require opening anything', () => {
+    const room = read('app/writers-studio/canvas/CanvasClient.tsx');
+    const at = room.indexOf('<DraftStateNotice');
+    expect(at).toBeGreaterThan(-1);
+    expect(room.slice(Math.max(0, at - 600), at)).not.toMatch(/outlineOpen && \(/);
   });
 });
 
 describe('R1 — the act is offered only where conversion can succeed', () => {
-  const page = read('app/writers-studio/canvas/CanvasClient.tsx');
+  const page = read('app/writers-studio/canvas/DraftStateNotice.tsx');
 
   it('gates the button on the WRITE STATE, not on the mount', () => {
-    expect(page).toMatch(/writeState\?\.mode === 'continuous' && \(\s*<button/);
+    /* ⚠️ AMENDED BY CONVERSION-AVAILABILITY-ALIGNMENT-01. The law is unchanged
+       in spirit and STRICTER in fact: the gate was `mode === 'continuous'`, a
+       CLASSIFICATION; it is now the member's own conversion door. The mount
+       still cannot stand in for either. */
+    expect(page).toMatch(/const actAvailable = offerable;/);
+    expect(page).toMatch(/conversionOfferable === true/);
+    expect(page).toMatch(/\{actAvailable && \(\s*<button/);
   });
 
   it('does not gate the button on mount alone', () => {
-    // the mount still gates the explanatory block; the button needs more
-    expect(page).toMatch(/writeMount\.mount === 'worktable' && \(/);
     const buttonIdx = page.indexOf('data-action="confirm-section-breaks"');
-    const gateIdx = page.lastIndexOf("writeState?.mode === 'continuous'", buttonIdx);
-    expect(gateIdx).toBeGreaterThan(-1);
+    expect(buttonIdx).toBeGreaterThan(-1);
+    expect(page.lastIndexOf('actAvailable', buttonIdx)).toBeGreaterThan(-1);
+    /* ⛔ The mount may not stand in for it: `worktable` collapses three server
+       states and only one of them can convert. */
+    expect(page).not.toMatch(/mount === 'worktable'[\s\S]{0,120}<button/);
   });
 
   it('continuous_unprovable and no_draft still mount worktable — so the mount cannot be the gate', () => {
@@ -137,5 +186,61 @@ describe('R1 — the act is offered only where conversion can succeed', () => {
     const copy = read('lib/writersStudio/confirmSectionBreaks.ts');
     expect(copy).toMatch(/bodyNotConvertible/);
     expect(page).toMatch(/SECTION_BREAKS_COPY\.bodyNotConvertible/);
+  });
+
+  it('⭐⭐ the control is gated on the MEMBER\'S OWN conversion door', () => {
+    /* CONVERSION-AVAILABILITY-ALIGNMENT-01. `mode === 'continuous'` says the
+       draft is convertible IN PRINCIPLE; `conversionOfferable` is the door's own
+       planConversion saying the act can actually succeed. ⛔ Classification
+       alone never authorizes the control. */
+    expect(page).toMatch(/conversionOfferable === true/);
+    expect(page).toMatch(/const actAvailable = offerable;/);
+  });
+
+  it('⛔ absence of the fact is NOT permission', () => {
+    /* An older server omits the field. A strict `=== true` is the difference
+       between "the door said yes" and "the response was silent". */
+    expect(page).not.toMatch(/conversionOfferable\s*\)/);
+    expect(page).not.toMatch(/conversionOfferable !== false/);
+  });
+
+  it('⛔⛔ the UI does not RE-IMPLEMENT the predicate', () => {
+    /* The defect being repaired was a gate aligned with a different
+       implementation. Fixing it by copying the strict rule into the surface
+       would create two identical predicates free to diverge again. The surface
+       must carry no composer, no byte comparison, no classification. */
+    const bare = strip(page);
+    expect(bare).not.toMatch(/composeDraftSlices|classifyDraft|planConversion/);
+    expect(bare).not.toMatch(/Buffer\.from|\.equals\(/);
+    expect(bare).not.toMatch(/PRISTINE|LEGACY_COMPOSER_VARIANT|EDITED/);
+  });
+
+  it('⭐ and the server takes the answer from the door the member uses', () => {
+    const route = read('app/api/sovereign/manuscripts/[id]/write-state/route.ts');
+    /* The SAME module POST /draft imports — not sections/convertDraft.ts,
+       which serves the developmental preparation path. */
+    expect(route).toMatch(/from '@\/lib\/manuscript\/draftSections'/);
+    expect(strip(route)).not.toMatch(/sections\/convertDraft/);
+    expect(route).toMatch(/conversionOfferable: plan\.status !== 'refused'/);
+  });
+
+  it('⛔ and the refusal WORDS stay off the screen', () => {
+    /* They are instrumentation. The surface needs to know WHETHER, not WHY. */
+    expect(page).not.toMatch(/boundary_confirmation_required|boundary_moved/);
+  });
+
+  it('⭐ the not-offerable band gets its own truthful sentence', () => {
+    expect(page).toMatch(/has section structure/);
+    expect(page).toMatch(/cannot safely make/);
+    /* ⛔ Not a failure, and ⛔ not an advertisement for machinery that does not
+       exist — there is no member act that confirms boundaries today. */
+    const bare = strip(page);
+    expect(bare).not.toMatch(/conversion failed|could not convert/i);
+    expect(bare).not.toMatch(/confirm the boundaries|review the boundaries/i);
+  });
+
+  it('⛔ and no_draft is announced without being offered an act', () => {
+    expect(page).toMatch(/mode === 'no_draft'/);
+    expect(page).toMatch(/const actAvailable = offerable;/);
   });
 });
