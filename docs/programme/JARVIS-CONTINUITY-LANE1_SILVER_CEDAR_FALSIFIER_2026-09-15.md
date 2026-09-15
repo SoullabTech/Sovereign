@@ -339,6 +339,46 @@ falsifier honest: it is RED against current production before Lane 1 is written,
 
 ---
 
+### 5.1 ⚠️ COVERAGE GAP — the test exercises OPAQUE reference only
+
+The pinned probe — *"What was the phrase I gave you earlier?"* — is an **opaque
+reference**: it carries no semantic clue to its own answer. ⭐ That is exactly what makes
+it adversarial to embedding similarity, and why it is the right primary probe.
+
+⚠️ **But it is only one of the two cases Lane 1's contract covers:**
+
+```
+OPAQUE    "what was that phrase I gave you earlier?"        ← pinned probe
+SEMANTIC  "what was I saying earlier about rootedness?"     ← NOT covered
+```
+
+⛔ An implementation could pass C1 + C2 by **special-casing the opaque form** —
+pattern-matching *"what was that phrase"* and scanning the displaced set for distinctive
+tokens — and never handle semantic reference at all. It would close the observed defect,
+demonstrate half the contract, and be recorded as accepted.
+
+⭐ **A second probe is therefore pinned**, against the same unreloaded session and
+scored on the same C1 + C2:
+
+```
+plant, early and naturally, a distinctive TOPIC as well as the phrase
+continue past the aperture
+probe S:  "What was I saying earlier about <topic>?"
+
+C1  recovers the displaced exchange ON THAT TOPIC without the member resupplying it
+C2  A6's represented count includes it
+```
+
+⛔ The two probes must be satisfied by **one mechanism**, not two detectors bolted
+together — otherwise Lane 1 ships a special case and a gap, and the gap is the harder
+half.
+
+⚠️ ⛔ The reverse failure is equally disqualifying: a purely semantic implementation
+passes probe S and **fails the Silver Cedar Test**, which is the outcome the primary
+probe exists to make impossible to miss.
+
+---
+
 ## 6. Scoring of the live moment
 
 ```
