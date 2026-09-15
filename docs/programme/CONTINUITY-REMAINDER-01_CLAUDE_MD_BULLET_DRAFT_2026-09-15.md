@@ -1,8 +1,10 @@
-# `CONTINUITY-REMAINDER-01` · CLAUDE.md PRIORITY-THREAD BULLET — **DRAFT, ⛔ NOT INSTALLED**
+# `CONTINUITY-REMAINDER-01` · CLAUDE.md PRIORITY-THREAD BULLET — **INSTALLED 2026-09-15**
 
-⛔ **This file is not the record and not the anchor.** It holds a drafted bullet for
-`CLAUDE.md`'s *Current priority thread*, **withheld from installation by founder instruction
-(2026-09-15)**. ⛔ Do not paste it into `CLAUDE.md` without an explicit founder act.
+⭐ **INSTALLED into `CLAUDE.md` by founder act 2026-09-15**, with optional addition **(a)** —
+and ⛔ **(b)** and **(c)** deliberately excluded, as ruled: *they belong in the records they
+already inhabit.* ⚠️ A `LATEST — 2026-09-15` prefix was added to match the anchor's own bullet
+convention; ⛔ no other wording changed. ⛔ **Do not install again** — this file is now a record
+of the act, not a pending draft.
 
 **Standard applied (founder):** *preserve standing, rather than turn into a mini-history.*
 
@@ -52,8 +54,9 @@ assertion. **(b)** and **(c)** are genuinely optional.
 ## 3 · STANDING
 
 ```text
-bullet ........................... ✅ DRAFTED · ⛔ NOT INSTALLED
-CLAUDE.md ........................ ⛔ UNTOUCHED
-optional additions ............... ⚠️ OFFERED · ⛔ NOT APPLIED
-install ........................... ⛔ REQUIRES AN EXPLICIT FOUNDER ACT
+bullet ........................... ✅ INSTALLED (founder act 2026-09-15)
+CLAUDE.md ........................ ✅ UPDATED — priority thread, top entry
+optional addition (a) ............ ✅ APPLIED — records + candidate SHA
+optional additions (b) · (c) ..... ⛔ EXCLUDED BY RULING
+re-install ....................... ⛔ DO NOT — this file is now a record of the act
 ```

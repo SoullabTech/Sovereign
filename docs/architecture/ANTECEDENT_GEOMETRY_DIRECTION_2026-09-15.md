@@ -358,7 +358,7 @@ elemental geometry ................ ⭐ PRESERVED (Cat 1, §6) · ⛔ hypothesis
 nodes-without-geometry finding .... ⭐ MEASURED in two layers (§6.1) · ⛔ not authorization
 preliminary note .................. ⭐ PRESERVED CLEAN · docs/research/relational-geometry/
 two relation types ................ ⚠️ ALREADY GOVERNED LAW (§6A.2) · ⛔ not open design space
-access constraint in the note ..... ⚠️ OWED before it becomes a paper section (§6A.3)
+access constraint in the note ..... ✅ FOLDED IN (founder act) — note §6 "Measurement boundary"
 two-place absence ................. ⭐ RECORDED (§6B.1) · nodes yes, configuration no
 provenance of the two findings .... ⚠️ NOT THE SAME — corrected in §6B.2
 hard boundary ..................... ⛔ THREE CRITERIA BEFORE ANY BUILD (§6B.3)

@@ -170,6 +170,13 @@ neural networks work. They do not supply evidence that planetary aspects describ
 they should not acquire scientific authority merely because a modern mathematical language can
 be placed around them.
 
+**Measurement boundary.** MAIA's primary member-facing intelligence is Claude, whose API does
+not expose internal activations. Any direct geometric measurement therefore begins on local
+open-weight models, not on the model presently serving members. A representation found in an
+open-weight model cannot be assumed to exist in Claude, and it cannot acquire authority over
+MAIA merely because it is geometrically measurable. Cross-model correspondence must be
+demonstrated rather than presumed.
+
 The appropriate posture is:
 
 > **The analogy is a source of structure, not of authority.**
