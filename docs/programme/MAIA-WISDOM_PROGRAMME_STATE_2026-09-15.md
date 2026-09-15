@@ -135,3 +135,54 @@ identity satisfiable by six directories is not an identity.
 ⛔ **Standing unchanged:** lane stopped at the materialization gate. ⛔ No census. ⛔ Run #2
 unauthorized. ⛔ Nothing created. ⛔ `maia_sovereign_corpus` (audio eval dataset) is not the corpus
 and is not used.
+
+## Witness — 2026-09-15 — the gate is blocked BELOW the corpus
+
+**Durable programme fact:** *Authoritative-corpus materialization is blocked by a host-wide
+CloudDocs content-fetch failure; corpus integrity and availability have not been adjudicated.*
+
+⭐ **The discriminator was a control file we do not care about.** A file inside Apple's own
+`com~apple~CloudDocs` container fails the identical content-read operation, instantly:
+
+```text
+control file in com~apple~CloudDocs   → Operation timed out · 0.014s · CONTROL BLOCKED
+corpus file in iCloud~md~obsidian     → Error reading · STILL BLOCKED
+```
+
+⛔ So there is **no evidentiary basis** for attributing the failure to AIN, to Obsidian, or to the
+corpus. The failure is one layer below the programme:
+
+```text
+MAIA WISDOM PROGRAMME
+        ↓
+materialization gate
+        ↓
+host iCloud / CloudDocs service   ← FAILURE HERE
+        ↓
+authoritative corpus
+```
+
+⚠️ **TWO host failures, stacked, and they are independent claims** — ⛔ neither may be inferred
+from the other:
+
+| container | state |
+|---|---|
+| `com~apple~CloudDocs` | registered · `last-sync 2026-09-03` (stale) · content fetch times out |
+| `iCloud~md~obsidian` | **`Client zone not found`** — not registered with the daemon at all |
+
+⭐ `Client zone not found` is **not** eviction. A recovered daemon does not, by itself, create a
+zone that is not there. So CloudDocs recovering would say **nothing** about the Obsidian path,
+which must be re-probed independently.
+
+Ruled out: storage (`brctl quota` → 1.18 TB remaining) · corpus-specific fault (control) ·
+a wedged daemon alone (`killall bird cloudd` did not clear it).
+
+⛔ **Not adjudicated, and not inferable from here:** whether the cloud-side copy exists or is
+intact. A local materialization failure is a statement about this host, ⛔ never about the remote.
+An independent cloud-side check (iCloud.com → Drive) would be its own reading.
+
+⛔ Launching Obsidian to register the container is **host/application recovery, not a programme
+act** — it authorizes nothing and is not performed on the programme's behalf.
+
+**Standing: PHASE 0 ⭐⭐ CLOSED · CORPUS CUSTODY UNADJUDICATED · HOST MATERIALIZATION ⛔ BLOCKED ·
+PART A RUN #2 ⛔ UNAUTHORIZED · ACT 2A ⛔ UNOPENED · ⛔ NO CENSUS · ⛔ NO ARCHITECTURE ACT.**
