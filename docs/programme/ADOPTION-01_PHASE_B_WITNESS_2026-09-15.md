@@ -404,3 +404,81 @@ merge                          ⛔ NOT AUTHORIZED
 deploy                         ⛔ NOT AUTHORIZED
 production                     UNTOUCHED
 ```
+
+---
+---
+
+# THE INTEGRATED RUN — A–H, 73/0
+
+**Candidate** `claude/adoption-01-integrated` — new canonical `b9301bb12`
+(carrying `EDITORIAL-WRITE-CARRY-COMPLETION-01` **and**
+`EDITORIAL-LOCUS-ALIGNMENT-01`) **+** ADOPTION-01 Phase B **+**
+`EDITORIAL-LEGACY-LOCUS-DISPOSITION-01` Phase B.
+
+⚠️ **Everything above this line is kept verbatim as the state at the time of
+that run.** ⛔ It is not edited to read as though leg F had always passed. The
+56/0 result and the leg-F defect were true then; what follows is what is true
+now.
+
+```
+A–H behavioural witness   73 passed · 0 failed
+source obligations        26 passed · 0 failed
+predicate truth table      9 passed · 0 failed
+ship typecheck            229 vs baseline 239 · 0 regressions
+WS + manuscript suites    4 failed / 16 tests — IDENTICAL to canonical
+check:no-supabase         clean
+```
+
+## ⭐ LEG F IS NOW A PASS, NOT AN OBSERVATION
+
+```
+F1 ⭐⭐ a headed section is ADOPTABLE
+F2 the manuscript carries the chosen version, heading intact exactly once
+F3 ⛔ and it is NOT reported as the Work having moved
+F4 the draft advanced exactly once
+```
+
+The defect leg F reported is closed at its source — the producer, not the
+explanation.
+
+## ⭐⭐ THE FOUR TRUTHS, DISCRIMINATED
+
+```
+untouched modern headed section   →  ADOPTABLE          F1–F4
+genuinely edited section          →  work_moved         C3–C11
+historical stored-space chain     →  legacy_locus       G1–G10
+the Studio cannot execute         →  system_refusal     E1a–E1f
+```
+
+New legs G and H are recorded in
+`EDITORIAL-LEGACY-LOCUS-DISPOSITION-01_2026-09-15.md` §B3.
+
+## ⚠️ ONE SOURCE OBLIGATION WAS RE-PINNED, AND WHY
+
+`S8` asserted the literal `FROM ask_threads WHERE id = $1 AND member_id = $2`.
+The legacy guard extended that read into a join, so the frozen locus and its
+heading arrive in the same statement. ⛔ The assertion was pinned to a
+**spelling**, and the spelling moved; the LAW did not. It now asserts that the
+derivation reads `ask_threads` and proves ownership **in the SQL**, and a
+companion `S8b` asserts ownership is never left to a later check.
+
+⭐ Falsified: stripping `AND th.member_id = $2` kills both.
+
+## STANDING
+
+```
+A · exact version              ✅      E2 · already applied       ✅
+B · success                    ✅      F  · modern headed         ✅ NEW
+C · work moved                 ✅      G  · legacy locus          ✅ NEW
+D · recovery                   ✅      H  · legacy unheaded       ✅ NEW
+E1 · system refusal            ✅
+
+leg F defect                   ✅ CLOSED at the producer
+legacy chains                  ✅ REFUSED before authorization · ⛔ none rewritten
+tsconfig.ship exclusion        ⚠️ separate finding · ⛔ not repaired
+production schema              ⚠️ authorization table presence UNVERIFIED
+production chain count         ⚠️ UNREAD — two queries stand in the disposition §3
+
+merge                          ⛔ NOT AUTHORIZED
+production                     UNTOUCHED
+```
