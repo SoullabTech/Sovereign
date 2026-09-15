@@ -13,9 +13,9 @@ ACT 1   ✅ CLOSED   Longitudinal continuity failure census          (C1–C9)
 ACT 2   ✅ CLOSED   Invariants · Amendment 1 · Completion 1         (LC-1…LC-21, 4 discriminators)
 ACT 3   ✅ CLOSED   Spiralogic runtime & process-continuity census  (D1 · owed read discharged)
 
-ACT 4                      ⛔ CLOSED
-continuity-depth repair    ⛔ NOT OPENED
-F1a                        ⛔ NOT AUTHORIZED
+ACT 4                      ⛔ UNOPENED
+continuity-depth repair    ⛔ UNOPENED
+F1a                        ⛔ UNAUTHORIZED
 ```
 
 > ⚠️ **AMENDED by §6, same day.** An earlier version of this block carried
@@ -248,9 +248,9 @@ act, with `F1a` beneath it. ⛔ **Neither is chosen here** — naming an act is 
 ACT 1                      ✅ CLOSED
 ACT 2                      ✅ CLOSED
 ACT 3                      ✅ CLOSED
-ACT 4                      ⛔ CLOSED
-continuity-depth repair    ⛔ NOT OPENED
-F1a                        ⛔ NOT AUTHORIZED
+ACT 4                      ⛔ UNOPENED
+continuity-depth repair    ⛔ UNOPENED
+F1a                        ⛔ UNAUTHORIZED
 ```
 
 ⛔ Nothing repaired · nothing ratified · C4 unrepaired and still a derived claim ·
@@ -258,3 +258,97 @@ F1a                        ⛔ NOT AUTHORIZED
 no act open.
 
 *Proposal ≠ founder act. Chat text ≠ durable lane authority.*
+
+---
+
+## 8. THE LADDER, AND WHY THIS CORRECTION IS INSIDE THE LANE'S SUBJECT
+
+Founder confirmation of §6 and §7, with two additions carried as authored.
+
+### 8.1 · R6 · THE FIVE TRANSITIONS **[F]**
+
+> *"An authorization exists only if its authority is independently recoverable from the durable
+> record."*
+
+```
+discussed   ≠ proposed
+proposed    ≠ authorized
+authorized  ≠ executed
+executed    ≠ accepted
+accepted    ≠ canonical
+```
+
+> **[F]** *Each transition needs its own evidence.*
+
+⭐ **[J] The ladder is already evidenced practice in this repository, not an aspiration** — which is
+what makes it enforceable rather than a slogan:
+
+| Transition | Where this project already proves it |
+|---|---|
+| `authorized ≠ executed` | S3's named, head-pinned founder acts — an authorization was **given and then spent**, and the record distinguishes the two |
+| `executed ≠ accepted` | the S3 route-integration candidate passed R1–R12 and F8 and was **still not acceptable** until two integration-only falsifiers were run and ruled on |
+| `accepted ≠ canonical` | the 2026-09-07 finding — *merging a migration to the production branch is, in effect, authorizing it to be applied by whoever deploys next*; acceptance in a lane is not canonical state |
+| `proposed ≠ authorized` | ⭐ **this correction** — the rung that had no instrument, and the one that failed |
+
+⚠️ **The failure was not a missing rule. It was a missing instrument on one rung**, and the rung
+that failed is the one furthest from any code: everything below `authorized` lives in git, and
+`discussed → proposed → authorized` lives in conversation. ⛔ Recorded as an observation about where
+the remaining exposure is, ⛔ not as a proposal to build a governance mechanism.
+
+### 8.2 · R7 · AUTHORITY AND MEMORY ARE THE SAME PROBLEM **[F]**
+
+> **Authority, like memory, requires provenance and standing.**
+>
+> *"A remembered decision without recoverable authorization is exactly analogous to a remembered
+> interpretation without its correction: the content survives while its epistemic status is lost.
+> That makes this governance correction oddly central to the continuity work itself."*
+
+⭐⭐ **[J] This closes the lane on itself, and the closure is a real check rather than a pleasing
+symmetry.** The phantom act is C6's failure shape — *interpretation without correction* — with the
+lane's own governance as the subject:
+
+| | Member memory | Lane authority |
+|---|---|---|
+| Content survives | the interpretation from turn 23 | *"A6 is open through F1a"* |
+| Epistemic status lost | that the member rejected it at turn 27 | that it was a chat draft, never ratified |
+| The law that would have held it | **LC-22** — standing travels with the thing whose standing it governs | **LC-22** — the NOT-AUTHORIZED stamp travels with the proposal (§6.2) |
+| The law that was breached | **LC-21** — accumulation must not silently become authority | repetition in conversation became authority |
+
+> **The lane's invariants govern the lane's own records.** ⭐ That is testable: any AIN-CONTEXT
+> record may be audited against LC-4, LC-21 and LC-22 exactly as a memory carrier may be. Where a
+> record asserts standing it cannot recover, it is the same defect the lane exists to refuse.
+
+### 8.3 · R8 · THE NEXT MOVE REQUIRES A NEW OPENING ACT **[F]**
+
+> *"The next move, whenever you choose it, should begin with a new explicit founder opening act —
+> **not** 'continue A6,' 'resume F1a,' or 'proceed with the proposal.'"*
+
+⛔ **Standing instruction.** No phrase referring back to the phantom act, the unratified proposal
+(§6.2), or this record constitutes an opening. ⭐ Recorded here because the defect class it guards
+is **recurrence by reference**: a proposal preserved for provenance is one careless *"proceed"* away
+from being treated as the act it explicitly is not.
+
+---
+
+## 9. STANDING — CONFIRMED BY FOUNDER
+
+```
+AIN-CONTEXT-01
+
+ACT 1                     ✅ CLOSED
+ACT 2                     ✅ CLOSED
+ACT 3                     ✅ CLOSED
+ACT 4                     ⛔ UNOPENED
+
+continuity-depth repair   ⛔ UNOPENED
+F1a                       ⛔ UNAUTHORIZED
+
+production                untouched
+schema                    untouched
+summary layer             inactive
+C4                        derived / unwitnessed / unrepaired
+Spiral carrier            untouched
+Bridge D                  untouched
+```
+
+*Authority, like memory, requires provenance and standing.*
