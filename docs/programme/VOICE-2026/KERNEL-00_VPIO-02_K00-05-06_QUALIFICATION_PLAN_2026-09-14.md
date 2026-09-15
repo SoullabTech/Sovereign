@@ -826,3 +826,8 @@ Gate 82/82 PASS · `swift build` PASS · `swift test` FAIL at test-target compil
 ### §10.59 — `SID REPAIR-01` OPEN (line 485 only) · siblings HOLD · `SID MAC-COMPILE-02` NOT OPEN · carrier first (2026-09-15; discriminator plan §18.39; implementation record §10.6)
 
 Founder ruling on the §10.58 STOP. Repair authority limited to the compiler-proven expression (`PureLogicTests.swift:485`, modulation-index test): type-check disambiguation only, values/assertions unchanged, one test file, new SHA, founder diff review; sibling closure expressions HOLD until a compile names them. `SID MAC-COMPILE-02` opens only by a separate act against the reviewed REPAIR-01 SHA. Evidence carrier (`SID_MAC-COMPILE-01_CARRIER_2026-09-15.sh`) lands before the repair is written. Qualification of the SID subject remains CLOSED; SID ENTRY WITNESS REQUIRED, not opened; reinstall pins EMPTY.
+
+
+### §10.60 — carrier read · `SID REPAIR-01` written at `faf918b5c` · founder diff review pending · `SID MAC-COMPILE-02` NOT OPEN (2026-09-15; discriminator plan §18.40; implementation record §10.7–§10.8)
+
+Evidence of the STOP is durable (carrier cherry-picked, seal reproduced, single 485:13 diagnostic confirmed from custody, zero tests ran). Repair = one hunk in the test file, compiler disambiguation only, siblings HOLD, kernel byte-identical to the accepted state. Compile requalification against `faf918b5c` opens only by a separate founder act. SID subject qualification remains CLOSED; SID ENTRY WITNESS REQUIRED, not opened; reinstall pins EMPTY. Third 0-byte transcript at 21:32:08Z recorded as an executed duplicate invocation with an unwitnessed (most plausibly precondition-refused) outcome; one read-only `ls` owed.
