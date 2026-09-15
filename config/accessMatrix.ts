@@ -497,6 +497,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/admin', minTier: 'pro', rolesAnyOf: ['admin'], notes: 'Admin panel - admin only' },
   { prefix: '/founder', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder ops console - admin only' },
   { prefix: '/api/founder', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder ops API - admin only' },
+  { prefix: '/api/ain/', public: false, minTier: 'free', rolesAnyOf: ['admin'], notes: 'AIN control surface — activate · collective · control · digest · knowledge · process · telemetry. CONTAINMENT (MAIA-WISDOM-CONSENT-01 ACT 2): these routes carried NO matrix rule, so under the default permissive mode (ACCESS_CONTROL_MODE unset) they were unmapped and therefore ALLOWED — reaching their handlers unauthenticated. checkAccess() is conjunctive (public short-circuit, then authenticated, then tier, then role), so this rule means authenticated AND tier>=free AND role in {admin}. Placed beside /api/founder, its sibling admin-only API rule; matchRule() returns the FIRST matching prefix in array order and no earlier prefix matches /api/ain/, so this entry wins.' },
   { prefix: '/steward', minTier: 'pro', rolesAnyOf: ['steward', 'admin'], notes: 'Steward tools' },
 
   // -------------------------------------------------------------------------
