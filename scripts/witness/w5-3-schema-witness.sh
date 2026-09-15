@@ -56,18 +56,22 @@ q "INSERT INTO proposal_versions (id, chain_id, author, formulation, supersedes)
 VX=99999999-0000-4000-8000-00000000000a
 VY=99999999-0000-4000-8000-00000000000b
 
+# ⭐ W4-2 (20260915000001): a thread has EXACTLY ONE SUBJECT. The chain-bound
+# rows below therefore pass anchor = NULL; the unbound row S1 keeps its anchor.
+# ⛔ Before that migration anchor was NOT NULL, so this fixture HAD to supply
+# one — which is why it wrote a two-subject thread and why W4-2 found it.
 TH="INSERT INTO ask_threads (id, manuscript_id, member_id, anchor, canonical_at_open, initiated_by, proposal_chain_id) VALUES"
 
 # ══ DISCOURSE ══════════════════════════════════════════════════════════════
 admits "S1 · ⭐ an UNBOUND thread is admitted — MATCH SIMPLE leaves it unchecked" \
   "$TH ('11110000-0000-4000-8000-00000000000a','aaaaaaaa-0000-4000-8000-00000000000a','$M','{\"on\":\"work\"}','c1','author',NULL);"
 admits "S2 · thread M/Work A → chain M/Work A" \
-  "$TH ('11110000-0000-4000-8000-00000000000b','aaaaaaaa-0000-4000-8000-00000000000a','$M','{\"on\":\"work\"}','c1','author','$CX');"
+  "$TH ('11110000-0000-4000-8000-00000000000b','aaaaaaaa-0000-4000-8000-00000000000a','$M',NULL,'c1','author','$CX');"
 refuses "S3 · ⭐⭐ thread M/Work A → chain M/Work B — the WRONG-WORK substitution" \
-  "$TH ('11110000-0000-4000-8000-00000000000c','aaaaaaaa-0000-4000-8000-00000000000a','$M','{\"on\":\"work\"}','c1','author','$CY');" \
+  "$TH ('11110000-0000-4000-8000-00000000000c','aaaaaaaa-0000-4000-8000-00000000000a','$M',NULL,'c1','author','$CY');" \
   "ask_threads_proposal_chain_fkey"
 refuses "S4 · thread M → chain owned by N" \
-  "$TH ('11110000-0000-4000-8000-00000000000d','aaaaaaaa-0000-4000-8000-00000000000a','$M','{\"on\":\"work\"}','c1','author','$CZ');" \
+  "$TH ('11110000-0000-4000-8000-00000000000d','aaaaaaaa-0000-4000-8000-00000000000a','$M',NULL,'c1','author','$CZ');" \
   "ask_threads_proposal_chain_fkey"
 refuses "S5a · ⛔ NULL → chain after open (attaching an old conversation)" \
   "UPDATE ask_threads SET proposal_chain_id='$CX' WHERE id='11110000-0000-4000-8000-00000000000a';" \
@@ -79,7 +83,7 @@ refuses "S5c · ⛔ chain → NULL (the quiet unbinding)" \
   "UPDATE ask_threads SET proposal_chain_id=NULL WHERE id='11110000-0000-4000-8000-00000000000b';" \
   "immutable"
 admits "S7 · ⭐ MANY threads may belong to one chain" \
-  "$TH ('11110000-0000-4000-8000-00000000000e','aaaaaaaa-0000-4000-8000-00000000000a','$M','{\"on\":\"work\"}','c1','maia','$CX');"
+  "$TH ('11110000-0000-4000-8000-00000000000e','aaaaaaaa-0000-4000-8000-00000000000a','$M',NULL,'c1','maia','$CX');"
 
 # S6 · deleting a bound thread takes its turns and NOTHING else
 q "INSERT INTO ask_turns (thread_id, turn_index, speaker, body, asked_at)
@@ -168,9 +172,22 @@ eq "A6 · ⭐ the discourse FK is MATCH SIMPLE with RESTRICT on both sides" \
 eq "A7 · ⛔ no second binding timestamp — opened_at IS the binding time" \
   "$(q "SELECT count(*) FROM information_schema.columns
         WHERE table_name='ask_threads' AND column_name IN ('bound_at','chain_bound_at');")" "0"
-eq "A8 · ⛔ no uniqueness on proposal_chain_id — many threads per chain" \
-  "$(q "SELECT count(*) FROM pg_indexes WHERE tablename='ask_threads'
-          AND indexdef ILIKE '%UNIQUE%' AND indexdef ILIKE '%proposal_chain_id%';")" "0"
+# ⭐ NARROWED by W4-2, and the law is UNCHANGED. The old predicate matched ANY
+# unique index mentioning proposal_chain_id, so W4-2's FK target
+# UNIQUE (id, proposal_chain_id) failed it — although that index constrains
+# NOTHING, id being the PK already. What the obligation forbids is a unique key
+# that makes a chain determine at most one thread: one that names
+# proposal_chain_id and does NOT include id. ⛔ A unique index leading with
+# proposal_chain_id would still fail this, as it must.
+eq "A8 · ⛔ no uniqueness that restricts threads per chain" \
+  "$(q "SELECT count(*) FROM pg_index i JOIN pg_class c ON c.oid = i.indrelid
+        WHERE c.relname='ask_threads' AND i.indisunique
+          AND EXISTS (SELECT 1 FROM unnest(i.indkey::int[]) k
+                      JOIN pg_attribute a ON a.attrelid=c.oid AND a.attnum=k
+                      WHERE a.attname='proposal_chain_id')
+          AND NOT EXISTS (SELECT 1 FROM unnest(i.indkey::int[]) k
+                          JOIN pg_attribute a ON a.attrelid=c.oid AND a.attnum=k
+                          WHERE a.attname='id');")" "0"
 eq "A9 · ⛔ AskAnchor untouched — no anchor column was added or altered" \
   "$(q "SELECT data_type FROM information_schema.columns
         WHERE table_name='ask_threads' AND column_name='anchor';")" "jsonb"
