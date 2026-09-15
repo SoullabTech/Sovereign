@@ -1,0 +1,4 @@
+ProductName:		macOS
+ProductVersion:		15.7.8
+BuildVersion:		24G806
+Darwin Kellys-Mac-Studio.local 24.6.0 Darwin Kernel Version 24.6.0: Wed May 20 23:01:05 PDT 2026; root:xnu-11417.140.69.711.5~3/RELEASE_ARM64_T6041 arm64

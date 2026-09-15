@@ -1,0 +1,2 @@
+$ sh -c command -v SwitchAudioSource
+[rc=1]

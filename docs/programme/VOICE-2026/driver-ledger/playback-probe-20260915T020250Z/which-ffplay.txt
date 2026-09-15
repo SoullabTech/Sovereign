@@ -1,0 +1,3 @@
+$ sh -c command -v ffplay
+/opt/homebrew/bin/ffplay
+[rc=0]

@@ -1,0 +1,147 @@
+# Mac playback-capability census — 20260915T020250Z (help/man/listing captures only; no sound, no file, no volume or device change)
+## execution HEAD 01bb8a29df680eac04fd641cb230066707d8a957
+## 1. candidate executables present
+afplay: /usr/bin/afplay
+say: /usr/bin/say
+ffplay: /opt/homebrew/bin/ffplay
+ffmpeg: /opt/homebrew/bin/ffmpeg
+sox: /opt/homebrew/bin/sox
+play: /opt/homebrew/bin/play
+mpv: ABSENT
+SwitchAudioSource: ABSENT
+osascript: /usr/bin/osascript
+system_profiler: /usr/sbin/system_profiler
+## 2. documented file argument / gain or volume option / duration or time option (grep of man + help text; the text is the authority)
+### man-afplay.txt
+5:     afplay - Audio File Play
+8:     afplay [-h] audiofile
+11:     Audio File Play plays an audio file to the default audio output
+no volume/gain line found
+no time/duration line found
+### help-afplay.txt
+3:    Audio File Play
+9:afplay [option...] audio_file
+13:    set the volume for playback of the file
+12:  {-v | --volume} VOLUME
+13:    set the volume for playback of the file
+18:  {-t | --time} TIME
+19:    play for TIME seconds
+### man-ffplay.txt
+9:       ffplay [options] [input_url]
+18:       representing a number as input, which may be followed by one of the SI
+33:       given on the command line is interpreted as a path to the file from
+38:	       ffmpeg -i INPUT -/filter:v filter.script OUTPUT
+243:       -loglevel [flags+]loglevel | -v [flags+]loglevel
+508:       -volume
+509:	   Set the startup volume. 0 means silence, 100 means no volume
+685:	   Decrease and increase volume respectively.
+250:	       the first line and the "Last message repeated n times" line
+258:	   time
+259:	       Indicates that log lines should be prefixed with time
+262:	   datetime
+### help-ffplay.txt
+13:usage: ffplay [options] input_file
+47:-i <input_file>     read specified file
+69:-sources <device>   list sources of the input device
+85:-infbuf <>          don't limit the input buffer size (useful with realtime streams)
+28:-v <loglevel>       set logging level
+42:-volume <volume>    set startup volume 0=min 100=max
+328:     replaygain      4            .D..A......
+1088:  -verifyhost        <string>     ED......... Verify against a specific hostname
+36:-t <duration>       play  "duration" seconds of audio/video
+83:-loop <loop count>  set number of times the playback shall be looped
+85:-infbuf <>          don't limit the input buffer size (useful with realtime streams)
+721:  -real_time         <boolean>    .D...S..... emit subtitle events as they are decoded for real-time display (default false)
+no time/duration line found
+### man-ffmpeg.txt
+9:       ffmpeg [global_options] {[input_file_options] -i input_url} ...
+10:       {[output_file_options] output_url} ...
+14:       inputs - including live grabbing/recording devices - filter, and
+17:       ffmpeg reads from an arbitrary number of inputs (which can be regular
+339:       again. Since encoding tends to be computationally expensive and in most
+954:       -loglevel [flags+]loglevel | -v [flags+]loglevel
+1419:	       recon_gain
+1420:		   Recon gain information used to reconstruct a scalable
+40:       command line multiple times. Each occurrence is then applied to the
+89:	   In other literature, demuxers are sometimes called splitters,
+122:	   in a demuxer, but sometimes may also exist on its own (see Loopback
+524:       changed since the time of this writing.
+### help-ffmpeg.txt
+13:usage: ffmpeg [options] [[infile options] -i infile]... {[outfile options] outfile}...
+38:Global options (affect whole program instead of just one file):
+40:-y                  overwrite output files
+41:-n                  never overwrite output files
+39:-v <loglevel>       set logging level
+49:-t <duration>       stop transcoding after specified duration
+50:-to <time_stop>     stop transcoding after specified time is reached
+51:-ss <time_off>      start transcoding at specified time
+### man-sox.txt
+8:       sox [global-options] [format-options] infile1
+9:	    [[format-options] infile2] ... [format-options] outfile
+12:       play [global-options] [format-options] infile1
+13:	    [[format-options] infile2] ... [format-options]
+145:       One important use of audio file comments is to convey `Replay Gain'
+146:       information.  SoX supports applying Replay Gain information (for
+150:       may contain Replay Gain information if some was present in the input
+152:       was performed then the output file Replay Gain information is likely to
+135:       an encoded audio signal over a unit of time.  It can depend on all of
+216:	  sox ... -t oss
+220:	  sox ... -t alsa
+482:       time period or sample count to determine the stopping point. The trim
+### help-sox.txt
+4:Usage summary: [gopts] [[fopts] infile]... [fopts] outfile [effect [effopt]]...
+6:SPECIAL FILENAMES (infile, outfile):
+7:-                        Pipe/redirect input/output (stdin/stdout); may need -t
+9:-n, --null               Use the `null' file handler; e.g. with synth effect
+24:-G, --guard              Use temporary files to guard against clipping
+38:--replay-gain track|album|off  Default: off (sox, rec), track (play)
+56:-v|--volume FACTOR       Input file volume adjustment factor (real number)
+79:EFFECTS: allpass band bandpass bandreject bass bend biquad chorus channels compand contrast dcshift deemph delay dither divide+ downsample earwax echo echos equalizer fade fir firfit+ flanger gain highpass hilbert input# loudness lowpass mcompand noiseprof noisered norm oops output# overdrive pad phaser pitch rate remix repeat reverb reverse riaa silence sinc spectrogram speed splice stat stats stretch swap synth tempo treble tremolo trim upsample vad vol
+10:-p, --sox-pipe           Alias for `-t sox -'
+### man-play.txt
+8:       sox [global-options] [format-options] infile1
+9:	    [[format-options] infile2] ... [format-options] outfile
+12:       play [global-options] [format-options] infile1
+13:	    [[format-options] infile2] ... [format-options]
+145:       One important use of audio file comments is to convey `Replay Gain'
+146:       information.  SoX supports applying Replay Gain information (for
+150:       may contain Replay Gain information if some was present in the input
+152:       was performed then the output file Replay Gain information is likely to
+135:       an encoded audio signal over a unit of time.  It can depend on all of
+216:	  sox ... -t oss
+220:	  sox ... -t alsa
+482:       time period or sample count to determine the stopping point. The trim
+### help-play.txt
+4:Usage summary: [gopts] [[fopts] infile]... [fopts] [effect [effopt]]...
+6:SPECIAL FILENAMES (infile, outfile):
+7:-                        Pipe/redirect input/output (stdin/stdout); may need -t
+9:-n, --null               Use the `null' file handler; e.g. with synth effect
+24:-G, --guard              Use temporary files to guard against clipping
+38:--replay-gain track|album|off  Default: off (sox, rec), track (play)
+56:-v|--volume FACTOR       Input file volume adjustment factor (real number)
+79:EFFECTS: allpass band bandpass bandreject bass bend biquad chorus channels compand contrast dcshift deemph delay dither divide+ downsample earwax echo echos equalizer fade fir firfit+ flanger gain highpass hilbert input# loudness lowpass mcompand noiseprof noisered norm oops output# overdrive pad phaser pitch rate remix repeat reverb reverse riaa silence sinc spectrogram speed splice stat stats stretch swap synth tempo treble tremolo trim upsample vad vol
+10:-p, --sox-pipe           Alias for `-t sox -'
+## 3. say: documented only (man captured); NEVER executed by this probe
+## 4. audio devices (system_profiler; default output marked by the listing itself)
+4:    Devices:
+8:          Manufacturer: ACR
+12:          Output Source: Default
+16:          Default Output Device: Yes
+17:          Manufacturer: Apple Inc.
+21:          Output Source: Default
+26:          Manufacturer: Apple Inc.
+35:          Manufacturer: Focusrite
+40:          Output Source: Default
+45:          Manufacturer: Apple Inc.
+49:          Output Source: Mac Studio Speakers
+54:          Manufacturer: Reincubate
+59:          Output Source: Camo Microphone
+64:          Manufacturer: Microsoft Corp.
+69:          Output Source: Microsoft Teams Audio Device
+74:          Manufacturer: Rogue Amoeba Software, Inc.
+## 5. output volume (read only)
+$ osascript -e get volume settings
+output volume:25, input volume:missing value, alert volume:59, output muted:false
+[rc=0]
+## 6. device selection without UI: SwitchAudioSource present? NO (third-party; documented only if present; NOT invoked with -s)
+## read-only assessment: the captured text is the authority for the S2 design; nothing here authorizes playback.

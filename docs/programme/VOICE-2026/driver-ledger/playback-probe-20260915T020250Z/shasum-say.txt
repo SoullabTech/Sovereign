@@ -1,0 +1,3 @@
+$ sh -c shasum -a 256 "$(command -v say)"
+7e18f00a6cb9cab34f084e26ed0148d5b86cb929e8e98cc891b31627fea7a4c2  /usr/bin/say
+[rc=0]

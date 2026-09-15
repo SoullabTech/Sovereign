@@ -1,0 +1,79 @@
+$ system_profiler SPAudioDataType
+Audio:
+
+    Devices:
+
+        ED343CUR V:
+
+          Manufacturer: ACR
+          Output Channels: 2
+          Current SampleRate: 48000
+          Transport: HDMI
+          Output Source: Default
+
+        B06Ultra:
+
+          Default Output Device: Yes
+          Manufacturer: Apple Inc.
+          Output Channels: 2
+          Current SampleRate: 44100
+          Transport: Bluetooth
+          Output Source: Default
+
+        Kelly Nezat’s iPhone Microphone:
+
+          Input Channels: 1
+          Manufacturer: Apple Inc.
+          Current SampleRate: 48000
+          Transport: Unknown
+          Input Source: Default
+
+        Scarlett 2i2 USB:
+
+          Default Input Device: Yes
+          Input Channels: 2
+          Manufacturer: Focusrite
+          Output Channels: 2
+          Current SampleRate: 192000
+          Transport: USB
+          Input Source: Default
+          Output Source: Default
+
+        Mac Studio Speakers:
+
+          Default System Output Device: Yes
+          Manufacturer: Apple Inc.
+          Output Channels: 2
+          Current SampleRate: 48000
+          Transport: Built-in
+          Output Source: Mac Studio Speakers
+
+        Camo Microphone:
+
+          Input Channels: 2
+          Manufacturer: Reincubate
+          Output Channels: 2
+          Current SampleRate: 48000
+          Transport: Virtual
+          Input Source: Camo Microphone
+          Output Source: Camo Microphone
+
+        Microsoft Teams Audio:
+
+          Input Channels: 1
+          Manufacturer: Microsoft Corp.
+          Output Channels: 1
+          Current SampleRate: 48000
+          Transport: Virtual
+          Input Source: Microsoft Teams Audio Device
+          Output Source: Microsoft Teams Audio Device
+
+        Loopback Audio:
+
+          Input Channels: 2
+          Manufacturer: Rogue Amoeba Software, Inc.
+          Current SampleRate: 44100
+          Transport: Virtual
+          Input Source: Default
+
+[rc=0]

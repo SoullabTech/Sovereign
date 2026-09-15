@@ -1,0 +1,17 @@
+$ sh -c MANPAGER=cat man afplay 2>/dev/null | col -b
+AFPLAY(1)		    General Commands Manual		     AFPLAY(1)
+
+NAME
+     afplay - Audio File Play
+
+SYNOPSIS
+     afplay [-h] audiofile
+
+DESCRIPTION
+     Audio File Play plays an audio file to the default audio output
+
+OPTIONS
+     -h       print help text
+
+Darwin			       February 13, 2007			Darwin
+[rc=0]

@@ -1,0 +1,3 @@
+$ sh -c command -v ffmpeg
+/opt/homebrew/bin/ffmpeg
+[rc=0]
