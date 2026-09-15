@@ -1,6 +1,14 @@
 # `ANTECEDENT-IDENTITY-01` — PREPARED CHARTER
 
-**Date** 2026-09-15 · ⛔⛔ **PREPARED, NOT OPENED.** ⛔ No census run · no prior art reviewed ·
+**Date** 2026-09-15 · ⭐⭐ **AUTHORIZED TO OPEN — FIRST IN SEQUENCE** (founder act 2026-09-15).
+⛔ Previously prepared-not-opened; the ordering question is now settled.
+⛔ Still: research/adjudication only, no repair authority.
+
+> ⭐ **Why this lane and not the broad one is the parent:** *we just spent an entire programme
+> establishing a precise evidentiary law around antecedence. A broad taxonomy should INHERIT
+> that result, not acquire authority to redescribe it.*
+
+⛔⛔ **PRIOR HEADER, SUPERSEDED:** ⛔ No census run · no prior art reviewed ·
 no taxonomy authored · no test designed · no repair authority of any kind.
 **Opening requires an explicit founder act.**
 

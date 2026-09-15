@@ -72,7 +72,16 @@ theme → elaborated_by → later insight statement → contrasts_with → earli
 
 ⛔ **All three survive the merge unchanged in force.**
 
-### 3.1 ⚠️ THE LANE COLLISION IS NOW RESOLVED ONE WAY AND STILL OPEN THE OTHER
+### 3.1 ⭐⭐ SETTLED — `ANTECEDENT-IDENTITY-01` OPENS FIRST; THIS LANE DEFERS
+
+> ⭐ **`REFERS_TO` / antecedent identity: DEFERRED TO / INHERITED FROM `ANTECEDENT-IDENTITY-01`.
+> ⛔ Do not independently adjudicate.**
+
+⭐ This lane **may study the surrounding grammar**; ⛔ it **may not classify, redefine or solve
+that edge.** ⛔ The broad lane was explicitly **not** made the parent, because a broad taxonomy
+should **inherit** the antecedence law rather than gain authority to redescribe it.
+
+⛔ **PRIOR FRAMING, SUPERSEDED:**
 
 ⭐ `RELATIONAL-MEMORY-01` is **merged into this lane** — that collision is closed. ⚠️
 `ANTECEDENT-IDENTITY-01` remains prepared, and its question is **one edge of this grammar**
@@ -198,7 +207,50 @@ supersedes them. ⛔ *Joint establishment must never be able to erase which side
 **stored confident NEGATIVE**. ⭐ The six-layer list **correctly avoided it**; recording the
 distinction so the census does not over-apply the refusal and drop a lawful edge.
 
-### 3B.4 ⚠️ THE STRONGEST CLAIM RESTS ON THE LEAST VERIFIABLE SOURCE
+### 3B.4a ⭐⭐ VERIFICATION RUN (founder, 2026-09-15) — and the rule it establishes
+
+⭐ **Venue-verified:** Centering (Grosz · Joshi · Weinstein 1995) · CODI-CRAC 2022 shared task
+(identity · bridging · discourse deixis as **separate** tasks) · Kobayashi & Ng bridging survey
+(COLING 2020) · Apple ReALM (**SIGDIAL 2024**) · Associa (Findings ACL 2025) · EventRelBench
+(Findings EMNLP 2025) · common-ground survey (2025) · GUMBridge (**LREC 2026**) + CODI 2026
+follow-up on salience/distance of associative antecedents · MemORAI (Findings ACL 2026) ·
+*Universal Discourse Relations: A Proposal* (**CODI-CRAC 2026**).
+
+⚠️ **CORRECTION 1 — DATE.** The relational-memory paper is **Liu, Yogatama & Blunsom, TACL
+2022** — ⛔ **not recent.** It belongs with the canonical set, not the contemporary wave.
+
+⚠️⚠️ **CORRECTION 2 — CLAIM NARROWED BY ITS OWN AUTHOR.** The 2026 synthesis **exists**, and the
+venue record supports *"a multi-layer model of coherence relations."* ⛔ It does **NOT** support
+the stronger wording that it separates *referential · temporal · attribution · topic · coherence*
+into **exactly** those layers. ⛔ **The charter does not inherit that sentence as fact.**
+
+> ⭐⭐ **THE RULE THIS ESTABLISHES, AND THE CENSUS CARRIES IT BY NAME:**
+> **A citation verified to EXIST is not a citation whose CLAIMS are verified.**
+>
+> ⭐ This is the same shape as the project's ratified **WITNESSED vs ENTAILED** distinction — a
+> venue record is read directly; what the paper argues is inferred from its title and abstract
+> until someone reads it. ⛔ Over ten-plus sources a census **will** drift from *the paper exists*
+> to *the paper says what we said it says* unless the two are kept as **separate evidence
+> classes**.
+
+⭐ **And the premise does not depend on the narrowed claim.** That discourse and reference
+comprise **different relational problems rather than one relevance score** is independently
+carried by Centering, the CODI-CRAC task separation, the bridging survey, and PDTB/RST/SDRT
+having different relation inventories.
+
+### 3B.4b ⚠️ THE MOST LOAD-BEARING CLAIM IS NOW A *READING* OBLIGATION
+
+⭐ Two independent benchmarks — **EventRelBench** (~35K questions; event relations) and
+**GUMBridge** (bridging resolution and subtype classification) — are both reported to find
+**contemporary models still weak at relationship understanding.**
+
+⭐⭐ That pair is **the programme's justification**: it is why AIN might need to preserve
+relational structure explicitly rather than assume Claude reconstructs it each turn. ⛔ Both are
+**venue-verified, claims REPORTED not READ.** ⭐ **They therefore deserve the strongest
+verification in the census — read, not cited** — because if the premise fails, the programme's
+motivation fails with it.
+
+### 3B.4c ⛔ PRIOR FRAMING, SUPERSEDED
 
 ⛔ The *"2026 discourse synthesis"* arguing for multilayer separation is **the single citation
 carrying the most weight here, and the one I can least corroborate** — venue, authorship and
@@ -212,10 +264,29 @@ carried by an unverified source, however well it states the case.
 
 ---
 
+### 3B.5 ⭐ TWO AXES, AND THE CENSUS NEEDS BOTH
+
+> ⭐⭐ *"MAIA may not need a graph. It may need a disciplined relational grammar that distinguishes
+> what should be DURABLE, what should be DERIVED, and what must be RECONSTRUCTED dynamically in
+> the present encounter."*
+
+⭐ That is the **prescriptive** axis — what a relation *ought* to be. ⛔ It is **not** the same as
+§3B.1's **descriptive** axis — what AIN does *today*:
+
+```text
+DESCRIPTIVE (census)     explicit · implicit · absent · correctly reconstructed
+PRESCRIPTIVE (grammar)   durable  · derived  · reconstructed-in-encounter
+```
+
+⛔ **Collapsing them would let *AIN already does X* pass as *X is right*** — ⭐ and the gap between
+the two axes **is the census's actual finding.**
+
+---
+
 ## 4 · STANDING
 
 ```text
-lane ............................. ⛔ PREPARED · NOT OPENED
+lane ............................. ⛔ PREPARED · NOT OPENED · opens AFTER ANT-IDENT-01
 supersedes ....................... RELATIONAL-MEMORY-01 (never opened, kept verbatim)
 parent/child with ANT-IDENT-01 ... ⚠️ UNDECIDED — settle BEFORE either opens (§3.1)
 citations ........................ ⚠️ canonical corroborable · recent UNVERIFIED (§3.2)
@@ -225,7 +296,12 @@ six candidate layers ............. ⭐ RECORDED (§3A) · ⛔ not final · devel
 census fourth category ........... ⭐ REQUIRED (§3B.1) — correctly reconstructed ≠ missing
 JOINTLY_ESTABLISHED .............. ⛔ COMPOSITE ONLY · never a primitive (§3B.2)
 WITHDRAWN_BY ..................... ✅ ADMISSIBLE — FR-15 tombstone (§3B.3)
-2026 synthesis ................... ⚠️ LEAST VERIFIABLE · MOST LOAD-BEARING (§3B.4)
+2026 synthesis ................... ✅ VENUE VERIFIED · ⚠️ layer claim NARROWED (§3B.4a)
+citation rule .................... ⭐ EXISTS ≠ CLAIMS VERIFIED — carried by name (§3B.4a)
+EventRelBench · GUMBridge ........ ⚠️ READING OBLIGATION — the premise rests on them (§3B.4b)
+TACL relational memory ........... ⚠️ IS 2022 — canonical set, not contemporary
+REFERS_TO ........................ ⛔ DEFERRED TO ANTECEDENT-IDENTITY-01 (§3.1)
+two census axes .................. ⭐ descriptive ≠ prescriptive · ⛔ do not collapse (§3B.5)
 design · schema · graph .......... ⛔ NOT AUTHORIZED
 production ....................... e57ca1baa · UNTOUCHED
 ```
