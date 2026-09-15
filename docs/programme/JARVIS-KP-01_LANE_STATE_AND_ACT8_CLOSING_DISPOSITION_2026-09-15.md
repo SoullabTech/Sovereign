@@ -188,6 +188,11 @@ AGENT §6 CONFORMITY ............................................. Ø UNOBSERVED
 ACT 9 · agent evidence-reuse witness ............................ ⏸ NOT OPEN
         requires explicit experimental authorization
 
+LANE STATUS ..................................................... ⏸ HELD / DELIBERATELY STOPPED
+                                                                   ⛔ NOT CLOSED
+        ACT 9 remains ⏸ NOT OPEN.
+        Lane closure requires a separate explicit act.
+
 ALL LANE ACTS .................................................... ⚠️ NONCONFORMING CUSTODY
                                                                     disclosed, not cured
 
