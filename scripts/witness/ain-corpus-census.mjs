@@ -104,15 +104,24 @@ const SOULLAB_MARKERS = ['soullab', 'spiralogic', 'elemental alchemy', 'maia', '
 const files = [];
 let skippedDirs = 0;
 let symlinks = 0;
-let unreadable = 0;
-let appleDoubleSkipped = 0;   // macOS AppleDouble sidecars — metadata, never corpus
+// Per-stage measurement state. The aggregate `unreadable` counter this replaces
+// was unusable as a witness metric: one file could increment it at several
+// stages, and a failed read was indistinguishable from a successful read that
+// found nothing. Each stage is now counted separately so the report can say
+// what was actually measured rather than what was attempted.
+let readdirFailures = 0;
+let lstatFailures = 0;
+let hashAttempts = 0, hashFailures = 0;
+let textAttempts = 0, textFailures = 0;
+let appleDoubleSkipped = 0;
+let backupSkipped = 0;   // macOS AppleDouble sidecars — metadata, never corpus
 
 async function walk(dir) {
   let entries;
   try {
     entries = await readdir(dir, { withFileTypes: true });
   } catch {
-    unreadable += 1;
+    readdirFailures += 1;
     return;
   }
   for (const entry of entries) {
@@ -133,6 +142,11 @@ async function walk(dir) {
       // hundreds at a single directory level. Excluded here and COUNTED, so the
       // exclusion is visible in the report rather than silently applied.
       if (entry.name.startsWith('._')) { appleDoubleSkipped += 1; continue; }
+      // Editor/tooling backup artifacts. Excluded from the corpus population and
+      // counted separately, on the same footing as AppleDouble sidecars: they are
+      // custody and hygiene evidence, not authored corpus objects. Nothing is
+      // deleted, modified, or inspected — only counted.
+      if (entry.name.endsWith('.backup')) { backupSkipped += 1; continue; }
       files.push(full);
     }
   }
@@ -199,6 +213,58 @@ function countSignals(lower, terms) {
 
 await walk(ROOT);
 
+// ---------------------------------------------------------------- read probe
+//
+// WHY THIS EXISTS. On 2026-09-15 this instrument produced a complete-looking
+// report over a corpus whose every content read had failed: 8,803 read failures
+// across 5,131 files, with a domain table, an authorship percentage and a
+// "100% frontmatter absent" figure all derived from nothing. The cause was
+// macOS dataless files — iCloud evicts the CONTENT while leaving name, size and
+// metadata intact, so readdir and lstat succeed and open()+read() fails.
+//
+// The earlier preflight looked for `*.icloud` placeholder files and returned 0,
+// which is a LEGACY convention. It was a proxy for the operation, not the
+// operation. This probes the actual read the census depends on.
+async function probeReadability(candidates) {
+  const sample = candidates.filter((p) => READABILITY[extname(p).toLowerCase()] === 'immediate').slice(0, 40);
+  if (sample.length === 0) return { attempted: 0, failed: 0 };
+  let failed = 0;
+  for (const path of sample) {
+    try {
+      const fh = await open(path, 'r');
+      try {
+        const buf = Buffer.alloc(1);
+        const { bytesRead } = await fh.read(buf, 0, 1, 0);
+        if (bytesRead === 0) { /* genuinely empty file — not a failure */ }
+      } finally { await fh.close(); }
+    } catch { failed += 1; }
+  }
+  return { attempted: sample.length, failed };
+}
+
+const probe = await probeReadability(files);
+if (probe.attempted > 0 && probe.failed / probe.attempted > 0.5) {
+  console.error('');
+  console.error(`REFUSED: ${probe.failed} of ${probe.attempted} sampled files could not be read.`);
+  console.error('');
+  console.error('The corpus tree is present but its CONTENT is not readable. The most common');
+  console.error('cause is macOS dataless files: iCloud has evicted file contents while leaving');
+  console.error('names, sizes and metadata intact. Check with:');
+  console.error('');
+  console.error('    ls -lO <a file in the tree>        # look for "dataless" in the flags');
+  console.error('');
+  console.error('Remedy: in Finder, right-click the folder and choose "Download Now", or turn');
+  console.error('off System Settings > Apple ID > iCloud > iCloud Drive > Optimize Mac Storage.');
+  console.error('(`brctl download` only addresses the iCloud Drive container, not third-party');
+  console.error('app containers such as Obsidian\'s.)');
+  console.error('');
+  console.error('A census run now would report counts, extensions and sizes correctly while');
+  console.error('silently deriving frontmatter, domain and authorship signals from zero bytes.');
+  console.error('That is why this refuses rather than reporting.');
+  console.error('');
+  process.exit(4);
+}
+
 const byExt = {};
 const byReadability = { immediate: 0, needs_conversion: 0, unsuitable: 0, unknown: 0 };
 const byTopDir = {};
@@ -215,7 +281,7 @@ let soullabSignal = 0;
 
 for (const path of files) {
   let st;
-  try { st = await lstat(path); } catch { unreadable += 1; continue; }
+  try { st = await lstat(path); } catch { lstatFailures += 1; continue; }
 
   const ext = extname(path).toLowerCase();
   const rel = relative(ROOT, path);
@@ -229,7 +295,8 @@ for (const path of files) {
   if (st.size === 0) zeroByte += 1;
 
   let hash = null, hashKind = null;
-  try { ({ hash, hashKind } = await hashFile(path, st.size)); } catch { unreadable += 1; }
+  hashAttempts += 1;
+  try { ({ hash, hashKind } = await hashFile(path, st.size)); } catch { hashFailures += 1; }
   if (hash) {
     if (!hashes.has(hash)) hashes.set(hash, []);
     hashes.get(hash).push(rel);
@@ -240,6 +307,7 @@ for (const path of files) {
   let soullab = false;
 
   if (readability === 'immediate' && st.size > 0 && st.size < 16 * 1024 * 1024) {
+    textAttempts += 1;
     try {
       const text = await readTextHead(path);
       const lower = text.toLowerCase();
@@ -249,7 +317,7 @@ for (const path of files) {
       }
       soullab = countSignals(lower, SOULLAB_MARKERS).length > 0;
       if (soullab) soullabSignal += 1;
-    } catch { unreadable += 1; }
+    } catch { textFailures += 1; }
   }
 
   if (fmPresent === null) withNoFrontmatter += 1;
@@ -265,6 +333,8 @@ for (const path of files) {
     soullab_authorship_signal: soullab, // SIGNAL ONLY — never a classification
   });
 }
+
+const textSuccesses = textAttempts - textFailures;
 
 const duplicateClusters = [...hashes.entries()]
   .filter(([, paths]) => paths.length > 1)
@@ -284,9 +354,20 @@ const census = {
     gigabytes: +(totalBytes / 1e9).toFixed(3),
     directories_skipped: skippedDirs,
     symlinks_not_followed: symlinks,
-    unreadable_entries: unreadable,
     appledouble_sidecars_excluded: appleDoubleSkipped,
+    backup_artifacts_excluded: backupSkipped,
     zero_byte_files: zeroByte,
+  },
+  measurement: {
+    readdir_failures: readdirFailures,
+    lstat_failures: lstatFailures,
+    hash_attempts: hashAttempts,
+    hash_successes: hashAttempts - hashFailures,
+    hash_failures: hashFailures,
+    text_read_attempts: textAttempts,
+    text_read_successes: textSuccesses,
+    text_read_failures: textFailures,
+    content_findings_trustworthy: textAttempts === 0 || textSuccesses / textAttempts >= 0.95,
   },
   readability: byReadability,
   by_extension: Object.fromEntries(Object.entries(byExt).sort((a, b) => b[1] - a[1])),
@@ -307,6 +388,23 @@ const census = {
   },
   files: records,
 };
+
+// FAIL CLOSED. If content reads were attempted and none succeeded, every
+// content-derived finding below is non-observation wearing the shape of a
+// measurement. Refuse rather than report.
+if (textAttempts > 0 && textSuccesses === 0) {
+  console.error('');
+  console.error(`REFUSED: ${textAttempts} content reads attempted, 0 succeeded.`);
+  console.error('Frontmatter standing, domain signal, authorship signal, content hashes and');
+  console.error('duplication are all derived from file contents and would be reported as');
+  console.error('findings while measuring nothing. No report was written.');
+  console.error('');
+  console.error(`Filesystem-level observations that DO hold: ${files.length} files, ` +
+                `${(totalBytes / 1e9).toFixed(3)} GB, ${appleDoubleSkipped} AppleDouble, ` +
+                `${backupSkipped} .backup, ${zeroByte} zero-byte, ${symlinks} symlinks.`);
+  console.error('');
+  process.exit(5);
+}
 
 await mkdir(OUT, { recursive: true });
 await writeFile(join(OUT, 'census.json'), JSON.stringify(census, null, 2));
@@ -331,10 +429,23 @@ const md = `# AIN Wisdom Corpus Census
 | Files | ${files.length} |
 | Size | ${census.totals.gigabytes} GB |
 | Symlinks (not followed) | ${symlinks} |
-| Unreadable entries | ${unreadable} |
 | Directories skipped | ${skippedDirs} |
 | **AppleDouble sidecars excluded** | ${appleDoubleSkipped} |
 | **Zero-byte files** | ${zeroByte} (${pct(zeroByte)}% of counted files) |
+| **\`.backup\` artifacts excluded** | ${backupSkipped} |
+
+## Measurement state
+
+⚠️ *What was measured, not what was attempted. A failed read is not an absent finding.*
+
+| Stage | Attempts | Successes | Failures |
+|---|---|---|---|
+| readdir | — | — | ${readdirFailures} |
+| lstat | ${files.length} | ${files.length - lstatFailures} | ${lstatFailures} |
+| content hash | ${hashAttempts} | ${hashAttempts - hashFailures} | ${hashFailures} |
+| text read | ${textAttempts} | ${textSuccesses} | ${textFailures} |
+
+**Content-derived findings trustworthy: ${textAttempts === 0 || textSuccesses / textAttempts >= 0.95 ? 'YES' : '⛔ NO'}**
 
 ## Machine readability
 
@@ -403,7 +514,8 @@ ${table(census.by_top_level_dir)}
 await writeFile(join(OUT, 'CENSUS.md'), md);
 
 console.log(`census complete — ${files.length} files, ${census.totals.gigabytes} GB`);
-console.log(`  excluded: ${appleDoubleSkipped} AppleDouble sidecar(s) · zero-byte files counted: ${zeroByte}`);
+console.log(`  excluded: ${appleDoubleSkipped} AppleDouble · ${backupSkipped} .backup · zero-byte: ${zeroByte}`);
+console.log(`  reads: text ${textSuccesses}/${textAttempts} · hash ${hashAttempts - hashFailures}/${hashAttempts}`);
 console.log(`  readable now: ${byReadability.immediate} · needs conversion: ${byReadability.needs_conversion} · unsuitable: ${byReadability.unsuitable}`);
 console.log(`  ratified frontmatter — complete: ${withFullFrontmatter} · partial: ${withPartialFrontmatter} · absent: ${withNoFrontmatter}`);
 console.log(`  duplicate clusters: ${duplicateClusters.length} (${duplicateFileCount} redundant files)`);
