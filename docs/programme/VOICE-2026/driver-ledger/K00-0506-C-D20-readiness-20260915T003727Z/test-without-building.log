@@ -1,0 +1,37 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun .derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testTerminateOnly"
+
+2026-09-14 20:36:37.670 xcodebuild[89814:30211543] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 20:36:37.673 xcodebuild[89814:30211543] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 20:36:37.773 xcodebuild[89814:30211543] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-14 20:36:38.370 xcodebuild[89814:30211543] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 20:36:38.561 xcodebuild[89814:30211543] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 20:36:44.696978-0400 DriverUITests-Runner[67208:14714564] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-14 20:36:49.804.
+Test Suite 'DriverUITests.xctest' started at 2026-09-14 20:36:49.805.
+Test Suite 'K00DriverTests' started at 2026-09-14 20:36:49.805.
+Test Case '-[DriverUITests.K00DriverTests testTerminateOnly]' started.
+    t =     0.00s Start Test at 2026-09-14 20:36:49.805
+    t =     0.01s Set Up
+    t =     0.02s Tear Down
+Test Case '-[DriverUITests.K00DriverTests testTerminateOnly]' passed (0.023 seconds).
+Test Suite 'K00DriverTests' passed at 2026-09-14 20:36:49.828.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.023 (0.023) seconds
+Test Suite 'DriverUITests.xctest' passed at 2026-09-14 20:36:49.828.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.023 (0.024) seconds
+Test Suite 'Selected tests' passed at 2026-09-14 20:36:49.828.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.023 (0.024) seconds
+2026-09-14 20:36:50.121 xcodebuild[89814:30211543] [MT] IDETestOperationsObserverDebug: 11.751 elapsed -- Testing started completed.
+2026-09-14 20:36:50.122 xcodebuild[89814:30211543] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-14 20:36:50.122 xcodebuild[89814:30211543] [MT] IDETestOperationsObserverDebug: 11.751 sec, +11.751 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-ekihmguuehlipvbijgukfxwqfrba/Logs/Test/Test-DriverUITests-2026.09.14_20-36-37--0400.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
