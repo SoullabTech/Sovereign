@@ -125,8 +125,8 @@ verbatim; the acts below are the lane's real spine and supersede it where they d
 ACT 1  epistemology census                    ✅ CLOSED
 ACT 2  collision adjudication                 ✅ CLOSED → 416c87e7 FOUNDER-ADJUDICATED
 ACT 3  canonical reconciliation + placement   ✅ CLOSED → RE-009 CANONICAL
-ACT 4  runtime conformity census              ⛔ NOT OPENED (founder act) · census-only:
-                                                 finding violations does NOT authorize repair
+ACT 4  runtime conformity census              ✅ CLOSED · 1 NONCONFORMS · 2 AMBIGUOUS
+                                                 ⛔ repair NOT authorized, NOT performed
 ACT 5+ bounded repair decisions               ⛔ NOT OPENED
        benchmark corpus                       ⛔ blocked until doctrine and substrate agree
                                                  on what constitutes a violation
