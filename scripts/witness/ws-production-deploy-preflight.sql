@@ -99,7 +99,13 @@ SELECT s.position, left(coalesce(s.heading,'(no heading)'), 50) AS heading,
 
 \echo ''
 \echo '════ 4 · EXISTING RELATIONSHIPS — what the walk would return to ════'
+-- ⚠️ `to_regclass` rather than a bare count: this whole script runs under
+-- ON_ERROR_STOP=1, and one absent table would abort the preflight AFTER the
+-- expensive checks above rather than reporting a NULL beside them.
 SELECT (SELECT count(*) FROM ask_threads)                       AS ask_threads_total,
        (SELECT count(*) FROM ask_threads WHERE anchor->>'on' = 'work')
                                                                 AS work_anchored,
-       (SELECT count(*) FROM manuscript_structure_proposals)     AS readings;
+       CASE WHEN to_regclass('public.manuscript_structure_proposals') IS NULL
+            THEN NULL
+            ELSE (SELECT count(*) FROM manuscript_structure_proposals) END
+                                                                AS readings;
