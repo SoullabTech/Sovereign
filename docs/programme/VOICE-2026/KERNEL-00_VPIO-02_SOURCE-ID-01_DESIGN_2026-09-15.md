@@ -1,6 +1,6 @@
 # KERNEL-00 · VPIO-02 · `SOURCE-ID-01` — SOURCE-IDENTIFICATION DESIGN ACT (read-only, 2026-09-15)
 
-**Status:** DESIGN ONLY · returned for founder ruling · **authorizes nothing.** No implementation · no compile · no install · no device act · no S3 · no K00-06 acceptance attempt · no threshold · no organism, harness, driver, reader or reinstall change. The frozen organism `ac12dedf4` / instrument `b198e2e37` / installed `.vpio02` are untouched.
+**Status:** DESIGN ONLY · returned for founder ruling · **authorizes nothing.** ⚠️ **Founder ruling §9 (2026-09-15): spectral core ACCEPTED; §2.2 aggregate and §4 numerical law AMENDED in §10 — read §2.2/§4 with §10, which supersedes their numbers.** No implementation · no compile · no install · no device act · no S3 · no K00-06 acceptance attempt · no threshold · no organism, harness, driver, reader or reinstall change. The frozen organism `ac12dedf4` / instrument `b198e2e37` / installed `.vpio02` are untouched.
 
 **Opened by:** founder, after the §18.32 ruling on the S2 population (discriminator plan `KERNEL-00_VPIO-02_K00-06_PARTIAL-ZERO_DISCRIMINATOR_PLAN_2026-09-15.md` §18.32; standing table §18.32.2). Founder's words: *"Next is not another witness. The next lawful move is a new design lane for the unresolved discriminator: can we prove that the energy surviving at the consumed seam is the independent near-end source, rather than MAIA's own playback / residual echo? … Open a read-only source-identification design act. No device run, no harness change, no S3, no K00-06 acceptance attempt."* The act must answer four questions before any implementation: **(1) measurement · (2) stimulus · (3) reading law · (4) minimal surface.**
 
@@ -50,6 +50,8 @@ Nothing in the seam carries frequency, phase or temporal-pattern information; th
 
 ### 2.2 Aggregate: one evidence record per second on the existing tick, beside `input_health_sample`
 
+> ⚠️ Superseded numerically by §10.A (founder ruling §9): the `e997HighFrames / e997LowFrames` counts below preserve contrast, not order, and cannot prove a 2 Hz signature; the frame arithmetic "≈ 6 high / 6 low" is wrong (25 frames/s → ≈ 12–13 on / 12–13 off). Kept as written for the record.
+
 New record **`input_source_sample`** (component `HealthSupervisor`, cause `sample`, emitted from the same `sampleIfDue` tick, so its `windowMs` and callback count coincide with the health sample it sits beside). Evidence, per bin `b ∈ B`: `e<b>Mean` · `e<b>Max` · `e<b>Min` (over the frames closed in the window) and, for the stimulus bin only, `e997HighFrames` / `e997LowFrames` (frames above / below the geometric mean of that window's `e997Max`·`e997Min` — the **temporal-contrast signature** a gated stimulus leaves and a stationary residual cannot, §3); plus `frames` (closed 40 ms frames in the window), `frameReset`, `analysisRateHz`, `binsHz` (the closed list, so the record is self-describing). No `inputFlow`, no class, no verdict: **evidence only**. `input_health_sample` keeps its exact current shape and keys.
 
 ### 2.3 What is deliberately NOT measured
@@ -64,7 +66,7 @@ S2 raised (as inference only, §18.31.7 (e)) that a stationary 997 Hz tone is ex
 | Option | Stimulus | Identifies the source by | Cost | Reading |
 |---|---|---|---|---|
 | **S-a** | 997 Hz stationary (the existing fixture, SHA-pinned) | frequency only (`e997` vs controls, vs `e440`/`e880` leakage bound) | none (fixture and batch token unchanged) | clean but still exposed to stationary-noise suppression — and now that exposure becomes **measurable**: a monotone decline of `e997Mean` across the ≥ 10 pre-output baseline windows, with no own playback present, is direct evidence of suppression-by-stationarity, separately from anything MAIA does |
-| **S-b (recommended primary)** | 997 Hz **gated**: 250 ms on / 250 ms off (2 Hz duty, 50 %), same level, 180 s, new SHA-pinned fixture | frequency **and** temporal contrast: within every 1 s window the 997 bin must alternate (≈ 6 high / 6 low 40 ms frames, `e997Max/e997Min` ≫ 1); own-playback residual and any leakage are continuous over the 3 s stream and cannot produce that pattern | one new fixture (+ sidecar SHA + gate header/frame/crossing/duty checks) + one new batch token; organism unchanged beyond §2 | the strongest attribution available without correlation: energy at 997 Hz *that turns on and off at 2 Hz* is the Mac's, full stop; a 250 ms gate is far shorter than typical noise-suppression adaptation, so the tone never becomes "stationary" to the processor |
+| **S-b (recommended primary)** | 997 Hz **gated**: 250 ms on / 250 ms off (2 Hz duty, 50 %), same level, 180 s, new SHA-pinned fixture | frequency **and** temporal contrast: within every 1 s window the 997 bin must alternate (≈ 6 high / 6 low 40 ms frames [corrected §10: ≈ 12–13 on / 12–13 off of 25 frames per second], `e997Max/e997Min` ≫ 1); own-playback residual and any leakage are continuous over the 3 s stream and cannot produce that pattern | one new fixture (+ sidecar SHA + gate header/frame/crossing/duty checks) + one new batch token; organism unchanged beyond §2 | the strongest attribution available without correlation: energy at 997 Hz *that turns on and off at 2 Hz* is the Mac's, full stop; a 250 ms gate is far shorter than typical noise-suppression adaptation, so the tone never becomes "stationary" to the processor |
 | S-c | two alternating tones (997 / 1 540 Hz) | frequency alternation | new fixture, two stimulus bins (1 540 avoids 440-multiples but sits 220 Hz from 1 320 and 1 760 — fine at 25 Hz bins) | equivalent to S-b with more bins; no advantage over gating |
 | S-d | chirp / PRN / coded sequence | correlation against a reference | phone-side reference + alignment + a correlation estimator ≈ raw-audio-adjacent custody; a different instrument class | **not recommended for the first source instrument** (most power, least minimal); named for the record as the escalation if S-b cannot separate |
 
@@ -73,6 +75,8 @@ S2 raised (as inference only, §18.31.7 (e)) that a stationary 997 Hz tone is ex
 ---
 
 ## 4. Q3 — Reading law (predeclared; witness criteria only, never constitutional, never a change to the K00-06 law or readers)
+
+> ⚠️ Superseded numerically by §10.B (founder ruling §9): the leakage bound `Lk = 3.5e-6 × e880Max + 1e-9 × e440Max` applied power-domain ratios to magnitude-domain quantities and understates leakage by orders of magnitude; the V2 contrast test is replaced by the ordered 2 Hz measure. Structure and taxonomy stand; numbers are re-derived in §10.B.
 
 All quantities per invocation, self-calibrated from that invocation's own pre-output baseline windows (the §7.2 discipline), read from `input_source_sample` beside the unchanged `input_health_sample`. Let `B997`, `B700`, `B1200` be the medians of `e997Mean`, `e700Mean`, `e1200Mean` over the healthy pre-output baseline windows; `C = max(B700, B1200)` the in-band noise reference.
 
@@ -146,3 +150,103 @@ only then                              reconsider S3 (redesigned, not inherited)
 Rulings owed (in order): **(1)** Q1 estimator accepted as specified (40 ms Hann, bin set `B`, one `input_source_sample`/s)? **(2)** Q2: S-b gated 997 Hz as the population stimulus with an S-a N=5 measurement arm first — or S-a only, or another shape? **(3)** Q3 reading law as predeclared (the 10×/20 dB/40 dB witness criteria, the leakage bound, the four classes, the hypothesis mapping) — numbers are proposals, the structure is the design? **(4)** Q4 surface accepted as the whole diff budget; new bundle id named; separate entry witness required or not (§6)? Then, separately and only after (1)–(4): implementation authority.
 
 **Nothing opens with this record.** S3 CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · KERNEL-00 NOT ACCEPTED · C-D26 HOLD · `.vpio02` untouched · no device act · no code.
+
+---
+
+## 9. Founder ruling on §1–§8 (2026-09-15) — spectral core ACCEPTED · Q1 aggregate AMEND REQUIRED · Q2 S-b ACCEPTED, S-a NOT OPEN · Q3 structure ACCEPTED, numbers AMEND REQUIRED · Q4 surface ACCEPTED IN PRINCIPLE, separate entry witness REQUIRED · implementation NOT AUTHORIZED
+
+Substance verbatim:
+
+1. **Q1 — ACCEPTED IN PART.** Accepted: the consumed post-VP buffer after `AudioUnitRender` · no second AVAudio/AudioUnit read · 40 ms Hann frame (justified: ≈ −51.2 dB 880→997, −93 dB 440→997; the 10 ms alternative materially unsafe) · fixed-frequency magnitude measurement · source evidence only, no health/control meaning · one aggregate record on the existing 1 s tick · no raw audio, phase or wide-band spectrum · new subject by custody. **Defect A:** `e997HighFrames / e997LowFrames` preserves how many high/low frames occurred, not their order — it proves contrast, not a 2 Hz gated signature; random or processor-induced fluctuation could satisfy the same counts. Amend so the 1 s record carries a **phase-independent measure of the 2 Hz modulation of the 997 Hz magnitude envelope** (e.g. a fixed 2 Hz Goertzel/DFT magnitude over the ordered 40 ms `e997` frames); no phase stored; still non-invertible and one per second. Also correct the frame arithmetic: ≈ 25 frames/s; a 50 % duty 250 ms gate gives ≈ 12–13 high and 12–13 low frames per second, not ≈ 6/6.
+2. **Q2 — S-b ACCEPTED; S-a N=5 NOT AUTHORIZED.** Gated 997 Hz, 250 ms on / 250 ms off, is the first source-identification population stimulus: frequency plus a known 2 Hz amplitude modulation is materially stronger than frequency alone and does not make the stationary-noise-suppression side question a mandatory population. The stationary arm stays a legitimate optional characterization experiment, not a precondition. Chirp/PRN = escalation only. N = 10 proposal retained.
+3. **Q3 — STRUCTURE ACCEPTED; NUMBERS NOT ACCEPTED AS WRITTEN.** The taxonomy (UNMEASURED-SRC · NEAR-END-SURVIVES · NEAR-END-SUPPRESSED · CHARACTERIZE-SRC · INDETERMINATE-SRC, own-playback residual descriptive only), the self-calibrated baseline discipline and the separation from K00-06 are accepted. **Defect B:** the estimator outputs are magnitudes, yet `Lk = 3.5e-6 × e880Max + 1e-9 × e440Max` uses power-domain ratios: −51.2 dB amplitude → 10^(−51.2/20) ≈ 2.75e-3, −93 dB → ≈ 2.2e-5; the written bound understates leakage by orders of magnitude and the `10 × Lk` test cannot be accepted. The amended law must (i) use amplitude-domain coefficients with magnitude measurements, (ii) explicitly account for every own-tone harmonic the leakage claim relies on, or conservatively bound unmeasured ones, (iii) replace the unordered contrast test with the corrected 2 Hz measure, (iv) re-derive the V2 / SURVIVES / INDETERMINATE thresholds from those corrected quantities. The 20 dB visibility, ≥ 40 dB suppression and indeterminate-band shapes are reasonable; their numerical ratification waits for the corrected derivation.
+4. **Q4 — SURFACE ACCEPTED IN PRINCIPLE, SEPARATE ENTRY WITNESS REQUIRED.** Diff budget accepted (AudioGraph interior · VoiceKernel source hop + aggregate/record · tests · new fixture/token + evidence-only source reader · gate isolation proofs · frozen readers unchanged · `.vpio02` untouched · no health/recovery/classification/projection/session/route semantics). The runtime observer cost (extra audio-thread arithmetic, ≈ 25 source-observation actor hops/s) is exactly why "it should be inert" is not enough after P5-F1. **New subject named: bundle `life.soullab.voicekernel.vpio02sid` · display `VoiceKernel VPIO-02-SID`.** A separate entry witness is required before any source population — the population must not answer *did the new in-process observer perturb entry?* and *what source survives during duplex rendering?* at once. That entry witness is not opened here; its shape belongs in the implementation/qualification pin after the design correction.
+
+**Authorized now: only a read-only amendment correcting A and B and returning the amended Q1/Q3 arithmetic and law.** No implementation, compile, install, entry witness, Mac playback or population.
+
+```text
+SOURCE-ID-01 spectral core     ACCEPTED
+Q1 aggregate                   AMEND REQUIRED
+Q2 gated 997 Hz                ACCEPTED
+S-a stationary arm             NOT OPEN
+Q3 taxonomy/structure          ACCEPTED
+Q3 numerical law               AMEND REQUIRED
+Q4 diff budget                 ACCEPTED IN PRINCIPLE
+SID bundle                     life.soullab.voicekernel.vpio02sid
+separate SID entry witness     REQUIRED · NOT OPEN
+
+implementation                 NOT AUTHORIZED
+device act                     NONE
+S3                             CLOSED
+K00-06                         CHARACTERIZE ONLY · INCOMPLETE
+KERNEL-00                      NOT ACCEPTED
+```
+
+---
+
+## 10. Amendment (read-only, under ruling §9) — A: ordered 2 Hz source signature · B: magnitude-domain leakage law · re-derived thresholds
+
+Every number below was computed here (Hann, N = 1 920, fs = 48 000; 40 ms frames at 25/s; script results quoted); the amended coefficients are to be **recomputed by the instrument for the actual observed rate and frame length and pinned by the gate** at implementation time — these are the design values.
+
+### 10.A Amended Q1 aggregate — the 2 Hz signature is measured on the *ordered* frame sequence
+
+Per closed 40 ms frame the estimator yields magnitudes `e_b` for each bin `b`. Within each 1 s tick window the kernel keeps, for the stimulus bin and the own-fundamental bin, the **ordered** sequence of frame magnitudes `e997[k]`, `e440[k]` (`k = 0 … K−1`, `K` ≈ 25–26, fixed-size ring buffer sized for the longest tick, no allocation) and computes at the tick, then discards:
+
+```text
+X0   = Σ_k e[k]
+X2   = | Σ_k e[k] · exp(−j·2π·2 Hz·(k·0.040 s)) |        (one fixed-frequency DFT bin at exactly 2 Hz over frame time; K need not be 25)
+m2   = 2·X2 / X0                                        (modulation index of the magnitude envelope at 2 Hz; phase-independent; 0 for a steady envelope)
+```
+
+Evidence on `input_source_sample` (replacing `e997HighFrames / e997LowFrames`): per bin `e<b>Mean · e<b>Max · e<b>Min` · **`m2_997` · `m2_440`** · `frames` (= K) · `frameMs` (40) · `frameReset` · `analysisRateHz` · `binsHz`. Still one record per second, still five-to-seven magnitudes plus two scalar indices, still non-invertible: `m2` is a magnitude of one DFT bin of the *envelope*, no phase, no waveform. `m2_440` is the control: MAIA's own tone is continuous over its 3 s stream, so its residual at the seam must read `m2_440 ≈ 0`; a 2 Hz index on the 440 bin would itself be an anomaly to record.
+
+**Frame arithmetic (corrected):** 25 frames/s; a 250 ms on / 250 ms off gate spans 6.25 frames per half-period, so a window holds ≈ 12–13 ON frames and ≈ 12–13 OFF frames, with 4 transition frames per second carrying intermediate values.
+
+**Expected values (computed):** ideal 50 % gate, random phase relative to the frame grid, K = 25 or 26 → **`m2` = 1.21 … 1.31** (median 1.26); a gate whose ON half is progressively attenuated to 30 % inside each 250 ms (the noise-suppressor-adapting shape) → `m2` ≈ 1.33 (still a strong 2 Hz line); **unmodulated frames with heavy random fluctuation (σ/μ ≈ 1)** → `m2` median 0.23, 95th percentile 0.48, 99th 0.60, **max 0.82 over 4 000 trials**; σ/μ ≈ 0.3 → max 0.39. Hence the predeclared signature threshold **`m2_997 ≥ 0.9`**: ≥ 0.3 below the ideal gate's minimum, ≥ 0.08 above the worst unmodulated draw observed, and no unmodulated 4 000-trial draw reached it. (0.5, the first draft's implicit margin, would have admitted ≈ 5 % false signatures per window under heavy fluctuation.)
+
+**Bin set (Q1 leakage accounting, ruling item 3(ii)):** the design bin set `{440, 880, 997, 700, 1200}` measures only the first two own-tone harmonics the leakage bound relies on. Two options, founder's choice: **(recommended) measure the harmonics the bound uses — add 1 320 and 1 760 Hz** (7 bins; ≈ 14 MAC/sample + Hann, still trivial; the 1 200 Hz control sits 4.8 bins from 1 320, leak 1 320 → 1 200 = 1.8e-3 amplitude, acceptable as a control) — or keep 5 bins and **bound unmeasured harmonics conservatively by the 2nd**, i.e. assume `e1320, e1760, e2200 ≤ e880` (adds (4.0e-5 + 1.1e-5 + 8.4e-7) ≈ 5.2e-5 to the 880 coefficient, +1.9 %; an assumption about speaker distortion, stated as one). §10.B is written for the 7-bin set with the 5-bin fallback shown.
+
+### 10.B Amended Q3 numerical law — amplitude domain throughout
+
+All estimator outputs are magnitudes (normalized DFT magnitudes; a full-scale sine reads 0.5; a tone of rms *r* reads ≈ *r*/√2). All ratios below are **amplitude ratios**: 10× = 20 dB, 100× = 40 dB.
+
+**Leakage coefficients into the 997 Hz bin (amplitude, Hann N = 1 920):**
+
+| Own-tone component | Amplitude coefficient `a` into 997 | dB |
+|---|---|---|
+| 440 Hz (fundamental) | **2.16e-5** | −93.3 |
+| 880 Hz (2nd) | **2.77e-3** | −51.2 |
+| 1 320 Hz (3rd) | **4.00e-5** | −88.0 |
+| 1 760 Hz (4th) | **1.12e-5** | −99.0 |
+| 2 200 Hz (5th) | 8.4e-7 | −121.5 |
+
+**Leakage bound per window** (using each harmonic's *measured* maximum in that window; 7-bin set):
+
+```text
+Lk = 2.77e-3·e880Max + 2.16e-5·e440Max + 4.00e-5·e1320Max + 1.12e-5·e1760Max
+     (5-bin fallback, conservative: Lk = 2.82e-3·e880Max + 2.16e-5·e440Max, assuming higher harmonics ≤ e880)
+```
+
+Sanity against S1/S2 levels: under VP OFF (S1) the own tone read ≈ 0.06 rms at the seam; if its 2nd harmonic were as large as 10 % of that (≈ 4e-3 magnitude), `Lk` ≈ 1.1e-5 — two orders below a 7e-4 stimulus; under VP ON (S2 full windows ≈ 2e-3 rms total) `Lk` is smaller still. The bound is therefore rarely binding, but it is now dimensionally correct and computed from what was measured, not assumed.
+
+**Noise references (magnitudes):** `C_base = max(B700, B1200)` over healthy pre-output baseline windows (medians); `C_w = max(e700Mean, e1200Mean)` of the window being read (rendering may raise the floor); `F_w = max(C_base, C_w, Lk)`.
+
+**Validity (row admitted):**
+- **V1** `B997 ≥ 10 × C_base` (stimulus ≥ 20 dB above the control bands at rest) in ≥ 2 healthy baseline windows.
+- **V2 (amended)** median `m2_997` over healthy baseline windows **≥ 0.9** (the gate is seen at rest as a 2 Hz line on the envelope; unordered contrast no longer used anywhere).
+- **V3** stimulus custody `VALID`; entry row lawful (unchanged).
+- Any of V1–V3 failing → **UNMEASURED-SRC** (the row says nothing about rendering).
+
+**Per full rendering window** (definition unchanged):
+- **NEAR-END-SURVIVES:** `e997Mean ≥ 0.1 × B997` (within 20 dB of its own baseline) ∧ `e997Mean ≥ 10 × F_w` (≥ 20 dB above noise *and* above the amplitude-domain leakage bound) ∧ **`m2_997 ≥ 0.9`** (the surviving 997 Hz energy carries the Mac's 2 Hz gate — this is what makes it *the near-end source* rather than any 997 Hz energy).
+- **NEAR-END-SUPPRESSED:** `e997Mean < 0.01 × B997` (≥ 40 dB below its baseline) ∧ `callbacks ≥ 90` ∧ `ioRunning true` (no `m2` condition: there is nothing to modulate).
+- **INDETERMINATE-SRC** with a reason code, any of: `between` (0.01 × B997 ≤ e997Mean < 0.1 × B997) · `floor` (e997Mean ≥ 0.1 × B997 but < 10 × F_w — energy present but not resolvable above noise/leakage) · **`signature_absent`** (amplitude conditions of SURVIVES met but `m2_997 < 0.9`: 997 Hz energy is present yet not gated — residual, leakage, or processor artefact; explicitly *not* attributed to the near-end source) · `frameReset`.
+- **OWN-PLAYBACK-RESIDUAL-PRESENT** (descriptive, orthogonal): `e440Mean ≥ 10 × max(C_base, C_w)`; reported with `m2_440` (expected ≈ 0).
+
+**Per row / population:** unchanged from §4 — every full window SURVIVES → NEAR-END SURVIVES; every window SUPPRESSED → NEAR-END SUPPRESSED; otherwise CHARACTERIZE-SRC with windows listed; hypothesis mapping as §4; no K00-06 PASS.
+
+**What changed and why it matters:** a window can now be *A-consistent in amplitude* (energy persists) and still be **`signature_absent`** — which is precisely the S2 ambiguity (§18.32: *whose energy survives in the 22 windows*) rendered as a measurable, per-window outcome instead of an interpretive limitation.
+
+### 10.C Standing after the amendment
+
+Design amended as ruled; nothing else moves. Owed from the founder: acceptance of §10.A (including the 7-bin vs 5-bin choice) and §10.B; then, separately, the implementation/qualification pin that also shapes the **required SID entry witness** (`life.soullab.voicekernel.vpio02sid` · `VoiceKernel VPIO-02-SID`) — none of which is opened by this amendment. Implementation NOT AUTHORIZED · device act NONE · S-a NOT OPEN · S3 CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · KERNEL-00 NOT ACCEPTED.
