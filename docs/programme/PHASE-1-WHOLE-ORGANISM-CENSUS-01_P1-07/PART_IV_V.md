@@ -150,10 +150,8 @@ and the label stays `UNKNOWN` — ⛔ the record's own phrase is never rounded t
 
 ## IV.4 · ⭐⭐ The two rows that reach GOVERNED and authorize no position
 
-This is the clearest illustration in the corpus of `GOVERNED SHAPE ≠ GOVERNED ACT`, and it is shown
-here rather than counted. Both are quoted verbatim from
-`P1-04/MAP3_authority.md` (Domain C node blocks) and
-`P1-04/MAP3_authority.md §GOVERNED nodes, by scope`.
+The clearest illustration in the corpus of `GOVERNED SHAPE ≠ GOVERNED ACT` — shown rather than
+counted. Both quoted verbatim from `P1-04/MAP3_authority.md` (Domain C nodes; §GOVERNED nodes, by scope).
 
 ```text
 P3-C-01 · developmental_readings — frozen developmental reading (WS2-07)
@@ -232,23 +230,19 @@ GOVERNING TEXT LOCATED · IMPLEMENTATION NONE FOUND
 ### IV.5a · ⭐⭐ `P3-C-08` — why a nearby governing source is not an authorization
 
 ```text
-P3-C-08 · living_field_affinities (system-created affinity)  [EWLA]
-  PARTICIPATION  KNOWS · CONSIDERS · DECIDES [SYN-2]
-  AUTHORITY      ⭐ SPLIT — GOVERNED for inspectability · NONE LOCATED for the DECIDES effect
+P3-C-08 · living_field_affinities  [EWLA]   KNOWS · CONSIDERS · DECIDES
+  AUTHORITY  ⭐ SPLIT — GOVERNED for inspectability · NONE LOCATED for the DECIDES effect
   BASIS  ⭐⭐ "A system-computed score selects and orders which of the member's own Keeps enter
-         MAIA's prompt, with a hard `LIMIT 10`. This is *ranking* and *what MAIA says*, from a
-         system-inferred judgement."
-         "⛔ no gate was located governing the scoring or the ranking itself"
-  ⚠️ SCOPE CARRIED  "the member's OWN material, self-scoped by member_id … ⛔ NOT member-to-member."
-  INF-6  DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
-         ⛔⛔ A located governing source that covers a DIFFERENT aspect of the same object is not
-         an authorization for this one.
+         MAIA's prompt, with a hard LIMIT 10. This is *ranking* and *what MAIA says*, from a
+         system-inferred judgement."  ·  "⛔ no gate was located governing the scoring or the
+         ranking itself"  ·  ⚠️ "the member's OWN material … ⛔ NOT member-to-member."
+  INF-6  ⛔⛔ A located governing source covering a DIFFERENT aspect of the same object is not an
+         authorization for this one.
 ```
 
 ⭐ P1-03 ADJUDICATION 04 §3b records what this row cost to see: *"Under the old single hierarchy
-this row would have read 'governed' and the gap would have vanished."* The `SPLIT` value exists
-because the axes were separated; ⛔ the two halves are never merged, and ⛔ the row is not
-adjudicated here.
+this row would have read 'governed' and the gap would have vanished."* ⛔ The two halves are never
+merged, and ⛔ the row is not adjudicated here.
 
 ---
 
@@ -269,9 +263,9 @@ authorization status      NONE LOCATED / UNKNOWN
 ```
 
 ⭐⭐ **THE COUNT IS NAVIGATION. THE ROWS ARE THE FINDING.** Amendment 4 §3 requires these to survive
-as **named rows**, never reduced to the number. They are therefore reproduced in full below —
-all 62, as MAP 3 names them. ⛔ The number 62 does not replace this list, and no reader should
-carry the number away in place of it.
+as **named rows**, never reduced to the number. All 62 are therefore reproduced below as MAP 3 names
+them. ⛔ The number 62 does not replace this list, and no reader should carry the number away in
+place of it.
 
 ### IV.6a · A · B · C — 18 rows whose effect reaches an OUTCOME or the organism's OUTPUT
 
@@ -432,15 +426,14 @@ a worker that tested the rule and declined the promotion shows a written refusal
 
 ## IV.8 · ⭐⭐ `X-DEF-3` — the census caught an inference defect in its OWN output
 
-This is included because hiding it would **understate** the method's reliability, not overstate it.
+Included because hiding it would **understate** the method's reliability, not overstate it.
 
 ```text
 OBJECT   X-DEF-3 · D_field.md §6 ans.4  vs  D_field.md §7 (P1-D-GOV-02)
-OUTCOME  C4 · RECORD DEFECT   ⛔ NOT organism behaviour
-ROW      P3-D-06 (enforceFieldSafety)
+OUTCOME  C4 · RECORD DEFECT   ⛔ NOT organism behaviour        ROW  P3-D-06 (enforceFieldSafety)
 ```
 
-**Both sides are sentences of ONE P1-02 record, about one object, in one pass**
+**Both sides are sentences of ONE P1-02 record, one object, one pass**
 (`P1-05/01_named_objects.md` Object 3):
 
 ```text
@@ -464,10 +457,10 @@ INF-6 firing line:  "P3-D-06   DECIDES established · HAS AUTHORITY not establis
 ```
 
 ⭐⭐ **The decisive establishment:** the organism's two facts are **not** in conflict. Amendment 3 §2
-lists `PARTICIPATION DECIDES + AUTHORITY NONE LOCATED` as a **coherent state**. So the contradiction
-does not live in the organism at all — what conflicts is an **inference** laid on top of two
-compatible observations, and Amendment 3 had already removed `HAS AUTHORITY` from the ladder:
-*"It was never a rung; treating it as the top one is exactly what INF-6 forbids."*
+lists `PARTICIPATION DECIDES + AUTHORITY NONE LOCATED` as a **coherent state**, so the contradiction
+does not live in the organism at all. What conflicts is an **inference** laid on two compatible
+observations — and Amendment 3 had already removed `HAS AUTHORITY` from the ladder: *"It was never a
+rung; treating it as the top one is exactly what INF-6 forbids."*
 
 ⭐ **And the counter-example stands beside it in the same corpus, in the same pass:** `F_symbolic.md`
 §3.3 — *"authentication establishes `PARTICIPATES`, not `HAS AUTHORITY`"* (`P3-F-07`, `P3-F-08`).
@@ -508,8 +501,8 @@ One P1-02 record made the promotion; another refused it, on the same distinction
 
 ## V.0 · ⛔ This is not a defect backlog
 
-A founder reading Part V should **not** come away thinking there are *N* bugs to fix. The items
-below fall into three kinds, and the difference between them is the content of this part:
+A founder reading Part V should **not** come away thinking there are *N* bugs to fix. The items fall
+into three kinds, and the difference between them is the content of this part:
 
 ```text
 KIND 1  GENUINE CONTRADICTIONS (C5) — 16
@@ -563,9 +556,9 @@ OUTCOME  C5 · GENUINE CONTRADICTION   ⭐ the census's first
 ROWS     P3-D-07 · P3-E-04
 ```
 
-Two P1-02 records name **the same module, the same function, the same host file and the overlapping
-line span `1079–1114`**, under **the same mode gate**, and give **the same named field
-(`SURFACED WHERE`) opposite values** (`P1-05/01_named_objects.md` Object 1):
+Two P1-02 records name **the same module, function, host file and overlapping line span
+`1079–1114`**, under **the same mode gate**, and give **the same named field (`SURFACED WHERE`)
+opposite values** (`P1-05/01_named_objects.md` Object 1):
 
 ```text
 D_field.md §2 D-OBJ-7
@@ -588,13 +581,11 @@ readings, and the comment's own text is the whole of the quoted evidence on both
 **Why no cheaper outcome was available** — each refused on the record:
 
 ```text
-C1 SCOPE      same module · same function · same host file · same span · same mode gate ·
-              same SURFACED WHERE field
-C2 ALTITUDE   both sides are implementation reads of the same lines
-C3 TIME/SUBJ  same P1-02 pass, same subject, same dated corpus
-C4 RECORD     no count or tally is in dispute; the disputed proposition is about behaviour
-C6 UNKNOWN    the evidence is SUFFICIENT to establish that the two claims cannot both hold —
-              ⛔ C6 is for when that itself cannot be established
+C1 SCOPE   same module/function/file/span/mode gate/field      C2 ALTITUDE  both sides are
+C3 TIME    same pass, subject, dated corpus                    implementation reads of the same lines
+C4 RECORD  no count in dispute; the proposition is about behaviour
+C6 UNKNOWN the evidence is SUFFICIENT to establish that the two claims cannot both hold —
+           ⛔ C6 is for when that itself cannot be established
 ```
 
 ⭐⭐ **WHAT REMAINS OPEN — and this is the model:** *"Which side is true is NOT decided here, and
@@ -615,69 +606,55 @@ C5-01  A-1 · Registry vs orchestrator                                    ROWS P
   A  "between/chat `callsMaiaResponse: false`, reason 'uses maiaOrchestrator, not
       getMaiaResponse'"                                                  — maiaRuntimeContext.ts:81
   B  "maiaOrchestrator.ts:506 — it does"
-
 C5-02  A-2 · DEEP addenda, in one function                               ROWS P3-A-05
   A  "buildComprehensiveVoicePrompt … currently does NOT iterate MaiaContext addenda"
   B  "maiaService.ts:2526-2535 + maiaVoice.ts:972 — it does. Four lines apart."
-
 C5-03  A-6 · Sole-gateway claim                                          ROWS P3-A-16
   A  "Main gateway for ALL text generation in MAIA"                      — modelService.ts:72
   B  "at least four independent model reaches bypass it"
   ⭐ the corpus's own row sentence: "THE GATEWAY CLAIM IS FALSE AT THE SUBJECT"
-
 C5-04  A-7 · Egress mislabel                                             ROWS P3-A-01
   A  "list/route.ts:1390 emits `endpoint: '/api/sovereign/app/maia'`"
   B  "it is emitted 'from the /list handler'; acknowledged in-source as a pre-existing mislabel"
-
 C5-05  B-2 · memoryHealth.pattern                                        ROWS P3-B-20 · P3-B-07
   A  "`pattern?: { count } // theme_signals feeds this`, under 'Wired by Cut 1'"
   B  "route :1178-1209 supplies no `pattern` input, so `layerStatus(undefined) = 'empty'`
       on every turn"
-
 C5-06  B-3 · memoryHealth.semantic                                       ROWS P3-B-20
   A  "memoryHealth.ts:63 declares `semantic` … 'enduring facts, roles, relationships, preferences'"
   B  "what feeds it is an atoms row count and … 'no semantic retrieval exists on this path'"
   ⭐ third source, same side: "a self-report that misstates the memory state MAIA is in …
      occurring in the observability layer itself"
-
 C5-07  CONTRA-2 · "no live consumer" vs the import graph                 ROWS P3-D-10
   A  "Resonant field memory … consumers: [] … Service preserved; no live consumer wired"
   B  "CoherenceFieldService is imported at MemoryPalaceOrchestrator.ts:14, called at :75,:188,:249"
   ⚠️ the C5 attaches to "consumers: []" ONLY; ⛔ the word "live" is not adjudicated (INF-1)
-
 C5-08  CONTRA-4 · "The ONLY file that knows how the field engines connect"   ROWS P3-D-01
   A  "fieldOrchestrator.ts:3 asserts sole-seam status"
   B  "at least four other seams connect field engines into cognition"
-
 C5-09  CONTRA-5 · `persistentFieldStates` is not persistent              ROWS P3-D-12
   A  "maintaining persistent field states"                               — QuantumFieldMemory.ts:2-6
   B  ":91 is `new Map()`; the file's only import is `crypto`; no query/INSERT/SELECT in 810 lines"
-
 C5-10  C-E4 · "8 voices" vs the code                                     ROWS P3-E-12
   A  "MythicAtlas + MaiaVoice + ShadowAgent + Fire/Water/Earth/Air/Aether"      — CLAUDE.md
   B  "MythicAtlas + MaiaVoice + WisdomRouter + up to six elemental rows in which `shadow` is an
       ELEMENT VALUE, not a separate ShadowAgent"
   ⛔ D-P1-06: the anchor may not amend by assertion; PRESERVED + REPORTED, ⛔ repair unauthorized
-
 C5-11  C-E5 · "imported only by soulPortrait/schema" vs zero importers   ROWS P3-E-01
   A  "the cited import"
   B  "at the subject lib/soulPortrait/schema.ts:19 is a comment, not an import"
-
 C5-12  C-3 (G) · "Main gateway for ALL text generation"                  ROWS P3-G-01 · P3-G-10
   A  "lib/ai/modelService.ts:71-73"
   B  "scripts/anthropic-import-allowlist.json (2 + 1 + 57)"
   ⭐ "Both are the project's own text."  ⚠️ INF-2: the allowlist is a CI instrument, not governance
-
 C5-13  C-I-1 · "Deferred, held FALSE, no path" vs a live path            ROWS P3-I-01
   A  migration 20260626000001:8,40,96 states the capability DEFERRED, column "held FALSE, no path"
   B  "vision-studio/field-note/route.ts:107-130 binds it to a client-supplied value" and
      "app/studio/fields/[memberId]/page.tsx:69 reads it"
-
 C5-14  C-I-2 · "the consented facilitator view" vs a role-only gate      ROWS P3-I-01
   A  "page.tsx:9-11 asserts consent"
   B  ":104-107 checks only that the viewer is *some* active practitioner"
   ⛔ no verdict of legitimacy · ⛔ no exposure claim · ⛔ AUTH-EXPOSURE-01 neither cited nor awaited
-
 C5-15  C2 (H) · STT/TTS LATITUDE        ⭐ the one anchor-versus-canon C5
                                         ROWS P3-H-01 · P3-H-02 · P3-H-03 · P3-H-07
   A  "STT/TTS are sensory infrastructure and may change freely; the mind may not be
@@ -794,27 +771,23 @@ precisely what `C3` would have been abused for.
 
 ⭐ **Recorded as a structural property of the corpus, ⛔ not as a recommendation to read it.**
 *Eight separate adjudications are waiting on a single sentence nobody is authorized to write here*
-(P1-05 CLOSE §4).
-
-The question is already on the record as the organism's own open question — Domain B carries it as
+(P1-05 CLOSE §4). The question is already the organism's own open question — Domain B carries it as
 `OQ-2`, *"⛔ unanswered"* — and `02_corpus_register.md §4e` calls it **"the single most depended-upon
-unknown in this corpus."**
-
-⛔ **Naming this concentration is not authorization to resolve it**, and this packet does not
-propose who should, when, or by what mechanism.
+unknown in this corpus."** ⛔ Naming the concentration is not authorization to resolve it, and this
+packet proposes no one to do it, no time and no mechanism.
 
 ---
 
 ## V.4 · Vocabulary collisions — ⭐ an epistemic limit, ⛔ not a defect
 
 ⛔ Standing on every item: *"No collision is resolved. ⛔ No two objects are merged because they
-share a word."* `C1 RESOLVED BY SCOPE` here classifies **the KIND** of divergence — one token,
-several objects the records distinguish by path, table or type — and ⛔ settles no sentence that uses
-the bare word (`02_corpus_register.md §4c`).
+share a word."* `C1 RESOLVED BY SCOPE` classifies **the KIND** of divergence — one token, several
+objects the records distinguish by path, table or type — and ⛔ settles no sentence using the bare
+word (`02_corpus_register.md §4c`).
 
-⭐⭐ **Why this belongs in Part V at all:** a collision is not a thing to fix. It is the reason
-certain natural-sounding sentences about MAIA **cannot be evaluated at the subject**. That is a
-limit on what can be said, not a backlog item.
+⭐⭐ **Why this belongs in Part V:** a collision is not a thing to fix. It is the reason certain
+natural-sounding sentences about MAIA **cannot be evaluated at the subject** — a limit on what can
+be said, ⛔ not a backlog item.
 
 ```text
 TOKEN         WHAT THE RECORDS ENUMERATE                       WHAT IT MAKES UNEVALUABLE
@@ -889,11 +862,10 @@ C4-ORGREC    a defect in the ORGANISM's own records / identifiers
              C6 (H) · VC-RFI/UFI · VC-names-asserting-what-they-do-not-carry
 ```
 
-⭐ **The strongest kind of `C4-CENSUS` entry is one the census declared about itself.**
-`UC-EXISTS-BASIS` is the slice-06 `EXISTS` qualification: *"`EXISTS` is recovered on 48 of 48 rows.
-Its basis is a slice-level shared quote … ⛔ not a per-row quote,"* and *"the worker flagged this
-itself and reported it separately 'so it is not read as coverage.'"* ⛔ The 48/48 may not be cited as
-per-row evidence.
+⭐ **The strongest `C4-CENSUS` entry is one the census declared about itself.** `UC-EXISTS-BASIS`:
+*"`EXISTS` is recovered on 48 of 48 rows. Its basis is a slice-level shared quote … ⛔ not a per-row
+quote,"* and *"the worker flagged this itself … 'so it is not read as coverage.'"* ⛔ The 48/48 may
+not be cited as per-row evidence.
 
 ⚠️ **Three arithmetic divergences are carried and ⛔ none is resolved:**
 
@@ -905,18 +877,16 @@ SC-20              MAP 1 block 61 edges vs P1-04 CLOSE 59; MAP 3 block 59 vs CLO
                    here", ⛔ no edge list re-counted, ⛔ the close not edited.
 ```
 
-⭐ And the self-correction register itself is evidence about the method, not a defect list:
-**22 entries, with `HOW CAUGHT` on all 22, and ⛔ no mechanism dominant** — founder review 6 ·
-lane operator on its own act 5 · a later worker re-reading at the subject 4 · a gate fixed before
-the evidence 3 · mechanical parse or recount 3 · an instrument written before evidence 3
-(categories are **non-exclusive**, declared in the artifact).
+⭐ The self-correction register is evidence about the method, not a defect list: **22 entries,
+`HOW CAUGHT` on all 22, ⛔ no mechanism dominant** — founder review 6 · lane operator on its own act
+5 · a later worker re-reading at the subject 4 · a gate fixed before the evidence 3 · mechanical
+parse 3 · an instrument written before evidence 3 (categories **non-exclusive**, declared in-artifact).
 
 ---
 
 ## V.6 · ⭐⭐ Which items are EPISTEMIC LIMITS and which are closable in principle
 
-This is the section that keeps Part V from reading as a backlog.
-⛔ **Naming an item "closable" is not a recommendation to close it, an assignment, or a priority.**
+⛔ **Naming an item "closable" is not a recommendation to close it, an assignment or a priority.**
 
 ```text
 A · CLOSABLE IN PRINCIPLE BY AN ACT THIS CENSUS MAY NOT PERFORM
@@ -955,9 +925,9 @@ B · EPISTEMIC LIMITS — ⛔ NOT THINGS AWAITING TECHNICAL REPAIR
 ```
 
 ⭐⭐ **The honest summary of Part V is not a count of problems.** It is: *the census found 16 places
-where two claims cannot both hold and refused to pick a winner; 20 places where it could not
-lawfully decide and refused to guess; and a set of limits — vocabulary, scope, and absent governance
-— that no further reading of this corpus would remove.*
+where two claims cannot both hold and refused to pick a winner; 20 places where it could not lawfully
+decide and refused to guess; and a set of limits — vocabulary, scope, absent governance — that no
+further reading of this corpus would remove.*
 
 ---
 
