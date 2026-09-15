@@ -5,9 +5,22 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Sparkles, ArrowRight, Eye, EyeOff, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { ganeshaContacts, GaneshaContact } from '@/lib/ganesha/contacts';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { api, ApiError } from '@/lib/api-client';
+
+/**
+ * SOURCE-CUSTODY-PII-01 · ACT 2 — this module no longer holds human records.
+ *
+ * It previously value-imported `ganeshaContacts`, which put every contact's
+ * name, email and passcode into the browser bundle and decided admission
+ * against that bundled list. Admission is now a server decision
+ * (`POST /api/onboarding/recognize-key`) and the only personal datum that
+ * crosses back is the matched person's OWN name.
+ *
+ * ⛔ Do not re-import `@/lib/ganesha/contacts` here. It is `server-only` and
+ * guarded by `__tests__/onboarding-human-record-boundary.test.ts`.
+ */
+type RecognizedSoul = { name: string };
 
 interface SacredSoulInductionProps {
   onComplete: (userData: {
@@ -19,37 +32,30 @@ interface SacredSoulInductionProps {
   initialPasskey?: string;  // Pre-filled passkey from URL redirect
 }
 
-// Get all valid soul keys from Ganesha consciousness database
-const getAllSacredKeys = (): string[] => {
-  const soulKeys = ganeshaContacts
-    .filter(contact => contact.status === 'active' && contact.metadata.passcode)
-    .map(contact => contact.metadata.passcode!);
-
-  const universalKeys = [
-    'CONSCIOUSNESS2025',
-    'DAIMON',
-    'SOULLAB',
-    'ORACLE',
-    'MAIA',
-    'SOUL-PIONEER-2025'
-  ];
-
-  return [...soulKeys, ...universalKeys];
-};
-
-// Check if a passkey follows valid SOULLAB-NAME format for new registrations
-const isValidSoullabFormat = (key: string): boolean => {
-  const upper = key.toUpperCase();
-  // Must be SOULLAB- followed by at least 2 characters (a name)
-  return upper.startsWith('SOULLAB-') && upper.length >= 10;
-};
-
-// Recognize returning soul by their sacred key
-const recognizeSoul = (soulKey: string): GaneshaContact | null => {
-  return ganeshaContacts.find(contact =>
-    contact.status === 'active' &&
-    contact.metadata.passcode === soulKey.toUpperCase()
-  ) || null;
+/**
+ * Ask the server whether this key admits, and who it belongs to.
+ *
+ * ⛔ REPLACES THREE THINGS, DELIBERATELY: the bundled soul-key list, the
+ * bundled universal keys, and `isValidSoullabFormat` as an admission test.
+ * That last one was the live instance of the defect the 2026-09-06 founder
+ * ruling closed elsewhere — *a prefix determines FORMAT, never AUTHORIZATION*.
+ * A well-formed key with no record and no invite behind it is now refused.
+ *
+ * ⛔ FAILS CLOSED. The previous code caught a failed server check and fell
+ * through to local validation, so an outage became an admission. A refusal
+ * and an outage are both "not admitted" here; the caller is told to retry,
+ * never let in.
+ */
+const recognizeSoulKey = async (
+  soulKey: string,
+): Promise<{ recognized: boolean; name: string | null }> => {
+  const response = await fetch('/api/onboarding/recognize-key', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: soulKey }),
+  });
+  if (!response.ok) throw new Error(`recognize-key failed: ${response.status}`);
+  return response.json();
 };
 
 // Extract first name from full name or soulkey, with proper capitalization
@@ -88,7 +94,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isRecognizing, setIsRecognizing] = useState(false);
-  const [recognizedSoul, setRecognizedSoul] = useState<GaneshaContact | null>(null);
+  const [recognizedSoul, setRecognizedSoul] = useState<RecognizedSoul | null>(null);
   const [blessings, setBlessings] = useState<string[]>([]);
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -224,34 +230,41 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
       }
     } catch (err) {
       console.error('[SacredSoulInduction] Server check error:', err);
-      // Fall through to local validation if server unavailable
+      /* ⛔ NO FALL-THROUGH. This catch used to continue into local validation,
+         which turned an outage into an admission. The membership question is
+         simply unanswered here; the admission question below is asked of the
+         server on its own terms and fails closed. */
     }
 
-    // Fall back to local validation (Ganesha contacts + universal keys + SOULLAB-NAME format)
-    const validKeys = getAllSacredKeys();
-    const recognizedMember = recognizeSoul(soulKey);
-    const isValidFormat = isValidSoullabFormat(soulKey);
-
-    if (validKeys.includes(soulKey.toUpperCase()) || isValidFormat) {
+    // Admission is a server decision. There is no local list to consult.
+    let verdict: { recognized: boolean; name: string | null };
+    try {
+      verdict = await recognizeSoulKey(soulKey);
+    } catch (err) {
+      console.error('[SacredSoulInduction] Recognition unavailable:', err);
+      setError('We could not check that key just now. Please try again in a moment.');
       setIsRecognizing(false);
+      return;
+    }
 
-      if (recognizedMember) {
-        // Returning consciousness pioneer (from Ganesha contacts)
-        setRecognizedSoul(recognizedMember);
-        const firstName = extractFirstName(recognizedMember.name);
-        console.log('Debug - Full name:', recognizedMember.name, 'Extracted first name:', firstName);
-        setName(firstName);
-        setPhase('recognition');
-      } else {
-        // New soul arriving - extract name from passkey if it follows SOULLAB- format
-        const extractedName = extractFirstName(soulKey);
-        setName(extractedName);
-        setPreferredName(extractedName); // Default preferred name to extracted name
-        setPhase('creation');
-      }
-    } else {
+    setIsRecognizing(false);
+
+    if (!verdict.recognized) {
       setError('This key isn\'t recognized. Please check your invitation and try again.');
-      setIsRecognizing(false);
+      return;
+    }
+
+    if (verdict.name) {
+      // Returning consciousness pioneer — the server returned THEIR OWN name.
+      setRecognizedSoul({ name: verdict.name });
+      setName(extractFirstName(verdict.name));
+      setPhase('recognition');
+    } else {
+      // Admitted, but no name on record — derive a starting name from the key.
+      const extractedName = extractFirstName(soulKey);
+      setName(extractedName);
+      setPreferredName(extractedName); // Default preferred name to extracted name
+      setPhase('creation');
     }
   };
 
