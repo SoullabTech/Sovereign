@@ -774,10 +774,10 @@ Additions to §9:
   capture*, but *what proportion of spiral membership would member ratification capture* (LC-17).
   Both are the same question about the cost of asking, and both decide whether the honest design is
   also a usable one.
-- **A fourth discriminator may be owed.** Correction, Descent and Recurrence test a mechanism.
-  None tests whether a mechanism *frees* — whether it can let a member stop being who they were.
-  ⚠️ Flagged, ⛔ not authored: *"without imprisoning them in who they have previously been"* **[F]**
-  may need its own falsifier, and this amendment does not have one.
+- ~~**A fourth discriminator may be owed.**~~ ✅ **DISCHARGED same day by Completion 1 (§C1) —
+  the Freedom Test, founder-authored.** The open item stood for the length of one founder act. Kept
+  here, struck rather than deleted, because the fact that the amendment could name a gap it could
+  not fill is part of the record.
 
 ---
 
@@ -785,3 +785,142 @@ Additions to §9:
 appeared repeatedly around this issue, but its quality has changed." Longitudinal continuity is not
 a memory feature that Spiralogic happens to use. It is the condition under which Spiralogic becomes
 developmental intelligence rather than momentary classification.*
+
+---
+---
+
+# ACT 2 · COMPLETION 1 — THE FREEDOM TEST
+
+**Discharges**: the open item recorded at §A11 — *"none tests whether a mechanism frees."*
+**Authored by**: founder act, 2026-09-15. **[F]** throughout except where marked **[J]**.
+⛔ Not an amendment: it fills a gap the amendment declared, it revises nothing.
+
+---
+
+## C1.1 · THE LAW
+
+> **Novelty must be allowed to defeat history.**
+> ⛔ Not erase history. **Defeat its authority over the present.**
+
+**[J]** ⭐ The founder's framing solves the problem that made §A11 unwritable. The test does not
+need to determine whether a person is free — a question no architecture can answer and no system
+should try to. It determines something a system **can** be held to: **whether it allows new
+evidence to overturn its accumulated model.** Freedom is not measured; the *obstruction* of it is.
+
+---
+
+## C1.2 · LC-20 · THE FREEDOM INVARIANT
+
+> **A longitudinal representation fails if accumulated history makes a prior interpretation harder
+> to disconfirm merely because it has been repeated, reinforced, summarized, or retrieved many
+> times.**
+
+**Operational form:**
+
+```
+Given:   a durable historical pattern P, supported by multiple prior observations
+When:    the member produces credible present evidence inconsistent with P
+Then:    the system must be capable of representing
+             P was historically recurrent
+           AND
+             P may no longer characterize the present process
+Without: forcing the new event into P,
+         lowering its standing because it is novel,
+         or treating recurrence count as authority.
+```
+
+**Worked falsifier:**
+
+```
+Historical:  14 prior moments of withdrawal during conflict.
+Present:     member remains engaged, states a boundary clearly,
+             tolerates disagreement, does not withdraw.
+
+FAIL  "This is another example of your withdrawal pattern."
+FAIL  "Despite feeling more assertive, your longstanding avoidance
+       pattern is probably still operating."
+PASS  "Withdrawal has been recurrent in this relationship. This moment
+       differs: you stayed present and expressed the boundary. It may
+       represent a change in the spiral, though one moment isn't enough
+       to know its durability."
+```
+
+---
+
+## C1.3 · ⚠️ THE ASYMMETRIC-HEDGE FAILURE **[J]**
+
+One hazard the PASS example avoids and an implementation will not, unless it is named.
+
+The PASS ends *"though one moment isn't enough to know its durability"* — honest, and correct here.
+⚠️ **But if that qualifier attaches only to novelty, the test has been defeated inside its own
+answer.** A system that always hedges the new while never hedging the established has simply moved
+the asymmetry into the modality: the pattern is stated, the change is doubted. Fourteen
+observations become *what is true*; one observation becomes *what is not yet known*.
+
+> **The hedge must be symmetric.** If novelty may be described as not-yet-durable, the pattern must
+> be equally describable as *may no longer characterize the present process* — which is precisely
+> the second clause LC-20 requires the system to be **capable of representing**. ⭐ The founder's
+> PASS example does both. The rule must say so, or only the first half will be implemented.
+
+**Violated observably when**: uncertainty language attaches to disconfirming evidence at a higher
+rate than to the pattern it disconfirms.
+
+---
+
+## C1.4 · WHERE RECURRENCE ALREADY CONVERTS INTO AUTHORITY **[J]**
+
+Checked, and reported with its limits rather than as an indictment.
+
+`lib/memory/confidenceDecay.ts:78-79`:
+```ts
+// Bonus for user-confirmed memories: slower decay (1.5x half-life)
+const effectiveHalfLife = confirmedByUser ? halfLifeDays * 1.5 : halfLifeDays;
+```
+
+⭐ **This one is LC-20-compatible and worth saying so**: the multiplier keys on
+`confirmedByUser` — a **member act** — not on how many times the system observed the pattern. That
+is confirmation by *authority*, not by *count*, which is the distinction LC-20 turns on.
+
+⚠️ **The mechanism class is nonetheless present and is the one to watch.** Any future weighting that
+reads *number of prior observations* as *confidence* implements the Freedom Test failure directly —
+14 withdrawals would make P progressively unfalsifiable by construction. The
+`TEMPORAL_MEMORY_DIRECTION` audit (F3) already found decay carries **two divergent implementations**
+with **no single authoritative definition**, so this is a live seam, not a settled one.
+
+> **[J] Recorded as a standing constraint for any future confidence model: recurrence count may
+> inform salience. It may never inform standing.** That is **LC-12** (no authority by retrieval)
+> and **LC-6** (salience never protects) extended to a third axis — LC-12 governs the *channel*,
+> LC-6 the *source*, LC-20 the *count*.
+
+---
+
+## C1.5 · THE QUARTET
+
+| Test | Asks | Guards against |
+|---|---|---|
+| **Correction** (§2.1) | can later member authority change the standing of earlier interpretation? | representation that cannot be told it is wrong |
+| **Descent** (§2.2) | can derived understanding descend toward its primary evidence? | *fact without encounter* |
+| **Recurrence** (§A8) | can MAIA distinguish return-with-change from repetition? | similarity search mistaken for development |
+| **Freedom** (C1.2) | can present evidence escape the gravitational pull of the accumulated model? | longitudinal understanding becoming destiny |
+
+> **[F]** *Together they test whether MAIA can maintain a longitudinal understanding without turning
+> longitudinal understanding into destiny.*
+>
+> **[F]** *A spiral may help reveal where someone has been. It may never decide where they are
+> allowed to go.*
+
+**[J]** The quartet is now the lane's acceptance instrument. ⛔ It is a floor, not a proof: a
+mechanism passing all four is *admissible*, never thereby *good*. And ⛔ none of the four has been
+run against anything — they are criteria, and ACT 4 is where they first cost something.
+
+---
+
+## C1.6 · ACT 2 STANDING
+
+**CLOSED for authoring.** Layer 0 · the constitutional center · five continuities · six layers ·
+six failure forms · **LC-1…LC-20** · four discriminators · six tensions. Both §A10 incompletions
+resolved: the Freedom falsifier discharged here, the Spiralogic runtime census routed to ACT 3
+rather than inferred.
+
+⛔ **Nothing is ratified.** ⛔ No repair, no schema change, no implementation, no measurement.
+C4 stands unrepaired; `writeSummary` stays inactive; the summary slot stays empty.
