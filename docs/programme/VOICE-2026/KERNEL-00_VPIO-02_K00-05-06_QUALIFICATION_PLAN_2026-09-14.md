@@ -816,3 +816,8 @@ Founder review of `6f0e2e0b2`: surface right, five flags disposed (all accepted;
 ### §10.57 — `SOURCE-ID-02` + `02A` ACCEPTED · SID MAC-COMPILE OPEN (2026-09-15; discriminator plan §18.37; implementation record §10)
 
 Accepted code state `f0c6ae13b88db29cbd1537bec585d98376c8bc4f` (gate 82/82 · reader 24/24). SID MAC-COMPILE-01 pinned as a paste-able Mac act (implementation record §10.2): worktree at the SHA · gate · `swift test` · xcodegen · unsigned + signed builds · identity + manifest + codesign · post-build surface proof · sealed `$OUT`; STOP rules and the no-repair / no-pin-mutation constraints as ruled. NOT YET EXECUTED. FIRST-INSTALL · SID ENTRY WITNESS (required) · S-b N=10 · S-a · S3 CLOSED; KERNEL-00 NOT ACCEPTED; device execution NONE.
+
+
+### §10.58 — `SID MAC-COMPILE-01` EXECUTED · STOP at `swift test` (2026-09-15; discriminator plan §18.38; implementation record §10.5)
+
+Gate 82/82 PASS · `swift build` PASS · `swift test` FAIL at test-target compilation (`PureLogicTests.swift:485:13` type-checker time-out on the `ripple` closure in the modulation-index unit test) → STOP; xcodegen/builds/identity/manifest/seal never entered; zero Swift tests ran. Bounded compile defect in the predeclared risk class; not repaired inside the act; authority SPENT; duplicate invocation NOT ESTABLISHED as executed; evidence carrier owed. Repair (test file only, new SHA, fresh compile pin) is a separate founder ruling; reinstall pins unchanged (empty). Qualification of the SID subject remains CLOSED; SID ENTRY WITNESS still REQUIRED and not opened.
