@@ -466,3 +466,26 @@ S2 witness              NOT AUTHORIZED
 ```
 
 Reading law unchanged (§14.3): exactly one `DEFAULT_OUTPUT` line · `Mac Studio Speakers` · `coreaudio_device_type_builtin` · `MAC_STUDIO_DEFAULT_OUTPUT True`; B06Ultra present without the flag; volumes custody only. On PASS the sequence the founder restated applies in order and each step is its own act: (1) record the preparation PASS → (2) separate S2 batch-only design authority → (3) implement only the orchestration (deterministic stimulus, SHA custody, `/usr/bin/afplay`, PID/start/alive/stop/exit evidence, default-output verification before each population) → (4) gate → new orchestration SHA → (5) fresh S2 witness authority → (6) S2 with VP ON + the labelled external signal → (7) read whether the near-end signal survives at the consumed seam while MAIA speaks → (8) only then decide S3. None of (2)–(8) is opened by this entry.
+
+### 14.9 OUTPUT-SOURCE PREPARATION — EVIDENCE RECEIVED · VERIFIED HERE · **PASS** (stamp `20260915T022305Z`)
+
+**Custody.** Founder returned `driver-ledger/s2-output-source-20260915T022305Z/` on `feature/k00-s2-output-source-evidence-20260915` at `8a3ca8fda198c8d2a8970a0674bcbbca95321345`, cherry-picked here with `-x`. Six files: `audio-before.json` · `volume-before.txt` · `audio-after.json` · `volume-after.txt` · `READ.txt` · `SHA256SUMS`. All four sealed hashes RECOMPUTED here and identical to `SHA256SUMS` (`26ad8eab…` · `4b30c689…` · `81d2fbf5…` · `e0d2120e…`). The founder read the gate 67/67 before the Mac-side commit (founder-stated).
+
+**Independent read (the §14.2 parser run in this session on both captures, not `READ.txt`):**
+
+```text
+BEFORE  DEFAULT_OUTPUT B06Ultra coreaudio_device_type_bluetooth 44100      (1 line)   MAC_STUDIO_DEFAULT_OUTPUT False
+AFTER   DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin 48000  (1 line)   MAC_STUDIO_DEFAULT_OUTPUT True
+AFTER   B06ULTRA_PRESENT True · B06ULTRA_DEFAULT_OUTPUT False · transport bluetooth (not unpaired)
+BOTH    default input Scarlett 2i2 USB (unchanged) · Default System Output Mac Studio Speakers (unchanged) · no sample-rate change on any device
+```
+
+`READ.txt` agrees line for line. **§14.3 PASS: exactly one `DEFAULT_OUTPUT` line · `Mac Studio Speakers` · `coreaudio_device_type_builtin` · flag True · B06Ultra present without the flag.**
+
+**Custody observations (recorded, not absorbed, not criteria):**
+- `output volume:25 → 69`, `output muted:false` both sides, alert volume 59 unchanged. Volume is custody only under §14.3; the founder states no volume-setting command was issued and the act contained no volume gesture. The mechanism (per-device volume state retained by macOS) is the ruling's stated interpretation; this session asserts only the two read values. S2's `afplay -v` is the governed playback level; the system output level at S2 time is re-read before each population.
+- Device set delta: `Kelly Nezat’s iPhone Microphone` (transport `coreaudio_device_type_unknown`, an input-only Continuity entry) present in the before capture, absent in the after capture. Not an output device, not touched by any authorized act, not a criterion; recorded as an OS-side transient between the two reads.
+
+**Result:** `S2 output-source preparation PASS · Mac Studio Speakers default output confirmed at 20260915T022305Z`. This is evidence at a time, not a standing guarantee: the S2 batch must re-read the default-output identity before each population and refuse on mismatch (§14.5).
+
+**Standing after §14.9:** structural corpus partition LANDED · playback census COMPLETE · S2 physical source Mac Studio Speakers RULED · **output-source preparation PASS** · sound playback NOT AUTHORIZED · **S2 batch-only design authority = the founder's next separate ruling (NOT opened here)** · S2 implementation HELD · S2 witness NOT AUTHORIZED · S3 NOT OPEN · organism FROZEN · `.vpio02` untouched · `.vpio01` FROZEN · K00/R1 UNTOUCHED · KERNEL-00 NOT ACCEPTED.
