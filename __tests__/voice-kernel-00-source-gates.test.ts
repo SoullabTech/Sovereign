@@ -1068,6 +1068,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   const tracked = (paths: string[]) => execFileSync('git', ['ls-files', '--', ...paths], { cwd: process.cwd() }).toString('utf8').split('\n').filter(Boolean).sort();
   const INSTRUMENT = ['ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift', 'scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh'];
   const OUTPUT_READER = 'scripts/witness/k00-output-ledger.py';                      // K00-05/06 (Option C): the one file the instrument may add
+  const PLAYBACK_PROBE = 'scripts/witness/k00-playback-probe.sh';                    // S2 design (founder ruling 2026-09-15): read-only Mac playback-capability census
   const INSTRUMENT_VPIO02B = '08483cfe4f6c3e98198805337ced99bae92ce911';             // the F-W1 instrument; the entry classifier + reinstall stay at its bytes
   const INSTRUMENT_K0506 = '8b111709b6e5010b4b6ee7281d257141945276ff';               // the K00-05/06 Option C instrument (DRIVER-COMPILE-01 GREEN; first witness ten infra rows); C-D20 may move only the driver test beyond it
   it('the organism is byte-identical to ac12dedf4: every tracked file under ios/VoiceKernel and ios/VoiceKernelHarness equals its historical bytes; no file added or removed', () => {
@@ -1080,7 +1081,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   it('the instrument moved only in the four authorized files relative to de3efd3fb (scripts/witness · ios/VoiceKernelDriver); exactly one file added under those roots — the K00-05/06 output reader (founder ruling 2026-09-14, Option C); nothing removed', () => {
     const roots = ['scripts/witness', 'ios/VoiceKernelDriver'];
     const listed = histList(INSTRUMENT_BASE, roots).sort();
-    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER].sort());
+    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER, PLAYBACK_PROBE].sort());
     const moved = listed.filter((p) => !histRaw(INSTRUMENT_BASE, p).equals(readFileSync(join(process.cwd(), p))));
     expect(moved.sort()).toEqual(INSTRUMENT);
   });
@@ -1313,5 +1314,19 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(diff.length).toBe(1);
     expect(diff[0][0]).toMatch(/\| 1 \| K00-06 `K00-558df5b2` \| \*\*FAIL-06\*\* \|.*output-health family absent beside the input window at t=1037764041/);
     expect(diff[0][1]).toMatch(/\| 1 \| K00-06 `K00-558df5b2` \| \*\*PASS-06\*\* \|/);
+  });
+  it('S2 design (founder ruling 2026-09-15): the Mac playback-capability probe is DISCOVERY ONLY — help/man/listings with stdin closed; never executes say; no audio file, no volume change, no device selection; C-D11 filename shift; capture-time manifest + seal', () => {
+    const pp = readFileSync(join(process.cwd(), PLAYBACK_PROBE), 'utf8');
+    const ppExec = pp.split('\n').filter((l) => !/^\s*(#|echo\b|\{?\s*echo\b)/.test(l)).join('\n');
+    expect(pp).toMatch(/local f="\$1"; shift/);
+    expect(pp).toMatch(/"\$@" <\/dev\/null; echo "\[rc=\$\?\]"/);                       // every tool invocation has stdin closed
+    expect(ppExec).not.toMatch(/^\s*(capture [^ ]+ |helpflag )?say\b/m);                   // say is never executed (only `command -v say` / man)
+    expect(ppExec).not.toMatch(/\.(wav|aiff?|caf|mp3|m4a|flac)\b/i);                         // no audio file is named, created or played
+    expect(ppExec).not.toMatch(/set volume|SwitchAudioSource -s|osascript -e '(set|tell)/);    // nothing changed or selected
+    expect(ppExec).not.toMatch(/\b(afplay|ffplay|mpv|sox|play) [^-\n>]*\//);                    // no player receives a path (a `>/dev/null` redirect is not an argument)
+    expect(ppExec).not.toMatch(/devicectl|xcodebuild|k00-driver-batch/);                         // no device act, no batch
+    expect(pp).toContain('capture audio-devices.txt system_profiler SPAudioDataType');
+    expect(pp).toContain("capture output-volume-read.txt osascript -e 'get volume settings'");
+    expect(pp).toMatch(/"soundPlayed":False/); expect(pp).toMatch(/SEAL\.sha256/);
   });
 });
