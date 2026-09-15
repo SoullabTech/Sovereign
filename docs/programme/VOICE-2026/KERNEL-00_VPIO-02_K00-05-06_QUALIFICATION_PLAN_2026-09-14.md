@@ -851,3 +851,8 @@ Compile qualification of the SID subject reached its final echo: gate 82/82 · s
 ### §10.64 — `SID MAC-COMPILE-02` PASS · SPENT (founder ruling 2026-09-15; discriminator plan §18.44; implementation record §10.13)
 
 Compile qualification of the SID subject `faf918b5c` is complete and ruled; sibling HOLD remains; reinstall pins EMPTY; K00 qualification of the SID subject remains CLOSED; SID ENTRY WITNESS REQUIRED and not opened; carrier landing = record confirmation only.
+
+
+### §10.65 — carrier-B · reinstall-pin at `3f3cb15b070d9237f17f66625ede6591b1ae5940` · ENTRY witness design OPEN (2026-09-15; discriminator plan §18.45; implementation record §10.14)
+
+No qualification change: MAC-COMPILE-02 PASS stands; the SID subject remains uninstallable by the instrument (`pins-unrecorded` on the unruled pins) and unqualified (K00 obligations CLOSED for it); the ENTRY witness is being designed, not executed.
