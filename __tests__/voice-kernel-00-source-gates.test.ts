@@ -1125,7 +1125,10 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     const listed = histList(INSTRUMENT_BASE, roots).sort();
     const SID_FIXTURE = 'scripts/witness/fixtures/k00-sid-nearend-997hz-gated-2hz-180s.wav';   // SOURCE-ID-02: the gated fixture + sidecar + the source reader
     const SOURCE_READER = 'scripts/witness/k00-source-ledger.py';
-    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER, PLAYBACK_PROBE, S2_FIXTURE, S2_FIXTURE_SIDECAR, VOLUME_DRIFT_CENSUS, SID_FIXTURE, SID_FIXTURE + '.sha256', SOURCE_READER].sort());   // S2 (founder ruling 2026-09-15): the tracked stimulus + its sidecar
+    // SID ENTRY (founder ruling 2026-09-15, tooling-only): the observer-liveness verifier + its eight synthetic self-test journals
+    const LIVENESS = 'scripts/witness/k00-source-liveness.py';
+    const LIVENESS_FIXTURES = ['badframes', 'boundary9plus', 'distractors', 'dormant9', 'frames0', 'live10', 'mixedreset', 'unrelated'].map((n) => `scripts/witness/fixtures/k00-source-liveness-selftest/${n}.jsonl`);
+    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER, PLAYBACK_PROBE, S2_FIXTURE, S2_FIXTURE_SIDECAR, VOLUME_DRIFT_CENSUS, SID_FIXTURE, SID_FIXTURE + '.sha256', SOURCE_READER, LIVENESS, ...LIVENESS_FIXTURES].sort());   // S2 (founder ruling 2026-09-15): the tracked stimulus + its sidecar
     const moved = listed.filter((p) => !histRaw(INSTRUMENT_BASE, p).equals(readFileSync(join(process.cwd(), p))));
     expect(moved.sort()).toEqual(INSTRUMENT);
   });
@@ -1761,5 +1764,32 @@ describe('KERNEL-00 · SOURCE-ID-02 — seven-bin Goertzel at the consumed seam 
     expect((bx.match(/python3 "\$ROOT\/scripts\/witness\/k00-source-ledger\.py"/g) ?? []).length).toBe(2);
     for (const l of bx.split('\n').filter((l) => l.includes('k00-source-ledger.py'))) expect(l).not.toMatch(/custody|STIMULUS|S2_|afplay/);
     for (const p of ['scripts/witness/k00-ledger.py', 'scripts/witness/k00-output-ledger.py']) expect(histRaw('b198e2e37058f2e059d986b4b148e224215f3ee3', p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+  });
+});
+
+describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026-09-15, tooling-only) — a validity input for [G], never an ENTRY class', () => {
+  const V = 'scripts/witness/k00-source-liveness.py';
+  const stripPy = (s: string) => s.replace(/"""[\s\S]*?"""/g, '').split('\n').map((l) => l.replace(/#.*$/, '')).join('\n');
+  it('reads only input_source_sample records and only their frames / frameReset evidence keys; the source (docstring and comments stripped) names no bin, magnitude, m2, attribution or stimulus key and never imports the source reader', () => {
+    const src = stripPy(readFileSync(join(process.cwd(), V), 'utf8'));
+    expect(src).toContain('EVENT = "input_source_sample"');
+    expect(src).toContain('KEY_FRAMES = "frames"');
+    expect(src).toContain('KEY_RESET = "frameReset"');
+    expect((src.match(/ev\.get\(/g) ?? []).length).toBe(2);                                             // exactly two evidence reads
+    expect(src).not.toMatch(/magnitudes|m2_|m2\b|e997|e440|e880|e700|e1200|e1320|e1760|binsHz|stimulus|SURV|SUPP|NEAR-END|INDETERMINATE|Fisher|UNPERTURBED|PERTURBED|k00-source-ledger|k00-ledger/);
+    expect(src).toContain('LIVE_MIN = 10');
+    expect(src).not.toMatch(/subprocess|import\s+(re|csv|statistics|scipy|numpy)/);
+  });
+  it('self-test 9/9 on the synthetic journals: 10 → LIVE · 9 → DORMANT · frames=0 never counts · missing/non-numeric/negative frames never count · mixed frameReset counters reported exactly · unrelated records ignored · bin/magnitude/m2 content cannot change any column', () => {
+    const out = execFileSync('python3', [V, '--selftest'], { cwd: process.cwd() }).toString('utf8');
+    expect(out.trim().split('\n').pop()).toBe('selftest 9/9');
+    expect(out).not.toMatch(/FAIL/);
+  });
+  it('on a real VPIO-02 (no-observer) journal it reads 0 source records → DORMANT, the correct negative control; the header is the seven pinned columns', () => {
+    const j = join(process.cwd(), 'docs/programme/VOICE-2026/driver-ledger/VPIO-02-20260914T223500Z/journals');
+    const one = readdirSync(j).filter((n) => n.endsWith('.jsonl')).sort()[0];
+    const out = execFileSync('python3', [V, join(j, one)], { cwd: process.cwd() }).toString('utf8').trim().split('\n');
+    expect(out[0]).toBe('journal\tsource_sample_records\tframes_present_records\tframeReset_nonzero_records\tframeReset_zero_records\tresets_total\tliveness');
+    expect(out[1]).toBe(`${one}\t0\t0\t0\t0\t0\tDORMANT`);
   });
 });
