@@ -24,7 +24,9 @@ for m in 20260901000001_ask_threads \
          20260914000001_proposal_succession 20260914000002_manuscript_revision_offers \
          20260914000003_proposal_chains_member_identity \
          20260914000004_manuscript_revision_authorizations \
-         20260914000005_editorial_ontology; do
+         20260914000005_editorial_ontology \
+         20260915000001_w4_s1_thread_subject_preparation \
+         20260915000002_w4_s2_validation_and_binding; do
   psql -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGDB" -q -v ON_ERROR_STOP=1 \
     -f "$ROOT/database/migrations/$m.sql" >/dev/null || {
       echo "REFUSED · migration failed: $m"; exit 2; }
