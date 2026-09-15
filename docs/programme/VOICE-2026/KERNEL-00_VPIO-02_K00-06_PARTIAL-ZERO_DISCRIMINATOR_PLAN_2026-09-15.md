@@ -1475,3 +1475,173 @@ Flagged inference only (same class as §18.6's): 38 lies on the sixteenth-step g
 4. Nothing else. S2 population · S3 · KERNEL-00 acceptance remain CLOSED.
 
 **Standing after §18.12:** `S2-WITNESS-03` STOP · SPENT · Blocks A/B PASS ×2 on `b198e2e37` · pre-C read refused 38 · nothing played · no S2 row · 69 last read 14:05:42Z, 38 read 15:05:51Z · drift cause/actor UNKNOWN · `b198e2e37` unchanged · WITNESS-02 + WITNESS-03 residue preserved · `S2-WITNESS-04` / `S2-VOLUME-RESTORE-03` NOT ISSUED · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.13 — FOUNDER RULING (2026-09-15) on §18.12: `S2-WITNESS-03` ACCEPTED · second drift census ⛔ NOT OPENED · **`S2-RESTORE/WITNESS-04` AUTHORIZED AS ONE PAIRED CUSTODY** (restoration after-read = the freshness read; ordinal boundary, not a clock)
+
+### 18.13.1 Ruling (founder, verbatim)
+
+```text
+S2-WITNESS-03          ACCEPTED · STOP before Block C · authority SPENT
+69 target              UNCHANGED
+second drift census    ⛔ NOT OPENED
+cause of 69 → 38       UNKNOWN · no further mechanism required for progress
+
+NEXT ACT:
+S2-RESTORE/WITNESS-04  AUTHORIZED AS ONE PAIRED CUSTODY
+
+sequence:
+  WITNESS-04 Block A
+  WITNESS-04 Block B
+  confirm pane closed / no competing process
+  RESTORE-03 founder hand act:
+      Volume Down → zero
+      Volume Up ×11
+  immediate governed after-read
+
+joint condition:
+  Mac Studio Speakers
+  builtin
+  output volume 69
+  output muted false
+  Sound/System Settings absent
+
+PASS at joint
+  → Block C immediately
+  → Block D if C succeeds
+
+FAIL at joint
+  → STOP
+  → no correction
+  → no retry
+  → authority spent
+
+No unrelated command, deliberation, documentation act,
+commit, push, or preparation step may intervene between
+the accepted joint read and Block C.
+
+b198e2e37              reusable unchanged
+WITNESS-04 token       s2w4
+WITNESS-02 residue     preserved
+WITNESS-03 residue     preserved
+
+S2 population          CLOSED
+S3                     CLOSED
+KERNEL-00 acceptance   CLOSED
+```
+
+Founder reasoning, substance preserved: (1) `S2-WITNESS-03` accepted exactly as adjudicated, no qualification. (2) No second drift census — the operational fact that matters is already established: *output volume is volatile state on this Mac*; another census might name another candidate mechanism but would not change the witness design requirement; cause may remain UNKNOWN. (3) The lesson of WITNESS-02/03 is not "find out why 69 moves" but "do not depend on 69 persisting while governance/preparation consumes time" → all slow preparation (custody Block A, device preflight Block B) happens **before** the hand; RESTORE-03 is the already-tested §18.7.2 keyboard sequence; **its after-read is the WITNESS-04 pre-Block-C read** — no separate freshness read later. (4) No 5/10/30-minute window: the boundary is **causal/ordinal** — the accepted restoration read must be the last relevant state observation before Block C with nothing intervening that could legitimately delay the act; an interruption after that read STOPs the act rather than relying on remaining minutes. *A volatile environmental prerequisite belongs at the last responsible moment, not at the beginning of a governed sequence. The refusal boundaries have demonstrated that they work; the next experiment tests the intended phenomenon, not whether macOS volume stays stable for an hour.*
+
+### 18.13.2 What this changes and what it does not
+
+| | §18.11.3 (WITNESS-03) | §18.13.3 (RESTORE/WITNESS-04) |
+|---|---|---|
+| Restoration | separate prior act (RESTORE-02, 14:05:42Z), then a lapse | inside the same custody, after Blocks A+B |
+| Freshness read | a separate pre-C read of an inherited state | the restoration after-read itself |
+| Boundary | five conditions, clock-free but an inherited state | same five conditions + `RESTORE_ACCEPTANCE PASS`; ordinal: last observation before Block C |
+| Interruption after the read | (not reached) | STOP; never resumed on "remaining minutes" |
+| `b198e2e37` · §16 blocks · §16.4 law · batch preflight · parser · keyboard act | unchanged | unchanged (three literal substitutions only, diff-proven) |
+
+Unchanged laws: the batch's own stimulus preflight inside Block C still re-reads volume and refuses ≠ 69 with exit 8 (a second boundary, not a substitute for the joint); the machine reads, the founder's hand sets (§18.5.1); no `osascript`/slider/scripted keys; the sample-1 journal is never an S2 row and gets no §7 reading (§16); PASS ≠ S2 population · ≠ S3 · ≠ KERNEL-00. Residue rule: `/private/tmp/k0506-s2w2-…`, `/private/tmp/k0506-s2w3-…` and every `s2w2-*`/`s2w3-*` file stay untouched (never removed/reused/modified/executed).
+
+Recorded fact, not a change: inside Block C the batch builds the driver (xcodegen + signed `build-for-testing`) before its stimulus preflight reads volume, so minutes elapse between the joint read and the batch's own read. The ruling's "immediately" governs what the operator does (nothing) between the joint read and starting Block C; what the batch does after that is `b198e2e37`'s frozen order.
+
+### 18.13.3 Execution pin — `S2-RESTORE/WITNESS-04` (Mac; founder; paste-able; no `#` comment lines; nothing between the joint read and Block C)
+
+**Stage 0 — extraction with the `s2w4` token (the §18.11.3 mechanics; the diff must show only the three tokens; the `s2w4` path must not pre-exist):**
+
+```bash
+DOC=docs/programme/VOICE-2026/KERNEL-00_VPIO-02_K00-06_PARTIAL-ZERO_DISCRIMINATOR_PLAN_2026-09-15.md
+cd /Users/soullab/MAIA-SOVEREIGN
+git show 17b4df63b:$DOC | sed -n '599,625p' > /private/tmp/s2w1-blockA.sh
+git show 17b4df63b:$DOC | sed -n '633,702p' > /private/tmp/s2w1-blockB.sh
+git show 17b4df63b:$DOC | sed -n '710,713p' > /private/tmp/s2w1-blockC.sh
+git show 17b4df63b:$DOC | sed -n '719,732p' > /private/tmp/s2w1-blockD.sh
+for b in A B C D; do sed -e 's/S2-WITNESS-01/S2-WITNESS-04/g' -e 's/s2-witness-01/s2-witness-04/g' -e 's#/private/tmp/k0506-s2w-b198e2e37#/private/tmp/k0506-s2w4-b198e2e37#g' /private/tmp/s2w1-block$b.sh > /private/tmp/s2w4-block$b.sh; done
+for b in A B C D; do echo "== block $b diff (only the three tokens may appear)"; diff /private/tmp/s2w1-block$b.sh /private/tmp/s2w4-block$b.sh; done
+shasum -a 256 /private/tmp/s2w4-block[ABCD].sh
+ls -d /private/tmp/k0506-s2w4-b198e2e37 2>&1
+```
+
+(Expected: Block A `ee17183f…` / B `2dce2db8…` / C `82f3c6be…` / D `c682e8aa…` hashes will differ from WITNESS-03's only by the token; the last line must report no such directory, else STOP before Block A.)
+
+**Stage 1 — Blocks A and B (§16.7 transport; STOP on any non-zero rc, no repair):**
+
+```bash
+bash /private/tmp/s2w4-blockA.sh 2>&1 | tee /private/tmp/s2w4-blockA.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w4-blockA.out
+bash /private/tmp/s2w4-blockB.sh 2>&1 | tee /private/tmp/s2w4-blockB.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w4-blockB.out
+```
+
+Both must print their PASS lines (`BLOCK_A_PASS=1` · `PREFLIGHT_CLEAN=…S2-WITNESS-04-preflight-<stamp>`).
+
+**Stage 2 — pane closed, no competing process (§18.7.2 Step 0; a hand ⌘Q if a pane is resident; repeatable until it passes; this is preparation, not the joint):**
+
+```bash
+pgrep -fl "System Settings|Sound.appex" ; echo "[pgrep rc=$?]"
+pgrep -fl "afplay|k00-driver-batch" ; echo "[pgrep rc=$?]"
+```
+
+Expected: no process line and `[pgrep rc=1]` on both.
+
+**Stage 3 — RESTORE-03 before-read (§18.7.2 Step 1 with the `restore-03` prefix; volume UNKNOWN until read):**
+
+```bash
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+OUT="/private/tmp/k00-s2-volume-restore-03-$STAMP"
+mkdir -p "$OUT"
+date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/before-utc.txt"
+system_profiler SPAudioDataType -json > "$OUT/audio-before.json"
+system_profiler SPBluetoothDataType -json > "$OUT/bluetooth-before.json"
+osascript -e 'get volume settings' > "$OUT/volume-before.txt"
+pgrep -fl "System Settings|Sound.appex" > "$OUT/sound-pane-before.txt" ; echo "rc=$?" >> "$OUT/sound-pane-before.txt"
+cat "$OUT/volume-before.txt"
+echo "$OUT"
+```
+
+**Stage 4 — the one founder hand act (§18.7.2 Step 2 verbatim):** keyboard Volume Down until the bottom/zero state → Volume Up exactly 11 times → stop. Nothing else touched. (Key-feedback click, if on, is a side effect of the control, recorded if heard, not a STOP.)
+
+**Stage 5 — THE JOINT READ (§18.7.2 Step 3 + the unchanged §18.5.2 parser + the pane read; this is both RESTORE-03's after-read and WITNESS-04's pre-Block-C read):**
+
+```bash
+date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/after-utc.txt"
+system_profiler SPAudioDataType -json > "$OUT/audio-after.json"
+osascript -e 'get volume settings' > "$OUT/volume-after.txt"
+pgrep -fl "System Settings|Sound.appex" > "$OUT/sound-pane-after.txt" ; echo "rc=$?" >> "$OUT/sound-pane-after.txt"
+cat "$OUT/after-utc.txt" "$OUT/volume-after.txt" "$OUT/sound-pane-after.txt"
+```
+
+then the §18.5.2 parser block, unchanged (`python3 - "$OUT/audio-after.json" "$OUT/volume-after.txt" <<'PY' … PY`).
+
+**Joint condition — all of, read from the parser's lines and `sound-pane-after.txt`:**
+
+```text
+exactly one DEFAULT_OUTPUT line
+DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin …
+MAC_STUDIO_DEFAULT_OUTPUT True
+OUTPUT_VOLUME 69
+OUTPUT_MUTED false
+RESTORE_ACCEPTANCE PASS
+sound-pane-after.txt = no process line, last line rc=1
+```
+
+**PASS at the joint → Block C is the very next shell act. Nothing intervenes: no seal, no commit, no push, no note, no re-read, no deliberation.** **FAIL at the joint (any line) → STOP: no correction, no second hand act, no retry; run only Stage 7's seal for the restoration files; authority SPENT.** **Interruption after an accepted joint read and before Block C started → STOP, same rule; never resumed.**
+
+**Stage 6 — Blocks C and D (only on PASS at the joint; §16.7 transport):**
+
+```bash
+bash /private/tmp/s2w4-blockC.sh 2>&1 | tee /private/tmp/s2w4-blockC.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w4-blockC.out
+bash /private/tmp/s2w4-blockD.sh 2>&1 | tee /private/tmp/s2w4-blockD.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w4-blockD.out
+```
+
+Block D runs only if Block C's rc is 0 (§16.7). A Block-C STOP (e.g. the batch's own preflight refusing) is evidence, not a retry.
+
+**Stage 7 — seal the restoration files (read-only; after Block D, or immediately on a joint FAIL / Block-C STOP):**
+
+```bash
+( cd "$OUT" && shasum -a 256 before-utc.txt audio-before.json bluetooth-before.json volume-before.txt sound-pane-before.txt after-utc.txt audio-after.json volume-after.txt sound-pane-after.txt > SHA256SUMS && cat SHA256SUMS )
+```
+
+**Return (one `feature/*` branch, one commit):** `driver-ledger/s2-restore-witness-04-<STAMP>/` = the nine restoration files + `SHA256SUMS` + the parser's seven lines as `parser.txt` + `JOINT.txt` (`PASS` or `STOP <line>`); and §16.7's return block with the `04` substitutions — the `S2-WITNESS-04-<stamp>/` ledger dir (`transcript.txt` + `SHA256SUMS.witness`) when Block C ran, the `S2-WITNESS-04-preflight-<stamp>/` dir, the `s2w4-block*.out` that exist, block diffs + hashes, the Stage-0 pre-existence line, `BRANCH · HEAD · STAMP · BATCH_PIPELINE_RC` (`NOT_RUN_JOINT_STOP` if Block C never started). Cherry-picked here; the restoration half read against §18.5.3, the witness half against §16.4 → **§18.14**. PASS ≠ S2 population · ≠ S3 · ≠ KERNEL-00.
+
+**Standing after §18.13:** `S2-WITNESS-03` ACCEPTED · STOP · spent · second drift census NOT OPENED · 69 exact · `S2-RESTORE/WITNESS-04` AUTHORIZED · pinned · NOT YET EXECUTED (founder hand inside it) · joint = restoration after-read = last observation before Block C · `b198e2e37` unchanged · WITNESS-02/03 residue preserved · S2 population · S3 · KERNEL-00 acceptance CLOSED.
