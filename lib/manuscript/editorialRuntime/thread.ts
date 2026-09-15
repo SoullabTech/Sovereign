@@ -21,6 +21,7 @@
 
 import { query, transaction } from '@/lib/db/postgres';
 import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+import { locusIsAdoptable } from '../proposalChain/legacyLocus';
 import { openChainWithExecutor } from '../proposalChain/store';
 import { readProposalWork } from '../proposalChain/proposalWork';
 import type { VersionAuthor } from '../proposalChain/contract';
@@ -210,6 +211,19 @@ export interface EditorialThreadView {
    */
   readonly targetSectionId: string | null;
   readonly sectionLabel: string | null;
+  /**
+   * ⚠️ EDITORIAL-LEGACY-LOCUS-DISPOSITION-01 — this relationship's frozen locus
+   * was written in the pre-alignment stored coordinate space and can never be
+   * located in the projected one.
+   *
+   * ⭐ THE SURFACE NEEDS IT BEFORE SHE CHOOSES. Without it she would pick a
+   * version, confirm an adoption, and only then meet a refusal — so the fact
+   * that belongs to the relationship is reported with the relationship.
+   *
+   * ⛔ It withholds adoption and NOTHING ELSE. The exchange stays readable and
+   * comparable; the chain is untouched; ⛔ nothing here says her Work moved.
+   */
+  readonly legacyLocus: boolean;
   readonly turns: readonly EditorialThreadTurn[];
   /**
    * ⭐⭐ THE COMPLETE STRUCTURAL LINEAGE, in succession order.
@@ -310,6 +324,10 @@ export async function readEditorialThread(
       locusText: t.rows[0]!.expected_text ?? '',
       targetSectionId: t.rows[0]!.target_section_id,
       sectionLabel: t.rows[0]!.heading,
+      /* ⭐ THE SAME PURE PREDICATE THE ADOPTION SEAM ASKS — one implementation,
+         so the panel and the act can never disagree about which relationships
+         are adoptable. */
+      legacyLocus: !locusIsAdoptable(t.rows[0]!.expected_text ?? '', t.rows[0]!.heading),
       turns,
       versions,
       /* ⛔ Read off the LINEAGE, never off `versions[length-1]` of an unordered

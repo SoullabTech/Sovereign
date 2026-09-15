@@ -68,6 +68,8 @@ interface ThreadView {
   /** ⭐ Server-derived. ⛔ The browser never names the place a change belongs. */
   targetSectionId: string | null;
   sectionLabel: string | null;
+  /** ⚠️ Pre-alignment locus: readable and comparable, ⛔ never adoptable. */
+  legacyLocus: boolean;
   turns: ThreadTurn[];
   versions: ThreadVersion[];
   headVersionId: string | null;
@@ -526,7 +528,18 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
                 ⭐ What has NOT changed: comparison still shows two immutable
                 facts, and the adoption acts on the SAME frozen version the
                 writer opened — ⛔ never the head. */}
-            {adoptionTarget?.versionId === shown.id ? (
+            {/* ⚠️⚠️ A RELATIONSHIP FROM BEFORE THE LOCUS ALIGNMENT.
+                ⭐ SYSTEM AND HISTORICAL LANGUAGE, deliberately. ⛔ Never "you
+                changed the text", ⛔ never "conversion failed", and ⛔ never a
+                suggestion that the exchange is corrupt or lost — it is neither.
+                Only adoption is withheld. */}
+            {view.legacyLocus ? (
+              <StudioText role="metadata" style={{ color: INK.secondary }}
+                data-adopt-unavailable="legacy_locus">
+                This older editorial relationship can&rsquo;t be safely adopted
+                into the manuscript. You can still read and compare it.
+              </StudioText>
+            ) : adoptionTarget?.versionId === shown.id ? (
               <div data-adopt-confirm={shown.id}
                 style={{ display: 'flex', flexDirection: 'column', gap: SPACE.snug,
                          border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,

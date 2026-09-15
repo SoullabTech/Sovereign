@@ -19,6 +19,8 @@
  *                          which is not an error and must not be logged as one
  *     409 system_refusal   ⛔ the Studio could not act — abnormal, so the code
  *                          says so where infrastructure can see it
+ *     409 legacy_locus     ⚠️ the relationship predates the locus alignment and
+ *                          cannot be adopted; ⛔ nothing about the Work moved
  *     404 / 400            the relationship or the named version is unreadable
  *
  * The body carries `kind` in every case, and a client that read only the code
@@ -53,6 +55,10 @@ function statusFor(outcome: AdoptionOutcome): number {
        working correctly, and a 4xx would teach the log otherwise. */
     case 'work_moved': return 200;
     case 'system_refusal': return 409;
+    /* ⚠️ A state of the relationship, not a fault in the request — and ⛔ not a
+       manuscript claim either. 409 keeps it visible without dressing it as a
+       server error or as something the caller got wrong. */
+    case 'legacy_locus':   return 409;
     case 'relationship_refusal':
       return outcome.reason === 'not_editorial' ? 400 : 404;
   }

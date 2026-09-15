@@ -67,6 +67,7 @@ import { query } from '@/lib/db/postgres';
 import { authorizeVersion, type AuthorizeRefusal } from '../revisionAuthorization/store';
 import { executeAuthorization, type ExecutionRefusal } from '../revisionAuthorization/execute';
 import { readAuthorizationStatus, type ChangeLocator } from '../revisionAuthorization/status';
+import { locusIsAdoptable } from '../proposalChain/legacyLocus';
 import type { VerifiedIdentity } from './turn';
 
 export interface AdoptVersionInput {
@@ -148,6 +149,23 @@ export type AdoptionOutcome =
   /** ⛔ THE STUDIO COULD NOT ACT. ⛔ Not a statement about the manuscript. */
   | { readonly kind: 'system_refusal'; readonly permission: AdoptionPermission;
       readonly reason: SystemRefusalReason; readonly facts: AdoptionFacts }
+  /**
+   * ⚠️⚠️ A HISTORICALLY MALFORMED LOCUS — EDITORIAL-LEGACY-LOCUS-DISPOSITION-01.
+   *
+   * ⭐⭐ ITS OWN FAMILY, AND THAT IS THE POINT. Four different truths, and the
+   * member must never receive one in place of another:
+   *
+   *     untouched modern headed section  → ADOPTABLE
+   *     genuinely edited section         → work_moved
+   *     historical stored-space chain    → THIS
+   *     the Studio cannot execute        → system_refusal
+   *
+   * ⛔ It is NOT `work_moved`: nothing about her writing changed. ⛔ It is NOT a
+   * system failure: nothing is broken. ⛔ And no permission exists — the refusal
+   * happens before the authorizing act, so `permission` is `established: false`
+   * by construction rather than by remembering to say so.
+   */
+  | { readonly kind: 'legacy_locus'; readonly permission: AdoptionPermission }
   /** The editorial relationship or the named version could not be read. */
   | { readonly kind: 'relationship_refusal'; readonly reason: RelationshipRefusal };
 
@@ -217,9 +235,20 @@ export async function adoptVersion(input: AdoptVersionInput): Promise<AdoptionOu
   const memberId = input.identity.memberId;
 
   /* ⭐ THE CHAIN, DERIVED FROM AN OWNED EDITORIAL THREAD — ownership inside the
-     SQL, so an unknown thread and another member's are one answer. */
-  const t = await query<{ proposal_chain_id: string | null }>(
-    `SELECT proposal_chain_id FROM ask_threads WHERE id = $1 AND member_id = $2`,
+     SQL, so an unknown thread and another member's are one answer.
+     ⭐ The frozen locus and its section's heading ride along in the SAME
+     statement: the legacy guard below needs both, and a second round trip would
+     let them be read from two different moments. */
+  const t = await query<{
+    proposal_chain_id: string | null; expected_text: string | null;
+    heading: string | null;
+  }>(
+    `SELECT th.proposal_chain_id, c.expected_text, ms.heading
+       FROM ask_threads th
+       LEFT JOIN proposal_chains c ON c.id = th.proposal_chain_id
+       LEFT JOIN manuscript_draft_sections ds ON ds.id = c.target_section_id
+       LEFT JOIN manuscript_sections ms ON ms.id = ds.source_section_id
+      WHERE th.id = $1 AND th.member_id = $2`,
     [input.threadId, memberId]);
   if (t.rows.length === 0) {
     return { kind: 'relationship_refusal', reason: 'thread_not_found' };
@@ -227,6 +256,21 @@ export async function adoptVersion(input: AdoptVersionInput): Promise<AdoptionOu
   const chainId = t.rows[0]!.proposal_chain_id;
   if (chainId === null) {
     return { kind: 'relationship_refusal', reason: 'not_editorial' };
+  }
+
+  /* ══ ⭐⭐ THE COMPATIBILITY GUARD — BEFORE ACT 1, DELIBERATELY ═══════════
+     A locus frozen in the stored coordinate space can never be located in the
+     projected one, so letting it proceed would mint a permission that can only
+     fail, and fail as `expected_text_absent` — which this taxonomy reports as
+     `work_moved`, telling the writer she changed a passage she never touched.
+
+     ⛔ THE POSITION IS THE WHOLE REPAIR. Placing this inside
+     `evaluateExecutionFit` would BE reclassifying `stale_base`; placing it in
+     `authorizeVersion` would change authorization semantics for every caller.
+     Here, the malformed locus never reaches the classifier and no authorization
+     row is written. ⭐ `stale_base` keeps its meaning exactly. */
+  if (!locusIsAdoptable(t.rows[0]!.expected_text ?? '', t.rows[0]!.heading)) {
+    return { kind: 'legacy_locus', permission: { established: false } };
   }
 
   /* ══ ACT 1 · THE PERMISSION ═══════════════════════════════════════════════

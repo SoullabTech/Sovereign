@@ -55,8 +55,16 @@ for (const forbidden of ['baseVersion', 'expectedText', 'idempotencyKey', 'range
 }
 eq('S7  ⛔ the seam takes no chainId from anyone — it derives it from the thread',
   /input\.chainId|chainId:\s*input\./.test(seam), false);
+/* ⚠️ THE ASSERTION WAS PINNED TO A LITERAL, AND THE LITERAL MOVED. The legacy
+   guard extended this read into a join so the frozen locus and its heading
+   arrive in the same statement. ⭐ The LAW is unchanged and is what is asserted
+   now: the derivation reads `ask_threads` and proves ownership IN THE SQL.
+   ⛔ A test that fails because a query grew a join is testing the spelling. */
 eq('S8  the chain is derived in SQL from an owned thread',
-  /FROM ask_threads WHERE id = \$1 AND member_id = \$2/.test(seam), true);
+  /FROM ask_threads[\s\S]{0,400}?WHERE th\.id = \$1 AND th\.member_id = \$2/.test(seam)
+    || /FROM ask_threads WHERE id = \$1 AND member_id = \$2/.test(seam), true);
+eq('S8b ⛔ and ownership is never left to a later check',
+  /WHERE[^;]*member_id = \$2/.test(seam), true);
 
 /* ── the seam is not a third authority ───────────────────────────────────── */
 eq('S9  ⛔ the seam writes nothing itself',

@@ -79,7 +79,7 @@ const api = (path: string, init?: RequestInit) =>
  * `baseVersion` from the Work version it READ. Equal values would have hidden
  * the difference, which is exactly the trap the contract's own header names.
  */
-async function makeFixture(title: string, heading: string | null = null): Promise<Fixture> {
+async function makeWorkOnly(title: string, heading: string | null) {
   const WK = randomUUID(), LW = randomUUID(), DR = randomUUID();
   const SRC = randomUUID(), SRC2 = randomUUID(), DS = randomUUID(), DS2 = randomUUID();
   const stored = heading ? `${heading}\n\n${PASSAGE}` : PASSAGE;
@@ -111,14 +111,11 @@ async function makeFixture(title: string, heading: string | null = null): Promis
             WHERE id = $1`, [DR]);
   await q('COMMIT');
 
-  /* ⭐ THE RELATIONSHIP IS OPENED THROUGH THE REAL ROUTE, naming only the
-     section — every other fact is derived server-side. */
-  const r = await api('/api/writers-studio/editorial/thread',
-    { method: 'POST', body: JSON.stringify({ sectionId: DS }) });
-  if (!r.ok) throw new Error(`thread open refused: ${r.status} ${await r.text()}`);
-  const { threadId, chainId } = await r.json() as { threadId: string; chainId: string };
+  return { WK, DR, DS, DS2, stored };
+}
 
-  /* ⭐ FOUR VERSIONS, and the one the member will choose is NOT the head. */
+/** ⭐ FOUR VERSIONS, and the one the member will choose is NOT the head. */
+async function authorVersions(chainId: string) {
   const v1 = randomUUID(), v2 = randomUUID(), v3 = randomUUID(), v4 = randomUUID();
   await q(`INSERT INTO proposal_versions (id,chain_id,author,formulation,supersedes)
            VALUES ($1,$2,'maia',$3,NULL)`, [v1, chainId, V1_TEXT]);
@@ -128,7 +125,56 @@ async function makeFixture(title: string, heading: string | null = null): Promis
            VALUES ($1,$2,'member',$3,$4)`, [v3, chainId, V3_TEXT, v2]);
   await q(`INSERT INTO proposal_versions (id,chain_id,author,formulation,supersedes)
            VALUES ($1,$2,'member',$3,$4)`, [v4, chainId, V4_TEXT, v3]);
-  return { WK, DR, DS, DS2, threadId, chainId, v1, v2, v3, v4 };
+  return { v1, v2, v3, v4 };
+}
+
+/** ⭐ The modern path: the relationship is opened through the REAL route,
+ *  naming only the section — every other fact is derived server-side. */
+async function makeFixture(title: string, heading: string | null = null): Promise<Fixture> {
+  const w = await makeWorkOnly(title, heading);
+  const r = await api('/api/writers-studio/editorial/thread',
+    { method: 'POST', body: JSON.stringify({ sectionId: w.DS }) });
+  if (!r.ok) throw new Error(`thread open refused: ${r.status} ${await r.text()}`);
+  const { threadId, chainId } = await r.json() as { threadId: string; chainId: string };
+  const v = await authorVersions(chainId);
+  return { WK: w.WK, DR: w.DR, DS: w.DS, DS2: w.DS2, threadId, chainId, ...v };
+}
+
+/**
+ * ⚠️ THE ARTIFACT THE PRE-ALIGNMENT PRODUCER LEFT BEHIND, REPRODUCED.
+ *
+ * ⭐⭐ IT PERFORMS THE HISTORICAL ACT RATHER THAN EDITING A MODERN ONE: one
+ * chain INSERT carrying the STORED slice as `expected_text` — exactly what
+ * `openEditorialRelationship` wrote before the alignment — and one thread
+ * INSERT naming it, with `anchor` NULL, which is the schema's own definition of
+ * an editorial thread.
+ *
+ * ⚠️ A FIRST ATTEMPT OPENED A MODERN RELATIONSHIP AND RE-POINTED THE THREAD AT A
+ * LEGACY CHAIN. The database refused:
+ *
+ *     ask thread … is immutable in ownership, anchor, reading reference,
+ *     canonical baseline and editorial parent: a thread cannot be re-pointed
+ *     at a reading or a proposal it was not about
+ *
+ * ⭐ The guard was right and the fixture was wrong — and the refusal made the
+ * fixture more faithful, not less: a legacy relationship was BORN legacy, and
+ * the witness now builds one that way.
+ */
+async function makeLegacyFixture(title: string, heading: string | null): Promise<Fixture> {
+  const w = await makeWorkOnly(title, heading);
+  const chainId = randomUUID(), threadId = randomUUID();
+  /* ⛔ `w.stored` — the STORED slice, heading prefix included. That IS the
+     defect, reproduced verbatim. */
+  await q(`INSERT INTO proposal_chains
+             (id, member_id, work_id, draft_id, base_version, target_section_id, expected_text)
+           VALUES ($1,$2,$3,$4,1,$5,$6)`, [chainId, M, w.WK, w.DR, w.DS, w.stored]);
+  await q(`INSERT INTO ask_threads
+             (id, manuscript_id, member_id, anchor, reading_identity,
+              canonical_at_open, initiated_by, proposal_chain_id)
+           VALUES ($1,$2,$3,NULL,NULL,$4,'author',$5)`,
+    [threadId, w.WK, M, `draft:${w.DR}@1`, chainId]);
+  const v = await authorVersions(chainId);
+  return { WK: w.WK, DR: w.DR, DS: w.DS, DS2: w.DS2, threadId, chainId, ...v };
 }
 
 const adopt = async (threadId: string, versionId: string, extra: Record<string, unknown> = {}) => {
@@ -335,20 +381,66 @@ async function main() {
   eq('E2f one permission, spent once', e2Rows.length, 1);
   eq('E2g ⛔ nothing was written twice', Number(e2Rows[0].resulting_version), 42);
 
-  /* ══ F · ⚠️ A SECTION THAT CARRIES A HEADING ════════════════════════════
-     ⛔ NOT A REPAIR. This leg exists to establish what canonical does today
-     when the passage sits under a heading, because every leg above used a
-     heading-less section and a witness that only tests the easy shape reports
-     on itself. */
-  console.log('\n── F · HEADING-BEARING SECTION (observation) ─────────────────────');
+  /* ══ F · ⭐⭐ A MODERN HEADED SECTION — IT MUST NOW SUCCEED ═════════════
+     ⛔ This leg was an OBSERVATION and it reported a defect: before
+     EDITORIAL-LOCUS-ALIGNMENT-01 a headed section produced
+     `work_moved / expected_text_absent`, telling the writer she had written
+     there since — about a passage she had not touched. ⭐ It is a PASS leg now. */
+  console.log('\n── F · MODERN HEADED SECTION ─────────────────────────────────────');
   const F = await makeFixture('F · headed', 'Chapter Ten');
   const rf = await adopt(F.threadId, F.v2);
-  console.log(`  OBSERVED  kind=${rf.body.kind} reason=${rf.body.reason ?? '—'} `
-    + `permission=${rf.body.permission?.established ?? '—'} status=${rf.status}`);
-  console.log(`  OBSERVED  section text unchanged: ${(await sectionText(F.DS)) === `Chapter Ten\n\n${PASSAGE}`}`);
-  const fChain = await one('SELECT expected_text FROM proposal_chains WHERE id=$1', [F.chainId]);
-  console.log(`  OBSERVED  chain expected_text starts with the heading: `
-    + `${String(fChain.expected_text).startsWith('Chapter Ten')}`);
+  eq('F1 ⭐⭐ a headed section is ADOPTABLE', rf.body.kind, 'applied');
+  eq('F2 the manuscript carries the chosen version, heading intact exactly once',
+    await sectionText(F.DS), `Chapter Ten\n\n${V2_TEXT}`);
+  eq('F3 ⛔ and it is NOT reported as the Work having moved',
+    rf.body.kind === 'work_moved', false);
+  eq('F4 the draft advanced exactly once', await draftVersion(F.DR), 42);
+
+  /* ══ G · ⚠️⚠️ A HISTORICAL MALFORMED CHAIN ═════════════════════════════
+     ⭐ The fixture INSERTS the chain the pre-alignment producer wrote — the
+     stored slice, heading prefix included. ⛔ That is not a cheat: legacy rows
+     are DATA, `proposal_chains` refuses UPDATE and DELETE, and the only honest
+     way to witness the guard is against the artifact itself. */
+  console.log('\n── G · HISTORICAL MALFORMED HEADED CHAIN ─────────────────────────');
+  const G = await makeLegacyFixture('G · legacy headed', 'Chapter Ten');
+  const authsBefore = Number((await one(
+    'SELECT count(*) c FROM manuscript_revision_authorizations WHERE proposal_chain_id = $1',
+    [G.chainId])).c);
+  const rg = await adopt(G.threadId, G.v2);
+  eq('G1 ⭐⭐ its own outcome family — ⛔ not work_moved, ⛔ not a system failure',
+    rg.body.kind, 'legacy_locus');
+  eq('G2 ⛔ NO permission was established', rg.body.permission?.established, false);
+  eq('G3 ⭐⭐ and ZERO authorization rows exist — the refusal precedes act 1',
+    Number((await one(
+      'SELECT count(*) c FROM manuscript_revision_authorizations WHERE proposal_chain_id = $1',
+      [G.chainId])).c), authsBefore);
+  eq('G4 the manuscript is untouched', await sectionText(G.DS), `Chapter Ten\n\n${PASSAGE}`);
+  eq('G5 the draft did not advance', await draftVersion(G.DR), 41);
+  eq('G6 ⛔ stale_base was never consulted — no fit reason is reported',
+    rg.body.reason ?? null, null);
+  /* ⭐ The relationship remains readable and comparable. */
+  const gView = await (await api(
+    `/api/writers-studio/editorial/thread?threadId=${encodeURIComponent(G.threadId)}`)).json() as any;
+  eq('G7 the read surface says so BEFORE she chooses', gView.legacyLocus, true);
+  eq('G8 ⭐ and the exchange is still readable', typeof gView.locusText === 'string'
+    && gView.locusText.length > 0, true);
+  eq('G9 ⭐ and still comparable — its versions are all there', gView.versions.length, 4);
+  eq('G10 ⛔ the chain itself was not touched',
+    String((await one('SELECT expected_text FROM proposal_chains WHERE id=$1', [G.chainId])).expected_text),
+    `Chapter Ten\n\n${PASSAGE}`);
+
+  /* ══ H · A HISTORICAL UNHEADED CHAIN — ⭐ STILL ADOPTABLE ═══════════════
+     ⛔ The guard must not withhold adoption from relationships that were never
+     malformed. On an unheaded section the pre-repair producer wrote exactly what
+     the repaired one writes, so there is no distinction to draw. */
+  console.log('\n── H · HISTORICAL UNHEADED CHAIN ─────────────────────────────────');
+  const H = await makeLegacyFixture('H · legacy unheaded', null);
+  const rh = await adopt(H.threadId, H.v2);
+  eq('H1 ⭐ a pre-repair unheaded relationship is STILL adoptable', rh.body.kind, 'applied');
+  eq('H2 the manuscript carries the chosen version', await sectionText(H.DS), V2_TEXT);
+  const hView = await (await api(
+    `/api/writers-studio/editorial/thread?threadId=${encodeURIComponent(H.threadId)}`)).json() as any;
+  eq('H3 ⛔ and the read surface does not call it legacy', hView.legacyLocus, false);
 
   console.log(`\n  ${pass} passed · ${fail} failed`);
   killNext(); await pg.end();
