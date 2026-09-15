@@ -82,7 +82,7 @@ describe('CONTAINMENT — the page may never repaint the room', () => {
   });
 
   it("the member's own words take the page's ink unconditionally", () => {
-    const canvas = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8').replace(
+    const canvas = readFileSync(join(__dirname, '..', 'canvas', 'CanvasClient.tsx'), 'utf8').replace(
       /\/\*[\s\S]*?\*\//g,
       '',
     );
@@ -96,7 +96,7 @@ describe('CONTAINMENT — the page may never repaint the room', () => {
 
   it('applied to the writing field element and nowhere else', () => {
     const canvas = readFileSync(
-      join(__dirname, '..', 'canvas', 'page.tsx'),
+      join(__dirname, '..', 'canvas', 'CanvasClient.tsx'),
       'utf8',
     ).replace(/\/\*[\s\S]*?\*\//g, '');
     /* Spread into the style of the element carrying data-panel-role, not onto
@@ -308,7 +308,7 @@ describe('REACHABILITY — component existence is not capability existence', () 
   it('the LIVE writing paths carry the material', () => {
     /* Not by wiring each one: the material is set on the writing-field element
        that contains them, so a surface nobody has audited yet inherits it. */
-    const page = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8');
+    const page = readFileSync(join(__dirname, '..', 'canvas', 'CanvasClient.tsx'), 'utf8');
     expect(page).toMatch(/data-panel-role="writing-field"[\s\S]{0,600}\.\.\.canvasSurfaceVars/);
     expect(page).toContain('SectionWritingSurface');
     expect(page).toContain('FieldBody');

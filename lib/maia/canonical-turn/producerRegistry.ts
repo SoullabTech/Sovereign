@@ -53,6 +53,7 @@ const PARTITION01 = { registeredAt: '2026-09-04', registeredBy: 'MEMORY-PRODUCER
 const WSROOM = { registeredAt: '2026-09-09', registeredBy: 'WS-ROOM-01' } as const;
 const WRITERS_ONLY: readonly RoomKind[] = ['writers_studio'];
 const PASS1_DIV = { registeredAt: '2026-09-03', registeredBy: 'JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01' } as const;
+const ER2 = { registeredAt: '2026-09-15', registeredBy: 'WS-EDITORIAL-RUNTIME-01 · ER-R2' } as const;
 /**
  * Rooms a CONSTITUTIONAL producer travels into — i.e. all of them. Adding a room here is a
  * policy statement ("MAIA remains MAIA; her constitutional boundaries travel with her"),
@@ -419,6 +420,57 @@ export const PRODUCER_REGISTRY = {
     reason: 'the OBSERVATION being pursued remains MAIA/system-originated. Partitioned from '
       + 'member.writer_pursuit so a member act can never launder system authorship.',
   },
+
+  /* ══════════════════════════════════════════════════════════════════════
+     WRITER'S STUDIO · EDITORIAL DISCOURSE  (ER-R2, 2026-09-15)
+     ⭐ The four ids the editorial discourse contract DECLARED and deliberately
+     left unregistered. Registration is its own act, and this is it.
+     ⛔ `writers_studio` ONLY. ⛔ Nothing existing was altered to make them fit.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /** The chain's member-authored original wording, and the chain's identity. */
+  'retrieved.writer_editorial_locus': {
+    authoredBy: 'member', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'lib/manuscript/proposalChain readProposalWork → chain.expectedText',
+    consentBasis: 'the member opened this proposal chain against their own Work',
+    requires: { identity: 'verified', notSanctuary: false }, rooms: WRITERS_ONLY,
+    mandatory: false, scope: 'route',
+    ...ER2, reason: 'the writer\u2019s own wording at the locus; retrieved, never restated',
+  },
+
+  /** Prior MEMBER discourse turns, Directions and ProposalVersions. */
+  'member.writer_editorial_history': {
+    authoredBy: 'member', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'lib/manuscript/editorialDiscourse editorialCandidates (ask_turns · Directions · ProposalVersions, authored by the member)',
+    consentBasis: 'the member authored every record in it, in this thread, about their own Work',
+    requires: { identity: 'verified', notSanctuary: false }, rooms: WRITERS_ONLY,
+    mandatory: false, scope: 'route',
+    ...ER2, reason: 'PARTITIONED from the system half so a member act can never launder system authorship',
+  },
+
+  /** Insights, prior MAIA discourse turns, MAIA Directions and ProposalVersions. */
+  'system.writer_editorial_history': {
+    authoredBy: 'system', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'lib/manuscript/editorialDiscourse editorialCandidates (Insights · ask_turns · Directions · ProposalVersions, authored by MAIA)',
+    consentBasis: null,
+    requires: { identity: 'verified', notSanctuary: false }, rooms: WRITERS_ONLY,
+    mandatory: false, scope: 'route',
+    ...ER2, reason: 'the other half of the same partition; MAIA\u2019s own prior acts, never folded into the member\u2019s',
+  },
+
+  /**
+   * ⭐⭐ THE DECLARED KIND OF THE CURRENT ACT, AND ONLY THAT.
+   * ⛔ Never a second copy of the member's words — those are `encounter.input`.
+   */
+  'member.writer_editorial_act': {
+    authoredBy: 'member', participationClass: 'declared', authority: 'situate',
+    provenance: 'lib/manuscript/editorialRuntime persistMemberEditorialAct → the member-DECLARED act kind',
+    consentBasis: 'the member declared this act kind at the time of the turn',
+    requires: { identity: 'verified', notSanctuary: false }, rooms: WRITERS_ONLY,
+    mandatory: false, scope: 'route',
+    ...ER2, reason: 'declared, never classified: the kind the writer chose, carrying no second copy of their words',
+  },
+
 } as const satisfies Record<string, ProducerSpec>;
 
 export type ProducerId = keyof typeof PRODUCER_REGISTRY;

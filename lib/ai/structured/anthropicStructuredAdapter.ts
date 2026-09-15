@@ -18,6 +18,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { deriveModelAgreement } from './types';
 import type { ProviderName } from '../types';
 import type {
   StructuredBlock, StructuredProvider, StructuredRequest, StructuredResult,
@@ -106,9 +107,24 @@ export function anthropicStructuredProvider(
         },
         provenance: {
           provider,
-          /* THE MODEL ACTUALLY SENT. Reported from the request that went up the
-             wire, so provenance can never drift from what was asked for. */
+          /* THE MODEL REQUESTED AND SENT. Taken from the request that went up the
+             wire, so this fact can never drift from what was asked for — and it
+             is deliberately NOT the answer to "what actually replied". */
           model: req.model,
+          /* WHAT THE PROVIDER SAYS ANSWERED — read from the RESPONSE, from the
+             same message object already read for content, stop_reason and usage.
+             No second request, no retry.
+
+             ⛔ Never `req.model`. Populating this from the request would recreate
+             the original defect under a second field name, and the check built on
+             it would again reduce to `requested === requested`. */
+          reportedModel: typeof message.model === 'string' && message.model.length > 0
+            ? message.model
+            : null,
+          modelAgreement: deriveModelAgreement(
+            req.model,
+            typeof message.model === 'string' && message.model.length > 0 ? message.model : null,
+          ),
           latencyMs: Date.now() - t0,
         },
       };

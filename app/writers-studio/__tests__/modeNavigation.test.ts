@@ -87,7 +87,7 @@ describe('the bar navigates exactly where a room exists', () => {
     const shell = src('studio', 'WriterStudioShell.tsx');
     expect(shell).toContain('manuscriptId={manuscriptId}');
     expect(shell).toContain('current={currentMode}');
-    for (const mode of [['canvas', 'page.tsx'], ['develop', 'DevelopRoom.tsx']] as const) {
+    for (const mode of [['canvas', 'CanvasClient.tsx'], ['develop', 'DevelopRoom.tsx']] as const) {
       const body = src(...mode);
       expect(body).toContain('WriterStudioShell');
       expect(body).toMatch(/manuscriptId=\{/);
@@ -97,7 +97,7 @@ describe('the bar navigates exactly where a room exists', () => {
   it('neither mode composes the Studio chrome for itself', () => {
     /* Two headers that merely resemble each other is the thing this refactor
        exists to prevent, so no mode may grow its own. */
-    for (const mode of [['canvas', 'page.tsx'], ['develop', 'DevelopRoom.tsx']] as const) {
+    for (const mode of [['canvas', 'CanvasClient.tsx'], ['develop', 'DevelopRoom.tsx']] as const) {
       expect(src(...mode)).not.toContain('Soullab · Writer’s Studio');
     }
     expect(src('studio', 'WriterStudioShell.tsx')).toContain('Soullab · Writer’s Studio');

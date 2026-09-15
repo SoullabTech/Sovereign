@@ -13,8 +13,11 @@
  */
 
 import {
+  CANVAS_EDITORIAL_THREAD_PARAM,
   CANVAS_MANUSCRIPT_PARAM,
   canvasForManuscript,
+  canvasWithEditorialThread,
+  editorialThreadIdFrom,
   identityHonoured,
   requestedManuscriptId,
   selectManuscript,
@@ -87,5 +90,54 @@ describe('Canvas identity — the round trip Home relies on', () => {
 
   it('pins the parameter name — the Canvas reads this exact string', () => {
     expect(CANVAS_MANUSCRIPT_PARAM).toBe('m');
+  });
+});
+
+/**
+ * WS-EDITORIAL-UI-01A — the editorial thread ADDRESS.
+ *
+ * Same discipline as above and for the same reason: never assert that a URL
+ * contains something. Write the address with the writer, read it back with the
+ * reader, and assert on what comes out.
+ */
+describe('the editorial thread address survives the round trip', () => {
+  const CANVAS = '/writers-studio/canvas';
+  const T = 'b3f1c0de-0000-4000-8000-000000000001';
+  const readBack = (href: string) =>
+    editorialThreadIdFrom(new URLSearchParams(href.slice(href.indexOf('?'))));
+
+  it('names the exact thread it was given', () => {
+    expect(readBack(canvasWithEditorialThread(CANVAS, '', T))).toBe(T);
+  });
+
+  it('PRESERVES the manuscript identity beside it', () => {
+    /* Dropping `m` would strand the room on reload while appearing to fix the
+       conversation — a repair that breaks the thing it is standing next to. */
+    const withWork = canvasForManuscript(CANVAS, 'ms-alchemy');
+    const href = canvasWithEditorialThread(
+      CANVAS,
+      withWork.slice(withWork.indexOf('?')),
+      T,
+    );
+    expect(readBack(href)).toBe(T);
+    expect(requestedManuscriptId(href.slice(href.indexOf('?')))).toBe('ms-alchemy');
+  });
+
+  it('replaces rather than accumulates when a second conversation is opened', () => {
+    const first = canvasWithEditorialThread(CANVAS, '', T);
+    const second = canvasWithEditorialThread(CANVAS, first.slice(first.indexOf('?')), 'other');
+    expect(readBack(second)).toBe('other');
+    expect((second.match(/editorialThread=/g) ?? []).length).toBe(1);
+  });
+
+  it('reads nothing out of an address that names nothing', () => {
+    /* ⛔ NO FALLBACK. `selectManuscript` may degrade to the most recent; this
+       may not, because the schema admits many threads per chain. */
+    expect(editorialThreadIdFrom(new URLSearchParams(''))).toBeNull();
+    expect(editorialThreadIdFrom(new URLSearchParams('?m=ms-alchemy'))).toBeNull();
+  });
+
+  it('pins the parameter name — the room reads this exact string', () => {
+    expect(CANVAS_EDITORIAL_THREAD_PARAM).toBe('editorialThread');
   });
 });
