@@ -86,3 +86,19 @@ rights question) · `MAIA-WISDOM-RUNTIME-01`.
 
 ⛔ **ACT 3 — contribution authority model — unopened.** It is the next act in this lane, and
 it opens only by founder act.
+
+## Update — 2026-09-15 — PHASE 0 CLOSED (founder act)
+
+**`MAIA-WISDOM-WITNESS-01` census instrument FINALLY ACCEPTED at
+`28af4ef457c67c280a83c2149e92ef04302290e7`.** Eight amendments (1 · 2 · 2A–2F) accepted; the
+evidentiary grammar — **visibility · readability · observation · applicability · identity ·
+claim scope** — now has six separate semantics that may not be collapsed into one another.
+Record: `MAIA-WISDOM-WITNESS-01_PHASE0_CLOSURE_2026-09-15.md`.
+
+⛔ **Part A Run #2 remains on HOLD.** The block is host-side, not instrumental: the
+authoritative tree is `compressed,dataless` (432K on disk, errno 60). The gate is
+`head -c 100 "$ROOT/00-Context-Map.md"` returning `READ OK` — ⛔ never the iCloud UI.
+Part B is complete and is not rerun.
+
+⛔ **No further census-instrument design is earned.** The next problem is **custody**, not
+measurement.
