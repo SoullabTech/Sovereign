@@ -1819,3 +1819,23 @@ bash /private/tmp/s2w5-blockD.sh 2>&1 | tee /private/tmp/s2w5-blockD.out; echo "
 **Return:** one `feature/*` branch: `driver-ledger/s2-restore-witness-05-<STAMP>/` (nine restoration files + `SHA256SUMS` + `parser.txt` + `JOINT.txt`) and the §16.7 return with the `05` substitutions (`S2-WITNESS-05-<stamp>/` ledger dir when Block C ran, `S2-WITNESS-05-preflight-<stamp>/`, the `s2w5-block*.out` that exist, diffs + hashes, the Stage-0 pre-existence line, `BRANCH · HEAD · STAMP · BATCH_PIPELINE_RC`). On a pre-restoration STOP the return is the §18.14 shape (`STOP.txt` + `SHA256SUMS.stop`, no restoration directory). Cherry-picked here; read against §18.5.3 / §16.4 → **§18.16**. PASS ≠ S2 population · ≠ S3 · ≠ KERNEL-00.
 
 **Standing after §18.15:** `S2-RESTORE/WITNESS-04` ACCEPTED · STOP · spent · device-availability act NOT OPENED · `S2-RESTORE/WITNESS-05` AUTHORIZED · pinned · NOT YET EXECUTED (founder hand inside it) · 69 exact · `b198e2e37` unchanged · WITNESS-02/03/04 residue preserved · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+#### 18.15.3 Mid-act relay (founder, 2026-09-15) — `S2-RESTORE/WITNESS-05` at the hand boundary: Stages 0–3 PASS · RESTORE-03 before-read COMPLETE · hand act PENDING
+
+Relayed from the executing Mac lane, recorded as custody only (this session has no hand and no Mac; nothing here acts on the Mac lane):
+
+```text
+Stage 0          PASS
+Block A          PASS
+Block B          PASS
+pane check       PASS · rc=1
+competing proc   PASS · rc=1
+RESTORE-03
+before-read      COMPLETE
+
+before volume    38
+muted            false
+OUT              /private/tmp/k00-s2-volume-restore-03-20260915T154626Z
+```
+
+Reading: Block B passed this time (the WITNESS-04 device seam refusal did not recur; no inference about why). The before-read of 38 equals the WITNESS-03 pre-C read of 15:05:51Z — recorded as an observation, not as continuity (no read in between). The next act is the one §18.7.2 keyboard sequence by the founder's hand, then the joint read; PASS at the joint → Block C is the very next shell act on the Mac lane. This note is written before the hand act and does not sit between the joint read and Block C; it authorizes nothing and changes nothing. Outcome → §18.16 on return of the evidence.
