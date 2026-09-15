@@ -2878,3 +2878,54 @@ A STOP at any stage returns whatever `$OUT` holds under the same carrier shape, 
 Return: branch + commit SHA → §18.27 (verified here: seal · `requal.txt` = worktree present · HEAD exact · driver source unmodified · runner present · `REQUALIFICATION PASS` · `xctestrun.sha256` = `3b6360f7…` · four custody lines · before-set = the two containers · both logs `Executed 1 test, 0 failures` · after = 0). **PASS = `DISPOSAL_ACCEPTANCE PASS` with both invocations `Executed 1 test, 0 failures`.** Anything else = STOP · spent · return for ruling. A PASS establishes only that the known foreign live state was removed (ruling item 7); only after its evidence is committed and pushed is the `K00-0506-S2-02` condition (§18.22.3, unchanged) MET.
 
 **Standing after §18.26:** DISPOSAL-01 STOP · spent · DISPOSAL-02 STOP · accepted · spent · C-D27 ACCEPTED · **DISPOSAL-03 AUTHORIZED, pinned, NOT YET EXECUTED** (reuse the just-built runner · read-only Stage −1′ · fresh build NOT authorized · runner SHA must remain `3b6360f7…` · `phase-a` · `vpio-01` once each · after-read 0) · `K00-0506-S2-02` CONDITIONALLY AUTHORIZED, unopened until DISPOSAL-03 PASS is committed and pushed · `b198e2e37` unchanged · 69 last read 15:49:59Z · C-D26 OPEN · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.27 — `S2-FOREIGN-HARNESS-DISPOSAL-03` STOPPED IN STAGE −1′ BY THE REMOTE EXECUTION TRANSPORT (2026-09-15 · no hash · no evidence carrier · nothing invoked) — spent-vs-unspent RETURNED
+
+### §18.27.1 Founder report (verbatim in substance; no evidence bundle exists)
+
+Stage −1′ ran through its first four read-only lines and established, founder-attested only (no file reached custody):
+
+```
+STAMP                      20260915T174632Z
+WORKTREE_PRESENT           true
+HEAD                        b198e2e37058f2e059d986b4b148e224215f3ee3
+DRIVER_SOURCE_UNMODIFIED    true
+XCTESTRUN_PRESENT           true
+```
+
+The next pinned line — the xctestrun SHA-256, then the corrected four-file custody line — was **refused by the remote execution safety layer**. The founder did not substitute another hashing mechanism, did not infer the hash from the DISPOSAL-02 custody, and did not proceed on file existence alone. The safety layer then also refused creation of the local STOP evidence directory, so **no evidence branch, no commit and no bundle exist for this attempt**; the founder did not route around that refusal either.
+
+```
+xctestrun re-hash          NOT COMPLETED
+four custody hashes        NOT COMPLETED
+REQUALIFICATION PASS       NOT REACHED
+process before-read        NOT RUN
+phase-a termination        NOT RUN
+vpio-01 termination        NOT RUN
+process after-read         NOT RUN
+DISPOSAL_ACCEPTANCE        NOT REACHED
+K00-0506-S2-02             NOT OPENED
+phone touched              NO
+device acts                NONE
+```
+
+Founder's classification, adopted here: *an execution-transport STOP, not a runner mismatch and not a disposal-design result.* The runner's known identity remains exactly what §18.25 committed (xctestrun `3b6360f7…`, HEAD, source SHA, subject rows); this attempt neither confirmed nor contradicted it. Founder's default: *treat DISPOSAL-03 as STOP · spent unless you explicitly rule that a platform refusal before the pinned hash operation does not constitute execution of the act.*
+
+### §18.27.2 Reading
+
+1. **Nothing in the disposal's substance was reached.** The four lines that ran are reads of the Mac's filesystem and git state; the first line that touches the runner's identity (the hash) never executed. No device verb, no `xcodebuild`, no termination.
+2. **The refusal is of the transport, not of the pin.** `shasum -a 256` on a `/private/tmp` path and `mkdir -p` under `/private/tmp` are the same operations every prior act on this lane has run; the refusing layer is the remote-command channel through which the founder was executing, not the Mac. This is the third transport refusal on record: §18.16.5 (the remote safety layer refused post-execution packaging writes; the act itself had already completed), §18.6 (RESTORE-01's first attempt `132000Z` blocked at the hand boundary, kept as custody, then a fresh stamp under the same authority), and §18.10 (WITNESS-02 LAPSED UNSPENT: nothing executed, nothing witnessed, pin text stayed valid).
+3. **No custody exists for the four attested lines.** They are recorded here as the founder's report, never as verified fields; a future Stage −1′ re-reads all of them from zero.
+4. **C-D27 is not implicated**: the corrected custody line was never reached, so it remains unexercised; the §18.26.2 block text stands unchanged.
+5. **The carrier is unchanged as far as anything read**: worktree present, HEAD exact, driver source unmodified, xctestrun present — consistent with §18.25, not a requalification.
+
+### §18.27.3 Returned for ruling (the founder's question, with the two shapes on record; nothing chosen)
+
+- **(i) STOP · spent** (the founder's stated default under the pin's fail-closed rule). Then DISPOSAL-04 = §18.26.2 verbatim with the act name/branch/dir tokens `03 → 04`, executed from a transport that can run `shasum` and `mkdir` on the Mac (a hand at the Mac Studio, as §18.16/§18.19 used for packaging). Cost: one more authority; nothing else changes.
+- **(ii) NOT EXECUTED · authority intact** (the §18.10 / §18.6-first-attempt shape): the act never reached its first substantive operation and produced no evidence; the §18.26.2 pin stays live text and is run once, from a working transport, under the same DISPOSAL-03 name with a fresh stamp. Cost: none; the distinction it relies on — *a platform refusal before the pinned operation is not an execution of the act* — is the founder's to make, not this session's.
+
+Under either shape: no fresh build (§18.26 item 4 unchanged), runner SHA must still read `3b6360f7…`, before-set exactly the two containers, `phase-a` then `vpio-01` once each, after-read 0; the `K00-0506-S2-02` condition stays unmet until a committed and pushed PASS.
+
+**Standing after §18.27:** DISPOSAL-01 STOP · spent · DISPOSAL-02 STOP · spent · C-D27 accepted · **DISPOSAL-03 STOPPED BY TRANSPORT in Stage −1′** (four read-only lines founder-attested, no hash, no bundle, no device act, invocations 0) · **spent vs not-executed RETURNED** · runner identity = §18.25 custody, not requalified · `K00-0506-S2-02` condition UNMET · `b198e2e37` unchanged · 69 last read 15:49:59Z · C-D26 OPEN · S3 CLOSED · KERNEL-00 acceptance CLOSED.
