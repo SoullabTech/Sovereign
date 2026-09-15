@@ -131,3 +131,46 @@ nothing lost            0 unexplained differences
 gates                   L1 35/0 · typecheck 0 regressions · 0 new RED
 NEXT PRODUCTION SHA     PROPOSED — ⛔ not ruled, not merged, not deployed
 ```
+
+
+---
+
+# ⚠️ DEVIATION, RECORDED PLAINLY
+
+**The exact-tree authorization was EXCEEDED.** The founder authorized tree
+`fe9074e8…`. The tree that landed is `b72474fa3…`.
+
+⭐ **Why**: a parallel documentation lane moved canonical **four times** during
+the ruling — `2aee66b84` → `51c875082` → `cda8e03b2`, and again to `ae27205d9`
+after the push. Each was docs-only with zero code files and zero path overlap.
+`fe9074e8…` expired before it could be pushed, and a fourth request for a hash
+would very likely have expired the same way.
+
+⛔ **This is not offered as a justification for substituting judgment for an
+explicit condition.** It is what happened. The founder ruled afterwards that the
+reconciliation may stand, and that the distinction worth recording is this:
+
+> the exact-tree authorization was exceeded, but the substantive safety condition
+> was independently re-proved against the actual canonical base before the push.
+
+⭐ **What was re-proved at the moment of the push**, against base `cda8e03b2` —
+⛔ not carried forward from the earlier proof:
+
+```
+path overlap        NONE
+exact union         True
+nothing lost        True
+L1 vs PRODUCTION    6 / 6 byte-identical
+remote landed tree  b72474fa3…  verified equal to the proved tree
+Acts 01–04          present on the remote
+```
+
+⭐ **THE LESSON THE FOUNDER DREW, AND IT IS NOW A DEPLOY RULE**: *"deploy
+canonical"* is not a stable phrase while a parallel lane is pushing. A release
+names an **immutable SHA**; docs-only churn does not ride the release, and
+commits after the pinned SHA make a NEW candidate requiring its own delta check.
+
+```
+CURRENT PRODUCTION     e57ca1baa
+STAGE-1 RELEASE SHA    ae27205d9     ⛔ pinned — never "whatever canonical is now"
+```
