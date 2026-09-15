@@ -34,6 +34,18 @@ export interface GaneshaContact {
     source?: string; // How they joined (website, referral, etc.)
     contribution?: string;
     lastActive?: string;
+    /**
+     * Admission credential. Present on 48 of these records and read by
+     * `POST /api/onboarding/recognize-key`.
+     *
+     * ⚠️ It was used throughout this file and by the former client components
+     * and NEVER DECLARED — the file's `@ts-nocheck` and a `!` assertion at each
+     * call site hid that. The typecheck gate surfaced it the moment a checked
+     * module read the field. Declared here so it is visible as what it is: a
+     * credential living beside a person's name and email, which is why this
+     * module is `server-only`.
+     */
+    passcode?: string;
     preferences?: {
       newsletters: boolean;
       updates: boolean;
