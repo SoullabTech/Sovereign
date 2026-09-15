@@ -1906,3 +1906,164 @@ Additional verification here: `k00-ledger.py --subject vpio-02` on the journal r
 The evidence cherry-pick `041b892c0` landed the 549th tracked journal and the 16th ledgered directory; the corpus-partition assertion pins the set sizes exactly (`vpio-02 50 · vpio-01 30 · engine 468`, total 548, 15 directories) and went RED on the cherry-pick alone (records untouched). This is the C-D19/C-D21/C-D23 species under the structural rule: the founder's ratified partition keeps set sizes as pins, so a lawful new population moves them by exactly its size. Maintenance applied in the gate only: total 548→549 · vpio-02 50→51 · gen-1 listen 49→50 · cross-subject mismatch array 50→51 · ledgered directories 15→16 · the title's set sizes; membership rule (H ∧ C), disagreement fail-closed, the produced-ledger row-for-row reproduction (now over 16 directories, the new one reproducing its single row) and every other assertion unchanged. Gate 76/76 read alone before the instrument commit; the gate commit precedes this records commit (the C-D21 red-push shape did not recur — the red was read before any push). Whether a structural rule that must move on every lawful population is the right shape is a founder question, not decided here.
 
 **Standing after §18.16:** `S2-RESTORE/WITNESS-05` EXECUTED · joint PASS (founder-attested, custody owed) · witness half PASS (§16.4, verified here) · authority SPENT · orchestration WITNESSED ONCE on the real Mac · 69 last read 15:49:23Z (joint) and 15:49:59Z (batch preflight) · `b198e2e37` unchanged · WITNESS-02/03/04 residue preserved · S2 population NOT AUTHORIZED · S3 NOT OPEN · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.17 — FOUNDER RULING on §18.16 (2026-09-15): `S2-RESTORE/WITNESS-05` ACCEPTED · restoration standing FIXED (repository-verifiable + founder-attested, upgradable only by custody transfer) · **`S2-WITNESS-05-CUSTODY-COMPLETE-01` AUTHORIZED, custody only** · C-D24 ACCEPTED · S2 population NOT YET ISSUED
+
+### 18.17.1 The ruling, as captured
+
+Transport note (custody-side, recorded not absorbed): this session's context was compacted between the founder's message and this pin; the ruling below is carried by the session's own compaction record, which preserved the founder's sentences quoted here verbatim and the remainder as a faithful capture. Nothing in it was reconstructed from the repository. Where a sentence is quoted it is the founder's; where it is not, it is the captured substance.
+
+1. **`S2-RESTORE/WITNESS-05` ACCEPTED as read** in §18.16.3–18.16.4 — "first complete passage of the S2 orchestration on the real Mac". The missing repository copy of the restoration captures is **custody incompleteness, not a defect**; no downgrade of the PASS.
+2. **Restoration standing** = two carriers, named separately and never merged: (a) **repository-verifiable** — the batch's own stimulus preflight at 15:49:59Z read `69 · unmuted · Mac Studio Speakers · builtin` (`S2-WITNESS-05-20260915T154952Z/stimulus-preflight/`); (b) **founder-attested, local** — the RESTORE-03 captures at `/private/tmp/k00-s2-volume-restore-03-20260915T154626Z/` (before 38 → after 69 · parser `RESTORE_ACCEPTANCE PASS` · pane rc=1 · `SHA256SUMS` 9/9 verified at the Mac). Standing (b) is **upgradable only by custody transfer** and is **never described as rerun**.
+3. **`S2-WITNESS-05-CUSTODY-COMPLETE-01` AUTHORIZED — custody only.** Copy byte-for-byte the already-existing `before-utc.txt · audio-before.json · bluetooth-before.json · volume-before.txt · sound-pane-before.txt · after-utc.txt · audio-after.json · volume-after.txt · sound-pane-after.txt · SHA256SUMS · parser.txt` from `/private/tmp/k00-s2-volume-restore-03-20260915T154626Z/` into `docs/programme/VOICE-2026/driver-ledger/s2-restore-witness-05-20260915T154626Z/`; originals untouched; the nine `SHA256SUMS` files must verify **before and after** the copy, mismatch = STOP. `parser.txt` **may** be compared with a fresh execution of the pinned §18.5.2 parser on the copied `audio-after.json` + `volume-after.txt` — a read/derivation check, **not a rerun** of the act. A new `JOINT.txt` **may** be created but must self-identify as an index over existing evidence (e.g. `JOINT PASS` · `DERIVED_DURING_CUSTODY_COMPLETION true` · `SOURCE after-utc.txt · volume-after.txt · sound-pane-after.txt · parser.txt` · `ORIGINAL_JOINT_FILE absent — packaging write refused after execution`). `/private/tmp/s2w5-blockA.out`, `s2w5-blockB.out`, `s2w5-blockC.out` may be copied byte-for-byte. **`s2w5-blockD.out` must NOT be manufactured**; custody note, founder's words: *"Block D executed once. The tee carrier was refused by the remote safety layer. No original s2w5-blockD.out exists. Block D was not rerun to manufacture one. Its produced repository artifacts and SHA256SUMS.witness are the evidence of that act."* Stage-0 material that was displayed but never written = attested/derived custody material, **not original files**.
+4. **NOT authorized** under this act: volume change · keyboard volume act · device selection · playback · `run_test` · batch invocation · new S2 sample · new restoration read · new witness read · regeneration of missing experimental evidence · modification of `b198e2e37`.
+5. **C-D24 ACCEPTED** as gate maintenance (§18.16.6). The structural question — pins that test historical cardinality versus corpus integrity — deserves a later design ruling; **not opened**.
+6. **S2 population NOT YET ISSUED.** The experimental prerequisite is met. After custody completion returns and the 9/9 restoration seal recomputes from the repository carrier, the programme returns for an **explicit** S2-population issuance ruling; authority does not arise automatically.
+7. Governing distinction, founder's words: *"The experiment is complete. The evidence transfer is not. Custody may complete the carrier; custody may not recreate the act."*
+
+Standing fixed by the ruling: WITNESS-05 PASS · accepted · spent · RESTORE-03 PASS, local, intact · restoration repository custody INCOMPLETE · C-D24 accepted · `b198e2e37` unchanged · CUSTODY-COMPLETE-01 authorized, custody only · S2 population NOT YET AUTHORIZED · S3 CLOSED · KERNEL-00 acceptance CLOSED · WITNESS-02/03/04 residue preserved.
+
+### 18.17.2 Execution pin — `S2-WITNESS-05-CUSTODY-COMPLETE-01` (Mac act; founder or the Mac-side lane; this session has no Mac)
+
+Shape: every line is a read, a byte-for-byte copy, a hash, a derivation labelled as such, or a git act on a fresh `feature/*` branch. No line runs `afplay`, `osascript`, `xcodebuild`, `devicectl`, the batch, the driver or any volume/device verb. The source directory is read only; nothing under `/private/tmp` is written, moved or removed. Any STOP line ends the act with its evidence in place — no correction, no retry under this authority.
+
+Stage 0 — fresh carrier worktree from the lane tip (the branch that carries this pin); pre-existence read; source inventory read:
+
+```bash
+set -u
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+BR="feature/k00-s2-witness-05-custody-complete-$STAMP"
+WT="/private/tmp/k00-s2w5-custody-$STAMP"
+SRC="/private/tmp/k00-s2-volume-restore-03-20260915T154626Z"
+REL="docs/programme/VOICE-2026/driver-ledger/s2-restore-witness-05-20260915T154626Z"
+cd /Users/soullab/MAIA-SOVEREIGN
+git fetch origin claude/voice-2026-census-01
+test ! -e "$WT" && echo "WT_PREEXISTS false" || { echo "STOP: worktree path pre-exists $WT"; exit 2; }
+git worktree add -b "$BR" "$WT" origin/claude/voice-2026-census-01
+cd "$WT"
+git rev-parse HEAD
+test -d "$SRC" && echo "SRC_PRESENT true" || { echo "STOP: source dir absent"; exit 2; }
+ls -la "$SRC"
+for f in before-utc.txt audio-before.json bluetooth-before.json volume-before.txt sound-pane-before.txt after-utc.txt audio-after.json volume-after.txt sound-pane-after.txt SHA256SUMS parser.txt; do test -f "$SRC/$f" && echo "SRC_FILE $f present" || { echo "STOP: $f absent in source"; exit 2; }; done
+test ! -e "$WT/$REL" && echo "DST_PREEXISTS false" || { echo "STOP: target dir pre-exists in the carrier"; exit 2; }
+```
+
+Stage 1 — verify the nine-file seal in the SOURCE before any copy (read only; STOP on any line that is not `OK`):
+
+```bash
+( cd "$SRC" && shasum -a 256 -c SHA256SUMS ) | tee "/private/tmp/k00-s2w5-custody-$STAMP.before-copy.txt"
+grep -c ': OK$' "/private/tmp/k00-s2w5-custody-$STAMP.before-copy.txt"
+grep -q 'FAILED' "/private/tmp/k00-s2w5-custody-$STAMP.before-copy.txt" && { echo "STOP: source seal mismatch before copy"; exit 3; }
+test "$(grep -c ': OK$' "/private/tmp/k00-s2w5-custody-$STAMP.before-copy.txt")" = "9" && echo "BEFORE_COPY_SEAL 9/9 OK" || { echo "STOP: before-copy count is not 9"; exit 3; }
+```
+
+Stage 2 — byte-for-byte copy of the eleven files into the carrier; verify the seal AFTER the copy and compare every file to its original (STOP on any difference):
+
+```bash
+mkdir -p "$WT/$REL"
+DST="$WT/$REL"
+for f in before-utc.txt audio-before.json bluetooth-before.json volume-before.txt sound-pane-before.txt after-utc.txt audio-after.json volume-after.txt sound-pane-after.txt SHA256SUMS parser.txt; do cp -p "$SRC/$f" "$DST/$f"; done
+( cd "$DST" && shasum -a 256 -c SHA256SUMS ) | tee "$DST/after-copy-seal-check.txt"
+grep -q 'FAILED' "$DST/after-copy-seal-check.txt" && { echo "STOP: seal mismatch after copy"; exit 3; }
+test "$(grep -c ': OK$' "$DST/after-copy-seal-check.txt")" = "9" && echo "AFTER_COPY_SEAL 9/9 OK" || { echo "STOP: after-copy count is not 9"; exit 3; }
+for f in before-utc.txt audio-before.json bluetooth-before.json volume-before.txt sound-pane-before.txt after-utc.txt audio-after.json volume-after.txt sound-pane-after.txt SHA256SUMS parser.txt; do cmp "$SRC/$f" "$DST/$f" && echo "BYTE_IDENTICAL $f"; done
+( cd "$DST" && shasum -a 256 SHA256SUMS parser.txt ) | tee "$DST/unsealed-originals.sha256"
+```
+
+Stage 3 — derivation check: the §18.5.2 parser, code unchanged, executed on the COPIED after-captures; its output is compared with the original `parser.txt`. This is a read of already-captured state, never a new read of the Mac (no `system_profiler`, no `osascript`). A difference is evidence to return, not a line to edit:
+
+```bash
+{
+python3 - "$DST/audio-after.json" "$DST/volume-after.txt" <<'PY'
+import json, re, sys
+
+raw = open(sys.argv[1], encoding="utf-8").read()
+raw = raw[raw.find("{"):raw.rfind("}")+1]
+d = json.loads(raw)
+
+items = []
+for group in d.get("SPAudioDataType", []):
+    items.extend(group.get("_items", []))
+
+defaults = [
+    x for x in items
+    if x.get("coreaudio_default_audio_output_device") == "spaudio_yes"
+]
+
+for x in defaults:
+    print(
+        "DEFAULT_OUTPUT",
+        x.get("_name"),
+        x.get("coreaudio_device_transport"),
+        x.get("coreaudio_device_srate"),
+    )
+
+mac = next((x for x in items if x.get("_name") == "Mac Studio Speakers"), None)
+mac_default = bool(mac and mac.get("coreaudio_default_audio_output_device") == "spaudio_yes")
+print("MAC_STUDIO_DEFAULT_OUTPUT", mac_default)
+
+vol = open(sys.argv[2], encoding="utf-8").read()
+m_vol = re.search(r"output volume:(\d+)", vol)
+m_mute = re.search(r"output muted:(true|false)", vol)
+volume = int(m_vol.group(1)) if m_vol else None
+muted = m_mute.group(1) if m_mute else None
+print("OUTPUT_VOLUME", volume)
+print("OUTPUT_MUTED", muted)
+
+ok = (
+    len(defaults) == 1
+    and mac_default
+    and defaults[0].get("coreaudio_device_transport") == "coreaudio_device_type_builtin"
+    and volume == 69
+    and muted == "false"
+)
+print("RESTORE_ACCEPTANCE", "PASS" if ok else "STOP")
+PY
+} > "$DST/parser.custody-derivation.txt"
+cat "$DST/parser.custody-derivation.txt"
+diff "$DST/parser.txt" "$DST/parser.custody-derivation.txt" > "$DST/parser.derivation-diff.txt"; echo "PARSER_DERIVATION_DIFF_RC=$?" | tee -a "$DST/parser.derivation-diff.txt"
+```
+
+Stage 4 — derived index `JOINT.txt` (self-identifying; an index over existing evidence, never an original), the Block A/B/C outputs copied only if they exist, the Block-D custody note in the founder's words, and a custody-time read of the Stage-0 block files (labelled as a read at custody time, not the Stage-0 original):
+
+```bash
+{
+printf 'JOINT PASS\n'
+printf 'DERIVED_DURING_CUSTODY_COMPLETION true\n'
+printf 'SOURCE after-utc.txt · volume-after.txt · sound-pane-after.txt · parser.txt\n'
+printf 'ORIGINAL_JOINT_FILE absent — packaging write refused after execution\n'
+printf 'ACT S2-RESTORE/WITNESS-05 · RESTORE-03 after-read = pre-Block-C joint · plan §18.13 / §18.15.2\n'
+printf 'DERIVED_AT_UTC %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+printf -- '--- after-utc.txt ---\n'; cat "$DST/after-utc.txt"
+printf -- '--- volume-after.txt ---\n'; cat "$DST/volume-after.txt"
+printf -- '--- sound-pane-after.txt ---\n'; cat "$DST/sound-pane-after.txt"
+printf -- '--- parser.txt (original) ---\n'; cat "$DST/parser.txt"
+} > "$DST/JOINT.txt"
+cat "$DST/JOINT.txt"
+for b in A B C; do if test -f "/private/tmp/s2w5-block$b.out"; then cp -p "/private/tmp/s2w5-block$b.out" "$DST/s2w5-block$b.out" && cmp "/private/tmp/s2w5-block$b.out" "$DST/s2w5-block$b.out" && echo "BLOCK_OUT_COPIED s2w5-block$b.out"; else echo "BLOCK_OUT_ABSENT s2w5-block$b.out" | tee -a "$DST/block-outs.custody-read.txt"; fi; done
+test ! -e /private/tmp/s2w5-blockD.out && echo "BLOCK_D_OUT_ABSENT true (as attested)" | tee -a "$DST/block-outs.custody-read.txt" || { echo "STOP: /private/tmp/s2w5-blockD.out exists, contradicting the attestation — not copied, returned for ruling"; exit 4; }
+cat > "$DST/BLOCK-D-CUSTODY-NOTE.txt" <<'NOTE'
+Block D executed once. The tee carrier was refused by the remote safety layer. No original s2w5-blockD.out exists. Block D was not rerun to manufacture one. Its produced repository artifacts and SHA256SUMS.witness are the evidence of that act.
+NOTE
+{ printf 'STAGE-0 CUSTODY-TIME READ — not the Stage-0 original (that material was displayed, never written)\nREAD_AT_UTC %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"; ls -la /private/tmp/s2w5-block[ABCD].sh 2>&1; shasum -a 256 /private/tmp/s2w5-block[ABCD].sh 2>&1; } > "$DST/stage-0.custody-read.txt"
+cat "$DST/stage-0.custody-read.txt"
+```
+
+Stage 5 — seal the carrier, return file, commit on the feature branch, push (the lane cherry-picks with `-x` and recomputes every hash here):
+
+```bash
+( cd "$DST" && ls -1 | grep -v '^SHA256SUMS.custody$' | xargs shasum -a 256 > SHA256SUMS.custody && cat SHA256SUMS.custody )
+{ printf 'ACT S2-WITNESS-05-CUSTODY-COMPLETE-01\nBRANCH %s\nCARRIER_BASE %s\nSTAMP %s\nSOURCE %s\nBEFORE_COPY_SEAL 9/9 OK\nAFTER_COPY_SEAL 9/9 OK\nPARSER_DERIVATION_DIFF_RC %s\nORIGINALS_TOUCHED none\nDEVICE_ACTS none\nVOLUME_ACTS none\n' "$BR" "$(git rev-parse HEAD)" "$STAMP" "$SRC" "$(tail -1 "$DST/parser.derivation-diff.txt" | sed 's/.*=//')"; } > "$DST/RETURN.txt"
+cat "$DST/RETURN.txt"
+git add "$REL"
+git status --short
+git commit -m "custody(voice-2026): S2-WITNESS-05-CUSTODY-COMPLETE-01 — RESTORE-03 evidence carrier, byte-identical, seal 9/9 before and after copy; derived JOINT.txt self-identified; Block D note, no manufactured output"
+git push -u origin "$BR"
+git log -1 --format=%H
+```
+
+Return: branch name + commit SHA + the `RETURN.txt` and `SHA256SUMS.custody` text → §18.18 (this session cherry-picks with `-x`, runs `shasum`/`sha256sum -c` on both seals, re-executes the §18.5.2 parser on the copied captures, reads `JOINT.txt` as derived, and records; the gate's corpus partition is not touched by this directory — it holds no journal and no `ledger.md`). Nothing about the S2 population is opened by a clean return; §18.17.1 item 6 governs.
+
+**Standing after §18.17:** WITNESS-05 ACCEPTED · spent · CUSTODY-COMPLETE-01 AUTHORIZED, pinned, NOT YET EXECUTED · C-D24 ACCEPTED · 69 last read 15:49:59Z (batch preflight, in custody) · `b198e2e37` unchanged · S2 population NOT YET AUTHORIZED · S3 CLOSED · KERNEL-00 acceptance CLOSED.
