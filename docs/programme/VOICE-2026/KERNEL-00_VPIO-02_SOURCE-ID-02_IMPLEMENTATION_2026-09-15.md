@@ -350,3 +350,32 @@ drwxr-xr-x    2 soullab  wheel     64 Sep 15 17:32 /private/tmp/sid-mac-compile-
 ```
 
 The mechanism's footprint is present: an **empty** `$OUT` directory (`2` links, 64 bytes = `.` and `..` only) stamped `20260915T213209Z`, created 17:32 local — one second after the shell's tee stamp `213208Z`, because the script computes its own `STAMP` after `bash` starts. The duplicate ran `mkdir -p "$OUT"`, reached `test ! -e "$WT"` with the governed worktree (16:43) present, and exited: no `head.txt`, no log, nothing written into the governed `$OUT` (unchanged at 16:44, 8 entries). §10.9's ruling is confirmed by direct evidence; nothing in the ruling changes. Residue on the Mac: the empty `…-out-20260915T213209Z` directory — non-substantive; left in place (nothing on the Mac is deleted in this lane without a ruling). Next pin: `mkdir -p "$OUT"` after the precondition.
+
+### 10.11 FOUNDER RULINGS (2026-09-15): `SID REPAIR-01` **ACCEPTED** at `faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8` · `SID MAC-COMPILE-02` **OPEN** against that SHA exactly → execution pin issued as a standalone file
+
+**Ruling 1 — REPAIR-01 ACCEPTED (verbatim in substance).** The founder reviewed `faf918b5c` directly: file changed `PureLogicTests.swift` only · hunks 1 · 5 insertions / 1 deletion · kernel untouched · harness/driver untouched · siblings untouched · assertions unchanged · test values unchanged; the transformation is semantically faithful — *it gives the type solver intermediate typed expressions while preserving the calculation and assertion surface*; scope within ruling, one proven obstruction only, semantic drift NONE FOUND, no amendment required.
+
+**Ruling 2 — MAC-COMPILE-02 OPEN (verbatim in substance).** A fresh compile act against exactly `faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8`; purpose = *requalification after the accepted REPAIR-01, not continuation of MAC-COMPILE-01*; the pin retains the §10.2 compile path with only two changes — (1) subject SHA, (2) `mkdir -p "$OUT"` moved after `test ! -e "$WT"` so a refused invocation cannot manufacture an empty evidence directory (*evidence hygiene, not a change to the qualification being performed*). Boundary: sibling repair ⛔ HOLD · additional code change ⛔ NONE · reinstall pins EMPTY · install 0 · launch 0 · sample 0 · device mutation 0. **MAC-COMPILE-02 gets its own fate**: if the compiler now exposes `g`, `seq26`, the inner `on` loop, or anything else, that is a new finding and a STOP, not inherited permission to repair it.
+
+**Pin issued.** `docs/programme/VOICE-2026/SID_MAC-COMPILE-02_PIN_2026-09-15.sh` — 50 lines, `554e663eca340b9cad70cf1139718930926a0b931070b4012e6417d53fc9d390`. Derived mechanically from the accepted §10.2 block (extracted from `7ec59882d`, hash `a3a803f4…` reproduced here first) by `sed`/`awk`; the complete `diff` between the two is:
+
+| lines | change | authority |
+|---|---|---|
+| 2 | `SHA=f0c6ae13b…` → `SHA=faf918b5c…` | ruled change 1 |
+| 7→9 | `mkdir -p "$OUT"` moved from before to after `test ! -e "$WT"` | ruled change 2 |
+| 4 · 6 · 40–42 · 50 | act label `sid-mac-compile-01` / `SID-MAC-COMPILE-01` → `…-02` in the worktree path, the `$OUT` path, the manifest filename and the final echo | **labelling only — disclosed as a third class the ruling did not enumerate**: the evidence of act 02 must not be written under act 01's name, and a `-02-` worktree path also cannot collide with the still-present `-01-` worktree; every command, test, path component and identity read is otherwise byte-identical |
+
+If the founder prefers the strict two-change reading, the label substitution is reverted and the pin re-issued before any run; **nothing runs on this pin until the founder runs it.** Steps, PASS conjunction and STOP rules are exactly §10.1/§10.2's: HEAD exact + tree clean → gate 82/82 → `swift build` → `swift test` (`Executed N tests, with 0 failures`; `SourceEstimatorTests … passed` count) → `xcodegen` → unsigned generic-iOS build → signed device build (team `ZVK2X646Z2`, destination id `00008140-00163D9922E0801C`, no install) → identity (bundle `life.soullab.voicekernel.vpio02sid` · display `VoiceKernel VPIO-02-SID` · dylib UUID · dylib SHA · executable SHA · manifest + count) → post-build `git diff --quiet -- ios/VoiceKernel ios/VoiceKernelHarness/project.yml scripts __tests__` → `SHA256SUMS.compile` → `SID-MAC-COMPILE-02 <stamp> subject faf918b5c… out <OUT>`. Any Swift diagnostic = STOP, returned as the exact failure, not repaired.
+
+**Run shape (Mac Studio terminal directly; file transport; no paste of the body):**
+
+```bash
+git -C /Users/soullab/MAIA-SOVEREIGN fetch origin claude/voice-2026-census-01
+git -C /Users/soullab/MAIA-SOVEREIGN show origin/claude/voice-2026-census-01:docs/programme/VOICE-2026/SID_MAC-COMPILE-02_PIN_2026-09-15.sh > /private/tmp/sid-mac-compile-02.sh
+shasum -a 256 /private/tmp/sid-mac-compile-02.sh; wc -l /private/tmp/sid-mac-compile-02.sh
+bash /private/tmp/sid-mac-compile-02.sh 2>&1 | tee /private/tmp/sid-mac-compile-02-transcript-$(date -u +%Y%m%dT%H%M%SZ).log; echo "rc=${PIPESTATUS[0]}"
+```
+
+Custody check before line 4: `554e663e…` and `50`. Do not type anything into the window while it runs. `rc=` may be empty (C-D26). The evidence carrier for `$OUT` follows the §10.6 carrier shape on a `feature/*` branch — issued after the run, whatever its fate.
+
+**Standing after §10.11.** REPAIR-01 ACCEPTED · compile candidate = `faf918b5c` · `SID MAC-COMPILE-02` OPEN, pinned, NOT YET EXECUTED · siblings HOLD · reinstall pins EMPTY · FIRST-INSTALL CLOSED · SID ENTRY WITNESS REQUIRED, not opened · device execution NONE · C-D26 HOLD.

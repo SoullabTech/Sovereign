@@ -836,3 +836,8 @@ Evidence of the STOP is durable (carrier cherry-picked, seal reproduced, single 
 ### §10.61 — duplicate invocation ESTABLISHED as a precondition refusal (founder ruling 2026-09-15; discriminator plan §18.41; implementation record §10.9)
 
 Non-substantive residue only (0-byte tee transcript, refused at `test ! -e "$WT"`, nothing ran). Supersedes §10.58/§10.60 "not established" wording. No change to any standing: MAC-COMPILE-01 SPENT · REPAIR-01 written at `faf918b5c`, review pending · siblings HOLD · MAC-COMPILE-02 NOT OPEN · SID ENTRY WITNESS REQUIRED · reinstall pins EMPTY.
+
+
+### §10.62 — REPAIR-01 ACCEPTED · `SID MAC-COMPILE-02` OPEN and pinned (2026-09-15; discriminator plan §18.42; implementation record §10.11)
+
+Compile requalification of `faf918b5c` on the Mac toolchain; same PASS conjunction and STOP rules as MAC-COMPILE-01; installs, launches, samples nothing; reinstall pins stay empty. SID subject qualification remains CLOSED; SID ENTRY WITNESS REQUIRED, not opened. Not yet executed.
