@@ -1839,3 +1839,70 @@ OUT              /private/tmp/k00-s2-volume-restore-03-20260915T154626Z
 ```
 
 Reading: Block B passed this time (the WITNESS-04 device seam refusal did not recur; no inference about why). The before-read of 38 equals the WITNESS-03 pre-C read of 15:05:51Z — recorded as an observation, not as continuity (no read in between). The next act is the one §18.7.2 keyboard sequence by the founder's hand, then the joint read; PASS at the joint → Block C is the very next shell act on the Mac lane. This note is written before the hand act and does not sit between the joint read and Block C; it authorizes nothing and changes nothing. Outcome → §18.16 on return of the evidence.
+
+---
+
+## §18.16 — `S2-RESTORE/WITNESS-05` EXECUTED → **JOINT PASS → BLOCK C PASS → BLOCK D COMPLETED** · witness half VERIFIED HERE (§16.4 PASS on every committed line) · restoration half FOUNDER-ATTESTED, custody OWED (packaging refused by the remote safety layer) — 2026-09-15
+
+### 18.16.1 Custody
+
+- Evidence branch `feature/k00-s2-restore-witness-05-evidence-20260915T154626Z`, founder commit `36bfde4e653eb6c84b3d872f04056da2b148ad57` → cherry-picked here as `041b892c0` (`-x`, no edit). Branch clean at push (founder-stated).
+- Committed: `driver-ledger/S2-WITNESS-05-20260915T154952Z/` (ledger · output-ledger · transcript · batch.log · xcodegen.log · build-for-testing.log · sample-1-xcodebuild.log · sample-timing.tsv · `stimulus-preflight/` ×5 · `stimulus-sample-1.tsv` · `stimulus-sample-1-afplay.log` · `daemons/` ×4 · `journals/kernel00-K00-fb8793df-1789487467.jsonl` · `SHA256SUMS.witness`) and `driver-ledger/S2-WITNESS-05-preflight-20260915T154525Z/` (`apps.json` · `processes.json`). **`sha256sum -c SHA256SUMS.witness` here: 12/12 OK** (= the founder's independent recount).
+- **NOT committed, founder-disclosed:** the restoration half (`/private/tmp/k00-s2-volume-restore-03-20260915T154626Z/`: nine captures + `SHA256SUMS` + `parser.txt`, seal 9/9 founder-verified), the `s2w5-block[ABD].out` files, the Stage-0 diffs/hashes/pre-existence line and `JOINT.txt`. The remote safety layer refused every post-execution packaging write into the worktree; the founder did not bypass it. Block D ran once under `bash`; the `tee` wrapper was rejected, so `s2w5-blockD.out` never existed; Block D was not rerun to manufacture it. → **custody gap, not a defect in the act**: the raw restoration evidence is intact, unchanged and unrerun on the Mac; it is OWED to the record by a lawful packaging path (§18.16.5).
+- Residue: `s2w2`/`s2w3`/`s2w4` untouched.
+
+### 18.16.2 Restoration half — founder-relayed (§18.5.3 law), NOT YET VERIFIED HERE
+
+```text
+before  2026-09-15T15:46:26Z   volume 38 · unmuted · pane rc=1
+after   2026-09-15T15:49:23Z   volume 69 · unmuted · pane rc=1
+joint read lines (relayed):
+  output volume:69 ... output muted:false
+  rc=1
+  DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin 48000
+  MAC_STUDIO_DEFAULT_OUTPUT True
+  OUTPUT_VOLUME 69
+  OUTPUT_MUTED false
+  RESTORE_ACCEPTANCE PASS
+```
+
+Reading: every §18.5.3 line present in the relay; the one hand act (Down to zero · Up ×11) took 38 → 69 — the second observation of the stepped-control procedure reaching the exact integer (n = 2: RESTORE-02 65 → 69, RESTORE-03 38 → 69; the slider act gave 73). Standing of this half until the nine files + seal + `parser.txt` are received and re-hashed here: **FOUNDER-ATTESTED PASS**, not VERIFIED HERE. Independent corroboration inside the committed witness half: the batch's own stimulus preflight at 15:49:59Z (36 s after the joint read) read `output volume:69 · muted false · Mac Studio Speakers · builtin` (`stimulus-preflight/volume.txt`, `audio-output.json` with exactly one default-output device, `transcript.txt` line 6) — the batch's frozen boundary saw the same state the joint read saw.
+
+### 18.16.3 Witness half — §16.4, read here from the committed files
+
+| §16.4 condition | Evidence | Read |
+|---|---|---|
+| Preflight PASS | `transcript.txt`: `stimulus preflight PASS: fixture 1a505b3d… · afplay 88f3b577… · default output Mac Studio Speakers (coreaudio_device_type_builtin) · volume 69 · muted false`; `stimulus-preflight/`: fixture SHA = pin · afplay SHA = pin · `format=EXACT` (mono · 48 000 · 16-bit · 8 640 000 frames · 180.000 s) · `DEFAULT_OUTPUT_MATCH True` | ✓ |
+| Complete `stimulus-sample-1.tsv` | 82 rows: sample · fixture · fixtureSha256 · afplay · afplaySha256 · afplayVolume 0.50 · afplaySeconds 180 · pid 94754 · startEpoch 1789487400 · preRunState alive · 67 liveness · postRunState alive · stopRequestedEpoch · waitExitStatus 143 · stopEpoch · custody | ✓ complete |
+| All-alive liveness spanning `run_test` | 67 liveness rows, every state `alive`, epochs 1789487402 → 1789487471 (69 s), no gap > 2 s; driver started 15:50:01, `testOutputSample` passed in 28.890 s, liveness continues to the stop | ✓ |
+| `custody VALID` | last row `custody VALID`; transcript: `pid 94754 alive through the governed interval; stopped by the batch, wait rc=143` | ✓ |
+| Stopped before the 180 s failsafe | start 1789487400 → stop 1789487471 = 71 s; `waitExitStatus 143` = the batch's TERM, not the failsafe | ✓ |
+| No afplay before / after | before: Block A `AFPLAY_PROCESSES_BEFORE=0` (founder-relayed; `.out` not packaged) · after: Block D `AFPLAY_PROCESSES_AFTER=0` (founder-relayed; Block D ran once, output not captured) | ✓ relayed, not in custody here |
+| One row + one journal | `ledger.md` one row; `journals/` exactly one file; `sample-timing.tsv` one line (`1 1789487401 1789487471`) | ✓ |
+| rc 0 | `BATCH_PIPELINE_RC=0` (founder-relayed); transcript ends `batch complete`; `output rows read` | ✓ |
+
+Additional verification here: `k00-ledger.py --subject vpio-02` on the journal reproduces the ledger row byte-for-byte (`K00-fb8793df` · 72 records · SHA `156fcca2…` · **gen-1 listen** · cold · `isRunningImmediate` true · first callback 2 ms · listening 397 ms · held 19 s · generations 1); `k00-output-ledger.py` reproduces the four output rows (K00-05-CANCEL PASS-05 · K00-05-COMPLETE PASS-05 · K00-06 UNMEASURED-06 · COUPLING UNMEASURED-06, one full rendering window). Journal: 14-step VPIO-02 trace, one `app_lifecycle` (`didBecomeActive` at seq 1, generation 0), 18 input-health samples, 3 output-render samples, `stream_cancel_measured` + `stream_complete` present. Daemon snapshots identical before/after (`audiomxd` PID 113). Preflight dir: `E3B88028` ×1, harness processes 0. `stimulus-sample-1-afplay.log` is 0 bytes (afplay wrote nothing to its log on a normal run; observed, not read as a fault).
+
+**Per §16: the sample-1 journal is never an S2 row and receives no §7 reading.** Its rows above are evidence of the instrument working, not physiology adjudicated.
+
+### 18.16.4 Adjudication
+
+**`S2-RESTORE/WITNESS-05`:**
+- Restoration half — **FOUNDER-ATTESTED PASS** (§18.5.3), custody OWED; corroborated by the batch's own frozen boundary 36 s later.
+- Ordinal joint — **HONOURED**: the founder relays that Block C was the very next shell act after the accepted joint read, with no read, note or deliberation between; the batch's preflight at +36 s is the first machine confirmation of that ordering.
+- Witness half — **PASS under §16.4** on every line verifiable from the committed evidence; the two "no afplay" reads and rc 0 are founder-relayed and consistent with everything in custody. Authority SPENT.
+- This is the **first complete passage of the S2 orchestration on the real Mac**: the batch's stimulus preflight, the per-sample stimulus custody, the liveness monitor, TERM/wait, the ledger row and the output reader all executed as `b198e2e37` pinned them. What §16 set out to witness has been witnessed once.
+- What this PASS does not establish: no S2 population (sample 1 is never an S2 row) · no §7 reading · no K00-06 movement · S3 not opened · KERNEL-00 not accepted.
+
+### 18.16.5 Returned to the founder (nothing opened here)
+
+1. **Acceptance of the witness PASS** as read in §18.16.3–18.16.4.
+2. **Custody of the restoration half + block outputs.** The nine restoration captures, `SHA256SUMS`, `parser.txt` and (if they exist) the Stage-0 diffs/hashes/pre-existence line are OWED to the record by a lawful packaging path — a founder-side copy into a fresh `feature/*` worktree where the safety layer permits it, or any route the founder rules; nothing is rerun or regenerated; the 9/9 seal must re-hash here. Until received, §18.16.2 stands as founder-attested. This is a custody item, not a STOP.
+3. **Whether the S2 population is issued.** The orchestration is now witnessed; the population authority is a separate founder act (§15/§16 shape: `k00-driver-batch.sh K00-0506-S2 10 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02 --stimulus s2-nearend`, with the §7 reading law). Not proposed here beyond naming it; the volume precondition will be re-read by the batch at its own preflight, and the §18.13 lesson (prepare at the last responsible moment) applies to any population issuance.
+4. Nothing else. S3 NOT OPEN · KERNEL-00 acceptance CLOSED.
+
+### 18.16.6 C-D24 — gate maintenance (instrument commit `dbbc8e8c1`, founder acceptance owed)
+
+The evidence cherry-pick `041b892c0` landed the 549th tracked journal and the 16th ledgered directory; the corpus-partition assertion pins the set sizes exactly (`vpio-02 50 · vpio-01 30 · engine 468`, total 548, 15 directories) and went RED on the cherry-pick alone (records untouched). This is the C-D19/C-D21/C-D23 species under the structural rule: the founder's ratified partition keeps set sizes as pins, so a lawful new population moves them by exactly its size. Maintenance applied in the gate only: total 548→549 · vpio-02 50→51 · gen-1 listen 49→50 · cross-subject mismatch array 50→51 · ledgered directories 15→16 · the title's set sizes; membership rule (H ∧ C), disagreement fail-closed, the produced-ledger row-for-row reproduction (now over 16 directories, the new one reproducing its single row) and every other assertion unchanged. Gate 76/76 read alone before the instrument commit; the gate commit precedes this records commit (the C-D21 red-push shape did not recur — the red was read before any push). Whether a structural rule that must move on every lawful population is the right shape is a founder question, not decided here.
+
+**Standing after §18.16:** `S2-RESTORE/WITNESS-05` EXECUTED · joint PASS (founder-attested, custody owed) · witness half PASS (§16.4, verified here) · authority SPENT · orchestration WITNESSED ONCE on the real Mac · 69 last read 15:49:23Z (joint) and 15:49:59Z (batch preflight) · `b198e2e37` unchanged · WITNESS-02/03/04 residue preserved · S2 population NOT AUTHORIZED · S3 NOT OPEN · KERNEL-00 acceptance CLOSED.
