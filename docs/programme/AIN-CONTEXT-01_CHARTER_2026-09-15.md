@@ -199,8 +199,9 @@ ACT 2 architecture        OPEN · RUN · SPECIFICATION ONLY
 ACT 2 addendum            FOUNDER RULINGS R1-R6 RATIFIED
 R1 three epistemic cond.  IN FORCE (cognition / record / nature)
 Continuity envelope       RATIFIED (six panes)
-A6 temporal sovereignty   SPECIFIED · NOT OPENED · founder decision owed
-F1a false self-location   SPECIFIED · NOT AUTHORED · NOT RUN
+A6 temporal sovereignty   OPEN THROUGH F1a ONLY (founder act 2026-09-15)
+F1a false self-location   AUTHORED · RUN · RED · evidence preserved
+A6 repair                 NOT WRITTEN · NOT AUTHORIZED · founder ruling owed
 A3 reproduction harness   PROPOSED · NOT OPENED
 A4-A8                     PROPOSED · NOT OPENED
 F1-F8 falsifiers          SPECIFIED · NOT AUTHORED · NOT RUN
