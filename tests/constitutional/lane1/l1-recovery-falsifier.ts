@@ -136,6 +136,16 @@ ok('C2 · absent DECREASES by exactly the recovered count',
 ok('C2 · depth is unchanged by recovery', after.depth === before.depth);
 ok('C2 · recovered are DISJOINT from the aperture (no double-count)',
    P.every(r => !aperture.some(a => a.exchangeKey === r.exchangeKey)));
+// The founder's invariant says UNIQUE recovered exchanges. Disjointness from the
+// aperture is one half; the other is that the recovered set contains no duplicate
+// of itself, or `represented` would be inflated by counting one exchange twice.
+ok('C2 · recovered exchanges are UNIQUE among themselves',
+   new Set(P.map(e => e.exchangeKey)).size === P.length,
+   `${new Set(P.map(e => e.exchangeKey)).size} unique of ${P.length}`);
+ok('C2 · represented = aperture + UNIQUE recovered, exactly',
+   after.represented === CORE_APERTURE + new Set(P.map(e => e.exchangeKey)).size);
+ok('C2 · absent = depth − represented, exactly',
+   after.absent === after.depth - after.represented);
 
 // ── A6 NON-REGRESSION ───────────────────────────────────────────────────────
 // L1 changed A6's input from `apertureCount` to `apertureCount + recovered.length`.
