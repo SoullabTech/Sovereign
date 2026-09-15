@@ -37,6 +37,34 @@ the programme's opening rather than discovered at Phase 7.
 
 ---
 
+## 2a. ⭐⭐ PROGRAMME PRINCIPLE — integration, not accumulation
+
+> **Each lane must increase the FUNCTIONAL INTEGRATION of the memory organism, ⛔ not
+> merely add another memory capability.**
+
+⭐ MAIA already has extensive memory **anatomy**. What is uneven is **circulation**. That
+is why the system can *possess* a memory and still fail to bring it forward when the
+relationship needs it.
+
+> ⭐⭐ The project is no longer *"build more memory."* It is
+> **"turn MAIA's existing memory systems into a coordinated living memory organism."**
+
+⚠️ **The characteristic danger is therefore NOT individual code difficulty.** It is a
+local improvement silently contradicting another layer — exactly as Lane 1 could make
+A6 lie (§4.3 of the Lane 1 record). ⛔ Every lane must prove it broke no other memory law.
+
+### 2a.1 ⛔ Jarvis is not an organ
+
+⛔ Jarvis must not become another memory layer. Its role is programme conduction:
+
+```
+census → establish contracts → open ONE bounded lane → RED → implement
+      → verify → compose with the existing organism
+      → prove no other memory law was broken → canonicalize → next lane
+```
+
+---
+
 ## 3. Authority — orchestration only
 
 Jarvis MAY, under this programme:
@@ -148,6 +176,69 @@ then owes nine separate convergence repairs.
 
 ---
 
+## 4a. THE ORGAN CONTRACT — what every memory must carry into cognition
+
+⛔ Nothing enters cognition bare. Every item travels as:
+
+```
+memory
++ provenance                  who authored it
++ standing                    confirmed · corrected · superseded · revoked · uncertain
++ temporal / process location WHEN, and WITHIN WHICH unfolding process
++ applicable guard            what it may and may not be used to claim
+```
+
+⭐ So MAIA can distinguish, and never conflate:
+
+| | |
+| --- | --- |
+| *"the member literally said this"* | primary evidence |
+| *"this was marked as significant"* | member act |
+| *"MAIA inferred this"* | interpretation |
+| *"this interpretation was later corrected"* | superseded standing |
+| *"this is a recurring developmental pattern"* | derived, over time |
+| *"this belongs to a particular spiral"* | process-located |
+| *"this is symbolic material"* | ⛔ **never an identity claim** |
+
+⚠️ Today `memory_type` is **always `'pattern'`**, so **none** of these distinctions
+survives into cognition. The contract is the work of **L2**, and every later lane
+depends on it.
+
+---
+
+## 4b. ⭐⭐ ONE FINAL COMPOSITION POINT — where the organism becomes coherent
+
+⛔ Today each memory system independently stuffs material into the prompt. Instead:
+
+```
+candidate memories from ALL relevant organs
+        ↓
+standing + provenance checks
+        ↓
+relevance / significance
+        ↓
+deduplication (by durable identity)
+        ↓
+conflict / correction handling
+        ↓
+FINAL COGNITIVE COMPOSITION
+        ↓
+A6 truthful self-location, derived HERE
+        ↓
+MAIA
+```
+
+⛔ **This is NOT one giant memory database.** The organs stay different, with different
+epistemic roles. ⭐ It means there is **one place where they become a coherent present
+awareness** — and one place where self-location is computed.
+
+⭐ This **generalizes** the Lane 1 accounting law (§4.3 of the Lane 1 record) from A6
+alone to every organ: *self-location is computed from the final composition, never
+maintained by individual carriers.* ⭐ The same reasoning that stops Lane 1 making A6 lie
+stops every later lane doing it.
+
+---
+
 ## 5. Lane sequence
 
 ```
@@ -240,6 +331,44 @@ asserted through a real `getMaiaResponse` rather than through the context object
 
 ---
 
+## 5a. ⭐ WHOLE-ORGANISM CENSUS — the act that precedes the lanes
+
+⛔ **NAMED, NOT OPENED.** For every memory carrier, establish:
+
+```
+what does it store?           what is its epistemic role?
+who writes it?                who reads it?
+LIVE / PARTIAL / DORMANT / UNREACHABLE?
+what TRIGGERS retrieval?      does it reach FAST / CORE / DEEP?
+what PROVENANCE survives?     what STANDING survives?
+```
+
+⛔ No implementation.
+
+⭐⭐ **This census answers a blind spot the programme has already hit.** ACT 2 censused
+**continuity CLASSES** and marked C1 evidentiary *"sound as-is"* — and the Lane 1 defect
+lives inside C1, because the class was sound while its displaced region had no carrier
+(Lane 1 record §3a.2). ⭐ **A class census cannot see a carrier gap.** This census is
+carrier-first, which is the missing pass.
+
+---
+
+## 6a. ⭐ ORGANISM-LEVEL ACCEPTANCE — beyond per-lane tests
+
+⚠️ Per-lane falsifiers prove a lane. ⛔ They do not prove the organism. A final suite
+must exercise the organs **together**:
+
+> The member says *"silver cedar"* today. **Six weeks later** they discuss rootedness
+> **without naming it.** MAIA can recover the earlier episode · know it was **the
+> member's language, not hers** · recognize the developmental relationship **without
+> declaring a fixed trait** · distinguish any later corrections · and bring it forward
+> **only if it is relevant now.**
+
+⭐ Every clause is a different organ, and the test fails if any one of them is missing —
+which is what makes it an organism test rather than a longer lane test.
+
+---
+
 ## 6. The four acceptance tests
 
 Governing every phase:
@@ -275,10 +404,16 @@ AIN-CONTEXT-01                     predecessor · census + constitution
 A6                                 ✅ ACCEPTED (FAST + CORE) · ✅ CANONICAL @ 286e4381
 A6 DEEP primary                    ⛔ NOT DELIVERED · measured · routed out
 
+whole-organism census              ⛔ NAMED, NOT OPENED
+organ contract                     ⛔ NOT ESTABLISHED (L2's work)
+single composition point           ⛔ NOT BUILT
+organism-level acceptance suite    ⛔ NOT AUTHORED
+
 0A  A6 member falsifier            ⛔ NOT RUN  (founder-run; no reload)
 0B  SRD-01 witness                 ⛔ NOT RUN  · finding ENTAILED, not witnessed
 0C  DEEP carrier                   ⛔ NOT OPENED
-1–8                                ⛔ NOT OPENED
+L1  current-session recovery       ⛔ NOT OPENED · falsifiers pinned
+L2–L8                              ⛔ NOT OPENED
 
 runtime changes                    ⛔ NOT AUTHORIZED
 schema / migrations                ⛔ NOT AUTHORIZED
