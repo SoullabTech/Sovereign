@@ -8,7 +8,13 @@ TYPE        CONSTITUTIONAL SEMANTICS — ⛔ not component placement, ⛔ not im
 STATE       DRAFTED · ⛔ NOT RATIFIED
 ```
 
-> ⚠️⚠️ **ZERO RATIFICATION BLOCKERS REMAIN.** `FD-4` (`DECIDES` — open question versus
+> ✅⭐ **RATIFIED by founder act dated 2026-09-14** — see `P2-00_RATIFICATION_RECORD.md`.
+> The constitutional meaning is the COMPOSITE carried, in order, by `ab070551` · `41378a5d` ·
+> `e2c945c8` · `7d639f79` · `45ae88ad`. ⛔ This draft is not rewritten and the amendments are not
+> absorbed into it: the documents stay historically distinct. ⛔ Ratification opens no mapping,
+> grants MAIA no authority, and leaves implementation blocked.
+
+> ⚠️⚠️ **ZERO RATIFICATION BLOCKERS REMAINED AT RATIFICATION.** `FD-4` (`DECIDES` — open question versus
 > execution) and `FD-11a` (`GOVERNING SOURCE` — finite termination in the constitution or in
 > competent personal authority) are **DECIDED** in
 > `P2-00_BLOCKING-DECISIONS_FD-4_FD-11a_FD-8.md`, which also **retires `FD-8` as superseded**.
