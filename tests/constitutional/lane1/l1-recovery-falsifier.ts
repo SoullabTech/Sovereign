@@ -49,7 +49,26 @@ const push = (u: string, m: string) => {
     userMessage: u, maiaResponse: m,
   });
 };
+// ⚠️⚠️ MARKER POSITION IS LOAD-BEARING, AND AN EARLIER VERSION OF THIS FIXTURE GOT IT
+// WRONG. The marker used to sit at index 1. `distinctiveness` saturated at 1.0 for
+// nearly every exchange — most contain three once-said tokens — so ranking collapsed
+// to the `(a.index - b.index)` tie-break and index 1 won BY POSITION. The probe
+// therefore passed without ever demonstrating opaque retrieval.
+//
+// ⭐ Production placed its marker mid-session (index 22 of 41) where no such privilege
+// exists, and it FAILED. The fixture now mirrors that: the marker sits mid-corpus,
+// preceded by dense one-off material of the kind that actually beat it in production.
+//
+// ⛔ Do not move the marker earlier to make this pass.
 push('Morning. Ready to work.', 'Good morning. Where would you like to begin?');
+push('We are getting the developmental editing down and that entails a lot of functionalities for my editor developer writer support.',
+     'That is substantial infrastructure. What would make it feel complete?');
+push('I could upload my Elemental Alchemy manuscript and get incredible insights from the editor developer.',
+     'A real capability unlock. What matters most about that?');
+while (exchanges.length < 20) {
+  const [u, m] = FILLER[exchanges.length % FILLER.length]!;
+  push(`${u}`, `${m}`);
+}
 push('Silver cedar is an image that has been on my mind today.',
      'Tell me more about that image — what does it carry for you?');
 push('I have been thinking about rootedness lately, how it differs from being stuck.',
