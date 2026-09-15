@@ -87,6 +87,24 @@ interface ComposerTarget {
   ordinal: number;
 }
 
+/**
+ * ⭐⭐ WHICH AUTHORED WORDING THE WRITER IS LOOKING AT — frozen by their click,
+ * exactly as `ComposerTarget` is, and for the same reason.
+ *
+ * ⛔ NEVER `headVersionId`, ⛔ never `versions[versions.length - 1]`, ⛔ never
+ * `composerTarget`. Those answer different questions, and a comparison that
+ * followed the head would silently change what the writer is reading while they
+ * are reading it.
+ *
+ * ⛔ AND IT IS NOT A DECISION. Comparison shows two immutable facts and carries
+ * no authority consequence: no Keep, no Adopt, no Apply, no write of any kind.
+ */
+interface ComparisonTarget {
+  versionId: string;
+  author: 'maia' | 'member';
+  ordinal: number;
+}
+
 const authorLabel = (a: 'maia' | 'member') => (a === 'maia' ? 'MAIA' : 'Your version');
 
 /** Plain, and never reassuring: the exchange really did move. */
@@ -133,6 +151,9 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
   const [wording, setWording] = useState('');
   const [wordingBusy, setWordingBusy] = useState(false);
   const [wordingRefusal, setWordingRefusal] = useState<string | null>(null);
+  /* ⭐ Presentation state, set ONLY by an explicit gesture on one version.
+     ⛔ Nothing derives it, and `reload()` does not touch it. */
+  const [comparisonTarget, setComparisonTarget] = useState<ComparisonTarget | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   /* ⭐ THE ONLY SOURCE OF WHAT IS SHOWN. */
@@ -296,6 +317,18 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
               <StudioText role="maiaReading" style={{ whiteSpace: 'pre-wrap' }}>{v.wording}</StudioText>
               {/* ⭐⭐ THE PREDECESSOR IS CHOSEN EXPLICITLY, on a particular
                   version. ⛔ The composer never opens against "the latest". */}
+              <div style={{ display: 'flex', gap: SPACE.snug, marginTop: SPACE.tight }}>
+              {/* ⭐ COMPARISON IS ITS OWN EXPLICIT GESTURE, on this version. */}
+              <button type="button"
+                data-compare={v.id}
+                onClick={() => setComparisonTarget(
+                  { versionId: v.id, author: v.author, ordinal: i + 1 })}
+                style={{ ...typeStyle('panelLabel'), alignSelf: 'flex-start',
+                         background: 'none', border: `1px solid ${RULE.soft}`,
+                         borderRadius: RADIUS.sm, padding: `${SPACE.tight}px ${SPACE.snug}px`,
+                         color: INK.secondary, cursor: 'pointer' }}>
+                Compare with passage
+              </button>
               <button type="button"
                 onClick={() => {
                   setComposerTarget({ versionId: v.id, author: v.author, ordinal: i + 1 });
@@ -304,12 +337,13 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
                      the system must not manufacture that authorship. */
                   setWording(''); setWordingRefusal(null);
                 }}
-                style={{ ...typeStyle('panelLabel'), alignSelf: 'flex-start', marginTop: SPACE.tight,
+                style={{ ...typeStyle('panelLabel'), alignSelf: 'flex-start',
                          background: 'none', border: `1px solid ${RULE.soft}`,
                          borderRadius: RADIUS.sm, padding: `${SPACE.tight}px ${SPACE.snug}px`,
                          color: INK.secondary, cursor: 'pointer' }}>
                 Write my version from this
               </button>
+              </div>
             </div>
           ))}
           {/* ⭐ THE STANDING SENTENCE. ⛔ No Keep / Revise / Adopt controls in
@@ -319,6 +353,67 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
           </StudioText>
         </section>
       )}
+
+      {/* ══ COMPARE ═══════════════════════════════════════════════════════
+          ⭐⭐ TWO IMMUTABLE FACTS, SIDE BY SIDE. ⛔ No authority consequence:
+          this reads what is already on screen and writes nothing anywhere. */}
+      {comparisonTarget && view && (() => {
+        /* ⭐ Looked up BY THE FROZEN ID. Versions are immutable, so this shows
+           what the server says about the version the writer chose — ⛔ never
+           whichever version happens to be current. */
+        const shown = view.versions.find((v) => v.id === comparisonTarget.versionId);
+        if (!shown) return null;
+        return (
+          <section aria-label="Compare"
+            style={{ borderTop: `1px solid ${RULE.soft}`, paddingTop: SPACE.base,
+                     display: 'flex', flexDirection: 'column', gap: SPACE.snug }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.snug }}>
+              <StudioText role="panelLabel">Compare</StudioText>
+              <button type="button" onClick={() => setComparisonTarget(null)}
+                style={{ ...typeStyle('panelLabel'), marginLeft: 'auto', background: 'none',
+                         border: 'none', color: INK.muted, cursor: 'pointer' }}>
+                Done comparing
+              </button>
+            </div>
+            {/* Side by side where there is room, stacked where there is not.
+                ⛔ No character diff: full exact wording is already truthful, and
+                a diff engine is another interpretation surface. */}
+            <div style={{ display: 'grid', gap: SPACE.base,
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+              <div data-compare-side="passage"
+                style={{ display: 'flex', flexDirection: 'column', gap: SPACE.hairline }}>
+                {/* ⭐ NOT "Original". `locusText` is the chain's HISTORICAL
+                    provenance — the passage as this relationship opened — and
+                    the Work may have moved since. "Original" would be read as
+                    "what the manuscript says now". */}
+                <StudioText role="panelLabel" style={{ color: INK.muted }}>
+                  Passage when this exchange opened
+                </StudioText>
+                <StudioText role="maiaReading" style={{ whiteSpace: 'pre-wrap' }}>
+                  {view.locusText}
+                </StudioText>
+              </div>
+              <div data-compare-side="version" data-compare-version={shown.id}
+                style={{ display: 'flex', flexDirection: 'column', gap: SPACE.hairline }}>
+                {/* ⭐ Authorship stays visible on the side that has an author. */}
+                <StudioText role="panelLabel"
+                  style={{ color: shown.author === 'maia' ? MAIA_ACCENT.voice : INK.muted }}>
+                  {`${authorLabel(shown.author)} · Version ${comparisonTarget.ordinal}`}
+                </StudioText>
+                <StudioText role="maiaReading" style={{ whiteSpace: 'pre-wrap' }}>
+                  {shown.wording}
+                </StudioText>
+              </div>
+            </div>
+            {/* ⛔ AND NO DECISION LIVES HERE. Keep, Accept, Revise, Adopt and
+                Apply are all closed; comparison is clarity before a decision,
+                never the decision. */}
+            <StudioText role="metadata" style={{ color: INK.quiet }}>
+              Nothing changes until you explicitly adopt a version.
+            </StudioText>
+          </section>
+        );
+      })()}
 
       {/* ══ YOUR VERSION ══════════════════════════════════════════════════ */}
       {composerTarget && (

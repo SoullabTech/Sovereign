@@ -272,6 +272,72 @@ describe('WS-EDITORIAL-UI-02 — the writer answers in wording', () => {
   });
 });
 
+describe('WS-EDITORIAL-UI-03 — exact comparison, with no authority', () => {
+  const panel = strip(read(PANEL));
+
+  it('⭐⭐ freezes the compared version at the click, never at the head', () => {
+    expect(panel).toMatch(/useState<ComparisonTarget \| null>\(null\)/);
+    /* Set only by the gesture. Every assignment is either the click or a clear. */
+    const sets = panel.match(/setComparisonTarget\([\s\S]{0,120}?\)/g) ?? [];
+    expect(sets.length).toBeGreaterThan(0);
+    for (const call of sets) {
+      expect(call).toMatch(/setComparisonTarget\(null\)|versionId: v\.id/);
+    }
+    expect(panel).not.toMatch(/setComparisonTarget[\s\S]{0,120}headVersionId/);
+    expect(panel).not.toMatch(/setComparisonTarget[\s\S]{0,120}composerTarget/);
+  });
+
+  it('⛔ reads the compared version by its frozen id, not by position', () => {
+    expect(panel).toMatch(/view\.versions\.find\(\(v\) => v\.id === comparisonTarget\.versionId\)/);
+    expect(panel).not.toMatch(/versions\[view\.versions\.length - 1\]/);
+  });
+
+  /**
+   * ⚠️ A SLICE BOUNDED BY A STRING THAT IS NOT THERE IS A SLICE TO END-OF-FILE.
+   * The first version of these obligations ended the comparison block at
+   * `indexOf('YOUR VERSION')`, but the source says `Your version` — so `-1`
+   * made the "comparison block" the whole rest of the component, and it failed
+   * on the COMPOSER's copy. Both ends are asserted present now, so a renamed
+   * marker fails loudly instead of widening the scan.
+   */
+  const compareBlock = (() => {
+    const from = panel.indexOf('{comparisonTarget && view &&');
+    /* ⚠️ And the marker must survive `strip`: the banner comment does not, so
+       the anchor is the composer's own aria-label. The guard below caught that
+       too — loudly, which is the point of asserting both ends. */
+    const to = panel.indexOf('aria-label="Your version"');
+    expect(from).toBeGreaterThan(-1);
+    expect(to).toBeGreaterThan(from);
+    return panel.slice(from, to);
+  })();
+
+  it('⛔ adds no server seam, and fetches no current Work', () => {
+    /* Comparison reads what is already on screen. Fetching the manuscript to
+       look "more current" would silently change the subject from the chain's
+       historical locus to the present Work. */
+    const compare = compareBlock;
+    expect(compare).not.toMatch(/apiFetch|fetch\(/);
+    expect(compare).not.toMatch(/manuscript|draft|sections/i);
+  });
+
+  it('⭐ labels the left side by PROVENANCE, never "Original"', () => {
+    expect(panel).toContain('Passage when this exchange opened');
+    expect(panel).not.toMatch(/>\s*Original\s*</);
+  });
+
+  it('⛔ offers no decision at all', () => {
+    const compare = compareBlock;
+    expect(compare).not.toMatch(/\b(Keep Original|Accept|Revise|Apply|Use this)\b/);
+    /* "Done comparing" dismisses a view; it decides nothing about the Work. */
+    expect(compare).toContain('Done comparing');
+    expect(compare).toContain('Nothing changes until you explicitly adopt a version.');
+  });
+
+  it('⛔ introduces no diff algorithm', () => {
+    expect(panel).not.toMatch(/\bdiff\b|myers|levenshtein|patience/i);
+  });
+});
+
 describe('the room source is where its scanners look', () => {
   /* ⚠️ THE SPLIT'S OWN HAZARD, CLOSED. Four suites read the Canvas room as
      TEXT. Moving the room to CanvasClient.tsx left them pointed at a

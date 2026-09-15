@@ -340,10 +340,21 @@ async function main() {
   /* ══ WS-EDITORIAL-UI-02 · THE WRITER ANSWERS IN WORDING ═══════════════ */
   console.log('\n── the writer authors their own formulation ──────────────────────');
   const lineage = () => page.locator('section[aria-label="Wording in this exchange"] [data-version]');
+  /* ⚠️ ORDER BY id WAS WRONG, AND IT PASSED BY LUCK. `id` is a UUID, so
+     `ORDER BY id` is arbitrary: `rows[length-1]` is not the newest row and
+     `slice(-1)` is not the head. The UI-02 run's B11 happened to land the right
+     row and reported green on an assertion that had no basis. Ordered by
+     `authored_at` now — and where the HEAD is what matters, it is derived from
+     succession rather than from any ordering at all. */
   const vRows = async () => (await q(
     `SELECT id, author, formulation, supersedes FROM proposal_versions
       WHERE chain_id = (SELECT proposal_chain_id FROM ask_threads WHERE id=$1)
-      ORDER BY id`, [addressed]));
+      ORDER BY authored_at, id`, [addressed]));
+  /* ⭐ THE HEAD IS A SUCCESSION FACT: the version nothing supersedes. */
+  const headOf = (rows: { id: string; supersedes: string | null }[]) => {
+    const superseded = new Set(rows.map((r) => r.supersedes).filter(Boolean));
+    return rows.find((r) => !superseded.has(r.id)) ?? null;
+  };
   const turnCount = async () =>
     Number((await one('SELECT count(*) n FROM ask_turns WHERE thread_id=$1', [addressed])).n);
 
@@ -483,6 +494,85 @@ async function main() {
      (await page.locator('section[aria-label="Your version"]').innerText())
        .includes('no longer follows the version you answered'), true);
 
+  /* ══ WS-EDITORIAL-UI-03 · EXACT COMPARISON ═══════════════════════════
+     ⭐⭐ The object compared is THE PASSAGE AS THIS RELATIONSHIP OPENED versus
+     ONE EXACT AUTHORED VERSION. ⛔ Not the current manuscript, ⛔ not the
+     latest version, ⛔ not the head by default. */
+  console.log('\n── the writer compares one exact version ─────────────────────────');
+  /* Close the composer first so its own fields cannot stand in for anything. */
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await settle(page);
+
+  const before = {
+    turns: await turnCount(),
+    versions: (await vRows()).length,
+    auths: Number((await one('SELECT count(*) n FROM manuscript_revision_authorizations')).n),
+    section: (await one('SELECT text FROM manuscript_draft_sections WHERE id=$1', [SE]))?.text,
+  };
+  eq('K0 three formulations stand before any comparison', before.versions, 3);
+
+  await page.locator(`[data-compare="${v1?.id}"]`).click();
+  await page.waitForSelector('section[aria-label="Compare"]', { timeout: 30_000 });
+  await settle(page); await shot(page, '12-compare-v1');
+
+  const side = (which: string) =>
+    page.locator(`section[aria-label="Compare"] [data-compare-side="${which}"]`);
+  /* ⚠️ A first draft of this block carried a K1 that compared the left side's
+     text TO ITSELF — a tautology that would have passed on any rendering at
+     all. Deleted rather than repaired: K1a and K1b below are the two claims it
+     was pretending to make, and they are separable for a reason (the label is a
+     provenance question, the body is a content question). */
+  eq('K1a ⭐ and it is labelled by PROVENANCE, never "Original"',
+     (await side('passage').innerText()).toUpperCase().includes('PASSAGE WHEN THIS EXCHANGE OPENED')
+     && !(await side('passage').innerText()).toUpperCase().includes('ORIGINAL'), true);
+  eq('K1b ⭐ carrying the frozen locus wording exactly',
+     (await side('passage').innerText()).includes(SECTION_TEXT), true);
+  eq('K2 ⭐ the right side is the EXACT version they clicked',
+     await side('version').getAttribute('data-compare-version'), v1?.id ?? null);
+  eq('K3 ⭐ named as MAIA’s, with its ordinal',
+     (await side('version').innerText()).toUpperCase().includes('MAIA · VERSION 1'), true);
+  eq('K4 ⭐ and showing her exact wording', (await side('version').innerText()).includes(CANDIDATE), true);
+
+  /* ⭐⭐ THE DECISIVE ONE: the head is V3, and the comparison is V1. */
+  const head = headOf(await vRows());
+  eq('K5 the succession head really is a different version',
+     typeof head?.id === 'string' && head.id !== v1?.id, true);
+  await page.locator('section[aria-label="Editorial conversation"]').evaluate(
+    (el) => { el.scrollTop = 0; });
+  await settle(page);
+  eq('K6 ⭐⭐ COMPARISON STILL SHOWS V1 WHILE THE HEAD IS V3',
+     await side('version').getAttribute('data-compare-version'), v1?.id ?? null);
+
+  eq('K7 ⛔ comparing wrote NO turn', await turnCount(), before.turns);
+  eq('K8 ⛔ comparing wrote NO version', (await vRows()).length, before.versions);
+  eq('K9 ⛔ comparing wrote NO authorization',
+     Number((await one('SELECT count(*) n FROM manuscript_revision_authorizations')).n), before.auths);
+  eq('K10 ⛔ and the manuscript is untouched',
+     (await one('SELECT text FROM manuscript_draft_sections WHERE id=$1', [SE]))?.text, before.section);
+  eq('K11 ⛔ NO DECISION IS OFFERED HERE',
+     /\b(Keep Original|Keep\b|Accept|Revise|Adopt this|Apply|Use this)\b/i
+       .test(await page.locator('section[aria-label="Compare"]').innerText()), false);
+  eq('K12 ⭐ and the standing sentence is present',
+     (await page.locator('section[aria-label="Compare"]').innerText()).toUpperCase()
+       .includes('NOTHING CHANGES UNTIL YOU EXPLICITLY ADOPT A VERSION'), true);
+
+  /* ⭐ It changes only through another explicit click. */
+  await page.locator(`[data-compare="${mine?.id}"]`).click();
+  await settle(page); await shot(page, '13-compare-mine');
+  eq('K13 ⭐ another explicit gesture moves it, and only that',
+     await side('version').getAttribute('data-compare-version'), mine?.id ?? null);
+  eq('K14 ⭐ authorship on the right side follows the version, not the room',
+     (await side('version').innerText()).toUpperCase().includes('YOUR VERSION · VERSION 2'), true);
+  eq('K15 ⭐ and the left side never moved',
+     (await side('passage').innerText()).includes(SECTION_TEXT), true);
+
+  /* ⭐ A server re-read is not a selection change. */
+  await page.getByRole('button', { name: 'Write my version from this' }).first().click();
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await settle(page);
+  eq('K16 ⭐ the comparison survives an ordinary re-read of the thread',
+     await side('version').getAttribute('data-compare-version'), mine?.id ?? null);
+
   /* ══ THE CLOSED SHAPE ═════════════════════════════════════════════════ */
   console.log('\n── the request shape is closed, and says so ──────────────────────');
   const post = (body: unknown) => page.evaluate(async (b) => {
@@ -491,7 +581,9 @@ async function main() {
     });
     return { status: r.status, body: await r.text() };
   }, body);
-  const head3 = rows3.find((r) => r.formulation === THIRD);
+  const head3 = headOf(rows3);
+  eq('B3 the closed-shape probes are aimed at the real succession head',
+     head3?.formulation, THIRD);
   const base = { threadId: addressed, supersedes: head3?.id };
 
   const withAuthor = await post({ ...base, replacementText: 'x', author: 'maia' });
@@ -511,10 +603,14 @@ async function main() {
      should not be here*, and it changes nothing until adoption. */
   const empty = await post({ ...base, replacementText: '' });
   eq('B10 ⭐⭐ an EMPTY formulation is lawful, not a validation error', empty.status, 201);
+  /* ⭐ Identified BY THE ID THE SERVER RETURNED — ⛔ never by position in a
+     list, which is what made the first version of this obligation luck. */
+  const emptyId = (() => { try { return JSON.parse(empty.body).versionId; } catch { return null; } })();
   const rows4 = await vRows();
+  const appended = rows4.find((r) => r.id === emptyId);
   eq('B11 and it is durable, authored, and empty',
-     `${rows4.length}/${rows4[rows4.length - 1]?.formulation}/${rows4[rows4.length - 1]?.author}`,
-     '4//member');
+     `${rows4.length}/${appended?.formulation}/${appended?.author}/${appended?.supersedes === head3?.id}`,
+     '4//member/true');
   eq('B12 ⛔ AND THE MANUSCRIPT IS STILL THE WRITER’S OWN SENTENCE',
      (await one('SELECT text FROM manuscript_draft_sections WHERE id=$1', [SE]))?.text, SECTION_TEXT);
 
