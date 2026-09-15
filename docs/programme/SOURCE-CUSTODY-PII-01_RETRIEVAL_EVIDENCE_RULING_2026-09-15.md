@@ -86,6 +86,70 @@ evidence into *it never happened*.
 
 ---
 
+## Amendment 1 — a missing carrier is not a historical negative
+
+**Founder correction, recorded 2026-09-15, BEFORE A1–A4 were run.**
+
+An earlier draft of the run guidance said that
+`ERROR: relation "ain_knowledge_chunks" does not exist` should be recorded as
+`INGESTED INTO PRODUCTION = VERIFIED ABSENT`, and that it would close §B.
+
+⛔ **Withdrawn.** A missing relation proves the table is absent from the queried
+database *now*. It does not establish that the table never existed, or was never
+populated and later dropped, recreated, or migrated. Recording it as a verified
+absence would smuggle a historical negative in through an operational fact —
+the exact move the ladder above exists to refuse, committed at the first
+opportunity to make one.
+
+Correct classification:
+
+```
+relation does not exist
+    → CURRENT CORPUS TABLE = VERIFIED ABSENT
+    → HISTORICAL INGESTION  = UNKNOWN
+```
+
+`HISTORICAL INGESTION` may move off `UNKNOWN` only on independent evidence —
+schema history, migration ledger, or deployment records establishing that
+`ain_knowledge_chunks` has never existed in that production database. Absence of
+the carrier is not that evidence.
+
+⭐ **This amendment only ever narrows what may be claimed.** An amendment that
+strictly reduces certainty cannot be used to launder a result, which is why it
+is safe to record at all — but it is recorded before the run regardless, because
+the discipline is the point and exceptions to it accumulate.
+
+## Amendment 2 — correlated errors are one fact, not many
+
+The script carries no `ON_ERROR_STOP`, so a single absent table will produce a
+separate error at A1, A2, A3 and A4.
+
+⛔ **Four errors from one cause are one finding.** They must not be recorded as
+four independent confirmations of absence. Preserve the complete output,
+errors included, and attribute correlated failures to their common cause.
+
+The same rule governs A3/A4: a source flagged by three signals is one source
+carrying three signals, not three findings.
+
+## Outcome classification — fixed in advance
+
+```
+rows returned
+    → production ingestion VERIFIED for those rows/sources
+
+0 rows, table exists
+    → VERIFIED ABSENT for the queried sources in the CURRENT table
+
+relation does not exist
+    → CURRENT CORPUS TABLE = VERIFIED ABSENT
+    → HISTORICAL INGESTION = UNKNOWN (see Amendment 1)
+
+connection / auth / database / permission error
+    → INSTRUMENT FAILURE — no evidentiary conclusion, re-run
+```
+
+⛔ An unrunnable query never becomes an absence result.
+
 ## Result form — fill only these slots
 
 ⭐ The form is part of the ruling. There is deliberately **no free-text verdict
@@ -96,7 +160,10 @@ own listed values and nothing else.
 A1 · known tester sources in ain_knowledge_chunks
     source files with rows ......... <count>
     chunks per source .............. <path: count, …>
-    INGESTED INTO PRODUCTION ....... VERIFIED | VERIFIED ABSENT (these sources only)
+    CURRENT TABLE .................. PRESENT | VERIFIED ABSENT
+    INGESTED INTO PRODUCTION ....... VERIFIED | VERIFIED ABSENT (these sources, current table)
+                                     | UNKNOWN (if the table is absent — Amendment 1)
+    HISTORICAL INGESTION ........... VERIFIED | UNKNOWN
 
 A2 · corpus shape
     total chunks ................... <count>
