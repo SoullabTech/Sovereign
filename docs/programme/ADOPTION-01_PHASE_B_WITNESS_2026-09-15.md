@@ -310,7 +310,53 @@ ruling **explicitly retired**: *"the ruled flow is COMPARE → ADOPT."*
 | `⛔ adds no server seam, and fetches no current Work` | the adopt POST lives in the compare block, and the confirmation prose contains the word *manuscript* | ⭐ comparison itself still reads only what is on screen; the gesture fetches ⛔ no manuscript, draft or sections endpoint |
 | `⛔ offers no decision at all` | its headline is the retired law | ⭐ `Keep Original\|Accept\|Revise\|Apply\|Use this` are still absent; `Done comparing` is still present |
 
-⛔⛔ **THE INSTRUMENT WAS NOT EDITED, AND WILL NOT BE WITHOUT A RULING.**
+### ⭐ AMENDED, BY FOUNDER RULING
+
+> *"UI-02/UI-03 originally prohibited adoption because adoption did not yet
+> exist. `ADOPTION-01` was explicitly authorized to retire that prohibition.
+> Therefore assertions whose only law is 'no adoption decision/control may exist
+> here' are now stale law, not product regressions."*
+
+⛔ **The record says plainly that the LAW CHANGED BY FOUNDER RULING** — ⛔ it
+does not pretend those assertions were always wrong. Each was right for the law
+that existed. Each is narrowed in place, with its supersession written into the
+file beside it, and every surviving clause kept:
+
+```
+1  ⭐ offers adoption as ONE explicit gesture, and nothing else
+   kept: the standing sentence (still TRUE) · ⛔ Keep Original · Revise · Use this
+2  ⛔ fetches no current Work — and the gesture asks only the adoption route
+   kept: the comparison JSX issues no request at all
+   ⭐ stronger: the gesture makes EXACTLY ONE request, to the adoption route,
+      carrying exactly { threadId, versionId } · ⛔ never a manuscript endpoint
+   ⚠️ the retired clause was a VOCABULARY scan that fired on the confirmation's
+      prose (*"the location the manuscript identifies"*), not on a behaviour
+3  ⛔ offers exactly one decision, and it is adoption
+   kept: the retired vocabulary · "Done comparing" remains dismissal
+   ⭐ added: the decision acts on the FROZEN comparison target, ⛔ never the head
+```
+
+**Falsified — 3 mutants, 3 dead, panel restored byte-identical:**
+
+```
+MU-T1  the adopt gesture removed        → assertions 1 and 3 die
+MU-T2  the gesture also fetches the Work → assertion 2 dies
+MU-T3  the decision follows the head     → assertion 3 dies
+```
+
+⭐⭐ **AND THE SUITES NOW MATCH CANONICAL EXACTLY:**
+
+```
+canonical 212f417da   4 suites failed · 16 tests failed
+candidate             4 suites failed · 16 tests failed
+```
+
+⛔ The four remaining reds are pre-existing and untouched. ⛔ No unrelated guard
+was weakened to reach that number.
+
+---
+
+⛔⛔ **THE STANDING RULE, UNCHANGED FOR EVERYTHING ELSE.**
 *Implementation fails suite → repair the implementation* is lawful;
 *→ reinterpret the contract → weaken the test* is not. The one legitimate ground
 for moving a guard is that the LAW moved, which is what happened here — and that
@@ -347,7 +393,8 @@ E2 · already applied           ✅ 7/7
 source obligations             ✅ 25/25
 instruments falsified          ✅ 4 mutants, 4 dead
 ship typecheck                 ✅ 0 regressions
-WS + manuscript suites         ⚠️ 3 RED · see §7 · ⛔ instrument NOT edited
+WS + manuscript suites         ✅ 4/16 red — IDENTICAL to canonical, §7
+obsolete prohibition           ✅ AMENDED by ruling · 3 mutants killed
 
 leg F · headed sections        ⚠️⚠️ OPEN DEFECT · ⛔ NOT REPAIRED · ruling owed
 tsconfig.ship exclusion        ⚠️ separate finding · ⛔ not repaired
