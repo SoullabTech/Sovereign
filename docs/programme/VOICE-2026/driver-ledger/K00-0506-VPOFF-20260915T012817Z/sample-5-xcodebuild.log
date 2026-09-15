@@ -1,0 +1,132 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/k0506-vpoff-83a382a14/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testOutputSample"
+
+2026-09-14 21:33:10.228 xcodebuild[99393:30315363] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 21:33:10.231 xcodebuild[99393:30315363] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 21:33:10.330 xcodebuild[99393:30315363] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-14 21:33:10.602 xcodebuild[99393:30315363] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 21:33:10.796 xcodebuild[99393:30315363] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 21:33:12.328826-0400 DriverUITests-Runner[67496:14765409] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-14 21:33:12.797.
+Test Suite 'DriverUITests.xctest' started at 2026-09-14 21:33:12.797.
+Test Suite 'K00DriverTests' started at 2026-09-14 21:33:12.798.
+Test Case '-[DriverUITests.K00DriverTests testOutputSample]' started.
+    t =     0.00s Start Test at 2026-09-14 21:33:12.798
+    t =     0.02s Set Up
+    t =     0.02s Open life.soullab.voicekernel.vpio02
+    t =     0.02s     Launch life.soullab.voicekernel.vpio02
+    t =     0.10s         Setting up automation session
+    t =     0.18s         Wait for life.soullab.voicekernel.vpio02 to idle
+2026-09-14 21:33:12.969 xcodebuild[99393:30315363] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =     1.28s Wait for life.soullab.voicekernel.vpio02 to become Running Foreground
+    t =     1.28s Waiting 10.0s for "Enter conversation" Button to exist
+    t =     2.35s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     2.35s         Checking existence of `"Enter conversation" Button`
+    t =     2.44s Checking existence of `"Voice processing: ON (default)" Button`
+    t =     2.47s Checking existence of `"Voice processing: OFF (control run)" Button`
+    t =     2.49s Tap "Voice processing: ON (default)" Button
+    t =     2.49s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =     2.50s     Find the "Voice processing: ON (default)" Button
+    t =     2.53s     Check for interrupting elements affecting "Voice processing: ON (default)" Button
+    t =     2.56s     Synthesize event
+    t =     2.86s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =     3.18s Waiting 3.0s for "Voice processing: OFF (control run)" Button to exist
+    t =     4.19s     Checking `Expect predicate `existsNoRetry == 1` for object "Voice processing: OFF (control run)" Button`
+    t =     4.19s         Checking existence of `"Voice processing: OFF (control run)" Button`
+    t =     4.25s Waiting 5.0s for "Enter conversation" Button to exist
+    t =     5.27s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     5.27s         Checking existence of `"Enter conversation" Button`
+    t =     5.32s Tap "Enter conversation" Button
+    t =     5.32s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =     5.32s     Find the "Enter conversation" Button
+    t =     5.35s     Check for interrupting elements affecting "Enter conversation" Button
+    t =     5.38s     Synthesize event
+    t =     5.67s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =     5.68s Waiting 5.0s for "Play 3 s tone" Button to exist
+    t =     6.70s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =     6.71s         Checking existence of `"Play 3 s tone" Button`
+    t =     6.75s         Capturing element debug description
+    t =     7.68s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =     7.68s         Checking existence of `"Play 3 s tone" Button`
+    t =     7.73s         Capturing element debug description
+    t =     8.76s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =     8.76s         Checking existence of `"Play 3 s tone" Button`
+    t =     8.82s         Capturing element debug description
+    t =     9.74s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =     9.74s         Checking existence of `"Play 3 s tone" Button`
+    t =     9.78s         Capturing element debug description
+    t =    10.68s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =    10.68s         Checking existence of `"Play 3 s tone" Button`
+    t =    10.73s         Capturing element debug description
+    t =    10.74s     Checking existence of `"Play 3 s tone" Button`
+    t =    10.77s Collecting debug information to assist test failure triage
+    t =    10.77s     Requesting snapshot of accessibility hierarchy for app with pid 67497
+    t =    10.85s Swipe up Application 'life.soullab.voicekernel.vpio02'
+    t =    10.85s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    10.86s     Find the Application 'life.soullab.voicekernel.vpio02'
+    t =    10.88s     Check for interrupting elements affecting "VoiceKernel VPIO-02" Application
+    t =    10.92s     Synthesize event
+    t =    11.46s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    14.01s Checking existence of `"Play 3 s tone" Button`
+2026-09-14 21:33:26.869489-0400 DriverUITests-Runner[67496:14765409] K00-OUTPUT: reveal swipe 1/4 — 'Play 3 s tone' exists: true
+    t =    14.07s Checking existence of `"Play 3 s tone" Button`
+    t =    14.11s Find the "Play 3 s tone" Button
+    t =    16.15s Tap "Play 3 s tone" Button
+    t =    16.15s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    16.17s     Find the "Play 3 s tone" Button
+    t =    16.22s     Check for interrupting elements affecting "Play 3 s tone" Button
+    t =    16.27s     Synthesize event
+    t =    16.59s     Wait for life.soullab.voicekernel.vpio02 to idle
+2026-09-14 21:33:29.399491-0400 DriverUITests-Runner[67496:14765409] K00-OUTPUT: Play 1 tapped
+    t =    17.61s Checking existence of `"Cancel active" Button`
+    t =    17.66s Find the "Cancel active" Button
+    t =    17.69s Tap "Cancel active" Button
+    t =    17.69s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    17.70s     Find the "Cancel active" Button
+    t =    17.73s     Check for interrupting elements affecting "Cancel active" Button
+    t =    17.78s     Synthesize event
+    t =    18.08s     Wait for life.soullab.voicekernel.vpio02 to idle
+2026-09-14 21:33:30.881692-0400 DriverUITests-Runner[67496:14765409] K00-OUTPUT: Cancel active tapped at ≈1000 ms after Play 1
+    t =    19.09s Checking existence of `"Play 3 s tone" Button`
+    t =    19.14s Find the "Play 3 s tone" Button
+    t =    19.18s Tap "Play 3 s tone" Button
+    t =    19.18s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    19.19s     Find the "Play 3 s tone" Button
+    t =    19.22s     Check for interrupting elements affecting "Play 3 s tone" Button
+    t =    19.27s     Synthesize event
+    t =    19.57s     Wait for life.soullab.voicekernel.vpio02 to idle
+2026-09-14 21:33:32.381562-0400 DriverUITests-Runner[67496:14765409] K00-OUTPUT: Play 2 tapped (left to complete)
+    t =    24.09s Waiting 5.0s for "Export journal" Button to exist
+    t =    25.13s     Checking `Expect predicate `existsNoRetry == 1` for object "Export journal" Button`
+    t =    25.13s         Checking existence of `"Export journal" Button`
+    t =    25.19s Tap "Export journal" Button
+    t =    25.19s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    25.20s     Find the "Export journal" Button
+    t =    25.24s     Check for interrupting elements affecting "Export journal" Button
+    t =    25.29s     Synthesize event
+    t =    25.60s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    27.82s Terminate life.soullab.voicekernel.vpio02:67497
+    t =    28.91s Wait for life.soullab.voicekernel.vpio02 to become Not Running
+    t =    28.91s Tear Down
+Test Case '-[DriverUITests.K00DriverTests testOutputSample]' passed (28.997 seconds).
+Test Suite 'K00DriverTests' passed at 2026-09-14 21:33:41.796.
+	 Executed 1 test, with 0 failures (0 unexpected) in 28.997 (28.999) seconds
+Test Suite 'DriverUITests.xctest' passed at 2026-09-14 21:33:41.801.
+	 Executed 1 test, with 0 failures (0 unexpected) in 28.997 (29.003) seconds
+Test Suite 'Selected tests' passed at 2026-09-14 21:33:41.804.
+	 Executed 1 test, with 0 failures (0 unexpected) in 28.997 (29.007) seconds
+2026-09-14 21:33:41.841 xcodebuild[99393:30315363] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 21:33:42.083 xcodebuild[99393:30315363] [MT] IDETestOperationsObserverDebug: 31.480 elapsed -- Testing started completed.
+2026-09-14 21:33:42.083 xcodebuild[99393:30315363] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-14 21:33:42.083 xcodebuild[99393:30315363] [MT] IDETestOperationsObserverDebug: 31.480 sec, +31.480 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-ghvhysaksrygxsgzwkpwaxskzpno/Logs/Test/Test-DriverUITests-2026.09.14_21-33-10--0400.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
