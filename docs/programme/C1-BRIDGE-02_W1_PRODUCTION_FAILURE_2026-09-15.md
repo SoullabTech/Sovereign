@@ -272,3 +272,27 @@ S                      ⛔ unspent
 repair · root cause    ⛔ not authorized, not begun
 rollback primitive     ⚠️ DEFECTIVE · witnessed · routed out · unrepaired
 ```
+
+### 11a · Independent image-ID census corroborating the restore
+
+Founder-run, read-only, after the manual restore:
+
+```text
+running container   image_id sha256:0ad57611d747…   GIT_COMMIT=e57ca1baa
+:prod               0ad57611d747…  tags ["current","e57ca1baa","prod"]
+:current            0ad57611d747…  (same image)
+:previous           a954f9a52ad6…  tags ["0f58a7f93","broken","previous"]
+```
+
+⭐ `:prod`, `:current` and `:e57ca1baa` resolve to **one image ID**, and it is the image the
+container runs. This corroborates §11 at image-ID level, which is stronger than the `printenv`
+check alone. The rejected build is correctly parked under `:previous`/`:broken`.
+
+⚠️ **`:previous` is `0f58a7f93`** — a second `rollback` would roll FORWARD into the rejected
+build (and would not touch `:prod` anyway). ⛔ Do not run it.
+
+⭐⭐ **The census also confirms Defect B empirically**: every one of the five local images
+reports `commit=<no value>`. ⛔ **No image in the store carries a `git.commit` label at all**,
+so a search for *"the image whose label is `e57ca1baa`"* can never succeed.
+`maia-sovereign:e57ca1baa` is a **TAG**, not a label. Image identity must be established from
+the baked `GIT_COMMIT` env or the SHA tag — which is what the restore used, and why it worked.
