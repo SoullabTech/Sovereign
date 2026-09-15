@@ -571,6 +571,36 @@ export const ACCESS_RULES: AccessRule[] = [
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
 
+  /* WRITER'S STUDIO EDITORIAL CORRIDOR — containment, not authorization design.
+     WS-ACCESS-CONTAINMENT-01.
+
+     Found by the WS-EDITORIAL merge-integration probe: /api/writers-studio/
+     editorial/{thread,turn,version} matched NO rule here, so permissive mode
+     forwarded every request and the handlers' own resolveCanonicalIdentity was
+     the ONLY identity boundary. That boundary is real and witnessed — an
+     unauthenticated call gets 401 and a foreign thread gets 404 — but it is one
+     layer where the architecture asks for two, which is the same shape the
+     /api/ain/ rule above was added to repair.
+
+     ⛔ AND NOT THE SAME POLICY AS /api/ain/. Its STRUCTURE is the precedent;
+     its admin-only role is not. These routes serve any authenticated member
+     writing in their own Studio, so copying `rolesAnyOf: ['admin']` would
+     contain the corridor by emptying it. The neighbour whose policy actually
+     fits is /api/sovereign directly above: authenticated, free tier, no role.
+
+     ⛔ NARROWEST THAT COVERS THE ROUTES IN SCOPE, deliberately. A
+     '/api/writers-studio/' prefix would also capture /api/writers-studio/focus,
+     which carries the identical gap and is NOT part of this act — naming it
+     here would silently widen the ruling. It is recorded as an open finding
+     instead.
+
+     ⛔ This changes nothing inside the handlers. resolveCanonicalIdentity stays
+     exactly where it is: the matrix stops an unauthenticated request at the
+     door, and the handler still proves identity independently for everything
+     that gets through. Neither layer is permitted to become the other's
+     excuse. */
+  { prefix: '/api/writers-studio/editorial/', minTier: 'free', notes: "Writer's Studio editorial corridor — authenticated members only (WS-ACCESS-CONTAINMENT-01); same policy as /api/sovereign, never /api/ain's admin gate" },
+
   /* Invite API — the issuing side of member admission. Declared EXPLICITLY
      rather than inheriting the permissive unmapped-route default (#717), which
      had left create/list/revoke reachable with no session at all while each
