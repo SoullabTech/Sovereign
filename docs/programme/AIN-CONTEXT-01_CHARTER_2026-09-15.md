@@ -209,8 +209,8 @@ A6 ACCEPTANCE HOLD        LIFTED (founder ruling 2026-09-15)
 A6 coverage               ACCEPTED for FAST + CORE · DEEP primary EXCLUDED
 DEEP addenda divergence   pre-existing II.C · routed out · NOT REPAIRED
 PR                        AUTHORIZED TO OPEN
-Merge · deploy            NOT AUTHORIZED
-Production                UNTOUCHED BY A6 (running f190f8992 = PR #1297)
+Merge · deploy            NOT AUTHORIZED                                   ⛔ SUPERSEDED 2026-09-15 → §A
+Production                UNTOUCHED BY A6 (running f190f8992 = PR #1297)   ⛔ SUPERSEDED 2026-09-15 → §A
 A3 reproduction harness   PROPOSED · NOT OPENED
 A4-A8                     PROPOSED · NOT OPENED
 F1-F8 falsifiers          SPECIFIED · NOT AUTHORED · NOT RUN
@@ -220,5 +220,103 @@ New summarizer            NOT AUTHORIZED
 Context assembler         NOT AUTHORIZED
 Source changed            NONE
 Schema changed            NONE
+Production                UNTOUCHED                                       ⛔ SUPERSEDED 2026-09-15 → §A
+```
+
+---
+
+# §A · DATED STATUS CORRECTION · 2026-09-15 (evening)
+
+⛔ **RECORD-ONLY ACT.** Authorized by founder ruling as a documentary correction.
+⛔ No architectural reinterpretation · no repair · no production or code change · no new
+authority taken.
+
+## A.1 What was stale
+
+Three lines in the standing block above, marked `⛔ SUPERSEDED` **in place rather than
+rewritten**:
+
+```text
+Merge · deploy            NOT AUTHORIZED
+Production                UNTOUCHED BY A6 (running f190f8992 = PR #1297)
 Production                UNTOUCHED
+```
+
+⭐ **Every one of them was ACCURATE WHEN WRITTEN.** At the time of this charter, A6 had been
+implemented and accepted but neither merged nor deployed, and production was serving
+`f190f8992`. ⛔ They are preserved verbatim so this record cannot be read as though the charter
+always knew A6 was in production. *A witness is a reading at a time; the honest repair is to
+date it, not to edit it.*
+
+## A.2 The corrected production fact
+
+**A6 IS PRESENT AND OPERATING IN PRODUCTION**, and has been since the A6 deploy.
+
+```text
+A6 in production          ✅ PRESENT · OPERATING · WITNESSED
+production runtime        e57ca1baa  (as of 2026-09-15 evening)
+A6 deploy commit          c8770709c  — "feat(AIN-CONTEXT-01): A6 authoritative depth
+                                       + absence accounting — F1b GREEN"
+lineage                   c8770709c IS AN ANCESTOR OF e57ca1baa (verified by
+                          `git merge-base --is-ancestor`), so A6 has been continuously
+                          present in production across every runtime since
+```
+
+**Production evidence, WITNESSED, established in the L1 lane:**
+
+1. ⭐ **The A6 arithmetic closed on MAIA's own words.** On runtime `e57ca1baa`, with depth 40
+   and a FAST aperture of 3 plus 3 recovered, A6 reported 6 represented / 34 absent — and MAIA
+   said *"34 of our exchanges… aren't in my current view."* ⛔ Not an inference from logs
+   alone: the accounting and the member-facing sentence agreed.
+
+2. The unconditional A6 serving line was observed directly in production
+   (`docs/programme/C1-BRIDGE-02_W1_PRODUCTION_FAILURE_2026-09-15.md` §2):
+
+```text
+🧭 [A6/CORE] session continuity { depth: 41, represented: 7, absent: 34, unit: 'completed exchanges' }
+```
+
+⚠️ That particular line was captured on runtime `0f58a7f93`, a build since rolled back. ⛔ It
+is cited as evidence that **A6 operates**, never as evidence about the rolled-back bridge, and
+A6 itself was unchanged between the two runtimes.
+
+## A.3 ⛔ THE DISTINCTION THIS CORRECTION MUST NOT BLUR
+
+```text
+DEPLOY EVENT      branch SHA c8770709c → production
+CANONICAL EVENT   b22945ac + accepted subject 9ac0730d → canonical 286e4381
+VALIDITY BRIDGE   four A6 runtime blobs verified byte-identical
+```
+
+⭐⭐ **Deployment provenance and canonical provenance are INDEPENDENT.** `c8770709c` reached
+production directly from the A6 branch, **before** the accepted subject was landed in
+canonical. ⛔ The later canonical landing does **not** retroactively become the authority for
+that deploy. The live member falsifier is valid because the four runtime blobs were
+independently verified byte-identical — ⛔ **not** because the two events are treated as one.
+
+*This correction states that A6 is in production. It does not state that the deploy and the
+canonical landing were one act, and nothing here may be cited to that effect.*
+
+## A.4 Scope kept narrow, and one thing flagged rather than taken
+
+⭐ `Merge · deploy NOT AUTHORIZED` was marked superseded because leaving it beside a corrected
+production statement would assert the outcome while denying its cause. Both were authorized
+later, by **separate founder acts**, each recorded in its own lane. ⛔ This addendum re-rules
+nothing and confers no authorization; it records that the authorizations happened elsewhere.
+
+⚠️ **Not corrected here, and deliberately so:** other records in this lane carry point-in-time
+production statements (e.g. `AIN-CONTEXT-01_A6_ACCEPTANCE_RULING_2026-09-15.md`,
+`Production UNTOUCHED BY A6 (running f190f8992)`). ⛔ Those are **dated rulings and witnesses**,
+not living standing, and are left untouched by design. This charter carries the standing; the
+witnesses carry their readings at their times.
+
+## A.5 What remains closed
+
+```text
+selection-law investigation   ⛔ UNOPENED
+rollback primitive repair     ⛔ UNOPENED
+W2 / W3 / S                   ⛔ UNSPENT
+A3-A8 · F1-F8                 ⛔ UNCHANGED BY THIS ACT
+production                    ✅ e57ca1baa — UNCHANGED BY THIS ACT
+source · schema               ⛔ UNCHANGED BY THIS ACT
 ```

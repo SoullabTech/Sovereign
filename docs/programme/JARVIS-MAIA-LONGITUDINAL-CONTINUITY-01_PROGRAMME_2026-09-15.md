@@ -486,6 +486,11 @@ without any ruling on what follows it.
 
 ### 7.1 ⚠️ Owed, and deliberately not folded into this record
 
+> ✅ **DISCHARGED 2026-09-15 (evening)** by founder-authorized record-only act — see
+> `AIN-CONTEXT-01_CHARTER_2026-09-15.md` **§A · DATED STATUS CORRECTION**. The three stale
+> standing lines are marked `⛔ SUPERSEDED` **in place**, never rewritten, and the
+> DEPLOY / CANONICAL / VALIDITY distinction below is carried verbatim into §A.3.
+
 The `AIN-CONTEXT-01` charter still carries `production A6 ⛔ NOT PRESENT`, which is now
 false. Its correction is a **separate record-only act**, because the fact it must state
 is a distinction this programme depends on and must not blur:
