@@ -3256,3 +3256,151 @@ git add docs/programme/VOICE-2026/driver-ledger && git status --short && git com
 - **Pin accepted as written at `d14844e95`** — names `S2-RESTORE-04` and `feature/k00-s2-population-02-evidence-<RSTAMP>` accepted; no amendment before execution. The founder verified the committed `d14844e95` object through GitHub because the Mac checkout had not yet fetched it and the ineligible remote channel refused the fetch; **the direct Mac Studio Terminal still performs the pinned `git fetch` + `git show … §18.30.2` read before executing** (a read of the object it will run, from the transport that will run it).
 - **Advance ruling (in-batch drift STOP):** if the joint reads `PASS` and Block C's own stimulus preflight then STOPs on drift with exit 8 before playback (§17 shape), **that is a genuine governed STOP and spends `K00-0506-S2-02`** — not a transport non-execution: no sample was taken, but the governed population act had begun and its own internal acceptance boundary refused it; no rerun under the same authority. Recorded so §18.31 can adjudicate that outcome from the return alone.
 - Nothing else changes: transport Mac Studio terminal directly · remote channel ineligible · C-D26 HOLD · compaction deferred · S3 / KERNEL-00 acceptance CLOSED.
+
+## §18.31 — `S2-RESTORE-04 / K00-0506-S2-02` EXECUTED (2026-09-15 · Mac Studio terminal directly · founder hand inside it) → JOINT PASS → BLOCK C PASS → POPULATION ACQUIRED 10/10 · VERIFIED HERE · §7.2/§7.3 READING PERFORMED → population CHARACTERIZE · returned for ruling
+
+### §18.31.1 Custody
+
+Return branch `feature/k00-s2-population-02-evidence-20260915T184016Z`, commit `84eb74094609be6a569fc0c8572ef85be4527594`, cherry-picked here as `d82e7a834` (`-x`; 117 files). Transport: Mac Studio terminal directly (the §18.28 ruling honoured; the remote channel carried nothing). Four carriers, all read from the committed files:
+
+| Carrier | Files | Seal | Read here |
+|---|---|---|---|
+| `driver-ledger/s2-volume-restore-04-20260915T184016Z/` | 11 (`before-utc` · `after-utc` · `volume-before/after` · `audio-before/after.json` · `bluetooth-before.json` · `sound-pane-before/after` · `parser.txt` · `JOINT.txt` · `SHA256SUMS`) | **11/11** | §18.31.2 |
+| `driver-ledger/K00-0506-S2-02-run-20260915T184016Z/` | `RETURN.txt` · `s2pop2-block{A,B,C,Dpop}.{sh,out}` · `SHA256SUMS.run` | **9/9** | §18.31.4 |
+| `driver-ledger/K00-0506-S2-preflight-20260915T183343Z/` | `apps.json` · `processes.json` (Block B's two device reads) | inside the run seal's reach via Block B's `PREFLIGHT_CLEAN` line | §18.31.4 |
+| `driver-ledger/K00-0506-S2-20260915T184128Z/` | 10 journals · `ledger.md` · `output-ledger.md` · `batch.log` · `transcript.txt` · `stimulus-preflight/` ×5 · `stimulus-sample-1..10.tsv` · `stimulus-sample-1..10-afplay.log` (all 0 bytes: afplay wrote nothing) · `sample-timing.tsv` · `daemons/` · `SHA256SUMS.population` | **80/80** | §18.31.4–§18.31.6 |
+
+Block scripts re-hashed here = the §18.30.2 pin exactly: A `5dd16bdd…` · B `22e105dd…` · C `77d40528…` · Dpop `e4f93c0b…`. `RETURN.txt` verbatim: `ACT K00-0506-S2-02 paired with S2-RESTORE-04 · RESTORE_STAMP 20260915T184016Z · JOINT PASS · LEDGER_DIR …/K00-0506-S2-20260915T184128Z · PREFLIGHT_DIR …/K00-0506-S2-preflight-20260915T183343Z · BASE_HEAD b198e2e37058f2e059d986b4b148e224215f3ee3 · TRANSPORT Mac Studio terminal directly`.
+
+### §18.31.2 Restoration half — read against §18.5.3 → PASS
+
+- Before-read `2026-09-15T18:40:16Z`: `output volume:69 … output muted:false`, Sound pane `rc=1` (closed). **The volume was already 69 before the hand act** (last governed read 69 at 15:49:59Z, §18.16; no drift in the 2 h 50 min between) — the §18.30.2 pin performs the keyboard act unconditionally, so the hand act re-established a state that had not moved. Observation, not a defect; the pin never conditioned the hand on the before-read, and a conditional hand would have been a different act.
+- One keyboard act (Volume Down to zero · Up ×11), founder's hand.
+- After-read `2026-09-15T18:41:19Z`: `output volume:69 … output muted:false`, pane `rc=1`.
+- §18.5.2 parser re-executed here on the copied `audio-after.json` + `volume-after.txt` = `parser.txt` byte-for-byte: `DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin 48000` · `MAC_STUDIO_DEFAULT_OUTPUT True` · `OUTPUT_VOLUME 69` · `OUTPUT_MUTED false` · **`RESTORE_ACCEPTANCE PASS`**. `audio-before.json` and `audio-after.json` byte-identical (device state untouched by the act; only the scalar was exercised). `JOINT.txt` = `PASS`, derived mechanically (C-D28 shape) from `RESTORE_ACCEPTANCE PASS` ∧ pane `rc=1`.
+- **Joint condition MET at 18:41:19Z.** Ordinal boundary honoured: Block C's first line (`build-for-testing`) is stamped 18:41:29 in `s2pop2-blockC.out` — ten seconds later, nothing governed between (§18.31.3 names the one thing that happened *before* Stage 5, not after it).
+
+### §18.31.3 Sequencing deviation — founder-disclosed, ruled NON-MATERIAL (verbatim in substance)
+
+> After the keyboard act and before Stage 5, the Stage 7 seal command was run once prematurely and failed (the after-read files did not exist yet). It touched no device, volume or harness. Stage 5 then returned PASS and Block C was the very next act; the batch's own stimulus preflight reconfirmed 69 / unmuted / builtin. Ruled non-material: not a governed STOP, and the ordering is not relaxed for future acts.
+
+Recorded as ruled. The premature seal produced no file (the later Stage 7 seal is the only `SHA256SUMS` in the carrier, 11/11). It sits *before* the joint read, so the boundary that matters — nothing between the accepted joint read and Block C — was not crossed. Species: operator sequencing slip inside a hand-driven stage, harmless because the seal command is read-only and fails closed on absent inputs.
+
+### §18.31.4 Population half — read against §16.4 and §18.20.3 `Dpop` → PASS on every committed line
+
+- **Block A PASS** (fourth clean pass on `b198e2e37`): `HEAD=b198e2e37…` · `TREE_CLEAN=1` · `GATE_75_75=1` (the frozen worktree's own gate) · `AFPLAY_SHA=88f3b577…` · `AFPLAY_PROCESSES_BEFORE=0` · `BLOCK_A_PASS=1`.
+- **Block B `PREFLIGHT_CLEAN`**: `E3B88028_CONTAINER_HITS=1`; `processes.json` read here = 310 processes, **0 `VoiceKernelHarness`** (the DISPOSAL-03 state held; the two foreign harnesses did not return).
+- **Block C**: `build-for-testing` 18:41:29 → **stimulus preflight PASS 18:41:35** (`fixture 1a505b3d…` · `afplay 88f3b577…` · `default output Mac Studio Speakers (coreaudio_device_type_builtin)` · **`volume 69` · `muted false`** — the second volume boundary, re-read by the batch itself 16 s after the joint) → samples 1–10 each `stimulus custody VALID (pid … alive through the governed interval; stopped by the batch, wait rc=143)` → `batch complete` 18:48:02 → **`BATCH_PIPELINE_RC=0`**. Every `.out` ends `rc=` (empty) — C-D26, HOLD, unchanged; the explicit `BATCH_PIPELINE_RC=0` line is the authoritative status.
+- **`Dpop`**: `AFPLAY_PROCESSES_AFTER=0` · ten `custody VALID` lines · ten journal hashes · population seal written.
+- **Stimulus custody, read from the ten TSVs**: fixture path + SHA `1a505b3d…`, `/usr/bin/afplay` SHA `88f3b577…`, `-v 0.50`, 180 s; one child per sample (pids 30133 · 30583 · 30995 · 31467 · 31819 · 32222 · 32632 · 32986 · 33430 · 33803); `preRunState alive` → 32–42 `liveness … alive` rows at 1 s, no gap, no `dead`/`zombie` → `postRunState alive` → `stopRequestedEpoch` → `waitExitStatus 143` → `custody VALID` ×10. `sample-timing.tsv`: sample 1 run_test 18:41:37Z–18:42:19Z … sample 10 18:47:25Z–18:47:57Z; 32–39 s per governed interval; the stimulus outlived every run_test on both ends.
+- **Preflight artefacts**: `stimulus.sha256` = fixture pin · `afplay.sha256` = census pin · `volume.txt` = `output volume:69 … output muted:false` · `stimulus-wave-metadata.txt` = `channels=1 sampleRate=48000 sampleWidthBytes=2 frames=8640000 seconds=180.000 format=EXACT` · `audio-output.json` parsed here → exactly one default output, `Mac Studio Speakers coreaudio_device_type_builtin 48000`.
+
+### §18.31.5 Classifier and output reader reproduced here
+
+- `k00-ledger.py --subject vpio-02` on the ten journals → **10/10 rows byte-identical** to `ledger.md`: **10 × gen-1 listen** (listening 328–434 ms), cold ×10, 14-step VPIO-02 trace, VP ON, `isRunningImmediate=true` · `graphStartedRunning=true`, first callback 2–10 ms, `generations=1`, hold 18.9–27.2 s, `listeningHeldAtExport=True` ×10, `listeningLostLater=True` ×10 (the lawful `listening → maiaSpeaking` output floor, §10.12). 0 refusals · 0 resets · 0 interruptions · 0 orphans.
+- `k00-output-ledger.py --subject vpio-02` → every K00-05-CANCEL · K00-05-COMPLETE · K00-06 · COUPLING row byte-identical to `output-ledger.md`; the four `DRIVER-MARKER` rows per sample are taken by the batch from the runner log, not the journal, and are therefore not reproducible from the journals alone (the same shape as every prior K00-0506 verification).
+- **Frozen rows, beside the S2 reading, never pooled, earning nothing:** K00-05 cancel **PASS-05 ×10** (`cancelToSilenceMs 0` ×10; frames at cancel 70 080–94 560 of 144 000) ∧ completion **PASS-05 ×10** (144 000/144 000; 2 992–3 001 ms descriptive) — K00-05 is CLOSED (§10.12), these are evidence only. K00-06: **9 PASS-06 · 1 UNMEASURED-06 (sample 6, one full rendering window) · 0 CHARACTERIZE-06 · 0 FAIL-06**; `digitalZeroTotal=0` in all ten (§18.31.7 (a)). The K00-06 built-in standing (CHARACTERIZE ONLY · INCOMPLETE from the K00-0506 population, §10.12) is untouched: an S2 row earns no K00-06 PASS by the §18.20 ruling, and 9/10 would not meet the frozen 10/10 condition in any case.
+
+### §18.31.6 §7.2/§7.3 reading, per row — the scientific reading the population was acquired for
+
+**Definitions applied (existing evidence only, §7.2):** kernel energy classes per callback — `digitalZero` peak ≤ 1e-7 · `noiseFloor` rms < 1e-3 · `signal` rms ≥ 1e-3 (`HealthSupervisor.swift:21–22`); *baseline window* = an `input_health_sample` whose whole span precedes the first `stream_scheduled`, `inputFlow healthy`; *full rendering window* = a window whose whole span lies inside one scheduled stream (either stream; stream 1 is cancelled at ≈1.5–2.0 s after scheduling and so holds at most one full window; stream 2 completes at 3.0 s and holds one or two); *partial* windows straddle a stream edge and are shown but do not decide. Validity: the stimulus visible as `signal` in ≥ 2 healthy baseline windows. Verdict per row: `signal` present in **every** full rendering window with callbacks ≥ 90 and `ioRunning true` → **A-consistent** · absent in **every** full rendering window with callbacks/`ioRunning` intact → **A′-consistent** · mixed → **CHARACTERIZE**. Reading script (offline, reads only the ten journals; kept verbatim so the reading is reproducible):
+
+```python
+#!/usr/bin/env python3
+"""§7.2/§7.3 per-window reading of the K00-0506-S2 population (evidence-only; never a K00-06 PASS/FAIL).
+Per input_health_sample window: phase relative to the two scheduled streams, callbacks, digitalZero,
+noiseFloor, signal (kernel classes: digitalZero peak<=1e-7 · noiseFloor rms<1e-3 · signal rms>=1e-3),
+rmsMean, rmsMin, ioRunning. Validity = signal present (signal>0) in >=2 healthy pre-output baseline windows.
+Full rendering window = a window whose whole span lies inside a scheduled stream (stream2 = uncancelled)."""
+import json, sys, glob, os
+def rd(p):
+    return [json.loads(l) for l in open(p)]
+def read(path):
+    R = rd(path); E = lambda r: r.get('evidence', {})
+    sess = R[0]['session']
+    gs = next(r for r in R if r['event']=='graph_started'); t0 = gs['timeMonotonicMs']
+    streams = []  # (start, end, kind)
+    for r in R:
+        if r['event']=='stream_scheduled':
+            streams.append([r['timeMonotonicMs'], None, r['to'] if 'to' in r else r.get('stream')])
+        if r['event'] in ('stream_cancelled','stream_complete'):
+            for s in streams:
+                if s[1] is None: s[1] = r['timeMonotonicMs']; s[2] = r['event']; break
+    rows = []; prev_t = t0
+    for r in R:
+        if r['event']!='input_health_sample': continue
+        e = E(r); t = r['timeMonotonicMs']; ws, we = prev_t, t; prev_t = t
+        phase = 'pre-output'
+        if streams and ws >= streams[0][0]:
+            phase = 'post-output'
+            for i, s in enumerate(streams):
+                if s[0] <= ws and s[1] is not None and we <= s[1]: phase = f'FULL-RENDER s{i+1}({s[2][7:]})'
+                elif s[0] < we and (s[1] is None or ws < s[1]): phase = f'partial s{i+1}({s[2][7:]})'
+            if phase == 'post-output' and streams[-1][1] and ws < streams[-1][1]: phase='between'
+        rows.append(dict(t=(t-t0), phase=phase, cb=int(e['callbacks']), dz=int(e['digitalZero']), nf=int(e['noiseFloor']),
+                         sig=int(e['signal']), rmsMean=float(e['rmsMean']), rmsMin=float(e['rmsMin']), peakMax=float(e['peakMax']),
+                         io=e['ioRunning'], flow=e['inputFlow']))
+    return sess, rows
+def verdict(rows):
+    base = [w for w in rows if w['phase']=='pre-output' and w['flow']=='healthy']
+    base_sig = [w for w in base if w['sig']>0]
+    full = [w for w in rows if w['phase'].startswith('FULL-RENDER')]
+    if len(base_sig) < 2: return 'UNMEASURED (stimulus not seen as signal in >=2 baseline windows)', base, full
+    if len(full) < 1: return 'UNMEASURED (no full rendering window)', base, full
+    persists = all(w['sig']>0 and w['io']=='true' and w['cb']>=90 for w in full)
+    vanishes = all(w['sig']==0 and w['io']=='true' and w['cb']>=90 for w in full)
+    if persists: return 'A-consistent (signal persists through every full rendering window)', base, full
+    if vanishes: return "A'-consistent (signal disappears in every full rendering window; callbacks/ioRunning intact)", base, full
+    return 'CHARACTERIZE (mixed across full rendering windows)', base, full
+if __name__=='__main__':
+    files = sorted(glob.glob(sys.argv[1]+'/journals/*.jsonl'), key=lambda p: int(p.rsplit('-',1)[1].split('.')[0]))
+    for i,p in enumerate(files,1):
+        sess, rows = read(p); v, base, full = verdict(rows)
+        bs = ' '.join(f"{w['sig']}" for w in base)
+        print(f"\n## {i} {sess}  baselineWindows={len(base)} signal/window=[{bs}] withSignal={sum(1 for w in base if w['sig']>0)}  fullRender={len(full)}  → {v}")
+        for w in rows:
+            if w['phase']=='pre-output' and w['sig']>0 and w['dz']==0: continue  # elide ordinary baseline rows
+            print(f"  t={w['t']:6d} {w['phase']:26s} cb={w['cb']:3d} dz={w['dz']:2d} nf={w['nf']:3d} sig={w['sig']:3d} rmsMean={w['rmsMean']:.5f} rmsMin={w['rmsMin']:.2e} peak={w['peakMax']:.4f} io={w['io']} {w['flow']}")
+```
+
+**Result table** (baseline = `signal` callbacks per baseline window; full = `signal` callbacks per full rendering window in order, `s1` = cancelled stream, `s2` = completed stream; rms = `rmsMean` of those windows):
+
+| # | Session | Baseline windows with signal | Baseline signal/window | Full rendering windows (signal · rmsMean) | Verdict |
+|---|---|---|---|---|---|
+| 1 | `K00-8d09e590` | 9/11 (marginal: windows 2·4 read 0 at rms 0.0007) | 9 0 2 0 48 49 67 54 23 24 29 | s2 103 · 0.0030 / s2 103 · 0.0027 | **A-consistent** |
+| 2 | `K00-48b857c6` | 6/11 (marginal: most windows rms 0.0008–0.0009) | 71 0 6 0 0 0 3 9 0 6 42 | s2 103 · 0.0016 / s2 52 · 0.00097 | **A-consistent** (second window half-signal, at the threshold) |
+| 3 | `K00-ea4d3805` | 18/18 | 53–103 | s1 41 · 0.0011 / s2 99 · 0.0017 / **s2 0 · 0.00008** | **CHARACTERIZE** (one deep-attenuation window inside stream 2) |
+| 4 | `K00-4989dad6` | 11/11 | 85–104 | s1 96 · 0.0010 / s2 104 · 0.0016 / s2 102 · 0.0018 | **A-consistent** |
+| 5 | `K00-bbd4ec34` | 11/11 | 93–104 | s1 101 · 0.0011 / s2 104 · 0.0018 / s2 104 · 0.0018 | **A-consistent** |
+| 6 | `K00-46d00487` | 11/11 | 4–104 | s2 102 · 0.0017 (the only full window) | **A-consistent on n = 1 window** — the frozen K00-06 reader reads this row UNMEASURED-06 (< 2 full windows); §7.2 states no full-window minimum → founder to rule (§18.31.8 item 2) |
+| 7 | `K00-923c4e4b` | 11/11 | 32–104 | **s1 0 · 0.00003** / s2 103 · 0.0054 / s2 103 · 0.0081 (peak 1.0000) | **CHARACTERIZE** (deep attenuation in stream 1; full-scale peak in stream 2) |
+| 8 | `K00-388b3ac9` | 11/11 | 46–104 | **s1 0 · 0.00001 (peak 0.0000)** / s2 102 · 0.0018 / s2 103 · 0.0018 | **CHARACTERIZE** (deep attenuation in stream 1) |
+| 9 | `K00-e5e6f9bb` | 11/11 | 87–104 | s2 103 · 0.0023 / s2 103 · 0.0025 | **A-consistent** |
+| 10 | `K00-08e81fa8` | 11/11 | 52–101 | s1 92 · 0.0018 / s2 103 · 0.0020 / s2 95 · 0.0027 | **A-consistent** |
+
+**Tally (rows, N = 10, 0 infra, 0 custody-INVALID):** A-consistent **6** (1 · 2 · 4 · 5 · 9 · 10) + **1 on a single window** (6) · CHARACTERIZE **3** (3 · 7 · 8) · A′-consistent **0** · UNMEASURED **0** by the letter of §7.2 (rows 1–2 valid but marginal, §18.31.7 (e)).
+**Window level (25 full rendering windows):** **22** carry `signal`-class input (rmsMean 0.00097–0.0081, callbacks 102–104, `ioRunning true`) · **3** carry none — rmsMean **1e-5 … 8e-5**, i.e. 10–100× *below* the pre-output baseline noise level (≈ 7e-4), with callbacks 102–104 and `ioRunning true`: exactly the A′ shape (the whole near-end suppressed at the consumed seam while MAIA speaks), two of them in stream 1 (samples 7 · 8, the cancelled stream's only full window), one in stream 2 (sample 3, its second full window).
+
+**§7.2 verdict for the population: CHARACTERIZE.** The dominant shape is A-consistent (signal-class input persists at the consumed post-VP seam through 22/25 full rendering windows, every row contributing at least one such window); A′ is **not excluded** — three windows in three rows show the seam driven to ~1e-5 rms with capture intact; A is **not established** as the whole-population shape. Neither hypothesis is ruled out by this population; nothing here earns K00-06 PASS, and nothing here is constitutional.
+
+### §18.31.7 Observations — descriptive, none an act, none a mechanism claim
+
+(a) **No digital-zero callback anywhere in-stream, 0/10** (`digitalZeroTotal=0` on every frozen K00-06 row; the only `digitalZero` callbacks in any journal are the 3 in the first window after `graph_started`, the known start transient). The K00-0506 VP-ON population without a stimulus (§10.11) read partial digital zero in 5/10. The two populations differ in stimulus presence and in nothing else known; they are never pooled and the difference is not attributed.
+(b) **Onset transient in every row**: the partial window containing a stream start reads `peakMax` 0.09–0.57 and `rmsMean` 0.0035–0.019 — the own tone before the processor converges, the same shape as §10.11 and S1.
+(c) **Limitation of the ratified discriminator, named:** in the A-consistent full windows the seam rms sits at 1.3–2.5× the baseline rms. The journal carries amplitude classes only, no spectral evidence, so whether that residual is the 997 Hz near-end tone, residual echo of the phone's own tone, or both cannot be separated from these files. The A reading therefore establishes *"signal-class input persists at the consumed seam while MAIA speaks"*, not *"the near-end tone specifically persists"*. This is a property of §7.2 as ratified (existing evidence only), not a defect and not repaired here.
+(d) The three deep-attenuation windows are **not** explained by (c): a seam at 1e-5 rms is below the tone, below the residual echo and below the room — under S1 (VP OFF) the same seam during rendering read 0.06–0.07 rms. Those three windows are the strongest A′-shaped evidence the programme holds; three windows in ten rows is characterization, not a verdict.
+(e) **The stimulus reaches the seam at threshold-edge level**: baseline rms 0.0007–0.0013 straddles the 1e-3 `signal` boundary, hence rows 1–2's patchy baseline visibility. INFERENCE, not read: a stationary 997 Hz tone is the kind of input a voice processor's noise suppression may treat as stationary noise; the row-to-row baseline difference is consistent with that and establishes nothing. If S3 or any further stimulus act is ever ruled, a non-stationary labelled source (or a higher fixture level) is the design question this raises — not proposed here.
+(f) Sample 7's second stream-2 window reads `peakMax 1.0000`: a full-scale callback at the consumed seam during own playback. Descriptive.
+(g) Restoration: the volume had not drifted since 15:49:59Z (69 → 69 across 2 h 50 min with the Sound pane closed). Consistent with the §18.4 candidate mechanism (a person-shaped Sound-pane session), not evidence of it.
+
+### §18.31.8 Standing and what is returned (nothing opened)
+
+- `S2-RESTORE-04` **PASS** · evidence committed · joint honoured (ordinal) · the sequencing deviation of §18.31.3 recorded as ruled non-material.
+- `K00-0506-S2-02` **EXECUTION PASS · SPENT** · samples 10/10 · custody 10/10 VALID · journals 10 · `BATCH_PIPELINE_RC 0` · every §16.4 / `Dpop` line verified here · classifier + output reader reproduced.
+- **Scientific reading PERFORMED (§18.31.6): population CHARACTERIZE** — A dominant at window level (22/25), A′ present in 3 windows / 3 rows, neither established, neither excluded.
+- Returned for ruling, in order: **(1)** acceptance of the §18.31.6 reading as the S2 disposition; **(2)** sample 6 — A-consistent on one window vs UNMEASURED by extension of the reader's ≥ 2 rule (the record does not choose); **(3)** whether observation (c) (amplitude-only seam evidence) means S2 as ratified cannot separate A from residual echo, and what that implies for the conditional S3 (S3 was conditioned on A′; the population is CHARACTERIZE, not A′; S3 stays NOT OPEN unless ruled); **(4)** C-D24-species gate maintenance (§18.31.9) acceptance; **(5)** the CLAUDE.md compaction deferred at §18.28.5 is now eligible on the founder's word.
+- NOT proposed: any S2 top-up or rerun (forbidden by the ruling) · any threshold · any organism/harness/driver/reader change · C-D26 repair (HOLD) · S3 · KERNEL-00 acceptance. No Mac population act is needed; the work moved from acquisition to reading, and the reading is on the record.
+
+### §18.31.9 Gate maintenance (C-D24 species; instrument-only commit, preceding the records commit)
+
+The corpus-partition test read red on the cherry-pick exactly where §18.30.2 predicted: tracked journals 549 → **559**, vpio-02 51 → **61**, ledgered directories 16 → **17**, and (a fourth pin not predicted) vpio-02 gen-1 listens 50 → **60** (the ten new rows). Four count pins moved, the comment beside them updated, rule unchanged, no directory named; 76/76 read alone before the instrument commit and again before the records commit. Founder acceptance owed.
