@@ -407,3 +407,34 @@ Custody check before line 4: `554e663e…` and `50`. Do not type anything into t
 **Carrier issued** — `docs/programme/VOICE-2026/SID_MAC-COMPILE-02_CARRIER_2026-09-15.sh` (§10.6 shape): reads `$OUT` whole (`cp -R`), the executed pin, every `sid-mac-compile-02-transcript-*.log`, a listing; runs `shasum -c SHA256SUMS.compile` inside the copy and stores the result as `SHA256SUMS.compile.check`; writes `SHA256SUMS.run` + `RETURN.txt`; commits to `feature/sid-mac-compile-02-evidence-20260915T214212Z` and pushes. Never writes into `$OUT`; touches no code. Run shape as §10.6 (`git show <sha>:… > /private/tmp/sid-carrier-02.sh` · `shasum`/`wc -l` · `bash … | tee …`).
 
 **Standing after §10.12.** `SID MAC-COMPILE-02` EXECUTED · PASS (founder-reported) · **NOT YET ACCEPTED** (carrier owed) · REPAIR-01 ACCEPTED at `faf918b5c` · siblings: no finding · reinstall pins EMPTY · FIRST-INSTALL CLOSED · SID ENTRY WITNESS REQUIRED, not opened · device execution NONE · C-D26 HOLD. Next possible founder acts, none open: accept MAC-COMPILE-02 on custody → rule on pinning the SID identity into the reinstall instrument → rule on opening the SID ENTRY WITNESS.
+
+### 10.13 FOUNDER RULINGS on §10.11–§10.12 (2026-09-15): label substitution ACCEPTED as constitutive act identity · `SID MAC-COMPILE-02` **PASS · authority SPENT** on the founder's independent read of `$OUT` · carrier NOT withheld
+
+**Ruling 1 — labels (verbatim in substance).** The founder compared the issued script against the accepted §10.2 block directly; the complete differences are exactly: subject SHA `f0c6ae13b…` → `faf918b5c…` · worktree identity `sid-mac-compile-01` → `-02` · OUT identity `-01` → `-02` · `mkdir` moved after the `$WT` precondition · manifest filename `COMPILE-01` → `COMPILE-02` · final identity echo `COMPILE-01` → `COMPILE-02`; *no undisclosed build, test, identity, signing, source, or acceptance-command changes.* The `01→02` substitutions are accepted **as constitutive act identity, not an expansion of authority** — and the worktree identity change was *necessary*: retaining the preserved `-01-` worktree path would have made `MAC-COMPILE-02` refuse immediately and so could not have instantiated the separately authorized act. No re-issue required.
+
+**Ruling 2 — PASS (verbatim in substance).** The founder independently read `/private/tmp/sid-mac-compile-02-out-20260915T214212Z`: subject `faf918b5c…` before and after · repository clean before · JS/source gate 82/82 · Swift build PASS · Swift test suite 33 tests, 0 failures, 0 unexpected · `SourceEstimatorTests` 6 tests, 0 failures · **the repaired modulation-index test `testTheOrderedEnvelopeModulationIndexSeparatesAGatedStimulusFromASteadyOrFluctuatingOne` executed and passed** — *REPAIR-01 has done more than merely compile: its affected test executed successfully* · unsigned Xcode build SUCCEEDED · signed device-target build SUCCEEDED · identity `life.soullab.voicekernel.vpio02sid` / `VoiceKernel VPIO-02-SID` / `TeamIdentifier=ZVK2X646Z2` / `Apple Development: Kelly Nezat (N9DTF6434L)` · signed artifacts hashed · product manifest 7 entries · `status-before.txt` 0 bytes · after: `M ios/VoiceKernelHarness/Harness/Info.plist` only, 20 lines — the known `xcodegen` footprint the pin permits; the protected source/project/script/test diff check passed (else the final echo was unreachable) · **compile evidence seal present: `SHA256SUMS.compile`, 17 entries, sha256 `d835bebc36a86be7d8640fdbdd68b36eca9b26cce1faaaec70b3a12c3c93e2d3`** · normal termination at the `SID-MAC-COMPILE-02 20260915T214212Z subject faf918b5c… out …` echo · empty `rc=` = the known zsh `PIPESTATUS` display issue, not failure. Standing ruled:
+
+```text
+REPAIR-01                 ACCEPTED
+SID MAC-COMPILE-02        EXECUTED · PASS · authority SPENT
+sibling-expression HOLD   remains HOLD — no sibling compiler finding occurred
+reinstall pins            EMPTY
+install 0 · launch 0 · sample 0 · device act 0
+```
+
+*Do not withhold the carrier*: the `MAC-COMPILE-02` evidence carrier is issued under the established pattern, preserving `$OUT` and the transcript before anything downstream opens.
+
+**Corrections to this record's own wording.** §10.12 said the sibling HOLD was "moot rather than lifted"; the founder's standing is **remains HOLD** — the absence of a finding leaves the hold in place, it does not dissolve it. §10.12 also made acceptance wait on custody; the founder has ruled PASS on a direct read of `$OUT`, which is the founder's witness, not this session's. What custody still does here, when the carrier lands: reproduce the 17-entry `SHA256SUMS.compile` (expected sha256 `d835bebc…`), re-hash the 7-entry manifest (expected `699ac758…`), read `swift-test.log` in full, and record the reproduction as §10.14 — a confirmation of a ruling already made, not a condition of it.
+
+**Carrier status.** `SID_MAC-COMPILE-02_CARRIER_2026-09-15.sh` was committed at `3bad244ad` in the same minute this ruling arrived (28 lines, `5aaa5120fdf9b2c0c8c541857b274272b9343553635561d72d45fcf179e01a65`). Run shape (Mac Studio terminal directly; no paste of the body):
+
+```bash
+git -C /Users/soullab/MAIA-SOVEREIGN fetch origin claude/voice-2026-census-01
+git -C /Users/soullab/MAIA-SOVEREIGN show 3bad244ad:docs/programme/VOICE-2026/SID_MAC-COMPILE-02_CARRIER_2026-09-15.sh > /private/tmp/sid-carrier-02.sh
+shasum -a 256 /private/tmp/sid-carrier-02.sh; wc -l /private/tmp/sid-carrier-02.sh
+bash /private/tmp/sid-carrier-02.sh 2>&1 | tee /private/tmp/sid-carrier-02-transcript-$(date -u +%Y%m%dT%H%M%SZ).log; echo "rc=${PIPESTATUS[0]}"
+```
+
+Expected final line `SID-MAC-COMPILE-02 CARRIER PUSHED`. It reads `$OUT`; it never writes it.
+
+**Standing after §10.13.** `SID MAC-COMPILE-02` PASS · SPENT · carrier issued, not yet landed · REPAIR-01 ACCEPTED · siblings HOLD · reinstall pins EMPTY · FIRST-INSTALL CLOSED · SID ENTRY WITNESS REQUIRED, not opened · device execution NONE · C-D26 HOLD. Downstream acts, none open until the founder opens them: reinstall-pin mutation for the SID identity (UUID `4A6AD464-…`, container unknown until an install exists) · SID ENTRY WITNESS.

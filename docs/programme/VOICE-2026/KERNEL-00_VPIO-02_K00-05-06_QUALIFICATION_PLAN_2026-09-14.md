@@ -846,3 +846,8 @@ Compile requalification of `faf918b5c` on the Mac toolchain; same PASS conjuncti
 ### §10.63 — `SID MAC-COMPILE-02` PASS as founder-reported on `faf918b5c`; NOT YET ACCEPTED pending custody (2026-09-15; discriminator plan §18.43; implementation record §10.12)
 
 Compile qualification of the SID subject reached its final echo: gate 82/82 · swift build · swift test 33/33 (source vectors 6/6) · project generation · unsigned + signed device builds · identity exact (`vpio02sid` / `VPIO-02-SID`; dylib UUID `4A6AD464-…`) · surface proof. Installs, launches, samples nothing; reinstall pins EMPTY. SID subject qualification (K00 obligations) remains CLOSED; SID ENTRY WITNESS REQUIRED and not opened. Carrier owed before acceptance.
+
+
+### §10.64 — `SID MAC-COMPILE-02` PASS · SPENT (founder ruling 2026-09-15; discriminator plan §18.44; implementation record §10.13)
+
+Compile qualification of the SID subject `faf918b5c` is complete and ruled; sibling HOLD remains; reinstall pins EMPTY; K00 qualification of the SID subject remains CLOSED; SID ENTRY WITNESS REQUIRED and not opened; carrier landing = record confirmation only.
