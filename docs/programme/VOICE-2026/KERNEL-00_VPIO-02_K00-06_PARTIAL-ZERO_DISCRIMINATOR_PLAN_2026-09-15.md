@@ -1309,3 +1309,30 @@ Custody note: the pin landed at 14:15:48Z (`24f111302`, ~10 min after the restor
 The founder reports the previous Mac lane timed out: the screenshot shows the Mac session's last visible step as "Inspected §18.9 text and extracted substitutions with proof capture", followed by "Connection interrupted. Waiting for the complete answer". The lapsed-unspent report in §18.10 came from a later lane at 14:52:19Z, which found the window already missed. Recorded, not inferred beyond the founder's statement: the window was lost to a transport interruption, not to any decision; no act of either session is at fault; the ruling's "do not hurry" clause was applied correctly by the later lane.
 
 Custody consequence for the fresh issuance (read-only, before any Block A): the interrupted lane had reached the substitution step and may have written `/private/tmp/s2w1-block*.sh` and `/private/tmp/s2w2-block*.sh`; whether it reached `worktree add` (which would create `/private/tmp/k0506-s2w2-b198e2e37`) is UNKNOWN. §16.3 Block A STOPs on a pre-existing worktree path. The fresh issuance should therefore begin with a read (`ls -d /private/tmp/k0506-s2w2-b198e2e37 /private/tmp/s2w2-block*.sh 2>&1`); if the worktree path exists it is residue of the interrupted lane and its disposition (remove by a founder-authorized act, or a new path token such as `k0506-s2w3-b198e2e37` in the substitution list) is the founder's ruling, never a silent cleanup. Stale `s2w1-`/`s2w2-` block files are overwritten by the re-extraction step and carry no evidentiary weight.
+
+#### 18.10.2 Residue read (founder, Mac, 2026-09-15) — the interrupted lane reached at least Block A's `worktree add`; §18.10 corrected beside the original
+
+Founder-pasted read (`ls -d /private/tmp/k0506-s2w2-b198e2e37 /private/tmp/s2w2-block*.sh`; the paste carried a stray trailing `f` after `2>&1` — a paste artefact, not part of the pinned command; the listing printed regardless):
+
+```text
+/private/tmp/k0506-s2w2-b198e2e37
+/private/tmp/s2w2-blockA.sh  /private/tmp/s2w2-blockB.sh  /private/tmp/s2w2-blockC.sh  /private/tmp/s2w2-blockD.sh
+```
+
+**Correction to §18.10, recorded beside it:** the worktree path exists, so the interrupted lane executed at least the `worktree add` line of Block A before the connection dropped. §18.10's "Blocks A–D not executed" is accurate for the later lane's own conduct and inaccurate as a statement about the interrupted lane; how far that lane got is UNKNOWN until read. The four `s2w2-block*.sh` files are the substituted blocks (their diffs and hashes were never returned; they carry no evidentiary weight and are overwritten by any re-extraction).
+
+Pinned follow-up read (read-only; nothing removed, nothing run) and its reading law, fixed before the output is seen:
+
+```bash
+ls -la /private/tmp/s2w2-block*.out /private/tmp/s2-witness-02-transcript.txt 2>&1
+ls -d /private/tmp/k0506-s2w2-b198e2e37/docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-02-* 2>&1
+git -C /private/tmp/k0506-s2w2-b198e2e37 status --short 2>&1 | head -20
+pgrep -fl "afplay|k00-driver-batch|xcodebuild" ; echo "[pgrep rc=$?]"
+date -u +%Y-%m-%dT%H:%M:%SZ
+```
+
+- no `.out`, no transcript, no `S2-WITNESS-02-*` directory, clean worktree, `[pgrep rc=1]` → the lane died inside Block A after `worktree add`; residue = an inert worktree; disposition (founder-authorized removal, or a new path token `k0506-s2w3-b198e2e37` in the substitution list) is the founder's ruling, never a silent cleanup.
+- `blockA.out`/`blockB.out` present, no `blockC.out`, no ledger directory → Blocks A–B ran under the lapsed issuance (read-only acts: custody + device preflight), Block C did not; no playback; same disposition question, plus those two `.out` files are returned as custody.
+- anything from Block C (a `blockC.out`, a transcript, a `S2-WITNESS-02-2*` ledger directory, a live `afplay`/batch process) → the interrupted lane STARTED THE BATCH under an authority that had not yet lapsed at that moment or had; either way an orchestration act whose record never returned. It is adjudicated on its own evidence before any fresh issuance; nothing is re-run to "complete" it.
+
+No fresh issuance runs until this read is on the record.
