@@ -1594,8 +1594,10 @@ custody chain is unchanged and still controlling:
 
 ### 52.2 ⭐ MIGRATION-BASE LOCK
 
-**⚠️ NARROWED 2026-09-15**, by the founder act that opened the migration lane.
-The lock below is operative; what it replaced is recorded beneath it.
+**⚠️ NARROWED 2026-09-15 at `a9858996`**, by the founder act that opened the
+migration lane. ⛔ That commit is **not** an ancestor of the reconciled carrier
+(see §53.0) — this wording reached this document by transcription. The lock
+below is operative; what it replaced is recorded verbatim beneath it.
 
 > Any migration act must begin from **`911efbbb`**, or from a descendant
 > carrying **this custody ruling in full** — ⛔ not from bare `f210df118`.
@@ -1679,12 +1681,35 @@ production             UNTOUCHED
 ## 53. ⭐⭐ RECONCILIATION — ONE CARRIER, TWO AUTHORITY AXES
 
 **Date** 2026-09-15 · **Authorized by** founder act
-**Reconciled from exactly two sources, and no others:**
+
+### 53.0 ⭐ THE AUTHORITY LEDGER — four SHAs, and only two are parents
 
 ```
-custody lineage          911efbbb   (§52, as narrowed at a9858996)
-pinned design subject    2c152e54ba341613522e23ac1bb0f7a1e06ac0ec
+design authority             2c152e54ba341613522e23ac1bb0f7a1e06ac0ec   ← parent
+original custody authority   911efbbb                                   ← parent
+custody NARROWING            a9858996                                   ⛔ NOT a parent
+reconciled carrier           bf214c0c                                   ← this commit
 ```
+
+⚠️⚠️ **`a9858996` IS NOT IN THIS COMMIT'S ANCESTRY.** It lived on
+`chore/w4-2-migration-20260915`, the **superseded** one-file migration lane. The
+narrowed wording of §52.2 — *migration base = `911efbbb` or a descendant
+carrying the custody ruling in full* — has its provenance there, and was carried
+into this document **by transcription, not by merge**.
+
+⛔ **So the ledger must not be read as saying the narrowed wording already
+existed at `911efbbb`.** It did not. `911efbbb` carries the original, wider lock
+(*"`f210df118`, or a descendant carrying this design record"*), which §52.2
+preserves verbatim beneath the operative one. ⭐ The narrowing is the correct
+rule and it is correctly carried; only its origin needed naming.
+
+⚠️ **And this commit is record-only in what it AUTHORED, not in what it
+CARRIES.** The reconciliation authored the governance carrier alone. Being a
+true merge, it also **inherited seven files unchanged from `2c152e54`** — six
+witness/instrument scripts and one programme record. ⛔ None was modified or
+repaired here, so this is not witness engineering; ⭐ but when `bf214c0c` enters
+canonical, those files enter with it, and any merge ruling must account for them
+as inherited rather than treat this commit as touching documents only.
 
 ### 53.1 What happened, stated plainly
 
