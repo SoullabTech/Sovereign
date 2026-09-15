@@ -790,3 +790,63 @@ find docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-01-* -maxdepth 2 -type f
 ```
 
 Provenance of the three evidence sources: (1) `S2-WITNESS-01-<stamp>/` is written by the batch during Block C (ledger · journals · `stimulus-preflight/` · `stimulus-sample-1.tsv` · afplay log · timing · daemons · batch.log) and completed by Block D (`transcript.txt` copied in, `SHA256SUMS.witness` sealed); (2) `S2-WITNESS-01-preflight-<stamp>/` is written by Block B (`apps.json` · `processes.json`); (3) the Block A / B / D Terminal output exists only in the Terminal session and must be captured into the bundle by the operator (e.g. `script` or copy of the scrollback into `S2-WITNESS-01-<stamp>/blocks-ABD.txt`) — it is required because several custody facts (gate read, tree clean, both SHAs, afplay process counts before/after) occur outside the batch. All three go into one commit on one `feature/*` branch. This session is not at the Mac; the blocks are already pinned verbatim in §16.3 and are not to be reconstructed from this note.
+
+### 16.7 Execution transport for §16.3 (instruction defect prevented before the act): run each block under `bash` from a file, never pasted into the interactive shell
+
+Two hazards in the pinned text when pasted into an interactive zsh: every STOP is an `exit N`, which would close the Terminal window and lose the scrollback that §16.6 requires as evidence; and Block C's `${PIPESTATUS[0]}` is a bash array (zsh spells it `pipestatus`), so `BATCH_PIPELINE_RC` would print empty. Transport rule: extract each block verbatim from the record at the revision that pinned it (`17b4df63b`; §16.3's lines do not move in later appends), run it with `bash`, capture its output to a file. The blocks' text is unchanged; only the carrier is fixed. Code-line ranges at `17b4df63b`: A 599–625 · B 633–702 · C 710–713 · D 719–732.
+
+```bash
+cd /Users/soullab/MAIA-SOVEREIGN
+git fetch origin claude/voice-2026-census-01
+DOC=docs/programme/VOICE-2026/KERNEL-00_VPIO-02_K00-06_PARTIAL-ZERO_DISCRIMINATOR_PLAN_2026-09-15.md
+git show 17b4df63b:$DOC | sed -n '599,625p' > /private/tmp/s2w-blockA.sh
+git show 17b4df63b:$DOC | sed -n '633,702p' > /private/tmp/s2w-blockB.sh
+git show 17b4df63b:$DOC | sed -n '710,713p' > /private/tmp/s2w-blockC.sh
+git show 17b4df63b:$DOC | sed -n '719,732p' > /private/tmp/s2w-blockD.sh
+head -1 /private/tmp/s2w-blockA.sh; tail -1 /private/tmp/s2w-blockA.sh
+head -1 /private/tmp/s2w-blockB.sh; tail -1 /private/tmp/s2w-blockB.sh
+head -1 /private/tmp/s2w-blockC.sh; tail -1 /private/tmp/s2w-blockC.sh
+head -1 /private/tmp/s2w-blockD.sh; tail -1 /private/tmp/s2w-blockD.sh
+shasum -a 256 /private/tmp/s2w-block[ABCD].sh
+```
+
+Expected: A begins `git -C /Users/soullab/MAIA-SOVEREIGN fetch …` and ends `echo "BLOCK_A_PASS=1"`; B begins `cd /private/tmp/k0506-s2w-b198e2e37` and ends `echo "PREFLIGHT_CLEAN=$PF"`; C begins `cd …` and ends `echo "BATCH_PIPELINE_RC=${PIPESTATUS[0]}"`; D begins `cd …` and ends the `( cd "$LD" && shasum … )` line. No fence line, no prose line inside any file; if any file's first or last line differs, STOP and do not run it.
+
+Then, one at a time, reading each output before the next (a non-zero `rc` is the STOP; nothing after it runs):
+
+```bash
+bash /private/tmp/s2w-blockA.sh 2>&1 | tee /private/tmp/s2w-blockA.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w-blockA.out
+```
+
+```bash
+bash /private/tmp/s2w-blockB.sh 2>&1 | tee /private/tmp/s2w-blockB.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w-blockB.out
+```
+
+```bash
+bash /private/tmp/s2w-blockC.sh 2>&1 | tee /private/tmp/s2w-blockC.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w-blockC.out
+```
+
+```bash
+bash /private/tmp/s2w-blockD.sh 2>&1 | tee /private/tmp/s2w-blockD.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w-blockD.out
+```
+
+(The `echo "rc=…"` lines run in the operator's zsh, where `${PIPESTATUS[0]}` is empty — read the block's own last echo line for its result; the `rc=` line is informational only. If the operator's shell is bash, `rc=` carries the block's exit code.)
+
+**Block E — assemble the Terminal evidence into the bundle and return it** (read-only except for the two evidence files it adds and the commit; runs only after Block D produced `SHA256SUMS.witness`; if the act STOPPED earlier, run only the `cat` line into a `blocks-ABD.txt` placed beside whatever directories exist, and commit those):
+
+```bash
+cd /private/tmp/k0506-s2w-b198e2e37
+LD="$(ls -td docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-01-2* | head -1)"
+echo "LEDGER_DIR=$LD"
+cat /private/tmp/s2w-blockA.out /private/tmp/s2w-blockB.out /private/tmp/s2w-blockC.out /private/tmp/s2w-blockD.out > "$LD/blocks-ABCD.txt"
+( cd "$LD" && shasum -a 256 blocks-ABCD.txt >> SHA256SUMS.witness && tail -1 SHA256SUMS.witness )
+STAMP="$(basename "$LD" | sed 's/^S2-WITNESS-01-//')"
+git checkout -b "feature/k00-s2-witness-01-evidence-$STAMP"
+git add docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-01-*
+git status --short
+git commit -m "witness(voice-2026): return S2-WITNESS-01 evidence ($STAMP)"
+git push -u origin "feature/k00-s2-witness-01-evidence-$STAMP"
+git rev-parse HEAD
+```
+
+Return the branch name and the `git rev-parse HEAD` value. The pre-commit hook needs `node_modules`, which Block A linked. Nothing in Block E touches the device, the player, the volume or the organism.
