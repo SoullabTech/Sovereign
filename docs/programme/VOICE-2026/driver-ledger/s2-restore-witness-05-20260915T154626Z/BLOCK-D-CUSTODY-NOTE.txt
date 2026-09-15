@@ -1,0 +1,1 @@
+Block D executed once. The tee carrier was refused by the remote safety layer. No original s2w5-blockD.out exists. Block D was not rerun to manufacture one. Its produced repository artifacts and SHA256SUMS.witness are the evidence of that act.
