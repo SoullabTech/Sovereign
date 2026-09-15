@@ -4,8 +4,13 @@ import { incrementTurnCount, addConversationExchange, getConversationHistory, ge
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext, CORE_PROMPT_HISTORY_APERTURE } from './maiaVoice';
 // AIN-CONTEXT-01 · A6 — session self-location + known absence (pure; no I/O, no memory).
 import {
+  recoverViaBridge,
+  isOpaqueRetrospectiveRequest,
+} from '@/lib/maia/continuity/sessionBridge';
+import {
   recoverDisplacedExchanges,
   formatRecoveredForPrompt,
+  RECOVERY_SOURCE,
   type DisplacedExchange,
   type RecoveredExchange,
 } from '@/lib/maia/continuity/sessionRecovery';
@@ -802,7 +807,7 @@ async function validateAndRepairResponse(
  *
  * ⛔ Current session only. No cross-session reach, no summaries, no schema change.
  */
-function recoverForTier(args: {
+export function recoverForTier(args: {
   utterance: string;
   allSessionExchanges: readonly DisplacedExchange[];
   apertureCount: number;
@@ -812,11 +817,60 @@ function recoverForTier(args: {
 
   const apertureCount = Math.max(0, Math.min(all.length, args.apertureCount));
   const displaced = all.slice(0, all.length - apertureCount);
-  const apertureKeys = new Set(all.slice(all.length - apertureCount).map(e => e.exchangeKey));
+  const aperture = all.slice(all.length - apertureCount);
+  const apertureKeys = new Set(aperture.map(e => e.exchangeKey));
+  const candidates = displaced.filter(e => !apertureKeys.has(e.exchangeKey));
 
+  // ══ OPAQUE RETROSPECTIVE PATH ════════════════════════════════════════════
+  // ⭐⭐ When the member's words name only the ACT of remembering and identify nothing
+  // they said before, one-hop ranking has no evidence to rank on. Production proved
+  // what it does instead: it returned [2,3,36] while the marker sat at 22, and index
+  // 36 won on the member's own word "remember" — the retrieval vocabulary being
+  // mistaken for evidence about the remembered object.
+  //
+  // ⛔⛔ TERMINAL ABSTENTION. If no member-grounded bridge exists, this path returns
+  // NOTHING and does NOT fall through to the opaque scorer. Falling through would make
+  // the N2 abstention law an internal detail of one function rather than a property of
+  // what the member actually receives — the mechanism would say "there is no grounded
+  // path" and the member would still be handed [2,3,36].
+  if (isOpaqueRetrospectiveRequest(args.utterance, candidates)) {
+    const outcome = recoverViaBridge({
+      probe: args.utterance,
+      activePrefix: aperture,
+      displaced: candidates,
+    });
+
+    if (outcome.kind === 'abstained') {
+      console.log('🌉 [L1/bridge] abstained', { reason: outcome.reason });
+      return { recovered: [], block: '' };   // ⛔ NOTHING BELOW THIS LINE
+    }
+
+    const byIndex = new Map(candidates.map(e => [e.index, e]));
+    const recovered = outcome.exchanges
+      .map(b => {
+        const src = byIndex.get(b.index);
+        return src
+          ? ({ ...src, source: RECOVERY_SOURCE, score: b.carriedBy.length } satisfies RecoveredExchange)
+          : null;
+      })
+      .filter((e): e is RecoveredExchange => e !== null)
+      .sort((a, b) => a.index - b.index);
+
+    console.log('🌉 [L1/bridge] recovered', {
+      count: recovered.length,
+      indices: recovered.map(e => e.index),
+      via: outcome.exchanges.map(e => e.viaPrefixIndex),
+    });
+    return { recovered, block: formatRecoveredForPrompt(recovered) };
+  }
+
+  // ══ GROUNDED PATH ════════════════════════════════════════════════════════
+  // The present utterance carries real evidence about earlier material, so ordinary
+  // one-hop recovery may operate. ⛔ Unchanged, and deliberately not deleted: rejecting
+  // it as a FALLBACK for opaque requests is not rejecting it where it has evidence.
   const recovered = recoverDisplacedExchanges({
     utterance: args.utterance,
-    displaced: displaced.filter(e => !apertureKeys.has(e.exchangeKey)),
+    displaced: candidates,
     corpus: all,
   });
 

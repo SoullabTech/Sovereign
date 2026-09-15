@@ -1,4 +1,23 @@
 /**
+ * ⚠️⚠️ RETIRED 2026-09-15 — THIS INSTRUMENT TESTS A REJECTED HYPOTHESIS.
+ *
+ * It was built to falsify the recurrence repair, and it did its job: the repair went
+ * GREEN here and then FAILED R1 against the real production corpus. The founder
+ * rejected the repair, the scorer was reverted to deployed semantics, and so the
+ * behaviour this file asserts no longer exists.
+ *
+ * ⛔ It is NOT deleted. Its result is the record of a hypothesis that was plausible,
+ * locally confirmed, and wrong — which is the most useful kind of evidence this lane
+ * has produced. ⭐ Its failures are REPORTED, never scored: a suite whose oracle was
+ * disproven must not keep governing the implementation.
+ *
+ * ⭐ The finding it carries forward, which survives the rejection: MAIA's echoes must
+ * not manufacture member significance. That principle was RE-USED, in origin-aware
+ * form, by the bridge mechanism that replaced this one.
+ *
+ * Superseded by: tests/constitutional/lane1/c1-bridge-acceptance.ts (P1 · N1 · N2)
+ *
+ * ─── original header ───
  * L1 · C1 REPAIR — the RECURRENCE falsifier.
  *
  * Authority: founder ruling 2026-09-15, on the production witness at `e57ca1baa`.
@@ -138,4 +157,7 @@ ok('recovery still returns at most 3', got.length <= 3, `got ${got.length}`);
 ok('aperture unchanged at 3', APERTURE === 3);
 
 console.log(`\n${'─'.repeat(60)}\nL1 RECURRENCE FALSIFIER: ${pass} passed · ${fail} failed`);
-process.exit(fail === 0 ? 0 : 1);
+// ⚠️ RETIRED: report, never score. See the header.
+console.log(`  ⚠️  RETIRED INSTRUMENT — ${fail} assertion(s) no longer hold because the`);
+console.log('      repair they tested was rejected by R1 and reverted. Not a regression.');
+process.exit(0);

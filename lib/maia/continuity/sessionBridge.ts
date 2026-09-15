@@ -153,3 +153,51 @@ export function recoverViaBridge(input: {
   // ⛔ NO FALLBACK BELOW THIS LINE. There is deliberately nothing here.
   return { kind: 'recovered', exchanges };
 }
+
+/**
+ * ⭐⭐ IS THIS AN OPAQUE RETROSPECTIVE REQUEST?
+ *
+ * Founder ruling 2026-09-15: the generic retrieval words themselves — `remember`,
+ * `earlier`, `shared`, `phrase` — must NOT be treated as evidence identifying the
+ * remembered object. Production index 36 already showed why: it won one-hop ranking
+ * on the member's own word "remember" and had nothing to do with what was asked.
+ *
+ * The classification is by EVIDENCE, not by a word list, in two steps:
+ *
+ *   1. strip the retrieval vocabulary — the words that name the ACT of remembering;
+ *   2. ask whether anything that REMAINS actually occurs in the member's own earlier
+ *      messages.
+ *
+ * ⭐ Step 2 is what makes this robust. The real production probe contains "eralier",
+ * a misspelling that no vocabulary list will catch — but it appears nowhere else in
+ * the conversation, so it identifies nothing, and the request is correctly opaque.
+ * A word list alone would have mis-classified it as grounded and handed the turn back
+ * to the scorer that failed.
+ *
+ * Conversely "what was I saying earlier about rootedness" leaves `rootedness`, which
+ * DOES occur in the member's earlier language — genuine evidence about the object —
+ * so that request is GROUNDED and ordinary one-hop recovery may operate on it.
+ */
+const RETRIEVAL_VOCABULARY = new Set([
+  'remember','remembered','recall','recalled','forget','forgot','forgotten',
+  'earlier','previously','before','ago','back','start','started','beginning','last',
+  'said','say','saying','told','tell','telling','mention','mentioned','mentioning',
+  'shared','share','sharing','gave','give','given','brought','talked','discussed',
+  'phrase','word','words','conversation','chat','thread','something','anything',
+]);
+
+export function isOpaqueRetrospectiveRequest(
+  utterance: string,
+  memberHistory: readonly BridgeExchange[]
+): boolean {
+  const residual = tokenize(utterance).filter(t => !RETRIEVAL_VOCABULARY.has(t));
+  if (residual.length === 0) return true;
+
+  const memberVocabulary = new Set(
+    memberHistory.flatMap(e => tokenize(e.userMessage))
+  );
+  // ⭐ Opaque exactly when nothing the member is saying NOW identifies anything the
+  // member said BEFORE. ⛔ MAIA's replies are not consulted: her having used a word
+  // does not make the member's request grounded.
+  return !residual.some(t => memberVocabulary.has(t));
+}

@@ -29,11 +29,12 @@ export type BridgeFn = (input: {
 }) => number[];
 
 const all = frozen.corpus as BridgeExchange[];
-const MARKER = 22, PRIOR_ASK = 39;
+export const MARKER = 22;
+const PRIOR_ASK = 39;
 const clone = () => all.map(e => ({ ...e }));
 
 // ── P1 · the authoritative corpus, unmodified ───────────────────────────────
-const P1 = { name: 'P1 · genuine member-originated bridge', corpus: clone() };
+export const P1 = { name: 'P1 · genuine member-originated bridge', corpus: clone() };
 
 // ── N1 · the ONLY mutation: the prior ask's marker tokens move member → MAIA ─
 // The path 40 → 39 → 22 still EXISTS, but its second hop is now assistant-originated.
@@ -48,7 +49,7 @@ const N1corpus = clone();
   e.userMessage = e.userMessage.split(/\s+/).filter(t => !markerToks.has(t)).join(' ');
   e.maiaResponse = `${e.maiaResponse} ${moved.join(' ')}`.trim();
 }
-const N1 = { name: 'N1 · bridge exists ONLY through MAIA echo', corpus: N1corpus };
+export const N1 = { name: 'N1 · bridge exists ONLY through MAIA echo', corpus: N1corpus };
 
 // ── N2 · the active prefix's PRIOR ASKS are replaced by ordinary conversation ─
 //
@@ -70,7 +71,7 @@ const N2corpus = clone();
     slot.maiaResponse = ordinary[k]!.maiaResponse;
   }
 }
-const N2 = { name: 'N2 · single ask, NO bridge', corpus: N2corpus };
+export const N2 = { name: 'N2 · single ask, NO bridge', corpus: N2corpus };
 
 function split(corpus: BridgeExchange[]) {
   const probeEx = corpus.find(e => e.index === 40)!;
