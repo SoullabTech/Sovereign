@@ -314,6 +314,17 @@ carried by an unverified source, however well it states the case.
 
 ---
 
+### 3B.6 ⭐⭐ ACT 2 MUST CENSUS DECAY — the live temporal carrier
+
+⭐ **Decay is an existing EXPLICIT AIN temporal carrier**, and ACT 2 must census it as such,
+**including that two implementations disagree** (`TEMPORAL_GOVERNANCE_INVERSION_FINDING_2026-09-15.md`).
+
+⛔ **Not so this lane fixes it.** ⭐ So the lane cannot produce a typed grammar of `BEFORE` ·
+`SUPERSEDES` · `CORRECTED_BY` **while ignoring the mechanism already deciding which old memories
+survive retrieval.** ⚠️ The reconciliation question — *how should explicit temporal relations
+interact with temporal weighting already active in retrieval?* — is **owed to a founder act**,
+⛔ not answered by this lane, and ⛔ not left to the default in which whichever runs last wins.
+
 ### 3B.5 ⭐ TWO AXES, AND THE CENSUS NEEDS BOTH
 
 > ⭐⭐ *"MAIA may not need a graph. It may need a disciplined relational grammar that distinguishes
@@ -357,6 +368,7 @@ EventRelBench · GUMBridge ........ ⚠️ READING OBLIGATION — the premise re
 TACL relational memory ........... ⚠️ IS 2022 — canonical set, not contemporary
 REFERS_TO ........................ ⛔ DEFERRED TO ANTECEDENT-IDENTITY-01 (§3.1)
 two census axes .................. ⭐ descriptive ≠ prescriptive · ⛔ do not collapse (§3B.5)
+decay ............................ ⭐ ACT 2 MUST CENSUS IT (§3B.6) · ⛔ must not fix it
 design · schema · graph .......... ⛔ NOT AUTHORIZED
 production ....................... e57ca1baa · UNTOUCHED
 ```
