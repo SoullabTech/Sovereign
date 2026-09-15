@@ -1430,3 +1430,144 @@ route / Canvas                    ⛔
 production mutation               ⛔ NONE — both protected runs were READ ONLY
 maia_focus_witness                FROZEN
 ```
+
+---
+
+# W5-LANDING-02 · GATE A — FULL PENDING-ORDER CENSUS · INSTRUMENT
+
+**Authorized by** founder act, 2026-09-15. ⛔ **READ ONLY.**
+**Instrument** `scripts/witness/w5-landing-02-gate-a.sh`
+**Seal** `scripts/witness/w5-landing-02-gate-a-seal.sh` — **18 passed · 0 failed**
+**Protected result** ⛔ **NOT RUN** — this session cannot reach production.
+
+> **The custody lesson, one level up from 2026-09-07.** A narrow git diff is not
+> a narrow database act if the migration runner sees a wider pending set. The
+> runner does not execute a conceptual lane — it executes every file in the
+> directory the ledger does not yet name, in filename order.
+
+---
+
+## 47. ⭐ Three Gate A findings established LOCALLY, before production is touched
+
+**47.1 — The five pinned blobs all match.** Verified by `git hash-object`
+against this working tree:
+
+```
+45b7578d…  20260914000001_proposal_succession.sql          ✅
+df200edf…  20260914000002_manuscript_revision_offers.sql   ✅
+44ae7019…  20260914000003_proposal_chains_member_identity  ✅
+beb02f67…  20260914000004_manuscript_revision_authorizations ✅
+7215e1bb…  20260914000005_editorial_ontology.sql           ✅
+```
+
+**47.2 ⚠️⚠️ — This branch carries SEVEN non-W5 migrations the canonical base
+does not**, and every one of them **sorts before** `20260914000001`:
+
+```
+20260910000001_pending_ask_claims.sql
+20260910000002_context_disclosure_boundary_developmental.sql
+20260910000003_pending_ask_consuming_act.sql
+20260910000005_pending_ask_invocation_receipt.sql
+20260912000001_focus_crossing_acts.sql
+20260912000002_focus_act_draft_provenance.sql
+20260913000001_editorial_decision_events.sql
+```
+
+⭐⭐ **This is exactly the danger the ruling named, and it is real rather than
+hypothetical.** A carrier built by merging *this branch* would put seven
+unrelated migrations ahead of `000001` in the runner's order. ⛔ The founder's
+Gate B design already excludes them — *base + five blobs only* — and that
+exclusion is now backed by a measurement rather than by intent.
+
+`origin/clean-main-no-secrets` carries **480** migrations; this branch, **489**.
+
+**47.3 ⭐ The five are self-contained.** Every external table they reference —
+`members`, `member_manuscripts`, `manuscript_working_drafts`,
+`manuscript_draft_sections`, `ask_turns` — comes from long-standing migrations,
+**none from the seven above**. ⚠️ Their presence on the protected database is
+**not yet verified** for any but `ask_turns` (W4-2.2 confirmed
+`20260901000001` applied). Owed to the protected Gate A run.
+
+## 48. What the instrument does
+
+```
+LOCAL    landing base's migration filenames (git ls-tree)
+         + the five, pins ASSERTED by hash, never "copied"
+REMOTE   the running image's /app/database/migrations   (ls)
+         the protected ledger        (SELECT inside BEGIN READ ONLY)
+```
+
+Then four sections that do not collapse into each other:
+
+- **§3 the CURRENT image's latent pending set** — what production would attempt
+  today with **no merge at all**. ⭐ That matters whether or not W5 ever lands.
+- **§4 ledgered but file absent** — the ledger naming migrations the image does
+  not carry.
+- **§5 the complete ordered pending set** of the proposed carrier, each row
+  tagged `W5 package` or `⚠️ OUTSIDE W5`, in the runner's order, ⛔ with no
+  hidden filtering.
+- **§6 the verdict** — PASS only when the pending set is **exactly the five**,
+  nothing outside and nothing missing.
+
+⭐ A pending migration outside the package **fails the gate and names the five
+dispositions** it must be classified under; ⛔ it is not treated as a permanent
+blocker, and it is not silently skipped.
+
+## 49. The seal, and its test seam
+
+Gate A's *gathering* needs the protected host; its **classifier** does not. The
+instrument declares a test seam — three input files — and in that mode performs
+**no protected read** and prints `SYNTHETIC` twice, so a seal run can never be
+mistaken for a protected reading.
+
+| case | asserted |
+|---|---|
+| exactly the five pending | PASSES, exit 0, all tagged `W5 package`, none OUTSIDE |
+| one stray pending | FAILS, names it, demands disposition, nonzero exit |
+| **earlier-sorting stray** | listed **before** `000001` — the runner's order, not the package's |
+| ledgered but file absent | drift named, gate fails |
+| latent pending in the current image | surfaced and named |
+| **one of the five already applied** | package is **stale** → fails |
+| synthetic mode | declares itself, and says it was not a protected reading |
+
+### Two defects in the seal, both mine
+
+- ⚠️ **A broken obligation** passed a *line number* as its expected string, so it
+  asserted nothing about ordering and failed on its own nonsense. The real
+  ordering check — comparing positions — was beside it and passed. Removed, with
+  the reason recorded.
+- ⚠️ **A malformed fixture.** To test *"one of the five already applied"* I put
+  the file in the **ledger but not the image** — and the instrument correctly
+  reported **drift** first, because a ledger row with no file really is drift.
+  ⭐ The instrument was right and my fixture was wrong; the fixture now supplies
+  both.
+
+## 50. How to run Gate A
+
+```bash
+bash scripts/witness/w5-landing-02-gate-a.sh
+```
+
+Default landing base `origin/clean-main-no-secrets`. ⛔ **Do not pass
+`claude/w4-2-schema-design`** — it carries later architecture and is not the
+landing carrier; comparing the ledger against it wholesale would describe a
+deploy nobody proposed.
+
+## 51. Standing
+
+```
+W5-LANDING-01 lane census         ✅ RUN · all five PENDING · no drift
+W5-LANDING-02 Gate A instrument   ✅ sealed · 18/0
+W5-LANDING-02 Gate A RESULT       ⛔ NOT RUN
+  seven non-W5 migrations on THIS branch sort before 000001   ⚠️ measured
+  the five are self-contained                                  ⭐ measured
+  base-table presence on production                            ⏸ unverified
+
+Gate B narrow carrier             ⛔ only if Gate A passes, and by founder act
+canonical merge                   ⛔
+protected execution               ⛔
+deployment                        ⛔
+W4 schema                         ⛔
+production mutation               ⛔ NONE
+maia_focus_witness                FROZEN
+```
