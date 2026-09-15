@@ -95,5 +95,23 @@ standing to cross from a member's relationship with MAIA into the collective fie
 FALSE THERE · ⚠️ IDENTITY BINDING REQUIRED BEFORE ANY WIDENING · ⛔ ACT 3 UNOPENED ·
 ⛔ LANE OPEN.**
 
+---
+
+## 6. Closing statement (founder, 2026-09-15)
+
+> **ACT 2 established production containment of the unauthenticated AIN HTTP corridor.
+> It did not establish member consent to contribute to AIN. Authentication and
+> contribution authority remain separate boundaries.**
+
+⭐ That sentence is the whole of what closed, and the whole of what did not.
+
+⚠️ **On the contaminated run:** the earlier `401 / 000 / 000 / 000` outputs stay in the
+historical record as contaminated shell evidence. ⛔ **They are no longer load-bearing.**
+The self-labelled rerun is the witness.
+
+**Next act, when explicitly opened: `ACT 3 — Contribution Authority Model`** — defining what
+must be true before anything can cross from a member–MAIA relationship into the collective
+AIN field.
+
 > *The door is shut and we watched it refuse three strangers. Nobody has yet been given a
 > way to knock on purpose — and that, not the lock, is the remaining work.*
