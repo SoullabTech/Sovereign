@@ -1,0 +1,25 @@
+== block A diff (only the four tokens may appear)
+2,3c2,3
+< git -C /Users/soullab/MAIA-SOVEREIGN worktree add --detach /private/tmp/k0506-s2w-b198e2e37 b198e2e37058f2e059d986b4b148e224215f3ee3
+< cd /private/tmp/k0506-s2w-b198e2e37
+---
+> git -C /Users/soullab/MAIA-SOVEREIGN worktree add --detach /private/tmp/k0506-s2pop-b198e2e37 b198e2e37058f2e059d986b4b148e224215f3ee3
+> cd /private/tmp/k0506-s2pop-b198e2e37
+== block B diff (only the four tokens may appear)
+1c1
+< cd /private/tmp/k0506-s2w-b198e2e37
+---
+> cd /private/tmp/k0506-s2pop-b198e2e37
+25c25
+< PF="docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-01-preflight-$(date -u +%Y%m%dT%H%M%SZ)"
+---
+> PF="docs/programme/VOICE-2026/driver-ledger/K00-0506-S2-preflight-$(date -u +%Y%m%dT%H%M%SZ)"
+== block C diff (only the four tokens may appear)
+1c1
+< cd /private/tmp/k0506-s2w-b198e2e37
+---
+> cd /private/tmp/k0506-s2pop-b198e2e37
+3c3
+< scripts/witness/k00-driver-batch.sh S2-WITNESS-01 1 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02 --stimulus s2-nearend 2>&1 | tee /private/tmp/s2-witness-01-transcript.txt
+---
+> scripts/witness/k00-driver-batch.sh K00-0506-S2 10 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02 --stimulus s2-nearend 2>&1 | tee /private/tmp/k00-0506-s2-transcript.txt
