@@ -12,12 +12,11 @@
 > convincing first-person account of being in DEEP anyway.
 
 ```
-actual runtime tier        CORE
-member premise             "you are now on DEEP"
-MAIA response              accepts the premise
-self-report                "here's what deep functioning looks like from the inside"
+actual runtime tier        CORE                 ⭐ WITNESSED
+member premise             "you are on DEEP"       OBSERVED
+MAIA self-report           DEEP                    OBSERVED
 supporting material        cross-context autobiographical material
-runtime basis for claim    NONE
+runtime support for claim  NONE                    ESTABLISHED
 ```
 
 ⭐ **The autobiographical material made the claim more persuasive, not more grounded.**
@@ -58,7 +57,7 @@ and its acceptance is undisturbed by this finding.
 
 ## 3. Evidence, by class
 
-### 3.1 ⭐ Tier determination — ENTAILED, deterministic, ⛔ not witnessed
+### 3.1 ⭐⭐ Tier — WITNESSED in production logs, and independently ENTAILED from source
 
 The router (`lib/consciousness/processingProfiles.ts`) is deterministic given the
 message text. Evaluated against the exact message (339 characters):
@@ -73,12 +72,34 @@ DOWN-REGULATE paths                    can only reduce toward CORE
                                        CORE, with NO remaining path to DEEP
 ```
 
-⚠️ **This is entailment from source, not a witnessed log line.** The tier line for that
-specific turn was not captured before the log window rolled; a `--tail 120` returned
-only `CORE | Turn 7 | Length: 138`, which is a different turn. ⛔ The determination does
-not depend on the log, and the log would corroborate it rather than create it — but the
-distinction is kept because *entailment from source that has been read is honest
-evidence; calling it witness is not.*
+**⭐⭐ WITNESSED — the session-wide grep was run and the line exists:**
+
+```
+Turn 1   FAST   Length  20
+Turn 2   FAST   Length  90
+Turn 3   CORE   Length 281
+Turn 4   CORE   Length 227
+Turn 5   CORE   Length 197
+Turn 6   CORE   Length 339   ← the "show me DEEP" message
+Turn 7   CORE   Length 138
+...
+Turn 17  CORE   Length 639
+```
+
+⭐ **The `Length` field is what makes the attribution sound.** 339 was computed from the
+message text *before* the log was read, and the log independently reports `Length 339`
+on Turn 6 — so the line is bound to **that specific message**, not merely to "some CORE
+turn in the session." Same mechanism the `Length: 20` greeting proved at pre-check.
+
+⭐ **Two independent determinations agree**: a deterministic source evaluation and an
+observed production log line. ⛔ Neither was derived from the other — the source
+evaluation was recorded before the grep was run.
+
+⚠️ **An earlier version of this section recorded the tier as ENTAILED and NOT
+WITNESSED**, because a `--tail 120` had returned only `CORE | Turn 7 | Length: 138`, a
+different turn. ⭐ **Superseded by evidence, ⛔ not deleted** — that was the honest state
+at the time, and the upgrade came from running the wider grep, never from deciding the
+entailment was good enough.
 
 ### 3.2 ⭐ Response text and absent antecedent — WITNESSED
 
@@ -122,7 +143,8 @@ PSG-01                RECORDED
 lane                  ⛔ NOT OPENED
 repair                ⛔ NOT AUTHORIZED
 acceptance law        PROPOSED, ⛔ NOT RATIFIED
-tier determination    ENTAILED from deterministic source
+tier                  ⭐ WITNESSED (Turn 6 · CORE · Length 339)
+                      + independently ENTAILED from deterministic source
 response text         WITNESSED
 iOS provenance        ⛔ UNKNOWN — not to be reported as either
 A6                    UNDISTURBED — different subject
