@@ -118,14 +118,24 @@ fi
 
 echo ""
 echo "── 5 · OPTION A · has the dated unique-build ruling changed? ─────"
-echo "   ⭐ Option A was earned on 2026-09-14: ask_threads 8 kB · ask_turns 24 kB."
-echo "      This rechecks that the ordinary UNIQUE build is still a blip."
-S="$(ro "SELECT pg_size_pretty(pg_total_relation_size('ask_threads')),
-                pg_size_pretty(pg_total_relation_size('ask_turns')),
+echo "   ⭐ Option A was earned on 2026-09-14 from a HEAP reading:"
+echo "        ask_threads heap 8192 bytes · ask_turns heap 24 kB"
+echo ""
+echo "   ⚠️ CORRECTED 2026-09-15, founder-found. The first version of this"
+echo "      section printed pg_total_relation_size and compared it against that"
+echo "      dated HEAP figure — two different measurements. It made ask_threads"
+echo "      look like it had grown 8 kB → 80 kB when the heap had not moved at"
+echo "      all; the difference is index and TOAST overhead W5 added."
+echo "      ⛔ A comparison between two different measurements is not a"
+echo "      comparison. BOTH are printed now, and the heap-to-heap line is the"
+echo "      one the dated ruling is about."
+S="$(ro "SELECT pg_relation_size('ask_threads'), pg_size_pretty(pg_total_relation_size('ask_threads')),
+                pg_relation_size('ask_turns'),   pg_size_pretty(pg_total_relation_size('ask_turns')),
                 (SELECT reltuples::bigint FROM pg_class WHERE relname='ask_threads'),
                 (SELECT reltuples::bigint FROM pg_class WHERE relname='ask_turns');" | grep '|' | head -1)"
-echo "   ask_threads  $(echo "$S" | cut -d'|' -f1)  · est rows $(echo "$S" | cut -d'|' -f3)"
-echo "   ask_turns    $(echo "$S" | cut -d'|' -f2)  · est rows $(echo "$S" | cut -d'|' -f4)"
+echo ""
+echo "   ask_threads  heap $(echo "$S" | cut -d'|' -f1) bytes   (dated: 8192)   · total $(echo "$S" | cut -d'|' -f2) · est rows $(echo "$S" | cut -d'|' -f5)"
+echo "   ask_turns    heap $(echo "$S" | cut -d'|' -f3) bytes   (dated: 24576)  · total $(echo "$S" | cut -d'|' -f4) · est rows $(echo "$S" | cut -d'|' -f6)"
 echo "   ⛔ reltuples is an ESTIMATE and reads -1 when never analyzed; it sizes"
 echo "      the build, it does not answer an integrity question."
 echo "   ⚠️ Founder judgement: if either table has grown materially, Option A is"
