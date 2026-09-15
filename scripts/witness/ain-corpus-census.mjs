@@ -209,6 +209,25 @@ function countSignals(lower, terms) {
   return terms.filter((t) => lower.includes(t));
 }
 
+// ---------------------------------------------------------------- object kind
+//
+// CARRIER IDENTITY IS ESTABLISHED BEFORE CONTENT ANALYSIS, not after it.
+//
+// Amendment 2E introduced `.meta.json` as the second ratified metadata carrier and
+// counted it — but it computed `isSidecar` in the records loop AFTER hashFile() and
+// AFTER the text read. So `doc.pdf.meta.json` was excluded from the corpus-document
+// total while still contributing to duplication clusters, to the domain and
+// authorship denominators, and to the text/hash trust rates. A carrier that
+// describes a document was being measured as though it were one.
+//
+// A sidecar is a CARRIER. It is counted, its path and size are recorded, and its
+// contents are never inspected: not for frontmatter, not for domain terms, not for
+// authorship terms, not for a duplication hash. `soullab` written inside a sidecar
+// is a statement ABOUT a document, never evidence FROM one.
+function isMetadataSidecar(path) {
+  return basename(path).endsWith('.meta.json');
+}
+
 // ---------------------------------------------------------------- main
 
 await walk(ROOT);
@@ -226,7 +245,12 @@ await walk(ROOT);
 // which is a LEGACY convention. It was a proxy for the operation, not the
 // operation. This probes the actual read the census depends on.
 async function probeReadability(candidates) {
-  const sample = candidates.filter((p) => READABILITY[extname(p).toLowerCase()] === 'immediate').slice(0, 40);
+  // Corpus documents only. The probe guards content findings, and content findings
+  // are now corpus-document-scoped; a tree of readable sidecars beside dataless
+  // documents must not be able to satisfy it.
+  const sample = candidates
+    .filter((p) => !isMetadataSidecar(p) && READABILITY[extname(p).toLowerCase()] === 'immediate')
+    .slice(0, 40);
   if (sample.length === 0) return { attempted: 0, failed: 0 };
   let failed = 0;
   for (const path of sample) {
@@ -284,6 +308,8 @@ let mdDocuments = 0;
 let withNoFrontmatter = 0;
 let withUnknownFrontmatter = 0;   // eligible Markdown, content never arrived — NOT absence
 let sidecarFiles = 0;             // .meta.json — a metadata carrier, not a corpus document
+let sidecarBytes = 0;
+let corpusDocuments = 0;          // filesystem objects MINUS metadata carriers
 let zeroByte = 0;
 let soullabSignal = 0;
 
@@ -296,11 +322,39 @@ for (const path of files) {
   const top = rel.split(sep)[0] || '(root)';
   const readability = READABILITY[ext] ?? 'unknown';
 
+  // ---- CARRIER IDENTITY FIRST. Nothing below reads content until this is settled.
+  const objectKind = isMetadataSidecar(path) ? 'metadata_sidecar' : 'corpus_document';
+
+  // Filesystem-object tallies. Both kinds are real objects on disk and both are
+  // counted here; the corpus-document denominators are carried separately below.
   byExt[ext || '(none)'] = (byExt[ext || '(none)'] ?? 0) + 1;
   byReadability[readability] += 1;
   byTopDir[top] = (byTopDir[top] ?? 0) + 1;
   totalBytes += st.size;
   if (st.size === 0) zeroByte += 1;
+
+  if (objectKind === 'metadata_sidecar') {
+    sidecarFiles += 1;
+    sidecarBytes += st.size;
+    // Path and size are retained. Contents are NOT opened — no hash, no text read,
+    // no domain terms, no authorship terms. Every content-derived field is null,
+    // which reads as "not applicable to a carrier", never as "looked and found none".
+    records.push({
+      rel, object_kind: objectKind, ext: ext || '(none)', bytes: st.size,
+      mtime: st.mtime.toISOString(), readability,
+      hash: null, hashKind: null,
+      frontmatter_status: 'not_applicable',
+      frontmatter_observation: 'not_applicable',
+      frontmatter_fields_present: null,
+      frontmatter_fields_missing: null,
+      content_observed: null,
+      domain_signal: null,
+      soullab_authorship_signal: null,
+    });
+    continue;
+  }
+
+  corpusDocuments += 1;
 
   let hash = null, hashKind = null;
   hashAttempts += 1;
@@ -314,8 +368,10 @@ for (const path of files) {
   let domains = [];
   let soullab = false;
   let textObserved = false;   // did this file's content actually reach us?
+  let textAttempted = false;  // did we even try? not-attempted is not not-found
 
   if (readability === 'immediate' && st.size > 0 && st.size < 16 * 1024 * 1024) {
+    textAttempted = true;
     textAttempts += 1;
     try {
       const text = await readTextHead(path);
@@ -334,25 +390,45 @@ for (const path of files) {
   // evidence that frontmatter is missing from it. Within the tolerated 5% of
   // content-read failures those files were previously counted as "absent" —
   // a false negative manufactured from non-observation.
+  // FRONTMATTER STANDING FOLLOWS OBSERVATION, NEVER CONVENIENCE.
+  //
+  // Amendment 2E routed non-zero Markdown to `unknown` only when it was ELIGIBLE for
+  // a text read. A Markdown document of 16 MB or more was ineligible, fell past that
+  // branch with fmPresent still null, and landed on `absent` — a deliberate
+  // non-attempt recorded as a finding of absence. The eligibility predicate is gone:
+  // the only question now is whether this document's content was observed.
+  //
+  //   zero bytes                      -> absent    (size IS the observation)
+  //   content read                    -> complete | partial | absent
+  //   non-zero, not observed, ANY reason -> unknown
   const isMarkdown = ext === '.md' || ext === '.markdown';
-  const isSidecar = rel.endsWith('.meta.json');
-  if (isSidecar) sidecarFiles += 1;
 
   let frontmatterStatus = 'not_applicable';   // non-Markdown: this carrier is not required of it
+  let frontmatterObservation = 'not_applicable';
   if (isMarkdown) {
     mdDocuments += 1;
-    const textEligible = st.size > 0 && st.size < 16 * 1024 * 1024;
-    if (st.size === 0) { frontmatterStatus = 'absent'; withNoFrontmatter += 1; }
-    else if (textEligible && !textObserved) { frontmatterStatus = 'unknown'; withUnknownFrontmatter += 1; }
-    else if (fmPresent === null) { frontmatterStatus = 'absent'; withNoFrontmatter += 1; }
-    else if (fmPresent.length === RATIFIED_FIELDS.length) { frontmatterStatus = 'complete'; withFullFrontmatter += 1; }
-    else { frontmatterStatus = 'partial'; withPartialFrontmatter += 1; }
+    if (st.size === 0) {
+      frontmatterStatus = 'absent'; frontmatterObservation = 'observed'; withNoFrontmatter += 1;
+    } else if (!textObserved) {
+      frontmatterStatus = 'unknown';
+      frontmatterObservation = textAttempted
+        ? 'read_failed'
+        : (st.size >= 16 * 1024 * 1024 ? 'not_attempted_size_limit' : 'not_attempted');
+      withUnknownFrontmatter += 1;
+    } else {
+      frontmatterObservation = 'observed';
+      if (fmPresent === null) { frontmatterStatus = 'absent'; withNoFrontmatter += 1; }
+      else if (fmPresent.length === RATIFIED_FIELDS.length) { frontmatterStatus = 'complete'; withFullFrontmatter += 1; }
+      else { frontmatterStatus = 'partial'; withPartialFrontmatter += 1; }
+    }
   }
 
   records.push({
-    rel, ext: ext || '(none)', bytes: st.size, mtime: st.mtime.toISOString(),
+    rel, object_kind: objectKind, ext: ext || '(none)', bytes: st.size,
+    mtime: st.mtime.toISOString(),
     readability, hash, hashKind,
     frontmatter_status: frontmatterStatus,   // complete | partial | absent | unknown | not_applicable
+    frontmatter_observation: frontmatterObservation, // observed | read_failed | not_attempted_size_limit | not_attempted | not_applicable
     // A missing-fields array is emitted ONLY for a Markdown document whose content
     // was actually read. Unknown and not_applicable both carry null: neither
     // non-observation nor a different metadata carrier is evidence of absence.
@@ -377,6 +453,11 @@ for (const path of files) {
 // original defect in a narrower form. The threshold and the guard are now the
 // same derived value, computed once and consumed everywhere.
 const TRUST_THRESHOLD = 0.95;
+
+// SCOPE (Amendment 2F): both rates below are over CORPUS DOCUMENTS. Metadata
+// sidecars are never opened, so they never enter either numerator or either
+// denominator. A tree of readable carriers cannot raise the observed rate of the
+// documents they describe.
 
 // TWO content-reading channels, not one. Amendment 2A unified the threshold for
 // text reads and left hashing merely counted — but hashing feeds duplication,
@@ -423,6 +504,17 @@ const census = {
     backup_artifacts_excluded: backupSkipped,
     zero_byte_files: zeroByte,
   },
+  // Three populations, deliberately not one number.
+  //   filesystem_objects  — everything counted on disk
+  //   metadata_sidecars   — .meta.json carriers; path and size only, never opened
+  //   corpus_documents    — the denominator for every content-derived finding
+  population: {
+    filesystem_objects: files.length,
+    metadata_sidecars: sidecarFiles,
+    metadata_sidecar_bytes: sidecarBytes,
+    corpus_documents: corpusDocuments,
+    sidecar_contents_inspected: false,
+  },
   measurement: {
     readdir_failures: readdirFailures,
     lstat_failures: lstatFailures,
@@ -436,6 +528,7 @@ const census = {
     text_read_success_rate: +textSuccessRate.toFixed(4),
     hash_success_rate: +hashSuccessRate.toFixed(4),
     trust_threshold: TRUST_THRESHOLD,
+    trust_scope: 'corpus documents only; metadata sidecars are never opened',
     text_findings_trustworthy: textFindingsTrustworthy,
     hash_findings_trustworthy: hashFindingsTrustworthy,
     content_findings_trustworthy: contentFindingsTrustworthy,
@@ -451,14 +544,17 @@ const census = {
     markdown_frontmatter_partial: withPartialFrontmatter,
     markdown_frontmatter_absent: withNoFrontmatter,
     markdown_frontmatter_unknown: withUnknownFrontmatter,
+    markdown_frontmatter_observation: 'zero-byte = observed; unread non-zero = unknown, for ANY reason including a deliberate size-limit non-attempt',
     non_markdown_sidecar_compliance: 'NOT MEASURED BY THIS INSTRUMENT',
     meta_json_sidecars_seen: sidecarFiles,
-    corpus_documents_excluding_sidecars: files.length - sidecarFiles,
+    corpus_documents_excluding_sidecars: corpusDocuments,
   },
   observation_scope: {
     files_whose_content_was_read: textSuccesses,
     files_eligible_but_unread: textAttempts - textSuccesses,
     domain_and_authorship_denominator: textSuccesses,
+    denominator_population: 'corpus documents',
+    sidecars_excluded_from_content_findings: sidecarFiles,
     duplication_coverage: hashSuccessRate === 1 ? 'complete' : 'partial',
     duplication_counts_are: hashSuccessRate === 1 ? 'exact' : 'observed lower bound',
     files_unhashed: hashAttempts - hashSuccesses,
@@ -561,8 +657,22 @@ const md = `# AIN Wisdom Corpus Census
 | **AppleDouble sidecars excluded** | ${appleDoubleSkipped} |
 | **Zero-byte files** | ${zeroByte} (${pct(zeroByte)}% of counted files) |
 | **\`.backup\` artifacts excluded** | ${backupSkipped} |
-| **\`.meta.json\` sidecars (carriers, not documents)** | ${sidecarFiles} |
-| **Corpus documents excluding sidecars** | ${files.length - sidecarFiles} |
+
+## Populations
+
+⚠️ *Three populations, deliberately not one number. Every content-derived finding below
+uses **corpus documents** as its denominator.*
+
+| Population | Count | What it means |
+|---|---|---|
+| Filesystem objects | ${files.length} | everything counted on disk |
+| \`.meta.json\` metadata sidecars | ${sidecarFiles} | carriers — **path and size only, never opened** |
+| **Corpus documents** | ${corpusDocuments} | the denominator for hashing, duplication, domain, authorship, frontmatter |
+
+⛔ A sidecar is a statement **about** a document, never evidence **from** one. Sidecar contents
+are not hashed, not read, and contribute nothing to duplication clusters, domain counts,
+authorship counts, or the text/hash trust rates. ⛔ Nothing in a sidecar was inspected, altered
+or deleted.
 
 ## Measurement state
 
@@ -572,6 +682,7 @@ const md = `# AIN Wisdom Corpus Census
 |---|---|---|---|
 | **readdir (exact: 0 required)** | — | — | ${readdirFailures} |
 | **lstat (exact: 0 required)** | ${files.length} | ${files.length - lstatFailures} | ${lstatFailures} |
+| *(attempts below are over the ${corpusDocuments} corpus documents)* | | | |
 | content hash | ${hashAttempts} | ${hashAttempts - hashFailures} | ${hashFailures} |
 | text read | ${textAttempts} | ${textSuccesses} | ${textFailures} |
 
@@ -584,6 +695,9 @@ const md = `# AIN Wisdom Corpus Census
 
 ## Machine readability
 
+⚠️ *Over all ${files.length} filesystem objects, sidecars included — this is a disk-format
+table, not an ingestion denominator.*
+
 | Class | Files | Share |
 |---|---|---|
 | Immediately readable | ${byReadability.immediate} | ${pct(byReadability.immediate)}% |
@@ -595,14 +709,15 @@ const md = `# AIN Wisdom Corpus Census
 
 Required: ${RATIFIED_FIELDS.map((f) => `\`${f}\``).join(' · ')}
 
-⭐ **Denominator is the ${mdDocuments} Markdown document(s)**, ⛔ not all ${files.length} counted files.
+⭐ **Denominator is the ${mdDocuments} Markdown document(s)**, ⛔ not all ${files.length} filesystem
+objects and ⛔ not the ${corpusDocuments} corpus documents.
 
 | State | Markdown docs | Share of Markdown |
 |---|---|---|
 | Complete | ${withFullFrontmatter} | ${mdDocuments ? ((withFullFrontmatter / mdDocuments) * 100).toFixed(1) : '0.0'}% |
 | Partial | ${withPartialFrontmatter} | ${mdDocuments ? ((withPartialFrontmatter / mdDocuments) * 100).toFixed(1) : '0.0'}% |
 | Absent (**read**, none found) | ${withNoFrontmatter} | ${mdDocuments ? ((withNoFrontmatter / mdDocuments) * 100).toFixed(1) : '0.0'}% |
-| ⛔ **Unknown (eligible but unread)** | ${withUnknownFrontmatter} | ${mdDocuments ? ((withUnknownFrontmatter / mdDocuments) * 100).toFixed(1) : '0.0'}% |
+| ⛔ **Unknown (non-zero, unobserved)** | ${withUnknownFrontmatter} | ${mdDocuments ? ((withUnknownFrontmatter / mdDocuments) * 100).toFixed(1) : '0.0'}% |
 
 ### ⛔ Non-Markdown metadata: NOT MEASURED
 
@@ -621,9 +736,13 @@ counted as metadata carriers, ⛔ never as authored corpus documents.
 distance between the **Markdown** corpus as it exists and the YAML-carrier half of the discipline
 already ratified for it* — ⛔ **not** the whole protocol.
 
-⛔ ***Unknown* is not *absent*.** Those files were eligible for a content read and their content
-never reached this instrument. They are excluded from the absence finding rather than counted
-toward it.
+⛔ ***Unknown* is not *absent*.** A non-zero Markdown document whose content did not reach this
+instrument is \`unknown\` **for any reason** — a failed read, or a deliberate non-attempt such as the
+16 MB size limit. ⛔ *Not attempted* is never converted to *absent*. Each record carries
+\`frontmatter_observation\`: \`observed\` · \`read_failed\` · \`not_attempted_size_limit\` ·
+\`not_attempted\` · \`not_applicable\`.
+
+⛔ Zero-byte Markdown is \`absent\` by **observation** — the size is itself the measurement.
 
 ## Duplication
 
@@ -640,8 +759,11 @@ ${hashSuccessRate === 1
 
 ## Domain signal (12-domain map)
 
-Term occurrence counts over the **${textSuccesses} files whose content was actually read**.
-Orientation, **not** classification.
+Term occurrence counts over the **${textSuccesses} corpus documents whose content was actually
+read**. Orientation, **not** classification.
+
+⛔ ${sidecarFiles} metadata sidecar(s) were excluded before any content analysis. A Soullab or
+Spiralogic term inside a sidecar describes a document; it is not a term found in one.
 
 ⛔ **Denominator is observed files, not the corpus.** ${textAttempts - textSuccesses} eligible
 file(s) were not read and contribute nothing to these counts — ⛔ which is *absence of
@@ -654,7 +776,8 @@ ${Object.entries(domainHits).sort((a, b) => b[1] - a[1]).map(([k, v]) => `| ${k}
 
 ## Authorship signal
 
-${soullabSignal} of the **${textSuccesses} files read** carry a Soullab/Spiralogic/MAIA term.
+${soullabSignal} of the **${textSuccesses} corpus documents read** carry a Soullab/Spiralogic/MAIA
+term. ⛔ Sidecars were never opened and contribute neither a hit nor a miss.
 
 ⛔ ${textAttempts - textSuccesses} eligible file(s) were unread and are **not** counted as
 lacking the term.
@@ -663,6 +786,8 @@ lacking the term.
 axes (charter §2.1) and neither is assigned by this instrument.
 
 ## By extension
+
+⚠️ *All ${files.length} filesystem objects, sidecars included.*
 
 | Extension | Files | Share |
 |---|---|---|
@@ -676,13 +801,14 @@ ${table(census.by_top_level_dir)}
 
 ---
 
-**Standing: CENSUS COMPLETE · READ-ONLY · ⛔ NOTHING MOVED · ⛔ NOTHING INDEXED ·
+**Standing: CENSUS COMPLETE · READ-ONLY · ⛔ NO SIDECAR OPENED · ⛔ NOTHING MOVED · ⛔ NOTHING INDEXED ·
 ⛔ NOTHING INGESTED · ⛔ NO CANON ASSIGNED · CORPUS UNTOUCHED.**
 `;
 
 await writeFile(join(OUT, 'CENSUS.md'), md);
 
-console.log(`census complete — ${files.length} files, ${census.totals.gigabytes} GB`);
+console.log(`census complete — ${files.length} filesystem objects, ${census.totals.gigabytes} GB`);
+console.log(`  populations: ${corpusDocuments} corpus documents · ${sidecarFiles} metadata sidecars (never opened)`);
 console.log(`  excluded: ${appleDoubleSkipped} AppleDouble · ${backupSkipped} .backup · zero-byte: ${zeroByte}`);
 console.log(`  reads: text ${textSuccesses}/${textAttempts} · hash ${hashAttempts - hashFailures}/${hashAttempts}`);
 console.log(`  readable now: ${byReadability.immediate} · needs conversion: ${byReadability.needs_conversion} · unsuitable: ${byReadability.unsuitable}`);
