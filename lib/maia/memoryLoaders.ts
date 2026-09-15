@@ -172,10 +172,11 @@ export async function loadRecentThemeSignals(
  * Phase 2 (2026-05-24, Kelly lift on observation freeze for conversational layer):
  * content IS surfaced into MAIA's prompt via lib/maia/conversationalRecallBlock.ts,
  * gated by members.conversational_recall_enabled (default TRUE — matches the
- * 0fa544bc4 atoms default-flip pattern). The retriever returns bounded content
- * (LEFT 600 chars per row); the formatter applies further suppression rules and
- * provenance-grounded rendering. No synthesis, no relevance scoring — order is
- * recency only; "related" = structural (same member, different session, recent).
+ * 0fa544bc4 atoms default-flip pattern). The retriever returns the complete text
+ * for the bounded row set; the formatter is the ONE prompt-budget boundary and
+ * preserves both the beginning and end of very long turns. No synthesis, no
+ * relevance scoring — order is recency only; "related" = structural (same member,
+ * different session, recent).
  *
  * Authority: docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md
  *
@@ -205,7 +206,7 @@ export async function loadPriorCrossSessionExchanges(
       created_at: Date;
       content: string;
     }>(
-      `SELECT session_id, role, created_at, LEFT(content, 600) AS content
+      `SELECT session_id, role, created_at, content
        FROM conversation_turns
        WHERE user_id = $1
          AND session_id IS NOT NULL
@@ -270,7 +271,7 @@ export async function loadConversationalRecallPref(userId: string): Promise<bool
  *   - any row with marked_by_member = FALSE (legacy/system-authored rows,
  *     ~0 callers today, but structurally excluded regardless)
  *
- * Graceful: returns [] on missing input or DB error.
+ * Graceful: returns [] on missing inputs or DB error.
  */
 export type MarkedEpisodeSnapshot = {
   episode_id: string;
