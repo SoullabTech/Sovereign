@@ -1336,3 +1336,70 @@ date -u +%Y-%m-%dT%H:%M:%SZ
 - anything from Block C (a `blockC.out`, a transcript, a `S2-WITNESS-02-2*` ledger directory, a live `afplay`/batch process) → the interrupted lane STARTED THE BATCH under an authority that had not yet lapsed at that moment or had; either way an orchestration act whose record never returned. It is adjudicated on its own evidence before any fresh issuance; nothing is re-run to "complete" it.
 
 No fresh issuance runs until this read is on the record.
+
+### 18.11 Follow-up residue read (founder, Mac, 14:55:27Z) → reading-law case 2: **Blocks A and B ran under the still-live issuance, Block C did not, no playback** · FOUNDER RULING — **`S2-WITNESS-03` AUTHORIZED** as a new custody act (residue preserved · new path token `k0506-s2w3-b198e2e37` · freshness anchored to a fresh pre-Block-C volume read)
+
+#### 18.11.1 What the §18.10.2 read returned
+
+```text
+/private/tmp/s2-witness-02-transcript.txt        absent
+/private/tmp/s2w2-blockA.out                      2530 bytes · Sep 15 10:18 local (14:18Z)
+/private/tmp/s2w2-blockB.out                       157 bytes · Sep 15 10:19 local (14:19Z)
+/private/tmp/s2w2-blockC.out · blockD.out         absent
+S2-WITNESS-02-preflight-20260915T141935Z          present inside the s2w2 worktree (Block B's preflight directory)
+S2-WITNESS-02-2* ledger directory                 absent
+git status --short (s2w2 worktree)                printed nothing
+pgrep afplay|k00-driver-batch|xcodebuild          [pgrep rc=1] (no process)
+clock                                             2026-09-15T14:55:27Z
+```
+
+**Reading under the predeclared §18.10.2 law → case 2.** The interrupted lane executed Block A (14:18Z) and Block B (preflight stamped 14:19:35Z), both read-only custody/preflight acts, while the §18.9 issuance was still live (deadline 14:35:42Z), then died before the conduct-rule reads and Block C. No transcript, no `blockC.out`, no ledger directory, no player or batch process: **the batch never started; nothing played; no S2 row exists.** The 157-byte `blockB.out` is small for a 70-line block; whether Block B completed or was cut mid-run is not determinable from the listing and is not inferred (the preflight directory exists, so it reached at least its directory creation). `git status --short` printing nothing is recorded as observed, not interpreted. The window was therefore lost with ~16 min remaining at Block B's stamp, to the transport failure alone.
+
+#### 18.11.2 Ruling (founder, substance preserved) — `S2-WITNESS-03`
+
+1. **Residue disposition.** `/private/tmp/k0506-s2w2-b198e2e37`, `s2w2-block[A–D].sh`, `s2w2-blockA.out`, `s2w2-blockB.out` and the `S2-WITNESS-02-preflight-20260915T141935Z` directory are preserved as residue of the interrupted, lapsed `S2-WITNESS-02` preparation: ⛔ not removed, reused, modified or executed. Their existence does not establish that any governed witness act occurred. (Custody: the two `.out` files and the preflight directory may be copied to a `feature/*` branch as residue when convenient — a copy is a read — but this is not a precondition of WITNESS-03.)
+2. **Freshness authority.** The WITNESS-03 window is anchored to a **fresh governed volume read immediately before Block C**, not to the spent RESTORE-02 act; the 14:05:42Z reading is historical evidence only; the batch preflight's drift refusal remains operative. **No fresh read, no Block C.** The founder's own confirmation that the volume has not been touched since 14:05:42Z may be recorded as historical continuity but does not replace the read.
+3. **Reusable pin.** §18.9.2 may be reused only with these literal substitutions relative to its text: `S2-WITNESS-02 → S2-WITNESS-03` · `s2-witness-02 → s2-witness-03` · `s2w2 → s2w3` · `/private/tmp/k0506-s2w2-b198e2e37 → /private/tmp/k0506-s2w3-b198e2e37`. No other substantive change. The substitution proof (diff against the `17b4df63b` blocks) must show only run/path-token changes before execution.
+4. **Conduct immediately before Block C:** (1) the fresh governed volume read · (2) `date -u` · (3) the pinned `pgrep` check · (4) verify no process · (5) verify the read satisfies the pinned precondition (`output volume:69` · `output muted:false`). Only then Block C. Preparation does not authorize execution; `READ OK` is a precondition, never a trigger.
+5. **Standing:** RESTORE-02 PASS · spent · WITNESS-02 lapsed unspent · its residue preserved, non-authoritative · **WITNESS-03 AUTHORIZED** · `b198e2e37` unchanged · §16.4 unchanged · S2 population · S3 · KERNEL-00 acceptance CLOSED. No authority for S3, restoration, residue cleanup or anything beyond the bounded WITNESS-03 witness.
+
+#### 18.11.3 Execution pin — `S2-WITNESS-03` (Mac; the §18.9.2 transport; blocks re-extracted from `17b4df63b` so that one substitution step yields the 03 text directly; the diff proves it)
+
+```bash
+DOC=docs/programme/VOICE-2026/KERNEL-00_VPIO-02_K00-06_PARTIAL-ZERO_DISCRIMINATOR_PLAN_2026-09-15.md
+cd /Users/soullab/MAIA-SOVEREIGN
+git show 17b4df63b:$DOC | sed -n '599,625p' > /private/tmp/s2w1-blockA.sh
+git show 17b4df63b:$DOC | sed -n '633,702p' > /private/tmp/s2w1-blockB.sh
+git show 17b4df63b:$DOC | sed -n '710,713p' > /private/tmp/s2w1-blockC.sh
+git show 17b4df63b:$DOC | sed -n '719,732p' > /private/tmp/s2w1-blockD.sh
+for b in A B C D; do sed -e 's/S2-WITNESS-01/S2-WITNESS-03/g' -e 's/s2-witness-01/s2-witness-03/g' -e 's#/private/tmp/k0506-s2w-b198e2e37#/private/tmp/k0506-s2w3-b198e2e37#g' /private/tmp/s2w1-block$b.sh > /private/tmp/s2w3-block$b.sh; done
+for b in A B C D; do echo "== block $b diff (only the three tokens may appear)"; diff /private/tmp/s2w1-block$b.sh /private/tmp/s2w3-block$b.sh; done
+shasum -a 256 /private/tmp/s2w3-block[ABCD].sh
+ls -d /private/tmp/k0506-s2w3-b198e2e37 2>&1
+```
+
+(The last line must report no such directory; a pre-existing s2w3 path is STOP before Block A.) Then, each as §16.7 (bash from file, `rc=${PIPESTATUS[0]}`, STOP on any non-zero rc, no repair):
+
+```bash
+bash /private/tmp/s2w3-blockA.sh 2>&1 | tee /private/tmp/s2w3-blockA.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w3-blockA.out
+bash /private/tmp/s2w3-blockB.sh 2>&1 | tee /private/tmp/s2w3-blockB.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w3-blockB.out
+```
+
+**Immediately before Block C — the ruling-4 reads (all five conditions must hold; volume and pane untouched throughout):**
+
+```bash
+date -u +%Y-%m-%dT%H:%M:%SZ | tee /private/tmp/s2w3-preC-clock.txt
+osascript -e 'get volume settings' | tee /private/tmp/s2w3-preC-volume.txt
+pgrep -fl "System Settings|Sound.appex" ; echo "[pgrep rc=$?]"
+```
+
+Proceed only if the volume line reads `output volume:69` and `output muted:false`, the pgrep prints no process and `[pgrep rc=1]`. Anything else: STOP, no adjustment, return for ruling (the issuance is spent by a STOP; a non-69 read = the prepared state did not persist again, adjudicated then).
+
+```bash
+bash /private/tmp/s2w3-blockC.sh 2>&1 | tee /private/tmp/s2w3-blockC.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w3-blockC.out
+bash /private/tmp/s2w3-blockD.sh 2>&1 | tee /private/tmp/s2w3-blockD.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w3-blockD.out
+```
+
+Return as §16.7's return block with the same substitutions: the `S2-WITNESS-03-<stamp>/` ledger dir (`transcript.txt` + `SHA256SUMS.witness`), the `S2-WITNESS-03-preflight-<stamp>/` dir, the four `s2w3-block*.out`, `s2w3-preC-clock.txt` + `s2w3-preC-volume.txt`, the block-file diffs + hashes, `BRANCH · HEAD · STAMP · BATCH_PIPELINE_RC`, on a `feature/*` branch; cherry-picked here and read against §16.4 → §18.12. PASS ≠ S2 population · ≠ S3 · ≠ KERNEL-00.
+
+**Standing after §18.11:** `S2-WITNESS-03` AUTHORIZED · pinned · NOT YET EXECUTED · freshness = the pre-Block-C read · WITNESS-02 residue preserved · `b198e2e37` unchanged · S2 population · S3 · KERNEL-00 acceptance CLOSED.
