@@ -39,13 +39,22 @@ VPIO02_DYLIB_SHA="e963a23cd17fd12e273671023b01c74ea5fbc4e8a7fb22168a0cee2562bd66
 VPIO02_EXEC_SHA="9fe56504131e0b023162c62a6bd60541053b14262c9d3075a15a08dbe6c7805a"
 VPIO02_MANIFEST_SHA="1459283c175e243c90459b2724c2be7362cf6dd4c95c191bd15c443ec8b98410"
 VPIO02_MANIFEST_FILES=7
+# SOURCE-ID-02 (founder ruling 2026-09-15): the SID subject's identity is recorded ONLY by its own MAC-COMPILE act; until then every
+# pin below is empty and the subject is refused BEFORE any device verb (pins-unrecorded). The bundle id is the one fact known now.
+VPIO02SID_BID="life.soullab.voicekernel.vpio02sid"
+VPIO02SID_UUID=""
+VPIO02SID_DYLIB_SHA=""
+VPIO02SID_EXEC_SHA=""
+VPIO02SID_MANIFEST_SHA=""
+VPIO02SID_MANIFEST_FILES=""
 # PIN_* = the pinned identity of the declared VPIO subject (empty for the historical engine subjects, which carry no pin).
 PIN_BID=""; PIN_UUID=""; PIN_DYLIB_SHA=""; PIN_EXEC_SHA=""; PIN_MANIFEST_SHA=""; PIN_MANIFEST_FILES=""
 case "$SUBJECT" in
   p5b0|phase-a) BID="life.soullab.voicekernel.k00";;
   vpio-01)      BID="$VPIO_BID";   PIN_BID="$VPIO_BID";   PIN_UUID="$VPIO_UUID";   PIN_DYLIB_SHA="$VPIO_DYLIB_SHA";   PIN_EXEC_SHA="$VPIO_EXEC_SHA";   PIN_MANIFEST_SHA="$VPIO_MANIFEST_SHA";   PIN_MANIFEST_FILES="$VPIO_MANIFEST_FILES";;
   vpio-02)      BID="$VPIO02_BID"; PIN_BID="$VPIO02_BID"; PIN_UUID="$VPIO02_UUID"; PIN_DYLIB_SHA="$VPIO02_DYLIB_SHA"; PIN_EXEC_SHA="$VPIO02_EXEC_SHA"; PIN_MANIFEST_SHA="$VPIO02_MANIFEST_SHA"; PIN_MANIFEST_FILES="$VPIO02_MANIFEST_FILES";;
-  *) echo "unknown subject '$SUBJECT' (p5b0|phase-a|vpio-01|vpio-02); no default bundle — refusing" >&2; exit 2;;
+  vpio-02-sid)  BID="$VPIO02SID_BID"; PIN_BID="$VPIO02SID_BID"; PIN_UUID="$VPIO02SID_UUID"; PIN_DYLIB_SHA="$VPIO02SID_DYLIB_SHA"; PIN_EXEC_SHA="$VPIO02SID_EXEC_SHA"; PIN_MANIFEST_SHA="$VPIO02SID_MANIFEST_SHA"; PIN_MANIFEST_FILES="$VPIO02SID_MANIFEST_FILES";;
+  *) echo "unknown subject '$SUBJECT' (p5b0|phase-a|vpio-01|vpio-02|vpio-02-sid); no default bundle — refusing" >&2; exit 2;;
 esac
 APP="${2:-$HOME/Library/Developer/Xcode/DerivedData/VoiceKernelHarness-afqjfcjktctgkjbejscivlpbxqtc/Build/Products/Debug-iphoneos/VoiceKernelHarness.app}"
 EXPECT="${K00_EXPECT_UUID:-}"
@@ -61,6 +70,8 @@ EXEC_SHA="$(shasum -a 256 "$APP/VoiceKernelHarness" 2>/dev/null | cut -d' ' -f1 
 PRODUCT_BID="$(python3 -c 'import plistlib,sys; print(plistlib.load(open(sys.argv[1],"rb")).get("CFBundleIdentifier",""))' "$APP/Info.plist" 2>/dev/null || true)"
 PIN_REFUSE=""
 if [ -n "$PIN_BID" ]; then
+  # SOURCE-ID-02: a pinned subject whose identity has not been recorded yet can never be installed (fail closed, before any read of the device).
+  { [ -n "$PIN_UUID" ] && [ -n "$PIN_DYLIB_SHA" ] && [ -n "$PIN_EXEC_SHA" ] && [ -n "$PIN_MANIFEST_SHA" ] && [ -n "$PIN_MANIFEST_FILES" ]; } || PIN_REFUSE="${PIN_REFUSE:+$PIN_REFUSE,}pins-unrecorded"
   # Pinned identity (the declared VPIO subject's own pin): a supplied expectation that disagrees with the pin is a refusal, not an override.
   [ -n "$EXPECT" ]     && [ "$EXPECT" != "$PIN_UUID" ]          && PIN_REFUSE="${PIN_REFUSE:+$PIN_REFUSE,}uuid-expectation-conflicts-with-pin"
   [ -n "$EXPECT_SHA" ] && [ "$EXPECT_SHA" != "$PIN_DYLIB_SHA" ] && PIN_REFUSE="${PIN_REFUSE:+$PIN_REFUSE,}dylib-sha-expectation-conflicts-with-pin"

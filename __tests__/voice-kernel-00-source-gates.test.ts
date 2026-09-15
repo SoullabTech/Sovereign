@@ -60,6 +60,19 @@ const rel = (f: string) => f.replace(process.cwd() + '/', '');
 const histRaw = (sha: string, path: string): Buffer =>
   execFileSync('git', ['show', `${sha}:${path}`], { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 });
 const histBody = (sha: string, path: string): string => stripComments(histRaw(sha, path).toString('utf8'));
+// SOURCE-ID-02 (founder ruling 2026-09-15): an instrument file may move beyond its frozen state ONLY by lines that
+// declare the SID subject; every historical executable line must survive verbatim and in order.
+const sidOnlyDelta = (was: string, now: string, allowed: RegExp): string[] => {
+  const ex = (s: string) => s.split('\n').filter((l) => !/^\s*#/.test(l));
+  // the one ruled substitution: the unknown-subject refusal names the five-subject closed set; normalized back to history for the scan
+  const w = ex(was), n = ex(now).map((l) => l.replace('(p5b0|phase-a|vpio-01|vpio-02|vpio-02-sid)', '(p5b0|phase-a|vpio-01|vpio-02)').replace('(p5b0 | phase-a | vpio-01 | vpio-02 | vpio-02-sid)', '(p5b0 | phase-a | vpio-01 | vpio-02)'));
+  let j = 0; for (const l of w) { while (j < n.length && n[j] !== l) j++; if (j >= n.length) return [`MISSING: ${l}`]; j++; }
+  const seen = new Map<string, number>(); for (const l of w) seen.set(l, (seen.get(l) ?? 0) + 1);
+  const added: string[] = [];
+  for (const l of n) { const c = seen.get(l) ?? 0; if (c > 0) { seen.set(l, c - 1); continue; } if (/^\s*$/.test(l) || allowed.test(l)) continue; added.push(l); }
+  return added;
+};
+const SID_ALLOWED = /VPIO02SID_|vpio-02-sid|vpio02sid|VPIO-02-SID|pins-unrecorded|SOURCE-ID-02|CLASSIFIER_SUBJECT|SOURCE_LEDGER|k00-source-ledger\.py|sid-nearend-gated|classifierSubject=|S-a arm/;
 const histList = (sha: string, paths: string[]): string[] =>
   execFileSync('git', ['ls-tree', '-r', '--name-only', sha, '--', ...paths], { cwd: process.cwd() })
     .toString('utf8').split('\n').filter(Boolean);
@@ -149,7 +162,10 @@ describe('KERNEL-00 · K00-16 — nothing else is in the build', () => {
     // frozen exactly by the founder (VPIO-01 plan §8 item 3 / census §6): a distinct custody identity, never the K00 id.
     // VPIO-02 / FORMAT-RESOLUTION-01 (founder adjudication 2026-09-14): a new subject, a new custody identity; the
     // installed .vpio01 artifact is frozen evidence and is never re-used for a different subject.
-    expect(yml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio02$/m);
+    // SOURCE-ID-02 (founder ruling 2026-09-15): the working tree is the SID subject; the frozen VPIO-02 identity is
+    // pinned in history (ac12dedf4), never re-used for the instrumented subject.
+    expect(yml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio02sid$/m);
+    expect(histRaw('ac12dedf4', 'ios/VoiceKernelHarness/project.yml').toString('utf8')).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio02$/m);
     expect(yml).not.toMatch(/vpio01/);
     expect(yml).not.toMatch(/life\.soullab\.voicekernel\.k00\b/);
   });
@@ -884,8 +900,16 @@ describe('KERNEL-00 · VPIO-01B — witness preparation: instrument-only subject
     const ENVELOPE = ['ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift', 'ios/VoiceKernel/Tests/VoiceKernelTests/PureLogicTests.swift', 'ios/VoiceKernelHarness/project.yml'];
     const listed = histList('85e5e7154', paths).sort();
     const moved: string[] = [];
-    for (const p of listed) if (!histRaw('85e5e7154', p).equals(readFileSync(join(process.cwd(), p)))) moved.push(p);
+    // the VPIO-02 envelope is a fact of history now: ac12dedf4 relative to 85e5e7154 (SOURCE-ID-02 moved the working tree on)
+    for (const p of listed) if (!histRaw('85e5e7154', p).equals(histRaw('ac12dedf4', p))) moved.push(p);
     expect(moved.sort()).toEqual(ENVELOPE);
+    // SOURCE-ID-02 (founder ruling 2026-09-15): relative to the frozen VPIO-02 subject ac12dedf4 the working tree moves in
+    // exactly AudioGraph.swift (estimator) · VoiceKernel.swift (hop + aggregate + record) · PureLogicTests.swift · project.yml (identity)
+    const SID_ENVELOPE = ['ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift', 'ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift',
+                          'ios/VoiceKernel/Tests/VoiceKernelTests/PureLogicTests.swift', 'ios/VoiceKernelHarness/project.yml'];
+    const sidMoved: string[] = [];
+    for (const p of listed) if (!histRaw('ac12dedf4', p).equals(readFileSync(join(process.cwd(), p)))) sidMoved.push(p);
+    expect(sidMoved.sort()).toEqual(SID_ENVELOPE);
     // the working tree adds no source file under those roots
     const live = files.map(rel).filter((p) => paths.some((x) => p === x || p.startsWith(x + '/'))).sort();
     expect(live).toEqual(listed.filter((p) => /\.(swift|yml|plist)$/.test(p)));
@@ -1043,10 +1067,15 @@ describe('KERNEL-00 · VPIO-02 — the format probe lifecycle: initialize → re
   });
   it('the custody identity is the new subject: bundle life.soullab.voicekernel.vpio02 · display name "VoiceKernel VPIO-02"; the frozen .vpio01 identity survives only in the VPIO-01 witness instrument and records', () => {
     const yml = readFileSync(join(process.cwd(), 'ios/VoiceKernelHarness/project.yml'), 'utf8');
-    expect(yml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio02$/m);
-    expect(yml).toMatch(/CFBundleDisplayName: VoiceKernel VPIO-02$/m);
+    // SOURCE-ID-02 (founder ruling 2026-09-15): the frozen VPIO-02 identity lives in history; the tree carries the SID subject.
+    const frozenYml = histRaw('ac12dedf4', 'ios/VoiceKernelHarness/project.yml').toString('utf8');
+    expect(frozenYml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio02$/m);
+    expect(frozenYml).toMatch(/CFBundleDisplayName: VoiceKernel VPIO-02$/m);
+    expect(yml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio02sid$/m);
+    expect(yml).toMatch(/CFBundleDisplayName: VoiceKernel VPIO-02-SID$/m);
     const ymlExec = yml.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');   // prose is not identity (the C21 lesson)
     expect(ymlExec).not.toMatch(/vpio01|VPIO-01/);
+    expect(ymlExec).not.toMatch(/vpio02$|VPIO-02$/m);                                  // the frozen .vpio02 identity is never the tree's
     // VPIO-02B (founder ruling 2026-09-14): the instrument now carries the vpio-02 row; its delta against de3efd3fb is
     // pinned to exactly the four authorized files in the VPIO-02B block below, and the organism is pinned to ac12dedf4 there.
   });
@@ -1077,17 +1106,26 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   const VOLUME_DRIFT_CENSUS = 'scripts/witness/k00-volume-drift-census.sh';                // S2-VOLUME-DRIFT-01 (founder ruling 2026-09-15): read-only Mac census, never sets volume
   const INSTRUMENT_VPIO02B = '08483cfe4f6c3e98198805337ced99bae92ce911';             // the F-W1 instrument; the entry classifier + reinstall stay at its bytes
   const INSTRUMENT_K0506 = '8b111709b6e5010b4b6ee7281d257141945276ff';               // the K00-05/06 Option C instrument (DRIVER-COMPILE-01 GREEN; first witness ten infra rows); C-D20 may move only the driver test beyond it
-  it('the organism is byte-identical to ac12dedf4: every tracked file under ios/VoiceKernel and ios/VoiceKernelHarness equals its historical bytes; no file added or removed', () => {
+  it('SOURCE-ID-02 (founder ruling 2026-09-15): the frozen VPIO-02 organism is ac12dedf4 in history; the working tree differs from it in exactly the four ruled files, and every invariant file (authority · supervisor · policy · state · projection · journal · replay · route comparison · Package.swift · every harness Swift file) is byte-identical; no file added or removed', () => {
     const roots = ['ios/VoiceKernel', 'ios/VoiceKernelHarness'];
     const listed = histList(ORGANISM, roots).sort();
     expect(listed.length).toBeGreaterThan(10);
     expect(tracked(roots)).toEqual(listed);
-    for (const p of listed) expect(histRaw(ORGANISM, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    const SID_ENVELOPE = ['ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift', 'ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift',
+                          'ios/VoiceKernel/Tests/VoiceKernelTests/PureLogicTests.swift', 'ios/VoiceKernelHarness/project.yml'];
+    const moved = listed.filter((p) => !histRaw(ORGANISM, p).equals(readFileSync(join(process.cwd(), p))));
+    expect(moved.sort()).toEqual(SID_ENVELOPE);
+    const INVARIANT = ['AudioSessionAuthority.swift', 'HealthSupervisor.swift', 'Journal.swift', 'KernelState.swift', 'RecoveryPolicy.swift', 'Replay.swift', 'RouteComparison.swift', 'StateProjection.swift']
+      .map((f) => 'ios/VoiceKernel/Sources/VoiceKernel/' + f).concat(['ios/VoiceKernel/Package.swift'], listed.filter((p) => p.startsWith('ios/VoiceKernelHarness/Harness/') && p.endsWith('.swift')));
+    expect(INVARIANT.length).toBeGreaterThanOrEqual(12);
+    for (const p of INVARIANT) { expect(listed).toContain(p); expect(histRaw(ORGANISM, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true); }
   });
   it('the instrument moved only in the four authorized files relative to de3efd3fb (scripts/witness · ios/VoiceKernelDriver); exactly one file added under those roots — the K00-05/06 output reader (founder ruling 2026-09-14, Option C); nothing removed', () => {
     const roots = ['scripts/witness', 'ios/VoiceKernelDriver'];
     const listed = histList(INSTRUMENT_BASE, roots).sort();
-    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER, PLAYBACK_PROBE, S2_FIXTURE, S2_FIXTURE_SIDECAR, VOLUME_DRIFT_CENSUS].sort());   // S2 (founder ruling 2026-09-15): the tracked stimulus + its sidecar
+    const SID_FIXTURE = 'scripts/witness/fixtures/k00-sid-nearend-997hz-gated-2hz-180s.wav';   // SOURCE-ID-02: the gated fixture + sidecar + the source reader
+    const SOURCE_READER = 'scripts/witness/k00-source-ledger.py';
+    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER, PLAYBACK_PROBE, S2_FIXTURE, S2_FIXTURE_SIDECAR, VOLUME_DRIFT_CENSUS, SID_FIXTURE, SID_FIXTURE + '.sha256', SOURCE_READER].sort());   // S2 (founder ruling 2026-09-15): the tracked stimulus + its sidecar
     const moved = listed.filter((p) => !histRaw(INSTRUMENT_BASE, p).equals(readFileSync(join(process.cwd(), p))));
     expect(moved.sort()).toEqual(INSTRUMENT);
   });
@@ -1100,20 +1138,28 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     const t = stripComments(W('ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift'));
     expect(t).toMatch(/"vpio-02": Subject\(key: "vpio-02", bundleID: "life\.soullab\.voicekernel\.vpio02", iconLabel: "VoiceKernel VPIO-02"\)/);
     expect(t).toMatch(/"vpio-01": Subject\(key: "vpio-01", bundleID: "life\.soullab\.voicekernel\.vpio01", iconLabel: "VoiceKernel VPIO-01"\)/);
-    expect((t.match(/Subject\(key:/g) ?? []).length).toBe(4);
+    expect((t.match(/Subject\(key:/g) ?? []).length).toBe(5);   // SOURCE-ID-02: + vpio-02-sid (custody declaration only)
+    expect(t).toMatch(/"vpio-02-sid": Subject\(key: "vpio-02-sid", bundleID: "life\.soullab\.voicekernel\.vpio02sid", iconLabel: "VoiceKernel VPIO-02-SID"\)/);
     expect(t).toMatch(/env\["K00_SUBJECT"\] \?\? "p5b0"/);
     expect(t).not.toMatch(/launchArguments|launchEnvironment|UserDefaults|dlopen|NSClassFromString/);
     const bx = execLines(W('scripts/witness/k00-driver-batch.sh'));
     expect(bx).toMatch(/vpio-02\)\s+BID="life\.soullab\.voicekernel\.vpio02"; ICON="VoiceKernel VPIO-02";;/);
     expect(bx).toMatch(/vpio-01\)\s+BID="life\.soullab\.voicekernel\.vpio01"; ICON="VoiceKernel VPIO-01";;/);
     expect((bx.match(/life\.soullab\.voicekernel\.k00/g) ?? []).length).toBe(1);
-    expect((bx.match(/life\.soullab\.voicekernel\.vpio02/g) ?? []).length).toBe(1);   // named once: the subject row; every use is $BID
+    expect((bx.match(/life\.soullab\.voicekernel\.vpio02(?!sid)/g) ?? []).length).toBe(1);   // named once: the subject row; every use is $BID
+    expect((bx.match(/life\.soullab\.voicekernel\.vpio02sid/g) ?? []).length).toBe(1);        // SOURCE-ID-02: the SID row, once
+    expect(bx).toMatch(/vpio-02-sid\)\s+BID="life\.soullab\.voicekernel\.vpio02sid"; ICON="VoiceKernel VPIO-02-SID";;/);
     expect(bx).not.toMatch(/install app|uninstall/);                                          // no reinstall is added to the batch
     const rx = execLines(W('scripts/witness/k00-reinstall.sh'));
     expect(rx).toMatch(/vpio-02\)\s+BID="\$VPIO02_BID"; PIN_BID="\$VPIO02_BID"; PIN_UUID="\$VPIO02_UUID"; PIN_DYLIB_SHA="\$VPIO02_DYLIB_SHA"; PIN_EXEC_SHA="\$VPIO02_EXEC_SHA"; PIN_MANIFEST_SHA="\$VPIO02_MANIFEST_SHA"; PIN_MANIFEST_FILES="\$VPIO02_MANIFEST_FILES";;/);
     expect(rx).toMatch(/vpio-01\)\s+BID="\$VPIO_BID";\s+PIN_BID="\$VPIO_BID";\s+PIN_UUID="\$VPIO_UUID";/);
-    // the unknown-subject refusal names the closed set identically everywhere
-    for (const src of [l, t, bx, rx]) expect(src).toMatch(/p5b0[ |]+phase-a[ |]+vpio-01[ |]+vpio-02/);
+    // the unknown-subject refusal names the closed set: the FROZEN entry classifier still names four subjects (it is byte-identical
+    // to its frozen state); driver · batch · reinstall name five (SOURCE-ID-02). The batch maps vpio-02-sid → classifier vpio-02
+    // explicitly (declared custody + trace compatibility = subject identity; founder ruling 2026-09-14).
+    expect(l).toMatch(/p5b0[ |]+phase-a[ |]+vpio-01[ |]+vpio-02(?![ |]+vpio-02-sid)/);
+    expect(l).not.toMatch(/vpio-02-sid/);
+    for (const src of [t, bx, rx]) expect(src).toMatch(/p5b0[ |]+phase-a[ |]+vpio-01[ |]+vpio-02[ |]+vpio-02-sid/);
+    expect(bx).toContain('CLASSIFIER_SUBJECT="$SUBJECT"; [ "$SUBJECT" = vpio-02-sid ] && CLASSIFIER_SUBJECT="vpio-02"');
   });
   it('the ledger VPIO02_STEPS list is exactly the fourteen seams, in order, and equals the AudioGraph.swift enum order of the frozen subject', () => {
     const l = W('scripts/witness/k00-ledger.py');
@@ -1144,7 +1190,16 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(noProse).not.toMatch(/uninstall/);
     // .vpio01 / .vpio02 literals: each exactly once, on its own constant line; every other use goes through $PIN_BID / $BID
     expect((rx.match(/life\.soullab\.voicekernel\.vpio01/g) ?? []).length).toBe(1);
-    expect((rx.match(/life\.soullab\.voicekernel\.vpio02/g) ?? []).length).toBe(1);
+    expect((rx.match(/life\.soullab\.voicekernel\.vpio02(?!sid)/g) ?? []).length).toBe(1);
+    // SOURCE-ID-02 (founder ruling 2026-09-15): the SID subject's bundle is the one known fact; every other pin is EMPTY until its own
+    // MAC-COMPILE records it, and an empty pin refuses (pins-unrecorded) before any device read.
+    expect(rx).toContain('VPIO02SID_BID="life.soullab.voicekernel.vpio02sid"');
+    for (const k of ['VPIO02SID_UUID', 'VPIO02SID_DYLIB_SHA', 'VPIO02SID_EXEC_SHA', 'VPIO02SID_MANIFEST_SHA', 'VPIO02SID_MANIFEST_FILES']) expect(rx).toContain(`${k}=""`);
+    expect(rx).toMatch(/vpio-02-sid\)\s+BID="\$VPIO02SID_BID"; PIN_BID="\$VPIO02SID_BID"; PIN_UUID="\$VPIO02SID_UUID";/);
+    expect(rx.indexOf('pins-unrecorded')).toBeGreaterThan(-1);
+    expect(rx.indexOf('pins-unrecorded')).toBeLessThan(rx.indexOf('device info apps'));
+    expect(rx.indexOf('pins-unrecorded')).toBeLessThan(install);
+    expect((rx.match(/life\.soullab\.voicekernel\.vpio02sid/g) ?? []).length).toBe(1);
     expect(rx).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(\b(grep|cat|git)\b|==|-f )/);
   });
   it('the ledger self-test passes 34/34, naming the VPIO-02 full trace, the lawful refusal prefixes, out-of-order/missing-seam refusals, and every cross-subject mismatch', () => {
@@ -1247,14 +1302,17 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   }, 180_000);
   // ---- K00-05 / K00-06 instrument (founder ruling 2026-09-14, Option C): driver test + batch flags + evidence-only reader; everything else frozen ----
   it('C-D20 (founder ruling 2026-09-14/15): relative to the K00-05/06 instrument 8b111709b the driver test moved (C-D20), the output reader moved (C-D22) and the batch moved (S2, 2026-09-15 — every historical line preserved in order, proven in the S2 block); the entry classifier and the reinstall gate are byte-identical', () => {
-    for (const p of ['scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_K0506, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    expect(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-ledger.py')))).toBe(true);
+    // SOURCE-ID-02 (founder ruling 2026-09-15): the reinstall moves beyond 8b111709b ONLY by the SID custody declarations
+    expect(sidOnlyDelta(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-reinstall.sh').toString('utf8'), readFileSync(join(process.cwd(), 'scripts/witness/k00-reinstall.sh'), 'utf8'), SID_ALLOWED)).toEqual([]);
     expect(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-driver-batch.sh').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-driver-batch.sh')))).toBe(false);
     // C-D22 (founder ruling 2026-09-15): the output reader moved beyond 8b111709b in exactly the closed-boundary family rule; pinned below.
     expect(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-output-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-output-ledger.py')))).toBe(false);
     expect(histRaw(INSTRUMENT_K0506, 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').equals(readFileSync(join(process.cwd(), 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift')))).toBe(false);
   });
-  it('K00-05/06 Option C: the entry classifier and the reinstall gate are byte-identical to the F-W1 instrument 08483cfe4; the organism block above still pins ac12dedf4', () => {
-    for (const p of ['scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_VPIO02B, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+  it('K00-05/06 Option C: the entry classifier is byte-identical to the F-W1 instrument 08483cfe4; the reinstall differs from it only by the SOURCE-ID-02 custody declarations; the frozen organism is ac12dedf4 in history', () => {
+    expect(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-ledger.py')))).toBe(true);
+    expect(sidOnlyDelta(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-reinstall.sh').toString('utf8'), readFileSync(join(process.cwd(), 'scripts/witness/k00-reinstall.sh'), 'utf8'), SID_ALLOWED)).toEqual([]);
   });
   it('K00-05/06 Option C + C-D20: the driver gains exactly testOutputSample with the ruled sequence (wait Play present ≤5 s · else ≤4 bounded reveal swipes with an exact-label check each · hierarchy to the runner log then the SAME driver failure · wait Play enabled ≤5 s · settle · Play · cancel-at · Cancel active if enabled · 1 s · Play · 4.5 s · Export); the three historical tests are byte-identical to 08483cfe4; the app under test still receives nothing', () => {
     const now = W('ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift');
@@ -1303,9 +1361,14 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect((bx.match(/TEST_RUNNER_K00_CANCEL_AT_MS/g) ?? []).length).toBe(1);                                              // set in one place, only under output
     const header = 'echo "stratum=$LABEL · N=$N · vp=$VP · mode=$MODE · hold=${HOLD}s · w4=${W4:-off} · subject=$SUBJECT · bundle=$BID · device=$DEV · xcodeDest=$XDEST"';
     expect(bx).toContain(header); expect(was).toContain(header);                                                              // the historical header line is verbatim
+    // SOURCE-ID-02 (founder ruling 2026-09-15): a second header line declares the classifier subject when it differs (declared custody ≠ trace subject)
+    expect(bx).toContain('[ "$CLASSIFIER_SUBJECT" != "$SUBJECT" ] && echo "classifierSubject=$CLASSIFIER_SUBJECT');
     expect(bx).toMatch(/\[ "\$ACT" = output \] && echo "act=output · cancelAt=\$\{CANCEL_AT\}ms · settle=\$\{SETTLE\}s/);
-    const ledgerCall = 'python3 "$ROOT/scripts/witness/k00-ledger.py" --stratum "$LABEL" --index "$i" --mode "$MODE" --subject "$SUBJECT" $([ -n "$W4" ] && echo --w4) "$LEDGER_DIR/journals/$f" >> "$LEDGER"';
-    expect(bx).toContain(ledgerCall); expect(was).toContain(ledgerCall);                                                      // the entry row is produced exactly as before
+    const ledgerCallWas = 'python3 "$ROOT/scripts/witness/k00-ledger.py" --stratum "$LABEL" --index "$i" --mode "$MODE" --subject "$SUBJECT" $([ -n "$W4" ] && echo --w4) "$LEDGER_DIR/journals/$f" >> "$LEDGER"';
+    // SOURCE-ID-02: the one ruled substitution on the entry-classifier line — the FROZEN classifier receives the trace-compatible
+    // subject (vpio-02 for vpio-02-sid); for every historical subject CLASSIFIER_SUBJECT == SUBJECT and the row is produced exactly as before
+    const ledgerCall = ledgerCallWas.replace('--subject "$SUBJECT"', '--subject "$CLASSIFIER_SUBJECT"');
+    expect(was).toContain(ledgerCallWas); expect(bx).toContain(ledgerCall); expect(bx).not.toContain(ledgerCallWas);
     const outCall = bx.indexOf('k00-output-ledger.py" --stratum'); const guard = bx.indexOf('if [ -n "$OUTPUT_LEDGER" ]; then');
     expect(guard).toBeGreaterThan(-1); expect(outCall).toBeGreaterThan(guard); expect(outCall).toBeGreaterThan(bx.indexOf(ledgerCall));
     expect((bx.match(/python3 "\$ROOT\/scripts\/witness\/k00-output-ledger\.py"/g) ?? []).length).toBe(2);              // --header once, one row-call once, both inside the guard
@@ -1464,13 +1527,19 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
     expect(bx).toContain('STIMULUS=""; S2_PID=""; S2_MON=""');
     expect(bx).toContain('  --stimulus) STIMULUS="$2"; shift 2;;');
     const caseLine = `case "$STIMULUS" in "") ;; s2-nearend) ;; *) echo "unknown stimulus '$STIMULUS' (the only token is s2-nearend; no path is accepted); refusing" >&2; exit 2;; esac`;
-    const guard = 'if [ -n "$STIMULUS" ] && { [ "$ACT" != output ] || [ "$VP" != on ] || [ "$MODE" != L ] || [ "$SUBJECT" != vpio-02 ]; }; then';
+    // SOURCE-ID-02 (founder ruling 2026-09-15): a second closed token (sid-nearend-gated) lawful only with vpio-02-sid; s2-nearend stays
+    // lawful only with vpio-02 (the stationary S-a arm is NOT OPEN on the SID subject); the shared guard admits the two subjects only.
+    const guard = 'if [ -n "$STIMULUS" ] && { [ "$ACT" != output ] || [ "$VP" != on ] || [ "$MODE" != L ] || { [ "$SUBJECT" != vpio-02 ] && [ "$SUBJECT" != vpio-02-sid ]; }; }; then';
+    const sidCase = 'case "$STIMULUS" in sid-nearend-gated) [ "$SUBJECT" = vpio-02-sid ] || {';
+    const s2Case = 's2-nearend) [ "$SUBJECT" = vpio-02 ] || {';
+    expect(bx).toContain(sidCase); expect(bx).toContain(s2Case); expect(bx.indexOf(sidCase)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));
+    expect(bx).toContain('S2_STIMULUS="$ROOT/scripts/witness/fixtures/k00-sid-nearend-997hz-gated-2hz-180s.wav"');
     expect(bx).toContain(caseLine); expect(bx).toContain(guard);
     expect(bx.indexOf(caseLine)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));       // refused before the device lock
     expect(bx.indexOf(guard)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));
     expect(bx).toContain('S2_STIMULUS="$ROOT/scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav"');
     const uses = bx.split('\n').filter((l) => l.includes('$STIMULUS'));
-    for (const l of uses) expect(l).toMatch(/^(case "\$STIMULUS" in|if \[ -n "\$STIMULUS" \] && \{|\s+echo "--stimulus \$STIMULUS is lawful only|\s+\[ -n "\$STIMULUS" \] && echo "stimulus=\$STIMULUS|if \[ -n "\$STIMULUS" \]; then|\s+if \[ -n "\$STIMULUS" \]; then)/);
+    for (const l of uses) expect(l).toMatch(/^(case "\$STIMULUS" in|if \[ "\$STIMULUS" = sid-nearend-gated \]; then|SOURCE_LEDGER=""; \[ "\$STIMULUS" = sid-nearend-gated \]|if \[ -n "\$STIMULUS" \] && \{|\s+echo "--stimulus \$STIMULUS is lawful only|\s+\[ -n "\$STIMULUS" \] && echo "stimulus=\$STIMULUS|if \[ -n "\$STIMULUS" \]; then|\s+if \[ -n "\$STIMULUS" \]; then)/);
     expect(bx).not.toMatch(/\/\$STIMULUS|-f "\$STIMULUS"|afplay[^\n]*\$STIMULUS[^_]/);
   });
   it('stimulus lifetime per sample: start → record PID/epoch → 1 s settle → prove alive & non-zombie (else infrastructure abort, exit 9, no identical rows) → 1 s liveness monitor throughout run_test → run_test → post-run state → explicit TERM → wait that exact child → exit status → custody VALID|INVALID; the -t 180 ceiling is the failsafe, not the stop', () => {
@@ -1493,29 +1562,38 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
   it('stimulus invalidity can never become a physiological verdict: custody is written only to stimulus-sample-N.tsv / stimulus-preflight/; both reader invocations are byte-identical to 8b111709b and receive nothing about the stimulus; k00-ledger.py · k00-output-ledger.py · k00-reinstall.sh · the driver tree are byte-frozen', () => {
     const now = execLines(W(BATCH)); const was = execLines(histRaw(INSTRUMENT_K0506, BATCH).toString('utf8'));
     const readerLines = (s: string) => s.split('\n').filter((l) => /k00-(output-)?ledger\.py" --/.test(l));
-    expect(readerLines(now)).toEqual(readerLines(was)); expect(readerLines(now).length).toBe(4);   // header + row for each of the two readers, verbatim
+    // SOURCE-ID-02: the entry-classifier row line carries the one ruled substitution ($CLASSIFIER_SUBJECT); otherwise verbatim
+    expect(readerLines(now).map((l) => l.replace('--subject "$CLASSIFIER_SUBJECT"', '--subject "$SUBJECT"'))).toEqual(readerLines(was)); expect(readerLines(now).length).toBe(4);
     for (const l of now.split('\n').filter((l) => l.includes('python3 "$ROOT/scripts/witness/k00-'))) expect(l).not.toMatch(/custody|STIMULUS|S2_|afplay/);   // reader invocations carry nothing about the stimulus
     for (const l of now.split('\n').filter((l) => l.includes("custody\\t"))) expect(l).toContain('>> "$t"');
     expect(now).toContain('local t="$LEDGER_DIR/stimulus-sample-$1.tsv"');
     expect(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-ledger.py')))).toBe(true);
-    expect(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-reinstall.sh').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-reinstall.sh')))).toBe(true);
+    expect(sidOnlyDelta(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-reinstall.sh').toString('utf8'), readFileSync(join(process.cwd(), 'scripts/witness/k00-reinstall.sh'), 'utf8'), SID_ALLOWED)).toEqual([]);
     expect(histRaw(OUTPUT_READER_CD22, 'scripts/witness/k00-output-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-output-ledger.py')))).toBe(true);
     const driver = histList(INSTRUMENT_CD20, ['ios/VoiceKernelDriver']).sort();
     expect(tracked(['ios/VoiceKernelDriver'])).toEqual(driver);
-    for (const p of driver) expect(histRaw(INSTRUMENT_CD20, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    // SOURCE-ID-02: the driver moves beyond C-D20 only by the SID subject row and the two closed-set strings (the app under test still receives nothing)
+    for (const p of driver) {
+      if (p.endsWith('K00DriverTests.swift')) expect(sidOnlyDelta(histRaw(INSTRUMENT_CD20, p).toString('utf8'), readFileSync(join(process.cwd(), p), 'utf8'), SID_ALLOWED)).toEqual([]);
+      else expect(histRaw(INSTRUMENT_CD20, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    }
   });
   it('the historical batch path is preserved: every executable line of the batch at 8b111709b is present, verbatim and in order, in the current batch; every added executable line is inside one of the four S2 functions, an S2/STIMULUS constant, or an `if [ -n "$STIMULUS" ]` block — without --stimulus nothing new runs', () => {
     const was = execLines(histRaw(INSTRUMENT_K0506, BATCH).toString('utf8')).split('\n');
-    const now = execLines(W(BATCH)).split('\n');
+    // SOURCE-ID-02 (founder ruling 2026-09-15): exactly one historical line is substituted — the entry-classifier call receives
+    // $CLASSIFIER_SUBJECT (== $SUBJECT for every historical subject). It is normalized back here so the in-order scan sees history verbatim.
+    const now = execLines(W(BATCH)).split('\n').map((l) => l.replace('--subject "$CLASSIFIER_SUBJECT" $([ -n "$W4" ]', '--subject "$SUBJECT" $([ -n "$W4" ]').replace('(p5b0|phase-a|vpio-01|vpio-02|vpio-02-sid)', '(p5b0|phase-a|vpio-01|vpio-02)'));   // + the refusal's five-subject closed set (SOURCE-ID-02)
     let j = 0; for (const l of was) { while (j < now.length && now[j] !== l) j++; expect(j < now.length ? l : `MISSING: ${l}`).toBe(l); j++; }
     const allowed = new Set<number>();
     for (let i = 0; i < now.length; i++) {
       if (/^(afplay_state|stimulus_preflight|stimulus_start|stimulus_stop)\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }
       if (/^\s*if \[ -n "\$STIMULUS" \]/.test(now[i]) && /then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }
+      if (/^\s*if \[ "\$STIMULUS" = sid-nearend-gated \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }   // SOURCE-ID-02
+      if (/^\s*if \[ -n "\$SOURCE_LEDGER" \]; then/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }                    // SOURCE-ID-02
     }
     const wasSet = new Map<string, number>(); for (const l of was) wasSet.set(l, (wasSet.get(l) ?? 0) + 1);
     const added: string[] = [];
-    now.forEach((l, i) => { const n = wasSet.get(l) ?? 0; if (n > 0) { wasSet.set(l, n - 1); return; } if (allowed.has(i)) return; if (/^(STIMULUS=""|S2_[A-Z0-9_]+=")/.test(l) || l.includes('$STIMULUS') || l.includes('--stimulus') || /^\s*(fi|\}|esac|done)?\s*$/.test(l)) return; added.push(l); });   // bare block closers carry no executable content
+    now.forEach((l, i) => { const n = wasSet.get(l) ?? 0; if (n > 0) { wasSet.set(l, n - 1); return; } if (allowed.has(i)) return; if (/^(STIMULUS=""|S2_[A-Z0-9_]+=")/.test(l) || l.includes('$STIMULUS') || l.includes('--stimulus') || SID_ALLOWED.test(l) || /^\s*(fi|\}|esac|done)?\s*$/.test(l)) return; added.push(l); });   // bare block closers carry no executable content
     expect(added).toEqual([]);
     expect(now.filter((l) => l.includes('$STIMULUS')).length).toBeGreaterThanOrEqual(6);
   });
@@ -1540,5 +1618,116 @@ describe('KERNEL-00 · S2-VOLUME-DRIFT-01 — the drift census instrument is rea
     expect(x).toContain("'SEAL.sha256'"); expect(x).toContain('shasum -a 256 "$RAW/log-window.txt"');
     expect((x.match(/<\/dev\/null/g) ?? []).length).toBeGreaterThanOrEqual(4);              // stdin closed on every external read
     expect(execLines(W('scripts/witness/k00-driver-batch.sh'))).not.toMatch(/volume-drift|K00_DRIFT/);   // the batch is untouched by this act
+  });
+});
+
+// ---- SOURCE-ID-02 (founder ruling 2026-09-15): the source-identification instrument — a new subject by custody, evidence only ----
+describe('KERNEL-00 · SOURCE-ID-02 — seven-bin Goertzel at the consumed seam (evidence only) · gated 997 Hz fixture · evidence-only source reader · SID custody declarations; implementation is code/offline only', () => {
+  const W = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
+  const ORGANISM = 'ac12dedf4';
+  const GRAPH = 'ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift';
+  const KERNEL = 'ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift';
+  const SID_FIXTURE = 'scripts/witness/fixtures/k00-sid-nearend-997hz-gated-2hz-180s.wav';
+  const SID_SHA = '30d51cf4b7527d28131bd9c2535c6bd4dcd2403c8dc0343fc045f6f6959875eb';
+  const BINS = [440, 700, 880, 997, 1200, 1320, 1760];
+  it('the estimator lives only in AudioGraph.swift: the bin set is exactly the seven ruled frequencies; frames close every fourth callback; coefficients come from the OBSERVED rate after the format guard and before any callback is armed; the fourteen trace seams are unchanged; no new AudioUnit/AudioOutputUnit/AudioComponent call, no timer, no lock, no allocation on the audio path', () => {
+    const g = stripComments(W(GRAPH)); const h = histBody(ORGANISM, GRAPH);
+    expect(g).toContain('public static let binsHz: [Double] = [440, 700, 880, 997, 1200, 1320, 1760]');
+    expect(g).toContain('public static let callbacksPerFrame = 4');
+    const guard = g.indexOf('try hw.requireValid()'), est = g.indexOf('sourceEstimator = SourceEstimator(sampleRate: hw.sampleRate)'), arm = g.indexOf('trace(.callbacksArmed');
+    expect(guard).toBeGreaterThan(-1); expect(est).toBeGreaterThan(guard); expect(arm).toBeGreaterThan(est);
+    expect([...g.matchAll(/case \w+ = "([a-z_]+)"/g)].map((x) => x[1])).toEqual([...h.matchAll(/case \w+ = "([a-z_]+)"/g)].map((x) => x[1]));   // 14 seams, same order
+    for (const re of [/AudioUnitGetProperty\(/g, /AudioUnitSetProperty\(/g, /AudioUnitInitialize\(/g, /AudioUnitUninitialize\(/g, /AudioOutputUnitStart\(/g, /AudioUnitRender\(/g, /AudioComponent\w*\(/g, /AudioUnitAddPropertyListener\(/g, /\bimport \w+/g])
+      expect((g.match(re) ?? []).length).toBe((h.match(re) ?? []).length);
+    expect(g).not.toMatch(/DispatchQueue|Timer\b|Thread\b|OSAllocatedUnfairLock|DispatchSemaphore/);
+    expect((g.match(/NSLock\(/g) ?? []).length).toBe((h.match(/NSLock\(/g) ?? []).length);   // the one pre-existing render lock; none added
+    expect((g.match(/lock\.lock\(\)/g) ?? []).length).toBe((h.match(/lock\.lock\(\)/g) ?? []).length);
+    // the audio-thread hook: the same consumed samples, after measure(); the frame is emitted outside the buffer closure
+    const pull = g.slice(g.indexOf('fileprivate func pullInput('), g.indexOf('fileprivate func render('));
+    expect(pull).toMatch(/let \(rms, peak\) = Self\.measure\(base, n\)[\s\S]*sourceEstimator\?\.consume\(base, n\)/);
+    expect(pull.indexOf('onSource?(')).toBeGreaterThan(pull.indexOf('if let o = observation { onInput?(o) }'));
+    // SIMD state, cos/sin recurrence, magnitude normalized by the window sum; lane 7 zero
+    expect(g).toMatch(/SIMD8<Double>/); expect(g).toMatch(/mag\[7\] = 0/); expect(g).toMatch(/if wsum > 0 \{ mag \/= wsum \}/);
+    expect(g).toMatch(/public static func modulationIndex\(_ ordered: \[Double\], frameSeconds: Double, hz: Double = 2\.0\) -> Double\?/);
+  });
+  it('the kernel journals input_source_sample exactly once, from the existing tick, component SourceEvidence, beside an UNCHANGED input_health_sample; the record is never a causal parent; nothing in supervisor · policy · projection · state reads source evidence', () => {
+    const k = stripComments(W(KERNEL)); const hk = histBody(ORGANISM, KERNEL);
+    expect((k.match(/"input_source_sample"/g) ?? []).length).toBe(1);
+    expect(k).toMatch(/journal\("SourceEvidence", "input_source_sample", cause: "sample", evidence: src\)/);
+    expect(k).not.toMatch(/lastObservationSeq = journal\("SourceEvidence"/);
+    const tick = k.slice(k.indexOf('private func sampleIfDue('), k.indexOf('private func handleSource('));
+    expect(tick.indexOf('"input_health_sample"')).toBeLessThan(tick.indexOf('"input_source_sample"'));
+    const health = (s: string) => s.slice(s.indexOf('journal("HealthSupervisor", "input_health_sample"'), s.indexOf('if let g = graph, let r = g.renderStats()'));
+    expect(health(k)).toBe(health(hk));                                                                              // the health record is byte-identical
+    expect(k).toMatch(/ag\.onSource = \{ \[weak self\] o in Task \{ await self\?\.handleSource\(o\) \} \}/);
+    const hs = k.slice(k.indexOf('private func handleSource('), k.indexOf('private func handleSource(') + 400);
+    expect(hs).toMatch(/guard o\.generation == snap\.generation else \{ return \}\s+sourceAgg\.add\(o\)\s+\}/);
+    for (const key of ['m2_997', 'm2_440', 'binsHz', 'frameReset', 'analysisRateHz']) expect(k).toContain(`"${key}"`);
+    for (const f of ['HealthSupervisor.swift', 'RecoveryPolicy.swift', 'StateProjection.swift', 'KernelState.swift', 'Replay.swift'])
+      expect(stripComments(W('ios/VoiceKernel/Sources/VoiceKernel/' + f))).not.toMatch(/SourceObservation|SourceEstimator|input_source_sample|m2_/);
+    expect(k).not.toMatch(/sourceAgg[^\n]*(inputFlow|floor|transition|requestRecovery|health\.)/);
+  });
+  it('the pure-logic tests carry the source unit vectors: seven bins · coherent gain · the four amplitude-domain leakage coefficients · silence · frame reset · the ordered 2 Hz index (ideal gate ≥ 1.15, steady 0, fluctuation < 0.9) · a gated stimulus through the whole estimator', () => {
+    const t = stripComments(W('ios/VoiceKernel/Tests/VoiceKernelTests/PureLogicTests.swift'));
+    expect(t).toContain('final class SourceEstimatorTests: XCTestCase');
+    for (const name of ['testTheBinSetIsExactlyTheSevenRuledFrequenciesAndAFrameClosesEveryFourthCallback', 'testAStimulusToneReadsItsOwnBinAtTheCoherentGainAndNothingInTheControls',
+                        'testOwnToneHarmonicsLeakIntoTheStimulusBinNoMoreThanTheAmplitudeCoefficientsTheReadingLawPins', 'testSilenceReadsZeroEverywhereAndACallbackSizeChangeResetsTheFrame',
+                        'testTheOrderedEnvelopeModulationIndexSeparatesAGatedStimulusFromASteadyOrFluctuatingOne', 'testAGatedStimulusThroughTheWholeEstimatorCarriesTheSignatureOnTheStimulusBinOnly']) expect(t).toContain(`func ${name}()`);
+    expect(t).toContain('[(440.0, 2.16e-5), (880.0, 2.77e-3), (1320.0, 4.00e-5), (1760.0, 1.12e-5)]');
+    expect(t).toContain('XCTAssertEqual(SourceEstimator.binsHz, [440, 700, 880, 997, 1200, 1320, 1760])');
+  });
+  it('the gated fixture is exactly PCM16 · mono · 48 000 Hz · 8 640 000 frames · 997 Hz at peak 0.20 FS gated 250 ms on / 250 ms off (2 Hz, 50 % duty) with 2 ms raised-cosine edges; OFF halves are digital zero; SHA-256 equals the sidecar and the batch pin', () => {
+    const buf = readFileSync(join(process.cwd(), SID_FIXTURE));
+    expect(buf.toString('ascii', 0, 4)).toBe('RIFF'); expect(buf.toString('ascii', 8, 12)).toBe('WAVE');
+    let off = 12; let fmt: Record<string, number> | null = null; let dataOff = -1; let dataLen = -1;
+    while (off + 8 <= buf.length) {
+      const id = buf.toString('ascii', off, off + 4); const len = buf.readUInt32LE(off + 4);
+      if (id === 'fmt ') fmt = { format: buf.readUInt16LE(off + 8), channels: buf.readUInt16LE(off + 10), rate: buf.readUInt32LE(off + 12), bits: buf.readUInt16LE(off + 22) };
+      if (id === 'data') { dataOff = off + 8; dataLen = len; }
+      off += 8 + len + (len & 1);
+    }
+    expect(fmt).toEqual({ format: 1, channels: 1, rate: 48000, bits: 16 });
+    const frames = dataLen / 2; expect(frames).toBe(8_640_000); expect(dataOff + dataLen).toBe(buf.length);
+    const peak = 6553, period = 24000, on = 12000, edge = 96;
+    let max = 0, min = 0, worst = 0, offNonZero = 0, onSamples = 0;
+    for (let i = 0; i < 96000; i++) {                                                    // the first two seconds: four full gate periods
+      const v = buf.readInt16LE(dataOff + 2 * i); if (v > max) max = v; if (v < min) min = v;
+      const ph = i % period;
+      if (ph >= on) { if (v !== 0) offNonZero++; continue; }
+      onSamples++;
+      let gain = 1; if (ph < edge) gain = 0.5 - 0.5 * Math.cos(Math.PI * ph / edge); else if (ph >= on - edge) gain = 0.5 - 0.5 * Math.cos(Math.PI * (on - 1 - ph) / edge);
+      const d = Math.abs(v - Math.round(peak * gain * Math.sin(2 * Math.PI * 997 * i / 48000))); if (d > worst) worst = d;
+    }
+    expect(offNonZero).toBe(0); expect(onSamples).toBe(48000); expect(worst).toBeLessThanOrEqual(1);
+    for (let i = 96000; i < frames; i += 997) { const v = buf.readInt16LE(dataOff + 2 * i); if (v > max) max = v; if (v < min) min = v; }
+    expect(max).toBe(peak); expect(min).toBe(-peak);
+    const sha = createHash('sha256').update(buf).digest('hex'); expect(sha).toBe(SID_SHA);
+    expect(W(SID_FIXTURE + '.sha256')).toBe(`${SID_SHA}  k00-sid-nearend-997hz-gated-2hz-180s.wav\n`);
+    expect(W('scripts/witness/k00-driver-batch.sh')).toContain(`S2_STIMULUS_SHA256="${SID_SHA}"`);
+  });
+  it('the source reader is evidence-only: closed vocabulary, the amplitude-domain coefficients and the tail bound pinned, geometry fail-closed, self-test 20/20 naming every path; every tracked VPIO-02 journal reads UNMEASURED-SRC: no_source_evidence (never PASS/FAIL)', () => {
+    const r = W('scripts/witness/k00-source-ledger.py');
+    expect(r).toContain("A440, A880, A1320, A1760, TAIL = 2.16e-5, 2.77e-3, 4.00e-5, 1.12e-5, 2.82e-6");
+    expect(r).toContain("VIS, SURV, SUPP, NOISE, M2, CB_MIN, MIN_FRAMES = 10.0, 0.1, 0.01, 10.0, 0.9, 90, 20");
+    expect(r).toContain("GEOMETRY = {'rate': 48000.0, 'frameFrames': 1920}");
+    expect(r).toMatch(/m2own is None or m2own < M2/);                                                     // the own_modulated veto is part of SURVIVES
+    for (const v of ['NEAR-END-SURVIVES', 'NEAR-END-SUPPRESSED', 'INDETERMINATE-SRC: frameReset', 'INDETERMINATE-SRC: between', 'INDETERMINATE-SRC: floor', 'INDETERMINATE-SRC: signature_absent', 'INDETERMINATE-SRC: own_modulated', 'no_source_evidence', 'gate_not_seen', 'stimulus_not_visible', 'no_full_rendering_window']) expect(r).toContain(v);
+    const out = execFileSync('python3', ['scripts/witness/k00-source-ledger.py', '--selftest'], { cwd: process.cwd() }).toString('utf8');
+    expect(out).toMatch(/selftest: 20\/20/); expect(out).not.toMatch(/^FAIL/m);
+    const dirs = execFileSync('git', ['ls-files', 'docs/programme/VOICE-2026/driver-ledger'], { cwd: process.cwd() }).toString('utf8').split('\n').filter((p) => p.endsWith('/ledger.md'))
+      .filter((p) => /subject=vpio-02\b/.test(readFileSync(join(process.cwd(), p), 'utf8')));
+    const journals = dirs.flatMap((p) => execFileSync('git', ['ls-files', p.replace(/ledger\.md$/, 'journals')], { cwd: process.cwd() }).toString('utf8').split('\n').filter((f) => f.endsWith('.jsonl') && !f.includes('not-a-sample')));
+    expect(journals.length).toBe(61);
+    const rows = execFileSync('python3', ['scripts/witness/k00-source-ledger.py', '--subject', 'vpio-02', ...journals], { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 }).toString('utf8');
+    expect((rows.match(/no_source_evidence/g) ?? []).length).toBe(61); expect(rows).not.toMatch(/PASS|FAIL|VALID\*\*/);
+  });
+  it('custody declarations: the batch names the SID subject once, maps it to classifier vpio-02, admits sid-nearend-gated only with vpio-02-sid and s2-nearend only with vpio-02, and invokes the source reader only inside the output guard after the two frozen readers; the frozen readers are byte-identical to b198e2e37', () => {
+    const bx = W('scripts/witness/k00-driver-batch.sh').split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+    expect(bx).toContain('SOURCE_LEDGER=""; [ "$STIMULUS" = sid-nearend-gated ] && SOURCE_LEDGER="$LEDGER_DIR/source-ledger.md"');
+    const srcCall = bx.indexOf('k00-source-ledger.py" --stratum'), guard = bx.indexOf('if [ -n "$SOURCE_LEDGER" ]; then'), outCall = bx.indexOf('k00-output-ledger.py" --stratum');
+    expect(guard).toBeGreaterThan(outCall); expect(srcCall).toBeGreaterThan(guard);
+    expect((bx.match(/python3 "\$ROOT\/scripts\/witness\/k00-source-ledger\.py"/g) ?? []).length).toBe(2);
+    for (const l of bx.split('\n').filter((l) => l.includes('k00-source-ledger.py'))) expect(l).not.toMatch(/custody|STIMULUS|S2_|afplay/);
+    for (const p of ['scripts/witness/k00-ledger.py', 'scripts/witness/k00-output-ledger.py']) expect(histRaw('b198e2e37058f2e059d986b4b148e224215f3ee3', p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
   });
 });

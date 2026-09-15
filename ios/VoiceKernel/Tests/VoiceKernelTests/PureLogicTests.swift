@@ -391,3 +391,116 @@ final class StartTraceTests: XCTestCase {
         XCTAssertFalse(refusalPrefix.contains("callbacks_armed"))
     }
 }
+
+// SOURCE-ID-02 (founder ruling 2026-09-15): the source estimator and the 2 Hz
+// signature are pure arithmetic and earn themselves here, offline, before any
+// Mac compile: unit vectors for the seven bins, the amplitude-domain leakage
+// coefficients the reading law relies on, the ordered-envelope modulation index
+// (ideal gate ≈ 1.2–1.3 · steady 0 · fluctuation < 0.9) and the frame-reset path.
+final class SourceEstimatorTests: XCTestCase {
+    private let fs = 48_000.0
+    private let n = 480          // 10 ms callback (the observed geometry); frame = 4 × 480 = 1 920 = 40 ms
+
+    /// Feed `callbacks` × `n` samples of a generator through the estimator; return the closed frames.
+    private func run(_ callbacks: Int, _ gen: (Int) -> Float, n: Int? = nil) -> [SourceEstimator.ClosedFrame] {
+        var est = SourceEstimator(sampleRate: fs)
+        var frames: [SourceEstimator.ClosedFrame] = []
+        let m = n ?? self.n
+        var buf = [Float](repeating: 0, count: m)
+        var idx = 0
+        for _ in 0..<callbacks {
+            for i in 0..<m { buf[i] = gen(idx); idx += 1 }
+            buf.withUnsafeMutableBufferPointer { p in
+                if let f = est.consume(p.baseAddress!, m) { frames.append(f) }
+            }
+        }
+        return frames
+    }
+    private func sine(_ hz: Double, amplitude: Double) -> (Int) -> Float {
+        { i in Float(amplitude * sin(2.0 * Double.pi * hz * Double(i) / self.fs)) }
+    }
+    private func bin(_ f: SourceEstimator.ClosedFrame, _ hz: Double) -> Double { f.magnitudes[SourceEstimator.binsHz.firstIndex(of: hz)!] }
+
+    func testTheBinSetIsExactlyTheSevenRuledFrequenciesAndAFrameClosesEveryFourthCallback() {
+        XCTAssertEqual(SourceEstimator.binsHz, [440, 700, 880, 997, 1200, 1320, 1760])
+        XCTAssertEqual(SourceEstimator.callbacksPerFrame, 4)
+        let frames = run(8, sine(997, amplitude: 0.001))
+        XCTAssertEqual(frames.count, 2)
+        XCTAssertEqual(frames[0].frameFrames, 1_920)
+        XCTAssertEqual(frames[0].sampleRate, fs)
+        XCTAssertFalse(frames[0].reset); XCTAssertFalse(frames[1].reset)
+        XCTAssertEqual(frames[0].magnitudes[7], 0, "lane 7 is unused and always zero")
+    }
+
+    func testAStimulusToneReadsItsOwnBinAtTheCoherentGainAndNothingInTheControls() {
+        // rms 1e-3 → amplitude 1.414e-3 → normalized magnitude ≈ 7.07e-4 (a full-scale sine reads 0.5)
+        let f = run(4, sine(997, amplitude: 0.001 * 2.0.squareRoot()))[0]
+        XCTAssertEqual(bin(f, 997), 7.07e-4, accuracy: 7.07e-4 * 0.02)
+        XCTAssertLessThan(bin(f, 700), 7.07e-4 * 1e-3)      // −60 dB or better into the controls
+        XCTAssertLessThan(bin(f, 1200), 7.07e-4 * 1e-3)
+        XCTAssertLessThan(bin(f, 880), 7.07e-4 * 4e-3)      // 997 → 880 mirrors the pinned 880 → 997 coefficient
+        XCTAssertLessThan(bin(f, 440), 7.07e-4 * 1e-4)
+    }
+
+    func testOwnToneHarmonicsLeakIntoTheStimulusBinNoMoreThanTheAmplitudeCoefficientsTheReadingLawPins() {
+        // §10.B (amplitude domain): 440 → 997 2.16e-5 · 880 → 997 2.77e-3 · 1320 → 997 4.00e-5 · 1760 → 997 1.12e-5
+        for (hz, coeff) in [(440.0, 2.16e-5), (880.0, 2.77e-3), (1320.0, 4.00e-5), (1760.0, 1.12e-5)] {
+            let f = run(4, sine(hz, amplitude: 0.2))[0]            // MAIA's own tone amplitude → magnitude 0.1 in its own bin
+            XCTAssertEqual(bin(f, hz), 0.1, accuracy: 0.1 * 0.02, "\(hz) Hz reads its own bin")
+            XCTAssertLessThanOrEqual(bin(f, 997), 0.1 * coeff * 1.10, "\(hz) Hz leaks into 997 within the pinned coefficient (+10 %)")
+            XCTAssertGreaterThanOrEqual(bin(f, 997), 0.1 * coeff * 0.50, "the coefficient is a bound of the right order, not a fiction")
+        }
+    }
+
+    func testSilenceReadsZeroEverywhereAndACallbackSizeChangeResetsTheFrame() {
+        let z = run(4, { _ in 0 })[0]
+        for i in 0..<7 { XCTAssertEqual(z.magnitudes[i], 0) }
+        var est = SourceEstimator(sampleRate: fs)
+        var a = [Float](repeating: 0.01, count: 480), b = [Float](repeating: 0.01, count: 512)
+        var closed: [SourceEstimator.ClosedFrame] = []
+        a.withUnsafeMutableBufferPointer { p in for _ in 0..<3 { if let f = est.consume(p.baseAddress!, 480) { closed.append(f) } } }
+        XCTAssertEqual(closed.count, 0, "three of four callbacks: the frame is still open")
+        b.withUnsafeMutableBufferPointer { p in for _ in 0..<4 { if let f = est.consume(p.baseAddress!, 512) { closed.append(f) } } }
+        XCTAssertEqual(closed.count, 1, "the open 480-frame is discarded; four 512-callbacks close a new 2 048-frame")
+        XCTAssertTrue(closed[0].reset); XCTAssertEqual(closed[0].frameFrames, 2_048)
+    }
+
+    func testTheOrderedEnvelopeModulationIndexSeparatesAGatedStimulusFromASteadyOrFluctuatingOne() {
+        let dt = 0.04
+        // ideal 250 ms on / 250 ms off gate, integrated per 40 ms frame, random phase against the frame grid
+        for phase in stride(from: 0.0, to: 0.5, by: 0.037) {
+            var seq: [Double] = []
+            for k in 0..<25 {
+                var on = 0.0
+                for i in 0..<40 { let t = Double(k) * dt + phase + Double(i) * 0.001; if t.truncatingRemainder(dividingBy: 0.5) < 0.25 { on += 1 } }
+                seq.append(on / 40.0)
+            }
+            let m2 = SourceSignature.modulationIndex(seq, frameSeconds: dt)!
+            XCTAssertGreaterThanOrEqual(m2, 1.15, "ideal gate reads ≈ 1.21–1.31 (phase \(phase))")
+            XCTAssertLessThanOrEqual(m2, 1.40)
+        }
+        XCTAssertEqual(SourceSignature.modulationIndex([Double](repeating: 0.3, count: 25), frameSeconds: dt)!, 0, accuracy: 1e-9, "a steady envelope has no 2 Hz line")
+        XCTAssertNil(SourceSignature.modulationIndex([Double](repeating: 0, count: 25), frameSeconds: dt), "no energy → no index (journalled as -)")
+        // deterministic fluctuation (a 7 Hz ripple + drift) stays well under the 0.9 witness threshold
+        let ripple = (0..<25).map { k in 0.5 + 0.3 * sin(2.0 * Double.pi * 7.0 * Double(k) * dt) + 0.01 * Double(k) }
+        XCTAssertLessThan(SourceSignature.modulationIndex(ripple, frameSeconds: dt)!, 0.9)
+        // 26 frames (a 1.04 s tick) evaluates over frame time, not a fixed 25-point bin
+        let seq26 = (0..<26).map { k in (Double(k) * dt).truncatingRemainder(dividingBy: 0.5) < 0.25 ? 1.0 : 0.0 }
+        XCTAssertGreaterThanOrEqual(SourceSignature.modulationIndex(seq26, frameSeconds: dt)!, 1.15)
+    }
+
+    func testAGatedStimulusThroughTheWholeEstimatorCarriesTheSignatureOnTheStimulusBinOnly() {
+        // 997 Hz gated 250 ms on/off + a continuous 440 Hz own tone; 25 frames = 100 callbacks
+        let g: (Int) -> Float = { i in
+            let t = Double(i) / self.fs
+            let gate = t.truncatingRemainder(dividingBy: 0.5) < 0.25 ? 1.0 : 0.0
+            return Float(0.002 * gate * sin(2.0 * Double.pi * 997 * t) + 0.02 * sin(2.0 * Double.pi * 440 * t))
+        }
+        let frames = run(100, g)
+        XCTAssertEqual(frames.count, 25)
+        let e997 = frames.map { bin($0, 997) }, e440 = frames.map { bin($0, 440) }
+        XCTAssertGreaterThanOrEqual(SourceSignature.modulationIndex(e997, frameSeconds: 0.04)!, 0.9, "the stimulus bin carries the 2 Hz gate")
+        XCTAssertLessThan(SourceSignature.modulationIndex(e440, frameSeconds: 0.04)!, 0.2, "the own-tone bin does not (m2_440 is the confound veto's control)")
+    }
+}
+

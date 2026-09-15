@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # DRIVER-01 — Mac orchestration and evidence custody. One command per declared batch.
 #
-#   usage: scripts/witness/k00-driver-batch.sh <stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a|vpio-01|vpio-02] [--ledger DIR]
+#   usage: scripts/witness/k00-driver-batch.sh <stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a|vpio-01|vpio-02|vpio-02-sid] [--ledger DIR]
 #                                              [--act entry|output] [--cancel-at MS] [--settle S]
 #                                              [--stimulus s2-nearend]
 #          S2 (founder ruling 2026-09-15, batch-only design): `--stimulus s2-nearend` is the ONE closed token; the batch resolves it
@@ -39,7 +39,9 @@ while [ $# -gt 0 ]; do case "$1" in
 case "$ACT" in entry|output) ;; *) echo "unknown act '$ACT' (entry|output); refusing" >&2; exit 2;; esac
 if [ "$ACT" = output ] && [ -n "$W4" ]; then echo "--act output and --w4 are separate acts; refusing to combine them" >&2; exit 2; fi
 case "$STIMULUS" in "") ;; s2-nearend) ;; *) echo "unknown stimulus '$STIMULUS' (the only token is s2-nearend; no path is accepted); refusing" >&2; exit 2;; esac
-if [ -n "$STIMULUS" ] && { [ "$ACT" != output ] || [ "$VP" != on ] || [ "$MODE" != L ] || [ "$SUBJECT" != vpio-02 ]; }; then
+# SOURCE-ID-02 (founder ruling 2026-09-15): a second closed token, the gated 997 Hz fixture, lawful ONLY with the SID subject.
+case "$STIMULUS" in sid-nearend-gated) [ "$SUBJECT" = vpio-02-sid ] || { echo "--stimulus sid-nearend-gated is lawful only with --subject vpio-02-sid (got subject=$SUBJECT); refusing before playback" >&2; exit 2; };; s2-nearend) [ "$SUBJECT" = vpio-02 ] || { echo "--stimulus s2-nearend is lawful only with --subject vpio-02 (the stationary S-a arm is NOT OPEN on the SID subject; got subject=$SUBJECT); refusing before playback" >&2; exit 2; };; esac
+if [ -n "$STIMULUS" ] && { [ "$ACT" != output ] || [ "$VP" != on ] || [ "$MODE" != L ] || { [ "$SUBJECT" != vpio-02 ] && [ "$SUBJECT" != vpio-02-sid ]; }; }; then
   echo "--stimulus $STIMULUS is lawful only with --act output --vp on --mode L --subject vpio-02 (got act=$ACT vp=$VP mode=$MODE subject=$SUBJECT); refusing before playback" >&2; exit 2
 fi
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -56,7 +58,8 @@ case "$SUBJECT" in
   p5b0|phase-a) BID="life.soullab.voicekernel.k00";    ICON="VoiceKernel K00";;
   vpio-01)      BID="life.soullab.voicekernel.vpio01"; ICON="VoiceKernel VPIO-01";;
   vpio-02)      BID="life.soullab.voicekernel.vpio02"; ICON="VoiceKernel VPIO-02";;
-  *) echo "unknown subject '$SUBJECT' (p5b0|phase-a|vpio-01|vpio-02); no default bundle — refusing" >&2; exit 2;;
+  vpio-02-sid)  BID="life.soullab.voicekernel.vpio02sid"; ICON="VoiceKernel VPIO-02-SID";;   # SOURCE-ID-02: new subject by custody; trace-compatible with vpio-02
+  *) echo "unknown subject '$SUBJECT' (p5b0|phase-a|vpio-01|vpio-02|vpio-02-sid); no default bundle — refusing" >&2; exit 2;;
 esac
 # S2 constants (founder ruling 2026-09-15). The fixture path is resolved HERE from the closed token, never from the command line.
 # Every value below is read-only custody: the batch compares and records; it never sets a volume, selects a device or repairs state.
@@ -70,12 +73,21 @@ S2_OUTPUT_DEVICE="Mac Studio Speakers"
 S2_OUTPUT_TRANSPORT="coreaudio_device_type_builtin"
 S2_OUTPUT_VOLUME="69"
 S2_OUTPUT_MUTED="false"
+# SOURCE-ID-02: the frozen entry/output readers know no SID subject; a SID journal is classified under vpio-02 (its trace
+# signature is the same fourteen seams) while the ledger header declares custody vpio-02-sid. Declared custody + trace
+# compatibility = subject identity (founder ruling 2026-09-14); the mapping is explicit here and in the header line.
+CLASSIFIER_SUBJECT="$SUBJECT"; [ "$SUBJECT" = vpio-02-sid ] && CLASSIFIER_SUBJECT="vpio-02"
+if [ "$STIMULUS" = sid-nearend-gated ]; then
+  S2_STIMULUS="$ROOT/scripts/witness/fixtures/k00-sid-nearend-997hz-gated-2hz-180s.wav"
+  S2_STIMULUS_SHA256="30d51cf4b7527d28131bd9c2535c6bd4dcd2403c8dc0343fc045f6f6959875eb"
+fi
 PROJ="$ROOT/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj"
 DD="$ROOT/ios/VoiceKernelDriver/.derived"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 LEDGER_DIR="${LEDGER_DIR:-$ROOT/docs/programme/VOICE-2026/driver-ledger/$STRATUM-$STAMP}"
 mkdir -p "$LEDGER_DIR/journals"
 LEDGER="$LEDGER_DIR/ledger.md"
+SOURCE_LEDGER=""; [ "$STIMULUS" = sid-nearend-gated ] && SOURCE_LEDGER="$LEDGER_DIR/source-ledger.md"   # SOURCE-ID-02: third evidence-only reader, gated-stimulus populations only
 # One batch per device. CALIBRATION-01 (2026-09-12) had two batches driving the same iPhone at once
 # (173320Z and 173603Z); a second batch is refused here rather than allowed to contend for the runner.
 LOCK="$ROOT/docs/programme/VOICE-2026/driver-ledger/.device-$DEV.lock"
@@ -228,6 +240,7 @@ failure_signature(){ # $1 = sample log
   echo "# DRIVER-01 batch — $STRATUM — $STAMP"
   echo
   echo "stratum=$LABEL · N=$N · vp=$VP · mode=$MODE · hold=${HOLD}s · w4=${W4:-off} · subject=$SUBJECT · bundle=$BID · device=$DEV · xcodeDest=$XDEST"
+  [ "$CLASSIFIER_SUBJECT" != "$SUBJECT" ] && echo "classifierSubject=$CLASSIFIER_SUBJECT · declared custody $SUBJECT is trace-compatible with $CLASSIFIER_SUBJECT (SOURCE-ID-02: the frozen entry/output readers classify under it; source rows in source-ledger.md)"
   [ "$ACT" = output ] && echo "act=output · cancelAt=${CANCEL_AT}ms · settle=${SETTLE}s · driver=testOutputSample · reader=k00-output-ledger.py → output-ledger.md (K00-05 / K00-06 / coupling rows, evidence-only)"
   [ -n "$STIMULUS" ] && echo "stimulus=$STIMULUS · fixture=$(basename "$S2_STIMULUS") · fixtureSha256=$S2_STIMULUS_SHA256 · player=$S2_AFPLAY -v $S2_AFPLAY_VOLUME -t $S2_AFPLAY_SECONDS · afplaySha256=$S2_AFPLAY_SHA256 · outputDevice=$S2_OUTPUT_DEVICE ($S2_OUTPUT_TRANSPORT) · outputVolume=$S2_OUTPUT_VOLUME · muted=$S2_OUTPUT_MUTED · custody=stimulus-preflight/ + stimulus-sample-N.tsv (never read by k00-ledger.py / k00-output-ledger.py)"
   echo "installed harness identity (the app under test is NOT rebuilt by this batch):"
@@ -308,11 +321,16 @@ for i in $(seq 1 "$N"); do
   fi
   for f in $NEW; do
     pull_journal "$f" || { echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | journal $f could not be copied from the container |" >> "$LEDGER"; continue; }
-    python3 "$ROOT/scripts/witness/k00-ledger.py" --stratum "$LABEL" --index "$i" --mode "$MODE" --subject "$SUBJECT" $([ -n "$W4" ] && echo --w4) "$LEDGER_DIR/journals/$f" >> "$LEDGER"
+    python3 "$ROOT/scripts/witness/k00-ledger.py" --stratum "$LABEL" --index "$i" --mode "$MODE" --subject "$CLASSIFIER_SUBJECT" $([ -n "$W4" ] && echo --w4) "$LEDGER_DIR/journals/$f" >> "$LEDGER"
     log "sample $i ledgered: $f"
     if [ -n "$OUTPUT_LEDGER" ]; then   # K00-05/06: the same journal, a second evidence-only reader; the entry row above is untouched
       [ -s "$OUTPUT_LEDGER" ] || python3 "$ROOT/scripts/witness/k00-output-ledger.py" --header > "$OUTPUT_LEDGER"
       python3 "$ROOT/scripts/witness/k00-output-ledger.py" --stratum "$LABEL" --index "$i" --subject "$SUBJECT" "$LEDGER_DIR/journals/$f" >> "$OUTPUT_LEDGER"
+      if [ -n "$SOURCE_LEDGER" ]; then   # SOURCE-ID-02: the same journal, the evidence-only source reader; entry and output rows untouched
+        [ -s "$SOURCE_LEDGER" ] || python3 "$ROOT/scripts/witness/k00-source-ledger.py" --header > "$SOURCE_LEDGER"
+        python3 "$ROOT/scripts/witness/k00-source-ledger.py" --stratum "$LABEL" --index "$i" --subject "$SUBJECT" "$LEDGER_DIR/journals/$f" >> "$SOURCE_LEDGER"
+        log "sample $i source rows read: $f"
+      fi
       grep -o 'K00-OUTPUT: [^"]*' "$LEDGER_DIR/sample-$i-xcodebuild.log" | sed "s/^/| $LABEL | $i | DRIVER-MARKER | — | /; s/\$/ |/" | tr -d '\r' >> "$OUTPUT_LEDGER"
       log "sample $i output rows read: $f"
     fi

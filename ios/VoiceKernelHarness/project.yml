@@ -31,7 +31,7 @@ targets:
     info:
       path: Harness/Info.plist
       properties:
-        CFBundleDisplayName: VoiceKernel VPIO-02
+        CFBundleDisplayName: VoiceKernel VPIO-02-SID
         CFBundleShortVersionString: "0.0.1"
         CFBundleVersion: "1"
         UILaunchScreen: {}
@@ -52,7 +52,7 @@ targets:
           - UIInterfaceOrientationPortrait
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: life.soullab.voicekernel.vpio02
+        PRODUCT_BUNDLE_IDENTIFIER: life.soullab.voicekernel.vpio02sid
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: NO

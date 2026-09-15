@@ -19,6 +19,7 @@ import XCTest
 //   K00_HOLD_S seconds to hold in conversation before Export (default 15)
 //   K00_W4_MS  W4 target: milliseconds between Enter and Leave (default 500)
 //   K00_SUBJECT p5b0 | phase-a | vpio-01 | vpio-02   (default p5b0) — VPIO-01B / VPIO-02B (founder rulings 2026-09-14): selects which
+//   SOURCE-ID-02 (founder ruling 2026-09-15): + vpio-02-sid → life.soullab.voicekernel.vpio02sid (custody declaration only)
 //              installed bundle the DRIVER addresses and which Home Screen label it looks for. The subject
 //              configures the driver only; the app under test still receives no launch arguments, no launch
 //              environment, no hooks — the harness never learns the subject. An unknown value is a
@@ -36,6 +37,7 @@ final class K00DriverTests: XCTestCase {
         "phase-a": Subject(key: "phase-a", bundleID: "life.soullab.voicekernel.k00",    iconLabel: "VoiceKernel K00"),
         "vpio-01": Subject(key: "vpio-01", bundleID: "life.soullab.voicekernel.vpio01", iconLabel: "VoiceKernel VPIO-01"),
         "vpio-02": Subject(key: "vpio-02", bundleID: "life.soullab.voicekernel.vpio02", iconLabel: "VoiceKernel VPIO-02"),
+        "vpio-02-sid": Subject(key: "vpio-02-sid", bundleID: "life.soullab.voicekernel.vpio02sid", iconLabel: "VoiceKernel VPIO-02-SID"),   // SOURCE-ID-02 (founder ruling 2026-09-15): custody declaration only; the app under test still receives nothing
     ]
     static let springboardBundleID = "com.apple.springboard"
     /// C-D20 (founder ruling 2026-09-14/15, after the K00-0506 first witness returned ten `'Play 3 s tone' not found after
@@ -61,7 +63,7 @@ final class K00DriverTests: XCTestCase {
         continueAfterFailure = false
         let key = env["K00_SUBJECT"] ?? "p5b0"
         guard let s = Self.subjects[key] else {
-            throw DriverError(description: "DRIVER/INFRASTRUCTURE FAILURE: unknown subject '\(key)' (p5b0 | phase-a | vpio-01 | vpio-02); no launch attempted")
+            throw DriverError(description: "DRIVER/INFRASTRUCTURE FAILURE: unknown subject '\(key)' (p5b0 | phase-a | vpio-01 | vpio-02 | vpio-02-sid); no launch attempted")
         }
         subject = s
     }

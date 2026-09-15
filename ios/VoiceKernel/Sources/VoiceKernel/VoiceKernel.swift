@@ -69,6 +69,28 @@ public actor VoiceKernel {
     private var lastSampleMs: Int64 = 0
     private let sampleEveryMs: Int64 = 1_000
 
+    /// SOURCE-ID-02 (founder ruling 2026-09-15): source-identification EVIDENCE,
+    /// aggregated on the same tick as `input_health_sample` and journalled beside
+    /// it as `input_source_sample`. Nothing here is read by the supervisor, the
+    /// recovery policy, the projection or any floor transition; the record is
+    /// never a causal parent (it is never assigned to `lastObservationSeq`).
+    private struct SourceAggregate {
+        var frames = 0; var resets = 0; var frameFrames = 0; var sampleRate = 0.0
+        var sum = SIMD8<Double>(repeating: 0)
+        var maxLane = SIMD8<Double>(repeating: -Double.greatestFiniteMagnitude)
+        var minLane = SIMD8<Double>(repeating: Double.greatestFiniteMagnitude)
+        var e997: [Double] = []      // ORDERED frame envelope of the stimulus bin (the 2 Hz signature lives in the order)
+        var e440: [Double] = []      // ORDERED frame envelope of the own-tone bin (the confound control)
+        static let capacity = 64     // > any 1 s tick at 25 frames/s; beyond it frames still count but are not sequenced
+        mutating func add(_ o: SourceObservation) {
+            frames += 1; if o.frameReset { resets += 1 }
+            frameFrames = o.frameFrames; sampleRate = o.sampleRate
+            sum += o.magnitudes; maxLane = pointwiseMax(maxLane, o.magnitudes); minLane = pointwiseMin(minLane, o.magnitudes)
+            if e997.count < Self.capacity { e997.append(o[bin: 997]); e440.append(o[bin: 440]) }
+        }
+    }
+    private var sourceAgg = SourceAggregate()
+
     public init(session id: String = "K00-" + UUID().uuidString.prefix(8).lowercased(),
                 thresholds: HealthThresholds = HealthThresholds(),
                 schedule: RecoverySchedule = RecoverySchedule(),
@@ -285,6 +307,7 @@ public actor VoiceKernel {
         ag.onInput = { [weak self] o in Task { await self?.handleInput(o) } }
         ag.onStreamComplete = { [weak self] id, gen in Task { await self?.handleStreamComplete(id, generation: gen) } }
         ag.onFormatChanged = { [weak self] gen, fmt in Task { await self?.handleFormatChanged(generation: gen, format: fmt) } }
+        ag.onSource = { [weak self] o in Task { await self?.handleSource(o) } }   // SOURCE-ID-02: evidence hop, 25/s
         do {
             try ag.start(voiceProcessing: snap.voiceProcessingEnabled, clock: clock) { step, ev in
                 // Phase A: one journal record per startup seam, in the order it happened.
@@ -309,7 +332,7 @@ public actor VoiceKernel {
         snap.generation = g
         snap.recovery.generation = g
         snap.inputCallbacksInGeneration = 0
-        agg = InputAggregate(); lastSampleMs = clock()
+        agg = InputAggregate(); sourceAgg = SourceAggregate(); lastSampleMs = clock()
         health.beginGeneration(g, nowMs: clock())
         snap.inputFlow = health.inputFlow
         snap.outputFlow = health.outputFlow
@@ -424,8 +447,33 @@ public actor VoiceKernel {
                                                     "framesScheduled": String(r.framesScheduled),
                                                     "outputFlow": snap.outputFlow.rawValue, "synthetic": String(r.synthetic)])
         }
+        // SOURCE-ID-02: the evidence-only source record, same tick, same window.
+        let sa = sourceAgg
+        var src: [String: String] = ["windowMs": String(now - lastSampleMs), "generation": String(snap.generation),
+                                     "frames": String(sa.frames), "frameReset": String(sa.resets),
+                                     "frameFrames": String(sa.frameFrames), "analysisRateHz": String(sa.sampleRate),
+                                     "frameMs": sa.sampleRate > 0 ? String(Double(sa.frameFrames) * 1000.0 / sa.sampleRate) : "-",
+                                     "binsHz": SourceEstimator.binsHz.map { String(Int($0)) }.joined(separator: ",")]
+        for (i, hz) in SourceEstimator.binsHz.enumerated() {
+            let b = "e\(Int(hz))"
+            src[b + "Mean"] = sa.frames > 0 ? String(sa.sum[i] / Double(sa.frames)) : "-"
+            src[b + "Max"] = sa.frames > 0 ? String(sa.maxLane[i]) : "-"
+            src[b + "Min"] = sa.frames > 0 ? String(sa.minLane[i]) : "-"
+        }
+        let frameSeconds = sa.sampleRate > 0 ? Double(sa.frameFrames) / sa.sampleRate : 0
+        src["m2_997"] = SourceSignature.modulationIndex(sa.e997, frameSeconds: frameSeconds).map { String($0) } ?? "-"
+        src["m2_440"] = SourceSignature.modulationIndex(sa.e440, frameSeconds: frameSeconds).map { String($0) } ?? "-"
+        journal("SourceEvidence", "input_source_sample", cause: "sample", evidence: src)
         agg = InputAggregate()
+        sourceAgg = SourceAggregate()
         lastSampleMs = now
+    }
+
+    /// SOURCE-ID-02: generation-gated like every observation; a frame from a
+    /// previous generation is dropped without a record (evidence, not an act).
+    private func handleSource(_ o: SourceObservation) {
+        guard o.generation == snap.generation else { return }
+        sourceAgg.add(o)
     }
 
     private func handleStreamComplete(_ id: OutputStreamID, generation gen: Int) {
