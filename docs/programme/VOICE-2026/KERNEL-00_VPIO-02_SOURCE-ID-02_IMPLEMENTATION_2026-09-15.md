@@ -340,3 +340,13 @@ queued duplicate
 This **supersedes** three earlier wordings, none of which is edited: §10.5 ("visible scrollback, execution NOT ESTABLISHED"), §10.7 ("outcome most plausibly a precondition refusal, NOT witnessed"), and the carrier's `RETURN.txt` line `DUPLICATE_INVOCATION not-established` (authored by the carrier script from §10.5's state; the carrier directory is frozen evidence and is not rewritten). The §10.7 `ls -ld …` line is no longer owed; it remains a free confirmation (an empty `…-out-20260915T213208Z` directory would be the mechanism's footprint) and, if run, would be recorded as such. The §10.7 design note stands for the next pin: `mkdir -p "$OUT"` after the worktree precondition, so a refusal leaves no residue at all.
 
 **Ordering, as the founder stated it and as it ran.** §10.7 (carrier read, third-transcript finding) was written and committed (`e7a50435f`) **before** `SID REPAIR-01` (`faf918b5c`); the ruling here changes the finding's classification, not its place in the sequence. `REPAIR-01` remains open exactly as ruled (§10.6) and is written (§10.8), awaiting diff review. Siblings HOLD. `SID MAC-COMPILE-02` NOT OPEN.
+
+### 10.10 Free confirmation of §10.9 (founder, Mac terminal, read-only, 2026-09-15)
+
+```text
+drwxr-xr-x  413 soullab  wheel  13216 Sep 15 16:43 /private/tmp/sid-mac-compile-01-f0c6ae13b88db29cbd1537bec585d98376c8bc4f
+drwxr-xr-x    8 soullab  wheel    256 Sep 15 16:44 /private/tmp/sid-mac-compile-01-out-20260915T204348Z
+drwxr-xr-x    2 soullab  wheel     64 Sep 15 17:32 /private/tmp/sid-mac-compile-01-out-20260915T213209Z
+```
+
+The mechanism's footprint is present: an **empty** `$OUT` directory (`2` links, 64 bytes = `.` and `..` only) stamped `20260915T213209Z`, created 17:32 local — one second after the shell's tee stamp `213208Z`, because the script computes its own `STAMP` after `bash` starts. The duplicate ran `mkdir -p "$OUT"`, reached `test ! -e "$WT"` with the governed worktree (16:43) present, and exited: no `head.txt`, no log, nothing written into the governed `$OUT` (unchanged at 16:44, 8 entries). §10.9's ruling is confirmed by direct evidence; nothing in the ruling changes. Residue on the Mac: the empty `…-out-20260915T213209Z` directory — non-substantive; left in place (nothing on the Mac is deleted in this lane without a ruling). Next pin: `mkdir -p "$OUT"` after the precondition.

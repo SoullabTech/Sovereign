@@ -3502,3 +3502,5 @@ Carrier `feature/sid-mac-compile-01-evidence-20260915T204348Z` @ `1c772e14f` che
 ## §18.41 — FOUNDER RULING (2026-09-15): the queued duplicate invocation is **ESTABLISHED as executed and refused at the existing `$WT`** (implementation record §10.9; qualification plan §10.61)
 
 0-byte `…T213208Z.log` at 21:32:08Z, carrier transcript begins 21:32:12Z, `mkdir -p "$OUT"` then `test ! -e "$WT"` with the governed worktree present → non-substantive residue only: no gate, no Swift, no Xcode, no device act. Supersedes the "not established" wording in §18.38 / §18.40 and in the carrier's `RETURN.txt` (frozen, not rewritten). The §18.40 `ls` is no longer owed. MAC-COMPILE-01 standing unchanged (EXECUTED · STOP · SPENT). REPAIR-01 written at `faf918b5c` under §18.39, diff review pending; siblings HOLD; MAC-COMPILE-02 NOT OPEN.
+
+§18.41 confirmed by direct read (§10.10): empty `/private/tmp/sid-mac-compile-01-out-20260915T213209Z` (17:32 local, `.`/`..` only) beside the untouched governed `$OUT` and the 16:43 worktree — the duplicate created its `$OUT`, hit `test ! -e "$WT"`, exited. No change to any standing.
