@@ -276,6 +276,7 @@ let totalBytes = 0;
 let withFullFrontmatter = 0;
 let withPartialFrontmatter = 0;
 let withNoFrontmatter = 0;
+let withUnknownFrontmatter = 0;   // text read attempted and failed — NOT absence
 let zeroByte = 0;
 let soullabSignal = 0;
 
@@ -305,6 +306,7 @@ for (const path of files) {
   let fmPresent = null;
   let domains = [];
   let soullab = false;
+  let textObserved = false;   // did this file's content actually reach us?
 
   if (readability === 'immediate' && st.size > 0 && st.size < 16 * 1024 * 1024) {
     textAttempts += 1;
@@ -317,10 +319,17 @@ for (const path of files) {
       }
       soullab = countSignals(lower, SOULLAB_MARKERS).length > 0;
       if (soullab) soullabSignal += 1;
+      textObserved = true;
     } catch { textFailures += 1; }
   }
 
-  if (fmPresent === null) withNoFrontmatter += 1;
+  // UNOBSERVED IS NOT ABSENT. A file whose content never reached us cannot be
+  // evidence that frontmatter is missing from it. Within the tolerated 5% of
+  // content-read failures those files were previously counted as "absent" —
+  // a false negative manufactured from non-observation.
+  const textEligible = readability === 'immediate' && st.size > 0 && st.size < 16 * 1024 * 1024;
+  if (textEligible && !textObserved) withUnknownFrontmatter += 1;
+  else if (fmPresent === null) withNoFrontmatter += 1;
   else if (fmPresent.length === RATIFIED_FIELDS.length) withFullFrontmatter += 1;
   else withPartialFrontmatter += 1;
 
@@ -329,8 +338,9 @@ for (const path of files) {
     readability, hash, hashKind,
     frontmatter_fields_present: fmPresent, // null = no frontmatter block found
     frontmatter_fields_missing: fmPresent ? RATIFIED_FIELDS.filter((f) => !fmPresent.includes(f)) : RATIFIED_FIELDS,
-    domain_signal: domains,
-    soullab_authorship_signal: soullab, // SIGNAL ONLY — never a classification
+    content_observed: textObserved,
+    domain_signal: textObserved ? domains : null,   // null = not observed, NOT 'none found'
+    soullab_authorship_signal: textObserved ? soullab : null, // null = not observed
   });
 }
 
@@ -416,6 +426,15 @@ const census = {
     complete: withFullFrontmatter,
     partial: withPartialFrontmatter,
     absent: withNoFrontmatter,
+    unknown_unread: withUnknownFrontmatter,
+  },
+  observation_scope: {
+    files_whose_content_was_read: textSuccesses,
+    files_eligible_but_unread: textAttempts - textSuccesses,
+    domain_and_authorship_denominator: textSuccesses,
+    duplication_coverage: hashSuccessRate === 1 ? 'complete' : 'partial',
+    duplication_counts_are: hashSuccessRate === 1 ? 'exact' : 'observed lower bound',
+    files_unhashed: hashAttempts - hashSuccesses,
   },
   domain_signal_counts: domainHits,
   soullab_authorship_signal_files: soullabSignal,
@@ -551,10 +570,15 @@ Required: ${RATIFIED_FIELDS.map((f) => `\`${f}\``).join(' · ')}
 |---|---|---|
 | Complete | ${withFullFrontmatter} | ${pct(withFullFrontmatter)}% |
 | Partial | ${withPartialFrontmatter} | ${pct(withPartialFrontmatter)}% |
-| Absent | ${withNoFrontmatter} | ${pct(withNoFrontmatter)}% |
+| Absent (**read**, none found) | ${withNoFrontmatter} | ${pct(withNoFrontmatter)}% |
+| ⛔ **Unknown (eligible but unread)** | ${withUnknownFrontmatter} | ${pct(withUnknownFrontmatter)}% |
 
 ⚠️ *Absent frontmatter is the census's central finding, not a defect list. It measures
 the distance between the corpus as it exists and the discipline already ratified for it.*
+
+⛔ ***Unknown* is not *absent*.** Those files were eligible for a content read and their content
+never reached this instrument. They are excluded from the absence finding rather than counted
+toward it.
 
 ## Duplication
 
@@ -563,11 +587,21 @@ the distance between the corpus as it exists and the discipline already ratified
 | Duplicate clusters | ${duplicateClusters.length} |
 | Redundant files | ${duplicateFileCount} |
 
+${hashSuccessRate === 1
+  ? '⭐ **Hash coverage complete** — these counts are exact for the counted corpus.'
+  : `⛔ **Hash coverage is ${(hashSuccessRate * 100).toFixed(1)}%, not complete.** ${hashAttempts - hashSuccesses} file(s) could not be hashed, so these are an **OBSERVED LOWER BOUND**, never a whole-corpus total. An unhashed file cannot be shown to duplicate anything, and its absence from a cluster is not evidence that it is unique.`}
+
 ⛔ Nothing was deduplicated. Clusters are reported for founder adjudication only.
 
 ## Domain signal (12-domain map)
 
-Term occurrence counts over immediately-readable files. Orientation, **not** classification.
+Term occurrence counts over the **${textSuccesses} files whose content was actually read**.
+Orientation, **not** classification.
+
+⛔ **Denominator is observed files, not the corpus.** ${textAttempts - textSuccesses} eligible
+file(s) were not read and contribute nothing to these counts — ⛔ which is *absence of
+observation*, never *observation of absence*. A domain showing zero may be unrepresented, or may
+sit entirely in the unread set.
 
 | Domain | Files with signal |
 |---|---|
@@ -575,7 +609,10 @@ ${Object.entries(domainHits).sort((a, b) => b[1] - a[1]).map(([k, v]) => `| ${k}
 
 ## Authorship signal
 
-${soullabSignal} files (${pct(soullabSignal)}%) carry a Soullab/Spiralogic/MAIA term.
+${soullabSignal} of the **${textSuccesses} files read** carry a Soullab/Spiralogic/MAIA term.
+
+⛔ ${textAttempts - textSuccesses} eligible file(s) were unread and are **not** counted as
+lacking the term.
 
 ⛔ This is a **signal**, never a classification. Authorship and standing are orthogonal
 axes (charter §2.1) and neither is assigned by this instrument.
