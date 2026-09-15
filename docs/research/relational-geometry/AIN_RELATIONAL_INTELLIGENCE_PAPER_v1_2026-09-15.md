@@ -64,6 +64,31 @@ We now have a way to find out.
 
 ---
 
+## What we are asking, and what we are not
+
+This paper is an invitation to test something, not a request to accept anything.
+
+**We are not asking for agreement.** Nothing here depends on the reader sharing our
+starting assumptions.
+
+**We are not asking anyone to accept the elemental taxonomy.** Whether Fire, Water, Air,
+Earth and Aether name real distinctions in cognition is itself one of the open questions.
+The architectural proposition — *preserve meaningful differentiation before synthesis* —
+is separable from the taxonomy and is the one we would defend first.
+
+**We are not claiming geometric correspondence.** An explicit distinction in our type
+system is not evidence of a representational distinction inside a model. Having built the
+architecture is not partial evidence for it.
+
+**We are offering a falsifiable experimental object**: twelve relational distinctions,
+forty-eight paired cases, explicit controls, and failure conditions named in advance.
+
+**And we most want criticism exactly where we may be mixing architecture with
+representation.** That is the error this work is most likely to be making, and the one we
+are least able to catch from inside it.
+
+---
+
 # 1. Intelligence Beyond the Model
 
 A language model can be extraordinarily capable while having almost no durable relationship to the person interacting with it.
@@ -308,6 +333,8 @@ Many of AIN's most interesting distinctions were not designed as cognitive scien
 
 They emerged because something unsafe or misleading happened when two relations were collapsed.
 
+The examples in this section are invented illustrative examples, not member material, and are included only to clarify the architectural distinction.
+
 Consider:
 
 > "I am afraid of becoming like my father."
@@ -503,7 +530,7 @@ Some have been exercised through harnesses.
 
 Most presently exist as compiler- or architecture-enforced distinctions.
 
-One is declared in vocabulary but apparently not emitted by the executable path.
+One is declared in vocabulary but not emitted anywhere in the current repository execution path.
 
 That creates an essential scientific boundary.
 
@@ -921,6 +948,9 @@ It has a measurable internal organization.
 Only then would we say:
 
 **the bridge has been found.**
+
+Until then it is a candidate — and we would rather it failed early, in review, than late,
+in a result we had grown attached to.
 
 ---
 
