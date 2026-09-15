@@ -64,7 +64,99 @@ connection would be more than metaphor.
 
 ---
 
-## 2 · What we are not claiming
+## 2 · Spiralogic and the elemental foundation of AIN
+
+⭐ Placed here, before anything else, because without it the rest of this brief reads
+as a sophisticated memory-and-provenance system with an interesting benchmark attached.
+It is more coherent than that, and the coherence is the argument.
+
+AIN is not organized only around memory, provenance, consent and relational continuity.
+Beneath those systems is a developmental operating grammar derived from **Spiralogic and
+Elemental Alchemy**.
+
+Spiralogic differentiates five elemental dimensions — ⛔ **not personality types, and not
+symbolic decoration**, but distinct functional modes through which experience is
+encountered, transformed, expressed and integrated:
+
+| | in simplified functional terms |
+|---|---|
+| **Water** | receives, feels, senses, relates |
+| **Fire** | initiates, imagines, desires, directs, moves |
+| **Air** | differentiates, names, interprets, communicates, makes meaning |
+| **Earth** | grounds, structures, embodies, acts, manifests |
+| **Aether** | integrates, contextualizes, witnesses, holds the relationship among perspectives |
+
+⭐ The process is **recursive, not linear**. Experience is received, mobilized,
+differentiated, embodied, integrated — and then encountered again from a changed position.
+
+### 2.1 Why this became an architectural concern
+
+The pattern shaped AIN at a deeper level than interface language. It changed how the
+system treats cognition itself:
+
+> **Intelligence is not one homogeneous process producing increasingly accurate answers.
+> Different manners of attention disclose different aspects of a situation, and premature
+> synthesis destroys information.**
+
+So AIN attempts to preserve differentiated perspectives long enough for their differences
+to remain meaningful, while still allowing them to participate in coherent integration.
+The **Corpus Callosum** architecture is one expression of that: multiple modes may
+contribute to cognition, but their contributions must not be collapsed into an averaged
+answer before their differences have done useful work.
+
+⭐ **This is not only a design principle — it has production rows behind it.** Eight
+parallel voices (the five elemental modes plus three others) emit into `agent_runs` under
+live traffic, and the router integrates selectively rather than broadcasting everything
+forward. ⚠️ Two honest limits, carried and not smoothed over: the *member-facing
+experiential effect of that selectivity is unmeasured*, and two of the processing paths
+show zero rows. We report the substrate as live and the effect as unknown.
+
+### 2.2 What this explains about MAIA
+
+⛔ MAIA is **not** five elemental agents speaking independently to the member. The
+differentiated processes belong *beneath* the encounter. MAIA remains the relational
+intelligence and the single voice through which those perspectives are integrated — which
+is why the canonical turn has one renderer and one identity resolver, however many
+producers were considered.
+
+### 2.3 ⭐⭐ The proposition that connects this to the corpus
+
+Spiralogic gives AIN a developmental model **and** an architectural proposition:
+
+> **Difference is information. Integration should preserve the information carried by
+> difference rather than erase it.**
+
+That proposition extends well beyond elemental cognition. The same pattern appears
+throughout AIN's relational architecture:
+
+- authorship must remain distinguishable from inference
+- historical truth must remain distinguishable from present truth
+- withholding must remain distinguishable from exclusion
+- memory must remain distinguishable from interpretation
+- individual perspective must remain distinguishable within collective intelligence
+
+⭐⭐ **So the relational operators in JR-01 are not separate from the elemental foundation.
+They are the same design commitment at another scale: _preserve meaningful differentiation
+before synthesis._**
+
+### 2.4 Which makes the research question larger than the elements
+
+The question is not only whether Fire, Water, Air, Earth and integrative attention produce
+distinguishable representational trajectories. It is also whether the broader principle
+beneath Spiralogic — **the preservation and transformation of consequential relations among
+differentiated states** — has measurable structure inside artificial cognition.
+
+The lineage, stated once:
+
+```
+Elemental Alchemy → Spiralogic → differentiated attention → Corpus Callosum
+   → relational architecture → MAIA → relational perturbation corpus
+   → possible geometric measurement
+```
+
+---
+
+## 3 · What we are not claiming
 
 Stated first, because the temptation runs the other way.
 
@@ -75,6 +167,12 @@ Stated first, because the temptation runs the other way.
 - ⛔ **An explicit type-level distinction in TypeScript is not evidence of a
   representational distinction inside a model.** Having built the types is not
   partial evidence for it. That correspondence is precisely the open question.
+- ⛔ We are **not** claiming the five elemental modes are empirically validated constructs.
+  Whether they name real distinctions in cognition is one of the things we would like to
+  find out, and rung 1 of the ladder below applies to them exactly as it applies to the
+  relational operators. ⭐ The architectural proposition — *preserve differentiation before
+  synthesis* — is separable from any particular taxonomy of what the differences are, and
+  it is the proposition we would defend first.
 - ⛔ Of our 12 operators, **8 are compiler-enforced contracts and nothing more.**
   One is witnessed against a live route, two against a test harness, and one is
   declared in our vocabulary but emitted by no code path at all. We grade and
@@ -87,7 +185,7 @@ We treat the agreement as a constraint on what we may say, not as a finding.
 
 ---
 
-## 3 · What we think we can contribute that is hard to get elsewhere
+## 4 · What we think we can contribute that is hard to get elsewhere
 
 Your published paradigm perturbs a **load-bearing fact** and asks whether the
 conclusion moves with it. Our contribution is a set of perturbations where the
@@ -132,7 +230,7 @@ It currently reports 0 failures on 48 pairs.
 
 ---
 
-## 4 · The ladder, and where the two programmes meet
+## 5 · The ladder, and where the two programmes meet
 
 ```
 RELATIONAL OPERATOR
@@ -160,7 +258,7 @@ or neither means anything.
 
 ---
 
-## 5 · The four things we would ask of you
+## 6 · The four things we would ask of you
 
 1. **Are these legitimate candidate invariants, or are we conflating levels?** The
    answer we most want to hear, if it is the true one, is *"you are mixing
@@ -184,7 +282,7 @@ E2   can that discovered geometry →  be trained directly?
 
 ---
 
-## 6 · The failure test
+## 7 · The failure test
 
 We hold ourselves to naming, in advance, what result would sink the proposal.
 
@@ -200,7 +298,7 @@ relational structure. We would report that.
 
 ---
 
-## 7 · What we think is genuinely interesting here
+## 8 · What we think is genuinely interesting here
 
 Not that we built an elaborate architecture. Architectures are cheap.
 
@@ -230,7 +328,7 @@ way to find out whether relational intelligence and geometric reasoning meet at 
 measurable level.
 
 And if they don't, we would like to know that too — which is why the failure test is
-in §6 and not in a footnote.
+in §7 and not in a footnote.
 
 ---
 

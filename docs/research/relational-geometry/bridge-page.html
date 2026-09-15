@@ -117,6 +117,20 @@
   .anchor .key { color: var(--ink); }
   .anchor .key b { font-weight: 600; color: var(--accent); }
 
+  /* ── elemental ────────────────────────────────────────── */
+  .modes { border-top: 1px solid var(--rule-firm); margin: 22px 0 26px; }
+  .mode { display: grid; grid-template-columns: 6.5rem 1fr; gap: 4px 20px; align-items: baseline;
+          padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .mode dt { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .09em;
+             text-transform: uppercase; color: var(--accent); }
+  .mode dd { margin: 0; font-size: 1rem; color: var(--ink); }
+  .lineage { font-family: var(--mono); font-size: 12.5px; line-height: 2; color: var(--slate);
+             background: var(--surface); border: 1px solid var(--rule-firm); padding: 16px 18px;
+             overflow-x: auto; white-space: pre; margin: 22px 0 0; max-width: none; }
+  .lineage b { color: var(--accent); font-weight: 600; }
+  .pull { border-left: 3px solid var(--accent); padding: 4px 0 4px 20px; margin: 24px 0; }
+  .pull p { font-size: 1.12rem; line-height: 1.45; margin: 0; max-width: 46ch; font-weight: 400; }
+
   /* ── specimen ─────────────────────────────────────────── */
   .specimen { border: 1px solid var(--rule-firm); background: var(--surface); }
   .specimen-head {
@@ -208,6 +222,78 @@
     <p class="lede">His paradigm perturbs a load-bearing <em>fact</em>. Ours perturbs a load-bearing <em>relation</em> while the payload barely moves.</p>
     <p class="key"><b>MAIA gives us the relations to test. Sophontic may give us the methods to determine whether those relations have measurable internal geometry.</b></p>
   </div>
+
+  <section>
+    <h2>Spiralogic &amp; the elemental foundation</h2>
+    <p>
+      AIN is not organized only around memory, provenance, consent and relational continuity.
+      Beneath those systems is a developmental operating grammar derived from
+      <strong>Spiralogic and Elemental Alchemy</strong>. It differentiates five elemental
+      dimensions — not personality types, not symbolic decoration, but distinct functional
+      modes through which experience is encountered, transformed, expressed and integrated.
+    </p>
+    <dl class="modes">
+      <div class="mode"><dt>Water</dt><dd>receives, feels, senses, relates</dd></div>
+      <div class="mode"><dt>Fire</dt><dd>initiates, imagines, desires, directs, moves</dd></div>
+      <div class="mode"><dt>Air</dt><dd>differentiates, names, interprets, communicates, makes meaning</dd></div>
+      <div class="mode"><dt>Earth</dt><dd>grounds, structures, embodies, acts, manifests</dd></div>
+      <div class="mode"><dt>Aether</dt><dd>integrates, contextualizes, witnesses, holds the relationship among perspectives</dd></div>
+    </dl>
+    <p>
+      The process is recursive rather than linear: experience is received, mobilized,
+      differentiated, embodied, integrated — then encountered again from a changed position.
+      This shaped AIN at a deeper level than interface language, because it changed how the
+      system treats cognition itself.
+    </p>
+    <div class="pull">
+      <p>
+        Intelligence is not one homogeneous process producing increasingly accurate answers.
+        Different manners of attention disclose different aspects of a situation, and
+        premature synthesis destroys information.
+      </p>
+    </div>
+    <p>
+      So AIN preserves differentiated perspectives long enough for their differences to remain
+      meaningful, while still allowing them to participate in coherent integration. The
+      <strong>Corpus Callosum</strong> architecture is one expression of that: multiple modes
+      may contribute to cognition, but their contributions must not be collapsed into an
+      averaged answer before their differences have done useful work. Eight parallel voices
+      emit under live traffic and the router integrates selectively rather than broadcasting
+      everything forward. The member-facing experiential effect of that selectivity is
+      <em>unmeasured</em>, and two processing paths show no rows at all — we report the
+      substrate as live and the effect as unknown.
+    </p>
+    <p>
+      MAIA is <strong>not</strong> five elemental agents speaking independently to the member.
+      The differentiated processes belong beneath the encounter; MAIA remains the relational
+      intelligence and the single voice through which those perspectives are integrated —
+      which is why the canonical turn has one renderer and one identity resolver, however many
+      producers were considered.
+    </p>
+    <div class="pull">
+      <p>
+        Difference is information. Integration should preserve the information carried by
+        difference rather than erase it.
+      </p>
+    </div>
+    <p>
+      That proposition extends well beyond elemental cognition, and this is the join:
+      authorship must stay distinguishable from inference; historical truth from present
+      truth; withholding from exclusion; memory from interpretation; individual perspective
+      from collective intelligence. <strong>The relational operators below are not separate
+      from the elemental foundation — they are the same commitment at another scale.</strong>
+    </p>
+    <p>
+      Which makes the research question larger than the elements. Not only whether Fire,
+      Water, Air, Earth and integrative attention produce distinguishable representational
+      trajectories, but whether the broader principle beneath Spiralogic — the preservation
+      and transformation of consequential relations among differentiated states — has
+      measurable structure inside artificial cognition.
+    </p>
+    <p class="lineage">Elemental Alchemy &rarr; Spiralogic &rarr; differentiated attention &rarr; <b>Corpus Callosum</b>
+   &rarr; relational architecture &rarr; <b>MAIA</b> &rarr; relational perturbation corpus
+   &rarr; <b>possible geometric measurement</b></p>
+  </section>
 
   <section>
     <h2>What MAIA already preserves</h2>
@@ -317,6 +403,12 @@
       <li>We are <strong>not</strong> asserting that "relationship" is literally a geometric object.</li>
       <li>An explicit type-level distinction in TypeScript is <strong>not evidence</strong> of a
         representational one. Having built the types is not partial evidence for it.</li>
+      <li>We are <strong>not</strong> claiming the five elemental modes are empirically
+        validated constructs. Whether they name real distinctions in cognition is one of the
+        things we would like to find out — rung 1 applies to them exactly as it applies to the
+        relational operators. The architectural proposition, <em>preserve differentiation
+        before synthesis</em>, is separable from any particular taxonomy of what the
+        differences are, and it is the one we would defend first.</li>
       <li>Of the twelve operators, <strong>eight are compiler-enforced contracts and nothing
         more</strong>. One is witnessed against a live route, two against a test harness, and one
         is declared in our vocabulary but emitted by no code path at all. We grade this per
