@@ -138,3 +138,85 @@ the client comparison at :3124 · the cache write at :3129        untouched
 
 ⛔ **The act ends here**: evidence preserved · result classified · **stop**. A new founder ruling is
 required before any repair. ⛔ Nothing in the explicitly-unauthorized list was touched.
+
+---
+
+## 7. FOUNDER DISPOSITION — 2026-09-15
+
+### 7.1 · THE WORDING BOUNDARY, HELD **[F]**
+
+> ⛔ **Do not write**: *"This proves MAIA cognitively forgot turns 101–150."*
+> ✅ **Write**: *"This proves the client destroys the recent continuity state that cognition depends
+> upon; model-payload loss remains unwitnessed."*
+
+*"We have not yet directly witnessed a model request in which turns 101–150 are absent because of
+this mechanism. The code path makes that consequence plausible — and apparently strongly entailed
+from `historicalMessagesRef.current` feeding `truncateHistoryForAPI` — but your refusal to upgrade
+it was correct."* **[F]**
+
+### 7.2 · ⭐⭐ TWO DEFECTS, NOT ONE **[F]**
+
+```
+D1 · SELECTION DEFECT
+     "more rows" wins over "more recent rows"          (OracleConversation.tsx:3124)
+
+D2 · DESTRUCTIVE PERSISTENCE DEFECT
+     the selected stale set overwrites the better cache (OracleConversation.tsx:3129)
+```
+
+> *"A repair that fixes only one could still leave continuity broken."* **[F]** — fix the server
+> ordering but keep destructive replacement → fragile; fix the overwrite but still prefer the stale
+> set → the current session is still wrong; merge naïvely → duplicates, ordering and provenance
+> problems.
+
+⭐ **D2 is arguably the more urgent**, because it removes the fallback that could have corrected the
+next load.
+
+### 7.3 · ⚠️ THE EXISTING MERGE PRIMITIVE IS NOT SAFE TO LEAN ON
+
+**[J]** Attached to the repair law because the founder's *"merge naïvely"* hazard is **not
+hypothetical — the adjacent helper already has that shape.** `truncateHistoryForAPI`
+(`OracleConversation.tsx:372-405`), re-read for this disposition:
+
+- it concatenates **historical first, then current**, and ⛔ **never sorts by timestamp** — the
+  resulting sequence is ordered by **source**, not by **time**;
+- `slice(-maxMessages)` therefore takes the most recent **array positions**, not the most recent
+  **turns**;
+- dedupe is by `id`, and *"Messages without ID always added"* (`:395-397`) — **an id-less message
+  bypasses dedupe entirely.**
+
+> ⛔ **"Just merge the two carriers" would produce a temporally scrambled history using the
+> primitive already in the file.** Any repair that reconciles carriers must sort by time and must
+> not rely on this helper's ordering. ⛔ Recorded as an observation informing repair, ⛔ not a repair.
+
+### 7.4 · SEQUENCING **[F]**
+
+```
+C4c · PROMPT-PAYLOAD WITNESS   — completes causal attribution to cognition
+C4-REPAIR-01                   — repairs already-witnessed continuity corruption
+```
+
+> *"C4c is useful scientifically. It is **not** a prerequisite for repairing destructive client
+> state."* **[F]** — the client destruction is independently harmful and fully witnessed.
+
+### 7.5 · FIXTURE CAVEATS STAY ATTACHED TO FIXTURE FIDELITY **[F]**
+
+`431 applied / 56 refused` is **evidence about this shadow reconstruction**, ⛔ never a statement
+about production schema completeness. The S5 trigger episode likewise bears only on fixture
+fidelity: full schema partially reconstructed · provenance trigger active · first invalid seed
+correctly refused · governed fixture passed the real write contract. ⛔ It does not alter C4a's
+SELECT result.
+
+### 7.6 · STANDING AFTER DISPOSITION
+
+```
+C4a  server temporal slice          🔴 WITNESSED
+C4b  client stale-set preference    🔴 WITNESSED
+C4b  recency-correct cache loss     🔴 WITNESSED
+C4b  persistent cache regression    🔴 WITNESSED
+
+C4c  outgoing model payload         ⏳ ENTAILED, NOT WITNESSED · OWED / NOT OPEN
+     model cognitive omission       ⏳ NOT YET WITNESSED
+
+repair authority                    ⛔ STILL NOT GRANTED
+```

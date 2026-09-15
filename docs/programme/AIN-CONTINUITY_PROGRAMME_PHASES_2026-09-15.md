@@ -81,12 +81,76 @@ Recurrence · Freedom** (`AIN-CONTEXT-01` ACT 2 §C1.5). ⛔ A floor, never a pr
 
 ---
 
+## THE SELF-AMPLIFICATION FINDING AND THE REPAIR LAW
+
+Added 2026-09-15 after `C4-WITNESS-01` and `C4b-WITNESS-01` both returned RED.
+
+### ⭐⭐ THE SENTENCE THE PROGRAMME TURNS ON **[F]**
+
+> **The continuity defect is self-amplifying: once the stale PostgreSQL slice wins by count, the
+> client overwrites the more recent cache with that stale slice, removing the very fallback that
+> could have corrected the next load.**
+>
+> *"That is the architectural defect we need to fix — not merely a bad `LIMIT 100`."*
+
+The witnessed chain:
+
+```
+150-turn durable session
+      ↓  server returns turns 1–100
+      ↓  client already holds turns 101–150
+      ↓  100 > 50
+      ↓  client selects the stale PG set
+      ↓  client rewrites the local cache
+      ↓  cache becomes turns 51–100
+turns 101–150 disappear from the client continuity carrier
+```
+
+⭐ **The client is not merely making a bad choice for one render. It is destroying the better
+continuity state it already possessed** — and after one reload there is no recency-correct fallback
+left to recover from.
+
+### CR-1 · THE CARRIER RECONCILIATION LAW **[F]**
+
+> **When multiple conversation carriers disagree, recency and source continuity may not be degraded
+> merely because one carrier contains more rows. A less-recent carrier must never overwrite a
+> more-recent valid carrier without an explicit reconciliation rule.**
+
+And the older invariant continues to hold beneath it:
+
+> **Conversation length may change representation; it may not make significant recent relational
+> history irrecoverable.**
+
+**[J]** CR-1 is recorded **here**, in the programme, ⛔ not appended to `AIN-CONTEXT-01`'s LC series
+— that lane is closed and adding to it would reopen it. CR-1 extends **LC-3** (recoverability) and
+**LC-22** (standing travels with what it governs) into the carrier-conflict case the witnesses
+exposed; ⛔ it supersedes neither.
+
+⭐ **Why the law rather than the conditional**: the shallow repair is `change > to <`. That would fix
+neither defect properly — it would pick the smaller carrier by count instead of the larger one by
+count, which is the same mistake with the inequality reversed. **Count is not the axis.**
+
+### THE TWO DEFECTS ANY REPAIR MUST ADDRESS TOGETHER
+
+```
+D1 · SELECTION DEFECT              "more rows" beats "more recent rows"      :3124
+D2 · DESTRUCTIVE PERSISTENCE       the stale winner overwrites the cache     :3129
+```
+
+⚠️ And the primitive already in the file is not a safe basis for a merge-based repair —
+`truncateHistoryForAPI` orders by **source, not time**, and lets id-less messages bypass dedupe
+(`C4b` result §7.3).
+
+---
+
 ## STANDING
 
 ```
 Phase I · II · III        ⛔ UNOPENED
-step 1 (C4 witness)       ⭐ PROCEDURE SPECIFIED — ⛔ UNSPENT
-                             → AIN-CONTINUITY_C4-WITNESS-01_PROCEDURE_2026-09-15.md
+step 1 (C4a witness)      ✅ SPENT · 🔴 RED · WITNESSED
+step 1b (C4b witness)     ✅ SPENT · 🔴 RED · WITNESSED (D1 + D2)
+C4c prompt payload        ⏳ ENTAILED, NOT WITNESSED · OWED / NOT OPEN
+C4-REPAIR-01              ⛔ UNOPENED — authority NOT granted
 steps 2–5                 ⛔ UNOPENED, UNSPECIFIED
 
 production · schema · migrations · prompts · summary layer
