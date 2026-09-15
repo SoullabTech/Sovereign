@@ -1694,3 +1694,128 @@ Block D runs only if Block C's rc is 0 (§16.7). A Block-C STOP (e.g. the batch'
 3. Nothing else. S2 population · S3 · KERNEL-00 acceptance remain CLOSED.
 
 **Standing after §18.14:** `S2-RESTORE/WITNESS-04` STOP in Block B · SPENT · RESTORE-03 NOT STARTED · joint NOT REACHED · 69 untested by this act (last read 38 at 15:05:51Z) · disconnect cause UNKNOWN, not inferred · `b198e2e37` unchanged · Block A PASS ×3 · WITNESS-02/03/04 residue preserved · `S2-RESTORE/WITNESS-05` NOT ISSUED · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.15 — FOUNDER RULING (2026-09-15) on §18.14: `S2-RESTORE/WITNESS-04` ACCEPTED (STOP in Block B · spent) · device-availability act ⛔ NOT OPENED · **`S2-RESTORE/WITNESS-05` AUTHORIZED AS ONE PAIRED CUSTODY** (§18.13.3 unchanged except the fresh `05` / `s2w5` tokens)
+
+### 18.15.1 Ruling (founder, verbatim)
+
+```text
+1. Acceptance
+S2-RESTORE/WITNESS-04 is accepted exactly as adjudicated:
+    STOP in Block B
+    authority SPENT
+The STOP establishes only that the Mac → iPhone apps-read seam was unavailable during that act.
+It establishes no S2 physiology, no volume state, no restoration result, and no defect in the S2 design.
+RESTORE-03 was never entered.
+The §18.13 ordinal boundary was never exercised and remains unchanged.
+
+2. Device-availability act
+A separate read-only device-availability act is NOT OPENED.
+Block B already occupies the correct architectural position for that question: it tests the required
+device seam before the founder hand act and refuses if the seam is unavailable.
+An earlier availability census would not establish availability at the moment the paired custody requires it.
+The infrastructure refusal therefore earns a fresh attempt through the existing boundary, not a new
+boundary in front of it.
+
+3. Fresh paired authority
+S2-RESTORE/WITNESS-05 is AUTHORIZED as one paired custody.
+Its execution contract is §18.13.3 unchanged except for the fresh run/path tokens:
+    S2-WITNESS-04 → S2-WITNESS-05
+    s2-witness-04 → s2-witness-05
+    s2w4          → s2w5
+    /private/tmp/k0506-s2w4-b198e2e37 → /private/tmp/k0506-s2w5-b198e2e37
+The blocks are again extracted from the original 17b4df63b carrier and substitution-proved before execution.
+b198e2e37 remains the orchestration artifact.
+No batch, block, target, parser, restoration sequence, or acceptance law changes.
+
+4. Execution order remains unchanged
+    Stage 0   fresh extraction / substitution proof / path absence
+    Stage 1   Block A · then Block B
+    Stage 2   pane closed · no competing process
+    Stage 3   restoration before-read
+    Stage 4   founder hand act: Volume Down → zero · Volume Up exactly 11 times · stop
+    Stage 5   joint read = RESTORE after-read = WITNESS pre-Block-C read
+    PASS      Block C is the next shell act
+    then      Block D only if Block C returns rc 0
+The joint condition remains:
+    exactly one default output · Mac Studio Speakers · builtin transport ·
+    OUTPUT_VOLUME 69 · OUTPUT_MUTED false · RESTORE_ACCEPTANCE PASS ·
+    Sound/System Settings absent · rc=1
+
+5. Failure law
+Every existing refusal remains operative.
+If Block A or Block B stops, the paired authority is spent before restoration.
+If the joint condition fails, STOP with no correction, second hand act, or retry.
+If execution is interrupted after an accepted joint read and before Block C begins, STOP.
+If Block C's own frozen preflight refuses, that STOP is evidence and there is no rerun under the same authority.
+No failure permits weakening 69, modifying b198e2e37, changing the blocks, or bypassing the failed boundary.
+
+6. Residue
+S2-WITNESS-02, S2-WITNESS-03, and S2-WITNESS-04 worktrees and evidence remain preserved residue.
+They are not reused, modified, executed, or cleaned under this authority.
+S2-WITNESS-05 receives a fresh s2w5 path and fresh evidence carrier.
+
+Standing
+    S2-RESTORE/WITNESS-04   STOP · accepted · spent
+    RESTORE-03              not entered
+    device census           NOT OPENED
+    S2-RESTORE/WITNESS-05   AUTHORIZED · pinned execution = §18.13.3 unchanged except fresh 05 / s2w5 tokens · NOT YET EXECUTED
+    69 target               unchanged
+    b198e2e37               unchanged
+    S2 population           CLOSED
+    S3                      CLOSED
+    KERNEL-00 acceptance    CLOSED
+
+The governing principle remains:
+A transient failure of a lawful boundary is reason to approach that boundary again under fresh authority,
+not reason to route around it.
+```
+
+Founder reasoning, substance preserved: Block B *is* the availability gate, placed at the last responsible moment before the hand; a census earlier in time would not establish availability at the moment the paired custody needs it. WITNESS-04 did not fail to produce the intended phenomenon; it never reached the experiment, so there is nothing yet to redesign. The next meaningful evidence comes from another clean passage through Block B.
+
+### 18.15.2 Execution pin — `S2-RESTORE/WITNESS-05`
+
+**The contract is §18.13.3 verbatim, with `s2w4` → `s2w5` in every path and the run/transcript tokens `04` → `05`.** Only Stage 0 differs textually and is reproduced here so the paste needs no editing; Stages 1–7 are §18.13.3's blocks with `/private/tmp/s2w4-block*` read as `/private/tmp/s2w5-block*`, `k00-s2-volume-restore-03-` unchanged as the restoration prefix (RESTORE-03 was never entered under WITNESS-04, so its label is unspent and stays), and the return directory `driver-ledger/s2-restore-witness-05-<STAMP>/` + `S2-WITNESS-05-…` for the §16.7 return.
+
+**Stage 0 — extraction with the `s2w5` token (three literal substitutions from the original `17b4df63b` carrier; the diff must show only those; the path must not pre-exist):**
+
+```bash
+DOC=docs/programme/VOICE-2026/KERNEL-00_VPIO-02_K00-06_PARTIAL-ZERO_DISCRIMINATOR_PLAN_2026-09-15.md
+cd /Users/soullab/MAIA-SOVEREIGN
+git show 17b4df63b:$DOC | sed -n '599,625p' > /private/tmp/s2w1-blockA.sh
+git show 17b4df63b:$DOC | sed -n '633,702p' > /private/tmp/s2w1-blockB.sh
+git show 17b4df63b:$DOC | sed -n '710,713p' > /private/tmp/s2w1-blockC.sh
+git show 17b4df63b:$DOC | sed -n '719,732p' > /private/tmp/s2w1-blockD.sh
+for b in A B C D; do sed -e 's/S2-WITNESS-01/S2-WITNESS-05/g' -e 's/s2-witness-01/s2-witness-05/g' -e 's#/private/tmp/k0506-s2w-b198e2e37#/private/tmp/k0506-s2w5-b198e2e37#g' /private/tmp/s2w1-block$b.sh > /private/tmp/s2w5-block$b.sh; done
+for b in A B C D; do echo "== block $b diff (only the three tokens may appear)"; diff /private/tmp/s2w1-block$b.sh /private/tmp/s2w5-block$b.sh; done
+shasum -a 256 /private/tmp/s2w5-block[ABCD].sh
+ls -d /private/tmp/k0506-s2w5-b198e2e37 2>&1
+```
+
+(Last line must report no such directory, else STOP before Block A. The `s2w1-block*.sh` intermediates are regenerated from the carrier each time; overwriting them is not a residue violation — the residue rule covers the `s2w2`/`s2w3`/`s2w4` files and worktrees, which this Stage never names.)
+
+**Stage 1:**
+
+```bash
+bash /private/tmp/s2w5-blockA.sh 2>&1 | tee /private/tmp/s2w5-blockA.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w5-blockA.out
+bash /private/tmp/s2w5-blockB.sh 2>&1 | tee /private/tmp/s2w5-blockB.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w5-blockB.out
+```
+
+Both must print their PASS lines (`BLOCK_A_PASS=1` · `PREFLIGHT_CLEAN=…S2-WITNESS-05-preflight-<stamp>`); a Block-B refusal (as §18.14) spends the authority before restoration.
+
+**Stages 2–5:** §18.13.3 Stages 2–5 verbatim (pane + competing-process reads · RESTORE-03 before-read under `k00-s2-volume-restore-03-$STAMP` · the one hand act · the joint read with the §18.5.2 parser). Joint condition unchanged. PASS → Block C is the very next shell act; FAIL / interruption after an accepted read → STOP, spent.
+
+**Stage 6 (only on PASS at the joint):**
+
+```bash
+bash /private/tmp/s2w5-blockC.sh 2>&1 | tee /private/tmp/s2w5-blockC.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w5-blockC.out
+bash /private/tmp/s2w5-blockD.sh 2>&1 | tee /private/tmp/s2w5-blockD.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w5-blockD.out
+```
+
+**Stage 7:** §18.13.3 seal of the nine restoration files, after Block D or immediately on a joint FAIL / Block-C STOP.
+
+**Return:** one `feature/*` branch: `driver-ledger/s2-restore-witness-05-<STAMP>/` (nine restoration files + `SHA256SUMS` + `parser.txt` + `JOINT.txt`) and the §16.7 return with the `05` substitutions (`S2-WITNESS-05-<stamp>/` ledger dir when Block C ran, `S2-WITNESS-05-preflight-<stamp>/`, the `s2w5-block*.out` that exist, diffs + hashes, the Stage-0 pre-existence line, `BRANCH · HEAD · STAMP · BATCH_PIPELINE_RC`). On a pre-restoration STOP the return is the §18.14 shape (`STOP.txt` + `SHA256SUMS.stop`, no restoration directory). Cherry-picked here; read against §18.5.3 / §16.4 → **§18.16**. PASS ≠ S2 population · ≠ S3 · ≠ KERNEL-00.
+
+**Standing after §18.15:** `S2-RESTORE/WITNESS-04` ACCEPTED · STOP · spent · device-availability act NOT OPENED · `S2-RESTORE/WITNESS-05` AUTHORIZED · pinned · NOT YET EXECUTED (founder hand inside it) · 69 exact · `b198e2e37` unchanged · WITNESS-02/03/04 residue preserved · S2 population · S3 · KERNEL-00 acceptance CLOSED.
