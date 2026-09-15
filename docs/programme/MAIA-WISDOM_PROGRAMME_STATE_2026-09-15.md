@@ -211,3 +211,64 @@ kept apart from the start: metadata paths worked throughout while fetch stayed d
 guarded content read counts.
 
 **Standing unchanged.**
+
+### Amendment — same day — root cause named by the OS · layer model · evidence grammar
+
+⭐⭐ **macOS states the cause directly.** Finder, on the iCloud Drive view:
+
+> *"Syncing has been disabled due to an error."*
+
+⭐ **DISABLED is not STALLED**, and the distinction is load-bearing: a stalled sync may recover on
+its own; a disabled one will not until the error clears. It is also why restarting the daemons
+changed nothing — ⛔ nothing was attempting to fetch. This replaces the earlier inference
+*"something disrupted CloudDocs"* with an observation.
+
+**Four layers, failing independently** (working model, founder-supplied):
+
+```text
+APPLE ACCOUNT / CLOUD
+  ├── metadata catalogue          name · path · size · dates        ✅ present
+  ├── app-container relationship  iCloud~md~obsidian ↔ Obsidian     ⛔ Client zone not found
+  ├── local placeholder tree      /Library/Mobile Documents/...      ✅ present
+  └── local content hydration     actual bytes on this Mac           ⛔ absent
+```
+
+⭐ `ls` needs only the first layer; `cat` needs the fourth. *That is why `ls -lO` returns
+`13950 Nov 28 2025` while `cat` times out* — **13,950 is the file's LOGICAL size, ⛔ never
+evidence that 13,950 bytes reside on this Mac.** Corroborated by the container total: 432K on
+disk against a tree of thousands of files.
+
+⛔ **Path existence does not prove container registration. Container registration does not prove
+local materialization.** Different layers, separate claims.
+
+**Ruled out by test, not by assumption:** storage (`brctl quota` → 1.18 TB) · a wedged daemon
+(`killall bird cloudd` did not clear it) · VPN (Tailscale confirmed `(Disconnected)`, control still
+timed out in 0.007s) · anything corpus- or Obsidian-specific (a control file in Apple's **own**
+`com~apple~CloudDocs` fails identically).
+
+⚠️ **EVIDENCE GRAMMAR — corrected.** An intermediate session wrote *"`IPHONE READ OK` → the remote
+copy exists and is readable."* ⛔ Withdrawn as overreach — the phone could furnish bytes it already
+holds. The admissible form:
+
+```text
+IPHONE READ OK
+  → ✅ an independent device possesses or can furnish readable content
+  → ⭐ strong evidence against corpus loss
+  → ⛔ does NOT prove the bytes were freshly fetched from cloud
+```
+
+⛔⛔ **TWO ACTIONS PROHIBITED WHILE THE REMOTE COPY IS UNADJUDICATED:**
+**(1)** ⛔ Do not toggle iCloud Drive off, or sign out of iCloud, on the Mac Studio — every file in
+both containers is `dataless`, so switching off can discard the placeholders, and with the remote
+unadjudicated that risks leaving nothing on either side. *It is the one action in this sequence
+that could actually lose something.*
+**(2)** ⛔ Do not evict or re-download the iPhone's copy to manufacture a stronger experiment. If
+it is the healthy readable copy, **preserving it outranks proving where its bytes came from.**
+
+⭐ **The failure is beneath MAIA, beneath the witness instrument, and beneath the vault** — in the
+machinery by which this one Mac turns cloud metadata into local bytes. *We have not lost the map;
+this host has lost its road from the map to the territory.*
+
+**Standing unchanged: PHASE 0 ⭐⭐ CLOSED · CORPUS IDENTITY AND PATH ✅ KNOWN · LOCAL BYTES ⛔
+UNAVAILABLE · OBSIDIAN REGISTRATION ⛔ ABSENT · REMOTE CONTENT ? UNADJUDICATED · PART A RUN #2 ⛔
+UNAUTHORIZED · ACT 2A ⛔ UNOPENED · MAIA UNTOUCHED.**
