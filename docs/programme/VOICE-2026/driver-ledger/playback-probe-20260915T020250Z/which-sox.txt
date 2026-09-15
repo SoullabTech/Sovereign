@@ -1,0 +1,3 @@
+$ sh -c command -v sox
+/opt/homebrew/bin/sox
+[rc=0]

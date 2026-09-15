@@ -1,0 +1,3 @@
+$ sh -c command -v say
+/usr/bin/say
+[rc=0]

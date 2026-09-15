@@ -1,0 +1,2 @@
+$ sh -c command -v mpv
+[rc=1]

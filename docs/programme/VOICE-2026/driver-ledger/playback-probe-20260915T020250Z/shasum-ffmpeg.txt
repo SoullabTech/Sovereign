@@ -1,0 +1,3 @@
+$ sh -c shasum -a 256 "$(command -v ffmpeg)"
+e2209fba46efdfae84dfa96a49d497ff39d7cbb3e30d2299925a9be2d94fe75d  /opt/homebrew/bin/ffmpeg
+[rc=0]

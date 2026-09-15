@@ -1,0 +1,3 @@
+$ sh -c command -v system_profiler
+/usr/sbin/system_profiler
+[rc=0]

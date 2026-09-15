@@ -1,0 +1,3 @@
+$ sh -c shasum -a 256 "$(command -v afplay)"
+88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb  /usr/bin/afplay
+[rc=0]

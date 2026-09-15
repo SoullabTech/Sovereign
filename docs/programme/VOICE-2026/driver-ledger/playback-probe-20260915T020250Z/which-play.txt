@@ -1,0 +1,3 @@
+$ sh -c command -v play
+/opt/homebrew/bin/play
+[rc=0]

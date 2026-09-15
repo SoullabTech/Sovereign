@@ -1,0 +1,3 @@
+$ sh -c command -v osascript
+/usr/bin/osascript
+[rc=0]

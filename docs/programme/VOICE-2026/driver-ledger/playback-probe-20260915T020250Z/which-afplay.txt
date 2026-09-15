@@ -1,0 +1,3 @@
+$ sh -c command -v afplay
+/usr/bin/afplay
+[rc=0]
