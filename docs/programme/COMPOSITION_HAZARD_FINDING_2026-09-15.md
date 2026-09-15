@@ -85,6 +85,49 @@ working.
 
 ---
 
+---
+
+## Merge gate — verified 2026-09-15
+
+Before merging ACT 4, the founder required establishing that ordinary
+application deployment does not invoke the corpus machinery. If a deploy ran
+`build-ain-corpus` or `embed-ain-knowledge`, the fail-closed admission guard
+would become a deployment-blocking condition rather than a held one.
+
+⭐ **This is the composition question turned on the guard itself** — the same
+question that found the `--force` hazard, asked before merge instead of after.
+
+**Verified, read-only:**
+
+| Surface | Invokes corpus scripts? |
+|---|---|
+| `scripts/deploy-production.sh` | **no** |
+| `scripts/pre-deploy-gate.sh` | **no** |
+| `scripts/entrypoint.sh` | **no** — runs only `exec node server.js` |
+| `scripts/ensure-migrations.sh` | **no** |
+| `Dockerfile` · `docker-compose.production.yml` | **no** |
+| `package.json` scripts (incl. `build`) | **no reference at all** |
+| `.github/workflows/**` | **no** |
+
+**Call graph of the guarded function.** `processAllSources` has exactly **one**
+invocation in the repository: `scripts/embed-ain-knowledge.ts:93`.
+`lib/ain/knowledge/index.ts` only re-exports it through a barrel;
+`lib/library/spiralogicTagger.ts` merely names `ChunkingService` in a comment.
+**No runtime route reaches it.**
+
+**Conclusion:**
+
+```
+application deploy     ✅ may proceed — cannot trigger corpus ingestion
+corpus rebuild/embed   ⛔ remains separately held, manual invocation only
+```
+
+The ACT 4 guard is therefore **not a reason to hold the security repair**. The
+hold is real and it is narrow: it binds two manually-run scripts, nothing that a
+deploy can reach.
+
+---
+
 ## Relationship to the declared-membership candidate
 
 Distinct, and should not be merged.
