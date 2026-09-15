@@ -222,3 +222,53 @@ existed, and why member satisfaction was never permitted to discharge it.
 
 The selection law is the next architectural question. ⛔ It belongs to a separately authorized
 repair/investigation act, and is not opened here.
+
+---
+
+## 11. ROLLBACK · EXECUTED AND VERIFIED (2026-09-15T20:27Z)
+
+```text
+running commit      e57ca1baa                              ✅ WITNESSED (printenv)
+bridge integration  grep -rl "L1/bridge" .next/server → (empty)   ✅ WITNESSED
+one-hop scorer      unchanged — byte-identical throughout; never modified by the
+                    bridge deploy (§1) and therefore unaffected by its removal
+```
+
+⚠️ **The scripted rollback primitive FAILED and had to be bypassed.**
+`scripts/deploy-production.sh rollback` reported `Rollback complete!` while production
+continued to serve `0f58a7f93` with the bridge live. Root cause: compose starts
+`maia-sovereign:prod`, which `cmd_rollback` never retags; and its only provenance readout
+(`git.commit` label) is never set, so the failure printed as blank fields rather than as an
+error.
+
+⭐⭐ **This was PREDICTED IN WRITING on 2026-09-14** and routed out unrepaired —
+`docs/programme/ROLLBACK_IMAGE_ALIAS_MISMATCH_FINDING_2026-09-14.md`. Today's production
+witness is recorded as an **addendum to that finding**, which moves it from ENTAILED to
+WITNESSED. ⛔ No repair lane opened; `scripts/` unmodified.
+
+Restore was performed by hand, verifying image identity from each image's **baked
+`GIT_COMMIT` env** rather than the absent label:
+
+```bash
+docker tag maia-sovereign:e57ca1baa maia-sovereign:prod
+docker compose -f docker-compose.production.yml up -d --no-deps maia
+```
+
+⭐ **ONE CONSEQUENCE FOR THIS LANE'S OWN RECORD, STATED PLAINLY.** Between the failed scripted
+rollback (20:25:45Z) and the manual restore (20:27:38Z), production continued serving
+`0f58a7f93` — code that had already been ruled ⛔ NOT PRODUCTION-ACCEPTED. ⛔ That window is
+recorded, not minimised: an authorized rollback was believed complete while it had not
+occurred. *A recovery primitive that cannot report its own failure converts a governed
+rollback into an unnoticed continuation.*
+
+## 12. FINAL STANDING
+
+```text
+W1                     ⛔ FAIL · durable at 60252820
+0f58a7f93              ⛔ NOT PRODUCTION-ACCEPTED · NO LONGER DEPLOYED
+production runtime     e57ca1baa · bridge ABSENT · verified
+W2 / W3                ⛔ unspent
+S                      ⛔ unspent
+repair · root cause    ⛔ not authorized, not begun
+rollback primitive     ⚠️ DEFECTIVE · witnessed · routed out · unrepaired
+```
