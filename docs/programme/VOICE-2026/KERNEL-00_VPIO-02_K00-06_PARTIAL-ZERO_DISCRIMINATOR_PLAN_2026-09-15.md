@@ -2746,3 +2746,135 @@ test "$(wc -l < "$OUT/runner-custody.sha256" | tr -d ' ')" = "4" || { echo "STOP
 Under either shape: before-set exactly `{0B07D423…, 6A2E406B…}` else STOP · `phase-a` then `vpio-01`, once each · after-read 0 · `DISPOSAL_ACCEPTANCE PASS` alone meets the `K00-0506-S2-02` condition once committed and pushed · `.vpio01` termination only · `s2pop2` pin (§18.22.3) unaffected. The `k0506-disposal-b198e2e37` worktree is residue under (β) and the carrier under (α); under neither is it removed.
 
 **Standing after §18.25:** DISPOSAL-01 STOP · spent · DISPOSAL-02 STOP in Stage −1 · spent · runner BUILT + IDENTIFIED (xctestrun `3b6360f7…`) · **C-D27 = this session's pin defect** (custody line omitted `Debug-iphoneos/`; precedent existed at §10.6/§10.9) · termination invocations 0 · foreign process state NOT re-read · `K00-0506-S2-02` condition UNMET · DISPOSAL-03 shapes (α)/(β) returned, NOT authorized · `b198e2e37` unchanged · 69 last read 15:49:59Z · C-D26 OPEN · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.26 — FOUNDER RULING on §18.25 (2026-09-15): DISPOSAL-02 STOP ACCEPTED · C-D27 ACCEPTED · option (α) ADOPTED → `S2-FOREIGN-HARNESS-DISPOSAL-03` AUTHORIZED on the just-built runner, read-only requalification first
+
+### §18.26.1 Ruling as captured (founder; standing block verbatim)
+
+Choice **(α)**: *"This is materially different from the earlier historical-runner reuse I rejected. That earlier candidate depended on stale `/private/tmp` residue whose worktree had already disappeared. Here, DISPOSAL-02 has just produced a runner whose build HEAD, source identity, subject table, xctestrun hash, and successful signed build are already in committed custody. The STOP happened after those facts were established and only because the custody paths in the pin were wrong. Rebuilding the same runner again would add cost without adding evidence."*
+
+1. **DISPOSAL-02 STOP — ACCEPTED** exactly as recorded (Stage −1 build PASS · runner source identity PASS · subject-table identity PASS · signed `build-for-testing` PASS · xctestrun produced PASS · runner-custody path check STOP · device acts NONE · termination invocations 0 · authority SPENT). The STOP arose from C-D27; it is not evidence of a Mac, runner, disposal-design or phone-state failure.
+2. **C-D27 — ACCEPTED** as a pin defect: §18.24.2 named the companion binaries relative to `Build/Products/` when the actual and precedented signed-product layout is `Build/Products/Debug-iphoneos/`; the corrected line already existed in §10.6/§10.9 and had run on the Mac. No design change arises.
+3. **Option (α) — ADOPTED. `S2-FOREIGN-HARNESS-DISPOSAL-03` AUTHORIZED** using the runner built by DISPOSAL-02 at `/private/tmp/k0506-disposal-b198e2e37`. **No fresh build authorized.** Reuse is allowed because the spent act already established and committed HEAD `b198e2e37…` · `testTerminateOnly` `c483528b…` · subject rows `phase-a` + `vpio-01` · `TEST BUILD SUCCEEDED` · xctestrun SHA `3b6360f7…`; *the runner is not being trusted because it happens to exist in `/private/tmp`; it is being reused because its identity has already been established by the spent act and will be re-established before use.*
+4. **Stage −1′ — read-only runner requalification**, before any phone/process read or termination: worktree still present · HEAD = `b198e2e37…` · xctestrun still present · xctestrun SHA-256 = `3b6360f7…` · the corrected four-file custody line succeeds (`Build/Products/Debug-iphoneos/` layout exactly as pinned in §18.25.4) · exactly four custody hashes produced. NOT authorized: rebuild · `xcodegen` · `build-for-testing` · alternate runner search · historical runner fallback · file repair · product regeneration. Any mismatch or missing product → STOP · no rebuild · no second path · no termination invocation.
+5. **Disposal boundary unchanged**: before-read exactly `0B07D423-97E7-4196-BC1C-C69C96F994BE` and `6A2E406B-D1B8-43A4-92F3-29D50333AF19`, no other `VoiceKernelHarness`; anything else → STOP before termination.
+6. **Termination authority unchanged**: `phase-a` → `testTerminateOnly`, then `vpio-01` → `testTerminateOnly`, once each, in order; `.vpio01` termination only.
+7. **Acceptance unchanged**: after-read `VoiceKernelHarness processes AFTER: 0` → `DISPOSAL_ACCEPTANCE PASS`; proves only that the known foreign live state is absent after the act — not cause, actor, launch time, or whether either process had already exited before its termination call.
+8. **Population condition**: `K00-0506-S2-02` conditionally authorized, unopened; condition met only when DISPOSAL-03 = PASS AND evidence committed AND pushed; then the population begins as its own act under the `s2pop2` pin; no restoration authority added.
+
+```text
+DISPOSAL-02                 STOP · accepted · spent
+C-D27                       ACCEPTED · pin defect
+
+DISPOSAL-03                 AUTHORIZED
+runner strategy             reuse just-built runner
+Stage −1′                   read-only identity/custody requalification
+fresh build                 NOT AUTHORIZED
+runner SHA                  must remain 3b6360f7…
+termination subjects        phase-a · vpio-01
+termination count           once each
+after-read                  zero harness processes
+
+K00-0506-S2-02              CONDITIONALLY AUTHORIZED
+                            unopened until
+                            DISPOSAL-03 PASS
+                            is committed and pushed
+
+b198e2e37                   unchanged
+C-D26                       OPEN · non-blocking
+S3                          CLOSED
+KERNEL-00 acceptance        CLOSED
+```
+
+Governing distinction (founder): *"Do not rebuild what the previous act already built and proved. Re-read its identity, correct the custody path, and continue only if the carrier is still exactly the runner already placed in custody."* And: β is strongly resisted unless α fails its identity re-read — *the next act should consume evidence already earned, not pay again for the same build.*
+
+### §18.26.2 Execution pin — `S2-FOREIGN-HARNESS-DISPOSAL-03` (Mac act; Stage −1′ read-only, then §18.22.2 Stages 0–3 with only the act name, the carrier and the C-D27-corrected custody line changed)
+
+Carrier = the DISPOSAL-02 worktree `/private/tmp/k0506-disposal-b198e2e37` and its product `ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun`, both named explicitly (no `ls -t`, no search). Every Stage −1′ line is a read; the only writes are into `$OUT`. No `#` on any shell line; `zsh` expected.
+
+**Stage −1′ — read-only requalification (any failing line = STOP; nothing after it runs):**
+
+```bash
+set -u
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUT="/private/tmp/k00-disposal03-$STAMP"
+WTB="/private/tmp/k0506-disposal-b198e2e37"
+XR="$WTB/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun"
+mkdir -p "$OUT"
+echo "$STAMP" > "$OUT/stamp.txt"
+test -d "$WTB/.git" -o -f "$WTB/.git" && echo "WORKTREE_PRESENT true" | tee "$OUT/requal.txt" || { echo "STOP: carrier worktree absent — no rebuild under this authority"; exit 2; }
+git -C "$WTB" rev-parse HEAD | tee -a "$OUT/requal.txt"
+test "$(git -C "$WTB" rev-parse HEAD)" = "b198e2e37058f2e059d986b4b148e224215f3ee3" || { echo "STOP: carrier HEAD is not b198e2e37"; exit 2; }
+git -C "$WTB" diff --quiet -- ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift && echo "DRIVER_SOURCE_UNMODIFIED true" | tee -a "$OUT/requal.txt" || { echo "STOP: driver source modified in the carrier"; exit 2; }
+test -f "$XR" && echo "RUNNER_PRESENT true $XR" | tee -a "$OUT/requal.txt" || { echo "STOP: xctestrun absent — no rebuild under this authority"; exit 2; }
+shasum -a 256 "$XR" | tee "$OUT/xctestrun.sha256"
+grep -q '^3b6360f76e2ec96f0917bcac180dea439c7bddfcafa2c592317b953cfd08d1fc ' "$OUT/xctestrun.sha256" || { echo "STOP: xctestrun hash is not the DISPOSAL-02 custody value"; exit 2; }
+( cd "$(dirname "$XR")" && shasum -a 256 "$(basename "$XR")" Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests Debug-iphoneos/DriverUITests-Runner.app/DriverUITests-Runner Debug-iphoneos/DriverHost.app/DriverHost ) | tee "$OUT/runner-custody.sha256"
+test "$(wc -l < "$OUT/runner-custody.sha256" | tr -d ' ')" = "4" || { echo "STOP: runner custody incomplete"; exit 3; }
+echo "REQUALIFICATION PASS" | tee -a "$OUT/requal.txt"
+```
+
+**Stage 0 — before-read (§18.22.2 verbatim; the §10.5 C matcher):**
+
+```bash
+xcrun devicectl device info processes --device A0736AC8-793B-516F-AC72-C076DB6CEE38 --json-output "$OUT/processes-before.json"
+python3 - "$OUT/processes-before.json" <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print('VoiceKernelHarness processes BEFORE:', len(hits), hits)
+c={p.split('/Bundle/Application/')[1].split('/')[0] for p,_ in hits}
+exp={'0B07D423-97E7-4196-BC1C-C69C96F994BE','6A2E406B-D1B8-43A4-92F3-29D50333AF19'}
+print('BEFORE_SET_IS_THE_TWO_IDENTIFIED', c==exp, sorted(c))
+PY
+```
+
+`BEFORE_SET_IS_THE_TWO_IDENTIFIED True` is the precondition (ruling item 5). Any other set → STOP, return the before-read, no invocation.
+
+**Stage 1 — exactly two `testTerminateOnly` invocations, `phase-a` then `vpio-01`, once each:**
+
+```bash
+cd "$WTB"
+TEST_RUNNER_K00_SUBJECT=phase-a xcodebuild test-without-building -xctestrun "$XR" -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never -only-testing:DriverUITests/K00DriverTests/testTerminateOnly 2>&1 | tee "$OUT/terminate-phase-a.log"
+TEST_RUNNER_K00_SUBJECT=vpio-01 xcodebuild test-without-building -xctestrun "$XR" -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never -only-testing:DriverUITests/K00DriverTests/testTerminateOnly 2>&1 | tee "$OUT/terminate-vpio-01.log"
+grep -hE 'Executed 1 test|TEST EXECUTE|DRIVER/INFRASTRUCTURE|PRECONDITION' "$OUT/terminate-phase-a.log" "$OUT/terminate-vpio-01.log"
+```
+
+A `harness did not terminate` failure on either → still take the after-read, then STOP and return; no second invocation of either subject.
+
+**Stage 2 — after-read; acceptance = 0:**
+
+```bash
+xcrun devicectl device info processes --device A0736AC8-793B-516F-AC72-C076DB6CEE38 --json-output "$OUT/processes-after.json"
+python3 - "$OUT/processes-after.json" <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print('VoiceKernelHarness processes AFTER:', len(hits), hits)
+print('DISPOSAL_ACCEPTANCE', 'PASS' if len(hits)==0 else 'STOP')
+PY
+```
+
+**Stage 3 — seal and return on its own `feature/*` branch** (fresh carrier worktree from the lane tip; §18.18.4 dependency link; nothing else committed):
+
+```bash
+{ printf 'ACT S2-FOREIGN-HARNESS-DISPOSAL-03\nSTAMP %s\nRUNNER_SOURCE b198e2e37058f2e059d986b4b148e224215f3ee3\nRUNNER_CARRIER %s\nRUNNER_BUILT_BY S2-FOREIGN-HARNESS-DISPOSAL-02-STOP-20260915T173055Z\nRUNNER_XCTESTRUN_SHA 3b6360f76e2ec96f0917bcac180dea439c7bddfcafa2c592317b953cfd08d1fc\nFRESH_BUILD none\nSUBJECTS phase-a vpio-01\nINVOCATIONS 2\nSECOND_INVOCATION_PER_SUBJECT none\nESCALATION none\nDEVICE_ACTS termination-only\n' "$STAMP" "$WTB"; } > "$OUT/RETURN.txt"
+( cd "$OUT" && shasum -a 256 stamp.txt requal.txt xctestrun.sha256 runner-custody.sha256 processes-before.json processes-after.json terminate-phase-a.log terminate-vpio-01.log RETURN.txt > SHA256SUMS.disposal && cat SHA256SUMS.disposal )
+BR="feature/k00-s2-foreign-harness-disposal-03-$STAMP"
+WT="/private/tmp/k00-disposal03-carrier-$STAMP"
+cd /Users/soullab/MAIA-SOVEREIGN && git fetch origin claude/voice-2026-census-01 && git worktree add -b "$BR" "$WT" origin/claude/voice-2026-census-01
+cd "$WT" && test -e node_modules || ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
+REL="docs/programme/VOICE-2026/driver-ledger/S2-FOREIGN-HARNESS-DISPOSAL-03-$STAMP"
+mkdir -p "$REL" && cp -p "$OUT"/* "$REL"/ && ( cd "$REL" && shasum -a 256 -c SHA256SUMS.disposal )
+git add "$REL" && git commit -m "witness(voice-2026): return S2-FOREIGN-HARNESS-DISPOSAL-03 evidence (runner requalified read-only from DISPOSAL-02 custody; termination-only, two subjects, before/after process reads)" && git push -u origin "$BR" && git log -1 --format=%H
+```
+
+A STOP at any stage returns whatever `$OUT` holds under the same carrier shape, `RETURN.txt` naming the stage reached and `INVOCATIONS` as actually performed (the §18.23/§18.25 STOP bundles are the precedent).
+
+Return: branch + commit SHA → §18.27 (verified here: seal · `requal.txt` = worktree present · HEAD exact · driver source unmodified · runner present · `REQUALIFICATION PASS` · `xctestrun.sha256` = `3b6360f7…` · four custody lines · before-set = the two containers · both logs `Executed 1 test, 0 failures` · after = 0). **PASS = `DISPOSAL_ACCEPTANCE PASS` with both invocations `Executed 1 test, 0 failures`.** Anything else = STOP · spent · return for ruling. A PASS establishes only that the known foreign live state was removed (ruling item 7); only after its evidence is committed and pushed is the `K00-0506-S2-02` condition (§18.22.3, unchanged) MET.
+
+**Standing after §18.26:** DISPOSAL-01 STOP · spent · DISPOSAL-02 STOP · accepted · spent · C-D27 ACCEPTED · **DISPOSAL-03 AUTHORIZED, pinned, NOT YET EXECUTED** (reuse the just-built runner · read-only Stage −1′ · fresh build NOT authorized · runner SHA must remain `3b6360f7…` · `phase-a` · `vpio-01` once each · after-read 0) · `K00-0506-S2-02` CONDITIONALLY AUTHORIZED, unopened until DISPOSAL-03 PASS is committed and pushed · `b198e2e37` unchanged · 69 last read 15:49:59Z · C-D26 OPEN · S3 CLOSED · KERNEL-00 acceptance CLOSED.
