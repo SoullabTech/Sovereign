@@ -1166,10 +1166,10 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
                         'shared-head refusal (3 steps) qualifies under vpio-02 — trace-indistinguishable, custody decides: failure then recovery']) expect(out).toContain(line);
     expect(out).not.toMatch(/^FAIL/m);
   });
-  it('corpus partition (founder ruling 2026-09-15, structural — replaces the C-D19/C-D21/C-D23 per-directory naming): every tracked journal carries H (its directory\'s ledger header subject=) and C (its own start-trace signature); membership = H ∧ C, a disagreement fails closed naming file · header · signature; the sets are exactly vpio-02 50 · vpio-01 30 · engine 468; the frozen classifier reproduces every produced ledger\'s class column row for row under the header subject; cross-subject reads are SUBJECT-MISMATCH; no directory is named', () => {
+  it('corpus partition (founder ruling 2026-09-15, structural — replaces the C-D19/C-D21/C-D23 per-directory naming): every tracked journal carries H (its directory\'s ledger header subject=) and C (its own start-trace signature); membership = H ∧ C, a disagreement fails closed naming file · header · signature; the sets are exactly vpio-02 51 · vpio-01 30 · engine 468; the frozen classifier reproduces every produced ledger\'s class column row for row under the header subject; cross-subject reads are SUBJECT-MISMATCH; no directory is named', () => {
     const LEDGER_ROOT = 'docs/programme/VOICE-2026/driver-ledger';
     const all = tracked([`:(glob)${LEDGER_ROOT}/**/kernel00-*.jsonl`]);
-    expect(all.length).toBe(548);
+    expect(all.length).toBe(549);
     // H — the declared subject: the nearest ledger.md above the journal (written by the batch from its --subject); no ledger ⇒ none (the archive)
     const headerOf = (p: string): { dir: string; subject: string } | null => {
       let d = dirname(p);
@@ -1194,7 +1194,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(disagreements).toEqual([]);
     const corpus = (subject: string) => all.filter((p) => carriers.get(p)!.hn === subject && carriers.get(p)!.c === subject);
     const vpio02 = corpus('vpio-02'), vpio01 = corpus('vpio-01'), engine = corpus('engine');
-    expect([vpio02.length, vpio01.length, engine.length]).toEqual([50, 30, 468]);
+    expect([vpio02.length, vpio01.length, engine.length]).toEqual([51, 30, 468]);
     expect(all.filter((p) => carriers.get(p)!.h === null).length).toBe(154);          // the archive: no header, engine by signature
     const classify = (subject: string, files: string[]): Map<string, string> => {
       if (files.length === 0) return new Map();
@@ -1205,10 +1205,10 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     // historical pins (counts, not membership): VPIO-01 F-W1 30 × degradation; the VPIO-02 corpus 49 × gen-1 listen + 1 × failure then recovery (29+1 · 10 · 10)
     expect(classes('vpio-01', vpio01)).toEqual(Array(30).fill('failure then degradation'));
     const c02 = classes('vpio-02', vpio02);
-    expect(c02.filter((c) => c === 'gen-1 listen').length).toBe(49);
+    expect(c02.filter((c) => c === 'gen-1 listen').length).toBe(50);
     expect(c02.filter((c) => c === 'failure then recovery').length).toBe(1);
     // cross-subject: structural, both directions; engine-era reads SUBJECT-MISMATCH or infrastructure under BOTH VPIO subjects
-    expect(classes('vpio-01', vpio02)).toEqual(Array(50).fill('SUBJECT-MISMATCH'));
+    expect(classes('vpio-01', vpio02)).toEqual(Array(51).fill('SUBJECT-MISMATCH'));
     expect(classes('vpio-02', vpio01)).toEqual(Array(30).fill('SUBJECT-MISMATCH'));
     expect(new Set(classes('vpio-02', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
     expect(new Set(classes('vpio-01', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
@@ -1219,7 +1219,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     // frozen classifier is the C-D6 gen-1 §3 refusal (one journal, SUBJECT-MISMATCH → failure then degradation), pinned exactly.
     const byDir = new Map<string, string[]>();
     for (const p of all) { const h = carriers.get(p)!.h; if (h) byDir.set(h.dir, [...(byDir.get(h.dir) ?? []), p]); }
-    expect(byDir.size).toBe(15);                                                                    // 15 ledgered directories hold journals today (the archive is the 16th population, headerless)
+    expect(byDir.size).toBe(16);                                                                    // 16 ledgered directories hold journals today (C-D24: + S2-WITNESS-05; the archive is the 17th population, headerless)
     const floods: string[] = [];
     for (const [dir, files] of byDir) {
       const subject = headerOf(files[0])!.subject;
