@@ -6,6 +6,9 @@ import { FilePlus2, FolderInput, Loader2, Trash2 } from 'lucide-react';
 import { PRESS, SERIF } from './pressTheme';
 import { CANVAS_HREF, IMPORT_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
+import { locationForSection } from '@/lib/writersStudio/placeInWork';
+import { useSectionActivity } from './useSectionActivity';
+import type { SectionActivity } from '@/lib/writersStudio/sectionActivity';
 import { DELETE_WORK_COPY, REMOVE_WORK_COPY, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
 import { arrivalFor, homeWritingExtent, manuscriptIdOf } from './homeState';
 import type { CurrentManuscript } from './useCurrentManuscript';
@@ -134,6 +137,32 @@ export interface HomeViewProps {
   onRemove: (workId: string) => Promise<void>;
 }
 
+/**
+ * RETURN-LOCUS-01 — the address to return to.
+ *
+ * ⭐ Section-scoped only when the evidence names ONE section. For
+ * `undifferentiated` (an import, a conversion, a whole-draft save or a restore
+ * stamped every row at once), for `none`, and while the read is still in
+ * flight, this is EXACTLY the link that shipped before this act — Work-scoped,
+ * and the room opens where it always did.
+ *
+ * ⛔ No ranking, no tie-break, no "closest guess". Both helpers here already
+ * existed; this adds no URL grammar of its own.
+ */
+function returnHref(
+  manuscriptId: string | null,
+  activity: SectionActivity | null,
+): string {
+  const base = canvasForManuscript(CANVAS_HREF, manuscriptId);
+  if (activity?.kind !== 'distinct') return base;
+  const cut = base.indexOf('?');
+  return locationForSection(
+    cut === -1 ? base : base.slice(0, cut),
+    cut === -1 ? '' : base.slice(cut),
+    activity.sectionId,
+  );
+}
+
 export default function HomeView({
   loading,
   works,
@@ -163,6 +192,11 @@ export default function HomeView({
 
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
   const { kind, resume, alsoWritten, shelf, feature, imported } = arrivalFor(works, manuscripts);
+
+  /* RETURN-LOCUS-01 — asked only for the Work in the hero, because that is the
+     only link this can make more precise. ⛔ `null` while it loads, and the
+     href is unchanged then, so nothing waits on it. */
+  const resumeActivity = useSectionActivity(resume ? manuscriptIdOf(resume) : null);
 
   /* ── FINDING WHAT IS ALREADY YOURS ──────────────────────────────────────
      Not a feature; a condition of the room staying usable. A writer with
@@ -776,7 +810,7 @@ export default function HomeView({
                 </div>
                 <div className="flex items-center gap-3">
                   <Link
-                    href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(resume))}
+                    href={returnHref(manuscriptIdOf(resume), resumeActivity)}
                     className={`${FILLED} w-full sm:w-auto`}
                     style={{ background: PRESS.accent, color: PRESS.ink }}
                   >
