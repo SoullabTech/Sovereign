@@ -48,6 +48,14 @@ behavioural repair ............... ⛔ NOT AUTHORIZED
 
 ## 3 · ⭐ THE NEXT ACT — P1 RE-ADJUDICATION, KEPT NARROW
 
+> ⚠️⚠️ **SUPERSEDED 2026-09-15 by founder amendment**, after §4.1 was ruled valid. The
+> two-branch frame below **rests on a false dichotomy**: it assumes the two rules must either
+> agree or conflict, when they may govern **different objects** and both be true. ⛔ Kept
+> verbatim as the frame at the time of the ACT 2 closure ruling, ⛔ never edited to read as if
+> it had always said otherwise. **The frame in force is
+> `…_P1_READJUDICATION_FRAME_AMENDED_2026-09-15.md`.**
+
+
 ⛔ The question is **not** *"how should we fix the bridge?"* It is:
 
 > **May retrieval-language tokens such as `remember` legitimately establish `HOP 1`
@@ -115,8 +123,8 @@ revising either rule's *content* — and the ruling should be able to see that b
 ACT 2 ............................ ✅ CLOSED
 defect name ...................... ⭐ HOP 1 LEXICAL-ROLE INSTABILITY
 next act ......................... P1 RE-ADJUDICATION · ⛔ NOT OPENED
-adjudication question ............ ✅ FRAMED (§3)
-frame question ................... ⚠️ RAISED ONCE (§4.1) · ⛔ DEFERRED TO FOUNDER
+adjudication question ............ ⚠️ §3 SUPERSEDED — see FRAME_AMENDED
+frame question (§4.1) ............ ✅ RULED VALID — it amended the frame
 behavioural repair ............... ⛔ NOT AUTHORIZED — follows the ruling, never precedes it
 tie-break rule ................... ⛔ NOT INTRODUCED
 ACT 3 falsifiers ................. ⛔ NOT AUTHORED
