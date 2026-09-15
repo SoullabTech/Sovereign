@@ -42,14 +42,16 @@ VPIO02_MANIFEST_FILES=7
 # SOURCE-ID-02 (founder ruling 2026-09-15): the SID subject's identity is recorded ONLY by its own MAC-COMPILE act; until then every
 # pin below is empty and the subject is refused BEFORE any device verb (pins-unrecorded). The bundle id is the one fact known now.
 # SID REINSTALL-PIN-SID (founder ruling 2026-09-15, code-only): SID MAC-COMPILE-02 PASS on faf918b5c (implementation record §10.13)
-# recorded the dylib UUID and dylib SHA-256 below; the executable / manifest pins stay EMPTY (not in the ruled list) so pins-unrecorded
-# still refuses the SID subject before any device verb. No install, launch or sample authority is inherited from these values.
+# recorded the dylib UUID and dylib SHA-256 below (act 1, accepted at 3f3cb15b0); act 2 (same ruling, extended) recorded the executable
+# SHA-256, the manifest SHA-256 and the manifest file count from the same compile evidence (carrier-B ca735fe15). With all five pins
+# recorded the pins-unrecorded refusal no longer fires for the SID subject; every other gate (artifact match, manifest verification,
+# just-in-time absence, K00_EXEC_AUTHORITY) still stands. No install, launch or sample authority is inherited from these values.
 VPIO02SID_BID="life.soullab.voicekernel.vpio02sid"
 VPIO02SID_UUID="4A6AD464-0A19-320F-980E-7446F6AA1440"
 VPIO02SID_DYLIB_SHA="a15b399d9a9a3c1071d12ba3c4fb24a56b3f6e51c708f8d3c5dd9cb811bdfc44"
-VPIO02SID_EXEC_SHA=""
-VPIO02SID_MANIFEST_SHA=""
-VPIO02SID_MANIFEST_FILES=""
+VPIO02SID_EXEC_SHA="db036694dcaa415bb50bb6319af249d643e6db76847177541db836f2f1ec5d17"
+VPIO02SID_MANIFEST_SHA="699ac758b12bd8062145655ad12fab6ed5ac2c96e1b4003cc210a5b39f72c7a4"
+VPIO02SID_MANIFEST_FILES=7
 # VPIO02SID_CONTAINER is NOT an install input and is never read by this script: the data container exists only after an install and
 # is captured by the SID ENTRY witness. WITNESS-REQUIRED is a sentinel, not a value — an empty string here would read as an ordinary
 # unfilled pin; a UUID here without an ENTRY witness record would be a manufactured fact. Neither is admissible.

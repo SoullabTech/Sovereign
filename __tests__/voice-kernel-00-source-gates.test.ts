@@ -1193,13 +1193,16 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect((rx.match(/life\.soullab\.voicekernel\.vpio02(?!sid)/g) ?? []).length).toBe(1);
     // SOURCE-ID-02 (founder ruling 2026-09-15): the SID subject's bundle is the one known fact; every other pin is EMPTY until its own
     // MAC-COMPILE records it, and an empty pin refuses (pins-unrecorded) before any device read.
-    // SID REINSTALL-PIN-SID (founder ruling 2026-09-15, code-only): SID MAC-COMPILE-02 PASS on faf918b5c recorded EXACTLY the dylib UUID and
-    // dylib SHA-256; executable / manifest pins stay EMPTY (outside the ruled list) so pins-unrecorded still refuses; the container is a
+    // SID REINSTALL-PIN-SID (founder rulings 2026-09-15, code-only): act 1 (3f3cb15b0) recorded the dylib UUID + dylib SHA-256, act 2 the
+    // executable SHA-256 + manifest SHA-256 + file count — all five from the one accepted SID MAC-COMPILE-02 act (faf918b5c, carrier-B
+    // ca735fe15); pins-unrecorded therefore no longer fires for the SID subject, every other gate stands; the container is a
     // WITNESS-REQUIRED sentinel (never empty, never a UUID) and is not read anywhere in the script.
     expect(rx).toContain('VPIO02SID_BID="life.soullab.voicekernel.vpio02sid"');
     expect(rx).toContain('VPIO02SID_UUID="4A6AD464-0A19-320F-980E-7446F6AA1440"');
     expect(rx).toContain('VPIO02SID_DYLIB_SHA="a15b399d9a9a3c1071d12ba3c4fb24a56b3f6e51c708f8d3c5dd9cb811bdfc44"');
-    for (const k of ['VPIO02SID_EXEC_SHA', 'VPIO02SID_MANIFEST_SHA', 'VPIO02SID_MANIFEST_FILES']) expect(rx).toContain(`${k}=""`);
+    expect(rx).toContain('VPIO02SID_EXEC_SHA="db036694dcaa415bb50bb6319af249d643e6db76847177541db836f2f1ec5d17"');
+    expect(rx).toContain('VPIO02SID_MANIFEST_SHA="699ac758b12bd8062145655ad12fab6ed5ac2c96e1b4003cc210a5b39f72c7a4"');
+    expect(rx).toContain('VPIO02SID_MANIFEST_FILES=7');
     expect(rx).toContain('VPIO02SID_CONTAINER="WITNESS-REQUIRED"');
     expect((rx.match(/VPIO02SID_CONTAINER/g) ?? []).length).toBe(1);                       // declared once, consumed nowhere
     expect(rx).not.toMatch(/VPIO02SID_CONTAINER=""|VPIO02SID_CONTAINER="[0-9A-F]{8}-/);     // never empty, never a manufactured UUID
