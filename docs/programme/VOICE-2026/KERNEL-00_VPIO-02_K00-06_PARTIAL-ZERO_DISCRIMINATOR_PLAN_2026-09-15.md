@@ -778,3 +778,15 @@ KERNEL-00 acceptance       CLOSED
 ```
 
 The next legitimate event in this lane is the Mac evidence bundle, not another design or implementation act. On its return the only work is custody verification, seal recomputation and adjudication against §16.4; no interpretation is invented after seeing the result.
+
+### 16.6 Path correction for the Mac operator (instruction defect prevented before the act)
+
+The witness directories are written by the batch under **`docs/programme/VOICE-2026/driver-ledger/`** (batch: `LEDGER_DIR="${LEDGER_DIR:-$ROOT/docs/programme/VOICE-2026/driver-ledger/$STRATUM-$STAMP}"`), never under a repo-root `driver-ledger/`. A `find driver-ledger …` run from the repository root returns nothing on a run that succeeded; that empty result is a path miss, not a STOP and not evidence. Exact-path form, from the worktree root, after Block D:
+
+```bash
+cd /private/tmp/k0506-s2w-b198e2e37
+find docs/programme/VOICE-2026/driver-ledger -maxdepth 1 \( -name 'S2-WITNESS-01-*' -o -name 'S2-WITNESS-01-preflight-*' \) -print
+find docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-01-* -maxdepth 2 -type f -print
+```
+
+Provenance of the three evidence sources: (1) `S2-WITNESS-01-<stamp>/` is written by the batch during Block C (ledger · journals · `stimulus-preflight/` · `stimulus-sample-1.tsv` · afplay log · timing · daemons · batch.log) and completed by Block D (`transcript.txt` copied in, `SHA256SUMS.witness` sealed); (2) `S2-WITNESS-01-preflight-<stamp>/` is written by Block B (`apps.json` · `processes.json`); (3) the Block A / B / D Terminal output exists only in the Terminal session and must be captured into the bundle by the operator (e.g. `script` or copy of the scrollback into `S2-WITNESS-01-<stamp>/blocks-ABD.txt`) — it is required because several custody facts (gate read, tree clean, both SHAs, afplay process counts before/after) occur outside the batch. All three go into one commit on one `feature/*` branch. This session is not at the Mac; the blocks are already pinned verbatim in §16.3 and are not to be reconstructed from this note.
