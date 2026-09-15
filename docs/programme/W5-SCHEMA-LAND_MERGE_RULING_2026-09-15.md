@@ -152,33 +152,81 @@ and the ruling reopens rather than proceeds.
 
 ---
 
-## 3 · Carried obligation — W5 integrity disclosure sequencing
+## 3 · Carried obligation — W5 integrity disclosure sequencing — **IDENTIFIED**
 
-The opening act requires that *the existing W5 integrity disclosure sequencing
-must reach canonical no later than the later W4-2 migration*, and that **W5
-landing does not erase that obligation**. It is carried here verbatim, ⛔ **OPEN
-and undischarged**.
+⚠️ **A correction I owe, and it is the same class three times now.** I reported
+this obligation as unlocated. It was located in one command by the founder. My
+search grepped `docs/programme/` **in the checked-out tree** — not across refs —
+so a record living on a side branch was invisible to it. That is Gate A's §0
+defect (*read the ref, not the working tree*) and Gate B's staging defect
+(*verify and use the same bytes*) a third time, in a search rather than an
+instrument. ⛔ **"I could not find it" was a statement about my method, not about
+the repository.**
 
-⚠️ **I could not locate a written record of it**, so I am not restating it in my
-own words and risking a paraphrase that narrows it. Searched: `docs/programme/`,
-`docs/canon/`, and the five migrations. The nearest repository artifact is
-`20260914000002`'s `read_state` / S3-disclosure linkage — *"The S3 disclosure that
-licensed the reading"* — but I will not assume that is what is meant.
+**The artifact, verified here independently rather than accepted on summary:**
 
-**One question, and it settles the item:** is the obligation (a) the
-`manuscript_revision_offers` ↔ S3-disclosure binding in `20260914000002`, or (b)
-a separate ruling that has not yet been written down? If (b), it needs recording
-before this ruling can close, because an obligation that exists only in memory
-cannot be checked against a landing.
+```
+commit   b67eb15e5b95a232415c1d567a94c8b8945d946a
+branch   origin/chore/w5-witness-integrity-findings-20260915
+base     911efbbb2                        ⛔ itself NOT on canonical
+file     docs/programme/W5_WITNESS_INTEGRITY_FINDINGS_2026-09-15.md
+shape    1 file · +125 lines · ⭐ docs only, no code, no migration
+class    RECORD ONLY — "Nothing is repaired, reclassified, or absorbed."
+```
 
----
+Its two findings, read from the artifact: **(1)** W5-3 **S6** is vacuous — its
+`ask_turns` seed never writes, so *"delete thread removes turns"* passes on zero
+(⭐ the record keeps the scope narrow: **only S6**; S6b is not vacuous);
+**(2)** the W5 runtime stubs are not repository-reconstructible —
+`/tmp/step2_runtime_stubs.sql` was machine-local, `git log --all` finds it
+nowhere. Its governing purpose: ⛔ *`36 passed · 0 failed` must not be read as 36
+independently functioning behavioural assertions.*
+
+⭐ **This is witness-integrity disclosure. It is NOT `20260914000002`'s
+`read_state` ↔ S3 binding.** Two different uses of the word *disclosure*, and I
+was right not to assume they were one.
+
+### The sequencing rule, and ⛔ the trap in satisfying it
+
+```
+lawful      b67eb15e  →  W4-2 migration      (or both in one canonical window)
+forbidden   W4-2 → canonical  while b67eb15e remains only on a side branch
+```
+
+⛔ **It does NOT join the five-file carrier. The narrow carrier stays narrow.**
+The deadline is *before or with* W4-2 landing, which is not now.
+
+⭐⭐ **AND THE OBVIOUS WAY TO DISCHARGE IT IS A TRAP.** The obligation is that
+canonical acquires **`b67eb15e`** — one docs-only commit. Merging the **branch**
+that carries it would acquire:
+
+```
+437 files · +77,757 lines · ⛔ TWELVE migrations, not five
+  the five W5 package files, plus SEVEN outside it:
+    20260910000001_pending_ask_claims          20260912000001_focus_crossing_acts
+    20260910000002_context_disclosure_boundary 20260912000002_focus_act_draft_provenance
+    20260910000003_pending_ask_consuming_act   20260913000001_editorial_decision_events
+    20260910000005_pending_ask_invocation_receipt
+```
+
+⛔ Those are exactly the seven branch-only migrations the founder's Gate A run
+confirmed **do not enter the carrier**. By the 2026-09-07 mechanism, all twelve
+would become deployable by whoever deploys next, for a reason unrelated to any of
+them. **Gate A and Gate B would have proven a five-file package while a
+twelve-migration package landed through a different door.**
+
+⭐ The narrow lawful form is therefore a **cherry-pick of `b67eb15e5` alone** —
+one file, +125 lines, no code, no schema. ⛔ Recorded as the mechanic, **not
+performed and not authorized here.**
 
 ## 4 · What closure requires
 
 ```
 1  custody item 1 reconciled                       ✅ §1  (standing raised, unrepaired)
 2  protected reread immediately before landing     ⛔ OWED · founder act · §2
-3  integrity disclosure sequencing recorded        ⛔ OPEN · §3
+3  integrity disclosure sequencing                 ✅ IDENTIFIED + RECORDED · §3
+   canonical acquisition of b67eb15e             ⏸ owed no later than W4-2 landing
+                                                 ⛔ by cherry-pick, never branch merge
 4  merge + intended execution decided TOGETHER     ⛔ the founder's act, not mine
 ```
 
@@ -201,6 +249,8 @@ production mutation             ⛔ NONE
 
 20260903000001                  ⚠️ RECONCILED AS RECORD · ⛔ UNREPAIRED
                                 ⚠️ standing raised: live member-facing, own lane owed
+b67eb15e disclosure             ✅ IDENTIFIED · ⏸ canonical acquisition owed
+                                ⛔ deadline is W4-2 landing, and it is not now
 ```
 
 > ***A merge that defers the execution decision does not defer it. It hands it to
