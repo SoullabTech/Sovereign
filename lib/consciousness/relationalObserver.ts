@@ -13,7 +13,7 @@
  */
 
 import { query, queryOne, insertOne } from '@/lib/db/postgres';
-import { detectPatterns, DEFAULT_PATTERN_TTL_DAYS } from '@/lib/relationships/patternDetection';
+import { detectPatterns } from '@/lib/relationships/patternDetection';
 
 // Signal words that indicate relational content
 const RELATIONAL_SIGNALS = [
@@ -183,39 +183,46 @@ async function _observeAsync(
   // Pattern detection v2 — structural, multi-hit. Runs on the user message
   // only (MAIA's response is deliberately excluded so the detector cannot
   // chase its own output). See: lib/relationships/patternDetection.ts.
+  //
+  // RE-009 (docs/canon/PERCEPTION_WITHOUT_POSSESSION.md): PERCEPTION IS
+  // PERMITTED; POSSESSION IS NOT. The detector still runs, and its hits are
+  // available to this conversational act. What may NOT happen is the hit
+  // becoming durable person-level data before the member has participated in
+  // its meaning. `pursue_withdraw`, `overfunctioning`, `projection` and their
+  // siblings attribute a RELATIONAL PATTERN to the member — RE-009 §5's named
+  // prohibited category — so they are held here and not written.
   const patternHits = detectPatterns(userMessage);
 
-  // Insert the observation as a relationship entry. pattern_hint gets the
-  // top-confidence hit (if any) for continuity with the existing context
-  // bridge; the full multi-hit record lives in relationship_entry_patterns.
-  const topHit = patternHits[0] ?? null;
-  const entryRow = await insertOne('relationship_entries', {
+  // Insert the observation as a relationship entry.
+  //
+  // What persists is EVIDENCE: `content` is the member's own words, truncated,
+  // with no AI interpretation (see detectRelationalContent). `confidence` and
+  // `kind` record the detection as an operation. RE-009 §5 permits this.
+  //
+  // `pattern_hint` is deliberately NOT SET. It is a system-originated
+  // attribution about the member, and writing it made the hypothesis durable
+  // and session-crossing — the ACT 4 nonconformity. An expiry does not make an
+  // unadopted attribution ephemeral: RE-009 bounds ephemerality to the
+  // conversational working context, not to a TTL.
+  await insertOne('relationship_entries', {
     relationship_id: relationshipId,
     member_id: memberId,
     kind: detection.entryKind,
     content: detection.summary,
     confidence: detection.confidence,
-    pattern_hint: topHit?.patternId ?? null,
   });
 
-  // Fan out all concurrent pattern hits to the side table. Expires_at gives
-  // each hit a natural shelf life — relational dynamics are stateful, not
-  // fixed traits. See: database/migrations/20260409000001_relationship_entry_patterns.sql.
+  // The multi-hit fan-out to `relationship_entry_patterns` is likewise removed.
+  // Every column that row carried about the member beyond its evidence snippet
+  // was an unadopted system interpretation.
+  //
+  // Detection remains observable as an OPERATION — pattern ids and confidences,
+  // with no member identifier on the line, so the log records that the detector
+  // fired rather than what the member is. Silence here would fail RE-009's
+  // other arm: MAIA must not go blind in order not to possess.
   if (patternHits.length > 0) {
-    const expiresAt = new Date(Date.now() + DEFAULT_PATTERN_TTL_DAYS * 24 * 60 * 60 * 1000);
-    for (const hit of patternHits) {
-      await insertOne('relationship_entry_patterns', {
-        entry_id: entryRow.id,
-        relationship_id: relationshipId,
-        member_id: memberId,
-        pattern_id: hit.patternId,
-        confidence: hit.confidence,
-        evidence: hit.evidence,
-        expires_at: expiresAt.toISOString(),
-      });
-    }
     console.log(
-      `🔗 [RelationalObserver] Pattern hits: ${patternHits.map(h => `${h.patternId}@${h.confidence.toFixed(2)}`).join(', ')}`
+      `🔗 [RelationalObserver] Pattern hits (ephemeral, not persisted): ${patternHits.map(h => `${h.patternId}@${h.confidence.toFixed(2)}`).join(', ')}`
     );
   }
 
