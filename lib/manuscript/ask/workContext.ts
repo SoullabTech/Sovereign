@@ -44,7 +44,12 @@
  */
 
 import { query } from '@/lib/db/postgres';
-import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+/* ⭐ SECTION-PROJECTION-EXTRACTION-01 — the projection law, at its own address.
+   ⛔ Importing it from `saveSection` pulled that module's mutating exports into
+   this route's value-import graph, and `askRouteEffectFamily` refused. A pure
+   read rule must be importable without importing the authority to mutate the
+   object it describes. */
+import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import {
   resolveSituatedWork, type SituatedWork,
 } from '@/lib/writersStudio/workSituation';
