@@ -1575,9 +1575,19 @@ export async function POST(req: NextRequest) {
             }
 
             // 🔭 FIELD MONITOR: Turn-level observability (fire-and-forget, never blocks stream)
-            if (!sanctuary && fullResponse.trim()) {
+            //
+            // FIELD-MONITOR-UUID-01: `userId` is required, not defaulted. This was
+            // `memberId: userId || ''`, and `field_monitor_turns.member_id` is
+            // `uuid NOT NULL` — so a memberless turn failed the cast and vanished
+            // into the fire-and-forget catch, exactly as the session_id defect did.
+            // The table is member-scoped by design (checkMonoModalCollapse reads
+            // prior rows WHERE member_id = $1), so an anonymous row would be
+            // unreachable by the only analysis that consumes it. The right answer
+            // is not to write one — matching storeTrustObservation below, which
+            // has always guarded on `userId`.
+            if (userId && !sanctuary && fullResponse.trim()) {
               fireAndForgetFieldMonitor({
-                memberId: userId || '',
+                memberId: userId,
                 sessionId: effectiveSessionId,
                 route: 'stream',
                 responseText: fullResponse.trim(),
