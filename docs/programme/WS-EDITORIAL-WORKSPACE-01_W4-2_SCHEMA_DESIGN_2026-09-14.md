@@ -43,18 +43,30 @@ ALTER TABLE ask_threads
 ALTER TABLE ask_threads VALIDATE CONSTRAINT ask_threads_one_subject;
 ```
 
-⭐ **`NOT VALID` then `VALIDATE` is deliberate.** `ask_threads` is a live
-production table; a plain `ADD CONSTRAINT` takes `ACCESS EXCLUSIVE` for the
-length of a full scan. Split, the scan runs under a weaker lock. ⛔ And the
-`VALIDATE` is not optional: a constraint left `NOT VALID` is enforced for new
-rows and **silently unenforced as an invariant over the existing ones**, which
-is the shape of a guarantee that reads true and is not.
+⚠️⚠️ **THE LOCK CLAIM THAT WAS HERE WAS WRONG, AND IS CORRECTED IN §8.** It
+said *"split, the scan runs under a weaker lock"*, which is true **across
+transactions** and false **across mere statements** — PostgreSQL holds a table
+lock until the transaction that took it ends. The two statements as written
+above are a single phase and buy nothing. See **W4-2.1 · §8**, which replaces
+this shape with two migration files.
 
-⭐ **Every existing row already satisfies it** — `anchor NOT NULL` held until
-now and `proposal_chain_id` has no backfill — so `VALIDATE` is expected to pass
-on the first attempt. ⛔ **If it does not, that is a finding, not an obstacle**:
-a row carrying both subjects would mean something wrote one, and the migration
-must stop rather than repair it.
+⭐ What remains true: the `VALIDATE` is **not optional**. A constraint left
+`NOT VALID` is enforced for new rows and **silently unenforced as an invariant
+over the existing ones** — the shape of a guarantee that reads true and is not.
+
+⚠️ **CLAIM NARROWED BY W4-2.1 (founder, 2026-09-14).** This paragraph first
+said *"every existing row already satisfies it… so VALIDATE is expected to
+pass"*, reasoning from the absence of a backfill. ⛔ **No backfill does not prove
+no row.** The probe in §3b falsified the stronger inference within the hour, on
+the first database it was pointed at. The durable statement is:
+
+> No production runtime currently writes `proposal_chain_id`, so **no
+> runtime-created violating row is known**. Existing protected rows remain
+> **unproved until preflight**. Validation is the authority and may refuse.
+
+⛔ **If it refuses, that is a finding, not an obstacle**: a row carrying both
+subjects means something wrote one, and the migration must stop rather than
+repair it.
 
 ⛔ **No backfill invents a subject.** A historical thread's absent
 `proposal_chain_id` is the evidence that it predates the editorial object — the
@@ -326,7 +338,12 @@ catching it, and cannot lie in both without the CHECK catching the pair.
 ⛔ **No migration file exists and nothing was migrated.** The DDL above was
 applied inside a **transaction that rolled back**, on the **disposable
 `w5_witness` database**, purely to establish that the constraints behave as this
-record claims. *A design that asserts constraint behaviour without checking it is
+record claims.
+
+⚠️ **CORRECTED BY W4-2.2a §23**: that sentence is true of THIS probe and **not**
+of the lock probes in §8/§11, two of whose statements ran under psql autocommit
+and **did** persist — leaving `anchor` nullable on the witness database. The
+distinction is recorded rather than smoothed. *A design that asserts constraint behaviour without checking it is
 a claim, not a design.* Evidence class: **BEHAVIOURAL, ephemeral, rolled back.**
 
 ```
@@ -468,10 +485,6 @@ production writes to today.
 
 ## 7. Standing
 
-⚠️ **SUPERSEDED by §8** (founder ruling, 2026-09-14). Kept verbatim as the
-standing at the time this record was authored — ⛔ never edited to read as if
-it had always said otherwise.
-
 ```
 W4-1.2                          ✅ CLOSED · a79163ff6
 W4-2 schema design              ✅ THIS RECORD
@@ -489,7 +502,1080 @@ maia_focus_witness              FROZEN
 
 ---
 
-## 8. ⭐ FOUNDER RULING — CLOSURE AT THE DESIGN BOUNDARY
+# W4-2.1 — MIGRATION PHASING SEAL
+
+**Authorized by** founder act, 2026-09-14, on source inspection of `f210df118`.
+Same branch. ⛔ **Record / design only. No executable SQL.**
+
+> The database design is right; the way we acquire that database state on a live
+> table is not yet fully designed.
+
+---
+
+## 8. The lock claim, corrected — with evidence
+
+⚠️ **§1.1 was wrong.** PostgreSQL retains a table lock acquired earlier in a
+transaction until that transaction ends, so `NOT VALID` followed by `VALIDATE`
+**in the same transaction** never reaches the weaker-lock window.
+
+Measured on the disposable witness database (`pg_locks`, rolled back):
+
+```
+same transaction · DROP NOT NULL → ADD … NOT VALID → look at the locks
+    AccessExclusiveLock   granted        ← still held; VALIDATE gains nothing
+
+separate transaction · VALIDATE alone
+    ShareUpdateExclusiveLock granted     ← the intended window
+```
+
+⭐ **This is not a subtlety about SQL style. It is the whole reason the phasing
+must be two migration *files*, not two statements.**
+
+## 9. The two runners, read rather than assumed
+
+| runner | shape | consequence |
+|---|---|---|
+| `scripts/run-sql-migrations.sh:79` | `psql -c "BEGIN;" -f "$f" -c "COMMIT;"` | **force-wraps the whole file in one transaction** |
+| `scripts/apply-migrations.sh:~110` | `\i '<file>'` inside one advisory-locked psql script | executes the file **as written**; transactions are whatever the file declares |
+
+Existing migrations (`20260901000001`, `20260914000005`) each open with their own
+`BEGIN;`, which under the first runner nests inside the wrapper and is a no-op
+warning. ⭐ **So a single file cannot deliver two lock phases under both runners
+without depending on that nesting** — and the dependency is worse than it looks:
+under `run-sql-migrations.sh` an in-file `COMMIT;` would end the *runner's* wrapper
+transaction, so the file would be committing a transaction it did not open.
+
+⛔ **And a single file has a second, decisive failure mode**: `schema_migrations`
+records a **filename**, once, after the whole file succeeds. If phase 2 refused,
+phase 1 would already be committed and **nothing would be ledgered** — a live
+table left altered with no record that it was, and a retry re-running phase 1
+against its own result. *That is the un-ledgered half-file, and it is the reason
+the phasing is files rather than statements.*
+
+## 10. The lawful shape — two migration files
+
+```
+W4-S1 · subject preparation                        ← short ACCESS EXCLUSIVE
+    ALTER COLUMN anchor DROP NOT NULL
+    ADD CONSTRAINT ask_threads_one_subject            … NOT VALID
+    ADD CONSTRAINT ask_threads_editorial_has_no_reading … NOT VALID
+    COMMIT                                          ← the lock is released HERE
+                                                      and ledgered HERE
+
+W4-S2 · validation + binding substrate             ← a NEW transaction
+    VALIDATE CONSTRAINT ask_threads_one_subject
+    VALIDATE CONSTRAINT ask_threads_editorial_has_no_reading
+    the four supporting UNIQUE targets (§11)
+    editorial_turn_bindings + trigger + partial unique indexes
+```
+
+⭐ **The safe intermediate state is the point.** If S2 refuses — an old
+two-subject row, or anything else — the database rests at:
+
+```
+anchor                    nullable
+both CHECKs               present and ENFORCED ON NEW ROWS
+the violating row         still visible, unrepaired, findable
+runtime                   still creates no editorial threads
+S1                        recorded in schema_migrations
+S2                        not recorded — retryable once the row is ruled on
+```
+
+⛔ Nothing has been destroyed and nothing is un-ledgered. That is strictly
+better than a half-applied file, and it is why the phases are split even though
+S1 alone buys no new guarantee.
+
+⚠️ **S1 must be written idempotently anyway** (`DROP NOT NULL` already is;
+the two `ADD CONSTRAINT`s need an `IF NOT EXISTS`-equivalent guard, since
+PostgreSQL has none for `ADD CONSTRAINT`), because a runner that fails *after*
+the file succeeds but *before* the ledger write would re-run it.
+
+## 11. The four supporting UNIQUE targets — lock strategy is an OPEN RULING
+
+Measured: `ALTER TABLE … ADD CONSTRAINT … UNIQUE` takes **`AccessExclusiveLock`
++ `ShareLock`** and builds the index under them. Two of the four targets are on
+live tables — `ask_threads` and `ask_turns`, the latter growing with every turn
+anyone has ever spoken.
+
+**Option A — ordinary unique build**, accepted **only after** protected preflight
+proves the tables are small enough that the build is a blip.
+
+**Option B — `CREATE UNIQUE INDEX CONCURRENTLY`**, then attach it via
+`ADD CONSTRAINT … USING INDEX`.
+
+⛔⛔ **Option B is not merely unprecedented here; it is structurally
+incompatible with one of the two runners.** Measured:
+
+```
+BEGIN; CREATE UNIQUE INDEX CONCURRENTLY … ;
+  → ERROR: CREATE INDEX CONCURRENTLY cannot run inside a transaction block
+```
+
+and `run-sql-migrations.sh` **force-wraps every file** in `BEGIN;`/`COMMIT;`.
+So B would require either abandoning that runner for this migration, or a file
+that deliberately commits a transaction it did not open. ⭐ Both are **custody
+decisions, not implementation details**, and neither is taken here.
+
+⭐ Also: `grep -rl CONCURRENTLY database/migrations/` returns **nothing** — this
+repository has no concurrent-index precedent at all, and a failed CIC leaves an
+`INVALID` index requiring its own recovery path.
+
+⛔ **This design does not choose.** The protected-database size census decides
+whether B's machinery is warranted, and that census has not been run.
+
+## 12. Protected preflight — owed, and unread
+
+Before S1 is authorized, read on the protected database:
+
+```
+1  SELECT count(*) FROM ask_threads;
+2  SELECT count(*) FROM ask_turns;
+3  SELECT count(*) FROM ask_threads
+    WHERE anchor IS NOT NULL AND proposal_chain_id IS NOT NULL;   ← must be 0
+4  SELECT count(*) FROM ask_threads
+    WHERE proposal_chain_id IS NOT NULL AND reading_identity IS NOT NULL;
+5  SELECT count(*) FROM ask_threads WHERE proposal_chain_id IS NOT NULL;
+```
+
+⛔ **Every one of these is UNREAD.** (3) is the XOR question and (5) is the
+rollback question — a non-zero (5) means rollback is already a decision about a
+member's record, not a schema operation (§4). (1) and (2) decide §11.
+
+⚠️ And they must be read on the **protected** database. The probe in §3b read
+a witness database and found a violating row **there**; that says nothing about
+production either way, and must not be reported as if it did.
+
+## 13. The W5-3 witness fixture — successor treatment, not laundering
+
+When W4 schema lands in the witness database, the W5-3 schema witness's
+chain-bound fixture becomes `anchor = NULL, proposal_chain_id = C`, **and the
+inverse obligation is added in the same act**:
+
+```
+anchor IS NOT NULL AND proposal_chain_id IS NOT NULL   → REFUSED
+```
+
+⭐ That is a **successor-schema adaptation**, not retroactive evidence
+laundering: git preserves the original W5-3 witness at `303212ae7`, and the new
+obligation is strictly stronger than the one it replaces. ⛔ **Do not repair it
+before the migration exists** — a witness edited in advance of the schema it
+describes is a witness describing a schema nobody has.
+
+## 14. Left open by founder ruling
+
+`initiated_by = 'maia'` on an editorial thread stays **undecided and
+unconstrained**. W4 v1 begins discourse with a member act, and the column's
+broader existing vocabulary causes no false relationship by merely remaining
+available. ⭐ It is decided at the route act, ⛔ not narrowed prematurely in
+schema.
+
+## 15. Standing after the phasing seal
+
+```
+W4-2 semantic schema design       ✅ PASS · f210df118
+W4-2.1 migration phasing          ✅ SEALED — two files, lock strategy OPEN
+
+protected preflight (§12)         ⛔ OWED — every query unread
+unique-target lock ruling (§11)   ⛔ OPEN — decided by the size census
+executable W4 migration           ⛔ HELD
+producer registration             ⛔ HELD
+canonical service seam            ⛔ HELD
+route / Canvas                    ⛔
+
+canonical landing                 ⛔
+protected migration               ⛔
+production                        UNTOUCHED
+maia_focus_witness                FROZEN
+```
+
+---
+
+# W4-2.2 — PROTECTED SCHEMA PREFLIGHT
+
+**Authorized by** founder act, 2026-09-14. ⛔ **READ ONLY.**
+**Instrument** `scripts/witness/w4-2-2-protected-preflight.sql`
+
+---
+
+## 16. ⛔ RESULT: **NOT RUN.** This session cannot reach the protected database.
+
+That is the result, stated first, because it is the only honest thing this act
+can report about production.
+
+```
+ssh                     absent — no ssh binary exists in this container
+DATABASE_URL / PG*      unset
+.env files present      .env.android.template · .env.docker.template · .env.example
+                        (templates only; no DSN)
+soullab.life:443        reachable — and it is the PUBLIC HTTPS SURFACE,
+                        which serves no SQL
+```
+
+⛔ **And it will not be reached by another route.** Driving the preflight through
+an application endpoint would be a runtime act against production wearing a
+read's name, and no act authorizes it. `NOT RUN` is a first-class result — the
+same standing as `NOT WITNESSED` in the S3 lane, and for the same reason: *a
+preflight that did not run has measured nothing, and a number produced any other
+way is not that number.*
+
+⛔ **Every cell of the decision table below is therefore UNKNOWN**, not zero, not
+"probably fine". The founder runs the instrument; this act delivers the
+instrument and its falsification.
+
+## 17. The decision table, unfilled
+
+```
+W5-3 protected substrate         UNKNOWN
+ledger: 20260914000005           UNKNOWN
+XOR violations                   UNKNOWN
+editorial+reading collisions     UNKNOWN
+existing editorial threads       UNKNOWN
+
+ask_threads     size / est rows  UNKNOWN
+ask_turns       size / est rows  UNKNOWN
+directions      size / est rows  UNKNOWN
+versions        size / est rows  UNKNOWN
+required UNIQUE already present  UNKNOWN
+INVALID indexes present          UNKNOWN
+
+unique strategy
+  A ordinary build               NOT EARNED
+  B concurrent lane              NOT DETERMINED
+```
+
+## 18. The instrument, and why it is shaped this way
+
+**Read-only is structural, not promised.** The whole run is inside
+`BEGIN READ ONLY`, so a write added later by anyone is refused by the server.
+Proved on the disposable database:
+
+```
+BEGIN READ ONLY; INSERT …   → ERROR: cannot execute INSERT in a read-only transaction
+BEGIN READ ONLY; ALTER …    → ERROR: cannot execute ALTER TABLE in a read-only transaction
+```
+
+**Identity and ledger first, invariants only where the substrate exists.**
+`20260914000005` is custody-held and may be genuinely unexecuted on the
+protected database. A query against `proposal_chain_id` would then error — or,
+under a careless reader, be reported as *"0 violations"*.
+
+> ⛔ **An absent schema is `NOT MEASURABLE`. It is never zero.**
+
+**The ledger is a claim; the catalogue is the fact.** §2 and §3 are read
+separately and their disagreement is itself reported — the 2026-09-07 drift is
+exactly a case where they diverged.
+
+**Sizing and integrity use different instruments,** per the founder's
+correction: `pg_total_relation_size` + `reltuples` + `last_analyze` decide the
+lock strategy; exact `COUNT(*)` answers only the integrity questions. And
+`reltuples = -1` is reported as **`NEVER ANALYZED`** rather than as an estimate:
+unknown is not empty.
+
+**Drift is checked, not assumed.** §6 lists every unique index on the four
+targets, plus any `INVALID` index — the residue a failed `CONCURRENTLY` leaves.
+
+## 19. Falsification — both branches, on real databases
+
+| branch | database | result |
+|---|---|---|
+| substrate **PRESENT** | `w5_witness` (migrations through `…005`) | §4 measured: `xor 0 · collisions 0 · editorial 0 · total 0` |
+
+⚠️⚠️ **AND ONE CELL OF THAT TABLE WAS MEANINGLESS — see W4-2.2a §23.** The
+`anchor IS NOT NULL | true` line reported above was produced by a **reversed
+expression** against a database my own lock probe had **left mutated**. Two
+errors cancelled into a plausible-looking right answer. The row is kept and
+corrected there rather than edited here.
+| substrate **ABSENT** | `runtime_witness` (stops at `…004`) | §4 reported **NOT MEASURABLE** on all three, and still reported the measurable total |
+
+⭐ The absent branch is the one that mattered, and it behaves correctly: it does
+**not** print zeros.
+
+### Two defects the falsification found in the instrument itself
+
+1. ⚠️ **It died on an absent ledger.** `schema_migrations` does not exist on the
+   disposable databases (they are built by applying files directly), and
+   `ON_ERROR_STOP on` killed the run at §2 — *an instrument that dies on an
+   absent thing has reported nothing about the database it was pointed at.*
+   Gated, for the same reason §4 is gated.
+2. ⚠️ **`n/a` for an absent column read like an error.** The step-2 stub
+   `ask_threads` has no `anchor` column at all, and the instrument printed
+   `n/a`. Now `COLUMN ABSENT` — the distinction between *nullable*, *not null*
+   and *not there* has to survive into the output, or the reader supplies the
+   missing one themselves.
+
+### ⭐ And one W4-2 finding confirmed on a real database
+
+§6 on `w5_witness` shows `proposal_chain_directions` carrying **only**
+`proposal_chain_directions_pkey (id)` — no `(proposal_chain_id, id)` unique of
+any kind, while `proposal_versions` carries `proposal_versions_chain_id_id_key`.
+The B4 gap named in §2.2 is not a reading of the source; it is observable in a
+built database.
+
+## 20. How to run it
+
+⚠️ **AN EARLIER USAGE LINE HERE WAS WRONG AND SENT THE RUN AT THE WRONG
+MACHINE.** It read `psql "$PROTECTED_DATABASE_URL" -X -f …`, naming a variable
+that **exists nowhere in this project**; unset, psql fell back to its defaults —
+local socket, database `$USER` — and reported `database "soullab" does not
+exist`. ⛔ Nothing was read, and that output is **not a preflight result of any
+kind**. *A usage line naming an undefined variable is a usage line that points at
+the wrong machine.*
+
+⭐ The protected database is `maia-postgres`, in Docker, **on minisforum**, and
+the Mac Studio has no socket or TCP route to it. Run from the Mac Studio:
+
+```bash
+git fetch origin claude/w4-2-schema-design
+git show origin/claude/w4-2-schema-design:scripts/witness/w4-2-2-protected-preflight.sql \
+  > /tmp/w4-preflight.sql
+ssh soullab@minisforum \
+  'docker exec -i maia-postgres psql -U soullab -d maia_consciousness -X' \
+  < /tmp/w4-preflight.sql
+```
+
+⭐ Fetching the file from the branch means it works from any worktree — the
+script lives only on `claude/w4-2-schema-design`, and the shell that produced the
+error was in an unrelated one.
+
+⭐ **Read §1 first.** It prints the database, host, port, role and read-only
+state actually connected to. ⛔ If §1 does not name the protected database,
+nothing below it is a protected reading, whatever it says. Verified: the
+instrument runs identically when piped on stdin rather than read with `-f`.
+
+⛔ Nothing in it writes, repairs, or creates. If it finds a violating row it
+**reports** it — *a preflight that fixed what it found would destroy the evidence
+it exists to gather.*
+
+## 21. What a clean preflight would earn — and what it would not
+
+```
+protected read              ✅ this act
+unique-lock strategy ruling ✅ earned by the result
+right to DESIGN W4-S1/S2    ✅ earned by the result
+
+migration implementation    ⛔
+migration execution         ⛔
+canonical merge             ⛔
+deployment                  ⛔
+data repair                 ⛔
+```
+
+⛔ The W5-3 witness fixture stays untouched until the successor migration
+actually exists.
+
+## 22. Standing
+
+```
+W4-2   semantic schema design    ✅ CLOSED · f210df118
+W4-2.1 migration phasing         ✅ CLOSED · 46a44928e
+W4-2.2 preflight INSTRUMENT      ✅ built · falsified on both branches
+W4-2.2 preflight RESULT          ⛔ NOT RUN — this session cannot reach production
+
+unique-target strategy           ⏸ undecided — waits on the result
+executable W4 migrations         ⛔ HELD
+producer registration            ⛔ HELD
+canonical service seam           ⛔ HELD
+route / Canvas                   ⛔
+
+production mutation              ⛔
+maia_focus_witness               FROZEN
+```
+
+---
+
+# W4-2.2a — PREFLIGHT INSTRUMENT SEAL
+
+**Authorized by** founder act, 2026-09-14, on source inspection of `21ebfc9ce`.
+Same branch. Instrument + record only. ⛔ Still no protected read from this
+session, still no migration.
+
+**Harness** `scripts/witness/w4-2-2a-instrument-seal.sh` — **26 passed · 0 failed**
+
+> **The governing rule.** An instrument for discovering drift must itself survive
+> drift without converting *"I cannot measure this state"* into either zero or
+> failure.
+
+---
+
+## 23. ⚠️⚠️ The first defect invalidated a cell of my own falsification
+
+`anchor` nullability was reported **backwards**. The expression was
+`(NOT (is_nullable = 'NO'))`, so a genuinely `NOT NULL` column printed **`false`**
+under a label reading *"anchor IS NOT NULL"*. Measured on a purpose-built table:
+
+```
+a  (NOT NULL)  → reported  false
+b  (nullable)  → reported  true
+```
+
+⛔ **It reversed the exact column W4-S1 exists to change.**
+
+⭐⭐ **And the reason it slipped past me is the finding.** My W4-2.2 record
+reported `ask_threads.anchor IS NOT NULL | true` and presented it as the
+instrument working. The `w5_witness` database at that moment actually had
+`anchor` **nullable** — `is_nullable = YES` — because the §11 lock probe ran
+`ALTER TABLE … DROP NOT NULL` through `psql -c`, **under autocommit**, while I
+described the whole exercise as *"rolled back"*.
+
+```
+a reversed expression   ×   a database I had silently mutated
+                        =   a plausible-looking correct answer
+```
+
+Two wrongs cancelled. ⛔ That is precisely the class this lane exists to refuse,
+and it happened inside the instrument built to refuse it. Both halves are
+corrected **in place** in §3b and §19 rather than edited away.
+
+⚠️ **The operational lesson is narrower than "be careful":** a probe that mixes
+transactional statements with `psql -c` autocommit statements has **two
+different durabilities in one exercise**, and describing the exercise by its
+safer half is how a mutated database gets read as a clean one.
+
+## 24. Ledger: three states, because "present" was not enough
+
+The gate proved only that `schema_migrations` **exists**, then immediately read
+`s.filename`. But `run-sql-migrations.sh` carries migration logic for a **legacy
+ledger with `version` and no `filename`** — so the table can exist while the
+column does not, and the instrument dies one level deeper than the hole it had
+just patched.
+
+```
+LEDGER ABSENT                       → reported ABSENT
+LEDGER PRESENT · filename present   → exact rows, applied / ABSENT FROM LEDGER
+LEDGER PRESENT · legacy, no filename → reported LEGACY · NOT MEASURABLE
+```
+
+⭐ *A ledger in a vocabulary this query cannot read is not an empty ledger.*
+
+## 25. Substrate: PRESENT · PARTIAL · ABSENT
+
+`w5_present` meant only *`proposal_chain_id` exists*, while the gated query
+required `ask_threads`, `anchor`, `proposal_chain_id` **and** `reading_identity`.
+⛔ Inferring the rest of a migration from one column is exactly the inference a
+**drift detector** may not make — 2026-09-07 was a partially applied lane.
+
+Now classified over six objects/columns, with `PARTIAL` first-class: it reports
+**NOT MEASURABLE**, never an SQL error and never a zero. `ask_threads` being
+absent entirely no longer kills the count either.
+
+⭐ **`PARTIAL` had to be constructed, because no migration produces it** — which
+is the whole argument for building the state rather than waiting to meet it.
+
+## 26. Acceptance — every state the ruling named
+
+```
+ledger absent                      → ABSENT                    ✅
+legacy ledger, no filename         → LEGACY / NOT MEASURABLE   ✅
+modern ledger                      → exact rows                ✅
+
+anchor NOT NULL                    → true                      ✅
+anchor nullable                    → false                     ✅
+anchor absent                      → COLUMN ABSENT             ✅
+
+W5 absent                          → NOT MEASURABLE            ✅
+W5 partial                         → NOT MEASURABLE            ✅
+W5 complete                        → exact counts              ✅
+ask_threads absent                 → NOT MEASURABLE            ✅
+
+READ ONLY + INSERT                 → server refuses            ✅
+READ ONLY + DDL                    → server refuses            ✅
+```
+
+Every case also asserts **the run COMPLETED** — reaching its final section —
+because a died-early instrument reports nothing about the database it was
+pointed at, and that was the shape of both earlier repairs.
+
+## 27. Two more instrument defects, found by the harness itself
+
+1. ⚠️ **The harness hung.** A stray `psql` with neither `-c` nor `-f` reads
+   **stdin** and blocks forever; it ran to a 120-second timeout on the first
+   attempt. One invocation, one `-c`.
+2. ⚠️ **A C21-class ban, for the third time this session.** `W1`/`W2` banned the
+   string `xor_violations` — which appears in the `⛔` **echo line that declares
+   the count is not measurable**. A prohibition firing on the text that documents
+   it. Re-asserted as the psql **result-table header**
+   (`xor_violations | editorial_reading_collisions`), which can only appear when
+   the query actually ran. ⭐ *"No measured value" is the obligation; "the word
+   does not appear" never was.*
+
+⚠️ And a self-inflicted one worth recording: `pkill -9 -f "[p]sql"` matched **its
+own command line** and killed the shell running it. `pkill -x psql` is the
+correct instrument.
+
+## 28. Standing
+
+```
+W4-2   semantic schema design    ✅ CLOSED · f210df118
+W4-2.1 migration phasing         ✅ CLOSED · 46a44928e
+W4-2.2 preflight RESULT          ⛔ NOT RUN — unchanged
+W4-2.2a instrument seal          ✅ 26 passed · 0 failed
+
+unique-lock strategy             ⏸ waits on the protected output
+executable W4 migrations         ⛔ HELD
+producer registration            ⛔ HELD
+canonical service seam           ⛔ HELD
+route / Canvas                   ⛔
+
+production mutation              ⛔
+maia_focus_witness               FROZEN
+```
+
+The protected preflight remains **unspent**:
+
+```bash
+psql "$PROTECTED_DATABASE_URL" -X \
+  -f scripts/witness/w4-2-2-protected-preflight.sql
+```
+
+---
+
+# W4-2.2 — PROTECTED PREFLIGHT · **RESULT**
+
+**Run** 2026-09-15, founder, from the Mac Studio via
+`ssh soullab@minisforum 'docker exec -i maia-postgres psql …'`
+**Instrument at** `646b9508b`
+
+```
+db                  maia_consciousness
+role                soullab
+read_only           on
+server              PostgreSQL 16.13 (Debian)
+```
+
+⭐ §1 names the protected database. **This is a protected reading**, and it
+supersedes the `NOT RUN` standing recorded in §16.
+
+---
+
+## 29. ⭐⭐ THE FINDING: the entire succession lane is ABSENT from production
+
+The preflight was asked *"is W5-3 present?"* and answered a larger question.
+
+| migration | ledger | catalogue |
+|---|---|---|
+| `20260901000001_ask_threads.sql` | **applied** | `ask_threads` ✅ `ask_turns` ✅ |
+| `20260914000001_proposal_succession.sql` | **ABSENT** | `proposal_chains` ❌ `proposal_versions` ❌ |
+| `20260914000005_editorial_ontology.sql` | **ABSENT** | `proposal_chain_directions` ❌ `proposal_chain_insights` ❌ `ask_threads.proposal_chain_id` ❌ |
+
+⭐ **Ledger and catalogue AGREE on every row.** After 2026-09-07 that is not
+assumed, and it is worth stating plainly: there is **no drift** here. The record
+and the database tell the same story.
+
+⭐⭐ **The consequence relocates the whole W4 schema landing.** W4-S1/S2 declare
+foreign keys into `proposal_chains`, `proposal_versions` and
+`proposal_chain_directions` — **none of which exist on production.** The W4
+migration is not one act away from the protected database; it is behind an
+entire unlanded lane:
+
+```
+20260914000001  proposal_succession        ⛔ NOT APPLIED
+20260914000002  revision_offers            ⚠️ NOT QUERIED
+20260914000003  chains_member_identity     ⚠️ NOT QUERIED
+20260914000004  revision_authorizations    ⚠️ NOT QUERIED
+20260914000005  editorial_ontology         ⛔ NOT APPLIED
+─────────────────────────────────────────────────────────
+W4-S1 / W4-S2                              ⛔ depends on all of the above
+```
+
+⚠️ **`…000002`, `…000003` and `…000004` are NOT MEASURED.** My instrument named
+only three filenames, and the catalogue checks it performs do not cover
+`manuscript_revision_offers` or `manuscript_revision_authorizations`. Their
+absence is *plausible* — they build on `proposal_chains`, which is absent — ⛔
+but plausible is not measured, and this record does not report them as absent.
+**That is an instrument gap**, and it is named rather than filled by inference.
+
+## 30. The decision table, filled
+
+```
+W5-3 protected substrate         ABSENT  (ledger and catalogue agree)
+ledger: 20260914000005           ABSENT FROM LEDGER
+XOR violations                   NOT MEASURABLE   ⛔ never "0"
+editorial+reading collisions     NOT MEASURABLE
+existing editorial threads       NOT MEASURABLE
+
+ask_threads     heap 8192 bytes · total 72 kB · NEVER ANALYZED
+ask_turns       heap 24 kB      · total 72 kB · NEVER ANALYZED
+directions      does not exist
+versions        does not exist
+
+total_threads                    1        ⭐ not zero — see §31
+required UNIQUE already present  NO — only the two primary keys
+INVALID indexes present          NONE
+```
+
+## 31. ⭐ One real Ask thread exists in production
+
+`total_threads = 1`, and `ask_turns` carries 24 kB of heap. ⛔ Small is not
+empty: somebody has held an Ask conversation on the protected database, and the
+migration plan is operating on a table with a real member record in it.
+
+⭐ It also means the **rollback property (§4) is currently clean** — but for a
+structural reason rather than a measured one: `proposal_chain_id` does not
+exist, so there are **no editorial threads to strand**, and
+`ALTER COLUMN anchor SET NOT NULL` would succeed today. ⛔ That is a fact about
+today, and it stops being true the moment the first editorial conversation is
+held.
+
+## 32. RULING EARNED: the unique-lock strategy — **Option A**
+
+```
+A · ordinary unique build        ✅ EARNED
+B · concurrent lane              ⛔ NOT REQUIRED
+```
+
+The two live targets are **8 kB and 24 kB of heap**; the other two do not exist
+yet and will be created empty. An `ACCESS EXCLUSIVE` index build over 72 kB of
+total relation is a blip, and **Option B's machinery is not warranted** — no
+`CONCURRENTLY` precedent in this repository, structural incompatibility with
+`run-sql-migrations.sh`, and an `INVALID`-index recovery path to own, all to
+avoid a lock measured in milliseconds.
+
+⭐ `pg_total_relation_size` decided this, as designed — and it decided it
+**despite** `reltuples` being `NEVER ANALYZED` on both tables. That is exactly
+why sizing and integrity were separated: a `COUNT(*)`-only instrument would have
+reported `1` and told us nothing about index-build cost.
+
+⚠️ **This ruling is dated.** It rests on sizes read on 2026-09-15. If the
+succession lane lands and data accumulates before W4-S1/S2 are authorized,
+**re-run the preflight** — the ruling is earned by a measurement, not by the
+shape of the tables.
+
+## 33. What this result does and does not authorize
+
+```
+protected read                   ✅ SPENT — this
+unique-lock strategy ruling      ✅ EARNED — Option A
+right to DESIGN W4-S1/S2         ✅ EARNED
+
+migration implementation         ⛔ HELD
+migration execution              ⛔ HELD
+canonical merge                  ⛔
+deployment                       ⛔
+data repair                      ⛔
+```
+
+⛔ **And a new prerequisite is now visible**: the succession lane
+(`20260914000001` … `20260914000005`) is itself unlanded and custody-held. W4's
+schema cannot reach production before it does, and **that sequencing is a founder
+act this preflight does not touch.**
+
+## 34. Standing
+
+```
+W4-2   semantic schema design    ✅ CLOSED · f210df118
+W4-2.1 migration phasing         ✅ CLOSED · 46a44928e
+W4-2.2a instrument seal          ✅ CLOSED · 26/0
+W4-2.2 protected RESULT          ✅ RUN 2026-09-15 · W5 substrate ABSENT
+
+unique-lock strategy             ✅ Option A earned (dated)
+…000002/3/4 ledger state         ⚠️ NOT MEASURED — instrument gap, named
+executable W4 migrations         ⛔ HELD
+succession lane landing          ⛔ HELD — and now a visible prerequisite
+
+production mutation              ⛔ NONE — the run was READ ONLY
+maia_focus_witness               FROZEN
+```
+
+---
+
+# W5-LANDING-01 — PROTECTED SUCCESSION-LANE CENSUS · INSTRUMENT
+
+**Authorized by** founder act, 2026-09-15. ⛔ **READ ONLY.**
+**Instrument** `scripts/witness/w5-landing-01-lane-census.sql`
+**Seal** `scripts/witness/w5-landing-01-census-seal.sh` — **26 passed · 0 failed**
+**Protected result** ⛔ **NOT RUN** — this session still cannot reach production.
+
+> **The prohibition that shapes it.** `…000001 absent, therefore …000002–000004
+> absent` is forbidden, even though the dependency graph makes it likely. Each
+> migration is measured **on its own**, twice — ledger and catalogue — and the
+> two answers are reported side by side rather than reconciled.
+
+---
+
+## 35. What it measures
+
+All five migrations by exact filename, against **28 named objects** —
+tables, indexes, constraints, a column, functions and triggers — each checked
+individually:
+
+```
+000001  proposal_chains · proposal_versions · one_successor · one_root
+        chain_id_id_key · predecessor_same_chain · 2 functions · 2 triggers
+000002  manuscript_revision_offers · 2 functions · 2 triggers
+000003  proposal_chains_member_id_id_key
+000004  manuscript_revision_authorizations · uq_mra_one_unspent_permission
+        · function · trigger
+000005  member_work_id_key · ask_threads.proposal_chain_id · chain fkey
+        · insights · directions · function · 2 triggers
+```
+
+Rolled up per migration as **PRESENT · PARTIAL · ABSENT**, then crossed with the
+ledger into the derived state:
+
+```
+ledger applied  + catalogue PRESENT  → LANDED
+ledger absent   + catalogue ABSENT   → PENDING          ⭐ the pending set
+ledger applied  + catalogue ABSENT   → DRIFT (ledger claims it, database lacks it)
+ledger absent   + catalogue PRESENT  → DRIFT (present but unledgered — 2026-09-07)
+catalogue PARTIAL                    → PARTIAL, ruling owed   ⛔ never pending
+```
+
+## 36. Three defects the build found — two of them in my own design
+
+1. ⚠️⚠️ **The read-only membrane refused my own instrument.** The object list
+   was held in a `CREATE TEMP VIEW`, and the run died with
+   `ERROR: cannot execute CREATE VIEW in a read-only transaction`. ⭐ The very
+   property that makes this safe caught its author. The list now lives in an
+   inline CTE — **twice**, because a read-only transaction admits no temp object
+   and a psql variable cannot carry a quoted SQL literal list safely. ⛔ The
+   duplication is **guarded, not trusted**: the seal asserts the two copies are
+   byte-identical (28 objects), because copies that drifted would make the
+   detail and the rollup describe **different databases**.
+
+2. ⚠️⚠️ **A SQL-level gate is not a gate.** The ledger join was written as
+   `CASE WHEN <ledger readable> THEN (SELECT … FROM schema_migrations) …`, and
+   PostgreSQL **resolves the relation at parse time** — so on a database without
+   the ledger the statement died before the CASE was ever evaluated. The join
+   now sits behind a psql `\if`, which decides whether the statement is **sent
+   at all**. ⭐ The distinction matters beyond this file: *a conditional that
+   still names the missing object has not avoided it.*
+
+3. ⚠️ A placeholder collision while assembling the file replaced the word
+   `PRESENT` inside its own `'PRESENT'` string literals. Caught immediately by a
+   syntax error; rebuilt with non-colliding tokens. Recorded because it is the
+   same family as the C21 bans: **a textual substitution that cannot tell code
+   from the text describing it.**
+
+## 37. And two obligation defects in the seal itself
+
+- ⚠️ **A whole-output ban where a per-row assertion was meant** — banning
+  `PENDING` across the run fails whenever *another* migration is legitimately
+  pending. In a run where `000001` is PARTIAL, `000002–000005` are correctly
+  PENDING. Re-asserted **row-scoped**. *(The fourth time this session that a
+  ban has been written wider than the property it defends.)*
+- ⚠️ **An obligation that demanded a row which correctly does not exist.** The
+  PARTIAL case had no ledger, so §5 prints nothing and the last matching line is
+  §4's rollup. The derived state is now asserted in the case that *has* a
+  ledger.
+
+## 38. Falsification — 26 obligations, on constructed drift
+
+| case | built | asserted |
+|---|---|---|
+| nothing applied | bare database | every migration ABSENT, nothing PRESENT |
+| **PARTIAL** | `proposal_chains` + `proposal_versions` tables, no triggers/indexes | PARTIAL, and that row **never** PENDING |
+| **DRIFT ↓** | ledger says all five applied, database empty | *ledger claims it, database lacks it* — never LANDED |
+| **DRIFT ↑ / PARTIAL** | objects present, ledger silent | PARTIAL row keeps its own state; a genuinely absent+unledgered migration IS pending |
+| **PENDING** | empty modern ledger, empty database | PENDING — the state we are here to measure |
+| legacy ledger | `version`, no `filename` | LEGACY · **no pending set derived** |
+| absent ledger | no `schema_migrations` | NOT MEASURABLE · no pending set |
+| read-only | — | server refuses DDL; census declares its own state |
+
+⭐ **PARTIAL had to be constructed** — no migration produces it, which is exactly
+why waiting to meet it in production is not a plan.
+
+## 39. How to run it
+
+```bash
+git fetch origin claude/w4-2-schema-design
+git show origin/claude/w4-2-schema-design:scripts/witness/w5-landing-01-lane-census.sql \
+  > /tmp/w5-lane-census.sql
+ssh soullab@minisforum \
+  'docker exec -i maia-postgres psql -U soullab -d maia_consciousness -X' \
+  < /tmp/w5-lane-census.sql
+```
+
+⭐ **§1 first.** If it does not name the protected database, nothing below it is
+a protected reading.
+
+## 40. Standing
+
+```
+W4-2.2 protected preflight       ✅ RUN · 87c6dd1bb
+unique-lock strategy             ✅ Option A · dated
+
+W5-LANDING-01 instrument         ✅ sealed · 26/0
+W5-LANDING-01 protected RESULT   ⛔ NOT RUN
+exact pending predecessor set    ⏸ unknown until it runs
+
+W5-LANDING-02 landing package    ⛔ not authorized
+succession/W5 production landing ⛔ HELD
+W4 executable migration landing  ⛔ HELD
+producer registration            ⛔
+canonical service seam           ⛔
+route / Canvas                   ⛔
+
+production mutation              ⛔ NONE
+maia_focus_witness               FROZEN
+```
+
+---
+
+# W5-LANDING-01 — **RESULT**
+
+**Run** 2026-09-15, founder, from the Mac Studio via
+`ssh soullab@minisforum 'docker exec -i maia-postgres psql …'`
+**Instrument at** `f113f988d`
+
+```
+db          maia_consciousness
+role        soullab
+read_only   on
+```
+
+⭐ §1 names the protected database. **This is a protected reading.**
+
+---
+
+## 41. THE EXACT PENDING SET
+
+```
+20260914000001_proposal_succession.sql                  absent · ABSENT · PENDING
+20260914000002_manuscript_revision_offers.sql           absent · ABSENT · PENDING
+20260914000003_proposal_chains_member_identity.sql      absent · ABSENT · PENDING
+20260914000004_manuscript_revision_authorizations.sql   absent · ABSENT · PENDING
+20260914000005_editorial_ontology.sql                   absent · ABSENT · PENDING
+```
+
+**All five. No exceptions, no partial, no drift.**
+
+```
+DRIFT rows      0
+PARTIAL rows    0
+LANDED rows     0
+PENDING rows    5
+```
+
+## 42. ⭐ 33 independent measurements, unanimous
+
+Five ledger reads and **28 catalogue reads** — every table, index, constraint,
+column, function and trigger the five migrations create — and **all 28 report
+`f`**. Ledger and catalogue agree on every one of the five.
+
+⭐⭐ **The instrument was built to find drift and found none.** That is a
+result, not an absence of one: after 2026-09-07 — where the record said one
+thing and the database another — concordance across 33 measurements is
+positive evidence about the protected database's integrity, and it is worth
+stating rather than assuming.
+
+⭐ And the prohibition held its shape: `…000002`, `…000003` and `…000004` are
+reported ABSENT **because each was measured**, not because `…000001` was. The
+answer happens to match what the dependency graph predicted; ⛔ it is not
+derived from it.
+
+## 43. What this establishes, exactly
+
+> Production is one full architecture generation behind the substrate W4
+> assumes — and the gap is **the entire succession/editorial lane, intact and
+> unstarted**, not a partial application anyone must reconcile.
+
+```
+ask_threads / ask_turns          ✅ applied, live, 1 real thread (W4-2.2 §31)
+succession lane (000001–000004)  ⛔ wholly PENDING
+editorial ontology (000005)      ⛔ PENDING
+W4-S1 / W4-S2                    ⛔ behind all five
+```
+
+⭐ **The clean state is the best available news for a landing package**: there
+is no reconciliation problem, no half-applied migration to adjudicate, and no
+ledger/catalogue disagreement to rule on. The landing question is *sequencing
+and custody*, not repair.
+
+## 44. ⚠️ One limit of this census, named
+
+It measured **these five filenames**. It did **not** measure whether other
+migrations in `database/migrations/` are also unapplied on the protected
+database, nor whether any of them interleave with these five.
+
+⛔ That is not a gap this record fills by inference. If the protected ledger is
+behind on the five, it may be behind on others — and a landing package that
+applies five migrations into a database that is behind on **different** ones has
+a sequencing question nobody has asked yet. **Measured, not assumed, and owed to
+W5-LANDING-02.**
+
+## 45. What the result earns — and what it does not
+
+```
+protected read                   ✅ SPENT — this
+exact pending predecessor set    ✅ ESTABLISHED — all five
+unique-lock strategy             ✅ Option A (W4-2.2, dated)
+
+landing package design           ⛔ W5-LANDING-02 — NOT AUTHORIZED
+migration execution              ⛔
+canonical merge                  ⛔
+deployment                       ⛔
+data repair                      ⛔ — and none is needed
+```
+
+⛔ **No landing package is designed here.** The founder's sequence puts
+`W5-LANDING-02` behind an explicit act, and a clean census is not that act.
+
+## 46. Standing
+
+```
+W4-1.2 relational contract        ✅ CLOSED · a79163ff6
+W4-2   semantic schema design     ✅ CLOSED · f210df118
+W4-2.1 migration phasing          ✅ CLOSED · 46a44928e
+W4-2.2 protected preflight        ✅ RUN · 87c6dd1bb
+W4-2.2a instrument seal           ✅ CLOSED · 26/0
+W5-LANDING-01 census              ✅ RUN 2026-09-15 · all five PENDING · no drift
+
+W5-LANDING-02 landing package     ⛔ awaiting explicit founder act
+succession/W5 production landing  ⛔ HELD
+W4 executable migrations          ⛔ HELD
+producer registration             ⛔
+canonical service seam            ⛔
+route / Canvas                    ⛔
+
+production mutation               ⛔ NONE — both protected runs were READ ONLY
+maia_focus_witness                FROZEN
+```
+
+---
+
+# W5-LANDING-02 · GATE A — FULL PENDING-ORDER CENSUS · INSTRUMENT
+
+**Authorized by** founder act, 2026-09-15. ⛔ **READ ONLY.**
+**Instrument** `scripts/witness/w5-landing-02-gate-a.sh`
+**Seal** `scripts/witness/w5-landing-02-gate-a-seal.sh` — **18 passed · 0 failed**
+**Protected result** ⛔ **NOT RUN** — this session cannot reach production.
+
+> **The custody lesson, one level up from 2026-09-07.** A narrow git diff is not
+> a narrow database act if the migration runner sees a wider pending set. The
+> runner does not execute a conceptual lane — it executes every file in the
+> directory the ledger does not yet name, in filename order.
+
+---
+
+## 47. ⭐ Three Gate A findings established LOCALLY, before production is touched
+
+**47.1 — The five pinned blobs all match.** Verified by `git hash-object`
+against this working tree:
+
+```
+45b7578d…  20260914000001_proposal_succession.sql          ✅
+df200edf…  20260914000002_manuscript_revision_offers.sql   ✅
+44ae7019…  20260914000003_proposal_chains_member_identity  ✅
+beb02f67…  20260914000004_manuscript_revision_authorizations ✅
+7215e1bb…  20260914000005_editorial_ontology.sql           ✅
+```
+
+**47.2 ⚠️⚠️ — This branch carries SEVEN non-W5 migrations the canonical base
+does not**, and every one of them **sorts before** `20260914000001`:
+
+```
+20260910000001_pending_ask_claims.sql
+20260910000002_context_disclosure_boundary_developmental.sql
+20260910000003_pending_ask_consuming_act.sql
+20260910000005_pending_ask_invocation_receipt.sql
+20260912000001_focus_crossing_acts.sql
+20260912000002_focus_act_draft_provenance.sql
+20260913000001_editorial_decision_events.sql
+```
+
+⭐⭐ **This is exactly the danger the ruling named, and it is real rather than
+hypothetical.** A carrier built by merging *this branch* would put seven
+unrelated migrations ahead of `000001` in the runner's order. ⛔ The founder's
+Gate B design already excludes them — *base + five blobs only* — and that
+exclusion is now backed by a measurement rather than by intent.
+
+`origin/clean-main-no-secrets` carries **480** migrations; this branch, **489**.
+
+**47.3 ⭐ The five are self-contained.** Every external table they reference —
+`members`, `member_manuscripts`, `manuscript_working_drafts`,
+`manuscript_draft_sections`, `ask_turns` — comes from long-standing migrations,
+**none from the seven above**. ⚠️ Their presence on the protected database is
+**not yet verified** for any but `ask_turns` (W4-2.2 confirmed
+`20260901000001` applied). Owed to the protected Gate A run.
+
+## 48. What the instrument does
+
+```
+LOCAL    landing base's migration filenames (git ls-tree)
+         + the five, pins ASSERTED by hash, never "copied"
+REMOTE   the running image's /app/database/migrations   (ls)
+         the protected ledger        (SELECT inside BEGIN READ ONLY)
+```
+
+Then four sections that do not collapse into each other:
+
+- **§3 the CURRENT image's latent pending set** — what production would attempt
+  today with **no merge at all**. ⭐ That matters whether or not W5 ever lands.
+- **§4 ledgered but file absent** — the ledger naming migrations the image does
+  not carry.
+- **§5 the complete ordered pending set** of the proposed carrier, each row
+  tagged `W5 package` or `⚠️ OUTSIDE W5`, in the runner's order, ⛔ with no
+  hidden filtering.
+- **§6 the verdict** — PASS only when the pending set is **exactly the five**,
+  nothing outside and nothing missing.
+
+⭐ A pending migration outside the package **fails the gate and names the five
+dispositions** it must be classified under; ⛔ it is not treated as a permanent
+blocker, and it is not silently skipped.
+
+## 49. The seal, and its test seam
+
+Gate A's *gathering* needs the protected host; its **classifier** does not. The
+instrument declares a test seam — three input files — and in that mode performs
+**no protected read** and prints `SYNTHETIC` twice, so a seal run can never be
+mistaken for a protected reading.
+
+| case | asserted |
+|---|---|
+| exactly the five pending | PASSES, exit 0, all tagged `W5 package`, none OUTSIDE |
+| one stray pending | FAILS, names it, demands disposition, nonzero exit |
+| **earlier-sorting stray** | listed **before** `000001` — the runner's order, not the package's |
+| ledgered but file absent | drift named, gate fails |
+| latent pending in the current image | surfaced and named |
+| **one of the five already applied** | package is **stale** → fails |
+| synthetic mode | declares itself, and says it was not a protected reading |
+
+### Two defects in the seal, both mine
+
+- ⚠️ **A broken obligation** passed a *line number* as its expected string, so it
+  asserted nothing about ordering and failed on its own nonsense. The real
+  ordering check — comparing positions — was beside it and passed. Removed, with
+  the reason recorded.
+- ⚠️ **A malformed fixture.** To test *"one of the five already applied"* I put
+  the file in the **ledger but not the image** — and the instrument correctly
+  reported **drift** first, because a ledger row with no file really is drift.
+  ⭐ The instrument was right and my fixture was wrong; the fixture now supplies
+  both.
+
+## 50. How to run Gate A
+
+```bash
+bash scripts/witness/w5-landing-02-gate-a.sh
+```
+
+Default landing base `origin/clean-main-no-secrets`. ⛔ **Do not pass
+`claude/w4-2-schema-design`** — it carries later architecture and is not the
+landing carrier; comparing the ledger against it wholesale would describe a
+deploy nobody proposed.
+
+## 51. Standing
+
+```
+W5-LANDING-01 lane census         ✅ RUN · all five PENDING · no drift
+W5-LANDING-02 Gate A instrument   ✅ sealed · 18/0
+W5-LANDING-02 Gate A RESULT       ⛔ NOT RUN
+  seven non-W5 migrations on THIS branch sort before 000001   ⚠️ measured
+  the five are self-contained                                  ⭐ measured
+  base-table presence on production                            ⏸ unverified
+
+Gate B narrow carrier             ⛔ only if Gate A passes, and by founder act
+canonical merge                   ⛔
+protected execution               ⛔
+deployment                        ⛔
+W4 schema                         ⛔
+production mutation               ⛔ NONE
+maia_focus_witness                FROZEN
+```
+
+
+---
+
+## 52. ⭐ FOUNDER RULING — CLOSURE AT THE DESIGN BOUNDARY (custody axis)
 
 **Recorded 2026-09-14, after `f210df118` was committed**, by an authorized
 **record-only** act on a branch descending from `f210df118` unchanged.
@@ -499,17 +1585,43 @@ session and would otherwise have survived only in a transcript — which in this
 project is the same as not having been recorded at all. ⛔ No migration file, no
 fixture edit, no `lib/`, no `database/`, no merge, no execution.
 
-### 8.1 W4-2 schema design is ACCEPTED AND CLOSED AT THE DESIGN BOUNDARY
+### 52.1 W4-2 schema design is ACCEPTED AND CLOSED AT THE DESIGN BOUNDARY
 
 ⛔ **Acceptance of the design authorizes nothing else.** It does not authorize a
 migration act, a merge, protected execution, or any implementation act. §5's
 custody chain is unchanged and still controlling:
 *design accepted ≠ migration authorized ≠ merge ≠ protected execution.*
 
-### 8.2 ⭐ MIGRATION-BASE LOCK
+### 52.2 ⭐ MIGRATION-BASE LOCK
 
-> Any eventual migration act must begin from **`f210df118`**, or from a
-> descendant carrying this design record.
+**⚠️ NARROWED 2026-09-15**, by the founder act that opened the migration lane.
+The lock below is operative; what it replaced is recorded beneath it.
+
+> Any migration act must begin from **`911efbbb`**, or from a descendant
+> carrying **this custody ruling in full** — ⛔ not from bare `f210df118`.
+
+⭐ **`f210df118` is where the design authority originates; `911efbbb` is where
+the terms of its custody become durable.** A migration branched from bare
+`f210df118` would carry the design and **not** §8 — so it would arrive with the
+obligations of §52.4 stated (§6 already names them) but with **no** §52.3, and the
+W5-3 break would read as unfinished work to whoever met it first. ⛔ That is the
+whole reason this section exists, and the original wording did not exclude it.
+
+⛔ **Superseded wording, kept verbatim** — ⛔ never edited to read as if it had
+always said otherwise:
+
+> *Any eventual migration act must begin from `f210df118`, or from a descendant
+> carrying this design record.*
+
+⚠️ **The most likely future consumer has no first-read path to this lock.**
+`JARVIS-WRITERS-STUDIO-EDITORIAL-01` names *locus-scoped authored proposal
+succession* as its next engineering priority — the work this design serves — and
+a session picking it up would naturally branch from the editorial tip, which
+carries neither the design nor this ruling. ⭐ **Therefore the handoff is ONE
+custody act, never three chores**: narrow this section · branch from `911efbbb`
+or a descendant · carry the design and this ruling into the migration lane.
+⛔ Doing any one without the others relocates the ambiguity rather than closing
+it.
 
 ⛔ **`claude/ecstatic-sagan-ohakll` @ `1a555430` is explicitly disqualified as a
 migration base**, because `f210df118` is not in its lineage.
@@ -517,10 +1629,10 @@ migration base**, because `f210df118` is not in its lineage.
 ⭐ **This is a lineage ruling, not a judgment about the content of `1a555430`.**
 The disqualification would hold equally if that head were perfect: a migration
 authored from a base that does not carry its own design record has no stated
-origin for the obligations in §8.4, and the W5-3 break in §8.3 would arrive
+origin for the obligations in §52.4, and the W5-3 break in §52.3 would arrive
 unexplained.
 
-### 8.3 ⭐⭐ W5-3 FIXTURE CUSTODY — WHY THE BREAK IS LEFT STANDING
+### 52.3 ⭐⭐ W5-3 FIXTURE CUSTODY — WHY THE BREAK IS LEFT STANDING
 
 The W5-3 schema-witness fixture (§3b) remains **untouched** by the design act.
 
@@ -541,16 +1653,16 @@ Therefore:
 - ✅ **repair the fixture inside the same authorized migration act** that makes
   the old fixture invalid.
 
-### 8.4 MIGRATION OBLIGATIONS REMAIN OWED, NOT PERFORMED
+### 52.4 MIGRATION OBLIGATIONS REMAIN OWED, NOT PERFORMED
 
 - **`ask_threads` two-subject repair** — `NOT VALID`, then **`VALIDATE` as a
   separate statement**. ⛔ A constraint left `NOT VALID` is enforced for new rows
   and silently unenforced as an invariant over the old ones.
-- **W5-3 fixture repair** — after the witnessed break, per §8.3.
+- **W5-3 fixture repair** — after the witnessed break, per §52.3.
 - **`UNIQUE (proposal_chain_id, id)` on `proposal_chain_directions`** — the real
   gap of §2.2. ⛔ Until it exists, B4's composite FK has no target.
 
-### 8.5 Standing after this ruling
+### 52.5 Standing after this ruling
 
 ```
 W4-2 SCHEMA DESIGN     ✅ CLOSED · f210df118
@@ -560,4 +1672,133 @@ W5-3 fixture repair    ⏸ owed inside the migration act
 merge                  ⛔ not implied
 protected execution    ⛔ not implied
 production             UNTOUCHED
+```
+
+---
+
+## 53. ⭐⭐ RECONCILIATION — ONE CARRIER, TWO AUTHORITY AXES
+
+**Date** 2026-09-15 · **Authorized by** founder act
+**Reconciled from exactly two sources, and no others:**
+
+```
+custody lineage          911efbbb   (§52, as narrowed at a9858996)
+pinned design subject    2c152e54ba341613522e23ac1bb0f7a1e06ac0ec
+```
+
+### 53.1 What happened, stated plainly
+
+Two founder-authorized acts evolved this document in parallel on 2026-09-14/15.
+One continued **design** from `f210df118` and produced §8–§51. One ruled
+**custody** and produced the section now numbered §52. ⛔ Neither lane was wrong
+and ⛔ neither silently wins by being merged first.
+
+⭐⭐ **The two authority lines are compatible; the artifacts carrying them were
+not.** §8–§51 rule *how the migration is shaped*. §52 rules *what lineage may
+carry it*. Nothing in §10–§51 addresses the base lock; nothing in §52 addresses
+phasing.
+
+⚠️ **The collision was a `##` number, on a governance document.** Both lanes
+wrote a `§8`. The custody section is the one that moved, because the design body
+is the larger work and — decisively — **§1.1 cross-references "§8" meaning the
+lock correction**. Renumbering that one would have broken a live reference.
+
+⭐ **The design lane never saw §52**: it branched from bare `f210df118`, which
+carries the design and not the ruling. ⛔ That is not its error — it is the
+discoverability gap §52.2 names, materialising in the interval between the
+ruling and this reconciliation.
+
+### 53.2 ⛔ THE PINNED-SUBJECT RULE
+
+> `2c152e54ba341613522e23ac1bb0f7a1e06ac0ec` is the **only** parallel-lane
+> subject reconciled by this act.
+
+⛔ Any later commit on `claude/w4-2-schema-design` is **outside this
+authorization and acquires no authority automatically.** It requires its own
+adjudication. ⚠️ At the time of this act that branch was quiescent — tip
+unchanged across two readings ~20 minutes apart — but ⛔ **quiescent was not
+proved dormant**, and this pin does not depend on it being either.
+
+### 53.3 The governing implementation shape
+
+```
+W4-S1 · preparation            DROP NOT NULL · both CHECKs NOT VALID
+W4-S2 · validation + binding   VALIDATE · the four UNIQUE targets ·
+                               editorial_turn_bindings + trigger + indexes
+```
+
+⭐ **Two migration files, two ledger acts** — per §10, and ⛔ **not** two
+transactions inside one file. A single file cannot deliver two lock phases under
+both runners, and its decisive failure mode is the un-ledgered half-file: phase
+1 committed, the filename never recorded, a retry re-running phase 1 against its
+own result.
+
+⭐ **Independently confirmed against `run-sql-migrations.sh:79`** during the
+merge ruling, by running its exact invocation over a two-transaction file:
+
+```
+COMMIT                                    ← the file commits the RUNNER's transaction
+BEGIN … INSERT … COMMIT
+WARNING:  there is no transaction in progress
+```
+
+⛔ So a one-file carrier commits a transaction it did not open, and atomicity is
+lost. **The prototype migration built at `chore/w4-2-migration-20260915` has
+exactly this shape and is therefore superseded as authority.**
+
+### 53.4 ⛔ EXISTING ROWS ARE NOT KNOWN TO SATISFY THE CONSTRAINT
+
+Carried from §1.1 as an **earned requirement**, not an assumption:
+
+> ⛔ **"No backfill required" ≠ "existing rows satisfy the new constraint."**
+> Existing protected rows remain **unproved until the required preflight**.
+
+⭐ Therefore **W4-S2 may not execute `VALIDATE` expecting success.** A bounded
+preflight must establish that protected data satisfies the condition before
+W4-S2 is allowed to proceed. ⛔ And if `VALIDATE` refuses, the migration stops —
+it does not repair the row.
+
+⚠️ **The prototype migration still carries the superseded claim verbatim** in
+its part D (*"Every existing row is expected to satisfy it"*). ⛔ It is not
+corrected here — this act does not touch migration files — and the correction is
+owed by the re-cut.
+
+### 53.5 Evidence transfer
+
+⭐ **The semantics were witnessed; the carrier was wrong.** These survive the
+re-cut as inherited evidence, because each is a statement about behaviour and
+none depends on the one-file packaging:
+
+```
+✅ the W5-3 RED, witnessed before any repair
+✅ the W4-2 behavioural witness · 33 obligations
+✅ three wrong implementations killed, each on the obligations that name it
+✅ the A8 narrowing, falsified in both restricting shapes
+✅ the two W5 witness-integrity findings (b67eb15e)
+```
+
+⚠️ **Two do NOT transfer unexamined, and must be re-derived for two files:**
+
+1. **The rollback-ordering obligations** (`R0a`/`R0b`) assume **one** migration
+   file with one footer. Two files have two footers, and their order among
+   themselves — as well as against W5-3's — is a new question.
+2. **Placement of the W5-3 inverse obligation.** §13 places it *in W5-3*,
+   alongside the `anchor = NULL` adaptation, in the same act. The prototype
+   placed it in the W4-2 witness as `X3`. ⛔ §13 governs.
+
+### 53.6 Standing after reconciliation
+
+```
+design · phasing · lock · fixture treatment   §8–§51    ✅ GOVERNING
+custody · base lock · disclosure              §52       ✅ GOVERNING
+reconciliation · pin · evidence transfer      §53       ✅ THIS
+
+one-file prototype migration                  ⛔ SUPERSEDED AS AUTHORITY
+                                              ✅ retained as evidence
+W4-S1 / W4-S2 re-cut                          ⛔ NOT PERFORMED — next act
+preflight on protected data                   ⛔ OWED, before W4-S2
+
+canonical merge · deployment ·
+protected execution                           ⛔ NOT AUTHORIZED
+production                                    UNTOUCHED
 ```
