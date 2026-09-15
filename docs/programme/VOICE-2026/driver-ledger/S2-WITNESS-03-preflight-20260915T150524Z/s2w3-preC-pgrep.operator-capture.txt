@@ -1,0 +1,3 @@
+SOURCE=Remote Desktop Commander pre-Block-C execution output, PID 82431
+COMMAND=pgrep -fl "System Settings|Sound.appex" ; echo "[pgrep rc=$?]"
+OBSERVED=[pgrep rc=1]
