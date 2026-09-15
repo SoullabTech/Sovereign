@@ -26,7 +26,21 @@
 
 ---
 
-## 2. ⭐⭐ The reframe: the Library **is** the second brain. Everything AIN-named is empty.
+## 2. ⭐⭐ The reframe — stated precisely
+
+> **The production semantic corpus exists and is fully embedded in `library_*`.**
+> ⛔ **That is not the same as the second brain existing as an integrated intelligence system.**
+
+⚠️ **This supersedes an earlier heading in this record that read *"the Library IS the second
+brain."*** ⛔ **That was an overstatement, and of a specific governed kind.** A fully embedded
+vector corpus is a **semantic substrate**. `MAIA_SOUL_CORPUS.md` defines the second brain as
+something carrying standing, provenance and a relation to the member — none of which this
+data has. Under `MARKETING_CLAIM_DISCIPLINE.md`, *"we have a second brain and it is full"*
+would collapse **Live** and **Designed** into one sentence. ⭐ **The looser phrasing would
+have licensed exactly the claim that discipline exists to prevent**, so it is corrected here
+rather than softened.
+
+**What is true: everything named `ain_*` is empty; everything named `library_*` is full.**
 
 | Substrate | Rows | Embedded | Reading |
 |---|---|---|---|
@@ -35,7 +49,7 @@
 | `library_chunks` | **55,760** | ⭐ **55,760 (100%)** | ⭐⭐ **Fully embedded. This is the real second brain.** |
 | `library_sources` | **2,228** | 1,752 completed (79%) | ⚠️ 476 sources pending/failed/skipped — a named gap, not a defect claim. |
 
-> ⭐⭐ **Every object named `ain_*` is empty. Every object named `library_*` is full.**
+> ⭐⭐ **A populated, fully embedded vector library is not yet governed wisdom.**
 > The programme spent its census looking hardest at the corpus that turned out not to exist
 > in production, and the substrate carrying 55,760 embedded chunks was the one ACT 1B
 > already identified as the best-designed seam (R2) — on architecture alone, before any
@@ -113,5 +127,31 @@ completed) · `ain_knowledge_chunks` 0 · `corpus_chunks` 0 · ⛔ ELEMENTAL TAG
 (EXTERNAL AIN TREE) UNRUN · ⛔ NO WRITES · ⛔ NOTHING TAGGED · ⛔ NOTHING INGESTED ·
 ⛔ ACT 2A NOT OPENED.**
 
-> *We were counting the wrong shelves. The library was full the whole time, unlabelled, and
-> nobody could get to it.*
+---
+
+## 7. ⭐⭐ The finding of the day (founder)
+
+> **MAIA's knowledge problem is no longer *"where is the corpus?"* It is *"how does a fully
+> embedded Library acquire provenance, elemental participation, contradiction, relationship,
+> and a governed path into the member relationship?"***
+
+⭐ **That is a narrower and far more buildable problem than the one the programme opened
+with** — and one precision makes it narrower still. `library_sources` is **not** provenance-
+free: it already carries `author`, `type` (CHECK-constrained), SHA-256 `checksum`,
+`ingestion_status`, a consent gate, and `meta` documented for `{folder, tags[], tradition,
+lineage}`.
+
+⛔ **What it lacks is not provenance of form but two kinds of standing:**
+
+| Present | ⛔ Absent |
+|---|---|
+| author · type · checksum identity | **rights standing** (R4) — no field, anywhere |
+| tradition · lineage in `meta` | **epistemic standing** — inherited vs founder vs member vs emergent (R8) |
+| consent gate on the source | elemental participation **in data** (0 / 55,760) |
+| ingestion status | concepts · relationships · **counterexample** (R13) |
+
+⭐ **ACT 2A therefore extends a real object rather than inventing one**, which is what R2
+anticipated on architecture alone and Part B has now confirmed on data.
+
+> *We were counting the wrong shelves. The library was full the whole time — unlabelled,
+> ungoverned, and unreachable.*
