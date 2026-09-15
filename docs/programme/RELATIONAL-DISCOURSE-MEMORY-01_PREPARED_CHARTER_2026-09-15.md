@@ -116,6 +116,102 @@ cannot prove.* ⭐ *A relation is not available merely because it is nameable.*
 
 ---
 
+## 3A · THE SHARPENED HYPOTHESIS, THE SIX LAYERS, AND THE CENSUS FORMAT
+
+> ⭐⭐ **MAIA may not primarily have a memory-storage problem. It may have a
+> DISCOURSE-ORGANIZATION problem: remembered objects exist, but too many of the relations that
+> make them intelligible, accessible and associative have to be RECONSTRUCTED at retrieval
+> time.**
+>
+> ⭐ Shorter: **MAIA remembers things better than it remembers how things relate.**
+
+⭐ Three lines converge — **linguistics** (meaning across discourse depends on typed relations) ·
+**AIN** (governance repeatedly required typed relational distinctions) · **current AI memory**
+(multi-relational / event graphs outperforming flat retrieval). ⛔ Convergence justifies
+research; ⛔ it is not itself a finding.
+
+**Three quantities the lane must never conflate:**
+
+```text
+semantic similarity  ≠  conversational accessibility  ≠  antecedent identity
+```
+
+**Six candidate layers** — ⛔ *not claimed final*: **Referential** (`REFERS_TO · COREFERS_WITH ·
+BRIDGES_TO · POINTS_TO_EVENT`) · **Attentional** (`SALIENT · CURRENT_TOPIC · FOREGROUNDED ·
+ACCESSIBLE · COMPETING_REFERENT`) · **Discourse/coherence** (`ELABORATES · EXPLAINS · CAUSES ·
+CONTRASTS · FOLLOWS_FROM · CONDITION_FOR`) · **Temporal/episodic** (`BEFORE · AFTER ·
+SAME_EPISODE · RECURS_IN · CONTINUES · SUPERSEDES`) · **Epistemic/relational** (`STATED_BY ·
+INFERRED_BY · JOINTLY_ESTABLISHED · CORRECTED_BY · WITHDRAWN_BY · AUTHORIZED_BY`) ·
+**Developmental** (`THEME_RECURS · INTERPRETATION_DEVELOPS · RUPTURE · REPAIR · DIFFERENTIATES ·
+INTEGRATES`) — ⛔ the last layer **must be earned experimentally**, never assumed.
+
+**Prior-art order:** Centering → Accessibility/Givenness → anaphora/coreference → discourse
+deixis → bridging → DRT/SDRT → discourse coherence → common ground → conversational repair →
+current graph-memory systems.
+
+**Census row format:**
+
+```text
+linguistic relation → what it means → evidence it matters → existing AIN carrier
+                    → explicit / implicit / absent → failure case → research standing
+```
+
+⛔ No schema · no graph implementation · no new memory engine.
+
+---
+
+## 3B · ⚠️ FOUR GUARDS THE CENSUS NEEDS BEFORE IT OPENS
+
+### 3B.1 ⭐⭐ THE CLASSIFICATION AXIS DOES NOT APPLY TO THE ATTENTIONAL LAYER
+
+⛔ **`explicit / implicit / absent` is the wrong axis for Attentional relations**, because
+attentional state is **about the present encounter** — `SALIENT`, `FOREGROUNDED`, `ACCESSIBLE`
+and `COMPETING_REFERENT` **should** be computed at retrieval time. ⭐ Persisting them would store
+a **stale confident claim** about an encounter that has ended.
+
+⚠️ The hypothesis says *"too many relations have to be reconstructed at retrieval time"* — ⭐ but
+**some must be**, and ⛔ *reconstructed* is not a synonym for *missing*. **The census therefore
+needs a fourth category:**
+
+```text
+explicit · implicit · absent · ⭐ CORRECTLY RECONSTRUCTED — persisting it would be a DEFECT
+```
+
+⭐ Without it the census will score the whole Attentional layer *absent* and recommend
+persisting exactly what should never be persisted. ⚠️ This also reinstates the distinction the
+superseded charter drew and the six-layer list collapses: **durable typed relations** versus
+**dynamic configuration**.
+
+### 3B.2 ⭐⭐ `JOINTLY_ESTABLISHED` MUST NOT BE A PRIMITIVE
+
+⛔ If `JOINTLY_ESTABLISHED` can **stand in place of** `STATED_BY` / `INFERRED_BY`, it becomes a
+mechanism by which **MAIA's own inference acquires member authority** — the exact failure class
+`N1`'s origin law exists to prevent, and *derived stays visibly derived* forbids.
+
+⭐ **Admissible only as a COMPOSITE that PRESERVES both origins**, never as a primitive that
+supersedes them. ⛔ *Joint establishment must never be able to erase which side originated what.*
+
+### 3B.3 ⭐ `WITHDRAWN_BY` IS ADMISSIBLE — and the earlier refusal was narrower than it looked
+
+⭐ `WITHDRAWN_BY` records a **positive act by a named party** and is already ratified law —
+**FR-15**, *withdrawal is a tombstone*. ⛔ What was refused (`IS_WITHHELD_FROM`, §3.3) is a
+**stored confident NEGATIVE**. ⭐ The six-layer list **correctly avoided it**; recording the
+distinction so the census does not over-apply the refusal and drop a lawful edge.
+
+### 3B.4 ⚠️ THE STRONGEST CLAIM RESTS ON THE LEAST VERIFIABLE SOURCE
+
+⛔ The *"2026 discourse synthesis"* arguing for multilayer separation is **the single citation
+carrying the most weight here, and the one I can least corroborate** — venue, authorship and
+claims all unchecked.
+
+⭐ **This is not a reason to reject the claim**: that discourse has multiple distinct relational
+layers is **independently supported by PDTB, RST and SDRT being different frameworks with
+different relation inventories**, all corroborable. ⛔ But the census must rest on **those**, and
+must verify the 2026 synthesis against its venue **or drop it** — ⛔ the premise may not be
+carried by an unverified source, however well it states the case.
+
+---
+
 ## 4 · STANDING
 
 ```text
@@ -125,6 +221,11 @@ parent/child with ANT-IDENT-01 ... ⚠️ UNDECIDED — settle BEFORE either ope
 citations ........................ ⚠️ canonical corroborable · recent UNVERIFIED (§3.2)
 grammar .......................... ⛔ NOT OPEN DESIGN SPACE (§3.3) · IS_WITHHELD_FROM REFUSED
 bridging reframe ................. ⭐ ORIENTATION ONLY — ⛔ not a solution
+six candidate layers ............. ⭐ RECORDED (§3A) · ⛔ not final · developmental layer EARNED
+census fourth category ........... ⭐ REQUIRED (§3B.1) — correctly reconstructed ≠ missing
+JOINTLY_ESTABLISHED .............. ⛔ COMPOSITE ONLY · never a primitive (§3B.2)
+WITHDRAWN_BY ..................... ✅ ADMISSIBLE — FR-15 tombstone (§3B.3)
+2026 synthesis ................... ⚠️ LEAST VERIFIABLE · MOST LOAD-BEARING (§3B.4)
 design · schema · graph .......... ⛔ NOT AUTHORIZED
 production ....................... e57ca1baa · UNTOUCHED
 ```
