@@ -90,6 +90,32 @@ entries are **all unauthorized** under ACT 2.
 **ACT 2 instrument delivered:** `MAIA-RE-01_ACT2_RE-009_ADJUDICATION_INSTRUMENT_2026-09-15.md`
 — collision **NOT resolved**; six-act lattice mapped across three sources; ruling pending.
 | 3 | Falsifier authoring (adversarial benchmark) | ≥1 doctrine CANONICAL |
+
+⚠️ **Phase 3 RE-SPECIFIED IN PLACE, 2026-09-15, by founder act.** The row above is kept
+verbatim; it is superseded, not corrected. Phase 3 is **not** benchmark authoring and is
+**⛔ not Inkling**. Phase 3 is the **reconciliation / conformity act**: propagate the RE-009
+ruling through the three canonical texts, and census the current runtime against the six
+cells — ⛔ **repairing nothing**. *Only after the doctrine and the substrate agree on what
+constitutes a violation may the benchmark corpus begin.*
+
+⭐⭐ **And the evaluation architecture is amended by the same ruling.** A response-only
+benchmark is **insufficient**. Any future benchmark needs two witness surfaces:
+
+```
+EXTERNAL WITNESS    What did MAIA say or do?
+SUBSTRATE WITNESS   What did MAIA form, persist, retrieve, promote,
+                    or allow to influence subsequent behavior?
+```
+
+*An adapter could produce exquisitely humble language while silently building an
+increasingly confident portrait of the person. Under RE-009 that is a catastrophic FAIL
+that every conversational benchmark would mark excellent.*
+
+⭐ **Two-axis scoring stands alongside it** (founder, carried from ACT 2 §8):
+**RELATIONAL DISCIPLINE** — does it preserve standing, sovereignty, corrigibility? ·
+**RELATIONAL CAPACITY** — does it still perceive, discriminate, challenge, contribute?
+*Humility without perception is timidity; perception without epistemic discipline becomes
+possession.*
 | 4 | Baseline run: canonical MAIA path vs untouched Inkling-Small | benchmark exists, blinded |
 | 5 | Failure taxonomy → training candidate set | baselines scored |
 | 6 | LoRA / adapter experiment | candidate set adjudicated |

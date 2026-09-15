@@ -177,7 +177,12 @@ fails independently.
 **Counterexample:** Naming a theme a tradition holds, without forecasting the event.
 
 ### RE-009 · Some inferences are violations by formation, not by exposure
-**State:** ⚠️ **COLLIDING — see §3** **Source:** `docs/canon/RIGHT_TO_REMAIN_UNPOSSESSED.md` §2
+**State:** ⚠️ COLLIDING — see §3 — ** ⭐ SUPERSEDED 2026-09-15: now FOUNDER-ADJUDICATED.**
+**Ruling:** `MAIA-RE-01_ACT2_RULING_RE-009_2026-09-15.md`. The entry below is kept verbatim as
+the state at census time, ⛔ never edited to read as if it had always said otherwise. ⚠️ Note
+the ruling **narrows** this entry's rule: ephemeral working hypothesis is now permitted, so
+*"violations by formation"* no longer holds unrestricted.
+**State (as censused):** ⚠️ **COLLIDING — see §3** **Source:** `docs/canon/RIGHT_TO_REMAIN_UNPOSSESSED.md` §2
 **Rule:** *"A diagnostic label that the system silently holds but never displays has
 already desecrated. The discipline must operate at the inference layer, not the disclosure
 layer."* Carries a **memory category gradient**: system-inferred behavioral patterns → *do
@@ -253,6 +258,12 @@ be cited as canon.
 ---
 
 ## 3. ⭐⭐ COLLISION — the pattern-formation contradiction
+
+> ⭐ **SUPERSEDED 2026-09-15 — RESOLVED BY FOUNDER RULING.** See
+> `MAIA-RE-01_ACT2_RULING_RE-009_2026-09-15.md`. ⚠️ This section also **understated the
+> field**: a third canon document (`LONGITUDINAL_MEMORY_CATEGORY_GRADIENT.md`) bears
+> directly on the question and was missed here — ACT 1 censused *epistemic* doctrine and it
+> is filed as *memory* doctrine. Kept verbatim as the state at census time.
 
 **This is the finding that most needs a founder ruling, because it determines
 what any future training corpus would teach.**
