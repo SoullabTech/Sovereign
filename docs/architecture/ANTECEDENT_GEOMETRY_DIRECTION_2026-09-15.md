@@ -257,6 +257,88 @@ scoping fact; ⛔ discovered late it is a retraction.
 
 ---
 
+## 6B · THE TWO-PLACE ABSENCE, AND ITS ACTUAL PROVENANCE
+
+### 6B.1 The recurring pattern
+
+> ⭐⭐ **AIN has representations of the NODES, but not yet representations of the CONFIGURATION
+> between the nodes.**
+
+**Continuity** — a proxy standing where a relation should be:
+
+```text
+   turn A     turn B                turn A ──refers-to──> turn B
+      \       /            vs.
+       shared words                 ⭐ the relation, represented
+```
+
+**Elemental** — modes selectable, relations absent:
+
+```text
+Fire   Water   Air   Earth   Aether        ⭐ exist as selectable modes
+                                           ⛔ nothing represents:
+Fire ──tension── Water · Air ──mediates── Fire/Water
+Earth ──grounds── Fire · Aether ──integrates── configuration
+```
+
+⛔ The second structure is **fundamentally different from asking which agent wins routing.**
+
+| astrology | AIN analogue |
+| --- | --- |
+| planet / body → **node** | voice / state → **node** |
+| aspect → **typed relation** | relation → **typed connection** |
+| chart → **configuration** | field → **configuration** |
+| transit → **changing configuration through time** | development → **trajectory through configurations** |
+
+**The sentence carried forward:**
+
+> ⭐⭐ **AIN has learned to preserve differentiated nodes; the open question is whether relational
+> intelligence requires preserving the typed geometry among them.**
+
+### 6B.2 ⚠️ PROVENANCE, CORRECTED — the two findings do NOT share a provenance
+
+⚠️ **A claim worth getting exactly right, because it is the claim that keeps this scientific
+rather than ornamental:** *"we found the missing relational structure twice in code,
+independently, and then noticed that old symbolic grammars..."* ⛔ **That is true of the first
+finding and not of the second.** The commit record is the audit trail:
+
+```text
+continuity absence   measured 21:29–22:03, ACT 1 census → P1 ruling
+                     ⭐ BEFORE any analogy was in play — genuinely independent
+geometry direction   opened 22:12 — the analogy enters here
+elemental absence    found 22:18 — the WisdomRouter singular-agent check was run
+                     ⚠️ BECAUSE the analogy suggested where to look
+```
+
+⭐ **This does not weaken the finding. It is the analogy performing exactly the role assigned to
+it** — *an ancient relational hypothesis generator for questions modern representational
+geometry can actually test* — with **measurement deciding**, and the code confirming rather than
+the metaphor asserting.
+
+⛔ **But the two are not the same provenance, and the record must not blur them.** *A relation
+discovered after the fact in a corpus that happens to contain it* is this lane's characteristic
+error; ⛔ it applies to the lane's narrative about itself no less than to a bridge.
+
+⭐ **The honest form, and the one to carry into any paper:**
+
+> **The continuity absence was measured before any analogy was in play. The elemental absence
+> was found because the analogy suggested where to look, and then confirmed in code. One is
+> independent evidence; the other is a worked instance of the analogy generating a hypothesis
+> that measurement then sustained.** ⭐ Both are worth having. ⛔ They are not the same kind of
+> evidence.
+
+### 6B.3 ⛔⛔ THE HARD BOUNDARY
+
+> ⛔ **Do not build "elemental aspects" into AIN because the analogy is elegant.** First
+> establish whether relations among modes are **behaviourally real · representationally
+> distinguishable · causally consequential.**
+
+⭐ Those three are a **sequence, not a list**, and the third is already specified above: *causally
+consequential* is the **§4.1 disruption test** — ⛔ decodable is not used. ⭐ **Elegance is not
+one of the three.**
+
+---
+
 ## 7 · CLASSIFICATION AND BOUNDARY
 
 ⭐ If opened, this belongs in the **R&D lane's** epistemic frame (epistemic kind × product
@@ -277,6 +359,9 @@ nodes-without-geometry finding .... ⭐ MEASURED in two layers (§6.1) · ⛔ no
 preliminary note .................. ⭐ PRESERVED CLEAN · docs/research/relational-geometry/
 two relation types ................ ⚠️ ALREADY GOVERNED LAW (§6A.2) · ⛔ not open design space
 access constraint in the note ..... ⚠️ OWED before it becomes a paper section (§6A.3)
+two-place absence ................. ⭐ RECORDED (§6B.1) · nodes yes, configuration no
+provenance of the two findings .... ⚠️ NOT THE SAME — corrected in §6B.2
+hard boundary ..................... ⛔ THREE CRITERIA BEFORE ANY BUILD (§6B.3)
 CONTINUITY-REMAINDER-01 ........... ⛔ UNCHANGED — repair still not authorized
 FIRST-ASK-OPAQUE-MEMORY-01 ........ ⛔ UNOPENED · PRESERVED
 production ........................ e57ca1baa · UNTOUCHED
