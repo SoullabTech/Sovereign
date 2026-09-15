@@ -69,7 +69,7 @@ async function main() {
     console.log('  ⛔ REFUSED — this witness database already holds editorial state.');
     console.log('     Editorial records are constitutionally undeletable, so it cannot');
     console.log('     be cleaned in place. Rebuild it:');
-    console.log('       bash scripts/witness/er-r1-rebuild-db.sh');
+    console.log('       bash scripts/witness/er-runtime-rebuild-db.sh');
     await closePool();
     process.exit(2);
   }

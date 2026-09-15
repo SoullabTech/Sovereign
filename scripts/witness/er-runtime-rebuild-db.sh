@@ -6,7 +6,7 @@
 # LOCAL CLUSTER, never a DSN — it cannot reach the protected host.
 set -eu
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"; cd "$ROOT"
-PGH="${PGH:-/tmp}"; PGP="${PGP:-5603}"; PGU="${PGU:-postgres}"; PGDB="${PGDB:-er_r1_witness}"
+PGH="${PGH:-/tmp}"; PGP="${PGP:-5605}"; PGU="${PGU:-postgres}"; PGDB="${PGDB:-er_runtime_witness}"
 case "$PGDB" in *witness*) ;; *) echo "REFUSED · '$PGDB' is not a witness database."; exit 2;; esac
 psql -h "$PGH" -p "$PGP" -U "$PGU" -d postgres -X -q \
   -c "DROP DATABASE IF EXISTS $PGDB;" -c "CREATE DATABASE $PGDB;" >/dev/null 2>&1

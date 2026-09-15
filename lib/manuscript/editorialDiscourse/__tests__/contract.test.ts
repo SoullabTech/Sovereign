@@ -26,7 +26,7 @@ import {
   type EditorialInvocation, type TurnRecord, type VersionRecord,
   type InsightRecord, type DirectionRecord, type TurnBinding,
 } from '../contract';
-import { PRODUCER_IDS } from '@/lib/maia/canonical-turn/producerRegistry';
+import { PRODUCER_IDS, PRODUCER_REGISTRY } from '@/lib/maia/canonical-turn/producerRegistry';
 
 const strip = (s: string) =>
   s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
@@ -294,10 +294,49 @@ describe('C1 · editorial participation partitions by authorship', () => {
     expect(CONTRACT).not.toMatch(/retrieved\.writer_work_context/);
   });
 
-  it('⛔ [SOURCE] declared, NOT registered — the producer registry is untouched', () => {
-    expect(PRODUCER_IDS.length).toBeGreaterThan(30);
+  /* ⭐⭐ SUPERSEDED IN PLACE, NEVER SILENTLY DELETED.
+   *
+   * Until 2026-09-15 this position asserted the OPPOSITE:
+   *
+   *     it('⛔ [SOURCE] declared, NOT registered — the producer registry is untouched')
+   *       expect(PRODUCER_IDS).not.toContain(id)   // for all four
+   *
+   * ⭐ That obligation did its job. It guarded the window in which the contract
+   * existed and no act had yet registered its producers — *a contract that
+   * quietly registered its own producers would be an implementation wearing a
+   * contract's name.* ER-R2 is that act, so the guard is replaced by the
+   * obligation it was protecting the way to.
+   *
+   * ⛔ The replacement is STRICTLY STRONGER: it pins the frozen axes, the room,
+   * and the requirement flags — an inversion alone would have admitted the four
+   * ids registered with any axes at all. */
+  it('⭐⭐ ER-R2 · the exact four are registered, with the frozen axes', () => {
+    const FROZEN = {
+      'retrieved.writer_editorial_locus':  ['member', 'retrieved', 'situate'],
+      'member.writer_editorial_history':   ['member', 'retrieved', 'situate'],
+      'system.writer_editorial_history':   ['system', 'retrieved', 'situate'],
+      'member.writer_editorial_act':       ['member', 'declared',  'situate'],
+    } as const;
+    /* the declared set and the registered set are the SAME four */
+    expect([...EDITORIAL_PRODUCER_IDS].sort()).toEqual(Object.keys(FROZEN).sort());
+    for (const [id, axes] of Object.entries(FROZEN)) {
+      expect(PRODUCER_IDS as readonly string[]).toContain(id);
+      const spec = PRODUCER_REGISTRY[id as keyof typeof PRODUCER_REGISTRY];
+      expect([spec.authoredBy, spec.participationClass, spec.authority]).toEqual(axes);
+      /* ⭐ the contract's own declaration and the registry must not diverge */
+      const declared = EDITORIAL_PRODUCERS[id as keyof typeof EDITORIAL_PRODUCERS];
+      expect([declared.authoredBy, declared.participationClass, declared.authority]).toEqual(axes);
+    }
+  });
+
+  it('⛔ ER-R2 · none of the four is registered outside writers_studio', () => {
     for (const id of EDITORIAL_PRODUCER_IDS) {
-      expect(PRODUCER_IDS as readonly string[]).not.toContain(id);
+      const spec = PRODUCER_REGISTRY[id as keyof typeof PRODUCER_REGISTRY];
+      expect(spec.rooms).toEqual(['writers_studio']);
+      expect(spec.mandatory).toBe(false);
+      expect(spec.scope).toBe('route');
+      expect(spec.requires.identity).toBe('verified');
+      expect(spec.requires.notSanctuary).toBe(false);
     }
   });
 });
