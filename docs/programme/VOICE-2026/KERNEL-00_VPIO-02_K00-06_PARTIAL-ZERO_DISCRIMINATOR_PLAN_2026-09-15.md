@@ -2929,3 +2929,52 @@ Founder's classification, adopted here: *an execution-transport STOP, not a runn
 Under either shape: no fresh build (§18.26 item 4 unchanged), runner SHA must still read `3b6360f7…`, before-set exactly the two containers, `phase-a` then `vpio-01` once each, after-read 0; the `K00-0506-S2-02` condition stays unmet until a committed and pushed PASS.
 
 **Standing after §18.27:** DISPOSAL-01 STOP · spent · DISPOSAL-02 STOP · spent · C-D27 accepted · **DISPOSAL-03 STOPPED BY TRANSPORT in Stage −1′** (four read-only lines founder-attested, no hash, no bundle, no device act, invocations 0) · **spent vs not-executed RETURNED** · runner identity = §18.25 custody, not requalified · `K00-0506-S2-02` condition UNMET · `b198e2e37` unchanged · 69 last read 15:49:59Z · C-D26 OPEN · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.28 — FOUNDER RULING on §18.27 (2026-09-15): `S2-FOREIGN-HARNESS-DISPOSAL-03` = NOT EXECUTED · AUTHORITY INTACT · §18.26.2 pin unchanged · restarts from Stage −1′ line one on a Mac-side transport
+
+### §18.28.1 Ruling as captured (founder; standing block verbatim)
+
+Choice **(ii)**: *"Nothing inside the governed act actually happened: no hash completed, no custody line completed, no process read, no termination, no evidence carrier. The remote-command channel refused the operation before the act crossed its first substantive evidentiary boundary. Calling that a spent act would make a transport layer capable of consuming constitutional authority merely by refusing to carry it."*
+
+1. **Classification:** DISPOSAL-03 = **NOT EXECUTED · authority INTACT.** The transport refused the pinned hash before the first substantive requalification result; no governed evidence carrier, no device act, no termination; no runner identity requalified or contradicted.
+2. **Why not a spent STOP:** *transport refusing to carry an authorized operation* ≠ *the authorized operation executing and returning STOP*; only the latter spends the authority. The four founder-attested observations (worktree present · HEAD exact · driver source unmodified · xctestrun present) **do not become the starting state of the resumed act** — no custody bundle exists, so DISPOSAL-03 begins again from Stage −1′ line one; nothing from the refused attempt is inherited as evidence.
+3. **Precedent:** §18.6 (an attempt blocked before the hand boundary did not substitute for the governed act that later ran under the authority) · §18.10 (WITNESS-02 lapsed without becoming an executed STOP) · §18.16.5 (a platform refusal affecting evidence transport distinguished from the act itself). Principle: *a carrier may fail without converting an unperformed governed operation into a performed one; authority is spent by the act or by a ruled STOP inside the act, not by a transport refusing to carry the act.*
+4. **DISPOSAL-03 remains authorized.** §18.26.2 unchanged · no `03 → 04` rename · no stamp inherited · fresh stamp · Stage −1′ from the beginning, every check repeated (carrier worktree present · HEAD = `b198e2e37…` · driver source unmodified · xctestrun present · xctestrun SHA = `3b6360f7…` · corrected four-file custody line succeeds · exactly four custody lines); only after all of those may Stage 0 touch the phone.
+5. **Transport boundary:** the remote-command channel that refused the `shasum`/evidence operations is **INELIGIBLE** for the resumed act; do not test it again inside this authority; execute through a Mac-side transport already capable of carrying the pinned shell operations without selectively refusing them — the Mac Studio terminal directly is an appropriate carrier. A transport choice only; the pinned act is unaltered.
+6. **Disposal boundary unchanged:** before-set exactly `0B07D423-97E7-4196-BC1C-C69C96F994BE` + `6A2E406B-D1B8-43A4-92F3-29D50333AF19`, no other harness process → `phase-a` then `vpio-01` `testTerminateOnly` once each → after-read `VoiceKernelHarness processes AFTER: 0` → `DISPOSAL_ACCEPTANCE PASS`; anything else = a genuine governed STOP that spends DISPOSAL-03.
+7. **Population condition unchanged:** `K00-0506-S2-02` conditionally authorized, unopened until DISPOSAL-03 PASS + evidence committed + pushed; then the `s2pop2` population act begins separately.
+
+```text
+DISPOSAL-01             STOP · spent
+DISPOSAL-02             STOP · spent
+C-D27                   ACCEPTED
+
+DISPOSAL-03             NOT EXECUTED
+                        authority INTACT
+                        pin unchanged
+                        fresh stamp required
+                        Stage −1′ restarts from line one
+
+remote refusing channel INELIGIBLE for resumed act
+fresh build             NOT AUTHORIZED
+runner source           b198e2e37
+runner SHA              must read 3b6360f7…
+
+K00-0506-S2-02          CONDITIONALLY AUTHORIZED
+                        still unopened
+
+b198e2e37               unchanged
+C-D26                   OPEN · non-blocking
+S3                      CLOSED
+KERNEL-00 acceptance    CLOSED
+```
+
+Governing distinction (founder): *"A refusal by the transport is not a refusal by the governed instrument. Do not spend authority on an operation the instrument never performed."* Operational rule made explicit: *do not send DISPOSAL-03 back through the remote channel that just proved unable to carry the pin.*
+
+### §18.28.2 Execution note (no new pin)
+
+The act of record is **§18.26.2 verbatim** — every Stage −1′ line, Stages 0–3, the seal list, the branch/dir names `S2-FOREIGN-HARNESS-DISPOSAL-03-<stamp>` and `feature/k00-s2-foreign-harness-disposal-03-<stamp>`, and the `RETURN.txt` fields — run once from the top with the stamp the block itself mints. The only thing this ruling adds is where it runs: at the Mac Studio, in a shell that has already carried `shasum -a 256` and `mkdir -p` on this lane, never through the remote-command channel of §18.27. §18.27's four attested lines are not a checkpoint; if any of them reads differently on the resumed run, the resumed run's reading governs and its STOP line applies. Return → §18.29 (verified here: seal · `requal.txt` lines · `REQUALIFICATION PASS` · xctestrun hash = `3b6360f7…` · four custody lines · before-set = the two containers · both logs `Executed 1 test, 0 failures` · after = 0).
+
+**Standing after §18.28:** DISPOSAL-01 STOP · spent · DISPOSAL-02 STOP · spent · C-D27 ACCEPTED · **DISPOSAL-03 NOT EXECUTED · authority INTACT · §18.26.2 pin unchanged · fresh stamp · Stage −1′ from line one · Mac-side transport only** · fresh build NOT AUTHORIZED · runner SHA `3b6360f7…` · `K00-0506-S2-02` CONDITIONALLY AUTHORIZED, unopened · `b198e2e37` unchanged · 69 last read 15:49:59Z · C-D26 OPEN · S3 CLOSED · KERNEL-00 acceptance CLOSED.
