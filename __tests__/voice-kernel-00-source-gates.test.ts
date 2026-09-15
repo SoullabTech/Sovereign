@@ -1074,6 +1074,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   const PLAYBACK_PROBE = 'scripts/witness/k00-playback-probe.sh';                    // S2 design (founder ruling 2026-09-15): read-only Mac playback-capability census
   const S2_FIXTURE = 'scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav';          // S2 stimulus (founder ruling 2026-09-15): 997 Hz · 180 s · PCM16 · 48 kHz, SHA-pinned
   const S2_FIXTURE_SIDECAR = S2_FIXTURE + '.sha256';
+  const VOLUME_DRIFT_CENSUS = 'scripts/witness/k00-volume-drift-census.sh';                // S2-VOLUME-DRIFT-01 (founder ruling 2026-09-15): read-only Mac census, never sets volume
   const INSTRUMENT_VPIO02B = '08483cfe4f6c3e98198805337ced99bae92ce911';             // the F-W1 instrument; the entry classifier + reinstall stay at its bytes
   const INSTRUMENT_K0506 = '8b111709b6e5010b4b6ee7281d257141945276ff';               // the K00-05/06 Option C instrument (DRIVER-COMPILE-01 GREEN; first witness ten infra rows); C-D20 may move only the driver test beyond it
   it('the organism is byte-identical to ac12dedf4: every tracked file under ios/VoiceKernel and ios/VoiceKernelHarness equals its historical bytes; no file added or removed', () => {
@@ -1086,7 +1087,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   it('the instrument moved only in the four authorized files relative to de3efd3fb (scripts/witness · ios/VoiceKernelDriver); exactly one file added under those roots — the K00-05/06 output reader (founder ruling 2026-09-14, Option C); nothing removed', () => {
     const roots = ['scripts/witness', 'ios/VoiceKernelDriver'];
     const listed = histList(INSTRUMENT_BASE, roots).sort();
-    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER, PLAYBACK_PROBE, S2_FIXTURE, S2_FIXTURE_SIDECAR].sort());   // S2 (founder ruling 2026-09-15): the tracked stimulus + its sidecar
+    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER, PLAYBACK_PROBE, S2_FIXTURE, S2_FIXTURE_SIDECAR, VOLUME_DRIFT_CENSUS].sort());   // S2 (founder ruling 2026-09-15): the tracked stimulus + its sidecar
     const moved = listed.filter((p) => !histRaw(INSTRUMENT_BASE, p).equals(readFileSync(join(process.cwd(), p))));
     expect(moved.sort()).toEqual(INSTRUMENT);
   });
@@ -1517,5 +1518,27 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
     now.forEach((l, i) => { const n = wasSet.get(l) ?? 0; if (n > 0) { wasSet.set(l, n - 1); return; } if (allowed.has(i)) return; if (/^(STIMULUS=""|S2_[A-Z0-9_]+=")/.test(l) || l.includes('$STIMULUS') || l.includes('--stimulus') || /^\s*(fi|\}|esac|done)?\s*$/.test(l)) return; added.push(l); });   // bare block closers carry no executable content
     expect(added).toEqual([]);
     expect(now.filter((l) => l.includes('$STIMULUS')).length).toBeGreaterThanOrEqual(6);
+  });
+});
+
+// ---- S2-VOLUME-DRIFT-01 (founder ruling 2026-09-15): read-only census of the 69 → 31 output-volume drift; the instrument reads, never sets ----
+describe('KERNEL-00 · S2-VOLUME-DRIFT-01 — the drift census instrument is read-only: volume/device/Bluetooth/boot/sleep/preferences/process/unified-log READS with documented flags only; no set-volume, device selection, playback, signal, preference write, phone or batch verb; manifest + seal', () => {
+  const W = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
+  const execLines = (s: string) => s.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+  it('reads only, with documented flags; writes only into its own census directory (+ the raw log window off-repo); seals a manifest with every mutation flag false', () => {
+    const x = execLines(W('scripts/witness/k00-volume-drift-census.sh'));
+    expect(x).not.toMatch(/set volume|SwitchAudioSource|blueutil|defaults (write|delete|import)|\bsudo\b|afplay|\bsay\b|\bkill\b|killall|devicectl|xcodebuild|xcrun|log (collect|config|stream)|networksetup|pmset [a-z]*(sleep|wake|restart|schedule)|launchctl/);
+    for (const l of x.split('\n').filter((l) => /shutdown|reboot/.test(l))) expect(l).toMatch(/^capture last-(reboot|shutdown)\.txt last (reboot|shutdown)$/);   // history reads only
+    for (const l of x.split('\n').filter((l) => l.includes('osascript'))) expect(l).toContain("osascript -e 'get volume settings'");
+    for (const l of x.split('\n').filter((l) => /\bdefaults\b/.test(l) && !l.includes('defaults-'))) expect(l).toMatch(/defaults (domains|read)\b/);
+    for (const l of x.split('\n').filter((l) => l.includes('system_profiler'))) expect(l).toMatch(/system_profiler SP(Audio|Bluetooth)DataType -json/);
+    for (const l of x.split('\n').filter((l) => /^\s*log show/.test(l))) expect(l).toMatch(/^log show --last "\$LAST" --style syslog --predicate '[^']*' > "\$RAW\/log-window\.txt"/);
+    expect(x).toContain('capture log-show-help.txt log show --help');
+    expect(x).toContain('RAW="/private/tmp/k00-volume-drift-$STAMP"');                       // the raw unified-log window never enters the repo
+    expect(x).toContain('OUT="$ROOT/docs/programme/VOICE-2026/driver-ledger/volume-drift-$STAMP"');
+    expect(x).toMatch(/'volumeSet': False, 'deviceSelected': False, 'soundPlayed': False, 'phoneTouched': False, 'preferencesWritten': False/);
+    expect(x).toContain("'SEAL.sha256'"); expect(x).toContain('shasum -a 256 "$RAW/log-window.txt"');
+    expect((x.match(/<\/dev\/null/g) ?? []).length).toBeGreaterThanOrEqual(4);              // stdin closed on every external read
+    expect(execLines(W('scripts/witness/k00-driver-batch.sh'))).not.toMatch(/volume-drift|K00_DRIFT/);   // the batch is untouched by this act
   });
 });
