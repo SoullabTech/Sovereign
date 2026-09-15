@@ -359,12 +359,183 @@ UNION ALL SELECT 'library_sources', count(*), count(*) FILTER (WHERE ingestion_s
 
 ---
 
+## 10. ⭐ AMENDMENT — SPIRALOGIC WHOLE PREMISE · ELEMENTAL DISCOVERY PASS
+
+**Added 2026-09-15 by founder amendment**, which introduced the *Spiralogic Whole*
+foundational premise and directed the census to **discover** existing elemental structure
+**without imposing a new taxonomy**. This section reports discovery only. ⛔ No taxonomy
+authored. ⛔ No element assigned to anything. ⛔ No classification written.
+
+### 10.1 The premise as received (recorded, ⛔ not ratified here)
+
+> Spiralogic is the organising whole. Fire, Water, Earth, Air and Weather are **active
+> knowledge environments** through which sources, concepts, memories, symbols, teachings
+> and relationships may be encountered — not tags, folders, decorative categories or
+> independent silos. A knowledge object may participate in multiple elemental
+> environments. Elemental participation must not require physical duplication or exclusive
+> file placement. Elemental relationship must be able to remain contextual,
+> multidimensional, developmental, relational and dynamic rather than a fixed property of
+> a file. Weather must remain available to represent relational/field dynamics among
+> elements rather than being reduced to a fifth content bucket.
+
+⚠️ Ratification is a founder act with its own record. This is the premise the census was
+directed to protect, and §10.2–10.6 report whether the substrate can carry it.
+
+### 10.2 ⛔⛔ NAMING COLLISION — THE FIFTH POSITION IS `AETHER`, NOT `WEATHER`
+
+| Term | Code presence | Status |
+|---|---|---|
+| `aether` | **1,163 files** across `lib/`, `app/`, `components/` | ⭐ The established fifth element |
+| `weather` (elemental sense) | **0 files** | ⛔ Not an element anywhere in the codebase |
+
+The **live** member substrate constrains it in the database:
+
+```sql
+-- database/migrations/20260213200001_member_spiral_state.sql:17
+dominant_element TEXT NOT NULL CHECK (dominant_element IN ('fire','water','earth','air','aether'))
+```
+
+`weather` appears in code only as ordinary small-talk detection
+(`MayaPersonality`, `AnthonyPersonality`), inside an **Air** pattern list
+(`ConsciousnessBreadthEngine:231` — `["air","wind","breath","atmosphere","weather","sky"]`),
+and in an agent vocabulary list. In the corpus it appears in 54 of 739 files (7%),
+ordinary meteorological usage included.
+
+⭐ **One occurrence genuinely supports the founder's intuition** — `lib/oracle/iching/daoistVoice.ts:74`
+rewrites `state` → `weather`, i.e. *"weather" is already Soullab's word for field-state*.
+That is evidence for the concept, ⛔ not evidence that Weather is the fifth element.
+
+⛔ **A founder ruling is required before ACT 2, and the two candidates are materially
+different architectures:**
+
+1. **Weather renames Aether** — a vocabulary migration touching 1,163 files, a live CHECK
+   constraint, and stored member rows.
+2. **Weather is a distinct position from Aether** — a *sixth* term, and then the premise's
+   structural claim (*"Weather is what happens among them"*) belongs to a **relational
+   layer**, not to the element list at all.
+
+⚠️ ⛔ **Do not reconcile this silently.** This is the same defect class as the Circles
+lane's *"Commons denotes three different things"* and this census's own *"Second Brain
+denotes two."* ⭐ The premise's own structural argument — *Weather is what happens among
+the others* — is in fact an argument that it is **not a peer of the other four**, which
+matters more than the name.
+
+### 10.3 ⭐⭐ The corpus empirically refuses one-file-one-element
+
+Read-only scan of all **739** files in `data/ain/source`:
+
+| Signal | Files | Share |
+|---|---|---|
+| YAML frontmatter of any kind | **3** | 0.4% |
+| …carrying an `element` field | **1** | **0.1%** |
+| Element named in **filename** | 6 | 0.8% |
+| `water` in body text | 390 | 53% |
+| `fire` in body text | 385 | 52% |
+| `earth` in body text | 384 | 52% |
+| `air` in body text | 339 | 46% |
+| `aether` in body text | 225 | 30% |
+| `weather` in body text | 54 | 7% |
+| Spiralogic phase / *phase N* language | 126 | 17% |
+| `facet` | 43 | 6% |
+| `correspondence(s)` | 49 | 7% |
+
+⭐⭐ **THE DECISIVE NUMBER: the four elemental sets overlap by hundreds of files.** Roughly
+half the corpus discusses each of fire, water, earth and air. **A one-file-one-element rule
+would not merely flatten the architecture — it would be empirically false about this
+corpus.** The premise is not only the preferable design; it is the only reading the
+material supports.
+
+⚠️ **And the corollary is the hard part:** elemental structure is **pervasive in prose and
+effectively absent from metadata** (0.1%). Elemental participation therefore **cannot be
+read off the corpus today.** It must be derived — which makes derivation-at-acceptable-
+authority a **finding owed** (§7-F.3), not a premise. ⛔ A model-inferred elemental
+resonance is not canonical, per the brief's own rule.
+
+### 10.4 ⭐⭐ The premise is already implemented once — in memory, unconnected
+
+`lib/ain-recall/PatternResonanceGraph.ts`. Its own header: *"Unlike a knowledge graph
+(keyword connections), this is a **FIELD MAP**."*
+
+```ts
+export interface GraphNode {
+  type: 'card' | 'pattern' | 'symbol' | 'archetype' | 'element';   // element is a NODE
+  element?: Element;                                                // and a PROPERTY
+}
+export interface GraphEdge {
+  connectionType: 'symbolic' | 'elemental' | 'archetypal'
+                | 'temporal' | 'thematic' | 'transformation';       // ⭐ edges carry dynamics
+}
+export interface ResonanceCluster { centerNode; nodes; element?; }
+```
+
+⭐ **`connectionType: 'transformation'` is precisely the premise's *"connections can carry
+dynamics, rather than merely edges."*** An element is both a first-class node and a
+relation a node may bear — elements as participants, not containers.
+
+⚠️ **State:** `private nodes: Map<string, GraphNode>` — **in-memory only.** No table, no
+persistence, no corpus connection, no retrieval path. ⛔ It has never met the 739 files.
+
+**This is the single most important structure to preserve rather than rebuild.**
+
+### 10.5 Multi-element is already schema precedent — the flattening lives elsewhere
+
+**84 migrations** mention element, spiralogic or facet. Plural and weighted forms already
+exist and are the majority tradition:
+
+| Shape | Example |
+|---|---|
+| `JSONB` weighting | `elemental_affinities`, `elemental_weight`, `elemental_dynamics`, `collective_elemental_balance {"fire":0.5,...,"aether":0.5}` |
+| `TEXT[]` participation | `applicable_elements`, `dominant_elements`, `deficient_elements`, `elemental_lenses` |
+| Movement between elements | ⭐ `elemental_phase_from` / `elemental_phase_to` (`collective_breakthroughs`) — a **transition** precedent |
+| Column-level singular | `dominant_element`, `primary_element` |
+
+⭐ **The flattening risk the premise guards against is NOT in the schema tradition.** It
+sits in exactly two places: **(a)** the live `member_spiral_state.dominant_element` —
+singular and CHECK-constrained, ⛔ and correctly so, since it records *a member's current
+structural position*, not a knowledge object's participation; and **(b)** the corpus, which
+carries no element at all. ⚠️ **The risk is that (a)'s shape gets copied onto knowledge
+objects because it is the most visible elemental column in the system.**
+
+### 10.6 Elemental retrieval: ⛔ does not exist
+
+- `lib/ain/knowledge/RetrievalService.ts` and `ChunkingService.ts` — **no element anywhere.**
+- `ain_knowledge_chunks` — `domain TEXT` + `categories TEXT[]`; ⛔ **no element column.**
+- `corpus_chunks`, `library_chunks` — ⛔ no element column.
+- Existing elemental code is **member-state and voice** (conductor, hysteresis, elemental
+  voices, `wuxingBridge` Wu Xing correspondences, `spiralogic-core`, `ImplicateOrder`,
+  `interpretiveCouncil`) — ⛔ none of it touches the corpus.
+
+> **MAIA reasons elementally about the member and non-elementally about knowledge.**
+> Clicking Water and having the second brain reorganise is unbuilt at every layer:
+> no element on chunks, no elemental scoring in retrieval, no persisted graph.
+
+### 10.7 What this amendment adds to §7-F
+
+**F.9 — A ruling on Aether ⇄ Weather** (§10.2), before any schema names a fifth position.
+
+**F.10 — An elemental-derivation feasibility finding.** With 0.1% elemental metadata and
+~50% elemental prose, the question is not *where are the elements* but *by what authority
+is a resonance assigned, and how is a derived resonance kept visibly derived?* ⭐ The
+existing law already answers the second half: `RECIPROCAL_SOVEREIGNTY_INTENTION_2026-08-04`
+(*every increase in capability must produce a matching increase in provenance, restraint
+and transparency*) and the R12 memory ruling (*derived stays visibly derived*).
+
+**F.11 — Persistence design for `PatternResonanceGraph`** (§10.4) before any new graph
+model is drawn. ⛔ Do not author a second field-map vocabulary beside it.
+
+⛔ **None of F.9–F.11 is authorized by this census.**
+
+---
+
 ## 9. Standing
 
 **MAIA-WISDOM-01 · ACT 1 COMPLETE (repository side) · ⛔ EXTERNAL AIN CENSUS OWED ·
 ⛔ PRODUCTION COUNTS OWED · ⛔ ACT 2 NOT OPENED · ⛔ NO ARCHITECTURE PROPOSED AS AUTHORIZED ·
 ⛔ NO CANON AUTHORED OR AMENDED · ⛔ NO FILE MOVED · ⛔ NO INGESTION · ⛔ NO EMBEDDING ·
 ⛔ NO SCHEMA · ⛔ NO UI · ⛔ NO RETRIEVAL OR MEMORY ALTERED · PRODUCTION UNTOUCHED.**
+
+**AMENDMENT: SPIRALOGIC WHOLE PREMISE RECORDED · ELEMENTAL DISCOVERY COMPLETE ·
+⛔ NO TAXONOMY IMPOSED · ⛔ NO ELEMENT ASSIGNED · ⛔ AETHER/WEATHER RULING OWED.**
 
 **STOP. Returned for founder adjudication.**
 
