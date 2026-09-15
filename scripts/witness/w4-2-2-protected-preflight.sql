@@ -22,8 +22,29 @@
 --
 --     ⛔ AN ABSENT SCHEMA IS `NOT MEASURABLE`. IT IS NEVER ZERO.
 --
--- Usage (the founder runs this; this session cannot reach the protected host):
---     psql "$PROTECTED_DATABASE_URL" -X -f scripts/witness/w4-2-2-protected-preflight.sql
+-- ── USAGE ─────────────────────────────────────────────────────────────────
+--
+-- ⚠️ THE PROTECTED DATABASE IS `maia-postgres`, IN DOCKER, ON MINISFORUM.
+-- It is not reachable from the Mac Studio by socket or by TCP. An earlier
+-- version of this line said `psql "$PROTECTED_DATABASE_URL"` — a variable that
+-- EXISTS NOWHERE IN THIS PROJECT — so psql silently fell back to its defaults
+-- (local socket, database = $USER) and reported `database "soullab" does not
+-- exist`. ⛔ A usage line naming an undefined variable is a usage line that
+-- points at the wrong machine.
+--
+-- Run from the Mac Studio. The script is read locally and piped in:
+--
+--     git fetch origin claude/w4-2-schema-design
+--     git show origin/claude/w4-2-schema-design:scripts/witness/w4-2-2-protected-preflight.sql \
+--       > /tmp/w4-preflight.sql
+--     ssh soullab@minisforum \
+--       'docker exec -i maia-postgres psql -U soullab -d maia_consciousness -X' \
+--       < /tmp/w4-preflight.sql
+--
+-- ⭐ SECTION 1 IS THE FIRST THING TO READ, and it is first for this reason:
+-- it prints the database, host, port, role and read-only state actually
+-- connected to. ⛔ If it does not name the protected database, nothing below it
+-- is a protected reading — whatever it says.
 
 \set ON_ERROR_STOP on
 \pset pager off

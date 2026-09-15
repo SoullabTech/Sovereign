@@ -813,9 +813,34 @@ built database.
 
 ## 20. How to run it
 
+⚠️ **AN EARLIER USAGE LINE HERE WAS WRONG AND SENT THE RUN AT THE WRONG
+MACHINE.** It read `psql "$PROTECTED_DATABASE_URL" -X -f …`, naming a variable
+that **exists nowhere in this project**; unset, psql fell back to its defaults —
+local socket, database `$USER` — and reported `database "soullab" does not
+exist`. ⛔ Nothing was read, and that output is **not a preflight result of any
+kind**. *A usage line naming an undefined variable is a usage line that points at
+the wrong machine.*
+
+⭐ The protected database is `maia-postgres`, in Docker, **on minisforum**, and
+the Mac Studio has no socket or TCP route to it. Run from the Mac Studio:
+
 ```bash
-psql "$PROTECTED_DATABASE_URL" -X -f scripts/witness/w4-2-2-protected-preflight.sql
+git fetch origin claude/w4-2-schema-design
+git show origin/claude/w4-2-schema-design:scripts/witness/w4-2-2-protected-preflight.sql \
+  > /tmp/w4-preflight.sql
+ssh soullab@minisforum \
+  'docker exec -i maia-postgres psql -U soullab -d maia_consciousness -X' \
+  < /tmp/w4-preflight.sql
 ```
+
+⭐ Fetching the file from the branch means it works from any worktree — the
+script lives only on `claude/w4-2-schema-design`, and the shell that produced the
+error was in an unrelated one.
+
+⭐ **Read §1 first.** It prints the database, host, port, role and read-only
+state actually connected to. ⛔ If §1 does not name the protected database,
+nothing below it is a protected reading, whatever it says. Verified: the
+instrument runs identically when piped on stdin rather than read with `-f`.
 
 ⛔ Nothing in it writes, repairs, or creates. If it finds a violating row it
 **reports** it — *a preflight that fixed what it found would destroy the evidence
