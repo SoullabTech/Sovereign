@@ -157,3 +157,36 @@ repair ........................... ⛔
 ACT 2 measurement ................ ⭐ AUTHORIZED · ⛔ UNSPENT — owed to a host with production access
 production ....................... UNTOUCHED
 ```
+
+---
+
+## 8. Predeclared adjudication criteria (founder, 2026-09-15 — recorded BEFORE the run)
+
+The outcome classes are bounded in advance so the measurement is adjudicated against predeclared
+criteria rather than read opportunistically after the fact.
+
+**The decisive Cut-1 question**: *does live decay change which otherwise-valid memories cross Cut 1
+into the top-12 pool, before the current utterance participates in retrieval?*
+
+```
+A. decay changes Cut-1 MEMBERSHIP
+   → availability effect ESTABLISHED
+
+B. decay changes only ORDERING, not membership
+   → salience effect established · NO Cut-1 exclusion observed
+
+C. no observable difference in eligible production rows
+   → current decay effect NOT DEMONSTRATED in this witness
+```
+
+**Separately, Stage B**: *within the voice path, which of those already-truncated candidates survive
+Cut 2 into selected bullets?* → voice-only evidence about 12 → bullets. ⛔ Never a statement about
+the pool.
+
+⛔ **No repair follows automatically from any of these.** ⭐ **And the traceability non-conformance
+survives all three outcomes**: Cut-1 exclusion is reconstructible now, but not historically
+traceable for the original turn. **That standing is not to be softened after the run** — a green,
+null or negative counterfactual is not evidence that the record was adequate.
+
+**The result file carries exactly three things**: Stage A §2.a–§2.e as emitted · the two Stage B
+voice-path greps · the claim ceiling in §6 unchanged.
