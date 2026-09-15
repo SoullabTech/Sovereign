@@ -3539,3 +3539,8 @@ All five SID reinstall pins recorded (identity completion, not install authority
 ## §18.48 — FIRST-INSTALL draft AMENDED (seven-file product-vs-manifest proof before any device read) · execution NOT OPEN · [D] `SID_ENTRY-PREFLIGHT-01` and [E] `SID_ENTRY-BATCH-01` DRAFTED as separate artifacts, placeholder container, frozen N = 30 law, adjudication kept outside the instrument (2026-09-15; implementation record §10.18; qualification plan §10.68)
 
 Three draft artifacts (`a052f081…` 59 lines · `bc83ca0e…` 41 lines · `2a5b6206…` 28 lines; all `bash -n` only) returned for review; nothing runs; no admissible SID container exists; `K00_EXEC_AUTHORITY` not issued. Structural couplings: [E] requires [D]'s worktree and a `PREFLIGHT-CLEAN` ≤ 600 s old and refuses a second ledger; [D] refuses while `__SID_CONTAINER_FROM_FIRST_INSTALL_RECORD__` stands.
+
+
+## §18.49 — FIRST-INSTALL draft ACCEPTED (execution closed) · [D]/[E] amended as ruled (preflight sealed; batch verifies the seal; freshness 0…300 s) · FIRST-INSTALL carrier drafted with refusing placeholders · observer-liveness verifier committed at `6f9c4e6ad` (selftest 9/9; gate 82 → 85) (2026-09-15; implementation record §10.19; qualification plan §10.69)
+
+Artifacts: `SID_ENTRY-PREFLIGHT-01_PIN_DRAFT` 44 lines `1e77bb05…` · `SID_ENTRY-BATCH-01_PIN_DRAFT` 32 lines `990e34ff…` · `SID_FIRST-INSTALL-01_CARRIER_DRAFT` 42 lines `bf4283b7…` · `scripts/witness/k00-source-liveness.py` + 8 fixtures. The verifier reads two evidence keys of one record kind and decides only LIVE/DORMANT; F-W1 journals read DORMANT (negative control). Nothing runs; no container exists; authority not issued.

@@ -10,11 +10,15 @@ cd "$WT"
 test "$(git rev-parse HEAD)" = "$SHA"
 test -z "$(git status --porcelain -- scripts/witness/k00-driver-batch.sh scripts/witness/k00-ledger.py scripts/witness/k00-reinstall.sh ios/VoiceKernelDriver)"
 PF=$(ls -d "$WT"/docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-ENTRY-preflight-* | LC_ALL=C sort | tail -1)
+test -f "$PF/SHA256SUMS.preflight"
+( cd "$PF" && shasum -a 256 -c SHA256SUMS.preflight >/dev/null )
 test -f "$PF/PREFLIGHT-CLEAN"
 PFSTAMP=$(basename "$PF" | sed 's/.*preflight-//')
 NOW=$(date -u +%s)
 PFSEC=$(date -u -j -f %Y%m%dT%H%M%SZ "$PFSTAMP" +%s)
-test $((NOW - PFSEC)) -le 600
+AGE=$((NOW - PFSEC))
+test "$AGE" -ge 0
+test "$AGE" -le 300
 test "$(ls -d "$WT"/docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-ENTRY-2* 2>/dev/null | wc -l | tr -d ' ')" = 0
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 scripts/witness/k00-driver-batch.sh VPIO-02-SID-ENTRY 30 --vp on --mode L --hold 15 --subject vpio-02-sid 2>&1 | tee "/private/tmp/sid-entry-batch-01-$STAMP.log"

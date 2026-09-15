@@ -871,3 +871,8 @@ The SID subject is identity-complete in the instrument and remains uninstalled, 
 ### §10.68 — the ENTRY witness instruments exist as drafts before the install (2026-09-15; discriminator plan §18.48; implementation record §10.18)
 
 No qualification change. FIRST-INSTALL-SID not open; ENTRY not open; K00 obligations for the SID subject CLOSED.
+
+
+### §10.69 — ENTRY instruments complete as drafts; liveness validity reader exists before its evidence (2026-09-15; discriminator plan §18.49; implementation record §10.19)
+
+No qualification change. FIRST-INSTALL-SID closed; ENTRY not open; K00 obligations for the SID subject CLOSED. The reader that will judge observer liveness at [G] is committed and self-tested before any SID journal exists.

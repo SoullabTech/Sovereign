@@ -39,3 +39,6 @@ xcrun devicectl device info processes --device "$DEV" --json-output "$PF/process
 test "$(grep -ci VoiceKernelHarness "$PF/processes.json")" = 0
 if [ -d "$APP" ]; then echo "product-present $(dwarfdump --uuid "$APP/VoiceKernelHarness.debug.dylib" | grep -c "$UUID_PIN")"; else echo "product-absent"; fi | tee "$PF/product-path-read.txt"
 printf 'SID-ENTRY-PREFLIGHT-01 %s CLEAN subject %s instrument %s sid-container %s\n' "$STAMP" "$SUBJECT_SHA" "$SHA" "$SID_CONTAINER" | tee "$PF/PREFLIGHT-CLEAN"
+SEAL="/private/tmp/sid-entry-preflight-01-$STAMP.SHA256SUMS.preflight"
+( cd "$PF" && find . -type f | LC_ALL=C sort | xargs shasum -a 256 ) > "$SEAL"
+mv "$SEAL" "$PF/SHA256SUMS.preflight"
