@@ -62,6 +62,29 @@ export function requestedProposalFocus(
   return { chainId, versionId };
 }
 
+/**
+ * Direct manipulation inside one editorial thread still deserves a durable
+ * address. Replace only the two proposal selectors; preserve manuscript,
+ * section, view and every unrelated fact about the visit.
+ */
+export function canvasLocationForProposalFocus(
+  pathname: string,
+  search: string,
+  focus: { chainId: string; versionId: string } | null,
+): string {
+  const params = new URLSearchParams(search);
+  if (focus) {
+    params.set(CANVAS_PROPOSAL_CHAIN_PARAM, focus.chainId);
+    params.set(CANVAS_PROPOSAL_VERSION_PARAM, focus.versionId);
+    params.delete(CANVAS_PROPOSAL_PARAM);
+  } else {
+    params.delete(CANVAS_PROPOSAL_CHAIN_PARAM);
+    params.delete(CANVAS_PROPOSAL_VERSION_PARAM);
+  }
+  const q = params.toString();
+  return q ? `${pathname}?${q}` : pathname;
+}
+
 /** The proposal this visit is pointed at, if any. */
 export function requestedProposalId(
   params: { get(name: string): string | null },

@@ -180,6 +180,20 @@ export class SectionSaveQueue {
     this.emit();
   }
 
+  /**
+   * Advance the queue after a different, already-authorized write path moved
+   * the same draft. This is lawful ONLY when this queue is completely settled;
+   * otherwise changing its base would silently rebase member-authored pending
+   * text across a Work state they have not reconciled.
+   */
+  adoptExternalVersion(serverVersion: number): boolean {
+    if (!Number.isInteger(serverVersion) || serverVersion < this.version) return false;
+    if (this.hasUnsavedWork()) return false;
+    this.version = serverVersion;
+    this.emit();
+    return true;
+  }
+
   state(): QueueState {
     return {
       version: this.version,

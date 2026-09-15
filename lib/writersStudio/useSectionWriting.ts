@@ -78,6 +78,13 @@ export interface SectionWriting {
   /** The draft version last acknowledged by the serialized server save lane. */
   currentRevisionId: () => number;
   /**
+   * Reconcile a completed external write (for example, adopting an exact
+   * editorial version) into this still-mounted writing session. Refuses while
+   * any local text is unsettled, so an external write can never silently rebase
+   * pending member authorship.
+   */
+  adoptExternalRevision: (serverVersion: number, changedSectionId?: string) => boolean;
+  /**
    * Send the active section's staged text NOW, without waiting out the
    * autosave delay.
    *
@@ -451,6 +458,22 @@ export function useSectionWriting(
      server-acknowledged base this writing session is entitled to assert. */
   const currentRevisionId = useCallback(() => queue.state().version, [queue]);
 
+  const adoptExternalRevision = useCallback((
+    serverVersion: number, changedSectionId?: string,
+  ): boolean => {
+    /* ⛔ Never rebase pending authorship. The queue owns both pending and
+       in-flight saves; staged owns the text not yet handed to it. */
+    if (staged.current.size > 0 || queue.hasUnsavedWork()) return false;
+    if (!queue.adoptExternalVersion(serverVersion)) return false;
+    if (changedSectionId) {
+      clearTimerFor(changedSectionId);
+      staged.current.delete(changedSectionId);
+      persisted.delete(changedSectionId);
+    }
+    setStagedTick((n) => n + 1);
+    return true;
+  }, [queue, persisted, clearTimerFor]);
+
   /**
    * THE PUBLISHED SESSION MUST BE REFERENTIALLY STABLE.
    *
@@ -481,9 +504,10 @@ export function useSectionWriting(
       goToSection,
       hasUnsavedWork,
       currentRevisionId,
+      adoptExternalRevision,
       flushPending,
     }),
     [initialSections, activeId, active, activeBody, statusOf, edit, editSection, captureForUnmount,
-     bodyOf, goToSection, hasUnsavedWork, currentRevisionId, flushPending],
+     bodyOf, goToSection, hasUnsavedWork, currentRevisionId, adoptExternalRevision, flushPending],
   );
 }

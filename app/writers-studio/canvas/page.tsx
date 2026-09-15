@@ -28,6 +28,7 @@ import { IMPORT_HREF } from '../studioMap';
 import {
   adoptRouteIdentity,
   canvasLocationForManuscript,
+  canvasLocationForProposalFocus,
   requestedManuscriptId,
   requestedManuscriptIdFrom,
   resolveManuscript,
@@ -68,6 +69,7 @@ import { useHeldFocus } from '../field/useHeldFocus';
 import FocusStrip from '../field/FocusStrip';
 import FocusOverlay from '../field/FocusOverlay';
 import ProposalWorkSurface, { ProposalEvidenceInWork } from './ProposalWorkSurface';
+import EditorialWorkspace, { type EditorialFocus } from './EditorialWorkspace';
 import { focusPaint } from '../field/focusPaint';
 import { codePointBoundaries } from '@/lib/manuscript/draftSections';
 
@@ -297,9 +299,47 @@ function CanvasRoom() {
   /* ⭐⭐ CUTOVER-01A — the room names a CHAIN and the EXACT VERSION it is
      showing. ⛔ Both or neither: a chain alone would let the room display
      whatever is newest and call it the thing the writer was sent to. */
-  const proposalFocus = useMemo(
+  const requestedEditorialFocus = useMemo(
     () => (searchParams ? requestedProposalFocus(searchParams) : null),
     [searchParams]);
+  /* The route chooses the editorial chain on arrival. After that, version
+     selection is local direct manipulation: clicking V2 previews V2 without a
+     navigation event or remount. A later route may move to a DIFFERENT chain,
+     but the stale version id in the address bar never fights the writer's own
+     next click inside the same thread. */
+  const [proposalFocus, setProposalFocus] = useState<EditorialFocus | null>(
+    requestedEditorialFocus);
+  useEffect(() => {
+    if (!requestedEditorialFocus) return;
+    setProposalFocus((held) =>
+      held?.chainId === requestedEditorialFocus.chainId
+        ? held
+        : requestedEditorialFocus);
+  }, [requestedEditorialFocus]);
+
+  const selectEditorialFocus = useCallback((next: EditorialFocus) => {
+    setProposalFocus(next);
+    if (typeof window === 'undefined') return;
+    window.history.replaceState(
+      window.history.state,
+      '',
+      canvasLocationForProposalFocus(
+        window.location.pathname, window.location.search, next,
+      ),
+    );
+  }, []);
+
+  const leaveEditorialThread = useCallback(() => {
+    setProposalFocus(null);
+    if (typeof window === 'undefined') return;
+    window.history.replaceState(
+      window.history.state,
+      '',
+      canvasLocationForProposalFocus(
+        window.location.pathname, window.location.search, null,
+      ),
+    );
+  }, []);
 
   /* ── WS2-04B: which engine may write this draft. Resolved by the server in
      one response; the room never assembles it from parts. */
@@ -461,6 +501,30 @@ function CanvasRoom() {
      `sectionEngine` for why this is not six inline disjunctions. */
   const engine = sectionEngine(writeMount);
 
+  const editorialTargetId = engine?.target?.sectionId ?? null;
+  const moveToEditorialTarget = useCallback((): boolean => {
+    const move = proposalMove(
+      session?.view ?? null, editorialTargetId, writing !== null,
+    );
+    if (move.kind === 'wait') return false;
+    if (move.kind === 'scroll') { setJumpTo(move.sectionId); return true; }
+    if (writing && writing.activeId !== move.sectionId) writing.goToSection(move.sectionId);
+    return true;
+  }, [editorialTargetId, session?.view, writing]);
+
+  const arrivedEditorialTarget = useRef<string | null>(null);
+  useEffect(() => {
+    if (!proposalFocus || !editorialTargetId) return;
+    if (arrivedEditorialTarget.current === editorialTargetId) return;
+    if (!moveToEditorialTarget()) return;
+    arrivedEditorialTarget.current = editorialTargetId;
+  }, [proposalFocus, editorialTargetId, moveToEditorialTarget]);
+
+  const showEditorialChange = useCallback(() => {
+    moveToEditorialTarget();
+    setRevealToken((n) => n + 1);
+  }, [moveToEditorialTarget]);
+
   /**
    * ⭐⭐ ONE COMPUTATION, TWO SURFACES. The Work marks the locus; the panel
    * shows the affected sentence. Both are `(body, range, replacement)` from the
@@ -480,6 +544,29 @@ function CanvasRoom() {
     if (!range) return null;
     return sentenceComparison(section.body, range, t.replacementText);
   }, [engine]);
+
+  const settleBeforeEditorialAdopt = useCallback(async (): Promise<boolean> => {
+    if (!writing) return false;
+    writing.flushPending();
+    const deadline = Date.now() + 4000;
+    while (writing.hasUnsavedWork()) {
+      if (Date.now() > deadline) return false;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    return true;
+  }, [writing]);
+
+  const editorialApplied = useCallback(async (resultingVersion: number) => {
+    /* The exact proposal target was read-only while it was being worked, so a
+       settled queue has no member-authored body to rebase there. Advance the
+       still-mounted queue before rereading sections; otherwise its next save
+       would be based on the pre-adoption draft version and manufacture a
+       conflict immediately after the member's own successful act. */
+    writing?.adoptExternalRevision(resultingVersion, engine?.target?.sectionId);
+    await refreshWriteState();
+    setHistoryKey((k) => k + 1);
+  }, [writing, engine?.target?.sectionId, refreshWriteState]);
+
   /* Development only, and only when a witness asks: holds the save RESPONSE so
      a section can be seen still saving while the next opens. */
   const witnessDelayMs =
@@ -925,28 +1012,34 @@ function CanvasRoom() {
           ) : null
         }
         maia={
-          /* The existing Canvas conversation, unchanged and unimproved. It does
-             not go through CanonicalTurn, and this room does not pretend
-             otherwise. */
-          work && manuscript ? (
+          proposalFocus ? (
+            <EditorialWorkspace
+              focus={proposalFocus}
+              sectionLabel={engine?.target?.sectionLabel ?? null}
+              comparison={proposalComparison}
+              onSelectVersion={selectEditorialFocus}
+              onShowChange={showEditorialChange}
+              onBeforeAdopt={settleBeforeEditorialAdopt}
+              onApplied={editorialApplied}
+              onKeepOriginal={leaveEditorialThread}
+            />
+          ) : work && manuscript ? (
             <StudioConversation
               work={work}
               manuscriptId={manuscript.id}
               conversationId={conversationId}
               onClose={() => undefined}
             />
+          ) : proposed.mount.state === 'ready' ? (
+            <ProposedChange
+              comparison={proposalComparison}
+              preview={proposed.mount.preview}
+              onAccepted={proposed.accepted}
+              onDismiss={proposed.dismiss}
+              onShowChange={showProposedChange}
+            />
           ) : (
-            proposed.mount.state === 'ready' ? (
-              <ProposedChange
-                comparison={proposalComparison}
-                preview={proposed.mount.preview}
-                onAccepted={proposed.accepted}
-                onDismiss={proposed.dismiss}
-                onShowChange={showProposedChange}
-              />
-            ) : (
-              <MaiaColumn context={workContext} />
-            )
+            <MaiaColumn context={workContext} />
           )
         }
         workbench={
@@ -1320,7 +1413,7 @@ function CanvasRoom() {
         {maiaOpen && (
           <StudioPanel
             role="maia"
-            label={conversationOpen ? 'MAIA · conversation' : 'MAIA'}
+            label={proposalFocus ? 'MAIA · editorial' : conversationOpen ? 'MAIA · conversation' : 'MAIA'}
             onDismiss={() => {
               /* Dismissing the region closes the conversation with it. The
                  exchange itself is not lost — reopening within this page
@@ -1331,24 +1424,31 @@ function CanvasRoom() {
             style={{
               width: compact
                 ? '100%'
-                : conversationOpen
+                : (proposalFocus || conversationOpen)
                   ? pct(L.maiaPanel + L.materialsPanel + L.gutter)
                   : pct(L.maiaPanel),
               flexShrink: 0,
             }}
           >
-            {conversationOpen && work && manuscript ? (
+            {proposalFocus ? (
+              <EditorialWorkspace
+                focus={proposalFocus}
+                sectionLabel={engine?.target?.sectionLabel ?? null}
+                comparison={proposalComparison}
+                onSelectVersion={selectEditorialFocus}
+                onShowChange={showEditorialChange}
+                onBeforeAdopt={settleBeforeEditorialAdopt}
+                onApplied={editorialApplied}
+                onKeepOriginal={leaveEditorialThread}
+              />
+            ) : conversationOpen && work && manuscript ? (
               <StudioConversation
                 work={work}
                 manuscriptId={manuscript.id}
                 conversationId={conversationId}
-                /* Puts her away without ending the exchange: the panel is
-                   hidden by `dismiss`, never unmounted, so calling her forward
-                   again returns to the same conversation. */
                 onClose={() => dismiss('conversation')}
               />
-            ) : (
-              proposed.mount.state === 'ready' ? (
+            ) : proposed.mount.state === 'ready' ? (
               <ProposedChange
                 comparison={proposalComparison}
                 preview={proposed.mount.preview}
@@ -1358,12 +1458,11 @@ function CanvasRoom() {
               />
             ) : (
               <MaiaColumn context={workContext} />
-            )
             )}
           </StudioPanel>
         )}
 
-        {materialsOpen && !conversationOpen && !compact && (
+        {materialsOpen && !proposalFocus && !conversationOpen && !compact && (
           <StudioPanel
             role="materials"
             label="Materials"
