@@ -1,5 +1,6 @@
 // backend: lib/sovereign/sessionManager.ts
 import { query } from '@/lib/db';
+import type { DisplacedExchange } from '@/lib/maia/continuity/sessionRecovery';
 import { randomUUID } from 'crypto';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture, contentWritable } from '@/lib/sanctuary/turnPosture';
@@ -150,6 +151,13 @@ export interface SessionContinuityWindow {
   exchanges: ConversationExchange[];
   /** Completed exchanges durably recorded for this session, as the pairing sees them. */
   durableCompletedExchanges: number;
+  /**
+   * L1 · every paired exchange of this session, each carrying durable identity and
+   * its position. The caller subtracts whatever its own final aperture carries to
+   * obtain the DISPLACED set — aperture size is a tier concern and is deliberately
+   * not decided here.
+   */
+  allExchanges: DisplacedExchange[];
 }
 
 export async function getSessionContinuityWindow(
@@ -157,8 +165,16 @@ export async function getSessionContinuityWindow(
   limit = 10
 ): Promise<SessionContinuityWindow> {
   // Query conversation_turns for this session's messages
-  const result = await query<{ role: 'user' | 'assistant'; content: string; created_at: string }>(
-    `SELECT role, content, created_at
+  // `exchange_id` is an EXISTING column (20260301000001) — selecting it is a read,
+  // not a migration. It is nullable on rows written before that migration, so the
+  // positional fallback below keeps identity durable either way.
+  const result = await query<{
+    role: 'user' | 'assistant';
+    content: string;
+    created_at: string;
+    exchange_id: string | null;
+  }>(
+    `SELECT role, content, created_at, exchange_id
      FROM conversation_turns
      WHERE session_id = $1
      ORDER BY created_at ASC`,
@@ -168,11 +184,60 @@ export async function getSessionContinuityWindow(
   const turns = result.rows ?? [];
 
   if (turns.length === 0) {
-    return { exchanges: [], durableCompletedExchanges: 0 };
+    return { exchanges: [], durableCompletedExchanges: 0, allExchanges: [] };
   }
 
-  const all = pairTurnsToExchanges(turns);
-  return { exchanges: all.slice(-limit), durableCompletedExchanges: all.length };
+  const allExchanges = pairTurnsWithIdentity(turns);
+  const all = allExchanges.map(toConversationExchange);
+  return {
+    exchanges: all.slice(-limit),
+    durableCompletedExchanges: all.length,
+    allExchanges,
+  };
+}
+
+/**
+ * L1 · the same pairing as `pairTurnsToExchanges`, carrying durable identity.
+ *
+ * ⛔ The pairing RULE is unchanged — same `i += 2` stride, same user→assistant
+ * requirement — because A6's depth is derived from it and a different rule here
+ * would silently change what `depth` means.
+ */
+function pairTurnsWithIdentity(
+  turns: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    created_at: string;
+    exchange_id?: string | null;
+  }>
+): DisplacedExchange[] {
+  const exchanges: DisplacedExchange[] = [];
+
+  for (let i = 0; i < turns.length - 1; i += 2) {
+    const userTurn = turns[i];
+    const assistantTurn = turns[i + 1];
+
+    if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
+      const index = exchanges.length;
+      exchanges.push({
+        exchangeKey: userTurn.exchange_id ?? `idx:${index}`,
+        index,
+        timestamp: userTurn.created_at,
+        userMessage: userTurn.content,
+        maiaResponse: assistantTurn.content,
+      });
+    }
+  }
+
+  return exchanges;
+}
+
+function toConversationExchange(e: DisplacedExchange): ConversationExchange {
+  return {
+    timestamp: e.timestamp,
+    userMessage: e.userMessage,
+    maiaResponse: e.maiaResponse,
+  };
 }
 
 /**
