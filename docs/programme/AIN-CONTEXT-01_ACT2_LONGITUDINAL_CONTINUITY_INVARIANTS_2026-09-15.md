@@ -32,6 +32,8 @@ written against an incumbent. **ACT 2 exists to spend that window on law rather 
 
 ## 1. THE GOVERNING PRINCIPLE — LAYER 0
 
+> ⚠️ **AMENDED IN PLACE by Amendment 1 (§A1–§A2), same day.** The principle below is correct and insufficient; the amendment widens it from *meaning through time* to *the living processes through which meaning changes*, and places the OS definition above it. ⛔ Kept verbatim as authored, never edited to read as if it had always said the wider thing.
+
 **[F]** Carried as authored:
 
 > **Relational continuity is not the persistence of information. It is the persistence of meaning
@@ -484,3 +486,302 @@ begins with the C4 falsifier before any repair is admitted.*
 passed between them, and what this moment means in light of that history. ACT 1 found the field of
 recoverability intact and the path to it missing. ACT 2 proposes the law that path must obey before
 anyone is permitted to build it.*
+
+---
+---
+
+# ACT 2 · AMENDMENT 1 — PROCESS AS THE UNIT OF CONTINUITY
+
+**Opened by**: two founder acts, 2026-09-15, same day as the base act. **Method**: unchanged —
+source and schema reading only. ⛔ No database, no traffic, no measurement, no repair.
+
+**What this amendment changes**: §1's governing principle is **widened** (§A2); a constitutional
+center is placed **above** it (§A1); four new invariants are proposed (**LC-16…LC-19**); and one
+existing substrate is found to carry the shape LC-16 prohibits (§A6). ⛔ §1 is amended in place and
+kept verbatim — superseded, never deleted.
+
+---
+
+## A1. THE CONSTITUTIONAL CENTER **[F]**
+
+> **MAIA is a relational, developmental, process-centered operating system for human
+> consciousness.**
+>
+> - **Relational** — meaning emerges *between* person, world, others, and MAIA. The system does not
+>   treat the member as an isolated data object.
+> - **Developmental** — it tracks change through time: stages, phases, thresholds, regressions,
+>   integrations, new capacities.
+> - **Process-centered** — it privileges living movement over static identity. The fundamental
+>   question is not *"What is this person?"* but *"What is unfolding here?"*
+> - **Operating system** — Spiralogic, Elemental Alchemy, memory, symbolic intelligence, relational
+>   intelligence, communication, reflection and model orchestration are not separate features. They
+>   are coordinated ways of sensing and supporting the member's lived processes.
+
+And the design boundary that protects it:
+
+> **The person is not the object being modeled. The living processes in which the person is
+> participating are what MAIA attempts to perceive.**
+>
+> **MAIA organizes around processes, not profiles; becoming, not identity; relationship, not
+> observation; and participation, not prediction.**
+
+⭐ **[J] This sits above Layer 0 and above every invariant.** §1 said the principle governs the
+invariants; §A1 governs the principle. The operative consequence for this lane is narrow and
+sharp: **a continuity mechanism that improves MAIA's model of *the person* while leaving her no
+better at perceiving *what is unfolding* has not served this architecture, however accurate it is.**
+
+---
+
+## A2. THE PRINCIPLE, WIDENED **[F]**
+
+> **Relational continuity is not merely the persistence of meaning through time. It is the capacity
+> to recognize the living processes through which meaning itself is changing.**
+
+And for Spiralogic specifically:
+
+> **MAIA should help the member perceive the spirals of becoming that are difficult to see from
+> inside the immediacy of lived experience** — not by telling someone what their process means, but
+> by holding enough history that she can say: **"We've been here before — but not quite like this."**
+
+⭐ **[J] That sentence is the lane's acceptance criterion**, and it is unusually well-formed as one,
+because it cannot be satisfied by accumulation. It requires **recurrence** (this is the same
+process) **and difference** (it has moved) **held together**. A system that has one without the
+other cannot produce it: recurrence alone yields *"you mentioned this before"*; difference alone
+yields *"something is different"*. Neither is recognition. See **§A8**.
+
+---
+
+## A3. FOUR THINGS THAT MUST NEVER COLLAPSE **[F]**
+
+| | Question it answers | Grain |
+|---|---|---|
+| **State** | What is happening *now*? | immediate — fiery and mobilized, watery and grieving, airy and trying to understand, earthy and needing consolidation |
+| **Phase** | What kind of movement is occurring *across a period*? | sustained passage — confrontation → differentiation → mourning → reorientation → recommitment |
+| **Stage** | What has become *possible now* that was not possible earlier? | developmental position — finally able to set the boundary, perceive the pattern, tolerate ambiguity, grieve the fantasy, act on what is already known |
+| **Spiral** | *Which living process is this?* | the process itself, whose states and phases accumulate into transformation |
+
+**[F]** Spirals are not folders. They move, recur, intersect, go dormant and return, **can
+apparently regress while actually deepening**, and can resolve at one level and reopen at another.
+A member is inside many at once — marriage, vocation, grief, a creative project, parenting,
+relationship-to-body, money, one particular conflict, a decision months in the making, an old wound
+being met differently, a new identity beginning to emerge.
+
+⚠️ **[J] The collapse hazard is not theoretical.** Three of these four answer with the same
+vocabulary — Fire, Water, Earth, Air — so a single stored `element` is ambiguous across all of
+them, and the S3 lane's rule applies directly: **⛔ no implementation may proceed while two
+different objects are both called the same thing.** A state-Fire and a stage-Fire are not the same
+claim and must not become the same row.
+
+---
+
+## A4. SIX MEMORY LAYERS, RECONCILED WITH THE FIVE CONTINUITIES
+
+**[F]** the six layers. **[J]** the reconciliation, done explicitly so the lane does not end up
+with two taxonomies quietly in use.
+
+| Layer **[F]** | Holds | Maps to | Substrate today |
+|---|---|---|---|
+| **1 · Event** | what actually happened or was said | K1 Historical | ✅ `conversation_turns` |
+| **2 · Meaning** | what the member understood it to mean *at that time* | K2 Epistemic | ⛔ none reaching cognition |
+| **3 · Spiral** | which ongoing process an event may belong to | ⭐ **new — no K equivalent** | ⛔ none |
+| **4 · State / phase** | where that process appeared to be at particular moments | ⭐ **new** (partly K4) | ⚠️ `member_spiral_state` — see §A6 |
+| **5 · Transformation** | what changed across the sequence | K4 Developmental | ⛔ none |
+| **6 · Relational** | what happened *between* MAIA and the member while understanding it | K5 Relational | ⛔ one overwritten row (§3.1) |
+
+⭐⭐ **[J] LAYER 3 IS NOT ANOTHER KIND OF CONTENT. IT IS THE RELATION THAT MAKES THE OTHERS
+LEGIBLE.** Without spiral membership, March 3 and June 20 are two dated events. With it, they are
+one process that moved. **Every longitudinal statement the founder's worked example produces
+depends on layer 3 existing, and layer 3 has no substrate at all.** That is the single largest
+architectural gap this lane has found — larger than the 100-message cap, because the cap withholds
+material while this withholds the *form* in which material becomes understanding.
+
+⛔ Naming it is not authorization to build it.
+
+---
+
+## A5 · LC-16 — THE ANTI-TYPING LAW, AS A PROHIBITED DURABLE SHAPE **[J]**
+
+**[F]** states the law: *"otherwise MAIA could accidentally turn Elemental Alchemy into personality
+typing: 'Kelly is in Water.' No."* The faithful form attaches the element to a process, in a
+window, with movement:
+
+> *"When you speak about this particular relationship, Water has been recurring for several weeks —
+> first as grief, then as receptivity, and now increasingly as the capacity to let the old form
+> dissolve. At the same time, Fire has begun appearing around what you want to do next."*
+
+**[J] Proposed as an enforceable shape rather than a stylistic preference**, because a prose rule
+about how MAIA should phrase things does not survive contact with a schema that makes the wrong
+phrasing the easy one:
+
+> **LC-16 · No elemental or phase predicate may be durably attached to a member.**
+> An elemental predicate attaches to a **(spiral, time-window)** pair and must carry **movement**.
+> The durable shape `{member_id, element}` — atemporal, spiral-less, one row per person — is
+> **prohibited**, exactly as `{pendingAskRef, sectionId, authorized:true}` is prohibited in S3
+> §10.6: not because it is inaccurate, but because nothing structural prevents it from being read
+> as a fact about the person.
+
+⭐ Stated this way the law is **checkable**: the absence of a member-level element column is a
+static guard, in the family this repository already runs (`askRuntimeCannotWrite`, the S3 substrate
+guards). A prose rule is not.
+
+---
+
+## A6 · ⚠️ THE PROHIBITED SHAPE EXISTS TODAY — AND IS NOT YET IN COGNITION
+
+**[J]** Checked in this amendment. `database/migrations/20260213200001_member_spiral_state.sql`:
+
+```sql
+CREATE TABLE IF NOT EXISTS member_spiral_state (
+  member_id        UUID PRIMARY KEY REFERENCES members(id) ON DELETE CASCADE,
+  -- Elemental Identity
+  dominant_element TEXT NOT NULL CHECK (dominant_element IN ('fire','water','earth','air','aether')),
+  phase            INTEGER NOT NULL CHECK (phase BETWEEN 1 AND 12),
+  motion           TEXT CHECK (motion IS NULL OR motion IN ('ascending','stuck','breakthrough')),
+  ...
+CREATE INDEX idx_member_spiral_element ON member_spiral_state (dominant_element, phase);
+```
+
+Three observations, each held to what it actually shows:
+
+1. **The shape is `{member_id, element}`** — `member_id` is the PRIMARY KEY, so one row per person;
+   `dominant_element` is `NOT NULL`; there is no spiral, no window, no movement. ⚠️ The column
+   group's own comment reads **`-- Elemental Identity`** — the precise word LC-16 exists to refuse.
+2. **`motion IN ('ascending','stuck','breakthrough')` scores developmental direction.** ⭐ *"Spirals
+   can apparently regress while actually deepening"* **[F]** — a three-value enum containing
+   `stuck` cannot represent that distinction, and will read an apparent regression as a failure to
+   progress. See **LC-18**.
+3. **`idx_member_spiral_element (dominant_element, phase)`** supports population-level distribution,
+   and `app/api/admin/activity-feed/route.ts:140` runs exactly that:
+   `SELECT dominant_element, COUNT(*) GROUP BY 1`.
+
+**⭐ AND THE FAIRNESS THAT MATTERS MOST: IT DOES NOT REACH THE CANONICAL PROMPT.** No reference to
+`member_spiral_state`, `spiralState` or `dominant_element` was found in
+`app/api/sovereign/app/maia/list/route.ts`. Its readers are the admin command-center, the admin
+activity feed, and the Bridge D conductor seed on `app/api/oracle/conversation/route.ts` — the route
+CMT-01 classified as receiving ~zero live traffic. Its own table comment is candid about its
+purpose: *"Anti-regression state: structural spiral position per member. NOT conversation content."*
+and CLAUDE.md is explicit — *"NOT personalization. NOT psychometrics. Just continuity."*
+
+> **The finding is therefore a latent violation, not a live one, and the distinction is the whole
+> value of finding it now.** Bridge D was built for a good and narrow purpose: stop the conductor's
+> element resetting on server restart so returning members are not met as strangers. ⛔ Nothing here
+> says Bridge D is wrong. What LC-16 says is that **the shape it uses is the shape that becomes
+> typing the moment it is read into cognition as a fact about the person** — and that no gate
+> currently prevents that reading.
+
+⭐ This is structurally the same gift as **C3**: the wrong thing exists, is not yet load-bearing,
+and can therefore be ruled on before it becomes expensive. ⛔ Not repaired. ⛔ No lane opened.
+⛔ Do not migrate this table opportunistically — it serves a live conductor seam and its repair is
+its own governed act.
+
+---
+
+## A7 · LC-17 — SPIRAL MEMBERSHIP IS PROPOSED, NEVER ASSERTED **[J]**
+
+The founder's worked example carries the hazard in its own margin: *"↓ **possible** vocational
+spiral."* Who decides that March 3 and March 17 belong to the same process?
+
+> **LC-17 · A spiral, its membership, and any cross-spiral connection are SYSTEM-NOTICED SALIENCE
+> until the member ratifies them.** As salience they may reorder retrieval and may be **offered**.
+> They may never confer protection, standing, or durability, and MAIA may never narrate an
+> unratified spiral as established.
+
+⭐ This is **LC-6's two-class split** and **LC-5's `detect → ask → record`** applied to the new
+layer — ⛔ not a new principle, which is the point: if spiral inference needed a *different* rule
+from every other system inference, the rule would be a special exemption. **[F]** already supplies
+the form: *"I may be seeing a connection. Does that fit your experience?"* and *"The member remains
+the authority over meaning."*
+
+⚠️ **The coverage cost is real and is not hidden**: unratified spirals do nothing. A system that
+must ask before it may see will see less. That is the correct trade and ACT 3 must size it, because
+if ratified coverage is near zero the layer is honest and inert.
+
+⭐ The founder's cross-spiral example — *"in your work you are moving from accommodation into
+authorship, and in this relationship from accommodation into boundary; they may be expressions of
+the same developmental movement"* — is the highest-value and highest-risk output of this whole
+architecture. It is the thing no other system can offer, and it is **an interpretation of the
+member's life offered by a machine.** LC-17 is what keeps it an offer.
+
+---
+
+## A8 · THE RECURRENCE TEST — THIRD DISCRIMINATOR **[J]**
+
+Joining the Correction Test and the Descent Test (§2):
+
+> **Can this mechanism distinguish *return* from *repetition*?**
+
+A mechanism that reports *"you mentioned grief in March and you are mentioning grief now"* is
+**retention** — it matched a token across two dates. A mechanism that can say *"this is the same
+process, and it has moved"* is **recognition**.
+
+⭐ **A spiral is return without simple repetition** **[F]** — the place looks familiar and
+consciousness has changed. The test therefore falsifies the single most likely wrong
+implementation of this entire lane: **semantic similarity search over past turns**, which is
+excellent at finding *repetition* and structurally blind to *return*, because similarity is highest
+exactly where least has changed. ⚠️ A retrieval layer optimized on similarity will systematically
+surface the member's least-developed material.
+
+---
+
+## A9 · LC-18 AND LC-19 **[J]**
+
+> **LC-18 · MAIA does not score developmental direction.** Movement may be described; progress may
+> not be adjudicated. ⛔ No stored field may assert that a member is ahead, behind, stuck,
+> regressing, or ascending. *"Apparent regression may be deepening"* **[F]** is not an edge case to
+> handle — it is the reason the judgment is not MAIA's to make.
+> **Violated observably when**: a durable field or a prompt-reaching claim ranks a member's
+> developmental position. ⚠️ Present latent instance: `motion IN ('ascending','stuck','breakthrough')`
+> (§A6).
+> ⭐ Consistent with the standing sovereignty check *"does this reduce the system's psychological
+> centrality over time?"* — a system that grades becoming has made itself the examiner of it.
+
+> **LC-19 · The six layers do not collapse.** Event, meaning, spiral, state/phase, transformation
+> and relational are distinct objects with distinct standing. ⛔ An implementation may not store a
+> state-element and a stage-element in one field, nor a meaning as if it were an event, nor a
+> system-proposed spiral as if it were a member-ratified one.
+> **Violated observably when**: one column answers two of §A3's four questions, or one row is read
+> as both what happened and what it meant.
+
+---
+
+## A10 · WHAT THIS AMENDMENT DOES NOT DO
+
+1. ⛔ **Ratifies nothing.** LC-16…LC-19 are candidates, like LC-1…LC-15.
+2. ⛔ **Does not authorize a spiral substrate.** §A4 names layer 3 as the largest gap; naming is
+   not building.
+3. ⛔ **Does not repair `member_spiral_state`**, migrate it, or touch Bridge D. §A6 is a finding.
+4. ⛔ **Does not open the Personal Model question.** The process-not-profile boundary is recorded
+   as constitutional; what follows for any existing personal-model work is out of this lane.
+5. ⛔ **Does not census Spiralogic runtime.** `lib/voice/conductor.ts`, `SpiralogicOrchestrator`,
+   the elemental agents and `FieldCoherenceEngine` were **not read**. §A6 covers one table and its
+   grep-visible readers. ⚠️ Whether elemental state reaches cognition by some other path is
+   **unestablished** — ⛔ and absence of a grep hit is not proof of absence, the ceiling CMT-01 §1.1
+   already named.
+6. ⛔ **Still does not measure anything.** No database, no traffic, no tokens, no model call.
+
+---
+
+## A11 · WHAT ACT 3 INHERITS, REVISED
+
+Additions to §9:
+
+- **The compliance matrix gains LC-16…LC-19**, and gains `member_spiral_state`,
+  `lib/voice/conductor.ts` hysteresis, and the Spiralogic orchestration surfaces as subjects.
+- **⭐ The Spiralogic runtime census is now owed and was explicitly not done here** (§A10.5). Its
+  question: does any elemental or phase predicate reach cognition today, by any path, attached to a
+  member rather than to a process?
+- **T3's sizing question widens**: not only *what proportion of significance would member marking
+  capture*, but *what proportion of spiral membership would member ratification capture* (LC-17).
+  Both are the same question about the cost of asking, and both decide whether the honest design is
+  also a usable one.
+- **A fourth discriminator may be owed.** Correction, Descent and Recurrence test a mechanism.
+  None tests whether a mechanism *frees* — whether it can let a member stop being who they were.
+  ⚠️ Flagged, ⛔ not authored: *"without imprisoning them in who they have previously been"* **[F]**
+  may need its own falsifier, and this amendment does not have one.
+
+---
+
+*Without continuity, MAIA can say "this sounds like Fire." With continuity, she can say "Fire has
+appeared repeatedly around this issue, but its quality has changed." Longitudinal continuity is not
+a memory feature that Spiralogic happens to use. It is the condition under which Spiralogic becomes
+developmental intelligence rather than momentary classification.*
