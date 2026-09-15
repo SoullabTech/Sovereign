@@ -39,7 +39,7 @@ import {
 } from '../canvasIdentity';
 import { CANVAS_HREF } from '../studioMap';
 
-const canvasSource = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8');
+const canvasSource = readFileSync(join(__dirname, '..', 'canvas', 'CanvasClient.tsx'), 'utf8');
 /** The room's comments explain the defect and therefore quote it. Assertions
  *  about what the CODE does must read the code, not the history beside it. */
 const canvasCode = canvasSource

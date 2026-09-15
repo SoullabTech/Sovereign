@@ -198,3 +198,48 @@ export function resolveManuscript<T extends SelectableManuscript>(
   }
   return { kind: 'ambiguous', manuscripts };
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WS-EDITORIAL-UI-01A · THE EDITORIAL THREAD ADDRESS
+
+   ⭐⭐ SERVER STATE PRESERVES THE CONVERSATION. AN ADDRESS PRESERVES WHICH
+   CONVERSATION YOU MEAN. Those are different responsibilities, and UI-01
+   conflated them: the component minted a relationship from its own mount
+   effect and held the only copy of its identity in React state, so a remount
+   lost the thread and a re-render was an authored request to create one.
+
+   ⛔ THE SCHEMA ADMITS MANY THREADS PER CHAIN, so the server cannot lawfully
+   infer "the" thread from a section or a chain. There is no most-recent
+   lookup here and none may be added — the address is exact or there is none.
+
+   ⛔ AND IT IS NOT AUTHORITY. It is an address, exactly like the manuscript
+   identity above. The server still proves the session owns the thread before
+   returning a single word of it; a tampered parameter buys a 404.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** The query parameter naming the editorial thread. Never inline this string. */
+export const CANVAS_EDITORIAL_THREAD_PARAM = 'editorialThread';
+
+/** Reads the editorial thread address out of already-parsed search params. */
+export function editorialThreadIdFrom(
+  params: { get(name: string): string | null },
+): string | null {
+  return params.get(CANVAS_EDITORIAL_THREAD_PARAM);
+}
+
+/**
+ * The same address, with the editorial thread named.
+ *
+ * Every other parameter is PRESERVED — the manuscript identity above is one
+ * of them, and dropping it would strand the room on reload while appearing to
+ * fix the conversation.
+ */
+export function canvasWithEditorialThread(
+  pathname: string,
+  search: string,
+  threadId: string,
+): string {
+  const next = new URLSearchParams(search);
+  next.set(CANVAS_EDITORIAL_THREAD_PARAM, threadId);
+  return `${pathname}?${next.toString()}`;
+}

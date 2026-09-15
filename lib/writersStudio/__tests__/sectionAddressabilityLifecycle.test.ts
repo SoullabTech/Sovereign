@@ -39,13 +39,13 @@ describe('import alone does NOT make a Work section-addressable', () => {
 
 describe('only the explicit member act converts', () => {
   it('the act is reachable from exactly one place, and it is a member gesture', () => {
-    const page = read('app/writers-studio/canvas/page.tsx');
+    const page = read('app/writers-studio/canvas/CanvasClient.tsx');
     expect(page).toMatch(/data-action="confirm-section-breaks"/);
     expect(page).toMatch(/onClick=\{onConfirmSectionBreaks\}/);
   });
 
   it('no automatic conversion fires on mount or on save', () => {
-    const page = read('app/writers-studio/canvas/page.tsx');
+    const page = read('app/writers-studio/canvas/CanvasClient.tsx');
     // the command appears only inside the callback the button invokes
     const callSites = page.match(/confirmSectionBreaks\(/g) ?? [];
     expect(callSites).toHaveLength(1);
@@ -98,19 +98,19 @@ describe('after conversion the Work is navigable — and navigability comes from
 
 describe('the unconverted outline explains itself instead of sitting inert', () => {
   it('names its state and offers the act', () => {
-    const page = read('app/writers-studio/canvas/page.tsx');
+    const page = read('app/writers-studio/canvas/CanvasClient.tsx');
     expect(page).toMatch(/data-outline-state="unconverted"/);
     expect(page).toMatch(/SECTION_BREAKS_COPY\.action/);
   });
 
   it('prefers the server\'s own reason when it has one', () => {
-    const page = read('app/writers-studio/canvas/page.tsx');
+    const page = read('app/writers-studio/canvas/CanvasClient.tsx');
     expect(page).toMatch(/writeMount\.notice\?\.title \?\? SECTION_BREAKS_COPY\.title/);
   });
 });
 
 describe('R1 — the act is offered only where conversion can succeed', () => {
-  const page = read('app/writers-studio/canvas/page.tsx');
+  const page = read('app/writers-studio/canvas/CanvasClient.tsx');
 
   it('gates the button on the WRITE STATE, not on the mount', () => {
     expect(page).toMatch(/writeState\?\.mode === 'continuous' && \(\s*<button/);

@@ -11,7 +11,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { chooseMount, type WriteState } from '@/lib/writersStudio/writeStateClient';
 
-const page = readFileSync(join(process.cwd(), 'app/writers-studio/canvas/page.tsx'), 'utf8');
+const page = readFileSync(join(process.cwd(), 'app/writers-studio/canvas/CanvasClient.tsx'), 'utf8');
 const session = readFileSync(
   join(process.cwd(), 'app/writers-studio/canvas/SectionWritingSession.tsx'), 'utf8');
 const surface = readFileSync(

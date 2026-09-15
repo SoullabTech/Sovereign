@@ -13,7 +13,7 @@ const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/
 
 const surface = strip(read('canvas', 'StudioConversation.tsx'));
 const identity = strip(read('useMemberIdentity.ts'));
-const canvas = strip(read('canvas', 'page.tsx'));
+const canvas = strip(read('canvas', 'CanvasClient.tsx'));
 
 /**
  * WS2-03D — MAIA inside the Studio.

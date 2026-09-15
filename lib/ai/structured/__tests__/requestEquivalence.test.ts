@@ -32,7 +32,11 @@
  * NO PAID READING IS RUN. Every provider call here is a capturing stub.
  */
 
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { anthropicStructuredProvider, toAnthropicParams } from '../anthropicStructuredAdapter';
+import { deriveModelAgreement } from '../types';
+import { readerIdentity } from '@/lib/manuscript/developmentalReader/read';
 import type { StructuredRequest } from '../types';
 
 /** Captures exactly what the adapter would send, and by which method. */
@@ -151,7 +155,11 @@ describe('maiaReader request equivalence', () => {
     expect(r.stopReason).toBe('end_turn');
   });
 
-  it('reports usage and the resolved model as provenance', async () => {
+  /* SP-5. This used to be called "the resolved model as provenance", which is
+     what let the defect survive: the value asserted is the REQUESTED model, and
+     calling it resolved made a check on it look like proof that the provider had
+     answered with it. */
+  it('reports usage and the REQUESTED/SENT model as provenance.model', async () => {
     const { client } = capturingClient();
     const r = await anthropicStructuredProvider({ client }).execute(readerRequest);
     expect(r.usage).toEqual({ inputTokens: 1, outputTokens: 2 });
@@ -188,11 +196,86 @@ describe('Ask MAIA request equivalence', () => {
     expect(seen[0].method).toBe('create');
   });
 
-  it('returns answer text and resolved-model provenance', async () => {
+  it('returns answer text and the requested/sent model as provenance.model', async () => {
     const { client } = capturingClient({ content: [{ type: 'text', text: 'I could be wrong.' }] });
     const r = await anthropicStructuredProvider({ client }).execute(askRequest);
     expect(r.content).toEqual([{ type: 'text', text: 'I could be wrong.' }]);
     expect(r.provenance.model).toBe('claude-opus-5');
+  });
+});
+
+describe('AIN-STRUCTURED-PROVENANCE-01 · requested is not reported', () => {
+  /* The three facts a provenance system must never collapse:
+       REQUESTED   what we intended to invoke
+       REPORTED    what the provider says answered
+       AUTHORIZED  whether we invoked it through the constituted channel
+     The seam owns the first two. The third is not a field here. */
+
+  it('SP-1 ⛔ a provider answering with a DIFFERENT model is observable', async () => {
+    const { client } = capturingClient({ model: 'some-other-model' });
+    const r = await anthropicStructuredProvider({ client }).execute(readerRequest);
+    expect(r.provenance.model).toBe('claude-opus-5');        // unchanged meaning
+    expect(r.provenance.reportedModel).toBe('some-other-model');
+    expect(r.provenance.modelAgreement).toBe('differs');
+  });
+
+  it('SP-1 agreement when the provider answers with the model that was asked for', async () => {
+    const { client } = capturingClient({ model: 'claude-opus-5' });
+    const r = await anthropicStructuredProvider({ client }).execute(readerRequest);
+    expect(r.provenance.reportedModel).toBe('claude-opus-5');
+    expect(r.provenance.modelAgreement).toBe('agreed');
+  });
+
+  it('SP-2 ⛔ a provider reporting no model identity stays VISIBLY unreported', async () => {
+    /* Never silently equal to the request — that is the whole defect. */
+    const { client } = capturingClient();
+    const r = await anthropicStructuredProvider({ client }).execute(readerRequest);
+    expect(r.provenance.reportedModel).toBeNull();
+    expect(r.provenance.modelAgreement).toBe('unreported');
+  });
+
+  it('SP-2 an empty or non-string model is unreported, not an empty agreement', async () => {
+    for (const model of ['', 42, null, undefined]) {
+      const { client } = capturingClient({ model });
+      const r = await anthropicStructuredProvider({ client }).execute(readerRequest);
+      expect(r.provenance.reportedModel).toBeNull();
+      expect(r.provenance.modelAgreement).toBe('unreported');
+    }
+  });
+
+  it('SP-2 the long-running path reports identically — both mechanisms return a Message', async () => {
+    const { client } = capturingClient({ model: 'some-other-model' });
+    const r = await anthropicStructuredProvider({ client })
+      .execute({ ...readerRequest, execution: { completion: 'long-running' } });
+    expect(r.provenance.modelAgreement).toBe('differs');
+  });
+
+  it('SP-3 the DEVELOPMENT consumer still receives the requested/sent model', async () => {
+    /* readerIdentity() takes provenance.model, and that identity is frozen into
+       already-persisted reader provenance. Its meaning must not move. */
+    const { client } = capturingClient({ model: 'some-other-model' });
+    const r = await anthropicStructuredProvider({ client }).execute(readerRequest);
+    expect(readerIdentity(r.provenance.model).model).toBe('claude-opus-5');
+  });
+
+  it('SP-6 agreement is derived from the two facts — no fixture may contradict it', () => {
+    expect(deriveModelAgreement('a', null)).toBe('unreported');
+    expect(deriveModelAgreement('a', 'a')).toBe('agreed');
+    expect(deriveModelAgreement('a', 'b')).toBe('differs');
+    /* Aliases are deliberately NOT normalized: deciding two identifiers mean the
+       same model is its own policy question. */
+    expect(deriveModelAgreement('claude-opus-5', 'claude-opus-5-20260101')).toBe('differs');
+  });
+
+  it('SP-6 the adapter does not spell the comparison itself', () => {
+    const src = readFileSync(
+      join(__dirname, '../anthropicStructuredAdapter.ts'), 'utf8',
+    ).replace(/\/\*[\s\S]*?\*\//g, ' ');
+    expect(src).toContain('deriveModelAgreement');
+    expect(src).not.toMatch(/reportedModel\s*===\s*req\.model/);
+    /* And reportedModel is never populated from the request — that would recreate
+       the defect under a second field name. */
+    expect(src).not.toMatch(/reportedModel:\s*req\.model/);
   });
 });
 

@@ -42,7 +42,10 @@ describe('primary: executed exactly, and never fallen back from', () => {
     execute.mockResolvedValue({
       content: [{ type: 'tool_use', id: 't', name: 'propose_structure', input: { form: 'flat' } }],
       stopReason: 'tool_use', usage: { inputTokens: 1, outputTokens: 2 },
-      provenance: { provider: 'anthropic', model: 'claude-opus-5', latencyMs: 1 },
+      provenance: {
+        provider: 'anthropic', model: 'claude-opus-5',
+        reportedModel: 'claude-opus-5', modelAgreement: 'agreed', latencyMs: 1,
+      },
     });
     const r = await withMode(undefined, () => runStructured(req));
     expect(r.ok).toBe(true);
