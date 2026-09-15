@@ -1153,3 +1153,60 @@ B06Ultra connected (A2DP) at the before-read, not default. Default output, trans
 - Whether the ruled value should remain an exact integer, become a band, or be reached by a stepped control is a **founder decision** (a band would change the batch's precondition = new orchestration SHA; a stepped-control hand act would not). This record chooses none.
 
 **Standing after §18.6:** `S2-VOLUME-DRIFT-01` CLOSED · candidate mechanism · 69 RULED · **`S2-VOLUME-RESTORE-01` STOP · SPENT** · current volume UNKNOWN to the record (a post-act adjustment disclosed, unread) · restoration re-open = a fresh founder authority (not issued) · `S2-WITNESS-02` NOT ISSUED · `b198e2e37` reusable if the batch is byte-unchanged · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+### 18.7 FOUNDER RULING (2026-09-15) on §18.6 — precondition stays **exact integer 69** · band NOT ADOPTED · `b198e2e37` unchanged · **`S2-VOLUME-RESTORE-02` AUTHORIZED** (fresh act: fresh read → one bounded founder stepped-control sequence → fresh read) · `S2-VOLUME-RESTORE-01` remains STOP · spent
+
+#### 18.7.1 Ruling (substance preserved)
+
+- The §18.6.4 sixteenth-step inference (25 = 4/16 · 31 ≈ 5/16 · 44 ≈ 7/16 · 69 ≈ 11/16 · 73 not on the grid) is sufficiently supported to justify a **different human control mechanism**, not to redefine the target. The slider failure is informative — the slider can land between the keyboard steps — and does not show that 69 is an inappropriate acceptance value.
+- **`S2-VOLUME-RESTORE-02`** is a new act. Preparation: close System Settings / Sound by hand, let it settle; the Mac session performs a fresh Step 0 and a fresh Step 1 under a new stamp; the current volume is UNKNOWN until that read. **The single authorized founder hand act is the whole bounded sequence:** using the Mac Studio keyboard's normal volume keys — (1) press Volume Down until the bottom/zero state; (2) press Volume Up exactly 11 times; (3) stop. No device selection · no System Settings Sound slider · no scripted keystrokes · no `osascript` · no test playback · no twelfth press · no slider correction · no correction after the governed after-read · no retry under the same authority.
+- Epistemic point (founder): eleven presses are not assumed to produce 69; that candidate human mechanism is tested once; the machine after-read remains authoritative. PASS = the unchanged §18.5.3 condition (`Mac Studio Speakers` · `coreaudio_device_type_builtin` · `MAC_STUDIO_DEFAULT_OUTPUT True` · `OUTPUT_VOLUME 69` · `OUTPUT_MUTED false` · `RESTORE_ACCEPTANCE PASS`); anything else STOP, result preserved, rule again. A PASS teaches that a human stepped-control sequence can establish the exact scalar the batch already requires, without changing the instrument.
+- Standing: RESTORE-01 STOP · spent · RESTORE-02 AUTHORIZED · target 69 exact · batch `b198e2e37` unchanged · band NOT ADOPTED · scripted volume change FORBIDDEN · `S2-WITNESS-02` NOT ISSUED · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+#### 18.7.2 Pinned sequence for `S2-VOLUME-RESTORE-02` (Mac; the §18.5.2 mechanics verbatim except the directory prefix and the hand act; no `#` comment lines)
+
+Step 0 — hand: quit System Settings (⌘Q); settle (30 s proposed); read-only confirmation, repeatable until it passes:
+
+```bash
+pgrep -fl "System Settings|Sound.appex" ; echo "[pgrep rc=$?]"
+```
+
+Expected: no process line and `[pgrep rc=1]`.
+
+Step 1 — before-read (new stamp; current volume UNKNOWN until this read):
+
+```bash
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+OUT="/private/tmp/k00-s2-volume-restore-02-$STAMP"
+mkdir -p "$OUT"
+date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/before-utc.txt"
+system_profiler SPAudioDataType -json > "$OUT/audio-before.json"
+system_profiler SPBluetoothDataType -json > "$OUT/bluetooth-before.json"
+osascript -e 'get volume settings' > "$OUT/volume-before.txt"
+pgrep -fl "System Settings|Sound.appex" > "$OUT/sound-pane-before.txt" ; echo "rc=$?" >> "$OUT/sound-pane-before.txt"
+cat "$OUT/volume-before.txt"
+echo "$OUT"
+```
+
+Step 2 — **the one founder hand act, the whole sequence:** keyboard Volume Down until the bottom/zero state → Volume Up exactly 11 times → stop. Nothing else touched. (Note, not a rule: if macOS's "play feedback when volume is changed" is on, the key feedback click is a side effect of the control, not a test playback and not the S2 stimulus; it is recorded if heard, and does not STOP the act.)
+
+Step 3 — after-read + the unchanged §18.5.2 parser (`python3 - "$OUT/audio-after.json" "$OUT/volume-after.txt" <<'PY' … PY` exactly as pinned in §18.5.2; verified offline in §18.5.2 and reproduced on the real §18.6 files):
+
+```bash
+date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/after-utc.txt"
+system_profiler SPAudioDataType -json > "$OUT/audio-after.json"
+osascript -e 'get volume settings' > "$OUT/volume-after.txt"
+pgrep -fl "System Settings|Sound.appex" > "$OUT/sound-pane-after.txt" ; echo "rc=$?" >> "$OUT/sound-pane-after.txt"
+```
+
+then the §18.5.2 parser block, unchanged.
+
+Step 4 — seal (read-only), the same nine files:
+
+```bash
+( cd "$OUT" && shasum -a 256 before-utc.txt audio-before.json bluetooth-before.json volume-before.txt sound-pane-before.txt after-utc.txt audio-after.json volume-after.txt sound-pane-after.txt > SHA256SUMS && cat SHA256SUMS )
+```
+
+PASS / STOP exactly §18.5.3 (with `RESTORE_ACCEPTANCE PASS` the decisive line). Return as `docs/programme/VOICE-2026/driver-ledger/s2-volume-restore-02-<STAMP>/` on a `feature/*` branch with `BRANCH · HEAD · STAMP`, the parser's seven lines and the `SHA256SUMS`; this session cherry-picks, recomputes every hash, reruns the parser and records §18.8. Nothing plays, samples, touches the phone or edits the batch.
+
+**Standing after §18.7:** `S2-VOLUME-RESTORE-02` AUTHORIZED · pinned · NOT YET EXECUTED (founder hand act) · 69 exact · `b198e2e37` unchanged · `S2-WITNESS-02` NOT ISSUED · S2 population · S3 · KERNEL-00 acceptance CLOSED.
