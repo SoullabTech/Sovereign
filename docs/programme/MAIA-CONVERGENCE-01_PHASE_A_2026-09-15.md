@@ -283,3 +283,214 @@ production                   UNTOUCHED
 > conversation is server state and survives close, reopen and navigation. In the
 > room beside it she starts over every time the page loads, and tomorrow she
 > will not be able to find the exchange she had today.
+
+---
+---
+
+# PHASE B · SEAM 1 — `RETURN-RELATIONSHIP`
+
+**Branch** `claude/maia-convergence-01` · **base** canonical `3909be968`.
+⛔ No merge · ⛔ no deploy · ⛔ no migration · ⛔ no new table or column.
+
+## B0 · RESULT
+
+```
+return-relationship witness    30 passed · 0 failed   real Chromium, real PostgreSQL
+editorial surface witness      93 passed · 0 failed   re-pointed and repaired
+room source suite              35 passed · 0 failed
+ship typecheck                 229 vs baseline 239 · 0 regressions
+WS + manuscript suites         4 failed / 16 tests — IDENTICAL to canonical
+check:no-supabase              clean
+
+⛔ SEAM 2 · MAIA-CONVERGENCE       STOPPED — see §B5
+```
+
+## B1 · WHAT WAS BUILT — ONE READ, ONE BINDING
+
+```
+lib/manuscript/editorialRuntime/relationships.ts   threads for a SECTION
+app/api/writers-studio/editorial/relationships     GET ?sectionId=
+app/writers-studio/canvas/RelationshipChooser.tsx  the four states, rendered
+CanvasClient                                       one adopter, and a summon
+                                                   that no longer mints
+```
+
+⛔ **No new table, column or migration.** Every field was already stored.
+
+⭐⭐ **The choosing law is NOT reimplemented.** `observationDialogueResume`
+already holds it — `resumeDecision`, pure and proven, written for the
+observation subject — including the state that refuses to round *could not find
+out* to *there are none*. This act supplies the **subject**; that module supplies
+the **decision**. The chooser passes a projection (`id · openedAt · turnCount`)
+and keeps the full records for the writer to recognise, so ⛔ the proven law is
+consumed unchanged rather than re-typed.
+
+## B2 · ⭐⭐ WHAT THE WITNESS CAUGHT — THE ACCIDENTAL OPEN WAS IN THE RAIL
+
+The first runs showed the room going straight into a conversation. The panel's
+chooser was never reached, because the Conversations gesture itself called
+`openEditorialConversation()`:
+
+```
+if (d.id === 'conversations') {
+  summon('conversation');
+  summon('maia');
+  void openEditorialConversation();   ⛔ every summon minted a relationship
+}
+```
+
+⭐ **That is exactly the founder's *"accidentally opening another one because
+Return has no read"*, and it was one line above the surface I had changed.**
+Asking for the panel is not asking for a new relationship. The call is gone; the
+room LOOKS first, and starting one is an explicit button the chooser offers by
+name.
+
+⚠️ **And the `editorialThreadId` guard came out with it.** It existed *because*
+the room could not find a relationship, so suppressing a second open was the only
+protection against duplicating one. ⛔ Keeping it would now forbid the plurality
+the substrate has always permitted. Discovery replaced suppression.
+
+## B3 · THE WITNESS — 30/0, and "tomorrow" is a browser that knows nothing
+
+⛔ Not a reopened panel, ⛔ not a back button, ⛔ not a remount — a **fresh page**
+at the room's own URL with no `editorialThread` parameter.
+
+```
+R1 · NOTHING YET            discovery found nothing · ⛔ arriving created NOTHING
+                            · the room offers to start, by name
+
+R2 · LEAVE → RETURN         ⭐⭐ returning FINDS the relationship that was there
+                            · ⛔ arriving created nothing · it OFFERS, and does
+                            not continue by itself · ⭐ she recognises it by the
+                            PASSAGE · ⛔ no identifier is shown to her
+                            · continuing resumes the SAME one
+
+R3 · A SECOND, EXPLICITLY   named as separate · ⭐ plurality is lawful
+
+R4 · PLURALITY              ⭐⭐ both shown, neither chosen · ⛔ no row marked,
+                            preferred or defaulted · each recognisable by its
+                            frozen passage · she chose the second and got it
+
+R5 · DISCOVERY FAILS        ⛔⛔ reported as unknown, NEVER as "none"
+                            · ⛔ the room does NOT offer to start
+                            · ⭐ so nothing was written
+
+R6 · SCOPED                 the other passage has none · ⛔ the server marks no
+                            winner · ⭐ order is ASCENDING, so no row sits in the
+                            "newest" seat
+```
+
+⭐ **R5 is induced by a real transport failure** — the route is intercepted and
+made to return 500 — ⛔ not by stubbing the decision.
+
+## B4 · INSTRUMENTS — amended, repaired, and re-run
+
+⭐ **Three assertions amended**, each right for the law that existed, each
+narrowed in place with its supersession written beside it:
+
+```
+the summon opens the PANEL, never a relationship   (retired coupling asserted GONE)
+one place puts a relationship in the room AND in the address
+⛔ the chooser discovers from an effect, and can open nothing from one   ⭐ NEW
+```
+
+⚠️⚠️ **AND A REAL FINDING IN AN OLDER INSTRUMENT.** `ui-editorial-surface-witness`
+would not run: its fixture recorded Source heading `'One'` while the stored draft
+slice carried **no `One\n\n` prefix** — a shape `splitStoredSection` cannot
+project, which the aligned door correctly refuses as `section_unprojectable`.
+
+⭐ **The fixture was invalid all along and only worked because the old producer
+ignored the heading.** `EDITORIAL-LOCUS-ALIGNMENT-01` exposed it. The heading was
+dropped rather than the prefix invented — with no heading, stored and projected
+coincide exactly as they always did there, so ⛔ the witness's subject is
+unchanged.
+
+⚠️ Its `K11`/`K12` carried the **same retired UI-03 law** the jest suite had
+already had amended — a second instrument holding the same sentence. Amended the
+same way, keeping every surviving clause (the retired vocabulary stays closed;
+comparison still writes nothing — `K7…K10` untouched and still passing).
+
+⚠️ And one amendment of mine was wrong before it was right: `K11` scanned
+rendered text case-sensitively, which tests the stylesheet rather than the
+surface. Recorded, because the retired `K12` had called `.toUpperCase()` for
+exactly that reason and I did not read it closely enough.
+
+```
+89 / 2   after re-pointing          (K11 · K12, the retired law)
+92 / 1   after amending them        (K11, case-sensitivity — my error)
+93 / 0   ⭐ green
+```
+
+## B5 · ⛔⛔ SEAM 2 IS STOPPED — A BOUNDARY THAT WAS CLOSED ON PURPOSE
+
+The ruling authorizes replacing the room's ephemeral conversation with *"the
+existing durable anchored conversation substrate"*. ⭐ The substrate is right:
+`AskAnchor` already declares `{ on: 'work' }` and `{ on: 'section', sectionId }`,
+neither is proposal-dependent, and **no schema change would be needed**.
+
+⛔ **But the Ask POST boundary refuses both, deliberately:**
+
+```ts
+const SUPPORTED_ANCHORS = ['question', 'uncertainty', 'division'] as const;
+```
+
+and, in that file's own words:
+
+> *"WHY `work` AND `proposal` CAME OUT. A `work` anchor loads no proposal, so a
+> raw POST could open and PERSIST a thread and only then return `no_reading` — an
+> author-originated Work thread entering through HTTP before the slice that
+> defines what such a thread is. The type may know the future union; the boundary
+> must not. `section` and `concern` were never parseable for the same reason.*
+>
+> *A shape the boundary accepts before its surface exists is a shape nobody has
+> proved, and the row it writes is evidence of a conversation nobody designed."*
+
+⭐⭐ **This is not an oversight to route around; it is a recorded decision with a
+reason, and the reason names an ordering defect** — persist first, refuse after.
+
+⛔ **NOT OPENED HERE.** Widening a boundary a prior act closed for a stated
+reason is the move this programme refused when `askRuntimeCannotWrite` blocked
+the S3 claimant: the answer then was to move the code to its honest home, ⛔ never
+to add an allowlist entry so a change could pass.
+
+⭐ **And the question is genuinely narrow now**, because Phase B *is* the slice
+that defines what an author-originated Work thread is:
+
+```
+1  may the Ask POST boundary admit { on: 'work' }?
+2  is the room's ordinary conversation anchored to the WORK, or to the ACTIVE
+   PASSAGE? — those are different relationships, and the acceptance test
+   ("MAIA's ordinary conversation is still there") reads as the Work
+3  a Work-anchored turn acquires per-turn STALENESS and PROVENANCE, because that
+   is what `ask_turns` stores. ⭐ That is a semantic commitment, not a refactor
+4  the ordering defect the comment names: does the POST still persist before it
+   can refuse a readingless anchor?
+```
+
+⛔ Nothing about the room's conversation was changed. `StudioConversation` is
+byte-for-byte as it was.
+
+## B6 · STANDING
+
+```
+RETURN-RELATIONSHIP            ✅ BUILT · 30/0 · no new memory
+prior editorial witness        ✅ RE-POINTED · fixture repaired · 93/0
+room source suite              ✅ 35/35 · three assertions amended, one NEW
+gates                          ✅ 0 regressions · suites identical to canonical
+
+MAIA-CONVERGENCE (seam 2)      ⛔ STOPPED · boundary ruling owed
+StudioConversation             ⛔ UNCHANGED
+developmental readings         ⛔ UNCHANGED
+adoption                       ⛔ UNCHANGED
+schema                         ⛔ UNCHANGED
+
+merge                          ⛔ NOT AUTHORIZED
+production                     UNTOUCHED
+```
+
+> **The acceptance question, honestly, after seam 1:** Kelly returns to Chapter
+> 10 tomorrow. The Studio remembers the chapter. **If she had an editorial
+> relationship, the Studio now finds it — offers the one, or shows her both and
+> lets her choose — and starting another is something she does, not something
+> that happens to her.** Her ordinary conversation with MAIA still starts over,
+> and closing that is seam 2.

@@ -127,6 +127,29 @@ async function transcript(page: Page): Promise<string[]> {
 }
 const U = (s: string) => s.toUpperCase();
 
+
+/**
+ * ⚠️ RETURN-RELATIONSHIP CHANGED THIS WITNESS'S DRIVING PATH, and the change is
+ * the point of that act: summoning the panel no longer mints a relationship.
+ * ⭐ The behaviour this witness proves is unchanged — it now takes the one
+ * explicit gesture the room always should have required.
+ */
+async function startOrResume(page: Page) {
+  /* ⭐ NOTHING TO CHOOSE WHEN THE ADDRESS ALREADY NAMES ONE. Reopening the panel
+     on an addressed relationship mounts the conversation directly — the chooser
+     is not rendered, and waiting for it would be waiting for a surface that
+     correctly is not there. */
+  await page.waitForTimeout(400);
+  if (await page.locator('[aria-label="Editorial conversation"]').count() > 0) return;
+  await page.waitForSelector('[data-discovery]:not([data-discovery="pending"])',
+    { timeout: 60_000 });
+  const start = page.locator('[data-start-new]');
+  const resume = page.locator('[data-resume]');
+  if (await resume.count() > 0) await resume.first().click().catch(() => {});
+  else if (await start.count() > 0) await start.first().click().catch(() => {});
+  await page.waitForTimeout(600);
+}
+
 async function main() {
   mkdirSync(SHOTS, { recursive: true });
   pg = new Client({ connectionString: DSN }); await pg.connect();
@@ -155,8 +178,19 @@ async function main() {
   await q(`INSERT INTO living_work_expressions (living_work_id,expression_type,expression_id,declared_by)
            VALUES ($1,'manuscript',$2,$3)`, [LW, WK, M]);
   await q(`INSERT INTO member_manuscripts (id,member_id,title) VALUES ($1,$2,'The Sound Before Water')`, [WK, M]);
+  /* ⚠️⚠️ THE FIXTURE WAS INVALID, AND EDITORIAL-LOCUS-ALIGNMENT-01 EXPOSED IT.
+     It recorded Source heading `'One'` while the stored draft slice carried NO
+     `One\n\n` prefix — a shape `splitStoredSection` cannot project. The old
+     producer froze the stored slice and never consulted the heading, so the
+     contradiction was invisible; the aligned door refuses it as
+     `section_unprojectable`, which is CORRECT.
+
+     ⭐ The heading is dropped rather than the prefix invented: every assertion
+     in this file is about the passage, and with no heading stored and projected
+     coincide exactly as they always did here. ⛔ The witness's subject is
+     unchanged. */
   await q(`INSERT INTO manuscript_sections (id,manuscript_id,position,heading,body)
-           VALUES ($1,$2,1,'One',$3)`, [SRC, WK, SECTION_TEXT]);
+           VALUES ($1,$2,1,NULL,$3)`, [SRC, WK, SECTION_TEXT]);
   /* ⭐ ORDER MATTERS, AND THE DATABASE SAYS SO. A section-addressable draft's
      content must equal the flattening of its sections, so the draft is created
      plain, the section is written, and only then is it declared addressable. */
@@ -202,6 +236,7 @@ async function main() {
   /* ══ THE GESTURE ══════════════════════════════════════════════════════ */
   console.log('\n── the member asks for a conversation ────────────────────────────');
   await page.getByText('Conversations', { exact: true }).first().click();
+  await startOrResume(page);
   await page.waitForFunction(
     () => new URL(window.location.href).searchParams.get('editorialThread') !== null,
     undefined, { timeout: 60_000 },
@@ -310,6 +345,7 @@ async function main() {
   eq('C2 ⭐ and the address STILL names the conversation',
      new URL(page.url()).searchParams.get('editorialThread'), addressed);
   await page.getByText('Conversations', { exact: true }).first().click();
+  await startOrResume(page);
   await page.waitForSelector('section[aria-label="Editorial conversation"]', { timeout: 60_000 });
   await settle(page); await shot(page, '05-reopened');
   eq('C3 ⭐ the same four turns are there', (await transcript(page)).length, four);
@@ -323,6 +359,7 @@ async function main() {
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 240_000 });
   await page.waitForSelector(`text=${SECTION_TEXT}`, { timeout: 240_000 });
   await page.getByText('Conversations', { exact: true }).first().click();
+  await startOrResume(page);
   await page.waitForSelector('section[aria-label="Editorial conversation"]', { timeout: 120_000 });
   await page.waitForFunction((c) => document.body.innerText.includes(c), CANDIDATE, { timeout: 60_000 })
     .catch(() => {});
@@ -413,6 +450,7 @@ async function main() {
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 240_000 });
   await page.waitForSelector(`text=${SECTION_TEXT}`, { timeout: 240_000 });
   await page.getByText('Conversations', { exact: true }).first().click();
+  await startOrResume(page);
   await page.waitForSelector('section[aria-label="Wording in this exchange"]', { timeout: 120_000 });
   await settle(page);
   eq('V16 ⭐ the authored succession survives a browser reload', await lineage().count(), 2);
@@ -549,12 +587,27 @@ async function main() {
      Number((await one('SELECT count(*) n FROM manuscript_revision_authorizations')).n), before.auths);
   eq('K10 ⛔ and the manuscript is untouched',
      (await one('SELECT text FROM manuscript_draft_sections WHERE id=$1', [SE]))?.text, before.section);
-  eq('K11 ⛔ NO DECISION IS OFFERED HERE',
-     /\b(Keep Original|Keep\b|Accept|Revise|Adopt this|Apply|Use this)\b/i
-       .test(await page.locator('section[aria-label="Compare"]').innerText()), false);
-  eq('K12 ⭐ and the standing sentence is present',
-     (await page.locator('section[aria-label="Compare"]').innerText()).toUpperCase()
-       .includes('NOTHING CHANGES UNTIL YOU EXPLICITLY ADOPT A VERSION'), true);
+  /* ⚠️⚠️ AMENDED BY FOUNDER RULING, ADOPTION-01 · PHASE B — the same retired law
+     the jest suite carried, in a second instrument. ⛔ K11 and K12 were RIGHT for
+     the law that existed: UI-03 prohibited a decision here BECAUSE ADOPTION DID
+     NOT YET EXIST. The ruled flow is now COMPARE → ADOPT, so the decision belongs
+     beside the two facts it is made from. ⭐ Everything else they protected is
+     kept: the retired vocabulary stays closed, and comparison still writes
+     nothing — K7…K10 above are untouched and still pass. */
+  const compareText = await page.locator('section[aria-label="Compare"]').innerText();
+  /* ⚠️ CASE-INSENSITIVE, DELIBERATELY. The Studio renders panel labels in
+     uppercase, so a case-sensitive scan of rendered text tests the stylesheet
+     rather than the surface — which is why the retired K12 had to call
+     `.toUpperCase()` too. */
+  eq('K11 ⭐ the ONE decision offered here is adoption',
+     /adopt this version/i.test(compareText), true);
+  eq('K11b ⛔ and the retired vocabulary is still closed',
+     /\b(Keep Original|Accept|Revise|Apply|Use this)\b/i.test(compareText), false);
+  eq('K12 ⭐ it is a confirmation, never a one-click write',
+     await page.locator('[data-adopt]').count() > 0, true);
+  eq('K12b ⛔ and nothing was adopted merely by comparing',
+     Number((await one('SELECT count(*) n FROM manuscript_revision_authorizations')).n),
+     before.auths);
 
   /* ⭐ It changes only through another explicit click. */
   await page.locator(`[data-compare="${mine?.id}"]`).click();
