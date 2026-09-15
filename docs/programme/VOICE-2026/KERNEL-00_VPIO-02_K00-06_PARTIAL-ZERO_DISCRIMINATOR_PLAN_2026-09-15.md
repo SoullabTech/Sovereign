@@ -3404,3 +3404,53 @@ if __name__=='__main__':
 ### §18.31.9 Gate maintenance (C-D24 species; instrument-only commit, preceding the records commit)
 
 The corpus-partition test read red on the cherry-pick exactly where §18.30.2 predicted: tracked journals 549 → **559**, vpio-02 51 → **61**, ledgered directories 16 → **17**, and (a fourth pin not predicted) vpio-02 gen-1 listens 50 → **60** (the ten new rows). Four count pins moved, the comment beside them updated, rule unchanged, no directory named; 76/76 read alone before the instrument commit and again before the records commit. Founder acceptance owed.
+
+## §18.32 — FOUNDER RULING on §18.31 (2026-09-15): return ACCEPTED · S2 disposition CHARACTERIZE · sample 6 A-consistent on n=1 · amplitude-only limitation MATERIAL · S3 CLOSED and non-executable as written · C-D24 maintenance ACCEPTED · CLAUDE.md compaction AUTHORIZED
+
+### §18.32.1 Ruling as captured (founder; five rulings, substance verbatim)
+
+1. **§18.31.6 ACCEPTED as the S2 disposition: `CHARACTERIZE`.** The reading is internally faithful to the ratified §7.2 law: 22/25 full rendering windows retain signal-class input; 3/25, across samples 3, 7 and 8, fall to the A′-shaped deep-attenuation floor while callbacks and `ioRunning` remain intact. The record correctly does not promote that to either A or A′ as the population finding. **S2 closes as CHARACTERIZE — founder question unresolved, not PASS, FAIL, A or A′.**
+2. **Sample 6 is `A-consistent on n=1 full rendering window`, not UNMEASURED.** The frozen K00-06 reader's two-full-window measurement rule is not imported into S2 after the evidence exists. The ratified S2 validity rule requires the external stimulus visible in ≥ 2 healthy baseline windows; its rendering rule does not require two full rendering windows. Sample 6 satisfies that law and has one qualifying full window in which signal persists. The evidentiary weakness is preserved explicitly as `n=1`; the tally is not flattened to an undifferentiated 7/10 — "6 + sample 6 on one window" is the right carrier.
+3. **The amplitude-only limitation is MATERIAL TO INTERPRETATION, accepted exactly as named.** S2 can establish that signal-class energy persists at the consumed seam in a window; it cannot establish that the persisting energy is specifically the controlled 997 Hz near-end stimulus rather than residual echo of MAIA's own playback. The 22 signal-positive windows are legitimately A-consistent but cannot establish hypothesis A as originally defined (*independent near-end signal still passes*). The three deep-attenuation windows remain strong A′-shaped observations (the whole consumed seam falls toward ~1e-5–8e-5 rms while capture continues), but three windows in three rows do not establish A′ for the population.
+   **Consequence for S3: S3 remains CLOSED, and S3 as presently designed must not be executed merely by later satisfying the old A′ condition.** The original S3 design uses VP OFF plus the same external stimulus and reads "signal during rendering" as evidence that the external stimulus survives; but S1 already established that with VP OFF MAIA's own 440 Hz playback itself reaches the consumed seam at roughly 0.06–0.07 rms and dominates it. An amplitude-only S3 therefore could not tell whether its positive signal came from the 997 Hz external stimulus or the uncancelled 440 Hz own playback. The old conditional is not triggered by this S2 result and its positive arm is now known to be non-discriminating. If the programme later needs to distinguish A from residual echo, or reopen the A′ → B question, it requires a **new source-identifying discriminator** (spectral / correlation, or another labelled-source method whose evidence can distinguish the external source from own playback) — a new design and ruling, not S3 by inheritance.
+4. **C-D24-species gate maintenance ACCEPTED.** `c78ccd59c` moves only the four structural count pins the ten new journals require (total 549 → 559 · vpio-02 51 → 61 · ledgered directories 16 → 17 · vpio-02 gen-1 listens 50 → 60); the structural partition rule is unchanged and no population directory is added to membership logic; 76/76 read alone.
+5. **CLAUDE.md compaction AUTHORIZED.** The §18.28.5 ruling approved it in principle and deferred it only until the S2 population disposition closed; this ruling closes that disposition. The compaction is its own subsequent carrier after this adjudication is durable; it may not introduce new doctrine, reopen S3, repair C-D26, or alter the scientific findings.
+
+### §18.32.2 Standing after this ruling (founder's table, verbatim)
+
+```text
+S2-RESTORE-04           PASS · CLOSED
+K00-0506-S2-02          EXECUTION PASS · SPENT
+S2 scientific disposition
+                        CHARACTERIZE · ACCEPTED · CLOSED
+
+sample 6                A-consistent · n=1 full window
+                        not S2-UNMEASURED
+
+A                       NOT ESTABLISHED
+A′                      NOT ESTABLISHED · NOT EXCLUDED
+founder question         UNRESOLVED by amplitude-only S2
+
+S2 top-up / rerun        ⛔
+new Mac population act   ⛔
+
+S3                       ⛔ CLOSED
+S3 as currently written ⛔ not executable without new
+                           source-identifying discriminator ruling
+
+C-D24 maintenance        ✅ ACCEPTED
+C-D26                    HOLD
+CLAUDE compaction        ✅ AUTHORIZED after adjudication record
+
+K00-06 built-in          CHARACTERIZE ONLY · INCOMPLETE
+KERNEL-00                NOT ACCEPTED
+```
+
+Founder, on the result: *"The important scientific result is narrower — and more useful — than forcing A or A′: VP ON does not produce one stable duplex behavior. The consumed seam preserves signal-class energy through most rendering windows, but in three independently observed windows it collapses by orders of magnitude while the capture machinery remains alive. What S2 cannot tell us is whose energy survives in the other 22 windows. That is now the actual unresolved discriminator."*
+
+### §18.32.3 Applied here
+
+- §18.31.6's table row for sample 6 now reads under ruling 2; the tally "6 + 1 on a single window (sample 6) · CHARACTERIZE 3" stands as the carrier. Nothing in §18.31 is edited.
+- S3 (§5 / §7.4 conditional) is CLOSED and, as written, non-executable; any future source-identifying discriminator is a new design act, not opened here.
+- This section is the adjudication record the compaction waits on; the compaction follows as its own commit (pointer to this standing table + `VOICE_CLAIM_STATE_2026-09-15.md`; no new doctrine).
+- Nothing else opens. `.vpio02` untouched · organism, harness, driver, readers, reinstall frozen · C-D26 HOLD · KERNEL-00 NOT ACCEPTED.
