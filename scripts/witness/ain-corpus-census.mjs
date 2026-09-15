@@ -344,9 +344,29 @@ for (const path of files) {
 // original defect in a narrower form. The threshold and the guard are now the
 // same derived value, computed once and consumed everywhere.
 const TRUST_THRESHOLD = 0.95;
+
+// TWO content-reading channels, not one. Amendment 2A unified the threshold for
+// text reads and left hashing merely counted — but hashing feeds duplication,
+// and the two channels do not fail together:
+//
+//   readTextHead()  attempted only for immediate-readability, non-empty, <16MB
+//   hashFile()      attempted for EVERY counted file
+//   startup probe   samples only immediate-readability files
+//
+// So a tree of materialized Markdown beside dataless PDFs or media passes the
+// probe, passes a text-only gate at 100%, and still emits a duplication table
+// computed from half the corpus under the banner CENSUS COMPLETE. Each channel
+// now carries its own rate against the same threshold, and completion requires
+// both.
 const textSuccesses = textAttempts - textFailures;
 const textSuccessRate = textAttempts === 0 ? 1 : textSuccesses / textAttempts;
-const contentFindingsTrustworthy = textSuccessRate >= TRUST_THRESHOLD;
+const textFindingsTrustworthy = textSuccessRate >= TRUST_THRESHOLD;
+
+const hashSuccesses = hashAttempts - hashFailures;
+const hashSuccessRate = hashAttempts === 0 ? 1 : hashSuccesses / hashAttempts;
+const hashFindingsTrustworthy = hashSuccessRate >= TRUST_THRESHOLD;
+
+const contentFindingsTrustworthy = textFindingsTrustworthy && hashFindingsTrustworthy;
 
 const duplicateClusters = [...hashes.entries()]
   .filter(([, paths]) => paths.length > 1)
@@ -380,7 +400,10 @@ const census = {
     text_read_successes: textSuccesses,
     text_read_failures: textFailures,
     text_read_success_rate: +textSuccessRate.toFixed(4),
+    hash_success_rate: +hashSuccessRate.toFixed(4),
     trust_threshold: TRUST_THRESHOLD,
+    text_findings_trustworthy: textFindingsTrustworthy,
+    hash_findings_trustworthy: hashFindingsTrustworthy,
     content_findings_trustworthy: contentFindingsTrustworthy,
   },
   readability: byReadability,
@@ -406,12 +429,20 @@ const census = {
 // FAIL CLOSED. If content reads were attempted and none succeeded, every
 // content-derived finding below is non-observation wearing the shape of a
 // measurement. Refuse rather than report.
-if (textAttempts > 0 && !contentFindingsTrustworthy) {
+const textChannelFails = textAttempts > 0 && !textFindingsTrustworthy;
+const hashChannelFails = hashAttempts > 0 && !hashFindingsTrustworthy;
+if (textChannelFails || hashChannelFails) {
   console.error('');
-  console.error(`REFUSED: ${textSuccesses} of ${textAttempts} content reads succeeded ` +
-                `(${(textSuccessRate * 100).toFixed(1)}%).`);
-  console.error(`Content-derived findings require at least ${(TRUST_THRESHOLD * 100).toFixed(0)}% ` +
-                'successful reads.');
+  console.error(`REFUSED: a content-reading channel fell below ` +
+                `${(TRUST_THRESHOLD * 100).toFixed(0)}%.`);
+  if (textChannelFails) {
+    console.error(`  text reads: ${textSuccesses}/${textAttempts} ` +
+                  `(${(textSuccessRate * 100).toFixed(1)}%) — frontmatter, domain, authorship`);
+  }
+  if (hashChannelFails) {
+    console.error(`  hash reads: ${hashSuccesses}/${hashAttempts} ` +
+                  `(${(hashSuccessRate * 100).toFixed(1)}%) — duplication clusters`);
+  }
   console.error('Frontmatter standing, domain signal, authorship signal, content hashes and');
   console.error('duplication are all derived from file contents and would be reported as');
   console.error('findings while measuring nothing. No report was written.');
@@ -462,7 +493,12 @@ const md = `# AIN Wisdom Corpus Census
 | content hash | ${hashAttempts} | ${hashAttempts - hashFailures} | ${hashFailures} |
 | text read | ${textAttempts} | ${textSuccesses} | ${textFailures} |
 
-**Content-derived findings trustworthy: ${contentFindingsTrustworthy ? 'YES' : '⛔ NO'}** (${(textSuccessRate * 100).toFixed(1)}% ≥ ${(TRUST_THRESHOLD * 100).toFixed(0)}% required)
+| channel | rate | trustworthy |
+|---|---|---|
+| text reads → frontmatter · domain · authorship | ${(textSuccessRate * 100).toFixed(1)}% | ${textFindingsTrustworthy ? 'YES' : '⛔ NO'} |
+| hash reads → duplication clusters | ${(hashSuccessRate * 100).toFixed(1)}% | ${hashFindingsTrustworthy ? 'YES' : '⛔ NO'} |
+
+**Content-derived findings trustworthy: ${contentFindingsTrustworthy ? 'YES' : '⛔ NO'}** (both channels must reach ${(TRUST_THRESHOLD * 100).toFixed(0)}%)
 
 ## Machine readability
 
