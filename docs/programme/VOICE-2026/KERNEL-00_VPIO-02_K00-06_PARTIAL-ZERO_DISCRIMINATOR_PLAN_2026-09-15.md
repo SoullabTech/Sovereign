@@ -308,3 +308,124 @@ Done, in the corpus test only (`k00-ledger.py` · `k00-output-ledger.py` · batc
 - Gate read alone before commit: **67/67** (count unchanged: one test replaced one test).
 
 **Standing after §13:** K00-04 PASS · K00-05 PASS · CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE (seam RULED) · S1 ACCEPTED · C-D22 DONE · C-D23 CLOSED by the structural partition (no further per-population naming will be needed for S2's evidence) · playback probe READ · S2 player ESTABLISHED (`afplay`) · S2 output source UNRESOLVED (founder favours preparing Mac Studio Speakers; separate act, NOT authorized) · S2 implementation HELD · S2 witness NOT AUTHORIZED · S3 not open · organism FROZEN · `.vpio02` untouched · `.vpio01` FROZEN · K00/R1 UNTOUCHED · KERNEL-00 NOT ACCEPTED.
+
+## 14. FOUNDER RULING (2026-09-15) — S2 physical source = **Mac Studio Speakers** · OUTPUT-SOURCE PREPARATION ACT OPEN (founder-performed macOS UI act) · S2 design direction FIXED, not live
+
+### 14.1 Ruling (founder, verbatim in substance)
+
+Mac Studio Speakers are selected as the governed physical source for S2: `afplay` is documented to play through the *default audio output*; the probe shows `B06Ultra` (Bluetooth) as that default and `Mac Studio Speakers` only as the system-default device. An unidentified Bluetooth endpoint would weaken the physical custody of the experiment; the built-in speakers are a stable, named, local acoustic source.
+
+**Output-source preparation act — OPEN.** A founder-performed macOS UI act, not a CLI utility, not an audio experiment.
+
+```text
+purpose
+  make Mac Studio Speakers the macOS Default Output Device
+  used by future afplay playback
+
+authorized mutation
+  exactly one output-device selection:
+  Mac Studio Speakers
+
+not authorized
+  playing sound
+  changing volume
+  disconnecting / unpairing B06Ultra
+  installing SwitchAudioSource or any other utility
+  changing input device
+  changing sample rate
+  changing the iPhone
+  starting S2
+```
+
+### 14.2 Pinned sequence (as ruled; paste-able; no `#` comment lines)
+
+Before-read, immediately before the selection:
+
+```bash
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+OUT="/private/tmp/k00-s2-output-source-$STAMP"
+mkdir -p "$OUT"
+system_profiler SPAudioDataType -json > "$OUT/audio-before.json"
+osascript -e 'get volume settings' > "$OUT/volume-before.txt"
+echo "$OUT"
+```
+
+Then exactly one UI gesture: **Control Center → Sound → Output → Mac Studio Speakers.** No volume gesture. No test sound.
+
+After-read, immediately afterwards (the parser below was run in this session against the probe's captured `audio-devices.json` — every key it reads exists as written: `_name` · `coreaudio_default_audio_output_device` · `coreaudio_device_transport` · `coreaudio_device_srate`; on the probe's capture it prints `DEFAULT_OUTPUT B06Ultra coreaudio_device_type_bluetooth 44100` and `MAC_STUDIO_DEFAULT_OUTPUT False`, i.e. the before-state):
+
+```bash
+system_profiler SPAudioDataType -json > "$OUT/audio-after.json"
+osascript -e 'get volume settings' > "$OUT/volume-after.txt"
+
+python3 - "$OUT/audio-after.json" <<'PY'
+import json, sys
+
+raw = open(sys.argv[1], encoding="utf-8").read()
+raw = raw[raw.find("{"):raw.rfind("}")+1]
+d = json.loads(raw)
+
+items = []
+for group in d.get("SPAudioDataType", []):
+    items.extend(group.get("_items", []))
+
+defaults = [
+    x for x in items
+    if x.get("coreaudio_default_audio_output_device") == "spaudio_yes"
+]
+
+for x in defaults:
+    print(
+        "DEFAULT_OUTPUT",
+        x.get("_name"),
+        x.get("coreaudio_device_transport"),
+        x.get("coreaudio_device_srate"),
+    )
+
+mac = next((x for x in items if x.get("_name") == "Mac Studio Speakers"), None)
+print("MAC_STUDIO_DEFAULT_OUTPUT",
+      bool(mac and mac.get("coreaudio_default_audio_output_device") == "spaudio_yes"))
+PY
+```
+
+Then seal the four captures for return (read-only; `shasum` is present on the Mac, the probe used it):
+
+```bash
+( cd "$OUT" && shasum -a 256 audio-before.json volume-before.txt audio-after.json volume-after.txt > SHA256SUMS && cat SHA256SUMS )
+```
+
+### 14.3 PASS / STOP (as ruled; literals from the captured JSON vocabulary)
+
+PASS requires all of:
+
+```text
+exactly one DEFAULT_OUTPUT line
+name       Mac Studio Speakers
+transport  coreaudio_device_type_builtin        (the JSON literal for "built-in")
+MAC_STUDIO_DEFAULT_OUTPUT True
+```
+
+Custody only, not criteria: the sample rate printed on that line (the probe read 48000 for the built-in device), both `volume-*.txt` values (macOS keeps per-device volume state; they need not equal the Bluetooth values; the act must not alter volume by hand), and `B06Ultra` still listed in `audio-after.json` without the default-output flag (it was not unpaired). Anything else is **STOP**: no second selection, no volume correction, no playback test, no S2 execution.
+
+### 14.4 Return
+
+Copy `$OUT` into `docs/programme/VOICE-2026/driver-ledger/s2-output-source-<STAMP>/` on a `feature/*` branch (the Mac hooks refuse `claude/*`), with the parser's printed lines pasted into a `READ.txt` beside the captures; it is cherry-picked here and the PASS/STOP is read from the files. A PASS establishes only *the default output device is Mac Studio Speakers at <STAMP>*; the S2 batch re-reads the device identity before each population and refuses on a mismatch (design direction below) — the preparation is not a standing guarantee.
+
+### 14.5 S2 design direction — FIXED by this ruling, NOT live
+
+```text
+player               /usr/bin/afplay
+physical source      Mac Studio Speakers
+stimulus             deterministic static audio file · SHA-256 pinned · steady for the entire phone
+                     invocation · distinct from MAIA's 440-Hz own-output tone
+orchestration        batch-only
+per-sample custody   stimulus SHA · afplay binary identity · default-output identity before invocation ·
+                     player PID · player start epoch · proof the PID remained alive during the governed
+                     interval · explicit stop/wait · exit status · stop epoch
+```
+
+Physical chain the design must make legible: hash-pinned stimulus → `/usr/bin/afplay` → macOS Default Output Device → Mac Studio Speakers → room → iPhone `builtInMic` → VoiceProcessingIO → MAIA's consumed input seam. Phone-side validity unchanged (§7 as ratified): the source must be visible as `signal` in at least two healthy pre-output baseline windows, else that invocation is UNMEASURED for the discriminator; no amplitude threshold is manufactured.
+
+**Lane rule:** a PASS on the preparation does not authorize the S2 design act or implementation; before/after evidence returns first, then a separate bounded S2 batch-only design authority.
+
+**Standing after §14:** structural corpus partition LANDED · playback census COMPLETE · S2 physical source Mac Studio Speakers · RULED · **output-source preparation OPEN (Mac act, not yet executed; evidence owed)** · sound playback NOT AUTHORIZED · S2 design execution HELD · S2 implementation HELD · S2 witness NOT AUTHORIZED · S3 NOT OPEN · organism FROZEN · `.vpio02` untouched · `.vpio01` FROZEN · K00/R1 UNTOUCHED · KERNEL-00 NOT ACCEPTED.
