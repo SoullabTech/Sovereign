@@ -2332,3 +2332,143 @@ Neither is the `.vpio02` container `E3B88028…` (present in `apps.json`, no pro
 5. Nothing else: `b198e2e37` unchanged · S3 CLOSED · KERNEL-00 acceptance CLOSED.
 
 **Standing after §18.21:** `K00-0506-S2` act STOP in Block B (foreign harness processes: R1 `.k00` PID 2098 · frozen `.vpio01` PID 2099; cause/actor UNKNOWN) · population NOT invoked · S2 rows NONE · playback NONE · volume UNREAD by this act · `.vpio02` install intact · `b198e2e37` unchanged · C-D26 open, non-blocking · WITNESS-02/03/04 residue preserved · S2 population authority: disposition owed · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.22 — FOUNDER RULING on §18.21 (2026-09-15): STOP ACCEPTED · `tmp/` census NOT OPENED · **`S2-FOREIGN-HARNESS-DISPOSAL-01` AUTHORIZED (termination only)** · **`K00-0506-S2-02` AUTHORIZED CONDITIONALLY** on a clean disposal (`s2pop2` token; §18.20.3 otherwise unchanged) · two distinct evidentiary acts · NOT YET EXECUTED
+
+### 18.22.1 The ruling (founder; quoted where it governs)
+
+1. **`K00-0506-S2` STOP — ACCEPTED** as read: "STOPPED in Block B · authority SPENT · population invocation NOT begun · population rows NONE · playback NONE · pre-Block-C volume read NOT reached." Classified as "an infrastructure refusal caused by two live `VoiceKernelHarness` processes belonging to subjects other than the population subject" — PID 2098 → R1 / `.k00` / `phase-a`; PID 2099 → frozen `.vpio01`; `.vpio02` process absent, install intact. The restart/relaunch inference "remains inference only. Cause and actor remain UNKNOWN. Block B behaved correctly."
+2. **Optional container `tmp/` census — NOT OPENED.** "The process capture already establishes the fact necessary for the population boundary … Determining whether those ungoverned processes wrote additional material is a separate forensic question and is not required to restore the population precondition." May be opened later under its own authority.
+3. **`S2-FOREIGN-HARNESS-DISPOSAL-01` — AUTHORIZED**, termination only, "the already-exercised §10.5 C termination shape": `subject phase-a → testTerminateOnly` · `subject vpio-01 → testTerminateOnly`, `TEST_RUNNER_K00_SUBJECT` explicit for each. For `.vpio01` "this ruling authorizes termination only"; NOT authorized for either subject: test launch · sample acquisition · reinstall · container mutation · journal generation · reader invocation · stimulus · playback · volume change · configuration change.
+4. **Disposal acceptance:** after the two invocations, `VoiceKernelHarness processes: 0` "using the same process-reading surface already used by Block B. If either foreign process remains, the disposal act STOPs and returns for ruling. No escalation, kill command, reinstall, retry with another mechanism, or manual process destruction is authorized."
+5. **`K00-0506-S2-02` AUTHORIZED upon a clean disposal result only** — "§18.20.3 unchanged except for the fresh population worktree/path token" `/private/tmp/k0506-s2pop-b198e2e37` → `/private/tmp/k0506-s2pop2-b198e2e37` "and any corresponding fresh carrier names required solely to prevent collision with the spent act." Semantics unchanged: run label `K00-0506-S2` · N 10 · subject `vpio-02` · stimulus `s2-nearend` · `b198e2e37` unchanged · §7 reading law unchanged. The spent `s2pop` worktree is residue, "not reused or cleaned under this authority."
+6. **The pre-Block-C gate remains decisive.** No restoration authority added; the governed read (69 · unmuted · Sound pane absent) decides; on failure "STOP · no restoration · no adjustment · no retry · population invocation remains unbegun." The 15:49:59Z reading is historical custody only.
+7. **No inference from successful disposal** — a clean termination establishes only that the known foreign state was removed; a later Block B PASS does not explain the earlier presence.
+8. **C-D26** stays OPEN · non-blocking; no repair inside either act.
+
+"The foreign processes are a precondition defect, not a population finding. Remove the defect by the narrowest already-exercised act; then approach the same population boundary again without weakening it." Disposal and population "as two distinct evidentiary acts."
+
+### 18.22.2 Execution pin — `S2-FOREIGN-HARNESS-DISPOSAL-01` (Mac act; §10.5 C shape twice; reads only otherwise)
+
+Runner: the same signed `8b111709b` batch runner the §10.5 C act used (`testTerminateOnly` is byte-identical across `8b111709b` · `83a382a14` · `b198e2e37`; C-D20 touched `testOutputSample` only). If that xctestrun no longer exists on the Mac, STOP before any invocation and return — no rebuild is inside this authority. Device id `A0736AC8-…` for `devicectl`, Xcode destination `00008140-…` for `xcodebuild`, never swapped. The harness receives nothing; the runner env is the only input.
+
+**Stage 0 — before-read (the Block-B surface; the §10.5 C matcher verbatim). Proceed only if exactly the two identified containers are listed and nothing else:**
+
+```bash
+set -u
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUT="/private/tmp/k00-disposal-$STAMP"
+mkdir -p "$OUT"
+echo "$STAMP" > "$OUT/stamp.txt"
+XR=/private/tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+test -f "$XR" && echo "RUNNER_PRESENT true" || { echo "STOP: the 8b111709b signed runner xctestrun is absent — no rebuild under this authority"; exit 2; }
+( cd /private/tmp/k0506-driver-compile-8b111709b && git rev-parse HEAD )
+xcrun devicectl device info processes --device A0736AC8-793B-516F-AC72-C076DB6CEE38 --json-output "$OUT/processes-before.json"
+python3 - "$OUT/processes-before.json" <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print('VoiceKernelHarness processes BEFORE:', len(hits), hits)
+c={p.split('/Bundle/Application/')[1].split('/')[0] for p,_ in hits}
+exp={'0B07D423-97E7-4196-BC1C-C69C96F994BE','6A2E406B-D1B8-43A4-92F3-29D50333AF19'}
+print('BEFORE_SET_IS_THE_TWO_IDENTIFIED', c==exp, sorted(c))
+PY
+```
+
+`BEFORE_SET_IS_THE_TWO_IDENTIFIED True` is the precondition. Any other set (a third process, the `.vpio02` container, zero, or an unreadable listing) → STOP, return the before-read, no invocation.
+
+**Stage 1 — exactly two `testTerminateOnly` invocations, one per foreign subject, in this order; each once:**
+
+```bash
+cd /private/tmp/k0506-driver-compile-8b111709b
+TEST_RUNNER_K00_SUBJECT=phase-a xcodebuild test-without-building -xctestrun "$XR" -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never -only-testing:DriverUITests/K00DriverTests/testTerminateOnly 2>&1 | tee "$OUT/terminate-phase-a.log"
+TEST_RUNNER_K00_SUBJECT=vpio-01 xcodebuild test-without-building -xctestrun "$XR" -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never -only-testing:DriverUITests/K00DriverTests/testTerminateOnly 2>&1 | tee "$OUT/terminate-vpio-01.log"
+grep -hE 'Executed 1 test|TEST EXECUTE|DRIVER/INFRASTRUCTURE|PRECONDITION' "$OUT/terminate-phase-a.log" "$OUT/terminate-vpio-01.log"
+```
+
+A `harness did not terminate` failure on either → still take the after-read, then STOP and return; no second invocation of either subject.
+
+**Stage 2 — after-read on the same surface; acceptance = 0:**
+
+```bash
+xcrun devicectl device info processes --device A0736AC8-793B-516F-AC72-C076DB6CEE38 --json-output "$OUT/processes-after.json"
+python3 - "$OUT/processes-after.json" <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print('VoiceKernelHarness processes AFTER:', len(hits), hits)
+print('DISPOSAL_ACCEPTANCE', 'PASS' if len(hits)==0 else 'STOP')
+PY
+```
+
+**Stage 3 — seal and return on its own `feature/*` branch** (fresh worktree from the lane tip; the §18.18.4 dependency link is the precedented transport; nothing else committed):
+
+```bash
+{ printf 'ACT S2-FOREIGN-HARNESS-DISPOSAL-01\nSTAMP %s\nRUNNER_SOURCE 8b111709b6e5010b4b6ee7281d257141945276ff\nSUBJECTS phase-a vpio-01\nINVOCATIONS 2\nSECOND_INVOCATION_PER_SUBJECT none\nESCALATION none\nDEVICE_ACTS termination-only\n' "$STAMP"; } > "$OUT/RETURN.txt"
+( cd "$OUT" && shasum -a 256 stamp.txt processes-before.json processes-after.json terminate-phase-a.log terminate-vpio-01.log RETURN.txt > SHA256SUMS.disposal && cat SHA256SUMS.disposal )
+BR="feature/k00-s2-foreign-harness-disposal-$STAMP"
+WT="/private/tmp/k00-disposal-carrier-$STAMP"
+cd /Users/soullab/MAIA-SOVEREIGN && git fetch origin claude/voice-2026-census-01 && git worktree add -b "$BR" "$WT" origin/claude/voice-2026-census-01
+cd "$WT" && test -e node_modules || ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
+REL="docs/programme/VOICE-2026/driver-ledger/S2-FOREIGN-HARNESS-DISPOSAL-01-$STAMP"
+mkdir -p "$REL" && cp -p "$OUT"/* "$REL"/ && ( cd "$REL" && shasum -a 256 -c SHA256SUMS.disposal )
+git add "$REL" && git commit -m "witness(voice-2026): return S2-FOREIGN-HARNESS-DISPOSAL-01 evidence (termination-only, two subjects, before/after process reads)" && git push -u origin "$BR" && git log -1 --format=%H
+```
+
+Return: branch + commit SHA → §18.23 (verified here: seal, the two logs, before = the two identified containers, after = 0). **PASS = `DISPOSAL_ACCEPTANCE PASS` with both invocations `Executed 1 test, 0 failures`.** Anything else = STOP · spent · return for ruling. A PASS establishes only that the known foreign state was removed (ruling item 7).
+
+### 18.22.3 Execution pin — `K00-0506-S2-02` (Mac act; ONLY after §18.22.2 returned `DISPOSAL_ACCEPTANCE PASS` and its evidence is committed and pushed; a separate evidentiary act, its own branch)
+
+§18.20.3 verbatim with the `s2pop2` token: worktree `/private/tmp/k0506-s2pop2-b198e2e37`; block files `/private/tmp/s2pop2-block*.sh`; outputs `/private/tmp/s2pop2-block*.out`; pre-C files `/private/tmp/s2pop2-preC-*.txt`; the ledger label `K00-0506-S2` and the transcript name `/private/tmp/k00-0506-s2-transcript.txt` unchanged (that transcript was never created by the spent act, so no collision). Expected block hashes (derived here from `17b4df63b` + the four substitutions with the new path; `Dpop` = §18.20.3 Stage 5 text with the two path lines changed):
+
+```text
+5dd16bdd1d1aafdf40c740a615d92b1e8e54bbe4e1bebdeb1cecc623174aa276  /private/tmp/s2pop2-blockA.sh
+22e105ddd7f3e7389ad86c1dc0c4359cb5ad609d50030a810692c73b2d9ac16e  /private/tmp/s2pop2-blockB.sh
+77d40528fb81f403ae43c22af5db7ec3d1ba4f5e2fa9b763448e67b6533c48c0  /private/tmp/s2pop2-blockC.sh
+e4f93c0beb49831438320ffd5af1f82d111b0c529392d33f5a3af0a0462b5879  /private/tmp/s2pop2-blockDpop.sh
+```
+
+**Stage 0:**
+
+```bash
+cd /Users/soullab/MAIA-SOVEREIGN
+DOC=docs/programme/VOICE-2026/KERNEL-00_VPIO-02_K00-06_PARTIAL-ZERO_DISCRIMINATOR_PLAN_2026-09-15.md
+git show 17b4df63b:$DOC | sed -n '599,625p' > /private/tmp/s2w1-blockA.sh
+git show 17b4df63b:$DOC | sed -n '633,702p' > /private/tmp/s2w1-blockB.sh
+git show 17b4df63b:$DOC | sed -n '710,713p' > /private/tmp/s2w1-blockC.sh
+for b in A B C; do sed -e 's/S2-WITNESS-01 1 --act/K00-0506-S2 10 --act/' -e 's/S2-WITNESS-01/K00-0506-S2/g' -e 's/s2-witness-01/k00-0506-s2/g' -e 's#/private/tmp/k0506-s2w-b198e2e37#/private/tmp/k0506-s2pop2-b198e2e37#g' /private/tmp/s2w1-block$b.sh > /private/tmp/s2pop2-block$b.sh; done
+for b in A B C; do echo "== block $b diff (only the four tokens may appear)"; diff /private/tmp/s2w1-block$b.sh /private/tmp/s2pop2-block$b.sh; done
+shasum -a 256 /private/tmp/s2pop2-block[ABC].sh
+test ! -e /private/tmp/k0506-s2pop2-b198e2e37 && echo "POP2_WORKTREE_PREEXISTS false" || { echo "STOP: /private/tmp/k0506-s2pop2-b198e2e37 pre-exists"; exit 2; }
+```
+
+Then write `/private/tmp/s2pop2-blockDpop.sh` as exactly the Stage 5 text below and confirm its hash. Any mismatch = STOP before Block A.
+
+**Stages 1–4** = §18.20.3 Stages 1–4 with `s2pop` → `s2pop2` in every `/private/tmp/…` path (Blocks A · B → pre-C read → Block C → `Dpop`), §16.7 transport unchanged. The pre-C read is unchanged and decisive: `output volume:69, ` ∧ `output muted:false` ∧ pane `rc=1`, else `STOP: pre-Block-C volume read is not 69/unmuted — population NOT invoked`, no restoration, no adjustment, no retry.
+
+**Stage 5 — `Dpop` for this act (write byte-for-byte):**
+
+```bash
+cd /private/tmp/k0506-s2pop2-b198e2e37
+LD="$(ls -td docs/programme/VOICE-2026/driver-ledger/K00-0506-S2-2* | head -1)"
+echo "LEDGER_DIR=$LD"
+pgrep -x afplay > /private/tmp/s2pop2-afplay-after.txt && { cat /private/tmp/s2pop2-afplay-after.txt; echo "AFPLAY_PROCESSES_AFTER=nonzero"; } || echo "AFPLAY_PROCESSES_AFTER=0"
+ls -la "$LD/stimulus-preflight"
+cat "$LD/stimulus-preflight/stimulus.sha256" "$LD/stimulus-preflight/afplay.sha256" "$LD/stimulus-preflight/stimulus-wave-metadata.txt" "$LD/stimulus-preflight/volume.txt"
+for f in "$LD"/stimulus-sample-*.tsv; do echo "== $f"; grep -E '^(sample|pid|startEpoch|preRunState|postRunState|waitExitStatus|stopEpoch|custody)' "$f"; done
+grep -c "custody$(printf '\t')VALID" "$LD"/stimulus-sample-*.tsv
+cat "$LD/sample-timing.tsv"
+grep -E 'stimulus|STOP|ABORT|custody|ledgered|batch complete|INFRASTRUCTURE' "$LD/batch.log"
+grep -c '^| AUTOMATED' "$LD/ledger.md"
+ls "$LD/journals" | grep -c '\.jsonl$'
+cp /private/tmp/k00-0506-s2-transcript.txt "$LD/transcript.txt"
+( cd "$LD" && shasum -a 256 transcript.txt stimulus-sample-*.tsv stimulus-sample-*-afplay.log stimulus-preflight/* journals/*.jsonl ledger.md output-ledger.md batch.log sample-timing.tsv daemons/* > SHA256SUMS.population && wc -l SHA256SUMS.population && cat SHA256SUMS.population )
+```
+
+**Return** = §18.20.3's return contract on its own `feature/*` branch (`K00-0506-S2-<stamp>/` complete + `SHA256SUMS.population` · `K00-0506-S2-preflight-<stamp>/` · `s2pop2-*` outputs · pre-C files) → §18.24 here (seal · classifier · output reader · §7 reading per row; partition pins expected to move by ten, C-D24 species). A pre-C or in-batch STOP returns in the §18.21/§17 shape.
+
+**Standing after §18.22:** `K00-0506-S2` STOP · accepted · spent · foreign harnesses `.k00` + `.vpio01` identified · **DISPOSAL-01 AUTHORIZED, pinned, NOT YET EXECUTED** · **`K00-0506-S2-02` AUTHORIZED CONDITIONALLY (after `DISPOSAL_ACCEPTANCE PASS`), pinned, NOT YET EXECUTED** · `s2pop` worktree = residue · `b198e2e37` unchanged · 69 exact, pre-C read decisive · `tmp/` census NOT OPENED · C-D26 OPEN, non-blocking · S3 CLOSED · KERNEL-00 acceptance CLOSED.
