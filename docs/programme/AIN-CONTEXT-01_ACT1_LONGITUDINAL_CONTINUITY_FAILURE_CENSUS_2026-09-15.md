@@ -223,7 +223,12 @@ statement from turn 18 at turn 140?"*:
 > currently preserves the oldest material and drops the newest, which is the reverse of what a
 > conversation needs and the reverse of what the member will assume.
 
-⚠️ Classified **DERIVED, UNWITNESSED**. It follows from reading three files. It has not been run.
+✅ **WITNESSED 2026-09-15 by `C4-WITNESS-01` — RED.** On a disposable shadow with a 150-turn
+session (150 distinct timestamps), the real route returned exactly the oldest 100 and excluded
+the newest turn. Record: `AIN-CONTINUITY_C4-WITNESS-01_RESULT_2026-09-15.md`.
+⚠️ The original classification is kept below, struck rather than deleted.
+
+~~Classified **DERIVED, UNWITNESSED**. It follows from reading three files. It has not been run.~~
 It is the **first thing ACT 4's baseline must confirm or refute**, because if it is real it is a
 one-line ordering defect producing a large relational failure, and if it is not real this census
 wants to know why.
