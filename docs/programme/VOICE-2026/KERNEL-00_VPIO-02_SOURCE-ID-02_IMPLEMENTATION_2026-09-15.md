@@ -379,3 +379,31 @@ bash /private/tmp/sid-mac-compile-02.sh 2>&1 | tee /private/tmp/sid-mac-compile-
 Custody check before line 4: `554e663e…` and `50`. Do not type anything into the window while it runs. `rc=` may be empty (C-D26). The evidence carrier for `$OUT` follows the §10.6 carrier shape on a `feature/*` branch — issued after the run, whatever its fate.
 
 **Standing after §10.11.** REPAIR-01 ACCEPTED · compile candidate = `faf918b5c` · `SID MAC-COMPILE-02` OPEN, pinned, NOT YET EXECUTED · siblings HOLD · reinstall pins EMPTY · FIRST-INSTALL CLOSED · SID ENTRY WITNESS REQUIRED, not opened · device execution NONE · C-D26 HOLD.
+
+### 10.12 `SID MAC-COMPILE-02` EXECUTED (founder, Mac Studio terminal directly, 2026-09-15) → **final echo reached = pinned PASS conjunction satisfied, as founder-reported** · carrier issued · acceptance waits on custody
+
+**Transport.** Label substitution accepted by execution. Extracted pin = 50 lines · `554e663e…` (matches). `$OUT = /private/tmp/sid-mac-compile-02-out-20260915T214212Z`; worktree `/private/tmp/sid-mac-compile-02-faf918b5c…` (new path, no collision with the `-01-` worktree). `rc=` empty (C-D26).
+
+**Transcript, step by step (founder report; custody pending the carrier).**
+
+| step | witnessed line(s) | pinned criterion |
+|---|---|---|
+| HEAD | `faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8` | exact — PASS |
+| tree before | `test -z "$(git status --porcelain)"` passed (script continued) | clean — PASS |
+| toolchain | Xcode 26.3 (17C529) · xcodegen 2.46.0 · Apple Swift 6.2.4 — identical to MAC-COMPILE-01 | same toolchain that produced the 485:13 time-out |
+| gate | `Tests: 82 passed, 82 total` | 82/82 — PASS |
+| `swift build` | `[13/13] Compiling VoiceKernel AudioGraph.swift` · `Build complete! (4.00s)` | PASS |
+| `swift test` | **`Executed 33 tests, with 0 failures (0 unexpected)`** (package total; per-suite lines include `Executed 6 tests, with 0 failures … 0.033 s` = `SourceEstimatorTests`) | zero failures — PASS · **the six source unit vectors have now executed for the first time on any toolchain, all passing** |
+| source count | `7` (`SourceEstimatorTests` lines carrying `passed` = suite summary + six tests) | readable — PASS |
+| xcodegen | `Created project at …/VoiceKernelHarness.xcodeproj` | PASS |
+| unsigned generic-iOS build | `** BUILD SUCCEEDED **` | PASS |
+| signed device build (team `ZVK2X646Z2`, destination id) | `** BUILD SUCCEEDED **` | PASS · no install, no launch |
+| identity | `life.soullab.voicekernel.vpio02sid` · `VoiceKernel VPIO-02-SID` · dylib UUID **`4A6AD464-0A19-320F-980E-7446F6AA1440`** (arm64) · dylib SHA-256 **`a15b399d9a9a3c1071d12ba3c4fb24a56b3f6e51c708f8d3c5dd9cb811bdfc44`** · executable SHA-256 **`db036694dcaa415bb50bb6319af249d643e6db76847177541db836f2f1ec5d17`** · manifest `SID-MAC-COMPILE-02.manifest.sha256` = **`699ac758b12bd8062145655ad12fab6ed5ac2c96e1b4003cc210a5b39f72c7a4`**, **7 files** · codesign `Identifier=life.soullab.voicekernel.vpio02sid` · `TeamIdentifier=ZVK2X646Z2` · Apple Development authority chain | bundle/display exact; every identity field readable — PASS |
+| post-build surface | `head-after` = `faf918b5c…` · `status-after` = ` M ios/VoiceKernelHarness/Harness/Info.plist` (19+/1−) only · `git diff --quiet -- ios/VoiceKernel ios/VoiceKernelHarness/project.yml scripts __tests__` passed | the known `xcodegen` footprint and nothing else (§10.2 reading law) — PASS |
+| seal + echo | `SHA256SUMS.compile` written · `SID-MAC-COMPILE-02 20260915T214212Z subject faf918b5c… out …` | final echo reached — PASS |
+
+**What this establishes, and what it does not.** (i) The line-485 obstruction is **resolved on the same toolchain that produced it** — no sibling expression (`g`, `seq26`, the inner `on` loop) produced a diagnostic; they were, as the founder anticipated they might be, merely similar-looking expressions, and **no change was manufactured for them**; sibling HOLD is now moot rather than lifted. (ii) The SID subject compiles, its unit vectors pass (6/6 within 33/33), and it builds signed for the registered device with the ruled identity. (iii) This is a **compile qualification only**: install 0 · launch 0 · sample 0 · device mutation 0; the reinstall pins remain **EMPTY** — the identity above is recorded here, not pinned into `k00-reinstall.sh`; that mutation is its own act after the compile evidence is accepted (§10.1). (iv) **Acceptance waits on custody**: this section is the founder's transcript; the carrier below brings `$OUT` (head/status/toolchain/gate/swift-build/swift-test/source-tests-passed-count/xcodegen/xcodebuild-unsigned/xcodebuild-signed/build-results/identity/manifest/head-after/status-after/diff-after/SHA256SUMS.compile) onto a `feature/*` branch, is cherry-picked `-x`, the compile seal is re-checked file-by-file and the manifest re-hashed here before `SID MAC-COMPILE-02` is recorded ACCEPTED.
+
+**Carrier issued** — `docs/programme/VOICE-2026/SID_MAC-COMPILE-02_CARRIER_2026-09-15.sh` (§10.6 shape): reads `$OUT` whole (`cp -R`), the executed pin, every `sid-mac-compile-02-transcript-*.log`, a listing; runs `shasum -c SHA256SUMS.compile` inside the copy and stores the result as `SHA256SUMS.compile.check`; writes `SHA256SUMS.run` + `RETURN.txt`; commits to `feature/sid-mac-compile-02-evidence-20260915T214212Z` and pushes. Never writes into `$OUT`; touches no code. Run shape as §10.6 (`git show <sha>:… > /private/tmp/sid-carrier-02.sh` · `shasum`/`wc -l` · `bash … | tee …`).
+
+**Standing after §10.12.** `SID MAC-COMPILE-02` EXECUTED · PASS (founder-reported) · **NOT YET ACCEPTED** (carrier owed) · REPAIR-01 ACCEPTED at `faf918b5c` · siblings: no finding · reinstall pins EMPTY · FIRST-INSTALL CLOSED · SID ENTRY WITNESS REQUIRED, not opened · device execution NONE · C-D26 HOLD. Next possible founder acts, none open: accept MAC-COMPILE-02 on custody → rule on pinning the SID identity into the reinstall instrument → rule on opening the SID ENTRY WITNESS.

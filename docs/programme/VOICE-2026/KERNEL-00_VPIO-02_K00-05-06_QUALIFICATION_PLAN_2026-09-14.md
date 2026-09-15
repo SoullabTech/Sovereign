@@ -841,3 +841,8 @@ Non-substantive residue only (0-byte tee transcript, refused at `test ! -e "$WT"
 ### §10.62 — REPAIR-01 ACCEPTED · `SID MAC-COMPILE-02` OPEN and pinned (2026-09-15; discriminator plan §18.42; implementation record §10.11)
 
 Compile requalification of `faf918b5c` on the Mac toolchain; same PASS conjunction and STOP rules as MAC-COMPILE-01; installs, launches, samples nothing; reinstall pins stay empty. SID subject qualification remains CLOSED; SID ENTRY WITNESS REQUIRED, not opened. Not yet executed.
+
+
+### §10.63 — `SID MAC-COMPILE-02` PASS as founder-reported on `faf918b5c`; NOT YET ACCEPTED pending custody (2026-09-15; discriminator plan §18.43; implementation record §10.12)
+
+Compile qualification of the SID subject reached its final echo: gate 82/82 · swift build · swift test 33/33 (source vectors 6/6) · project generation · unsigned + signed device builds · identity exact (`vpio02sid` / `VPIO-02-SID`; dylib UUID `4A6AD464-…`) · surface proof. Installs, launches, samples nothing; reinstall pins EMPTY. SID subject qualification (K00 obligations) remains CLOSED; SID ENTRY WITNESS REQUIRED and not opened. Carrier owed before acceptance.
