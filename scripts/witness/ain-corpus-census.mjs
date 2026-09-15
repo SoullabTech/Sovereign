@@ -275,8 +275,15 @@ const records = [];
 let totalBytes = 0;
 let withFullFrontmatter = 0;
 let withPartialFrontmatter = 0;
+// Frontmatter standing is a question about MARKDOWN documents only.
+// CORPUS_DISCIPLINE_PROTOCOL_v1.0 admits TWO metadata carriers — YAML frontmatter
+// for Markdown, a sibling .meta.json sidecar for PDFs and other formats — and this
+// instrument reads only the first. Counting a non-Markdown file as "absent
+// frontmatter" asks it to satisfy a carrier the canon does not require of it.
+let mdDocuments = 0;
 let withNoFrontmatter = 0;
-let withUnknownFrontmatter = 0;   // text read attempted and failed — NOT absence
+let withUnknownFrontmatter = 0;   // eligible Markdown, content never arrived — NOT absence
+let sidecarFiles = 0;             // .meta.json — a metadata carrier, not a corpus document
 let zeroByte = 0;
 let soullabSignal = 0;
 
@@ -327,17 +334,33 @@ for (const path of files) {
   // evidence that frontmatter is missing from it. Within the tolerated 5% of
   // content-read failures those files were previously counted as "absent" —
   // a false negative manufactured from non-observation.
-  const textEligible = readability === 'immediate' && st.size > 0 && st.size < 16 * 1024 * 1024;
-  if (textEligible && !textObserved) withUnknownFrontmatter += 1;
-  else if (fmPresent === null) withNoFrontmatter += 1;
-  else if (fmPresent.length === RATIFIED_FIELDS.length) withFullFrontmatter += 1;
-  else withPartialFrontmatter += 1;
+  const isMarkdown = ext === '.md' || ext === '.markdown';
+  const isSidecar = rel.endsWith('.meta.json');
+  if (isSidecar) sidecarFiles += 1;
+
+  let frontmatterStatus = 'not_applicable';   // non-Markdown: this carrier is not required of it
+  if (isMarkdown) {
+    mdDocuments += 1;
+    const textEligible = st.size > 0 && st.size < 16 * 1024 * 1024;
+    if (st.size === 0) { frontmatterStatus = 'absent'; withNoFrontmatter += 1; }
+    else if (textEligible && !textObserved) { frontmatterStatus = 'unknown'; withUnknownFrontmatter += 1; }
+    else if (fmPresent === null) { frontmatterStatus = 'absent'; withNoFrontmatter += 1; }
+    else if (fmPresent.length === RATIFIED_FIELDS.length) { frontmatterStatus = 'complete'; withFullFrontmatter += 1; }
+    else { frontmatterStatus = 'partial'; withPartialFrontmatter += 1; }
+  }
 
   records.push({
     rel, ext: ext || '(none)', bytes: st.size, mtime: st.mtime.toISOString(),
     readability, hash, hashKind,
-    frontmatter_fields_present: fmPresent, // null = no frontmatter block found
-    frontmatter_fields_missing: fmPresent ? RATIFIED_FIELDS.filter((f) => !fmPresent.includes(f)) : RATIFIED_FIELDS,
+    frontmatter_status: frontmatterStatus,   // complete | partial | absent | unknown | not_applicable
+    // A missing-fields array is emitted ONLY for a Markdown document whose content
+    // was actually read. Unknown and not_applicable both carry null: neither
+    // non-observation nor a different metadata carrier is evidence of absence.
+    frontmatter_fields_present: frontmatterStatus === 'unknown' || frontmatterStatus === 'not_applicable' ? null : fmPresent,
+    frontmatter_fields_missing:
+      frontmatterStatus === 'unknown' || frontmatterStatus === 'not_applicable' ? null
+        : fmPresent ? RATIFIED_FIELDS.filter((f) => !fmPresent.includes(f))
+        : RATIFIED_FIELDS,
     content_observed: textObserved,
     domain_signal: textObserved ? domains : null,   // null = not observed, NOT 'none found'
     soullab_authorship_signal: textObserved ? soullab : null, // null = not observed
@@ -423,10 +446,14 @@ const census = {
   ratified_frontmatter: {
     required_fields: RATIFIED_FIELDS,
     source: 'docs/canon/CORPUS_DISCIPLINE_PROTOCOL_v1.0.md',
-    complete: withFullFrontmatter,
-    partial: withPartialFrontmatter,
-    absent: withNoFrontmatter,
-    unknown_unread: withUnknownFrontmatter,
+    markdown_documents: mdDocuments,
+    markdown_frontmatter_complete: withFullFrontmatter,
+    markdown_frontmatter_partial: withPartialFrontmatter,
+    markdown_frontmatter_absent: withNoFrontmatter,
+    markdown_frontmatter_unknown: withUnknownFrontmatter,
+    non_markdown_sidecar_compliance: 'NOT MEASURED BY THIS INSTRUMENT',
+    meta_json_sidecars_seen: sidecarFiles,
+    corpus_documents_excluding_sidecars: files.length - sidecarFiles,
   },
   observation_scope: {
     files_whose_content_was_read: textSuccesses,
@@ -534,6 +561,8 @@ const md = `# AIN Wisdom Corpus Census
 | **AppleDouble sidecars excluded** | ${appleDoubleSkipped} |
 | **Zero-byte files** | ${zeroByte} (${pct(zeroByte)}% of counted files) |
 | **\`.backup\` artifacts excluded** | ${backupSkipped} |
+| **\`.meta.json\` sidecars (carriers, not documents)** | ${sidecarFiles} |
+| **Corpus documents excluding sidecars** | ${files.length - sidecarFiles} |
 
 ## Measurement state
 
@@ -566,15 +595,31 @@ const md = `# AIN Wisdom Corpus Census
 
 Required: ${RATIFIED_FIELDS.map((f) => `\`${f}\``).join(' · ')}
 
-| State | Files | Share |
-|---|---|---|
-| Complete | ${withFullFrontmatter} | ${pct(withFullFrontmatter)}% |
-| Partial | ${withPartialFrontmatter} | ${pct(withPartialFrontmatter)}% |
-| Absent (**read**, none found) | ${withNoFrontmatter} | ${pct(withNoFrontmatter)}% |
-| ⛔ **Unknown (eligible but unread)** | ${withUnknownFrontmatter} | ${pct(withUnknownFrontmatter)}% |
+⭐ **Denominator is the ${mdDocuments} Markdown document(s)**, ⛔ not all ${files.length} counted files.
 
-⚠️ *Absent frontmatter is the census's central finding, not a defect list. It measures
-the distance between the corpus as it exists and the discipline already ratified for it.*
+| State | Markdown docs | Share of Markdown |
+|---|---|---|
+| Complete | ${withFullFrontmatter} | ${mdDocuments ? ((withFullFrontmatter / mdDocuments) * 100).toFixed(1) : '0.0'}% |
+| Partial | ${withPartialFrontmatter} | ${mdDocuments ? ((withPartialFrontmatter / mdDocuments) * 100).toFixed(1) : '0.0'}% |
+| Absent (**read**, none found) | ${withNoFrontmatter} | ${mdDocuments ? ((withNoFrontmatter / mdDocuments) * 100).toFixed(1) : '0.0'}% |
+| ⛔ **Unknown (eligible but unread)** | ${withUnknownFrontmatter} | ${mdDocuments ? ((withUnknownFrontmatter / mdDocuments) * 100).toFixed(1) : '0.0'}% |
+
+### ⛔ Non-Markdown metadata: NOT MEASURED
+
+\`CORPUS_DISCIPLINE_PROTOCOL_v1.0\` admits **two** metadata carriers — YAML frontmatter for
+Markdown, and a sibling \`.meta.json\` sidecar for PDFs and other formats. **This instrument reads
+only the first.**
+
+> **Markdown frontmatter standing is measured here. Non-Markdown \`.meta.json\` sidecar compliance
+> is NOT measured by this census.**
+
+⛔ A non-Markdown file is therefore **\`not_applicable\`**, never "absent frontmatter" — it is not
+required to carry that carrier. ${sidecarFiles} \`.meta.json\` sidecar(s) were seen; they are
+counted as metadata carriers, ⛔ never as authored corpus documents.
+
+⚠️ *Absent frontmatter is the census's central finding, not a defect list. It measures the
+distance between the **Markdown** corpus as it exists and the YAML-carrier half of the discipline
+already ratified for it* — ⛔ **not** the whole protocol.
 
 ⛔ ***Unknown* is not *absent*.** Those files were eligible for a content read and their content
 never reached this instrument. They are excluded from the absence finding rather than counted
