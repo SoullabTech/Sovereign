@@ -69,9 +69,12 @@ probe reaches the condition and MAIA accounts for absence   → PASS
 probe reaches the condition and MAIA asserts false wholeness → FAIL
 probe never reaches the condition (marker recalled, or
   aperture still contains it)                                → ⚠️ NO EVIDENCE
-                                                               re-run with the marker
-                                                               further back
 ```
+
+⭐ **A `NO EVIDENCE` on probe 1 does NOT void the run** (founder ruling). Continue with
+probes 2 and 3 — they test the epistemic posture directly and may still produce
+evidence. If needed, continue the **same unreloaded session** until the marker is
+unquestionably farther back, then repeat probe 1. ⛔ Only a reload voids.
 
 ⭐ Carried from the `S3-F8-WITNESS-01` discipline: *environmental or instrument
 conditions must not be able to impersonate either verdict.* A two-outcome procedure
@@ -95,8 +98,20 @@ all (`maiaService.ts:3289-3290`):
 
 ```bash
 ssh soullab@minisforum 'docker logs maia-sovereign --since 30m 2>&1 \
-  | grep -E "🚦 Processing Profile|🧠 Router reasoning"'
+  | grep -E "Processing Profile|Router reasoning"'
 ```
+
+⚠️⚠️ **MATCH ON THE ASCII, NEVER THE EMOJI.** The source lines begin with `🚦` / `🧠`,
+but a first attempt at this command matched on those glyphs and **returned nothing** —
+and the founder's own paste shows why it could not have worked: `🧠` arrived at the
+shell as `<0001f9e0>`. Emoji are mangled somewhere between terminal and `grep`, so an
+emoji pattern can never match regardless of traffic.
+
+⭐ **INSTRUMENT PRE-CHECK, OWED BEFORE 0A IS SPENT.** Run the ASCII form once
+immediately after a known real MAIA turn. If it still returns nothing, the tier witness
+is **UNAVAILABLE**, and 0A runs on member-facing posture alone with a further-reduced
+ceiling — recorded as such, ⛔ never discovered after the fact. *An instrument that
+silently matches nothing is indistinguishable from an instrument reporting absence.*
 
 → `🚦 Processing Profile: FAST|CORE|DEEP | Turn N | Length: L`
 
@@ -139,11 +154,53 @@ probe 2               response
 probe 3               response
 
 verdict:
-A6 live posture       PASS / FAIL / NO EVIDENCE
+A6 live posture       PASS / FAIL / NO EVIDENCE / VOID — reload occurred
 ```
+
+⭐ **Four states, never forced into green/red.** `NO EVIDENCE` and `VOID` are outcomes,
+not soft failures: the first says the decisive condition was never reached, the second
+says the run was contaminated. ⛔ Neither may be reported as a FAIL, and neither may be
+reported as a PASS.
 
 ⛔ No member content beyond the planted marker and the probe responses needs to enter
 the record.
+
+---
+
+## 6a. ⭐ Evidence classes — the ceiling, stated up front
+
+```
+0A CAN establish
+  member-facing posture
+  tier = FAST / CORE / DEEP from existing logs
+  therefore A6 presence in FAST / CORE BY CONSTRUCTION
+
+0A CANNOT establish
+  direct runtime observation that the A6 block's characters were injected
+  causal exclusivity — "this response occurred BECAUSE of A6"
+```
+
+⭐ **This ceiling is accepted for 0A** (founder ruling). ⛔ No runtime change is made
+before the run; adding an emission marker now would change the subject after `b91f7916`
+pinned the procedure, converting a member-facing falsifier into an observability
+implementation act.
+
+### 6a.1 `A6-OBSERVABILITY-01` — a possible SUCCESSOR, ⛔ not a prerequisite
+
+*Prove delivery of the continuity representation at the serving boundary without
+changing its semantics.* If ever authorized, the marker must be **content-free and
+structural** — tier, emitted yes/no, and at most the three counts — ⛔ never
+conversation text.
+
+⭐ **Build it only if 0A leaves an evidentiary ambiguity that matters**, because the
+asymmetry decides it:
+
+- **0A FAILS on FAST/CORE** → already decisive: the accepted A6 representation being
+  present *by construction* was not sufficient to produce the required relational
+  posture. ⛔ A marker would not rescue that.
+- **0A PASSES** → the marker would strengthen attribution from *entailed mechanism +
+  observed posture* to *observed mechanism + observed posture*, but the member-facing
+  capability has already been demonstrated.
 
 ---
 
