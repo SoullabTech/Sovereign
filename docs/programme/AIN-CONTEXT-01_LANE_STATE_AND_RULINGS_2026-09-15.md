@@ -13,13 +13,20 @@ ACT 1   ✅ CLOSED   Longitudinal continuity failure census          (C1–C9)
 ACT 2   ✅ CLOSED   Invariants · Amendment 1 · Completion 1         (LC-1…LC-21, 4 discriminators)
 ACT 3   ✅ CLOSED   Spiralogic runtime & process-continuity census  (D1 · owed read discharged)
 
-A6 → F1a   ⭐ NAMED BY FOUNDER AS THE NEXT MOVE — ⚠️ NOT IDENTIFIED IN THIS TREE (§5)
-ACT 4      ⛔ UNOPENED, deliberately
+ACT 4                      ⛔ CLOSED
+continuity-depth repair    ⛔ NOT OPENED
+F1a                        ⛔ NOT AUTHORIZED
 ```
 
-**[F]** *"I would keep ACT 4 unopened until F1a has run and received its founder ruling. Otherwise
-this lane starts accumulating parallel evidence programs while the smallest live continuity defect
-already has bounded authorization."*
+> ⚠️ **AMENDED by §6, same day.** An earlier version of this block carried
+> `A6 → F1a ⭐ NAMED BY FOUNDER AS THE NEXT MOVE`. **There is no such act.** The founder's
+> correction (§6) establishes that it was an unratified chat draft referred to in error as an
+> existing authorization. ⛔ Kept in §6 verbatim rather than deleted.
+
+~~**[F]** *"I would keep ACT 4 unopened until F1a has run and received its founder ruling…
+while the smallest live continuity defect already has bounded authorization."*~~
+⚠️ **SUPERSEDED (§6): the clause "already has bounded authorization" was not true.** ACT 4 remains
+closed; the reason is now simply that no act has opened it.
 
 ⛔ Nothing repaired · nothing ratified · C4 unrepaired · `writeSummary` inactive · summary slot
 empty · `member_spiral_state` untouched · Bridge D untouched.
@@ -140,3 +147,114 @@ see — most likely a prior session, another branch, or a record not yet committ
 
 *Signal may persist. Interpretation may persist. Neither persistence converts either one into
 identity or authority.*
+
+---
+
+## 6. CUSTODY CORRECTION — THERE IS NO `A6 → F1a` ACT **[F]**
+
+**Founder correction, 2026-09-15, carried as authored:**
+
+> *"There is no committed `A6 → F1a` act. I introduced it in my prior response as though it were
+> already part of the durable lane state. That was incorrect."*
+>
+> What actually happened: *"you asked whether A6 should open with repair authority and whether it
+> should stop at F1a; I recommended 'open A6 through F1a only' and **drafted authorization language
+> here in chat**; that language was **never adopted by a founder act, committed, or pushed**; I then
+> mistakenly referred to my own proposed draft as an already-authorized act."*
+>
+> *"`c3b42ce` is correct to leave it unresolved. Current durable state: **no A6 repair act is open.
+> ACT 4 remains closed.**"*
+>
+> *"Your custody check caught a genuine error in my previous state accounting: **proposal ≠ founder
+> act, and chat text ≠ durable lane authority.**"*
+
+### 6.1 ⭐ THE GENERAL FORM — AND IT IS THE THIRD INSTANCE
+
+**[J]** This is not a one-off slip. It is the same defect class this project has now recorded three
+times, in three environments:
+
+| Date | Instance | The shared mechanism |
+|---|---|---|
+| 2026-09-07 | Merge-to-canonical is latent schema-deploy authorization; pushes reported *"Bypassed rule violations"* | a thing became authorized by a **channel**, not by an act |
+| 2026-09-13 | Branch policy committed but not authoritative in every execution environment — *"a commit can appear policy-compliant merely because the enforcement mechanism was absent"* | a rule appeared satisfied because nothing could check it |
+| **2026-09-15** | **A drafted authorization, discussed but never committed, later recalled as an existing act** | an authorization appeared to exist because nothing distinguished **proposed** from **ratified** |
+
+> **General form: an authorization's existence must be checkable from the durable record, never
+> from recollection of the conversation in which it was discussed.**
+
+⭐ And the interim rule, in the same shape as the 2026-09-13 one (*absence of the branch hook is
+never evidence of branch-policy compliance*):
+
+> **⛔ Recollection of having drafted an authorization is never evidence that one was given.**
+
+⚠️ Worth stating plainly because the asymmetry is the whole hazard: **this class of error is
+invisible from the side that made it and cheap to catch from the side that must act on it.** The
+drafter remembers deciding; the executor finds nothing. ⭐ The check that caught it was not
+cleverness — it was refusing to run a procedure that could not be read.
+
+### 6.2 THE PROPOSAL, PRESERVED — ⛔⛔ NOT AN AUTHORIZATION
+
+Recorded **[F]** *"for provenance"*, so a future founder act can adopt it without reconstructing it.
+
+> ### ⛔⛔ STATUS: UNRATIFIED DRAFT FROM CHAT · NOT AN AUTHORIZATION · CONFERS NO STANDING ⛔⛔
+>
+> **Proposed act** — *"Authoritative Depth + Absence Accounting"*
+>
+> **Proposed boundary**: author F1a, run it against untouched production behaviour, establish
+> whether the specified failure is present, preserve the RED evidence, and **stop** for founder
+> ruling. ⛔ No repair written before F1a is run and adjudicated.
+>
+> **Proposed purpose**: add **no** memory, retrieval, summarization, interpretation or developmental
+> inference. Ground the existing continuity posture with truthful self-location about
+> **(1)** authoritative conversation depth · **(2)** current-session material actually represented
+> in the active cognitive assembly · **(3)** known absence between the durable conversation and the
+> presently assembled working set.
+>
+> **Proposed F1a claim, to be falsified**: *in a sufficiently long active session, authoritative
+> session depth exceeds the prompt-visible conversational window, yet cognition is given a shallow
+> effective turn count and no explicit accounting of displaced current-session material.*
+>
+> **Proposed witness distinguishes**: authoritative session depth · selected current-session history
+> supplied to cognition · resulting prompt-visible turn count or equivalent self-location · whether
+> displaced current-session material is represented as **known absent**.
+> ⭐ The RED would **not** depend on cross-session memory being present.
+>
+> **Proposed stop condition**: preserve evidence · classify against the falsifier · **stop** ·
+> require a new founder ruling before any implementation.
+>
+> **Proposed exclusions**: `hasLoadedContext` omitting the in-session window · whole-response
+> replacement by the memory-canon scrubber · retrieval changes · summaries · cross-session memory ·
+> interpretive-ledger wiring · Spiralogic changes · correction-standing changes.
+
+**[J] Why this is recorded inside the lane-state record and not as its own file.** A standalone
+document under `docs/programme/` is exactly the artifact that gets mistaken for an act six weeks
+later — which is the error §6.1 just named. ⛔ It stays here, under the status stamp, where its
+non-authorization travels with it. **LC-22 applied to the lane's own records: the guard is bound to
+what it guards.**
+
+### 6.3 NAMING — `A6` RETIRED FOR THIS PURPOSE **[F]**
+
+> *"`A6` is already overloaded inside ACT 2, as you found. I would not reuse it for the repair."*
+
+⛔ `A6` denotes **ACT 2 Amendment 1 §A6** (the `member_spiral_state` prohibited-shape section) and
+nothing else in this lane. **[F]** suggests `LC-DEPTH-01` or `CONTINUITY-APERTURE-01` for a future
+act, with `F1a` beneath it. ⛔ **Neither is chosen here** — naming an act is an act.
+
+---
+
+## 7. STANDING, RESTATED
+
+```
+ACT 1                      ✅ CLOSED
+ACT 2                      ✅ CLOSED
+ACT 3                      ✅ CLOSED
+ACT 4                      ⛔ CLOSED
+continuity-depth repair    ⛔ NOT OPENED
+F1a                        ⛔ NOT AUTHORIZED
+```
+
+⛔ Nothing repaired · nothing ratified · C4 unrepaired and still a derived claim ·
+`writeSummary` inactive · summary slot empty · `member_spiral_state` untouched · Bridge D untouched ·
+no act open.
+
+*Proposal ≠ founder act. Chat text ≠ durable lane authority.*
