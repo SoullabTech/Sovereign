@@ -105,6 +105,24 @@ const MAX_QUESTION = 4000;
  *
  * A shape the boundary accepts before its surface exists is a shape nobody has
  * proved, and the row it writes is evidence of a conversation nobody designed.
+ *
+ * ── ⚠️ ASK-WORK-ANCHOR-01 · B1 — HALF OF THAT REASONING IS NOW SPENT ───────
+ *
+ * ⭐ THE ORDERING DEFECT IS REPAIRED. The readingless decision now stands ABOVE
+ * `openThread` and above the author's turn, so the sentence *"could open and
+ * PERSIST a thread and only then return `no_reading`"* is no longer true of this
+ * route. ⛔ It is kept above rather than deleted, because it is why the boundary
+ * was closed and the record of that is worth more than a tidy comment.
+ *
+ * ⛔⛔ AND THE BOUNDARY STAYS CLOSED ANYWAY, on the half that has NOT been
+ * spent: *a shape the boundary accepts before its surface exists is a shape
+ * nobody has proved.* `askMaia` still takes a proposal-shaped context —
+ * `interpretation`, `evidence`, `coverage`, `reviewed` — and there is no Work
+ * context anywhere in this substrate. An admitted `work` anchor would now reach
+ * a lawful thread and fail THERE instead, which is better and is not enough.
+ *
+ * ⭐ The order is the law: ordering (B1) → a Work context (B2) → widening (B3).
+ * ⛔ Nothing may be added to `SUPPORTED_ANCHORS` until B2 is witnessed.
  */
 const SUPPORTED_ANCHORS = ['question', 'uncertainty', 'division'] as const;
 
@@ -300,6 +318,47 @@ export async function POST(
       { status: ANCHOR_STATUS[check.refusal] });
   }
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     ⭐⭐ ASK-WORK-ANCHOR-01 · B1 — THE READINGLESS DECISION, ABOVE ANY WRITE.
+
+     ⚠️ THIS BRANCH STOOD BELOW `openThread` AND BELOW THE AUTHOR'S TURN. It was
+     kept, correctly, as *"the honest answer the day a reading-less anchor is
+     added"* — but from where it stood, that day would have looked like this:
+
+         admit {on:'work'}
+           → thread row written
+           → the member's own words written
+           → 422 no_reading
+
+         = durable evidence of a conversation the system had not established it
+           could conduct, carrying what she actually said
+
+     ⭐ The parse boundary and this branch were the same finding written from
+     opposite ends, and they agreed: the boundary refused the anchor precisely
+     BECAUSE this branch was in the wrong place. Moving it is what lets the
+     boundary be widened later — ⛔ and widening is NOT this act.
+
+     ⭐ THE ACCEPTANCE LAW: a refusal discovered before opening a relationship
+     must leave no evidence that the relationship existed. So the response no
+     longer carries a `threadId` — ⛔ there is no thread to name, and naming one
+     was only possible because one had already been written.
+
+     ⛔ STILL UNREACHABLE TODAY, and deliberately so. `parseAnchor` admits only
+     proposal-bearing anchors, and a proposal-dependent anchor with no reading is
+     already refused above — by the 404 at `loadFrozenReading` or by
+     `checkAnchor`'s `anchor_requires_reading`. ⭐ That is the point: the ordering
+     is repaired BEFORE the boundary can reach it, not after.
+
+     ⛔ `isProposalDependent` is deliberately NOT consulted here. `checkAnchor`
+     is the anchor authority and has already refused every proposal-dependent
+     anchor that lacks its reading; asking a second question about the same fact
+     would be a second authority on it. What remains at this line is exactly the
+     case the boundary does not yet admit.
+     ══════════════════════════════════════════════════════════════════════════ */
+  if (!reading) {
+    return NextResponse.json({ refusal: 'no_reading' }, { status: 422 });
+  }
+
   /* Measured, or honestly reported as unmeasured. Never assumed. */
   let canonicalNow: string | null = null;
   try { canonicalNow = await canonicalFingerprint(id); } catch { canonicalNow = null; }
@@ -374,14 +433,6 @@ export async function POST(
     await appendTurn({
       threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
     });
-  }
-
-  if (!reading) {
-    /* UNREACHABLE WHILE THE BOUNDARY ACCEPTS ONLY PROPOSAL-BEARING ANCHORS, and
-       kept for exactly that reason: it is the honest answer the day a
-       reading-less anchor is added, and deleting it would mean the first such
-       anchor arrives at a route with no opinion about having nothing to read. */
-    return NextResponse.json({ threadId: liveThreadId, refusal: 'no_reading' }, { status: 422 });
   }
 
   const outcome = await askMaia(
