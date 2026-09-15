@@ -28,13 +28,40 @@ admits() { local out; out="$(q "$2")"
 
 echo "── W5-3 · rollback ───────────────────────────────────────────"
 
-# Run the manual rollback exactly as the migration's footer records it.
-ROLLBACK_SQL="$(sed -n '/^-- BEGIN;$/,/^-- COMMIT;$/p' \
-  "$ROOT/database/migrations/20260914000005_editorial_ontology.sql" | sed 's/^-- \{0,1\}//')"
+footer_of() { sed -n '/^-- BEGIN;$/,/^-- COMMIT;$/p' "$1" | sed 's/^-- \{0,1\}//'; }
+run_sql() { printf '%s\n' "$1" | psql -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGDB" -q -v ON_ERROR_STOP=1 2>&1; }
+
+W42="$ROOT/database/migrations/20260915000001_editorial_turn_bindings.sql"
+W53="$ROOT/database/migrations/20260914000005_editorial_ontology.sql"
+W42_ROLLBACK="$(footer_of "$W42")"
+ROLLBACK_SQL="$(footer_of "$W53")"
 [ -n "$ROLLBACK_SQL" ] || { echo "REFUSED · no rollback block found in the migration"; exit 2; }
+[ -n "$W42_ROLLBACK" ] || { echo "REFUSED · no rollback block found in the W4-2 migration"; exit 2; }
+
+# ⭐⭐ THE ORDERING LAW, PERFORMED RATHER THAN ASSERTED IN PROSE. W4-2 builds on
+# W5-3's objects, so W5-3's footer CANNOT run while W4-2 is applied. This ran
+# green before W4-2 existed and would silently go on passing if the two footers
+# were run out of order in the wrong direction — so it is checked first, on a
+# database where nothing has been rolled back yet.
+OUT_EARLY="$(run_sql "$ROLLBACK_SQL")"
+if printf '%s' "$OUT_EARLY" | grep -q 'ERROR'; then
+  ok "R0a · ⭐⭐ W5-3's rollback is REFUSED while W4-2 is applied — the footers have an order"
+else
+  bad "R0a · W5-3's rollback ran with W4-2 still applied" "NOT REFUSED"
+fi
+PGDB="$PGDB" bash "$ROOT/scripts/witness/w5-rebuild-db.sh" >/dev/null 2>&1 \
+  || { echo "REFUSED · could not rebuild $PGDB"; exit 2; }
+
+# ⭐ W4-2's own footer first. ⛔ Its SET NOT NULL is allowed to fail when an
+# editorial thread exists — that is the design's rollback law, and it is not
+# exercised here because this database has no threads yet.
+OUT42="$(run_sql "$W42_ROLLBACK")"
+if printf '%s' "$OUT42" | grep -q 'ERROR'; then
+  bad "R0b · W4-2's rollback runs first" "$(printf '%s' "$OUT42" | head -2)"
+else ok "R0b · ⭐ W4-2's rollback, from its own footer, runs first"; fi
 # ⭐ Executed FROM THE MIGRATION'S OWN FOOTER, so a rollback that drifts from
 # what the file documents is a failure here rather than a surprise later.
-OUT="$(printf '%s\n' "$ROLLBACK_SQL" | psql -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGDB" -q -v ON_ERROR_STOP=1 2>&1)"
+OUT="$(run_sql "$ROLLBACK_SQL")"
 if printf '%s' "$OUT" | grep -q 'ERROR'; then
   bad "R0 · the documented rollback runs" "$(printf '%s' "$OUT" | head -2)"
 else ok "R0 · ⭐ the rollback recorded in the migration's own footer RUNS"; fi
