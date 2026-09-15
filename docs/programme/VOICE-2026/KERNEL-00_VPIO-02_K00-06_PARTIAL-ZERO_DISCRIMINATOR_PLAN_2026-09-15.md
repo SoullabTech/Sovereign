@@ -2672,3 +2672,77 @@ A STOP before Stage 3 still returns whatever `$OUT` holds under the same carrier
 Return: branch + commit SHA → §18.25 (verified here: seal · `build-head.txt` = `b198e2e37…` · `testTerminateOnly.sha256` = `c483528b…` · subject-table rows 2 · `TEST BUILD SUCCEEDED` · runner custody hashes recorded · before-set = the two identified containers · both logs `Executed 1 test, 0 failures` · after = 0). **PASS = `DISPOSAL_ACCEPTANCE PASS` with both invocations `Executed 1 test, 0 failures`.** Anything else = STOP · spent · return for ruling. A PASS establishes only that the known foreign live harness state was removed (ruling item 8); only after its evidence is committed and pushed does the `K00-0506-S2-02` condition (§18.22.3, unchanged) become MET — the population is then its own act on its own branch.
 
 **Standing after §18.24:** DISPOSAL-01 STOP · accepted · spent · option (a) NOT ADOPTED · **DISPOSAL-02 AUTHORIZED, pinned, NOT YET EXECUTED** (Stage −1 fresh signed runner at `b198e2e37` · subjects `phase-a` · `vpio-01` once each · after-read 0) · `K00-0506-S2-02` CONDITIONALLY AUTHORIZED, unopened until DISPOSAL-02 PASS is committed and pushed · `b198e2e37` unchanged · 69 exact, pre-C read decisive · C-D26 OPEN, non-blocking · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.25 — `S2-FOREIGN-HARNESS-DISPOSAL-02` EXECUTED → STOP IN STAGE −1 AT THE RUNNER-CUSTODY LINE (2026-09-15 · runner BUILT and IDENTIFIED · custody paths mis-pinned · nothing invoked) — C-D27
+
+### §18.25.1 Custody
+
+Founder return: branch `feature/k00-s2-foreign-harness-disposal-02-stop-20260915T173055Z`, commit `761bef73950c6b5ef76ef80191949f75e5909267` → cherry-picked here with `-x` as `60269c4ed`. Bundle `driver-ledger/S2-FOREIGN-HARNESS-DISPOSAL-02-STOP-20260915T173055Z/` (13 files). `SHA256SUMS.disposal-stop` recomputed here: **12/12 OK** (stamp · build-head · testTerminateOnly.sha256 · subject-table · xcodegen.log · build-for-testing.log · runner-path · runner-custody.sha256 · worktree-footprint · products-post-stop-listing · STOP · RETURN). `STOP.txt` verbatim:
+
+```
+S2-FOREIGN-HARNESS-DISPOSAL-02 STOP in Stage -1
+BUILD_HEAD b198e2e37058f2e059d986b4b148e224215f3ee3
+TEST_TERMINATE_ONLY_SHA c483528b804f3aae6113f347ffdaecad51a80f6a0d3499bd419ae474b27d888e
+SUBJECT_TABLE_ROWS 2
+XCODEGEN PASS
+BUILD_FOR_TESTING PASS
+RUNNER_PRESENT true
+RUNNER_CUSTODY_HASHES INCOMPLETE
+MISSING_PINNED_PATH DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests
+MISSING_PINNED_PATH DriverUITests-Runner.app/DriverUITests-Runner
+MISSING_PINNED_PATH DriverHost.app/DriverHost
+PROCESS_BEFORE_READ NOT_RUN
+TERMINATION_INVOCATIONS 0
+PROCESS_AFTER_READ NOT_RUN
+DISPOSAL_ACCEPTANCE NOT_REACHED
+POPULATION_ACT NOT_OPENED
+```
+
+`RETURN.txt`: `RESULT STOP · STAGE_REACHED Stage -1 runner custody · RUNNER_SOURCE b198e2e37… · BUILD_FOR_TESTING PASS · RUNNER_PRESENT true · RUNNER_CUSTODY COMPLETE false · INVOCATIONS 0 · DEVICE_ACTS none · POPULATION_ACT NOT_OPENED`.
+
+### §18.25.2 What Stage −1 established (verified here from the files)
+
+- `build-head.txt` = `b198e2e37058f2e059d986b4b148e224215f3ee3` (exact).
+- `testTerminateOnly.sha256` = `c483528b…` = the §18.23.3 value recomputed from the git object database — the pinned implementation.
+- `subject-table.txt` = exactly the two rows (`phase-a` → `.k00` · `vpio-01` → `.vpio01`).
+- `xcodegen.log` PASS · `build-for-testing.log` `** TEST BUILD SUCCEEDED **` ×1, no `devicectl` / `test-without-building` verb in the log (the only `xctest` matches are build paths).
+- `runner-path.txt`: `RUNNER_PRESENT true /private/tmp/k0506-disposal-b198e2e37/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun`.
+- `runner-custody.sha256`: the xctestrun hashed `3b6360f76e2ec96f0917bcac180dea439c7bddfcafa2c592317b953cfd08d1fc`. **Observation, not inference:** this equals the §10.9 readiness signed-runner xctestrun hash recorded from the `83a382a14` worktree (`3b6360f7…`) — two builds in different worktrees produced byte-identical xctestrun text; consistent with the file's `__TESTROOT__`-relative content, recorded as observed.
+- `worktree-footprint.txt` empty (the generated project and `.derived` are gitignored; nothing tracked moved).
+- `products-post-stop-listing.txt` (founder-added, read-only): the xctestrun sits in `Build/Products/`; **every bundle sits one level deeper in `Build/Products/Debug-iphoneos/`** — `DriverHost.app/DriverHost` · `DriverUITests-Runner.app/DriverUITests-Runner` · `DriverUITests-Runner.app/PlugIns/DriverUITests.xctest` all present there; the build log names the test binary at `…/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests`.
+
+**The runner was built, signed, and identified. The device was never touched.**
+
+### §18.25.3 C-D27 — this session's pin defect (the boundary was right; the pin was wrong)
+
+The §18.24.2 custody line ran `cd "$(dirname "$XR")"` (= `Build/Products`) and named the three bundle binaries relative to that directory, **omitting the `Debug-iphoneos/` configuration-platform level**. The correct line already existed in the repository and had already run on the Mac twice — §10.6 (`8b111709b`) and §10.9 (`83a382a14`):
+
+```
+shasum -a 256 *.xctestrun Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests Debug-iphoneos/DriverUITests-Runner.app/DriverUITests-Runner Debug-iphoneos/DriverHost.app/DriverHost
+```
+
+I wrote a fresh line instead of reusing the precedent. The founder executed exactly as pinned and stopped exactly where §18.24 item 5 says to stop (*any Stage −1 failure → STOP, no adaptation*); adapting the paths inside the act would have been the wrong move, and it was not made. Classification: **instruction defect of this session (C-D27), same species as C-D3/C-D25** — a pinned line that had never run anywhere. Nothing about the Mac, the toolchain, the recipe, or the design is implicated: the recipe produced the runner; the custody sentence could not see it.
+
+Consequence under §18.24: **DISPOSAL-02 STOP · spent.** Termination invocations 0 · foreign process state NOT re-read (last evidence still the population Block-B read) · volume unread · `.vpio02`/`.vpio01`/K00/R1/organism/`b198e2e37` untouched · `K00-0506-S2-02` condition UNMET.
+
+Founder's observation, kept: *"the executable was successfully rebuilt; the act stopped on custody path assumptions before reaching the problem it was created to solve."*
+
+### §18.25.4 Returned for ruling (named, not chosen)
+
+The runner now exists at `/private/tmp/k0506-disposal-b198e2e37/…` with its xctestrun hash committed (`3b6360f7…`) and its build HEAD committed. Two shapes for a DISPOSAL-03, both with the C-D27 line corrected to the precedent; neither authorized here:
+
+- **(α) Reuse the DISPOSAL-02 runner.** Stage −1′ = read-only: the worktree HEAD re-read must be `b198e2e37…`; the xctestrun must exist and re-hash to exactly `3b6360f7…`; the four-file precedent custody line (with `Debug-iphoneos/`) must succeed; any mismatch → STOP, no rebuild inside. Then §18.22.2 Stages 0–3 unchanged. Cost: no build. Tension with §18.24 item 2: this is a `/private/tmp` product, but one whose identity is committed and which is minutes old, not a historical residue; the founder decides whether the item-2 reasoning applies to it.
+- **(β) Fresh Stage −1 in a new path** (`/private/tmp/k0506-disposal03-b198e2e37`, must not pre-exist), the §18.24.2 Stage −1 block verbatim except the corrected custody line; then Stages 0–3 unchanged. Cost: one more signed build; borrows nothing.
+
+Corrected custody line for either shape (the only substitution against §18.24.2; the precedent's shape, run from the products directory):
+
+```bash
+( cd "$(dirname "$XR")" && shasum -a 256 "$(basename "$XR")" Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests Debug-iphoneos/DriverUITests-Runner.app/DriverUITests-Runner Debug-iphoneos/DriverHost.app/DriverHost ) | tee "$OUT/runner-custody.sha256"
+test "$(wc -l < "$OUT/runner-custody.sha256" | tr -d ' ')" = "4" || { echo "STOP: runner custody incomplete"; exit 3; }
+```
+
+Under either shape: before-set exactly `{0B07D423…, 6A2E406B…}` else STOP · `phase-a` then `vpio-01`, once each · after-read 0 · `DISPOSAL_ACCEPTANCE PASS` alone meets the `K00-0506-S2-02` condition once committed and pushed · `.vpio01` termination only · `s2pop2` pin (§18.22.3) unaffected. The `k0506-disposal-b198e2e37` worktree is residue under (β) and the carrier under (α); under neither is it removed.
+
+**Standing after §18.25:** DISPOSAL-01 STOP · spent · DISPOSAL-02 STOP in Stage −1 · spent · runner BUILT + IDENTIFIED (xctestrun `3b6360f7…`) · **C-D27 = this session's pin defect** (custody line omitted `Debug-iphoneos/`; precedent existed at §10.6/§10.9) · termination invocations 0 · foreign process state NOT re-read · `K00-0506-S2-02` condition UNMET · DISPOSAL-03 shapes (α)/(β) returned, NOT authorized · `b198e2e37` unchanged · 69 last read 15:49:59Z · C-D26 OPEN · S3 CLOSED · KERNEL-00 acceptance CLOSED.
