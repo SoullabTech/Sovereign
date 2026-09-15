@@ -1,0 +1,41 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testTerminateOnly"
+
+2026-09-14 20:27:25.246 xcodebuild[86648:30189693] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 20:27:25.249 xcodebuild[86648:30189693] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 20:27:25.349 xcodebuild[86648:30189693] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-14 20:27:25.891 xcodebuild[86648:30189693] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 20:27:26.084 xcodebuild[86648:30189693] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 20:27:28.383059-0400 DriverUITests-Runner[67079:14704242] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-14 20:27:28.971.
+Test Suite 'DriverUITests.xctest' started at 2026-09-14 20:27:28.972.
+Test Suite 'K00DriverTests' started at 2026-09-14 20:27:28.972.
+Test Case '-[DriverUITests.K00DriverTests testTerminateOnly]' started.
+    t =     0.00s Start Test at 2026-09-14 20:27:28.973
+    t =     0.02s Set Up
+    t =     0.02s Terminate life.soullab.voicekernel.vpio02:67021
+2026-09-14 20:27:29.187 xcodebuild[86648:30189693] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =     1.06s Wait for life.soullab.voicekernel.vpio02 to become Not Running
+    t =     1.06s Tear Down
+Test Case '-[DriverUITests.K00DriverTests testTerminateOnly]' passed (1.113 seconds).
+Test Suite 'K00DriverTests' passed at 2026-09-14 20:27:30.087.
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.113 (1.115) seconds
+Test Suite 'DriverUITests.xctest' passed at 2026-09-14 20:27:30.088.
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.113 (1.116) seconds
+Test Suite 'Selected tests' passed at 2026-09-14 20:27:30.090.
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.113 (1.119) seconds
+2026-09-14 20:27:30.193 xcodebuild[86648:30189693] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 20:27:30.397 xcodebuild[86648:30189693] [MT] IDETestOperationsObserverDebug: 4.505 elapsed -- Testing started completed.
+2026-09-14 20:27:30.397 xcodebuild[86648:30189693] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-14 20:27:30.397 xcodebuild[86648:30189693] [MT] IDETestOperationsObserverDebug: 4.505 sec, +4.505 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-ggjqoltiyopnidgtuqndnknvxhsx/Logs/Test/Test-DriverUITests-2026.09.14_20-27-25--0400.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

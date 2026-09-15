@@ -1,0 +1,8 @@
+runner_source=8b111709b6e5010b4b6ee7281d257141945276ff
+subject=vpio-02
+before_count=1
+before_pid=67021
+terminate_only_result=PASS
+xcodebuild_result=TEST EXECUTE SUCCEEDED
+after_count=0
+no_second_invocation=true
