@@ -508,8 +508,34 @@ custody chain is unchanged and still controlling:
 
 ### 8.2 ⭐ MIGRATION-BASE LOCK
 
-> Any eventual migration act must begin from **`f210df118`**, or from a
-> descendant carrying this design record.
+**⚠️ NARROWED 2026-09-15**, by the founder act that opened the migration lane.
+The lock below is operative; what it replaced is recorded beneath it.
+
+> Any migration act must begin from **`911efbbb`**, or from a descendant
+> carrying **this custody ruling in full** — ⛔ not from bare `f210df118`.
+
+⭐ **`f210df118` is where the design authority originates; `911efbbb` is where
+the terms of its custody become durable.** A migration branched from bare
+`f210df118` would carry the design and **not** §8 — so it would arrive with the
+obligations of §8.4 stated (§6 already names them) but with **no** §8.3, and the
+W5-3 break would read as unfinished work to whoever met it first. ⛔ That is the
+whole reason this section exists, and the original wording did not exclude it.
+
+⛔ **Superseded wording, kept verbatim** — ⛔ never edited to read as if it had
+always said otherwise:
+
+> *Any eventual migration act must begin from `f210df118`, or from a descendant
+> carrying this design record.*
+
+⚠️ **The most likely future consumer has no first-read path to this lock.**
+`JARVIS-WRITERS-STUDIO-EDITORIAL-01` names *locus-scoped authored proposal
+succession* as its next engineering priority — the work this design serves — and
+a session picking it up would naturally branch from the editorial tip, which
+carries neither the design nor this ruling. ⭐ **Therefore the handoff is ONE
+custody act, never three chores**: narrow this section · branch from `911efbbb`
+or a descendant · carry the design and this ruling into the migration lane.
+⛔ Doing any one without the others relocates the ambiguity rather than closing
+it.
 
 ⛔ **`claude/ecstatic-sagan-ohakll` @ `1a555430` is explicitly disqualified as a
 migration base**, because `f210df118` is not in its lineage.
