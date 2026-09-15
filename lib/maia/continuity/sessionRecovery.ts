@@ -100,6 +100,46 @@ function tokenize(text: string): string[] {
  * "unusual for this member in this conversation" rather than "rare in English".
  * `silver cedar` scores high here because it was said once in thirty-nine exchanges.
  */
+function buildDocFreq(documents: string[]): Map<string, number> {
+  const df = new Map<string, number>();
+  for (const doc of documents) {
+    for (const token of new Set(tokenize(doc))) {
+      df.set(token, (df.get(token) ?? 0) + 1);
+    }
+  }
+  return df;
+}
+
+/**
+ * ⭐⭐ C1 REPAIR — RECURRENCE ALLOWANCE.
+ *
+ * Authority: founder ruling 2026-09-15 on the production witness at `e57ca1baa`.
+ *
+ * THE PRODUCTION DEFECT. A member planted "silver cedar", returned to it, and MAIA
+ * echoed it back. Plain idf therefore read a document frequency of five and ranked it
+ * BELOW things said once. ⛔ The member returning to an image is what makes it the
+ * thing they ask about later, and the scoring read that as unimportance.
+ *
+ * GOVERNING INVARIANT. Within a session, recurrence of a member-originated marker may
+ * INCREASE or PRESERVE its recovery significance; ⛔ it may NEVER REDUCE it merely
+ * because it recurred.
+ *
+ * ⛔ NOT "frequency wins". Beyond the allowance, rarity decays normally, so a common
+ * conversational word repeated twenty times still cannot dominate retrieval. The
+ * allowance only stops recurrence becoming NEGATIVE evidence.
+ */
+const RECURRENCE_ALLOWANCE = 2;
+
+/** How much a member's RETURN to their own language may lift its significance. */
+const RECURRENCE_BOOST = 0.6;
+
+function rarity(token: string, memberDf: Map<string, number>, n: number): number {
+  const df = memberDf.get(token) ?? 0;
+  if (df === 0) return 0;
+  const effective = Math.max(1, df - RECURRENCE_ALLOWANCE);
+  return Math.log((n + 1) / (effective + 1)) + 1;
+}
+
 function buildIdf(documents: string[]): Map<string, number> {
   const df = new Map<string, number>();
   for (const doc of documents) {
@@ -173,17 +213,37 @@ function idfOverlap(
  */
 function distinctiveness(
   memberTokens: string[],
-  idf: Map<string, number>,
-  maxIdf: number
+  memberDf: Map<string, number>,
+  memberDocCount: number,
+  maxRarity: number
 ): number {
-  if (memberTokens.length === 0 || maxIdf <= 0) return 0;
-  const top = [...new Set(memberTokens)]
-    .map(tok => idf.get(tok) ?? 0)
-    .sort((a, b) => b - a)
+  if (memberTokens.length === 0 || maxRarity <= 0) return 0;
+  const unique = [...new Set(memberTokens)];
+
+  // The exchange's DEFINING terms: its rarest few, which are what someone reaching back
+  // for it would be reaching for.
+  const ranked = unique
+    .map(tok => ({ tok, r: rarity(tok, memberDf, memberDocCount) }))
+    .sort((a, b) => b.r - a.r)
     .slice(0, 3);
-  if (top.length === 0) return 0;
-  const mean = top.reduce((a, b) => a + b, 0) / top.length;
-  return Math.min(1, mean / maxIdf);
+  if (ranked.length === 0) return 0;
+  const mean = ranked.reduce((sum, x) => sum + x.r, 0) / ranked.length;
+
+  // ⭐ Recurrence is measured over the DEFINING terms, not over every word. A long
+  // exchange whose incidental vocabulary happens to repeat elsewhere gains nothing;
+  // an exchange whose OWN rarest language the member returned to gains the lift.
+  //
+  // ⛔ Multiplicative on rarity, never additive — a common word the member repeats
+  // constantly has near-zero rarity, so the boost cannot promote it. Only material that
+  // is the member's own AND rare AND returned to can rise.
+  const returnedTo = ranked.filter(x => (memberDf.get(x.tok) ?? 0) >= 2).length;
+  const recurFraction = returnedTo / ranked.length;
+
+  // ⛔ NOT clamped to 1. Clamping saturated nearly every exchange — most contain three
+  // once-said tokens and so hit the ceiling — which collapsed ranking to index order
+  // and discarded the recurrence signal entirely. That saturation was the first repair
+  // attempt's failure, and it is recorded rather than quietly tuned away.
+  return (mean / maxRarity) * (1 + RECURRENCE_BOOST * recurFraction);
 }
 
 /**
@@ -208,9 +268,25 @@ export function recoverDisplacedExchanges(input: {
   const demand = retrospectiveDemand(utterance);
   if (demand <= 0) return []; // ⭐ the no-echo guarantee, evaluated once
 
+  // OVERLAP corpus: both voices. Matching MAIA's echo of a topic is legitimate help in
+  // finding the exchange the member means.
   const documents = corpus.map(e => `${e.userMessage} ${e.maiaResponse}`);
   const idf = buildIdf(documents.length > 0 ? documents : displaced.map(d => d.userMessage));
-  const maxIdf = Math.max(0, ...idf.values());
+
+  // ⭐⭐ SIGNIFICANCE corpus: the MEMBER'S OWN WORDS ONLY (founder ruling).
+  //   member says marker        → evidentiary
+  //   member returns to marker  → additional evidentiary signal
+  //   MAIA echoes marker        → ⛔ must not manufacture member significance
+  // The separation matters in BOTH directions: MAIA's echoes previously inflated
+  // document frequency and suppressed the member's own language, and without the split
+  // MAIA could bootstrap her own vocabulary into apparent personal significance.
+  const memberDocs = corpus.map(e => e.userMessage);
+  const memberDf = buildDocFreq(memberDocs.length > 0 ? memberDocs : displaced.map(d => d.userMessage));
+  const memberDocCount = Math.max(1, memberDocs.length);
+  const maxRarity = Math.max(
+    0,
+    ...[...memberDf.keys()].map(tok => rarity(tok, memberDf, memberDocCount))
+  );
 
   const utteranceTokens = tokenize(utterance);
 
@@ -218,7 +294,7 @@ export function recoverDisplacedExchanges(input: {
     const memberTokens = tokenize(ex.userMessage);
     const exchangeTokens = new Set([...memberTokens, ...tokenize(ex.maiaResponse)]);
     const overlap = idfOverlap(utteranceTokens, exchangeTokens, idf);
-    const distinct = distinctiveness(memberTokens, idf, maxIdf);
+    const distinct = distinctiveness(memberTokens, memberDf, memberDocCount, maxRarity);
     const score = demand * (W_OVERLAP * overlap + W_DISTINCT * distinct);
     return { ...ex, source: RECOVERY_SOURCE, score } satisfies RecoveredExchange;
   });
