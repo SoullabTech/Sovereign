@@ -1,0 +1,2 @@
+36:        "phase-a": Subject(key: "phase-a", bundleID: "life.soullab.voicekernel.k00",    iconLabel: "VoiceKernel K00"),
+37:        "vpio-01": Subject(key: "vpio-01", bundleID: "life.soullab.voicekernel.vpio01", iconLabel: "VoiceKernel VPIO-01"),
