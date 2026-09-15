@@ -1645,3 +1645,52 @@ Block D runs only if Block C's rc is 0 (§16.7). A Block-C STOP (e.g. the batch'
 **Return (one `feature/*` branch, one commit):** `driver-ledger/s2-restore-witness-04-<STAMP>/` = the nine restoration files + `SHA256SUMS` + the parser's seven lines as `parser.txt` + `JOINT.txt` (`PASS` or `STOP <line>`); and §16.7's return block with the `04` substitutions — the `S2-WITNESS-04-<stamp>/` ledger dir (`transcript.txt` + `SHA256SUMS.witness`) when Block C ran, the `S2-WITNESS-04-preflight-<stamp>/` dir, the `s2w4-block*.out` that exist, block diffs + hashes, the Stage-0 pre-existence line, `BRANCH · HEAD · STAMP · BATCH_PIPELINE_RC` (`NOT_RUN_JOINT_STOP` if Block C never started). Cherry-picked here; the restoration half read against §18.5.3, the witness half against §16.4 → **§18.14**. PASS ≠ S2 population · ≠ S3 · ≠ KERNEL-00.
 
 **Standing after §18.13:** `S2-WITNESS-03` ACCEPTED · STOP · spent · second drift census NOT OPENED · 69 exact · `S2-RESTORE/WITNESS-04` AUTHORIZED · pinned · NOT YET EXECUTED (founder hand inside it) · joint = restoration after-read = last observation before Block C · `b198e2e37` unchanged · WITNESS-02/03 residue preserved · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.14 — `S2-RESTORE/WITNESS-04` EXECUTED → **STOP IN BLOCK B** (device preflight: apps listing unreadable, CoreDevice error 4000) · RESTORE-03 never started · authority SPENT — 2026-09-15
+
+### 18.14.1 Custody
+
+- Evidence branch `feature/k00-s2-restore-witness-04-stop-evidence-20260915T152805Z`, founder commit `83b7fe3d2c1b9f531daed63f102b960d1a82a2a6` → cherry-picked here as `f33bff911` (`-x`, no edit).
+- Evidence directory `driver-ledger/S2-WITNESS-04-preflight-20260915T152805Z/` — 8 files: `RETURN.txt` · `STOP.txt` · `SHA256SUMS.stop` · `apps.json` · `blocks-ABD.txt` · `s2w4-block-diffs.txt` · `s2w4-block-hashes.txt` · `s2w4-preexistence.operator-capture.txt`. `sha256sum -c SHA256SUMS.stop` here: **7/7 OK**.
+- `RETURN.txt`: `BASE_HEAD=b198e2e37…` · `PIN=112a40615…` (the §18.13 record commit, i.e. the pin this execution followed) · `PREFLIGHT_STAMP=20260915T152805Z` · `BATCH_PIPELINE_RC=NOT_RUN_BLOCK_B_STOP`.
+- Deliberately absent, by design of a Block-B STOP: no `PREFLIGHT_CLEAN` line, no `processes.json`, no restoration directory (`k00-s2-volume-restore-03-*` was never created), no joint read, no `s2w4-block[CD].out`, no ledger, no transcript, no `SHA256SUMS.witness`.
+- WITNESS-02 / WITNESS-03 residue untouched.
+
+### 18.14.2 The §18.13.3 pin, honoured to the point of refusal
+
+| Stage | Evidence | Read |
+|---|---|---|
+| 0 — path absent | `ls: /private/tmp/k0506-s2w4-b198e2e37: No such file or directory` | ✓ |
+| 0 — substitutions | `s2w4-block-diffs.txt`: 18 changed lines, every one carries only `S2-WITNESS-01→04` / `s2-witness-01→04` / `k0506-s2w-→k0506-s2w4-` (0 lines outside the three tokens, recounted here) | ✓ diff-proven |
+| 0 — block hashes | A `8bebb636…` · B `e8ead651…` · C `fefcec89…` · D `4752ac25…` = the founder's four | ✓ |
+| 1 — Block A | `HEAD=b198e2e37…` · `TREE_CLEAN=1` · `Tests: 75 passed, 75 total` · `GATE_75_75=1` · fixture `1a505b3d…` · afplay `88f3b577…` · `AFPLAY_PROCESSES_BEFORE=0` · `BLOCK_A_PASS=1` | ✓ PASS every line (third clean Block A on `b198e2e37`) |
+| 1 — Block B | `PREFLIGHT_DIFF_RC=0` · `OTHER_BATCHES=0` · then the apps read: `ERROR: The device disconnected immediately after connecting. (com.apple.dt.CoreDeviceError error 4000 (0xFA0))` · `DeviceIdentifier = A0736AC8-…` · `APPS_READ_RC=1` · `STOP: apps listing unreadable` | **STOP** — the block's own fail-closed line |
+| 2–7 | `STOP.txt`: `RESTORE_03=NOT_STARTED · JOINT=NOT_REACHED · BLOCK_C=NOT_RUN · BLOCK_D=NOT_RUN · PLAYBACK=NONE · S2_ROW=NONE` | not reached ✓ |
+
+`apps.json` (35 lines) is the `devicectl` error envelope, not an apps listing: `error.code 4000`, `domain com.apple.dt.CoreDeviceError`, the device identifier, and the invoked arguments. It carries no container information; `E3B88028` was never read.
+
+### 18.14.3 Adjudication (§16.4 · §18.13.3)
+
+**`S2-RESTORE/WITNESS-04` — STOP in Block B · witness NOT PASS · authority SPENT.**
+
+- Block B stopped on its own predeclared refusal (`APPS_READ_RC≠0 → STOP`), before the pane check, before the restoration before-read, before the hand act, before the joint. The paired custody was never entered; the ordinal boundary it introduced was never exercised.
+- **Nothing about volume, restoration, the joint condition, S2 physiology or `b198e2e37`'s batch was measured.** The 69 target is untested by this act; the last governed volume read remains 38 at 15:05:51Z (§18.12). No volume operation of any kind occurred.
+- The failure is a device-preflight transport failure at the Mac ↔ iPhone seam (`devicectl` could not hold a connection for one listing). Founder statement carried verbatim: *"I am making no inference about why the iPhone disconnected."* This record makes none either. It is not evidence about the S2 lane's design, the volume question, or the phone's audio state.
+- First occurrence of this error class in the S2 lane. Comparable device-availability refusals exist in the driver history (Stage-B samples 1–2 "device not automatable at start"; readiness/automation-mode timeouts), all recorded as infrastructure, never as audio outcomes. Same classification here: infrastructure, not sample, not physiology.
+- No repair, rerun, reconnect or second listing was attempted under this authority — correct under §18.13.1 (*FAIL → STOP · no correction · no retry · authority spent*).
+
+### 18.14.4 What is and is not learned
+
+- Learned: Block A is stable (three clean passes: WITNESS-01, -03, -04); the §18.13.3 Stage-0 mechanics (token substitution, diff proof, pre-existence read) work on the first attempt; Block B's apps-read refusal fails closed exactly as pinned, with the error envelope preserved as evidence.
+- Not learned: whether the paired restoration → joint → Block C sequence holds 69 across its own short interval. That question is exactly where it was before this act.
+- Not inferred: the disconnect's cause; whether it is transient; whether it relates to any earlier act. A single occurrence names nothing.
+
+### 18.14.5 Returned to the founder (nothing opened here)
+
+1. Acceptance of the Block-B STOP as read.
+2. Whether a fresh paired issuance (`S2-RESTORE/WITNESS-05`, token `s2w5`, the §18.13.3 pin with the token substituted, `b198e2e37` unchanged) is made now, or whether a read-only device-availability read comes first. Under §18.13's own logic the device seam is another volatile prerequisite that Block B already verifies at the last responsible moment before the hand; a reissue exercises that boundary again without new design. A separate device-availability act would be a new authority; not proposed here, only named.
+3. Nothing else. S2 population · S3 · KERNEL-00 acceptance remain CLOSED.
+
+**Standing after §18.14:** `S2-RESTORE/WITNESS-04` STOP in Block B · SPENT · RESTORE-03 NOT STARTED · joint NOT REACHED · 69 untested by this act (last read 38 at 15:05:51Z) · disconnect cause UNKNOWN, not inferred · `b198e2e37` unchanged · Block A PASS ×3 · WITNESS-02/03/04 residue preserved · `S2-RESTORE/WITNESS-05` NOT ISSUED · S2 population · S3 · KERNEL-00 acceptance CLOSED.
