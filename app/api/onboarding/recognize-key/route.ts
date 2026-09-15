@@ -23,9 +23,23 @@
  * no echo of the submitted key. A caller learns whether the key they already
  * hold is recognized, and nothing about anybody else.
  *
- * ⚠️ Rate limiting is NOT added here — out of this act's authorized scope. The
- * enumeration surface is narrower than before (one key per request instead of
- * the whole list at once) but it is not zero, and naming it is not fixing it.
+ * ⚠️ TWO RESIDUALS, NAMED RATHER THAN QUIETLY LEFT (ACT 2A):
+ *
+ * (1) CREDENTIALS CAN STILL REACH SERVER LOGS, AND NOT FROM THIS FILE.
+ *     `resolveAdmission` passes the submitted key as a query parameter, and
+ *     `lib/db/postgres.ts` logs `SQL` and `Params` on any query error before
+ *     rethrowing. So a database fault during admission emits the submitted
+ *     credential. This route adds no logging of its own and swallows the throw
+ *     rather than re-emitting it — but the emission happens upstream, inside a
+ *     helper shared by the whole system. ⛔ Not repaired here: the lawful fix
+ *     is an opt-in credential-safe path through that shared helper, which the
+ *     S3 lane already identified and which is a founder call. §4 of ACT 2A is
+ *     therefore PARTIALLY discharged, and saying so is the point.
+ *
+ * (2) TIMING. A contact-record hit returns from memory; a miss continues to a
+ *     database lookup. The difference is observable and is an enumeration
+ *     signal that rate limiting narrows but does not remove. Constant-time
+ *     admission is a redesign, which this act is not.
  */
 import 'server-only';
 
@@ -33,6 +47,35 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { ganeshaContacts } from '@/lib/ganesha/contacts';
 import { resolveAdmission } from '@/lib/auth/passkeyAdmission';
+import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
+
+/**
+ * ACT 2A — this endpoint is an AUTHORIZATION ORACLE, so it is rate limited.
+ *
+ * A caller submits one candidate credential and learns whether it admits, and
+ * on a match receives that person's name. Without abuse control that is a
+ * guessing machine with a name attached to each success.
+ *
+ * `checkRateLimit` is reused rather than reinvented: it is already founder-
+ * reasoned to fail to a small in-process ceiling and then BLOCK when the
+ * durable limiter is unavailable — never to fail open.
+ */
+const RATE_LIMIT_ENDPOINT = 'onboarding/recognize-key';
+
+/**
+ * ⛔ ONE REFUSAL, NO VARIETIES. Bad JSON, empty key, unknown key, bad format,
+ * no invite, expired invite, revoked invite, unreadable invite table and
+ * throttled all return THIS EXACT BODY. A caller can distinguish admitted from
+ * not-admitted — that is the endpoint's purpose — and nothing finer. Anything
+ * finer is an enumeration aid.
+ */
+const REFUSAL = { recognized: false, name: null } as const;
+
+/** Never cache an admission answer, at any layer. */
+const NO_STORE = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+  Pragma: 'no-cache',
+} as const;
 
 /**
  * Shared, non-personal keys that previously sat in client source. They confer
@@ -55,16 +98,29 @@ export type RecognizeKeyResponse = {
   name: string | null;
 };
 
+const refuse = (status = 200, extraHeaders: Record<string, string> = {}) =>
+  NextResponse.json(REFUSAL, { status, headers: { ...NO_STORE, ...extraHeaders } });
+
+const admit = (name: string | null) =>
+  NextResponse.json<RecognizeKeyResponse>({ recognized: true, name }, { headers: NO_STORE });
+
 export async function POST(request: NextRequest) {
+  /* Throttle BEFORE reading the body, so a malformed request costs an attempt
+     too. Otherwise the cheapest way to probe is to send garbage. */
+  const limit = await checkRateLimit(getClientIP(request), 'ip', RATE_LIMIT_ENDPOINT);
+  if (!limit.allowed) {
+    return refuse(429, buildRateLimitHeaders(limit));
+  }
+
   let key: unknown;
   try {
     ({ key } = await request.json());
   } catch {
-    return NextResponse.json({ recognized: false, name: null }, { status: 400 });
+    return refuse();
   }
 
   if (typeof key !== 'string' || key.trim().length === 0) {
-    return NextResponse.json({ recognized: false, name: null }, { status: 400 });
+    return refuse();
   }
 
   const normalized = key.toUpperCase().trim();
@@ -73,27 +129,31 @@ export async function POST(request: NextRequest) {
   const contact = ganeshaContacts.find(
     (c) => c.status === 'active' && c.metadata.passcode === normalized,
   );
-  if (contact) {
-    return NextResponse.json<RecognizeKeyResponse>({ recognized: true, name: contact.name });
-  }
+  if (contact) return admit(contact.name);
 
   // 2. A shared admission key.
-  if (SHARED_ADMISSION_KEYS.has(normalized)) {
-    return NextResponse.json<RecognizeKeyResponse>({ recognized: true, name: null });
-  }
+  if (SHARED_ADMISSION_KEYS.has(normalized)) return admit(null);
 
   // 3. The ruled authority: a real pending, unexpired invite — or an existing
   //    member. Anything else, including a well-formed key with no invite
   //    behind it, refuses. `resolveAdmission` already fails closed when the
   //    invites table cannot be read.
-  const admission = await resolveAdmission(normalized);
-  if (admission.kind === 'admit') {
-    return NextResponse.json<RecognizeKeyResponse>({ recognized: true, name: null });
-  }
-  if (admission.kind === 'existing_member') {
-    const name = (admission.member.name as string | null) ?? null;
-    return NextResponse.json<RecognizeKeyResponse>({ recognized: true, name });
+  //
+  //    ⛔ It is called INSIDE a try: not to swallow the error, but so that a
+  //    thrown lookup cannot turn into a 500 whose shape differs from a plain
+  //    refusal. The error is not logged here — logging it would risk echoing
+  //    the submitted credential, which is the whole point of §4.
+  let admission: Awaited<ReturnType<typeof resolveAdmission>>;
+  try {
+    admission = await resolveAdmission(normalized);
+  } catch {
+    return refuse();
   }
 
-  return NextResponse.json<RecognizeKeyResponse>({ recognized: false, name: null });
+  if (admission.kind === 'admit') return admit(null);
+  if (admission.kind === 'existing_member') {
+    return admit((admission.member.name as string | null) ?? null);
+  }
+
+  return refuse();
 }
