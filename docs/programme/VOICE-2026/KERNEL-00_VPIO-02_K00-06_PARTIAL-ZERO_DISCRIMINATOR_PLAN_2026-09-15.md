@@ -850,3 +850,52 @@ git rev-parse HEAD
 ```
 
 Return the branch name and the `git rev-parse HEAD` value. The pre-commit hook needs `node_modules`, which Block A linked. Nothing in Block E touches the device, the player, the volume or the organism.
+
+## 17. `S2-WITNESS-01` EXECUTED → **STOP at the batch's stimulus preflight (exit 8) — nothing played, nothing sampled** · evidence RECEIVED and VERIFIED HERE · witness NOT PASS · orchestration fail-closed behaviour witnessed on the real Mac
+
+### 17.1 Custody
+
+Founder returned `feature/k00-s2-witness-01-evidence-20260915T122842Z` at `3cbec915b6db3a6ab8757c5d8f839be0f41265dc`, cherry-picked here with `-x` as `706dc4cf2`. Eleven files in two directories (`S2-WITNESS-01-20260915T122842Z/` · `S2-WITNESS-01-preflight-20260915T122817Z/`). Block D never ran (correctly — the act stopped in Block C), so no `transcript.txt` / `SHA256SUMS.witness` exists; the Block A/B/C Terminal output was captured as `blocks-ABCD.txt` under the §16.7 transport and the commit is the custody. SHA-256 of every file as received (recomputed here):
+
+```text
+01a79a3023de39393229fc5c898be90614770078088321db72e30849e2404358  S2-WITNESS-01-20260915T122842Z/batch.log
+cd75582f493919ad8a5de600fc868815d6bf4ce94f30aba87fe1a947d25f3d93  S2-WITNESS-01-20260915T122842Z/blocks-ABCD.txt
+556002e728d7c3a6fd0f9a6d541175a7b00c11d18c0caad2144c2b74476ac1ee  S2-WITNESS-01-20260915T122842Z/ledger.md
+06eba1145fb46478cdadc40680978c02eb4b9cd36c974dceb1336336434783b3  S2-WITNESS-01-20260915T122842Z/xcodegen.log
+498d16fdffb030242c97ba77ef69ffa4691df27f2a69ca4751ae676314d770c5  S2-WITNESS-01-20260915T122842Z/build-for-testing.log
+81d2fbf57485a5244d9082bb429f7c9c5823031d049c8fd79b2619b514428363  S2-WITNESS-01-20260915T122842Z/stimulus-preflight/audio-output.json
+5ad16ccb77db01f635bdf77e713faf3d90b69298b4d53ef7331a6920958dbc32  S2-WITNESS-01-20260915T122842Z/stimulus-preflight/stimulus.sha256
+b4b77a9378f1972b2143b1326ebcc5969daaff056c9f1d598d86608e9812e2b4  S2-WITNESS-01-20260915T122842Z/stimulus-preflight/stimulus-wave-metadata.txt
+dbb842b2ba78319047525f51195ac3b0f7d3ffa96d0fd231a427722181b0f056  S2-WITNESS-01-20260915T122842Z/stimulus-preflight/volume.txt
+20cd53b85f15185baa6f92561d0e9944f5cd2e2c070fcc3c49311798cff05f06  S2-WITNESS-01-preflight-20260915T122817Z/apps.json
+8b0577575b8bff090a1b7c07395636b06ec05007ef7fb90177b7f1d3f447160e  S2-WITNESS-01-preflight-20260915T122817Z/processes.json
+```
+
+### 17.2 What the files say (read here; nothing taken from the summary)
+
+**Block A (custody) — every gate line present, in order:** worktree created detached at `b198e2e37` · `HEAD=b198e2e37058f2e059d986b4b148e224215f3ee3` · `TREE_CLEAN=1` · `Tests: 75 passed, 75 total` → `GATE_75_75=1` · `FIXTURE_SHA=1a505b3d…` (= pin) · `AFPLAY_SHA=88f3b577…` (= census pin, read from the real `/usr/bin/afplay`) · `AFPLAY_PROCESSES_BEFORE=0` · `BLOCK_A_PASS=1`. **Block B (device preflight):** `PREFLIGHT_DIFF_RC=0` · `OTHER_BATCHES=0` · `APPS_READ_RC=0` · `E3B88028_CONTAINER_HITS=1` (verified in `apps.json`) · `PROCESS_READ_RC=0` · `VoiceKernelHarness processes: 0` (478 process rows, 0 harness, verified in `processes.json`) · `PREFLIGHT_CLEAN=…122817Z`. The `rc=` trailer lines are empty exactly as §16.7 said they would be under zsh; each block's own last echo is the result.
+
+**Block C (the one invocation):** `xcodegen` PASS · driver `build-for-testing` `** TEST BUILD SUCCEEDED **` ×1 (0 `devicectl` / `install` / `test-without-building` in the build log — the phone was never launched) · xctestrun resolved · ledger header written (`stratum=AUTOMATED-COLD-LAUNCH · N=1 · vp=on · mode=L · subject=vpio-02 · bundle=.vpio02`, the S2 `stimulus=` line, installed identity `VoiceKernel VPIO-02`, last reinstall `20260913T145025Z`) · then the batch's stimulus preflight, in the pinned order: fixture present → `stimulus.sha256` = `1a505b3d…` (pin MATCH) → `stimulus-wave-metadata.txt` `channels=1 sampleRate=48000 sampleWidthBytes=2 frames=8640000 seconds=180.000 · format=EXACT` → `audio-output.json` parsed here: **exactly one default output, `Mac Studio Speakers`, `coreaudio_device_type_builtin`, 48000 → `DEFAULT_OUTPUT_MATCH True`** (B06Ultra present, not default) → `volume.txt`: **`output volume:31, input volume:missing value, alert volume:59, output muted:false`** → **`STOP: output volume is not 69 (…) — read-only precondition, nothing changed`** → `STOP: stimulus preflight failed — nothing played, nothing sampled` → **`BATCH_PIPELINE_RC=8`**. The afplay clause was never reached (no `afplay.sha256` in `stimulus-preflight/`, by the pinned order). Ledger: header only, zero rows. No journal, no `stimulus-sample-1.tsv`, no afplay log. Zero rows in the phone journal set; the vpio-02 corpus count is unchanged (50).
+
+### 17.3 Adjudication under §16.4 (predeclared; nothing invented after the result)
+
+**STOP — *stimulus preflight STOP (nothing played)*.** Criterion 1 (Blocks A and B) satisfied in full; criterion 2 failed on exactly one clause — the ruled read-only precondition `output volume 69` read `31`. Criteria 3–5 are unreachable and unassessed. **The witness is NOT PASS.** No physiology exists; no §7 reading arises; §16.5's distinction stands trivially (no journal was produced, so nothing can be mistaken for a population row). Under the fail-closed rule, no repair and no rerun occurred under this authority — the founder stated it and the files confirm it (one batch stamp, one preflight stamp, nothing after the STOP). **`S2-WITNESS-01` authority SPENT.**
+
+### 17.4 What the STOP is evidence of (recorded, not interpreted beyond the files)
+
+- **The orchestration's fail-closed preflight behaved on the real Mac exactly as the offline instrument claimed for that branch:** fixture custody, exact format and the default-output identity all PASSED against the live machine, and the first clause that did not match stopped the act before any player process existed. This is not a PASS of the witness; it is the STOP branch of the same instrument, witnessed once.
+- **The Mac's output volume was `31` at 12:28:50Z.** The preparation after-read (§14.9) recorded `69` at `20260915T022305Z`. No authorized act set a volume between those reads (the preparation, the batch and every pinned block only read volume; the gate forbids any set-volume code). **The cause of the change from 69 to 31 is UNKNOWN and is not inferred here** (candidate mechanisms exist — keyboard volume keys, another application, a device re-select restoring a per-device level — none is asserted). The `69` precondition was ruled as custody of the preparation reading; on this Mac, that value did not hold for ten hours without any governed act touching it.
+- Everything else read as ruled: Mac Studio Speakers still the one default output on the builtin transport; B06Ultra present and not default; harness absent; container present; `.vpio02` untouched; no device act beyond the two read-only listings and the driver build.
+
+### 17.5 Standing · returned for ruling
+
+```text
+S2-WITNESS-01              EXECUTED · STOP (stimulus preflight, volume 31 ≠ 69) · authority SPENT
+playback                   NONE occurred · NOT AUTHORIZED
+S2 population              CLOSED
+S3                         CLOSED
+KERNEL-00 acceptance       CLOSED
+orchestration b198e2e37    unchanged · fail-closed branch witnessed once on the real Mac
+```
+
+Returned to the founder, not chosen here: (a) the volume-precondition question — whether `69` remains the ruled read-only precondition (in which case a separate, founder-performed, read-then-hand-then-read preparation act shaped like §14 would be needed to re-establish it before any second witness authority) or whether the precondition is re-ruled (any change to the batch's pinned `S2_OUTPUT_VOLUME` = new orchestration SHA = new gate read = new authority; the batch does not, and must not, set volume); (b) whether the 69→31 drift is to be characterised further by read-only means before either path; (c) whether a second `S2-WITNESS-02` authority is issued at all. None of these is opened by this record.
