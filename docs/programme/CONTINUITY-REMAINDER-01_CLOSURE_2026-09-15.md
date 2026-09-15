@@ -1,6 +1,6 @@
 # `CONTINUITY-REMAINDER-01` · LANE CLOSURE
 
-**Date** 2026-09-15 · **Founder ruling: CLOSURE-READY.** ⛔ No behavioural code was written in
+**Date** 2026-09-15 · **Founder ruling: ⭐⭐ LANE CLOSED.** ⛔ No behavioural code was written in
 this lane at any point · production `e57ca1baa` untouched.
 
 ---
@@ -57,7 +57,33 @@ mechanism nobody is authorized to build would be an instrument in search of a ca
 
 ---
 
-## 3 · ⚠️ ONE ITEM TO DECIDE BEFORE THE CLOSING ACT — the withdrawal must not go dormant
+## 3 · ⭐ DISPOSITION TAKEN — **(ii)**, and the frozen suite is NOT edited
+
+> ⭐⭐ **RULED: carry the withdrawal in the anchor bullet. ⛔ Do not edit the frozen acceptance
+> suite, not even comment-only.**
+
+⭐ **The reason, and it is the better argument:** P1 still legitimately preserves the old
+**recovery regression**. Putting the new **lawfulness judgment** inside that frozen artifact
+would **blur two different authorities**:
+
+```text
+the suite   says what the candidate HISTORICALLY DOES
+the ruling  says what that green is NO LONGER ALLOWED TO ESTABLISH
+```
+
+⛔ Keeping those separate is cleaner than **retroactively annotating the old instrument.**
+⭐ The frozen suite stays **exactly as historical evidence.**
+
+**Installed into the `CLAUDE.md` anchor:**
+
+> *P1 remains a recovery regression only; its lawfulness standing is withdrawn. A green
+> `must recover 22` must not be read as evidence of lawful antecedent resolution.*
+
+⭐ Enough to stop the next lane inheriting the false confidence, ⛔ without touching the artifact.
+
+---
+
+## 3A · THE ITEM AS RAISED (kept, for the reasoning it carries)
 
 ⭐⭐ **The P1 lawfulness withdrawal lives in a lane about to close; the suite it affects will be
 inherited by the lane that opens next.**
@@ -78,7 +104,7 @@ the suite ........................ ⛔ carries no trace of it
 discoverable from the code? ...... ⛔ NO
 ```
 
-⭐ **Three lawful dispositions, ⛔ none taken here, ⛔ and this is NOT a repair question:**
+⭐ **Three lawful dispositions — ⭐ (ii) TAKEN, see §3:**
 
 | | |
 | --- | --- |
@@ -86,9 +112,8 @@ discoverable from the code? ...... ⛔ NO
 | **(ii)** | Carry it in the **anchor bullet** instead, so the warning travels with the priority thread rather than the code. |
 | **(iii)** | ⛔ **Accept the gap deliberately**, on the ground that the records are the authority and the suite never was. ⭐ Defensible — ⛔ but then it is *chosen*, not *overlooked*. |
 
-⛔ **My recommendation is (i) or (ii), not (iii) by default** — ⭐ but a gap accepted knowingly is
-lawful, and a gap that survives because nobody named it is the thing this lane spent the day
-refusing.
+⭐ **(ii) was ruled.** ⛔ (i) was refused on the two-authorities ground in §3 — a stronger reason
+than the freeze-discipline caution I had raised. ⛔ (iii) was not taken.
 
 ---
 
@@ -107,8 +132,14 @@ ACT 3 falsifiers ................. ⛔ ABANDONED BY RULING — not pending
 replacement instrument ........... ⛔ NOT CHOSEN
 behavioural repair ............... ⛔ NOT AUTHORIZED
 CLAUDE.md anchor ................. ✅ INSTALLED 2026-09-15
-LANE ............................. ⭐ CLOSURE-READY · ⚠️ closing act UNSPENT (§3 first)
+P1 suite assertion ............... ✅ PRESERVED
+frozen suite ..................... ✅ UNTOUCHED
+anchor warning ................... ✅ INSTALLED (§3)
+ANTECEDENT-IDENTITY-01 ........... ⛔ PREPARED · NOT OPENED
+LANE ............................. ⭐⭐ **CLOSED** — closing act SPENT 2026-09-15
 production ....................... e57ca1baa · UNTOUCHED
 ```
 
 > ⭐ **The lane answered what it could answer, and stopped there.**
+>
+> ⭐⭐ **CLOSED.**
