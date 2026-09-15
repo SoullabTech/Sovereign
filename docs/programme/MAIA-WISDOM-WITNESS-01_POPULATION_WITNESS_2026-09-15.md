@@ -53,10 +53,26 @@ of the code, and it is preserved.**
 ⛔ **But in production: `(untagged) | (none) | 55760`. Zero of 55,760 chunks carry any
 elemental metadata. `spiralogicTagger` has never run against production `library_chunks`.**
 
-**The corrected statement:** the elemental derivation precedent exists as **trustworthy,
-inspectable, model-free code that has never been applied.** ⚠️ It is a *capability*, not a
-*dataset*. ⛔ ACT 2A may not treat elemental participation as existing data, and any surface
-that reads `meta->>'element'` today returns nothing for every chunk.
+**The corrected statement — founder wording, PREDECLARED before the result was known:**
+
+> **The deterministic elemental classifier exists as an implementation precedent, but
+> production evidence does not establish that it has participated in the stored corpus.**
+
+⭐⭐ **That revision was written as a conditional *before* the query ran**, alongside the
+opposite branch (*"if the production rows contain meaningful elemental combinations, the
+stronger statement survives"*). ⭐ **This is a genuine falsification test, not post-hoc
+narration** — the result selected between two predeclared readings rather than being
+explained after the fact.
+
+⚠️ **And the founder's wording is strictly better than the draft it replaces.** An earlier
+version of this section said the tagger *"has never been applied"* — ⛔ that asserts a
+negative the data cannot carry. Zero tagged rows is equally consistent with *never ran*,
+*ran and was later cleared*, or *ran against a different table*. **The founder's formulation
+states the limit of the evidence instead of a claim beyond it**, which is the discipline this
+lane has run on throughout. Adopted verbatim; the weaker draft is superseded, not hidden.
+
+⛔ ACT 2A may not treat elemental participation as existing data: any surface reading
+`meta->>'element'` today returns nothing for every one of the 55,760 chunks.
 
 ⭐ **This is exactly the falsifier ACT 1B named for that finding, and it fired.** The finding
 was stated as a claim about implementation and would have been read as a claim about the
