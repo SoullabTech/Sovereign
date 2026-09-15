@@ -1,0 +1,1 @@
+RUNNER_PRESENT true /private/tmp/k0506-disposal-b198e2e37/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
