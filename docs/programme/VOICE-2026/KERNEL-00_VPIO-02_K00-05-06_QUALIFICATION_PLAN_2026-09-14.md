@@ -812,3 +812,7 @@ Founder ruling on `d02ce1094` accepted §10.A/§10.B with the `m2_440` confound 
 ### §10.56 — `SOURCE-ID-02A` offline repair LANDED at `f0c6ae13b` (2026-09-15; discriminator plan §18.36; implementation record §9)
 
 Founder review of `6f0e2e0b2`: surface right, five flags disposed (all accepted; Swift risk deferred to MAC-COMPILE), but two offline defects (the gated stimulus token unreachable behind the batch's earlier catch-all; `frameReset` not vetoing SUPPRESSED) and one control ambiguity (undefined `m2_440` clearing like a measured control) → one narrow carrier: single closed stimulus dispatch with two lawful pairings; `frameReset` before either attribution verdict; own-control law with `own_control_unmeasured`; self-test 24/24; gate 82/82; Swift untouched. Implementation NOT YET ACCEPTED for MAC-COMPILE; nothing else open; device execution authority NONE.
+
+### §10.57 — `SOURCE-ID-02` + `02A` ACCEPTED · SID MAC-COMPILE OPEN (2026-09-15; discriminator plan §18.37; implementation record §10)
+
+Accepted code state `f0c6ae13b88db29cbd1537bec585d98376c8bc4f` (gate 82/82 · reader 24/24). SID MAC-COMPILE-01 pinned as a paste-able Mac act (implementation record §10.2): worktree at the SHA · gate · `swift test` · xcodegen · unsigned + signed builds · identity + manifest + codesign · post-build surface proof · sealed `$OUT`; STOP rules and the no-repair / no-pin-mutation constraints as ruled. NOT YET EXECUTED. FIRST-INSTALL · SID ENTRY WITNESS (required) · S-b N=10 · S-a · S3 CLOSED; KERNEL-00 NOT ACCEPTED; device execution NONE.

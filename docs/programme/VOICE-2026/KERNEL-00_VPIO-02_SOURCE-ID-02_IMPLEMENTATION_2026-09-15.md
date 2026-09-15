@@ -109,3 +109,86 @@ device execution authority       NONE
 4. **Self-test 24/24; gate 82/82** (pins for the dispatch, the law order `frameReset → SURVIVES → SUPPRESSED → …`, the control expression, the new reason code and the four new case names); 61 tracked VPIO-02 journals still `no_source_evidence`.
 
 **Standing after §9:** implementation `6f0e2e0b2` + repair `f0c6ae13b` RETURNED · NOT YET ACCEPTED for MAC-COMPILE (the founder adjudicates the whole after this carrier) · core Swift/source design ACCEPTED IN PRINCIPLE · MAC-COMPILE · FIRST-INSTALL · SID ENTRY WITNESS (required) · S-b N=10 CLOSED · S-a NOT OPEN · S3 CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · KERNEL-00 NOT ACCEPTED · device execution authority NONE.
+
+---
+
+## 10. Founder adjudication (2026-09-15): `SOURCE-ID-02` ACCEPTED · `SOURCE-ID-02A` ACCEPTED · accepted code state `f0c6ae13b88db29cbd1537bec585d98376c8bc4f` · **SID MAC-COMPILE OPEN** (the only newly authorized act) — pinned §10.2, NOT YET EXECUTED
+
+### 10.1 Ruling as captured (substance verbatim)
+
+Accepted as repaired: one closed stimulus dispatch with `sid-nearend-gated` reachable only under `vpio-02-sid` · `frameReset` before both attribution verdicts · missing/undefined own-tone control never silently earns SURVIVES, `own_control_unmeasured` carries the unresolved case · new cases gate-pinned, repair limited to batch + reader + gate, Swift untouched · the record preserves that the implementation was not accepted before this ruling. The five flags stay disposed as previously ruled.
+
+```text
+SOURCE-ID-02          ACCEPTED
+SOURCE-ID-02A         ACCEPTED
+accepted code state   f0c6ae13b88db29cbd1537bec585d98376c8bc4f
+offline gate          82/82
+source reader         24/24
+```
+
+**SID MAC-COMPILE — OPEN.** Purpose, narrow: establish that the accepted SID subject compiles and tests on the Mac toolchain and record its product identity. It installs and launches nothing. **Subject = exactly `f0c6ae13b88db29cbd1537bec585d98376c8bc4f`** (the later `94f4cb4af` carrier is records-only and does not alter the compiled subject). Steps: (1) HEAD exact + tree clean · (2) VOICE gate 82/82 · (3) `swift test` for `ios/VoiceKernel` · (4) `xcodegen` from `project.yml` · (5) device build of the SID harness, no install, no launch · (6) identity: bundle `life.soullab.voicekernel.vpio02sid` · display `VoiceKernel VPIO-02-SID` · `VoiceKernelHarness.debug.dylib` UUID · dylib SHA-256 · executable SHA-256 · complete product manifest + manifest SHA-256 + file count · (7) the built source/test surface is still the accepted one after the build · (8) return every compile/test/custody line in a record. The Swift unit tests matter particularly: written, never executed (seven bins · leakage coefficients · reset · 2 Hz discrimination · the gated-997 / continuous-440 control case).
+
+PASS = HEAD exact ∧ tree clean before build ∧ gate 82/82 ∧ `swift test` zero failures ∧ project generation PASS ∧ device build PASS ∧ bundle/display exact ∧ dylib UUID, dylib SHA, executable SHA readable ∧ manifest complete + sealed ∧ device install 0 · launch 0 · sample 0. **STOP** on any Swift compile/test failure, project-generation failure, signing/build failure, unreadable identity field, unexpected bundle identity or source drift. A compiler error in the predeclared risk area (`SIMD8`, pointwise operations, the optional-mutating estimator call, …) is returned as a **bounded compile defect — never repaired inside the compile act**; a repair needs its own ruling. **Do not fill the reinstall pins because the build produced them**: the compile records the identity; pinning the install instrument follows only after the compile evidence is accepted.
+
+Still closed: FIRST-INSTALL · reinstall pin mutation (pending compile acceptance) · SID ENTRY WITNESS (REQUIRED) · S-b N=10 · S-a (NOT OPEN) · S3 · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · KERNEL-00 NOT ACCEPTED · device execution NONE.
+
+### 10.2 Execution pin — `SID MAC-COMPILE-01` (Mac Studio terminal directly; paste-able; zsh-safe — no `#` on command lines; every line reused from the accepted VPIO-02 MAC-COMPILE-01 / repro-build recipe, with the SHA, the paths and the SID identity substituted)
+
+Toolchain expected (recorded, not re-pinned here): Xcode 26.3 (17C529) · Swift 6.2.4 · XcodeGen 2.46.0 · SDK iphoneos26.2; destination = the Xcode id `00008140-00163D9922E0801C` (never the devicectl id); team `ZVK2X646Z2`. The signed build compiles for the paired device and produces a signed product; it does not install, launch or sample. Evidence directory: `$OUT` (outside the worktree); return on a `feature/*` branch → cherry-pick here.
+
+```bash
+set -e
+SHA=f0c6ae13b88db29cbd1537bec585d98376c8bc4f
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+WT=/private/tmp/sid-mac-compile-01-$SHA
+DD=$WT-derived
+OUT=/private/tmp/sid-mac-compile-01-out-$STAMP
+mkdir -p "$OUT"
+test ! -e "$WT"
+cd /Users/soullab/MAIA-SOVEREIGN
+git fetch origin claude/voice-2026-census-01
+git worktree add --detach "$WT" "$SHA"
+cd "$WT"
+git rev-parse HEAD | tee "$OUT/head.txt"
+test "$(git rev-parse HEAD)" = "$SHA"
+git status --porcelain | tee "$OUT/status-before.txt"
+test -z "$(git status --porcelain)"
+ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
+xcodebuild -version | tee "$OUT/toolchain.txt"
+xcodegen --version | tee -a "$OUT/toolchain.txt"
+xcrun swift --version 2>&1 | head -1 | tee -a "$OUT/toolchain.txt"
+npx jest --config jest.config.js __tests__/voice-kernel-00-source-gates.test.ts 2>&1 | tee "$OUT/gate.log" | tail -5
+grep -E 'Tests:\s+82 passed, 82 total' "$OUT/gate.log"
+( cd ios/VoiceKernel && xcrun swift build 2>&1 ) | tee "$OUT/swift-build.log" | tail -3
+( cd ios/VoiceKernel && xcrun swift test 2>&1 ) | tee "$OUT/swift-test.log" | grep -E 'Executed|error|failed' | tail -4
+grep -E 'Executed [0-9]+ tests, with 0 failures' "$OUT/swift-test.log"
+grep -E 'SourceEstimatorTests' "$OUT/swift-test.log" | grep -E "passed" | wc -l | tee "$OUT/source-tests-passed-count.txt"
+( cd ios/VoiceKernelHarness && xcodegen generate 2>&1 ) | tee "$OUT/xcodegen.log" | tail -2
+( cd ios/VoiceKernelHarness && xcodebuild -project VoiceKernelHarness.xcodeproj -scheme VoiceKernelHarness -destination 'generic/platform=iOS' -derivedDataPath "$DD" CODE_SIGNING_ALLOWED=NO build ) > "$OUT/xcodebuild-unsigned.log" 2>&1 || true
+grep -E '\*\* BUILD (SUCCEEDED|FAILED) \*\*' "$OUT/xcodebuild-unsigned.log" | tee -a "$OUT/build-results.txt"
+grep -q 'BUILD SUCCEEDED' "$OUT/xcodebuild-unsigned.log"
+( cd ios/VoiceKernelHarness && xcodebuild -project VoiceKernelHarness.xcodeproj -scheme VoiceKernelHarness -destination id=00008140-00163D9922E0801C -derivedDataPath "$DD" DEVELOPMENT_TEAM=ZVK2X646Z2 CODE_SIGN_STYLE=Automatic -allowProvisioningUpdates build ) > "$OUT/xcodebuild-signed.log" 2>&1 || true
+grep -E '\*\* BUILD (SUCCEEDED|FAILED) \*\*' "$OUT/xcodebuild-signed.log" | tee -a "$OUT/build-results.txt"
+grep -q 'BUILD SUCCEEDED' "$OUT/xcodebuild-signed.log"
+P="$DD/Build/Products/Debug-iphoneos/VoiceKernelHarness.app"
+/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' -c 'Print CFBundleDisplayName' "$P/Info.plist" | tee "$OUT/identity.txt"
+test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$P/Info.plist")" = life.soullab.voicekernel.vpio02sid
+test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleDisplayName' "$P/Info.plist")" = 'VoiceKernel VPIO-02-SID'
+dwarfdump --uuid "$P/VoiceKernelHarness.debug.dylib" | tee -a "$OUT/identity.txt"
+shasum -a 256 "$P/VoiceKernelHarness.debug.dylib" "$P/VoiceKernelHarness" | tee -a "$OUT/identity.txt"
+( cd "$P" && find . -type f | LC_ALL=C sort | xargs shasum -a 256 ) > "$OUT/SID-MAC-COMPILE-01.manifest.sha256"
+shasum -a 256 "$OUT/SID-MAC-COMPILE-01.manifest.sha256" | tee -a "$OUT/identity.txt"
+wc -l "$OUT/SID-MAC-COMPILE-01.manifest.sha256" | tee -a "$OUT/identity.txt"
+codesign -dv --verbose=2 "$P" 2>&1 | grep -E 'Identifier|TeamIdentifier|Authority' | tee -a "$OUT/identity.txt"
+git rev-parse HEAD | tee "$OUT/head-after.txt"
+test "$(git rev-parse HEAD)" = "$SHA"
+git status --porcelain | tee "$OUT/status-after.txt"
+git diff --stat | tee "$OUT/diff-after.txt"
+git diff --quiet -- ios/VoiceKernel ios/VoiceKernelHarness/project.yml scripts __tests__
+( cd "$OUT" && find . -type f | LC_ALL=C sort | xargs shasum -a 256 ) > "$OUT/SHA256SUMS.compile"
+echo "SID-MAC-COMPILE-01 $STAMP subject $SHA out $OUT"
+```
+
+Reading law for the return: every `test` line passing = the corresponding PASS criterion; `status-after.txt` may show only the known `xcodegen` footprint (`ios/VoiceKernelHarness/Harness/Info.plist` regenerated) and untracked build/evidence artefacts — the `git diff --quiet` line proves the accepted source, project.yml, instruments and gate did not move; anything else = STOP (source drift). The first failing line stops the paste (`set -e`): return `$OUT` as it stands with the failing line named; no second attempt under this authority. **Nothing in the block installs, launches, samples or writes a reinstall pin.**
+
+**Standing after §10:** SOURCE-ID-02 + 02A ACCEPTED · accepted code state `f0c6ae13b` · SID MAC-COMPILE OPEN · pinned · NOT YET EXECUTED (Mac act) · FIRST-INSTALL · reinstall pin mutation · SID ENTRY WITNESS (required) · S-b N=10 CLOSED · S-a NOT OPEN · S3 CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · KERNEL-00 NOT ACCEPTED · device execution NONE.
