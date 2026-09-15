@@ -165,14 +165,58 @@ final aperture. Recover two displaced exchanges into cognition and the truth bec
 `represented = 6 · absent = 33` — while A6, unchanged, still states `4` and `35`.
 
 ⛔ **That is a false statement about her own view, which is the precise defect A6 was
-built to repair.** So `represented` must count *everything actually present* —
-aperture **plus** recovered — or Lane 1 will silently restore false wholeness through
-the back door while appearing to improve continuity.
+built to repair.**
 
-⭐ This is why §4's pipeline says **EXCLUDE exchanges already represented**: without it
-the same exchange can be counted twice and the arithmetic breaks in the other direction.
+### 4.3 ⭐⭐ THE BOUNDARY — self-location is computed from the FINAL COMPOSITION
 
-⛔ Naming this constraint is not authorization to implement it.
+⚠️ An earlier draft of §4.2 said *"Lane 1 must feed A6's accounting"* — a **push** model
+in which each carrier reports what it contributed. ⭐ **SUPERSEDED, ⛔ not deleted.** It
+is brittle: every future lane that contributes material would have to remember to
+increment A6, and **truthful self-location would become dependent on side-channel
+bookkeeping** — reliable exactly until one carrier forgets.
+
+⭐ The **pull** model is the law:
+
+> ⭐⭐ **Self-location is computed from the final cognitive composition, never maintained
+> by individual memory carriers.**
+
+```
+depth        = unique completed exchanges durably recorded for this session
+
+represented  = unique completed exchanges ACTUALLY PRESENT in FINAL cognition,
+               after recent aperture + recovery + any future source-bearing
+               carrier has composed
+
+absent       = depth − represented
+```
+
+**Two corollaries:**
+
+- ⛔ **Retrieved but discarded before the model sees it does NOT count as represented.**
+- ⭐ **The same exchange present through two carriers counts ONCE**, by durable exchange
+  identity.
+
+⭐ This preserves A6's original law exactly — *represented* means **what MAIA actually
+has before her**, ⛔ never what some upstream stage fetched. And it scales: protected
+significance, summaries, developmental continuity and every later carrier become unable
+to silently falsify A6 merely by adding context.
+
+### 4.4 ⚠️ IMPLEMENTATION CONSEQUENCE — A6's derivation point must move
+
+A6 derives per tier at that tier's **final aperture**, immediately before prompt
+assembly (`maiaService.ts:1072` FAST · `:1826` CORE). ⭐ That is correct **today**,
+because the aperture is the only exchange-bearing carrier for the current session — so
+"final aperture" and "final composition" coincide.
+
+⚠️ **They stop coinciding the moment Lane 1 lands.** Adopting §4.3 therefore implies
+relocating A6's derivation **downstream of every exchange-bearing carrier**, which is a
+change to A6 itself.
+
+⛔ Not circular: the continuity block is part of the prompt but contributes no
+exchanges, so it never counts itself.
+
+⛔ Naming this constraint is not authorization to implement it, and ⛔ it does not reopen
+A6's acceptance — A6 is correct for the composition that exists today.
 
 ---
 
