@@ -1159,7 +1159,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
                         'shared-head refusal (3 steps) qualifies under vpio-02 — trace-indistinguishable, custody decides: failure then recovery']) expect(out).toContain(line);
     expect(out).not.toMatch(/^FAIL/m);
   });
-  it('corpus regression: the VPIO-01 N=30 population reads 30 × failure then degradation under vpio-01 and 30 × SUBJECT-MISMATCH under vpio-02; every engine-era journal under vpio-02 reads SUBJECT-MISMATCH or DRIVER/INFRASTRUCTURE FAILURE', () => {
+  it('corpus regression: the VPIO-01 N=30 population reads 30 × failure then degradation under vpio-01 and 30 × SUBJECT-MISMATCH under vpio-02; the VPIO-02 F-W1 and fresh K00-0506 populations read as produced; every engine-era journal under vpio-02 reads SUBJECT-MISMATCH or DRIVER/INFRASTRUCTURE FAILURE', () => {
     const all = tracked([':(glob)docs/programme/VOICE-2026/driver-ledger/**/kernel00-*.jsonl']);
     const vpio01 = all.filter((p) => p.includes('/VPIO-01-20260914T200542Z/journals/'));
     expect(vpio01.length).toBe(30);
@@ -1177,7 +1177,14 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(c02.filter((c) => c === 'gen-1 listen').length).toBe(29);
     expect(c02.filter((c) => c === 'failure then recovery').length).toBe(1);
     expect(classes('vpio-01', vpio02)).toEqual(Array(30).fill('SUBJECT-MISMATCH'));
-    const engine = all.filter((p) => !vpio01.includes(p) && !vpio02.includes(p));
+    // C-D21 (2026-09-15, same shape as C-D19): the fresh K00-0506 output-act population (K00-0506-20260915T004738Z, after C-D20) is
+    // its own tracked VPIO-02 population — 10 × gen-1 listen under vpio-02, 10 × SUBJECT-MISMATCH under vpio-01 — and is excluded
+    // from "engine-era" like the two F-W1 populations. The first K00-0506 batch (235008Z) produced no journal and needs no row.
+    const k0506 = all.filter((p) => p.includes('/K00-0506-20260915T004738Z/journals/'));
+    expect(k0506.length).toBe(10);
+    expect(classes('vpio-02', k0506)).toEqual(Array(10).fill('gen-1 listen'));
+    expect(classes('vpio-01', k0506)).toEqual(Array(10).fill('SUBJECT-MISMATCH'));
+    const engine = all.filter((p) => !vpio01.includes(p) && !vpio02.includes(p) && !k0506.includes(p));
     expect(engine.length).toBeGreaterThan(400);
     expect(new Set(classes('vpio-02', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
   });
