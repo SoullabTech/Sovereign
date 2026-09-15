@@ -497,6 +497,30 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/admin', minTier: 'pro', rolesAnyOf: ['admin'], notes: 'Admin panel - admin only' },
   { prefix: '/founder', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder ops console - admin only' },
   { prefix: '/api/founder', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder ops API - admin only' },
+
+  // AIN COLLECTIVE FIELD CORRIDOR — containment, not authorization design.
+  //
+  // MAIA-WISDOM-CONSENT-01 witnessed this in production on 2026-09-15: an
+  // unauthenticated POST from the public internet to
+  // /api/ain/collective/breakthrough returned 400 — the ROUTE'S OWN body
+  // validator, meaning the handler executed. Two layers were absent at once:
+  // no rule matched /api/ain/* here, so permissive mode forwarded the request,
+  // and the handlers carry no guard of their own. The corridor also exposes
+  // /api/ain/control (action: 'shutdown' | 'emergency_stabilization') and
+  // /api/ain/knowledge (corpus retrieval whose only early return is a
+  // CAPACITOR_BUILD static-export stub, not a production guard).
+  //
+  // minTier 'free' is load-bearing, not filler: checkAccess() returns on the
+  // FIRST failure, so a higher minTier would report 'insufficient-tier' and
+  // never reach the role test. The middleware's insufficient-tier branch
+  // re-evaluates rolesAnyOf independently for exactly this reason, so the rule
+  // holds either way — but 'free' keeps the admin role the single operative
+  // condition rather than relying on that repair.
+  //
+  // This CONTAINS an ingress. It is not the contribution boundary: an
+  // authenticated conversation is still not an offering to the field (R15),
+  // and the consent act remains undesigned and unauthorized.
+  { prefix: '/api/ain/', public: false, minTier: 'free', rolesAnyOf: ['admin'], notes: 'AIN collective field corridor — admin only (MAIA-WISDOM-CONSENT-01 containment)' },
   { prefix: '/steward', minTier: 'pro', rolesAnyOf: ['steward', 'admin'], notes: 'Steward tools' },
 
   // -------------------------------------------------------------------------
