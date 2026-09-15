@@ -175,7 +175,9 @@
     "matrix:s3-constitutional": "tsx tests/constitutional/s3/matrix.ts",
     "typecheck:s3-substrate": "node scripts/typecheck-s3-substrate.mjs",
     "guards:s3-substrate": "tsx tests/constitutional/s3-substrate/guards.ts",
-    "matrix:editorial-runtime": "tsx tests/constitutional/editorial-runtime/matrix.ts"
+    "matrix:editorial-runtime": "tsx tests/constitutional/editorial-runtime/matrix.ts",
+    "typecheck:jr01": "tsc -p tsconfig.jr01-research.json",
+    "validate:jr01": "node --experimental-strip-types tests/research/jr-01/validate.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

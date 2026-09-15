@@ -1,0 +1,16 @@
+{
+  "//": "JR-01 research instrument. Isolated on purpose: it does NOT widen tsconfig.ship.json, cannot move the typecheck baseline, and implies nothing about research code being production code. `allowImportingTsExtensions` is required because validate.mjs runs the corpus through Node's type stripping, which needs explicit extensions.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true
+  },
+  "include": ["tests/research/jr-01/**/*.ts"]
+}
