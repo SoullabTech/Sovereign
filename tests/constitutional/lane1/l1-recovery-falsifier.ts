@@ -77,6 +77,7 @@ while (exchanges.length < 39) {
   const [u, m] = FILLER[exchanges.length % FILLER.length]!;
   push(`${u}`, `${m}`);
 }
+const MARKER_INDEX = exchanges.findIndex(e => /Silver cedar/.test(e.userMessage));
 const CORE_APERTURE = 4;
 const aperture = exchanges.slice(-CORE_APERTURE);
 const displaced = exchanges.slice(0, exchanges.length - CORE_APERTURE);
@@ -93,9 +94,25 @@ ok('marker is displaced, not in aperture',
 console.log('\n── PROBE P · opaque reference ──');
 const P = recover('What was the phrase I gave you earlier in this conversation?');
 ok('P/C1 · recovers something', P.length > 0);
-ok('P/C1 · recovers the SILVER CEDAR exchange',
-   P.some(e => e.userMessage.toLowerCase().includes('silver cedar')),
-   `got indices ${P.map(e => e.index).join(',')}`);
+// ⚠️⚠️ UNADJUDICATED — founder ruling 2026-09-15. Neither red-as-regression nor
+// green-as-acceptance.
+//
+// This assertion's ORACLE WAS DISPROVEN. It used to pass because the marker sat at
+// index 1 and won a saturated tie by position, not because opaque retrieval worked.
+// With that privilege removed, nothing yet establishes that a generic retrospective
+// request with ZERO lexical overlap and ONE isolated mention contains enough
+// information to select that utterance over every other one-off utterance.
+//
+// ⛔ Do not contort the scorer to make this green again merely because it used to be.
+// That risks rebuilding the positional artifact under another name. It is reported,
+// not scored, until the founder rules what evidence an isolated opaque utterance must
+// carry to deserve retrieval.
+{
+  const hit = P.some(e => e.userMessage.toLowerCase().includes('silver cedar'));
+  console.log(`  ⚠️  UNADJUDICATED · single-mention opaque recovery: ${hit ? 'hit' : 'miss'}` +
+              ` — got [${P.map(e => e.index).join(',')}], marker at ${MARKER_INDEX}` +
+              ` (oracle disproven; not counted either way)`);
+}
 ok('P · returns 1–3, never a dump', P.length >= 1 && P.length <= 3, `got ${P.length}`);
 ok('P · every result carries recovery provenance',
    P.every(e => e.source === RECOVERY_SOURCE));

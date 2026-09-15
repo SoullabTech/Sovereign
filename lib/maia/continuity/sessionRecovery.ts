@@ -333,3 +333,68 @@ export function formatRecoveredForPrompt(recovered: readonly RecoveredExchange[]
     `reconstruct it, and do not describe it as a memory you are unsure of.`
   );
 }
+
+/**
+ * ⭐ DIAGNOSTIC ONLY — authorized 2026-09-15 as instrumentation.
+ *
+ * ⛔ Changes no behaviour and is called from no serving path. It recomputes the same
+ * intermediates `recoverDisplacedExchanges` uses so a ranking decision can be inspected
+ * rather than inferred.
+ *
+ * `memberOccurrences` / `assistantEchoes` are computed HERE for explanation only.
+ * ⛔ They are NOT scoring inputs and must not become them by way of this function.
+ */
+export interface RecoveryExplanation {
+  readonly index: number;
+  readonly overlap: number;
+  readonly rawDistinctiveness: number;
+  readonly definingTerms: string[];
+  readonly memberOccurrences: number;
+  readonly assistantEchoes: number;
+  readonly finalScore: number;
+  readonly rank: number;
+}
+
+export function explainRecovery(input: {
+  utterance: string;
+  displaced: readonly DisplacedExchange[];
+  corpus: readonly { userMessage: string; maiaResponse: string }[];
+}): { demand: number; explanations: RecoveryExplanation[] } {
+  const { utterance, displaced, corpus } = input;
+  const demand = retrospectiveDemand(utterance);
+
+  const documents = corpus.map(e => `${e.userMessage} ${e.maiaResponse}`);
+  const idf = buildIdf(documents.length > 0 ? documents : displaced.map(d => d.userMessage));
+  const memberDocs = corpus.map(e => e.userMessage);
+  const memberDf = buildDocFreq(memberDocs.length > 0 ? memberDocs : displaced.map(d => d.userMessage));
+  const memberDocCount = Math.max(1, memberDocs.length);
+  const maxRarity = Math.max(
+    0,
+    ...[...memberDf.keys()].map(tok => rarity(tok, memberDf, memberDocCount))
+  );
+  const utteranceTokens = tokenize(utterance);
+
+  const rows = displaced.map(ex => {
+    const memberTokens = tokenize(ex.userMessage);
+    const exchangeTokens = new Set([...memberTokens, ...tokenize(ex.maiaResponse)]);
+    const overlap = idfOverlap(utteranceTokens, exchangeTokens, idf);
+    const rawDistinctiveness = distinctiveness(memberTokens, memberDf, memberDocCount, maxRarity);
+    const definingTerms = [...new Set(memberTokens)]
+      .map(tok => ({ tok, r: rarity(tok, memberDf, memberDocCount) }))
+      .sort((a, b) => b.r - a.r)
+      .slice(0, 3)
+      .map(x => x.tok);
+    const finalScore = demand * (W_OVERLAP * overlap + W_DISTINCT * rawDistinctiveness);
+    const memberOccurrences = definingTerms.length > 0
+      ? Math.max(...definingTerms.map(t => memberDf.get(t) ?? 0)) : 0;
+    const assistantEchoes = corpus.filter(
+      c => definingTerms.some(t => new Set(tokenize(c.maiaResponse)).has(t))
+    ).length;
+    return { index: ex.index, overlap, rawDistinctiveness, definingTerms,
+             memberOccurrences, assistantEchoes, finalScore, rank: -1 };
+  });
+
+  const ordered = [...rows].sort((a, b) => (b.finalScore - a.finalScore) || (a.index - b.index));
+  ordered.forEach((r, i) => { (r as { rank: number }).rank = i; });
+  return { demand, explanations: rows };
+}
