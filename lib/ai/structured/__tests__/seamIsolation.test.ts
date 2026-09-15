@@ -79,12 +79,53 @@ describe('the existing plain-text seam is untouched', () => {
  * THE SEAM TO THE CALLER. A migration that "worked" by loosening the router, or
  * by teaching the adapter about one caller's shape, would have migrated nothing
  * — it would have moved the vendor coupling one file inward. So the seam's four
- * source files are pinned byte-identical to the commit that merged them.
+ * source files are pinned byte-identical.
  *
  * Its tests are deliberately NOT pinned: each new caller adds its own proof, and
  * that is the seam being used, not altered.
+ *
+ * ── AMENDED 2026-09-08 · AIN-STRUCTURED-PROVENANCE-01 ─────────────────────
+ *
+ * The pin used to name the seam's MERGE commit, as though the seam could never
+ * legitimately change. Then it did: `provenance.model` recorded the model
+ * REQUESTED, which is correct and load-bearing, and Encounter's G8 witness
+ * needed a second fact — the model the provider REPORTS as having answered.
+ * The repair was additive and founder-authorized, and this guard failed.
+ *
+ * ⭐ IT WAS RIGHT TO FAIL. It was not a stale test; it was a constitutional stop
+ * asking *who authorized the seam itself to change?* — a question that now has
+ * an answer. The correct response was never to weaken the pin, and never to
+ * teach it to guess:
+ *
+ *   ⛔ no caller exception · ⛔ no branch-name inspection · ⛔ no
+ *   "if this change belongs to the seam lane, skip the byte comparison"
+ *
+ * Any of those would gut the instrument. Instead the BASELINE MOVES, and moving
+ * it is itself a governed act:
+ *
+ *   ordinary caller work        → the byte pin is immovable
+ *   governed seam amendment     → the founder may move the baseline,
+ *                                 and the pin is immovable again
+ *
+ * THE AMENDED INVARIANT: a caller migration must bend the caller to the governed
+ * structured-inference seam, never the seam to the caller. The seam itself may
+ * change only through an explicitly authorized amendment of its governing
+ * contract. Such an amendment establishes a new governed seam baseline; moving
+ * that baseline is itself a governed act, never an automatic test repair.
  */
-const MERGED = '8b31d931c2ca4349b08fa49428b2e93508f47613';
+
+/** Historical evidence: the commit that first merged the seam. Never deleted. */
+const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
+
+/**
+ * The ACTIVE pin. Founder-authorized 2026-09-08 (AIN-STRUCTURED-PROVENANCE-01).
+ *
+ * The authorization is narrow and worth stating exactly: **those four seam-file
+ * states at this commit** constitute the new governed baseline. The commit also
+ * carries witness-side work, and no unrelated file gains constitutional status
+ * by having travelled in the same commit — this guard resolves four paths.
+ */
+const GOVERNED_SEAM_BASELINE = '35d0f81d167dca73431ae7640d7fabf4bae86cff';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([
@@ -92,11 +133,40 @@ describe('callers bend to the seam, never the seam to a caller', () => {
     'lib/ai/structured/policy.ts',
     'lib/ai/structured/router.ts',
     'lib/ai/structured/anthropicStructuredAdapter.ts',
-  ])('%s is byte-identical to the merged seam', (p) => {
+  ])('%s is byte-identical to the governed seam baseline', (p) => {
     const now = execSync(`git hash-object ${JSON.stringify(p)}`, { cwd: ROOT }).toString().trim();
-    const was = execSync(`git rev-parse ${MERGED}:${JSON.stringify(p)}`, { cwd: ROOT })
+    const was = execSync(`git rev-parse ${GOVERNED_SEAM_BASELINE}:${JSON.stringify(p)}`, { cwd: ROOT })
       .toString().trim();
     expect(now).toBe(was);
+  });
+
+  it('the original merge is preserved as history, and the baseline has genuinely moved', () => {
+    /* Both facts matter. Deleting the original would erase the evidence that the
+       seam once shipped unamended; letting the two be equal would mean no
+       governed amendment ever happened. */
+    expect(ORIGINAL_SEAM_MERGE).toBe('8b31d931c2ca4349b08fa49428b2e93508f47613');
+    expect(GOVERNED_SEAM_BASELINE).not.toBe(ORIGINAL_SEAM_MERGE);
+  });
+
+  it('⛔ the pin is unconditional — no caller, lane or branch may talk it out of comparing', () => {
+    /* A pin that can be talked out of is not a pin.
+     *
+     * The first version of this control scanned the whole file for words like
+     * "branch" and "skip" — and failed on ITS OWN TITLE AND ITS OWN PATTERN.
+     * That is the ratified C21 lesson for the fifth time in this lane: a scan
+     * that reads prose fails on the file documenting its own compliance.
+     *
+     * So it asserts the actual property instead: the body that performs the byte
+     * comparison contains no branch of any kind. It hashes, it resolves, it
+     * expects. There is nowhere for an exception to live. */
+    const self = readFileSync(join(ROOT, 'lib/ai/structured/__tests__/seamIsolation.test.ts'), 'utf8');
+    const marker = "'%s is byte-identical to the governed seam baseline'";
+    const start = self.indexOf(marker);
+    expect(start).toBeGreaterThan(-1);
+    const body = self.slice(start, self.indexOf('});', start));
+    expect(body).toMatch(/git hash-object/);
+    expect(body).toMatch(/GOVERNED_SEAM_BASELINE/);
+    expect(body).not.toMatch(/\bif\b|\?\.|\|\||&&|process\.env|return\b/);
   });
 
   /* The seam's whole point is that a caller cannot name its provider. A

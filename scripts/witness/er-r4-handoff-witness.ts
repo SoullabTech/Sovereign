@@ -45,13 +45,17 @@ function startStub(): Promise<Server> {
   });
 }
 
+/* ⭐ By default the stub reports back the model that was REQUESTED, so
+   `modelAgreement` is `agreed` and the editorial acceptance rule is satisfied.
+   ⛔ `mismatchReply` deliberately reports a different one. */
+let reportedModel = 'claude-opus-5';
 const toolReply = (input: unknown) => ({
-  id: 'msg_stub', type: 'message', role: 'assistant', model: 'stub-model-that-served',
+  id: 'msg_stub', type: 'message', role: 'assistant', model: reportedModel,
   content: [{ type: 'tool_use', id: 'tu_1', name: 'editorial_outcome', input }],
   stop_reason: 'tool_use', usage: { input_tokens: 11, output_tokens: 7 },
 });
 const textReply = (text: string) => ({
-  id: 'msg_stub', type: 'message', role: 'assistant', model: 'stub-model-that-served',
+  id: 'msg_stub', type: 'message', role: 'assistant', model: reportedModel,
   content: [{ type: 'text', text }], stop_reason: 'end_turn',
   usage: { input_tokens: 3, output_tokens: 2 },
 });
@@ -161,6 +165,25 @@ async function main() {
   const prov = (await one(`SELECT answer_provenance p FROM ask_turns WHERE thread_id=$1 AND speaker='maia'`,[TE])).p;
   eq('A8 ⭐ provider provenance is persisted on the MAIA turn', prov?.provider, 'anthropic');
   eq('A8b ⭐ with usage and latency', typeof prov?.usage?.outputTokens === 'number' && typeof prov?.latencyMs === 'number', true);
+  eq('A9 ⭐⭐ all THREE provenance facts are durable — model keeps its governed meaning',
+     `${prov?.model}/${prov?.reportedModel}/${prov?.modelAgreement}`,
+     `${EDITORIAL_MODEL}/${EDITORIAL_MODEL}/agreed`);
+
+  /* ══ ⭐⭐ THE ATTRIBUTION RULE ═══════════════════════════════════════════ */
+  console.log('\n── ⭐⭐ Writer\u2019s Studio will not attribute what it cannot name ──');
+  const beforeMM = await counts();
+  const aMM = await persistMemberEditorialAct({ memberId: M, threadId: TE,
+    act: { act: 'discourse', text: 'and if the model differs?', refersTo: null } });
+  reportedModel = 'some-other-model-entirely';
+  reply = toolReply({ kind: 'reply_with_proposal', reply: 'Here.', proposal: { replacementText: 'FROM-A-DIFFERENT-MODEL' } });
+  const rMM = await runEditorialTurn({ ...base, currentTurnIndex: (aMM as any).turnIndex,
+    declaredAct: 'discourse', currentDirectionId: null, exchangeId: 'xmm' });
+  eq('M1 ⭐⭐ a provider-reported model that DIFFERS is refused',
+     rMM.ok === false && rMM.reason, 'model_unattributable');
+  eq('M2 ⭐⭐ and mints NOTHING — refused BEFORE admission', await counts(), beforeMM);
+  eq('M3 ⛔ the wording it offered exists nowhere',
+     Number((await one(`SELECT count(*)::int n FROM proposal_versions WHERE formulation='FROM-A-DIFFERENT-MODEL'`)).n), 0);
+  reportedModel = EDITORIAL_MODEL;
 
   /* ══ 2 · PROSE CANNOT MINT ═════════════════════════════════════════════ */
   console.log('\n── prose cannot mint ─────────────────────────────────────────────');

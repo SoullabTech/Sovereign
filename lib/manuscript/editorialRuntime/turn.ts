@@ -69,6 +69,11 @@ export type EditorialTurnRefusal =
   | 'handoff_unproven'
   | OutcomeRefusal
   | MaiaOutcomeRefusal
+  /**
+   * ⭐⭐ THE PROVIDER DID NOT SAY WHICH MODEL ANSWERED, or said a different one.
+   * ⛔ Writer's Studio will not attribute authorship it cannot name.
+   */
+  | 'model_unattributable'
   /** The structured seam refused. ⛔ There is no fallback below this. */
   | 'structured_refused';
 
@@ -138,15 +143,39 @@ export async function runEditorialTurn(
 
   /* 6 ⛔ ADMISSION. A refusal here reaches no transaction, and prose is never
      inspected afterwards to rescue it. */
+  /* ⭐⭐ ATTRIBUTION BEFORE ADMISSION — the Writer's Studio acceptance rule.
+   *
+   * The shared seam REPORTS the facts (`model` requested/sent · `reportedModel`
+   * as the provider named it · `modelAgreement` derived). ⭐ It does not judge
+   * them, and it should not: other callers may lawfully tolerate a substitution.
+   *
+   * ⛔ THIS CAPABILITY DOES NOT. A durable MAIA turn is an attribution of
+   * authorship, and an editorial act attributed to a model the provider did not
+   * name — or named differently — is an attribution nobody can stand behind.
+   * ⛔ Refused BEFORE admission, so nothing is admitted and nothing is written.
+   */
+  const { reportedModel, modelAgreement } = structured.result.provenance;
+  if (reportedModel === null || modelAgreement !== 'agreed') {
+    return {
+      ok: false, reason: 'model_unattributable',
+      detail: `requested=${structured.result.provenance.model} reported=${reportedModel ?? 'none'} agreement=${modelAgreement}`,
+    };
+  }
+
   const admission = admitEditorialToolEnvelope(structured.result.content);
   if (!admission.ok) return { ok: false, reason: admission.reason };
 
   /* 7 · persist, with the provenance of the answer that ACTUALLY came back */
   const persisted = await persistMaiaEditorialOutcome({
     memberId, invocation, outcome: admission.outcome,
+    /* ⭐ ALL THREE FACTS, and `model` keeps its governed meaning:
+       requested and SENT. ⛔ It is not redefined to mean "what answered" — that
+       is `reportedModel`, and their relation is `modelAgreement`. */
     answerProvenance: {
       provider: structured.result.provenance.provider,
       model: structured.result.provenance.model,
+      reportedModel,
+      modelAgreement,
       latencyMs: structured.result.provenance.latencyMs,
       usage: structured.result.usage,
       runtime: 'ws-editorial-runtime-01/er-r4',
