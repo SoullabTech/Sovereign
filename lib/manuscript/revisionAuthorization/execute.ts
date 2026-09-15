@@ -40,7 +40,10 @@
  */
 
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
-import { saveSectionInTransaction, splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+/* ⭐ The mutation it lawfully performs, and the projection it only reads —
+   from two addresses now, because they are two different capabilities. */
+import { saveSectionInTransaction } from '@/lib/manuscript/sections/saveSection';
+import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import { applyExactlyOnce } from '@/lib/manuscript/exactText';
 import { evaluateExecutionFit } from './executionFit';
 import { AUTH_COLUMNS, hydrateAuthorizationRow } from './store';

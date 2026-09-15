@@ -20,7 +20,7 @@
  */
 
 import { query, transaction } from '@/lib/db/postgres';
-import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import { locusIsAdoptable } from '../proposalChain/legacyLocus';
 import { openChainWithExecutor } from '../proposalChain/store';
 import { readProposalWork } from '../proposalChain/proposalWork';

@@ -57,7 +57,7 @@
  * unreliable tomorrow.
  */
 
-import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 
 /**
  * ⭐ Which coordinate space a frozen locus was written in.

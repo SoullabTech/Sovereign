@@ -32,6 +32,7 @@
  */
 
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
+import { splitStoredSection } from './sectionProjection';
 
 export type SaveRefusal =
   | 'draft_not_found'
@@ -46,32 +47,6 @@ export interface SaveResult {
   detail?: string;
   version?: number;
   sectionChars?: number;
-}
-
-/**
- * Split a stored section slice into the part the member may not edit and the
- * part they may. PURE.
- *
- * Returns null when the slice does not begin with the heading the Source
- * records — which means this section is not in the shape this cut knows how to
- * edit, and refusing is the only honest response. Never guesses at a heading
- * by looking at the text.
- */
-export function splitStoredSection(
-  text: string,
-  heading: string | null,
-): { headingPrefix: string; body: string } | null {
-  const h = heading?.trim();
-  if (!h) return { headingPrefix: '', body: text };
-
-  /* The composer writes `heading\n\n` before the body. Accept exactly that,
-     and the degenerate case of a heading with nothing after it. */
-  if (text === h) return { headingPrefix: h, body: '' };
-  if (text.startsWith(`${h}\n`)) {
-    const prefixEnd = text.startsWith(`${h}\n\n`) ? h.length + 2 : h.length + 1;
-    return { headingPrefix: text.slice(0, prefixEnd), body: text.slice(prefixEnd) };
-  }
-  return null;
 }
 
 /** One section, as the writing surface needs it. */
