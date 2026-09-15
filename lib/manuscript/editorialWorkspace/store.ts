@@ -236,11 +236,26 @@ export interface DirectionInput {
  * server function a future route must CHOOSE to call, rather than in a field it
  * merely passes along.
  */
+/**
+ * ⭐⭐ ONE INSERT, EXECUTOR-SUPPLIED. There is no second Direction INSERT
+ * anywhere, and adding one would be the defect: two statements that must agree
+ * is the shape drift arrives in.
+ *
+ * ⛔ THE EXECUTOR SUPPLIES ATOMICITY, NEVER AUTHORITY. Authorship is still fixed
+ * here by the two public seams below, never accepted as a field.
+ *
+ * ⚠️ ER-R1 FOUND THIS: the pool-level `query` cannot join a caller's
+ * transaction, so an atomic member act built from the old signature would have
+ * written the turn inside the transaction and the Direction outside it — and
+ * ER-F7 would have been FALSE while reading green, because the turn alone would
+ * survive a Direction refusal.
+ */
 async function insertDirection(
-  memberId: string, chainId: string, author: 'maia' | 'member', input: DirectionInput,
+  exec: SqlExecutor, memberId: string, chainId: string,
+  author: 'maia' | 'member', input: DirectionInput,
 ): Promise<DirectionResult> {
   try {
-    const r = await query<DirectionRow>(
+    const r = await exec.query<DirectionRow>(
       `INSERT INTO proposal_chain_directions
          (member_id, proposal_chain_id, author, instruction, refers_to_version_id)
        VALUES ($1, $2, $3, $4, $5)
@@ -254,18 +269,37 @@ async function insertDirection(
   }
 }
 
+/**
+ * The writer steers, INSIDE a caller's transaction.
+ *
+ * ⭐ The whole reason it exists: the member's turn, their Direction and the
+ * turn↔act binding are ONE AUTHORED ACT, and the database must remember all of
+ * it or none of it.
+ */
+export async function createMemberDirectionWithExecutor(
+  exec: SqlExecutor, memberId: string, chainId: string, input: DirectionInput,
+): Promise<DirectionResult> {
+  return insertDirection(exec, memberId, chainId, 'member', input);
+}
+
 /** The writer steers: *"Go back to what V1 was doing."* */
 export async function createMemberDirection(
   memberId: string, chainId: string, input: DirectionInput,
 ): Promise<DirectionResult> {
-  return insertDirection(memberId, chainId, 'member', input);
+  return insertDirection({ query }, memberId, chainId, 'member', input);
 }
 
-/** MAIA steers: *"Let me try the shorter form before we commit."* */
+/**
+ * MAIA steers: *"Let me try the shorter form before we commit."*
+ *
+ * ⛔ NO EXECUTOR VARIANT YET, DELIBERATELY. MAIA's turn and its adjunct are the
+ * next runtime cut, and a seam added before the act that needs it is a place a
+ * future caller can assert something nobody authorized.
+ */
 export async function createMaiaDirection(
   memberId: string, chainId: string, input: DirectionInput,
 ): Promise<DirectionResult> {
-  return insertDirection(memberId, chainId, 'maia', input);
+  return insertDirection({ query }, memberId, chainId, 'maia', input);
 }
 
 /**
