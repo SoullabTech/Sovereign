@@ -147,9 +147,17 @@ describe('the parent re-reads through the one existing path', () => {
 
 describe('scope — the repair touches nothing it was told not to', () => {
   it('does not alter conversion behaviour', () => {
-    // the NAV-01 act still exists, still gated on the write state
-    expect(canvas()).toMatch(/writeState\?\.mode === 'continuous' && \(\s*<button/);
-    expect(canvas()).toMatch(/data-action="confirm-section-breaks"/);
+    /* The NAV-01 act still exists and is still gated on the WRITE STATE — the
+       law this guard protects, and it is intact.
+       ⚠️ WRITING-STATE-ANNOUNCE-01 moved the act out of the dismissible Outline
+       panel into the writing field, so the anchor is the notice rather than the
+       room. ⛔ The gate was not loosened: it moved from an inline
+       `writeState?.mode === 'continuous'` to a named `actAvailable` derived from
+       the same server mode, with the button inside it. */
+    const notice = read('app/writers-studio/canvas/DraftStateNotice.tsx');
+    expect(notice).toMatch(/const actAvailable = mode === 'continuous';/);
+    expect(notice).toMatch(/\{actAvailable && \(\s*<button/);
+    expect(notice).toMatch(/data-action="confirm-section-breaks"/);
   });
 
   it('adds no second navigation path — sections still mount through chooseMount', () => {

@@ -66,6 +66,7 @@ import MaiaColumn from './MaiaColumn';
 import StudioConversation from './StudioConversation';
 import EditorialConversation from './EditorialConversation';
 import StudioLowerBand from './StudioLowerBand';
+import { DraftStateNotice } from './DraftStateNotice';
 
 /**
  * THE WRITER'S STUDIO — the persistent shell, at /writers-studio/canvas.
@@ -803,54 +804,22 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
                   phase={sectionsPhase}
                   sections={sections}
                 />
-                {/* R1 — `worktable` collapses THREE server states, and only one of
-                    them can convert. planConversion() refuses unless the draft is
-                    byte-identical to the source-derived partition, so offering the
-                    act on `continuous_unprovable` would show a button structurally
-                    incapable of succeeding, and `no_draft` has nothing to convert.
-                    The gate is therefore the WRITE STATE, not the mount. */}
+                {/* WRITING-STATE-ANNOUNCE-01 — the outline still describes
+                    STRUCTURE; it no longer owns the draft's existential state.
+                    ⛔ That truth used to live ONLY here, in a DISMISSIBLE panel
+                    that opens on the SOURCE having sections while describing the
+                    DRAFT — so a Work begun in the Studio met the Worktable with
+                    no explanation anywhere. It is now carried by the writing
+                    field, where the writer already is. This marker remains so
+                    the outline can still say its rows are not navigable. */}
                 {writeMount.mount === 'worktable' && (
                   <div
                     style={{ marginTop: SPACE.comfortable, maxWidth: '34ch' }}
                     data-outline-state="unconverted"
                   >
-                    {/* The server's own reason, when it has one, comes first —
-                        it is more specific than anything written here. */}
-                    <StudioText role="metadata" style={{ marginBottom: SPACE.tight }}>
-                      {writeMount.notice?.title ?? SECTION_BREAKS_COPY.title}
-                    </StudioText>
                     <StudioText role="quiet">
-                      {writeMount.notice?.body
-                        ?? (writeState?.mode === 'continuous'
-                              ? SECTION_BREAKS_COPY.body
-                              : SECTION_BREAKS_COPY.bodyNotConvertible)}
+                      These rows are not navigable yet.
                     </StudioText>
-                    {writeState?.mode === 'continuous' && (
-                    <button
-                      type="button"
-                      onClick={onConfirmSectionBreaks}
-                      disabled={confirming || !manuscript?.id}
-                      data-action="confirm-section-breaks"
-                      style={{
-                        marginTop: SPACE.tight,
-                        padding: '8px 14px',
-                        background: 'transparent',
-                        border: `1px solid ${RULE.soft}`,
-                        borderRadius: 6,
-                        color: 'inherit',
-                        font: 'inherit',
-                        cursor: confirming ? 'default' : 'pointer',
-                        opacity: confirming ? 0.6 : 1,
-                      }}
-                    >
-                      {confirming ? SECTION_BREAKS_COPY.working : SECTION_BREAKS_COPY.action}
-                    </button>
-                    )}
-                    {confirmError && (
-                      <StudioText role="quiet" style={{ marginTop: SPACE.tight }}>
-                        {confirmError}
-                      </StudioText>
-                    )}
                   </div>
                 )}
               </>
@@ -943,6 +912,22 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
                 background: var(--ws-ground-active);
               }
             `}</style>
+            {/* ⭐⭐ THE DRAFT'S STATE, WHERE THE WRITER IS — directly above
+                the surface she is about to use, and requiring nothing to be
+                opened to learn it.
+
+                Placed HERE rather than inside `FieldBody` because the server
+                state, the confirm handler and its pending flag already live in
+                this scope. ⛔ Threading three props down to say the same thing
+                one level lower would be plumbing, not clarity, and `FieldBody`
+                would then hold a state it does not act on. */}
+            <DraftStateNotice
+              writeState={writeState}
+              writeMount={writeMount}
+              onConfirmSectionBreaks={onConfirmSectionBreaks}
+              confirming={confirming}
+              canConfirm={Boolean(manuscript?.id)}
+            />
             <FieldBody
               writeMount={writeMount}
               witnessDelayMs={witnessDelayMs}
