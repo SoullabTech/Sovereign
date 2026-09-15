@@ -100,6 +100,36 @@ instrument**.
 read as an all-clear. It probed a legacy placeholder convention rather than the operation the
 census depends on. The gate above probes the read itself.*
 
+### ⭐⭐ `READ OK` establishes AVAILABILITY, not AUTHORITY
+
+*(Added 2026-09-15 by founder ruling, after the closure above. The ruling is unchanged; this
+names the boundary it implies, so it survives the session rather than living in a transcript.)*
+
+⛔ The gate is a **precondition**, never a trigger. Phase 0 spent its authority establishing the
+instrument and its evidentiary grammar; it did **not** spend the authority to point that
+instrument at the authoritative corpus. Those are separate acts.
+
+On `READ OK` the only valid state transition is evidentiary:
+
+```text
+AUTHORITATIVE CORPUS   ✅ readable
+INSTRUMENT             ✅ ready
+PART A RUN #2          ⛔ still unauthorized
+ACT 2A                 ⛔ still unopened
+```
+
+**Nothing else moves.** Three substitutions are each forbidden, and they are the plausible drifts:
+
+- ⛔ **sync progress cannot substitute for named-file readability** — a growing container may hold
+  placeholders, partial downloads and unrelated materialized files
+- ⛔ **readability cannot substitute for authorization** — the next legitimate act is a NEW custody
+  authorization for Part A Run #2
+- ⛔ **results from a future run cannot retroactively reopen Phase 0** or modify the accepted
+  instrument without a separately authorized act
+
+⭐ The honest report on materialization is: *the named file yields readable bytes; the instrument
+is ready; Run #2 awaits a custody act.* ⛔ Never *ready, proceeding.*
+
 ---
 
 ## 5. Roadmap position
