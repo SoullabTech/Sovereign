@@ -134,6 +134,13 @@ const BRIDGE_WITH_FALLBACK: BridgeFn = ({ probe, activePrefix, displaced }) => {
     .sort((a, b) => b.n - a.n || a.i - b.i).slice(0, 1).map(x => x.i);
 };
 
+// ── THE IMPLEMENTATION, against the frozen oracles ──────────────────────────
+import { recoverViaBridge } from '../../../lib/maia/continuity/sessionBridge';
+export const IMPLEMENTATION: BridgeFn = ({ probe, activePrefix, displaced }) => {
+  const r = recoverViaBridge({ probe, activePrefix, displaced });
+  return r.kind === 'recovered' ? r.exchanges.map(e => e.index) : [];
+};
+
 if (process.argv[1]?.includes('c1-bridge-acceptance')) {
   console.log('C1-BRIDGE · pre-implementation acceptance set (oracles frozen)');
   const a = runAcceptance(ABSTAIN, 'DEFEAT · always abstain');
@@ -143,6 +150,7 @@ if (process.argv[1]?.includes('c1-bridge-acceptance')) {
   console.log(`  ABSTAIN       ${a ? '⛔ SURVIVED — suite is not lethal' : '✅ killed (fails P1)'}`);
   console.log(`  BEST-AVAILABLE ${b ? '⛔ SURVIVED — suite is not lethal' : '✅ killed (fails a negative)'}`);
   console.log(`  BRIDGE+FALLBACK ${c ? '⛔ SURVIVED — N2 is not discriminating' : '✅ killed — N2 discriminates'}`);
-  console.log(`  ⛔ NO BRIDGE IMPLEMENTATION EXISTS YET — oracles frozen first, by ruling.`);
-  process.exit(!a && !b && !c ? 0 : 1);
+  const impl = runAcceptance(IMPLEMENTATION, 'C1-BRIDGE-02 · IMPLEMENTATION');
+  console.log(`  IMPLEMENTATION  ${impl ? '✅ PASSES P1 · N1 · N2' : '⛔ FAILS'}`);
+  process.exit(!a && !b && !c && impl ? 0 : 1);
 }
