@@ -534,3 +534,218 @@ KERNEL-00              NOT ACCEPTED
 ```
 
 Owed before any S2 witness (founder decisions, none opened here): the witness authority string · whether the driver runner must be rebuilt signed from the `b198e2e37` worktree (the driver test is byte-identical to `83a382a14`, so the batch's own `build-for-testing` step rebuilds the same product) · a read-only preflight shaped like §10.10 plus the batch's own stimulus preflight.
+
+## 16. FOUNDER RULING (2026-09-15) — `S2-WITNESS-01` GRANTED, BOUNDED: one witness of the landed orchestration on the real Mac Studio against exactly `b198e2e37` · playback permitted ONLY as an instrument of this witness · S2 population CLOSED · Mac act, NOT YET EXECUTED
+
+### 16.1 Authority (verbatim from the ruling; this is the authority of record — no instrument consumes an authority string in this act, so the invocation carries none)
+
+```text
+S2-WITNESS-01
+
+PURPOSE
+Witness that the landed S2 batch orchestration behaves on the actual
+Mac Studio exactly as the offline instrument claims.
+
+AUTHORIZED
+✅ checkout / verify b198e2e37058f2e059d986b4b148e224215f3ee3
+✅ read the 75/75 gate before the act
+✅ verify clean tree
+✅ verify fixture SHA-256:
+   1a505b3d38a97b75cb935f85bd33deb889628322e558f74af9a5f05afbfbd00e
+✅ verify /usr/bin/afplay SHA-256:
+   88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb
+✅ exercise the real-device population preflight
+✅ permit the ruled S2 stimulus playback only as required by this witness
+✅ execute the minimum real-Mac witness necessary to observe:
+   - preflight PASS
+   - child creation
+   - PID / epoch custody
+   - alive + non-zombie proof
+   - run_test containment
+   - monitor behavior
+   - post-run state
+   - TERM directed only to the locally created child
+   - wait / exit-status capture
+   - stimulus-sample custody record
+✅ preserve terminal output and generated witness artifacts
+✅ record PASS / STOP from observed evidence
+
+NOT AUTHORIZED
+⛔ S2 population collection
+⛔ repeated samples merely to accumulate data
+⛔ S3
+⛔ KERNEL-00 acceptance
+⛔ device mutation
+⛔ output-volume mutation
+⛔ fixture regeneration or substitution
+⛔ alternate stimulus paths or tokens
+⛔ edits to readers, driver, reinstall path, or organism
+⛔ code repair during the witness
+⛔ weakening a STOP into a warning
+⛔ treating a failed witness as implementation authority
+```
+
+Fail-closed rule (founder): if the real Mac contradicts any pinned precondition, the witness STOPS there — no repair and rerun under this authority. If playback begins but custody cannot be proved (wrong PID, premature death, zombie state, monitor failure, ambiguous termination, malformed/missing custody record) the result is witness failure / infrastructure evidence, never permission to continue. *Playback is authorized only as an instrument of S2-WITNESS-01; it is not independently authorized; S2 population remains closed.* Acceptance boundary: **witness PASS ≠ S2 population authorized · ≠ S3 opened · ≠ KERNEL-00 accepted.** On PASS: return the evidence and stop for a separate S2 population ruling.
+
+### 16.2 Shape of the minimum witness (this session's reading of "minimum")
+
+`run_test containment` can only be observed around a real `run_test`, and `run_test` is one phone invocation of `testOutputSample`. The minimum is therefore **N = 1** under its own stratum label `S2-WITNESS-01`: one cold precondition, one `afplay` child, one phone invocation, one stop, one custody record. The phone will write one journal; it is preserved, hashed and ledgered exactly as the batch does for any sample, **but it is witness evidence of the orchestration, never an S2 population row** — the K00-06 / A / A′ reading of §7 is NOT performed on it under this authority. (When its evidence lands here, the structural corpus test's exact set count moves 50 → 51 for the vpio-02 corpus; that is count maintenance under the ratified rule, not a directory naming.)
+
+### 16.3 Pinned sequence — Mac act (paste each block whole; no `#` lines)
+
+**Block A — source custody: fresh detached worktree at exactly the orchestration SHA, gate read, tree clean, fixture and player SHAs.** (`/private/tmp/k0506-s2w-b198e2e37` must not pre-exist; a pre-existing path is STOP for `worktree add`. The gate needs `node_modules`; link the main checkout's if absent.)
+
+```bash
+git -C /Users/soullab/MAIA-SOVEREIGN fetch origin claude/voice-2026-census-01
+git -C /Users/soullab/MAIA-SOVEREIGN worktree add --detach /private/tmp/k0506-s2w-b198e2e37 b198e2e37058f2e059d986b4b148e224215f3ee3
+cd /private/tmp/k0506-s2w-b198e2e37
+HEAD_NOW="$(git rev-parse HEAD)"
+echo "HEAD=$HEAD_NOW"
+if [ "$HEAD_NOW" != "b198e2e37058f2e059d986b4b148e224215f3ee3" ]; then
+  echo "STOP: wrong orchestration HEAD"
+  exit 80
+fi
+[ -e node_modules ] || ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
+git status --porcelain | grep -v '^?? node_modules$' > /private/tmp/s2w-tree-status.txt
+if [ -s /private/tmp/s2w-tree-status.txt ]; then
+  cat /private/tmp/s2w-tree-status.txt
+  echo "STOP: tree not clean"
+  exit 81
+fi
+echo "TREE_CLEAN=1"
+npx jest --config jest.config.js __tests__/voice-kernel-00-source-gates.test.ts 2>&1 | tee /private/tmp/s2w-gate.txt | grep -E "Tests:"
+grep -q "75 passed, 75 total" /private/tmp/s2w-gate.txt && echo "GATE_75_75=1" || { echo "STOP: gate not 75/75"; exit 82; }
+FIX_SHA="$(shasum -a 256 scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav | cut -d' ' -f1)"
+echo "FIXTURE_SHA=$FIX_SHA"
+[ "$FIX_SHA" = "1a505b3d38a97b75cb935f85bd33deb889628322e558f74af9a5f05afbfbd00e" ] || { echo "STOP: fixture SHA differs from the pin"; exit 83; }
+AF_SHA="$(shasum -a 256 /usr/bin/afplay | cut -d' ' -f1)"
+echo "AFPLAY_SHA=$AF_SHA"
+[ "$AF_SHA" = "88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb" ] || { echo "STOP: /usr/bin/afplay SHA differs from the census pin"; exit 84; }
+pgrep -x afplay > /private/tmp/s2w-afplay-before.txt && { cat /private/tmp/s2w-afplay-before.txt; echo "STOP: an afplay process already exists before the witness"; exit 85; } || echo "AFPLAY_PROCESSES_BEFORE=0"
+echo "BLOCK_A_PASS=1"
+```
+
+Proceed only on `HEAD=b198e2e37…` · `TREE_CLEAN=1` · `GATE_75_75=1` · `FIXTURE_SHA=1a505b3d…` · `AFPLAY_SHA=88f3b577…` · `AFPLAY_PROCESSES_BEFORE=0` · `BLOCK_A_PASS=1`.
+
+**Block B — read-only device preflight** (the §10.10 / S1 law, on this worktree; the `pgrep` pattern also matches any running K00-0506 or S2-WITNESS batch by design):
+
+```bash
+cd /private/tmp/k0506-s2w-b198e2e37
+git diff --quiet b198e2e37058f2e059d986b4b148e224215f3ee3 -- \
+  ios/VoiceKernelDriver \
+  scripts/witness/k00-driver-batch.sh \
+  scripts/witness/k00-ledger.py \
+  scripts/witness/k00-output-ledger.py \
+  scripts/witness/k00-reinstall.sh \
+  scripts/witness/fixtures
+DIFF_RC=$?
+echo "PREFLIGHT_DIFF_RC=$DIFF_RC"
+if [ "$DIFF_RC" -ne 0 ]; then
+  echo "STOP: witness surface differs"
+  exit 91
+fi
+
+if pgrep -fl 'k00-driver-batch.sh \(K00-0506\|S2-WITNESS\)' > /private/tmp/s2w-preflight-other-batches.txt; then
+  cat /private/tmp/s2w-preflight-other-batches.txt
+  echo "STOP: another batch process exists"
+  exit 92
+else
+  echo "OTHER_BATCHES=0"
+fi
+
+DEV=A0736AC8-793B-516F-AC72-C076DB6CEE38
+PF="docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-01-preflight-$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$PF"
+
+xcrun devicectl device info apps \
+  --device "$DEV" \
+  --bundle-id life.soullab.voicekernel.vpio02 \
+  --json-output "$PF/apps.json" >/dev/null
+APPS_RC=$?
+echo "APPS_READ_RC=$APPS_RC"
+if [ "$APPS_RC" -ne 0 ]; then
+  echo "STOP: apps listing unreadable"
+  exit 93
+fi
+
+CONTAINER_HITS="$(grep -c 'E3B88028-A10F-46B1-AB27-CF0A1F83FB78' "$PF/apps.json")"
+echo "E3B88028_CONTAINER_HITS=$CONTAINER_HITS"
+if [ "$CONTAINER_HITS" -lt 1 ]; then
+  echo "STOP: ruled VPIO-02 container not found"
+  exit 94
+fi
+
+xcrun devicectl device info processes \
+  --device "$DEV" \
+  --json-output "$PF/processes.json" >/dev/null
+PROCESS_RC=$?
+echo "PROCESS_READ_RC=$PROCESS_RC"
+if [ "$PROCESS_RC" -ne 0 ]; then
+  echo "STOP: process listing unreadable"
+  exit 95
+fi
+
+HCOUNT="$(python3 - "$PF/processes.json" <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print(len(hits))
+PY
+)"
+echo "VoiceKernelHarness processes: $HCOUNT"
+if [ "$HCOUNT" != "0" ]; then
+  echo "STOP: harness process present"
+  exit 96
+fi
+
+echo "PREFLIGHT_CLEAN=$PF"
+```
+
+Proceed only on `PREFLIGHT_DIFF_RC=0` · `OTHER_BATCHES=0` · `APPS_READ_RC=0` · `E3B88028_CONTAINER_HITS` ≥ 1 · `PROCESS_READ_RC=0` · `VoiceKernelHarness processes: 0`. Anything else is STOP; no normalization, no corrective device act.
+
+**Block C — the one witness invocation** (N = 1 · output act · cancel-at 1000 · settle 2 · VP ON · Mode L · vpio-02 · `--stimulus s2-nearend`; the batch's own stimulus preflight runs inside it after the driver build and STOPs with exit 8 on any mismatch; terminal output preserved by `tee`):
+
+```bash
+cd /private/tmp/k0506-s2w-b198e2e37
+K00_DEVICE=A0736AC8-793B-516F-AC72-C076DB6CEE38 K00_XCODE_DEST=00008140-00163D9922E0801C \
+scripts/witness/k00-driver-batch.sh S2-WITNESS-01 1 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02 --stimulus s2-nearend 2>&1 | tee /private/tmp/s2-witness-01-transcript.txt
+echo "BATCH_PIPELINE_RC=${PIPESTATUS[0]}"
+```
+
+**Block D — post-witness read (read-only; nothing signalled, nothing changed):**
+
+```bash
+cd /private/tmp/k0506-s2w-b198e2e37
+LD="$(ls -td docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-01-2* | head -1)"
+echo "LEDGER_DIR=$LD"
+pgrep -x afplay > /private/tmp/s2w-afplay-after.txt && { cat /private/tmp/s2w-afplay-after.txt; echo "AFPLAY_PROCESSES_AFTER=nonzero"; } || echo "AFPLAY_PROCESSES_AFTER=0"
+ls -la "$LD/stimulus-preflight"
+cat "$LD/stimulus-preflight/stimulus.sha256" "$LD/stimulus-preflight/afplay.sha256" "$LD/stimulus-preflight/stimulus-wave-metadata.txt" "$LD/stimulus-preflight/volume.txt"
+cat "$LD/stimulus-sample-1.tsv"
+cat "$LD/stimulus-sample-1-afplay.log"
+cat "$LD/sample-timing.tsv"
+grep -E 'stimulus|STOP|ABORT|custody|ledgered|batch complete' "$LD/batch.log"
+grep -c '^| AUTOMATED' "$LD/ledger.md"
+ls "$LD/journals"
+cp /private/tmp/s2-witness-01-transcript.txt "$LD/transcript.txt"
+( cd "$LD" && shasum -a 256 transcript.txt stimulus-sample-1.tsv stimulus-sample-1-afplay.log stimulus-preflight/* journals/*.jsonl ledger.md output-ledger.md batch.log > SHA256SUMS.witness && cat SHA256SUMS.witness )
+```
+
+**Return:** the whole `S2-WITNESS-01-<stamp>/` directory (with `transcript.txt` and `SHA256SUMS.witness`) plus the `S2-WITNESS-01-preflight-<stamp>/` directory and the Block A/B/D terminal output, on a `feature/*` branch (Mac hooks refuse `claude/*`); it is cherry-picked here with `-x` and read against §16.4.
+
+### 16.4 Reading law — predeclared before any evidence exists
+
+**PASS** requires ALL of:
+1. Blocks A and B: every gate line as listed (HEAD · tree clean · gate 75/75 · fixture SHA · afplay SHA · no pre-existing afplay · surface diff 0 · no other batch · apps + processes readable · container present · harness 0).
+2. `batch.log` carries `stimulus preflight PASS: fixture 1a505b3d… · afplay 88f3b577… · default output Mac Studio Speakers (coreaudio_device_type_builtin) · volume 69 · muted false`; `stimulus-preflight/` holds the five files; `stimulus.sha256` and `afplay.sha256` equal the pins; `stimulus-wave-metadata.txt` reads `format=EXACT`; `volume.txt` carries `output volume:69,` and `output muted:false`; `audio-output.json` parses to exactly one default output = Mac Studio Speakers/builtin.
+3. `stimulus-sample-1.tsv` is well-formed and complete: `sample 1` · fixture path · fixture SHA = pin · `afplay /usr/bin/afplay` · afplay SHA = pin · `afplayVolume 0.50` · `afplaySeconds 180` · `pid <n>` · `startEpoch` · `preRunState <epoch> alive` · liveness rows **all `alive`**, at ≈1 s spacing, spanning at least the `run_test` wall window recorded in `sample-timing.tsv` (T0…T1) · `postRunState <epoch> alive` · `stopRequestedEpoch` · `waitExitStatus <n>` (the recorded value is custody; 143 is the expected TERM outcome, any other value is recorded and read, not normalised) · `stopEpoch` · **`custody VALID`**; `stopEpoch − startEpoch < 180` (the batch stopped it; the `-t` failsafe did not).
+4. Child identity: exactly one `pid` row; `stimulus-sample-1-afplay.log` empty or free of `error`/`failed`; `AFPLAY_PROCESSES_BEFORE=0` and `AFPLAY_PROCESSES_AFTER=0` (the only afplay that ever existed was the batch's child, and it is gone).
+5. `run_test` containment: `sample-timing.tsv` has exactly one row; the ledger has exactly one `AUTOMATED-COLD-LAUNCH` row for sample 1 (any class as produced; physiology is recorded, not adjudicated); one journal in `journals/` whose SHA-256 appears in the ledger row; `batch complete` in `batch.log`; `BATCH_PIPELINE_RC=0`.
+6. No device act beyond the batch's ordinary reads/launch/pull; no `set volume`, device selection or reinstall anywhere in the transcript.
+
+**STOP / FAIL** is anything else, recorded as infrastructure / witness evidence: a Block A/B STOP is *precondition not met* (nothing played); a batch exit 8 is *stimulus preflight STOP* (nothing played); exit 9 is *child not alive before the invocation* (played ≤ 1 s); `custody INVALID` or any malformed/missing custody field is *custody not proved* (the phone journal, if any, is preserved and is not evidence of anything about S2). None of these authorises a rerun under this authority.
+
+**PASS opens nothing:** S2 population NOT AUTHORIZED · S3 NOT OPEN · KERNEL-00 NOT ACCEPTED · the sample-1 journal is never an S2 row and its §7 reading is not performed.
+
+**Standing after §16:** orchestration `b198e2e37` LANDED · **S2-WITNESS-01 GRANTED, NOT YET EXECUTED (Mac act; evidence owed)** · playback permitted only inside that witness · S2 population NOT AUTHORIZED · S3 NOT OPEN · organism FROZEN · `.vpio02` untouched · `.vpio01` FROZEN · K00/R1 UNTOUCHED · KERNEL-00 NOT ACCEPTED.
