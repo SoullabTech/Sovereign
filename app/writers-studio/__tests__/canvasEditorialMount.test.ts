@@ -27,6 +27,7 @@ const strip = (s: string) =>
 const PAGE = 'app/writers-studio/canvas/page.tsx';
 const CLIENT = 'app/writers-studio/canvas/CanvasClient.tsx';
 const PANEL = 'app/writers-studio/canvas/EditorialConversation.tsx';
+const CHOOSER = 'app/writers-studio/canvas/RelationshipChooser.tsx';
 
 describe('one flag, read once, on the server', () => {
   it('reads the environment in the server page and nowhere in the client tree', () => {
@@ -120,10 +121,46 @@ describe('the panel is handed a conversation and cannot make one', () => {
 describe('the room opens a relationship from a gesture, never from a render', () => {
   const client = strip(read(CLIENT));
 
-  it('opens inside the Conversations gesture', () => {
-    expect(client).toMatch(
+  /**
+   * ⚠️ AMENDED BY FOUNDER RULING, RETURN-RELATIONSHIP.
+   *
+   * ⛔ THE ASSERTION WAS RIGHT FOR ITS LAW — *opening is a member gesture, never
+   * a mount effect* — and it pinned that law to the only gesture that existed.
+   * ⭐ The founder then ruled that summoning the panel is not asking for a new
+   * relationship: *"what must stop is accidentally opening another one because
+   * Return has no read."* So the law survives whole and its SITE moved, from the
+   * rail to a button the chooser offers by name.
+   */
+  it('⭐ the summon opens the PANEL, never a relationship', () => {
+    /* ⛔ The retired coupling is gone, not merely unasserted: a summon that
+       mints a relationship is the accidental-duplication defect itself. */
+    expect(client).not.toMatch(
       /d\.id === 'conversations'[\s\S]{0,200}openEditorialConversation\(\)/,
     );
+    expect(client).toMatch(/d\.id === 'conversations'[\s\S]{0,400}summon\('conversation'\)/);
+    /* ⭐ And the opening act is still reached only from an explicit gesture. */
+    expect(client).toMatch(/onStartNew=\{\(\) => void openEditorialConversation\(\)\}/);
+    expect((client.match(/openEditorialConversation\(\)/g) ?? []).length).toBe(1);
+  });
+
+  /**
+   * ⭐⭐ AND THE CHOOSER'S OWN EFFECT IS HELD TO THE SAME LAW. It discovers, and
+   * discovery is a READ. ⛔ An effect that could reach the opening act would be
+   * the UI-01 defect rebuilt one component further out — a render authoring a
+   * durable relationship.
+   */
+  it('⛔ the chooser discovers from an effect, and can open nothing from one', () => {
+    const chooser = strip(read(CHOOSER));
+    const effects = chooser.match(/useEffect\([\s\S]{0,800}?\n  \}, \[[^\]]*\]\);/g) ?? [];
+    expect(effects.length).toBeGreaterThan(0);
+    for (const e of effects) {
+      expect(e).not.toMatch(/method:\s*'POST'/);
+      expect(e).not.toMatch(/editorial\/thread/);
+      expect(e).not.toContain('onStartNew');
+    }
+    /* ⛔ The component posts nothing at all — it reads, and reports. */
+    expect(chooser).not.toMatch(/method:\s*'POST'/);
+    expect(chooser).toContain('editorial/relationships');
   });
 
   it('does not open from an effect', () => {
@@ -137,25 +174,58 @@ describe('the room opens a relationship from a gesture, never from a render', ()
     }
   });
 
-  it('refuses to open twice, and refuses to open without a locus', () => {
+  /**
+   * ⚠️ AMENDED BY FOUNDER RULING, RETURN-RELATIONSHIP.
+   *
+   * ⛔ THE `editorialThreadId` CLAUSE WAS NOT WRONG. It was right for the law
+   * that existed: the room had no way to FIND a relationship, so suppressing a
+   * second open was the only protection against duplicating one. ⭐ The founder
+   * then ruled that plurality is lawful and that *"what must stop is
+   * accidentally opening another one because Return has no read"* — so the
+   * protection moves from suppression to DISCOVERY, and starting another
+   * becomes an explicit gesture offered by name.
+   *
+   * ⭐ Everything else the assertion protected is kept, and one clause is
+   * added: the room must still refuse without a locus, must still read the
+   * locus from the active section, and must now DISCOVER before it can start.
+   */
+  it('⭐ discovers before it starts, and still refuses to open without a locus', () => {
     const act = client.slice(client.indexOf('const openEditorialConversation'));
-    expect(act).toMatch(/if \(!editorialEnabled \|\| editorialThreadId \|\| editorialOpening\) return;/);
+    expect(act).toMatch(/if \(!editorialEnabled \|\| editorialOpening\) return;/);
+    /* ⛔ AND THE RETIRED CLAUSE IS GONE, not merely unasserted. */
+    expect(act).not.toMatch(/\|\| editorialThreadId \|\|/);
     expect(act).toMatch(/if \(!sectionId\) return;/);
     expect(act).toMatch(/writing\?\.activeId/);
+    /* ⭐⭐ THE PROTECTION THAT REPLACED IT: nothing may start without discovery
+       having run, and the chooser owns that. */
+    expect(client).toContain('<RelationshipChooser');
+    expect(client).toMatch(/onStartNew=\{\(\) => void openEditorialConversation\(\)\}/);
   });
 
-  it('writes the address as soon as the server names the thread', () => {
-    const act = client.slice(
+  /**
+   * ⚠️ RE-PINNED, NOT RETIRED. The law is unchanged: a thread that exists on the
+   * server is never one the room cannot name again. ⭐ What moved is where it
+   * lives — resuming an existing relationship and opening a new one must not
+   * each carry their own copy, because two writers of the same URL parameter
+   * are two chances to disagree. The assertion now names the ONE writer.
+   */
+  it('⭐ one place puts a relationship in the room AND in the address', () => {
+    const adopt = client.slice(
+      client.indexOf('const adoptEditorialThread'),
       client.indexOf('const openEditorialConversation'),
-      client.indexOf('const [compact'),
     );
-    expect(act).toContain('canvasWithEditorialThread');
-    expect(act).toContain('window.history.replaceState');
-    /* The address is written in the same success branch that learns the id —
-       a thread that exists on the server is never one the room cannot name. */
-    expect(act.indexOf('setEditorialThreadId')).toBeLessThan(
-      act.indexOf('canvasWithEditorialThread'),
+    expect(adopt.length).toBeGreaterThan(0);
+    expect(adopt).toContain('setEditorialThreadId');
+    expect(adopt).toContain('canvasWithEditorialThread');
+    expect(adopt).toContain('window.history.replaceState');
+    expect(adopt.indexOf('setEditorialThreadId')).toBeLessThan(
+      adopt.indexOf('canvasWithEditorialThread'),
     );
+    /* ⛔ AND THERE IS EXACTLY ONE. A second writer anywhere in the room fails. */
+    expect((client.match(/canvasWithEditorialThread\(/g) ?? []).length).toBe(1);
+    /* ⭐ Both paths reach it: the open gesture, and the chooser's resume. */
+    expect(client).toContain('adoptEditorialThread(threadId)');
+    expect(client).toMatch(/onResume=\{adoptEditorialThread\}/);
   });
 
   it('ranks nothing and guesses nothing', () => {

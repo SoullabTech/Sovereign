@@ -65,6 +65,7 @@ import ReadingsEntry from './ReadingsEntry';
 import MaiaColumn from './MaiaColumn';
 import StudioConversation from './StudioConversation';
 import EditorialConversation from './EditorialConversation';
+import RelationshipChooser from './RelationshipChooser';
 import StudioLowerBand from './StudioLowerBand';
 import { DraftStateNotice } from './DraftStateNotice';
 
@@ -410,6 +411,24 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
      a most-recent question and this lane refuses those. */
   const [conversationId] = useState(mintStudioConversationId);
 
+  /**
+   * ⭐⭐ ONE PLACE THAT PUTS A RELATIONSHIP IN THE ROOM AND IN THE ADDRESS.
+   *
+   * ⛔ Resuming an existing relationship and opening a new one must not each
+   * carry their own copy of this: two writers of the same URL parameter are two
+   * chances for a thread that exists on the server to be one the room cannot
+   * name again. Every other parameter is preserved.
+   */
+  const adoptEditorialThread = useCallback((threadId: string) => {
+    setEditorialThreadId(threadId);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(
+        null, '',
+        canvasWithEditorialThread(
+          window.location.pathname, window.location.search, threadId));
+    }
+  }, []);
+
   /* ⭐⭐ THE OPENING ACT IS THE MEMBER'S GESTURE, AND IT HAPPENS ONCE.
      Clicking Conversations is an authored request to work on this passage
      with MAIA. ⛔ A re-render is not, which is why this lives here and not in
@@ -418,7 +437,13 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
 
      Already addressed → nothing is created; the panel simply opens. */
   const openEditorialConversation = useCallback(async () => {
-    if (!editorialEnabled || editorialThreadId || editorialOpening) return;
+    /* ⚠️ THE `editorialThreadId` GUARD IS GONE, DELIBERATELY. It existed when
+       the room had no way to FIND a relationship, so suppressing a second open
+       was the only protection against duplicating one. Discovery now precedes
+       every start, and starting another is an explicit gesture the chooser
+       offers by name — ⛔ suppressing it here would forbid the plurality the
+       substrate has always permitted. */
+    if (!editorialEnabled || editorialOpening) return;
     const sectionId = writing?.activeId ?? null;
     /* ⛔ NO LOCUS, NO RELATIONSHIP. The panel says so rather than the room
        choosing a passage on the writer's behalf. */
@@ -440,27 +465,13 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
         setEditorialRefusal('This passage could not be opened for conversation.');
         return;
       }
-      setEditorialThreadId(threadId);
-      /* ⭐ THE ADDRESS, IMMEDIATELY. Written in the same success branch that
-         learns the id, so a thread that exists on the server is never one the
-         room cannot name again. Every other parameter is preserved. */
-      if (typeof window !== 'undefined') {
-        window.history.replaceState(
-          null,
-          '',
-          canvasWithEditorialThread(
-            window.location.pathname,
-            window.location.search,
-            threadId,
-          ),
-        );
-      }
+      adoptEditorialThread(threadId);
     } catch {
       setEditorialRefusal('This passage could not be opened for conversation.');
     } finally {
       setEditorialOpening(false);
     }
-  }, [editorialEnabled, editorialThreadId, editorialOpening, writing]);
+  }, [editorialEnabled, editorialOpening, writing, adoptEditorialThread]);
 
   const [compact, setCompact] = useState(false);
   useEffect(() => {
@@ -662,9 +673,15 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
             if (d.id === 'structure') summon('outline');
             if (d.id === 'versions') setBandOpen(true);
             if (d.id === 'conversations') {
+              /* ⭐⭐ RETURN-RELATIONSHIP. ASKING FOR THE PANEL IS NOT ASKING FOR
+                 A NEW RELATIONSHIP. This gesture used to call
+                 `openEditorialConversation()` here, so every summon minted one
+                 — which is precisely the *"accidentally opening another one
+                 because Return has no read"* the founder named. ⛔ The room now
+                 LOOKS first: the panel discovers what already exists, and
+                 starting one is an explicit button the chooser offers by name. */
               summon('conversation');
               summon('maia');
-              void openEditorialConversation();
             }
           }}
           lead={
@@ -982,21 +999,19 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
                      still names it. */
                   <EditorialConversation threadId={editorialThreadId} />
                 ) : (
-                  /* ⛔ THE ROOM SAYS WHAT IS MISSING RATHER THAN GUESSING.
-                     No most-recent thread, no passage chosen on the writer's
-                     behalf — the schema admits many threads per chain and
-                     neither question has a lawful answer. */
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.snug }}>
-                    <StudioText role="panelLabel">MAIA · conversation</StudioText>
-                    <StudioText role="maiaReading" style={{ color: INK.muted }}>
-                      {editorialOpening
-                        ? 'Opening…'
-                        : (editorialRefusal
-                          ?? (writing?.activeId
-                            ? 'Select Conversations again to work on this passage together.'
-                            : 'Open a passage in the manuscript, then ask for a conversation about it.'))}
-                    </StudioText>
-                  </div>
+                  /* ⭐⭐ RETURN-RELATIONSHIP. The room used to say what was
+                     missing; now it LOOKS. ⛔ Still no most-recent thread and
+                     still no passage chosen on her behalf — the schema admits
+                     many relationships per passage and neither question has a
+                     lawful answer. ⭐ But "find them all and let her choose" is
+                     a lawful answer, and it was available the whole time. */
+                  <RelationshipChooser
+                    sectionId={writing?.activeId ?? null}
+                    opening={editorialOpening}
+                    refusal={editorialRefusal}
+                    onResume={adoptEditorialThread}
+                    onStartNew={() => void openEditorialConversation()}
+                  />
                 )
               ) : (
                 <StudioConversation
