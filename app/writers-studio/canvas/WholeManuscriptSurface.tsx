@@ -103,6 +103,35 @@ export interface WholeManuscriptSurfaceProps {
    * the viewport covers.
    */
   onPlaceChange?: (sectionId: string) => void;
+  /**
+   * ⭐ A PRESENTATION SEAM, AND NOTHING MORE.
+   *
+   * A room may draw a read-only mark over a section's text — the writer's own
+   * held focus, and only that. What it returns is rendered behind the editor,
+   * inert and aria-hidden, and is given the section's CURRENT body so it can
+   * never disagree with what the writer is typing.
+   *
+   * ⛔ IT CONFERS NO AUTHORITY. The <textarea> remains the sole editable
+   * manuscript control. Nothing returned here participates in write authority,
+   * autosave, capture, eviction or section identity, and nothing here may
+   * scroll or navigate. A room that needed more than a mark would be asking for
+   * a different seam, and should be refused one.
+   */
+  renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
+}
+
+/**
+ * The editor and its mark share one origin — but ONLY where a mark is drawn.
+ *
+ * ⭐ Absent a room that draws, this renders its children and nothing else: no
+ * wrapper element, no positioning context, no change to the tree. That is what
+ * lets `renderSectionOverlay` be described as inert without qualification.
+ */
+function OverlayOrigin(
+  { active, children }: { active: boolean; children: React.ReactNode },
+) {
+  if (!active) return <>{children}</>;
+  return <div style={{ position: 'relative' }}>{children}</div>;
 }
 
 /** What the parent may ask of a mounted surface. */
@@ -124,7 +153,7 @@ export interface WholeManuscriptSurfaceHandle {
 export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
-  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange,
+  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, renderSectionOverlay,
 }, handleRef) {
   const sections = writing.sections;
   const indexOfId = useMemo(() => {
@@ -365,6 +394,13 @@ export const WholeManuscriptSurface = forwardRef<
               />
             )}
             {!isMounted ? null : section.editable ? (
+              /* ⭐ THE WRAPPER ITSELF IS CONDITIONAL. An earlier form rendered
+                 this <div> unconditionally and only varied its style, so the
+                 claim below was nearly true rather than true: the DOM gained an
+                 element even where no room drew. A seam that is described as
+                 inert must be inert in the tree as well as in the paint. */
+              <OverlayOrigin active={Boolean(renderSectionOverlay)}>
+              {renderSectionOverlay?.(section.id, body)}
               <textarea
                 ref={(n) => { if (n) fields.current.set(section.id, n); }}
                 value={body}
@@ -386,8 +422,13 @@ export const WholeManuscriptSurface = forwardRef<
                   width: '100%', resize: 'none', border: 'none', outline: 'none',
                   background: 'transparent', font: 'inherit', lineHeight: 1.7,
                   color: 'inherit', overflow: 'hidden',
+                  /* Only when a mark is being drawn, so the mirror and the
+                     editor wrap identically. Absent a room that draws, this
+                     surface is byte-for-byte what it was. */
+                  ...(renderSectionOverlay ? { padding: 0, margin: 0 } : null),
                 }}
               />
+              </OverlayOrigin>
             ) : (
               <StudioText role="prose" as="pre" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
                 {body}
