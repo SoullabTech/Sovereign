@@ -856,3 +856,8 @@ Compile qualification of the SID subject `faf918b5c` is complete and ruled; sibl
 ### §10.65 — carrier-B · reinstall-pin at `3f3cb15b070d9237f17f66625ede6591b1ae5940` · ENTRY witness design OPEN (2026-09-15; discriminator plan §18.45; implementation record §10.14)
 
 No qualification change: MAC-COMPILE-02 PASS stands; the SID subject remains uninstallable by the instrument (`pins-unrecorded` on the unruled pins) and unqualified (K00 obligations CLOSED for it); the ENTRY witness is being designed, not executed.
+
+
+### §10.66 — ENTRY witness DESIGNED, not opened · all five SID reinstall pins recorded (act 2 review pending) (2026-09-15; discriminator plan §18.46; implementation record §10.15–§10.16)
+
+The SID subject's compile qualification is complete and in custody; the instrument no longer refuses it structurally once act 2 is accepted, but FIRST-INSTALL-SID, the ENTRY witness and S-b each remain separately unauthorized. K00 obligations for the SID subject: CLOSED. ENTRY = K00-04 axis only.
