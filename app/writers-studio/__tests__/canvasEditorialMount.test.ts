@@ -264,11 +264,29 @@ describe('WS-EDITORIAL-UI-02 — the writer answers in wording', () => {
     expect(panel).toMatch(/if \(res\.status === 201\) \{[\s\S]{0,200}reload\(threadId\)/);
   });
 
-  it('⛔ offers no adoption, and says so', () => {
+  /**
+   * ⚠️⚠️ AMENDED BY FOUNDER RULING, ADOPTION-01 · PHASE B.
+   *
+   * ⛔ THIS ASSERTION WAS NOT WRONG. It was right for the law that existed:
+   * UI-02 prohibited adoption BECAUSE ADOPTION DID NOT YET EXIST, and a
+   * control that writes the manuscript had no authority behind it. ⭐ The
+   * founder then authorized ADOPTION-01 and ruled the flow to be
+   * COMPARE → ADOPT, which retires that prohibition by act.
+   *
+   * ⭐ So the LAW moved, and the guard moves with it. ⛔ It is not deleted, and
+   * every clause that survives the new ruling is kept below — the retired
+   * vocabulary stays closed, and the standing sentence stays, because it is
+   * still TRUE: adoption still requires one explicit member gesture.
+   */
+  it('⭐ offers adoption as ONE explicit gesture, and nothing else', () => {
     const panel = strip(read(PANEL));
+    /* ⭐ STILL TRUE, and still the sentence the writer reads. */
     expect(panel).toContain('Nothing changes until you explicitly adopt a version.');
-    expect(panel).not.toMatch(/\bAdopt\b(?!\sa version)/);
-    expect(panel).not.toMatch(/Keep Original|Revise/);
+    /* ⭐ The gesture exists, and it is a confirmation, not a one-click write. */
+    expect(panel).toContain('Adopt this version');
+    expect(panel).toMatch(/data-adopt-confirm=/);
+    /* ⛔ STILL CLOSED. Adoption was authorized; these were not. */
+    expect(panel).not.toMatch(/Keep Original|Revise|Use this/);
   });
 });
 
@@ -311,13 +329,36 @@ describe('WS-EDITORIAL-UI-03 — exact comparison, with no authority', () => {
     return panel.slice(from, to);
   })();
 
-  it('⛔ adds no server seam, and fetches no current Work', () => {
-    /* Comparison reads what is already on screen. Fetching the manuscript to
-       look "more current" would silently change the subject from the chain's
-       historical locus to the present Work. */
+  /**
+   * ⚠️ AMENDED BY FOUNDER RULING, ADOPTION-01 · PHASE B.
+   *
+   * ⭐ THE SURVIVING LAW IS THE WHOLE POINT AND IS KEPT: comparison reads what
+   * is already on screen, and fetching the manuscript to look "more current"
+   * would silently change the subject from the chain's historical locus to the
+   * present Work.
+   *
+   * ⛔ WHAT CHANGED: the word "manuscript" now appears in the adoption
+   * confirmation's PROSE — *"the location the manuscript identifies"* — so the
+   * old vocabulary scan fired on a sentence, not on a behaviour. ⭐ The
+   * behaviour is asserted directly instead, which is stronger: the gesture
+   * makes exactly ONE request, to the adoption route, carrying exactly two ids.
+   */
+  it('⛔ fetches no current Work — and the gesture asks only the adoption route', () => {
     const compare = compareBlock;
+    /* ⭐ The comparison JSX itself still issues no request of any kind. */
     expect(compare).not.toMatch(/apiFetch|fetch\(/);
-    expect(compare).not.toMatch(/manuscript|draft|sections/i);
+
+    const adoptFn = panel.slice(panel.indexOf('const adopt = async'),
+                                panel.indexOf('return (', panel.indexOf('const adopt = async')));
+    expect(adoptFn.length).toBeGreaterThan(0);
+    const calls = adoptFn.match(/apiFetch\(\s*'([^']+)'/g) ?? [];
+    expect(calls.length).toBe(1);
+    expect(calls[0]).toContain('/api/writers-studio/editorial/adoption');
+    /* ⛔ NEVER the Work itself. */
+    expect(adoptFn).not.toMatch(/\/api\/sovereign\/manuscripts|\/draft|\/sections|write-state/);
+    /* ⛔ AND THE CALLER ASSERTS TWO IDS. No base, no range, no expected text. */
+    expect(adoptFn).toMatch(
+      /JSON\.stringify\(\{ threadId, versionId: adoptionTarget\.versionId \}\)/);
   });
 
   it('⭐ labels the left side by PROVENANCE, never "Original"', () => {
@@ -325,12 +366,22 @@ describe('WS-EDITORIAL-UI-03 — exact comparison, with no authority', () => {
     expect(panel).not.toMatch(/>\s*Original\s*</);
   });
 
-  it('⛔ offers no decision at all', () => {
+  /**
+   * ⚠️ AMENDED BY FOUNDER RULING, ADOPTION-01 · PHASE B — the decision that now
+   * lives here is ADOPTION, and it is the only one. ⛔ The retired vocabulary
+   * stays retired, and dismissal remains dismissal.
+   */
+  it('⛔ offers exactly one decision, and it is adoption', () => {
     const compare = compareBlock;
     expect(compare).not.toMatch(/\b(Keep Original|Accept|Revise|Apply|Use this)\b/);
     /* "Done comparing" dismisses a view; it decides nothing about the Work. */
     expect(compare).toContain('Done comparing');
-    expect(compare).toContain('Nothing changes until you explicitly adopt a version.');
+    /* ⭐ The one decision, and it is confirmed rather than taken on one click. */
+    expect(compare).toContain('Adopt this version');
+    expect(compare).toMatch(/data-adopt-confirm-commit=/);
+    /* ⛔ AND IT ACTS ON THE FROZEN COMPARISON TARGET, never the head. */
+    expect(compare).toMatch(/versionId: comparisonTarget\.versionId/);
+    expect(compare).not.toMatch(/headVersionId/);
   });
 
   it('⛔ introduces no diff algorithm', () => {
