@@ -330,25 +330,38 @@ from being treated as the act it explicitly is not.
 
 ---
 
-## 9. STANDING — CONFIRMED BY FOUNDER
+## 9. STANDING — FOUNDER-CONFIRMED FINAL STATE
+
+Carried verbatim as the founder stated it. ⭐ The two lines this block previously omitted —
+`migrations` and `prompts` — are restored, and `summary layer` reads **untouched** rather than
+*inactive*: its inactivity is a pre-existing property of the system, whereas **untouched** is the
+claim this session is accountable for.
 
 ```
 AIN-CONTEXT-01
 
-ACT 1                     ✅ CLOSED
-ACT 2                     ✅ CLOSED
-ACT 3                     ✅ CLOSED
+ACT 1–3                   ✅ CLOSED
 ACT 4                     ⛔ UNOPENED
-
 continuity-depth repair   ⛔ UNOPENED
 F1a                       ⛔ UNAUTHORIZED
 
 production                untouched
 schema                    untouched
-summary layer             inactive
-C4                        derived / unwitnessed / unrepaired
+migrations                untouched
+prompts                   untouched
+summary layer             untouched
 Spiral carrier            untouched
 Bridge D                  untouched
+
+C4                        derived / unwitnessed / unrepaired
 ```
+
+**Verification of the untouched claim**: every commit on `claude/sweet-mayer-on4m5x` in this
+session is confined to `docs/programme/`. ⛔ No file under `lib/`, `app/`, `components/`,
+`database/migrations/` or any prompt module was modified, and `git diff --stat` was read as empty
+outside the record before each commit.
+
+⛔ **Nothing proceeds from this state by "continue", "resume" or "proceed" (R8).** The next action
+requires a new explicit opening act with recoverable durable authority.
 
 *Authority, like memory, requires provenance and standing.*
