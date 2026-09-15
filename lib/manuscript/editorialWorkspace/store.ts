@@ -290,12 +290,18 @@ export async function createMemberDirection(
 }
 
 /**
- * MAIA steers: *"Let me try the shorter form before we commit."*
+ * MAIA steers, INSIDE a caller's transaction — ER-R3.
  *
- * ⛔ NO EXECUTOR VARIANT YET, DELIBERATELY. MAIA's turn and its adjunct are the
- * next runtime cut, and a seam added before the act that needs it is a place a
- * future caller can assert something nobody authorized.
+ * ⭐ Added now that the act needing it exists, and not before: MAIA's turn, her
+ * Direction and the binding are one durable act.
  */
+export async function createMaiaDirectionWithExecutor(
+  exec: SqlExecutor, memberId: string, chainId: string, input: DirectionInput,
+): Promise<DirectionResult> {
+  return insertDirection(exec, memberId, chainId, 'maia', input);
+}
+
+/** MAIA steers: *"Let me try the shorter form before we commit."* */
 export async function createMaiaDirection(
   memberId: string, chainId: string, input: DirectionInput,
 ): Promise<DirectionResult> {

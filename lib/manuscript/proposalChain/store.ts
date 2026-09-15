@@ -358,10 +358,24 @@ export interface AppendInput {
  * not a new decision in the editorial-decision lane; here, two identical
  * formulations by different authors are TWO FORMULATIONS. Census §6.3.
  */
-export async function appendAuthoredVersion(
-  memberId: string, chainId: string, input: AppendInput,
+/**
+ * ⭐⭐ THE SAME APPEND, ON A CALLER-SUPPLIED EXECUTOR — ER-R3.
+ *
+ * It exists so MAIA's turn, her ProposalVersion and the turn↔act binding are
+ * ONE durable act. ⛔ There is still exactly ONE implementation of the append;
+ * the public seam below opens a transaction and calls this.
+ *
+ * ⛔⛔ THE EXECUTOR CHANGES ATOMICITY, NEVER AUTHORITY. Every step below is
+ * untouched: the chain is locked `FOR UPDATE` with `member_id` in the
+ * predicate, every version is read inside that lock, `validateChain` refuses
+ * corrupt rows, and ⭐ `appendVersion` still decides ONLY whether the
+ * AUTHOR-STATED predecessor is still the head. The reread judges the stated
+ * predecessor; ⛔ it never chooses a different one.
+ */
+export async function appendAuthoredVersionWithExecutor(
+  tx: SqlExecutor, memberId: string, chainId: string, input: AppendInput,
 ): Promise<AppendResult> {
-  return transaction(async (tx) => {
+  return (async () => {
     /* 1 · The chain, locked, proven to be this member's in the same statement. */
     const c = await tx.query<ChainRow>(
       `SELECT ${CHAIN_COLUMNS} FROM proposal_chains
@@ -418,5 +432,12 @@ export async function appendAuthoredVersion(
       }
       throw e;
     }
-  });
+  })();
+}
+
+/** The ordinary append, which opens its own transaction. Identical steps. */
+export async function appendAuthoredVersion(
+  memberId: string, chainId: string, input: AppendInput,
+): Promise<AppendResult> {
+  return transaction((tx) => appendAuthoredVersionWithExecutor(tx, memberId, chainId, input));
 }
