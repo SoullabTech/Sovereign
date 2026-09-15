@@ -179,11 +179,23 @@ echo "   thread row digest (base)  $THREAD_BEFORE"
 # ══ B3/B4 · THE FIVE, ONE AT A TIME ═══════════════════════════════════
 echo ""
 echo "── B3/B4 · the five applied one at a time, in filename order ─────"
+# ⭐⭐ THE FIVE ARE STAGED FROM HEAD'S BLOBS, NOT FROM THE WORKING TREE.
+#
+# ⛔ A MUTANT FOUND THIS. B2 verifies the blob at HEAD; the first version of
+# this loop then applied `database/migrations/$m` FROM DISK. On a clean tree
+# they agree — but an uncommitted edit made the witness APPLY mutated SQL while
+# reporting the pins as exact. The gate would have proven the wrong artifact and
+# said nothing. It is Gate A's §0 defect again, one level down: *what was
+# verified and what was used must be the same bytes.*
 STAGE="$T/stage"; cp -r "$BM" "$STAGE"
+git diff --quiet HEAD -- database/migrations/ \
+  || { echo "  ⛔ REFUSED — database/migrations/ differs from HEAD. The carrier"
+       echo "     must be a committed artifact; an uncommitted edit is not one."
+       exit 2; }
 step=0
 for m in $FIVE; do
   step=$((step+1))
-  cp "database/migrations/$m" "$STAGE/$m"
+  git cat-file blob "HEAD:database/migrations/$m" > "$STAGE/$m"
   if ! DATABASE_URL="$URL" MIG_DIR="$STAGE" bash scripts/apply-migrations.sh >"$T/step$step.log" 2>&1; then
     bad "B3 step $step · $m FAILED TO APPLY" "$(grep -iE 'error|fail' "$T/step$step.log" | head -3)"
     echo "  ⛔ Gate B stops: a migration that does not apply has no postconditions."
@@ -312,7 +324,7 @@ echo "── B3 ⭐ the runner's own order, all five at once ──────�
 if build_base "$BULK_DB"; then
   BURL="postgresql://$PGU@/$BULK_DB?host=$PGH&port=$PGP"
   BSTAGE="$T/bstage"; cp -r "$BM" "$BSTAGE"
-  for m in $FIVE; do cp "database/migrations/$m" "$BSTAGE/$m"; done
+  for m in $FIVE; do git cat-file blob "HEAD:database/migrations/$m" > "$BSTAGE/$m"; done
   if DATABASE_URL="$BURL" MIG_DIR="$BSTAGE" bash scripts/apply-migrations.sh >"$T/bulk.log" 2>&1; then
     ok "B3 ⭐ all five applied in one runner pass"
     ORDER="$(psql "$BURL" -X -q -t -A -c \
