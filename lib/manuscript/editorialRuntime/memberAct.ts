@@ -14,9 +14,12 @@
  * So the only thing consulted below is `act.act`. `act.text` is written and
  * never read for meaning. There is:
  *
- *   ⛔ no `.trim()`          — the host must not tidy the writer's words; a
+ *   ⛔ no NORMALIZING trim   — the host must not tidy the writer's words; a
  *                              Direction whose text the system wrote is a
- *                              Direction the system authored
+ *                              Direction the system authored. ⭐ `.trim()` is
+ *                              used ONCE, as an EMPTINESS PREDICATE — to ask
+ *                              the question, never to change the answer that
+ *                              gets stored.
  *   ⛔ no paraphrase or summary
  *   ⛔ no focus-default for `refersTo` — the writer's silence is not a reference
  *   ⛔ no prose classifier   — if the system decides an utterance WAS a
@@ -35,20 +38,26 @@ import { appendTurnWithClient } from '../ask/threadStore';
 import { UNMEASURED } from '../ask/staleness';
 import { createMemberDirectionWithExecutor } from '../editorialWorkspace/store';
 import type { EditorialDirection } from '../editorialWorkspace/ontology';
-
-export type MemberActKind = 'discourse' | 'direction';
+/**
+ * ⭐⭐ THE ACT SHAPE COMES FROM THE CARRIED CONTRACT, TYPE-ONLY.
+ *
+ * ⛔ AN EARLIER DRAFT OF THIS FILE DECLARED ITS OWN
+ * `MemberActKind = 'discourse' | 'direction'`. It AGREED with the contract, and
+ * that was not enough: it created two independently editable answers to *what
+ * can a member editorial act be?* — immediately after the contract was carried
+ * forward precisely so ruled seams would not be rebuilt.
+ *
+ * ⛔ Same species as the deleted second succession resolver, at the type
+ * boundary. ⛔ No local alias is reintroduced: an alias is the same second
+ * answer wearing the first one's name.
+ */
+import type { MemberEditorialAct } from '../editorialDiscourse/contract';
 
 export interface MemberEditorialActInput {
   readonly memberId: string;
   /** ⛔ The THREAD is named. ⛔ The chain is NEVER accepted from the caller. */
   readonly threadId: string;
-  readonly act: {
-    readonly act: MemberActKind;
-    /** The member's own words, exactly as typed. */
-    readonly text: string;
-    /** ⛔ Absence stays null. */
-    readonly refersTo: string | null;
-  };
+  readonly act: MemberEditorialAct;
 }
 
 export type MemberActRefusal =
