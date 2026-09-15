@@ -8,6 +8,10 @@
  * ⛔ No tuning between the control and the R1 run.
  */
 import corpusJson from './l1-frozen-production-corpus.json';
+// The deployed scorer is materialized from git at run time so the control can never
+// drift from what production actually shipped:
+//   git show e57ca1ba:lib/maia/continuity/sessionRecovery.ts \
+//     > tests/constitutional/lane1/_deployed-scorer.ts
 import * as deployed from './_deployed-scorer';
 import * as repaired from '../../../lib/maia/continuity/sessionRecovery';
 

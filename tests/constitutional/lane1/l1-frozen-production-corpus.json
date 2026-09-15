@@ -1,7 +1,7 @@
 {
  "note": "CONTENT-FREE. Tokens are salted pseudonyms; the salt was discarded. Structure (df, overlap, rarity, recurrence, index, length) is exact. Frozen from the production session that failed C1 on runtime e57ca1baa.",
  "sessionDepth": 41,
- "probe": "tkaf790ead tk1e1c09b0 tk3a497e2a tk7eac0b05",
+ "probe": "can you remember the phrase I shared with you eralier",
  "markerIndex": 22,
  "markerReturnIndex": 24,
  "deployedScorerSelected": [
@@ -231,8 +231,8 @@
   {
    "index": 36,
    "memberTokenCount": 70,
-   "userMessage": "tk74d08cd4 tk9c8bac6e tk74d08cd4 tk3f8e86ae tkc646ef2f tk2b3e0835 tk17cbfe2a tkbedc1883 tk0c7ff22b tk53668860 tk159b7263 tk7125359f tk152bc991 tk6b302cc4 tkb6d4b0aa tka0ff14f4 tkda895e54 tkc311a587 tk6fcfec91 tk3a0322e7 tke0ffaa19 tkd61c6d26 tk8a7f235a tk77e41b53 tk6b302cc4 tkb6d4b0aa tk9db2ef43 tk078bb9ff tk61dc752b tk8b55da1c tk159b7263 tka833d791 tk4677a478 tk61dc752b tk6fcfec91 tka0ff14f4 tk0586e1a2 tk4e4bd4b9 tk0586e1a2 tk8f450936 tk7a5ef589 tkaf790ead tk775923ba tka26d53a1 tk40a312d6 tk8d264a94 tk89e55d16 tk3203b751 tk8dacb08e tk014a9812 tkc996bd7e tkfedce052 tke90b1e0d tk53668860 tk7a5ef589 tk0586e1a2 tk28b3be4b tk7e4b60e0 tkbc0c6f42 tk8f450936 tk2240bf7a tk75905bed tk24065df2 tk8dbcbf99 tk4588c0e1 tke32ddbd3 tk58d01f44 tk48c24f95 tkb3a56e48 tk64e5985b",
-   "maiaResponse": "tk98fc02e2 tk3a497e2a tk662f3d05 tk365cb6e4 tk8a7f235a tk44437129 tk64e77e6b tk6f1287a3 tk82d11ac8 tk11500e34 tk6500e697 tk6bc3f999 tk0912f7d4 tk2240bf7a tka137bba1 tk2ec6893f tkbf5dea17 tkc2d8c65c tke8965c6e tk58b88a6d tkf1ceb894 tk2b3c9dc2 tkc996bd7e tk3e974e34 tk9b84a486 tk0741c269 tk2b3e0835 tkbaeb59d2 tk28fa1911 tkfc766d78 tkf14d0987 tke584d0d0 tk80e5fc0c tk9a74a3f6 tk7c370f40 tk11500e34 tkc82a7016 tk68f08747 tk48c24f95 tk37cefc8b tk4d0efb1e tk7a5ef589"
+   "userMessage": "tk74d08cd4 tk9c8bac6e tk74d08cd4 tk3f8e86ae tkc646ef2f tk2b3e0835 tk17cbfe2a tkbedc1883 tk0c7ff22b tk53668860 tk159b7263 tk7125359f tk152bc991 tk6b302cc4 tkb6d4b0aa tka0ff14f4 tkda895e54 tkc311a587 tk6fcfec91 tk3a0322e7 tke0ffaa19 tkd61c6d26 tk8a7f235a tk77e41b53 tk6b302cc4 tkb6d4b0aa tk9db2ef43 tk078bb9ff tk61dc752b tk8b55da1c tk159b7263 tka833d791 tk4677a478 tk61dc752b tk6fcfec91 tka0ff14f4 tk0586e1a2 tk4e4bd4b9 tk0586e1a2 tk8f450936 tk7a5ef589 remember tk775923ba tka26d53a1 tk40a312d6 tk8d264a94 tk89e55d16 tk3203b751 tk8dacb08e tk014a9812 tkc996bd7e tkfedce052 tke90b1e0d tk53668860 tk7a5ef589 tk0586e1a2 tk28b3be4b tk7e4b60e0 tkbc0c6f42 tk8f450936 tk2240bf7a tk75905bed tk24065df2 tk8dbcbf99 tk4588c0e1 tke32ddbd3 tk58d01f44 tk48c24f95 tkb3a56e48 tk64e5985b",
+   "maiaResponse": "tk98fc02e2 shared tk662f3d05 tk365cb6e4 tk8a7f235a tk44437129 tk64e77e6b tk6f1287a3 tk82d11ac8 tk11500e34 tk6500e697 tk6bc3f999 tk0912f7d4 tk2240bf7a tka137bba1 tk2ec6893f tkbf5dea17 tkc2d8c65c tke8965c6e tk58b88a6d tkf1ceb894 tk2b3c9dc2 tkc996bd7e tk3e974e34 tk9b84a486 tk0741c269 tk2b3e0835 tkbaeb59d2 tk28fa1911 tkfc766d78 tkf14d0987 tke584d0d0 tk80e5fc0c tk9a74a3f6 tk7c370f40 tk11500e34 tkc82a7016 tk68f08747 tk48c24f95 tk37cefc8b tk4d0efb1e tk7a5ef589"
   },
   {
    "index": 37,
@@ -243,24 +243,25 @@
   {
    "index": 38,
    "memberTokenCount": 8,
-   "userMessage": "tk7fae60e7 tk904dcebe tkaf790ead tk1e1c09b0 tkcc3a7d5d tkdb3f6617 tk32a63deb tk26974f0c",
-   "maiaResponse": "tk152bc991 tk0a2ce41b tk32a63deb tk6528b185 tkfee82164 tk8f9adc4d tk7d87917f tkdb3f6617 tka566498c tk1e1c09b0 tk91851674 tk3316ed0f tk7a5ef589 tk078bb9ff tk55b9d495 tkfee82164 tkdf81d531"
+   "userMessage": "tk7fae60e7 tk904dcebe remember phrase tkcc3a7d5d tkdb3f6617 tk32a63deb tk26974f0c",
+   "maiaResponse": "tk152bc991 tk0a2ce41b tk32a63deb tk6528b185 tkfee82164 tk8f9adc4d tk7d87917f tkdb3f6617 tka566498c phrase tk91851674 tk3316ed0f tk7a5ef589 tk078bb9ff tk55b9d495 tkfee82164 tkdf81d531"
   },
   {
    "index": 39,
    "memberTokenCount": 5,
-   "userMessage": "tkaf790ead tk460bb704 tk2b3e0835 tk10672046 tk48146d3f",
-   "maiaResponse": "tk7d87917f tka566498c tk32a63deb tk6528b185 tkfee82164 tk8f9adc4d tkbc38acf4 tk0a2ce41b tk06ec5fc5 tk152bc991 tk01b262c8 tkc6c7ff2d tkaf790ead tke8965c6e tk046ec2a4 tkaab899e7 tkb3a1a1ae tk19c6f214 tk953ef8d5"
+   "userMessage": "remember tk460bb704 tk2b3e0835 tk10672046 tk48146d3f",
+   "maiaResponse": "tk7d87917f tka566498c tk32a63deb tk6528b185 tkfee82164 tk8f9adc4d tkbc38acf4 tk0a2ce41b tk06ec5fc5 tk152bc991 tk01b262c8 tkc6c7ff2d remember tke8965c6e tk046ec2a4 tkaab899e7 tkb3a1a1ae tk19c6f214 tk953ef8d5"
   },
   {
    "index": 40,
    "memberTokenCount": 4,
-   "userMessage": "tkaf790ead tk1e1c09b0 tk3a497e2a tk7eac0b05",
+   "userMessage": "remember phrase shared eralier",
    "maiaResponse": "tk7d87917f tka566498c tk32a63deb tk6528b185 tkfee82164 tk8f9adc4d tk0a2ce41b tkf591f071 tkaa49707a tk57c7c5c3 tk551b4a00 tk3316ed0f tk7a5ef589 tk078bb9ff tk55b9d495 tk6ad2bc09 tkffcffc20"
   }
  ],
  "displacedRange": [
   0,
   37
- ]
+ ],
+ "probeNote": "verbatim; its four content tokens are identity-mapped in the corpus"
 }
