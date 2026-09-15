@@ -18,9 +18,31 @@ import {
   __parseDevelopmentalAnchorForTest as parseDevelopmentalAnchor,
 } from '../../../../app/api/sovereign/manuscripts/[id]/ask/route';
 
-describe('the boundary accepts only what 02c-2 proved', () => {
-  it('accepts exactly question, uncertainty and division', () => {
-    expect([...SUPPORTED].sort()).toEqual(['division', 'question', 'uncertainty']);
+describe('the boundary accepts only what has been proved', () => {
+  /**
+   * ⚠️ AMENDED BY FOUNDER RULING, ASK-WORK-ANCHOR-01 · B3.
+   *
+   * ⛔ THE ASSERTION WAS RIGHT FOR ITS LAW: the boundary accepts only what a
+   * slice has actually proved, and 02c-2 had proved three kinds. ⭐ `work` was
+   * then proved in three ordered acts — B1 moved the refusal above every durable
+   * write, B2 built the server-derived Work context, and B3 wired the lane so
+   * the relationship is proven usable before anything is persisted.
+   *
+   * ⭐⭐ THE LAW ITSELF IS UNCHANGED, and the half that matters most is asserted
+   * harder below: `section`, `concern` and `proposal` are STILL refused. "Work
+   * support" is not permission to widen every typed anchor.
+   */
+  it('⭐ accepts question, uncertainty, division — and now work', () => {
+    expect([...SUPPORTED].sort()).toEqual(['division', 'question', 'uncertainty', 'work']);
+  });
+
+  it('⭐ accepts a work anchor, and ⛔ only in its closed shape', () => {
+    expect(parseAnchor({ on: 'work' })).toEqual({ on: 'work' });
+    /* ⛔ A work anchor names no section, no proposal and no index. A caller that
+       sent one and was admitted would have been told its extra key carried
+       standing — and the locus is context, never identity. */
+    expect(parseAnchor({ on: 'work', sectionId: 's1' })).toBeNull();
+    expect(parseAnchor({ on: 'work', proposalId: 'P1' })).toBeNull();
   });
 
   it('accepts a well-formed question anchor', () => {
@@ -40,8 +62,8 @@ describe('the boundary accepts only what 02c-2 proved', () => {
 });
 
 describe('unproved anchor kinds are refused at the boundary', () => {
+  /* ⛔ `work` HAS LEFT THIS LIST, and nothing else has. */
   it.each([
-    ['work', { on: 'work' }],
     ['proposal', { on: 'proposal', proposalId: 'P1' }],
     ['section', { on: 'section', sectionId: 's1' }],
     ['concern', { on: 'concern', sectionIds: ['s1'] }],

@@ -168,10 +168,36 @@ Test Suites: 4 failed, 122 passed, 126 total
 Tests:       16 failed, 2159 passed, 2175 total
 ```
 
-The four RED suites are the standing pre-existing set — `draft/route`,
-`draft/revisions/route`, `readings/route`, `evidenceCannotAct` — **identical to
-canonical `6336f10ab`, same four, same sixteen tests.** ⛔ Not repaired here; not
-this act's.
+⚠️ **CORRECTION, ADDED 2026-09-15 AFTER THIS RECORD WAS MERGED — the numbers
+above are a SCOPED run, and the record did not say so.**
+
+Those figures come from a manuscript-scoped `jest` invocation, not the
+repository-wide suite. They are real, and they are not the standing debt. Run
+repository-wide, canonical `20bef53fa` stands at:
+
+```
+Test Suites: 42 failed, 1 skipped, 395 passed, 437 of 438 total
+Tests:       94 failed, 19 skipped, 2 todo, 7107 passed, 7222 total
+```
+
+⛔ **A number quoted without its scope reads as the whole.** The four REDs
+(`draft/route`, `draft/revisions/route`, `readings/route`, `evidenceCannotAct`)
+are the four *within the scope that was run*, and prior act records in this
+programme quote the same four the same way. The repository-wide standing set is
+42 suites / 94 tests, and it is unchanged by this act.
+
+⭐ The no-regression claim survives the correction, and is now made at the wider
+scope where it means more. Measured against canonical `20bef53fa`, full set:
+
+```
+SUITES RED ON B3 BUT GREEN ON CANONICAL : (empty)
+SUITES RED ON CANONICAL BUT GREEN ON B3 : (empty)
+failing suites  42 → 42        failing tests  94 → 94
+passing suites 395 → 397       passing tests 7107 → 7127
+```
+
+⛔ Not repaired here; not this act's. ⛔ And not narrowed until it looked
+smaller.
 
 ## 9. ⚠️ What the composition branch is, and what it is not
 

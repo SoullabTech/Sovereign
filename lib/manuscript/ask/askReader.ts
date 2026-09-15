@@ -24,6 +24,8 @@ import type { StructuredBlock, StructuredMessage } from '../../ai/structured/typ
 import type { StructureInterpretation } from '../structure/interpret';
 import type { ReviewedStructure } from '../structure/review';
 import type { AskAnchor } from './anchor';
+import type { WorkContextFacts } from './workContext';
+import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation';
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 
 export const ASKER_VERSION = 'ws2-05b-8b-02c-2';
@@ -73,7 +75,25 @@ export type AskOutcome =
  * ASSEMBLED BY THE HOST, never by the client: a surface that could compose this
  * could tell MAIA the reading said something it did not.
  */
-export interface AskContext {
+/**
+ * ⭐⭐ ASK-WORK-ANCHOR-01 · B2 — THE CONTEXT IS A DISCRIMINATED UNION.
+ *
+ * ⛔ THE ALTERNATIVE WAS SEMANTIC LAUNDERING, and it is worth naming because it
+ * is the cheap path: a Work conversation could have been forced through
+ * `interpretation` / `evidence` / `coverage` / `reviewed` by putting a chapter
+ * body where a frozen structure reading belongs. The prompt would then tell MAIA
+ * *"your reading came out as…"* about a reading nobody made. ⭐ A relationship
+ * must not lie about what kind of context it has in order to reuse an interface.
+ *
+ * ⛔ AND THE DISCRIMINANT IS EXPLICIT, never structural. Sniffing
+ * `'interpretation' in ctx` would be inferring a context's kind from its
+ * furniture — the same family of guess this programme refuses everywhere else.
+ *
+ * ⭐ `ProposalContext` is otherwise UNCHANGED: every field it carried, it still
+ * carries, and it still means exactly what it meant.
+ */
+export interface ProposalContext {
+  readonly kind: 'proposal';
   anchor: AskAnchor;
   interpretation: StructureInterpretation;
   /**
@@ -91,7 +111,87 @@ export interface AskContext {
   staleness: StalenessState;
 }
 
-function anchorSays(ctx: AskContext): string {
+/**
+ * ⭐ THE WORK IN VIEW — ⛔ never a snapshot of the whole book.
+ *
+ * Every fact inside `facts` was re-read server-side from the member's own rows
+ * by `buildWorkContext`. ⛔ There is no transcript field: a Work-anchored
+ * conversation's history is `ask_turns`, and a context that could carry a
+ * client-supplied one would be the browser-authority channel rebuilt.
+ */
+export interface WorkContext {
+  readonly kind: 'work';
+  anchor: AskAnchor;
+  facts: WorkContextFacts;
+  staleness: StalenessState;
+}
+
+export type AskContext = ProposalContext | WorkContext;
+
+/**
+ * ⭐ What the member is pointing at, when the subject is the Work.
+ *
+ * ⛔ THE LOCUS IS NOT THE SUBJECT. It says where they are; the conversation is
+ * about the Work either way, and the prompt says so in those words so MAIA does
+ * not treat a scroll position as a change of topic.
+ */
+function workAnchorSays(ctx: WorkContext): string {
+  const { locus } = ctx.facts;
+  const lines = ['The subject of this conversation is the WORK ITSELF, not a passage.'];
+  if (locus) {
+    lines.push(
+      `They are presently at: ${locus.label ?? '(a passage with no heading)'}`,
+      'That is where they are, NOT what the conversation is about. If they move',
+      'to another passage it is the same conversation about the same Work.',
+      '',
+      'The passage they are at, as they are editing it now:',
+      locus.body);
+  } else {
+    lines.push('They are not at any particular passage right now.');
+  }
+  return lines.join('\n');
+}
+
+/**
+ * ⭐⭐ WHAT SHE HAS, AND — LOAD-BEARING — WHAT SHE DOES NOT.
+ *
+ * ⛔ The exclusions are `workSituation.ts`'s, inherited rather than restated:
+ * she is adjacent to the Work and is not its reader; declared materials were
+ * brought into the WORK and not into this conversation; nothing measured about
+ * the member appears at all.
+ */
+function workSays(ctx: WorkContext): string {
+  const { work, sections, locus, continuity } = ctx.facts;
+  const parts = [
+    /* ⭐ The ratified formatter, verbatim — the member's own words and no others. */
+    formatWorkSituationForPrompt(work) ?? 'They have not said anything about this Work yet.',
+    `The Work's sections, by heading only (you do NOT have their text):\n${
+      sections.map((s) => `  ${s.position}. ${s.heading ?? '(no heading)'} [${s.id}]`).join('\n')
+        || '  (no addressable sections)'}`,
+  ];
+  if (!locus) {
+    parts.push('You have not been given the text of ANY section.');
+  } else {
+    parts.push(
+      'You have been given the text of exactly ONE section — the one they are at.'
+      + ' You do not have any other section\'s text, and you may not ask for it'
+      + ' by assuming you have it.');
+  }
+  /* ⚠️⚠️ TWO FACTS, AND THE SECOND IS AN ABSENCE. ⛔ Structural continuity may
+     never stand in for textual continuity: the writer can add two thousand words
+     while the structure fingerprint is identical. */
+  parts.push(
+    'CONTINUITY — what has actually been measured since this conversation opened:'
+    + `\n  structure: ${continuity.structure}`
+    + `\n  prose: ${continuity.prose}`
+    + '\n  The structure measurement covers chapters, sections and their order.'
+    + '\n  NOTHING here measures whether they have written or rewritten text.'
+    + '\n  "structure: unchanged" does NOT mean the Work has not changed, and you'
+    + '\n  must not say or imply that it does.');
+  return parts.join('\n\n');
+}
+
+function anchorSays(ctx: ProposalContext): string {
   const a = ctx.anchor;
   const i = ctx.interpretation;
   switch (a.on) {
@@ -148,7 +248,7 @@ function stalenessSays(s: StalenessState): string {
   return lines.join('\n');
 }
 
-function readingSays(ctx: AskContext): string {
+function readingSays(ctx: ProposalContext): string {
   const i = ctx.interpretation;
   const parts = [
     `Your reading came out as: ${i.form}`,
@@ -212,9 +312,29 @@ export async function askMaia(
 ): Promise<AskOutcome> {
   const model = opts.model ?? DEFAULT_MODEL;
 
-  const system = [STANDING, '', '--- THE READING YOU MADE ---', readingSays(ctx), '',
-    '--- WHAT THEY ARE POINTING AT ---', anchorSays(ctx), '',
-    '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness)].join('\n');
+  /* ⭐⭐ THE HEADINGS FOLLOW THE KIND, and that is not cosmetic. Rendering a
+     Work context under "THE READING YOU MADE" would tell MAIA she had made a
+     reading she never made — the prompt asserting the very thing the union
+     exists to keep apart. */
+  /* ⚠️⚠️ THE TEST FOR THE **NEW** KIND, NOT THE OLD ONE — AND THAT DIRECTION IS
+     THE WHOLE CORRECTION. A first cut asked `ctx.kind === 'proposal'` and made
+     the WORK branch the default, so any context without a discriminant — a
+     fixture, an older caller, anything TypeScript did not see — was silently
+     rendered as a Work conversation and crashed on facts it never had. The
+     existing provider-seam suite caught it immediately.
+
+     ⭐ Asked this way round, a context must OPT IN to being a Work context.
+     Anything else is exactly what it was before this union existed, which is
+     what *"ProposalContext unchanged"* has to mean at runtime and not only in
+     the type. ⛔ A new shape earns the new branch; it is never inherited by
+     absence. */
+  const system = ctx.kind === 'work'
+    ? [STANDING, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
+       '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
+       '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness)].join('\n')
+    : [STANDING, '', '--- THE READING YOU MADE ---', readingSays(ctx), '',
+       '--- WHAT THEY ARE POINTING AT ---', anchorSays(ctx), '',
+       '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness)].join('\n');
 
   const messages: StructuredMessage[] = [
     ...history.map((t) => ({
