@@ -99,9 +99,20 @@ iCloud is alive and simply not delivering.
 **205 files**; the corpus holds **5,131**. ⛔ A clean census of a 4% fragment is worse than no
 census, because it would read as authority.
 
-⚠️ **Custody finding, carried:** the authoritative AIN tree is **not in the founder's
-possession on this machine.** 5,131 names, sizes and timestamps are local; the words are not.
-⛔ R4 rights standing cannot be established for text nobody can read.
+⚠️⚠️ **CUSTODY FINDING — founder wording, which corrects mine:**
+
+> **The authoritative AIN source tree is locatable but not locally materialized on the founder
+> workstation. Its metadata is present; its content is not reliably readable. It is therefore
+> outside the reach of the programme's current local census, local backup verification, rights
+> review, and governance instruments.**
+
+⛔ **An earlier draft here said the tree is "not in the founder's possession."** That
+overclaimed. The content apparently still exists with the cloud provider; what is absent is a
+**locally readable copy under direct filesystem custody.** ⭐ The distinction is load-bearing
+for backup and governance claims — *"we cannot read it here"* is supportable, *"it is
+unbacked"* is not, and the weaker phrasing would have licensed the second. Corrected in place.
+
+⛔ R4 rights standing still cannot be established for text that cannot be read locally.
 
 ## 6. Standing
 
