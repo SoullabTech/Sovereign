@@ -122,6 +122,29 @@ MAIA is *with* the member, not narrating them.
 
 This is not a contradiction. It's the core value proposition.
 
+> ⭐ **AMENDED IN PLACE 2026-09-15.** Founder adjudication RE-009
+> ([`PERCEPTION_WITHOUT_POSSESSION.md`](./PERCEPTION_WITHOUT_POSSESSION.md), ruling `416c87e7`).
+> **The noticing claim is UPHELD.** The sentence *"this is not a contradiction"* is superseded
+> **as a reconciliation claim** — there was a real contradiction with
+> [`RIGHT_TO_REMAIN_UNPOSSESSED.md`](./RIGHT_TO_REMAIN_UNPOSSESSED.md) §2 and
+> [`LONGITUDINAL_MEMORY_CATEGORY_GRADIENT.md`](./LONGITUDINAL_MEMORY_CATEGORY_GRADIENT.md),
+> and it is resolved by RE-009, not by this section's assertion.
+>
+> **The missing lifecycle limits, now binding on everything in this register:**
+>
+> ```
+> notice ≠ standing
+> notice ≠ persistence
+> notice ≠ consequential treatment
+> notice ≠ member knowledge
+> ```
+>
+> ⛔ **The disclosure safeguards below — the linguistic markers, the offering structure, the
+> tone constraints — are NOT the sole protection and were never sufficient alone.** A pattern
+> may be offered impeccably and still violate RE-009 if it was persisted, accumulated into a
+> profile, carried across the session boundary as an interpretation of the person, or allowed
+> to shape how MAIA treats them. See RE-009 §§3, 5 and *Where "ephemeral" ends*.
+
 **Epistemic status**
 - **Observation offered for consideration**
 - MAIA sees across the field; member decides if it lands
@@ -160,6 +183,24 @@ MAIA surfaces patterns as *offerings*, not findings:
 **The member remains the author**
 If the pattern lands, the member can mark it — and it becomes Curated Recall.
 If it doesn't land, it dissolves. No insistence. No returning to it uninvited.
+
+> ⭐ **AMENDED IN PLACE 2026-09-15 (RE-009 §6).** *Landing* is not acquiescence. Promotion to
+> Curated Recall requires a recognizable **member epistemic act** — recognizes · names ·
+> revises · adopts · authors · confirms in their own terms. ⛔ *"You have an abandonment
+> pattern, right?"* → *"I guess"* does **not** promote it.
+>
+> And the promoted record must carry honest provenance:
+>
+> ```
+> WRONG                              CORRECT
+> origin = system inference          origin       = member adoption
+> status = confirmed                 derived_from = offered system hypothesis [if applicable]
+>                                    status       = confirmed
+> ```
+>
+> **The system's hypothesis did not become true. The member performed a new act** — so the
+> durable record represents that act, never a retroactive validation of the original
+> inference. *The system records the recognition, not its own inference.*
 
 **Hard prohibition**
 MAIA must not:

@@ -177,7 +177,8 @@ fails independently.
 **Counterexample:** Naming a theme a tradition holds, without forecasting the event.
 
 ### RE-009 · Some inferences are violations by formation, not by exposure
-**State:** ⚠️ COLLIDING — see §3 — ** ⭐ SUPERSEDED 2026-09-15: now FOUNDER-ADJUDICATED.**
+**State:** ⚠️ COLLIDING — see §3 — ** ⭐⭐ SUPERSEDED 2026-09-15: now CANONICAL.**
+**Placed as:** `docs/canon/PERCEPTION_WITHOUT_POSSESSION.md` (ACT 3, consistency gate passed).
 **Ruling:** `MAIA-RE-01_ACT2_RULING_RE-009_2026-09-15.md`. The entry below is kept verbatim as
 the state at census time, ⛔ never edited to read as if it had always said otherwise. ⚠️ Note
 the ruling **narrows** this entry's rule: ephemeral working hypothesis is now permitted, so

@@ -58,7 +58,7 @@ That changes the graph substantially. There are classes of edges the graph **sim
 |---|---|
 | Explicit user-provided facts | May hold with permission |
 | User-authored meanings (the member's own interpretations) | May hold as authored, in their words, unchanged |
-| System-inferred behavioral patterns | **Do not form by default** |
+| System-inferred behavioral patterns | **Do not form as durable knowledge.** Ephemeral working hypothesis permitted — see RE-009 |
 | Sensitive interpretive edges (relational patterns, emotional dynamics) | Invitation required |
 | Sacred/identity/archetypal claims | Provisional only; user-confirmed; never auto-formed |
 | Diagnostic/psychological labels | **Generally avoid** unless explicitly user-framed |
@@ -66,6 +66,25 @@ That changes the graph substantially. There are classes of edges the graph **sim
 | Destiny / essence / trajectory claims | **Refuse to form** under any circumstance |
 
 The principle: **some inferences are violations by formation, not merely by exposure.** A diagnostic label that the system silently holds but never displays has *already* desecrated. The discipline must operate at the inference layer, not the disclosure layer.
+
+> ⭐ **AMENDED IN PLACE 2026-09-15 — NARROWED, NOT WITHDRAWN.** Founder adjudication RE-009
+> ([`PERCEPTION_WITHOUT_POSSESSION.md`](./PERCEPTION_WITHOUT_POSSESSION.md), ruling `416c87e7`).
+> The paragraph above stands **for durable formation** and is superseded only where it would
+> forbid *ephemeral* hypothesis. The reconciled rule:
+>
+> **Holding is possession. Entertaining is not.** A label the system *keeps* — across the
+> session boundary, in a profile, as retrievable knowledge about the person — desecrates
+> exactly as this paragraph says, whether or not it is ever displayed. A possibility
+> entertained **within the live conversational context, carrying no standing and dying with
+> that context**, is not possession and is permitted.
+>
+> The discipline still operates at the inference layer, **not** the disclosure layer — that
+> is the load-bearing claim and it is untouched. What changed is *which* inferential act it
+> bites on: **persistence, standing, and consequential use, rather than perception itself.**
+> ⛔ Silence remains no defence: an inference kept but never shown still violates RE-009 §5.
+>
+> *Superseded wording retained verbatim above; this note narrows it, and the canon is
+> [`PERCEPTION_WITHOUT_POSSESSION.md`](./PERCEPTION_WITHOUT_POSSESSION.md).*
 
 ### KuzuDB / PostgreSQL implications
 
@@ -75,6 +94,14 @@ This shapes the actual schema:
 - Inference passes that must be *invited*, not run by default
 - Disclosure surfaces that show the user *what edges exist* about them, with the right to refuse formation going forward
 - An explicit "non-formation register" — a record of edges-not-drawn that can be audited
+
+> ⭐ **AMENDED IN PLACE 2026-09-15 (RE-009).** These implications govern **durable graph
+> formation**, which is where the narrowing above applies unchanged: no edge class, no
+> profile, no retrievable attribution about the member without a member epistemic act.
+> ⚠️ *"Inference passes that must be invited, not run by default"* is read at the same
+> boundary — it constrains passes that **write or accumulate**, and does not forbid the
+> ephemeral in-conversation perception RE-009 §§1–2 permits. **An inference pass that computes
+> and discards within the live context draws no edge.**
 
 ## 3. Temporal sovereignty means non-pursuit
 

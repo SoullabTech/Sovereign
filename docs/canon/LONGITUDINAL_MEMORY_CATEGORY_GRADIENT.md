@@ -50,9 +50,43 @@ This is the discriminator. Memory that the member is authoring or co-authoring i
 
 Non-form is not a UI setting. It is not a privacy preference. It is a category of memory that the system commits to **not constructing in the first place**.
 
+> ⭐ **CLARIFIED IN PLACE 2026-09-15 (RE-009 §§2, 5).** "Non-form" governs **durable memory
+> formation** — what is constructed, stored, accumulated, and retrievable as knowledge about
+> the member. It does **not** forbid ephemeral in-conversation perception, which RE-009 §§1–2
+> permit and which carries no standing and dies with the conversational context. The
+> discriminator is **persistence and standing, not perception.**
+
 A non-form category does not require a "delete my data" pathway because the data is not formed. Storage code, inference retrieval, embedding pipelines, and analytic queries all skip these categories at the *formation* layer, not at the access layer.
 
 Where the system already happens to compute something that falls into a non-form category (e.g., I Ching mappings being structurally adjacent to "developmental pattern"), the formation gate is: the structural data may exist for the system's own functioning, but it does not surface as an inference about the member, does not accumulate into a longitudinal profile, and does not become content the member is treated through.
+
+> ⭐ **AMENDED IN PLACE 2026-09-15 — TWO CHANGES.** Founder adjudication RE-009
+> ([`PERCEPTION_WITHOUT_POSSESSION.md`](./PERCEPTION_WITHOUT_POSSESSION.md), ruling `416c87e7`).
+>
+> **(1) The carve-out is BOUNDED.** *"May exist for the system's own functioning"* may **not**
+> be read as *"anything is permissible as long as we call it structural data."* The boundary
+> is RE-009 §5:
+>
+> > **Does this record describe an event, utterance, member act, or system operation — or does
+> > it attribute meaning, disposition, identity, motive, pathology, developmental structure,
+> > or relational pattern to the member?**
+>
+> The first may persist. The second requires member participation. The accumulation and
+> treated-through clauses above are untouched and remain binding.
+>
+> **(2) ⚠️ The surfacing clause is NARROWED — this document previously forbade what RE-009
+> permits.** *"Does not surface as an inference about the member"* stands as written **for
+> assertion**, and no longer forbids **introduction as a corrigible invitation** under RE-009
+> §4, whose standing remains explicitly below the member's lived account. A system-originated
+> pattern **may** be offered as a question; it may **not** be stated as a fact about the
+> person, and offering it confers no standing (§6).
+>
+> ⭐ *This is the one cell where the three canon texts genuinely disagreed. It was resolved by
+> founder ruling, ⛔ not by treating this document's silence-adjacent phrasing as controlling
+> — which would have decided the question by filing accident rather than by adjudication.*
+>
+> **Retained intact:** *the system records the recognition, not its own inference* — carried
+> into RE-009 §6 near-verbatim as the promotion rule.
 
 ---
 

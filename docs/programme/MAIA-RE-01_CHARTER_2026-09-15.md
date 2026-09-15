@@ -117,6 +117,25 @@ that every conversational benchmark would mark excellent.*
 *Humility without perception is timidity; perception without epistemic discipline becomes
 possession.*
 | 4 | Baseline run: canonical MAIA path vs untouched Inkling-Small | benchmark exists, blinded |
+
+⚠️ **ACT SEQUENCE AS ACTUALLY RUN, recorded 2026-09-15.** The phase table above is kept
+verbatim; the acts below are the lane's real spine and supersede it where they differ.
+
+```
+ACT 1  epistemology census                    ✅ CLOSED
+ACT 2  collision adjudication                 ✅ CLOSED → 416c87e7 FOUNDER-ADJUDICATED
+ACT 3  canonical reconciliation + placement   ✅ CLOSED → RE-009 CANONICAL
+ACT 4  runtime conformity census              ⛔ NOT OPENED (founder act) · census-only:
+                                                 finding violations does NOT authorize repair
+ACT 5+ bounded repair decisions               ⛔ NOT OPENED
+       benchmark corpus                       ⛔ blocked until doctrine and substrate agree
+                                                 on what constitutes a violation
+```
+
+⭐ **The law this sequence encodes:** *a ruling can govern reconciliation before it is
+canonical, but runtime cannot be judged against a contradictory canon and called a
+conformity census.* Running ACT 4 early would have forced the census to decide which
+source wins while claiming only to measure — quietly giving it adjudicative authority.
 | 5 | Failure taxonomy → training candidate set | baselines scored |
 | 6 | LoRA / adapter experiment | candidate set adjudicated |
 | 7 | Post-training falsifiers on unseen adversarial cases | adapter exists |
