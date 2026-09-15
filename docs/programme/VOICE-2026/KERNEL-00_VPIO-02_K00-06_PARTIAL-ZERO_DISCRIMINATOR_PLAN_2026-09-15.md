@@ -3057,3 +3057,196 @@ Founder: *"The foreign harness precondition has been removed under committed evi
 `/private/tmp/k0506-disposal-b198e2e37` = **retained residue** from this point (§18.28.4 item 3); no cleanup authorized.
 
 **Standing after §18.29:** DISPOSAL-01 STOP · spent · DISPOSAL-02 STOP · spent · **DISPOSAL-03 PASS · accepted · spent** (evidence committed `cb195a052` → `79fa57e87`, pushed) · C-D27 CLOSED · C-D28 future pins only · C-D26 HOLD · **`K00-0506-S2-02` CONDITION MET · execution NOT YET OPENED — its own explicit founder act under the unchanged §18.22.3 `s2pop2` pin** (pre-Block-C 69/unmuted/pane-closed read decisive; no restoration authority inside it; 69 last governed read 15:49:59Z) · `b198e2e37` unchanged · CLAUDE.md compaction DEFERRED until the population disposition closes · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.30 — FOUNDER RULING after §18.29 (2026-09-15): `K00-0506-S2-02` ISSUED AS A PAIRED RESTORATION + POPULATION ACT (option b) · Mac Studio terminal directly · pinned §18.30.2
+
+### §18.30.1 Ruling as captured (founder; standing block verbatim)
+
+Choice **(b)**: *"Given the demonstrated volume drift, issuing it bare would knowingly make a transient host-volume condition capable of consuming another population authority before a single sample is taken. The paired shape removes that avoidable failure mode while preserving the exact 69 boundary."*
+
+1. **`K00-0506-S2-02` — ISSUED.** Scientific semantics = §18.22.3 unchanged: run label `K00-0506-S2` · N 10 · subject `vpio-02` · stimulus `s2-nearend` · source `b198e2e37` · §7 reading unchanged. Not acceptance, not S3, not KERNEL-00 acceptance.
+2. **Execution shape — paired restoration joint (§18.13.3 shape):** Block A → Block B → RESTORE before-read → one founder keyboard restoration act (Volume Down to zero · Volume Up exactly 11 times · stop; no other adjustment) → immediate after-read = the joint → Block C as the very next act → `Dpop` → seal/return.
+3. **Joint acceptance:** default output `Mac Studio Speakers` · `builtin` · `output volume 69` · `output muted false` · Sound pane closed · parser PASS. The post-restoration read **is** the population's pre-Block-C boundary; no second discretionary pause between the joint and Block C; anything else = STOP before population invocation.
+4. **Why paired is authorized:** it prepares the host to the already-required state, it does not relax the state the population requires; target exactly 69 · unmuted · builtin · pane closed; known host drift must not consume another population authority without testing S2.
+5. **Transport:** Mac Studio terminal directly; the remote-command channel is NOT eligible for this population execution (operational ruling; the channel has carried valid work but has also selectively refused required shell operations, and Block C is a long-running playback/batch act; the paired act contains a founder physical keyboard act, so one direct Mac-side shell gives the cleanest custody).
+6. DISPOSAL-03 PASS · accepted · spent; foreign harnesses removed under committed evidence; carrier retained residue; condition MET; no disposal work reopened.
+7. C-D26 HOLD · repair authority NONE (not repaired inside the population act).
+8. CLAUDE.md compaction APPROVED IN PRINCIPLE · DEFERRED until the S2 population disposition closes; not at §18.29.
+9. **Scope:** authorizes the paired restoration joint + one `K00-0506-S2` population invocation of N=10 + its pinned `Dpop`/custody return. NOT: S3 · KERNEL-00 acceptance · C-D26 repair · new runner design · new stimulus · new volume target · alternate restoration · population rerun after a governed STOP.
+
+```text
+DISPOSAL-03              PASS · spent
+K00-0506-S2-02           AUTHORIZED · paired shape
+population               NOT YET EXECUTED
+restoration              one keyboard act authorized
+joint target             69 · unmuted · builtin · pane closed
+transport                Mac Studio terminal directly
+remote channel           INELIGIBLE for this act
+b198e2e37                unchanged
+C-D26                    HOLD
+CLAUDE compaction        DEFER until population disposition
+S3                       CLOSED
+KERNEL-00 acceptance     CLOSED
+```
+
+Governing distinction (founder): *"Do not spend another scientific authority discovering that the Mac changed its volume. Restore the already-proven boundary immediately before the population, prove the boundary, then let the population be the next act."*
+
+### §18.30.2 Execution pin — `S2-RESTORE-04 / K00-0506-S2-02` paired act (Mac Studio terminal directly; founder hand inside it; nothing between the accepted joint read and Block C)
+
+Composition, nothing new: Stage 0 and Blocks A/B/C/`Dpop` = §18.22.3 verbatim (`s2pop2` tokens, the four pinned hashes); Stages 2–5 and 7 = §18.13.3's restoration joint (as executed in WITNESS-05) with the directory prefix `k00-s2-volume-restore-04-` so it never collides with RESTORE-03's; the §18.5.2 parser block embedded verbatim. **The joint read replaces §18.20.3's separate pre-C read** (ruling item 3: the post-restoration read *is* the pre-Block-C boundary); no `s2pop2-preC-*` files are produced. Every block runs under `bash` from its file (§16.7); the `rc=` trailer is informational under zsh (C-D26, HOLD). No `#` on any shell line.
+
+**Stage 0 — extraction with the `s2pop2` token, diff-proven, hashes = §18.22.3, pre-existence read (§18.22.3 verbatim):**
+
+```bash
+cd /Users/soullab/MAIA-SOVEREIGN
+git fetch origin claude/voice-2026-census-01
+DOC=docs/programme/VOICE-2026/KERNEL-00_VPIO-02_K00-06_PARTIAL-ZERO_DISCRIMINATOR_PLAN_2026-09-15.md
+git show 17b4df63b:$DOC | sed -n '599,625p' > /private/tmp/s2w1-blockA.sh
+git show 17b4df63b:$DOC | sed -n '633,702p' > /private/tmp/s2w1-blockB.sh
+git show 17b4df63b:$DOC | sed -n '710,713p' > /private/tmp/s2w1-blockC.sh
+for b in A B C; do sed -e 's/S2-WITNESS-01 1 --act/K00-0506-S2 10 --act/' -e 's/S2-WITNESS-01/K00-0506-S2/g' -e 's/s2-witness-01/k00-0506-s2/g' -e 's#/private/tmp/k0506-s2w-b198e2e37#/private/tmp/k0506-s2pop2-b198e2e37#g' /private/tmp/s2w1-block$b.sh > /private/tmp/s2pop2-block$b.sh; done
+for b in A B C; do echo "== block $b diff (only the four tokens may appear)"; diff /private/tmp/s2w1-block$b.sh /private/tmp/s2pop2-block$b.sh; done
+shasum -a 256 /private/tmp/s2pop2-block[ABC].sh
+test ! -e /private/tmp/k0506-s2pop2-b198e2e37 && echo "POP2_WORKTREE_PREEXISTS false" || { echo "STOP: /private/tmp/k0506-s2pop2-b198e2e37 pre-exists"; exit 2; }
+```
+
+Then write `/private/tmp/s2pop2-blockDpop.sh` as exactly the §18.22.3 Stage 5 text and confirm `shasum -a 256 /private/tmp/s2pop2-blockDpop.sh` = `e4f93c0beb49831438320ffd5af1f82d111b0c529392d33f5a3af0a0462b5879`. Expected A/B/C hashes `5dd16bdd…` · `22e105dd…` · `77d40528…`. Any mismatch or a pre-existing path = STOP before Block A.
+
+**Stage 1 — Block A (custody) then Block B (device preflight), §16.7 transport; any STOP line ends the act, nothing invoked:**
+
+```bash
+bash /private/tmp/s2pop2-blockA.sh 2>&1 | tee /private/tmp/s2pop2-blockA.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2pop2-blockA.out
+bash /private/tmp/s2pop2-blockB.sh 2>&1 | tee /private/tmp/s2pop2-blockB.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2pop2-blockB.out
+```
+
+`BLOCK_A_PASS=1` and `PREFLIGHT_CLEAN=…K00-0506-S2-preflight-<stamp>` must appear. Block B's process read must show `VoiceKernelHarness processes: 0` (DISPOSAL-03 removed the two foreign ones; a harness present here is a STOP under this pin, never a terminate-only).
+
+**Stage 2 — pane closed, no competing process (preparation, repeatable, not the joint; a hand ⌘Q if a Sound pane is resident):**
+
+```bash
+pgrep -fl "System Settings|Sound.appex" ; echo "[pgrep rc=$?]"
+pgrep -fl "afplay|k00-driver-batch" ; echo "[pgrep rc=$?]"
+```
+
+Expected: no process line and `[pgrep rc=1]` on both.
+
+**Stage 3 — RESTORE-04 before-read (volume UNKNOWN until read):**
+
+```bash
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+OUT="/private/tmp/k00-s2-volume-restore-04-$STAMP"
+mkdir -p "$OUT"
+date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/before-utc.txt"
+system_profiler SPAudioDataType -json > "$OUT/audio-before.json"
+system_profiler SPBluetoothDataType -json > "$OUT/bluetooth-before.json"
+osascript -e 'get volume settings' > "$OUT/volume-before.txt"
+pgrep -fl "System Settings|Sound.appex" > "$OUT/sound-pane-before.txt" ; echo "rc=$?" >> "$OUT/sound-pane-before.txt"
+cat "$OUT/volume-before.txt"
+echo "$OUT"
+```
+
+**Stage 4 — the one founder hand act (ruling item 2, verbatim):** keyboard Volume Down until the bottom/zero state → Volume Up exactly 11 times → stop. Nothing else touched; no slider, no scripted keys, no `osascript`, no twelfth press, no post-read correction.
+
+**Stage 5 — THE JOINT READ (= RESTORE-04's after-read = the population's pre-Block-C boundary); the parser writes `parser.txt` and `JOINT.txt` in the same pass, no second read:**
+
+```bash
+date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/after-utc.txt"
+system_profiler SPAudioDataType -json > "$OUT/audio-after.json"
+osascript -e 'get volume settings' > "$OUT/volume-after.txt"
+pgrep -fl "System Settings|Sound.appex" > "$OUT/sound-pane-after.txt" ; echo "rc=$?" >> "$OUT/sound-pane-after.txt"
+cat "$OUT/after-utc.txt" "$OUT/volume-after.txt" "$OUT/sound-pane-after.txt"
+python3 - "$OUT/audio-after.json" "$OUT/volume-after.txt" <<'PY' | tee "$OUT/parser.txt"
+import json, re, sys
+
+raw = open(sys.argv[1], encoding="utf-8").read()
+raw = raw[raw.find("{"):raw.rfind("}")+1]
+d = json.loads(raw)
+
+items = []
+for group in d.get("SPAudioDataType", []):
+    items.extend(group.get("_items", []))
+
+defaults = [
+    x for x in items
+    if x.get("coreaudio_default_audio_output_device") == "spaudio_yes"
+]
+
+for x in defaults:
+    print(
+        "DEFAULT_OUTPUT",
+        x.get("_name"),
+        x.get("coreaudio_device_transport"),
+        x.get("coreaudio_device_srate"),
+    )
+
+mac = next((x for x in items if x.get("_name") == "Mac Studio Speakers"), None)
+mac_default = bool(mac and mac.get("coreaudio_default_audio_output_device") == "spaudio_yes")
+print("MAC_STUDIO_DEFAULT_OUTPUT", mac_default)
+
+vol = open(sys.argv[2], encoding="utf-8").read()
+m_vol = re.search(r"output volume:(\d+)", vol)
+m_mute = re.search(r"output muted:(true|false)", vol)
+volume = int(m_vol.group(1)) if m_vol else None
+muted = m_mute.group(1) if m_mute else None
+print("OUTPUT_VOLUME", volume)
+print("OUTPUT_MUTED", muted)
+
+ok = (
+    len(defaults) == 1
+    and mac_default
+    and defaults[0].get("coreaudio_device_transport") == "coreaudio_device_type_builtin"
+    and volume == 69
+    and muted == "false"
+)
+print("RESTORE_ACCEPTANCE", "PASS" if ok else "STOP")
+PY
+grep -q '^RESTORE_ACCEPTANCE PASS$' "$OUT/parser.txt" && test "$(tail -1 "$OUT/sound-pane-after.txt")" = "rc=1" && echo "PASS" > "$OUT/JOINT.txt" || echo "STOP $(grep -E '^(RESTORE_ACCEPTANCE|OUTPUT_VOLUME|OUTPUT_MUTED|MAC_STUDIO_DEFAULT_OUTPUT)' "$OUT/parser.txt" | tr '\n' ' ') pane=$(tail -1 "$OUT/sound-pane-after.txt")" > "$OUT/JOINT.txt"
+cat "$OUT/JOINT.txt"
+```
+
+**Joint condition — all of:** exactly one `DEFAULT_OUTPUT` line · `DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin …` · `MAC_STUDIO_DEFAULT_OUTPUT True` · `OUTPUT_VOLUME 69` · `OUTPUT_MUTED false` · `RESTORE_ACCEPTANCE PASS` · `sound-pane-after.txt` = no process line, last line `rc=1` — summarised mechanically as `JOINT.txt` = `PASS` (C-D28 shape: the PASS word is written only from the parser's own output and the pane read, never by a bare echo).
+
+**PASS at the joint → Stage 6 is the very next shell act. Nothing intervenes: no seal, no commit, no push, no note, no re-read, no deliberation.** **FAIL at the joint (any line) → STOP: no correction, no second hand act, no retry; run only Stage 7's seal; authority SPENT; population NOT invoked.** **Interruption after an accepted joint read and before Block C started → STOP, same rule; never resumed.**
+
+**Stage 6 — Block C, exactly one invocation (the ten samples run inside it; the batch's own stimulus preflight is the second volume boundary and STOPs before playback on drift), then `Dpop` only after Block C returned:**
+
+```bash
+bash /private/tmp/s2pop2-blockC.sh 2>&1 | tee /private/tmp/s2pop2-blockC.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2pop2-blockC.out
+bash /private/tmp/s2pop2-blockDpop.sh 2>&1 | tee /private/tmp/s2pop2-blockDpop.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2pop2-blockDpop.out
+```
+
+`BATCH_PIPELINE_RC=0` and `batch complete` are Block C's PASS lines; an exit 8/9 STOP inside the batch is evidence (nothing sampled on 8; the partial ledger on 9), never rerun; a governed STOP spends the authority (ruling item 9).
+
+**Stage 7 — seal the restoration files (read-only; after `Dpop`, or immediately on a joint FAIL / Block-C STOP):**
+
+```bash
+( cd "$OUT" && shasum -a 256 before-utc.txt audio-before.json bluetooth-before.json volume-before.txt sound-pane-before.txt after-utc.txt audio-after.json volume-after.txt sound-pane-after.txt parser.txt JOINT.txt > SHA256SUMS && cat SHA256SUMS )
+```
+
+**Stage 8 — return, one `feature/*` branch, one commit, from a fresh carrier worktree with the dependency link (C-D25 lesson); read-only except the copies and the commit:**
+
+```bash
+cd /private/tmp/k0506-s2pop2-b198e2e37
+LD="$(ls -td docs/programme/VOICE-2026/driver-ledger/K00-0506-S2-2* 2>/dev/null | head -1)"
+PF="$(ls -td docs/programme/VOICE-2026/driver-ledger/K00-0506-S2-preflight-2* 2>/dev/null | head -1)"
+echo "LEDGER_DIR=$LD"; echo "PREFLIGHT_DIR=$PF"
+RSTAMP="$(basename "$OUT" | sed 's/^k00-s2-volume-restore-04-//')"
+BR="feature/k00-s2-population-02-evidence-$RSTAMP"
+WT="/private/tmp/k00-s2pop2-carrier-$RSTAMP"
+cd /Users/soullab/MAIA-SOVEREIGN && git fetch origin claude/voice-2026-census-01 && git worktree add -b "$BR" "$WT" origin/claude/voice-2026-census-01
+cd "$WT" && test -e node_modules || ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
+mkdir -p "docs/programme/VOICE-2026/driver-ledger/s2-volume-restore-04-$RSTAMP" && cp -p "$OUT"/* "docs/programme/VOICE-2026/driver-ledger/s2-volume-restore-04-$RSTAMP"/ && ( cd "docs/programme/VOICE-2026/driver-ledger/s2-volume-restore-04-$RSTAMP" && shasum -a 256 -c SHA256SUMS )
+test -n "$LD" && cp -R "/private/tmp/k0506-s2pop2-b198e2e37/$LD" docs/programme/VOICE-2026/driver-ledger/ || echo "LEDGER_DIR absent (Block C not run, or STOP before a ledger existed)"
+test -n "$PF" && cp -R "/private/tmp/k0506-s2pop2-b198e2e37/$PF" docs/programme/VOICE-2026/driver-ledger/ || echo "PREFLIGHT_DIR absent"
+RUN="docs/programme/VOICE-2026/driver-ledger/K00-0506-S2-02-run-$RSTAMP"
+mkdir -p "$RUN" && cp -p /private/tmp/s2pop2-block*.sh "$RUN"/ && cp -p /private/tmp/s2pop2-block*.out "$RUN"/ 2>/dev/null; true
+{ printf 'ACT K00-0506-S2-02 paired with S2-RESTORE-04\nRESTORE_STAMP %s\nJOINT %s\nLEDGER_DIR %s\nPREFLIGHT_DIR %s\nBASE_HEAD b198e2e37058f2e059d986b4b148e224215f3ee3\nTRANSPORT Mac Studio terminal directly\n' "$RSTAMP" "$(cat "$OUT/JOINT.txt")" "$LD" "$PF"; } > "$RUN/RETURN.txt"
+( cd "$RUN" && shasum -a 256 * > SHA256SUMS.run && cat SHA256SUMS.run )
+git add docs/programme/VOICE-2026/driver-ledger && git status --short && git commit -m "witness(voice-2026): return K00-0506-S2-02 paired evidence (S2-RESTORE-04 joint + K00-0506-S2 population, $RSTAMP)" && git push -u origin "$BR" && git log -1 --format=%H
+```
+
+**Return:** branch + full SHA + the terminal transcript from Stage 0 through the SHA + any `STOP:` line with its stage + `Mac Studio terminal directly` → **§18.31** here: restoration half read against §18.5.3 (seal 11/11 · parser reproduced · joint condition), population half against §16.4 and §18.20.3's `Dpop` (seal · stimulus custody · classifier · output reader · **§7.2/§7.3 reading per row**), partition pins expected to move by ten (C-D24 species). A joint FAIL, a Block-B STOP or an in-batch STOP returns in the same carrier shape with `JOINT.txt`/`RETURN.txt` naming the stage reached.
+
+**Standing after §18.30:** DISPOSAL-03 PASS · spent · **`K00-0506-S2-02` AUTHORIZED · paired shape · pinned §18.30.2 · NOT YET EXECUTED** (founder hand inside it) · joint target 69 · unmuted · builtin · pane closed · transport Mac Studio terminal directly (remote channel INELIGIBLE) · `b198e2e37` unchanged · C-D26 HOLD · CLAUDE.md compaction DEFERRED until the population disposition · S3 CLOSED · KERNEL-00 acceptance CLOSED.
