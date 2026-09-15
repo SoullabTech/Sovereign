@@ -16,6 +16,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { resolveDraftWriteState } from '@/lib/manuscript/sections/saveSection';
+import { query } from '@/lib/db/postgres';
+/* ⭐⭐ THE MEMBER'S OWN CONVERSION DOOR, imported as the AUTHORITY ON WHETHER
+   THE ACT MAY BE OFFERED — not re-implemented here.
+
+   `POST /draft { convert: true }` runs exactly this function. Any second
+   predicate, however carefully written, would be a copy that can drift; the
+   defect this repairs is precisely a gate aligned with a DIFFERENT
+   implementation (`sections/convertDraft.ts`) that the member's button never
+   calls. ⛔ So the answer is taken from the door, and nothing infers it. */
+import {
+  planConversion as planMemberConversion,
+  type SourceSection,
+} from '@/lib/manuscript/draftSections';
 import { navigableRows } from '@/lib/writersStudio/outlineRows';
 import {
   sectionNavigationCopy,
@@ -56,15 +69,38 @@ export async function GET(
         })),
       });
 
-    case 'continuous':
-      /* Convertible, simply not converted yet. Almost nothing to say — there is
-         no problem to explain, and this state disappears at activation. */
+    case 'continuous': {
+      /* ⭐ CLASSIFICATION AND OFFERABILITY ARE DIFFERENT FACTS, and they are
+         computed by different things on purpose:
+
+           what kind of draft is this?     resolveDraftWriteState  (above)
+           can the member's door succeed?  planConversion          (here)
+
+         ⚠️ `continuous` means the draft is convertible IN PRINCIPLE — it matches
+         a named composer, or its boundaries all resolve. The member's door is
+         stricter: it admits only byte-identity with the CURRENT composer. A
+         draft composed by the LEGACY `# ` composer is classified `continuous`
+         and refused by that door, which is a historical manuscript population
+         and not an edge case.
+
+         ⛔ Neither predicate is widened to agree with the other. The taxonomy
+         stays descriptive and the door stays strict; what changes is that the
+         surface now asks the door. */
+      const src = await query<SourceSection>(
+        `SELECT id, heading, body FROM manuscript_sections
+          WHERE manuscript_id = $1 ORDER BY position ASC`, [id]);
+      const plan = planMemberConversion(state.content, src.rows);
       return NextResponse.json({
         mode: 'continuous',
         version: state.version,
         content: state.content,
         notice: NAVIGATION_NOT_ACTIVE,
+        /* ⛔ A BOOLEAN, NOT THE REFUSAL. The refusal words are instrumentation
+           ("boundary_confirmation_required"), and this lane's own rule is that
+           they stay off the screen. The surface needs to know WHETHER, not WHY. */
+        conversionOfferable: plan.status !== 'refused',
       });
+    }
 
     case 'continuous_unprovable':
       /* The reason is a classification. It is mapped HERE and never sent: a

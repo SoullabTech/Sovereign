@@ -51,6 +51,8 @@ async function teardown() {
  * inferred from a timer, which is what made it diagnosable at all.
  */
 const TEXT = 'One\n\nBefore the water, there was a sound.\n\nTwo\n\nThe spiral is not a circle.\n';
+/** ⭐ The LEGACY composer's shape — `# ` headings. Classified, and not offerable. */
+const LEGACY_TEXT = '# One\n\nBefore the water, there was a sound.\n\n# Two\n\nThe spiral is not a circle.\n';
 
 async function main() {
   mkdirSync(SHOTS, { recursive: true });
@@ -90,6 +92,31 @@ async function main() {
                   ($3,$2,2,'Two','The spiral is not a circle.')`,
           [randomUUID(), W_CONT, randomUUID()]);
   await addDraft(W_CONT, TEXT);
+
+  /* ⭐⭐ LEGACY_COMPOSER_VARIANT — a PERMANENT OBLIGATION, and a production
+     shape rather than a curiosity: a draft composed by the older `# ` composer.
+     `classifyDraft` places it in a composer class, so `resolveDraftWriteState`
+     reports `continuous`; the member's own door demands byte-identity with the
+     CURRENT composer and refuses it. This is the band the alignment closes, and
+     it is exactly what a wrong Phase-B fixture built by accident. */
+  const W_LEGACY = await makeWork('Legacy Composer Work');
+  await q(`INSERT INTO manuscript_sections (id,manuscript_id,position,heading,body)
+           VALUES ($1,$2,1,'One','Before the water, there was a sound.'),
+                  ($3,$2,2,'Two','The spiral is not a circle.')`,
+          [randomUUID(), W_LEGACY, randomUUID()]);
+  await addDraft(W_LEGACY, LEGACY_TEXT);
+
+  /* ⚠️ A SECOND PRISTINE WORK, for the acceptance-law leg alone. The first one
+     is CONVERTED by the act leg, so reusing it there asked whether a control
+     appears on a Work that is no longer `continuous` — an instrument reusing a
+     fixture whose state a previous leg deliberately changed. Each leg gets its
+     own Work, the same discipline the five states already use. */
+  const W_LAW = await makeWork('Pristine Work For The Law');
+  await q(`INSERT INTO manuscript_sections (id,manuscript_id,position,heading,body)
+           VALUES ($1,$2,1,'One','Before the water, there was a sound.'),
+                  ($3,$2,2,'Two','The spiral is not a circle.')`,
+          [randomUUID(), W_LAW, randomUUID()]);
+  await addDraft(W_LAW, TEXT);
 
   /* continuous_unprovable — a draft with NO source at all (NO_SOURCE). */
   const W_UNPROV = await makeWork('Unprovable Work');
@@ -135,10 +162,18 @@ async function main() {
     none: await mode(W_NONE), cont: await mode(W_CONT),
     unprov: await mode(W_UNPROV), sec: await mode(W_SEC),
   };
+  /** ⭐ Offerability as the SERVER reports it — the door's own answer. */
+  const offerable = async (WK: string) => {
+    const r = await fetch(`http://127.0.0.1:${port}/api/sovereign/manuscripts/${WK}/write-state`,
+      { headers: { 'x-session-token': TOKEN } });
+    return r.ok ? (await r.json()).conversionOfferable : undefined;
+  };
   eq('S1 no_draft', modes.none, 'no_draft');
   eq('S2 continuous', modes.cont, 'continuous');
   eq('S3 continuous_unprovable', modes.unprov, 'continuous_unprovable');
   eq('S4 section_aware', modes.sec, 'section_aware');
+  eq('S5 ⭐ the legacy-composer draft is ALSO classified continuous',
+     await mode(W_LEGACY), 'continuous');
 
   browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1500, height: 1000 } });
@@ -175,6 +210,27 @@ async function main() {
      (await one('SELECT section_addressable_at a FROM manuscript_working_drafts WHERE manuscript_id=$1',
                 [W_CONT]))?.a, null);
 
+  console.log('\n── ⭐⭐ classified convertible, and the door says no ──────────────');
+  eq('L1 the server reports it convertible in principle', await mode(W_LEGACY), 'continuous');
+  eq('L2 ⭐⭐ AND THE MEMBER\'S OWN DOOR SAYS IT IS NOT OFFERABLE',
+     await offerable(W_LEGACY), false);
+  eq('L3 ⭐ while the pristine draft IS offerable — the two are distinguished',
+     await offerable(W_CONT), true);
+  await openRoom(W_LEGACY, '07-legacy-band');
+  await notice().first().waitFor({ timeout: 30_000 });
+  eq('L4 the field still names the state', await notice().getAttribute('data-draft-state'), 'continuous');
+  eq('L5 ⭐⭐ ⛔ NO CONTROL IS SHOWN — classification alone never authorizes it',
+     await act().count(), 0);
+  eq('L6 and the surface says so', await notice().getAttribute('data-draft-offerable'), 'false');
+  const bandText = (await notice().innerText()).replace(/\s+/g, ' ');
+  eq('L7 ⭐ the third sentence: structure exists, it cannot be made durable safely',
+     bandText.includes('has section structure')
+     && bandText.includes('cannot safely make that structure durable'), true);
+  eq('L8 ⛔ and it is NOT called a failure', /fail|error|could not convert/i.test(bandText), false);
+  eq('L9 ⛔ nor does it advertise machinery that does not exist',
+     /confirm the boundaries|review the boundaries/i.test(bandText), false);
+  eq('L10 ⭐ writing remains available', await page.locator('textarea, [contenteditable]').count() > 0, true);
+
   console.log('\n── continuous_unprovable · truthful, and NO act ──────────────────');
   await openRoom(W_UNPROV, '02-unprovable');
   eq('U1 the field names the state', await notice().getAttribute('data-draft-state'), 'continuous_unprovable');
@@ -198,10 +254,15 @@ async function main() {
   await openRoom(W_CONT, '05-before-act');
   /* ⭐ Capture what the conversion door actually answers, so a refusal is read
      rather than inferred from a timer that expired. */
-  let convert: { status: number; body: string } | null = null;
+  type ConvertSeen = { status: number; body: string };
+  /* ⚠️ An array rather than a `let`: TypeScript's flow analysis cannot see an
+     assignment made inside an event callback, so a nullable binding narrows to
+     `never` at the read. The collection is the honest shape anyway — it records
+     what was observed rather than what was expected. */
+  const convert: ConvertSeen[] = [];
   page.on('response', async (r) => {
     if (r.url().includes('/draft') && r.request().method() === 'POST') {
-      convert = { status: r.status(), body: (await r.text().catch(() => '')).slice(0, 300) };
+      convert.push({ status: r.status(), body: (await r.text().catch(() => '')).slice(0, 300) });
     }
   });
   await act().click();
@@ -210,7 +271,8 @@ async function main() {
     await page.waitForTimeout(500);
   }
   await page.screenshot({ path: `${SHOTS}/06-after-act.png` });
-  if (convert) console.log(`     conversion door answered ${convert.status}: ${convert.body}`);
+  const seen = convert[convert.length - 1];
+  if (seen) console.log(`     conversion door answered ${seen.status}: ${seen.body}`);
   else console.log('     ⚠️ no POST to the draft door was observed');
   eq('T1 ⭐⭐ structure became durable BECAUSE SHE ASKED',
      (await one('SELECT section_addressable_at IS NOT NULL a FROM manuscript_working_drafts WHERE manuscript_id=$1',
@@ -219,6 +281,19 @@ async function main() {
   eq('T3 the sections are real', Number((await one(
      `SELECT count(*) n FROM manuscript_draft_sections s
         JOIN manuscript_working_drafts d ON d.id = s.draft_id WHERE d.manuscript_id = $1`, [W_CONT])).n), 2);
+
+  /* ══ THE ACCEPTANCE LAW, BOTH DIRECTIONS ══════════════════════════════
+     if the field shows the control → the member's planner says available
+     if that planner refuses        → the field must not show the control */
+  console.log('\n── the acceptance law, in both directions ────────────────────────');
+  for (const [name, WK] of [['pristine', W_LAW], ['legacy', W_LEGACY]] as const) {
+    await openRoom(WK, `08-law-${name}`);
+    await notice().first().waitFor({ timeout: 30_000 });
+    const shown = (await act().count()) === 1;
+    const says = await offerable(WK);
+    eq(`X-${name} ⭐⭐ control shown (${shown}) IFF the door says offerable (${String(says)})`,
+       shown, says === true);
+  }
 
   console.log(`\n  ${pass} passed · ${fail} failed`);
   console.log(`  screenshots: ${SHOTS}`);

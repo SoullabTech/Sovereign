@@ -155,7 +155,12 @@ describe('scope — the repair touches nothing it was told not to', () => {
        `writeState?.mode === 'continuous'` to a named `actAvailable` derived from
        the same server mode, with the button inside it. */
     const notice = read('app/writers-studio/canvas/DraftStateNotice.tsx');
-    expect(notice).toMatch(/const actAvailable = mode === 'continuous';/);
+    /* ⚠️ AMENDED BY CONVERSION-AVAILABILITY-ALIGNMENT-01, and the guard's law
+       is satisfied MORE strongly, not less. This asserted the act was gated on
+       the write state; it is now gated on the member's own conversion door,
+       which is stricter — a classification alone no longer opens it. */
+    expect(notice).toMatch(/const actAvailable = offerable;/);
+    expect(notice).toMatch(/conversionOfferable === true/);
     expect(notice).toMatch(/\{actAvailable && \(\s*<button/);
     expect(notice).toMatch(/data-action="confirm-section-breaks"/);
   });

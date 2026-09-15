@@ -29,7 +29,25 @@ export interface WriteStateSection {
 
 export type WriteState =
   | { mode: 'section_aware'; version: number; rows: WriteStateRow[]; sections: WriteStateSection[] }
-  | { mode: 'continuous'; version: number; content: string; notice: { title: string; body: string } }
+  | {
+      mode: 'continuous';
+      version: number;
+      content: string;
+      notice: { title: string; body: string };
+      /**
+       * ⭐⭐ WHETHER THE MEMBER'S CONVERSION DOOR CAN SUCCEED — answered by that
+       * door's own `planConversion`, server-side, never inferred from `mode`.
+       *
+       * ⚠️ `continuous` says the draft is convertible IN PRINCIPLE. This says
+       * the act is actually offerable. They differ for legacy-composer drafts
+       * and for edited drafts whose boundaries all resolve, and treating the
+       * classification as the authorization is the defect this field closes.
+       *
+       * Optional so an older server is read as "not offerable" rather than as
+       * offerable-by-omission. ⛔ Absence must never open a door.
+       */
+      conversionOfferable?: boolean;
+    }
   | { mode: 'continuous_unprovable'; version: number; content: string; notice: { title: string; body: string } }
   | { mode: 'no_draft' };
 

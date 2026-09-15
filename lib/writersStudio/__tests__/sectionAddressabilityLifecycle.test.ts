@@ -10,6 +10,19 @@ import path from 'path';
 import { chooseMount, type WriteState } from '../writeStateClient';
 
 const REPO = path.resolve(__dirname, '../../..');
+/**
+ * ⚠️ THE C21 CLASS, EIGHTH OCCURRENCE IN THIS PROGRAMME — and three times in
+ * this one file. A prohibition scanned against raw source fires on the comment
+ * that STATES the prohibition: the notice names `planConversion` while
+ * explaining it must not re-implement it, the route names
+ * `sections/convertDraft` while explaining it does not import it, and the copy
+ * says ⛔ NOT "conversion failed" while forbidding that phrase. Comments are
+ * stripped before every prohibition scan, the remedy this programme has used
+ * since C6.
+ */
+const strip = (src: string) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
 const read = (p: string) => fs.readFileSync(path.join(REPO, p), 'utf8');
 
 describe('import alone does NOT make a Work section-addressable', () => {
@@ -142,9 +155,12 @@ describe('R1 — the act is offered only where conversion can succeed', () => {
   const page = read('app/writers-studio/canvas/DraftStateNotice.tsx');
 
   it('gates the button on the WRITE STATE, not on the mount', () => {
-    /* The gate is named rather than inlined now, so the law reads as one
-       sentence: availability comes from the SERVER's mode. */
-    expect(page).toMatch(/const actAvailable = mode === 'continuous';/);
+    /* ⚠️ AMENDED BY CONVERSION-AVAILABILITY-ALIGNMENT-01. The law is unchanged
+       in spirit and STRICTER in fact: the gate was `mode === 'continuous'`, a
+       CLASSIFICATION; it is now the member's own conversion door. The mount
+       still cannot stand in for either. */
+    expect(page).toMatch(/const actAvailable = offerable;/);
+    expect(page).toMatch(/conversionOfferable === true/);
     expect(page).toMatch(/\{actAvailable && \(\s*<button/);
   });
 
@@ -172,8 +188,59 @@ describe('R1 — the act is offered only where conversion can succeed', () => {
     expect(page).toMatch(/SECTION_BREAKS_COPY\.bodyNotConvertible/);
   });
 
+  it('⭐⭐ the control is gated on the MEMBER\'S OWN conversion door', () => {
+    /* CONVERSION-AVAILABILITY-ALIGNMENT-01. `mode === 'continuous'` says the
+       draft is convertible IN PRINCIPLE; `conversionOfferable` is the door's own
+       planConversion saying the act can actually succeed. ⛔ Classification
+       alone never authorizes the control. */
+    expect(page).toMatch(/conversionOfferable === true/);
+    expect(page).toMatch(/const actAvailable = offerable;/);
+  });
+
+  it('⛔ absence of the fact is NOT permission', () => {
+    /* An older server omits the field. A strict `=== true` is the difference
+       between "the door said yes" and "the response was silent". */
+    expect(page).not.toMatch(/conversionOfferable\s*\)/);
+    expect(page).not.toMatch(/conversionOfferable !== false/);
+  });
+
+  it('⛔⛔ the UI does not RE-IMPLEMENT the predicate', () => {
+    /* The defect being repaired was a gate aligned with a different
+       implementation. Fixing it by copying the strict rule into the surface
+       would create two identical predicates free to diverge again. The surface
+       must carry no composer, no byte comparison, no classification. */
+    const bare = strip(page);
+    expect(bare).not.toMatch(/composeDraftSlices|classifyDraft|planConversion/);
+    expect(bare).not.toMatch(/Buffer\.from|\.equals\(/);
+    expect(bare).not.toMatch(/PRISTINE|LEGACY_COMPOSER_VARIANT|EDITED/);
+  });
+
+  it('⭐ and the server takes the answer from the door the member uses', () => {
+    const route = read('app/api/sovereign/manuscripts/[id]/write-state/route.ts');
+    /* The SAME module POST /draft imports — not sections/convertDraft.ts,
+       which serves the developmental preparation path. */
+    expect(route).toMatch(/from '@\/lib\/manuscript\/draftSections'/);
+    expect(strip(route)).not.toMatch(/sections\/convertDraft/);
+    expect(route).toMatch(/conversionOfferable: plan\.status !== 'refused'/);
+  });
+
+  it('⛔ and the refusal WORDS stay off the screen', () => {
+    /* They are instrumentation. The surface needs to know WHETHER, not WHY. */
+    expect(page).not.toMatch(/boundary_confirmation_required|boundary_moved/);
+  });
+
+  it('⭐ the not-offerable band gets its own truthful sentence', () => {
+    expect(page).toMatch(/has section structure/);
+    expect(page).toMatch(/cannot safely make/);
+    /* ⛔ Not a failure, and ⛔ not an advertisement for machinery that does not
+       exist — there is no member act that confirms boundaries today. */
+    const bare = strip(page);
+    expect(bare).not.toMatch(/conversion failed|could not convert/i);
+    expect(bare).not.toMatch(/confirm the boundaries|review the boundaries/i);
+  });
+
   it('⛔ and no_draft is announced without being offered an act', () => {
     expect(page).toMatch(/mode === 'no_draft'/);
-    expect(page).toMatch(/const actAvailable = mode === 'continuous';/);
+    expect(page).toMatch(/const actAvailable = offerable;/);
   });
 });

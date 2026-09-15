@@ -70,22 +70,54 @@ export function DraftStateNotice({
      specific than anything written here. */
   const title = writeMount.notice?.title
     ?? (mode === 'no_draft' ? 'This Work has no draft yet.' : SECTION_BREAKS_COPY.title);
+  /**
+   * ⭐⭐ THE ACT IS GATED ON THE MEMBER'S OWN CONVERSION DOOR, never on the
+   * classification.
+   *
+   * `mode === 'continuous'` says the draft is convertible IN PRINCIPLE.
+   * `conversionOfferable` is that door's own `planConversion` answering whether
+   * it can actually succeed — computed server-side by the same pure function
+   * `POST /draft { convert: true }` executes, so there is one predicate and not
+   * a copy that can drift.
+   *
+   * ⛔ ABSENCE IS NOT PERMISSION. An older server omits the field, and a draft
+   * must never be offered an act because a response was silent about it.
+   */
+  const offerable = writeState?.mode === 'continuous'
+    && writeState.conversionOfferable === true;
+
+  /**
+   * ⭐ THE THIRD SENTENCE — a draft that HAS structure the Studio cannot safely
+   * make durable from the draft as it stands. The legacy-`#`-composer
+   * population lives here, and it is a population rather than an edge.
+   *
+   * ⛔ NOT "conversion failed": no act occurred and none was attempted.
+   * ⛔ AND NOT "confirm the boundaries" — there is no member act that does that
+   * today, and a surface must not advertise tomorrow's machinery. Three things
+   * are said and nothing more: there is structure here; the Studio cannot
+   * presently prove the durable transformation safely; you are not blocked.
+   */
+  const classifiedButNotOfferable = mode === 'continuous' && !offerable;
+
   const body = writeMount.notice?.body
-    ?? (mode === 'continuous' ? SECTION_BREAKS_COPY.body
+    ?? (classifiedButNotOfferable
+        ? 'This draft has section structure, but the Studio cannot safely make '
+          + 'that structure durable from the draft as it stands. You can keep '
+          + 'writing normally.'
+      : mode === 'continuous' ? SECTION_BREAKS_COPY.body
       : mode === 'no_draft' ? 'Start writing and it becomes the Work’s draft. '
         + 'Section navigation can come later, once there are sections to name.'
       : SECTION_BREAKS_COPY.bodyNotConvertible);
 
-  /* ⛔⛔ THE ACT IS GATED ON THE SERVER STATE, NEVER THE MOUNT. `planConversion`
-     refuses unless the draft matches the source-derived partition, so offering
-     this on `continuous_unprovable` would render a control structurally
-     incapable of succeeding — and `no_draft` has nothing to convert. */
-  const actAvailable = mode === 'continuous';
+  const actAvailable = offerable;
 
   return (
     <div
       data-draft-state={mode ?? 'unknown'}
       data-draft-act={actAvailable ? 'available' : 'none'}
+      /* ⭐ The band, made legible to a witness: classified convertible, and the
+         member's own door says no. */
+      data-draft-offerable={mode === 'continuous' ? String(offerable) : 'n/a'}
       style={{
         maxWidth: '44ch', marginBottom: SPACE.roomy,
         paddingBottom: SPACE.base, borderBottom: `1px solid ${RULE.quiet}`,
