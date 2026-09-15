@@ -239,3 +239,53 @@ An untyped single-expression closure over a `Range<Int>` whose body mixes five l
 **Custody on the Mac (owed as the evidence carrier).** `$OUT` (six files) + a recomputed seal, plus the two Desktop copies (`/Users/soullab/Desktop/SID-MAC-COMPILE-01-terminal-recovered.txt`, 41 lines / 3,966 bytes; `/Users/soullab/Desktop/SID-MAC-COMPILE-01-governed-run.log`, 4,351 bytes), travel on a `feature/*` branch and are cherry-picked here with `-x` before any reading beyond this founder-reported table is written. Nothing on the Mac is to be deleted, re-run or amended: the worktree may stay; the `.sh` may stay; `$OUT` is frozen evidence.
 
 **Standing after §10.5.** `SID MAC-COMPILE-01` = EXECUTED · STOPPED at step 3 (`swift test`) · authority SPENT · evidence carrier OWED. Accepted code state `f0c6ae13b` UNCHANGED (acceptance was of the offline evidence; it is not withdrawn by a Mac test-compile defect — the founder rules what, if anything, it means). Open authority: NONE — a repair ruling (test-file only, new SHA) and a fresh compile pin are the next possible founder acts. Still closed: FIRST-INSTALL · reinstall pin mutation · SID ENTRY WITNESS (REQUIRED) · S-b N=10 · S-a (NOT OPEN) · S3 · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · KERNEL-00 NOT ACCEPTED · device execution NONE · C-D26 HOLD.
+
+### 10.6 FOUNDER RULING on §10.5 (2026-09-15): `SID REPAIR-01` OPEN for the line-485 expression ONLY · sibling expressions HOLD · `SID MAC-COMPILE-02` NOT OPEN · evidence carrier lands FIRST
+
+Recorded verbatim in substance. The founder made the next ruling **narrower** than the pre-emptive repair §10.5 named: *the Mac produced one admissible compiler finding; the sibling expressions are plausible candidates by shape, but they are not yet findings — repairing them now would turn prediction into authority and blur the distinction between what failed and what might fail next.*
+
+```text
+REPAIR AUTHORITY
+  file      ios/VoiceKernel/Tests/VoiceKernelTests/PureLogicTests.swift
+  locus     modulation-index test · line 485 expression only
+  purpose   make the existing expression type-checkable
+  semantic change     NONE
+  values              unchanged
+  assertions          unchanged
+  production/kernel   untouched
+  sibling expressions HOLD
+```
+
+The §10.5 repair shape is accepted as appropriate — *explicit `[Double]`, typed closure argument, `kk`, `arg`, same arithmetic and return value; compiler-disambiguation, not test redesign.* Sequence, kept as three separate acts so that *the first failure does not pull the next two across its boundary*:
+
+```text
+MAC-COMPILE-01   EXECUTED · STOP · Swift test compile · authority SPENT
+REPAIR-01        one proven compiler obstruction · one test file · new SHA
+review repair diff
+MAC-COMPILE-02   separately authorized against that exact new SHA
+```
+
+If `MAC-COMPILE-02` then stops on `g`, `seq26` or the inner `on` loop, *that* creates the evidence for the next repair; if it passes them, they were merely similar-looking expressions and no change was manufactured. **The evidence carrier lands before the repair**: the six frozen `$OUT` files, a recomputed seal and the two recovered Desktop copies become durable first, preserving the failed act independently of whatever follows.
+
+**Order of execution as it follows from the ruling (this session).**
+1. **Carrier (Mac, founder, first).** Script `docs/programme/VOICE-2026/SID_MAC-COMPILE-01_CARRIER_2026-09-15.sh` (30 lines; file transport per §10.4, no paste of the body): fetches the lane branch, opens a detached worktree at its tip, creates `feature/sid-mac-compile-01-evidence-20260915T204348Z`, copies the six `$OUT` files · the two Desktop copies · `/private/tmp/sid-mac-compile-01.sh` · every `/private/tmp/sid-mac-compile-01-transcript-*.log` (this deliberately includes the 0-byte 20:43:11Z transcript of the §10.4 empty-script no-op, so that attribution is carried as a file, not as a sentence) · a `ls -la` listing, into `docs/programme/VOICE-2026/driver-ledger/sid-mac-compile-01-20260915T204348Z/`, writes `SHA256SUMS.run` + `RETURN.txt`, commits and pushes the `feature/*` branch. It reads `$OUT`; it never writes into it. It touches no kernel, test, harness or reader file. It refuses (`test`) if `$OUT`, either Desktop copy, or a pre-existing carrier worktree is missing/present. Run shape:
+   ```bash
+   git -C /Users/soullab/MAIA-SOVEREIGN fetch origin claude/voice-2026-census-01
+   git -C /Users/soullab/MAIA-SOVEREIGN show origin/claude/voice-2026-census-01:docs/programme/VOICE-2026/SID_MAC-COMPILE-01_CARRIER_2026-09-15.sh > /private/tmp/sid-carrier.sh
+   shasum -a 256 /private/tmp/sid-carrier.sh; wc -l /private/tmp/sid-carrier.sh
+   bash /private/tmp/sid-carrier.sh 2>&1 | tee /private/tmp/sid-carrier-transcript-$(date -u +%Y%m%dT%H%M%SZ).log; echo "rc=${PIPESTATUS[0]}"
+   ```
+   Expected last line `SID-MAC-COMPILE-01 CARRIER PUSHED`. The 30-line count and the SHA printed by the remote session at commit time are the custody check.
+2. **Here, on the carrier's arrival:** cherry-pick with `-x`, recompute `SHA256SUMS.run`, read `swift-test.log` in full (the only file whose contents §10.5 quotes from the founder's report rather than from custody), confirm `swift-build.log` PASS and the `head.txt` SHA, then write the carrier record (§10.7).
+3. **`SID REPAIR-01` (here, after 2).** Exactly one hunk in `PureLogicTests.swift`, the line-485 binding replaced by the pinned text below; nothing else in the file; gate 82/82 (the file is inside `SID_ALLOWED`; the frozen-subject pins are unaffected because the kernel tree is byte-identical); commit → **new SHA** → founder diff review. Pinned replacement (value-identical: the multiplication order `2.0 * Double.pi * 7.0 * kk * dt` is the original's left-to-right order, so every double is bitwise the same):
+   ```swift
+   let ripple: [Double] = (0..<25).map { (k: Int) -> Double in
+       let kk = Double(k)
+       let arg = 2.0 * Double.pi * 7.0 * kk * dt
+       return 0.5 + 0.3 * sin(arg) + 0.01 * kk
+   }
+   ```
+   No other line of the test file is touched — not `g`, not `seq26`, not the `on` loop, not the assertions, not the comment.
+4. **`SID MAC-COMPILE-02`** — NOT OPEN. It opens only by a separate founder act against the reviewed REPAIR-01 SHA, with its own §10.2-shaped pin (same steps, that SHA, a new `$OUT` stamp; reinstall pins still empty).
+
+**Standing after §10.6.** `SID MAC-COMPILE-01` EXECUTED · STOP · SPENT · carrier OWED (script issued) · `SID REPAIR-01` OPEN (line 485 only; not yet written — sequenced after the carrier) · sibling expressions HOLD · `SID MAC-COMPILE-02` NOT OPEN · accepted code state `f0c6ae13b` unchanged until REPAIR-01 supersedes it for compile purposes · FIRST-INSTALL CLOSED · reinstall pins EMPTY · SID ENTRY WITNESS REQUIRED, not opened · device execution NONE · C-D26 HOLD.

@@ -821,3 +821,8 @@ Accepted code state `f0c6ae13b88db29cbd1537bec585d98376c8bc4f` (gate 82/82 · re
 ### §10.58 — `SID MAC-COMPILE-01` EXECUTED · STOP at `swift test` (2026-09-15; discriminator plan §18.38; implementation record §10.5)
 
 Gate 82/82 PASS · `swift build` PASS · `swift test` FAIL at test-target compilation (`PureLogicTests.swift:485:13` type-checker time-out on the `ripple` closure in the modulation-index unit test) → STOP; xcodegen/builds/identity/manifest/seal never entered; zero Swift tests ran. Bounded compile defect in the predeclared risk class; not repaired inside the act; authority SPENT; duplicate invocation NOT ESTABLISHED as executed; evidence carrier owed. Repair (test file only, new SHA, fresh compile pin) is a separate founder ruling; reinstall pins unchanged (empty). Qualification of the SID subject remains CLOSED; SID ENTRY WITNESS still REQUIRED and not opened.
+
+
+### §10.59 — `SID REPAIR-01` OPEN (line 485 only) · siblings HOLD · `SID MAC-COMPILE-02` NOT OPEN · carrier first (2026-09-15; discriminator plan §18.39; implementation record §10.6)
+
+Founder ruling on the §10.58 STOP. Repair authority limited to the compiler-proven expression (`PureLogicTests.swift:485`, modulation-index test): type-check disambiguation only, values/assertions unchanged, one test file, new SHA, founder diff review; sibling closure expressions HOLD until a compile names them. `SID MAC-COMPILE-02` opens only by a separate act against the reviewed REPAIR-01 SHA. Evidence carrier (`SID_MAC-COMPILE-01_CARRIER_2026-09-15.sh`) lands before the repair is written. Qualification of the SID subject remains CLOSED; SID ENTRY WITNESS REQUIRED, not opened; reinstall pins EMPTY.
