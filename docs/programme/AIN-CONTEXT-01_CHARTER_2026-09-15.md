@@ -196,6 +196,11 @@ eventually judged.
 AIN-CONTEXT-01            OPEN
 ACT 1 census              COMPLETE · READ-ONLY · corrected in place 2026-09-15
 ACT 2 architecture        OPEN · RUN · SPECIFICATION ONLY
+ACT 2 addendum            FOUNDER RULINGS R1-R6 RATIFIED
+R1 three epistemic cond.  IN FORCE (cognition / record / nature)
+Continuity envelope       RATIFIED (six panes)
+A6 temporal sovereignty   SPECIFIED · NOT OPENED · founder decision owed
+F1a false self-location   SPECIFIED · NOT AUTHORED · NOT RUN
 A3 reproduction harness   PROPOSED · NOT OPENED
 A4-A8                     PROPOSED · NOT OPENED
 F1-F8 falsifiers          SPECIFIED · NOT AUTHORED · NOT RUN
