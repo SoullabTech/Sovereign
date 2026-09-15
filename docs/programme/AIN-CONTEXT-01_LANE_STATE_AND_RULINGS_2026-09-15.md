@@ -438,3 +438,24 @@ Applying `docs/canon/MARKETING_CLAIM_DISCIPLINE.md` to this lane's output, as §
 **Cleanest first move on reopening** **[F]**: **witness C4.** Cheap, bounded, currently derived
 rather than evidenced, and resolving it removes one remaining uncertainty before anything changes
 the live continuity path.
+
+### 10.5 · THE DISTINCTION, IN ONE LINE **[F]**
+
+> **A larger context window gives MAIA more past.**
+> **Longitudinal continuity gives MAIA relationship to the past.**
+
+And the postponement trap in its general form:
+
+> **Increasing the aperture can postpone discontinuity without creating continuity.**
+
+⭐ **[J] Recorded because this is the formulation that will be quoted when the nine documents are
+not read**, and because leaving the lane's clearest statement in conversation is — by **R6** — to
+leave it nowhere.
+
+Relationship to the past requires **selection · standing · correction · recurrence · temporal
+location · significance · process identity · freedom.** ⛔ **None of them is solved by increasing
+`N`.**
+
+**Member-facing truth, unchanged by this lane**: *MAIA still hits the wall today.* What the lane
+determined is **why**, **what a real solution must preserve**, and **what future work must not
+falsely claim as a solution.**
