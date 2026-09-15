@@ -100,9 +100,9 @@ Reads, in order, all read-only, all teed into `driver-ledger/VPIO-02-SID-ENTRY-p
 1. `git rev-parse HEAD` = the pinned lane SHA; `git diff --quiet -- scripts/witness/k00-driver-batch.sh scripts/witness/k00-ledger.py scripts/witness/k00-reinstall.sh ios/VoiceKernelDriver` (instrument identical to its gate-pinned bytes).
 2. `xcrun devicectl device info apps --device $DEV --json-output apps.json` → `grep -c <SID-CONTAINER>` **= 1** AND `grep -c E3B88028-A10F-46B1-AB27-CF0A1F83FB78` **= 1** (both subjects installed, exactly once each; the SID container is the literal captured at [C]).
 3. `xcrun devicectl device info processes --json-output processes.json` → `grep -ci VoiceKernelHarness` **= 0** (no harness of either subject running).
-4. The product the install came from still exists at its MAC-COMPILE-02 path and `dwarfdump --uuid` = `4A6AD464-…` (the installed binary is provably the compiled binary; no rebuild in between).
+4. ⭐ **RULED (founder, Q5): READ ONLY at [D]** — whether the product still exists at its MAC-COMPILE-02 path is recorded (`test -d` result and, if present, `dwarfdump --uuid`), but it is **not a gate**: product existence + full identity is a hard GATE at [B] (the install source), and its disappearance between [B] and [D] does not invalidate an already-bound installed identity.
 
-Predeclared: **all four green → [E] starts at once (same terminal, same minute); any other reading → STOP, nothing launched, return for ruling.** No Mac speaker volume precondition: [E] plays nothing (§9).
+Predeclared: **reads 1–3 green → [E] starts at once (same terminal, same minute); any other reading of 1–3 → STOP, nothing launched, return for ruling; read 4 is documentary.** No Mac speaker volume precondition: [E] plays nothing (§9). ⭐ **RULED (Q6):** read 2's two-container assertion is the intended state for the whole SID programme — `.vpio02` exactly one installed container · `.vpio02sid` exactly one · uninstall NEVER · overwrite of `.vpio02` NEVER — preserving the historical comparator in the act of introducing the experimental subject.
 
 ---
 
@@ -138,9 +138,11 @@ Let `t` = gen-1 takes, `v` = valid rows, `F` = one-sided Fisher exact test of (t
 
 | class | condition |
 |---|---|
-| **ENTRY-UNPERTURBED** | `t/v ≥ 24/30` (the F-W1 frozen-table floor, reused as ratified) ∧ `F` not significant at .05 ∧ 0 CEILING-BREACH ∧ all rows OBSERVER-LIVE |
+| **ENTRY-UNPERTURBED** | ⭐ **RULED (founder, Q3 AMENDED): `t ≥ 27/30`** ∧ `F` not significant at .05 ∧ 0 CEILING-BREACH ∧ all rows OBSERVER-LIVE — *failure to establish significant deterioration is not the same claim as evidence of non-perturbation*; 24/30 sits at the Fisher boundary (p≈.051) and would let five extra failures over baseline receive the strongest reassuring class |
 | **ENTRY-PERTURBED** | `F` significant at .05 (deterioration against F-W1) ∨ ≥ 2 CEILING-BREACH |
-| **INDETERMINATE-ENTRY** | anything else that is valid (e.g. `t/v` between, or exactly 1 breach), with the reason named: `(takes)` · `(ceiling)` · `(observer-dormant)` |
+| **INDETERMINATE-ENTRY** | everything between those evidentiary states — **including 24–26 takes**, or exactly 1 breach — with the reason named: `(takes)` · `(ceiling)` · `(observer-dormant)` |
+
+One-sided Fisher exact against F-W1 (29, 1), as the founder tabulated: 27/30 p=.306 · 26/30 p=.177 · 25/30 p=.097 · 24/30 p=.051 · 23/30 p=.026. The original draft's 24/30 floor (the F-W1 frozen-table CLEAR-IMPROVEMENT floor) was an *improvement-vs-engine* threshold, not a *non-perturbation-vs-VPIO-02* threshold; the ruling keeps it out of this witness.
 | **CHARACTERIZE ONLY** | invalid population (§6.1) |
 
 Latency shift is **descriptive only**: median gen-1 latency reported against F-W1's 338 ms; a shift > 100 ms is written as `LATENCY-SHIFT` in the reading and is an input to adjudication, never a class on its own (n is too small to make a latency-only claim without a ruling).
@@ -202,14 +204,14 @@ Two prohibitions follow. **(i)** ENTRY journals are never fed to `k00-source-led
 ## 11. Open questions for the founder (design questions; each needs a ruling, none is answered here)
 
 - **Q1 — reinstall-pin completion.** ⭐ **RULED (founder, 2026-09-15): YES — act 2 opened code-only and written at `3035c0235`** (exec SHA · manifest SHA · count; review pending). Consequence as the founder stated it: `pins-unrecorded` no longer fires for the SID subject, but *installable under a future authorized transaction is not installation opened* — artifact matching, manifest verification, just-in-time absence and explicit execution authority all still stand.
-- **Q2 — N.** Mirror F-W1 at **N = 30** (≈23 min wall) so the Fisher comparison is like-for-like, or a smaller N (e.g. 10) accepting that only gross perturbation is detectable? *Recommendation: 30; the comparison population is 30 and the question is subtle.*
-- **Q3 — comparison law.** Accept §6.3 as written (floor 24/30 reused; one-sided Fisher vs (29,1) at .05; ceiling breaches ≥2 → PERTURBED; latency descriptive)? Or require a stricter equality band (e.g. `t ≥ 27`)? *Recommendation: as written; the floor is already ratified and the Fisher test is the F-W1 instrument.*
-- **Q4 — observer-liveness minimum.** `L ≥ 10` of an expected ≈15 per journal as the OBSERVER-LIVE bar? *Recommendation: yes; below that the observer was not running for most of the hold.*
-- **Q5 — preflight read 4.** Require the compiled product to still exist at its `/private/tmp` path at [D] (it is the install source at [B]; by [D] it has served its purpose)? *Recommendation: require it at [B] (inherent) and record-only at [D]; a missing product at [D] is not a STOP.* (If accepted, §4 item 4 becomes a read, not a gate.)
-- **Q6 — `.vpio02` coexistence.** Confirm that both subjects installed side by side is the intended state for the whole SID programme (never uninstall `.vpio02`), so that preflight read 2 asserts both containers = 1.
+- **Q2 — N.** ⭐ **RULED: N = 30** — an organism-comparison witness against F-W1's 30 observations; matching N keeps the historical baseline legible.
+- **Q3 — comparison law.** ⭐ **RULED, AMENDED: UNPERTURBED floor = 27/30** (§6.3 rewritten as ruled; 24–26 takes = INDETERMINATE-ENTRY). *UNPERTURBED has affirmative evidentiary meaning rather than being synonymous with "not proven perturbed".*
+- **Q4 — observer-liveness minimum.** ⭐ **RULED: OBSERVER-LIVE = ≥ 10 `input_source_sample` records during the 15-second hold**; a valid row below that is INDETERMINATE-ENTRY (observer-dormant), never a silently excluded sample.
+- **Q5 — preflight read 4.** ⭐ **RULED: product existence + identity = GATE at [B] install · product-path existence = READ ONLY at [D]** (§4 rewritten as ruled).
+- **Q6 — `.vpio02` coexistence.** ⭐ **RULED: YES** — `.vpio02` exactly one installed container · `.vpio02sid` exactly one · uninstall NEVER · overwrite of `.vpio02` NEVER (§4 read 2 as ruled).
 
 ---
 
 ## 12. Standing
 
-`SID ENTRY-WITNESS-DESIGN` RETURNED · authorizes nothing · [A]–[H] each NOT OPEN · `SID MAC-COMPILE-02` PASS · spent (carrier-B in custody) · `SID REINSTALL-PIN-SID` act 1 ACCEPTED at `3f3cb15b0` · act 2 written at `3035c0235`, review pending · siblings HOLD · `.vpio02` frozen · S-b N=10 CLOSED · S-a NOT OPEN · S3 CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · KERNEL-00 NOT ACCEPTED · install 0 · launch 0 · sample 0 · device act 0 · C-D26 HOLD.
+`SID ENTRY-WITNESS-DESIGN` RETURNED and **ACCEPTED in architecture (founder, 2026-09-15) with Q2–Q6 ruled as marked** · authorizes nothing · [A]–[H] each NOT OPEN · `SID MAC-COMPILE-02` PASS · spent (carrier-B in custody) · `SID REINSTALL-PIN-SID` act 1 ACCEPTED at `3f3cb15b0` · act 2 ACCEPTED at `3035c0235` (all five pins recorded; `pins-unrecorded` ceases for the SID subject = identity completion, not install authority) · `FIRST-INSTALL-SID` pin DRAFT OPEN (`SID_FIRST-INSTALL-01_PIN_DRAFT_2026-09-15.sh`; run NOT OPEN) · siblings HOLD · `.vpio02` frozen · S-b N=10 CLOSED · S-a NOT OPEN · S3 CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · KERNEL-00 NOT ACCEPTED · install 0 · launch 0 · sample 0 · device act 0 · C-D26 HOLD.

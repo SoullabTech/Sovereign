@@ -861,3 +861,8 @@ No qualification change: MAC-COMPILE-02 PASS stands; the SID subject remains uni
 ### §10.66 — ENTRY witness DESIGNED, not opened · all five SID reinstall pins recorded (act 2 review pending) (2026-09-15; discriminator plan §18.46; implementation record §10.15–§10.16)
 
 The SID subject's compile qualification is complete and in custody; the instrument no longer refuses it structurally once act 2 is accepted, but FIRST-INSTALL-SID, the ENTRY witness and S-b each remain separately unauthorized. K00 obligations for the SID subject: CLOSED. ENTRY = K00-04 axis only.
+
+
+### §10.67 — ENTRY law ruled · FIRST-INSTALL-SID pin drafted, not opened (2026-09-15; discriminator plan §18.47; implementation record §10.17)
+
+The SID subject is identity-complete in the instrument and remains uninstalled, unlaunched, unsampled. K00 obligations for the SID subject: CLOSED; ENTRY = K00-04 axis only, law as ruled (27/30 floor). Nothing opens on this record.
