@@ -156,3 +156,186 @@ production              UNTOUCHED
 > Work context — the member's own words about her Work, her section headings, the
 > one passage she is presently at, and a continuity report that says plainly what
 > was measured and what was not — before any Work-anchored thread exists.
+
+---
+---
+
+# B3 — ADMIT AND PERSIST THE WORK · ⛔ HELD ON A CONSTITUTIONAL GUARD
+
+**Branch** `claude/ask-work-anchor-01-b3` · carries B1 and B2 on canonical
+`6336f10ab`. ⛔ No merge · ⛔ no deploy · ⛔ `section` still closed ·
+⛔ `StudioConversation` untouched · ⛔ no schema change.
+
+## B3.0 · RESULT
+
+```
+end-to-end witness       30 passed · 0 failed   real route · real spine · real DB
+ordering + boundary      10 passed · 0 failed   permanent suites
+mutants                  2 named, 2 dead        (and the first was a no-op — §B3.4)
+ship typecheck           0 regressions
+check:no-supabase        clean
+
+⛔ askRouteEffectFamily  RED — and it is RIGHT. §B3.5
+```
+
+## B3.1 · WHAT WAS BUILT
+
+```
+SUPPORTED_ANCHORS   + 'work'          ⛔ 'section' unchanged and still closed
+parseAnchor         case 'work'       ⛔ keys === 'on' — no section, no proposal
+workTurn(…)         the third lane, self-contained after the shared prologue
+body.sectionId      ⭐ an identifier, never a fact — the locus, read from the row
+```
+
+⭐ The lane is dispatched on the **anchor**, not on the absence of a reading:
+absence is what the structure lane refuses; `{ on: 'work' }` is what this lane
+requires. ⛔ A shape earns its branch — B2's lesson, one layer up from the prompt.
+
+**The ordering, which is the whole act:**
+
+```
+checkAnchor(work) → canonical baseline (503 before any write)
+  → buildWorkContext        ⭐⭐ the relationship is PROVEN USABLE
+  → not usable → refuse · 0 threads · 0 turns
+  → openThread              ⛔ the first durable write, and not before
+  → append the author's turn → askMaia(WorkContext) → append MAIA's turn
+```
+
+## B3.2 · THE WITNESS — 30/0, end to end
+
+```
+W1 FRESH        the Work anchor is ADMITTED · a relationship exists · both turns
+                persisted · ⭐ the thread's subject is {"on":"work"} · ⭐ its
+                reading is lawfully NULL · ⛔ the locus is NOT in the anchor
+
+W2 RELOAD       the conversation is server-held · continuing uses the SAME
+                relationship · ⛔ without opening a second one
+
+W3 TEN → NINE   ⭐⭐ same thread, different passage · still one relationship ·
+                ⛔ the thread's subject never moved
+
+W4 NO REPLAY    a planted `conversationHistory` entered ⛔ NO turn, and the
+                record grew only by the real exchange
+
+W5 B1'S DEBT    ⭐ admitted at the boundary, and still refused —
+                ⛔⛔ 0 threads · 0 turns
+
+W6 OWNERSHIP    another member's Work refused · nothing written anywhere
+
+W7/W8 CLOSED    `section` still refused at the boundary · a `work` anchor with an
+                extra key refused · neither wrote anything
+```
+
+⭐⭐ **W5 is B1's owed proof, discharged.** B1 recorded that
+`no_reading`-before-persistence was unreachable until widening. Widening made the
+equivalent case reachable — an admitted anchor whose context cannot be
+established — and it writes nothing.
+
+## B3.3 · ONE AMENDED INSTRUMENT, BY RULING
+
+`askHttpBoundary` asserted the boundary accepted exactly three kinds and refused
+`work`. ⛔ Right for its law; retired by founder act after `work` was proved in
+three ordered acts. ⭐ Amended with the surviving half asserted **harder**:
+`section`, `concern` and `proposal` are still refused, and the `work` shape is
+closed — `{ on: 'work', sectionId }` is refused, because the locus is context and
+never identity.
+
+## B3.4 · ⭐ FALSIFIED — and my first mutant was a no-op
+
+```
+MU-S  'section' admitted too                → the boundary obligations die
+MU-O  the Work lane opens and appends
+      BEFORE it proves the relationship     → the ordering obligation dies
+```
+
+⚠️ **The first MU-O was not a mutant at all.** It re-inserted the proof block
+immediately above `openThread` — i.e. it changed nothing — and the suite
+correctly stayed green. ⛔ A mutant that does not move the thing it claims to
+move proves the instrument against a machine identical to the real one. The
+faithful one places the proof **after** the author's turn is appended, and the
+obligation dies.
+
+⚠️ And two of my own B1 assertions had to be re-scoped: they counted `openThread`
+occurrences and spoke of *"the second"* one. B3 added a third lane between them,
+so they were asserting about **file order**, not about a lane. Sliced from each
+function's own declaration now.
+
+## B3.5 · ⛔⛔ THE BLOCKER — `askRouteEffectFamily` IS RED, AND IT IS RIGHT
+
+```
+lib/manuscript/sections/saveSection.ts mutates manuscript_draft_sections: true
+```
+
+The guard's law:
+
+> *"the developmental Ask route may write CONVERSATION and explicit records of
+> AUTHORITY and ACCOUNTABILITY. **It may never mutate the Work.** … The Work is
+> reachable from this route for READING only, and after this guard it still is."*
+
+⭐ **The path is two hops and unambiguous:**
+
+```
+app/api/sovereign/manuscripts/[id]/ask/route.ts
+  → lib/manuscript/ask/workContext.ts
+  → lib/manuscript/sections/saveSection.ts      ⛔ UPDATEs the Work
+```
+
+`workContext.ts` value-imports `splitStoredSection` — a **pure** function with no
+database — and that one import drags `saveSection` and
+`saveSectionInTransaction`, which mutate `manuscript_draft_sections` and
+`manuscript_working_drafts`, into the route's transitive value-import graph.
+
+⛔ **The route never calls them.** The guard is a static import-graph law
+precisely because *"it does not call it today"* is not a guarantee. ⚠️ Green at
+B2; red at B3; my change caused it.
+
+### ⛔ THE TWO CHEAP ANSWERS, REFUSED
+
+```
+widen the guard                 ⛔ "weakening a constitutional instrument so that
+                                   a new change can pass it is precisely the move
+                                   this lane exists to refuse" — its own words
+reimplement the projection      ⛔ a second implementation shifts offsets by the
+                                   heading prefix, silently, and only for headed
+                                   sections. EDITORIAL-LOCUS-ALIGNMENT-01 cost
+                                   this programme an act over exactly that
+use a dynamic import to dodge   ⛔⛔ evading a guard is worse than failing it
+   the graph walk
+```
+
+### ⭐ THE REPAIR, WITH ITS PRECEDENT — ⛔ NOT TAKEN
+
+`splitStoredSection` is **pure neutral Work law**: no database, no ontology,
+`(text, heading) → { headingPrefix, body }`. It sits inside a module whose other
+exports mutate the Work, and that is the whole of the problem.
+
+⭐ **This codebase has already ruled on this exact shape.** `lib/manuscript/exactText.ts`:
+
+> *"EXTRACTED 2026-09-14 ON A FOUNDER RULING… the mutation law was about to lose
+> its home along with an ontology it never belonged to… exact-text fit law ←
+> HERE. Neutral Work law."*
+
+So the repair is the same one: extract `splitStoredSection` to its own module,
+imported by `saveSection`, by the authorization seam, and by `workContext`.
+⛔ Not taken here — it changes the shape of a file B3 was not authorized to
+restructure, and the S3 precedent is that this move is a founder ruling, not a
+convenience.
+
+⚠️ **Until it is ruled, B3 stands complete and RED**: the behaviour is witnessed
+30/0, and one constitutional guard correctly refuses the import graph that
+behaviour arrived on.
+
+## B3.6 · STANDING
+
+```
+work anchor admitted        ✅   ⛔ section still closed, asserted twice
+Work lane                   ✅   proof before persistence · 30/0 end to end
+B1's owed proof             ✅   DISCHARGED at W5
+askHttpBoundary             ✅   amended by ruling, surviving half asserted harder
+typecheck                   ✅   0 regressions
+askRouteEffectFamily        ⛔   RED · RIGHT · ruling owed
+other suites                4 failed / 16 tests — the canonical set, unchanged
+
+merge                       ⛔ NOT AUTHORIZED
+production                  UNTOUCHED
+```

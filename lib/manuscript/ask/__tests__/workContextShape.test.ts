@@ -123,8 +123,9 @@ describe('the Work context is server-derived, and narrow', () => {
   });
 
   it('⛔ B2 widens no boundary and opens no thread', () => {
+    /* ⚠️ B3 widened this for `work`; the builder still opens nothing itself. */
     const list = ROUTE.match(/const SUPPORTED_ANCHORS = \[([^\]]*)\]/);
-    expect(list![1].replace(/['"\s]/g, '')).toBe('question,uncertainty,division');
+    expect(list![1].replace(/['"\s]/g, '').split(',')).not.toContain('section');
     expect(BUILDER).not.toContain('openThread');
     expect(BUILDER).not.toMatch(/\b(INSERT|UPDATE|DELETE)\b/i);
   });

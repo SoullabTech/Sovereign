@@ -45,6 +45,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { checkAnchor, type AskAnchor, type AnchorRefusal } from '@/lib/manuscript/ask/anchor';
+import { buildWorkContext } from '@/lib/manuscript/ask/workContext';
 import {
   loadFrozenReading, loadSectionHeads, measureNow, memberOwnsWork,
 } from '@/lib/manuscript/ask/frozenReading';
@@ -124,7 +125,13 @@ const MAX_QUESTION = 4000;
  * ⭐ The order is the law: ordering (B1) → a Work context (B2) → widening (B3).
  * ⛔ Nothing may be added to `SUPPORTED_ANCHORS` until B2 is witnessed.
  */
-const SUPPORTED_ANCHORS = ['question', 'uncertainty', 'division'] as const;
+/* ⭐⭐ ASK-WORK-ANCHOR-01 · B3 — `work` IS ADMITTED, AND ONLY `work`.
+   ⛔ `section` STAYS CLOSED. "Work support" is not permission to widen both
+   typed anchors: the room's ordinary conversation belongs to the WORK, and a
+   section-anchored thread would make scrolling a change of relationship. The
+   ruling is explicit, and this line is where someone would quietly disagree
+   with it. */
+const SUPPORTED_ANCHORS = ['question', 'uncertainty', 'division', 'work'] as const;
 
 function parseAnchor(v: unknown): AskAnchor | null {
   if (typeof v !== 'object' || v === null) return null;
@@ -136,6 +143,11 @@ function parseAnchor(v: unknown): AskAnchor | null {
   const n = (k: string) => Number.isInteger(o[k]) && (o[k] as number) >= 0;
 
   switch (o.on) {
+    /* ⛔ `on` AND NOTHING ELSE. A work anchor names no proposal, no section and
+       no index; a caller that sent one and was admitted would have been told its
+       extra key carried standing. */
+    case 'work':
+      return keys === 'on' ? { on: 'work' } : null;
     case 'division':
       return keys === 'on,proposalId,unitId' && s('proposalId') && s('unitId')
         ? { on: 'division', proposalId: o.proposalId as string, unitId: o.unitId as string } : null;
@@ -271,6 +283,13 @@ export async function POST(
       { status: 400 });
   }
 
+  /* ⭐ THE LOCUS IS AN IDENTIFIER, NEVER A FACT. The browser knows which passage
+     the writer is at; every word about it is read from the row by
+     `buildWorkContext`. ⛔ And it is not part of the anchor: moving from one
+     passage to another changes this and nothing else. */
+  const bodySectionId = typeof body.sectionId === 'string' && body.sectionId.length > 0
+    ? body.sectionId : null;
+
   const threadId = typeof body.threadId === 'string' ? body.threadId : null;
   const anchor = threadId ? null : parseAnyAnchor(body.anchor);
   if (!threadId && !anchor) {
@@ -355,6 +374,24 @@ export async function POST(
      would be a second authority on it. What remains at this line is exactly the
      case the boundary does not yet admit.
      ══════════════════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════════════════
+     ⭐⭐ ASK-WORK-ANCHOR-01 · B3 — THE WORK LANE.
+
+     A third lane, self-contained after the shared prologue exactly as the 07E
+     developmental lane is. ⛔ It reaches neither `loadFrozenReading` nor the
+     structure law below: a Work conversation HAS no frozen reading, and that is
+     lawful rather than missing.
+
+     ⭐ It is dispatched on the ANCHOR, not on the absence of a reading. Absence
+     is what the structure lane refuses; presence of `{ on: 'work' }` is what
+     this lane requires. ⛔ A shape must earn its branch — the B2 lesson, one
+     layer up from the prompt.
+     ══════════════════════════════════════════════════════════════════════════ */
+  if (check.anchor.on === 'work') {
+    return workTurn({ manuscriptId: id, memberId, anchor: check.anchor, existing,
+                      question, sectionId: bodySectionId });
+  }
+
   if (!reading) {
     return NextResponse.json({ refusal: 'no_reading' }, { status: 422 });
   }
@@ -454,6 +491,126 @@ export async function POST(
     question,
   );
 
+  if (!outcome.ok) {
+    /* The question is already recorded. A failed answer is reported as a
+       failure, never rendered as one of hers. */
+    return NextResponse.json({ threadId: liveThreadId, refusal: outcome.refusal, staleness },
+      { status: 502 });
+  }
+
+  await appendTurn({
+    threadId: liveThreadId, memberId, speaker: 'maia', body: outcome.answer,
+    staleness, answerProvenance: outcome.provenance,
+  });
+
+  const thread = await loadThread(liveThreadId, memberId);
+  return NextResponse.json({ threadId: liveThreadId, thread, staleness });
+}
+
+/**
+ * ⭐⭐ ASK-WORK-ANCHOR-01 · B3 — one author turn, one MAIA answer, about the WORK.
+ *
+ * ── THE ORDERING IS THE WHOLE ACT ──────────────────────────────────────────
+ *
+ *     checkAnchor(work)              already passed, above
+ *              ↓
+ *     canonical baseline             ⛔ 503 before any write, as everywhere
+ *              ↓
+ *     buildWorkContext               ⭐⭐ THE RELATIONSHIP IS PROVEN USABLE
+ *              ↓  not usable → refuse · 0 threads · 0 turns
+ *     openThread                     ⛔ the first durable write, and not before
+ *              ↓
+ *     append the author's turn
+ *              ↓
+ *     askMaia(WorkContext)
+ *              ↓
+ *     append MAIA's turn
+ *
+ * ⭐ Admission was never meant to mean *the anchor type is syntactically
+ * allowed*. It means the relationship has been proven capable of existing
+ * before durable evidence of it is created. B1 moved the refusal; B2 built the
+ * proof; this is where the two meet.
+ *
+ * ⛔ THE HISTORY IS THE SPINE'S. Prior turns come from `existing.turns` —
+ * `ask_turns`, append-only — and this route reads no caller-supplied transcript
+ * anywhere. The room's present conversation sends its own history back up as
+ * context; a Work-anchored conversation cannot, because there is nowhere to put
+ * one.
+ *
+ * ⭐ AND IDENTITY IS THE WORK. The locus is read fresh on every turn and is not
+ * stored on the thread, so a writer moving from Chapter 10 to Chapter 9
+ * continues the same conversation with different context in view. ⛔ The anchor
+ * carries no section, and the thread's identity is untouched by where she is.
+ */
+async function workTurn(input: {
+  manuscriptId: string;
+  memberId: string;
+  anchor: AskAnchor;
+  existing: Awaited<ReturnType<typeof loadThread>>;
+  question: string;
+  sectionId: string | null;
+}): Promise<NextResponse> {
+  const { manuscriptId, memberId, anchor, existing, question, sectionId } = input;
+
+  /* ⛔ NO FABRICATED BASELINE, the same law the structure lane holds: a thread
+     that cannot establish its BEFORE does not open. */
+  let canonicalNow: string | null = null;
+  try { canonicalNow = await canonicalFingerprint(manuscriptId); } catch { canonicalNow = null; }
+  if (!existing && canonicalNow === null) {
+    return NextResponse.json({ refusal: 'canonical_unmeasurable' }, { status: 503 });
+  }
+  const canonicalAtOpen = existing ? existing.canonicalAtOpen : canonicalNow!;
+
+  /* ⭐ No frozen reading, and `computeStaleness` already says the honest thing
+     about that: every reading dimension `unmeasured`, plus the one dimension
+     this system can actually measure. */
+  const staleness = computeStaleness({
+    frozen: null,
+    canonicalAtOpen,
+    now: { canonicalFingerprint: canonicalNow },
+    frozenProposalId: null,
+  });
+
+  /* ⚠️⚠️ TWO FACTS, AND THE SECOND IS AN ABSENCE. `canonicalMoved` digests
+     structure units, memberships and section topology with bodies emptied. ⛔ It
+     is not prose, and nothing here measures prose. */
+  const continuity = {
+    structure: staleness.canonicalMoved.state === 'changed' ? 'moved' as const
+      : staleness.canonicalMoved.state === 'unchanged' ? 'unchanged' as const
+        : 'unmeasured' as const,
+    prose: 'unmeasured' as const,
+  };
+
+  /* ⭐⭐ THE PROOF, BEFORE THE EVIDENCE. */
+  const built = await buildWorkContext({ manuscriptId, memberId, sectionId, continuity });
+  if (!built.ok) {
+    /* ⛔ Zero threads, zero turns. This is B1's law arriving at the case that
+       made it necessary — and the first case in which it is reachable at all. */
+    return NextResponse.json({ refusal: built.reason }, { status: 422 });
+  }
+
+  const liveThreadId = existing ? existing.id : await openThread({
+    manuscriptId, memberId, anchor,
+    /* ⛔ NULL, AND LAWFULLY SO. The column is nullable precisely for "a thread on
+       a Work with no reading". */
+    reading: null,
+    canonicalAtOpen,
+    initiatedBy: 'author',
+  });
+
+  const priorTurns = existing?.turns ?? [];
+  const retryingHeld = isHeldRetry(priorTurns, question);
+  if (!retryingHeld) {
+    await appendTurn({
+      threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
+    });
+  }
+
+  const outcome = await askMaia(
+    { kind: 'work', anchor, facts: built.facts, staleness },
+    historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question),
+    question,
+  );
   if (!outcome.ok) {
     /* The question is already recorded. A failed answer is reported as a
        failure, never rendered as one of hers. */

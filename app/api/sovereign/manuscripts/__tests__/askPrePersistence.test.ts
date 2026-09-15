@@ -53,8 +53,11 @@ describe('the readingless decision stands above every durable write', () => {
    * assertion that counts globally would pass or fail for reasons that have
    * nothing to do with either lane's order.
    */
-  it('⛔ each lane opens a thread exactly once, and there are two lanes', () => {
-    expect((code.match(/await openThread\(/g) ?? []).length).toBe(2);
+  it('⛔ each lane opens a thread exactly once, and there are three lanes', () => {
+    /* ⚠️ TWO AT B1, THREE AT B3 — the Work lane is the third. ⭐ The count is
+       kept rather than dropped: it is what makes "exactly once, per lane" a
+       claim about the file rather than about whichever slice a scanner picked. */
+    expect((code.match(/await openThread\(/g) ?? []).length).toBe(3);
   });
 
   /**
@@ -63,12 +66,20 @@ describe('the readingless decision stands above every durable write', () => {
    * no act claimed."* B1 does not invent the standard; it brings the structure
    * lane into line with the one the S3 lane already set.
    */
+  /**
+   * ⚠️ SCOPED TO THE FUNCTION, NOT TO "THE SECOND `openThread`". A first cut
+   * counted occurrences and broke the moment B3 added a third lane between
+   * them — it was asserting about file order, not about the developmental
+   * lane. ⭐ Sliced from the function's own declaration, it cannot be moved by
+   * anything landing above it.
+   */
   it('⭐ the developmental lane refuses before it opens, too', () => {
-    const second = code.indexOf('await openThread(', at('await openThread(') + 1);
-    expect(second).toBeGreaterThan(-1);
-    const orientation = at("refusal: 'section_orientation_unavailable'");
+    const lane = code.slice(code.indexOf('async function developmentalTurn'));
+    const open = lane.indexOf('await openThread(');
+    const orientation = lane.indexOf("refusal: 'section_orientation_unavailable'");
+    expect(open).toBeGreaterThan(-1);
     expect(orientation).toBeGreaterThan(-1);
-    expect(orientation).toBeLessThan(second);
+    expect(orientation).toBeLessThan(open);
   });
 
   it('⭐ the canonical baseline still refuses before any write', () => {
@@ -77,12 +88,41 @@ describe('the readingless decision stands above every durable write', () => {
     expect(unmeasurable).toBeLessThan(at('await openThread('));
   });
 
-  it('⛔ and the boundary is NOT widened by this act', () => {
+  /**
+   * ⚠️ AMENDED AT B3, BY FOUNDER RULING. B1 asserted the boundary was NOT widened,
+   * which was its own law and was right. B3 widened it for `work` alone.
+   *
+   * ⭐⭐ WHAT SURVIVES IS THE HALF THAT MATTERS MOST: `section` stays closed. It
+   * is easy for someone later to read "Work support" as permission to widen both
+   * typed anchors — and a section-anchored thread would make scrolling a change
+   * of relationship. This line is where that disagreement would be written.
+   */
+  it('⭐ the boundary admits `work`, and ⛔ `section` stays closed', () => {
     const list = code.match(/const SUPPORTED_ANCHORS = \[([^\]]*)\]/);
     expect(list).not.toBeNull();
-    const admitted = list![1].replace(/['"\s]/g, '');
-    expect(admitted).toBe('question,uncertainty,division');
-    expect(admitted).not.toContain('work');
+    const admitted = list![1].replace(/['"\s]/g, '').split(',');
+    expect(admitted.sort().join(',')).toBe('division,question,uncertainty,work');
     expect(admitted).not.toContain('section');
+    expect(admitted).not.toContain('concern');
+    /* ⭐ And the work anchor is parsed CLOSED — `on` and nothing else. */
+    expect(code).toMatch(/case 'work':[\s\S]{0,120}keys === 'on'/);
+  });
+
+  /**
+   * ⭐⭐ B1'S OWED PROOF, DISCHARGED AT B3. The Work lane establishes its context
+   * BEFORE it opens anything, so an admitted anchor whose relationship cannot be
+   * proven writes nothing. Held behaviourally by the B3 witness; held here so the
+   * ORDER cannot be quietly reversed later.
+   */
+  it('⭐⭐ the Work lane proves the relationship before it persists', () => {
+    const lane = code.slice(code.indexOf('async function workTurn'));
+    const proof = lane.indexOf('buildWorkContext(');
+    const refusal = lane.indexOf('built.ok');
+    const open = lane.indexOf('await openThread(');
+    const append = lane.indexOf('appendTurn(');
+    expect(proof).toBeGreaterThan(-1);
+    expect(refusal).toBeGreaterThan(proof);
+    expect(open).toBeGreaterThan(refusal);
+    expect(append).toBeGreaterThan(open);
   });
 });
