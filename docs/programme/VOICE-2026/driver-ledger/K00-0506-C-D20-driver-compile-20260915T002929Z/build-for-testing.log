@@ -1,0 +1,547 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project VoiceKernelDriver.xcodeproj -scheme DriverUITests -destination generic/platform=iOS -derivedDataPath /private/tmp/k0506-driver-compile-83a382a14-derived CODE_SIGNING_ALLOWED=NO
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'DriverUITests' in project 'VoiceKernelDriver'
+        ➜ Explicit dependency on target 'DriverHost' in project 'VoiceKernelDriver'
+    Target 'DriverHost' in project 'VoiceKernelDriver' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 04d99277fc5014d9156c25cf8503fdf3
+Build description path: /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/XCBuildData/04d99277fc5014d9156c25cf8503fdf3.xcbuilddata
+CreateBuildDirectory /tmp/k0506-driver-compile-83a382a14-derived/Build/Products
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/k0506-driver-compile-83a382a14-derived/Build/Products
+
+CreateBuildDirectory /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk /tmp/k0506-driver-compile-83a382a14-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -o /tmp/k0506-driver-compile-83a382a14-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+
+CreateBuildDirectory /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/VoiceKernelDriver-450d5ee07790ea55984dc2c5681c04c4-VFS-iphoneos/all-product-headers.yaml
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/VoiceKernelDriver-450d5ee07790ea55984dc2c5681c04c4-VFS-iphoneos/all-product-headers.yaml
+
+CreateBuildDirectory /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-non-framework-target-headers.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibPath-normal-arm64.txt (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibInstallName-normal-arm64.txt (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/ProductTypeInfoPlistAdditions.plist (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/ProductTypeInfoPlistAdditions.plist
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/empty-DriverUITests.plist (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/empty-DriverUITests.plist
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftConstValuesFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.LinkFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.LinkFileList
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyStaticMetadataFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyMetadataFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-non-framework-target-headers.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftConstValuesFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.LinkFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.LinkFileList
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyStaticMetadataFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyMetadataFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    write-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyMetadataFileList
+
+MkDir /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /bin/mkdir -p /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app
+
+MkDir /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /bin/mkdir -p /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest
+
+Ld /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/__preview.dylib normal (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -F/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -install_name @rpath/DriverHost.debug.dylib -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_dependency_info.dat -o /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/__preview.dylib
+
+ProcessInfoPlistFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/Info.plist /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/DriverHost/Info.plist (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-infoPlistUtility /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/DriverHost/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/Info.plist
+
+SwiftDriver DriverHost normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverHost -Onone -enforce-exclusivity\=checked @/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/k0506-driver-compile-83a382a14-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -F /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/k0506-driver-compile-83a382a14-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources-normal/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h -working-directory /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_AvailabilityInternal-7ZNWFY0V8EZ32G3YIHR65WKS3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_SwiftConcurrencyShims-C101NHV2K5CHR2VQ1335T7WNL.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_stdarg-7AC238BTJ4MQ6OFV9LVF5DOWT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/DeveloperToolsSupport-EG9R48G043AJ9NP3XOKOOB401.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_stddef-AR8MHCPRISU2V8OMQ4HH86RWQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/SwiftShims-79ZD3TG9DZEF7N4PXX1J10Y96.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/ptrauth-1YD6IFZVVCC5UF2GCGN72W4W7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_float-CEXJ9YIWWD035AVOQZDLBN7KV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_stdbool-5CGOKET2RNRO7ZHNG7EPHXXRC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/ptrcheck-983NL4SALGLTM698LULL85YIJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_DarwinFoundation1-BWVWQMQCP2W56YKU74PVQDD1Q.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_DarwinFoundation2-7OCLTH4SL64MR2MWJPF77KOAK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_limits-6RKIEL8P3DGKJ4SZCUM6YYCE6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_stdint-CV5MQ36TL8XTE39UQ4APU3OCR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_tgmath-CKLC3OK6SJ6X33B4O6UHLE56G.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/sys_types-4IFJ5MPF4VY8T92BN57MEQ0KM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_intrinsics-63B5BYEW2ZIAV1UIP5HX0FSHS.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_DarwinFoundation3-YWVWQS8BFCH3L26N94ZBB1TS.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_stdatomic-EXWWCZINDII9EQGFODH4HX35E.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/_Builtin_inttypes-3H9ADRAW8AHFYF5R6V0XD30UF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Darwin-4PMY0M4ZFW825F42NG3P9DI1Z.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/simd-21CKZYLNPI3EIB70UQE2QX6CK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/MachO-91IHV9LOSIMNF25J9RNOBMHEW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/ObjectiveC-CV53EI8YRST5TMTIWIO9Z6YUM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/os_object-CBK1CEDZISS1KRVQEXCVN9IEZ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/os_workgroup-5YOM4CJTE2ZKL75PF2GL0VSJ4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Dispatch-DSCJDHMNF5Y5M524PNZEL2II0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Spatial-2CUUS7ALOJEEOSL7P7JWWCZOB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/CoreFoundation-CSQM846IY31UNZEHEDJVCMHAN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/XPC-A6MLHJLFU2B4CB6X3BFNHXN67.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/os-1MURBK1APDEQTM0VZ3HK60SKD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/CoreGraphics-98ZZGD05DD4EVK5ABVXNXAB71.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Security-B9KZ4AG4J61FUZYACUZCXXXD8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/CFNetwork-CV1JTS7OXSV92U6501D1M0J9O.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Foundation-8NSKEKR66I0NLGZZF3YJ7U0F.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/CoreText-4IOK86P0TUE1Z48DWSA4RWIQ4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/ImageIO-B92P7M74O75BISGUG9AKOXLM4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Accessibility-MYL9Q8XFXOWSIZI4BY1USTN8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/IOSurface-DHZ693N55P608SKQKZ2UEVD80.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/CoreData-B08BJQ212HUS1SZUNV2S68511.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/UserNotifications-3YF536KQY1T8ZPVAX89Q0AHQX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/UIUtilities-82QG280Y7VX9BNX3E6P5YP7HT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/UniformTypeIdentifiers-8NDTKPL0N96CXUARDG42TV3P7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Symbols-AM5ND2FJJM5ATQ6DYI3G0RGYZ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/FileProvider-BXT4TW2V50GFJKXC5FLJU72E4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/CoreTransferable-BRT6XFR8WVMXZ3SHCCBCG1WY7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/OSLog-A2JHM42MEGULQPR40EOR3QQ44.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/DataDetection-BQYJQWDY50YG0C0G1RHZU1CXZ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Metal-3NZBQB8K7N3GKJI0CXXVSF9DU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/OpenGLES-CU5RWCD756KR1ZAF2H30MJ0RQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/CoreVideo-E3FY1TYGTM7WM9R6COYXGAT06.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/QuartzCore-BNH4KEMK871868YANQ1MS1BCX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/CoreImage-7E35NM09I6E3D44AAI5A6ZC1B.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/SwiftUICore-5SLZOMEZECVRMI8XE8KGHU7U3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/UIKit-BNSS0WK9DUX5K9TOE50X20OJC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/SwiftUI-94CPP79JZEKFMDZPGJK7YJSOB.pcm
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ DriverHost (in target 'DriverHost' from project 'VoiceKernelDriver')
+
+SwiftCompile normal arm64 /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/DriverHost/DriverHostApp.swift (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    
+
+SwiftCompile normal arm64 Compiling\ DriverHostApp.swift /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/DriverHost/DriverHostApp.swift (in target 'DriverHost' from project 'VoiceKernelDriver')
+SwiftCompile normal arm64 /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/DriverHost/DriverHostApp.swift (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for DriverHost (in target 'DriverHost' from project 'VoiceKernelDriver')
+
+SwiftDriver\ Compilation\ Requirements DriverHost normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverHost -Onone -enforce-exclusivity\=checked @/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/k0506-driver-compile-83a382a14-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -F /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/k0506-driver-compile-83a382a14-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources-normal/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h -working-directory /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/DriverHost-Swift.h /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-swiftHeaderTool -arch arm64 /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h -o /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/DriverHost-Swift.h
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.abi.json /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.abi.json (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.abi.json /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.swiftmodule /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.swiftdoc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftdoc (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftdoc /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftsourceinfo (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftsourceinfo /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftDriver DriverUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverUITests -Onone -enforce-exclusivity\=checked @/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/k0506-driver-compile-83a382a14-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/k0506-driver-compile-83a382a14-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h -working-directory /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCUIAutomation-DXRLILTLQ0VMWTD8J69PA4EG0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCTest-10A7QBZLFNO9I28OAYQRCSBSI.pcm
+
+SwiftExplicitDependencyCompileModuleFromInterface arm64 /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCUIAutomation-2957N6W25JJ33.swiftmodule
+
+SwiftExplicitDependencyCompileModuleFromInterface arm64 /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCTest-GUUHIBDBY778.swiftmodule
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ DriverUITests (in target 'DriverUITests' from project 'VoiceKernelDriver')
+
+SwiftCompile normal arm64 /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    
+
+SwiftCompile normal arm64 Compiling\ K00DriverTests.swift /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift (in target 'DriverUITests' from project 'VoiceKernelDriver')
+
+SwiftCompile normal arm64 /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for DriverUITests (in target 'DriverUITests' from project 'VoiceKernelDriver')
+
+SwiftDriver\ Compilation\ Requirements DriverUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverUITests -Onone -enforce-exclusivity\=checked @/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/k0506-driver-compile-83a382a14-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/k0506-driver-compile-83a382a14-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h -working-directory /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/DriverUITests-Swift.h /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-swiftHeaderTool -arch arm64 /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h -o /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/DriverUITests-Swift.h
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.swiftdoc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftdoc (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftdoc /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.swiftmodule /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.abi.json /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.abi.json (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.abi.json /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftsourceinfo (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftsourceinfo /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling K00DriverTests.swift (in target 'DriverUITests' from project 'VoiceKernelDriver')
+
+SwiftDriver\ Compilation DriverUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverUITests -Onone -enforce-exclusivity\=checked @/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/k0506-driver-compile-83a382a14-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/k0506-driver-compile-83a382a14-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h -working-directory /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling DriverHostApp.swift (in target 'DriverHost' from project 'VoiceKernelDriver')
+
+SwiftDriver\ Compilation DriverHost normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverHost -Onone -enforce-exclusivity\=checked @/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/k0506-driver-compile-83a382a14-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -F /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/k0506-driver-compile-83a382a14-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/k0506-driver-compile-83a382a14-derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources-normal/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/arm64 -Xcc -I/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h -working-directory /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib normal (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -F/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -filelist /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.LinkFileList -install_name @rpath/DriverHost.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule @/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-linker-args.resp -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-ExecutorLinkFileList-normal-arm64.txt (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    construct-stub-executor-link-file-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'DriverHost' from project 'VoiceKernelDriver')
+
+Ld /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost normal (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -F/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-ExecutorLinkFileList-normal-arm64.txt /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib -o /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost
+
+CopySwiftLibs /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib --scan-folder /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/Frameworks --scan-folder /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/PlugIns --scan-folder /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/SystemExtensions --scan-folder /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/Extensions --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name DriverHost --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 16.0 --bundle-identifier life.soullab.voicekernel.driverhost --output /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app --target-triple arm64-apple-ios16.0 --binary-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost --dependency-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_dependency_info.dat --stringsdata-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList --metadata-file-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyMetadataFileList --static-metadata-file-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-09-14 20:28:41.748 appintentsmetadataprocessor[86869:30192251] Starting appintentsmetadataprocessor export
+2026-09-14 20:28:41.749 appintentsmetadataprocessor[86869:30192251] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+AppIntentsSSUTraining (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/Info.plist --temp-dir-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/ssu --bundle-id life.soullab.voicekernel.driverhost --product-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app --extracted-metadata-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app/Metadata.appintents --metadata-file-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyMetadataFileList --archive-ssu-assets
+2026-09-14 20:28:41.765 appintentsnltrainingprocessor[86870:30192253] Parsing options for appintentsnltrainingprocessor
+2026-09-14 20:28:41.765 appintentsnltrainingprocessor[86870:30192253] No AppShortcuts found - Skipping.
+
+RegisterExecutionPolicyException /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-RegisterExecutionPolicyException /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app
+
+Validate /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-validationUtility /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /usr/bin/touch -c /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverHost.app
+
+ProcessInfoPlistFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Info.plist /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/empty-DriverUITests.plist (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-infoPlistUtility /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/empty-DriverUITests.plist -producttype com.apple.product-type.bundle.ui-testing -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/ProductTypeInfoPlistAdditions.plist -requiredArchitecture arm64 -o /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Info.plist
+
+Ld /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests normal (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -bundle -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -L/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -filelist /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path/Frameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule @/tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-linker-args.resp -Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport -o /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests
+
+CopySwiftLibs /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests --scan-folder /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Frameworks --scan-folder /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/PlugIns --scan-folder /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/SystemExtensions --scan-folder /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Extensions --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name DriverUITests --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 16.0 --bundle-identifier life.soullab.voicekernel.driver.xctest --output /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest --target-triple arm64-apple-ios16.0 --binary-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests --dependency-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_dependency_info.dat --stringsdata-file /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList --metadata-file-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyMetadataFileList --static-metadata-file-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-09-14 20:28:41.899 appintentsmetadataprocessor[86874:30192276] Starting appintentsmetadataprocessor export
+2026-09-14 20:28:41.900 appintentsmetadataprocessor[86874:30192276] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+GenerateDSYMFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest.dSYM /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests -o /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest.dSYM
+
+AppIntentsSSUTraining (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Info.plist --temp-dir-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/ssu --bundle-id life.soullab.voicekernel.driver.xctest --product-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest --extracted-metadata-path /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Metadata.appintents --metadata-file-list /tmp/k0506-driver-compile-83a382a14-derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyMetadataFileList --archive-ssu-assets
+2026-09-14 20:28:41.911 appintentsnltrainingprocessor[86876:30192278] Parsing options for appintentsnltrainingprocessor
+2026-09-14 20:28:41.912 appintentsnltrainingprocessor[86876:30192278] No AppShortcuts found - Skipping.
+
+CopyPlistFile /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Info.plist /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/Info.plist (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copyPlist --validate --convert xml1 --macro-expansion WRAPPEDPRODUCTNAME DriverUITests-Runner --macro-expansion WRAPPEDPRODUCTBUNDLEIDENTIFIER life.soullab.voicekernel.driver.xctest.xctrunner --macro-expansion TESTPRODUCTNAME DriverUITests --macro-expansion TESTPRODUCTBUNDLEIDENTIFIER life.soullab.voicekernel.driver.xctest --copy-value UIDeviceFamily /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Info.plist --outdir /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app -- /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/Info.plist
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PkgInfo /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/PkgInfo (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/PkgInfo /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app
+
+CopyAndPreserveArchs /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/DriverUITests-Runner (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/XCTRunner -output /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/DriverUITests-Runner -extract arm64
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUIAutomation.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCUIAutomation.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCUIAutomation.framework /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/libXCTestSwiftSupport.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUnit.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCUnit.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCUnit.framework /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestCore.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTestCore.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTestCore.framework /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTest.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+MkDir /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /bin/mkdir -p /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTAutomationSupport.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTAutomationSupport.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTAutomationSupport.framework /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestSupport.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTestSupport.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTestSupport.framework /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/Testing.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/Testing.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/Testing.framework /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+RegisterExecutionPolicyException /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    builtin-RegisterExecutionPolicyException /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest
+
+Touch /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/k0506-driver-compile-83a382a14/ios/VoiceKernelDriver
+    /usr/bin/touch -c /tmp/k0506-driver-compile-83a382a14-derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest
+
+** TEST BUILD SUCCEEDED **
+
