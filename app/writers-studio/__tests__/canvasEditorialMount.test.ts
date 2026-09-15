@@ -180,6 +180,98 @@ describe('false is the existing room, not a degraded one', () => {
   });
 });
 
+describe('WS-EDITORIAL-UI-02 — the writer answers in wording', () => {
+  const SEAM = 'lib/manuscript/editorialRuntime/memberVersion.ts';
+  const ROUTE = 'app/api/writers-studio/editorial/version/route.ts';
+
+  it('⭐⭐ writes NO ask_turn for a formulation', () => {
+    /* member discourse   → ask_turn
+       member Direction   → ask_turn + Direction + binding
+       member formulation → ProposalVersion, and nothing else.
+       Manufacturing a turn so every version carries a binding would invent
+       something the writer never said. */
+    const seam = strip(read(SEAM));
+    expect(seam).not.toMatch(/ask_turns/);
+    expect(seam).not.toMatch(/appendTurn|editorial_turn_bindings/);
+  });
+
+  it('⛔ takes no chain and no author from the caller', () => {
+    const seam = strip(read(SEAM));
+    /* The chain is derived from the OWNED thread, in the SQL. */
+    expect(seam).toMatch(/FROM ask_threads WHERE id = \$1 AND member_id = \$2/);
+    expect(seam).toMatch(/author: 'member'/);
+    expect(seam).not.toMatch(/input\.author|input\.chainId/);
+  });
+
+  it('⭐⭐ carries `supersedes` across the boundary without resolving it', () => {
+    /* `appendAuthoredVersion`'s own merge blocker: lock acquisition must not
+       invent history. A seam that resolved a stale predecessor for the writer
+       would reintroduce that one layer up. */
+    const seam = strip(read(SEAM));
+    expect(seam).toMatch(/supersedes: input\.supersedes/);
+    expect(seam).not.toMatch(/headVersionId|readProposalWork|lineage/);
+  });
+
+  it('⛔ never truthiness-checks the wording — `\'\'` is a lawful formulation', () => {
+    const route = strip(read(ROUTE));
+    expect(route).toMatch(/typeof b\.replacementText !== 'string'/);
+    expect(route).not.toMatch(/!b\.replacementText|b\.replacementText\.length === 0/);
+    expect(route).not.toMatch(/replacementText\.trim\(\)/);
+  });
+
+  it('⛔ the composer target is STATE FROM A CLICK, never derived from the head', () => {
+    /* The load-bearing UI law. If a newer version lands mid-draft, the lineage
+       head moves and the target does not — so the submission carries the
+       predecessor they answered and is truthfully refused. */
+    const panel = strip(read(PANEL));
+    expect(panel).toMatch(/useState<ComposerTarget \| null>\(null\)/);
+    expect(panel).toMatch(/supersedes: composerTarget\.versionId/);
+    expect(panel).not.toMatch(/supersedes:\s*view[?.]*\.headVersionId/);
+  });
+
+  it('⛔ never prefills "Your version" with the target wording', () => {
+    const panel = strip(read(PANEL));
+    /* Every setter for the composer field sets it empty or to what the writer
+       typed. Authoring identical text is lawful; manufacturing it is not. */
+    const sets = panel.match(/setWording\([^)]*\)/g) ?? [];
+    expect(sets.length).toBeGreaterThan(0);
+    for (const call of sets) {
+      expect(call).toMatch(/setWording\(''\)|setWording\(e\.target\.value\)/);
+    }
+  });
+
+  it('⛔ neither retries nor rebases on refusal, and keeps the draft', () => {
+    const panel = strip(read(PANEL));
+    const submit = panel.slice(panel.indexOf('const addMyVersion'),
+                               panel.indexOf('return ('));
+    /* On the refusal path: no setWording, no setComposerTarget. Both appear
+       only in the 201 branch and in the writer's own gestures. */
+    /* ⚠️ THE ANCHOR MATTERS. A first version sliced from the first
+       `setWordingRefusal(` — which is the `(null)` reset at the TOP of submit —
+       so the "refusal branch" it scanned contained the whole success branch and
+       failed on the success branch's own `setWording('')`. The refusal path is
+       everything after the 201 early return. */
+    const refusalBranch = submit.slice(submit.indexOf('const body = await res.json()'));
+    expect(refusalBranch).not.toMatch(/setWording\(/);
+    expect(refusalBranch).not.toMatch(/setComposerTarget\(/);
+    /* And the lineage IS re-read, so they can see what moved. */
+    expect(refusalBranch).toMatch(/reload\(threadId\)/);
+  });
+
+  it('⛔ splices nothing into the lineage — the screen agrees with storage', () => {
+    const panel = strip(read(PANEL));
+    expect(panel).not.toMatch(/setView\(\s*\{[\s\S]{0,200}versions/);
+    expect(panel).toMatch(/if \(res\.status === 201\) \{[\s\S]{0,200}reload\(threadId\)/);
+  });
+
+  it('⛔ offers no adoption, and says so', () => {
+    const panel = strip(read(PANEL));
+    expect(panel).toContain('Nothing changes until you explicitly adopt a version.');
+    expect(panel).not.toMatch(/\bAdopt\b(?!\sa version)/);
+    expect(panel).not.toMatch(/Keep Original|Revise/);
+  });
+});
+
 describe('the room source is where its scanners look', () => {
   /* ⚠️ THE SPLIT'S OWN HAZARD, CLOSED. Four suites read the Canvas room as
      TEXT. Moving the room to CanvasClient.tsx left them pointed at a

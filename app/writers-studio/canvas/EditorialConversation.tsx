@@ -47,11 +47,61 @@ interface ThreadTurn {
   at: string;
   adjunct: Adjunct;
 }
+/**
+ * ⭐ One formulation in the authored succession.
+ *
+ * ⛔ NOT A TURN. `turns` is conversation order; `versions` is authored
+ * succession, and a version written in the composer has no turn at all. ⛔ The
+ * two are never merged into one timestamped feed.
+ */
+interface ThreadVersion {
+  id: string;
+  author: 'maia' | 'member';
+  wording: string;
+  supersedes: string | null;
+  rationale: string | null;
+}
 interface ThreadView {
   threadId: string;
   chainId: string;
   locusText: string;
   turns: ThreadTurn[];
+  versions: ThreadVersion[];
+  headVersionId: string | null;
+}
+
+/**
+ * ⭐⭐ WHAT THE WRITER CLICKED — frozen at the click and held until they are
+ * done. ⛔ NEVER DERIVED FROM `headVersionId`.
+ *
+ * This is the load-bearing law of the cut. If a newer version lands while they
+ * are writing, the lineage head moves and THIS DOES NOT. Their submission then
+ * carries the predecessor they actually answered, and the store truthfully
+ * refuses it as `not_successor_of_head`. ⛔ No retarget, ⛔ no retry, ⛔ no
+ * rebase, ⛔ no cleared draft: the machine's timing may judge their
+ * relationship stale, but it may not rewrite which wording they answered.
+ */
+interface ComposerTarget {
+  versionId: string;
+  author: 'maia' | 'member';
+  ordinal: number;
+}
+
+const authorLabel = (a: 'maia' | 'member') => (a === 'maia' ? 'MAIA' : 'Your version');
+
+/** Plain, and never reassuring: the exchange really did move. */
+function refusalCopy(reason: string): string {
+  switch (reason) {
+    case 'not_successor_of_head':
+      return 'A newer version was added while you were writing, so this no longer '
+        + 'follows the version you answered. Your words are kept below.';
+    case 'simultaneous_append':
+      return 'Another version landed at the same moment. Your words are kept below.';
+    case 'version_exists':
+      return 'That version already exists. Your words are kept below.';
+    default:
+      return 'This version could not be added. Your words are kept below.';
+  }
 }
 
 export interface EditorialConversationProps {
@@ -78,6 +128,11 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
   const [actKind, setActKind] = useState<'discourse' | 'direction'>('discourse');
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  /* ⭐⭐ CREATED BY THE WRITER'S CLICK, and nothing else may set it. */
+  const [composerTarget, setComposerTarget] = useState<ComposerTarget | null>(null);
+  const [wording, setWording] = useState('');
+  const [wordingBusy, setWordingBusy] = useState(false);
+  const [wordingRefusal, setWordingRefusal] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   /* ⭐ THE ONLY SOURCE OF WHAT IS SHOWN. */
@@ -114,6 +169,39 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
       setFailure('Your words may be saved. MAIA could not answer this time.');
       await reload(threadId);
     } finally { setBusy(false); }
+  };
+
+  /* ⭐ THE WRITER'S OWN FORMULATION. */
+  const addMyVersion = async () => {
+    if (!composerTarget || wordingBusy) return;
+    setWordingBusy(true); setWordingRefusal(null);
+    try {
+      const res = await apiFetch('/api/writers-studio/editorial/version', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        /* ⛔ `supersedes` IS THE FROZEN TARGET, carried exactly. ⛔ Not
+           `view.headVersionId`, which may have moved while they wrote. */
+        body: JSON.stringify({
+          threadId,
+          supersedes: composerTarget.versionId,
+          replacementText: wording,
+        }),
+      });
+      if (res.status === 201) {
+        /* ⭐ THE SCREEN AGREES WITH STORAGE. ⛔ The submitted text is never
+           spliced into the visible lineage — it is re-read from the server. */
+        await reload(threadId);
+        setComposerTarget(null); setWording('');
+        return;
+      }
+      const body = await res.json().catch(() => null);
+      setWordingRefusal(typeof body?.error === 'string' ? body.error : 'unknown');
+      /* ⭐ Re-read so they can SEE what moved — ⛔ while their draft and their
+         frozen target both survive it. */
+      await reload(threadId);
+    } catch {
+      setWordingRefusal('unknown');
+    } finally { setWordingBusy(false); }
   };
 
   return (
@@ -187,6 +275,102 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
         {failure && <StudioText role="panelLabel" style={{ color: INK.muted }}>{failure}</StudioText>}
         <div ref={endRef} />
       </div>
+
+      {/* ══ THE AUTHORED SUCCESSION ═══════════════════════════════════════
+          ⛔ NOT THE TRANSCRIPT. This is wording, in the order it supersedes —
+          the chain's own validated lineage, read from the server. */}
+      {view && view.versions.length > 0 && (
+        <section aria-label="Wording in this exchange"
+          style={{ borderTop: `1px solid ${RULE.soft}`, paddingTop: SPACE.base,
+                   display: 'flex', flexDirection: 'column', gap: SPACE.snug }}>
+          <StudioText role="panelLabel" style={{ color: INK.muted }}>
+            Wording in this exchange
+          </StudioText>
+          {view.versions.map((v, i) => (
+            <div key={v.id} data-version={v.id} data-version-author={v.author}
+              style={{ display: 'flex', flexDirection: 'column', gap: SPACE.hairline }}>
+              <StudioText role="panelLabel"
+                style={{ color: v.author === 'maia' ? MAIA_ACCENT.voice : INK.muted }}>
+                {`${authorLabel(v.author)} · Version ${i + 1}`}
+              </StudioText>
+              <StudioText role="maiaReading" style={{ whiteSpace: 'pre-wrap' }}>{v.wording}</StudioText>
+              {/* ⭐⭐ THE PREDECESSOR IS CHOSEN EXPLICITLY, on a particular
+                  version. ⛔ The composer never opens against "the latest". */}
+              <button type="button"
+                onClick={() => {
+                  setComposerTarget({ versionId: v.id, author: v.author, ordinal: i + 1 });
+                  /* ⛔ AND THE FIELD STARTS EMPTY. Never prefilled with the
+                     target's wording: authoring identical text is lawful, but
+                     the system must not manufacture that authorship. */
+                  setWording(''); setWordingRefusal(null);
+                }}
+                style={{ ...typeStyle('panelLabel'), alignSelf: 'flex-start', marginTop: SPACE.tight,
+                         background: 'none', border: `1px solid ${RULE.soft}`,
+                         borderRadius: RADIUS.sm, padding: `${SPACE.tight}px ${SPACE.snug}px`,
+                         color: INK.secondary, cursor: 'pointer' }}>
+                Write my version from this
+              </button>
+            </div>
+          ))}
+          {/* ⭐ THE STANDING SENTENCE. ⛔ No Keep / Revise / Adopt controls in
+              this cut — the writer may answer in wording, and nothing more. */}
+          <StudioText role="metadata" style={{ color: INK.quiet }}>
+            Nothing changes until you explicitly adopt a version.
+          </StudioText>
+        </section>
+      )}
+
+      {/* ══ YOUR VERSION ══════════════════════════════════════════════════ */}
+      {composerTarget && (
+        <section aria-label="Your version"
+          style={{ borderTop: `1px solid ${RULE.soft}`, paddingTop: SPACE.base,
+                   display: 'flex', flexDirection: 'column', gap: SPACE.snug }}>
+          <StudioText role="panelLabel">Your version</StudioText>
+          {/* ⭐ The label says what the act IS. That is the whole protection:
+              there is no classifier guessing whether a sentence "sounds like" a
+              question, because a guess would refuse real prose. */}
+          <StudioText role="metadata" style={{ color: INK.muted }}>
+            Write the wording you would put in the manuscript.
+          </StudioText>
+          <textarea
+            value={wording}
+            onChange={(e) => setWording(e.target.value)}
+            rows={4}
+            spellCheck
+            aria-label="Write your version of this passage"
+            style={{
+              ...typeStyle('maiaReading'), width: '100%', resize: 'vertical',
+              background: GROUND.base, color: INK.primary,
+              border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+              padding: SPACE.snug, outline: 'none',
+            }}
+          />
+          {/* ⭐ The relationship is STATED before submission, not discovered
+              after — and it names the frozen target, never the head. */}
+          <StudioText role="metadata" style={{ color: INK.muted }} data-composer-target={composerTarget.versionId}>
+            {`Your version follows: ${authorLabel(composerTarget.author)} · Version ${composerTarget.ordinal}`}
+          </StudioText>
+          {wordingRefusal !== null && (
+            <StudioText role="metadata" style={{ color: INK.secondary }}>
+              {refusalCopy(wordingRefusal)}
+            </StudioText>
+          )}
+          <div style={{ display: 'flex', gap: SPACE.snug }}>
+            <button type="button" onClick={() => void addMyVersion()} disabled={wordingBusy}
+              style={{ ...typeStyle('panelLabel'), background: 'none',
+                       border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+                       padding: `${SPACE.tight}px ${SPACE.snug}px`, color: INK.primary, cursor: 'pointer' }}>
+              Add my version
+            </button>
+            <button type="button"
+              onClick={() => { setComposerTarget(null); setWording(''); setWordingRefusal(null); }}
+              style={{ ...typeStyle('panelLabel'), background: 'none', border: 'none',
+                       color: INK.muted, cursor: 'pointer' }}>
+              Cancel
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* ── Composer. Text only; no microphone exists on this surface. ── */}
       <div style={{ borderTop: `1px solid ${RULE.soft}`, paddingTop: SPACE.base }}>

@@ -53,7 +53,8 @@ choosing a passage on the writer's behalf.
 
 ## 3 · The witness — a real browser, 30 passed · 0 failed
 
-`scripts/witness/ui-01a-mount-witness.ts` — Chromium via Playwright against a
+`scripts/witness/ui-01a-mount-witness.ts` (renamed to
+`ui-editorial-surface-witness.ts` at UI-02, when it grew the composer legs) — Chromium via Playwright against a
 disposable cluster, a real `maia_session` cookie, provider substituted at the
 wire only.
 

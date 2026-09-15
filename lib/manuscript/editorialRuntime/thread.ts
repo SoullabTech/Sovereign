@@ -21,6 +21,8 @@
 
 import { query, transaction } from '@/lib/db/postgres';
 import { openChainWithExecutor } from '../proposalChain/store';
+import { readProposalWork } from '../proposalChain/proposalWork';
+import type { VersionAuthor } from '../proposalChain/contract';
 import type { VerifiedIdentity } from './turn';
 
 export interface OpenEditorialInput {
@@ -120,15 +122,47 @@ export interface EditorialThreadTurn {
     | { readonly kind: 'version'; readonly id: string; readonly wording: string; readonly supersedes: string | null };
 }
 
+/**
+ * ⭐ One formulation in the authored succession.
+ *
+ * ⛔ THIS IS NOT A TURN, and the two are deliberately different structures:
+ *
+ *     turns      conversation order
+ *     versions   authored succession
+ *
+ * ⛔ They are never merged into one timestamped feed. A version authored in the
+ * composer has no turn at all, and a chronological merge would have to invent a
+ * position for it among things that were said.
+ */
+export interface EditorialThreadVersion {
+  readonly id: string;
+  readonly author: VersionAuthor;
+  readonly wording: string;
+  readonly supersedes: string | null;
+  readonly rationale: string | null;
+}
+
 export interface EditorialThreadView {
   readonly threadId: string;
   readonly chainId: string;
   /** ⭐ The writer's own wording at the locus, as the chain froze it. */
   readonly locusText: string;
   readonly turns: readonly EditorialThreadTurn[];
+  /**
+   * ⭐⭐ THE COMPLETE STRUCTURAL LINEAGE, in succession order.
+   *
+   * ⚠️ UI-01 exposed versions ONLY through turn bindings, so a formulation
+   * authored in a composer — which lawfully has no turn — would have been
+   * DURABLE AND INVISIBLE. ⛔ The repair is not chronology: it is the chain's
+   * own validated succession, read through `readProposalWork`, which already
+   * owns read → validateChain → lineage. ⛔ No second ordering algorithm.
+   */
+  readonly versions: readonly EditorialThreadVersion[];
+  /** ⭐ The head of that succession, or `null` when nothing is authored yet. */
+  readonly headVersionId: string | null;
 }
 
-export type ReadEditorialRefusal = 'thread_not_found' | 'not_editorial';
+export type ReadEditorialRefusal = 'thread_not_found' | 'not_editorial' | 'chain_unreadable';
 
 export type ReadEditorialResult =
   | { readonly ok: true; readonly view: EditorialThreadView }
@@ -184,8 +218,29 @@ export async function readEditorialThread(
         : null,
   }));
 
+  /* ⭐ THE SUCCESSION, FROM THE READ THAT ALREADY VALIDATES IT. A corrupt chain
+     REFUSES here exactly as it refuses there — ⛔ a view that quietly worked
+     around broken succession would show the writer a history nobody authored. */
+  const work = await readProposalWork(memberId, chainId);
+  if (!work.ok) return { ok: false, reason: 'chain_unreadable' };
+  const versions: EditorialThreadVersion[] = work.work.versions.map((v) => ({
+    id: v.id,
+    author: v.author,
+    wording: v.replacementText,
+    supersedes: v.supersedes,
+    rationale: v.rationale ?? null,
+  }));
+
   return {
     ok: true,
-    view: { threadId, chainId, locusText: t.rows[0]!.expected_text ?? '', turns },
+    view: {
+      threadId, chainId,
+      locusText: t.rows[0]!.expected_text ?? '',
+      turns,
+      versions,
+      /* ⛔ Read off the LINEAGE, never off `versions[length-1]` of an unordered
+         read — `readProposalWork` returns them in succession order. */
+      headVersionId: versions.length ? versions[versions.length - 1]!.id : null,
+    },
   };
 }
