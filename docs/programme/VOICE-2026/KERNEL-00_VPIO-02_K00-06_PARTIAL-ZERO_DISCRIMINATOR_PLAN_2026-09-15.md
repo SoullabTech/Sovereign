@@ -1248,3 +1248,50 @@ B06Ultra connected (A2DP) at the before-read, not default. The before value 65 i
 - **Drift exposure remains** (§18.4 candidate mechanism, §18.6 slider, the 65 before this act): the prepared state is a scalar on a shared desktop. The conduct rule stands — the next witness should follow restoration closely, with the Sound pane closed, and the preflight refuses on any drift.
 
 **Standing after §18.8:** `S2-VOLUME-DRIFT-01` CLOSED · candidate mechanism · `S2-VOLUME-RESTORE-01` STOP · spent · **`S2-VOLUME-RESTORE-02` PASS · spent · 69 RESTORED at 14:05:42Z** · target 69 exact · `b198e2e37` unchanged, reusable if the batch is byte-unchanged · **`S2-WITNESS-02` NOT ISSUED (its own founder authority; the §16 shape is the natural template — one invocation, N=1, Blocks A–D, §16.4 law)** · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+### 18.9 FOUNDER RULING (2026-09-15) — **`S2-WITNESS-02` ISSUED** (one act; unchanged `b198e2e37`; §16 Blocks A–D; N=1; §16.4 law unchanged) · conduct rule PART OF THIS AUTHORITY (Block C by **14:35:42Z**, Sound pane closed, volume and device untouched, fresh Step 0 immediately before Block C) · volume LEFT EXACTLY ALONE
+
+#### 18.9.1 Authority (founder, substance preserved verbatim)
+
+`S2-WITNESS-02` authorizes exactly one real-Mac orchestration witness of unchanged `b198e2e37`, using the already-pinned §16 Blocks A–D, exactly one N=1 invocation, and the unchanged §16.4 PASS/STOP law. Playback is authorized only as an instrument of this witness. The phone journal, if produced, is orchestration evidence only and never an S2 population row. Any STOP or witness failure spends this authority; no repair, correction, or rerun occurs under it. Nothing about the implementation changes; `b198e2e37` remains the subject.
+
+Conduct rule, part of this authority but separate from the §16.4 acceptance law: RESTORE-02 after-read 14:05:42Z · volume 69 → **Block C freshness window ≤ 30 min from that read → Block C must begin by 14:35:42Z** · Sound pane CLOSED · volume UNTOUCHED · device UNTOUCHED · a fresh read-only Step 0 (`pgrep -fl "System Settings|Sound.appex" ; echo "[pgrep rc=$?]"` → no process line and `[pgrep rc=1]`) REQUIRED immediately before Block C; it does not replace the batch preflight, which still proves device · transport · volume 69 · mute · fixture · player pin immediately before playback. **If the window is missed: do not hurry or manipulate the machine; the issuance is LAPSED / UNSPENT; return for a fresh ruling.** Until the witness runs or lapses: no volume keys · no slider · no Sound pane · no output-device selection · no test sound · no scripted volume action. The current 69 is a reading at a time; the batch decides whether it persisted.
+
+#### 18.9.2 Execution pin — the §16.7 transport with exactly three literal substitutions (the blocks themselves are otherwise byte-identical to `17b4df63b`)
+
+The §16.3 blocks name the first witness in three places that must not collide with the spent act: the run label `S2-WITNESS-01` (batch run name, preflight dir, ledger dir, return commit), the transcript file `s2-witness-01-transcript.txt`, and the worktree path `/private/tmp/k0506-s2w-b198e2e37` (Block A STOPs on a pre-existing path, and it pre-exists from §17). Extract exactly as §16.7, then apply exactly these three substitutions and prove by diff that nothing else moved:
+
+```bash
+DOC=docs/programme/VOICE-2026/KERNEL-00_VPIO-02_K00-06_PARTIAL-ZERO_DISCRIMINATOR_PLAN_2026-09-15.md
+cd /Users/soullab/MAIA-SOVEREIGN
+git show 17b4df63b:$DOC | sed -n '599,625p' > /private/tmp/s2w1-blockA.sh
+git show 17b4df63b:$DOC | sed -n '633,702p' > /private/tmp/s2w1-blockB.sh
+git show 17b4df63b:$DOC | sed -n '710,713p' > /private/tmp/s2w1-blockC.sh
+git show 17b4df63b:$DOC | sed -n '719,732p' > /private/tmp/s2w1-blockD.sh
+for b in A B C D; do sed -e 's/S2-WITNESS-01/S2-WITNESS-02/g' -e 's/s2-witness-01/s2-witness-02/g' -e 's#/private/tmp/k0506-s2w-b198e2e37#/private/tmp/k0506-s2w2-b198e2e37#g' /private/tmp/s2w1-block$b.sh > /private/tmp/s2w2-block$b.sh; done
+for b in A B C D; do echo "== block $b diff (only the three tokens may appear)"; diff /private/tmp/s2w1-block$b.sh /private/tmp/s2w2-block$b.sh; done
+shasum -a 256 /private/tmp/s2w2-block[ABCD].sh
+```
+
+Then, in order, each as §16.7 (bash from file, `rc=${PIPESTATUS[0]}`, STOP on any non-zero rc, no repair):
+
+```bash
+bash /private/tmp/s2w2-blockA.sh 2>&1 | tee /private/tmp/s2w2-blockA.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w2-blockA.out
+bash /private/tmp/s2w2-blockB.sh 2>&1 | tee /private/tmp/s2w2-blockB.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w2-blockB.out
+```
+
+**Immediately before Block C — the conduct-rule reads (both required; Block C begins only if both hold and the clock is before 14:35:42Z):**
+
+```bash
+date -u +%Y-%m-%dT%H:%M:%SZ
+pgrep -fl "System Settings|Sound.appex" ; echo "[pgrep rc=$?]"
+```
+
+```bash
+bash /private/tmp/s2w2-blockC.sh 2>&1 | tee /private/tmp/s2w2-blockC.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w2-blockC.out
+bash /private/tmp/s2w2-blockD.sh 2>&1 | tee /private/tmp/s2w2-blockD.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2w2-blockD.out
+```
+
+Return exactly as §16.7's return block with the same three substitutions applied (the `S2-WITNESS-02-<stamp>/` ledger dir with `transcript.txt` + `SHA256SUMS.witness`, the `S2-WITNESS-02-preflight-<stamp>/` dir, the four `.out` files, the date/pgrep lines from the conduct-rule read, and the block-file diffs + hashes), on a `feature/*` branch; cherry-picked here with `-x` and read against §16.4 → §18.10. PASS ≠ S2 population · ≠ S3 · ≠ KERNEL-00.
+
+**Standing after §18.9:** `S2-WITNESS-02` ISSUED · one act · window to 14:35:42Z · NOT YET EXECUTED · `b198e2e37` unchanged · §16.4 unchanged · S2 population · S3 · KERNEL-00 acceptance CLOSED.
