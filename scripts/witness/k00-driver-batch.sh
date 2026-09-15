@@ -3,6 +3,15 @@
 #
 #   usage: scripts/witness/k00-driver-batch.sh <stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a|vpio-01|vpio-02] [--ledger DIR]
 #                                              [--act entry|output] [--cancel-at MS] [--settle S]
+#                                              [--stimulus s2-nearend]
+#          S2 (founder ruling 2026-09-15, batch-only design): `--stimulus s2-nearend` is the ONE closed token; the batch resolves it
+#          internally to the tracked, SHA-pinned fixture and plays it through /usr/bin/afplay (binary SHA-pinned) around the
+#          run_test seam of every sample — started and proven alive BEFORE the phone invocation, monitored at 1 s throughout,
+#          explicitly stopped and waited AFTER it. Lawful only with --act output --vp on --mode L --subject vpio-02; anything
+#          else refuses before playback. A population preflight READS (never sets) the Mac default output device, transport,
+#          output volume and mute state and STOPS on any mismatch. Stimulus custody lives in stimulus-sample-N.tsv and the
+#          stimulus-preflight/ directory only; neither reader ever sees it. Without --stimulus the batch is byte-for-byte the
+#          historical instrument.
 #          K00-05/06 (founder ruling 2026-09-14, Option C): `--act output --cancel-at 1000 --settle 2` selects testOutputSample and
 #          forwards the two values through the runner env only; every row is additionally read by k00-output-ledger.py into
 #          output-ledger.md (evidence-only). Without `--act output` the batch behaves exactly as before (entry act, no extra env).
@@ -20,13 +29,19 @@
 set -uo pipefail
 STRATUM="${1:?stratum label}"; N="${2:?N}"; shift 2
 VP=on; MODE=I; HOLD=15; W4=""; SUBJECT=p5b0; LEDGER_DIR=""; ACT=entry; CANCEL_AT=1000; SETTLE=2
+STIMULUS=""; S2_PID=""; S2_MON=""
 while [ $# -gt 0 ]; do case "$1" in
   --vp) VP="$2"; shift 2;; --mode) MODE="$2"; shift 2;; --hold) HOLD="$2"; shift 2;;
   --w4) W4="$2"; shift 2;; --subject) SUBJECT="$2"; shift 2;; --ledger) LEDGER_DIR="$2"; shift 2;;
   --act) ACT="$2"; shift 2;; --cancel-at) CANCEL_AT="$2"; shift 2;; --settle) SETTLE="$2"; shift 2;;
+  --stimulus) STIMULUS="$2"; shift 2;;
   *) echo "unknown arg $1" >&2; exit 2;; esac; done
 case "$ACT" in entry|output) ;; *) echo "unknown act '$ACT' (entry|output); refusing" >&2; exit 2;; esac
 if [ "$ACT" = output ] && [ -n "$W4" ]; then echo "--act output and --w4 are separate acts; refusing to combine them" >&2; exit 2; fi
+case "$STIMULUS" in "") ;; s2-nearend) ;; *) echo "unknown stimulus '$STIMULUS' (the only token is s2-nearend; no path is accepted); refusing" >&2; exit 2;; esac
+if [ -n "$STIMULUS" ] && { [ "$ACT" != output ] || [ "$VP" != on ] || [ "$MODE" != L ] || [ "$SUBJECT" != vpio-02 ]; }; then
+  echo "--stimulus $STIMULUS is lawful only with --act output --vp on --mode L --subject vpio-02 (got act=$ACT vp=$VP mode=$MODE subject=$SUBJECT); refusing before playback" >&2; exit 2
+fi
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DEV="${K00_DEVICE:-A0736AC8-793B-516F-AC72-C076DB6CEE38}"          # devicectl id
 XDEST="${K00_XCODE_DEST:-00008140-00163D9922E0801C}"                 # xcodebuild destination id (NOT the devicectl id)
@@ -43,6 +58,18 @@ case "$SUBJECT" in
   vpio-02)      BID="life.soullab.voicekernel.vpio02"; ICON="VoiceKernel VPIO-02";;
   *) echo "unknown subject '$SUBJECT' (p5b0|phase-a|vpio-01|vpio-02); no default bundle — refusing" >&2; exit 2;;
 esac
+# S2 constants (founder ruling 2026-09-15). The fixture path is resolved HERE from the closed token, never from the command line.
+# Every value below is read-only custody: the batch compares and records; it never sets a volume, selects a device or repairs state.
+S2_STIMULUS="$ROOT/scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav"
+S2_STIMULUS_SHA256="1a505b3d38a97b75cb935f85bd33deb889628322e558f74af9a5f05afbfbd00e"
+S2_AFPLAY="/usr/bin/afplay"
+S2_AFPLAY_SHA256="88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb"
+S2_AFPLAY_VOLUME="0.50"
+S2_AFPLAY_SECONDS="180"
+S2_OUTPUT_DEVICE="Mac Studio Speakers"
+S2_OUTPUT_TRANSPORT="coreaudio_device_type_builtin"
+S2_OUTPUT_VOLUME="69"
+S2_OUTPUT_MUTED="false"
 PROJ="$ROOT/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj"
 DD="$ROOT/ios/VoiceKernelDriver/.derived"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -120,6 +147,74 @@ run_test(){ # $1 = test method
   env $OUTPUT_ENV TEST_RUNNER_K00_MODE="$MODE" TEST_RUNNER_K00_VP="$VP" TEST_RUNNER_K00_HOLD_S="$HOLD" TEST_RUNNER_K00_W4_MS="${W4:-500}" TEST_RUNNER_K00_SUBJECT="$SUBJECT" \
   xcodebuild test-without-building -xctestrun "$XCTESTRUN" -destination "id=$XDEST" $DIAG_FLAGS -only-testing:"DriverUITests/K00DriverTests/$1" 2>&1
 }
+# ---- S2 stimulus orchestration (founder ruling 2026-09-15). Around the run_test seam only; never inside the driver or organism. ----
+afplay_state(){ # $1 = pid → alive | zombie | gone | not-afplay:<comm>   (read-only: ps only)
+  local st cm; st="$(ps -o stat= -p "$1" 2>/dev/null | tr -d ' ')"; cm="$(ps -o comm= -p "$1" 2>/dev/null)"
+  if [ -z "$st" ]; then echo gone; return; fi
+  case "$st" in *Z*) echo zombie; return;; esac
+  case "$cm" in *afplay*) echo alive;; *) echo "not-afplay:$cm";; esac
+}
+stimulus_preflight(){ # population level, BEFORE sample 1: reads only; any mismatch → STOP before any playback
+  local d="$LEDGER_DIR/stimulus-preflight"; mkdir -p "$d"
+  [ -f "$S2_STIMULUS" ] || { log "STOP: stimulus fixture missing at $S2_STIMULUS"; return 1; }
+  shasum -a 256 "$S2_STIMULUS" > "$d/stimulus.sha256"
+  [ "$(cut -d' ' -f1 "$d/stimulus.sha256")" = "$S2_STIMULUS_SHA256" ] || { log "STOP: stimulus fixture SHA-256 does not match the pin $S2_STIMULUS_SHA256"; return 1; }
+  python3 - "$S2_STIMULUS" > "$d/stimulus-wave-metadata.txt" <<'PY' || { log "STOP: stimulus fixture format is not the ruled 1 ch · 48000 Hz · 16-bit · 8640000 frames (see stimulus-preflight/stimulus-wave-metadata.txt)"; return 1; }
+import sys, wave
+w = wave.open(sys.argv[1], 'rb')
+ch, sr, sw, n = w.getnchannels(), w.getframerate(), w.getsampwidth(), w.getnframes()
+print(f"channels={ch} sampleRate={sr} sampleWidthBytes={sw} frames={n} seconds={n / sr:.3f}")
+ok = (ch, sr, sw, n) == (1, 48000, 2, 8640000)
+print("format=" + ("EXACT" if ok else "MISMATCH"))
+sys.exit(0 if ok else 1)
+PY
+  system_profiler SPAudioDataType -json > "$d/audio-output.json" 2>/dev/null || { log "STOP: system_profiler SPAudioDataType read failed"; return 1; }
+  python3 - "$d/audio-output.json" "$S2_OUTPUT_DEVICE" "$S2_OUTPUT_TRANSPORT" <<'PY' || { log "STOP: default output device is not exactly one $S2_OUTPUT_DEVICE ($S2_OUTPUT_TRANSPORT) — read-only precondition, nothing changed"; return 1; }
+import json, sys
+raw = open(sys.argv[1], encoding="utf-8").read(); raw = raw[raw.find("{"):raw.rfind("}") + 1]
+items = []
+for g in json.loads(raw).get("SPAudioDataType", []): items.extend(g.get("_items", []))
+defaults = [x for x in items if x.get("coreaudio_default_audio_output_device") == "spaudio_yes"]
+for x in defaults: print("DEFAULT_OUTPUT", x.get("_name"), x.get("coreaudio_device_transport"), x.get("coreaudio_device_srate"))
+ok = len(defaults) == 1 and defaults[0].get("_name") == sys.argv[2] and defaults[0].get("coreaudio_device_transport") == sys.argv[3]
+print("DEFAULT_OUTPUT_MATCH", ok); sys.exit(0 if ok else 1)
+PY
+  osascript -e 'get volume settings' > "$d/volume.txt" 2>&1 || { log "STOP: volume read failed"; return 1; }
+  grep -q "output volume:$S2_OUTPUT_VOLUME," "$d/volume.txt" || { log "STOP: output volume is not $S2_OUTPUT_VOLUME ($(cat "$d/volume.txt")) — read-only precondition, nothing changed"; return 1; }
+  grep -q "output muted:$S2_OUTPUT_MUTED" "$d/volume.txt" || { log "STOP: output muted is not $S2_OUTPUT_MUTED ($(cat "$d/volume.txt")) — read-only precondition, nothing changed"; return 1; }
+  [ -x "$S2_AFPLAY" ] || { log "STOP: $S2_AFPLAY is not an executable file"; return 1; }
+  shasum -a 256 "$S2_AFPLAY" > "$d/afplay.sha256"
+  [ "$(cut -d' ' -f1 "$d/afplay.sha256")" = "$S2_AFPLAY_SHA256" ] || { log "STOP: $S2_AFPLAY SHA-256 differs from the census pin $S2_AFPLAY_SHA256 — a different player is never silently accepted"; return 1; }
+  log "stimulus preflight PASS: fixture $S2_STIMULUS_SHA256 · afplay $S2_AFPLAY_SHA256 · default output $S2_OUTPUT_DEVICE ($S2_OUTPUT_TRANSPORT) · volume $S2_OUTPUT_VOLUME · muted $S2_OUTPUT_MUTED"
+}
+stimulus_start(){ # $1 = sample index. Exactly one afplay child; 1 s settle; proven alive+non-zombie; then a 1 s liveness monitor.
+  local t="$LEDGER_DIR/stimulus-sample-$1.tsv" st
+  { printf 'sample\t%s\n' "$1"; printf 'fixture\t%s\n' "$S2_STIMULUS"; printf 'fixtureSha256\t%s\n' "$S2_STIMULUS_SHA256"
+    printf 'afplay\t%s\n' "$S2_AFPLAY"; printf 'afplaySha256\t%s\n' "$S2_AFPLAY_SHA256"; printf 'afplayVolume\t%s\n' "$S2_AFPLAY_VOLUME"; printf 'afplaySeconds\t%s\n' "$S2_AFPLAY_SECONDS"; } > "$t"
+  /usr/bin/afplay -v 0.50 -t 180 "$S2_STIMULUS" </dev/null > "$LEDGER_DIR/stimulus-sample-$1-afplay.log" 2>&1 &
+  S2_PID=$!
+  printf 'pid\t%s\nstartEpoch\t%s\n' "$S2_PID" "$(date +%s)" >> "$t"
+  sleep 1
+  st="$(afplay_state "$S2_PID")"; printf 'preRunState\t%s\t%s\n' "$(date +%s)" "$st" >> "$t"
+  if [ "$st" != alive ]; then
+    printf 'custody\tINVALID\tplayer not alive/non-zombie before the phone invocation (%s)\n' "$st" >> "$t"
+    kill -TERM "$S2_PID" 2>/dev/null; wait "$S2_PID" 2>/dev/null; S2_PID=""; return 1
+  fi
+  ( while :; do sleep 1; printf 'liveness\t%s\t%s\n' "$(date +%s)" "$(afplay_state "$S2_PID")" >> "$t"; done ) 2>/dev/null &
+  S2_MON=$!
+}
+stimulus_stop(){ # $1 = sample index. Post-run state → explicit TERM → wait that exact child → exit status → custody verdict.
+  local t="$LEDGER_DIR/stimulus-sample-$1.tsv" st died rc
+  kill "$S2_MON" 2>/dev/null; wait "$S2_MON" 2>/dev/null; S2_MON=""
+  st="$(afplay_state "$S2_PID")"; printf 'postRunState\t%s\t%s\n' "$(date +%s)" "$st" >> "$t"
+  died="$(grep -c "^liveness	[0-9]*	\(gone\|zombie\|not-afplay\)" "$t")"
+  printf 'stopRequestedEpoch\t%s\n' "$(date +%s)" >> "$t"
+  kill -TERM "$S2_PID" 2>/dev/null; wait "$S2_PID" 2>/dev/null; rc=$?
+  printf 'waitExitStatus\t%s\nstopEpoch\t%s\n' "$rc" "$(date +%s)" >> "$t"
+  if [ "$st" = alive ] && [ "${died:-0}" -eq 0 ]; then printf 'custody\tVALID\n' >> "$t"; log "sample $1 stimulus custody VALID (pid $S2_PID alive through the governed interval; stopped by the batch, wait rc=$rc)"
+  else printf 'custody\tINVALID\tplayer died or changed during the governed interval (postRun=%s, dead liveness observations=%s)\n' "$st" "${died:-0}" >> "$t"; log "sample $1 stimulus custody INVALID (postRun=$st, dead liveness observations=${died:-0}) — sample and journal preserved; UNMEASURED for the S2 discriminator"; fi
+  S2_PID=""
+}
 # Name the failure the runner actually reported, so the ledger row carries the signature and not only rc.
 failure_signature(){ # $1 = sample log
   if grep -q 'Timed out while enabling automation mode' "$1"; then echo "runner could not enable automation mode on the device (Settings → Developer → Enable UI Automation / device locked or passcode prompt)"; return; fi
@@ -134,6 +229,7 @@ failure_signature(){ # $1 = sample log
   echo
   echo "stratum=$LABEL · N=$N · vp=$VP · mode=$MODE · hold=${HOLD}s · w4=${W4:-off} · subject=$SUBJECT · bundle=$BID · device=$DEV · xcodeDest=$XDEST"
   [ "$ACT" = output ] && echo "act=output · cancelAt=${CANCEL_AT}ms · settle=${SETTLE}s · driver=testOutputSample · reader=k00-output-ledger.py → output-ledger.md (K00-05 / K00-06 / coupling rows, evidence-only)"
+  [ -n "$STIMULUS" ] && echo "stimulus=$STIMULUS · fixture=$(basename "$S2_STIMULUS") · fixtureSha256=$S2_STIMULUS_SHA256 · player=$S2_AFPLAY -v $S2_AFPLAY_VOLUME -t $S2_AFPLAY_SECONDS · afplaySha256=$S2_AFPLAY_SHA256 · outputDevice=$S2_OUTPUT_DEVICE ($S2_OUTPUT_TRANSPORT) · outputVolume=$S2_OUTPUT_VOLUME · muted=$S2_OUTPUT_MUTED · custody=stimulus-preflight/ + stimulus-sample-N.tsv (never read by k00-ledger.py / k00-output-ledger.py)"
   echo "installed harness identity (the app under test is NOT rebuilt by this batch):"
   echo '```'
   xcrun devicectl device info apps --device "$DEV" 2>/dev/null | grep -i "$BID" || echo "(devicectl apps listing unavailable)"
@@ -149,6 +245,10 @@ log "build-for-testing (driver only; the harness is untouched)"
 xcodebuild build-for-testing -project "$PROJ" -scheme DriverUITests -destination "id=$XDEST" -derivedDataPath "$DD" DEVELOPMENT_TEAM="${K00_TEAM:-ZVK2X646Z2}" > "$LEDGER_DIR/build-for-testing.log" 2>&1 || { log "DRIVER/INFRASTRUCTURE FAILURE: build-for-testing failed (see build-for-testing.log)"; exit 3; }
 XCTESTRUN="$(ls -t "$DD"/Build/Products/*.xctestrun | head -1)"; log "xctestrun: $XCTESTRUN"
 
+if [ -n "$STIMULUS" ]; then
+  stimulus_preflight || { log "STOP: stimulus preflight failed — nothing played, nothing sampled"; exit 8; }
+  trap 'if [ -n "${S2_PID:-}" ]; then kill -TERM "$S2_PID" 2>/dev/null; fi; exit 130' INT TERM
+fi
 BEFORE="$(list_journals)" || { log "ABORT: the container listing failed three times before sample 1; nothing was sampled"; exit 7; }
 for i in $(seq 1 "$N"); do
   log "sample $i/$N — precondition"
@@ -161,9 +261,13 @@ for i in $(seq 1 "$N"); do
     fi
   fi
   daemon_snapshot "$i" before
+  if [ -n "$STIMULUS" ]; then
+    stimulus_start "$i" || { echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | stimulus player not alive before the phone invocation (stimulus-sample-$i.tsv); batch ABORTED as orchestration failure, no identical rows spent |" >> "$LEDGER"; log "ABORT: stimulus player not alive before the phone invocation; orchestration failure recorded"; exit 9; }
+  fi
   log "sample $i/$N — driver ($TEST, mode $MODE)"
   T0=$(date +%s); run_test "$TEST" > "$LEDGER_DIR/sample-$i-xcodebuild.log"; RC=$?; T1=$(date +%s)
   printf "%s\t%s\t%s\n" "$i" "$T0" "$T1" >> "$LEDGER_DIR/sample-timing.tsv"   # PASS-2 seam experiment: the per-sample wall window, for offline log show only
+  if [ -n "$STIMULUS" ]; then stimulus_stop "$i"; fi
   if grep -q '^xcodebuild: error:' "$LEDGER_DIR/sample-$i-xcodebuild.log"; then
     # The invocation itself was refused (usage/destination/xctestrun) — nothing reached the device. Burning N rows
     # on the same refusal is not a batch; abort as infrastructure at the first one.

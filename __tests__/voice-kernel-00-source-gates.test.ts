@@ -723,7 +723,10 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(b).toMatch(/daemon_snapshot "\$i" before/); expect(b).toMatch(/daemon_snapshot "\$i" after/);
     expect(b).toMatch(/'mediaserverd','coreaudiod','audiomxd'/); expect(b).toMatch(/NOT PRESENT IN THE DOCUMENTED JSON WINDOW/); expect(b).toMatch(/PRESENT — witnessed by PID/); expect(b).toMatch(/UNOBSERVABLE/); expect(b).toMatch(/--json-output "\$js"/);  // ruled names always recorded (NOT PRESENT when absent); observed daemons by PID from the documented JSON
     const bExec = b.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
-    expect(bExec).not.toMatch(/process (signal|terminate|suspend)|\bkill\b|sendMemoryWarning/);
+    // S2 (founder ruling 2026-09-15): the batch stops its OWN Mac-local afplay child (and the 1 s liveness monitor) — never a device process.
+    const bNoS2 = bExec.replace(/^(afplay_state|stimulus_preflight|stimulus_start|stimulus_stop)\(\)\{[\s\S]*?^\}$/gm, '').replace(/^\s*trap 'if \[ -n "\$\{S2_PID:-\}" \][^\n]*INT TERM$/m, '');
+    expect(bNoS2).not.toMatch(/process (signal|terminate|suspend)|\bkill\b|sendMemoryWarning/);
+    for (const k of bExec.match(/\bkill\b[^\n]*/g) ?? []) expect(k).toMatch(/^kill (-TERM )?"\$S2_(PID|MON)"/);   // every kill in the file names the afplay child or its monitor, nothing else
     // PASS-2 unified-log instruments: discovery captures help pages only; calibration is fail-closed on the probe, issues
     // only `log collect` + `log show`, and never `log config` / sysdiagnose / a level change.
     const lp = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-probe.sh'), 'utf8');
@@ -1069,6 +1072,8 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   const INSTRUMENT = ['ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift', 'scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh'];
   const OUTPUT_READER = 'scripts/witness/k00-output-ledger.py';                      // K00-05/06 (Option C): the one file the instrument may add
   const PLAYBACK_PROBE = 'scripts/witness/k00-playback-probe.sh';                    // S2 design (founder ruling 2026-09-15): read-only Mac playback-capability census
+  const S2_FIXTURE = 'scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav';          // S2 stimulus (founder ruling 2026-09-15): 997 Hz · 180 s · PCM16 · 48 kHz, SHA-pinned
+  const S2_FIXTURE_SIDECAR = S2_FIXTURE + '.sha256';
   const INSTRUMENT_VPIO02B = '08483cfe4f6c3e98198805337ced99bae92ce911';             // the F-W1 instrument; the entry classifier + reinstall stay at its bytes
   const INSTRUMENT_K0506 = '8b111709b6e5010b4b6ee7281d257141945276ff';               // the K00-05/06 Option C instrument (DRIVER-COMPILE-01 GREEN; first witness ten infra rows); C-D20 may move only the driver test beyond it
   it('the organism is byte-identical to ac12dedf4: every tracked file under ios/VoiceKernel and ios/VoiceKernelHarness equals its historical bytes; no file added or removed', () => {
@@ -1081,7 +1086,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   it('the instrument moved only in the four authorized files relative to de3efd3fb (scripts/witness · ios/VoiceKernelDriver); exactly one file added under those roots — the K00-05/06 output reader (founder ruling 2026-09-14, Option C); nothing removed', () => {
     const roots = ['scripts/witness', 'ios/VoiceKernelDriver'];
     const listed = histList(INSTRUMENT_BASE, roots).sort();
-    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER, PLAYBACK_PROBE].sort());
+    expect(tracked(roots)).toEqual([...listed, OUTPUT_READER, PLAYBACK_PROBE, S2_FIXTURE, S2_FIXTURE_SIDECAR].sort());   // S2 (founder ruling 2026-09-15): the tracked stimulus + its sidecar
     const moved = listed.filter((p) => !histRaw(INSTRUMENT_BASE, p).equals(readFileSync(join(process.cwd(), p))));
     expect(moved.sort()).toEqual(INSTRUMENT);
   });
@@ -1240,8 +1245,9 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(floods.length).toBe(1);
   }, 180_000);
   // ---- K00-05 / K00-06 instrument (founder ruling 2026-09-14, Option C): driver test + batch flags + evidence-only reader; everything else frozen ----
-  it('C-D20 (founder ruling 2026-09-14/15): relative to the K00-05/06 instrument 8b111709b only the driver test moved — the batch, the entry classifier, the output reader and the reinstall gate are byte-identical', () => {
-    for (const p of ['scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_K0506, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+  it('C-D20 (founder ruling 2026-09-14/15): relative to the K00-05/06 instrument 8b111709b the driver test moved (C-D20), the output reader moved (C-D22) and the batch moved (S2, 2026-09-15 — every historical line preserved in order, proven in the S2 block); the entry classifier and the reinstall gate are byte-identical', () => {
+    for (const p of ['scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_K0506, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    expect(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-driver-batch.sh').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-driver-batch.sh')))).toBe(false);
     // C-D22 (founder ruling 2026-09-15): the output reader moved beyond 8b111709b in exactly the closed-boundary family rule; pinned below.
     expect(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-output-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-output-ledger.py')))).toBe(false);
     expect(histRaw(INSTRUMENT_K0506, 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').equals(readFileSync(join(process.cwd(), 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift')))).toBe(false);
@@ -1370,5 +1376,146 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(pp).toContain('capture audio-devices.txt system_profiler SPAudioDataType');
     expect(pp).toContain("capture output-volume-read.txt osascript -e 'get volume settings'");
     expect(pp).toMatch(/"soundPlayed":False/); expect(pp).toMatch(/SEAL\.sha256/);
+  });
+});
+
+// ---- S2 batch-only orchestration (founder ruling 2026-09-15): stimulus custody around the run_test seam; the gate never executes a player ----
+describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) — a SHA-pinned 997 Hz fixture played by a SHA-pinned /usr/bin/afplay around the run_test seam; read-only Mac output preflight; closed --stimulus token; organism · driver · readers · reinstall frozen; the historical batch path is byte-preserved', () => {
+  const W = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
+  const execLines = (s: string) => s.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+  const tracked = (paths: string[]) => execFileSync('git', ['ls-files', '--', ...paths], { cwd: process.cwd() }).toString('utf8').split('\n').filter(Boolean).sort();
+  const BATCH = 'scripts/witness/k00-driver-batch.sh';
+  const FIXTURE = 'scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav';
+  const SIDECAR = FIXTURE + '.sha256';
+  const S2_STIMULUS_SHA256 = '1a505b3d38a97b75cb935f85bd33deb889628322e558f74af9a5f05afbfbd00e';   // pinned once; must equal the sidecar, the batch and the file
+  const S2_AFPLAY_SHA256 = '88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb';     // the playback census's /usr/bin/afplay (playback-probe-20260915T020250Z)
+  const INSTRUMENT_K0506 = '8b111709b6e5010b4b6ee7281d257141945276ff';                            // the batch's last frozen state (K00-05/06 Option C)
+  const INSTRUMENT_CD20 = '83a382a1455161996d499f30cbf00504bbd0332a';                             // the driver's frozen state (C-D20)
+  const INSTRUMENT_VPIO02B = '08483cfe4f6c3e98198805337ced99bae92ce911';                          // entry classifier + reinstall frozen state
+  const OUTPUT_READER_CD22 = 'b2a18e4845e9692c820c25ca8e41f61b741ff1ba';                          // output reader's frozen state (C-D22)
+  const fn = (bx: string, name: string) => { const a = bx.indexOf(`${name}(){`); expect(a).toBeGreaterThan(-1); const b = bx.indexOf('\n}\n', a); return bx.slice(a, b + 3); };
+  it('S2 stimulus fixture: tracked WAV is exactly PCM16 · mono · 48 000 Hz · 8 640 000 frames (180.000 s) · a continuous 997 Hz sine at peak 0.20 FS with no fade; its SHA-256 equals the sidecar, the batch pin and this gate\'s pin (file name alone is not custody)', () => {
+    const buf = readFileSync(join(process.cwd(), FIXTURE));
+    expect(buf.toString('ascii', 0, 4)).toBe('RIFF'); expect(buf.toString('ascii', 8, 12)).toBe('WAVE');
+    let off = 12; let fmt: Record<string, number> | null = null; let dataOff = -1; let dataLen = -1;
+    while (off + 8 <= buf.length) {
+      const id = buf.toString('ascii', off, off + 4); const len = buf.readUInt32LE(off + 4);
+      if (id === 'fmt ') fmt = { format: buf.readUInt16LE(off + 8), channels: buf.readUInt16LE(off + 10), rate: buf.readUInt32LE(off + 12), bits: buf.readUInt16LE(off + 22) };
+      if (id === 'data') { dataOff = off + 8; dataLen = len; }
+      off += 8 + len + (len & 1);
+    }
+    expect(fmt).toEqual({ format: 1, channels: 1, rate: 48000, bits: 16 });
+    expect(dataLen).toBe(17_280_000); expect(dataOff + dataLen).toBe(buf.length);
+    const frames = dataLen / 2; expect(frames).toBe(8_640_000);
+    const peak = Math.round(0.20 * 32767); expect(peak).toBe(6553);
+    let max = 0, min = 0, crossings = 0, prev = 0, worst = 0;
+    for (let i = 0; i < frames; i++) {
+      const v = buf.readInt16LE(dataOff + 2 * i);
+      if (v > max) max = v; if (v < min) min = v;
+      if (i < 48000) { if (i > 0 && ((prev < 0 && v >= 0) || (prev >= 0 && v < 0))) crossings++; prev = v; }
+      if (i < 48000) { const d = Math.abs(v - Math.round(peak * Math.sin(2 * Math.PI * 997 * i / 48000))); if (d > worst) worst = d; }
+    }
+    expect(max).toBe(peak); expect(min).toBe(-peak);                       // full-file peak exactly ±0.20 FS: no fade, no clipping, no silence-only file
+    expect(crossings).toBeGreaterThanOrEqual(1992); expect(crossings).toBeLessThanOrEqual(1996);   // 2 × 997 crossings in the first second
+    expect(worst).toBeLessThanOrEqual(1);                                   // first second matches the 997 Hz sine to 1 LSB
+    const last = buf.readInt16LE(dataOff + 2 * (frames - 1)); expect(Math.abs(last - Math.round(peak * Math.sin(2 * Math.PI * 997 * (frames - 1) / 48000)))).toBeLessThanOrEqual(1);
+    const sha = createHash('sha256').update(buf).digest('hex');
+    expect(sha).toBe(S2_STIMULUS_SHA256);
+    expect(W(SIDECAR)).toBe(`${S2_STIMULUS_SHA256}  k00-s2-nearend-997hz-180s.wav\n`);
+    expect(execLines(W(BATCH))).toContain(`S2_STIMULUS_SHA256="${S2_STIMULUS_SHA256}"`);
+    expect(S2_STIMULUS_SHA256).toMatch(/^[0-9a-f]{64}$/);                  // no placeholder hash may land
+  });
+  it('S2 player: /usr/bin/afplay is SHA-pinned to the playback census value; the ONE invocation is verbatim `/usr/bin/afplay -v 0.50 -t 180 "$S2_STIMULUS"`, lives only inside stimulus_start, and the recorded -v / -t constants equal it', () => {
+    const bx = execLines(W(BATCH));
+    const census = W('docs/programme/VOICE-2026/driver-ledger/playback-probe-20260915T020250Z/shasum-afplay.txt');
+    expect(census).toContain(`${S2_AFPLAY_SHA256}  /usr/bin/afplay`);
+    expect(bx).toContain('S2_AFPLAY="/usr/bin/afplay"'); expect(bx).toContain(`S2_AFPLAY_SHA256="${S2_AFPLAY_SHA256}"`);
+    expect(bx).toContain('S2_AFPLAY_VOLUME="0.50"'); expect(bx).toContain('S2_AFPLAY_SECONDS="180"');
+    const inv = bx.match(/^\s*\/usr\/bin\/afplay -v 0\.50 -t 180 "\$S2_STIMULUS" <\/dev\/null > "\$LEDGER_DIR\/stimulus-sample-\$1-afplay\.log" 2>&1 &$/gm) ?? [];
+    expect(inv.length).toBe(1);
+    expect((bx.match(/afplay -v/g) ?? []).length).toBe(1);                 // no second player invocation anywhere
+    expect(fn(bx, 'stimulus_start')).toContain(inv[0].trim());
+    expect(bx).not.toMatch(/\bsay\b|ffplay|mpv|sox\b|\bplay\b/);
+  });
+  it('S2 preflight fails closed, read-only, BEFORE sample 1: fixture present + SHA = pin + exact WAV format → exactly one default output = Mac Studio Speakers (coreaudio_device_type_builtin) → output volume 69 · muted false → afplay executable + SHA = pin; every clause STOPs (return 1 → exit 8) and nothing is played or changed', () => {
+    const bx = execLines(W(BATCH)); const pf = fn(bx, 'stimulus_preflight');
+    for (const c of ['S2_OUTPUT_DEVICE="Mac Studio Speakers"', 'S2_OUTPUT_TRANSPORT="coreaudio_device_type_builtin"', 'S2_OUTPUT_VOLUME="69"', 'S2_OUTPUT_MUTED="false"']) expect(bx).toContain(c);
+    const order = ['[ -f "$S2_STIMULUS" ] ||', 'shasum -a 256 "$S2_STIMULUS" >', '= "$S2_STIMULUS_SHA256" ] ||', '(1, 48000, 2, 8640000)', 'system_profiler SPAudioDataType -json >', 'len(defaults) == 1', "osascript -e 'get volume settings' >",
+                   '"output volume:$S2_OUTPUT_VOLUME,"', '"output muted:$S2_OUTPUT_MUTED"', '[ -x "$S2_AFPLAY" ] ||', 'shasum -a 256 "$S2_AFPLAY" >', '= "$S2_AFPLAY_SHA256" ] ||', 'log "stimulus preflight PASS'];
+    let last = -1; for (const o of order) { const i = pf.indexOf(o); expect(i).toBeGreaterThan(last); last = i; }
+    expect((pf.match(/\|\| \{ log "STOP: [^\n]*return 1; \}/g) ?? []).length).toBeGreaterThanOrEqual(10);
+    expect(pf).not.toMatch(/afplay -v|kill|set volume/);                    // the preflight reads; it never plays, signals or sets
+    const main = 'stimulus_preflight || { log "STOP: stimulus preflight failed — nothing played, nothing sampled"; exit 8; }';
+    expect(bx).toContain(main);
+    expect(bx.indexOf(main)).toBeGreaterThan(bx.indexOf('XCTESTRUN="$(ls -t'));   // after the driver build (nothing about the phone is touched by it)
+    expect(bx.indexOf(main)).toBeLessThan(bx.indexOf('for i in $(seq 1 "$N"); do'));   // before sample 1
+    expect(bx.indexOf(main)).toBeLessThan(bx.indexOf('stimulus_start "$i"'));            // before any player start
+  });
+  it('no S2 code sets system volume, selects an output device, disconnects Bluetooth, installs a utility or repairs state: osascript only ever reads `get volume settings`; system_profiler only reads SPAudioDataType; no set-volume / SwitchAudioSource / blueutil / defaults-write / sudo anywhere in the batch', () => {
+    const bx = execLines(W(BATCH));
+    expect(bx).not.toMatch(/set volume|SwitchAudioSource|blueutil|defaults write|--remove-existing-content|networksetup|\bsudo\b|killall|kill -9/);
+    for (const l of bx.split('\n').filter((l) => l.includes('osascript'))) expect(l).toContain("osascript -e 'get volume settings'");
+    for (const l of bx.split('\n').filter((l) => l.includes('system_profiler'))) expect(l).toContain('system_profiler SPAudioDataType -json');
+    expect((bx.match(/osascript -e 'get volume settings' > /g) ?? []).length).toBe(1); expect((bx.match(/system_profiler SPAudioDataType -json > /g) ?? []).length).toBe(1);   // one read each; other mentions are STOP messages
+  });
+  it('--stimulus is closed: the only token is s2-nearend, resolved internally to the tracked fixture path; no command-line path is accepted; lawful only with --act output · --vp on · --mode L · --subject vpio-02, refused before any lock, build or playback; $STIMULUS is never used as a path', () => {
+    const bx = execLines(W(BATCH));
+    expect(bx).toContain('STIMULUS=""; S2_PID=""; S2_MON=""');
+    expect(bx).toContain('  --stimulus) STIMULUS="$2"; shift 2;;');
+    const caseLine = `case "$STIMULUS" in "") ;; s2-nearend) ;; *) echo "unknown stimulus '$STIMULUS' (the only token is s2-nearend; no path is accepted); refusing" >&2; exit 2;; esac`;
+    const guard = 'if [ -n "$STIMULUS" ] && { [ "$ACT" != output ] || [ "$VP" != on ] || [ "$MODE" != L ] || [ "$SUBJECT" != vpio-02 ]; }; then';
+    expect(bx).toContain(caseLine); expect(bx).toContain(guard);
+    expect(bx.indexOf(caseLine)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));       // refused before the device lock
+    expect(bx.indexOf(guard)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));
+    expect(bx).toContain('S2_STIMULUS="$ROOT/scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav"');
+    const uses = bx.split('\n').filter((l) => l.includes('$STIMULUS'));
+    for (const l of uses) expect(l).toMatch(/^(case "\$STIMULUS" in|if \[ -n "\$STIMULUS" \] && \{|\s+echo "--stimulus \$STIMULUS is lawful only|\s+\[ -n "\$STIMULUS" \] && echo "stimulus=\$STIMULUS|if \[ -n "\$STIMULUS" \]; then|\s+if \[ -n "\$STIMULUS" \]; then)/);
+    expect(bx).not.toMatch(/\/\$STIMULUS|-f "\$STIMULUS"|afplay[^\n]*\$STIMULUS[^_]/);
+  });
+  it('stimulus lifetime per sample: start → record PID/epoch → 1 s settle → prove alive & non-zombie (else infrastructure abort, exit 9, no identical rows) → 1 s liveness monitor throughout run_test → run_test → post-run state → explicit TERM → wait that exact child → exit status → custody VALID|INVALID; the -t 180 ceiling is the failsafe, not the stop', () => {
+    const bx = execLines(W(BATCH));
+    const loop = bx.slice(bx.indexOf('for i in $(seq 1 "$N"); do'), bx.lastIndexOf('\ndone'));
+    const iStart = loop.indexOf('stimulus_start "$i"'), iRun = loop.indexOf('run_test "$TEST"'), iStop = loop.indexOf('stimulus_stop "$i"');
+    expect(iStart).toBeGreaterThan(loop.indexOf('daemon_snapshot "$i" before'));                 // after the ordinary cold precondition
+    expect(iStart).toBeLessThan(iRun); expect(iRun).toBeLessThan(iStop);
+    expect(loop.slice(iRun, iStop)).not.toMatch(/continue|exit/);                               // nothing can skip the stop between run_test and stimulus_stop
+    expect(loop).toMatch(/stimulus_start "\$i" \|\| \{ echo "\| \$LABEL \| \$i \| \$MODE \| — \| — \| — \| \*\*DRIVER\/INFRASTRUCTURE FAILURE\*\* \| stimulus player not alive before the phone invocation[^\n]*exit 9; \}/);
+    const st = fn(bx, 'stimulus_start');
+    for (const [a, b] of [['S2_PID=$!', "printf 'pid\\t%s\\nstartEpoch"], ["printf 'pid\\t%s\\nstartEpoch", 'sleep 1'], ['sleep 1', 'preRunState'], ['preRunState', '[ "$st" != alive ]'], ['[ "$st" != alive ]', 'while :; do sleep 1; printf \'liveness']]) expect(st.indexOf(a)).toBeLessThan(st.indexOf(b));
+    expect(st).toContain('S2_MON=$!');
+    const sp = fn(bx, 'stimulus_stop');
+    for (const [a, b] of [['kill "$S2_MON"', 'postRunState'], ['postRunState', 'stopRequestedEpoch'], ['stopRequestedEpoch', 'kill -TERM "$S2_PID"'], ['kill -TERM "$S2_PID"', 'wait "$S2_PID"'], ['wait "$S2_PID"', 'waitExitStatus'], ['waitExitStatus', "custody\\tVALID"], ["custody\\tVALID", "custody\\tINVALID"]]) expect(sp.indexOf(a)).toBeLessThan(sp.indexOf(b));
+    expect(sp).toMatch(/if \[ "\$st" = alive \] && \[ "\$\{died:-0\}" -eq 0 \]; then printf 'custody\\tVALID\\n'/);
+    const as = fn(bx, 'afplay_state'); expect(as).toContain('ps -o stat= -p'); expect(as).toContain('*Z*) echo zombie'); expect(as).toContain('*afplay*) echo alive'); expect(as).not.toMatch(/kill/);
+    expect(bx).toContain("trap 'if [ -n \"${S2_PID:-}\" ]; then kill -TERM \"$S2_PID\" 2>/dev/null; fi; exit 130' INT TERM");   // signals only; the EXIT trap (lock dir) is untouched
+  });
+  it('stimulus invalidity can never become a physiological verdict: custody is written only to stimulus-sample-N.tsv / stimulus-preflight/; both reader invocations are byte-identical to 8b111709b and receive nothing about the stimulus; k00-ledger.py · k00-output-ledger.py · k00-reinstall.sh · the driver tree are byte-frozen', () => {
+    const now = execLines(W(BATCH)); const was = execLines(histRaw(INSTRUMENT_K0506, BATCH).toString('utf8'));
+    const readerLines = (s: string) => s.split('\n').filter((l) => /k00-(output-)?ledger\.py" --/.test(l));
+    expect(readerLines(now)).toEqual(readerLines(was)); expect(readerLines(now).length).toBe(4);   // header + row for each of the two readers, verbatim
+    for (const l of now.split('\n').filter((l) => l.includes('python3 "$ROOT/scripts/witness/k00-'))) expect(l).not.toMatch(/custody|STIMULUS|S2_|afplay/);   // reader invocations carry nothing about the stimulus
+    for (const l of now.split('\n').filter((l) => l.includes("custody\\t"))) expect(l).toContain('>> "$t"');
+    expect(now).toContain('local t="$LEDGER_DIR/stimulus-sample-$1.tsv"');
+    expect(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-ledger.py')))).toBe(true);
+    expect(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-reinstall.sh').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-reinstall.sh')))).toBe(true);
+    expect(histRaw(OUTPUT_READER_CD22, 'scripts/witness/k00-output-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-output-ledger.py')))).toBe(true);
+    const driver = histList(INSTRUMENT_CD20, ['ios/VoiceKernelDriver']).sort();
+    expect(tracked(['ios/VoiceKernelDriver'])).toEqual(driver);
+    for (const p of driver) expect(histRaw(INSTRUMENT_CD20, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+  });
+  it('the historical batch path is preserved: every executable line of the batch at 8b111709b is present, verbatim and in order, in the current batch; every added executable line is inside one of the four S2 functions, an S2/STIMULUS constant, or an `if [ -n "$STIMULUS" ]` block — without --stimulus nothing new runs', () => {
+    const was = execLines(histRaw(INSTRUMENT_K0506, BATCH).toString('utf8')).split('\n');
+    const now = execLines(W(BATCH)).split('\n');
+    let j = 0; for (const l of was) { while (j < now.length && now[j] !== l) j++; expect(j < now.length ? l : `MISSING: ${l}`).toBe(l); j++; }
+    const allowed = new Set<number>();
+    for (let i = 0; i < now.length; i++) {
+      if (/^(afplay_state|stimulus_preflight|stimulus_start|stimulus_stop)\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }
+      if (/^\s*if \[ -n "\$STIMULUS" \]/.test(now[i]) && /then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }
+    }
+    const wasSet = new Map<string, number>(); for (const l of was) wasSet.set(l, (wasSet.get(l) ?? 0) + 1);
+    const added: string[] = [];
+    now.forEach((l, i) => { const n = wasSet.get(l) ?? 0; if (n > 0) { wasSet.set(l, n - 1); return; } if (allowed.has(i)) return; if (/^(STIMULUS=""|S2_[A-Z0-9_]+=")/.test(l) || l.includes('$STIMULUS') || l.includes('--stimulus') || /^\s*(fi|\}|esac|done)?\s*$/.test(l)) return; added.push(l); });   // bare block closers carry no executable content
+    expect(added).toEqual([]);
+    expect(now.filter((l) => l.includes('$STIMULUS')).length).toBeGreaterThanOrEqual(6);
   });
 });
