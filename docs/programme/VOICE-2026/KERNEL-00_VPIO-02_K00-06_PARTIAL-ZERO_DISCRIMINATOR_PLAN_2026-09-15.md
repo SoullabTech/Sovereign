@@ -977,3 +977,127 @@ Expected: the HEAD line · `1` · per-file captures · `files: N` · `sealed: <s
 - **A second output context on the Bluetooth device outlived the preparation act by nine hours** (item 5). This is descriptive: it says a client held B06Ultra open while Mac Studio Speakers was default, which S2's preflight does not and need not read (it reads the default device only). Recorded for the record; no act follows from it.
 
 **Standing after §18.4:** `S2-VOLUME-DRIFT-01` **CLOSED — CANDIDATE MECHANISM** (M1 device change at 11:25:48Z · M2 fourteen volume writes 11:32–11:56Z, inside a System Settings → Sound session on the Mac Studio; actor not inferred; value never logged) · 69 STANDS · **restoration NOT YET PERFORMED** (founder read → hand → read; its evidence returns on `feature/*` like §14) · `S2-WITNESS-02` NOT ISSUED (its own act after the post-hand read; `b198e2e37` reusable if the batch is unchanged) · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+### 18.5 FOUNDER RULING (2026-09-15) — `S2-VOLUME-DRIFT-01` **CLOSED · candidate mechanism** (accepted as read in §18.4) · **`S2-VOLUME-RESTORE-01` AUTHORIZED** (founder read → hand → read, shaped by §14) · `S2-WITNESS-02` NOT YET ISSUED
+
+#### 18.5.1 Ruling (substance preserved)
+
+- `S2-VOLUME-DRIFT-01` accepted as closed with outcome **candidate mechanism** — not cause found, not cause unknown. The 07:25:48 default-output transition plus the subsequent server-side volume writes inside the active Sound session is enough to move beyond "unknown"; the redacted values prevent saying which event produced 31.
+- **`S2-VOLUME-RESTORE-01` AUTHORIZED** as a founder-performed read → hand → read act. Authorized: close System Settings / Sound first · a short settling interval · machine READ current output device + volume · founder manually SETS output volume to 69 · machine READ device + volume again · both reads and timestamps preserved · evidence returned on `feature/*`. Not authorized: instrument sets volume · playback · `run_test` · phone invocation · S2 sample · `S2-WITNESS-02` · batch modification.
+- Post-hand acceptance condition, narrow: `default output = Mac Studio Speakers` · `transport = builtin` · `volume = 69` · `muted = false`. Anything else → STOP; no further adjusting under the same act.
+- The §18.4.4 conduct note stands as execution discipline, not as an instrument requirement: *restore with the Sound pane closed and shortly before the next witness.* The Sound session is a witnessed candidate mechanism family for scalar movement; it need not be proven the cause to be kept closed during preparation.
+- Standing: 69 RULED, unchanged · `b198e2e37` reusable if the batch remains byte-unchanged · S2 population · S3 · KERNEL-00 acceptance CLOSED. **A successful restoration read does not itself authorize the second witness**; `S2-WITNESS-02` gets its own authority after the restoration evidence is returned.
+
+#### 18.5.2 Pinned sequence for `S2-VOLUME-RESTORE-01` (Mac; founder; paste-able; no `#` comment lines; every command a read except the founder's hand)
+
+Step 0 — close the Sound pane by hand (System Settings → quit, ⌘Q). Then wait a short settling interval (the ruling names none; 30 s is proposed). Then confirm it is closed, by a read only:
+
+```bash
+pgrep -fl "System Settings|Sound.appex" ; echo "[pgrep rc=$?]"
+```
+
+Expected: no process line and `[pgrep rc=1]`. A listed process = the pane is still open → close it by hand and re-read; this step is preparation, not a sample, and may repeat.
+
+Step 1 — before-read (the same reads as §14.2; `SPBluetoothDataType` added so B06Ultra's connection state is on the record; `date -u` first so the stamp is the timestamp of record):
+
+```bash
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+OUT="/private/tmp/k00-s2-volume-restore-$STAMP"
+mkdir -p "$OUT"
+date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/before-utc.txt"
+system_profiler SPAudioDataType -json > "$OUT/audio-before.json"
+system_profiler SPBluetoothDataType -json > "$OUT/bluetooth-before.json"
+osascript -e 'get volume settings' > "$OUT/volume-before.txt"
+pgrep -fl "System Settings|Sound.appex" > "$OUT/sound-pane-before.txt" ; echo "rc=$?" >> "$OUT/sound-pane-before.txt"
+cat "$OUT/volume-before.txt"
+echo "$OUT"
+```
+
+Expected before-state on the census evidence: `output volume:31, … output muted:false`, and `rc=1` in `sound-pane-before.txt`.
+
+Step 2 — **exactly one hand act: set the output volume to 69.** The ruling names the value, not the control; §14's act used Control Center. Whichever control is used, it is one act; no device selection, no test sound, no second adjustment after the after-read.
+
+Step 3 — after-read, immediately afterwards, then the parser (the §14.2 device parser extended with the volume line; every key it reads exists in the captured JSON, as verified in §14.2/§14.9):
+
+```bash
+date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/after-utc.txt"
+system_profiler SPAudioDataType -json > "$OUT/audio-after.json"
+osascript -e 'get volume settings' > "$OUT/volume-after.txt"
+pgrep -fl "System Settings|Sound.appex" > "$OUT/sound-pane-after.txt" ; echo "rc=$?" >> "$OUT/sound-pane-after.txt"
+
+python3 - "$OUT/audio-after.json" "$OUT/volume-after.txt" <<'PY'
+import json, re, sys
+
+raw = open(sys.argv[1], encoding="utf-8").read()
+raw = raw[raw.find("{"):raw.rfind("}")+1]
+d = json.loads(raw)
+
+items = []
+for group in d.get("SPAudioDataType", []):
+    items.extend(group.get("_items", []))
+
+defaults = [
+    x for x in items
+    if x.get("coreaudio_default_audio_output_device") == "spaudio_yes"
+]
+
+for x in defaults:
+    print(
+        "DEFAULT_OUTPUT",
+        x.get("_name"),
+        x.get("coreaudio_device_transport"),
+        x.get("coreaudio_device_srate"),
+    )
+
+mac = next((x for x in items if x.get("_name") == "Mac Studio Speakers"), None)
+mac_default = bool(mac and mac.get("coreaudio_default_audio_output_device") == "spaudio_yes")
+print("MAC_STUDIO_DEFAULT_OUTPUT", mac_default)
+
+vol = open(sys.argv[2], encoding="utf-8").read()
+m_vol = re.search(r"output volume:(\d+)", vol)
+m_mute = re.search(r"output muted:(true|false)", vol)
+volume = int(m_vol.group(1)) if m_vol else None
+muted = m_mute.group(1) if m_mute else None
+print("OUTPUT_VOLUME", volume)
+print("OUTPUT_MUTED", muted)
+
+ok = (
+    len(defaults) == 1
+    and mac_default
+    and defaults[0].get("coreaudio_device_transport") == "coreaudio_device_type_builtin"
+    and volume == 69
+    and muted == "false"
+)
+print("RESTORE_ACCEPTANCE", "PASS" if ok else "STOP")
+PY
+```
+
+Step 4 — seal the captures for return (read-only):
+
+```bash
+( cd "$OUT" && shasum -a 256 before-utc.txt audio-before.json bluetooth-before.json volume-before.txt sound-pane-before.txt after-utc.txt audio-after.json volume-after.txt sound-pane-after.txt > SHA256SUMS && cat SHA256SUMS )
+```
+
+#### 18.5.3 PASS / STOP (as ruled; literals from the captured JSON vocabulary)
+
+PASS requires all of, on the after-read:
+
+```text
+exactly one DEFAULT_OUTPUT line
+name        Mac Studio Speakers
+transport   coreaudio_device_type_builtin
+MAC_STUDIO_DEFAULT_OUTPUT True
+OUTPUT_VOLUME 69
+OUTPUT_MUTED  false
+RESTORE_ACCEPTANCE PASS
+```
+
+Custody only, not criteria: the before-read values (expected 31 / Mac Studio Speakers) · the sample rate on the `DEFAULT_OUTPUT` line · B06Ultra's connection state · `sound-pane-*.txt` (expected `rc=1` both times; a pane open at the after-read is recorded, not a STOP by this ruling, but it contradicts the execution discipline and should be stated). Anything else is **STOP**: no second adjustment, no device selection, no playback, no S2 execution; the evidence returns as it is and the founder rules again.
+
+#### 18.5.4 Return
+
+Copy `$OUT` into the repo as `docs/programme/VOICE-2026/driver-ledger/s2-volume-restore-<STAMP>/` on a `feature/*` branch, commit, push, and report `BRANCH · HEAD · STAMP · the parser's seven lines · the SHA256SUMS`. This session cherry-picks it, recomputes every hash, runs the same parser on the returned `audio-after.json` + `volume-after.txt`, and records §18.6. Nothing here plays, samples, touches the phone, or edits the batch; `b198e2e37` is not moved.
+
+**Standing after §18.5:** `S2-VOLUME-DRIFT-01` CLOSED · candidate mechanism · 69 RULED · **`S2-VOLUME-RESTORE-01` AUTHORIZED, pinned, NOT YET EXECUTED (founder hand act)** · `S2-WITNESS-02` NOT ISSUED · `b198e2e37` reusable if the batch is byte-unchanged · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+**Parser verification (this session, offline, before commit):** the §18.5.2 parser was extracted verbatim from this record and run against two real captures already in the repo — the §14.9 after-read (`s2-output-source-20260915T022305Z`: `DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin 48000` · `MAC_STUDIO_DEFAULT_OUTPUT True` · `OUTPUT_VOLUME 69` · `OUTPUT_MUTED false` · **`RESTORE_ACCEPTANCE PASS`**) and the census capture (`volume-drift-20260915T125109Z`: same device line · `OUTPUT_VOLUME 31` · `OUTPUT_MUTED false` · **`RESTORE_ACCEPTANCE STOP`**). Both branches of the acceptance line are exercised on real data; the only untested input is the one the founder's hand will produce.
