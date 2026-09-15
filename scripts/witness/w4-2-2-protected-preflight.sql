@@ -49,13 +49,19 @@ SELECT current_database()                       AS db,
 \echo '── 2 · LEDGER · the migrations this act depends on ───────────────'
 
 -- ⚠️ THE LEDGER ITSELF MAY BE ABSENT, and an instrument that DIES on that has
--- reported nothing about the database it was pointed at. Gated for the same
--- reason §4 is gated: an absent thing is a FINDING, never an error and never a
--- zero. (Found immediately — the disposable witness databases are built by
--- applying migration files directly and carry no ledger at all.)
-SELECT (to_regclass('public.schema_migrations') IS NOT NULL) AS ledger_present \gset
+-- reported nothing about the database it was pointed at. An absent thing is a
+-- FINDING, never an error and never a zero.
+--
+-- ⚠️⚠️ AND "PRESENT" IS NOT ENOUGH. `run-sql-migrations.sh` carries migration
+-- logic for a LEGACY `schema_migrations` that has `version` and no `filename`,
+-- so the table can exist while the column this query reads does not — the same
+-- death, one level deeper. Three states, not two.
+SELECT (to_regclass('public.schema_migrations') IS NOT NULL) AS ledger_table,
+       EXISTS (SELECT 1 FROM information_schema.columns
+                WHERE table_schema='public' AND table_name='schema_migrations'
+                  AND column_name='filename') AS ledger_readable \gset
 
-\if :ledger_present
+\if :ledger_readable
 SELECT m.filename,
        CASE WHEN s.filename IS NULL THEN 'ABSENT FROM LEDGER' ELSE 'applied' END AS ledger
   FROM (VALUES
@@ -65,11 +71,17 @@ SELECT m.filename,
        ) AS m(filename)
   LEFT JOIN schema_migrations s ON s.filename = m.filename
  ORDER BY m.filename;
+\elif :ledger_table
+  \echo '   ⚠️ schema_migrations PRESENT but carries NO `filename` column —'
+  \echo '      the LEGACY shape (`version`) that run-sql-migrations.sh migrates.'
+  \echo '   ⛔ Ledger state NOT MEASURABLE by filename. ⭐ Not an error, and not'
+  \echo '      an empty ledger: a ledger in a vocabulary this query cannot read.'
 \else
   \echo '   ⛔ schema_migrations ABSENT on this database.'
-  \echo '   ⛔ Ledger state NOT MEASURABLE. ⭐ The catalogue below is unaffected'
-  \echo '      and is the stronger evidence anyway — see the §3 note.'
+  \echo '   ⛔ Ledger state NOT MEASURABLE.'
 \endif
+\echo '   ⭐ The catalogue below is unaffected by all three states, and is the'
+\echo '      stronger evidence anyway — see the §3 note.'
 
 \echo ''
 \echo '── 3 · CATALOGUE · what is actually here, ledger or not ──────────'
@@ -84,12 +96,15 @@ UNION ALL SELECT 'ask_threads.proposal_chain_id',
        EXISTS (SELECT 1 FROM information_schema.columns
                 WHERE table_schema='public' AND table_name='ask_threads'
                   AND column_name='proposal_chain_id')::text
+-- ⚠️⚠️ THIS LINE WAS REPORTED BACKWARDS, AND IT IS THE EXACT COLUMN W4-S1
+-- CHANGES. It read `(NOT (is_nullable='NO'))`, so a genuinely NOT NULL column
+-- printed `false` under a label that says IS NOT NULL. ⛔ The double negation
+-- was the whole defect; the inner test alone is the answer.
 UNION ALL SELECT 'ask_threads.anchor IS NOT NULL',
-       COALESCE((SELECT (NOT is_nullable::boolean)::text
-                   FROM (SELECT (is_nullable='NO') AS is_nullable
-                           FROM information_schema.columns
-                          WHERE table_schema='public' AND table_name='ask_threads'
-                            AND column_name='anchor') q), 'COLUMN ABSENT')
+       COALESCE((SELECT (is_nullable = 'NO')::text
+                   FROM information_schema.columns
+                  WHERE table_schema='public' AND table_name='ask_threads'
+                    AND column_name='anchor'), 'COLUMN ABSENT')
 UNION ALL SELECT 'proposal_chains',
        (to_regclass('public.proposal_chains') IS NOT NULL)::text
 UNION ALL SELECT 'proposal_versions',
@@ -101,31 +116,64 @@ UNION ALL SELECT 'proposal_chain_insights',
 UNION ALL SELECT 'editorial_turn_bindings (W4, must be ABSENT)',
        (to_regclass('public.editorial_turn_bindings') IS NOT NULL)::text;
 
--- ⭐ THE GATE. Everything downstream is conditional on the substrate existing.
-SELECT EXISTS (SELECT 1 FROM information_schema.columns
+-- ⭐⭐ THE GATE — THREE STATES, NOT TWO.
+--
+-- ⚠️ It used to mean only *`proposal_chain_id` exists*, and the gated query then
+-- required `ask_threads`, `anchor`, `proposal_chain_id` AND `reading_identity`.
+-- ⛔ Assuming the rest of a migration from ONE column is exactly the inference a
+-- DRIFT DETECTOR may not make — the 2026-09-07 finding was a partially applied
+-- lane. A half-present substrate must report NOT MEASURABLE, never an SQL error
+-- and never a zero.
+SELECT (to_regclass('public.ask_threads') IS NOT NULL)                  AS t_threads,
+       EXISTS (SELECT 1 FROM information_schema.columns
                 WHERE table_schema='public' AND table_name='ask_threads'
-                  AND column_name='proposal_chain_id') AS w5_present \gset
+                  AND column_name='anchor')                             AS c_anchor,
+       EXISTS (SELECT 1 FROM information_schema.columns
+                WHERE table_schema='public' AND table_name='ask_threads'
+                  AND column_name='proposal_chain_id')                  AS c_chain,
+       EXISTS (SELECT 1 FROM information_schema.columns
+                WHERE table_schema='public' AND table_name='ask_threads'
+                  AND column_name='reading_identity')                   AS c_reading,
+       (to_regclass('public.proposal_chains') IS NOT NULL)              AS t_chains,
+       (to_regclass('public.proposal_chain_directions') IS NOT NULL)    AS t_dirs
+  \gset
+
+SELECT (:'t_threads'::boolean AND :'c_anchor'::boolean AND :'c_chain'::boolean
+        AND :'c_reading'::boolean AND :'t_chains'::boolean AND :'t_dirs'::boolean)
+         AS w5_complete,
+       (:'c_chain'::boolean OR :'t_dirs'::boolean) AS w5_any \gset
 
 \echo ''
 \echo '── 4 · INVARIANTS ────────────────────────────────────────────────'
 
-\if :w5_present
-  \echo '   W5-3 substrate PRESENT — the three counts are measurable.'
+\if :w5_complete
+  \echo '   ⭐ W5 substrate COMPLETE — the three counts are measurable.'
   SELECT count(*) FILTER (WHERE anchor IS NOT NULL AND proposal_chain_id IS NOT NULL)
            AS xor_violations,
          count(*) FILTER (WHERE proposal_chain_id IS NOT NULL AND reading_identity IS NOT NULL)
            AS editorial_reading_collisions,
          count(*) FILTER (WHERE proposal_chain_id IS NOT NULL)
-           AS existing_editorial_threads,
-         count(*) AS total_threads
+           AS existing_editorial_threads
     FROM ask_threads;
-\else
-  \echo '   ⛔ W5-3 substrate ABSENT on this database.'
+\elif :w5_any
+  \echo '   ⚠️⚠️ W5 substrate PARTIAL — some required objects exist and some do not.'
   \echo '   ⛔ xor_violations                 NOT MEASURABLE  (never "0")'
   \echo '   ⛔ editorial_reading_collisions   NOT MEASURABLE'
   \echo '   ⛔ existing_editorial_threads     NOT MEASURABLE'
-  \echo '   ⭐ ask_threads total is still measurable, and is reported below.'
+  \echo '   ⭐ PARTIAL IS ITSELF THE FINDING. See §3 for which objects are missing.'
+\else
+  \echo '   ⛔ W5 substrate ABSENT on this database.'
+  \echo '   ⛔ xor_violations                 NOT MEASURABLE  (never "0")'
+  \echo '   ⛔ editorial_reading_collisions   NOT MEASURABLE'
+  \echo '   ⛔ existing_editorial_threads     NOT MEASURABLE'
+\endif
+
+-- ⭐ The thread total is a different question and survives all three states —
+-- ⛔ but only where the table exists at all.
+\if :t_threads
   SELECT count(*) AS total_threads FROM ask_threads;
+\else
+  \echo '   ⛔ ask_threads itself is ABSENT — total_threads NOT MEASURABLE.'
 \endif
 
 \echo ''

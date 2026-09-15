@@ -338,7 +338,12 @@ catching it, and cannot lie in both without the CHECK catching the pair.
 ⛔ **No migration file exists and nothing was migrated.** The DDL above was
 applied inside a **transaction that rolled back**, on the **disposable
 `w5_witness` database**, purely to establish that the constraints behave as this
-record claims. *A design that asserts constraint behaviour without checking it is
+record claims.
+
+⚠️ **CORRECTED BY W4-2.2a §23**: that sentence is true of THIS probe and **not**
+of the lock probes in §8/§11, two of whose statements ran under psql autocommit
+and **did** persist — leaving `anchor` nullable on the witness database. The
+distinction is recorded rather than smoothed. *A design that asserts constraint behaviour without checking it is
 a claim, not a design.* Evidence class: **BEHAVIOURAL, ephemeral, rolled back.**
 
 ```
@@ -774,6 +779,12 @@ targets, plus any `INVALID` index — the residue a failed `CONCURRENTLY` leaves
 | branch | database | result |
 |---|---|---|
 | substrate **PRESENT** | `w5_witness` (migrations through `…005`) | §4 measured: `xor 0 · collisions 0 · editorial 0 · total 0` |
+
+⚠️⚠️ **AND ONE CELL OF THAT TABLE WAS MEANINGLESS — see W4-2.2a §23.** The
+`anchor IS NOT NULL | true` line reported above was produced by a **reversed
+expression** against a database my own lock probe had **left mutated**. Two
+errors cancelled into a plausible-looking right answer. The row is kept and
+corrected there rather than edited here.
 | substrate **ABSENT** | `runtime_witness` (stops at `…004`) | §4 reported **NOT MEASURABLE** on all three, and still reported the measurable total |
 
 ⭐ The absent branch is the one that mattered, and it behaves correctly: it does
@@ -843,4 +854,150 @@ route / Canvas                   ⛔
 
 production mutation              ⛔
 maia_focus_witness               FROZEN
+```
+
+---
+
+# W4-2.2a — PREFLIGHT INSTRUMENT SEAL
+
+**Authorized by** founder act, 2026-09-14, on source inspection of `21ebfc9ce`.
+Same branch. Instrument + record only. ⛔ Still no protected read from this
+session, still no migration.
+
+**Harness** `scripts/witness/w4-2-2a-instrument-seal.sh` — **26 passed · 0 failed**
+
+> **The governing rule.** An instrument for discovering drift must itself survive
+> drift without converting *"I cannot measure this state"* into either zero or
+> failure.
+
+---
+
+## 23. ⚠️⚠️ The first defect invalidated a cell of my own falsification
+
+`anchor` nullability was reported **backwards**. The expression was
+`(NOT (is_nullable = 'NO'))`, so a genuinely `NOT NULL` column printed **`false`**
+under a label reading *"anchor IS NOT NULL"*. Measured on a purpose-built table:
+
+```
+a  (NOT NULL)  → reported  false
+b  (nullable)  → reported  true
+```
+
+⛔ **It reversed the exact column W4-S1 exists to change.**
+
+⭐⭐ **And the reason it slipped past me is the finding.** My W4-2.2 record
+reported `ask_threads.anchor IS NOT NULL | true` and presented it as the
+instrument working. The `w5_witness` database at that moment actually had
+`anchor` **nullable** — `is_nullable = YES` — because the §11 lock probe ran
+`ALTER TABLE … DROP NOT NULL` through `psql -c`, **under autocommit**, while I
+described the whole exercise as *"rolled back"*.
+
+```
+a reversed expression   ×   a database I had silently mutated
+                        =   a plausible-looking correct answer
+```
+
+Two wrongs cancelled. ⛔ That is precisely the class this lane exists to refuse,
+and it happened inside the instrument built to refuse it. Both halves are
+corrected **in place** in §3b and §19 rather than edited away.
+
+⚠️ **The operational lesson is narrower than "be careful":** a probe that mixes
+transactional statements with `psql -c` autocommit statements has **two
+different durabilities in one exercise**, and describing the exercise by its
+safer half is how a mutated database gets read as a clean one.
+
+## 24. Ledger: three states, because "present" was not enough
+
+The gate proved only that `schema_migrations` **exists**, then immediately read
+`s.filename`. But `run-sql-migrations.sh` carries migration logic for a **legacy
+ledger with `version` and no `filename`** — so the table can exist while the
+column does not, and the instrument dies one level deeper than the hole it had
+just patched.
+
+```
+LEDGER ABSENT                       → reported ABSENT
+LEDGER PRESENT · filename present   → exact rows, applied / ABSENT FROM LEDGER
+LEDGER PRESENT · legacy, no filename → reported LEGACY · NOT MEASURABLE
+```
+
+⭐ *A ledger in a vocabulary this query cannot read is not an empty ledger.*
+
+## 25. Substrate: PRESENT · PARTIAL · ABSENT
+
+`w5_present` meant only *`proposal_chain_id` exists*, while the gated query
+required `ask_threads`, `anchor`, `proposal_chain_id` **and** `reading_identity`.
+⛔ Inferring the rest of a migration from one column is exactly the inference a
+**drift detector** may not make — 2026-09-07 was a partially applied lane.
+
+Now classified over six objects/columns, with `PARTIAL` first-class: it reports
+**NOT MEASURABLE**, never an SQL error and never a zero. `ask_threads` being
+absent entirely no longer kills the count either.
+
+⭐ **`PARTIAL` had to be constructed, because no migration produces it** — which
+is the whole argument for building the state rather than waiting to meet it.
+
+## 26. Acceptance — every state the ruling named
+
+```
+ledger absent                      → ABSENT                    ✅
+legacy ledger, no filename         → LEGACY / NOT MEASURABLE   ✅
+modern ledger                      → exact rows                ✅
+
+anchor NOT NULL                    → true                      ✅
+anchor nullable                    → false                     ✅
+anchor absent                      → COLUMN ABSENT             ✅
+
+W5 absent                          → NOT MEASURABLE            ✅
+W5 partial                         → NOT MEASURABLE            ✅
+W5 complete                        → exact counts              ✅
+ask_threads absent                 → NOT MEASURABLE            ✅
+
+READ ONLY + INSERT                 → server refuses            ✅
+READ ONLY + DDL                    → server refuses            ✅
+```
+
+Every case also asserts **the run COMPLETED** — reaching its final section —
+because a died-early instrument reports nothing about the database it was
+pointed at, and that was the shape of both earlier repairs.
+
+## 27. Two more instrument defects, found by the harness itself
+
+1. ⚠️ **The harness hung.** A stray `psql` with neither `-c` nor `-f` reads
+   **stdin** and blocks forever; it ran to a 120-second timeout on the first
+   attempt. One invocation, one `-c`.
+2. ⚠️ **A C21-class ban, for the third time this session.** `W1`/`W2` banned the
+   string `xor_violations` — which appears in the `⛔` **echo line that declares
+   the count is not measurable**. A prohibition firing on the text that documents
+   it. Re-asserted as the psql **result-table header**
+   (`xor_violations | editorial_reading_collisions`), which can only appear when
+   the query actually ran. ⭐ *"No measured value" is the obligation; "the word
+   does not appear" never was.*
+
+⚠️ And a self-inflicted one worth recording: `pkill -9 -f "[p]sql"` matched **its
+own command line** and killed the shell running it. `pkill -x psql` is the
+correct instrument.
+
+## 28. Standing
+
+```
+W4-2   semantic schema design    ✅ CLOSED · f210df118
+W4-2.1 migration phasing         ✅ CLOSED · 46a44928e
+W4-2.2 preflight RESULT          ⛔ NOT RUN — unchanged
+W4-2.2a instrument seal          ✅ 26 passed · 0 failed
+
+unique-lock strategy             ⏸ waits on the protected output
+executable W4 migrations         ⛔ HELD
+producer registration            ⛔ HELD
+canonical service seam           ⛔ HELD
+route / Canvas                   ⛔
+
+production mutation              ⛔
+maia_focus_witness               FROZEN
+```
+
+The protected preflight remains **unspent**:
+
+```bash
+psql "$PROTECTED_DATABASE_URL" -X \
+  -f scripts/witness/w4-2-2-protected-preflight.sql
 ```
