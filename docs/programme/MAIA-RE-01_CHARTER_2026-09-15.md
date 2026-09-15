@@ -69,6 +69,26 @@ appeared often enough.
 |---|---|---|
 | 1 | Repository epistemology census | **AUTHORIZED — this act** |
 | 2 | Founder adjudication → Canon v0.1 | census delivered |
+
+⚠️ **Phase 2 AMENDED IN PLACE, 2026-09-15, by founder act.** The row above is kept
+verbatim as written; it is superseded, not corrected. Phase 2 does **not** open as
+"assemble Canon v0.1". It opens as **ACT 2 — adjudicate the RE-009 collision only**:
+determine the permissible standing and lifecycle of system-originated relational pattern
+inference across six acts (notice · form hypothesis · act from it · disclose · persist ·
+promote). Canon v0.1 assembly, corpus generation, model evaluation, changes to either
+source document, runtime repair, Inkling contact, and adjudication of the other 13 census
+entries are **all unauthorized** under ACT 2.
+
+**ACT 2 carries its own falsifier, binding on the ruling itself:**
+
+> **If the ruling can be satisfied merely by hiding an inference from the member, it has
+> failed Side A. If the ruling prevents MAIA from perceiving relational information that
+> has not already been explicitly named, it has failed Side B.**
+
+*That forces the ruling to solve the problem rather than pick a document.*
+
+**ACT 2 instrument delivered:** `MAIA-RE-01_ACT2_RE-009_ADJUDICATION_INSTRUMENT_2026-09-15.md`
+— collision **NOT resolved**; six-act lattice mapped across three sources; ruling pending.
 | 3 | Falsifier authoring (adversarial benchmark) | ≥1 doctrine CANONICAL |
 | 4 | Baseline run: canonical MAIA path vs untouched Inkling-Small | benchmark exists, blinded |
 | 5 | Failure taxonomy → training candidate set | baselines scored |
