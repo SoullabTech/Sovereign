@@ -38,9 +38,13 @@ while [ $# -gt 0 ]; do case "$1" in
   *) echo "unknown arg $1" >&2; exit 2;; esac; done
 case "$ACT" in entry|output) ;; *) echo "unknown act '$ACT' (entry|output); refusing" >&2; exit 2;; esac
 if [ "$ACT" = output ] && [ -n "$W4" ]; then echo "--act output and --w4 are separate acts; refusing to combine them" >&2; exit 2; fi
-case "$STIMULUS" in "") ;; s2-nearend) ;; *) echo "unknown stimulus '$STIMULUS' (the only token is s2-nearend; no path is accepted); refusing" >&2; exit 2;; esac
-# SOURCE-ID-02 (founder ruling 2026-09-15): a second closed token, the gated 997 Hz fixture, lawful ONLY with the SID subject.
-case "$STIMULUS" in sid-nearend-gated) [ "$SUBJECT" = vpio-02-sid ] || { echo "--stimulus sid-nearend-gated is lawful only with --subject vpio-02-sid (got subject=$SUBJECT); refusing before playback" >&2; exit 2; };; s2-nearend) [ "$SUBJECT" = vpio-02 ] || { echo "--stimulus s2-nearend is lawful only with --subject vpio-02 (the stationary S-a arm is NOT OPEN on the SID subject; got subject=$SUBJECT); refusing before playback" >&2; exit 2; };; esac
+# SOURCE-ID-02A (founder ruling 2026-09-15): ONE closed stimulus dispatch. Exactly two lawful pairings; an admitted token can never sit behind
+# an earlier catch-all refusal (the SOURCE-ID-02 draft rejected sid-nearend-gated as unknown before its own branch — defect 1, repaired here).
+case "$STIMULUS" in "") ;;
+  s2-nearend)        [ "$SUBJECT" = vpio-02 ]     || { echo "--stimulus s2-nearend is lawful only with --subject vpio-02 (the stationary S-a arm is NOT OPEN on the SID subject; got subject=$SUBJECT); refusing before playback" >&2; exit 2; };;
+  sid-nearend-gated) [ "$SUBJECT" = vpio-02-sid ] || { echo "--stimulus sid-nearend-gated is lawful only with --subject vpio-02-sid (got subject=$SUBJECT); refusing before playback" >&2; exit 2; };;
+  *) echo "unknown stimulus '$STIMULUS' (lawful pairings: s2-nearend with --subject vpio-02 · sid-nearend-gated with --subject vpio-02-sid; no path is accepted); refusing" >&2; exit 2;;
+esac
 if [ -n "$STIMULUS" ] && { [ "$ACT" != output ] || [ "$VP" != on ] || [ "$MODE" != L ] || { [ "$SUBJECT" != vpio-02 ] && [ "$SUBJECT" != vpio-02-sid ]; }; }; then
   echo "--stimulus $STIMULUS is lawful only with --act output --vp on --mode L --subject vpio-02 (got act=$ACT vp=$VP mode=$MODE subject=$SUBJECT); refusing before playback" >&2; exit 2
 fi

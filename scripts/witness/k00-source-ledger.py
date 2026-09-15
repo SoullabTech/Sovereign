@@ -13,7 +13,7 @@ non-SID subject, every historical population) reads UNMEASURED-SRC: no_source_ev
 
 Vocabulary (closed):
   SOURCE-VALIDITY  VALID | UNMEASURED-SRC (geometry · no_source_evidence · stimulus_not_visible (V1) · gate_not_seen (V2) · no_full_rendering_window)
-  SOURCE-WINDOW    NEAR-END-SURVIVES | NEAR-END-SUPPRESSED | INDETERMINATE-SRC: between|floor|signature_absent|own_modulated|frameReset
+  SOURCE-WINDOW    NEAR-END-SURVIVES | NEAR-END-SUPPRESSED | INDETERMINATE-SRC: frameReset|between|floor|signature_absent|own_control_unmeasured|own_modulated
                    (+ OWN-PLAYBACK-RESIDUAL-PRESENT as a descriptive flag on every window)
   SOURCE-ROW       NEAR-END SURVIVES | NEAR-END SUPPRESSED | CHARACTERIZE-SRC | UNMEASURED-SRC
 
@@ -25,9 +25,12 @@ Law (magnitude domain; 10× = 20 dB, 100× = 40 dB), per invocation, self-calibr
   full rendering window = source sample whose span lies inside one scheduled stream
   Lk  = A440·e440Max + A880·e880Max + A1320·e1320Max + A1760·e1760Max + TAIL·e880Max      (amplitude coefficients, pinned for 48 kHz / 1920-sample Hann)
   C_w = max(e700Mean, e1200Mean); F_w = max(C_base, C_w, Lk)
-  NEAR-END-SURVIVES   iff e997Mean ≥ SURV·B997 ∧ e997Mean ≥ NOISE·F_w ∧ m2_997 ≥ M2 ∧ m2_440 < M2 ∧ frameReset == 0
+  frameReset > 0      → INDETERMINATE-SRC: frameReset, BEFORE either attribution verdict (SOURCE-ID-02A)
+  own-tone control    clear iff m2_440 numeric and < M2, or m2_440 undefined with a complete record and e440Mean below the window
+                      noise reference (no own-band energy to modulate); absent/malformed with material own-band energy → unmeasured
+  NEAR-END-SURVIVES   iff e997Mean ≥ SURV·B997 ∧ e997Mean ≥ NOISE·F_w ∧ m2_997 ≥ M2 ∧ control clear
   NEAR-END-SUPPRESSED iff e997Mean < SUPP·B997 ∧ callbacks ≥ CB_MIN ∧ ioRunning true
-  INDETERMINATE-SRC   otherwise, with the FIRST applicable reason: frameReset · between · floor · signature_absent · own_modulated
+  INDETERMINATE-SRC   otherwise, with the FIRST applicable reason: between · floor · signature_absent · own_control_unmeasured · own_modulated
   OWN-PLAYBACK-RESIDUAL-PRESENT iff e440Mean ≥ NOISE × max(C_base, C_w)   (descriptive; never part of a verdict)
 """
 import argparse, json, statistics, sys
@@ -103,14 +106,22 @@ def read(path):
         e997, m2, m2own = g('e997Mean'), _f(e.get('m2_997')), _f(e.get('m2_440'))
         reset = int(g('frameReset')); cb = int(_f(h.get('callbacks')) or 0); io = h.get('ioRunning') == 'true'
         residual = g('e440Mean') >= NOISE * max(cal['C_base'], Cw)
-        if e997 >= SURV * B997 and e997 >= NOISE * Fw and (m2 or 0) >= M2 and (m2own is None or m2own < M2) and reset == 0:
+        # SOURCE-ID-02A: the own-tone control. Numeric and quiet → clears. Undefined only because the own band carries no energy
+        # (record complete, e440Mean below the window noise reference) → clears. Absent/malformed while own-band energy is
+        # material → own_control_unmeasured; missing control evidence never earns SURVIVES.
+        complete = all(_f(e.get(f'e{b}{k}')) is not None for b in BINS for k in ('Mean', 'Max', 'Min'))
+        own_quiet = complete and g('e440Mean') < max(cal['C_base'], Cw)
+        control = 'clear' if (m2own is not None and m2own < M2) else ('clear' if (m2own is None and own_quiet) else ('modulated' if m2own is not None else 'unmeasured'))
+        # SOURCE-ID-02A: a geometry reset inside the window is indeterminate BEFORE either attribution verdict (defect 2).
+        if reset > 0: v = 'INDETERMINATE-SRC: frameReset'
+        elif e997 >= SURV * B997 and e997 >= NOISE * Fw and (m2 or 0) >= M2 and control == 'clear':
             v = 'NEAR-END-SURVIVES'
         elif e997 < SUPP * B997 and cb >= CB_MIN and io:
             v = 'NEAR-END-SUPPRESSED'
-        elif reset > 0: v = 'INDETERMINATE-SRC: frameReset'
         elif e997 < SURV * B997: v = 'INDETERMINATE-SRC: between' if e997 >= SUPP * B997 else 'INDETERMINATE-SRC: floor'
         elif e997 < NOISE * Fw: v = 'INDETERMINATE-SRC: floor'
         elif (m2 or 0) < M2: v = 'INDETERMINATE-SRC: signature_absent'
+        elif control == 'unmeasured': v = 'INDETERMINATE-SRC: own_control_unmeasured'
         else: v = 'INDETERMINATE-SRC: own_modulated'
         verdicts.append({'t': w['t1'], 'stream': k, 'streamId': sid, 'verdict': v, 'e997': e997, 'B997': B997, 'Fw': Fw, 'Lk': Lk, 'Cw': Cw,
                          'm2_997': m2, 'm2_440': m2own, 'e440': g('e440Mean'), 'residual': residual, 'callbacks': cb, 'ioRunning': io, 'reset': reset})
@@ -157,6 +168,8 @@ def _synth(baseline, render, rate=48000.0, frameFrames=1920, healthy=True, cance
         base.update({k: v for k, v in over.items() if k in base})
         for b in BINS: ev[f'e{b}Mean'] = str(base[f'e{b}']); ev[f'e{b}Max'] = str(base[f'e{b}'] * 1.2); ev[f'e{b}Min'] = str(base[f'e{b}'] * 0.8)
         ev['m2_997'] = str(base['m2_997']); ev['m2_440'] = str(base['m2_440']); ev['frameReset'] = str(over.get('frameReset', 0))
+        if over.get('m2_440_undefined'): ev['m2_440'] = '-'
+        for k in over.get('drop', []): ev.pop(k, None)
         rec('input_source_sample', ev)
     rec('app_lifecycle', gen=0, cause='didBecomeActive'); rec('graph_started', {'ioRunning': 'true'})
     for o in baseline: win(o)
@@ -199,6 +212,11 @@ def selftest():
     case('16 own_modulated veto: gated 997 but the own-tone bin carries the same 2 Hz', _synth(B, [{'m2_440': 1.1, 'e440': 1e-3}, {'m2_440': 0.95, 'e440': 1e-3}]), 'VALID', 'CHARACTERIZE-SRC', ['INDETERMINATE-SRC: own_modulated', 'INDETERMINATE-SRC: own_modulated'])
     case('17 frameReset in a window is never SURVIVES', _synth(B, [{'frameReset': 1}, {}]), 'VALID', 'CHARACTERIZE-SRC', ['INDETERMINATE-SRC: frameReset', 'NEAR-END-SURVIVES'])
     case('18 own-playback residual is descriptive: SURVIVES stands with a strong 440 Hz residual', _synth(B, [{'e440': 2e-3}, {'e440': 2e-3}]), 'VALID', 'NEAR-END SURVIVES')
+    # SOURCE-ID-02A (founder ruling 2026-09-15)
+    case('21 suppressed amplitude + healthy capture + frameReset → frameReset, never SUPPRESSED', _synth(B, [{'e997': 1e-6, 'm2_997': 0.0, 'frameReset': 1}, {'e997': 1e-6, 'm2_997': 0.0}]), 'VALID', 'CHARACTERIZE-SRC', ['INDETERMINATE-SRC: frameReset', 'NEAR-END-SUPPRESSED'])
+    case('22 m2_440 undefined because the own band is quiet (complete record) → control clears, SURVIVES', _synth(B, [{'m2_440_undefined': True, 'e440': 1e-6}, {'m2_440_undefined': True, 'e440': 1e-6}]), 'VALID', 'NEAR-END SURVIVES', ['NEAR-END-SURVIVES', 'NEAR-END-SURVIVES'])
+    case('23 m2_440 undefined while own-band energy is material → own_control_unmeasured', _synth(B, [{'m2_440_undefined': True, 'e440': 1e-3}, {'m2_440_undefined': True, 'e440': 1e-3}]), 'VALID', 'CHARACTERIZE-SRC', ['INDETERMINATE-SRC: own_control_unmeasured', 'INDETERMINATE-SRC: own_control_unmeasured'])
+    case('24 malformed record (own-band keys missing) never clears the control', _synth(B, [{'m2_440_undefined': True, 'drop': ['e440Mean', 'e440Max', 'e440Min']}, {'m2_440_undefined': True, 'drop': ['e440Max']}]), 'VALID', 'CHARACTERIZE-SRC', ['INDETERMINATE-SRC: own_control_unmeasured', 'INDETERMINATE-SRC: own_control_unmeasured'])
     rows18 = _synth(B, [{'e440': 2e-3}, {'e440': 2e-3}])
     with tempfile.NamedTemporaryFile('w', suffix='.jsonl', delete=False) as f:
         for r in rows18: f.write(json.dumps(r) + '\n')

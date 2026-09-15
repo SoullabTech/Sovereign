@@ -1526,20 +1526,29 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
     const bx = execLines(W(BATCH));
     expect(bx).toContain('STIMULUS=""; S2_PID=""; S2_MON=""');
     expect(bx).toContain('  --stimulus) STIMULUS="$2"; shift 2;;');
-    const caseLine = `case "$STIMULUS" in "") ;; s2-nearend) ;; *) echo "unknown stimulus '$STIMULUS' (the only token is s2-nearend; no path is accepted); refusing" >&2; exit 2;; esac`;
+    // SOURCE-ID-02A (founder ruling 2026-09-15, defect 1): ONE closed dispatch — exactly two lawful pairings, each guarded on its own
+    // branch BEFORE the catch-all; the SOURCE-ID-02 draft's two-stage parser (a catch-all refusal ahead of the SID branch) is forbidden.
+    const caseLine = 'case "$STIMULUS" in "") ;;';
+    const s2Branch = 's2-nearend)        [ "$SUBJECT" = vpio-02 ]     || {';
+    const sidBranch = 'sid-nearend-gated) [ "$SUBJECT" = vpio-02-sid ] || {';
+    const catchAll = `*) echo "unknown stimulus '$STIMULUS' (lawful pairings: s2-nearend with --subject vpio-02 · sid-nearend-gated with --subject vpio-02-sid; no path is accepted); refusing" >&2; exit 2;;`;
+    expect((bx.match(/case "\$STIMULUS" in/g) ?? []).length).toBe(1);                                  // one dispatch, never two
+    const dispatch = bx.slice(bx.indexOf(caseLine), bx.indexOf('\nesac', bx.indexOf(caseLine)));
+    expect(dispatch).toContain(s2Branch); expect(dispatch).toContain(sidBranch); expect(dispatch).toContain(catchAll);
+    expect(dispatch.indexOf(s2Branch)).toBeLessThan(dispatch.indexOf(catchAll)); expect(dispatch.indexOf(sidBranch)).toBeLessThan(dispatch.indexOf(catchAll));
+    expect(dispatch).not.toMatch(/s2-nearend\) ;;/);                                                    // no unguarded admission
+    expect(bx).not.toContain('the only token is s2-nearend');
     // SOURCE-ID-02 (founder ruling 2026-09-15): a second closed token (sid-nearend-gated) lawful only with vpio-02-sid; s2-nearend stays
     // lawful only with vpio-02 (the stationary S-a arm is NOT OPEN on the SID subject); the shared guard admits the two subjects only.
     const guard = 'if [ -n "$STIMULUS" ] && { [ "$ACT" != output ] || [ "$VP" != on ] || [ "$MODE" != L ] || { [ "$SUBJECT" != vpio-02 ] && [ "$SUBJECT" != vpio-02-sid ]; }; }; then';
-    const sidCase = 'case "$STIMULUS" in sid-nearend-gated) [ "$SUBJECT" = vpio-02-sid ] || {';
-    const s2Case = 's2-nearend) [ "$SUBJECT" = vpio-02 ] || {';
-    expect(bx).toContain(sidCase); expect(bx).toContain(s2Case); expect(bx.indexOf(sidCase)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));
+    expect(bx.indexOf(caseLine)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));                         // dispatch precedes the device lock
     expect(bx).toContain('S2_STIMULUS="$ROOT/scripts/witness/fixtures/k00-sid-nearend-997hz-gated-2hz-180s.wav"');
     expect(bx).toContain(caseLine); expect(bx).toContain(guard);
     expect(bx.indexOf(caseLine)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));       // refused before the device lock
     expect(bx.indexOf(guard)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));
     expect(bx).toContain('S2_STIMULUS="$ROOT/scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav"');
     const uses = bx.split('\n').filter((l) => l.includes('$STIMULUS'));
-    for (const l of uses) expect(l).toMatch(/^(case "\$STIMULUS" in|if \[ "\$STIMULUS" = sid-nearend-gated \]; then|SOURCE_LEDGER=""; \[ "\$STIMULUS" = sid-nearend-gated \]|if \[ -n "\$STIMULUS" \] && \{|\s+echo "--stimulus \$STIMULUS is lawful only|\s+\[ -n "\$STIMULUS" \] && echo "stimulus=\$STIMULUS|if \[ -n "\$STIMULUS" \]; then|\s+if \[ -n "\$STIMULUS" \]; then)/);
+    for (const l of uses) expect(l).toMatch(/^(case "\$STIMULUS" in|\s+\*\) echo "unknown stimulus '\$STIMULUS'|if \[ "\$STIMULUS" = sid-nearend-gated \]; then|SOURCE_LEDGER=""; \[ "\$STIMULUS" = sid-nearend-gated \]|if \[ -n "\$STIMULUS" \] && \{|\s+echo "--stimulus \$STIMULUS is lawful only|\s+\[ -n "\$STIMULUS" \] && echo "stimulus=\$STIMULUS|if \[ -n "\$STIMULUS" \]; then|\s+if \[ -n "\$STIMULUS" \]; then)/);
     expect(bx).not.toMatch(/\/\$STIMULUS|-f "\$STIMULUS"|afplay[^\n]*\$STIMULUS[^_]/);
   });
   it('stimulus lifetime per sample: start → record PID/epoch → 1 s settle → prove alive & non-zombie (else infrastructure abort, exit 9, no identical rows) → 1 s liveness monitor throughout run_test → run_test → post-run state → explicit TERM → wait that exact child → exit status → custody VALID|INVALID; the -t 180 ceiling is the failsafe, not the stop', () => {
@@ -1705,15 +1714,27 @@ describe('KERNEL-00 · SOURCE-ID-02 — seven-bin Goertzel at the consumed seam 
     expect(W(SID_FIXTURE + '.sha256')).toBe(`${SID_SHA}  k00-sid-nearend-997hz-gated-2hz-180s.wav\n`);
     expect(W('scripts/witness/k00-driver-batch.sh')).toContain(`S2_STIMULUS_SHA256="${SID_SHA}"`);
   });
-  it('the source reader is evidence-only: closed vocabulary, the amplitude-domain coefficients and the tail bound pinned, geometry fail-closed, self-test 20/20 naming every path; every tracked VPIO-02 journal reads UNMEASURED-SRC: no_source_evidence (never PASS/FAIL)', () => {
+  it('the source reader is evidence-only: closed vocabulary, the amplitude-domain coefficients and the tail bound pinned, geometry fail-closed, frameReset before any attribution and the own-control law (SOURCE-ID-02A), self-test 24/24 naming every path; every tracked VPIO-02 journal reads UNMEASURED-SRC: no_source_evidence (never PASS/FAIL)', () => {
     const r = W('scripts/witness/k00-source-ledger.py');
     expect(r).toContain("A440, A880, A1320, A1760, TAIL = 2.16e-5, 2.77e-3, 4.00e-5, 1.12e-5, 2.82e-6");
     expect(r).toContain("VIS, SURV, SUPP, NOISE, M2, CB_MIN, MIN_FRAMES = 10.0, 0.1, 0.01, 10.0, 0.9, 90, 20");
     expect(r).toContain("GEOMETRY = {'rate': 48000.0, 'frameFrames': 1920}");
-    expect(r).toMatch(/m2own is None or m2own < M2/);                                                     // the own_modulated veto is part of SURVIVES
-    for (const v of ['NEAR-END-SURVIVES', 'NEAR-END-SUPPRESSED', 'INDETERMINATE-SRC: frameReset', 'INDETERMINATE-SRC: between', 'INDETERMINATE-SRC: floor', 'INDETERMINATE-SRC: signature_absent', 'INDETERMINATE-SRC: own_modulated', 'no_source_evidence', 'gate_not_seen', 'stimulus_not_visible', 'no_full_rendering_window']) expect(r).toContain(v);
+    // SOURCE-ID-02A (founder ruling 2026-09-15): frameReset is indeterminate BEFORE either attribution verdict (defect 2); the own-tone
+    // control clears only when numeric-and-quiet, or undefined with a complete record and no material own-band energy; otherwise
+    // own_control_unmeasured — missing control evidence never earns SURVIVES.
+    const law = r.slice(r.indexOf("residual = g('e440Mean')"), r.indexOf('verdicts.append('));
+    expect(law.indexOf("if reset > 0: v = 'INDETERMINATE-SRC: frameReset'")).toBeLessThan(law.indexOf("v = 'NEAR-END-SURVIVES'"));
+    expect(law.indexOf("v = 'NEAR-END-SURVIVES'")).toBeLessThan(law.indexOf("v = 'NEAR-END-SUPPRESSED'"));
+    expect(law).toContain("control = 'clear' if (m2own is not None and m2own < M2) else ('clear' if (m2own is None and own_quiet) else ('modulated' if m2own is not None else 'unmeasured'))");
+    expect(law).toContain("own_quiet = complete and g('e440Mean') < max(cal['C_base'], Cw)");
+    expect(law).toMatch(/and control == 'clear':\s+v = 'NEAR-END-SURVIVES'/);
+    expect(law).toContain("elif control == 'unmeasured': v = 'INDETERMINATE-SRC: own_control_unmeasured'");
+    expect(law).not.toMatch(/m2own is None or m2own < M2/);
+    for (const v of ['NEAR-END-SURVIVES', 'NEAR-END-SUPPRESSED', 'INDETERMINATE-SRC: frameReset', 'INDETERMINATE-SRC: between', 'INDETERMINATE-SRC: floor', 'INDETERMINATE-SRC: signature_absent', 'INDETERMINATE-SRC: own_control_unmeasured', 'INDETERMINATE-SRC: own_modulated', 'no_source_evidence', 'gate_not_seen', 'stimulus_not_visible', 'no_full_rendering_window']) expect(r).toContain(v);
     const out = execFileSync('python3', ['scripts/witness/k00-source-ledger.py', '--selftest'], { cwd: process.cwd() }).toString('utf8');
-    expect(out).toMatch(/selftest: 20\/20/); expect(out).not.toMatch(/^FAIL/m);
+    expect(out).toMatch(/selftest: 24\/24/); expect(out).not.toMatch(/^FAIL/m);
+    for (const line of ['21 suppressed amplitude + healthy capture + frameReset → frameReset, never SUPPRESSED', '22 m2_440 undefined because the own band is quiet (complete record) → control clears, SURVIVES',
+                        '23 m2_440 undefined while own-band energy is material → own_control_unmeasured', '24 malformed record (own-band keys missing) never clears the control', '16 own_modulated veto', '17 frameReset in a window is never SURVIVES']) expect(out).toContain(line);
     const dirs = execFileSync('git', ['ls-files', 'docs/programme/VOICE-2026/driver-ledger'], { cwd: process.cwd() }).toString('utf8').split('\n').filter((p) => p.endsWith('/ledger.md'))
       .filter((p) => /subject=vpio-02\b/.test(readFileSync(join(process.cwd(), p), 'utf8')));
     const journals = dirs.flatMap((p) => execFileSync('git', ['ls-files', p.replace(/ledger\.md$/, 'journals')], { cwd: process.cwd() }).toString('utf8').split('\n').filter((f) => f.endsWith('.jsonl') && !f.includes('not-a-sample')));
