@@ -3001,3 +3001,59 @@ CLAUDE compaction  APPROVED IN PRINCIPLE · DEFERRED until DISPOSAL-03 and the S
 ```
 
 Founder: *"That keeps the only active work exactly where it belongs: getting the Mac-side DISPOSAL-03 return, without opening another maintenance or records sub-lane around it."* Claim-state record `eeb176cd1` accepted; case-study reference line `978046bea` in place.
+
+---
+
+## §18.29 — `S2-FOREIGN-HARNESS-DISPOSAL-03` EXECUTED → PASS (2026-09-15 · Mac Studio terminal directly · verified here) · `K00-0506-S2-02` CONDITION MET
+
+### §18.29.1 Custody
+
+Founder return: branch `feature/k00-s2-foreign-harness-disposal-03-20260915T181106Z`, commit `cb195a05267d7d97ec4c8e82f3e8c37e57383e69` → cherry-picked here with `-x` as `79fa57e87`. Bundle `driver-ledger/S2-FOREIGN-HARNESS-DISPOSAL-03-20260915T181106Z/` (ten files). `SHA256SUMS.disposal` recomputed here: **9/9 OK**. Transport: **Mac Studio terminal directly** (founder), the only carrier eligible under §18.28 item 5; the transcript was relayed stage by stage during execution and matches the sealed files.
+
+### §18.29.2 Verification (every §18.26.2 return field, read from the sealed files)
+
+- `stamp.txt` = `20260915T181106Z` — fresh; the dead `175743Z` of §18.28.3 was not reintroduced.
+- `requal.txt` = `WORKTREE_PRESENT true` · `b198e2e37058f2e059d986b4b148e224215f3ee3` · `DRIVER_SOURCE_UNMODIFIED true` · `RUNNER_PRESENT true /private/tmp/k0506-disposal-b198e2e37/…/DriverUITests_iphoneos26.2-arm64.xctestrun` · `REQUALIFICATION PASS` — and this time the PASS line is causally downstream: the custody file exists beside it.
+- `xctestrun.sha256` = `3b6360f7…` = the DISPOSAL-02 custody value (§18.25). Runner identity requalified, not inherited.
+- `runner-custody.sha256`: exactly **four** lines with the C-D27-corrected `Debug-iphoneos/` paths — xctestrun `3b6360f7…` · `DriverUITests` `74ce3f48…` · `DriverUITests-Runner` `23f85491…` · `DriverHost` `efb57e22…`. Observation only: the three bundle-binary hashes differ from the §10.9 readiness runner's (`4d8684d1…` / `d77c2490…` / `704d21d3…`), as expected for a different worktree's signed build, while the xctestrun text is byte-identical.
+- `processes-before.json` (matcher reproduced here): **exactly two** `VoiceKernelHarness` — `0B07D423…` PID 2098 · `6A2E406B…` PID 2099 = the identified R1 `.k00` and frozen `.vpio01` containers, the same PIDs the population Block-B read saw hours earlier (same process instances, not relaunches); `BEFORE_SET_IS_THE_TWO_IDENTIFIED True`; no `.vpio02` (`E3B88028…`) process.
+- `terminate-phase-a.log`: one `Command line invocation`; `Terminate life.soullab.voicekernel.k00:2098` → `Wait for … to become Not Running` → `Executed 1 test, with 0 failures` → `** TEST EXECUTE SUCCEEDED **`. The log also carries `Unlock Kelly Nezat's iPhone to Continue` / `Waiting for the destination to become ready`: the device was locked at invocation; the founder unlocked it and the **same** invocation proceeded (56.97 s elapsed); no second invocation. Unlocking = a physical readiness act, not a governed operation on the harness (§18.29.3).
+- `terminate-vpio-01.log`: one `Command line invocation`; `Terminate life.soullab.voicekernel.vpio01:2099` → Not Running → `Executed 1 test, with 0 failures` → `** TEST EXECUTE SUCCEEDED **` (4.96 s). `.vpio01`: termination only, as ruled.
+- `processes-after.json` (matcher reproduced here): **`VoiceKernelHarness processes AFTER: 0`** → `DISPOSAL_ACCEPTANCE PASS`. No `.vpio02` process before or after.
+- `RETURN.txt`: `ACT S2-FOREIGN-HARNESS-DISPOSAL-03` · `RUNNER_SOURCE b198e2e37…` · `RUNNER_CARRIER /private/tmp/k0506-disposal-b198e2e37` · `RUNNER_BUILT_BY S2-FOREIGN-HARNESS-DISPOSAL-02-STOP-20260915T173055Z` · `RUNNER_XCTESTRUN_SHA 3b6360f7…` · `FRESH_BUILD none` · `SUBJECTS phase-a vpio-01` · `INVOCATIONS 2` · `SECOND_INVOCATION_PER_SUBJECT none` · `ESCALATION none` · `DEVICE_ACTS termination-only`.
+
+**PASS on every predeclared line: `DISPOSAL_ACCEPTANCE PASS` with both invocations `Executed 1 test, with 0 failures`.** Ruling item 8 bounds what it means: the known foreign live harness state is absent after the act; cause, actor, launch time, and whether either process had already exited before its termination call are NOT established.
+
+### §18.29.3 Observations, none an act
+
+- **Legacy `App.app` (container `B3E9C88A…`, PID 2100)** — the legacy MAIA iOS app — was running in both the before and after reads. It is not a `VoiceKernelHarness`, it is outside this authority and every pin on the lane, and nothing touched it. Recorded so it is never mistaken for a third harness. (Legacy repair remains forbidden.)
+- **Device lock at Stage 1**: the first `xcodebuild` waited ~50 s for the phone to be unlocked, then ran. The unlock is a readiness act of the calibration-setup species (setup acts are not samples); it did not alter the invocation count.
+- The two foreign harnesses had survived from before 17:00Z (population Block-B read) to 18:11Z with the same PIDs.
+
+### §18.29.4 Founder ruling (2026-09-15, verbatim in substance)
+
+```text
+DISPOSAL-03             PASS · accepted · spent
+transport               Mac Studio terminal directly
+
+phase-a                 termination-only PASS
+vpio-01                 termination-only PASS
+foreign harnesses after 0
+
+runner carrier          DISPOSAL-03 carrier during act
+                        retained residue after completion
+
+C-D27                   closed as pin defect
+C-D28                   future hardening only
+C-D26                   HOLD
+
+K00-0506-S2-02
+condition               MET
+population execution    NOT YET OPENED
+```
+
+Founder: *"The foreign harness precondition has been removed under committed evidence. The condition that blocked `K00-0506-S2-02` is satisfied. I would not run the population yet. First cherry-pick, recompute the seal, and record §18.29. After §18.29 is durable, the population can be opened as its own explicit act under the unchanged `s2pop2` pin."*
+
+`/private/tmp/k0506-disposal-b198e2e37` = **retained residue** from this point (§18.28.4 item 3); no cleanup authorized.
+
+**Standing after §18.29:** DISPOSAL-01 STOP · spent · DISPOSAL-02 STOP · spent · **DISPOSAL-03 PASS · accepted · spent** (evidence committed `cb195a052` → `79fa57e87`, pushed) · C-D27 CLOSED · C-D28 future pins only · C-D26 HOLD · **`K00-0506-S2-02` CONDITION MET · execution NOT YET OPENED — its own explicit founder act under the unchanged §18.22.3 `s2pop2` pin** (pre-Block-C 69/unmuted/pane-closed read decisive; no restoration authority inside it; 69 last governed read 15:49:59Z) · `b198e2e37` unchanged · CLAUDE.md compaction DEFERRED until the population disposition closes · S3 CLOSED · KERNEL-00 acceptance CLOSED.
