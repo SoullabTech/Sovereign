@@ -117,6 +117,31 @@ than the freeze-discipline caution I had raised. ⛔ (iii) was not taken.
 
 ---
 
+## 3B · DISCIPLINES PRODUCED — ADDENDUM 2026-09-15
+
+⛔ **This addendum reopens no adjudication and changes no standing.** It records what the lane
+taught, so the lessons inherit with the record rather than living only in a transcript.
+
+### D-1 ⭐⭐ Before repairing a failed mechanism, determine which job it is actually succeeding at
+
+The bridge was not simply working or broken. It was **performing a real job that had never been
+distinguished from the job we expected it to perform** — reliably detecting *retrospective asks*,
+while we read that success as *antecedent resolution*. ⭐ Naming the difference is what made the
+next question askable; ⛔ repairing first would have destroyed a working part to fix a job it was
+never doing.
+
+### D-2 ⭐⭐ Bind every comparison to its actual current referent before interpreting the diff
+
+⚠️ Produced by a live error in this lane: a post-merge verification compared against a **stale
+baseline** — canonical had moved between two merges — and briefly appeared to show scope creep
+that did not exist.
+
+⭐ **Same family as D-1: a valid measurement attached to the WRONG REFERENT becomes a false
+claim.** ⛔ The measurement was correct; the referent was not, and nothing in the output says so.
+⭐ *Re-resolve the baseline at the moment of comparison, never from memory of where it was.*
+
+---
+
 ## 4 · STANDING
 
 ```text
@@ -136,6 +161,7 @@ P1 suite assertion ............... ✅ PRESERVED
 frozen suite ..................... ✅ UNTOUCHED
 anchor warning ................... ✅ INSTALLED (§3)
 ANTECEDENT-IDENTITY-01 ........... ⛔ PREPARED · NOT OPENED
+disciplines produced ............. ⭐ D-1 · D-2 RECORDED (§3B addendum)
 LANE ............................. ⭐⭐ **CLOSED** — closing act SPENT 2026-09-15
 production ....................... e57ca1baa · UNTOUCHED
 ```
