@@ -69,6 +69,12 @@ export type MaiaOutcomeResult =
   | {
       readonly ok: true;
       readonly turnIndex: number;
+      /**
+       * ⭐ THE BODY THAT WAS PERSISTED, returned so a surface can show what the
+       * database actually holds. ⛔ Not a second copy for the caller to render
+       * instead — it IS `ask_turns.body` for `turnIndex`.
+       */
+      readonly reply: string;
       readonly direction: EditorialDirection | null;
       readonly version: ProposalVersion | null;
     }
@@ -128,7 +134,7 @@ export async function persistMaiaEditorialOutcome(
 
       /* ⭐ THE ONLY THING CONSULTED IS `outcome.kind`. */
       if (outcome.kind === 'reply_only') {
-        return { ok: true as const, turnIndex, direction: null, version: null };
+        return { ok: true as const, turnIndex, reply: outcome.reply, direction: null, version: null };
       }
 
       if (outcome.kind === 'reply_with_direction') {
@@ -140,7 +146,7 @@ export async function persistMaiaEditorialOutcome(
            MAIA's turn while its declared adjunct did not exist. */
         if (!d.ok) throw new OutcomeRefused('direction_refused', d.reason);
         await bind(tx, invocation, turnIndex, { directionId: d.direction.id });
-        return { ok: true as const, turnIndex, direction: d.direction, version: null };
+        return { ok: true as const, turnIndex, reply: outcome.reply, direction: d.direction, version: null };
       }
 
       const a = await appendAuthoredVersionWithExecutor(tx, memberId, invocation.chainId, {
@@ -159,7 +165,7 @@ export async function persistMaiaEditorialOutcome(
           a.reason);
       }
       await bind(tx, invocation, turnIndex, { versionId: a.version.id });
-      return { ok: true as const, turnIndex, direction: null, version: a.version };
+      return { ok: true as const, turnIndex, reply: outcome.reply, direction: null, version: a.version };
     });
   } catch (e) {
     /* ⛔ Caught OUTSIDE the transaction, so the abort has already happened. */

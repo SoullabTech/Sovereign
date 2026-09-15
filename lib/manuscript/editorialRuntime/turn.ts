@@ -39,6 +39,7 @@ import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers
 import type { MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import {
   admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchema,
+  editorialTurnIdentity,
   type EditorialInvocation, type MemberActKind, type OutcomeRefusal,
 } from '../editorialDiscourse/contract';
 import { assembleEditorialCognition, type AssemblyRefusal } from './assembly';
@@ -48,17 +49,35 @@ import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeR
 export const EDITORIAL_MODEL = process.env.MAIA_EDITORIAL_MODEL || 'claude-opus-5';
 const MAX_TOKENS = 4096;
 
+/** ⛔ VERIFIED ONLY. An editorial act has no anonymous or guest form. */
+export type VerifiedIdentity = Extract<MemberIdentity, { status: 'verified' }>;
+
+/**
+ * ⭐⭐ THE CAPABILITY OWNS ITS COGNITION TIER.
+ *
+ * ⛔ Not a parameter. HTTP cannot select it — but more importantly no later
+ * SERVER caller can either, without deliberately editing this file. A tier
+ * accepted from a caller is a tier some caller will eventually choose.
+ */
+const EDITORIAL_STRATEGY: TierStrategy = { tier: 'CORE' };
+
 export interface EditorialTurnInput {
-  readonly memberId: string;
-  readonly identity: MemberIdentity;
+  /**
+   * ⭐⭐ ONE IDENTITY, NOT TWO. The member id is DERIVED from the minted
+   * identity below.
+   *
+   * ⛔ An earlier cut took `memberId` AND `identity`, which is two potentially
+   * divergent answers to *who is acting* — the same defect class as the second
+   * succession resolver and the duplicated act vocabulary, at the identity
+   * boundary. ⭐ There is now no parallel identity truth to disagree with.
+   */
+  readonly identity: VerifiedIdentity;
   readonly threadId: string;
   /** The turn ER-R1 just persisted. ⛔ Its BODY is read from the database, not passed. */
   readonly currentTurnIndex: number;
   readonly declaredAct: MemberActKind;
   readonly currentDirectionId: string | null;
-  readonly sessionRef: string;
   readonly exchangeId: string;
-  readonly strategy: TierStrategy;
   readonly sanctuary: boolean;
 }
 
@@ -89,7 +108,9 @@ export type EditorialTurnResult =
 export async function runEditorialTurn(
   input: EditorialTurnInput,
 ): Promise<EditorialTurnResult> {
-  const { memberId, threadId, currentTurnIndex } = input;
+  /* ⭐ DERIVED, never accepted. */
+  const memberId: string = input.identity.memberId;
+  const { threadId, currentTurnIndex } = input;
 
   /* 1 ⭐⭐ THE DURABLE TURN IS THE UTTERANCE. */
   const t = await query<{ body: string }>(
@@ -120,11 +141,14 @@ export async function runEditorialTurn(
      constructor, so the turn that comes back already carries its admitted
      membership. ⛔ Calling `adjudicateParticipation` again here would be a
      second adjudication of the same turn. */
+  /* ⭐ THE RULED HELPER decides thread identity — `sessionRef = threadId`,
+     `turnId = exchangeId`. ⛔ Not an equivalent value handed in by a caller. */
+  const ids = editorialTurnIdentity(threadId, input.exchangeId);
   const turn = constructEditorialWriterTurn({
-    identity: input.identity, sessionRef: input.sessionRef, exchangeId: input.exchangeId,
+    identity: input.identity, sessionRef: ids.sessionRef, exchangeId: ids.turnId,
     ask: utterance, sanctuary: input.sanctuary,
   }, assembly.blocks);
-  const proof = renderEditorialTurn(turn, input.strategy, assembly.blocks.map((b) => b.producerId));
+  const proof = renderEditorialTurn(turn, EDITORIAL_STRATEGY, assembly.blocks.map((b) => b.producerId));
   if (!proof) return { ok: false, reason: 'handoff_unproven' };
 
   /* 5 ⛔ THE STRUCTURED SEAM. No fallback exists below this call. */
