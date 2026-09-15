@@ -17,7 +17,7 @@
  */
 
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
-import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import { occurrences } from '@/lib/manuscript/exactText';
 import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
 import { evaluateExecutionFit, type ExecutionFit } from './executionFit';

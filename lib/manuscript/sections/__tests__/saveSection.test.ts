@@ -7,7 +7,7 @@
  * heading at all, a heading repeated inside the prose.
  */
 
-import { splitStoredSection } from '../saveSection';
+import { splitStoredSection } from '../sectionProjection';
 
 describe('splitStoredSection', () => {
   it('separates the composer heading from the body', () => {

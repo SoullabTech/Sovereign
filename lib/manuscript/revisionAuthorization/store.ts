@@ -39,7 +39,7 @@
  */
 
 import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
-import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import {
   authorize, hydrateAuthorization, resolveGuard,
   type RevisionAuthorization, type WorkStateReading,
