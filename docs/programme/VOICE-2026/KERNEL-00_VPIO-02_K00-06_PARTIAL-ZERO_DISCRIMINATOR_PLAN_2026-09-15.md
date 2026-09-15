@@ -2531,3 +2531,144 @@ The narrowest already-exercised act needs a runner that exists. Three shapes, ea
 Under any of (a)/(b): before-set must equal exactly `{0B07D423… (.k00), 6A2E406B… (.vpio01)}` else STOP; two invocations (`phase-a` then `vpio-01`), one each, no retry; after-read must be 0; `DISPOSAL_ACCEPTANCE PASS` is the only thing that meets the `K00-0506-S2-02` condition; `.vpio01` termination only. The `s2pop2` population pin (§18.22.3) is unaffected by which runner performs the disposal — it builds its own.
 
 **Standing after §18.23:** DISPOSAL-01 STOP at Stage 0 · spent · runner absent, cause UNKNOWN · foreign process state NOT re-read · termination invocations 0 · `K00-0506-S2-02` condition UNMET · S2 population NOT invoked · `s2pop`/`s2w2`/`s2w3`/`s2w4` worktrees residue · `b198e2e37` unchanged · 69 last read 15:49:59Z · C-D26 OPEN, non-blocking · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.24 — FOUNDER RULING on §18.23 (2026-09-15): DISPOSAL-01 STOP ACCEPTED · option (a) NOT ADOPTED · `S2-FOREIGN-HARNESS-DISPOSAL-02` AUTHORIZED with a Stage −1 runner build
+
+### §18.24.1 Ruling as captured (founder, verbatim in substance; standing block verbatim)
+
+Choice: **(b), not (a).** *"The most recent WITNESS-05 worktree is not a good authority carrier now: during custody completion we already observed that `/private/tmp/k0506-s2w5-b198e2e37` had ceased to be a Git worktree. Naming a runner underneath that ephemeral path would make the next act depend on residue we already know is not durable. A fresh disposal-only `build-for-testing` at `b198e2e37` is cleaner. It creates the exact runner needed for the already-authorized termination behavior, without borrowing from historical residue or changing the termination semantics."*
+
+1. **DISPOSAL-01 STOP — ACCEPTED** exactly as recorded (STOP at Stage 0 · signed runner absent · invocations 0 · device acts none · `DISPOSAL_ACCEPTANCE NOT_REACHED` · authority SPENT). The STOP establishes runner absence only; it does not establish the current state of either foreign harness process; cause of absence UNKNOWN.
+2. **Existing-runner option (a) — NOT ADOPTED.** No historical runner path is searched as a fallback; a disposal authority should not depend on the accidental survival of an old `/private/tmp` build product.
+3. **`S2-FOREIGN-HARNESS-DISPOSAL-02` — AUTHORIZED**: Stage −1 build the signed disposal runner only · Stage 0 before-process read · Stage 1 two termination-only invocations · Stage 2 after-process read · Stage 3 evidence return. Runner built from `b198e2e37058f2e059d986b4b148e224215f3ee3` in a fresh worktree.
+4. **Stage −1 authority**: the same driver-only `build-for-testing` recipe the frozen batch uses; sole purpose = produce the xctestrun containing the already-proven `testTerminateOnly`. Authorized: fresh detached worktree at `b198e2e37` · `xcodegen` for the driver project as the recipe requires · driver-only `build-for-testing` · xctestrun resolution · runner SHA/custody capture. NOT authorized: test execution during Stage −1 · phone launch · install · reinstall · sample · stimulus · playback · volume mutation · organism modification · batch modification. *Stage −1 is runner preparation, not disposal itself.*
+5. **Runner identity** proven before any termination invocation: execution HEAD = `b198e2e37` · runner exists · `testTerminateOnly` is the pinned implementation · subject table unchanged. If Stage −1 cannot produce the runner under the existing recipe → STOP · no alternate build · no historical runner fallback · no termination invocation.
+6. **Disposal boundary unchanged**: the before-read must show exactly `0B07D423-97E7-4196-BC1C-C69C96F994BE` and `6A2E406B-D1B8-43A4-92F3-29D50333AF19`; anything else (zero, one, a third, `.vpio02`) → STOP before termination.
+7. **Termination authority**: exactly `TEST_RUNNER_K00_SUBJECT=phase-a` → `testTerminateOnly`, then `TEST_RUNNER_K00_SUBJECT=vpio-01` → `testTerminateOnly`, once each, in that order. `.vpio01`: termination only; no launch/sampling/reinstall/mutation/other interaction.
+8. **Acceptance**: the same governed process read returns `VoiceKernelHarness processes AFTER: 0` → `DISPOSAL_ACCEPTANCE PASS`. A PASS proves only that the known foreign live harness state was removed; it does not establish why the processes existed, who launched them, when, or whether either had already exited before termination.
+9. **Population conditional authority**: `K00-0506-S2-02` remains conditionally authorized exactly as pinned (§18.22.3); it does not begin until DISPOSAL-02 returns `DISPOSAL_ACCEPTANCE PASS` AND that evidence is committed and pushed as its own act; then the population begins as a separate evidentiary act under the `s2pop2` contract; no restoration authority added; the pre-Block-C `69 · unmuted · pane closed` read remains decisive.
+
+Standing (founder, verbatim):
+
+```text
+DISPOSAL-01                 STOP · accepted · spent
+
+historical runner reuse     NOT ADOPTED
+
+DISPOSAL-02                 AUTHORIZED
+Stage -1                    fresh signed runner build
+runner source               b198e2e37
+termination subjects        phase-a · vpio-01
+termination count           once each
+after-read requirement      zero harness processes
+
+K00-0506-S2-02              CONDITIONALLY AUTHORIZED
+                            remains unopened until
+                            DISPOSAL-02 PASS is
+                            committed and pushed
+
+b198e2e37                   unchanged
+C-D26                       OPEN · non-blocking
+S3                          CLOSED
+KERNEL-00 acceptance        CLOSED
+```
+
+Governing distinction (founder): *"Rebuilding the carrier does not reopen the design. The code being exercised is frozen; only the disposable signed runner needed to exercise it is being restored."*
+
+### §18.24.2 Execution pin — `S2-FOREIGN-HARNESS-DISPOSAL-02` (Mac act; Stage −1 build + the §18.22.2 stages with the runner path substituted; nothing else changed)
+
+Recipe provenance: Stage −1 reproduces `scripts/witness/k00-driver-batch.sh` lines 243 and 245 at `b198e2e37` term for term (`xcodegen generate` in `ios/VoiceKernelDriver`; `xcodebuild build-for-testing -project … -scheme DriverUITests -destination "id=00008140-00163D9922E0801C" -derivedDataPath <worktree>/ios/VoiceKernelDriver/.derived DEVELOPMENT_TEAM=ZVK2X646Z2`), and resolves the xctestrun the way line 246 does. The destination id is used for signing only; no device verb runs in Stage −1. `testTerminateOnly` identity = the function body's SHA-256 recomputed from the worktree source must equal `c483528b804f3aae6113f347ffdaecad51a80f6a0d3499bd419ae474b27d888e` (§18.23.3, computed here from the git object database at `8b111709b` · `83a382a14` · `b198e2e37`). Paths must not pre-exist (a pre-existing path = STOP, never reused or cleaned). No `#` on any shell line; `zsh` is the expected shell.
+
+**Stage −1 — build the disposal runner only (no device verb; no test executes):**
+
+```bash
+set -u
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUT="/private/tmp/k00-disposal02-$STAMP"
+WTB="/private/tmp/k0506-disposal-b198e2e37"
+test -e "$WTB" && { echo "STOP: $WTB pre-exists — never reused"; exit 2; }
+mkdir -p "$OUT"
+echo "$STAMP" > "$OUT/stamp.txt"
+cd /Users/soullab/MAIA-SOVEREIGN && git fetch origin claude/voice-2026-census-01 && git worktree add --detach "$WTB" b198e2e37058f2e059d986b4b148e224215f3ee3
+cd "$WTB" && git rev-parse HEAD | tee "$OUT/build-head.txt"
+test "$(git rev-parse HEAD)" = "b198e2e37058f2e059d986b4b148e224215f3ee3" || { echo "STOP: HEAD is not b198e2e37"; exit 2; }
+awk '/func testTerminateOnly/,/^    }$/' ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift | shasum -a 256 | tee "$OUT/testTerminateOnly.sha256"
+grep -q 'c483528b804f3aae6113f347ffdaecad51a80f6a0d3499bd419ae474b27d888e' "$OUT/testTerminateOnly.sha256" || { echo "STOP: testTerminateOnly is not the pinned implementation"; exit 2; }
+grep -nE '"phase-a": +Subject\(key: "phase-a", +bundleID: "life\.soullab\.voicekernel\.k00"|"vpio-01": +Subject\(key: "vpio-01", +bundleID: "life\.soullab\.voicekernel\.vpio01"' ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift | tee "$OUT/subject-table.txt"
+test "$(wc -l < "$OUT/subject-table.txt" | tr -d ' ')" = "2" || { echo "STOP: subject table rows for phase-a / vpio-01 not found as pinned"; exit 2; }
+( cd ios/VoiceKernelDriver && xcodegen generate ) > "$OUT/xcodegen.log" 2>&1 || { echo "STOP: xcodegen generate failed — no alternate build"; exit 3; }
+xcodebuild build-for-testing -project "$WTB/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj" -scheme DriverUITests -destination "id=00008140-00163D9922E0801C" -derivedDataPath "$WTB/ios/VoiceKernelDriver/.derived" DEVELOPMENT_TEAM=ZVK2X646Z2 > "$OUT/build-for-testing.log" 2>&1 || { echo "STOP: build-for-testing failed — no alternate build"; exit 3; }
+grep -c 'TEST BUILD SUCCEEDED' "$OUT/build-for-testing.log"
+XR="$(ls -t "$WTB"/ios/VoiceKernelDriver/.derived/Build/Products/*.xctestrun | head -1)"
+test -f "$XR" && echo "RUNNER_PRESENT true $XR" | tee "$OUT/runner-path.txt" || { echo "STOP: no xctestrun produced"; exit 3; }
+( cd "$(dirname "$XR")" && shasum -a 256 "$(basename "$XR")" DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests DriverUITests-Runner.app/DriverUITests-Runner DriverHost.app/DriverHost ) | tee "$OUT/runner-custody.sha256"
+git -C "$WTB" status --porcelain | tee "$OUT/worktree-footprint.txt"
+```
+
+The worktree footprint (xcodegen's regenerated project + `.derived`) is recorded, never committed. A STOP anywhere in Stage −1 ends the act: no termination invocation, no historical runner, no second build.
+
+**Stage 0 — before-read (unchanged from §18.22.2 except `XR` is now Stage −1's product):**
+
+```bash
+test -f "$XR" || { echo "STOP: runner absent after Stage -1"; exit 2; }
+xcrun devicectl device info processes --device A0736AC8-793B-516F-AC72-C076DB6CEE38 --json-output "$OUT/processes-before.json"
+python3 - "$OUT/processes-before.json" <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print('VoiceKernelHarness processes BEFORE:', len(hits), hits)
+c={p.split('/Bundle/Application/')[1].split('/')[0] for p,_ in hits}
+exp={'0B07D423-97E7-4196-BC1C-C69C96F994BE','6A2E406B-D1B8-43A4-92F3-29D50333AF19'}
+print('BEFORE_SET_IS_THE_TWO_IDENTIFIED', c==exp, sorted(c))
+PY
+```
+
+`BEFORE_SET_IS_THE_TWO_IDENTIFIED True` is the precondition (ruling item 6). Any other set → STOP, return the before-read, no invocation.
+
+**Stage 1 — exactly two `testTerminateOnly` invocations, `phase-a` then `vpio-01`, once each:**
+
+```bash
+cd "$WTB"
+TEST_RUNNER_K00_SUBJECT=phase-a xcodebuild test-without-building -xctestrun "$XR" -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never -only-testing:DriverUITests/K00DriverTests/testTerminateOnly 2>&1 | tee "$OUT/terminate-phase-a.log"
+TEST_RUNNER_K00_SUBJECT=vpio-01 xcodebuild test-without-building -xctestrun "$XR" -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never -only-testing:DriverUITests/K00DriverTests/testTerminateOnly 2>&1 | tee "$OUT/terminate-vpio-01.log"
+grep -hE 'Executed 1 test|TEST EXECUTE|DRIVER/INFRASTRUCTURE|PRECONDITION' "$OUT/terminate-phase-a.log" "$OUT/terminate-vpio-01.log"
+```
+
+A `harness did not terminate` failure on either → still take the after-read, then STOP and return; no second invocation of either subject.
+
+**Stage 2 — after-read; acceptance = 0:**
+
+```bash
+xcrun devicectl device info processes --device A0736AC8-793B-516F-AC72-C076DB6CEE38 --json-output "$OUT/processes-after.json"
+python3 - "$OUT/processes-after.json" <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print('VoiceKernelHarness processes AFTER:', len(hits), hits)
+print('DISPOSAL_ACCEPTANCE', 'PASS' if len(hits)==0 else 'STOP')
+PY
+```
+
+**Stage 3 — seal and return on its own `feature/*` branch** (fresh carrier worktree from the lane tip; the §18.18.4 dependency link is the precedented transport; nothing else committed):
+
+```bash
+{ printf 'ACT S2-FOREIGN-HARNESS-DISPOSAL-02\nSTAMP %s\nRUNNER_SOURCE b198e2e37058f2e059d986b4b148e224215f3ee3\nRUNNER_BUILT_IN %s\nSUBJECTS phase-a vpio-01\nINVOCATIONS 2\nSECOND_INVOCATION_PER_SUBJECT none\nESCALATION none\nDEVICE_ACTS termination-only\n' "$STAMP" "$WTB"; } > "$OUT/RETURN.txt"
+( cd "$OUT" && shasum -a 256 stamp.txt build-head.txt testTerminateOnly.sha256 subject-table.txt xcodegen.log build-for-testing.log runner-path.txt runner-custody.sha256 worktree-footprint.txt processes-before.json processes-after.json terminate-phase-a.log terminate-vpio-01.log RETURN.txt > SHA256SUMS.disposal && cat SHA256SUMS.disposal )
+BR="feature/k00-s2-foreign-harness-disposal-02-$STAMP"
+WT="/private/tmp/k00-disposal02-carrier-$STAMP"
+cd /Users/soullab/MAIA-SOVEREIGN && git fetch origin claude/voice-2026-census-01 && git worktree add -b "$BR" "$WT" origin/claude/voice-2026-census-01
+cd "$WT" && test -e node_modules || ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
+REL="docs/programme/VOICE-2026/driver-ledger/S2-FOREIGN-HARNESS-DISPOSAL-02-$STAMP"
+mkdir -p "$REL" && cp -p "$OUT"/* "$REL"/ && ( cd "$REL" && shasum -a 256 -c SHA256SUMS.disposal )
+git add "$REL" && git commit -m "witness(voice-2026): return S2-FOREIGN-HARNESS-DISPOSAL-02 evidence (Stage -1 runner build at b198e2e37; termination-only, two subjects, before/after process reads)" && git push -u origin "$BR" && git log -1 --format=%H
+```
+
+A STOP before Stage 3 still returns whatever `$OUT` holds under the same carrier shape (the §18.23 STOP bundle is the precedent), with `RETURN.txt` stating the stage reached and `INVOCATIONS` as actually performed.
+
+Return: branch + commit SHA → §18.25 (verified here: seal · `build-head.txt` = `b198e2e37…` · `testTerminateOnly.sha256` = `c483528b…` · subject-table rows 2 · `TEST BUILD SUCCEEDED` · runner custody hashes recorded · before-set = the two identified containers · both logs `Executed 1 test, 0 failures` · after = 0). **PASS = `DISPOSAL_ACCEPTANCE PASS` with both invocations `Executed 1 test, 0 failures`.** Anything else = STOP · spent · return for ruling. A PASS establishes only that the known foreign live harness state was removed (ruling item 8); only after its evidence is committed and pushed does the `K00-0506-S2-02` condition (§18.22.3, unchanged) become MET — the population is then its own act on its own branch.
+
+**Standing after §18.24:** DISPOSAL-01 STOP · accepted · spent · option (a) NOT ADOPTED · **DISPOSAL-02 AUTHORIZED, pinned, NOT YET EXECUTED** (Stage −1 fresh signed runner at `b198e2e37` · subjects `phase-a` · `vpio-01` once each · after-read 0) · `K00-0506-S2-02` CONDITIONALLY AUTHORIZED, unopened until DISPOSAL-02 PASS is committed and pushed · `b198e2e37` unchanged · 69 exact, pre-C read decisive · C-D26 OPEN, non-blocking · S3 CLOSED · KERNEL-00 acceptance CLOSED.
