@@ -12,12 +12,10 @@ TYPE      ADMISSION AND COMPRESSION of already-earned evidence
 > **Compression may remove repetition. ⛔ It may not remove epistemic distinctions.**
 
 ```text
-ASSESSED   120 obligations (OBL-01…OBL-120) · 3 open founder items (D-P1-01 · D-P1-03 · D-P1-05)
-           · 3 further founder items met in the corpus (D-P1-06 · D-P1-07 · D-P1-08)
-           · the P1-01 close's 14 unlocated-governance items · the six P1-06 rows'
-           WHAT THIS DOES NOT ESTABLISH fields · 15 C5 · 20 C6 · 5 named objects · 22 self-corrections
-
-ADMITTED   7   ⛔ every one of the 113 remaining candidates is PRESERVED below with its kind named
+ASSESSED   120 obligations (OBL-01…OBL-120) · 6 founder items (D-P1-01 · 03 · 05 · 06 · 07 · 08) ·
+           the P1-01 close's 14 unlocated-governance items · the six P1-06 rows' WHAT THIS DOES
+           NOT ESTABLISH fields · 15 C5 · 20 C6 · 5 named objects · 22 self-corrections
+ADMITTED   7   ⛔ every remaining candidate is PRESERVED below with its kind named
 ```
 
 ⛔ **Nothing in this file resolves a `C5` or a `C6`, chooses a limb, reads source, seeks runtime
