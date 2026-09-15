@@ -19,9 +19,59 @@ lane** · no design · no schema · no graph · no repair authority.
 > necessary for persistent conversational memory, and which of those relations does AIN already
 > preserve?**
 
-**Flow:** existing AIN relation census → applied-linguistics prior art → relation taxonomy →
-map overlaps/gaps → counterexamples from **real continuity failures** → minimum candidate
-grammar → founder adjudication → **STOP.** ⛔ No implementation step.
+**Flow — ⭐ AMENDED 2026-09-15.** ⛔ The prior ordering (*AIN census → prior art → taxonomy*) is
+**superseded**: it risked seeing only what we already built.
+
+```text
+ACT 1  Applied-linguistics prior-art census
+       → extract its own relational categories IN ITS OWN TERMS
+       → ⛔ no AIN matching yet
+
+ACT 2  AIN relation census
+       → describe what AIN actually carries IN NATIVE SYSTEM TERMS
+       → ⛔ no retrofitting to the linguistic taxonomy
+
+ACT 3  Correspondence map
+       → overlap · partial overlap · AIN-only · prior-art-only · contradiction
+
+ACT 4  Taxonomy candidate
+       → only NOW ask what grammar, if any, is warranted
+```
+
+→ counterexamples from **real continuity failures** → founder adjudication → **STOP.**
+⛔ No implementation step.
+
+> ⭐⭐ **METHODOLOGICAL RULE:** **Neither corpus may name the other before both have been
+> independently described.**
+
+⭐ **The protection is not merely ORDERING; it is INDEPENDENT DESCRIPTION BEFORE
+CORRESPONDENCE.** ⛔ Prior art first, taken as a template, would force AIN into inherited
+categories — the mirror of the failure the flip fixes. ⭐ *This is how convergence is
+DISCOVERED rather than MANUFACTURED.*
+
+### ⚠️ Two notes on making that rule real
+
+**(a) ⭐⭐ ORDERING ALONE CANNOT ENFORCE IT — the same reader runs both acts.** By ACT 2 the
+linguistic vocabulary is in mind, and ⛔ an instruction not to retrofit is exactly the kind of
+discipline this project has repeatedly found decays into prose. ⭐ **Make it checkable:
+ACT 2's output must be expressible entirely in AIN's native vocabulary** — table and column
+names, code identifiers, ratified law names — and **any linguistic term appearing in it is a
+CONTAMINATION FLAG**, not a finding. ⭐ A vocabulary-disjointness scan is cheap, fails closed,
+and keys on a semantic property rather than a line number, which is this project's own
+instrument discipline. ⛔ Alternative if that proves too blunt: run ACT 2 in a session that has
+not read ACT 1 — ⛔ stronger, and costlier.
+
+**(b) ⚠️ ONE PROPOSED ACT 3 CATEGORY IS PRESCRIPTIVE AND HAS BEEN MOVED.**
+*"correctly reconstructed / should not persist"* was listed among the correspondence
+categories. ⛔ **`should not persist` is a judgment about what AIN OUGHT to do** — §3B.5's
+prescriptive axis — and placing it in ACT 3 would smuggle ACT 4's adjudication into the
+descriptive map. ⭐ **The descriptive form belongs in ACT 2** (*this relation exists in AIN only
+at retrieval time, computed per encounter*); ⛔ **whether it SHOULD persist is ACT 4's call.**
+⭐ *Describe that it is recomputed; do not yet rule that recomputing is right.*
+
+⭐ **`contradiction` is the category that earns the census** — e.g. `IS_WITHHELD_FROM`, already
+refused. ⛔ Where ratified law exists, a contradiction is **reported, never resolved** by this
+lane.
 
 **Required reads:** Centering Theory · discourse deixis & anaphora · **bridging** · Discourse
 Representation Theory · common ground / grounding · discourse relations · conversational repair ·
@@ -287,6 +337,11 @@ the two axes **is the census's actual finding.**
 
 ```text
 lane ............................. ⛔ PREPARED · NOT OPENED · opens AFTER ANT-IDENT-01
+flow ............................. ⭐ AMENDED — prior art → independent AIN census →
+                                    correspondence → taxonomy candidate
+independence rule ................ ⭐ neither corpus names the other first
+  enforcement .................... ⚠️ vocabulary-disjointness scan on ACT 2 (proposed)
+  ACT 3 category moved ........... ⚠️ "should not persist" is PRESCRIPTIVE → ACT 4
 supersedes ....................... RELATIONAL-MEMORY-01 (never opened, kept verbatim)
 parent/child with ANT-IDENT-01 ... ⚠️ UNDECIDED — settle BEFORE either opens (§3.1)
 citations ........................ ⚠️ canonical corroborable · recent UNVERIFIED (§3.2)
