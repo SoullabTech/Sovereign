@@ -1403,3 +1403,75 @@ bash /private/tmp/s2w3-blockD.sh 2>&1 | tee /private/tmp/s2w3-blockD.out; echo "
 Return as §16.7's return block with the same substitutions: the `S2-WITNESS-03-<stamp>/` ledger dir (`transcript.txt` + `SHA256SUMS.witness`), the `S2-WITNESS-03-preflight-<stamp>/` dir, the four `s2w3-block*.out`, `s2w3-preC-clock.txt` + `s2w3-preC-volume.txt`, the block-file diffs + hashes, `BRANCH · HEAD · STAMP · BATCH_PIPELINE_RC`, on a `feature/*` branch; cherry-picked here and read against §16.4 → §18.12. PASS ≠ S2 population · ≠ S3 · ≠ KERNEL-00.
 
 **Standing after §18.11:** `S2-WITNESS-03` AUTHORIZED · pinned · NOT YET EXECUTED · freshness = the pre-Block-C read · WITNESS-02 residue preserved · `b198e2e37` unchanged · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.12 — `S2-WITNESS-03` EXECUTED → STOP BEFORE BLOCK C (pre-Block-C read 38 ≠ 69; §16.4 read; authority SPENT) — 2026-09-15
+
+### §18.12.1 Custody
+
+- Evidence branch `feature/k00-s2-witness-03-stop-evidence-20260915T150551Z`, founder commit `e85a39dae9901eabee9e316be45838b40573635e` → cherry-picked onto this lane as `05bbccc80feb67dcaf660e51154c3296aaa2c0c3` (`-x`, no edit).
+- Evidence directory `driver-ledger/S2-WITNESS-03-preflight-20260915T150524Z/` — 12 files: `RETURN.txt` · `SHA256SUMS.stop` · `apps.json` · `processes.json` · `blocks-ABD.txt` · `s2w3-block-diffs.txt` · `s2w3-block-hashes.txt` · `s2w3-preC-clock.txt` · `s2w3-preC-volume.txt` · `s2w3-preC-pgrep.operator-capture.txt` · `s2w3-preexistence.operator-capture.txt` · `stop-status.txt`.
+- `sha256sum -c SHA256SUMS.stop` here: **11/11 OK** (the seal file lists everything but itself).
+- `RETURN.txt`: `BRANCH=feature/k00-s2-witness-03-stop-evidence-20260915T150551Z · EXECUTION_HEAD=b198e2e37058f2e059d986b4b148e224215f3ee3 · STAMP=20260915T150551Z · BATCH_PIPELINE_RC=NOT_RUN_PRE_C_STOP`.
+- **Deliberately absent, by design of a pre-C STOP:** no `S2-WITNESS-03-<stamp>/` ledger dir, no `transcript.txt`, no `SHA256SUMS.witness`, no `s2w3-blockC.out` / `s2w3-blockD.out`. Their absence is the evidence that Block C never ran, not a custody gap.
+- WITNESS-02 residue (`/private/tmp/k0506-s2w2-b198e2e37`, `s2w2-block*`, `S2-WITNESS-02-preflight-20260915T141935Z`) NOT copied, NOT touched (§18.11.2 ⛔ honoured).
+
+### §18.12.2 The §18.11.3 pin, honoured line by line
+
+| Pinned step | Evidence | Read |
+|---|---|---|
+| Path did not pre-exist | `s2w3-preexistence.operator-capture.txt`: `ls: /private/tmp/k0506-s2w3-b198e2e37: No such file or directory` (pre-Block-A, PID 80148) | ✓ fresh token, no collision with WITNESS-01/02 |
+| Three literal substitutions only | `s2w3-block-diffs.txt`: every hunk in A/B/C/D is `k0506-s2w-` → `k0506-s2w3-`, `S2-WITNESS-01` → `S2-WITNESS-03`, `s2-witness-01` → `s2-witness-03`; nothing else | ✓ diff-proven |
+| Block hashes | A `ee17183f…` · B `2dce2db8…` · C `82f3c6be…` · D `c682e8aa…` — identical to the four the founder reported | ✓ |
+| Block A (custody) | `HEAD=b198e2e37…` · `TREE_CLEAN=1` · `Tests: 75 passed, 75 total` · `GATE_75_75=1` · `FIXTURE_SHA=1a505b3d…` · `AFPLAY_SHA=88f3b577…` · `AFPLAY_PROCESSES_BEFORE=0` · `BLOCK_A_PASS=1` | ✓ PASS every line |
+| Block B (device preflight) | `PREFLIGHT_DIFF_RC=0` · `OTHER_BATCHES=0` · `APPS_READ_RC=0` · `E3B88028_CONTAINER_HITS=1` (recount here on `apps.json`: 1) · `PROCESS_READ_RC=0` · `VoiceKernelHarness processes: 0` (recount here on `processes.json`: 0) · `PREFLIGHT_CLEAN=…/S2-WITNESS-03-preflight-20260915T150524Z` | ✓ PASS every line |
+| `rc=` blank after A and B | zsh `PIPESTATUS` — informational, §16.7 | — |
+| Pre-C clock | `s2w3-preC-clock.txt`: `2026-09-15T15:05:51Z` | read |
+| Pre-C volume | `s2w3-preC-volume.txt`: `output volume:38, input volume:missing value, alert volume:59, output muted:false` | **38 ≠ 69 → STOP** |
+| Pre-C pane | `s2w3-preC-pgrep.operator-capture.txt`: `OBSERVED=[pgrep rc=1]` (no `System Settings` / `Sound.appex` process; PID 82431 capture) | pane closed ✓ |
+| Block C / D | `stop-status.txt`: `BLOCK_C=NOT_RUN · BLOCK_D=NOT_RUN · PLAYBACK=NONE` | not run ✓ |
+
+The pre-C read did exactly what §18.11.2 built it to do: it was a precondition, it refused, and nothing downstream moved. No adjustment, no second read, no retry under the same authority.
+
+### §18.12.3 Adjudication (§16.4 + §18.11.3)
+
+**`S2-WITNESS-03` — STOP before Block C · witness NOT PASS · authority SPENT.**
+
+- Blocks A and B PASSED every predeclared line on the real Mac (second clean A/B pass on `b198e2e37`; WITNESS-01 was the first).
+- The §16.4 questions were never reached: no `stimulus-sample-1.tsv`, no liveness rows, no custody verdict, no afplay child, no journal, no S2 row, rc none. The batch's own stimulus preflight (which would have refused 38 with exit 8) was not exercised — the pre-C read refused first, as pinned.
+- Nothing played. `.vpio02` was not launched. K00/R1 · `.vpio01` untouched. `b198e2e37` unchanged.
+- **The founder's attestation is carried verbatim as the standing of the volume fact:** *"I cannot truthfully attest that nobody touched the volume after 14:05:42Z… 69 did not persist to the fresh read at 15:05:51Z; it was 38. Cause and actor remain unadjudicated."*
+
+### §18.12.4 The second drift (record, not inference)
+
+| Read | UTC | Output volume | Pane | Governed act |
+|---|---|---|---|---|
+| §14.9 after-read | 02:23Z | 69 | closed | preparation PASS |
+| WITNESS-01 batch preflight | 12:28Z | 31 | — | STOP (§17) |
+| census | 12:51Z | 31 | Sound pane open since 11:25Z | read only |
+| RESTORE-01 before | 13:43Z | 44 | closed | — |
+| RESTORE-01 after (slider) | 13:4xZ | 73 | open | STOP |
+| RESTORE-02 before | 13:59:19Z | 65 | closed | — |
+| RESTORE-02 after (11 key presses) | 14:05:42Z | **69** | closed | PASS |
+| WITNESS-03 pre-C | **15:05:51Z** | **38** | closed (`rc=1`) | STOP |
+
+Facts: 69 → 38 inside one hour and nine seconds, Sound pane closed at both ends, no governed act between the two reads touched volume (this lane: none; the Mac-side lanes: WITNESS-02 residue read at 14:55:27Z was a read; WITNESS-03 Blocks A/B are read-only by construction and gate-proven not to contain a volume verb). The §18.4 candidate mechanism (a person-shaped desktop session writing through `coreaudiod` server-side control) is *consistent* with this reading but was observed only for the 07:25–08:46 local window; nothing here re-observes it. **Cause UNKNOWN · actor UNKNOWN · not inferred.**
+
+Flagged inference only (same class as §18.6's): 38 lies on the sixteenth-step grid (6/16 = 37.5 → reported 38), as 25 · 31 · 44 · 69 did; 73 and 65 did not. A keyboard-step-shaped value is compatible with a keyboard act and with several other writers; it identifies nobody. The record does not choose.
+
+### §18.12.5 What this STOP earns and what it does not
+
+- Earned: the pre-Block-C freshness read (§18.11.2's re-anchoring) is now witnessed once refusing on drift — the third fail-closed boundary in this lane to do so (batch preflight §17 · restoration parser §18.6 · pre-C read here). *The refusal earned confidence in the boundary, not permission to move it* (§18 ruling, unchanged).
+- Earned: a second clean A/B pass on `b198e2e37`; the orchestration's custody and device-preflight blocks are stable under repetition.
+- Not earned: any S2 row · any §7 reading · any change to the volume target, the batch, or the pinned blocks · any diagnosis of the drift. A failed witness may diagnose; it may never bootstrap authority.
+- Not measured: whether 69 would have survived a tighter restoration→witness pairing. The two PASS reads of 69 (02:23Z, 14:05:42Z) were each followed by a non-69 read at the next governed touch (12:28Z, 15:05:51Z); the intervals were ~10 h and ~1 h. n = 2, no rate claimed.
+
+### §18.12.6 Returned to the founder (nothing opened here)
+
+1. **Acceptance of the STOP as read** (§18.12.3).
+2. **Disposition of the drift question**: (a) a second read-only drift census bounded to 14:05Z–15:06Z (the §18.3 instrument reused, `K00_DRIFT_LOG_LAST` sized to reach back past 14:05:42Z — retained coreaudio log coverage permitting), or (b) proceed without a mechanism, treating volume as a state that must be re-prepared immediately before use.
+3. **Whether a paired act is issued** — one issuance covering `S2-VOLUME-RESTORE-03` (§18.7.2 keyboard sequence, hand) immediately followed by `S2-WITNESS-04` Block C, with the pre-C read as the single joint between them and a conduct window measured in minutes, not thirty; `b198e2e37` reusable if the batch is byte-unchanged; new path token `s2w4`; WITNESS-02 and WITNESS-03 worktrees preserved as residue.
+4. Nothing else. S2 population · S3 · KERNEL-00 acceptance remain CLOSED.
+
+**Standing after §18.12:** `S2-WITNESS-03` STOP · SPENT · Blocks A/B PASS ×2 on `b198e2e37` · pre-C read refused 38 · nothing played · no S2 row · 69 last read 14:05:42Z, 38 read 15:05:51Z · drift cause/actor UNKNOWN · `b198e2e37` unchanged · WITNESS-02 + WITNESS-03 residue preserved · `S2-WITNESS-04` / `S2-VOLUME-RESTORE-03` NOT ISSUED · S2 population · S3 · KERNEL-00 acceptance CLOSED.
