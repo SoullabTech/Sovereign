@@ -876,3 +876,8 @@ No qualification change. FIRST-INSTALL-SID not open; ENTRY not open; K00 obligat
 ### §10.69 — ENTRY instruments complete as drafts; liveness validity reader exists before its evidence (2026-09-15; discriminator plan §18.49; implementation record §10.19)
 
 No qualification change. FIRST-INSTALL-SID closed; ENTRY not open; K00 obligations for the SID subject CLOSED. The reader that will judge observer liveness at [G] is committed and self-tested before any SID journal exists.
+
+
+### §10.70 — `SID FIRST-INSTALL-01` OPEN (2026-09-15; discriminator plan §18.50; implementation record §10.20)
+
+The install is the INSTALL TRANSACTION moment only: it establishes presence and container, nothing physiological. K00 obligations for the SID subject remain CLOSED; ENTRY [D]/[E] execution CLOSED; S-b CLOSED.
