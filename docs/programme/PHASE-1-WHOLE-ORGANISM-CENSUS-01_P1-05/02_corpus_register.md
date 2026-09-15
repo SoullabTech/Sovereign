@@ -698,3 +698,688 @@ viewer is *some* active practitioner", and `:79-85` applies "**no predicate at a
 RESIDUE · No consent predicate is located anywhere on this page — NONE LOCATED, ⛔ not ABSENT.
 P1-GOV-ACCESS-01 stands adjacent. ⛔ No verdict of legitimacy; ⛔ no exposure claim — that is not this
 census's territory and `AUTH-EXPOSURE-01` is neither cited nor awaited.
+
+```text
+ITEM      C-I-3 · two written access models vs the wired one
+OUTCOME   C2 RESOLVED BY ALTITUDE
+```
+BASIS · ALTITUDE 1 — written scope model: "`lib/relationship/scope.ts` and `lib/coachField/*` encode
+member/practitioner read scopes, crossing rules and verb limits". ALTITUDE 2 — the wired read:
+"`app/studio/fields/[memberId]/page.tsx` performs a practitioner read of member material and **imports
+neither**". Both hold (INF-4).
+RESIDUE · Twinned with C-5 (§8.5) across two registers (E-28); ⛔ the two items are not merged.
+P1-GOV-ACCESS-01 is the standing finding. ⛔ No verdict of legitimacy.
+
+```text
+ITEM      C-I-4 · `/caseload` declared with a role
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · Two named paths the record distinguishes: `config/accessMatrix.ts:470` declares
+"`{prefix:'/caseload', minTier:'pro', rolesAnyOf:['practitioner']}`"; "the API family lives at
+`/api/caseload/*`, **which that prefix does not match** and no other rule matches; the unmapped default is
+permissive". The declaration is true of the prefix it names.
+RESIDUE · ⭐ Whether anything gates the API family at request time is UNKNOWN — "⚠️ Production
+`ACCESS_CONTROL_MODE` is UNKNOWN" (UC-17 I-03, E-45) — owed read, §5, outside the permitted evidence.
+⛔ The scope classification establishes no enforcement fact in either direction.
+
+```text
+ITEM      C-I-5 · `/api/supervision` free-tier vs clinical content
+OUTCOME   C6 UNKNOWN
+```
+BASIS · Side A `config/accessMatrix.ts:578` — "free-tier, no role"; Side B "the routes' '**HIPAA
+compliant**' headers and their absent handler authorization". ⛔ A compliance claim is not adjudicable from
+the permitted evidence, and evaluating it would be a verdict this census may not render; the matrix entry's
+runtime force is itself undetermined (production `ACCESS_CONTROL_MODE` UNKNOWN). Carried: "⛔ Not adjudicated."
+RESIDUE · OWED READ (§5): the production access-control mode, and a located authorization in the
+"seven of eleven supervision routes" slice 06 left unread (UC-17 I-02). ⛔ Not performed. ⛔ "absent handler
+authorization" is read as NONE LOCATED, not ABSENT.
+
+```text
+ITEM      C-I-6 · facilitator and practitioner
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · Two named objects, distinguished by the record: "`member_memory_atoms.facilitator_id` attributing
+`source_type='practitioner_observation'`" against "`CircleRole`, where `facilitator` is a distinct enforced
+role **unrelated to `practitioners`**".
+RESIDUE · ⛔ Per the vocabulary rule no finding attaches to the shared token. Whether any
+`practitioner_observation` row exists is UNKNOWN — "no writer located" (UC-17 I-10) — owed read, §5.
+
+```text
+ITEM      C-I-7 · `practitioner_id` refers to two tables
+OUTCOME   C6 UNKNOWN
+```
+BASIS · "references `practitioners(id)` in some tables" / "and `members(id)` in others — Same column name,
+different referent", carried with the schema's own sentence: "**the declared shape in this repository is
+therefore NOT authoritative**" (`20260802000002…:45-52`, with three competing table definitions at `:26-39`).
+⛔ With the repository's declared shape disclaimed by the repository itself, the referent cannot be
+determined from the permitted evidence.
+RESIDUE · OWED READ (§5): the authoritative deployed schema for the tables carrying `practitioner_id` — a
+database read, ⛔ outside the permitted evidence and ⛔ not performed. ⛔ Per the vocabulary rule no finding
+attaches to the token. E-29 (SYN-4) carries this uncertainty into C-1 (§8.1)'s Side B.
+
+```text
+ITEM      C-I-8 · the matrix's own DECLARED-vs-ENFORCED divergences
+OUTCOME   C2 RESOLVED BY ALTITUDE
+```
+BASIS · Both altitudes are declared inside one artifact: `config/accessMatrix.ts:288,299,392-404,531` —
+"four cases the file records itself, one labelled '**Unreconciled**' in its own note" — DECLARED access
+policy against ENFORCED behaviour.
+RESIDUE · Whether the declarations bind at request time depends on the production `ACCESS_CONTROL_MODE`,
+UNKNOWN (UC-17 I-03). ⭐ A file recording its own divergences is evidence of the divergence, ⛔ not of its
+resolution.
+
+---
+
+## 4 · PARTS IV · V · VI · VIII · IX
+
+### 4a · PART IV — session-anchor versus canon (1 item adjudicated here)
+
+```text
+ITEM      C2 (H) · STT/TTS LATITUDE                     (anchor vs canon)
+OUTCOME   C5 GENUINE CONTRADICTION
+```
+BASIS · Side A `CLAUDE.md` — "STT/TTS are sensory infrastructure and **may change freely**; the mind may not
+be substituted." Side B `docs/canon/MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md:87` — "**the ear may
+be improved freely**; the mind may not be substituted" — "latitude to the ear only". Two normative grants
+over the same act (changing the mouth), same subject; the anchor's grant extends to what the canon clause
+withholds, and ⛔ both cannot govern.
+RESIDUE · ⭐ D-P1-06 constrains the reading and does ⛔ not dissolve the class: "an operational session anchor
+cannot amend a governing source by assertion"; the divergence "remain[s] a recorded defect, not census law";
+⛔ "Repair remains unauthorized." ⭐ A third fact is carried and matches NEITHER side: "The code gates the
+mouth and does not gate the ear — the exact inverse of the latitude CLAUDE.md grants." ⛔ Not adjudicated
+here; C4 (H) carries the ear's transport scope.
+
+```text
+ITEM      C-2 (G) · PROVIDER PROHIBITION                (anchor vs tree/policy — PART IV repeat)
+OUTCOME   C6 UNKNOWN  → adjudicated once, at §3 above. ⛔ Not restated differently, ⛔ not double-counted.
+```
+
+### 4b · PART V — provider-failure plurality (1 item)
+
+```text
+ITEM      PROVIDER-FAILURE PLURALITY
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · Three named seams with three named coverage families, stated by the register: DISPOSITION 1 LOCAL
+FALLBACK "`modelService.ts:180-193` → `localModelClient.ts` … COVERAGE: CONVERSATIONAL TEXT FAMILY only";
+DISPOSITION 2 DEGRADED FIRST-PERSON OUTPUT "`sovereignRouter.ts:15-17,50-61`; four exits … COVERAGE:
+CONVERSATIONAL TEXT FAMILY only"; DISPOSITION 3 HARD REFUSAL "`structured/router.ts:116-131` … Reached from
+the five Writer's-Studio reader callers, always. COVERAGE: STRUCTURED-READING FAMILY only." The register's
+own law: "provider failure semantics are PLURAL in the implemented organism, and ⛔ no synthesis may simplify
+this to 'MAIA falls back' or 'MAIA refuses.'"
+RESIDUE · ⭐ Three limbs survive the classification, ⛔ none of them resolved by it. (i) "Which behaviour
+governs production is UNKNOWN from repository evidence alone" — `MAIA_INFERENCE_MODE` "appears in no tracked
+deployment config"; owed read, §5. (ii) Under `consciousness_engine` the branch "returns `model:
+'template-engine'` — **a fourth answer-producing path that is not a model at all**". (iii) "The billing/auth
+no-fallback guard is, as read, **unreachable** from the Anthropic client" — it checks "properties no code
+sets" and "`claudeClient.ts:199-205` re-wraps every error so it cannot carry them". ⛔ INF-3 throughout: the
+env var selecting the disposition authorizes nothing.
+
+### 4c · PART VI — vocabulary collisions (11 items)
+
+⛔ Standing on every item in this sub-section: "No collision is resolved. ⛔ No two objects are merged because
+they share a word." ⭐ `C1` here classifies the KIND — one token, several objects the records distinguish by
+path, table or type — and ⛔ settles no sentence that uses the bare word.
+
+```text
+ITEM      VC-field
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · Register 02 (D §5.1) enumerates "'field' — seven unrelated semantic families", "at least **19**
+distinct code/table objects", each with its own path/table and row id (`FieldContext` ·
+`FieldRoutingDecision` · `ConsciousnessField` · `field_ideas` · `living_field_affinities` · "Field Lab" ·
+"MAIA Field" · `practice_field*` · `wisdom_field*` · `field_records` · `field_state_snapshots` …), with the
+sharpest instance distinguished by casing alone: "`lib/field-protocol/` (P3-D-27) and `lib/fieldProtocol/`
+(P3-D-26) are two different directories with no shared code". Register 01 enumerates "`field` — 9 referents"
+over the memory corpus. ⭐ The two enumerations are at different scopes and register 02's is self-declared
+non-exhaustive ("at least 19"), so their non-identity is ⛔ not an enumeration conflict.
+RESIDUE · ⭐⭐ ONE PAIR INSIDE IS `C6` AND IS ⛔ NOT DISSOLVED: D-OBJ-1's `FieldContext` (P3-D-01, ungated) and
+D-OBJ-9's `fieldContextAdapter` (P3-D-09, gated by `MAIA_FIELD_CONTEXT_ENABLED`) are "both called 'field
+context'", and the record poses and refuses the question — Q-D2: "Is this one capability with two
+implementations, or two capabilities that share a name? **⛔ A worker may not choose.**" Owed read, §5.
+Carried: "'Field memory is live' and 'field memory is not live' are both unevaluable until the referent is named."
+
+```text
+ITEM      VC-coherence
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · "six distinct quantities, none convertible into another", each named with type and site:
+`FieldContext.pfi.coherence` (number) · `FieldContext.unified.coherenceLevel` (string) · `coherenceScore`
+(0–1, persisted) · `fci` · somatic/breath coherence · `rhythmCoherence`.
+RESIDUE · Carried: "A sentence of the form 'MAIA's coherence is X' is unevaluable at the subject." ⚠️ A
+seventh adjacent reading stands unclassified: "`setCoherenceLevel(… || 0.85)` at
+`OracleConversation.tsx:6147`, which D found 'resolves to the 0.85 literal on every turn.'" ⛔ Not adjudicated.
+
+```text
+ITEM      VC-voices
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · Objects distinguished by path and lane: "three service-level voices plus up to six elemental rows in
+which `shadow` is an element value"; "'Corpus Callosum' — two lanes writing differently-named agent rows:
+`corpusCallosumService` (P3-E-12) and `maiaOrchestrator` (P3-E-13)"; "`MaiaSystemPrompt` — 2 files of the
+same basename in different trees: `lib/oracle/MaiaSystemPrompt.ts` and `lib/voice/MaiaSystemPrompt.ts`."
+RESIDUE · ⛔ "no claim is made that either is 'the' system prompt". The anchor-versus-code count limb is a
+different item and is `C5` (C-E4). ⚠️ A collision labelled on the bare token `voice` "is not identified in the
+authorized inputs" — UC-MODE · UC-CONVERGENCE, §6.
+
+```text
+ITEM      VC-RFI/UFI
+OUTCOME   C4 RECORD DEFECT  (C4-ORGREC)
+```
+BASIS · "`RFI` → 0 code objects; `UFI` → one comment that explicitly excludes it", and the record states the
+dissolution itself: "'RFI is built' and 'RFI is not built' were both unevaluable. **Once the referent is
+demanded, the question dissolves — there is no referent in code.**" The disagreement is between sentences in
+records about a token with no located object, ⛔ not between organism behaviours.
+RESIDUE · ⭐ "0 code objects" is a search that concluded — **NONE LOCATED**, ⛔ not ABSENT, and ⛔ not a claim
+that no such capability could exist elsewhere in the organism.
+
+```text
+ITEM      VC-phase
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · "'phase' — three incompatible vocabularies and a fourth trap": `Phase = 1|2|3` (`spiralogic-core.ts:17`)
+· `phase INTEGER 1..12` (`member_spiral_state.sql:19`) · `Intelligence | Intention | Goal`
+(`maiaService.ts:1134-1137`) · "⭐ and `SpiralogicPhase` in `lib/spiralogic/PhaseDetector.ts:8`, which is an
+**ELEMENT NAME, not a phase at all**". Each is a distinct named object.
+RESIDUE · Carried: "⛔ 'P1-04 cannot evaluate "MAIA assigns a phase" until the referent is named.'" C-E3
+depends on this item and is `C6` for exactly that reason (§6).
+
+```text
+ITEM      VC-resonance
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · "five objects, including one exact class-name duplication": `ResonanceFieldOrchestrator` at
+`lib/field/…:97` (783 ln) and `ResonanceFieldOrchestrator` at `lib/oracle/…:40` (629 ln) — "identical class
+name, different files, different bodies, neither reachable" · `ResonanceFieldGenerator` ("the only one the
+canonical path actually uses") · `ResonanceEngine` · `resonance_events` (a table).
+RESIDUE · The duplicated class name is distinguished ONLY by path; ⛔ no claim is made about which a citation
+elsewhere intends, and ⛔ neither is nominated canonical.
+
+```text
+ITEM      VC-element
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · "two live detectors and three persistence substrates": `ConversationElementalTracker` (in-memory) ·
+`ElementalOracleBridge` (per-message) · `member_spiral_state` · `bead_events.spiralogic_element` · Prisma
+`ElementalState`/`ElementalEvolution` — "three substrates for one concept."
+RESIDUE · ⭐ A live divergence is carried and ⛔ not adjudicated: the two detectors "can disagree on the same
+turn and both reach the same prompt by different routes, **with nothing reconciling them**". Whether they do
+disagree in production is ⛔ not established — no runtime witness.
+
+```text
+ITEM      VC-IChing
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · "two independent corpora": `lib/iching/` (1,925 ln) and `lib/divination/iching/` (2,687 ln) —
+"different hexagram data files, different casting modules, no shared import".
+RESIDUE · "⛔ no artifact declaring which is canonical" — NONE LOCATED, ⛔ not ABSENT. "F-07/F-08 use the
+former; F-10 and the recall lineage the latter", so the choice is already made differently in two lineages.
+
+```text
+ITEM      VC-names-asserting-what-they-do-not-carry
+OUTCOME   C4 RECORD DEFECT  (C4-ORGREC)
+```
+BASIS · The item is explicitly a name/object register — "recorded as collisions between a name and its
+object, ⛔ not as repairs" — over `symbolicAuthorityContracts` · `crossDomainGovernance` ·
+`promptIngressGovernance` (P3-F-20) · `QuantumFieldPersistence` (P3-D-17) · `persistentFieldStates`
+(CONTRA-5) · `archetypeEvolutionEngine` (P3-F-19) · `member_spiral_state` (C-E6). ⛔ Per the vocabulary rule
+no finding attaches to a token, so an identifier cannot stand as one side of a contradiction.
+RESIDUE · ⭐ Where a SENTENCE rather than a name makes the claim, the contradiction is real and is
+adjudicated at its own item: CONTRA-5 = `C5`; C-E6 = `C6`. ⛔ This classification does not weaken either.
+
+```text
+ITEM      VC-memory-corpus  (five further tokens + the appended items)
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · Each token's referents are enumerated with distinct paths/tables: `semantic` — 5 referents
+("two files, same basename, different trees") · `developmental` — 5 · `trust` — 5 · `pattern` — 6 ("⚠️ Plus
+`MemoryHealth.pattern` … the two are not the same object") · `relationship` — "3 sibling directories, 3
+different architectures".
+RESIDUE · Three appended limbs are ⛔ NOT vocabulary matters and are carried unresolved: "`pattern_ledger`
+declared by two migrations (20260204100001, 20260315120000), ⛔ not reconciled" (a duplicate-declaration
+limb); "`memory layers` — six code enumerations, none a subset of another. ⛔ No winner chosen" (= B-8);
+"`recurring_interests` — a column, not a table, with zero code references."
+
+```text
+ITEM      VC-updateOffering
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · "`updateOffering` also exists in `lib/offerings/offeringService.ts:79` — **a different function**;
+vocabulary collision recorded."
+RESIDUE · NONE. ⛔ No finding attaches to the token.
+
+### 4d · PART VIII — unresolved coverage · unknown by scope (10 items)
+
+```text
+ITEM      UC-17 · the 17 named UNKNOWN sub-questions withheld by slice 06
+OUTCOME   C6 UNKNOWN
+```
+BASIS · Slice 06 withheld a position on each, by name — "G-02 persistence · G-03 `CONSIDERS` · G-05
+`DECIDES` · G-08 `DECIDES` · G-09 whether `minimumBloomLevel` was ever evaluated · G-11 `DECIDES` and
+authority · G-15 identity across provider change · H-11 `CONTRIBUTES`/`DECIDES` · H-15 reachability of the
+remaining `lib/voice/` surface (119 entries) · I-02 seven of eleven supervision routes · I-03 production
+`ACCESS_CONTROL_MODE` · I-04 whether any flow requires `verify-passcode` first · I-05 the referent of
+`requireMemberId()` at each call site · I-06 most of ≈76 Studio routes classified rather than read · I-10
+whether any `practitioner_observation` row exists (no writer located) · I-11 the `consent_status` schema
+default · I-12 whether any deployment runs `app/api/_backend/**`."
+RESIDUE · OWED READS (§5): all seventeen, ⛔ each routed and ⛔ none performed. ⛔ A withheld position is
+UNKNOWN; it may not be read as `NONE LOCATED`, and `NONE LOCATED` may not be read as ABSENT.
+
+```text
+ITEM      UC-GHI-ENV · values carried as explicitly UNKNOWN by the G/H/I records
+OUTCOME   C6 UNKNOWN
+```
+BASIS · "production value of `MAIA_INFERENCE_MODE` · production value of `ACCESS_CONTROL_MODE` · values of
+`FOUNDER_MEMBER_IDS` / `LAB_ACCESS_MEMBER_IDS` / `CIRCLE_ACCESS_MEMBER_IDS` · the `relationship_spaces` DDL
+and its `consent_status` default · whether `minimumBloomLevel` was ever evaluated · whether any deployment
+runs `app/api/_backend/**` …"
+RESIDUE · ⭐ These lie OUTSIDE the permitted evidence entirely — they are deployment/runtime reads, not
+record reads. OWED READS (§5), ⛔ not performed. Items depending on them: C-1 (G) · C-I-4 · C-I-5 · C1 (H) ·
+PROVIDER-FAILURE PLURALITY (E-45 · E-46 · E-47).
+
+```text
+ITEM      UC-ABC-Q · whole-question gaps the A/B/C records declare rather than answer
+OUTCOME   C6 UNKNOWN
+```
+BASIS · "live tier distribution (A OQ-2) · whether the 2026-05-23 traffic audit still describes the subject
+(A-01) · how many of the 25 peripheral routes are member-reachable (A OQ-4) · whether `scrubMemoryAmnesia`'s
+result replaces member-facing text (B OQ-4) · whether `/api/oracle/conversation` serves member traffic (B
+OQ-2) · the referent of 'the SQL confirmation term caps at 0.0225' (C §10, NOT FOUND at the subject)."
+RESIDUE · OWED READS (§5), six, ⛔ none performed. ⭐ Two of them are the load-bearing dependencies elsewhere:
+the traffic question (A-4 · X-3 · D-1 · C-F5 · X-2) and the 0.0225 referent (CONTRA-6 · B-4, E-31).
+
+```text
+ITEM      UC-CROSSCUT · cross-cutting `NONE FOUND` findings carried forward unattached
+OUTCOME   C6 UNKNOWN
+```
+BASIS · "member deletion or erasure of formed memory (B §10.2) · the four freeze conditions have no
+evaluator of any kind (B §9) · practitioner visibility into member memory (B §10.2) · `MAIA_SAFE_MODE` — no
+ruling on who may set it or what it may remove (A §4) · what a practitioner may see of a member's
+developmental material (C §9) · erasure of `member_spiral_state`, `member_relational_signals`,
+`member_theme_signals`, `trust_observations` (C §9)." ⛔ Each is a one-sided finding: ⛔ no counter-claim is
+quoted anywhere in the corpus, so no contradiction is established and none is refuted.
+RESIDUE · ⭐ Each is a **located absence of governance** — NONE LOCATED, ⛔ not ABSENT — and D-P1-07 governs
+the freeze limb exactly: "the freeze remains binding; evaluator absence does not weaken it. ⭐ The absence
+means the **opposite** of 'probably stale.'" OWED READS (§5): a governing-source search for each.
+⛔ Not performed. P1-GOV-ACCESS-01 carries two of the six.
+
+```text
+ITEM      UC-PARTICIPATES · the `PARTICIPATES` vocabulary-evidence gap (A · B · C)
+OUTCOME   C4 RECORD DEFECT  (C4-CENSUS)
+```
+BASIS · The corpus states it as a fact about its own records: "PARTICIPATES 0 — ⭐ NO RECORD IN THIS SLICE
+USES OR ESTABLISHES THIS RUNG" (04_ladder), and "PARTICIPATES is EMPTY across A, B and C — **a corpus gap at
+the vocabulary level, ⛔ not a finding that nothing participates**" (P1-03 CLOSE §3a).
+RESIDUE · ⛔ FORBIDDEN PROMOTION REFUSED: "no PARTICIPATES assignment ≠ DOES NOT PARTICIPATE" (P1-04
+INSTRUMENT §3). ⛔ The zero may not be counted alongside any observed negative.
+
+```text
+ITEM      UC-CONSIDERS · `CONSIDERS` is zero across G · H · I
+OUTCOME   C4 RECORD DEFECT  (C4-CENSUS)
+```
+BASIS · The zero has two provenances and the corpus supplies both: coverage — "No record in this slice
+establishes that a fact a capability holds is read into a computation"; and one observed negative — "At the
+subject, `selectClaudeModel()` never reads an awareness level" (P3-G-03) — "KNOWS without CONSIDERS, which is
+precisely the promotion INF-6 forbids". AMENDMENT-4 §4b binds the handling: "47 rows the question was never
+posed (SYN-4) · 1 row an observed negative (SYN-1)."
+RESIDUE · ⭐⭐ ⛔ THE TWO ZEROS ARE NOT AGGREGATED — "Numerically equal states are not equivalent when their
+epistemic provenance differs." ⚠️ Carried from the same slice: "`EXISTS` on 48 of 48 is the weakest possible
+recovery and must not be read as coverage." ⛔ `CONSIDERS = 0` is not a shortfall claim about the organism.
+
+```text
+ITEM      UC-EXISTS-BASIS · the slice-06 `EXISTS` qualification
+OUTCOME   C4 RECORD DEFECT  (C4-CENSUS)
+```
+BASIS · P1-03 CLOSE §1a: "`EXISTS` is recovered on 48 of 48 rows. Its basis is **a slice-level shared quote**
+— the three records' own §0 subject-verification statements — ⛔ not a per-row quote. Every other rung on
+every row carries its own separate quote." · "The worker flagged this itself and reported it separately 'so
+it is not read as coverage.'"
+RESIDUE · ⭐ Artifact-2 material of the strongest kind: the defect was found and declared by the pass that
+produced it. ⛔ The 48/48 may not be cited as per-row evidence.
+
+```text
+ITEM      UC-NOTDET · the `NOT DETERMINED BY SOURCE RECORD` inventories
+OUTCOME   C4 RECORD DEFECT  (C4-CENSUS)
+```
+BASIS · Register 01: "LADDER — 60 of 62 rows"; "GOVERNANCE GATE — 14 rows where the record names neither a
+gate nor an absence … ⛔ distinct from NONE FOUND, which is a positive finding of absence. ⭐ Every one of them
+is in domain B"; "COVERAGE — 17 rows … 10 of them wholly". Register 02: "111 rows × 11 fields. `NOT
+DETERMINED BY SOURCE RECORD` appears **197 times**"; "⭐ Domain E assigns no ladder position anywhere".
+Register 03: "LADDER 41 of 48 … ⛔ The three P1-02 records never use the ladder vocabulary."
+RESIDUE · ⭐ `NOT DETERMINED BY SOURCE RECORD` ≠ `NONE FOUND` ≠ `UNKNOWN` ≠ `ABSENT`; ⛔ the four may not be
+merged in any count or legend (AMENDMENT-4 §2). ⚠️ Domain E's non-use of the ladder is a vocabulary-scale
+finding, ⛔ not a defect: "it uses a vocabulary vs executable axis and asks in Q1 whether EXISTS ≠
+PARTICIPATES even holds at its scale."
+
+```text
+ITEM      UC-MODE · a labelled collision on `mode` is not identified
+OUTCOME   C6 UNKNOWN (by scope)
+```
+BASIS · "Within those inventories no collision block is labelled on the bare tokens `mode`, `convergence`,
+or `voice`. ⛔ Nothing is guessed at and nothing is mapped onto a row. Following the precedent slice 06 set
+for X-DEF-2: **UNKNOWN, by scope.**"
+RESIDUE · OWED READ (§5): whether any record NOT authorized for this pass carries such an inventory.
+⛔ Not performed. ⛔ Absence from the authorized inputs is not absence from the organism.
+
+```text
+ITEM      UC-CONVERGENCE · a labelled collision on `convergence` is not identified
+OUTCOME   C6 UNKNOWN (by scope)
+```
+BASIS · Same block, and the corpus names what it DOES carry instead: "for `convergence` — as C3 (H) and
+C6 (H) in PART III-C, which concern the convergence gate and its citation coordinates, **⛔ not a set of
+competing referents for the word**."
+RESIDUE · OWED READ (§5): as UC-MODE. ⛔ C3 (H) and C6 (H) are adjudicated on their own terms above and are
+⛔ not treated as answering this item.
+
+### 4e · PART IX — cross-record divergences (5 items)
+
+```text
+ITEM      X-1 · `member_theme_signals`
+OUTCOME   C1 RESOLVED BY SCOPE
+```
+BASIS · Two different paths, each quoted: SIDE B (domain B, P3-B-07) — "theme signals are loaded at route
+:947 and surfaced into the FAST prompt inside the influence block — PARTIAL, SURFACED (FAST only)"; SIDE C
+(domain C, P3-C-09) — "WIRED-BUT-UNOBSERVED (write path only; **no member-facing read located**)", "and
+explicitly SUSPENDED from the collective surface". A prompt-assembly path and a member-facing read surface
+are different predicates over one table.
+RESIDUE · ⭐ Whether domain C's search covered domain B's prompt path is ⛔ NOT established; if it did, the
+item reopens as `C5`. Slice 04 D-2 expressly declines resolution: "⛔ Both stand. P3-C-09 is UNKNOWN. ⚠️
+P3-B-07 keeps its own record's affirmative trace (KNOWS · CONSIDERS) … ⛔ not a resolution of the
+divergence." ⛔ The rows are not merged and P3-C-09 stays UNKNOWN.
+
+```text
+ITEM      X-2 · Episodic / Coherence liveness
+OUTCOME   C6 UNKNOWN
+```
+BASIS · Side A `CLAUDE.md` Cat 3 — "0 **live** callers"; Side B Domain B §10.3 — "contradicted at the
+subject — both are called by `MemoryPalaceOrchestrator` (:61, :75, :188)". ⛔ Two readings of Side A are
+available and the corpus settles neither: read as "0 callers" it is refuted by three call sites; read as "0
+LIVE callers" it is not, because INF-1 holds that WIRED ↛ LIVE and the only located onward route's liveness
+is UNKNOWN. Choosing between the readings is a likelihood judgement.
+RESIDUE · OWED READ (§5): a dated in-repo runtime witness for the orchestrator's caller route. ⛔ Not
+performed. Depends on X-DEF-2 (owned) and on X-3 — §6.
+
+```text
+ITEM      X-3 · `/api/oracle/conversation` traffic
+OUTCOME   C6 UNKNOWN
+```
+BASIS · "Domain A: hard-refused at POST (410)" against "Domain B and C both carry live-path material whose
+only located consumer is that route (P3-B-24, P3-C-03 loader 1)", carried with "Domain B records the
+question as OQ-2; ⛔ unanswered."
+RESIDUE · OWED READ (§5): whether the route serves member traffic — the single most depended-upon unknown in
+this corpus (A-4 · C-4 §8.4 · C-F5 · X-2 · D-1 · B-1 · C-E6 · CONTRA-4). ⛔ Not performed. Depends on
+X-DEF-2 (owned) — §6.
+
+```text
+ITEM      D-1 · `P3-B-24` MemoryPalaceOrchestrator
+OUTCOME   C6 UNKNOWN
+```
+BASIS · The corpus states the disjunction and refuses to close it: "⛔ If the POST is refused at its first
+statement, neither the retrievals nor the prompt seam runs; if the seam runs, the route is reached. **Both
+stand. No position derived — not even KNOWS.** (Register X-3; B OQ-2.)" Side B quotes ":902
+`retrieveMemoryContext` → :2787 … interpolated into the prompt template; :1499 `storeConversationMemory`";
+Side A quotes "The 410 is the first executable statement of `POST`" plus refusal-19's assertion "that the
+body is never read".
+RESIDUE · ⚠️ refusal-19 is "a CI instrument, not a governing document" (INF-2) — it evidences a gate, ⛔ not
+runtime governance. OWED READ (§5): as X-3. Depends on X-DEF-2 (owned) — §6.
+
+```text
+ITEM      D-2 · `P3-C-09` `member_theme_signals`
+OUTCOME   C1 RESOLVED BY SCOPE  — the same object as X-1; adjudicated there, ⛔ not separately.
+```
+BASIS · The corpus records it as a pointer — "→ the same object as X-1; block above" — and slice 04's D-2
+closes "(Register X-1.)" (E-40).
+RESIDUE · As X-1. ⛔ Not double-counted in the tally below; it is carried as its own source-labelled item
+because the source wrote it as one.
+
+---
+
+## 5 · Outcome tally by class — ⛔ NAVIGATION ONLY
+
+> ⛔ **The tally stands in for nothing. The items above are the finding.** ⛔ No class is a severity, a
+> priority or a repair order. ⛔ Two items in one class are not thereby the same kind of fact.
+
+```text
+ITEMS ADJUDICATED   87        (92 corpus blocks − 6 owned by 01_named_objects + 1 PART IV repeat counted once)
+
+C1  RESOLVED BY SCOPE          27
+C2  RESOLVED BY ALTITUDE       17
+C3  RESOLVED BY TIME/SUBJECT    0     ⭐ see the note below — this zero is a finding about the EVIDENCE
+C4  RECORD / ARITHMETIC DEFECT  8     → C4-CENSUS 5 · C4-ORGREC 3   ⛔ not pooled
+C5  GENUINE CONTRADICTION      15
+C6  UNKNOWN                    20
+```
+
+⭐⭐ **ON `C3 = 0`.** ⛔ This is NOT a finding that no item has a temporal explanation. It is a finding about
+the permitted evidence: **no item in this corpus carries dated evidence of two states of one subject.** The
+candidates that would need it — the anchor's "~zero live traffic" (A-4), the "8 voices" enumeration (C-E4),
+the "NEW PHILOSOPHY (Jan 2026)" assertion against ADR-001 (C-4 (G)) — are each blocked by a declared gap:
+register 01 itself lists "whether the 2026-05-23 traffic audit still describes the subject (A-01)" as
+unanswered, and "No superseding ADR or ruling was located." ⛔ A temporal resolution was available in no
+case, and ⛔ none was manufactured.
+
+⚠️ `C4-CENSUS` (C-F3 · UC-PARTICIPATES · UC-CONSIDERS · UC-EXISTS-BASIS · UC-NOTDET) and `C4-ORGREC`
+(C6 (H) · VC-RFI/UFI · VC-names-asserting-what-they-do-not-carry) are different epistemic objects: the first
+is the census catching itself, the second is the organism's own records. ⛔ They are never summed as one.
+
+---
+
+## 6 · ⭐⭐ C5 — GENUINE CONTRADICTIONS (15) · every one named, both sides quoted
+
+> **Same object · same scope · same altitude · same subject — and both cannot hold.** ⛔ This section is
+> not compressible to a count. ⛔ Nothing here is a verdict of legitimacy, a severity, or a repair order.
+> ⭐ In every case below the two sides are BOTH DESCRIPTIVE — a claim about what the code does, against the
+> code — which is why no altitude separates them.
+
+```text
+C5-01  A-1 · Registry vs orchestrator                                        ROWS P3-A-11
+  A  "between/chat `callsMaiaResponse: false`, reason 'uses maiaOrchestrator, not getMaiaResponse'"  — maiaRuntimeContext.ts:81
+  B  "maiaOrchestrator.ts:506 — it does"                                                             — 01_normalized_A_B_C
+
+C5-02  A-2 · DEEP addenda, in one function                                   ROWS P3-A-05
+  A  "buildComprehensiveVoicePrompt … currently does NOT iterate MaiaContext addenda"                — maiaService.ts:2519-2521
+  B  "maiaService.ts:2526-2535 + maiaVoice.ts:972 — it does. Four lines apart."                      — 01_normalized_A_B_C
+
+C5-03  A-6 · Sole-gateway claim                                              ROWS P3-A-16
+  A  "Main gateway for ALL text generation in MAIA"                                                  — modelService.ts:72
+  B  "at least four independent model reaches bypass it — getClaudeService (A-14), six `new Anthropic()`
+      routes (A-15), A-13's MultiLLMProvider, DEEP-primary's consciousnessWrapper"                   — 01_normalized_A_B_C
+  ⭐ the corpus's own row sentence: "THE GATEWAY CLAIM IS FALSE AT THE SUBJECT"                       — 04_ladder
+
+C5-04  A-7 · Egress mislabel                                                 ROWS P3-A-01
+  A  "list/route.ts:1390 emits `endpoint: '/api/sovereign/app/maia'`"                                 — 01_normalized_A_B_C
+  B  "it is emitted 'from the /list handler'; acknowledged in-source as a pre-existing mislabel, left untouched"
+
+C5-05  B-2 · memoryHealth.pattern                                            ROWS P3-B-20 · P3-B-07
+  A  "`pattern?: { count } // theme_signals feeds this`, under 'Wired by Cut 1'"                      — memoryHealth.ts:103
+  B  "route :1178-1209 supplies no `pattern` input, so `layerStatus(undefined) = 'empty'` on every turn"
+
+C5-06  B-3 · memoryHealth.semantic                                           ROWS P3-B-20
+  A  "memoryHealth.ts:63 declares `semantic`, documented :49 as 'enduring facts, roles, relationships, preferences'"
+  B  "what feeds it is an atoms row count and … 'no semantic retrieval exists on this path'" — memoryHealth.ts:97-100 · route :1182-1186
+  ⭐ third source, same side: "a self-report that misstates the memory state MAIA is in… occurring in the
+     observability layer itself"                                     — MAIA_MEMORY_INTEGRITY_GAP_MAP_2026-08-04.md:38
+
+C5-07  CONTRA-2 · "no live consumer" vs the import graph                     ROWS P3-D-10
+  A  "Resonant field memory … consumers: [] … Service preserved; no live consumer wired"              — substrateMap.ts:383-391
+  B  "CoherenceFieldService is imported at MemoryPalaceOrchestrator.ts:14, called at :75,:188,:249"
+  ⚠️ the C5 attaches to "consumers: []" ONLY; ⛔ the word "live" is not adjudicated (INF-1)
+
+C5-08  CONTRA-4 · "The ONLY file that knows how the field engines connect"   ROWS P3-D-01
+  A  "fieldOrchestrator.ts:3 asserts sole-seam status"
+  B  "at least four other seams connect field engines into cognition — maiaService.ts:1082, maiaService.ts:2838,
+      oracle/conversation/route.ts:853, :902, voice/stream-conversation/route.ts:82"
+
+C5-09  CONTRA-5 · `persistentFieldStates` is not persistent                  ROWS P3-D-12
+  A  "maintaining persistent field states"                                                            — QuantumFieldMemory.ts:2-6
+  B  ":91 is `new Map()`; the file's only import is `crypto`; no `query`/`INSERT`/`SELECT` in 810 lines"
+
+C5-10  C-E4 · "8 voices" vs the code                                         ROWS P3-E-12
+  A  "MythicAtlas + MaiaVoice + ShadowAgent + Fire/Water/Earth/Air/Aether"                             — CLAUDE.md
+  B  "MythicAtlas + MaiaVoice + WisdomRouter + up to six elemental rows in which `shadow` is an ELEMENT
+      VALUE, not a separate ShadowAgent"                                                              — 02_normalized_D_E_F
+  ⛔ D-P1-06: the anchor may not amend by assertion; PRESERVED + REPORTED, ⛔ repair unauthorized
+
+C5-11  C-E5 · "imported only by soulPortrait/schema" vs zero importers       ROWS P3-E-01
+  A  "the cited import"
+  B  "at the subject `lib/soulPortrait/schema.ts:19` is a comment, not an import"
+  ⭐ carried: "The subject reading governs E's record; both preserved."
+
+C5-12  C-3 (G) · "Main gateway for ALL text generation"                      ROWS P3-G-01 · P3-G-10
+  A  "lib/ai/modelService.ts:71-73"
+  B  "scripts/anthropic-import-allowlist.json (2 + 1 + 57)"
+  ⭐ carried: "Both are the project's own text."   ⚠️ INF-2: the allowlist is a CI instrument, not governance
+
+C5-13  C-I-1 · "Deferred, held FALSE, no path" vs a live path                ROWS P3-I-01
+  A  "states the capability DEFERRED and the column 'held FALSE, no path'"  — 20260626000001_member_field_note_threads.sql:8,40,96
+  B  "app/api/maia/vision-studio/field-note/route.ts:107-130 binds it to a client-supplied value" and
+     "app/studio/fields/[memberId]/page.tsx:69 reads it"
+
+C5-14  C-I-2 · "the consented facilitator view" vs a role-only gate          ROWS P3-I-01
+  A  "page.tsx:9-11 asserts consent"
+  B  ":104-107 checks only that the viewer is *some* active practitioner", and ":79-85 applies no predicate
+      at all to `members.name` / `members.username`"
+  ⛔ no verdict of legitimacy · ⛔ no exposure claim · ⛔ AUTH-EXPOSURE-01 neither cited nor awaited
+
+C5-15  C2 (H) · STT/TTS LATITUDE          ⭐ the one anchor-versus-canon C5   ROWS P3-H-01 · P3-H-02 · P3-H-03 · P3-H-07
+  A  "STT/TTS are sensory infrastructure and may change freely; the mind may not be substituted."      — CLAUDE.md
+  B  "the ear may be improved freely; the mind may not be substituted" — "latitude to the ear only"
+                                          — docs/canon/MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md:87
+  ⭐ third fact, matching NEITHER: "The code gates the mouth and does not gate the ear — the exact inverse
+     of the latitude CLAUDE.md grants."
+  ⛔ D-P1-06 binds the reading, ⛔ not the class: "an operational session anchor cannot amend a governing
+     source by assertion"; the divergence is a recorded defect, ⛔ not census law; ⛔ repair unauthorized
+```
+
+⭐ **Two of these fifteen are one sentence of the project's own, contradicted in two different registers**
+(A-6 and C-3 (G) both quote `modelService.ts:71-73`, against two different counter-enumerations, E-23).
+⛔ They are not merged: each keeps its own Side B, its own rows, and its own record.
+
+---
+
+## 7 · C6 — UNKNOWN (20) · each with its OWED READ, named as an obligation and ⛔ NEVER PERFORMED
+
+> ⭐ A preserved UNKNOWN is the product this step exists to protect. ⛔ None of these is a near-miss
+> resolution, a "probably", or a candidate for tidying into `NONE LOCATED`.
+
+```text
+ID                     WHY THE EVIDENCE CANNOT ADJUDICATE            OWED READ (⛔ not performed)
+C-4 (§8.4)             "No runtime witness for either route was       a dated in-repo runtime witness for
+                        located in-repo … neither side is confirmed   oracle/conversation and for the list
+                        under the LIVE calibration"                   route, under the LIVE calibration
+CONTRA-3               Side A names `talkModeFieldIntelligence`,      the referent of `talkModeFieldIntelligence`
+                        Side B `analyzeFieldIntelligence`; ⛔ no       at fieldMonitorTelemetry.ts:165
+                        sentence states they are one object
+C-E3                   VC-phase: "cannot evaluate 'MAIA assigns a     the phase vocabulary in force at
+                        phase' until the referent is named"           maiaService.ts:1727/:1737/:2275 and :1098
+C-E6                   Side B is X-DEF-2's contested characterization a dated runtime witness for the route
+                                                                      (+ X-DEF-2's own adjudication)
+C-F5                   "⛔ the anchor may not settle this by            a dated runtime witness for
+                        assertion"                                    oracle/conversation
+C-2 (G)                "Authority standing UNKNOWN" — one altitude    whether provider-policy.json and
+                        is undetermined, so C2 is unavailable         docs/adr/012 are ratified governing sources
+C-5 (G)                "Whether a caller persists the turn is         whether the callers of sovereignRouter
+                        caller-dependent and is not resolved"         persist the turn on the four degraded exits
+C-6 (G)                `meta` has "no validation and no provenance"   the provenance of `req.meta` at the
+                                                                      live-chat entrypoints — who may set it
+C1 (H)                 "Both sides call themselves the vow" ·         which path serves a production voice turn;
+                        "UNKNOWN"                                     and the standing of the in-route "MAIA vow"
+C-I-5                  a compliance claim is not adjudicable from     production ACCESS_CONTROL_MODE; a located
+                        the permitted evidence, and ⛔ a verdict is     authorization in the seven of eleven
+                        outside this census                           supervision routes left unread
+C-I-7                  "the declared shape in this repository is      the authoritative deployed schema for the
+                        therefore NOT authoritative"                  tables carrying `practitioner_id`
+UC-17                  slice 06 withheld a position on each, by name  all seventeen named sub-questions
+UC-GHI-ENV             the values lie outside record evidence         the production deployment values named
+UC-ABC-Q               the A/B/C records declare rather than answer   all six named questions, incl. the traffic
+                                                                      question and the "0.0225" referent
+UC-CROSSCUT            one-sided findings; ⛔ no counter-claim quoted   a governing-source search for each of the
+                        anywhere in the corpus                        six (⛔ D-P1-07 binds the freeze limb)
+UC-MODE                "UNKNOWN, by scope"                            whether a record not authorized for this
+UC-CONVERGENCE         "UNKNOWN, by scope"                            pass carries such a collision inventory
+X-2                    "0 live callers" has two readings and INF-1    a dated runtime witness for the
+                        blocks the stronger one                       orchestrator's caller route
+X-3                    "Domain B records the question as OQ-2;        whether /api/oracle/conversation serves
+                        ⛔ unanswered"                                 member traffic
+D-1                    "Both stand. No position derived — not even    as X-3
+                        KNOWS."
+```
+
+⭐⭐ **Eight of these twenty reduce to ONE unread fact** — whether `/api/oracle/conversation` serves member
+traffic (C-4 (§8.4) · C-E6 · C-F5 · X-2 · X-3 · D-1, and it governs the residues of B-1 and CONTRA-4).
+⛔ That is recorded as a structural property of the corpus, ⛔ not as a recommendation to go and read it.
+
+⚠️ `NONE LOCATED` appears in many residues above and is ⛔ never rendered as `ABSENT`; `UNKNOWN` is ⛔ never
+upgraded to `NONE LOCATED` to tidy this table (AMENDMENT-4 §2).
+
+---
+
+## 8 · Items depending on another item's outcome
+
+### 8a · Depending on one of the six owned by `01_named_objects`
+
+```text
+DEPENDS ON X-DEF-2  (one route, three characterizations)          — owned by 01_named_objects
+  C-E6   C6   Side B ("that route refuses at :446-453") is X-DEF-2's Side B
+  C-F5   C6   this item IS X-DEF-2's SIDE C, carried there verbatim
+  X-3    C6   the same route-traffic question, from the A/B/C side
+  D-1    C6   the same route, at row P3-B-24 (E-05)
+  X-2    C6   the orchestrator's only located onward consumer is that route
+  C-4 (§8.4) C6   the R16 guard's sole call site is on that route (E-07)
+  B-1    C2   residue only — "Whether that route serves traffic is UNKNOWN" (E-06)
+  CONTRA-4 C5  residue only — two of the four counter-seams sit on that route; ⛔ the C5 does not rest on them
+  A-4    C2   residue only — the traffic limb (E-03)
+
+DEPENDS ON X-DEF-1  (reaching the prompt at CONTRIBUTES ↔ surfaced nowhere)
+  CONTRA-3 C6  Side B's onward claim ("producing a prompt block on the canonical member path") is X-DEF-1's
+               disputed side (E-10); ⛔ the C6 here rests on the SEPARATE referent question, not on X-DEF-1
+
+DEPENDS ON THE CONCLUDE ENUMERATION
+  C-F1   C2   shares rows P3-F-07 · P3-F-08 with the CONCLUDE inventory (E-16); ⛔ the altitude classification
+              does not turn on the count
+  C-F4   C2   the wrapper is named "the sole constraint" on CONCLUDE (E-18); the count itself is owned
+
+DEPENDS ON DEV-54/51
+  (none of the 87 items owned here turns on it; A-4 shares row P3-A-13 with it via E-09, ⛔ residue only)
+
+DEPENDS ON X-DEF-3 · THE MAP 3 SLICE-05 TALLY
+  (none — ⛔ no item owned here rests on either)
+```
+
+### 8b · Depending on another item in THIS register
+
+```text
+C-E3          → VC-phase           the referent question that makes C-E3 C6 is VC-phase's own refusal
+CONTRA-6      → B-4 · C-2 (§8.2)   one function, three items, three different sides (E-30) — ⛔ not merged
+B-4           → CONTRA-6           the "which runs in retrieval" sentence lives in CONTRA-6's Side A
+C-2 (§8.2)    → B-4 · CONTRA-6     the semantic-difference sentence is this item's residue, ⛔ not its class
+X-1           → D-2                D-2 is the same object; adjudicated once (E-40)
+C-I-4 · C-I-5 · C-I-8 · C-1 (G) · PROVIDER-FAILURE PLURALITY · C1 (H)
+              → UC-GHI-ENV         each carries a production value the corpus declares UNKNOWN (E-45 · E-46 · E-47)
+C-I-6         → UC-17 (I-10)       whether any `practitioner_observation` row exists
+A-6           ↔ C-3 (G)            one sentence, two registers, two counter-enumerations (E-23) — ⛔ not merged
+CONTRA-5 · C-E6 → VC-names…        named inside that inventory (E-34 · E-35); ⛔ the token carries no finding
+C-5 (§8.5)    ↔ C-I-3              two registers on the same dormant scope modules (E-28) — ⛔ not merged
+C-1 (§8.1)    → C-I-7              E-29 (SYN-4) leaves undetermined whether the `practitioner_id` tokens co-refer
+B-2           → X-1                the theme-signal path that does reach the FAST prompt is X-1's Side B
+VC-voices     → C-E4 · UC-MODE/UC-CONVERGENCE   the count limb is C-E4; the bare token `voice` is by-scope UNKNOWN
+VC-field      → CONTRA-2 · CONTRA-5 · X-DEF-1   rows named inside the enumeration (E-41)
+```
+
+---
+
+## 9 · Close
+
+```text
+P1-05 · 02 · REMAINING CONTRADICTION CORPUS · COMPLETE
+ITEMS ADJUDICATED     87 of 92 blocks (+ 1 PART IV repeat adjudicated once) · 6 owned by 01_named_objects
+AUTHORITY EXERCISED   READ (MAP 4 · P1-05 INSTRUMENT · AMENDMENT-4 · P1-02/P1-03/P1-04 INSTRUMENTS) · CLASSIFY
+⛔ NO SOURCE CODE RE-TRACED · ⛔ NO RUNTIME INSPECTED · ⛔ NO GOVERNING DOCUMENT SEARCHED
+⛔ NO AUTH-EXPOSURE-01 RESULT USED, CITED OR AWAITED
+⛔ NO SOURCE RECORD REPAIRED · ⛔ NO ROW VALUE ALTERED · ⛔ NO TOTAL RECONCILED
+⛔ NO SEVENTH OUTCOME · ⛔ NO "PROBABLY" USED AS A RESOLUTION
+⛔ NO VERDICT OF LEGITIMACY · ⛔ `ABSENT` NOT WRITTEN · ⛔ NONE LOCATED NOT PROMOTED · ⛔ UNKNOWN NOT UPGRADED
+⛔ NO ITEM RANKED · ⛔ NO LANE OPENED · ⛔ NO REPAIR PROPOSED
+⛔ NO FILE EDITED EXCEPT THIS ONE
+⭐ 15 GENUINE CONTRADICTIONS NAMED WITH BOTH SIDES · 20 UNKNOWNS PRESERVED WITH THEIR OWED READS ROUTED
+```
