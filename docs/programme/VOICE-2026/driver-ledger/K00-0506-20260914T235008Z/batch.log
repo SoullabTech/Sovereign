@@ -1,0 +1,31 @@
+[23:50:09] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[23:50:09] build-for-testing (driver only; the harness is untouched)
+[23:50:14] xctestrun: /private/tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+[23:50:15] sample 1/10 — precondition
+[23:50:15] sample 1/10 — driver (testOutputSample, mode L)
+[23:51:24] sample 2/10 — precondition
+[23:51:25] sample 2/10 — driver (testOutputSample, mode L)
+[23:52:29] sample 3/10 — precondition
+[23:52:29] sample 3/10 — driver (testOutputSample, mode L)
+[23:54:01] sample 4/10 — precondition
+[23:54:01] harness process present — attempting terminate-only via driver
+[23:54:52] sample 4/10 — driver (testOutputSample, mode L)
+[23:55:42] sample 5/10 — precondition
+[23:55:42] harness process present — attempting terminate-only via driver
+[23:56:35] sample 5/10 — driver (testOutputSample, mode L)
+[23:57:28] sample 6/10 — precondition
+[23:57:28] harness process present — attempting terminate-only via driver
+[23:58:21] sample 6/10 — driver (testOutputSample, mode L)
+[23:59:14] sample 7/10 — precondition
+[23:59:14] harness process present — attempting terminate-only via driver
+[00:00:08] sample 7/10 — driver (testOutputSample, mode L)
+[00:01:04] sample 8/10 — precondition
+[00:01:05] harness process present — attempting terminate-only via driver
+[00:02:01] sample 8/10 — driver (testOutputSample, mode L)
+[00:02:57] sample 9/10 — precondition
+[00:02:57] harness process present — attempting terminate-only via driver
+[00:03:54] sample 9/10 — driver (testOutputSample, mode L)
+[00:04:50] sample 10/10 — precondition
+[00:04:50] harness process present — attempting terminate-only via driver
+[00:05:48] sample 10/10 — driver (testOutputSample, mode L)
+[00:06:46] batch complete — /private/tmp/k0506-driver-compile-8b111709b/docs/programme/VOICE-2026/driver-ledger/K00-0506-20260914T235008Z/ledger.md

@@ -1,0 +1,82 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testOutputSample"
+
+2026-09-14 19:54:52.748 xcodebuild[83033:30137057] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 19:54:52.752 xcodebuild[83033:30137057] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 19:54:52.851 xcodebuild[83033:30137057] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-14 19:54:53.129 xcodebuild[83033:30137057] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 19:54:53.321 xcodebuild[83033:30137057] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 19:54:55.159826-0400 DriverUITests-Runner[66965:14682800] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-14 19:54:55.631.
+Test Suite 'DriverUITests.xctest' started at 2026-09-14 19:54:55.632.
+Test Suite 'K00DriverTests' started at 2026-09-14 19:54:55.632.
+Test Case '-[DriverUITests.K00DriverTests testOutputSample]' started.
+    t =     0.00s Start Test at 2026-09-14 19:54:55.633
+    t =     0.02s Set Up
+    t =     0.02s Open life.soullab.voicekernel.vpio02
+    t =     0.02s     Launch life.soullab.voicekernel.vpio02
+    t =     0.11s         Setting up automation session
+    t =     0.18s         Wait for life.soullab.voicekernel.vpio02 to idle
+2026-09-14 19:54:55.943 xcodebuild[83033:30137057] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =     1.28s Wait for life.soullab.voicekernel.vpio02 to become Running Foreground
+    t =     1.28s Waiting 10.0s for "Enter conversation" Button to exist
+    t =     2.30s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     2.30s         Checking existence of `"Enter conversation" Button`
+    t =     2.40s Checking existence of `"Voice processing: ON (default)" Button`
+    t =     2.42s Checking existence of `"Voice processing: OFF (control run)" Button`
+    t =     2.75s Waiting 3.0s for "Voice processing: ON (default)" Button to exist
+    t =     3.77s     Checking `Expect predicate `existsNoRetry == 1` for object "Voice processing: ON (default)" Button`
+    t =     3.77s         Checking existence of `"Voice processing: ON (default)" Button`
+    t =     3.83s Waiting 5.0s for "Enter conversation" Button to exist
+2026-09-14 19:55:00.139 xcodebuild[83033:30137057] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =     4.85s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     4.85s         Checking existence of `"Enter conversation" Button`
+    t =     4.91s Tap "Enter conversation" Button
+    t =     4.91s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =     4.92s     Find the "Enter conversation" Button
+    t =     4.96s     Check for interrupting elements affecting "Enter conversation" Button
+    t =     5.00s     Synthesize event
+    t =     5.30s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =     5.31s Waiting 5.0s for "Play 3 s tone" Button to exist
+    t =     6.34s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =     6.34s         Checking existence of `"Play 3 s tone" Button`
+    t =     6.39s         Capturing element debug description
+    t =     7.33s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =     7.33s         Checking existence of `"Play 3 s tone" Button`
+    t =     7.40s         Capturing element debug description
+    t =     8.32s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =     8.32s         Checking existence of `"Play 3 s tone" Button`
+    t =     8.37s         Capturing element debug description
+    t =     9.39s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =     9.39s         Checking existence of `"Play 3 s tone" Button`
+    t =     9.44s         Capturing element debug description
+    t =    10.31s     Checking `Expect predicate `existsNoRetry == 1` for object "Play 3 s tone" Button`
+    t =    10.31s         Checking existence of `"Play 3 s tone" Button`
+    t =    10.37s         Capturing element debug description
+    t =    10.37s     Checking existence of `"Play 3 s tone" Button`
+    t =    10.40s Collecting debug information to assist test failure triage
+    t =    10.40s     Requesting snapshot of accessibility hierarchy for app with pid 66966
+/tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift:238: error: -[DriverUITests.K00DriverTests testOutputSample] : failed - DRIVER/INFRASTRUCTURE FAILURE: 'Play 3 s tone' not found after Enter
+    t =    10.52s Tear Down
+2026-09-14 19:55:06.414 xcodebuild[83033:30137057] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+Test Case '-[DriverUITests.K00DriverTests testOutputSample]' failed (10.753 seconds).
+Test Suite 'K00DriverTests' failed at 2026-09-14 19:55:06.386.
+	 Executed 1 test, with 1 failure (0 unexpected) in 10.753 (10.754) seconds
+Test Suite 'DriverUITests.xctest' failed at 2026-09-14 19:55:06.387.
+	 Executed 1 test, with 1 failure (0 unexpected) in 10.753 (10.755) seconds
+Test Suite 'Selected tests' failed at 2026-09-14 19:55:06.392.
+	 Executed 1 test, with 1 failure (0 unexpected) in 10.753 (10.761) seconds
+2026-09-14 19:55:42.031 xcodebuild[83033:30137057] [MT] IDETestOperationsObserverDebug: 48.901 elapsed -- Testing started completed.
+2026-09-14 19:55:42.031 xcodebuild[83033:30137057] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-14 19:55:42.031 xcodebuild[83033:30137057] [MT] IDETestOperationsObserverDebug: 48.901 sec, +48.901 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-dgiremoipfelktadralzskxidbxs/Logs/Test/Test-DriverUITests-2026.09.14_19-54-52--0400.xcresult
+
+** TEST EXECUTE FAILED **
+
+Testing started

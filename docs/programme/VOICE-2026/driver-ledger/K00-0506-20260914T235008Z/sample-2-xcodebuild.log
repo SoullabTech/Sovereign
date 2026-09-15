@@ -1,0 +1,30 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testOutputSample"
+
+2026-09-14 19:51:25.783 xcodebuild[82622:30130634] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 19:51:25.787 xcodebuild[82622:30130634] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 19:51:25.886 xcodebuild[82622:30130634] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-14 19:51:26.166 xcodebuild[82622:30130634] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 19:51:26.362 xcodebuild[82622:30130634] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 19:51:27.855979-0400 DriverUITests-Runner[66951:14679374] [Default] Running tests...
+2026-09-14 19:52:28.097750-0400 DriverUITests-Runner[66951:14679374] [Default] Failed to initialize for UI testing: Error Domain=com.apple.dt.XCTest.XCTFuture Code=1000 "Timed out while enabling automation mode." UserInfo={NSLocalizedDescription=Timed out while enabling automation mode.}
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-cigsmjqnvphafzfasmykydutxhdq/Logs/Test/Test-DriverUITests-2026.09.14_19-51-26--0400.xcresult
+
+2026-09-14 19:52:28.449 xcodebuild[82622:30130634] [MT] IDETestOperationsObserverDebug: 62.281 elapsed -- Testing started completed.
+2026-09-14 19:52:28.449 xcodebuild[82622:30130634] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-14 19:52:28.449 xcodebuild[82622:30130634] [MT] IDETestOperationsObserverDebug: 62.281 sec, +62.281 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-cigsmjqnvphafzfasmykydutxhdq/Logs/Test/Test-DriverUITests-2026.09.14_19-51-26--0400.xcresult
+
+Testing failed:
+	DriverUITests-Runner (66951) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.))
+
+** TEST EXECUTE FAILED **
+
+Testing started
