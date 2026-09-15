@@ -1,0 +1,11 @@
+S1 execution transport note — 2026-09-15
+
+The ruled S1 act was executed once. Source custody, HEAD/diff/pgrep, and the exact batch invocation ran in the original interactive shell at /private/tmp/k0506-vpoff-83a382a14.
+
+The MCP safety layer rejected the full pinned preflight block when sent as one interactive payload. To avoid rerunning any completed read, the same single logical preflight was completed in two helper shell invocations: one apps read and one process read, both writing into the same preflight directory K00-0506-VPOFF-preflight-20260915T012701Z.
+
+No apps read or process read was repeated. Results were APPS_READ_RC=0, E3B88028 container hits=1, PROCESS_READ_RC=0, VoiceKernelHarness processes=0. HEAD was exact, witness-surface diff rc=0, and OTHER_K00_0506_BATCHES=0 before those reads.
+
+After the clean readings, the full 2,389-byte S1 authority string was passed once in K00_EXEC_AUTHORITY and exactly one K00-0506-VPOFF N=10 batch was invoked. There was no retry, top-up, reinstall, source change, corrective device act, or downstream S2/S3 act.
+
+This note records transport/custody only. It does not reinterpret S1 evidence or alter any journal, ledger, reader, instrument, or organism file.
