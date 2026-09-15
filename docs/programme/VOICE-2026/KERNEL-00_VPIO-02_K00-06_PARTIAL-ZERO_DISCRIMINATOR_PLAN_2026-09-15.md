@@ -433,3 +433,19 @@ Physical chain the design must make legible: hash-pinned stimulus → `/usr/bin/
 ### 14.6 Before-read CAPTURED · act paused at the governed boundary (founder-relayed, 2026-09-15)
 
 Before-read captured at `/private/tmp/k00-s2-output-source-20260915T022305Z` (`audio-before.json` · `volume-before.txt`; contents not yet received here). The Mac-side session stopped at the exact boundary: its terminal control does not reach Control Center, and it declined to substitute AppleScript or a CLI device switch for the pinned UI gesture — correct under §14.1. The request to *perform* the gesture was relayed to this session, which has no Mac, no display and no Control Center and likewise cannot and will not substitute. **The one authorized mutation — Control Center → Sound → Output → Mac Studio Speakers — is a physical act of the founder's hand.** Sequence unchanged: gesture → after-read → parser → four-file seal → return under the SAME stamp (`20260915T022305Z`); a second before-read would be a new stamp and the first pair is then evidence only. Nothing else is authorized.
+
+### 14.7 Founder confirmation (2026-09-15) — BLOCKED act, not a failed one · lane PAUSED at the boundary
+
+```text
+before-read             CAPTURED · 20260915T022305Z
+record                  bf7d2fc63
+required mutation       physical Control Center selection
+mutation performed      NO
+after-read              NOT AUTHORIZED YET
+seal                    NOT CREATED
+S2 design               HELD
+S2 implementation       HELD
+S2 witness              NOT AUTHORIZED
+```
+
+The ruling authorized one human UI gesture; no session (this one or the Mac terminal session) replaces it with AppleScript, CoreAudio commands, an installed selector or any other mechanism. The before-state is legitimate custody evidence with no after-state yet. Exactly two clean paths: **(1) hold** until someone physically at the Mac Studio selects Control Center → Sound → Output → Mac Studio Speakers and the after-read + seal complete under stamp `20260915T022305Z`; **(2) a new founder ruling** that abandons the human-gesture act and authorizes a different output-selection mechanism — a new act with its own preconditions, never a workaround inside this one. Until one happens, nothing further runs in S2.
