@@ -1175,3 +1175,136 @@ succession lane landing          ⛔ HELD — and now a visible prerequisite
 production mutation              ⛔ NONE — the run was READ ONLY
 maia_focus_witness               FROZEN
 ```
+
+---
+
+# W5-LANDING-01 — PROTECTED SUCCESSION-LANE CENSUS · INSTRUMENT
+
+**Authorized by** founder act, 2026-09-15. ⛔ **READ ONLY.**
+**Instrument** `scripts/witness/w5-landing-01-lane-census.sql`
+**Seal** `scripts/witness/w5-landing-01-census-seal.sh` — **26 passed · 0 failed**
+**Protected result** ⛔ **NOT RUN** — this session still cannot reach production.
+
+> **The prohibition that shapes it.** `…000001 absent, therefore …000002–000004
+> absent` is forbidden, even though the dependency graph makes it likely. Each
+> migration is measured **on its own**, twice — ledger and catalogue — and the
+> two answers are reported side by side rather than reconciled.
+
+---
+
+## 35. What it measures
+
+All five migrations by exact filename, against **28 named objects** —
+tables, indexes, constraints, a column, functions and triggers — each checked
+individually:
+
+```
+000001  proposal_chains · proposal_versions · one_successor · one_root
+        chain_id_id_key · predecessor_same_chain · 2 functions · 2 triggers
+000002  manuscript_revision_offers · 2 functions · 2 triggers
+000003  proposal_chains_member_id_id_key
+000004  manuscript_revision_authorizations · uq_mra_one_unspent_permission
+        · function · trigger
+000005  member_work_id_key · ask_threads.proposal_chain_id · chain fkey
+        · insights · directions · function · 2 triggers
+```
+
+Rolled up per migration as **PRESENT · PARTIAL · ABSENT**, then crossed with the
+ledger into the derived state:
+
+```
+ledger applied  + catalogue PRESENT  → LANDED
+ledger absent   + catalogue ABSENT   → PENDING          ⭐ the pending set
+ledger applied  + catalogue ABSENT   → DRIFT (ledger claims it, database lacks it)
+ledger absent   + catalogue PRESENT  → DRIFT (present but unledgered — 2026-09-07)
+catalogue PARTIAL                    → PARTIAL, ruling owed   ⛔ never pending
+```
+
+## 36. Three defects the build found — two of them in my own design
+
+1. ⚠️⚠️ **The read-only membrane refused my own instrument.** The object list
+   was held in a `CREATE TEMP VIEW`, and the run died with
+   `ERROR: cannot execute CREATE VIEW in a read-only transaction`. ⭐ The very
+   property that makes this safe caught its author. The list now lives in an
+   inline CTE — **twice**, because a read-only transaction admits no temp object
+   and a psql variable cannot carry a quoted SQL literal list safely. ⛔ The
+   duplication is **guarded, not trusted**: the seal asserts the two copies are
+   byte-identical (28 objects), because copies that drifted would make the
+   detail and the rollup describe **different databases**.
+
+2. ⚠️⚠️ **A SQL-level gate is not a gate.** The ledger join was written as
+   `CASE WHEN <ledger readable> THEN (SELECT … FROM schema_migrations) …`, and
+   PostgreSQL **resolves the relation at parse time** — so on a database without
+   the ledger the statement died before the CASE was ever evaluated. The join
+   now sits behind a psql `\if`, which decides whether the statement is **sent
+   at all**. ⭐ The distinction matters beyond this file: *a conditional that
+   still names the missing object has not avoided it.*
+
+3. ⚠️ A placeholder collision while assembling the file replaced the word
+   `PRESENT` inside its own `'PRESENT'` string literals. Caught immediately by a
+   syntax error; rebuilt with non-colliding tokens. Recorded because it is the
+   same family as the C21 bans: **a textual substitution that cannot tell code
+   from the text describing it.**
+
+## 37. And two obligation defects in the seal itself
+
+- ⚠️ **A whole-output ban where a per-row assertion was meant** — banning
+  `PENDING` across the run fails whenever *another* migration is legitimately
+  pending. In a run where `000001` is PARTIAL, `000002–000005` are correctly
+  PENDING. Re-asserted **row-scoped**. *(The fourth time this session that a
+  ban has been written wider than the property it defends.)*
+- ⚠️ **An obligation that demanded a row which correctly does not exist.** The
+  PARTIAL case had no ledger, so §5 prints nothing and the last matching line is
+  §4's rollup. The derived state is now asserted in the case that *has* a
+  ledger.
+
+## 38. Falsification — 26 obligations, on constructed drift
+
+| case | built | asserted |
+|---|---|---|
+| nothing applied | bare database | every migration ABSENT, nothing PRESENT |
+| **PARTIAL** | `proposal_chains` + `proposal_versions` tables, no triggers/indexes | PARTIAL, and that row **never** PENDING |
+| **DRIFT ↓** | ledger says all five applied, database empty | *ledger claims it, database lacks it* — never LANDED |
+| **DRIFT ↑ / PARTIAL** | objects present, ledger silent | PARTIAL row keeps its own state; a genuinely absent+unledgered migration IS pending |
+| **PENDING** | empty modern ledger, empty database | PENDING — the state we are here to measure |
+| legacy ledger | `version`, no `filename` | LEGACY · **no pending set derived** |
+| absent ledger | no `schema_migrations` | NOT MEASURABLE · no pending set |
+| read-only | — | server refuses DDL; census declares its own state |
+
+⭐ **PARTIAL had to be constructed** — no migration produces it, which is exactly
+why waiting to meet it in production is not a plan.
+
+## 39. How to run it
+
+```bash
+git fetch origin claude/w4-2-schema-design
+git show origin/claude/w4-2-schema-design:scripts/witness/w5-landing-01-lane-census.sql \
+  > /tmp/w5-lane-census.sql
+ssh soullab@minisforum \
+  'docker exec -i maia-postgres psql -U soullab -d maia_consciousness -X' \
+  < /tmp/w5-lane-census.sql
+```
+
+⭐ **§1 first.** If it does not name the protected database, nothing below it is
+a protected reading.
+
+## 40. Standing
+
+```
+W4-2.2 protected preflight       ✅ RUN · 87c6dd1bb
+unique-lock strategy             ✅ Option A · dated
+
+W5-LANDING-01 instrument         ✅ sealed · 26/0
+W5-LANDING-01 protected RESULT   ⛔ NOT RUN
+exact pending predecessor set    ⏸ unknown until it runs
+
+W5-LANDING-02 landing package    ⛔ not authorized
+succession/W5 production landing ⛔ HELD
+W4 executable migration landing  ⛔ HELD
+producer registration            ⛔
+canonical service seam           ⛔
+route / Canvas                   ⛔
+
+production mutation              ⛔ NONE
+maia_focus_witness               FROZEN
+```
