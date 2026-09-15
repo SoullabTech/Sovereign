@@ -2295,3 +2295,40 @@ cp /private/tmp/k00-0506-s2-transcript.txt "$LD/transcript.txt"
 **What a completed population does and does not do:** produces up to ten §7 readings (A / A′ / UNMEASURED / CHARACTERIZE) beside ten frozen K00-05/06 rows; may be null, mixed or counter-hypothesis; earns no K00-06 PASS; opens neither S3 nor KERNEL-00 acceptance; both remain separate founder rulings after §18.21 is read.
 
 **Standing after §18.20:** S2 population AUTHORIZED · pinned · NOT YET EXECUTED (Mac act) · `b198e2e37` unchanged · 69 last committed read 15:49:59Z (pre-C read decides) · C-D26 OPEN, non-blocking · WITNESS-02/03/04 residue preserved · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.21 — `K00-0506-S2` POPULATION ACT EXECUTED → **STOP IN BLOCK B: two `VoiceKernelHarness` processes present, NEITHER in the `.vpio02` container** · population NOT invoked · nothing played · evidence RECEIVED and VERIFIED HERE — 2026-09-15
+
+### 18.21.1 Custody
+
+- Branch `feature/k00-s2-population-stop-evidence-20260915T170040Z`, founder commit `e128037428be61a820659d5e43d3f41c0a2e9ad9` (parent `b198e2e37`, the execution worktree's HEAD) → cherry-picked here as the commit preceding this record (`-x`, no edit). Directory `driver-ledger/K00-0506-S2-preflight-20260915T170040Z/` — 9 files: `RETURN.txt` · `STOP.txt` · `SHA256SUMS.stop` · `apps.json` · `processes.json` · `block-hashes.txt` · `s2pop-blockA.out` · `s2pop-blockB.out` · `stage0-diffs.txt`. **`sha256sum -c SHA256SUMS.stop` here: 8/8 OK.** No journal, no `ledger.md` → corpus partition untouched; gate **76/76** on the cherry-pick.
+- **Stage 0 verified:** `block-hashes.txt` = the four §18.20.3 values exactly (`e157eaa4…` · `eee5b2c3…` · `3f39acd4…` · `17e3f184…`) = recomputed here from the immutable source + the four substitutions; `stage0-diffs.txt` carries 12 changed lines, all four tokens, nothing else; `/private/tmp/k0506-s2pop-b198e2e37` did not pre-exist (founder-relayed).
+- **Block A PASS** (fourth clean pass on `b198e2e37`): `HEAD=b198e2e37…` · `TREE_CLEAN=1` · `Tests: 75 passed, 75 total` · `GATE_75_75=1` · fixture + afplay SHAs = pins · `AFPLAY_PROCESSES_BEFORE=0` · `BLOCK_A_PASS=1`.
+- **Block B STOP on its own fail-closed line:** `PREFLIGHT_DIFF_RC=0` · `OTHER_BATCHES=0` · `APPS_READ_RC=0` · `E3B88028_CONTAINER_HITS=1` (the `.vpio02` install is intact and present) · `PROCESS_READ_RC=0` · **`VoiceKernelHarness processes: 2` → `STOP: harness process present`**. Pre-C read NOT RUN · Block C NOT RUN · `Dpop` NOT RUN · population NOT invoked · playback NONE · S2 rows NONE · `BATCH_PIPELINE_RC=NOT_RUN_BLOCK_B_STOP`. The outer `rc=` lines are empty (C-D26, as expected under zsh).
+
+### 18.21.2 What the two processes are (read from the committed `processes.json`, 349 rows)
+
+| PID | Executable container | Identified by |
+|---|---|---|
+| **2098** | `…/Bundle/Application/0B07D423-97E7-4196-BC1C-C69C96F994BE/VoiceKernelHarness.app` | `driver-ledger/reinstall-20260914T011754Z.txt` lines 15–16: `bundleID: life.soullab.voicekernel.k00` · `installationURL …0B07D423…` — **the R1 install (`.k00`, Phase-A repro subject)** |
+| **2099** | `…/Bundle/Application/6A2E406B-D1B8-43A4-92F3-29D50333AF19/VoiceKernelHarness.app` | `driver-ledger/reinstall-20260914T194554Z.txt` lines 17–18: `bundleID: life.soullab.voicekernel.vpio01` · `installationURL …6A2E406B…` — **the FIRST-INSTALL-01 `.vpio01` install (FROZEN evidence)** |
+
+Neither is the `.vpio02` container `E3B88028…` (present in `apps.json`, no process). So: the population's subject was cold; two *other* subjects were running. Facts, not inference: (i) no governed act has launched `.vpio01` since its first install (it was "installed, never launched" through every record to date), and R1 was last governed on 2026-09-14 (device HOLD IN PLACE); (ii) the two PIDs are adjacent (2098 · 2099); (iii) every harness PID previously read on this device was five digits (`54266 · 55561 · 63378 · 67021 · 80148 · 82431`). Inference only, kept as inference: adjacent low PIDs are consistent with the device having restarted since 15:51Z and both apps being relaunched together; **cause and actor UNKNOWN, not inferred** (founder: no inference offered; none is made here).
+
+### 18.21.3 Reading
+
+- **Block B refused correctly, and it refused something that would have aborted the batch inside.** The batch's own sample-1 precondition (`k00-driver-batch.sh` `harness_present()`, line 101) greps for *any* `VoiceKernelHarness` and, finding one, runs `testTerminateOnly` on the driver's own subject — `.vpio02` — which cannot terminate a `.k00` or `.vpio01` process; sample 1 would have been ledgered `PRECONDITION-FAILED` and the batch aborted as DRIVER/INFRASTRUCTURE FAILURE (line 259). Block B stopping before Block C kept the invocation unspent and avoided an infra row; the pin's ordering did its work.
+- **Nothing about the organism, the volume or S2 physiology was read.** The pre-C volume read never ran; 69 remains last committed at 15:49:59Z; no afplay before; no playback.
+- **Two foreign harness processes alive is itself a custody fact of the device**, of the same species as the stray pid 63378 (census §7.13–7.14: origin UNKNOWN, precondition residue, not a finding). It differs in one respect that the founder may weigh: one of the two is the `.vpio01` frozen-evidence subject, whose container has now been entered by a launch no record authorized. Whether that launch changed anything inside the container (a journal is written only on Export; the recorder starts at launch) is UNREAD; a read-only container listing would answer it and is named, not proposed.
+- **Disposition of the population authority:** by the §18.15 precedent (WITNESS-04's Block-B STOP = spent, re-issued fresh), a Block-B STOP spends the act. The population was authorized as "the existing §15 invocation"; that invocation never began. Whether the same issuance survives a clearance act or a fresh issuance is made is the founder's.
+
+### 18.21.4 Returned to the founder (nothing opened here)
+
+1. **STOP acceptance** as read.
+2. **Disposal of the two foreign processes** — a device act, not authorized by §18.20. The exercised shape is §10.5 C (one `testTerminateOnly` per subject on the `83a382a14` runner with `TEST_RUNNER_K00_SUBJECT` = `phase-a` for the `.k00` process and `vpio-01` for the `.vpio01` process; read before, read after, no launch); the `.vpio01` termination touches a frozen subject (termination only, no launch/uninstall/overwrite) and needs its own words. Alternative: leave them and accept that every population precondition aborts until they exit.
+3. **Read-only container reads** of `.vpio01` (`6A2E406B…`) and R1 (`0B07D423…`) `tmp/` — to learn whether the ungoverned launches wrote anything; named only.
+4. **Population re-issuance** after clearance: the §18.20.3 pin is reusable with a fresh worktree token (the `s2pop` path now pre-exists → Stage 0 would STOP; next token `s2pop2`, `K00-0506-S2` label unchanged); Blocks A/B/C/Dpop unchanged; the pre-C 69 read still decides, restoration still outside unless paired by ruling.
+5. Nothing else: `b198e2e37` unchanged · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+**Standing after §18.21:** `K00-0506-S2` act STOP in Block B (foreign harness processes: R1 `.k00` PID 2098 · frozen `.vpio01` PID 2099; cause/actor UNKNOWN) · population NOT invoked · S2 rows NONE · playback NONE · volume UNREAD by this act · `.vpio02` install intact · `b198e2e37` unchanged · C-D26 open, non-blocking · WITNESS-02/03/04 residue preserved · S2 population authority: disposition owed · S3 CLOSED · KERNEL-00 acceptance CLOSED.
