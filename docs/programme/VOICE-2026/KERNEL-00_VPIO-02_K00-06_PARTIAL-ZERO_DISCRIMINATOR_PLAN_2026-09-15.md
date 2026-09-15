@@ -449,3 +449,20 @@ S2 witness              NOT AUTHORIZED
 ```
 
 The ruling authorized one human UI gesture; no session (this one or the Mac terminal session) replaces it with AppleScript, CoreAudio commands, an installed selector or any other mechanism. The before-state is legitimate custody evidence with no after-state yet. Exactly two clean paths: **(1) hold** until someone physically at the Mac Studio selects Control Center → Sound → Output → Mac Studio Speakers and the after-read + seal complete under stamp `20260915T022305Z`; **(2) a new founder ruling** that abandons the human-gesture act and authorizes a different output-selection mechanism — a new act with its own preconditions, never a workaround inside this one. Until one happens, nothing further runs in S2.
+
+### 14.8 Gesture performed (founder statement, 2026-09-15: "all done") · after-read evidence NOT YET RECEIVED
+
+The founder states the one authorized mutation — Control Center → Sound → Output → Mac Studio Speakers — was performed by hand at the Mac Studio. This session holds only that statement: no `s2-output-source-20260915T022305Z/` directory exists on any `origin/feature/*` branch at the time of this entry (fetched and scanned), so `audio-after.json` · `volume-after.txt` · `READ.txt` · `SHA256SUMS` are unread here and PASS/STOP is NOT determined. State:
+
+```text
+before-read             CAPTURED · 20260915T022305Z
+mutation performed      YES — founder-stated; not yet evidenced
+after-read              OWED (Mac-side session, same stamp)
+seal                    OWED
+return                  OWED (feature/* → driver-ledger/s2-output-source-20260915T022305Z/)
+PASS / STOP             UNDETERMINED until the files are read here
+S2 design / impl        HELD
+S2 witness              NOT AUTHORIZED
+```
+
+Reading law unchanged (§14.3): exactly one `DEFAULT_OUTPUT` line · `Mac Studio Speakers` · `coreaudio_device_type_builtin` · `MAC_STUDIO_DEFAULT_OUTPUT True`; B06Ultra present without the flag; volumes custody only. On PASS the sequence the founder restated applies in order and each step is its own act: (1) record the preparation PASS → (2) separate S2 batch-only design authority → (3) implement only the orchestration (deterministic stimulus, SHA custody, `/usr/bin/afplay`, PID/start/alive/stop/exit evidence, default-output verification before each population) → (4) gate → new orchestration SHA → (5) fresh S2 witness authority → (6) S2 with VP ON + the labelled external signal → (7) read whether the near-end signal survives at the consumed seam while MAIA speaks → (8) only then decide S3. None of (2)–(8) is opened by this entry.
