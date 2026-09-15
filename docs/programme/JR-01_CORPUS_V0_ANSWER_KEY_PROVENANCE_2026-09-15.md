@@ -194,7 +194,11 @@ GROUNDING ..................... 1 witnessed · 2 harness · 8 contract · 1 unem
 MEASUREMENT ................... ⛔ NONE. No model has seen a stimulus.
 v1 CANDIDATES ................. the §4.1 conjunction case; a third state for R05
 EXTERNAL PARTNER .............. ⛔ not contacted, not required for rungs 1–2
-SOURCE PAPER (2026-08-14) ..... ⛔ STILL UNREAD. Its first-unit instruction stands.
+SOURCE PAPER (2026-08-14) ..... ✅ READ — ⚠️ SUPERSEDED later the same day; see
+                                 `JR-01_FIRST_UNIT_CLOSURE_2026-09-15.md`. The source is
+                                 the August 2026 Soullab/Sophontic working draft, read by
+                                 the founder; ⛔ it is not in this repository. The line
+                                 above was true when written and is kept verbatim.
 PRODUCT SOURCE ................ UNCHANGED   PRODUCTION ..... UNTOUCHED
 ```
 

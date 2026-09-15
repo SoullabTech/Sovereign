@@ -240,6 +240,12 @@ evidence for it.
 5. A canonical cross-model evaluation set (§4 row 6).
 6. ⛔ The source paper named in the 2026-08-14 held direction — still unread,
    still unlocated. Its standing first-unit instruction is undischarged.
+   ⚠️ **SUPERSEDED 2026-09-15**, later the same day: the source is identified as the
+   **August 2026 Soullab/Sophontic working draft** — not an unidentified Julian paper —
+   and the founder has read it and discharged the first unit
+   (`JR-01_FIRST_UNIT_CLOSURE_2026-09-15.md`). ⛔ The draft is still not in this
+   repository. Kept verbatim as the reading at the time, ⛔ never edited to read as if
+   it had always said otherwise.
 
 ---
 

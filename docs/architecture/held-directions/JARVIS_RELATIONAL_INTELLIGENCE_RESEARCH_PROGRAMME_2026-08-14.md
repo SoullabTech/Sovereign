@@ -225,7 +225,26 @@ research horizon). ⛔ Not done here. This record preserves the direction only.
 
 ---
 
-## ⛔ The first unit, when authorized
+## ✅ The first unit — DISCHARGED 2026-09-15
+
+⭐ **Closed by founder act on 2026-09-15.** The source was the **August 2026
+Soullab/Sophontic working draft**, not the unidentified Julian paper this section
+supposed. It was read, its existing claims and experimental architecture were
+reconstructed, and JR-01's novelty was distinguished from it without retrofitting
+history in either direction. Record:
+`docs/programme/JR-01_FIRST_UNIT_CLOSURE_2026-09-15.md`.
+
+⭐⭐ **The finding this section's caution earned**: the perturbation / vocabulary-
+invariance / discriminability / ablation architecture was **already Soullab prior art**
+in the August draft. Had the instruction to read first been skipped, JR-01 would have
+been presented as originating a method it did not originate.
+
+⛔ **STOP still holds.** Discharging the first unit authorizes no redesign, no model
+execution, and no representational measurement. The text below is preserved as written.
+
+---
+
+## ⛔ The first unit, when authorized *(historical — superseded above)*
 
 ⚠️ **A source paper/draft is referenced but was NOT read** — it did not appear in
 the originating conversation and no path was given. ⛔ Nothing here should be
