@@ -447,6 +447,43 @@ DEEP changes                       ⛔ NOT AUTHORIZED
 production deployment              ⛔ NOT AUTHORIZED
 ```
 
+### 7.0 ⭐ RESUMPTION ORDER — where to pick up
+
+```
+1.  FRESH 0A RUN
+    close the member witness on what is already shipped
+    ⭐ cheapest act; ⛔ should not hang while new architecture opens
+
+2.  MEMORY-ORGANISM-CENSUS-01        read-only · carrier-first
+    find every OTHER place where a sound class has unreachable territory,
+    dormant readers, wrong temporal scope, or tier-specific disappearance
+
+3.  L1 · CURRENT-SESSION-RECOVERY-01
+    ⛔ not because L1 needs redesign — the defect and falsifiers are sharp
+    ⭐ because its opening custody should INHERIT whatever the census finds
+       about composition, provenance or reachability
+```
+
+> ⭐⭐ **Finish the proof of the thing already shipped; then inspect carrier
+> reachability across the organism before changing it.**
+
+⛔ **Do not open L1 and the census simultaneously.** The census is cheap and may prevent
+L1 from solving one visible hole while reproducing an unseen one beside it.
+
+### 7.0.1 ⛔⛔ THE SEQUENCING TRAP — L1 LOOKS READY AND IS NOT NEXT
+
+⚠️ **0B and 0C precede L1 in the roadmap (§5).** L1 carries four falsifiers, a design
+sketch and six prohibitions; 0B and 0C carry far less. ⛔ **A session resuming cold will
+read that asymmetry as readiness and start L1.**
+
+⭐ **Opening L1 ahead of 0B and 0C is a SEQUENCING RULING — a founder act — never an
+inference from how complete the records look.** ⛔ Specification depth is not priority.
+
+⭐ The census (step 2) is **sequence-neutral**: it disturbs neither 0B nor 0C and can run
+without any ruling on what follows it.
+
+---
+
 ### 7.1 ⚠️ Owed, and deliberately not folded into this record
 
 The `AIN-CONTEXT-01` charter still carries `production A6 ⛔ NOT PRESENT`, which is now
