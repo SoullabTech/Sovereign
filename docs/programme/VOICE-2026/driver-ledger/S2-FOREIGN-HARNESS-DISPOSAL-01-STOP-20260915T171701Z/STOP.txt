@@ -1,0 +1,9 @@
+ACT S2-FOREIGN-HARNESS-DISPOSAL-01
+RESULT STOP before Stage 0 process read
+STOP_LINE STOP: the 8b111709b signed runner xctestrun is absent — no rebuild under this authority
+RUNNER_PATH /private/tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+TERMINATION_INVOCATIONS 0
+PROCESS_BEFORE_READ NOT_RUN
+PROCESS_AFTER_READ NOT_RUN
+DISPOSAL_ACCEPTANCE NOT_REACHED
+POPULATION_REISSUANCE CONDITION NOT_MET
