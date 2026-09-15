@@ -749,3 +749,32 @@ cp /private/tmp/s2-witness-01-transcript.txt "$LD/transcript.txt"
 **PASS opens nothing:** S2 population NOT AUTHORIZED · S3 NOT OPEN · KERNEL-00 NOT ACCEPTED · the sample-1 journal is never an S2 row and its §7 reading is not performed.
 
 **Standing after §16:** orchestration `b198e2e37` LANDED · **S2-WITNESS-01 GRANTED, NOT YET EXECUTED (Mac act; evidence owed)** · playback permitted only inside that witness · S2 population NOT AUTHORIZED · S3 NOT OPEN · organism FROZEN · `.vpio02` untouched · `.vpio01` FROZEN · K00/R1 UNTOUCHED · KERNEL-00 NOT ACCEPTED.
+
+### 16.5 Founder confirmation (2026-09-15) — handoff clean · one distinction to carry into the return record
+
+The founder confirms §16 as a clean handoff: fixed subject (`b198e2e37` + the two pinned hashes) · fixed act (exactly one witness invocation, explicitly not an S2 population sample) · fixed epistemic law (§16.4 decides PASS/STOP before the evidence exists). The load-bearing sentence is retained verbatim: *the phone journal is orchestration evidence only; it receives no §7 interpretation and never becomes an S2 row* — the witness cannot quietly become the first population datum merely because the machinery produced the same carrier. The return record (§17, when written) MUST carry this distinction:
+
+```text
+S2-WITNESS-01
+    proves / fails orchestration custody
+
+S2 population
+    remains an unperformed experimental act
+
+same invocation machinery ≠ same evidentiary act
+```
+
+Failure law restated by the founder: a failed witness may diagnose what failed; it cannot bootstrap authority to change the instrument and try again.
+
+```text
+batch implementation       LANDED        b198e2e37
+witness authority          RECORDED      1045bdd6e
+witness reading law        PREDECLARED   §16.4
+
+S2-WITNESS-01 Mac act      UNSPENT
+S2 population              CLOSED
+S3                         CLOSED
+KERNEL-00 acceptance       CLOSED
+```
+
+The next legitimate event in this lane is the Mac evidence bundle, not another design or implementation act. On its return the only work is custody verification, seal recomputation and adjudication against §16.4; no interpretation is invented after seeing the result.
