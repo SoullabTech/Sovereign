@@ -63,6 +63,13 @@ export interface MaiaContext {
   // 🚪 PLACE (House Presence): facts-only current-room orientation.
   // Built server-side from a validated body.place; never behavioral.
   placeAddendum?: string;
+  /**
+   * AIN-CONTEXT-01 · A6 — session self-location and known absence.
+   * Facts about THIS conversation's aperture: how much is on record, how much is
+   * represented here, how much exists and is not. ⛔ Not memory, not retrieval,
+   * not inference about the member. See lib/maia/continuity/sessionContinuity.ts.
+   */
+  sessionContinuityAddendum?: string;
   // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
   epistemicPathAddendum?: string;
   // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 of 3-pass pipeline)
@@ -396,6 +403,9 @@ Detection: ${rationale.join(', ')}`
 // 7. Epistemic/MAIA mode      — how to respond
 // 8. Studio/Knowledge/Member/Consultation/Field — multi-perspective layers
 // 9. Conversational recall    — cross-session continuity (Phase 2)
+//
+// 0. Session continuity       — A6 self-location + known absence. Injected FIRST:
+//                               it describes the aperture the rest of these sit in.
 // ═══════════════════════════════════════════════════════════════════════════
 
 // 🛡️ SAFE ADDENDUM WRAPPER: Final guarantee against null/undefined (Track 2B)
@@ -406,12 +416,25 @@ const safeAddendum = (v: unknown): string => {
   return s;
 };
 
+/**
+ * AIN-CONTEXT-01 · A6 — the CORE prompt's FINAL history aperture, in exchanges.
+ *
+ * ⛔ THE VALUE IS UNCHANGED (it was the literal 4 in the slice below; A6 may not widen
+ * it — R5). It is named and exported ONLY so the accounting in maiaService and the
+ * slice that actually narrows are the SAME number and cannot drift apart. If this
+ * constant is ever changed, the absence arithmetic follows it automatically.
+ */
+export const CORE_PROMPT_HISTORY_APERTURE = 4;
+
 type AddendumSpec = {
   field: keyof MaiaContext;
   log: (value: string) => string;
 };
 
 const ADDENDA_SPECS: readonly AddendumSpec[] = [
+  // AIN-CONTEXT-01 · A6. FIRST deliberately: this block states the facts about the
+  // aperture that every addendum below it sits inside. Orientation precedes content.
+  { field: 'sessionContinuityAddendum',       log: v => `🧭 [Session Continuity] Self-location + known absence injected (${v.length} chars)` },
   { field: 'placeAddendum',                   log: () => `🚪 [Place] Current-room orientation injected` },
   { field: 'relationshipModeAddendum',        log: v => `💫 [Relationship] Mode: ${v.split('\n')[0]}` },
   { field: 'governorAddendum',                log: () => `🌀 [Governor] Posture guidance injected` },
@@ -862,7 +885,7 @@ ${summary}`;
 
   // 🔄 CONVERSATION HISTORY: Include recent exchanges for memory/recall
   if (conversationHistory && conversationHistory.length > 0) {
-    const recentExchanges = conversationHistory.slice(-4).map(ex => {
+    const recentExchanges = conversationHistory.slice(-CORE_PROMPT_HISTORY_APERTURE).map(ex => {
       const userMsg = ex.userMessage || ex.content || '';
       const maiaMsg = ex.maiaResponse || '';
       if (userMsg && maiaMsg) {

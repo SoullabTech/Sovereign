@@ -1,7 +1,19 @@
 // backend: lib/sovereign/maiaService.ts
 import { randomUUID } from 'crypto';
-import { incrementTurnCount, addConversationExchange, getConversationHistory } from './sessionManager';
-import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
+import { incrementTurnCount, addConversationExchange, getConversationHistory, getSessionContinuityWindow } from './sessionManager';
+import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext, CORE_PROMPT_HISTORY_APERTURE } from './maiaVoice';
+// AIN-CONTEXT-01 · A6 — session self-location + known absence (pure; no I/O, no memory).
+import {
+  deriveSessionContinuity,
+  formatSessionContinuityForPrompt,
+} from '@/lib/maia/continuity/sessionContinuity';
+
+/**
+ * AIN-CONTEXT-01 · A6 — the DEEP consultation's FINAL history aperture, in exchanges.
+ * ⛔ Value unchanged (was the literal 5); named so the accounting and the slice that
+ * narrows are one number and cannot drift. A6 may not widen it (R5).
+ */
+const DEEP_CONSULTATION_APERTURE = 5;
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
 import { renderTurnForCognition, type CanonicalTurn } from '../maia/canonical-turn';
@@ -775,7 +787,10 @@ async function fastPathResponse(
   meta: Record<string, unknown>,
   mindContext?: MindContext,
   // 🌀 CONVERGENCE-01 Cut 1A — resolved at the shared boundary, threaded here, SHADOW ONLY.
-  orientation?: ResolvedOrientation
+  orientation?: ResolvedOrientation,
+  // AIN-CONTEXT-01 · A6 — completed exchanges durably on record for THIS session,
+  // in the SAME unit as conversationHistory (both from one pairing). R2.
+  durableCompletedExchanges: number = conversationHistory.length,
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
@@ -829,16 +844,24 @@ async function fastPathResponse(
   // 🔄 CROSS-SESSION RECALL: If current session is empty, load from cross-session turns
   // 🔒 SANCTUARY: Skip all cross-session recall (presence-only mode)
   let recentContext = '';
+  // AIN-CONTEXT-01 · A6 (R1): count what survives into cognition, NOT what was read.
+  // FAST's final aperture is the slice(-3) below; the cross-session fallback branch
+  // represents ZERO current-session exchanges. ⛔ No aperture is widened here.
+  let representedCurrentSessionExchanges = 0;
   if (isSanctuary) {
     // Sanctuary mode: no cross-session context, only current session history allowed
     if (conversationHistory.length > 0) {
-      recentContext = conversationHistory.slice(-3).map(ex =>
+      const fastAperture = conversationHistory.slice(-3);
+      representedCurrentSessionExchanges = fastAperture.length;
+      recentContext = fastAperture.map(ex =>
         `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
       ).join('\n');
     }
   } else if (conversationHistory.length > 0) {
     // Use current session history
-    recentContext = conversationHistory.slice(-3).map(ex =>
+    const fastAperture = conversationHistory.slice(-3);
+    representedCurrentSessionExchanges = fastAperture.length;
+    recentContext = fastAperture.map(ex =>
       `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
     ).join('\n');
   } else if (effectiveUserId) {
@@ -1043,6 +1066,22 @@ async function fastPathResponse(
 ${ainKnowledgeContext}\n`
     : '';
 
+  // ── AIN-CONTEXT-01 · A6 · FAST self-location + known absence ──────────────
+  // ⛔ Sanctuary: the session's own turn record is in-session material and stating
+  // its size discloses nothing cross-session, so the block is built identically.
+  const fastContinuity = deriveSessionContinuity({
+    durableCompletedExchanges,
+    representedExchanges: representedCurrentSessionExchanges,
+  });
+  const fastContinuityBlock = formatSessionContinuityForPrompt(fastContinuity);
+  const fastContinuityPrefix = fastContinuityBlock ? `${fastContinuityBlock}\n\n` : '';
+  console.log('🧭 [A6/FAST] session continuity', {
+    depth: fastContinuity.depth,
+    represented: fastContinuity.represented,
+    absent: fastContinuity.absent,
+    unit: fastContinuity.unit,
+  });
+
   let contextPrompt: string;
   // 🧵 LIVE THREAD: the cross-session memory bundle and the in-session recent thread are
   // complementary, not either/or. The bundle gives depth; recentContext keeps the live
@@ -1055,14 +1094,14 @@ ${ainKnowledgeContext}\n`
     : '';
   if (memoryContext && memoryContext.length > 0) {
     // Memory bundle (relationship snapshot + ranked cross-session memories) AND live thread
-    contextPrompt = `${memoryContext}\n\n${recentThreadBlock}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `${fastContinuityPrefix}${memoryContext}\n\n${recentThreadBlock}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
     console.log(`🧠 [FAST/MemoryDebug] Using MEMORY BUNDLE + recent thread (bundle=${memoryContext.length} chars, recent=${recentContext.length} chars)`);
   } else if (recentContext.length > 0) {
     // No bundle yet — recent in-session thread carries continuity on its own
-    contextPrompt = `Recent conversation:\n${recentContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `${fastContinuityPrefix}Recent conversation:\n${recentContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
     console.log(`🧠 [FAST/MemoryDebug] Using RECENT CONTEXT fallback (${recentContext.length} chars)`);
   } else {
-    contextPrompt = `${ainKnowledgeBlock}${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
+    contextPrompt = `${fastContinuityPrefix}${ainKnowledgeBlock}${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
     console.log(`⚠️ [FAST/MemoryDebug] NO MEMORY CONTEXT - using bare input only`);
   }
 
@@ -1605,7 +1644,10 @@ async function corePathResponse(
   meta: Record<string, unknown>,
   mindContext?: MindContext,
   // 🌀 CONVERGENCE-01 Cut 1A — resolved at the shared boundary, threaded here, SHADOW ONLY.
-  orientation?: ResolvedOrientation
+  orientation?: ResolvedOrientation,
+  // AIN-CONTEXT-01 · A6 — completed exchanges durably on record for THIS session,
+  // in the SAME unit as conversationHistory (both from one pairing). R2.
+  durableCompletedExchanges: number = conversationHistory.length,
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
@@ -1772,13 +1814,42 @@ async function corePathResponse(
   // Light conversation analysis
   const conversationContext = conversationElementalTracker.processMessage(sessionId, input, effectiveHistory);
 
+  // ── AIN-CONTEXT-01 · A6 · CORE self-location + known absence ──────────────
+  // R1: account against the FINAL aperture. buildMaiaWisePrompt narrows
+  // effectiveHistory by CORE_PROMPT_HISTORY_APERTURE, so exchanges loaded above and
+  // discarded there are as absent from cognition as material never loaded.
+  // When effectiveHistory came from the cross-session fallback (conversationHistory
+  // empty), ZERO current-session exchanges are represented.
+  const coreRepresentedCurrentSession = conversationHistory.length > 0
+    ? Math.min(CORE_PROMPT_HISTORY_APERTURE, effectiveHistory.length)
+    : 0;
+  const coreContinuity = deriveSessionContinuity({
+    durableCompletedExchanges,
+    representedExchanges: coreRepresentedCurrentSession,
+  });
+  const coreContinuityBlock = formatSessionContinuityForPrompt(coreContinuity);
+  console.log('🧭 [A6/CORE] session continuity', {
+    depth: coreContinuity.depth,
+    represented: coreContinuity.represented,
+    absent: coreContinuity.absent,
+    unit: coreContinuity.unit,
+  });
+
   // Build context with light consciousness insights
   const context: MaiaContext = {
     sessionId,
+    // AIN-CONTEXT-01 · A6 — injected FIRST by the shared addenda channel.
+    sessionContinuityAddendum: coreContinuityBlock || undefined,
     // PH2-001 item 3: count the history actually injected, not the session-scoped
     // fetch. With cross-session recall active these diverge, and MAIA was told "1 turns"
     // while four prior exchanges sat in her context.
-    summary: `Conversation: ${conversationContext.profile.dominantElement} element, ${effectiveHistory.length + 1} turns`,
+    // ── AIN-CONTEXT-01 · A6 ────────────────────────────────────────────────
+    // WAS: `${effectiveHistory.length + 1} turns` — the window length, which
+    // saturated at 11 regardless of true session depth (F1a RED, 2026-09-15).
+    // NOW: the authoritative count of completed exchanges on record for this
+    // session, in the unit sessionContinuity pins. ⛔ Nothing was widened to
+    // obtain it; it is the total the same pairing already computed.
+    summary: `Conversation: ${conversationContext.profile.dominantElement} element, ${coreContinuity.depth} ${coreContinuity.unit} on record`,
     memberProfile: conversationContext.memberProfile,
     wisdomAdaptation: conversationContext.wisdomAdaptation,
     consciousnessInsights: {
@@ -2060,7 +2131,10 @@ async function deepPathResponse(
   meta: Record<string, unknown>,
   mindContext?: MindContext,
   // 🌀 CONVERGENCE-01 Cut 1A — resolved at the shared boundary, threaded here, SHADOW ONLY.
-  orientation?: ResolvedOrientation
+  orientation?: ResolvedOrientation,
+  // AIN-CONTEXT-01 · A6 — completed exchanges durably on record for THIS session,
+  // in the SAME unit as conversationHistory (both from one pairing). R2.
+  durableCompletedExchanges: number = conversationHistory.length,
 ): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta }> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
 
@@ -2179,7 +2253,7 @@ The current user has not provided their name. Address them as "friend" or "there
         // Convert turns to conversation exchange format
         const pairs = pairCrossSessionTurns(crossSessionTurns);
         if (pairs.length > 0) {
-          effectiveHistory = pairs.slice(-5); // Last 5 exchanges for DEEP path
+          effectiveHistory = pairs.slice(-DEEP_CONSULTATION_APERTURE); // Last 5 exchanges for DEEP path
           console.log(`🔄 [Cross-Session Recall DEEP] Loaded ${pairs.length} exchanges from previous sessions`);
         } else {
           // PH2-001 item 2: fetched but unusable - previously silent.
@@ -2318,6 +2392,25 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     console.warn('[MAIA SERVICE] Knowledge field load failed (non-critical):', kfError);
   }
 
+  // ── AIN-CONTEXT-01 · A6 · DEEP self-location + known absence ──────────────
+  // R1: DEEP's final history aperture is DEEP_CONSULTATION_APERTURE. When
+  // effectiveHistory came from the cross-session fallback, ZERO current-session
+  // exchanges are represented.
+  const deepRepresentedCurrentSession = conversationHistory.length > 0
+    ? Math.min(DEEP_CONSULTATION_APERTURE, effectiveHistory.length)
+    : 0;
+  const deepContinuity = deriveSessionContinuity({
+    durableCompletedExchanges,
+    representedExchanges: deepRepresentedCurrentSession,
+  });
+  const deepContinuityBlock = formatSessionContinuityForPrompt(deepContinuity);
+  console.log('🧭 [A6/DEEP] session continuity', {
+    depth: deepContinuity.depth,
+    represented: deepContinuity.represented,
+    absent: deepContinuity.absent,
+    unit: deepContinuity.unit,
+  });
+
   // Build enhanced consciousness context
   const consciousnessContext: ConsciousnessContext = {
     sessionId,
@@ -2416,14 +2509,17 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
       const consultation = await consultClaudeForConsciousness({
         userInput: input,
         maiaInitialResponse: maiaInitialResponse + cognitiveScaffoldingNote + knowledgeFieldNote, // 🧠 Inject scaffolding + knowledge field into context for Claude
-        conversationContext: effectiveHistory.slice(-5).map(ex => ({
+        conversationContext: effectiveHistory.slice(-DEEP_CONSULTATION_APERTURE).map(ex => ({
           userMessage: ex.userMessage || '',
           maiaResponse: ex.maiaResponse || ''
         })),
         consultationType,
         contextAddenda: consultationRecallAddenda || undefined,
         sessionMetadata: {
-          turnCount: effectiveHistory.length + 1,
+          // AIN-CONTEXT-01 · A6 — WAS `effectiveHistory.length + 1` (the window
+          // length, saturating at 11). NOW authoritative completed exchanges on
+          // record for this session. ⛔ Nothing widened to obtain it.
+          turnCount: deepContinuity.depth,
           relationshipDepth: conversationContext.profile.relationshipDepth,
           emotionalIntensity: conversationContext.profile.dominantElement === 'fire' ? 'high' :
                              conversationContext.profile.dominantElement === 'water' ? 'medium' : 'low',
@@ -2478,6 +2574,9 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
       const repairedContext: MaiaContext = {
         sessionId,
         summary: `Repair attempt for: ${input}`,
+        // AIN-CONTEXT-01 · A6 — the DEEP repair path joins the shared addenda channel
+        // (ADDENDA_CHANNEL_DIVERGENCE §II.B), so the continuity block reaches it here.
+        sessionContinuityAddendum: deepContinuityBlock || undefined,
         memberProfile: conversationContext.memberProfile,
         wisdomAdaptation: conversationContext.wisdomAdaptation,
         consciousnessInsights: {
@@ -2760,7 +2859,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
   try {
     // Get conversation history for context (limited to 10 for prompt, but turnCount is authoritative)
-    const conversationHistory = await getConversationHistory(sessionId, 10);
+    //
+    // AIN-CONTEXT-01 · A6: the same single read now also yields how many completed
+    // exchanges the session actually holds. ⛔ The window is UNCHANGED at 10 — this
+    // reads no extra rows and widens nothing (R5); the SQL never had a LIMIT.
+    const continuityWindow = await getSessionContinuityWindow(sessionId, 10);
+    const conversationHistory = continuityWindow.exchanges;
+    const durableCompletedExchanges = continuityWindow.durableCompletedExchanges;
 
     // 🌀 CONVERGENCE-01 Cut 1A — resolve ONE orientation contract for this turn, here, at
     // the boundary both live surfaces reach. Upstream packet is used verbatim and never
@@ -3391,7 +3496,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {
-        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation);
+        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3402,7 +3507,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'CORE': {
-        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation);
+        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3413,7 +3518,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'DEEP': {
-        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation);
+        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
         provider = deepResult.provider; // May be undefined for DEEP path
@@ -3426,7 +3531,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       default: {
         // Fallback to FAST
-        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation);
+        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
         if (mindContext?.pfiMindState) {

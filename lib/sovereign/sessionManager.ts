@@ -125,6 +125,37 @@ export async function getSessionWithHistory(sessionId: string): Promise<MaiaSess
  * Transforms individual turns back into paired ConversationExchange format.
  */
 export async function getConversationHistory(sessionId: string, limit = 10): Promise<ConversationExchange[]> {
+  return (await getSessionContinuityWindow(sessionId, limit)).exchanges;
+}
+
+/**
+ * AIN-CONTEXT-01 · A6 — the windowed history AND the durable total, from ONE read.
+ *
+ * The SQL below has never carried a LIMIT: it already returns every turn in the
+ * session and the window is applied in memory afterwards. So counting what was
+ * paired costs nothing and reads NO additional rows.
+ *
+ * ⛔ R5: THIS WIDENS NOTHING. `exchanges` is byte-identical to what
+ * getConversationHistory returned before A6 — same query, same pairing, same slice.
+ * The only new thing is that the total which the pairing already computed is now
+ * returned instead of discarded.
+ *
+ * ⭐ R2: `durableCompletedExchanges` and the caller's represented count come from the
+ * SAME pairing over the SAME rows, so both are in completed exchanges and their
+ * difference needs no unit conversion. `maia_sessions.turn_count` counts served
+ * REQUESTS and is deliberately not used here.
+ */
+export interface SessionContinuityWindow {
+  /** The windowed history — exactly what getConversationHistory has always returned. */
+  exchanges: ConversationExchange[];
+  /** Completed exchanges durably recorded for this session, as the pairing sees them. */
+  durableCompletedExchanges: number;
+}
+
+export async function getSessionContinuityWindow(
+  sessionId: string,
+  limit = 10
+): Promise<SessionContinuityWindow> {
   // Query conversation_turns for this session's messages
   const result = await query<{ role: 'user' | 'assistant'; content: string; created_at: string }>(
     `SELECT role, content, created_at
@@ -137,11 +168,11 @@ export async function getConversationHistory(sessionId: string, limit = 10): Pro
   const turns = result.rows ?? [];
 
   if (turns.length === 0) {
-    return [];
+    return { exchanges: [], durableCompletedExchanges: 0 };
   }
 
-  // Transform individual turns into paired ConversationExchange format
-  return transformTurnsToExchanges(turns, limit);
+  const all = pairTurnsToExchanges(turns);
+  return { exchanges: all.slice(-limit), durableCompletedExchanges: all.length };
 }
 
 /**
@@ -178,6 +209,22 @@ function transformTurnsToExchanges(
   turns: Array<{ role: 'user' | 'assistant'; content: string; created_at: string }>,
   limit: number
 ): ConversationExchange[] {
+  // Return the most recent exchanges, up to the limit
+  return pairTurnsToExchanges(turns).slice(-limit);
+}
+
+/**
+ * Pair raw turns into exchanges WITHOUT windowing.
+ *
+ * Extracted verbatim from transformTurnsToExchanges for AIN-CONTEXT-01 · A6, so the
+ * total and the window are produced by one operation and are therefore in the same
+ * unit (R2). ⛔ The pairing logic is unchanged — including its fixed i += 2 stride and
+ * its user→assistant role test, whose interaction with an unpaired turn is a finding
+ * routed out by ACT 1 §3.2 and NOT repaired here.
+ */
+function pairTurnsToExchanges(
+  turns: Array<{ role: 'user' | 'assistant'; content: string; created_at: string }>
+): ConversationExchange[] {
   const exchanges: ConversationExchange[] = [];
 
   for (let i = 0; i < turns.length - 1; i += 2) {
@@ -194,8 +241,7 @@ function transformTurnsToExchanges(
     }
   }
 
-  // Return the most recent exchanges, up to the limit
-  return exchanges.slice(-limit);
+  return exchanges;
 }
 
 // Initialize the session table (create if not exists)
