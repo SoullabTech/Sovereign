@@ -2472,3 +2472,62 @@ cp /private/tmp/k00-0506-s2-transcript.txt "$LD/transcript.txt"
 **Return** = §18.20.3's return contract on its own `feature/*` branch (`K00-0506-S2-<stamp>/` complete + `SHA256SUMS.population` · `K00-0506-S2-preflight-<stamp>/` · `s2pop2-*` outputs · pre-C files) → §18.24 here (seal · classifier · output reader · §7 reading per row; partition pins expected to move by ten, C-D24 species). A pre-C or in-batch STOP returns in the §18.21/§17 shape.
 
 **Standing after §18.22:** `K00-0506-S2` STOP · accepted · spent · foreign harnesses `.k00` + `.vpio01` identified · **DISPOSAL-01 AUTHORIZED, pinned, NOT YET EXECUTED** · **`K00-0506-S2-02` AUTHORIZED CONDITIONALLY (after `DISPOSAL_ACCEPTANCE PASS`), pinned, NOT YET EXECUTED** · `s2pop` worktree = residue · `b198e2e37` unchanged · 69 exact, pre-C read decisive · `tmp/` census NOT OPENED · C-D26 OPEN, non-blocking · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.23 — `S2-FOREIGN-HARNESS-DISPOSAL-01` EXECUTED → STOP AT STAGE 0 (2026-09-15 · runner absent · nothing invoked)
+
+### §18.23.1 Custody
+
+Founder return: branch `feature/k00-s2-foreign-harness-disposal-stop-20260915T171701Z`, commit `939a00bbae531ff95b6f191f89f7fb54ea85f967` → cherry-picked here with `-x` as `1d95272b6`. Bundle `docs/programme/VOICE-2026/driver-ledger/S2-FOREIGN-HARNESS-DISPOSAL-01-STOP-20260915T171701Z/` (four files). `SHA256SUMS.disposal-stop` recomputed here: **3/3 OK**, every hash = the founder's list:
+
+```
+1b9ab1cb74571ce60e1a018ee3889f76993ca6425c5e7a3c5822e41431defa50  stamp.txt
+fb08570f6e86ee83d4d40bb8347fce6034a0089ea6c81dbf1121b1e8942c4837  STOP.txt
+f904d78cc9000e452d17500af362d9ba9bbe47160b517e86fe5212bab0fd7459  RETURN.txt
+96812a36c9a8f69c7086b019d3a92dc65f6b330dab4b1c39408fe5071311ef18  SHA256SUMS.disposal-stop
+```
+
+`stamp.txt` = `20260915T171701Z`. `STOP.txt` verbatim:
+
+```
+ACT S2-FOREIGN-HARNESS-DISPOSAL-01
+RESULT STOP before Stage 0 process read
+STOP_LINE STOP: the 8b111709b signed runner xctestrun is absent — no rebuild under this authority
+RUNNER_PATH /private/tmp/k0506-driver-compile-8b111709b/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+TERMINATION_INVOCATIONS 0
+PROCESS_BEFORE_READ NOT_RUN
+PROCESS_AFTER_READ NOT_RUN
+DISPOSAL_ACCEPTANCE NOT_REACHED
+POPULATION_REISSUANCE CONDITION NOT_MET
+```
+
+`RETURN.txt` verbatim: `RESULT STOP · RUNNER_PRESENT false · INVOCATIONS 0 · SECOND_INVOCATION_PER_SUBJECT none · ESCALATION none · DEVICE_ACTS none · POPULATION_ACT NOT_OPENED`.
+
+Founder's return, verbatim: *"`S2-FOREIGN-HARNESS-DISPOSAL-01` STOPPED at Stage 0 before any process read or termination invocation. The pinned signed runner was absent … Per §18.22.2, I did not rebuild it or substitute another runner."*
+
+### §18.23.2 Reading
+
+1. **The §18.22.2 Stage-0 precondition fired exactly as pinned.** The pin required the `8b111709b` signed runner xctestrun to exist at the recorded path and forbade a rebuild inside the authority. It did not exist; the act stopped before reading the device. Zero `devicectl` verbs, zero `xcodebuild` invocations, zero terminations. This is the fourth fail-closed boundary on this lane to refuse on real state (batch stimulus preflight · restoration parser · pre-C read · now the disposal runner check).
+2. **Why the runner is absent is UNKNOWN and is not inferred.** The path was last logged as present at the §10.7 corrective termination (2026-09-15, before-read one process, after-read zero — the act the disposal was shaped after). Nothing governed removed it; `/private/tmp` is volatile on macOS, but that is a possibility, not a finding. No census of `/private/tmp` was run and none is proposed.
+3. **The foreign process state was NOT re-read by this act.** The last evidence remains the population Block-B read (`K00-0506-S2-preflight-20260915T170040Z`, PID 2098 R1 `.k00` · PID 2099 frozen `.vpio01`). Whether they still run is UNKNOWN; a future disposal act's before-read decides, and its before-set must still equal exactly the two identified containers (a different set → STOP, return).
+4. **Nothing else was touched.** Volume unread (last governed read 69 at 15:49:59Z, batch preflight). `.vpio02` install, `.vpio01` frozen, K00/R1, organism `ac12dedf4`, `b198e2e37`: unchanged. No S2 row exists.
+5. **Standing:** DISPOSAL-01 STOP · spent · `DISPOSAL_ACCEPTANCE NOT_REACHED` → the `K00-0506-S2-02` conditional authority (§18.22.3) is UNMET and stays unopened; the `s2pop2` pin remains valid text, unused.
+
+### §18.23.3 Instrument fact for the next ruling (read from the repository, not from the Mac)
+
+The disposal's only test, `testTerminateOnly`, is **byte-identical across every driver SHA the lane has used**: the function body in `ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift` hashes to `c483528b…` at `8b111709b`, `83a382a14` and `b198e2e37` (recomputed here from the git object database). The subject table it reads (`phase-a` → `life.soullab.voicekernel.k00`, `vpio-01` → `.vpio01`, `vpio-02` → `.vpio02`) is likewise unchanged since VPIO-01B. So a signed runner built from any of those three SHAs would run the same termination test against the same bundle ids; the §18.22 ruling named `8b111709b` because it was the already-exercised runner, not because the test differs.
+
+Signed runner xctestrun paths ever logged on this lane's record (existence on the Mac today UNKNOWN for every one; the `8b111709b` path proved that a logged path is not a present file): `/private/tmp/k0506-s2w5-b198e2e37/…` (built 15:49:53Z inside WITNESS-05 Block C, the most recent) · `/private/tmp/k0506-s2w-b198e2e37/…` · `/private/tmp/k0506-batch-83a382a14/…` · `/private/tmp/k0506-vpoff-83a382a14/…` · `/private/tmp/k0506-driver-compile-83a382a14/…` (§10.9 readiness, pinned hashes xctestrun `3b6360f7…`) · older `voice-*` / `vpio-*` worktrees on earlier driver SHAs (not candidates: their subject tables predate `vpio-02`, and `vpio-01b`/`vpio02b` predate the output act — irrelevant to termination but not the exercised shape).
+
+### §18.23.4 Returned for ruling (named, not chosen)
+
+The narrowest already-exercised act needs a runner that exists. Three shapes, each fail-closed, none authorized here:
+
+- **(a) Name an already-built signed runner on record.** The §18.22.2 pin is reused with only `XR` changed to the named path; Stage 0 gains a presence read of that file (absent → STOP, no rebuild, no second path tried inside the act) and records its xctestrun SHA-256 as custody. Candidate of record: `/private/tmp/k0506-s2w5-b198e2e37/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun` (most recent, built by the batch's own recipe under a passed witness). Cost: nothing new is built; risk: it may also be absent, spending another authority on a read.
+- **(b) Authorize a disposal-only signed runner build.** A Stage −1 in a fresh detached worktree at `b198e2e37` (`/private/tmp/k0506-disposal-b198e2e37`, path must not pre-exist): `node_modules` link → `xcodegen generate` → the batch's own signed `build-for-testing` recipe (lines 147–150: `-scheme DriverUITests -destination "id=00008140-00163D9922E0801C" -derivedDataPath "$ROOT/ios/VoiceKernelDriver/.derived" DEVELOPMENT_TEAM=ZVK2X646Z2`) → xctestrun SHA-256 recorded → then §18.22.2 Stages 0–4 unchanged with `XR` = that product. Cost: one signed build (no device verb; the build targets the destination id only for signing); it is the same build every population Block C already performs, so it widens nothing. Risk: none to the subject; the organism is not compiled by the driver project.
+- **(c) Hold.** No disposal; the population boundary stays blocked by two foreign processes of unknown origin; nothing decays by waiting except that the Mac's `/private/tmp` may lose more runners.
+
+Under any of (a)/(b): before-set must equal exactly `{0B07D423… (.k00), 6A2E406B… (.vpio01)}` else STOP; two invocations (`phase-a` then `vpio-01`), one each, no retry; after-read must be 0; `DISPOSAL_ACCEPTANCE PASS` is the only thing that meets the `K00-0506-S2-02` condition; `.vpio01` termination only. The `s2pop2` population pin (§18.22.3) is unaffected by which runner performs the disposal — it builds its own.
+
+**Standing after §18.23:** DISPOSAL-01 STOP at Stage 0 · spent · runner absent, cause UNKNOWN · foreign process state NOT re-read · termination invocations 0 · `K00-0506-S2-02` condition UNMET · S2 population NOT invoked · `s2pop`/`s2w2`/`s2w3`/`s2w4` worktrees residue · `b198e2e37` unchanged · 69 last read 15:49:59Z · C-D26 OPEN, non-blocking · S3 CLOSED · KERNEL-00 acceptance CLOSED.
