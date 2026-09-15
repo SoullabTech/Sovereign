@@ -1,0 +1,18 @@
+JOINT PASS
+DERIVED_DURING_CUSTODY_COMPLETION true
+SOURCE after-utc.txt · volume-after.txt · sound-pane-after.txt · parser.txt
+ORIGINAL_JOINT_FILE absent — packaging write refused after execution
+ACT S2-RESTORE/WITNESS-05 · RESTORE-03 after-read = pre-Block-C joint · plan §18.13 / §18.15.2
+DERIVED_AT_UTC 2026-09-15T16:33:57Z
+--- after-utc.txt ---
+2026-09-15T15:49:23Z
+--- volume-after.txt ---
+output volume:69, input volume:missing value, alert volume:59, output muted:false
+--- sound-pane-after.txt ---
+rc=1
+--- parser.txt (original) ---
+DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin 48000
+MAC_STUDIO_DEFAULT_OUTPUT True
+OUTPUT_VOLUME 69
+OUTPUT_MUTED false
+RESTORE_ACCEPTANCE PASS

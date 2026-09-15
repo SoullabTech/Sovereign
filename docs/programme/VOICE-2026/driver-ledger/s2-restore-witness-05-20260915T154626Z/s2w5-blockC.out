@@ -1,0 +1,14 @@
+[15:49:53] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[15:49:53] build-for-testing (driver only; the harness is untouched)
+[15:49:59] xctestrun: /private/tmp/k0506-s2w5-b198e2e37/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin 48000
+DEFAULT_OUTPUT_MATCH True
+[15:49:59] stimulus preflight PASS: fixture 1a505b3d38a97b75cb935f85bd33deb889628322e558f74af9a5f05afbfbd00e · afplay 88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb · default output Mac Studio Speakers (coreaudio_device_type_builtin) · volume 69 · muted false
+[15:50:00] sample 1/1 — precondition
+[15:50:01] sample 1/1 — driver (testOutputSample, mode L)
+[15:51:11] sample 1 stimulus custody VALID (pid 94754 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:51:12] sample 1 ledgered: kernel00-K00-fb8793df-1789487467.jsonl
+[15:51:12] sample 1 output rows read: kernel00-K00-fb8793df-1789487467.jsonl
+[15:51:12] batch complete — /private/tmp/k0506-s2w5-b198e2e37/docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-05-20260915T154952Z/ledger.md
+BATCH_PIPELINE_RC=0
+rc=

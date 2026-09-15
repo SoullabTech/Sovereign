@@ -1,0 +1,1 @@
+BLOCK_D_OUT_ABSENT true (as attested)

@@ -1,0 +1,10 @@
+STAGE-0 CUSTODY-TIME READ — not the Stage-0 original (that material was displayed, never written)
+READ_AT_UTC 2026-09-15T16:33:57Z
+-rw-r--r--@ 1 soullab  wheel  1763 Sep 15 11:44 /private/tmp/s2w5-blockA.sh
+-rw-r--r--@ 1 soullab  wheel  2035 Sep 15 11:44 /private/tmp/s2w5-blockB.sh
+-rw-r--r--@ 1 soullab  wheel   373 Sep 15 11:44 /private/tmp/s2w5-blockC.sh
+-rw-r--r--@ 1 soullab  wheel  1035 Sep 15 11:44 /private/tmp/s2w5-blockD.sh
+4c0c7f4daad663c907d2a80c31c47fc180d24d4d16b67e2bcd8aded3b950c0c3  /private/tmp/s2w5-blockA.sh
+918b0323876b7f4dfe898f08f9aae7f93474c96fdf7d0b307f606a671f0004f2  /private/tmp/s2w5-blockB.sh
+3eab254f3a03272b6741e706201f2444dc3034a8e9b7d3f726af2de893249c65  /private/tmp/s2w5-blockC.sh
+e30277f585e37fb0f875b72e895ef84ac843ca3d229bba0d6ac278402cf59a47  /private/tmp/s2w5-blockD.sh
