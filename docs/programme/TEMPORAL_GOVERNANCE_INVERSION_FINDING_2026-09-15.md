@@ -77,6 +77,22 @@ architectures is a founder act and is **not made here.**
 
 ---
 
+## 3A · ⭐ THE DIRECTION OF SOLUTION (founder, 2026-09-15)
+
+> ⭐⭐ **Decay may influence SALIENCE. It may not determine VALIDITY.**
+
+⛔ The solution is **not to remove decay** — it is to **put decay in the right place.** Temporal
+meaning (typed relations, supersession, `CURRENT | SUPERSEDED | UNMEASURED`) decides what a
+memory MEANS; decay decides only how likely an otherwise-valid memory is to surface now.
+⛔ **Three temporal questions — never one scalar**: *what happened* · *what is true now* · *what
+matters in this encounter.*
+
+⭐ Carried in full, with the runtime order, the technical sequence and the scope guards, into
+**`TEMPORAL-MEMORY-RECONCILIATION-01_PREPARED_CHARTER_2026-09-15.md`** — ⛔ **prepared, not
+opened.**
+
+---
+
 ## 4 · STANDING
 
 ```text
@@ -86,5 +102,6 @@ decay ............................ ⛔ NOT REPAIRED · ⛔ NOT REDEFINED · ⛔ 
 scope ............................ ⚠️ BOUNDED (§1.1) · ⛔ not generalised
 ACT 2 inheritance ................ ⭐ RECORDED (§3)
 reconciliation ruling ............ ⛔ OWED · founder act · ⛔ not pre-chosen
+direction of solution ............ ⭐ RECORDED (§3A) · lane PREPARED, ⛔ NOT OPENED
 production ....................... e57ca1baa · UNTOUCHED
 ```
