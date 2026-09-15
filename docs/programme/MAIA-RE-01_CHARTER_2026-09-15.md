@@ -127,7 +127,9 @@ ACT 2  collision adjudication                 ✅ CLOSED → 416c87e7 FOUNDER-AD
 ACT 3  canonical reconciliation + placement   ✅ CLOSED → RE-009 CANONICAL
 ACT 4  runtime conformity census              ✅ CLOSED · 1 NONCONFORMS · 2 AMBIGUOUS
                                                  ⛔ repair NOT authorized, NOT performed
-ACT 5  bounded persistence repair             ⚠️ LANDED · NOT CLOSED (F8 live witness owed)
+ACT 5  bounded persistence repair             ⚠️ IMPLEMENTATION COMPLETE · CLOSURE NOT EARNED
+                                                 F8 live witness OWED · legacy attribution
+                                                 needs a SEPARATE disposition act
        benchmark corpus                       ⛔ blocked until doctrine and substrate agree
                                                  on what constitutes a violation
 ```

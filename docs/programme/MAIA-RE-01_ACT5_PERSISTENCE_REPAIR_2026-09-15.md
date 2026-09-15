@@ -1,6 +1,8 @@
 # MAIA-RE-01 / ACT 5 — RE-009 Persistence Repair
 
-**Status:** ⚠️ **REPAIR LANDED · ACT 5 NOT CLOSED.** F8 (three-route live witness) is **OWED**.
+**Status:** ⚠️ **REPAIR IMPLEMENTATION COMPLETE · ACCEPTANCE INCOMPLETE.**
+⛔ **ACT 5 closure NOT YET EARNED** (founder standing correction, 2026-09-15).
+F8 (three-route live witness) **OWED** · F5 carries a **legacy-state qualification** (§4).
 **Date:** 2026-09-15. **Authority:** `docs/canon/PERCEPTION_WITHOUT_POSSESSION.md`.
 **Fixes:** the ACT 4 confirmed Act 5 NONCONFORMS.
 **Touched:** `lib/consciousness/relationalObserver.ts` (+1 guard test). **Nothing else.**
@@ -89,6 +91,23 @@ silently fixed.
 
 ## 4. ⚠️ F5 — the residue, named rather than cleaned
 
+> ⭐ **FOUNDER STANDING CORRECTION, 2026-09-15.** F5 is **not** one question. The witness
+> must distinguish two, and they are not the same kind of fact:
+>
+> ```
+> NEW WRITE CONFORMITY   Does the repaired runtime create any new prohibited attribution?
+> LEGACY STATE           Do pre-repair prohibited attributions remain present?
+> ```
+>
+> ⭐ **The second is a migration/disposition question, NOT evidence that the forward repair
+> failed.** Conflating them would either understate the repair (by scoring it against rows
+> it did not write) or overstate it (by treating a clean forward path as a clean database).
+>
+> ⛔ **And the disposition needs its own authorization**, because deleting, transforming,
+> expiring, quarantining, and ignoring historical member-linked data are **materially
+> different acts** with different consequences for the member. ⛔ F5 is not weakened, and
+> historical data is not deleted opportunistically to make a gate green.
+
 **The repaired path writes no new attribution.** But `pattern_hint` values written **before**
 this repair are still in the database, and:
 
@@ -152,7 +171,11 @@ not a deferral, and static evidence is not being offered in its place.*
 ACT 5 REPAIR              ✅ LANDED — detection separated from durable attribution
 GUARD                     ✅ LETHAL — passes repaired source, kills M1 · M1b · M2 · M3
 GATE                      F1 F2 F3 F4 F6 F7 F9 ✅ · F5 ⚠️ CONDITIONAL · F8 ⛔ OWED
-ACT 5                     ⛔ NOT CLOSED — closes on the three-route live witness
+ACT 5                     ⛔ CLOSURE NOT YET EARNED (founder, 2026-09-15)
+  implementation          ✅ complete
+  static gates            ✅ except the F5 legacy-state qualification
+  live-route witness      ⏳ OWED
+  legacy attribution      ⏳ REQUIRES SEPARATE DISPOSITION ACT
 HISTORICAL pattern_hint   ⚠️ RESIDUE · no TTL · readable · ⛔ NOT PURGED (separate act)
 FILES CHANGED             1 source + 1 test
 READ PATH · PROMPTS       ⛔ UNTOUCHED
