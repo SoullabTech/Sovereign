@@ -900,7 +900,9 @@ orchestration b198e2e37    unchanged · fail-closed branch witnessed once on the
 
 Returned to the founder, not chosen here: (a) the volume-precondition question — whether `69` remains the ruled read-only precondition (in which case a separate, founder-performed, read-then-hand-then-read preparation act shaped like §14 would be needed to re-establish it before any second witness authority) or whether the precondition is re-ruled (any change to the batch's pinned `S2_OUTPUT_VOLUME` = new orchestration SHA = new gate read = new authority; the batch does not, and must not, set volume); (b) whether the 69→31 drift is to be characterised further by read-only means before either path; (c) whether a second `S2-WITNESS-02` authority is issued at all. None of these is opened by this record.
 
-## 18. FOUNDER RULING (2026-09-15) — **69 STAYS the precondition** ·  OPEN (read-only) · restoration = founder hand act ·  NOT ISSUED
+## 18. FOUNDER RULING (2026-09-15) — **69 STAYS the precondition** · `S2-VOLUME-DRIFT-01` OPEN (read-only) · restoration = founder hand act · `S2-WITNESS-02` NOT ISSUED
+
+*(Heading corrected in commit two after `84c68cd42`: the two backticked identifiers were lost to command substitution in this session's unquoted heredoc while writing §18 — a record-transport defect of this session, visible as two `command not found` lines on stderr; the §18 body and §10.24 were written with escaped backticks and are intact. No evidence or instrument was affected.)*
 
 ### 18.1 Ruling (substance preserved)
 
