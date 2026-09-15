@@ -1,0 +1,384 @@
+<title>The Candidate Bridge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper:      #f6f7f9;
+    --surface:    #ffffff;
+    --ink:        #14171d;
+    --slate:      #5c6672;
+    --faint:      #8b939d;
+    --rule:       #dde2e8;
+    --rule-firm:  #c2cad3;
+    --accent:     #2a5b7a;
+    --accent-dim: #eaf0f5;
+    --warn:       #8a5714;
+    --warn-dim:   #f6efe4;
+    --serif: "Spectral", Georgia, "Times New Roman", serif;
+    --mono:  "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --measure: 64ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #101317;
+      --surface:    #171b21;
+      --ink:        #e6e9ed;
+      --slate:      #a3acb7;
+      --faint:      #77808b;
+      --rule:       #262c34;
+      --rule-firm:  #3a434e;
+      --accent:     #86b6d6;
+      --accent-dim: #1a2630;
+      --warn:       #d6a355;
+      --warn-dim:   #272016;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #101317;
+    --surface:    #171b21;
+    --ink:        #e6e9ed;
+    --slate:      #a3acb7;
+    --faint:      #77808b;
+    --rule:       #262c34;
+    --rule-firm:  #3a434e;
+    --accent:     #86b6d6;
+    --accent-dim: #1a2630;
+    --warn:       #d6a355;
+    --warn-dim:   #272016;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 78ch;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 56px 72px;
+  }
+  p { max-width: var(--measure); margin: 0 0 1.15em; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 20px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(2.1rem, 6.4vw, 3.1rem);
+    line-height: 1.08;
+    letter-spacing: -.015em;
+    margin: 0 0 .5em;
+    text-wrap: balance;
+  }
+  .standfirst { font-size: 1.06rem; color: var(--slate); max-width: 60ch; }
+
+  section { margin-top: 56px; }
+  h2 {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 18px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* ── the anchor ───────────────────────────────────────── */
+  .anchor { margin-top: 56px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule-firm); padding-block: 34px; }
+  .anchor p {
+    font-size: clamp(1.28rem, 3.7vw, 1.72rem);
+    line-height: 1.34;
+    font-weight: 300;
+    letter-spacing: -.01em;
+    max-width: 30ch;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .anchor p + p { margin-top: 26px; padding-top: 26px; border-top: 1px solid var(--rule); max-width: 34ch; }
+  .anchor .lede { color: var(--slate); }
+  .anchor .key { color: var(--ink); }
+  .anchor .key b { font-weight: 600; color: var(--accent); }
+
+  /* ── specimen ─────────────────────────────────────────── */
+  .specimen { border: 1px solid var(--rule-firm); background: var(--surface); }
+  .specimen-head {
+    display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: baseline;
+    padding: 12px 18px; border-bottom: 1px solid var(--rule);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .specimen-head .id { font-weight: 600; color: var(--accent); }
+  .specimen-head .what { color: var(--faint); letter-spacing: .04em; text-transform: none; font-size: 12px; }
+  .sides { display: grid; grid-template-columns: 1fr 1fr; }
+  .side { padding: 20px 18px; }
+  .side + .side { border-left: 1px solid var(--rule); }
+  .side .tag { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .1em; color: var(--faint); display: block; margin-bottom: 10px; }
+  .side .stim { font-family: var(--mono); font-size: 13.5px; line-height: 1.58; margin: 0 0 14px; max-width: none; }
+  .side .stim mark { background: var(--accent-dim); color: inherit; padding: 1px 3px; border-radius: 2px; }
+  .side .ans { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--accent); margin: 0; max-width: none; }
+  .specimen-foot { padding: 16px 18px; border-top: 1px solid var(--rule); background: var(--accent-dim); }
+  .specimen-foot p { margin: 0; font-size: 15px; color: var(--ink); max-width: none; }
+
+  /* ── ladder ───────────────────────────────────────────── */
+  .ladder { border-top: 1px solid var(--rule-firm); }
+  .rung {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr 11rem;
+    gap: 4px 18px;
+    align-items: baseline;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .rung .n { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .rung .name { font-size: 1.02rem; }
+  .rung .own { font-family: var(--mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; text-align: right; }
+  .own.us   { color: var(--accent); }
+  .own.them { color: var(--warn); }
+  .rung.have { background: linear-gradient(to right, var(--accent-dim), transparent 62%); }
+
+  /* ── lists ────────────────────────────────────────────── */
+  ol.asks { list-style: none; counter-reset: ask; padding: 0; margin: 0; }
+  ol.asks li { counter-increment: ask; position: relative; padding-left: 2.6rem; margin-bottom: 20px; max-width: var(--measure); }
+  ol.asks li::before {
+    content: counter(ask, decimal-leading-zero);
+    position: absolute; left: 0; top: .12em;
+    font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--accent);
+  }
+  ul.refusals { list-style: none; padding: 0; margin: 0; }
+  ul.refusals li { position: relative; padding-left: 1.7rem; margin-bottom: 14px; max-width: var(--measure); color: var(--slate); }
+  ul.refusals li::before { content: "—"; position: absolute; left: 0; color: var(--warn); font-family: var(--mono); }
+  ul.refusals li strong { color: var(--ink); }
+
+  .fail { border-left: 3px solid var(--warn); background: var(--warn-dim); padding: 20px 22px; }
+  .fail p { margin: 0; max-width: 58ch; }
+  .fail p + p { margin-top: .9em; color: var(--slate); font-size: .95rem; }
+
+  /* ── footer ───────────────────────────────────────────── */
+  footer { margin-top: 64px; padding-top: 22px; border-top: 2px solid var(--ink); }
+  .standing { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; padding: 0; list-style: none; }
+  .standing li {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+    padding: 5px 10px; border: 1px solid var(--rule-firm); color: var(--slate); background: var(--surface);
+  }
+  .standing li.ok { color: var(--accent); border-color: var(--accent); }
+  .standing li.no { color: var(--warn); border-color: var(--warn); }
+  .colophon { font-family: var(--mono); font-size: 11.5px; color: var(--faint); line-height: 1.7; max-width: none; margin: 0; }
+
+  @media (max-width: 620px) {
+    .sides { grid-template-columns: 1fr; }
+    .side + .side { border-left: 0; border-top: 1px solid var(--rule); }
+    .rung { grid-template-columns: 2.2rem 1fr; }
+    .rung .own { grid-column: 2; text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  a { color: var(--accent); }
+  a:focus-visible, li:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Soullab &rarr; Sophontic &middot; 15 September 2026 &middot; working brief</p>
+  <h1>The Candidate Bridge</h1>
+  <p class="standfirst">
+    We think we may have found a concrete bridge between MAIA's relational intelligence
+    architecture and Sophontic's work on geometric reasoning. It is a <em>candidate</em>
+    bridge, not a proven one — it becomes real only if the relational distinctions MAIA
+    already preserves architecturally turn out to have stable, measurable structure inside
+    a model. This page proposes how to find out.
+  </p>
+
+  <div class="anchor">
+    <p class="lede">His paradigm perturbs a load-bearing <em>fact</em>. Ours perturbs a load-bearing <em>relation</em> while the payload barely moves.</p>
+    <p class="key"><b>MAIA gives us the relations to test. Sophontic may give us the methods to determine whether those relations have measurable internal geometry.</b></p>
+  </div>
+
+  <section>
+    <h2>What MAIA already preserves</h2>
+    <p>
+      Not as theory — as architecture it had to build for other reasons. Who originated
+      something. Whether it was stated or inferred. Whether evidence is historically valid
+      or presently current. Whether something is absent or intentionally withheld. What
+      standing a piece of information carries. Whether consent permits it to participate.
+      How those relations change over time.
+    </p>
+    <p>
+      Twelve of these are now a controlled relational-perturbation corpus: <strong>48 paired
+      cases</strong> in which the semantic content stays nearly identical while one underlying
+      relationship changes. The correct answer must change when the relationship changes,
+      and stay stable when only the wording changes. Six construction laws — one perturbation
+      per pair, no answer vocabulary in the stimulus, repository-derived keys, balanced
+      presentation order, alias tests kept separate, graded evidence standing — are enforced
+      by a validator rather than by discipline.
+    </p>
+  </section>
+
+  <section>
+    <h2>One specimen</h2>
+    <div class="specimen">
+      <div class="specimen-head">
+        <span class="id">R07</span>
+        <span class="what">never supplied &nbsp;&ne;&nbsp; ran and found nothing</span>
+      </div>
+      <div class="sides">
+        <div class="side">
+          <span class="tag">A</span>
+          <p class="stim">The lookup over the person's saved notes <mark>ran, and returned nothing</mark>.</p>
+          <p class="ans">&rarr; ran_and_found_nothing</p>
+        </div>
+        <div class="side">
+          <span class="tag">B</span>
+          <p class="stim">The lookup over the person's saved notes <mark>was never started</mark>.</p>
+          <p class="ans">&rarr; never_supplied</p>
+        </div>
+      </div>
+      <div class="specimen-foot">
+        <p>
+          Downstream, in our production system, these are the <strong>same artifact</strong>:
+          the text carried into the conversation is the empty string either way. The
+          distinction is unrecoverable from the payload — it exists only in how the emptiness
+          arose. In our architecture it is load-bearing, because only one of the two leaves
+          room for a second retrieval path to acquire standing.
+        </p>
+      </div>
+    </div>
+    <p style="margin-top:20px">
+      To be precise, since it matters: what is identical is the <em>downstream artifact in our
+      runtime</em>, not the two stimuli. In the corpus, A and B are minimally different
+      sentences — one clause changes. That is the paired-perturbation design. What the
+      same-surface property buys is the guarantee that a model cannot succeed by reading the
+      payload, because in the world the stimulus describes there is no payload to read.
+      Ten of the 48 pairs have this property.
+    </p>
+  </section>
+
+  <section>
+    <h2>The ladder, and where the two programmes meet</h2>
+    <div class="ladder">
+      <div class="rung have"><span class="n">01</span><span class="name">Behavioural discrimination</span><span class="own us">Soullab &middot; built</span></div>
+      <div class="rung have"><span class="n">02</span><span class="name">Vocabulary invariance</span><span class="own us">Soullab &middot; built</span></div>
+      <div class="rung"><span class="n">03</span><span class="name">Representational discrimination</span><span class="own them">Sophontic</span></div>
+      <div class="rung"><span class="n">04</span><span class="name">Causal intervention &amp; ablation</span><span class="own them">Sophontic</span></div>
+      <div class="rung"><span class="n">05</span><span class="name">Longitudinal development</span><span class="own them">the long game</span></div>
+    </div>
+    <p style="margin-top:22px">
+      Our own earlier research draft started at 3&ndash;5 and had no controlled substrate for
+      1&ndash;2. The corpus supplies the missing floor: a controlled vocabulary of relational
+      invariants that could serve as the things whose representations get measured.
+    </p>
+    <p>
+      The control structure matters more than the flip rate. A model that changes its answer
+      whenever <em>any</em> word changes will score well on relational perturbation alone.
+      The paraphrase controls — same relation, different wording, answer must <strong>not</strong>
+      move — are where that model dies. Both numbers must be reported or neither means anything.
+    </p>
+  </section>
+
+  <section>
+    <h2>Four questions for you</h2>
+    <ol class="asks">
+      <li><strong>Are these legitimate candidate invariants, or are we conflating levels?</strong>
+        The answer we most want to hear, if it is the true one, is <em>"you are mixing
+        architecture with representation."</em> We would rather learn that now.</li>
+      <li><strong>Help us adapt the perturbation methodology.</strong> We have 48 pairs and a
+        2&times;2 control matrix. We would like it reviewed before it grows.</li>
+      <li><strong>Instrument latent space on controlled relational pairs.</strong> Does changing
+        a relation while holding the payload constant produce systematic structure — directions,
+        subspaces, manifolds, trajectories, attractors?</li>
+      <li><strong>Compare the two layers.</strong> Does explicit relational scaffolding select
+        for more coherent internal relational geometry, <em>without retraining the underlying
+        model?</em> That question separates into two experiments that should not be run as one:
+        whether scaffolding produces different geometry, and whether the discovered geometry can
+        be trained directly.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>What we are not claiming</h2>
+    <ul class="refusals">
+      <li>We have <strong>not</strong> demonstrated latent-space learning. There is no training,
+        gradient or optimizer shaping a model's representation space anywhere in our architecture.</li>
+      <li>We are <strong>not</strong> asserting that "relationship" is literally a geometric object.</li>
+      <li>An explicit type-level distinction in TypeScript is <strong>not evidence</strong> of a
+        representational one. Having built the types is not partial evidence for it.</li>
+      <li>Of the twelve operators, <strong>eight are compiler-enforced contracts and nothing
+        more</strong>. One is witnessed against a live route, two against a test harness, and one
+        is declared in our vocabulary but emitted by no code path at all. We grade this per
+        operator, and the grading is machine-checked.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Failure conditions</h2>
+    <div class="fail">
+      <p>
+        <strong>If models flip their answers on paraphrase controls as often as on relational
+        perturbations</strong>, the corpus is measuring surface sensitivity rather than relational
+        encoding — and the bridge fails at level 1, before any representational question is reached.
+      </p>
+      <p>
+        A subtler failure: if the operators separate only for the four with runtime or harness
+        standing, and not for the eight that are contract-only, then what we have found is a
+        property of our test construction rather than of relational structure. We would report that.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why this might be worth your time</h2>
+    <p>
+      Not that we built an elaborate architecture. Architectures are cheap.
+      <strong>These distinctions were load-bearing before anyone proposed measuring them.</strong>
+    </p>
+    <p>
+      Provenance became three orthogonal axes because a single scalar let authorship hide inside
+      epistemic class. Historical recovery is type-separated from present location because a fuzzy
+      match would let a quotation drift. Our disclosure boundary returns permission without
+      executing the crossing, because otherwise an audit could not tell authorization from action.
+      Our receipts have <em>attempted</em> and <em>crossed</em> and deliberately no
+      <em>withheld</em> state — because that would assert a negative the database cannot prove.
+    </p>
+    <p>
+      The relations were not invented to fit a geometric theory. They existed because the system
+      had to preserve them for provenance, consent, memory, standing, correction, continuity and
+      human sovereignty. That independence is what makes them scientifically interesting: they are
+      not a hypothesis dressed as a dataset.
+    </p>
+    <p>
+      If distinctions arrived at that way turn out to correspond to measurable representational
+      structure, that is a more interesting finding than if we had designed them to. And if they
+      don't, we would like to know — which is why the failure conditions are on this page and not
+      in a footnote.
+    </p>
+  </section>
+
+  <footer>
+    <ul class="standing">
+      <li class="ok">Corpus validated</li>
+      <li class="no">Model execution not yet performed</li>
+      <li class="no">Representational correspondence not established</li>
+      <li class="no">Geometric claim not established</li>
+    </ul>
+    <p class="colophon">
+      Soullab &middot; MAIA / AIN &mdash; shareable projection of the canonical research record.<br>
+      The corpus, its validator and its answer-key provenance are available for review.
+    </p>
+  </footer>
+
+</div>

@@ -25,9 +25,42 @@ We think that makes them unusually good probes.
 > of geometric reasoning — where the invariant preserved is the structure of
 > relations rather than the properties of individual objects.**
 
+⚠️ **What we have is a CANDIDATE bridge, not a proven one.** It becomes real only
+if the same relational distinctions MAIA already preserves architecturally can be
+shown to have stable, measurable structure inside a model. Nothing below assumes
+that; the whole point is that it is currently unknown.
+
+MAIA already preserves a set of load-bearing relational distinctions: who
+originated something · whether it was stated or inferred · whether evidence is
+historically valid or presently current · whether something is absent or
+intentionally withheld · what standing a piece of information carries · whether
+consent permits it to participate · and how those relations change over time.
+
+We have turned twelve of them into a controlled relational-perturbation corpus:
+paired cases in which the semantic content stays nearly identical while one
+underlying relationship changes. **The correct answer must change when the
+relationship changes, and stay stable when only the wording changes.**
+
+What we have **not** established is whether these explicit architectural relations
+correspond to stable representational structure inside a neural model. That is the
+bridge we would like to test with you:
+
+> ### Do the relational invariants MAIA preserves externally correspond to measurable geometric invariants internally?
+
+⭐ Put at its shortest, and this is the sentence we would keep at the centre:
+
+> ## MAIA gives us the relations to test. Sophontic may give us the methods to determine whether those relations have measurable internal geometry.
+
 We have built a first instrument toward it: **12 relational operators, 48 paired
 stimuli, mechanically validated.** We can run the behavioural half ourselves. The
 representational half is yours.
+
+If a model reliably distinguishes these perturbations behaviourally, the next
+question is whether the distinction is visible in its activations — as directions,
+subspaces, manifolds, trajectories, attractors, or other reproducible structure. If
+those structures survive changes in vocabulary and context, and if selectively
+perturbing them selectively damages the corresponding relational capability, the
+connection would be more than metaphor.
 
 ---
 
@@ -186,8 +219,23 @@ a specific failure. If distinctions arrived at that way turn out to correspond t
 measurable representational structure, that is a more interesting finding than if we
 had designed them to.
 
+⭐⭐ **The relations were not invented to fit a geometric theory.** They already
+existed in MAIA because the system had to preserve them — for provenance, consent,
+memory, standing, correction, continuity, and human sovereignty. That independence
+is what makes them scientifically interesting: they are not a hypothesis dressed as
+a dataset.
+
+⛔ We are not claiming MAIA has discovered relational geometry. We are proposing a
+way to find out whether relational intelligence and geometric reasoning meet at a
+measurable level.
+
 And if they don't, we would like to know that too — which is why the failure test is
 in §6 and not in a footnote.
+
+---
+
+**Standing:** corpus validated · model execution not yet performed ·
+representational correspondence not established · geometric claim not established.
 
 ---
 
