@@ -1,0 +1,5 @@
+[12:28:43] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[12:28:43] build-for-testing (driver only; the harness is untouched)
+[12:28:49] xctestrun: /private/tmp/k0506-s2w-b198e2e37/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+[12:28:50] STOP: output volume is not 69 (output volume:31, input volume:missing value, alert volume:59, output muted:false) — read-only precondition, nothing changed
+[12:28:50] STOP: stimulus preflight failed — nothing played, nothing sampled
