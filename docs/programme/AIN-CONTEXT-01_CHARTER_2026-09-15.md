@@ -205,9 +205,12 @@ A6 implementation         COMPLETE · 4 files · apertures unchanged
 F1b acceptance            GREEN · 59/59 · admitted for the executed path
 F1c serving reach         6/6 · FAST DELIVERED · DEEP primary NOT REACHED
 Project typecheck gate    PASS · 229 vs baseline 239 · 0 regressions · exit 0
-A6 coverage               FAST + CORE · DEEP primary EXCLUDED · recorded not absorbed
+A6 ACCEPTANCE HOLD        LIFTED (founder ruling 2026-09-15)
+A6 coverage               ACCEPTED for FAST + CORE · DEEP primary EXCLUDED
 DEEP addenda divergence   pre-existing II.C · routed out · NOT REPAIRED
-Merge · deploy            NOT AUTHORIZED — founder act
+PR                        AUTHORIZED TO OPEN
+Merge · deploy            NOT AUTHORIZED
+Production                UNTOUCHED BY A6 (running f190f8992 = PR #1297)
 A3 reproduction harness   PROPOSED · NOT OPENED
 A4-A8                     PROPOSED · NOT OPENED
 F1-F8 falsifiers          SPECIFIED · NOT AUTHORED · NOT RUN
