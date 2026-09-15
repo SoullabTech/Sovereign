@@ -1,0 +1,53 @@
+$ defaults read com.apple.PersonalAudio
+{
+    accommodationTypesByRouteUID =     {
+    };
+    personalMediaConfigurationByRouteUID =     {
+        PAConfigurationWildcard = {length = 1486, bytes = 0x62706c69 73743030 d4010203 04050607 ... 00000000 000004fa };
+    };
+    personalMediaEnabledByRouteUID =     {
+        "20:15:82:D2:BE:0E" = 0;
+        "20:15:82:D2:BE:0E_UpdateInfo" =         {
+            "2025-10-25" = Other;
+        };
+        "6C:12:70:13:75:13_UpdateInfo" =         {
+            "2026-09-08" = Other;
+        };
+        PAConfigurationWildcard = 0;
+        "PAConfigurationWildcard_UpdateInfo" =         {
+            "2025-10-07" = heard;
+        };
+    };
+    shouldUpdateAccessory = 1;
+    transparencyAmplification =     {
+        "20:15:82:D2:BE:0E" = "0.5";
+        "6C:12:70:13:75:13" = "0.5";
+        "90:9C:4A:E5:E1:6A" = "0.5";
+    };
+    transparencyBalance =     {
+        "20:15:82:D2:BE:0E" = "0.5";
+        "6C:12:70:13:75:13" = "0.5";
+        "90:9C:4A:E5:E1:6A" = "0.5";
+    };
+    transparencyBeamforming =     {
+        "20:15:82:D2:BE:0E" = 0;
+        "6C:12:70:13:75:13" = 0;
+        "90:9C:4A:E5:E1:6A" = 1;
+    };
+    transparencyCustomized =     {
+        "20:15:82:D2:BE:0E" = 0;
+        "6C:12:70:13:75:13" = 0;
+        "90:9C:4A:E5:E1:6A" = 0;
+    };
+    transparencyNoiseSupressor =     {
+        "20:15:82:D2:BE:0E" = 0;
+        "6C:12:70:13:75:13" = 0;
+        "90:9C:4A:E5:E1:6A" = 0;
+    };
+    transparencyTone =     {
+        "20:15:82:D2:BE:0E" = "0.5";
+        "6C:12:70:13:75:13" = "0.5";
+        "90:9C:4A:E5:E1:6A" = "0.5";
+    };
+}
+[rc=0]

@@ -1,0 +1,968 @@
+$ ps -axo pid,ppid,lstart,etime,user,comm
+  PID  PPID STARTED                          ELAPSED USER             COMM
+    1     0 Sun Aug 30 12:33:29 2026     15-20:17:41 root             /sbin/launchd
+  124     1 Fri Sep 11 00:30:30 2026     04-08:20:40 soullab          /System/Library/PrivateFrameworks/MediaConversionService.framework/Versions/A/XPCServices/com.apple.photos.ImageConversionService.xpc/Contents/MacOS/com.apple.photos.ImageConversionService
+  297     1 Fri Sep 11 00:34:38 2026     04-08:16:32 root             /usr/libexec/tzd
+  298     1 Fri Sep 11 00:34:38 2026     04-08:16:32 root             /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XProtectUpdateService.xpc/Contents/MacOS/XProtectUpdateService
+  299     1 Fri Sep 11 00:34:38 2026     04-08:16:32 _assetcache      /System/Library/PrivateFrameworks/AssetCacheServices.framework/Versions/A/XPCServices/AssetCacheLocatorService.xpc/Contents/MacOS/AssetCacheLocatorService
+  337     1 Fri Sep 11 00:35:07 2026     04-08:16:03 soullab          /System/Library/CoreServices/EscrowSecurityAlert.app/Contents/MacOS/EscrowSecurityAlert
+  338     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/logd
+  340     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/UserEventAgent
+  342     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd
+  343     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /System/Library/PrivateFrameworks/MediaRemote.framework/Support/mediaremoted
+  346     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/sbin/systemstats
+  349     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/configd
+  351     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /System/Library/CoreServices/powerd.bundle/powerd
+  352     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/IOMFB_bics_daemon
+  354     1 Fri Sep 11 00:35:08 2026     04-08:16:02 soullab          /System/Library/PrivateFrameworks/CloudServices.framework/Helpers/com.apple.sbd
+  360     1 Sun Aug 30 12:34:29 2026     15-20:16:41 _corespeechd     /System/Library/PrivateFrameworks/CoreSpeech.framework/corespeechd_system
+  361     1 Fri Sep 11 00:35:12 2026     04-08:15:58 root             /usr/libexec/findmydeviced
+  362     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/watchdogd
+  363     1 Fri Sep 11 00:35:12 2026     04-08:15:58 soullab          /usr/libexec/findmydevice-user-agent
+  364     1 Fri Sep 11 00:35:13 2026     04-08:15:57 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/RemoteManagementAgent
+  366     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Support/mds
+  367     1 Fri Sep 11 00:35:13 2026     04-08:15:57 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/remotemanagementd
+  368     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/kernelmanagerd
+  369     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/diskarbitrationd
+  370     1 Fri Sep 11 00:35:13 2026     04-08:15:57 soullab          /System/Library/PrivateFrameworks/SafariFoundation.framework/Versions/A/XPCServices/SafariConfigurationSubscriber.xpc/Contents/MacOS/SafariConfigurationSubscriber
+  371     1 Fri Sep 11 00:35:13 2026     04-08:15:57 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/SecuritySubscriber.xpc/Contents/MacOS/SecuritySubscriber
+  372     1 Fri Sep 11 00:35:13 2026     04-08:15:57 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/InteractiveLegacyProfilesSubscriber.xpc/Contents/MacOS/InteractiveLegacyProfilesSubscriber
+  373     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/sbin/syslogd
+  374     1 Fri Sep 11 00:35:13 2026     04-08:15:57 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/SecuritySubscriber.xpc/Contents/MacOS/SecuritySubscriber
+  375     1 Fri Sep 11 00:35:13 2026     04-08:15:57 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ScreenSharingSubscriber.xpc/Contents/MacOS/ScreenSharingSubscriber
+  376     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/thermalmonitord
+  377     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/opendirectoryd
+  378     1 Fri Sep 11 00:35:13 2026     04-08:15:57 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/InteractiveLegacyProfilesSubscriber.xpc/Contents/MacOS/InteractiveLegacyProfilesSubscriber
+  379     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /System/Library/PrivateFrameworks/ApplePushService.framework/apsd
+  380     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /System/Library/CoreServices/launchservicesd
+  381     1 Sun Aug 30 12:34:29 2026     15-20:16:41 _timed           /usr/libexec/timed
+  382     1 Sun Aug 30 12:34:29 2026     15-20:16:41 _usbmuxd         /System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/Resources/usbmuxd
+  383     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/sbin/securityd
+  384     1 Fri Sep 11 00:35:13 2026     04-08:15:57 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ScreenSharingSubscriber.xpc/Contents/MacOS/ScreenSharingSubscriber
+  385     1 Sun Aug 30 12:34:29 2026     15-20:16:41 _locationd       /usr/libexec/locationd
+  386     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/nesessionmanager
+  388     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             autofsd
+  389     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/dasd
+  391     1 Sun Aug 30 12:34:29 2026     15-20:16:41 _distnote        /usr/sbin/distnoted
+  393     1 Fri Sep 11 00:35:13 2026     04-08:15:57 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/LegacyProfilesSubscriber.xpc/Contents/MacOS/LegacyProfilesSubscriber
+  394     1 Fri Sep 11 00:35:14 2026     04-08:15:56 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/LegacyProfilesSubscriber.xpc/Contents/MacOS/LegacyProfilesSubscriber
+  395     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /System/Library/CoreServices/logind
+  396     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /System/Library/PrivateFrameworks/GenerationalStorage.framework/Versions/A/Support/revisiond
+  397     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/sbin/KernelEventAgent
+  398     1 Fri Sep 11 00:35:14 2026     04-08:15:56 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/PasscodeSettingsSubscriber.xpc/Contents/MacOS/PasscodeSettingsSubscriber
+  400     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/sbin/bluetoothd
+  401     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/sbin/notifyd
+  402     1 Fri Sep 11 00:35:14 2026     04-08:15:56 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/PasscodeSettingsSubscriber.xpc/Contents/MacOS/PasscodeSettingsSubscriber
+  403     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/corebrightnessd
+  404     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/AirPlayXPCHelper
+  405     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/com.apple.cmio.registerassistantservice
+  406     1 Fri Sep 11 00:35:14 2026     04-08:15:56 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/DiskManagementSubscriber.xpc/Contents/MacOS/DiskManagementSubscriber
+  407     1 Fri Sep 11 00:35:14 2026     04-08:15:56 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/AccountSubscriber.xpc/Contents/MacOS/AccountSubscriber
+  408     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /System/Library/PrivateFrameworks/TCC.framework/Support/tccd
+  409     1 Sun Aug 30 12:34:30 2026     15-20:16:40 _windowserver    /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  410     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /usr/sbin/cfprefsd
+  411     1 Fri Sep 11 00:35:14 2026     04-08:15:56 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/SoftwareUpdateSubscriber.xpc/Contents/MacOS/SoftwareUpdateSubscriber
+  412     1 Sun Aug 30 12:34:30 2026     15-20:16:40 _analyticsd      /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsd
+  413     1 Fri Sep 11 00:35:14 2026     04-08:15:56 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ManagementTestSubscriber.xpc/Contents/MacOS/ManagementTestSubscriber
+  414     1 Sun Aug 30 12:34:30 2026     15-20:16:40 soullab          /System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow
+  415     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /usr/libexec/runningboardd
+  416     1 Fri Sep 11 00:35:14 2026     04-08:15:56 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ManagementTestSubscriber.xpc/Contents/MacOS/ManagementTestSubscriber
+  417     1 Fri Sep 11 00:35:14 2026     04-08:15:56 _rmd             /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ManagedConfigurationFilesSubscriber.xpc/Contents/MacOS/ManagedConfigurationFilesSubscriber
+  418     1 Fri Sep 11 00:35:14 2026     04-08:15:56 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ASConfigurationSubscriber.xpc/Contents/MacOS/ASConfigurationSubscriber
+  419     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /System/Library/CoreServices/coreservicesd
+  420     1 Fri Sep 11 00:35:15 2026     04-08:15:55 soullab          /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ManagedSettingsSubscriber.xpc/Contents/MacOS/ManagedSettingsSubscriber
+  421     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /System/Library/PrivateFrameworks/CoreDuetContext.framework/Resources/contextstored
+  424     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /usr/libexec/lsd
+  425     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /usr/libexec/airportd
+  426     1 Sun Aug 30 12:34:30 2026     15-20:16:40 _trustd          /usr/libexec/trustd
+  428     1 Sun Aug 30 12:34:30 2026     15-20:16:40 _coreaudiod      /usr/sbin/coreaudiod
+  435     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /usr/libexec/apfsd
+  436     1 Sun Aug 30 12:34:30 2026     15-20:16:40 _nsurlsessiond   /usr/libexec/nsurlsessiond
+  438     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /System/Library/Frameworks/Security.framework/Versions/A/XPCServices/authd.xpc/Contents/MacOS/authd
+  440     1 Sun Aug 30 12:34:30 2026     15-20:16:40 _cmiodalassistants /System/Library/Frameworks/CoreMediaIO.framework/Resources/VDC.plugin/Contents/Resources/VDCAssistant
+  442     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /usr/sbin/distnoted
+  445     1 Sun Aug 30 12:34:30 2026     15-20:16:40 _mdnsresponder   /usr/sbin/mDNSResponder
+  448     1 Sun Aug 30 12:34:30 2026     15-20:16:40 root             /usr/libexec/eligibilityd
+  451     1 Sun Aug 30 12:34:30 2026     15-20:16:40 _windowserver    /usr/sbin/distnoted
+  454     1 Sun Aug 30 12:34:31 2026     15-20:16:39 _networkd        /usr/libexec/symptomsd
+  457     1 Sun Aug 30 12:34:31 2026     15-20:16:39 root             /usr/libexec/aned
+  460     1 Sun Aug 30 12:34:31 2026     15-20:16:39 root             /usr/libexec/corercd
+  462     1 Sun Aug 30 12:34:31 2026     15-20:16:39 _coreaudiod      /usr/sbin/distnoted
+  470     1 Sun Aug 30 12:34:31 2026     15-20:16:39 root             /usr/libexec/syspolicyd
+  504     1 Fri Sep 11 00:36:02 2026     04-08:15:08 root             /usr/libexec/sysdiagnosed
+  512     1 Fri Sep 11 00:36:07 2026     04-08:15:03 soullab          /System/Library/Frameworks/FinanceKit.framework/financed
+  513     1 Fri Sep 11 00:36:07 2026     04-08:15:03 soullab          /usr/libexec/proactiveeventtrackerd
+  521     1 Sun Aug 30 12:34:31 2026     15-20:16:39 _cmiodalassistants /usr/sbin/distnoted
+  522     1 Sun Aug 30 12:34:31 2026     15-20:16:39 root             /usr/sbin/cron
+  523     1 Sun Aug 30 12:34:31 2026     15-20:16:39 root             /usr/sbin/mDNSResponderHelper
+  524     1 Sun Aug 30 12:34:31 2026     15-20:16:39 root             /usr/libexec/ApplicationFirewall/socketfilterfw
+  526     1 Fri Sep 11 00:36:22 2026     04-08:14:48 soullab          /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+  529     1 Fri Sep 11 00:36:26 2026     04-08:14:44 soullab          /System/Library/PrivateFrameworks/AssistantServices.framework/Versions/A/XPCServices/media-indexer.xpc/Contents/MacOS/media-indexer
+  530     1 Fri Sep 11 00:36:26 2026     04-08:14:44 soullab          /System/Library/PrivateFrameworks/PodcastServices.framework/XPCServices/PodcastContentService.xpc/Contents/MacOS/PodcastContentService
+  531     1 Fri Sep 11 00:36:26 2026     04-08:14:44 soullab          /System/Library/PrivateFrameworks/BookKit.framework/Versions/A/XPCServices/com.apple.BKAgentService.xpc/Contents/MacOS/com.apple.BKAgentService
+  532     1 Fri Sep 11 00:36:26 2026     04-08:14:44 soullab          /System/Library/PrivateFrameworks/BookDataStore.framework/Support/bookdatastored
+  533     1 Fri Sep 11 00:36:26 2026     04-08:14:44 soullab          /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+  534     1 Fri Sep 11 00:36:26 2026     04-08:14:44 soullab          /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+  542     1 Sun Aug 30 12:34:32 2026     15-20:16:38 root             /usr/sbin/WirelessRadioManagerd
+  545     1 Sun Aug 30 12:34:32 2026     15-20:16:38 root             /Library/PrivilegedHelperTools/com.lumina.LuminaBroker
+  546     1 Sun Aug 30 12:34:32 2026     15-20:16:38 root             /Library/PrivilegedHelperTools/com.docker.vmnetd
+  551     1 Sun Aug 30 12:34:32 2026     15-20:16:38 root             /System/Library/CoreServices/TimeMachine/backupd
+  553     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _locationd       /usr/sbin/distnoted
+  555     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _cmiodalassistants /Library/SystemExtensions/5D6C84C1-8EF0-4A53-B324-8245AA7C53DD/com.reincubate.macos.cam.avextension.systemextension/Contents/MacOS/com.reincubate.macos.cam.avextension
+  558     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _cmiodalassistants /usr/libexec/cameracaptured
+  561     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _cmiodalassistants /System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/UVCAssistant.systemextension/Contents/MacOS/UVCAssistant
+  564     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _coreaudiod      Core Audio Driver (ARK.driver)
+  566     1 Sun Aug 30 12:34:32 2026     15-20:16:38 root             /usr/libexec/audioclocksyncd
+  570     1 Sun Aug 30 12:34:32 2026     15-20:16:38 root             /System/Library/CoreServices/Software Update.app/Contents/Resources/suhelperd
+  571     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _coreaudiod      Core Audio Driver (MSTeamsAudioDevice.driver)
+  572     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _softwareupdate  /usr/sbin/distnoted
+  583     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _appleevents     /System/Library/CoreServices/appleeventsd
+  587     1 Sun Aug 30 12:34:32 2026     15-20:16:38 root             /usr/libexec/searchpartyd
+  589     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _nsurlsessiond   /usr/sbin/distnoted
+  592     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _driverkit       /System/Library/DriverExtensions/com.apple.DriverKit-AppleBCMWLAN.dext/com.apple.DriverKit-AppleBCMWLAN
+  593     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _driverkit       /System/Library/DriverExtensions/com.apple.DriverKit-IOUserDockChannelSerial.dext/com.apple.DriverKit-IOUserDockChannelSerial
+  595     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _driverkit       /System/Library/DriverExtensions/com.apple.DriverKit.AppleUserECM.dext/com.apple.DriverKit.AppleUserECM
+  596     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _driverkit       /System/Library/DriverExtensions/com.apple.AppleUserHIDDrivers.dext/com.apple.AppleUserHIDDrivers
+  597     1 Sun Aug 30 12:34:32 2026     15-20:16:38 _driverkit       /System/Library/DriverExtensions/com.apple.DriverKit.AppleUserECM.dext/com.apple.DriverKit.AppleUserECM
+  601     1 Sun Aug 30 12:34:32 2026     15-20:16:38 root             /System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Versions/A/Support/mds_stores
+  610     1 Sun Aug 30 12:34:33 2026     15-20:16:37 _spotlight       /usr/sbin/distnoted
+  611     1 Sun Aug 30 12:34:33 2026     15-20:16:37 _coreaudiod      Core Audio Driver (ReincubateCamoAudio.driver)
+  614     1 Sun Aug 30 12:34:33 2026     15-20:16:37 root             /System/Library/Frameworks/LocalAuthentication.framework/Support/coreauthd
+  616     1 Sun Aug 30 12:34:33 2026     15-20:16:37 _netbios         /usr/sbin/netbiosd
+  617     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/sbin/distnoted
+  620     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/sbin/cfprefsd
+  621     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/libexec/UserEventAgent
+  625     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /System/Library/CoreServices/WindowManager.app/Contents/MacOS/WindowManager
+  628     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/libexec/ContinuityCaptureAgent
+  630     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/sbin/universalaccessd
+  631     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/libexec/pboard
+  634     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/libexec/containermanagerd
+  635     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/libexec/lsd
+  638     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/libexec/secd
+  639     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/libexec/trustd
+  641     1 Sun Aug 30 12:34:33 2026     15-20:16:37 _appleevents     /usr/sbin/distnoted
+  642     1 Sun Aug 30 12:34:33 2026     15-20:16:37 soullab          /usr/libexec/rapportd
+  645     1 Sun Aug 30 12:34:34 2026     15-20:16:36 soullab          /System/Library/PrivateFrameworks/IDS.framework/identityservicesd.app/Contents/MacOS/identityservicesd
+  646     1 Sun Aug 30 12:34:34 2026     15-20:16:36 root             /usr/sbin/BTLEServer
+  647     1 Sun Aug 30 12:34:34 2026     15-20:16:36 soullab          /System/Library/CoreServices/audioaccessoryd
+  654     1 Sun Aug 30 12:34:34 2026     15-20:16:36 _ctkd            /System/Library/Frameworks/CryptoTokenKit.framework/ctkd
+  655     1 Sun Aug 30 12:34:34 2026     15-20:16:36 soullab          /System/Library/Frameworks/LocalAuthentication.framework/Support/coreauthd
+  657     1 Sun Aug 30 12:34:34 2026     15-20:16:36 soullab          /usr/libexec/sharingd
+  658     1 Sun Aug 30 12:34:34 2026     15-20:16:36 soullab          /System/Library/PrivateFrameworks/UserNotificationsCore.framework/Support/usernotificationsd
+  661     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/PrivateFrameworks/HomeKitDaemon.framework/Support/homed
+  663     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/Frameworks/Accounts.framework/Versions/A/Support/accountsd
+  671     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/CoreServices/sharedfilelistd
+  682     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /usr/libexec/nsurlsessiond
+  685     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /usr/sbin/usernoted
+  693     1 Sun Aug 30 12:34:35 2026     15-20:16:35 root             /System/Library/CoreServices/SubmitDiagInfo
+  695     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/CoreServices/NotificationCenter.app/Contents/MacOS/NotificationCenter
+  700     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/PrivateFrameworks/FamilyCircle.framework/Versions/A/Resources/familycircled
+  702     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/PrivateFrameworks/AuthKit.framework/Versions/A/Support/akd
+  703     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/Frameworks/QuickLookUI.framework/Versions/A/Resources/Quick Look Simulator.app/Contents/MacOS/Quick Look Simulator
+  704     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Applications/Music.app/Contents/MacOS/Music
+  709     1 Sun Aug 30 12:34:35 2026     15-20:16:35 root             /System/Library/PrivateFrameworks/WirelessDiagnostics.framework/Support/awdd
+  710     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Applications/TextEdit.app/Contents/MacOS/TextEdit
+  728     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/PrivateFrameworks/CoreDuetContext.framework/Resources/ContextStoreAgent
+  729     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/CoreServices/lockoutagent
+  731     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+  733     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/CoreServices/WiFiAgent.app/Contents/MacOS/WiFiAgent
+  734     1 Sun Aug 30 12:34:35 2026     15-20:16:35 _nearbyd         /usr/libexec/nearbyd
+  735     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/CoreServices/Dock.app/Contents/MacOS/Dock
+  737     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/CoreServices/ControlCenter.app/Contents/MacOS/ControlCenter
+  738     1 Sun Aug 30 12:34:35 2026     15-20:16:35 soullab          /System/Library/Frameworks/ApplicationServices.framework/Frameworks/ATS.framework/Support/fontd
+  739     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/CoreServices/SystemUIServer.app/Contents/MacOS/SystemUIServer
+  740     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/CoreServices/Finder.app/Contents/MacOS/Finder
+  748     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/CoreServices/WallpaperAgent.app/Contents/MacOS/WallpaperAgent
+  750     1 Sun Aug 30 12:34:36 2026     15-20:16:34 root             /usr/sbin/filecoordinationd
+  751     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATS.framework/Versions/A/Support/fontworker
+  757     1 Sun Aug 30 12:34:36 2026     15-20:16:34 root             /usr/libexec/gamepolicyd
+  758     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/PrivateFrameworks/FileProvider.framework/Support/fileproviderd
+  759     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/PrivateFrameworks/ViewBridge.framework/Versions/A/XPCServices/ViewBridgeAuxiliary.xpc/Contents/MacOS/ViewBridgeAuxiliary
+  765     1 Sun Aug 30 12:34:36 2026     15-20:16:34 root             automountd
+  774     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/PrivateFrameworks/AMPDevices.framework/Versions/A/Support/AMPDeviceDiscoveryAgent
+  775     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/ExtensionKit/Extensions/WallpaperImageExtension.appex/Contents/MacOS/WallpaperImageExtension
+  779     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/PrivateFrameworks/IMCore.framework/imagent.app/Contents/MacOS/imagent
+  781     1 Sun Aug 30 12:34:36 2026     15-20:16:34 root             /usr/libexec/wifianalyticsd
+  782     1 Sun Aug 30 12:34:36 2026     15-20:16:34 _modelmanagerd   /usr/libexec/modelmanagerd
+  784     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/CoreServices/UIKitSystem.app/Contents/MacOS/UIKitSystem
+  801     1 Sun Aug 30 12:34:36 2026     15-20:16:34 _oahd            /usr/libexec/rosetta/oahd
+  806     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/PrivateFrameworks/UserActivity.framework/Agents/useractivityd
+  807     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /System/Library/PrivateFrameworks/MediaRemote.framework/Support/mediaremoteagent
+  814     1 Sun Aug 30 12:34:36 2026     15-20:16:34 root             /usr/libexec/audioanalyticsd
+  826     1 Sun Aug 30 12:34:36 2026     15-20:16:34 soullab          /usr/libexec/avconferenced
+  845     1 Sun Aug 30 12:34:37 2026     15-20:16:33 soullab          /System/Library/CoreServices/Dock.app/Contents/XPCServices/com.apple.dock.extra.xpc/Contents/MacOS/com.apple.dock.extra
+  849     1 Sun Aug 30 12:34:37 2026     15-20:16:33 soullab          /System/Library/CoreServices/Dock.app/Contents/XPCServices/com.apple.dock.external.extra.arm64.xpc/Contents/MacOS/com.apple.dock.external.extra.arm64
+  882     1 Sun Aug 30 12:34:37 2026     15-20:16:33 _accessoryupdater /usr/sbin/distnoted
+  958     1 Sun Aug 30 12:34:37 2026     15-20:16:33 soullab          /System/Library/Frameworks/InputMethodKit.framework/Resources/imklaunchagent
+  970     1 Sun Aug 30 12:34:37 2026     15-20:16:33 soullab          /System/Library/PrivateFrameworks/TextInputUIMacHelper.framework/Versions/A/XPCServices/CursorUIViewService.xpc/Contents/MacOS/CursorUIViewService
+  992     1 Sun Aug 30 12:34:37 2026     15-20:16:33 soullab          /System/Library/Input Methods/PressAndHold.app/Contents/PlugIns/PAH_Extension.appex/Contents/MacOS/PAH_Extension
+ 1011     1 Sun Aug 30 12:34:37 2026     15-20:16:33 soullab          /System/Library/CoreServices/Spotlight.app/Contents/MacOS/Spotlight
+ 1042     1 Sun Aug 30 12:34:37 2026     15-20:16:33 soullab          /System/Library/CoreServices/UniversalControl.app/Contents/MacOS/UniversalControl
+ 1220     1 Sun Aug 30 12:34:38 2026     15-20:16:32 soullab          /System/Library/PrivateFrameworks/CommerceKit.framework/Versions/A/Resources/commerce
+ 1747     1 Fri Sep 11 00:58:43 2026     04-07:52:27 soullab          /System/Library/PrivateFrameworks/GeoAnalytics.framework/geoanalyticsd
+ 1755     1 Fri Sep 11 00:58:44 2026     04-07:52:26 soullab          /System/Library/PrivateFrameworks/PrivateCloudCompute.framework/privatecloudcomputed.app/Contents/MacOS/privatecloudcomputed
+ 1802     1 Fri Sep 11 00:59:52 2026     04-07:51:18 soullab          /System/Library/PrivateFrameworks/ContinuousDialogManagerService.framework/assistant_cdmd
+ 2059     1 Sun Sep  6 03:00:05 2026     09-05:51:05 soullab          /bin/bash
+ 2062  2059 Sun Sep  6 03:00:05 2026     09-05:51:05 soullab          docker
+ 2773     1 Sun Aug 30 12:34:40 2026     15-20:16:30 soullab          /System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Versions/A/Support/mdwrite
+ 2947     1 Thu Sep  3 20:18:35 2026     11-12:32:35 soullab          /System/Library/CoreServices/ReportCrash
+ 3076     1 Sun Aug 30 12:34:41 2026     15-20:16:29 root             /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/CVMServer
+ 3144     1 Sun Aug 30 12:34:41 2026     15-20:16:29 root             /System/Library/PrivateFrameworks/AmbientDisplay.framework/Versions/A/XPCServices/com.apple.AmbientDisplayAgent.xpc/Contents/MacOS/com.apple.AmbientDisplayAgent
+ 3178     1 Sun Aug 30 12:34:42 2026     15-20:16:28 root             /usr/libexec/sysmond
+ 3202     1 Sun Aug 30 12:34:42 2026     15-20:16:28 soullab          /System/Library/Image Capture/Support/icdd
+ 3415     1 Thu Sep  3 20:27:51 2026     11-12:23:19 soullab          /System/Library/PrivateFrameworks/BiomeStreams.framework/Support/BiomeAgent
+ 3423     1 Fri Sep 11 01:30:52 2026     04-07:20:18 root             /usr/libexec/misagent
+ 3649     1 Sun Aug 30 12:34:44 2026     15-20:16:26 _gamecontrollerd /usr/sbin/distnoted
+ 3651     1 Sun Aug 30 12:34:44 2026     15-20:16:26 _driverkit       /System/Library/DriverExtensions/IOUserBluetoothSerialDriver.dext/IOUserBluetoothSerialDriver
+ 3652     1 Sun Aug 30 12:34:44 2026     15-20:16:26 _driverkit       /System/Library/DriverExtensions/IOUserBluetoothSerialDriver.dext/IOUserBluetoothSerialDriver
+ 3657     1 Sun Aug 30 12:34:44 2026     15-20:16:26 _applepay        /usr/sbin/distnoted
+ 3664     1 Sun Aug 30 12:34:45 2026     15-20:16:25 soullab          /System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Versions/A/Support/mdbulkimport
+ 3784     1 Fri Sep 11 01:38:21 2026     04-07:12:49 soullab          /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+ 3851     1 Sun Aug 30 12:34:46 2026     15-20:16:24 _fpsd            /System/Library/PrivateFrameworks/CoreFP.framework/Versions/A/fairplayd
+ 3865     1 Sun Aug 30 12:34:47 2026     15-20:16:23 soullab          /System/Library/PrivateFrameworks/TextToSpeechVoiceBankingSupport.framework/Support/voicebankingd
+ 3878     1 Sun Aug 30 12:34:48 2026     15-20:16:22 soullab          /System/Library/PrivateFrameworks/AMPLibrary.framework/Versions/A/Support/AMPLibraryAgent
+ 3907     1 Sun Aug 30 12:34:50 2026     15-20:16:20 _fpsd            /System/Library/PrivateFrameworks/CoreLSKD.framework/Versions/A/lskdd
+ 4026     1 Mon Aug 31 12:35:06 2026     14-20:16:04 soullab          /Applications/Google Drive.app/Contents/MacOS/crashpad_handler
+ 4224     1 Mon Sep 14 10:37:20 2026        22:13:50 soullab          /System/Library/PrivateFrameworks/GenerativeExperiencesRuntime.framework/Versions/A/generativeexperiencesd
+ 4390     1 Sun Aug 30 12:34:55 2026     15-20:16:15 soullab          /usr/libexec/USBAgent
+ 4397     1 Sun Aug 30 12:34:56 2026     15-20:16:14 soullab          /System/Library/PrivateFrameworks/CoreSpeech.framework/corespeechd
+ 4410     1 Sun Aug 30 12:34:57 2026     15-20:16:13 _audiomxd        /usr/libexec/audiomxd
+ 4412     1 Sun Aug 30 12:34:57 2026     15-20:16:13 soullab          /Library/Apple/System/Library/PrivateFrameworks/RemotePairing.framework/Versions/A/XPCServices/remotepairingd.xpc/Contents/MacOS/remotepairingd
+ 4413     1 Sun Aug 30 12:34:57 2026     15-20:16:13 root             /Library/Developer/PrivateFrameworks/CoreSimulator.framework/Resources/bin/simdiskimaged
+ 4419     1 Sun Aug 30 12:34:58 2026     15-20:16:12 _diskimagesiod   /usr/libexec/diskimagesiod
+ 4431     1 Sun Aug 30 12:34:58 2026     15-20:16:12 soullab          /Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/XPCServices/SimLaunchHost.arm64.xpc/Contents/MacOS/SimLaunchHost.arm64
+ 4435     1 Sun Aug 30 12:34:58 2026     15-20:16:12 soullab          /System/Library/PrivateFrameworks/HearingCore.framework/heard
+ 4444     1 Sun Aug 30 12:34:58 2026     15-20:16:12 soullab          /System/Library/CoreServices/Siri.app/Contents/MacOS/Siri
+ 4449     1 Sun Aug 30 12:34:58 2026     15-20:16:12 soullab          /Users/soullab/.nvm/versions/node/v22.22.3/bin/node
+ 4453     1 Sun Aug 30 12:34:58 2026     15-20:16:12 soullab          arkaudiod
+ 4454     1 Sun Aug 30 12:34:58 2026     15-20:16:12 soullab          /System/Library/CoreServices/AirPlayUIAgent.app/Contents/MacOS/AirPlayUIAgent
+ 4455     1 Sun Aug 30 12:34:58 2026     15-20:16:12 soullab          /opt/homebrew/opt/postgresql@17/bin/postgres
+ 4457     1 Sun Aug 30 12:34:58 2026     15-20:16:12 soullab          /System/Library/CoreServices/diagnostics_agent
+ 4458     1 Sun Aug 30 12:34:58 2026     15-20:16:12 soullab          /System/Library/CoreServices/TextInputMenuAgent.app/Contents/MacOS/TextInputMenuAgent
+ 4462     1 Sun Aug 30 12:34:58 2026     15-20:16:12 root             /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 4463     1 Sun Aug 30 12:34:59 2026     15-20:16:11 soullab          /Applications/Google Drive.app/Contents/MacOS/Google Drive
+ 4469     1 Sun Aug 30 12:34:59 2026     15-20:16:11 soullab          /Applications/Loom.app/Contents/MacOS/Loom
+ 4481     1 Sun Aug 30 12:34:59 2026     15-20:16:11 soullab          /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 4491     1 Mon Sep  7 14:29:00 2026     07-18:22:10 root             /System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Versions/A/Support/mdsync
+ 4522     1 Sun Aug 30 12:35:00 2026     15-20:16:10 soullab          /System/Library/CoreServices/UserNotificationCenter.app/Contents/MacOS/UserNotificationCenter
+ 4546     1 Sun Aug 30 12:35:00 2026     15-20:16:10 soullab          /Applications/Google Drive.app/Contents/MacOS/crashpad_handler
+ 4636     1 Sun Aug 30 12:35:03 2026     15-20:16:07 soullab          /Applications/Docker.app/Contents/Resources/cli-plugins/docker-agent
+ 4648     1 Sun Aug 30 12:35:04 2026     15-20:16:06 soullab          /Applications/Google Drive.app/Contents/MacOS/crashpad_handler
+ 4680     1 Sun Aug 30 12:35:05 2026     15-20:16:05 soullab          /Applications/Loom.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+ 4681  4469 Sun Aug 30 12:35:05 2026     15-20:16:05 soullab          /Applications/Loom.app/Contents/Frameworks/Loom Helper (GPU).app/Contents/MacOS/Loom Helper (GPU)
+ 4683  4469 Sun Aug 30 12:35:05 2026     15-20:16:05 soullab          /Applications/Loom.app/Contents/Frameworks/Loom Helper.app/Contents/MacOS/Loom Helper
+ 4686     1 Sun Aug 30 12:35:05 2026     15-20:16:05 soullab          /System/Library/PrivateFrameworks/UniversalAccess.framework/Versions/A/Resources/universalAccessAuthWarn.app/Contents/MacOS/universalAccessAuthWarn
+ 4689     1 Sun Aug 30 12:35:06 2026     15-20:16:04 soullab          /Applications/Ollama.app/Contents/MacOS/Ollama
+ 4691  4469 Sun Aug 30 12:35:06 2026     15-20:16:04 soullab          /Applications/Loom.app/Contents/Frameworks/Loom Helper (Renderer).app/Contents/MacOS/Loom Helper (Renderer)
+ 4693  4469 Sun Aug 30 12:35:06 2026     15-20:16:04 soullab          /Applications/Loom.app/Contents/Frameworks/Loom Helper (Renderer).app/Contents/MacOS/Loom Helper (Renderer)
+ 4694  4469 Sun Aug 30 12:35:06 2026     15-20:16:04 soullab          /Applications/Loom.app/Contents/Frameworks/Loom Helper (Renderer).app/Contents/MacOS/Loom Helper (Renderer)
+ 4705  4469 Sun Aug 30 12:35:08 2026     15-20:16:02 soullab          /Applications/Loom.app/Contents/Resources/binaries/loom-recorder-production
+ 4711     1 Sun Aug 30 12:35:08 2026     15-20:16:02 soullab          /Applications/Loom.app/Contents/Resources/binaries/loom_crashpad_handler
+ 4713  4469 Sun Aug 30 12:35:08 2026     15-20:16:02 soullab          /Applications/Loom.app/Contents/Frameworks/Loom Helper (Renderer).app/Contents/MacOS/Loom Helper (Renderer)
+ 4719  4455 Sun Aug 30 12:35:08 2026     15-20:16:02 soullab          postgres: checkpointer 
+ 4720  4455 Sun Aug 30 12:35:08 2026     15-20:16:02 soullab          postgres: background writer 
+ 4722     1 Sun Aug 30 12:35:08 2026     15-20:16:02 _modelmanagerd   /System/Library/ExtensionKit/Extensions/TGOnDeviceInferenceProviderService.appex/Contents/MacOS/TGOnDeviceInferenceProviderService
+ 4726     1 Sun Aug 30 12:35:08 2026     15-20:16:02 _modelmanagerd   /usr/sbin/distnoted
+ 4727  4469 Sun Aug 30 12:35:08 2026     15-20:16:02 soullab          /Applications/Loom.app/Contents/Frameworks/Loom Helper.app/Contents/MacOS/Loom Helper
+ 4728  4469 Sun Aug 30 12:35:08 2026     15-20:16:02 soullab          /Applications/Loom.app/Contents/Frameworks/Loom Helper (Plugin).app/Contents/MacOS/Loom Helper (Plugin)
+ 4729  4455 Sun Aug 30 12:35:09 2026     15-20:16:01 soullab          postgres: walwriter 
+ 4730  4455 Sun Aug 30 12:35:09 2026     15-20:16:01 soullab          postgres: autovacuum launcher 
+ 4731  4455 Sun Aug 30 12:35:09 2026     15-20:16:01 soullab          postgres: logical replication launcher 
+ 4733  4689 Sun Aug 30 12:35:09 2026     15-20:16:01 soullab          /Applications/Ollama.app/Contents/Resources/ollama
+ 4800     1 Sun Aug 30 12:35:14 2026     15-20:15:56 soullab          /Applications/Loom.app/Contents/Frameworks/Squirrel.framework/Resources/ShipIt
+ 4961   346 Sun Aug 30 12:35:31 2026     15-20:15:39 root             /usr/sbin/systemstats
+ 5042     1 Sun Aug 30 12:35:46 2026     15-20:15:24 soullab          /System/Library/PrivateFrameworks/ChronoCore.framework/Support/chronod
+ 5078     1 Sun Aug 30 12:35:50 2026     15-20:15:20 soullab          /System/Applications/Calendar.app/Contents/PlugIns/CalendarWidgetExtension.appex/Contents/MacOS/CalendarWidgetExtension
+ 5101     1 Sun Aug 30 12:36:01 2026     15-20:15:09 soullab          /System/Library/CoreServices/Siri.app/Contents/XPCServices/SiriNCService.xpc/Contents/MacOS/SiriNCService
+ 5102     1 Sun Aug 30 12:36:02 2026     15-20:15:08 soullab          /System/Library/PrivateFrameworks/DataAccess.framework/Support/dataaccessd
+ 5106     1 Sun Aug 30 12:36:05 2026     15-20:15:05 root             /System/Library/CoreServices/CrashReporterSupportHelper
+ 5136     1 Sun Aug 30 12:36:22 2026     15-20:14:48 soullab          /System/Library/PrivateFrameworks/People.framework/peopled
+ 5159     1 Sun Aug 30 12:36:36 2026     15-20:14:34 _rmd             /usr/sbin/distnoted
+ 5300     1 Sun Aug 30 12:37:21 2026     15-20:13:49 soullab          /Applications/Tailscale.app/Contents/MacOS/Tailscale
+ 5320     1 Sun Aug 30 12:37:22 2026     15-20:13:48 root             /Library/SystemExtensions/2BDF37F6-6529-4237-857C-03917BFBD686/io.tailscale.ipn.macsys.network-extension.systemextension/Contents/MacOS/io.tailscale.ipn.macsys.network-extension
+ 5470     1 Sun Aug 30 12:38:32 2026     15-20:12:38 _appinstalld     /usr/sbin/distnoted
+ 5732     1 Sun Aug 30 12:39:55 2026     15-20:11:15 soullab          /System/Applications/Weather.app/Contents/PlugIns/WeatherWidget.appex/Contents/MacOS/WeatherWidget
+ 6712     1 Fri Sep 11 02:34:34 2026     04-06:16:36 _softwareupdate  /System/Library/PrivateFrameworks/MobileSoftwareUpdate.framework/Support/softwareupdated
+ 6713     1 Fri Sep 11 02:34:34 2026     04-06:16:36 root             /System/Library/PrivateFrameworks/MobileSoftwareUpdate.framework/Versions/A/XPCServices/com.apple.MobileSoftwareUpdate.CleanupPreparePathService.xpc/Contents/MacOS/com.apple.MobileSoftwareUpdate.CleanupPreparePathService
+ 6715     1 Fri Sep 11 02:34:36 2026     04-06:16:34 soullab          /System/Library/PrivateFrameworks/IASUtilities.framework/Versions/A/Resources/installerauthagent
+ 6716     1 Fri Sep 11 02:34:36 2026     04-06:16:34 _softwareupdate  /usr/libexec/NRDUpdated
+ 6719     1 Fri Sep 11 02:34:37 2026     04-06:16:33 _nsurlsessiond   /System/Library/PrivateFrameworks/StreamingZip.framework/Versions/A/XPCServices/com.apple.StreamingUnzipService.privileged.xpc/Contents/MacOS/com.apple.StreamingUnzipService.privileged
+ 6720     1 Fri Sep 11 02:34:37 2026     04-06:16:33 root             /private/var/db/com.apple.xpc.roleaccountd.staging/exec/16777234.306539894.xpc/Contents/MacOS/com.apple.NRD.UpdateBrainService
+ 6721     1 Fri Sep 11 02:34:37 2026     04-06:16:33 root             /usr/libexec/xpcroleaccountd
+ 6724     1 Fri Sep 11 02:34:38 2026     04-06:16:32 _softwareupdate  /System/Library/PrivateFrameworks/UIFoundation.framework/Versions/A/XPCServices/nsattributedstringagent.xpc/Contents/MacOS/nsattributedstringagent
+ 6725     1 Fri Sep 11 02:34:38 2026     04-06:16:32 _softwareupdate  /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/XPCServices/com.apple.hiservices-xpcservice.xpc/Contents/MacOS/com.apple.hiservices-xpcservice
+ 6728     1 Fri Sep 11 02:34:39 2026     04-06:16:31 _softwareupdate  /System/Library/Frameworks/MediaAccessibility.framework/Versions/A/XPCServices/com.apple.accessibility.mediaaccessibilityd.xpc/Contents/MacOS/com.apple.accessibility.mediaaccessibilityd
+ 6730     1 Fri Sep 11 02:34:39 2026     04-06:16:31 soullab          /System/Library/PrivateFrameworks/SoftwareUpdate.framework/Resources/SoftwareUpdateNotificationManager.app/Contents/MacOS/SoftwareUpdateNotificationManager
+ 6731     1 Fri Sep 11 02:34:39 2026     04-06:16:31 soullab          /System/Library/PrivateFrameworks/UIFoundation.framework/Versions/A/XPCServices/nsattributedstringagent.xpc/Contents/MacOS/nsattributedstringagent
+ 6745     1 Fri Sep 11 02:34:43 2026     04-06:16:27 _softwareupdate  /System/Library/PrivateFrameworks/Install.framework/Frameworks/DistributionKit.framework/Versions/A/XPCServices/DistributionHelper.xpc/Contents/MacOS/DistributionHelper
+ 7595     1 Sun Aug 30 12:48:03 2026     15-20:03:07 soullab          /System/Library/Frameworks/CoreSpotlight.framework/spotlightknowledged
+ 8408     1 Fri Sep 11 03:07:00 2026     04-05:44:10 soullab          /System/Library/PrivateFrameworks/FileProviderDaemon.framework/XPCServices/FPCKService.xpc/Contents/MacOS/FPCKService
+ 8515     1 Fri Sep 11 03:08:43 2026     04-05:42:27 soullab          /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/Versions/A/XPCServices/MessagesBlastDoorService.xpc/Contents/MacOS/MessagesBlastDoorService
+ 8520     1 Fri Sep 11 03:08:48 2026     04-05:42:22 soullab          /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+ 8777     1 Sat Sep  5 05:41:44 2026     10-03:09:26 soullab          /usr/libexec/searchpartyuseragent
+ 8954     1 Fri Sep 11 03:17:08 2026     04-05:34:02 root             /System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANECompilerService.xpc/Contents/MacOS/ANECompilerService
+ 8958     1 Fri Sep 11 03:17:12 2026     04-05:33:58 root             /System/Library/PrivateFrameworks/PerfPowerServicesReader.framework/Versions/A/XPCServices/PerfPowerTelemetryReaderService.xpc/Contents/MacOS/PerfPowerTelemetryReaderService
+ 9028     1 Fri Sep 11 03:18:46 2026     04-05:32:24 soullab          /System/Library/PrivateFrameworks/DeviceCheckInternal.framework/devicecheckd
+ 9029     1 Fri Sep 11 03:18:46 2026     04-05:32:24 soullab          /usr/libexec/seserviced
+ 9040     1 Fri Sep 11 03:18:48 2026     04-05:32:22 soullab          /System/Library/PrivateFrameworks/iCloudNotification.framework/iCloudNotificationAgent
+ 9847     1 Fri Sep 11 03:35:05 2026     04-05:16:05 root             /usr/libexec/dirhelper
+ 9917     1 Mon Sep 14 11:27:13 2026        21:23:57 root             /usr/libexec/PerfPowerServices
+10226     1 Tue Sep  1 12:35:09 2026     13-20:16:01 soullab          /Applications/Google Drive.app/Contents/MacOS/crashpad_handler
+10241     1 Mon Sep 14 11:30:46 2026        21:20:24 soullab          /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+10243     1 Mon Sep 14 11:30:47 2026        21:20:23 soullab          /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTEncoderXPCService.xpc/Contents/MacOS/VTEncoderXPCService
+10244     1 Mon Sep 14 11:30:47 2026        21:20:23 soullab          /System/Library/Frameworks/Speech.framework/Versions/A/XPCServices/localspeechrecognition.xpc/Contents/MacOS/localspeechrecognition
+11250     1 Sun Aug 30 13:15:07 2026     15-19:36:03 _modelmanagerd   /System/Library/ExtensionKit/Extensions/TGOnDeviceInferenceProviderService.appex/Contents/MacOS/TGOnDeviceInferenceProviderService
+11309     1 Thu Sep  3 22:10:10 2026     11-10:41:00 soullab          /System/Library/PrivateFrameworks/CoreSuggestions.framework/Versions/A/Support/suggestd
+11458     1 Sun Aug 30 13:15:27 2026     15-19:35:43 _modelmanagerd   /System/Library/ExtensionKit/Extensions/TGOnDeviceInferenceProviderService.appex/Contents/MacOS/TGOnDeviceInferenceProviderService
+11577     1 Mon Sep  7 02:36:19 2026     08-06:14:51 soullab          /System/Library/PrivateFrameworks/TelephonyUtilities.framework/callservicesd
+11578     1 Thu Sep  3 22:14:31 2026     11-10:36:39 soullab          /System/Applications/Messages.app/Contents/PlugIns/Messages Assistant Extension.appex/Contents/MacOS/Messages Assistant Extension
+11990 96046 Mon Sep 14 23:18:36 2026        09:32:34 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+12440     1 Sat Sep  5 06:37:48 2026     10-02:13:22 soullab          /System/Library/PrivateFrameworks/StatusKit.framework/StatusKitAgent
+12584     1 Fri Sep 11 04:27:22 2026     04-04:23:48 soullab          /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+14189     1 Mon Aug 31 00:12:04 2026     15-08:39:06 soullab          /System/Library/PrivateFrameworks/IMDPersistence.framework/IMAutomaticHistoryDeletionAgent.app/Contents/MacOS/IMAutomaticHistoryDeletionAgent
+14192     1 Mon Aug 31 00:12:05 2026     15-08:39:05 _neuralengine    /usr/sbin/distnoted
+14965     1 Thu Sep  3 00:35:31 2026     12-08:15:39 soullab          /System/Library/CoreServices/Setup Assistant.app/Contents/Resources/mbuseragent
+14967     1 Sun Sep 13 08:52:04 2026     01-23:59:06 _captiveagent    /usr/libexec/captiveagent
+15619     1 Mon Sep  7 03:36:02 2026     08-05:15:08 soullab          /System/Library/PrivateFrameworks/CloudKitDaemon.framework/Support/cloudd
+15633     1 Mon Sep  7 03:36:09 2026     08-05:15:01 root             /System/Library/PrivateFrameworks/SystemStatusServer.framework/Support/systemstatusd
+15726     1 Wed Sep  2 05:42:05 2026     13-03:09:05 soullab          /Applications/Obsidian.app/Contents/MacOS/Obsidian
+15730 15726 Wed Sep  2 05:42:06 2026     13-03:09:04 soullab          /Applications/Obsidian.app/Contents/Frameworks/Obsidian Helper (GPU).app/Contents/MacOS/Obsidian Helper (GPU)
+15731 15726 Wed Sep  2 05:42:06 2026     13-03:09:04 soullab          /Applications/Obsidian.app/Contents/Frameworks/Obsidian Helper.app/Contents/MacOS/Obsidian Helper
+15732 15726 Wed Sep  2 05:42:06 2026     13-03:09:04 soullab          /Applications/Obsidian.app/Contents/Frameworks/Obsidian Helper (Renderer).app/Contents/MacOS/Obsidian Helper (Renderer)
+16056     1 Tue Sep 15 00:12:35 2026        08:38:35 _installcoordinationd /usr/libexec/containermanagerd
+16065     1 Tue Sep 15 00:12:43 2026        08:38:27 root             /System/Library/PrivateFrameworks/PackageKit.framework/Versions/A/XPCServices/package_script_service.xpc/Contents/MacOS/package_script_service
+17237     1 Sat Sep  5 07:49:58 2026     10-01:01:12 soullab          /usr/sbin/BTLEServerAgent
+18313     1 Tue Sep  8 19:38:46 2026     06-13:12:24 soullab          docker
+18329 18313 Tue Sep  8 19:38:46 2026     06-13:12:24 soullab          /Users/soullab/.docker/cli-plugins/docker-ai
+19331     1 Tue Sep  1 14:43:37 2026     13-18:07:33 soullab          /System/Library/CoreServices/talagentd
+20045     1 Sat Sep  5 08:34:20 2026     10-00:16:50 soullab          /usr/libexec/tipsd
+20929     1 Sun Sep 13 10:17:02 2026     01-22:34:08 soullab          /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+21252 96046 Sat Sep 12 09:40:20 2026     02-23:10:50 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+21785     1 Fri Sep 11 07:28:58 2026     04-01:22:12 root             /Library/Apple/System/Library/CoreServices/XProtect.app/Contents/MacOS/XProtect
+22019     1 Mon Sep 14 13:22:02 2026        19:29:08 soullab          /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+22297     1 Sun Sep 13 10:30:28 2026     01-22:20:42 soullab          /System/Library/ExtensionKit/Extensions/TextThumbnailExtension.appex/Contents/MacOS/TextThumbnailExtension
+22312 39673 Sun Sep 13 10:30:38 2026     01-22:20:32 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+22320 39673 Sun Sep 13 10:30:39 2026     01-22:20:31 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+22354 39673 Sun Sep 13 10:30:41 2026     01-22:20:29 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+22358     1 Sun Sep 13 10:30:41 2026     01-22:20:29 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+22394 96046 Sun Sep 13 10:31:06 2026     01-22:20:04 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+22428     1 Sat Sep 12 10:05:52 2026     02-22:45:18 soullab          /System/Applications/Messages.app/Contents/MacOS/Messages
+22430     1 Sat Sep 12 10:05:53 2026     02-22:45:17 soullab          /System/Library/PrivateFrameworks/WebPrivacy.framework/webprivacyd
+22431     1 Sat Sep 12 10:05:53 2026     02-22:45:17 soullab          /System/iOSSupport/System/Library/PrivateFrameworks/IMTranscoding.framework/XPCServices/IMTranscoderAgent.xpc/Contents/MacOS/IMTranscoderAgent
+22432     1 Sat Sep 12 10:05:53 2026     02-22:45:17 soullab          /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/Versions/A/XPCServices/MessagesBlastDoorService.xpc/Contents/MacOS/MessagesBlastDoorService
+22974 96046 Sun Sep 13 10:34:39 2026     01-22:16:31 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+23472     1 Sat Sep 12 10:27:50 2026     02-22:23:20 root             /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+23516     1 Fri Sep 11 08:02:36 2026     04-00:48:34 _hidd            /usr/libexec/hidd
+23517     1 Fri Sep 11 08:02:37 2026     04-00:48:33 soullab          /System/Library/PrivateFrameworks/BookLibraryCore.framework/Support/bookassetd
+23536     1 Fri Sep 11 08:02:55 2026     04-00:48:15 root             /usr/libexec/applekeystored
+23537     1 Fri Sep 11 08:02:55 2026     04-00:48:15 root             /private/var/db/com.apple.xpc.roleaccountd.staging/exec/16777234.304811336.xpc/Contents/MacOS/com.apple.MobileSoftwareUpdate.UpdateBrainService
+23543     1 Fri Sep 11 08:02:56 2026     04-00:48:14 soullab          /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+23570     1 Fri Sep 11 08:03:11 2026     04-00:47:59 soullab          /System/Library/Frameworks/QuickLook.framework/Versions/A/XPCServices/QuickLookSatellite.xpc/Contents/MacOS/QuickLookSatellite
+23571 96046 Sun Sep 13 10:39:29 2026     01-22:11:41 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+23606     1 Fri Sep 11 08:03:40 2026     04-00:47:30 soullab          /System/Library/CoreServices/Dock.app/Contents/XPCServices/DockHelper.xpc/Contents/MacOS/DockHelper
+23612     1 Tue Sep 15 01:52:33 2026        06:58:37 soullab          /System/Library/PrivateFrameworks/IntelligencePlatformCompute.framework/Versions/A/XPCServices/IntelligencePlatformComputeService.xpc/Contents/MacOS/IntelligencePlatformComputeService
+23766     1 Mon Sep  7 05:36:18 2026     08-03:14:52 _biome           /System/Library/PrivateFrameworks/BiomeStreams.framework/Support/biomed
+23777     1 Mon Sep  7 05:36:22 2026     08-03:14:48 root             /System/Library/Frameworks/Security.framework/Versions/A/XPCServices/com.apple.CodeSigningHelper.xpc/Contents/MacOS/com.apple.CodeSigningHelper
+23986 96046 Sun Sep 13 10:43:28 2026     01-22:07:42 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+24018 96046 Sun Sep 13 10:43:49 2026     01-22:07:21 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+24077 52424 Thu Sep 10 20:49:30 2026     04-12:01:40 soullab          /Applications/Xcode.app/Contents/SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/MacOS/SWBBuildService
+24156     1 Fri Sep 11 08:03:45 2026     04-00:47:25 soullab          /System/Library/Frameworks/StoreKit.framework/Support/storekitagent
+24600     1 Sun Sep 13 10:47:04 2026     01-22:04:06 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService
+24601     1 Sun Sep 13 10:47:04 2026     01-22:04:06 soullab          /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/XPCServices/SpeechSynthesisServerXPC.xpc/Contents/MacOS/SpeechSynthesisServerXPC
+24602     1 Sun Sep 13 10:47:04 2026     01-22:04:06 soullab          /System/Library/PrivateFrameworks/AccessibilitySupport.framework/Versions/A/Resources/AccessibilityVisualsAgent.app/Contents/MacOS/AccessibilityVisualsAgent
+24605     1 Sun Sep 13 10:47:07 2026     01-22:04:03 soullab          /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/XPCServices/SpeechSynthesisServerXPC.xpc/Contents/MacOS/SpeechSynthesisServerXPC
+24607     1 Sun Sep 13 10:47:07 2026     01-22:04:03 soullab          /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/XPCServices/SpeechSynthesisServerXPC.xpc/Contents/MacOS/SpeechSynthesisServerXPC
+24608     1 Sun Sep 13 10:47:07 2026     01-22:04:03 soullab          /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/XPCServices/SpeechSynthesisServerXPC.xpc/Contents/MacOS/SpeechSynthesisServerXPC
+24749     1 Fri Sep 11 08:06:36 2026     04-00:44:34 soullab          /Applications/Xcode.app/Contents/SharedFrameworks/DVTFoundation.framework/Versions/A/XPCServices/com.apple.dt.Xcode.DeveloperSystemPolicyService.xpc/Contents/MacOS/com.apple.dt.Xcode.DeveloperSystemPolicyService
+25968     1 Fri Sep 11 08:08:17 2026     04-00:42:53 soullab          /System/Library/Frameworks/ColorSync.framework/Support/colorsync.useragent
+25969     1 Fri Sep 11 08:08:17 2026     04-00:42:53 soullab          /System/Library/Frameworks/ColorSync.framework/Versions/A/XPCServices/com.apple.ColorSyncXPCAgent.xpc/Contents/MacOS/com.apple.ColorSyncXPCAgent
+25970     1 Fri Sep 11 08:08:17 2026     04-00:42:53 root             /usr/libexec/colorsyncd
+26110     1 Fri Sep 11 08:09:10 2026     04-00:42:00 soullab          /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/sourcekitd.framework/Versions/A/XPCServices/SourceKitService.xpc/Contents/MacOS/SourceKitService
+26112     1 Fri Sep 11 08:09:10 2026     04-00:42:00 soullab          /usr/libexec/spindump_agent
+26199     1 Sat Sep 12 11:10:35 2026     02-21:40:35 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+27466     1 Tue Sep 15 02:42:59 2026        06:08:11 soullab          /usr/libexec/duetexpertd
+27469     1 Tue Sep 15 02:43:03 2026        06:08:07 soullab          /System/Library/PrivateFrameworks/AppPredictionFoundation.framework/Versions/A/XPCServices/AppPredictionIntentsHelperService.xpc/Contents/MacOS/AppPredictionIntentsHelperService
+27531     1 Sat Sep 12 11:32:28 2026     02-21:18:42 _appinstalld     /System/Library/PrivateFrameworks/MobileInstallation.framework/Support/appinstalld
+27532     1 Sat Sep 12 11:32:28 2026     02-21:18:42 root             /System/Library/PrivateFrameworks/MobileInstallation.framework/XPCServices/com.apple.MobileInstallationHelperService.xpc/Contents/MacOS/com.apple.MobileInstallationHelperService
+27639     1 Sat Sep 12 11:34:30 2026     02-21:16:40 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/com.apple.appkit.xpc.openAndSavePanelService.xpc/Contents/MacOS/com.apple.appkit.xpc.openAndSavePanelService
+27640     1 Sat Sep 12 11:34:30 2026     02-21:16:40 soullab          /System/Library/Frameworks/QuickLookUI.framework/Versions/A/XPCServices/QuickLookUIService.xpc/Contents/MacOS/QuickLookUIService
+27642     1 Sat Sep 12 11:34:30 2026     02-21:16:40 soullab          /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+27644     1 Sat Sep 12 11:34:30 2026     02-21:16:40 soullab          /System/Library/ExtensionKit/Extensions/AudiovisualThumbnailExtension.appex/Contents/MacOS/AudiovisualThumbnailExtension
+27645     1 Sat Sep 12 11:34:30 2026     02-21:16:40 soullab          /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+27670     1 Sat Sep 12 11:34:47 2026     02-21:16:23 soullab          /System/Applications/Books.app/Contents/PlugIns/BooksThumbnail.appex/Contents/MacOS/BooksThumbnail
+27680     1 Sat Sep 12 11:34:55 2026     02-21:16:15 soullab          /System/Library/ExtensionKit/Extensions/PackageThumbnailExtension.appex/Contents/MacOS/PackageThumbnailExtension
+28136     1 Fri Sep 11 08:21:38 2026     04-00:29:32 _modelmanagerd   /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+28137     1 Fri Sep 11 08:21:38 2026     04-00:29:32 _modelmanagerd   /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+28151     1 Fri Sep 11 08:21:52 2026     04-00:29:18 soullab          /System/Library/PrivateFrameworks/PaperKit.framework/Contents/LinkedNotesUIService.app/Contents/MacOS/LinkedNotesUIService
+28422     1 Sat Sep 12 11:40:07 2026     02-21:11:03 soullab          /System/Library/Frameworks/GroupActivities.framework/Versions/A/XPCServices/GroupSessionService.xpc/Contents/MacOS/GroupSessionService
+29827     1 Fri Sep 11 08:44:04 2026     04-00:07:06 soullab          /System/Library/Frameworks/Translation.framework/translationd
+29838     1 Mon Sep  7 07:06:07 2026     08-01:45:03 soullab          /System/Library/PrivateFrameworks/TCC.framework/Support/tccd
+30062 96046 Fri Sep 11 08:47:14 2026     04-00:03:56 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+30065 96046 Fri Sep 11 08:47:15 2026     04-00:03:55 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+30066 96046 Fri Sep 11 08:47:16 2026     04-00:03:54 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+30089     1 Fri Sep 11 08:47:44 2026     04-00:03:26 soullab          /System/Library/Frameworks/CoreGraphics.framework/Versions/A/XPCServices/CGPDFService.xpc/Contents/MacOS/CGPDFService
+30090     1 Fri Sep 11 08:47:44 2026     04-00:03:26 soullab          /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+30139     1 Tue Sep 15 03:17:59 2026        05:33:11 soullab          /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsagent
+30185     1 Sat Sep 12 11:46:45 2026     02-21:04:25 root             /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+30422     1 Fri Sep 11 08:55:03 2026     03-23:56:07 soullab          /System/Library/ExtensionKit/Extensions/OfficeThumbnailExtension.appex/Contents/MacOS/OfficeThumbnailExtension
+30423     1 Fri Sep 11 08:55:03 2026     03-23:56:07 soullab          /System/Library/ExtensionKit/Extensions/WebThumbnailExtension.appex/Contents/MacOS/WebThumbnailExtension
+30424     1 Fri Sep 11 08:55:03 2026     03-23:56:07 soullab          /System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.GPU.xpc/Contents/MacOS/com.apple.WebKit.GPU
+30426     1 Fri Sep 11 08:55:03 2026     03-23:56:07 soullab          /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+30444     1 Fri Sep 11 08:55:07 2026     03-23:56:03 soullab          /usr/libexec/naturallanguaged
+30850     1 Mon Sep  7 07:21:15 2026     08-01:29:55 soullab          /usr/libexec/knowledge-agent
+31124     1 Fri Sep 11 09:06:35 2026     03-23:44:35 soullab          /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/Versions/A/XPCServices/MessagesBlastDoorService.xpc/Contents/MacOS/MessagesBlastDoorService
+31150     1 Sat Sep  5 09:39:08 2026     09-23:12:02 soullab          /System/Library/PrivateFrameworks/ScreenTimeCore.framework/Versions/A/ScreenTimeAgent
+31732     1 Mon Sep  7 07:34:47 2026     08-01:16:23 soullab          /System/Library/PrivateFrameworks/Synapse.framework/Support/contentlinkingd
+31739     1 Mon Sep  7 07:34:50 2026     08-01:16:20 soullab          /usr/libexec/SidecarRelay
+31955     1 Mon Sep  7 07:37:44 2026     08-01:13:26 soullab          /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/XPCServices/com.apple.hiservices-xpcservice.xpc/Contents/MacOS/com.apple.hiservices-xpcservice
+32239 96046 Sun Sep 13 22:04:54 2026     01-10:46:16 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+32707 96046 Sun Sep 13 22:05:13 2026     01-10:45:57 soullab          /Applications/Claude.app/Contents/Helpers/chrome-native-host
+33104     1 Mon Sep  7 07:54:07 2026     08-00:57:03 soullab          /usr/libexec/bluetoothuserd
+33147     1 Mon Sep  7 07:54:26 2026     08-00:56:44 soullab          /usr/libexec/proactived
+33873     1 Sat Sep  5 09:54:43 2026     09-22:56:27 soullab          /bin/bash
+33876 33873 Sat Sep  5 09:54:43 2026     09-22:56:27 soullab          docker
+33877 33873 Sat Sep  5 09:54:43 2026     09-22:56:27 soullab          grep
+33927     1 Wed Sep  2 08:36:56 2026     13-00:14:14 soullab          /System/Library/CoreServices/rcd.app/Contents/MacOS/rcd
+34004 96046 Fri Sep 11 09:31:03 2026     03-23:20:07 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+34353 96046 Sun Sep 13 22:10:29 2026     01-10:40:41 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+34491     1 Sat Sep 12 12:46:02 2026     02-20:05:08 soullab          /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+34558     1 Fri Sep 11 09:38:42 2026     03-23:12:28 root             /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+34931     1 Tue Sep 15 04:21:25 2026        04:29:45 soullab          /System/Applications/Stocks.app/Contents/PlugIns/StocksWidget.appex/Contents/MacOS/StocksWidget
+35416     1 Fri Sep 11 09:53:07 2026     03-22:58:03 soullab          /System/Library/Frameworks/SafariServices.framework/Versions/A/XPCServices/com.apple.SafariServices.xpc/Contents/MacOS/com.apple.SafariServices
+35448 96046 Fri Sep 11 09:53:50 2026     03-22:57:20 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+36179     1 Thu Sep  3 07:57:36 2026     12-00:53:34 soullab          /Applications/Proton Mail.app/Contents/MacOS/Proton Mail
+36182     1 Thu Sep  3 07:57:36 2026     12-00:53:34 soullab          /Applications/Proton Mail.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+36184 36179 Thu Sep  3 07:57:36 2026     12-00:53:34 soullab          /Applications/Proton Mail.app/Contents/Frameworks/Proton Mail Helper.app/Contents/MacOS/Proton Mail Helper
+36185 36179 Thu Sep  3 07:57:36 2026     12-00:53:34 soullab          /Applications/Proton Mail.app/Contents/Frameworks/Proton Mail Helper.app/Contents/MacOS/Proton Mail Helper
+36188 36179 Thu Sep  3 07:57:36 2026     12-00:53:34 soullab          /Applications/Proton Mail.app/Contents/Frameworks/Proton Mail Helper (Renderer).app/Contents/MacOS/Proton Mail Helper (Renderer)
+36191 36179 Thu Sep  3 07:57:38 2026     12-00:53:32 soullab          /Applications/Proton Mail.app/Contents/Frameworks/Proton Mail Helper (Renderer).app/Contents/MacOS/Proton Mail Helper (Renderer)
+36192 36179 Thu Sep  3 07:57:38 2026     12-00:53:32 soullab          /Applications/Proton Mail.app/Contents/Frameworks/Proton Mail Helper (Renderer).app/Contents/MacOS/Proton Mail Helper (Renderer)
+36466     1 Fri Sep 11 10:10:31 2026     03-22:40:39 root             /System/Library/CoreServices/iconservicesagent
+36470     1 Fri Sep 11 10:10:33 2026     03-22:40:37 root             /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+36472     1 Fri Sep 11 10:10:34 2026     03-22:40:36 root             /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+36539     1 Sun Sep 13 22:26:49 2026     01-10:24:21 soullab          /System/Library/Services/AppleSpell.service/Contents/MacOS/AppleSpell
+36606     1 Fri Sep 11 10:13:37 2026     03-22:37:33 root             /usr/libexec/powerexperienced
+36609     1 Fri Sep 11 10:13:37 2026     03-22:37:33 soullab          /System/Library/PrivateFrameworks/ToneLibrary.framework/Versions/A/XPCServices/com.apple.tonelibraryd.xpc/Contents/MacOS/com.apple.tonelibraryd
+36610     1 Fri Sep 11 10:13:37 2026     03-22:37:33 soullab          /System/Library/PrivateFrameworks/TelephonyUtilities.framework/XPCServices/com.apple.FaceTime.FTConversationService.xpc/Contents/MacOS/com.apple.FaceTime.FTConversationService
+36611     1 Fri Sep 11 10:13:38 2026     03-22:37:32 soullab          /System/Library/PrivateFrameworks/CallHistory.framework/Support/CallHistoryPluginHelper
+36619     1 Fri Sep 11 10:13:41 2026     03-22:37:29 soullab          /System/Library/PrivateFrameworks/CallHistory.framework/Support/CallHistorySyncHelper
+36689     1 Thu Sep  3 08:07:38 2026     12-00:43:32 soullab          /System/Library/Frameworks/QuickLookUI.framework/Versions/A/PlugIns/QLPreviewGenerationExtension.appex/Contents/MacOS/QLPreviewGenerationExtension
+36925 67980 Sat Sep 12 13:22:09 2026     02-19:29:01 soullab          /Applications/TIDAL.app/Contents/Frameworks/TIDAL Helper.app/Contents/MacOS/TIDAL Helper
+36999     1 Fri Sep 11 10:20:10 2026     03-22:31:00 soullab          /Applications/WhatsApp.app/Contents/PlugIns/ServiceExtension.appex/Contents/MacOS/ServiceExtension
+37021     1 Fri Sep 11 10:20:32 2026     03-22:30:38 root             /System/Library/PrivateFrameworks/CoreKDL.framework/Support/corekdld
+37484     1 Wed Sep  2 09:16:56 2026     12-23:34:14 soullab          /Applications/Firefox.app/Contents/MacOS/firefox
+37488     1 Wed Sep  2 09:16:59 2026     12-23:34:11 soullab          /Applications/Firefox.app/Contents/MacOS/crashhelper
+37489 37484 Wed Sep  2 09:16:59 2026     12-23:34:11 soullab          /Applications/Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+37490 37484 Wed Sep  2 09:16:59 2026     12-23:34:11 soullab          /Applications/Firefox.app/Contents/MacOS/gpu-helper.app/Contents/MacOS/Firefox GPU Helper
+37492 37484 Wed Sep  2 09:17:00 2026     12-23:34:10 soullab          /Applications/Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+37493 37484 Wed Sep  2 09:17:00 2026     12-23:34:10 soullab          /Applications/Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+37495 37484 Wed Sep  2 09:17:01 2026     12-23:34:09 soullab          /Applications/Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+37496 37484 Wed Sep  2 09:17:01 2026     12-23:34:09 soullab          /Applications/Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+37497 37484 Wed Sep  2 09:17:01 2026     12-23:34:09 soullab          /Applications/Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+39673     1 Sat Sep 12 13:54:00 2026     02-18:57:10 soullab          /Applications/Zen.app/Contents/MacOS/zen
+39678 39673 Sat Sep 12 13:54:02 2026     02-18:57:08 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+39679 39673 Sat Sep 12 13:54:03 2026     02-18:57:07 soullab          /Applications/Zen.app/Contents/MacOS/gpu-helper.app/Contents/MacOS/Zen GPU Helper
+39680 39673 Sat Sep 12 13:54:03 2026     02-18:57:07 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+39681 39673 Sat Sep 12 13:54:03 2026     02-18:57:07 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+39682     1 Sat Sep 12 13:54:03 2026     02-18:57:07 soullab          /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+39696     1 Sat Sep 12 13:54:16 2026     02-18:56:54 soullab          /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/Versions/A/XPCServices/MessagesBlastDoorService.xpc/Contents/MacOS/MessagesBlastDoorService
+41593     1 Mon Sep 14 16:02:45 2026        16:48:25 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+41594     1 Mon Sep 14 16:02:45 2026        16:48:25 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+41813     1 Thu Sep 10 02:34:26 2026     05-06:16:44 soullab          /System/Cryptexes/App/usr/libexec/webinspectord
+42347     1 Thu Sep 10 21:29:55 2026     04-11:21:15 root             /System/Library/PrivateFrameworks/PackageKit.framework/Resources/installd
+42349     1 Tue Sep  8 21:55:19 2026     06-10:55:51 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/com.apple.appkit.xpc.openAndSavePanelService.xpc/Contents/MacOS/com.apple.appkit.xpc.openAndSavePanelService
+42351     1 Tue Sep  8 21:55:19 2026     06-10:55:51 soullab          /System/Library/Frameworks/QuickLookUI.framework/Versions/A/XPCServices/QuickLookUIService.xpc/Contents/MacOS/QuickLookUIService
+42352     1 Thu Sep 10 21:29:55 2026     04-11:21:15 root             /System/Library/PrivateFrameworks/PackageKit.framework/Resources/system_installd
+43019     1 Fri Sep 11 11:42:04 2026     03-21:09:06 soullab          /System/Library/PrivateFrameworks/CloudPhotoServices.framework/Versions/A/XPCServices/com.apple.CloudPhotosConfiguration.xpc/Contents/MacOS/com.apple.CloudPhotosConfiguration
+43025     1 Fri Sep 11 11:42:05 2026     03-21:09:05 soullab          /usr/libexec/studentd
+43026     1 Fri Sep 11 11:42:05 2026     03-21:09:05 soullab          /System/Library/Frameworks/ClassKit.framework/Versions/A/progressd
+43063     1 Fri Sep 11 11:42:16 2026     03-21:08:54 root             /System/Library/PrivateFrameworks/SystemAdministration.framework/XPCServices/writeconfig.xpc/Contents/MacOS/writeconfig
+43143  4469 Thu Sep 10 21:33:56 2026     04-11:17:14 soullab          /Applications/Loom.app/Contents/Frameworks/Loom Helper (Renderer).app/Contents/MacOS/Loom Helper (Renderer)
+43152     1 Sun Aug 30 16:20:06 2026     15-16:31:04 soullab          /System/Library/PrivateFrameworks/KerberosHelper/Helpers/DiskUnmountWatcher
+43636     1 Tue Sep  1 20:10:48 2026     13-12:40:22 soullab          /System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal
+43660     1 Fri Sep  4 08:54:48 2026     10-23:56:22 soullab          /Applications/Docker.app/Contents/MacOS/com.docker.backend
+43679 43660 Fri Sep  4 08:54:48 2026     10-23:56:22 soullab          /Applications/Docker.app/Contents/MacOS/com.docker.backend
+43680 43660 Fri Sep  4 08:54:48 2026     10-23:56:22 soullab          /Applications/Docker.app/Contents/MacOS/com.docker.backend
+43698 43680 Fri Sep  4 08:54:48 2026     10-23:56:22 soullab          /Applications/Docker.app/Contents/MacOS/com.docker.build
+43702 43680 Fri Sep  4 08:54:48 2026     10-23:56:22 soullab          /Applications/Docker.app/Contents/Resources/cli-plugins/docker-sandbox
+43703 43680 Fri Sep  4 08:54:48 2026     10-23:56:22 soullab          /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/MacOS/Docker Desktop
+43718 43703 Fri Sep  4 08:54:49 2026     10-23:56:21 soullab          /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/Frameworks/Docker Desktop Helper (GPU).app/Contents/MacOS/Docker Desktop Helper (GPU)
+43720 43703 Fri Sep  4 08:54:49 2026     10-23:56:21 soullab          /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/Frameworks/Docker Desktop Helper.app/Contents/MacOS/Docker Desktop Helper
+43757 43680 Fri Sep  4 08:54:49 2026     10-23:56:21 soullab          /Applications/Docker.app/Contents/Resources/cli-plugins/docker-agent
+43861     1 Thu Sep 10 21:36:21 2026     04-11:14:49 _softwareupdate  /System/Library/CoreServices/Software Update.app/Contents/Resources/softwareupdated
+45416     1 Thu Sep 10 21:42:50 2026     04-11:08:20 soullab          /System/Applications/Preview.app/Contents/MacOS/Preview
+45470     1 Thu Sep 10 21:42:52 2026     04-11:08:18 soullab          /System/Library/Frameworks/ImageCaptureCore.framework/Versions/A/XPCServices/mscamerad-xpc.xpc/Contents/MacOS/mscamerad-xpc
+45547     1 Thu Sep 10 21:42:53 2026     04-11:08:17 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/com.apple.appkit.xpc.openAndSavePanelService.xpc/Contents/MacOS/com.apple.appkit.xpc.openAndSavePanelService
+45560     1 Thu Sep 10 21:42:53 2026     04-11:08:17 soullab          /System/Library/Frameworks/QuickLookUI.framework/Versions/A/XPCServices/QuickLookUIService.xpc/Contents/MacOS/QuickLookUIService
+46415     1 Mon Sep 14 16:24:15 2026        16:26:55 soullab          /System/Library/PrivateFrameworks/SiriTTSService.framework/Versions/A/XPCServices/com.apple.SiriTTSService.TrialProxy.xpc/Contents/MacOS/com.apple.SiriTTSService.TrialProxy
+46883     1 Fri Sep 11 12:24:23 2026     03-20:26:47 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+46884     1 Fri Sep 11 12:24:23 2026     03-20:26:47 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+46903     1 Sun Sep  6 12:39:42 2026     08-20:11:28 soullab          /System/Cryptexes/App/usr/libexec/PasswordBreachAgent
+47233     1 Tue Sep 15 07:04:14 2026        01:46:56 soullab          /System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Versions/A/Support/corespotlightd
+47275 39673 Mon Sep 14 16:27:15 2026        16:23:55 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+47351     1 Wed Sep  9 12:35:26 2026     05-20:15:44 soullab          /Applications/Google Drive.app/Contents/MacOS/crashpad_handler
+47775 39673 Mon Sep 14 16:30:01 2026        16:21:09 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+47929     1 Fri Sep 11 12:39:51 2026     03-20:11:19 soullab          /usr/libexec/betaenrollmentagent
+47931     1 Fri Sep 11 12:39:51 2026     03-20:11:19 root             /usr/libexec/betaenrollmentd
+48072     1 Fri Sep 11 12:42:28 2026     03-20:08:42 _accessoryupdater /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/Support/accessoryupdaterd
+48309     1 Tue Sep 15 07:16:21 2026        01:34:49 soullab          /System/Library/Frameworks/CoreSpotlight.framework/spotlightknowledged
+48453     1 Wed Sep  2 11:08:19 2026     12-21:42:51 root             /usr/libexec/PowerUIAgent
+48788 96046 Tue Sep 15 07:22:30 2026        01:28:40 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+48854     1 Fri Sep 11 12:55:32 2026     03-19:55:38 root             /usr/libexec/ASPCarryLog
+48974     1 Tue Sep 15 07:25:23 2026        01:25:47 soullab          /System/Applications/System Settings.app/Contents/MacOS/System Settings
+48975     1 Tue Sep 15 07:25:23 2026        01:25:47 soullab          /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+48976     1 Tue Sep 15 07:25:23 2026        01:25:47 soullab          /System/Library/ExtensionKit/Extensions/AppleIDSettings.appex/Contents/MacOS/AppleIDSettings
+48977     1 Tue Sep 15 07:25:23 2026        01:25:47 soullab          /System/Applications/System Settings.app/Contents/PlugIns/GeneralSettings.appex/Contents/MacOS/GeneralSettings
+48980     1 Tue Sep 15 07:25:24 2026        01:25:46 soullab          /System/Library/ExtensionKit/Extensions/VPN.appex/Contents/MacOS/VPN
+48981     1 Tue Sep 15 07:25:24 2026        01:25:46 soullab          /System/Library/ExtensionKit/Extensions/FollowUpSettingsExtension.appex/Contents/MacOS/FollowUpSettingsExtension
+48982     1 Tue Sep 15 07:25:24 2026        01:25:46 soullab          /System/Library/ExtensionKit/Extensions/HeadphoneSettingsExtension.appex/Contents/MacOS/HeadphoneSettingsExtension
+48983     1 Tue Sep 15 07:25:24 2026        01:25:46 soullab          /System/Library/ExtensionKit/Extensions/FamilySettings.appex/Contents/MacOS/FamilySettings
+48984     1 Tue Sep 15 07:25:24 2026        01:25:46 soullab          /System/Library/ExtensionKit/Extensions/ClassroomSettings.appex/Contents/MacOS/ClassroomSettings
+49015     1 Tue Sep 15 07:25:29 2026        01:25:41 soullab          /System/Library/ExtensionKit/Extensions/Sound.appex/Contents/MacOS/Sound
+49431 96046 Tue Sep 15 07:30:57 2026        01:20:13 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+50628     1 Mon Sep 14 16:44:56 2026        16:06:14 soullab          /Library/Apple/System/Library/CoreServices/XProtect.app/Contents/XPCServices/XProtectPluginService.xpc/Contents/MacOS/XProtectPluginService
+50711     1 Thu Sep 10 21:56:26 2026     04-10:54:44 soullab          /usr/libexec/pkd
+51421 96046 Tue Sep 15 07:31:55 2026        01:19:15 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+51425 96046 Tue Sep 15 07:31:58 2026        01:19:12 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+52112     1 Tue Sep 15 07:37:52 2026        01:13:18 soullab          /System/Library/PrivateFrameworks/ShareKit.framework/Versions/A/PlugIns/ShareSheetUI.appex/Contents/MacOS/ShareSheetUI
+52146 96046 Sat Sep 12 15:14:29 2026     02-17:36:41 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+52424     1 Wed Sep  2 11:55:02 2026     12-20:56:08 soullab          /Applications/Xcode.app/Contents/MacOS/Xcode
+52434     1 Wed Sep  2 11:55:05 2026     12-20:56:05 soullab          /Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/XPCServices/com.apple.CoreSimulator.CoreSimulatorService.xpc/Contents/MacOS/com.apple.CoreSimulator.CoreSimulatorService
+52435     1 Wed Sep  2 11:55:05 2026     12-20:56:05 soullab          /Library/Developer/PrivateFrameworks/CoreDevice.framework/Versions/A/XPCServices/CoreDeviceService.xpc/Contents/MacOS/CoreDeviceService
+52436     1 Wed Sep  2 11:55:05 2026     12-20:56:05 soullab          /Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/XPCServices/SimulatorTrampoline.xpc/Contents/MacOS/SimulatorTrampoline
+52453     1 Wed Sep  2 11:55:06 2026     12-20:56:04 soullab          /Applications/Xcode.app/Contents/SharedFrameworks/SourceKit.framework/Versions/A/XPCServices/com.apple.dt.SKAgent.xpc/Contents/MacOS/com.apple.dt.SKAgent
+52502     1 Wed Sep  2 11:55:07 2026     12-20:56:03 soullab          /Applications/Xcode.app/Contents/PlugIns/GPUDebugger.ideplugin/Contents/Frameworks/GPUToolsTransportAgents.framework/Versions/A/XPCServices/GPUToolsCompatService.xpc/Contents/MacOS/GPUToolsCompatService
+52503     1 Wed Sep  2 11:55:07 2026     12-20:56:03 soullab          /usr/libexec/gputoolsserviced
+52504     1 Wed Sep  2 11:55:07 2026     12-20:56:03 soullab          /Applications/Xcode.app/Contents/PlugIns/GPUDebugger.ideplugin/Contents/Frameworks/GPUToolsTransportAgents.framework/Versions/A/XPCServices/GPUToolsAgentService.xpc/Contents/MacOS/GPUToolsAgentService
+52713     1 Sun Aug 30 17:28:47 2026     15-15:22:23 _audiomxd        /usr/sbin/distnoted
+52884 96046 Tue Sep 15 07:46:41 2026        01:04:29 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+53428     1 Fri Sep  4 20:14:33 2026     10-12:36:37 root             /usr/libexec/diagnosticd
+54123     1 Mon Sep 14 02:08:18 2026     01-06:42:52 soullab          /System/Library/PrivateFrameworks/EmailDaemon.framework/Versions/A/maild
+54243 96046 Tue Sep 15 07:59:16 2026           51:54 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+54266     1 Thu Sep  3 11:42:49 2026     11-21:08:21 soullab          /Applications/Camo Studio.app/Contents/MacOS/Camo Studio
+54267     1 Thu Sep  3 11:42:50 2026     11-21:08:20 root             /System/Library/Frameworks/SystemExtensions.framework/Versions/A/Helpers/sysextd
+54271     1 Thu Sep  3 11:42:50 2026     11-21:08:20 soullab          /System/Library/Frameworks/CoreML.framework/Versions/A/XPCServices/CoreMLModelSecurityService.xpc/Contents/MacOS/CoreMLModelSecurityService
+56661     1 Fri Sep  4 20:20:22 2026     10-12:30:48 soullab          /usr/bin/log
+56732 96046 Mon Sep 14 17:09:09 2026        15:42:01 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+58061 96046 Tue Sep 15 08:25:24 2026           25:46 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+59203     1 Thu Sep 10 08:41:31 2026     05-00:09:39 soullab          /System/Library/Frameworks/ApplicationServices.framework/Frameworks/PrintCore.framework/Versions/A/printtool
+59220     1 Thu Sep 10 08:41:39 2026     05-00:09:31 _lp              /usr/sbin/distnoted
+59633     1 Thu Sep 10 08:51:26 2026     04-23:59:44 root             /usr/sbin/cupsd
+60391     1 Mon Sep 14 17:30:38 2026        15:20:32 soullab          /Applications/Claude.app/Contents/MacOS/Claude
+60393     1 Mon Sep 14 17:30:39 2026        15:20:31 soullab          /Applications/Claude.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+60394 60391 Mon Sep 14 17:30:39 2026        15:20:31 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper
+60396 60391 Mon Sep 14 17:30:39 2026        15:20:31 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper
+60403 60391 Mon Sep 14 17:30:39 2026        15:20:31 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer)
+60464 60391 Mon Sep 14 17:30:39 2026        15:20:31 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer)
+60466     1 Thu Sep 10 22:04:34 2026     04-10:46:36 soullab          /usr/libexec/triald
+60782 60391 Mon Sep 14 17:30:40 2026        15:20:30 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper
+60783 60391 Mon Sep 14 17:30:40 2026        15:20:30 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper
+60784     1 Mon Sep 14 17:30:40 2026        15:20:30 soullab          /System/Library/PrivateFrameworks/SiriTTSService.framework/Versions/A/XPCServices/com.apple.SiriTTSService.TrialProxy.xpc/Contents/MacOS/com.apple.SiriTTSService.TrialProxy
+60830 60391 Mon Sep 14 17:30:40 2026        15:20:30 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper
+60831 60391 Mon Sep 14 17:30:40 2026        15:20:30 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper
+60846     1 Thu Sep 10 22:05:25 2026     04-10:45:45 root             /usr/libexec/mobileactivationd
+60865 60391 Mon Sep 14 17:30:40 2026        15:20:30 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper
+60866 60391 Mon Sep 14 17:30:40 2026        15:20:30 soullab          /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper
+60870     1 Thu Sep 10 22:05:51 2026     04-10:45:19 soullab          /System/Library/Frameworks/ManagedSettings.framework/Versions/A/ManagedSettingsAgent
+60881     1 Thu Sep 10 22:05:56 2026     04-10:45:14 soullab          /System/Library/CoreServices/CoreLocationAgent.app/Contents/MacOS/CoreLocationAgent
+60882     1 Thu Sep 10 22:05:56 2026     04-10:45:14 root             /usr/libexec/nehelper
+60883     1 Thu Sep 10 22:05:56 2026     04-10:45:14 soullab          /System/Library/PrivateFrameworks/SyncedDefaults.framework/Support/syncdefaultsd
+60885     1 Thu Sep 10 22:05:56 2026     04-10:45:14 root             /usr/libexec/usermanagerd
+60991     1 Fri Sep  4 20:35:12 2026     10-12:15:58 soullab          /Applications/Google Drive.app/Contents/MacOS/crashpad_handler
+61343 96046 Mon Sep 14 17:34:49 2026        15:16:21 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+61353     1 Thu Sep 10 22:06:03 2026     04-10:45:07 root             /usr/libexec/mobileassetd
+61383     1 Thu Sep 10 22:06:04 2026     04-10:45:06 soullab          /System/Library/PrivateFrameworks/AssistantServices.framework/Versions/A/Support/assistantd
+61384     1 Thu Sep 10 22:06:04 2026     04-10:45:06 root             /System/Library/PrivateFrameworks/ModelCatalogRuntime.framework/Versions/A/modelcatalogd
+61390     1 Thu Sep 10 22:06:04 2026     04-10:45:06 soullab          /usr/libexec/neagent
+61393     1 Thu Sep 10 22:06:05 2026     04-10:45:05 _fpsd            /System/Library/PrivateFrameworks/CoreADI.framework/adid
+61397     1 Thu Sep 10 22:06:05 2026     04-10:45:05 soullab          /usr/libexec/networkserviceproxy
+61400     1 Thu Sep 10 22:06:05 2026     04-10:45:05 root             /usr/libexec/logd_helper
+61404     1 Thu Sep 10 22:06:05 2026     04-10:45:05 root             /usr/libexec/wifip2pd
+61412     1 Thu Sep 10 22:06:06 2026     04-10:45:04 soullab          /usr/libexec/secinitd
+61414     1 Thu Sep 10 22:06:06 2026     04-10:45:04 root             /usr/libexec/containermanagerd_system
+61416     1 Thu Sep 10 22:06:06 2026     04-10:45:04 soullab          /usr/libexec/replayd
+61421     1 Thu Sep 10 22:06:06 2026     04-10:45:04 soullab          /System/Library/PrivateFrameworks/AppleMediaServices.framework/Resources/amsaccountsd
+61422     1 Thu Sep 10 22:06:06 2026     04-10:45:04 soullab          /System/Library/PrivateFrameworks/AppleMediaServicesUI.framework/amsengagementd
+61425     1 Thu Sep 10 22:06:07 2026     04-10:45:03 soullab          /usr/libexec/swcd
+61427     1 Thu Sep 10 22:06:09 2026     04-10:45:01 root             /System/Library/PrivateFrameworks/TVIdleServices.framework/idleassetsd
+61515     1 Thu Sep 10 22:06:50 2026     04-10:44:20 root             /usr/libexec/triald_system
+61516     1 Thu Sep 10 22:06:51 2026     04-10:44:19 soullab          /System/Library/PrivateFrameworks/AXAssetLoader.framework/Support/axassetsd
+61528     1 Thu Sep 10 22:06:52 2026     04-10:44:18 soullab          /System/Library/PrivateFrameworks/MacinTalk.framework/Versions/A/PlugIns/WardaSynthesizer_x86_64.appex/Contents/MacOS/WardaSynthesizer_x86_64
+61530     1 Thu Sep 10 22:06:52 2026     04-10:44:18 soullab          /System/Library/PrivateFrameworks/MacinTalk.framework/Versions/A/PlugIns/WardaSynthesizer_arm64.appex/Contents/MacOS/WardaSynthesizer_arm64
+61531     1 Thu Sep 10 22:06:52 2026     04-10:44:18 soullab          /System/Library/PrivateFrameworks/TextToSpeech.framework/PlugIns/SiriAUSP.appex/Contents/MacOS/SiriAUSP
+61532     1 Thu Sep 10 22:06:52 2026     04-10:44:18 soullab          /System/Library/PrivateFrameworks/TextToSpeechMauiSupport.framework/Versions/A/PlugIns/MauiAUSP.appex/Contents/MacOS/MauiAUSP
+61533     1 Thu Sep 10 22:06:52 2026     04-10:44:18 soullab          /System/Library/PrivateFrameworks/TextToSpeechKonaSupport.framework/Versions/A/PlugIns/KonaSynthesizer.appex/Contents/MacOS/KonaSynthesizer
+61536     1 Thu Sep 10 22:06:52 2026     04-10:44:18 soullab          /System/Library/PrivateFrameworks/MacinTalk.framework/Versions/A/PlugIns/MacinTalkAUSP.appex/Contents/MacOS/MacinTalkAUSP
+61826     1 Thu Sep 10 22:09:12 2026     04-10:41:58 root             /System/Library/CoreServices/TimeMachine/backupd-helper
+61847     1 Thu Sep 10 22:09:29 2026     04-10:41:41 root             /usr/libexec/amfid
+62105     1 Thu Sep 10 22:11:56 2026     04-10:39:14 root             /usr/libexec/sandboxd
+62177     1 Thu Sep 10 22:13:17 2026     04-10:37:53 soullab          /System/Library/PrivateFrameworks/iCloudDriveService.framework/XPCServices/ContainerMetadataExtractor.xpc/Contents/MacOS/ContainerMetadataExtractor
+62181     1 Thu Sep 10 22:13:19 2026     04-10:37:51 soullab          /System/Library/PrivateFrameworks/CalendarDaemon.framework/Support/calaccessd
+62221     1 Thu Sep 10 22:13:54 2026     04-10:37:16 root             /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+62222     1 Thu Sep 10 22:13:54 2026     04-10:37:16 root             /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XProtectBridgeService.xpc/Contents/MacOS/XProtectBridgeService
+62587 96046 Tue Sep 15 08:40:28 2026           10:42 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62589 96046 Tue Sep 15 08:40:30 2026           10:40 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62590 39673 Tue Sep 15 08:40:31 2026           10:39 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+62614 39673 Tue Sep 15 08:41:06 2026           10:04 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+62692     1 Tue Sep 15 08:42:00 2026           09:10 soullab          /System/Library/PrivateFrameworks/AOSKit.framework/Versions/A/XPCServices/com.apple.iCloudHelper.xpc/Contents/MacOS/com.apple.iCloudHelper
+62957 39673 Tue Sep 15 08:46:07 2026           05:03 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+63178     1 Tue Sep 15 08:49:24 2026           01:46 root             /usr/libexec/taskgated-helper
+63295     1 Wed Sep  2 14:31:42 2026     12-18:19:28 soullab          /System/Library/Frameworks/QuickLookUI.framework/Versions/A/XPCServices/QuickLookUIService.xpc/Contents/MacOS/QuickLookUIService
+63308 96046 Tue Sep 15 08:50:40 2026           00:30 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+63349 39673 Tue Sep 15 08:51:08 2026           00:02 soullab          /Applications/Zen.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+63791     1 Thu Sep 10 22:29:41 2026     04-10:21:29 root             /usr/libexec/storagekitd
+63794     1 Thu Sep 10 22:29:42 2026     04-10:21:28 soullab          /System/Library/PrivateFrameworks/CacheDelete.framework/deleted
+63817     1 Thu Sep 10 22:29:42 2026     04-10:21:28 root             /System/Library/PrivateFrameworks/CacheDelete.framework/deleted_helper
+63818     1 Thu Sep 10 22:29:42 2026     04-10:21:28 soullab          /System/Library/Frameworks/QuickLookThumbnailing.framework/Support/com.apple.quicklook.ThumbnailsAgent
+63819     1 Thu Sep 10 22:29:42 2026     04-10:21:28 _neuralengine    /usr/libexec/aneuserd
+63820     1 Thu Sep 10 22:29:42 2026     04-10:21:28 root             /System/Library/PrivateFrameworks/CoreSymbolication.framework/coresymbolicationd
+63821     1 Thu Sep 10 22:29:42 2026     04-10:21:28 soullab          /System/Library/PrivateFrameworks/GeoServices.framework/geodMachServiceBridge
+63822     1 Thu Sep 10 22:29:42 2026     04-10:21:28 root             /System/Library/PrivateFrameworks/CloudKitDaemon.framework/Support/cloudd
+63823     1 Thu Sep 10 22:29:42 2026     04-10:21:28 _assetcache      /usr/libexec/AssetCache/AssetCache
+64888     1 Thu Sep 10 22:30:07 2026     04-10:21:03 soullab          /usr/libexec/MTLAssetUpgraderD
+64892     1 Thu Sep 10 22:30:07 2026     04-10:21:03 soullab          /Applications/Xcode.app/Contents/SharedFrameworks/DVTITunesSoftware.framework/Versions/A/XPCServices/com.apple.dt.Xcode.ITunesSoftwareService.xpc/Contents/MacOS/com.apple.dt.Xcode.ITunesSoftwareService
+64907 52424 Thu Sep 10 22:30:18 2026     04-10:20:52 soullab          /Applications/Xcode.app/Contents/SharedFrameworks/LLDBRPC.framework/Resources/lldb-rpc-server
+64908     1 Thu Sep 10 22:30:19 2026     04-10:20:51 soullab          /System/Library/PrivateFrameworks/ReplicatorCore.framework/Support/replicatord
+64914     1 Thu Sep 10 22:30:23 2026     04-10:20:47 soullab          /System/Library/CoreServices/iconservicesagent
+64915     1 Thu Sep 10 22:30:23 2026     04-10:20:47 _iconservices    /System/Library/CoreServices/iconservicesd
+64916     1 Thu Sep 10 22:30:23 2026     04-10:20:47 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+64917     1 Thu Sep 10 22:30:23 2026     04-10:20:47 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+64937     1 Thu Sep 10 22:30:52 2026     04-10:20:18 soullab          /System/Library/PrivateFrameworks/AppStoreDaemon.framework/Support/appstoreagent
+64938     1 Thu Sep 10 22:30:52 2026     04-10:20:18 soullab          /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/XPCServices/csnameddatad.xpc/Contents/MacOS/csnameddatad
+64941     1 Thu Sep 10 22:30:52 2026     04-10:20:18 _installcoordinationd /System/Library/PrivateFrameworks/InstallCoordination.framework/Support/installcoordinationd
+64942     1 Thu Sep 10 22:30:52 2026     04-10:20:18 root             /System/Library/PrivateFrameworks/AppStoreDaemon.framework/Versions/A/XPCServices/com.apple.AppStoreDaemon.StorePrivilegedODRService.xpc/Contents/MacOS/com.apple.AppStoreDaemon.StorePrivilegedODRService
+64943     1 Thu Sep 10 22:30:52 2026     04-10:20:18 soullab          /usr/libexec/promotedcontentd
+64945     1 Thu Sep 10 22:30:53 2026     04-10:20:17 _fpsd            /usr/libexec/fairplaydeviceidentityd
+64947     1 Thu Sep 10 22:30:53 2026     04-10:20:17 soullab          /System/Library/PrivateFrameworks/iCloudDriveService.framework/XPCServices/TelemetryDiskChecker.xpc/Contents/MacOS/TelemetryDiskChecker
+64973     1 Thu Sep 10 22:31:25 2026     04-10:19:45 root             /usr/libexec/ospredictiond
+64974     1 Thu Sep 10 22:31:26 2026     04-10:19:44 soullab          /usr/libexec/feedbackd
+64976     1 Thu Sep 10 22:31:28 2026     04-10:19:42 soullab          /System/Library/PrivateFrameworks/BusinessChatService.framework/businessservicesd
+64977     1 Thu Sep 10 22:31:28 2026     04-10:19:42 root             /System/Library/Audio/Plug-Ins/usbaudio.bundle/Contents/MacOS/usbaudiod
+64978     1 Thu Sep 10 22:31:28 2026     04-10:19:42 soullab          /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/Versions/A/XPCServices/MessagesBlastDoorService.xpc/Contents/MacOS/MessagesBlastDoorService
+64981     1 Thu Sep 10 22:31:31 2026     04-10:19:39 soullab          /System/Library/PrivateFrameworks/NewDeviceOutreach.framework/ndoagent
+65009     1 Thu Sep 10 22:32:05 2026     04-10:19:05 soullab          /System/Library/Frameworks/CoreTelephony.framework/Support/CommCenter
+65018     1 Thu Sep 10 22:32:18 2026     04-10:18:52 root             /usr/libexec/online-auth-agent
+65020     1 Thu Sep 10 22:32:20 2026     04-10:18:50 soullab          /System/Library/CoreServices/Keychain Circle Notification.app/Contents/MacOS/Keychain Circle Notification
+65049     1 Thu Sep 10 22:33:00 2026     04-10:18:10 soullab          /System/Library/PrivateFrameworks/AMPLibrary.framework/Versions/A/Support/AMPArtworkAgent
+65057     1 Thu Sep 10 22:33:10 2026     04-10:18:00 soullab          /System/Library/PrivateFrameworks/PhotoLibraryServices.framework/Versions/A/Support/photolibraryd
+65058     1 Thu Sep 10 22:33:10 2026     04-10:18:00 root             /usr/libexec/coreduetd
+65091     1 Thu Sep 10 22:33:59 2026     04-10:17:11 soullab          /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/XPCServices/MDRemoteServiceSupport.xpc/Contents/MacOS/MDRemoteServiceSupport
+65201     1 Thu Sep 10 22:36:05 2026     04-10:15:05 _locationd       /System/Library/PrivateFrameworks/GeoServices.framework/Versions/A/XPCServices/com.apple.geod.xpc/Contents/MacOS/com.apple.geod
+65202     1 Thu Sep 10 22:36:05 2026     04-10:15:05 _locationd       /usr/libexec/secinitd
+65203     1 Thu Sep 10 22:36:05 2026     04-10:15:05 _locationd       /usr/sbin/cfprefsd
+65204     1 Thu Sep 10 22:36:05 2026     04-10:15:05 _locationd       /usr/libexec/trustd
+65206     1 Thu Sep 10 22:36:05 2026     04-10:15:05 root             /usr/libexec/trustdFileHelper
+65207     1 Thu Sep 10 22:36:06 2026     04-10:15:04 _locationd       /usr/libexec/containermanagerd
+65208     1 Thu Sep 10 22:36:06 2026     04-10:15:04 soullab          /System/Library/PrivateFrameworks/GeoServices.framework/Versions/A/XPCServices/com.apple.geod.xpc/Contents/MacOS/com.apple.geod
+65209     1 Thu Sep 10 22:36:06 2026     04-10:15:04 root             /System/Library/PrivateFrameworks/GeoServices.framework/Versions/A/XPCServices/com.apple.geod.xpc/Contents/MacOS/com.apple.geod
+65210     1 Thu Sep 10 22:36:06 2026     04-10:15:04 root             /usr/libexec/secinitd
+65211     1 Thu Sep 10 22:36:06 2026     04-10:15:04 root             /usr/libexec/countryd
+65212     1 Thu Sep 10 22:36:06 2026     04-10:15:04 root             /usr/libexec/containermanagerd
+65241     1 Sun Aug 30 18:40:13 2026     15-14:10:57 soullab          /usr/bin/ssh-agent
+65262     1 Thu Sep 10 22:37:20 2026     04-10:13:50 soullab          /System/Library/Frameworks/Contacts.framework/Support/contactsd
+65266     1 Thu Sep 10 22:37:23 2026     04-10:13:47 soullab          /usr/libexec/linkd
+65290     1 Thu Sep 10 22:38:02 2026     04-10:13:08 soullab          /System/Library/PrivateFrameworks/CommunicationsFilter.framework/CMFSyncAgent
+65291     1 Thu Sep 10 22:38:02 2026     04-10:13:08 soullab          /System/Library/Frameworks/CryptoTokenKit.framework/ctkd
+65294     1 Thu Sep 10 22:38:04 2026     04-10:13:06 soullab          /System/Library/PrivateFrameworks/AssetCacheServices.framework/Versions/A/XPCServices/AssetCacheLocatorService.xpc/Contents/MacOS/AssetCacheLocatorService
+65295     1 Thu Sep 10 22:38:05 2026     04-10:13:05 soullab          /System/Library/PrivateFrameworks/SharingXPCServices.framework/Versions/A/XPCServices/SharingXPCHelper.xpc/Contents/MacOS/SharingXPCHelper
+65296     1 Thu Sep 10 22:38:05 2026     04-10:13:05 soullab          /System/Library/PrivateFrameworks/DoNotDisturbServer.framework/Support/donotdisturbd
+65297     1 Thu Sep 10 22:38:05 2026     04-10:13:05 soullab          /usr/libexec/findmylocateagent
+65299     1 Thu Sep 10 22:38:05 2026     04-10:13:05 soullab          /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+65300     1 Thu Sep 10 22:38:05 2026     04-10:13:05 soullab          /System/Library/ExtensionKit/Extensions/ImageThumbnailExtension.appex/Contents/MacOS/ImageThumbnailExtension
+65301     1 Thu Sep 10 22:38:06 2026     04-10:13:04 root             /usr/sbin/systemsoundserverd
+65302     1 Thu Sep 10 22:38:06 2026     04-10:13:04 root             /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrar
+65303     1 Thu Sep 10 22:38:06 2026     04-10:13:04 root             /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+65304     1 Thu Sep 10 22:38:06 2026     04-10:13:04 soullab          /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+65305     1 Thu Sep 10 22:38:06 2026     04-10:13:04 soullab          /System/Library/CoreServices/CoreServicesUIAgent.app/Contents/MacOS/CoreServicesUIAgent
+65306     1 Thu Sep 10 22:38:06 2026     04-10:13:04 soullab          /System/Library/CoreServices/pbs
+65307     1 Thu Sep 10 22:38:06 2026     04-10:13:04 root             /System/Library/CoreServices/osanalyticshelper
+65329     1 Thu Sep 10 22:38:14 2026     04-10:12:56 soullab          /System/Library/PrivateFrameworks/MediaAnalysis.framework/Versions/A/mediaanalysisd
+65498     1 Thu Sep 10 22:40:13 2026     04-10:10:57 soullab          /System/Library/PrivateFrameworks/IMDPersistence.framework/XPCServices/IMDPersistenceAgent.xpc/Contents/MacOS/IMDPersistenceAgent
+65731     1 Thu Sep 10 22:41:14 2026     04-10:09:56 root             /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XprotectService.xpc/Contents/MacOS/XprotectService
+65916     1 Sat Sep 12 17:13:44 2026     02-15:37:26 root             /Library/Apple/System/Library/CoreServices/XProtect.app/Contents/XPCServices/XProtectPluginService.xpc/Contents/MacOS/XProtectPluginService
+67980     1 Fri Sep  4 09:22:17 2026     10-23:28:53 soullab          /Applications/TIDAL.app/Contents/MacOS/TIDAL
+67989     1 Fri Sep  4 09:22:19 2026     10-23:28:51 soullab          /Applications/TIDAL.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+67991 67980 Fri Sep  4 09:22:19 2026     10-23:28:51 soullab          /Applications/TIDAL.app/Contents/Resources/app.asar.unpacked/resources/osx/arm64/TIDALPlayer.app/Contents/MacOS/TIDALPlayer
+67994 67980 Fri Sep  4 09:22:19 2026     10-23:28:51 soullab          /Applications/TIDAL.app/Contents/Frameworks/TIDAL Helper.app/Contents/MacOS/TIDAL Helper
+67995 67980 Fri Sep  4 09:22:19 2026     10-23:28:51 soullab          /Applications/TIDAL.app/Contents/Frameworks/TIDAL Helper.app/Contents/MacOS/TIDAL Helper
+67999 67980 Fri Sep  4 09:22:20 2026     10-23:28:50 soullab          /Applications/TIDAL.app/Contents/Frameworks/TIDAL Helper (Renderer).app/Contents/MacOS/TIDAL Helper (Renderer)
+68002 67980 Fri Sep  4 09:22:20 2026     10-23:28:50 soullab          /Applications/TIDAL.app/Contents/Frameworks/TIDAL Helper.app/Contents/MacOS/TIDAL Helper
+68004 67980 Fri Sep  4 09:22:20 2026     10-23:28:50 soullab          /Applications/TIDAL.app/Contents/Frameworks/TIDAL Helper.app/Contents/MacOS/TIDAL Helper
+68317     1 Thu Sep 10 22:42:10 2026     04-10:09:00 root             /usr/libexec/biometrickitd
+68666     1 Thu Sep 10 22:42:21 2026     04-10:08:49 root             /System/Library/PrivateFrameworks/AutomationMode.framework/automationmode-writer
+68682     1 Thu Sep 10 22:42:24 2026     04-10:08:46 soullab          /System/Library/PrivateFrameworks/StorageManagement.framework/Resources/diskspaced
+68695     1 Thu Sep 10 22:42:40 2026     04-10:08:30 root             /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+68722     1 Thu Sep 10 22:42:51 2026     04-10:08:19 root             /usr/libexec/keybagd
+68724     1 Thu Sep 10 22:42:51 2026     04-10:08:19 soullab          /System/Library/PrivateFrameworks/UsageTracking.framework/Versions/A/UsageTrackingAgent
+68728     1 Thu Sep 10 22:42:52 2026     04-10:08:18 soullab          /System/Library/PrivateFrameworks/Categories.framework/Versions/A/XPCServices/CategoriesService.xpc/Contents/MacOS/CategoriesService
+68729     1 Thu Sep 10 22:42:53 2026     04-10:08:17 soullab          /System/Library/PrivateFrameworks/ContextKit.framework/Versions/A/XPCServices/ContextService.xpc/Contents/MacOS/ContextService
+68741     1 Thu Sep 10 22:43:02 2026     04-10:08:08 soullab          /usr/libexec/siriknowledged
+68743     1 Thu Sep 10 22:43:04 2026     04-10:08:06 soullab          /System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService
+68747     1 Thu Sep 10 22:43:08 2026     04-10:08:02 soullab          /System/Library/PrivateFrameworks/MapsSync.framework/mapssyncd
+68781     1 Thu Sep 10 22:43:26 2026     04-10:07:44 soullab          /usr/libexec/transparencyd
+68782     1 Thu Sep 10 22:43:26 2026     04-10:07:44 soullab          /System/Library/PrivateFrameworks/CoreFollowUp.framework/Versions/A/Support/followupd
+68783     1 Thu Sep 10 22:43:26 2026     04-10:07:44 soullab          /System/Library/Frameworks/Security.framework/Versions/A/XPCServices/TrustedPeersHelper.xpc/Contents/MacOS/TrustedPeersHelper
+68784     1 Thu Sep 10 22:43:26 2026     04-10:07:44 soullab          /System/Library/PrivateFrameworks/ProtectedCloudStorage.framework/Helpers/ProtectedCloudKeySyncing
+68828     1 Thu Sep 10 22:43:58 2026     04-10:07:12 soullab          /System/Library/PrivateFrameworks/SafariSafeBrowsing.framework/com.apple.Safari.SafeBrowsing.Service
+68877     1 Thu Sep 10 22:44:14 2026     04-10:06:56 soullab          /usr/libexec/keyboardservicesd
+68976     1 Thu Sep 10 22:45:01 2026     04-10:06:09 root             /usr/libexec/findmybeaconingd
+69194     1 Thu Sep 10 22:48:23 2026     04-10:02:47 soullab          /Applications/Xcode.app/Contents/SharedFrameworks/DVTSourceControl.framework/Versions/A/XPCServices/com.apple.dt.Xcode.sourcecontrol.WorkingCopyScanner.xpc/Contents/MacOS/com.apple.dt.Xcode.sourcecontrol.WorkingCopyScanner
+69381     1 Thu Sep 10 22:48:41 2026     04-10:02:29 soullab          /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+69385     1 Thu Sep 10 22:48:42 2026     04-10:02:28 soullab          /System/Library/CoreServices/ScopedBookmarkAgent
+69390     1 Thu Sep 10 22:48:43 2026     04-10:02:27 soullab          /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+69430     1 Thu Sep 10 22:49:22 2026     04-10:01:48 soullab          /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+69849     1 Sun Aug 30 19:00:13 2026     15-13:50:57 soullab          /System/Library/PrivateFrameworks/MobileDevice.framework/Resources/MobileDeviceUpdater.app/Contents/MacOS/MobileDeviceUpdater
+70710     1 Thu Sep 10 22:55:16 2026     04-09:55:54 soullab          /usr/libexec/mlhostd
+70842     1 Thu Sep 10 22:56:21 2026     04-09:54:49 root             /usr/libexec/microstackshot
+71877     1 Sat Sep 12 19:08:33 2026     02-13:42:37 soullab          /System/Library/Frameworks/Intents.framework/XPCServices/intents_helper.xpc/Contents/MacOS/intents_helper
+71879     1 Sat Sep 12 19:08:35 2026     02-13:42:35 soullab          /System/Library/Frameworks/Intents.framework/XPCServices/intents_helper.xpc/Contents/MacOS/intents_helper
+71994     1 Mon Sep  7 10:06:17 2026     07-22:44:53 root             /usr/libexec/securityd_system
+72432     1 Fri Sep 11 17:41:05 2026     03-15:10:05 soullab          /System/Library/PrivateFrameworks/AssistantServices.framework/Versions/A/Support/assistant_service
+72433     1 Fri Sep 11 17:41:05 2026     03-15:10:05 soullab          /System/Library/PrivateFrameworks/IntelligenceFlowRuntime.framework/Versions/A/intelligenceflowd
+72434     1 Fri Sep 11 17:41:05 2026     03-15:10:05 soullab          /System/Library/Frameworks/Speech.framework/Versions/A/XPCServices/localspeechrecognition.xpc/Contents/MacOS/localspeechrecognition
+72435     1 Fri Sep 11 17:41:05 2026     03-15:10:05 soullab          /System/Library/PrivateFrameworks/IntelligenceFlowContextRuntime.framework/Versions/A/intelligencecontextd
+73105     1 Sun Sep 13 13:28:46 2026     01-19:22:24 soullab          /System/Library/Frameworks/Intents.framework/XPCServices/intents_helper.xpc/Contents/MacOS/intents_helper
+73383     1 Fri Sep 11 17:50:19 2026     03-15:00:51 _diagnosticservicesd /System/Library/CoreServices/diagnosticservicesd
+74941     1 Fri Sep 11 18:24:48 2026     03-14:26:22 soullab          /System/Library/PrivateFrameworks/ContactsDonation.framework/Versions/A/Support/contactsdonationagent
+74942     1 Fri Sep 11 18:24:48 2026     03-14:26:22 soullab          /System/Cryptexes/App/System/Library/CoreServices/SafariSupport.bundle/Contents/MacOS/SafariBookmarksSyncAgent
+74943     1 Fri Sep 11 18:24:48 2026     03-14:26:22 soullab          /System/Library/PrivateFrameworks/AvatarPersistence.framework/Support/avatarsd
+75084     1 Fri Sep 11 18:27:58 2026     03-14:23:12 soullab          /Library/Apple/System/Library/CoreServices/XProtect.app/Contents/MacOS/XProtect
+75871     1 Tue Sep  1 00:25:55 2026     14-08:25:15 soullab          /System/Library/PrivateFrameworks/PassKitCore.framework/passd
+75891     1 Tue Sep  1 00:26:03 2026     14-08:25:07 _installcoordinationd /usr/sbin/distnoted
+75970     1 Thu Sep  3 14:13:51 2026     11-18:37:19 soullab          /Applications/Docker.app/Contents/Resources/cli-plugins/docker-agent
+76001     1 Fri Sep 11 18:34:38 2026     03-14:16:32 root             /usr/libexec/handwritingd
+76172     1 Thu Sep  3 14:14:05 2026     11-18:37:05 soullab          /Applications/Docker.app/Contents/Resources/cli-plugins/docker-agent
+78304     1 Thu Sep 10 12:07:00 2026     04-20:44:10 _diskimagesiod   /usr/libexec/diskimagesiod
+78319     1 Thu Sep 10 12:07:01 2026     04-20:44:09 soullab          /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+78938 96046 Mon Sep 14 07:27:26 2026     01-01:23:44 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+79399 96046 Mon Sep 14 07:30:41 2026     01-01:20:29 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+79607     1 Thu Sep 10 12:35:29 2026     04-20:15:41 soullab          /Applications/Google Drive.app/Contents/MacOS/crashpad_handler
+79608  4463 Thu Sep 10 12:35:29 2026     04-20:15:41 soullab          /Applications/Google Drive.app/Contents/MacOS/Google Drive
+79610     1 Thu Sep 10 12:35:29 2026     04-20:15:41 soullab          /System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.GPU.xpc/Contents/MacOS/com.apple.WebKit.GPU
+79611     1 Thu Sep 10 12:35:29 2026     04-20:15:41 soullab          /System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.WebContent.xpc/Contents/MacOS/com.apple.WebKit.WebContent
+79612     1 Thu Sep 10 12:35:29 2026     04-20:15:41 soullab          /usr/libexec/ptpcamerad
+79613     1 Thu Sep 10 12:35:29 2026     04-20:15:41 soullab          /System/Library/Frameworks/ImageCaptureCore.framework/Versions/A/XPCServices/mscamerad-xpc.xpc/Contents/MacOS/mscamerad-xpc
+79614     1 Thu Sep 10 12:35:29 2026     04-20:15:41 soullab          /System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.Networking.xpc/Contents/MacOS/com.apple.WebKit.Networking
+79623     1 Thu Sep 10 12:35:30 2026     04-20:15:40 soullab          /Applications/Google Drive.app/Contents/Applications/FinderHelper.app/Contents/PlugIns/FinderSyncExtension.appex/Contents/MacOS/FinderSyncExtension
+79625     1 Thu Sep 10 12:35:31 2026     04-20:15:39 soullab          /Applications/Google Drive.app/Contents/PlugIns/DFSFileProviderExtension.appex/Contents/MacOS/DFSFileProviderExtension
+80986     1 Sat Sep  5 21:34:57 2026     09-11:16:13 soullab          /System/Applications/Notes.app/Contents/MacOS/Notes
+81301     1 Wed Sep  2 18:40:30 2026     12-14:10:40 soullab          /System/Library/PrivateFrameworks/iCloudDriveCore.framework/Versions/A/Support/bird
+81482     1 Mon Sep 14 19:40:58 2026        13:10:12 soullab          /System/Library/PrivateFrameworks/UIFoundation.framework/Versions/A/XPCServices/nsattributedstringagent.xpc/Contents/MacOS/nsattributedstringagent
+85752     1 Mon Aug 31 11:01:00 2026     14-21:50:10 soullab          /System/Applications/Clock.app/Contents/PlugIns/WorldClockWidget.appex/Contents/MacOS/WorldClockWidget
+86401     1 Sun Sep 13 15:23:23 2026     01-17:27:47 soullab          /System/Library/Frameworks/ColorSync.framework/Versions/A/XPCServices/com.apple.ColorSyncXPCAgent.xpc/Contents/MacOS/com.apple.ColorSyncXPCAgent
+86609     1 Thu Sep 10 23:01:49 2026     04-09:49:21 soullab          /System/Library/CoreServices/appplaceholdersyncd
+86888     1 Mon Aug 31 11:10:59 2026     14-21:40:11 _modelmanagerd   /System/Library/ExtensionKit/Extensions/TGOnDeviceInferenceProviderService.appex/Contents/MacOS/TGOnDeviceInferenceProviderService
+87079     1 Wed Sep  9 18:25:16 2026     05-14:25:54 soullab          Contents/Library/LaunchAgents/com.microsoft.teams2.agent
+87519     1 Sun Sep 13 00:13:02 2026     02-08:38:08 soullab          /usr/libexec/backgroundassets.user
+87520     1 Sun Sep 13 00:13:02 2026     02-08:38:08 soullab          /System/Library/PrivateFrameworks/StreamingZip.framework/Versions/A/XPCServices/com.apple.StreamingUnzipService.xpc/Contents/MacOS/com.apple.StreamingUnzipService
+87526     1 Sun Sep 13 00:13:09 2026     02-08:38:01 _installcoordinationd /usr/libexec/pkd
+88128     1 Thu Sep 10 23:02:32 2026     04-09:48:38 root             /usr/libexec/smd
+88405     1 Sun Sep  6 21:08:22 2026     08-11:42:48 soullab          /usr/libexec/routined
+88689     1 Sun Sep 13 00:35:37 2026     02-08:15:33 _accessoryupdater /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/XPCServices/EAUpdaterService.xpc/Contents/MacOS/EAUpdaterService
+89483     1 Thu Sep 10 23:06:05 2026     04-09:45:05 soullab          /usr/libexec/swtransparencyd
+89484     1 Thu Sep 10 23:06:05 2026     04-09:45:05 soullab          /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+91023 91001 Wed Sep  9 19:20:50 2026     05-13:30:20 soullab          caffeinate
+91109     1 Sun Sep  6 21:43:23 2026     08-11:07:47 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService
+91334     1 Sun Sep  6 21:46:35 2026     08-11:04:35 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService
+91381     1 Sun Sep  6 21:46:55 2026     08-11:04:15 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService
+91382     1 Sun Sep  6 21:46:55 2026     08-11:04:15 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService
+91406     1 Sun Sep  6 21:47:13 2026     08-11:03:57 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService
+91407     1 Sun Sep  6 21:47:13 2026     08-11:03:57 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService
+91458     1 Fri Sep 11 23:36:37 2026     03-09:14:33 root             /System/Library/PrivateFrameworks/FindMyDevice.framework/XPCServices/FindMyDeviceSharedConfigurationXPCService.xpc/Contents/MacOS/FindMyDeviceSharedConfigurationXPCService
+91465     1 Fri Sep 11 23:36:37 2026     03-09:14:33 root             /System/Library/PrivateFrameworks/AuthKit.framework/Versions/A/Support/akd
+91730     1 Sun Sep  6 21:51:00 2026     08-11:00:10 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService
+92191     1 Sun Sep 13 16:17:56 2026     01-16:33:14 soullab          /System/Library/PrivateFrameworks/UIFoundation.framework/Versions/A/XPCServices/nsattributedstringagent.xpc/Contents/MacOS/nsattributedstringagent
+93239     1 Sat Sep 12 00:13:11 2026     03-08:37:59 _accessoryupdater /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/XPCServices/UARPUpdaterServiceDisplay.xpc/Contents/MacOS/UARPUpdaterServiceDisplay
+93240     1 Sat Sep 12 00:13:12 2026     03-08:37:58 _accessoryupdater /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/XPCServices/UARPUpdaterServiceLegacyAudio.xpc/Contents/MacOS/UARPUpdaterServiceLegacyAudio
+93327     1 Sat Sep 12 00:15:09 2026     03-08:36:01 soullab          /System/Library/PrivateFrameworks/AppStoreComponents.framework/Support/appstorecomponentsd
+94342     1 Sat Sep 12 00:35:32 2026     03-08:15:38 _gamecontrollerd /usr/libexec/gamecontrollerd
+94344     1 Sat Sep 12 00:35:32 2026     03-08:15:38 _gamecontrollerd /System/Library/PrivateFrameworks/GameControllerFoundation.framework/Versions/A/XPCServices/GameControllerConfigService.xpc/Contents/MacOS/GameControllerConfigService
+94345     1 Sat Sep 12 00:35:32 2026     03-08:15:38 soullab          /usr/libexec/gamecontrolleragentd
+95025 96046 Mon Sep 14 21:03:12 2026        11:47:58 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+95371     1 Thu Sep 10 23:13:29 2026     04-09:37:41 soullab          /System/Library/CoreServices/OSDUIHelper.app/Contents/MacOS/OSDUIHelper
+95917     1 Thu Sep 10 23:15:01 2026     04-09:36:09 root             /System/Library/CryptoTokenKit/com.apple.ifdreader.slotd/Contents/MacOS/com.apple.ifdreader
+95918     1 Thu Sep 10 23:15:01 2026     04-09:36:09 root             /usr/libexec/usbd
+95921     1 Thu Sep 10 23:15:02 2026     04-09:36:08 soullab          /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/XPCServices/MDRemoteServiceSupport.xpc/Contents/MacOS/MDRemoteServiceSupport
+95923     1 Thu Sep 10 23:15:02 2026     04-09:36:08 soullab          /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrar
+95924     1 Thu Sep 10 23:15:02 2026     04-09:36:08 soullab          /System/Library/Frameworks/MediaAccessibility.framework/Versions/A/XPCServices/com.apple.accessibility.mediaaccessibilityd.xpc/Contents/MacOS/com.apple.accessibility.mediaaccessibilityd
+95925     1 Thu Sep 10 23:15:02 2026     04-09:36:08 soullab          /System/Library/Frameworks/AudioToolbox.framework/XPCServices/CarbonComponentScannerXPC.xpc/Contents/MacOS/CarbonComponentScannerXPC
+95928     1 Thu Sep 10 23:15:02 2026     04-09:36:08 root             /System/Library/PrivateFrameworks/EcosystemAnalytics.framework/Support/ecosystemanalyticsd
+96046     1 Thu Sep 10 23:17:06 2026     04-09:34:04 soullab          /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+96051     1 Thu Sep 10 23:17:10 2026     04-09:34:00 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/chrome_crashpad_handler
+96052     1 Thu Sep 10 23:17:10 2026     04-09:34:00 soullab          /usr/libexec/dmd
+96056 96046 Thu Sep 10 23:17:10 2026     04-09:34:00 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+96058 96046 Thu Sep 10 23:17:10 2026     04-09:34:00 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+96060     1 Thu Sep 10 23:17:10 2026     04-09:34:00 soullab          /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/Versions/A/XPCServices/MessagesBlastDoorService.xpc/Contents/MacOS/MessagesBlastDoorService
+96062 96046 Thu Sep 10 23:17:10 2026     04-09:34:00 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+96065     1 Thu Sep 10 23:17:11 2026     04-09:33:59 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+96066     1 Thu Sep 10 23:17:11 2026     04-09:33:59 soullab          /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+96074     1 Thu Sep 10 23:17:11 2026     04-09:33:59 soullab          /System/Cryptexes/App/usr/libexec/SafariLaunchAgent
+96088 96046 Thu Sep 10 23:17:12 2026     04-09:33:58 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+96093 96046 Thu Sep 10 23:17:13 2026     04-09:33:57 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+96094     1 Thu Sep 10 23:17:13 2026     04-09:33:57 soullab          /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTEncoderXPCService.xpc/Contents/MacOS/VTEncoderXPCService
+96095     1 Thu Sep 10 23:17:13 2026     04-09:33:57 root             /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/XPCServices/csnameddatad.xpc/Contents/MacOS/csnameddatad
+96096     1 Thu Sep 10 23:17:13 2026     04-09:33:57 soullab          /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+96103     1 Thu Sep 10 23:17:13 2026     04-09:33:57 soullab          /System/Library/PrivateFrameworks/SiriTTSService.framework/Versions/A/XPCServices/com.apple.SiriTTSService.TrialProxy.xpc/Contents/MacOS/com.apple.SiriTTSService.TrialProxy
+96104     1 Thu Sep 10 23:17:13 2026     04-09:33:57 _coreaudiod      /usr/libexec/containermanagerd
+96122     1 Thu Sep 10 23:17:22 2026     04-09:33:48 soullab          /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+96130 96046 Thu Sep 10 23:17:25 2026     04-09:33:45 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+96132     1 Thu Sep 10 23:17:27 2026     04-09:33:43 soullab          /System/Cryptexes/App/usr/libexec/AuthenticationServicesAgent
+96134     1 Thu Sep 10 23:17:27 2026     04-09:33:43 soullab          /System/Volumes/Preboot/Cryptexes/App/System/Library/StagedFrameworks/Safari/SafariFoundation.framework/Versions/A/XPCServices/CredentialProviderExtensionHelper.xpc/Contents/MacOS/CredentialProviderExtensionHelper
+96135     1 Thu Sep 10 23:17:27 2026     04-09:33:43 soullab          /usr/libexec/keychainsharingmessagingd
+96136     1 Thu Sep 10 23:17:27 2026     04-09:33:43 soullab          /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+96179 96046 Thu Sep 10 23:17:59 2026     04-09:33:11 soullab          /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.84/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+96181     1 Thu Sep 10 23:18:00 2026     04-09:33:10 soullab          /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+96207     1 Thu Sep 10 23:18:33 2026     04-09:32:37 root             /System/Library/PrivateFrameworks/AppleCredentialManager.framework/AppleCredentialManagerDaemon
+96210     1 Thu Sep 10 23:18:33 2026     04-09:32:37 soullab          /usr/libexec/milod
+96211     1 Thu Sep 10 23:18:33 2026     04-09:32:37 soullab          /System/Library/PrivateFrameworks/IntlPreferences.framework/Support/localizationswitcherd
+96212     1 Thu Sep 10 23:18:33 2026     04-09:32:37 soullab          /usr/libexec/appleaccountd
+96214     1 Thu Sep 10 23:18:33 2026     04-09:32:37 soullab          /usr/libexec/inputanalyticsd
+96215     1 Thu Sep 10 23:18:33 2026     04-09:32:37 soullab          /System/Library/PrivateFrameworks/CoreCDP.framework/Versions/A/Resources/cdpd
+96238     1 Thu Sep 10 23:19:03 2026     04-09:32:07 root             /System/Library/PrivateFrameworks/PowerLog.framework/Versions/A/XPCServices/PerfPowerTelemetryClientRegistrationService.xpc/Contents/MacOS/PerfPowerTelemetryClientRegistrationService
+96240     1 Thu Sep 10 23:19:05 2026     04-09:32:05 soullab          /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+96246     1 Thu Sep 10 23:19:06 2026     04-09:32:04 soullab          /System/Library/PrivateFrameworks/SiriTTSService.framework/sirittsd
+96326     1 Thu Sep 10 23:20:21 2026     04-09:30:49 soullab          /usr/libexec/ciphermld
+96327     1 Thu Sep 10 23:20:21 2026     04-09:30:49 soullab          cloudphotod
+96329     1 Thu Sep 10 23:20:21 2026     04-09:30:49 soullab          /System/Library/PrivateFrameworks/SiriInference.framework/Versions/A/siriinferenced
+96330     1 Thu Sep 10 23:20:21 2026     04-09:30:49 root             /usr/libexec/symptomsd-diag
+96331     1 Thu Sep 10 23:20:21 2026     04-09:30:49 _rmd             /usr/sbin/cfprefsd
+96332     1 Thu Sep 10 23:20:21 2026     04-09:30:49 soullab          /usr/libexec/metrickitd
+96333     1 Thu Sep 10 23:20:21 2026     04-09:30:49 soullab          /usr/libexec/dprivacyd
+96335     1 Thu Sep 10 23:20:22 2026     04-09:30:48 soullab          /System/Library/PrivateFrameworks/SiriSuggestionsSupport.framework/Versions/A/XPCServices/SiriSuggestionsBookkeepingService.xpc/Contents/MacOS/SiriSuggestionsBookkeepingService
+96338     1 Thu Sep 10 23:20:23 2026     04-09:30:47 soullab          /System/Library/PrivateFrameworks/PhotoAnalysis.framework/Versions/A/Support/photoanalysisd
+96340     1 Thu Sep 10 23:20:23 2026     04-09:30:47 _neuralengine    /usr/sbin/cfprefsd
+96341     1 Thu Sep 10 23:20:23 2026     04-09:30:47 _installcoordinationd /usr/sbin/cfprefsd
+96348     1 Thu Sep 10 23:20:23 2026     04-09:30:47 _cmiodalassistants /usr/sbin/cfprefsd
+96349     1 Thu Sep 10 23:20:23 2026     04-09:30:47 _modelmanagerd   /usr/sbin/cfprefsd
+96350     1 Thu Sep 10 23:20:23 2026     04-09:30:47 _audiomxd        /usr/sbin/cfprefsd
+96351     1 Thu Sep 10 23:20:23 2026     04-09:30:47 _accessoryupdater /usr/sbin/cfprefsd
+96352     1 Thu Sep 10 23:20:23 2026     04-09:30:47 _softwareupdate  /usr/sbin/cfprefsd
+96353     1 Thu Sep 10 23:20:23 2026     04-09:30:47 root             /usr/libexec/rtcreportingd
+96370     1 Thu Sep 10 23:20:40 2026     04-09:30:30 _applepay        /usr/sbin/cfprefsd
+96371     1 Thu Sep 10 23:20:40 2026     04-09:30:30 _lp              /usr/sbin/cfprefsd
+96374     1 Thu Sep 10 23:20:40 2026     04-09:30:30 _nsurlsessiond   /usr/sbin/cfprefsd
+96376     1 Thu Sep 10 23:20:40 2026     04-09:30:30 _appinstalld     /usr/sbin/cfprefsd
+96392     1 Thu Sep 10 23:20:56 2026     04-09:30:14 soullab          /System/Library/PrivateFrameworks/MediaAnalysisAccess.framework/Versions/A/XPCServices/mediaanalysisd-access.xpc/Contents/MacOS/mediaanalysisd-access
+96393     1 Thu Sep 10 23:20:56 2026     04-09:30:14 root             /usr/libexec/mmaintenanced
+96426     1 Thu Sep 10 23:21:41 2026     04-09:29:29 soullab          /System/Library/PrivateFrameworks/IMTranscoding.framework/XPCServices/IMTranscoderAgent.xpc/Contents/MacOS/IMTranscoderAgent
+96427     1 Thu Sep 10 23:21:41 2026     04-09:29:29 soullab          /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/Versions/A/XPCServices/MessagesBlastDoorService.xpc/Contents/MacOS/MessagesBlastDoorService
+96428     1 Thu Sep 10 23:21:41 2026     04-09:29:29 soullab          /System/Library/PrivateFrameworks/CoreRecents.framework/Versions/A/Support/recentsd
+96429     1 Thu Sep 10 23:21:42 2026     04-09:29:28 soullab          /System/Library/PrivateFrameworks/NewsDaemon.framework/newsd
+96430     1 Thu Sep 10 23:21:42 2026     04-09:29:28 soullab          /usr/libexec/textunderstandingd
+96431     1 Thu Sep 10 23:21:42 2026     04-09:29:28 soullab          /System/Library/PrivateFrameworks/SocialLayer.framework/sociallayerd.app/Contents/MacOS/sociallayerd
+96432     1 Thu Sep 10 23:21:43 2026     04-09:29:27 soullab          /System/Library/PrivateFrameworks/CoreSuggestions.framework/Versions/A/Support/reversetemplated
+96433     1 Thu Sep 10 23:21:43 2026     04-09:29:27 root             /System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANECompilerService.xpc/Contents/MacOS/ANECompilerService
+96439     1 Thu Sep 10 23:21:49 2026     04-09:29:21 soullab          /System/Library/PrivateFrameworks/ModelCatalogRuntime.framework/Versions/A/ModelCatalogAgent
+96458     1 Thu Sep 10 23:22:18 2026     04-09:28:52 soullab          /System/Library/PrivateFrameworks/IntelligencePlatformCore.framework/Versions/A/intelligenceplatformd
+96733     1 Thu Sep 10 23:27:46 2026     04-09:23:24 _reportsystemmemory /System/Library/CoreServices/ReportSystemMemory
+96874     1 Thu Sep 10 23:30:14 2026     04-09:20:56 root             /usr/sbin/spindump
+97068     1 Thu Sep 10 23:34:21 2026     04-09:16:49 root             /usr/libexec/dprivacyd
+97989     1 Mon Sep 14 21:22:50 2026        11:28:20 soullab          /System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService
+98391     1 Fri Sep 11 00:00:00 2026     04-08:51:10 root             aslmanager
+98392     1 Fri Sep 11 00:00:00 2026     04-08:51:10 soullab          /System/Library/PrivateFrameworks/MobileTimer.framework/Executables/mobiletimerd
+98454     1 Fri Sep 11 00:00:59 2026     04-08:50:11 soullab          /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+98495     1 Fri Sep 11 00:01:59 2026     04-08:49:11 soullab          /System/Library/PrivateFrameworks/VoiceShortcuts.framework/Versions/A/Support/siriactionsd
+98531     1 Tue Sep  8 16:35:15 2026     06-16:15:55 soullab          /Applications/Google Drive.app/Contents/MacOS/crashpad_handler
+98696     1 Fri Sep 11 00:05:16 2026     04-08:45:54 soullab          /System/Library/PrivateFrameworks/CoreParsec.framework/parsecd
+98697     1 Fri Sep 11 00:05:16 2026     04-08:45:54 soullab          /usr/libexec/adprivacyd
+98698     1 Fri Sep 11 00:05:16 2026     04-08:45:54 soullab          /System/Library/PrivateFrameworks/iTunesCloud.framework/Support/itunescloudd
+98700     1 Fri Sep 11 00:05:18 2026     04-08:45:52 soullab          /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+98701     1 Fri Sep 11 00:05:18 2026     04-08:45:52 soullab          /System/Library/PrivateFrameworks/PhotoLibraryServicesCore.framework/Versions/A/XPCServices/com.apple.Photos.Migration.xpc/Contents/MacOS/com.apple.Photos.Migration
+99091     1 Fri Sep 11 00:12:43 2026     04-08:38:27 root             /usr/libexec/griddatad
+99093     1 Fri Sep 11 00:12:44 2026     04-08:38:26 root             /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+99094     1 Fri Sep 11 00:12:44 2026     04-08:38:26 root             /System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANEStorageMaintainer.xpc/Contents/MacOS/ANEStorageMaintainer
+99095     1 Fri Sep 11 00:12:44 2026     04-08:38:26 _neuralengine    /System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANEStorageMaintainer.xpc/Contents/MacOS/ANEStorageMaintainer
+99097     1 Fri Sep 11 00:12:46 2026     04-08:38:24 _applepay        /usr/libexec/nfcd
+99098     1 Fri Sep 11 00:12:46 2026     04-08:38:24 _applepay        /System/Library/PrivateFrameworks/NearFieldPrivateServices.framework/Versions/A/XPCServices/NFStorageServer.xpc/Contents/MacOS/NFStorageServer
+99118     1 Fri Sep 11 00:13:13 2026     04-08:37:57 root             /System/Library/PrivateFrameworks/AppStoreDaemon.framework/Versions/A/XPCServices/com.apple.AppStoreDaemon.StorePrivilegedTaskService.xpc/Contents/MacOS/com.apple.AppStoreDaemon.StorePrivilegedTaskService
+99122     1 Fri Sep 11 00:13:15 2026     04-08:37:55 soullab          /System/Library/Frameworks/MediaExtension.framework/Versions/A/Helpers/MENotificationAgent
+99123     1 Fri Sep 11 00:13:15 2026     04-08:37:55 soullab          /System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Support/BackgroundTaskManagementAgent.app/Contents/MacOS/BackgroundTaskManagementAgent
+99124     1 Fri Sep 11 00:13:15 2026     04-08:37:55 soullab          /System/Library/PrivateFrameworks/AppSSO.framework/Support/AppSSOAgent.app/Contents/MacOS/AppSSOAgent
+99125     1 Fri Sep 11 00:13:15 2026     04-08:37:55 soullab          /System/Library/PrivateFrameworks/OnDeviceStorage.framework/Support/amsondevicestoraged
+99126     1 Fri Sep 11 00:13:15 2026     04-08:37:55 root             /System/Library/Frameworks/GSS.framework/Helpers/GSSCred
+99127     1 Fri Sep 11 00:13:15 2026     04-08:37:55 root             /System/Library/PrivateFrameworks/AppSSO.framework/Support/AppSSODaemon
+99128     1 Fri Sep 11 00:13:15 2026     04-08:37:55 root             /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/XPCServices/com.apple.hiservices-xpcservice.xpc/Contents/MacOS/com.apple.hiservices-xpcservice
+99129     1 Fri Sep 11 00:13:15 2026     04-08:37:55 root             /System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Resources/backgroundtaskmanagementd
+99133     1 Fri Sep 11 00:13:17 2026     04-08:37:53 soullab          /System/Library/PrivateFrameworks/CoreEmbeddedSpeechRecognition.framework/Versions/A/XPCServices/com.apple.siri.embeddedspeech.xpc/Contents/MacOS/com.apple.siri.embeddedspeech
+99419     1 Fri Sep 11 00:18:48 2026     04-08:32:22 soullab          /System/Library/PrivateFrameworks/SiriAnalytics.framework/Versions/A/XPCServices/SAExtensionOrchestrator.xpc/Contents/MacOS/SAExtensionOrchestrator
+99420     1 Fri Sep 11 00:18:49 2026     04-08:32:21 soullab          /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+99421     1 Fri Sep 11 00:18:49 2026     04-08:32:21 soullab          /System/Library/ExtensionKit/Extensions/GMSSELFIngestor.appex/Contents/MacOS/GMSSELFIngestor
+99422     1 Fri Sep 11 00:18:49 2026     04-08:32:21 soullab          /System/Library/ExtensionKit/Extensions/BiomeSELFIngestor.appex/Contents/MacOS/BiomeSELFIngestor
+99423     1 Fri Sep 11 00:18:49 2026     04-08:32:21 soullab          /System/Library/ExtensionKit/Extensions/IFTelemetrySELFIngestor.appex/Contents/MacOS/IFTelemetrySELFIngestor
+99424     1 Fri Sep 11 00:18:49 2026     04-08:32:21 soullab          /System/Library/ExtensionKit/Extensions/IFTranscriptSELFIngestor.appex/Contents/MacOS/IFTranscriptSELFIngestor
+99762     1 Fri Sep 11 00:25:17 2026     04-08:25:53 soullab          /System/Library/PrivateFrameworks/Noticeboard.framework/Versions/A/Resources/nbagent.app/Contents/MacOS/nbagent
+99764     1 Fri Sep 11 00:25:18 2026     04-08:25:52 root             /System/Library/PrivateFrameworks/Noticeboard.framework/Versions/A/Resources/nbstated
+  356     1 Sun Aug 30 12:34:29 2026     15-20:16:41 root             /usr/libexec/remoted
+32845 43636 Fri Sep 11 09:21:06 2026     03-23:30:04 root             login
+32846 32845 Fri Sep 11 09:21:06 2026     03-23:30:04 soullab          -zsh
+80872 32846 Fri Sep 11 19:58:12 2026     03-12:52:58 soullab          node
+80875 80872 Fri Sep 11 19:58:12 2026     03-12:52:58 soullab          next-server (v15.5.11)
+59293 43636 Thu Sep  3 13:21:32 2026     11-19:29:38 root             login
+59294 59293 Thu Sep  3 13:21:32 2026     11-19:29:38 soullab          -zsh
+70338 43636 Mon Sep 14 18:33:24 2026        14:17:46 root             login
+70339 70338 Mon Sep 14 18:33:24 2026        14:17:46 soullab          -zsh
+89226 43636 Mon Sep 14 08:47:23 2026     01-00:03:47 root             login
+89227 89226 Mon Sep 14 08:47:23 2026     01-00:03:47 soullab          -zsh
+55336 43636 Tue Sep 15 08:11:32 2026           39:38 root             login
+55337 55336 Tue Sep 15 08:11:32 2026           39:38 soullab          -zsh
+56062 43636 Tue Sep 15 08:16:05 2026           35:05 root             login
+56064 56062 Tue Sep 15 08:16:05 2026           35:05 soullab          -zsh
+61216 43636 Tue Sep 15 08:31:44 2026           19:26 root             login
+61217 61216 Tue Sep 15 08:31:44 2026           19:26 soullab          -zsh
+38583 43636 Sat Sep 12 13:39:19 2026     02-19:11:51 root             login
+38584 38583 Sat Sep 12 13:39:19 2026     02-19:11:51 soullab          -zsh
+88778 43636 Tue Sep  8 13:36:48 2026     06-19:14:22 root             login
+88779 88778 Tue Sep  8 13:36:48 2026     06-19:14:22 soullab          -zsh
+66853 43636 Wed Sep  9 06:39:05 2026     06-02:12:05 root             login
+66854 66853 Wed Sep  9 06:39:05 2026     06-02:12:05 soullab          -zsh
+88536 66854 Wed Sep  9 18:49:43 2026     05-14:01:27 soullab          /Applications/Xcode.app/Contents/Developer/usr/bin/git
+88537 88536 Wed Sep  9 18:49:43 2026     05-14:01:27 soullab          /usr/bin/less
+77041 43636 Wed Sep  9 10:24:47 2026     05-22:26:23 root             login
+77042 77041 Wed Sep  9 10:24:48 2026     05-22:26:22 soullab          -zsh
+77422 77042 Wed Sep  9 10:24:49 2026     05-22:26:21 soullab          psql
+77424 77422 Wed Sep  9 10:24:50 2026     05-22:26:20 soullab          more
+ 5926 91024 Thu Sep 10 16:51:35 2026     04-15:59:35 soullab          npm run dev:web --host 127.0.0.1 --port 5174
+ 5938  5926 Thu Sep 10 16:51:35 2026     04-15:59:35 soullab          sh
+ 5955  5938 Thu Sep 10 16:51:35 2026     04-15:59:35 soullab          node
+ 5956  5955 Thu Sep 10 16:51:35 2026     04-15:59:35 soullab          /private/tmp/prose-rc-research-y0I41L/node_modules/@esbuild/darwin-arm64/bin/esbuild
+27804 91024 Wed Sep  9 21:41:36 2026     05-11:09:34 soullab          /bin/zsh
+27937 91024 Wed Sep  9 21:42:54 2026     05-11:08:16 soullab          /bin/zsh
+28009 91024 Sun Sep 13 11:12:18 2026     01-21:38:52 soullab          /bin/zsh
+28022 28009 Sun Sep 13 11:12:18 2026     01-21:38:52 soullab          /bin/zsh
+28023 28009 Sun Sep 13 11:12:18 2026     01-21:38:52 soullab          sed
+28024 28022 Sun Sep 13 11:12:18 2026     01-21:38:52 soullab          docker
+30612 91024 Sun Sep 13 21:52:13 2026     01-10:58:57 soullab          zsh
+34349 91024 Sun Sep 13 22:10:29 2026     01-10:40:41 soullab          npm exec next dev -p 3100
+34363 34349 Sun Sep 13 22:10:29 2026     01-10:40:41 soullab          node
+34366 34363 Sun Sep 13 22:10:29 2026     01-10:40:41 soullab          next-server (v15.5.11)
+44409 91024 Mon Sep 14 16:16:06 2026        16:35:04 soullab          /bin/zsh
+44412 44409 Mon Sep 14 16:16:06 2026        16:35:04 soullab          tail
+49290 91024 Fri Sep 11 13:04:54 2026     03-19:46:16 soullab          /bin/zsh
+49312 49290 Fri Sep 11 13:04:56 2026     03-19:46:14 soullab          bash
+49313 49290 Fri Sep 11 13:04:56 2026     03-19:46:14 soullab          tee
+49955 49312 Fri Sep 11 13:05:09 2026     03-19:46:01 soullab          docker
+63324 91024 Tue Sep 15 08:51:05 2026           00:05 soullab          bash
+63381 63324 Tue Sep 15 08:51:10 2026           00:00 root             ps
+76177 91024 Sun Sep 13 13:45:25 2026     01-19:05:45 soullab          node
+76180 76177 Sun Sep 13 13:45:25 2026     01-19:05:45 soullab          /private/tmp/jop04-reconciled/jarvis-desktop/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron
+76184 76180 Sun Sep 13 13:45:26 2026     01-19:05:44 soullab          /private/tmp/jop04-reconciled/jarvis-desktop/node_modules/electron/dist/Electron.app/Contents/Frameworks/Electron Helper (GPU).app/Contents/MacOS/Electron Helper (GPU)
+76185 76180 Sun Sep 13 13:45:26 2026     01-19:05:44 soullab          /private/tmp/jop04-reconciled/jarvis-desktop/node_modules/electron/dist/Electron.app/Contents/Frameworks/Electron Helper.app/Contents/MacOS/Electron Helper
+76198 76180 Sun Sep 13 13:45:26 2026     01-19:05:44 soullab          /private/tmp/jop04-reconciled/jarvis-desktop/node_modules/electron/dist/Electron.app/Contents/Frameworks/Electron Helper (Renderer).app/Contents/MacOS/Electron Helper (Renderer)
+82243 91024 Mon Sep 14 19:49:15 2026        13:01:55 soullab          /bin/zsh
+90338 43636 Wed Sep  9 19:20:31 2026     05-13:30:39 root             login
+90339 90338 Wed Sep  9 19:20:31 2026     05-13:30:39 soullab          -zsh
+90719 90339 Wed Sep  9 19:20:33 2026     05-13:30:37 soullab          npm exec @wonderwhy-er/desktop-commander@latest remote
+91001 90719 Wed Sep  9 19:20:50 2026     05-13:30:20 soullab          node
+91024 91001 Wed Sep  9 19:20:50 2026     05-13:30:20 soullab          /Users/soullab/.nvm/versions/node/v22.22.3/bin/node
+91383 91024 Wed Sep  9 19:24:57 2026     05-13:26:13 soullab          /bin/zsh
+91386 91383 Wed Sep  9 19:24:57 2026     05-13:26:13 soullab          docker
+91387 91383 Wed Sep  9 19:24:57 2026     05-13:26:13 soullab          sed
+92578 91024 Mon Sep 14 20:46:31 2026        12:04:39 soullab          zsh
+98134 91024 Mon Sep 14 21:25:14 2026        11:25:56 soullab          zsh
+99828 91024 Mon Sep 14 10:06:51 2026        22:44:19 soullab          /bin/zsh
+99831 99828 Mon Sep 14 10:06:51 2026        22:44:19 soullab          docker
+99832 99828 Mon Sep 14 10:06:51 2026        22:44:19 soullab          grep
+99944 91024 Mon Sep 14 10:07:49 2026        22:43:21 soullab          /bin/zsh
+99947 99944 Mon Sep 14 10:07:49 2026        22:43:21 soullab          docker
+99948 99944 Mon Sep 14 10:07:49 2026        22:43:21 soullab          sed
+[rc=0]

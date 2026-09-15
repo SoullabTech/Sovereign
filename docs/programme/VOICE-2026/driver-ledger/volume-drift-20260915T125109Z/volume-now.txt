@@ -1,0 +1,3 @@
+$ osascript -e get volume settings
+output volume:31, input volume:missing value, alert volume:59, output muted:false
+[rc=0]

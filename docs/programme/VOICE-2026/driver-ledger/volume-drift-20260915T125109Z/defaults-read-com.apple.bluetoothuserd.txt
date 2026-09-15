@@ -1,0 +1,13 @@
+$ defaults read com.apple.bluetoothuserd
+{
+    CKPerBootTasks =     (
+        CKAccountInfoCacheReset
+    );
+    CKStartupTime = 1788107610;
+    CloudKitAccountInfoCache =     {
+        900f9b0902ce900cf3b8bfc8a393d4574023270a48ca05c717ac6fbc403254e9 = {length = 497, bytes = 0x62706c69 73743030 d4010203 04050607 ... 00000000 00000189 };
+    };
+    LastOSLaunchVersion = 24G806;
+    lastLaunchBootSessionUUID = "6D030EB3-05AF-488F-A283-30AFB3AAD4B0";
+}
+[rc=0]

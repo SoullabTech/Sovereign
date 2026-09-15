@@ -1,0 +1,16 @@
+$ defaults read com.apple.audio.AudioMIDISetup
+{
+    "NSTableView Columns v3 AudioDeviceInputTabColumns" = {length = 712, bytes = 0x62706c69 73743030 d4010203 04050607 ... 00000000 000001e6 };
+    "NSTableView Columns v3 AudioDeviceOutputTabColumns" = {length = 625, bytes = 0x62706c69 73743030 d4010203 04050607 ... 00000000 000001ab };
+    "NSTableView Sort Ordering v2 AudioDeviceInputTabColumns" = {length = 237, bytes = 0x62706c69 73743030 d4010203 04050607 ... 00000000 000000b5 };
+    "NSTableView Sort Ordering v2 AudioDeviceOutputTabColumns" = {length = 237, bytes = 0x62706c69 73743030 d4010203 04050607 ... 00000000 000000b5 };
+    "NSTableView Supports v2 AudioDeviceInputTabColumns" = 1;
+    "NSTableView Supports v2 AudioDeviceOutputTabColumns" = 1;
+    "NSWindow Frame AMSAudioPanelFrame" = "1320 468 800 480 0 0 3440 1415 ";
+    "audioDevice.selected" = "0472000B-0000-0000-1B21-0103804F2178";
+    preferredSpeakerWindowStereoSize =     {
+        Height = 360;
+        Width = 442;
+    };
+}
+[rc=0]

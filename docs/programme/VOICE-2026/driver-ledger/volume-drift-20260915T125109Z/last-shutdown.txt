@@ -1,0 +1,4 @@
+$ last shutdown
+
+wtmp begins Wed Nov 19 16:31:02 EST 2025
+[rc=0]

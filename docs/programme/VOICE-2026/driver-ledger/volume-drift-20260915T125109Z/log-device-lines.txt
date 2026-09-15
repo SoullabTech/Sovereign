@@ -1,0 +1,4 @@
+2026-09-15 07:25:48.100924-0400  localhost Messages[22428]: (AudioToolbox) [com.apple.coreaudio:ddagg]        AggregateDevice.mm:852   HAL notification: default output device changed
+2026-09-15 07:25:48.101428-0400  localhost Messages[22428]: (AudioToolbox) [com.apple.coreaudio:ddagg]        AggregateDevice.mm:884   fetched default output device, ID = 128
+2026-09-15 07:25:48.101526-0400  localhost Camo Studio[54266]: (AudioToolbox) [com.apple.coreaudio:ddagg]        AggregateDevice.mm:852   HAL notification: default output device changed
+2026-09-15 07:25:48.101760-0400  localhost Camo Studio[54266]: (AudioToolbox) [com.apple.coreaudio:ddagg]        AggregateDevice.mm:884   fetched default output device, ID = 128

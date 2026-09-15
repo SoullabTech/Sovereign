@@ -1,0 +1,9 @@
+$ sh -c ls -la "$HOME/Library/Preferences" | grep -i -E "audio|sound|coreaudio|bluetooth|volume"
+-rw-------@   1 soullab  staff      721 Sep 15 01:24 com.apple.ComfortSounds.plist
+-rw-------@   1 soullab  staff     2712 Sep  8 08:46 com.apple.PersonalAudio.plist
+-rw-------@   1 soullab  staff     2464 Feb 10  2026 com.apple.audio.AudioMIDISetup.plist
+-rw-------@   1 soullab  staff      835 Sep 15 07:25 com.apple.bluetoothuserd.plist
+-rw-------@   1 soullab  staff      345 Oct  6  2025 com.apple.driver.AppleBluetoothMultitouch.mouse.plist
+-rw-------@   1 soullab  staff      778 Aug 30 12:34 com.apple.driver.AppleBluetoothMultitouch.trackpad.plist
+-rw-------@   1 soullab  staff    12856 Aug 30 12:35 com.rogueamoeba.arkaudiod.plist
+[rc=0]

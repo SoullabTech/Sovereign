@@ -1,0 +1,56 @@
+$ pmset -g assertions
+2026-09-15 08:51:10 -0400 
+Assertion status system-wide:
+   BackgroundTask                 0
+   ApplePushServiceTask           0
+   UserIsActive                   1
+   PreventUserIdleDisplaySleep    1
+   PreventSystemSleep             0
+   ExternalMedia                  1
+   InternalPreventDisplaySleep    1
+   PreventUserIdleSystemSleep     1
+   NetworkClientActive            0
+Listed by owning process:
+   pid 351(powerd): [0x0014cac1000198ca] 01:47:16 PreventUserIdleSystemSleep named: "Powerd - Prevent sleep while display is on"  
+   pid 351(powerd): [0x0000004400088005] 380:16:38 ExternalMedia named: "com.apple.powermanagement.externalmediamounted"  
+   pid 351(powerd): [0x0014df850010842b] 00:00:55 InternalPreventDisplaySleep named: "com.apple.powermanagement.delayDisplayOff"  
+	Timeout will fire in 244 secs Action=TimeoutActionTurnOff
+   pid 91023(caffeinate): [0x000d8e7c000189f7] 133:30:19 PreventUserIdleSystemSleep named: "caffeinate command-line tool"  
+	Details: caffeinate asserting on behalf of Process ID 91001
+	Created for PID: 91001. 
+	Localized=THE CAFFEINATE TOOL IS PREVENTING SLEEP.
+   pid 60391(Claude): [0x00140c28000189ba] 15:20:29 NoIdleSleepAssertion named: "Electron"  
+   pid 96046(Google Chrome): [0x0014e271000196fa] 00:06:13 NoIdleSleepAssertion named: "Playing audio"  
+   pid 96046(Google Chrome): [0x0014e3ae00059732] 00:00:55 NoDisplaySleepAssertion named: "Video Wake Lock"  
+   pid 400(bluetoothd): [0x0014e3a40001972d] 00:01:05 PreventUserIdleSystemSleep named: "com.apple.BTStack"  
+   pid 657(sharingd): [0x0014cfe7000191d3] 01:25:18 PreventUserIdleSystemSleep named: "Handoff"  
+   pid 657(sharingd): [0x000f99f60001a509] 96:16:48 PreventUserIdleSystemSleep named: "AirDrop"  
+   pid 409(WindowServer): [0x0014cac1000998cb] 00:00:01 UserIsActive named: "com.apple.iohideventsystem.queue.tickle serviceID:10030f772 service:AppleUserHIDEventService product:MX Vertical eventType:17"  
+	Timeout will fire in 1799 secs Action=TimeoutActionRelease
+   pid 428(coreaudiod): [0x0014e209000190a9] 00:07:57 PreventUserIdleSystemSleep named: "com.apple.audio.BuiltInSpeakerDevice.context.preventuseridlesleep"  
+	Created for PID: 96093. 
+	Resources: BuiltInSpeakerDevice 
+   pid 428(coreaudiod): [0x0014cfe300019071] 01:25:22 PreventUserIdleSystemSleep named: "com.apple.audio.BuiltInSpeakerDevice.context.preventuseridlesleep"  
+	Created for PID: 54266. 
+	Resources: BuiltInSpeakerDevice 
+Kernel Assertions: 0x104=USB,MAGICWAKE
+   id=582  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.03100000 owner=USB2.0 Hub             
+   id=584  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.03200000 owner=USB3.1 Hub             
+   id=587  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.00100000 owner=Scarlett 2i2 USB
+   id=589  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.03140000 owner=USB2.0 Hub             
+   id=591  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.02200000 owner=PSSD T7 Shield
+   id=592  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.03240000 owner=USB3.1 Hub             
+   id=594  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.08340000 owner=2.4G Receiver
+   id=595  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.03141000 owner=USB 2.0 Hub
+   id=598  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.03243000 owner=USB 10/100/1000 LAN
+   id=599  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.03141100 owner=IOUSBHostDevice
+   id=600  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.08320000 owner=USB2.1 Hub
+   id=601  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.08120000 owner=USB3.2 Hub
+   id=604  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.08322000 owner=Litra Glow
+   id=605  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.08121000 owner=Rugged USB-C
+   id=606  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.08124000 owner=Satechi Multiport Pro
+   id=608  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.08324000 owner=Satechi Multiport Pro
+   id=611  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.08324300 owner=USB 2.0 BILLBOARD
+   id=613  level=255 0x100=MAGICWAKE creat= description=en0 owner=en0
+   id=617  level=255 0x100=MAGICWAKE creat= description=en1 owner=IOSkywalkNetworkBSDClient
+[rc=0]
