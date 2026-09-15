@@ -369,9 +369,37 @@ C1  recovers the displaced exchange ON THAT TOPIC without the member resupplying
 C2  A6's represented count includes it
 ```
 
-⛔ The two probes must be satisfied by **one mechanism**, not two detectors bolted
-together — otherwise Lane 1 ships a special case and a gap, and the gap is the harder
-half.
+### 5.2 ⭐⭐ TWO OBLIGATION CLASSES — the probes do NOT prove single-mechanism
+
+⚠️ An earlier line here said the two probes *"must be satisfied by one mechanism, not
+two detectors bolted together"* — ⭐ **corrected in place**: that is true as a
+requirement and **false as a claim about what P and S demonstrate.** An implementation
+can internally special-case opaque reference, separately run semantic retrieval, and
+**pass both probes.** Black-box behaviour cannot distinguish one general mechanism from
+two bolted-together detectors.
+
+```
+BEHAVIOURAL — black-box probes against a live session
+  P    opaque reference works
+  S    semantic reference works
+  C1   displaced primary exchange recovered
+  C2   A6 accounting reflects FINAL cognition
+
+ARCHITECTURAL — ⛔ NOT provable by probes; requires CODE-LEVEL evidence
+  one general current-session recovery mechanism
+  ⛔ not two unrelated special-case detectors
+```
+
+⭐ **The architectural obligation is a static guard, not a probe** — the form this lane
+has used before (`S3` G1–G12, A6's guards). Candidate shape, ⛔ not ruled:
+
+- displaced-set selection is reachable through **exactly one** entry point;
+- ⛔ **no branch keyed on question phrasing** ("what was that phrase", "earlier about")
+  selects between retrieval strategies;
+- the two probes traverse the **same** call path, differing only in inputs.
+
+⛔ A lane that satisfies P, S, C1 and C2 while failing the architectural condition ships
+a special case and a gap — **and the gap is the harder half.**
 
 ⚠️ ⛔ The reverse failure is equally disqualifying: a purely semantic implementation
 passes probe S and **fails the Silver Cedar Test**, which is the outcome the primary
