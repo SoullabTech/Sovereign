@@ -1,0 +1,4 @@
+69392 /System/Applications/System Settings.app/Contents/MacOS/System Settings
+69394 /System/Applications/System Settings.app/Contents/PlugIns/GeneralSettings.appex/Contents/MacOS/GeneralSettings
+69408 /System/Library/ExtensionKit/Extensions/Sound.appex/Contents/MacOS/Sound
+rc=0
