@@ -831,3 +831,8 @@ Founder ruling on the §10.58 STOP. Repair authority limited to the compiler-pro
 ### §10.60 — carrier read · `SID REPAIR-01` written at `faf918b5c` · founder diff review pending · `SID MAC-COMPILE-02` NOT OPEN (2026-09-15; discriminator plan §18.40; implementation record §10.7–§10.8)
 
 Evidence of the STOP is durable (carrier cherry-picked, seal reproduced, single 485:13 diagnostic confirmed from custody, zero tests ran). Repair = one hunk in the test file, compiler disambiguation only, siblings HOLD, kernel byte-identical to the accepted state. Compile requalification against `faf918b5c` opens only by a separate founder act. SID subject qualification remains CLOSED; SID ENTRY WITNESS REQUIRED, not opened; reinstall pins EMPTY. Third 0-byte transcript at 21:32:08Z recorded as an executed duplicate invocation with an unwitnessed (most plausibly precondition-refused) outcome; one read-only `ls` owed.
+
+
+### §10.61 — duplicate invocation ESTABLISHED as a precondition refusal (founder ruling 2026-09-15; discriminator plan §18.41; implementation record §10.9)
+
+Non-substantive residue only (0-byte tee transcript, refused at `test ! -e "$WT"`, nothing ran). Supersedes §10.58/§10.60 "not established" wording. No change to any standing: MAC-COMPILE-01 SPENT · REPAIR-01 written at `faf918b5c`, review pending · siblings HOLD · MAC-COMPILE-02 NOT OPEN · SID ENTRY WITNESS REQUIRED · reinstall pins EMPTY.

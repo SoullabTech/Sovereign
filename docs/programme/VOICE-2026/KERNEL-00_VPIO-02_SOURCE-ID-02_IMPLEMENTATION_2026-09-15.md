@@ -320,3 +320,23 @@ Exactly the text pinned in §10.6 step 3. **Semantic change NONE**: `kk` is the 
 **Surface proof.** `git diff --stat f0c6ae13b faf918b5c -- ios scripts __tests__` → **1 file changed, 5 insertions(+), 1 deletion(-)** — the accepted code state and the repair differ, across the entire kernel/harness/driver/reader/gate surface, by this hunk and nothing else. Gate `__tests__/voice-kernel-00-source-gates.test.ts` alone at `faf918b5c`: **82/82** (the test file is inside `SID_ALLOWED`; the twelve frozen-subject history pins and the invariant-file identity to `ac12dedf4` are unaffected because no kernel file moved). `k00-source-ledger.py` and both frozen readers untouched. Not verifiable here: that Swift 6.2.4 now type-checks the expression — the remote session has no toolchain; that is precisely what `SID MAC-COMPILE-02` exists to witness, and a further time-out on a sibling expression would be that act's finding, not this one's.
 
 **Standing after §10.8.** `SID REPAIR-01` WRITTEN at `faf918b5c` · awaiting **founder diff review** (this section is the diff) · `SID MAC-COMPILE-02` **NOT OPEN** — opens only by a separate founder act naming `faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8` exactly, with its own §10.2-shaped pin (same steps; new `$OUT` stamp; `mkdir -p "$OUT"` moved after the `test ! -e "$WT"` precondition per the §10.7 design note; reinstall pins still empty). Accepted code state for **source/offline** purposes remains `f0c6ae13b`; for **compile** purposes the candidate is `faf918b5c`. Sibling expressions HOLD · FIRST-INSTALL CLOSED · SID ENTRY WITNESS REQUIRED, not opened · device execution NONE · C-D26 HOLD · the §10.7 third-transcript `ls` still owed as a record matter.
+
+### 10.9 FOUNDER RULING on the third transcript (2026-09-15): queued duplicate → **EXECUTION ESTABLISHED · precondition refusal at the existing `$WT` · non-substantive residue only** — supersedes the §10.5 / §10.7 / `RETURN.txt` "not established" wording
+
+Recorded verbatim in substance. The founder checked the file directly on the Mac: `sid-mac-compile-01-transcript-20260915T213208Z.log` is 0 bytes, created **21:32:08Z**, and the carrier's own transcript `sid-carrier-transcript-20260915T213212Z.log` begins **21:32:12Z** — four seconds later. With the executed script's preamble (`set -e` · … · `mkdir -p "$OUT"` · `test ! -e "$WT"`) and the original worktree already present from the governed run, a second invocation creates its `$OUT` and its tee transcript, reaches `test ! -e "$WT"`, and terminates before producing any stdout. Ruled standing:
+
+```text
+first invocation
+  EXECUTED · STOP at Swift test compilation · authority SPENT
+
+queued duplicate
+  EXECUTION NOW ESTABLISHED
+  precondition refusal at existing $WT
+  0-byte tee transcript
+  no gate · no Swift · no Xcode · no device act
+  non-substantive residue only
+```
+
+This **supersedes** three earlier wordings, none of which is edited: §10.5 ("visible scrollback, execution NOT ESTABLISHED"), §10.7 ("outcome most plausibly a precondition refusal, NOT witnessed"), and the carrier's `RETURN.txt` line `DUPLICATE_INVOCATION not-established` (authored by the carrier script from §10.5's state; the carrier directory is frozen evidence and is not rewritten). The §10.7 `ls -ld …` line is no longer owed; it remains a free confirmation (an empty `…-out-20260915T213208Z` directory would be the mechanism's footprint) and, if run, would be recorded as such. The §10.7 design note stands for the next pin: `mkdir -p "$OUT"` after the worktree precondition, so a refusal leaves no residue at all.
+
+**Ordering, as the founder stated it and as it ran.** §10.7 (carrier read, third-transcript finding) was written and committed (`e7a50435f`) **before** `SID REPAIR-01` (`faf918b5c`); the ruling here changes the finding's classification, not its place in the sequence. `REPAIR-01` remains open exactly as ruled (§10.6) and is written (§10.8), awaiting diff review. Siblings HOLD. `SID MAC-COMPILE-02` NOT OPEN.
