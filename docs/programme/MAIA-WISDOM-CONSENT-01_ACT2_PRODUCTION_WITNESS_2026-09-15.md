@@ -1,6 +1,11 @@
 # MAIA-WISDOM-CONSENT-01 · ACT 2 — Production Witness
 
-**Status: DEPLOYED · ⭐ DECISIVE FALSIFIER PASSED · ⛔ ACT 2 NOT CLOSED — TWO PROBES OUTSTANDING.**
+**Status: DEPLOYED · ⭐ ALL THREE PROBES WITNESSED 401 · ✅ ACT 2 CLOSED.**
+
+> ⭐ **UPDATED 2026-09-15**: the two outstanding probes were run clean and returned `401`.
+> See `…_ACT2_CLOSURE_2026-09-15.md`. §3 below is kept as written at the time — it was
+> accurate when recorded and is preserved rather than edited to read as if it had always
+> said otherwise.
 **Date:** 2026-09-15 · Deploy run by founder from the Mac Studio.
 
 ---
@@ -48,8 +53,8 @@ rule, exactly as the 30-test suite asserted. ⛔ Nothing was contributed: `{}` c
 | deployed SHA identified | ⭐ **`8cb640644`**, verified in image + container + printenv |
 | candidate lineage preserved | ⭐ identical to `origin/clean-main-no-secrets` |
 | breakthrough anonymous probe → 401 | ⭐ **401** |
-| **control anonymous probe → 401** | ⛔ **NOT RUN** |
-| **knowledge anonymous probe → 401** | ⛔ **NOT RUN** |
+| **control anonymous probe → 401** | ⛔ NOT RUN *(at the time; ⭐ since witnessed `401`)* |
+| **knowledge anonymous probe → 401** | ⛔ NOT RUN *(at the time; ⭐ since witnessed `401`)* |
 | no contribution/action submitted | ⭐ `{}` only; no action verb, no query |
 | `ACCESS_CONTROL_MODE` unchanged | ⭐ 0 occurrences in the diff |
 | Seam 2 unchanged | ⭐ asserted in suite; no file touched |

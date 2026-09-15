@@ -31,9 +31,9 @@ Fire · Water · Earth · Air · Weather, ⛔ without asserting they are ontolog
 
 | Lane | State |
 |---|---|
-| ⭐⭐ **`MAIA-WISDOM-CONSENT-01`** — existing AIN ingress boundary | **OPEN** · ACT 1 census complete · ⚠️ reachability falsifier owed |
+| ⭐⭐ **`MAIA-WISDOM-CONSENT-01`** — existing AIN ingress boundary | **OPEN** · ACT 1 CLOSED · ✅ **ACT 2 CLOSED** (Seam 1 contained in production, `8cb640644`, all three probes `401`) · ⛔ ACT 3 unopened |
 | **`MAIA-WISDOM-WITNESS-01`** — external corpus + production population | **OPEN, parallel** · ⛔ unreachable from any container · founder-side |
-| `ACT 2C` — AIN toroidal circulation governance | ⛔ blocked on CONSENT-01 |
+| `ACT 2C` — AIN toroidal circulation governance | ⛔ blocked on CONSENT-01 ACT 3 (the consent boundary), ⛔ not on ACT 2 |
 | `ACT 2B` — epistemic relationship / contradiction architecture | ⛔ not opened · ⚠️ R13 has no substrate |
 | `ACT 2A` — source / provenance / rights / elemental carrier | ⛔ design may proceed; **implementation held for WITNESS-01** |
 | `MAIA-WISDOM-RUNTIME-01` — live member route severance | ⛔ recorded, not opened |
@@ -72,3 +72,17 @@ CONSENT-01, 2C governance, or 2B epistemic design.
 
 **F.13** — the Unified Field ⇄ AIN boundary census (46 files carry unified/collective-field
 language) remains **uncensused**; its own read-only act.
+
+## Update — 2026-09-15, end of session
+
+**`MAIA-WISDOM-CONSENT-01` ACT 2 CLOSED.** Seam 1 contained in production at `8cb640644`;
+`breakthrough` · `control` · `knowledge` all refuse anonymous callers with `401`, where
+`breakthrough` returned `400` that morning. Record:
+`MAIA-WISDOM-CONSENT-01_ACT2_CLOSURE_2026-09-15.md`.
+
+⛔ **Carried, unresolved:** identity binding (closed by unreachability, not by binding) ·
+Seam 2 and R15 · `ACCESS-MATRIX-COVERAGE-01` · `MAIA-WISDOM-WITNESS-01` (A and B, now also a
+rights question) · `MAIA-WISDOM-RUNTIME-01`.
+
+⛔ **ACT 3 — contribution authority model — unopened.** It is the next act in this lane, and
+it opens only by founder act.
