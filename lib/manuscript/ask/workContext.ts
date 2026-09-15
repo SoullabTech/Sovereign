@@ -44,7 +44,14 @@
  */
 
 import { query } from '@/lib/db/postgres';
-import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+/* ⭐ THE PROJECTION LAW COMES FROM ITS OWN ADDRESS, and the address is the point.
+   ⛔ Importing it from `saveSection` pulled that module's mutating exports into
+   the Ask route's transitive value-import graph, and `askRouteEffectFamily`
+   refused — correctly. The authority to read a canonical projection must not
+   confer transitive authority to mutate the manuscript. Fixed by
+   SECTION-PROJECTION-EXTRACTION-01, which moved the pure rule character for
+   character; ⛔ the guard was not widened to admit the old address. */
+import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import {
   resolveSituatedWork, type SituatedWork,
 } from '@/lib/writersStudio/workSituation';
