@@ -5,6 +5,13 @@
 **A research paper for Julian Michels / Sophontic**
 **Soullab / AIN · September 2026**
 
+> ⚠️ **ROLE CHANGED, 2026-09-15, later the same day.** This was landed as the
+> CANONICAL LONG PAPER (marking preserved below). A second founder ruling the same
+> day made `AIN_RELATIONAL_INTELLIGENCE_PAPER_DRAFT_2026-09-15.md` the working base,
+> on the grounds that it carries evidentiary custody this document never had.
+> **This file is now the COMPARISON SOURCE** — consulted for anything the base
+> omits, ⛔ never merged wholesale. Its prose remains founder-authored and verbatim.
+>
 > **CANONICAL LONG PAPER.** Founder-authored, landed verbatim 2026-09-15.
 > The bridge page (`bridge-page.html`, published artifact) is the short entry point and
 > a projection of this document; where they differ, this governs.

@@ -4,11 +4,23 @@
 
 **Soullab · draft for Sophontic · 2026-09-15**
 
-> ⚠️ **SUPERSEDED, same day.** The canonical long paper is
-> `AIN_RELATIONAL_INTELLIGENCE_PAPER_v1_2026-09-15.md` (founder-authored).
-> This was a parallel draft written before that one landed — it was never a
-> continuation of it and does not govern. ⛔ Do not send this version.
-> Retained as a record, ⛔ never edited to read as if it had always been superseded.
+> ⚠️⚠️ **CUSTODY REVERSED, 2026-09-15, later the same day — recorded, not quietly applied.**
+>
+> Earlier today this draft was marked SUPERSEDED and the founder-authored
+> `AIN_RELATIONAL_INTELLIGENCE_PAPER_v1_2026-09-15.md` was landed as canonical.
+> **That ruling is withdrawn by a second founder ruling**: this draft carries
+> evidentiary custody the chat-authored paper never had — its claims were verified
+> against the repository at `3909be96` as they were written — so **this file is now
+> the working base**, and v1 is the **comparison source**, consulted for anything
+> this version omits. ⛔ v1 is not merged in wholesale.
+>
+> ⛔ The first marking is kept verbatim above the second rather than deleted: a
+> custody reversal that leaves no trace is indistinguishable from never having
+> ruled the first way. Both rulings were real, in that order, hours apart.
+>
+> **Status: WORKING BASE for the external-researcher edit pass. ⛔ Conceptual
+> expansion FROZEN — the intellectual chain is complete; edits are compression,
+> legibility, evidence marking and the closing invitation only.**
 ⚠️ **DRAFT.** Written for one reader and his colleagues. Not published, not a claim of
 result. ⛔ Nothing in it authorizes any experiment described in it.
 
@@ -31,23 +43,22 @@ several points, which §9 names.
 ## 0 · How to read the evidence markings
 
 A recurring failure in this field is prose that lets a design intention, a type
-declaration and a production observation all sound alike. We mark them, and the markings
-are enforced by tooling rather than by care where the tooling exists.
+declaration and a production observation all sound alike. Every substantive claim below
+carries one of three marks, and where tooling can enforce the mark, it does.
 
-**Maturity** — `LIVE` (running in production) · `DESIGNED` (built, not response-governing)
-· `VISION` (stated direction, not built).
+| | means |
+|---|---|
+| **[fact]** | observed in the running system, or exercised by a named test that we ran |
+| **[contract]** | the architecture declares it and the compiler enforces it — **nothing has yet observed the system honouring it under load** |
+| **[hypothesis]** | we believe it and have not established it |
 
-**Grounding**, for anything asserted about behaviour — `runtime_witnessed` (exercised
-against a real route and observed) · `harness_exercised` (a named script or suite ran it)
-· `contract_only` (types and the compiler, nothing more) · `declared_unemitted` (in the
-vocabulary, emitted by no code path).
+⚠️ **[contract] is not a softer way of saying [fact].** It is the honest statement that a
+distinction exists in the code's type system and has not been watched working. Eight of
+the twelve relational operators in §7 are [contract]. We say so wherever they appear, and
+a validator recomputes each operator's mark from its weakest source so none can quietly
+claim a better one.
 
-⚠️ `contract_only` is not a weaker way of saying the same thing. **It means the
-architecture declares the distinction and nothing has yet observed the system honouring it
-under load.** Eight of the twelve relational operators in §7 sit there. We say so on every
-surface where we describe them.
-
-Counts below were verified against commit `3909be96` in the session that wrote this.
+Figures were verified against a specific commit as this was written.
 
 ---
 
@@ -58,13 +69,13 @@ layer. It is an attempt at an **operating system for relational intelligence**: 
 substrate that decides what may participate in an encounter between a person and a
 machine, on what standing, under whose authority, and with what obligations afterwards.
 
-Concretely, at this commit: 487 migrations, 77 ratified canon documents, 16 sovereignty
-invariants, 30 named refusal tests, a closed registry of 54 declared producers that may
-contribute to a turn, and a deployment lane that refuses to build an image without a
-named immutable commit.
+Two figures matter here and the rest would be a catalogue. The system carries **sixteen
+ratified sovereignty invariants** — constitutional rules that a change must satisfy or not
+ship — and **thirty named refusal tests**, each of which exists because a specific way of
+failing a person had to be made structurally impossible rather than merely discouraged.
 
-⛔ None of that is offered as impressive. It is offered as the explanation for a
-peculiarity that matters to this paper:
+⛔ Neither is offered as impressive. Both are offered as the explanation for a peculiarity
+that matters to this paper:
 
 > **The distinctions we now want to measure were not designed to be measured. They were
 > each the minimum refusal of a specific way the system could have deceived someone.**
@@ -106,8 +117,7 @@ requirement on the code: differentiated perspectives must be preserved **long en
 their differences to remain meaningful**, and only then allowed to participate in
 integration.
 
-The **Corpus Callosum** architecture is one expression of it — `LIVE`, `runtime_witnessed`
-at the substrate: eight parallel voices (the five elemental modes plus three others) emit
+The **Corpus Callosum** architecture is one expression of it — **[fact]** at the substrate: eight parallel voices (the five elemental modes plus three others) emit
 into `agent_runs` under production traffic, and the router integrates selectively rather
 than broadcasting everything forward. ⚠️ Two limits stay attached wherever we say this:
 **the member-facing experiential effect of that selectivity is unmeasured**, and two
@@ -147,35 +157,40 @@ refusals written to prevent them recurring. Four examples, each now load-bearing
 **Provenance became three axes, not one scalar.** A single "epistemic class" let
 authorship hide inside standing: *system_inferred* and *member_authored* were points on
 one scale, so a derivation could drift toward the authority of a statement. The contract
-now separates `authoredBy` × `participationClass` × `authority` and declares them
-orthogonal — who wrote it, how it arrived, what standing it carries. ⭐ The ruling is
-recorded in the file itself: *a candidate's provenance is three axes, not one scalar.*
-`DESIGNED` · `contract_only`.
+now separates three independent axes and declares them orthogonal: **who wrote it, how it
+arrived, and what standing it carries.** A machine derivation and a person's own sentence
+can now arrive by the same route without the route deciding whose words they are. ⭐ The
+ruling is recorded in the code itself: *a candidate's provenance is three axes, not one
+scalar.* **[contract]**
 
 **Historical recovery is type-separated from present location.** An observation about a
 sentence in a draft must remain recoverable after the sentence is edited — and must not
-thereby claim to describe the draft as it now stands. `recoverEvidence` reconstructs from
-a digest-verified frozen reading; `locateCurrent` compares against the live work and
-returns `current | superseded | unmeasured`. ⭐ The third state exists because an
-unreadable present must not be reported as agreement. `DESIGNED` · `harness_exercised`.
+thereby claim to describe the draft as it now stands. Two separate operations answer the
+two questions, and the second returns **three** answers, not two: it matches, it has
+changed, or *it could not be checked*. ⭐ The third exists because a present state that
+could not be read must never be reported as agreement. **[fact]** — exercised by a named
+harness, not yet watched in production.
 
 **The disclosure boundary returns permission without executing the crossing.** Authority
 is resolved, proved and accounted for; then the *caller* performs the crossing. The seam
 never calls cognition. ⭐ The reason is written into the module: *a seam that both
-authorized and executed would make the two indistinguishable in a later audit.*
-`LIVE` · `runtime_witnessed`.
+authorized and executed would make the two indistinguishable in a later audit.* **[fact]**
 
-**Receipts have `attempted` and `crossed` and deliberately no `withheld`.** A record is
-written before a crossing and confirmed after it. There is no state meaning *definitely
-did not cross*, ⭐ because that would assert a negative the database cannot prove — the
-unconfirmed record is genuinely ambiguous and is required to stay that way. `LIVE` ·
-`runtime_witnessed`.
+**A record can say a crossing was attempted, or that it completed — never that it
+definitely did not happen.** The record is written before the crossing and confirmed after
+it. There is deliberately no third state meaning *did not cross*, ⭐ because that would
+assert a negative the database cannot prove; an unconfirmed record is genuinely ambiguous
+and is required to stay that way. **[fact]**
 
 ⭐⭐ **Read them together and they are one principle at four sites.** Authorship must stay
 distinguishable from inference. Historical truth from present truth. Authorization from
-action. A possible crossing from a proven one. *Preserve meaningful differentiation before
-synthesis* — the same commitment Spiralogic states developmentally, expressed as
-computational law because governance would not let it be expressed any other way.
+action. A possible crossing from a proven one.
+
+> ### The same commitment Spiralogic states developmentally became computational law because persistent relationship repeatedly failed when meaningful differences were allowed to collapse.
+
+⭐ That is the paper's claim in one line, and it is a claim about **pressure, not
+inspiration.** Nobody derived these four from the elemental grammar. Each was written
+after something went wrong, and only afterwards did they turn out to be the same rule.
 
 ---
 
@@ -201,8 +216,8 @@ outdated or wrong.** Otherwise long-term memory turns familiarity into ontology.
 why succession is carried by the successor (`supersedes` is stored; `superseded_by` is
 derived), why a claim ladder distinguishes hypothesis from observation from proof, and why
 staleness is *detect → ask → record* rather than a timer that silently rewrites a belief.
-Mixed: the ladder and supersession are `LIVE`/`harness_exercised`; the temporal memory
-decomposition is `VISION`, and we say so.
+Mixed, and worth separating: the claim ladder and the succession rule are **[fact]**; the
+fuller temporal-memory decomposition is **[hypothesis]** — written down, not built.
 
 ⭐⭐ **Corrigibility is the constraint that connects governance to research.** A system
 required to remain correctable must keep its beliefs, their sources and their contraries
@@ -223,22 +238,27 @@ extraordinary effort on **refusing to let one kind of thing become another kind 
 differentiated processes belong *beneath* the encounter. MAIA is the relational
 intelligence and the single voice through which those perspectives are integrated.
 
-Architecturally: a closed registry of 54 declared producers, a pure adjudication function
-over the three provenance axes, one renderer, one identity resolver, and a content-free
-manifest recording what was considered and what became of it. A producer's contribution
-is `AVAILABLE`, then finally `HELD`, `OFFERED`, `ADMITTED` or `EXCLUDED`, each with a
-reason drawn from a closed family disjoint across the four states.
+Everything that could contribute to a turn is declared in advance — there is a fixed list,
+and anything not on it cannot reach the encounter. Each candidate is judged by a function
+that reads only its three provenance axes, and the judgment is recorded in a log that
+carries identifiers and counts but no content, so what was considered is auditable without
+the audit itself becoming a second copy of the person's material.
 
-⭐ `HELD ≠ EXCLUDED` is the distinction that matters most and is the easiest to lose.
-*Excluded* means not constitutionally eligible. *Held* means legitimately considered and
-deliberately kept out of this turn — ephemeral, conferring no gain in standing, and
-reconsiderable next turn. Collapsing them would make a person's own privacy preference
-indistinguishable from an ineligibility, which is to say it would make a promise kept
-indistinguishable from a door that was never open.
+A candidate ends in one of four states, and the two that look alike are the ones that
+matter:
 
-`DESIGNED` · currently `shadow_executed`: the canonical construction runs on live turns
-and emits a structural diff, while legacy assembly still produces the member's response.
-⛔ We do not describe it as governing MAIA's speech, because it does not yet.
+> **Withheld** — legitimately eligible, deliberately kept out of *this* turn. Temporary,
+> confers nothing, reconsiderable next time.
+> **Not admissible** — never eligible here at all.
+
+⭐ Collapsing those two would make a person's own privacy preference indistinguishable
+from an ineligibility — which is to say it would make **a promise kept indistinguishable
+from a door that was never open.**
+
+**[contract]**, with one qualification worth stating plainly: this construction runs on
+live turns today and emits a structural comparison, but an older path still produces the
+words the person actually reads. ⛔ We do not describe it as governing MAIA's speech,
+because it does not yet.
 
 ---
 
@@ -389,6 +409,10 @@ Elemental Alchemy → Spiralogic → differentiated attention → preserve diffe
 
 ---
 
+![The lineage and the bridge](./lineage-and-bridge.svg)
+
+---
+
 ## 9 · What we are not claiming, and what would falsify this
 
 ### 9.1 Refusals
@@ -401,8 +425,10 @@ Elemental Alchemy → Spiralogic → differentiated attention → preserve diffe
   one.** Having built the types is not partial evidence for it. This is the inflation the
   whole paper is arranged to refuse, and it is the one a sympathetic reader is most likely
   to grant us by accident.
-- ⛔ Eight of the twelve operators are `contract_only`. One is `runtime_witnessed`, two are
-  `harness_exercised`, one is `declared_unemitted`.
+- ⛔ **Eight of the twelve operators are [contract].** Three are [fact] — one observed against
+  a live route, two exercised by a named harness. The twelfth is stranger than either: the
+  distinction is declared in the system's vocabulary and emitted by no code path at all.
+  ⭐ We found that by trying to build a test for it.
 
 ⭐ Two independent readings inside our own programme reached that fourth refusal from
 opposite directions — an earlier research draft warning against it from the theory side,
@@ -425,24 +451,39 @@ constraint on what we may say, not as a finding.
 
 ---
 
-## 10 · What we would ask of you
+## 10 · One specific thing we would like to do with you
 
-1. **Are these legitimate candidate invariants, or are we conflating levels?** The answer
-   we most want to hear, if it is the true one, is *"you are mixing architecture with
-   representation."*
-2. **Review the perturbation methodology** — 48 pairs and a 2×2 control matrix — before it
-   grows.
-3. **Instrument latent space on controlled relational pairs.** Does changing a relation
-   while holding the payload constant produce systematic structure: directions, subspaces,
-   manifolds, trajectories, attractors?
-4. **Compare the two layers.** Does explicit relational scaffolding select for more coherent
-   internal relational geometry *without retraining the underlying model?* That separates
-   into two experiments which should not be run as one:
+Not a programme. One experiment, small enough to run and sharp enough to fail.
 
-```
-E1   does relational scaffolding  →  different internal reasoning geometry?
-E2   can that discovered geometry →  be trained directly?
-```
+> ### E0 · Adversarial review, then one operator through your instruments.
+>
+> **Step one — try to break the corpus.** We send the 48 pairs. You tell us whether a
+> relational perturbation is genuinely distinct from the perturbation classes you already
+> study, or whether we have built an elaborate way of restating lexical sensitivity. ⭐ The
+> answer we most want, if it is the true one, is *"you are mixing architecture with
+> representation."* We would rather learn that from you in a week than from ourselves in a
+> year.
+>
+> **Step two — take the single strongest operator and look inside.** Our candidate is the
+> one where the downstream artifact is identical in both conditions, so nothing in the
+> payload can carry the answer. On an open-weight model, does the relational condition
+> separate in representation — and does the separation survive our paraphrase controls,
+> which hold the relation fixed while changing every word around it?
+>
+> **The decision rule we would accept in advance:** if the relational perturbation and the
+> paraphrase control produce comparable representational separation, the operator is
+> tracking surface form and we drop it. We will report that result whichever way it goes.
+
+That is the whole first ask. Two larger questions stand behind it and should not be
+folded into it — whether relational scaffolding produces a different internal geometry
+without retraining, and whether such a geometry could later be trained directly. ⛔ Those
+are separate experiments and we would not run them as one.
+
+⭐ And if you would rather begin somewhere else entirely, the most useful version of this
+collaboration starts with a question we cannot ask ourselves well:
+
+> **What experiment would you design if your goal were to prove that we are confusing
+> external architecture with internal representation?**
 
 ---
 
@@ -464,3 +505,44 @@ don't, we would like to know — which is why §9 is a section and not a footnot
 
 **Standing at this draft:** corpus validated · model execution not performed ·
 representational correspondence not established · geometric claim not established.
+
+
+---
+
+## Edit-pass record · 2026-09-15
+
+⛔ **Conceptual expansion FROZEN before this pass.** The intellectual chain is complete;
+nothing below added an idea. Five changes, all legibility or compression:
+
+1. **Repetition removed** — the refusals were stated in three places; they now sit once,
+   in §9.1, with §0 carrying only the marking convention.
+2. **Internal vocabulary retired** — seven internal grounding terms collapsed to three
+   visible marks (**[fact] · [contract] · [hypothesis]**); *producer*, *manifest*,
+   *adjudication*, *HELD/EXCLUDED* replaced with what they mean. Zero internal identifiers
+   remain outside §3's two deliberate ones.
+3. **Catalogues cut** — §1's six-figure inventory reduced to the two figures that carry
+   argument; §5's registry internals replaced by the one distinction that matters.
+4. **Marks made visible** — every substantive claim now carries its class inline rather
+   than in a convention a reader must remember.
+5. **The invitation made specific** — four asks replaced by **E0**, one two-step
+   experiment with a decision rule stated in advance, plus the standing invitation to
+   design the experiment that would refute us.
+
+⚠️ **One instruction I read as two and split.** *Keep one or two code-derived examples
+rather than a catalogue* and *§3's four distinctions are load-bearing* pull opposite ways.
+Resolution: **all four distinctions stay — the argument is that the principle recurred
+independently, and one instance cannot show recurrence** — but only two still cite code
+identifiers; the other two are stated in plain language. ⛔ If the intent was four down to
+two, that is a founder call and the cut is trivial to make.
+
+⭐ **The protected sentence is installed verbatim** at §3's close, set as the paper's
+one-line claim:
+
+> *The same commitment Spiralogic states developmentally became computational law because
+> persistent relationship repeatedly failed when meaningful differences were allowed to
+> collapse.*
+
+⛔ **Not done, deliberately:** tightening what Julian already knows. That needs knowledge
+of the reader that this session does not have.
+
+⛔ **Still open:** the disclosure-scope decision, carried in §22 of the comparison source.
