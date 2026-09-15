@@ -2067,3 +2067,78 @@ git log -1 --format=%H
 Return: branch name + commit SHA + the `RETURN.txt` and `SHA256SUMS.custody` text → §18.18 (this session cherry-picks with `-x`, runs `shasum`/`sha256sum -c` on both seals, re-executes the §18.5.2 parser on the copied captures, reads `JOINT.txt` as derived, and records; the gate's corpus partition is not touched by this directory — it holds no journal and no `ledger.md`). Nothing about the S2 population is opened by a clean return; §18.17.1 item 6 governs.
 
 **Standing after §18.17:** WITNESS-05 ACCEPTED · spent · CUSTODY-COMPLETE-01 AUTHORIZED, pinned, NOT YET EXECUTED · C-D24 ACCEPTED · 69 last read 15:49:59Z (batch preflight, in custody) · `b198e2e37` unchanged · S2 population NOT YET AUTHORIZED · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.18 — `S2-WITNESS-05-CUSTODY-COMPLETE-01` EXECUTED → custody Stages 0–5 PASS · **STOP AT THE COMMIT TRANSPORT** (governance hook refused: dependencies absent in the fresh worktree) · carrier STAGED LOCALLY, NOT COMMITTED, NOT PUSHED · pin defect C-D25 (this session's) — 2026-09-15
+
+### 18.18.1 What the executing lane reported (founder-relayed; nothing received here)
+
+Every custody line of §18.17.2 passed before the commit boundary: source seal **9/9 OK** before the copy · destination seal **9/9 OK** after · all eleven files `cmp` byte-identical · parser derivation identical (`PARSER_DERIVATION_DIFF_RC=0`) · `JOINT.txt` self-identified as derived · `s2w5-block[ABC].out` copied · `s2w5-blockD.out` absent as attested, the Block-D note written exactly as pinned · Stage-0 block hashes read and labelled as a custody-time read · originals untouched · no device / volume / playback / batch / witness act. `SHA256SUMS.custody` was generated. `RETURN.txt` as produced:
+
+```text
+ACT S2-WITNESS-05-CUSTODY-COMPLETE-01
+BRANCH feature/k00-s2-witness-05-custody-complete-20260915T163124Z
+CARRIER_BASE a5e874aa21964958372a3699df01dfb6874ba264
+STAMP 20260915T163124Z
+SOURCE /private/tmp/k00-s2-volume-restore-03-20260915T154626Z
+BEFORE_COPY_SEAL 9/9 OK
+AFTER_COPY_SEAL 9/9 OK
+PARSER_DERIVATION_DIFF_RC 0
+ORIGINALS_TOUCHED none
+DEVICE_ACTS none
+VOLUME_ACTS none
+```
+
+Then the pre-commit hook refused (verbatim, relayed):
+
+```text
+❌ Pre-commit blocked: repository dependencies are not installed.
+Run: npm ci
+Governance hooks never download dependencies at hook time.
+```
+
+The lane did not install dependencies, bypass the hook, amend the pin or retry — none of which §18.17.2 authorized. Because the Stage-5 block ran under `set -u` only (no `set -e`), the `git push -u origin "$BR"` line executed after the refused commit and **created the remote branch at the carrier base `a5e874aa2` with no custody commit on it**. The staged carrier is intact in the local worktree `/private/tmp/k00-s2w5-custody-20260915T163124Z`; no custody evidence exists on any remote.
+
+### 18.18.2 Reading
+
+- **The custody act did its work; the transport failed.** Nothing about the evidence is in doubt: the seals verified twice, the copies are byte-identical, the derivation matched, the source directory was only read. What did not happen is the carrier reaching a commit. The founder's distinction holds in the other direction too: *custody may complete the carrier; a carrier that never left the worktree has completed nothing yet.*
+- **The refusal was the hook doing its job, and the lane refusing to improvise was correct.** A fresh `git worktree add` shares the object database but not `node_modules`; the governance pre-commit needs them and, by its own rule, never downloads at hook time. The lane returned for a ruling instead of choosing a transport — the AUTH-3 posture (authority is an input, never a discovery).
+- **C-D25 — defect in this session's pin, not in the lane's conduct.** §18.17.2 Stage 0 created a fresh worktree and never provisioned the hook's dependencies, although this record already carries the exercised answer: §16 Block A links the main checkout's tree (`[ -e node_modules ] || ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules`, line 608; Block E note at line 852; the §18.4 census worktree did the same, founder-disclosed at line 944). Second defect in the same pin: Stage 5 chained `git commit` and `git push` without `set -e`, so a refused commit still pushed an empty branch. Both are instruction defects of the §12.1 / MAC-COMPILE-03 shape; the pin is preserved as written, corrected beside it (§18.18.4) only on a ruling.
+- **The remote branch `feature/k00-s2-witness-05-custody-complete-20260915T163124Z` at `a5e874aa2`** carries no evidence and is not a custody artefact; it is residue of the pin defect. Left in place (deletion of a remote branch is a founder act, not needed for anything).
+- Nothing here is a rerun, a new read, a device act or a volume act. The restoration standing is unchanged from §18.17.1 item 2: repository-verifiable (batch preflight) + founder-attested/local; the carrier that would upgrade it is staged, unshipped.
+
+### 18.18.3 Returned to the founder — commit-transport ruling only
+
+The evidence is not in question; only how the already-staged carrier may lawfully reach a commit. Three shapes, none chosen here:
+
+1. **Link the existing dependencies (precedented in this record):** in the same local worktree, `ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules` — no download, no network, the exact line §16 Block A and the §18.4 census already exercised — then the same `git commit` and `git push` on the same staged carrier. The staged index is not rebuilt; the symlink is untracked and never added.
+2. **`npm ci` in the worktree** — what the hook message suggests; downloads and writes a dependency tree; not precedented in this lane; the lane was right not to treat the message as authority.
+3. **Hold** — the local worktree keeps the staged carrier; nothing more.
+
+Whatever is ruled: no new stamp, no fresh worktree, no re-copy — the carrier already staged is the evidence, and creating a second one would be the "recreate the act" the founder forbade. A ruling for shape 1 can use §18.18.4 verbatim.
+
+### 18.18.4 Transport pin for shape 1 — valid ONLY on the founder's ruling naming it (nothing else runs)
+
+```bash
+set -eu
+WT="/private/tmp/k00-s2w5-custody-20260915T163124Z"
+REL="docs/programme/VOICE-2026/driver-ledger/s2-restore-witness-05-20260915T154626Z"
+cd "$WT"
+git rev-parse HEAD
+git rev-parse --abbrev-ref HEAD
+git status --short
+test -e node_modules && echo "NODE_MODULES_PRESENT true" || ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
+test -L node_modules && echo "NODE_MODULES_LINKED true"
+git status --porcelain | grep -v '^?? node_modules$' | grep -v "^A  $REL/" > /private/tmp/k00-s2w5-custody-20260915T163124Z.status-residue.txt || true
+test ! -s /private/tmp/k00-s2w5-custody-20260915T163124Z.status-residue.txt && echo "STAGED_CARRIER_ONLY true" || { echo "STOP: index or tree carries more than the staged carrier"; cat /private/tmp/k00-s2w5-custody-20260915T163124Z.status-residue.txt; exit 3; }
+( cd "$REL" && shasum -a 256 -c SHA256SUMS.custody ) | tail -3
+( cd "$REL" && shasum -a 256 -c SHA256SUMS ) | grep -c ': OK$'
+git commit -m "custody(voice-2026): S2-WITNESS-05-CUSTODY-COMPLETE-01 — RESTORE-03 evidence carrier, byte-identical, seal 9/9 before and after copy; derived JOINT.txt self-identified; Block D note, no manufactured output"
+git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
+git log -1 --format=%H
+```
+
+Return: the commit SHA + the pushed branch → this session cherry-picks with `-x`, recomputes both seals, re-executes the §18.5.2 parser on the copied captures, reads `JOINT.txt` as derived, records §18.19. The symlink is never committed (untracked; the `STAGED_CARRIER_ONLY` line refuses anything beyond the staged carrier).
+
+**Standing after §18.18:** CUSTODY-COMPLETE-01 custody PASS · commit REFUSED (dependencies absent) · carrier STAGED LOCALLY · custody evidence pushed NO · remote feature branch at base only (residue) · C-D25 = this session's pin defect (dependency link omitted; no `set -e`), pin preserved, correction beside it · experimental act untouched · restoration standing unchanged · `b198e2e37` unchanged · S2 population NOT AUTHORIZED · S3 CLOSED · KERNEL-00 acceptance CLOSED.
