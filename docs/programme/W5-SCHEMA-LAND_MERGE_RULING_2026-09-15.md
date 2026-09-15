@@ -1,4 +1,4 @@
-# W5-SCHEMA-LAND · MERGE RULING — **OPENED**
+# W5-SCHEMA-LAND · MERGE RULING — **CLOSED · LANDING AUTHORIZED**
 
 **Date** 2026-09-15 · **Opened by** founder act, 2026-09-15 · **Lane** evidence/architecture
 (`claude/w4-2-schema-design`) — ⛔ deliberately **not** the carrier branch, which stays
@@ -12,8 +12,32 @@ Gate A               PASS  · durable rerun reproduced · exit 3
 Gate B               PASS  · 88 passed · 0 failed
 ```
 
-⛔ **THIS ACT AUTHORIZES NOTHING.** It opens the decision. Canonical merge ⛔ NOT
-AUTHORIZED · protected migration ⛔ NOT AUTHORIZED · production mutation ⛔ NONE.
+**CLOSED by founder act, 2026-09-15**, after they independently performed the
+owed protected reread from exact `f4a19e03a` and it reproduced the predeclared
+state exactly (`§3 latent pending 0` · `§4 SUBSUMED 51 · OUTSIDE-CARRIER 1` ·
+`§5 exactly 000001–000005` · `exit 3`). ⭐ Item 2 ✅ **DISCHARGED**.
+
+```
+🟢 AUTHORIZED, AS ONE CONTROLLED CHANGE WINDOW
+   canonical acquisition      348b9e54d6d1ee31bec2452e5fb96a1458baa372
+   protected execution        20260914000001 … 20260914000005, in filename order
+   ⛔ NOTHING ELSE
+   ⛔ CONDITIONAL on canonical still resolving to 1a5554300 before acquisition
+```
+
+**Precondition verified 2026-09-15 at acquisition time**: `origin/clean-main-no-secrets`
+= `1a5554300…`, carrier = `348b9e54d…`, and the acquisition is a
+⭐ **fast-forward** — canonical becomes *exactly* the artifact Gate B proved, with
+no merge commit and no new tree to re-prove.
+
+**Scope, asserted rather than asserted-about** — seven files, all `A`, zero
+modified, zero deleted, nothing outside `database/migrations/` + this programme's
+own record and witness; all five blobs re-checked against the founder's pins at
+the carrier tip.
+
+⛔ **Change-window law.** If canonical advances before acquisition: **STOP.** Do
+not casually rebase the carrier, and do not infer that the Gate A result
+survives. Re-read → reconcile → re-rule.
 
 ---
 
@@ -223,15 +247,31 @@ performed and not authorized here.**
 
 ```
 1  custody item 1 reconciled                       ✅ §1  (standing raised, unrepaired)
-2  protected reread immediately before landing     ⛔ OWED · founder act · §2
+2  protected reread immediately before landing     ✅ DISCHARGED · founder act · §2
 3  integrity disclosure sequencing                 ✅ IDENTIFIED + RECORDED · §3
    canonical acquisition of b67eb15e             ⏸ owed no later than W4-2 landing
                                                  ⛔ by cherry-pick, never branch merge
-4  merge + intended execution decided TOGETHER     ⛔ the founder's act, not mine
+4  merge + intended execution decided TOGETHER     ✅ RULED — one window, §0
 ```
 
 ⛔ Jarvis does not infer *gates green → merge*, and does not close a ruling on
-items it has only described.
+items it has only described. All four are now disposed, and the ruling closes on
+the founder's act — not on the gates being green.
+
+### ⭐ Failure custody, carried into execution
+
+```
+any migration fails after an earlier one landed
+   → STOP immediately            ⛔ do not continue to the next migration
+   → record the exact applied prefix
+   → record ledger + catalogue
+   ⛔ NO AUTOMATIC ROLLBACK
+```
+
+*A ledgered prefix is a known state.* Reconcile forward, or rule otherwise —
+never unwind on reflex. `scripts/witness/w5-post-landing-verify.sh` implements
+this: it names the exact applied prefix, and it neither performs nor recommends
+a rollback.
 
 ---
 
@@ -240,12 +280,14 @@ items it has only described.
 ```
 Gate A                          ✅ CLOSED · instrument sealed · rerun reproduced
 Gate B                          ✅ CLOSED · 348b9e54d · 88/0
-W5-SCHEMA-LAND merge ruling     🟢 OPEN — opened by this act, closes on §4
+immediate protected reread      ✅ DISCHARGED · reproduced predeclared state
+W5-SCHEMA-LAND merge ruling     ✅ CLOSED
 
-canonical merge                 ⛔ NOT YET AUTHORIZED
-protected migration             ⛔ NOT YET AUTHORIZED
-deployment                      ⛔ NOT AUTHORIZED
-production mutation             ⛔ NONE
+canonical acquisition 348b9e54d 🟢 AUTHORIZED · fast-forward · precondition held
+protected execution 000001-05   🟢 AUTHORIZED
+as ONE controlled window        🟢
+W4 schema · W4 runtime          ⛔ not yet
+production mutation             ⏸ begins only with this authorized window
 
 20260903000001                  ⚠️ RECONCILED AS RECORD · ⛔ UNREPAIRED
                                 ⚠️ standing raised: live member-facing, own lane owed
