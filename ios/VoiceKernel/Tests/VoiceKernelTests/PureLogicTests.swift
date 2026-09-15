@@ -482,7 +482,11 @@ final class SourceEstimatorTests: XCTestCase {
         XCTAssertEqual(SourceSignature.modulationIndex([Double](repeating: 0.3, count: 25), frameSeconds: dt)!, 0, accuracy: 1e-9, "a steady envelope has no 2 Hz line")
         XCTAssertNil(SourceSignature.modulationIndex([Double](repeating: 0, count: 25), frameSeconds: dt), "no energy → no index (journalled as -)")
         // deterministic fluctuation (a 7 Hz ripple + drift) stays well under the 0.9 witness threshold
-        let ripple = (0..<25).map { k in 0.5 + 0.3 * sin(2.0 * Double.pi * 7.0 * Double(k) * dt) + 0.01 * Double(k) }
+        let ripple: [Double] = (0..<25).map { (k: Int) -> Double in
+            let kk = Double(k)
+            let arg = 2.0 * Double.pi * 7.0 * kk * dt
+            return 0.5 + 0.3 * sin(arg) + 0.01 * kk
+        }
         XCTAssertLessThan(SourceSignature.modulationIndex(ripple, frameSeconds: dt)!, 0.9)
         // 26 frames (a 1.04 s tick) evaluates over frame time, not a fixed 25-point bin
         let seq26 = (0..<26).map { k in (Double(k) * dt).truncatingRemainder(dividingBy: 0.5) < 0.25 ? 1.0 : 0.0 }
