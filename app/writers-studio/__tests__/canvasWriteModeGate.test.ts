@@ -81,11 +81,26 @@ describe('one outline namespace at a time', () => {
   it('the Source outline branch passes no navigation callbacks', () => {
     // Source rows carry manuscript_sections ids; giving them onSelect would
     // send the wrong namespace to a queue that would miss every click.
-    const sourceBranch = page.slice(page.indexOf('<ManuscriptOutline', page.indexOf(') : (')));
-    const upToClose = sourceBranch.slice(0, sourceBranch.indexOf('/>'));
-    expect(upToClose).not.toContain('onSelect');
-    expect(upToClose).not.toContain('activeId');
-    expect(upToClose).not.toContain('statusOf');
+    //
+    // ⭐ IDENTIFIED BY ITS NAMESPACE, NOT BY ITS POSITION. This assertion used
+    // to find the Source branch by slicing from the file's first `) : (`, which
+    // made it a claim about where an unrelated ternary happened to sit: adding
+    // one anywhere earlier in the file silently pointed it at the section-aware
+    // branch instead, where navigation props are correct and expected. It read
+    // as a failure of the Source branch and was neither.
+    //
+    // The rule is about the namespace, so it is stated that way and now holds
+    // for every Source outline in the file rather than for one found by
+    // arithmetic. The token set is unchanged.
+    const sourceBranches = [...page.matchAll(/<ManuscriptOutline\b[\s\S]*?\/>/g)]
+      .map((m) => m[0])
+      .filter((el) => /sections=\{sections\}/.test(el));
+    expect(sourceBranches.length).toBeGreaterThan(0);
+    for (const el of sourceBranches) {
+      expect(el).not.toContain('onSelect');
+      expect(el).not.toContain('activeId');
+      expect(el).not.toContain('statusOf');
+    }
   });
 
   it('the section outline is fed write-state rows, not Source sections', () => {
