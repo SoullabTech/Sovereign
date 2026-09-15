@@ -67,3 +67,29 @@ asked yet. If he replies, the paper is the second message.
 
 ⛔ Do not attach the corpus in a first note. Reviewing 48 pairs is a real ask and should
 be made only once he has said the question interests him.
+
+---
+
+## North star for the conversation that follows
+
+⭐ **Founder, 2026-09-15.** Preserved here rather than in the paper, because it governs the
+exchange after first contact, not the argument itself:
+
+> ### We are not asking you to validate the theory. We are asking where you would try to break it.
+
+If Julian engages, that is the moment to move from exposition to science. ⛔ The temptation
+at that moment will be to explain more. The discipline is to hand him the failure
+conditions and the corpus and let him attack them.
+
+## Send order — ruled, do not reorder
+
+```
+1  Cover note A  +  bridge page v2      first contact
+2  v1 paper                             only if he engages
+3  E0 — adversarial review, then one
+   operator through his instruments     only after the paper lands
+⛔  the 48-pair corpus                   never as an unsolicited attachment
+```
+
+⛔ **The argument is closed.** Further improvement of the case is not the next task; the
+next task is sending it. What comes back is what the work is for.
