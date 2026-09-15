@@ -243,3 +243,25 @@ export function canvasWithEditorialThread(
   next.set(CANVAS_EDITORIAL_THREAD_PARAM, threadId);
   return `${pathname}?${next.toString()}`;
 }
+
+/**
+ * The same address, with the editorial thread NO LONGER NAMED.
+ *
+ * MAIA-CONVERGENCE-01 · CANVAS. Leaving the editorial mode has to be as
+ * addressable as entering it: a room that could name a relationship and never
+ * un-name it would reopen in editorial on every reload, and the writer's way
+ * back would work exactly once.
+ *
+ * ⛔ IT DELETES ONE PARAMETER AND NOTHING ELSE — the same reason its counterpart
+ * preserves them: the manuscript identity is one of them, and dropping it would
+ * strand the room while appearing to close a conversation.
+ */
+export function canvasWithoutEditorialThread(
+  pathname: string,
+  search: string,
+): string {
+  const next = new URLSearchParams(search);
+  next.delete(CANVAS_EDITORIAL_THREAD_PARAM);
+  const q = next.toString();
+  return q ? `${pathname}?${q}` : pathname;
+}
