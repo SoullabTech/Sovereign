@@ -2142,3 +2142,50 @@ git log -1 --format=%H
 Return: the commit SHA + the pushed branch → this session cherry-picks with `-x`, recomputes both seals, re-executes the §18.5.2 parser on the copied captures, reads `JOINT.txt` as derived, records §18.19. The symlink is never committed (untracked; the `STAGED_CARRIER_ONLY` line refuses anything beyond the staged carrier).
 
 **Standing after §18.18:** CUSTODY-COMPLETE-01 custody PASS · commit REFUSED (dependencies absent) · carrier STAGED LOCALLY · custody evidence pushed NO · remote feature branch at base only (residue) · C-D25 = this session's pin defect (dependency link omitted; no `set -e`), pin preserved, correction beside it · experimental act untouched · restoration standing unchanged · `b198e2e37` unchanged · S2 population NOT AUTHORIZED · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.19 — `S2-WITNESS-05-CUSTODY-COMPLETE-01` TRANSPORT COMPLETE (founder ruling: shape 1, §18.18.4) → carrier RECEIVED, cherry-picked, **VERIFIED HERE on every line** · restoration half of WITNESS-05 now **REPOSITORY-VERIFIED** — 2026-09-15
+
+### 18.19.1 Transport and custody
+
+- Founder ruled shape 1 (§18.18.3) and ran §18.18.4 in the same local worktree: `NODE_MODULES_LINKED true` · `STAGED_CARRIER_ONLY true` · both seals 9/9 · pre-commit PASS · push PASS; no `npm ci`, no new worktree, no re-copy, no device/volume/playback act (founder-relayed; the commit itself is the evidence).
+- Branch `feature/k00-s2-witness-05-custody-complete-20260915T163124Z`, commit `34bdfbb91d027a223a9b46a547bf3514feca4c28`, parent `a5e874aa2` (= the §18.17 pin commit, as `RETURN.txt` declares) → cherry-picked here as `e6af62b18` (`-x`, no edit): 24 files, 487 insertions, all under `driver-ledger/s2-restore-witness-05-20260915T154626Z/`. The directory holds no journal and no `ledger.md`; the corpus-partition gate read **76/76** on the cherry-pick (no C-D24-species movement).
+
+### 18.19.2 Verified here (recomputed from the committed files, not relayed)
+
+| Check | Result |
+|---|---|
+| `sha256sum -c SHA256SUMS.custody` | **22/22 OK** |
+| `sha256sum -c SHA256SUMS` (the RESTORE-03 seal made at the Mac at 15:49Z) | **9/9 OK** |
+| Founder's pasted `SHA256SUMS.custody` vs the committed file vs a fresh recompute over the 22 files | all three identical |
+| §18.5.2 parser re-executed here on the copied `audio-after.json` + `volume-after.txt` | `DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin 48000` · `MAC_STUDIO_DEFAULT_OUTPUT True` · `OUTPUT_VOLUME 69` · `OUTPUT_MUTED false` · **`RESTORE_ACCEPTANCE PASS`** — byte-equal to the original `parser.txt` and to `parser.custody-derivation.txt` (`PARSER_DERIVATION_DIFF_RC=0`) |
+| Same parser on the before-captures | `OUTPUT_VOLUME 38` · `RESTORE_ACCEPTANCE STOP` — the before-state as relayed in §18.15.3 |
+| `before-utc.txt` → `after-utc.txt` | `2026-09-15T15:46:26Z` → `2026-09-15T15:49:23Z` (2 min 57 s around the one hand act) |
+| `sound-pane-before/after.txt` | `rc=1` both (pane closed at both reads; the two files hash identically) |
+| `audio-before.json` = `audio-after.json` | identical hash — device state byte-identical across the act, only the volume scalar moved (the §18.8 shape) |
+| `JOINT.txt` | self-identified: `DERIVED_DURING_CUSTODY_COMPLETION true` · `ORIGINAL_JOINT_FILE absent — packaging write refused after execution` · `DERIVED_AT_UTC 2026-09-15T16:33:57Z` ≠ the 15:49:23Z read it indexes — an index over existing evidence, as ruled |
+| `BLOCK-D-CUSTODY-NOTE.txt` | the founder's sentence verbatim; `block-outs.custody-read.txt`: `BLOCK_D_OUT_ABSENT true (as attested)`; no `s2w5-blockD.out` in the carrier |
+| **Stage-0 blocks** | `stage-0.custody-read.txt` lists the four `/private/tmp/s2w5-block[ABCD].sh` with SHA-256s. **Reproduced here from the immutable source** (`git show 17b4df63b:` lines 599–625 / 633–702 / 710–713 / 719–732 + exactly the three §18.15.2 substitutions): `4c0c7f4d…` · `918b0323…` · `3eab254f…` · `e30277f5…`, byte sizes 1763 · 2035 · 373 · 1035 — **identical to the custody-time read**. The blocks the Mac executed are the §18.15.2 derivation, proven from the object database, not attested. |
+| `s2w5-blockA.out` | `HEAD=b198e2e37…` · `TREE_CLEAN=1` · `Tests: 75 passed, 75 total` · `GATE_75_75=1` · fixture + afplay SHAs = pins · **`AFPLAY_PROCESSES_BEFORE=0`** · `BLOCK_A_PASS=1` |
+| `s2w5-blockB.out` | `PREFLIGHT_DIFF_RC=0` · `OTHER_BATCHES=0` · `APPS_READ_RC=0` · `E3B88028_CONTAINER_HITS=1` · `PROCESS_READ_RC=0` · harness 0 · preflight dir = the committed `S2-WITNESS-05-preflight-20260915T154525Z` |
+| `s2w5-blockC.out` | stimulus preflight PASS at 15:49:59Z (volume 69) · sample 1 custody VALID · ledgered `K00-fb8793df` · **`BATCH_PIPELINE_RC=0`** |
+
+Consequences for §18.16.3: the two rows that were "founder-relayed, not in custody" move — `AFPLAY_PROCESSES_BEFORE=0` and `BATCH_PIPELINE_RC=0` are now committed evidence. The one remaining relayed value is Block D's `AFPLAY_PROCESSES_AFTER=0` (no output file exists; by ruling never manufactured) — it stays attested, corroborated by the batch's own TERM/wait custody (`waitExitStatus 143`, `custody VALID`) in the witness directory.
+
+Observation, not a STOP (recorded for the next §16.7 use, nothing repaired): every `.out` ends `rc=` with an empty value. The §16.7 line reads `${PIPESTATUS[0]}`, a bash name; the founder's shell is zsh (`pipestatus`), so the carrier line printed nothing. Each block's own last line (`BLOCK_A_PASS=1` · `PREFLIGHT_CLEAN=…` · `BATCH_PIPELINE_RC=0`) carries the exit evidence instead. Instruction defect of the §12.1 shape, candidate **C-D26**; correction = future pins run the block under `bash -c` for the rc line or write `${pipestatus[1]}` — not applied to any produced record.
+
+### 18.19.3 Adjudication (this session's reading; acceptance is the founder's)
+
+- **`S2-WITNESS-05-CUSTODY-COMPLETE-01`: COMPLETE.** Custody stages PASS (§18.18), transport PASS by the ruled shape, carrier verified here on every line, nothing recreated, no originals touched. The only new bytes in the carrier are the ruled derived files (`JOINT.txt`, the derivation/diff outputs, the custody-time reads, the note, the seals, `RETURN.txt`), each self-identified.
+- **Restoration half of `S2-RESTORE/WITNESS-05` (§18.16.2): FOUNDER-ATTESTED PASS → REPOSITORY-VERIFIED PASS** under §18.5.3, on the custody-transfer path the §18.17 ruling named, never by rerun. The whole paired act now stands on committed evidence: RESTORE-03 before 38 → one keyboard act → joint 69 at 15:49:23Z (pane closed, device state byte-identical) → Block C's own preflight re-read 69 at 15:49:59Z → sample 1 with `custody VALID` → `BATCH_PIPELINE_RC=0`; Block A/B/C outputs in custody; Block D attested. The ordinal joint (§18.13) is now corroborated by two committed clocks 36 s apart with nothing between them in the block outputs.
+- **C-D25** (this session's pin defects) stands as recorded in §18.18.2; the ruled transport exercised the precedented link once more. The empty base-only remote branch was overwritten in place by the ruled push (the branch now points at `34bdfbb91`, parent `a5e874aa2`) — the residue resolved itself under the ruling; nothing was deleted.
+- **What this completes and what it does not:** the §18.17.1 item 6 precondition — *"after custody completion returns and the 9/9 restoration seal recomputes from the repository carrier"* — is met. It **opens nothing**: the S2 population is a separate, explicit founder issuance; S3 not open; KERNEL-00 not accepted; `b198e2e37` unchanged; 69 last committed reads 15:49:23Z and 15:49:59Z (output volume is volatile state on this Mac — §18.13; any population issuance re-prepares at the last responsible moment, the batch preflight refusing drift).
+
+### 18.19.4 Returned to the founder
+
+1. Acceptance of §18.19.2–18.19.3 as read (custody complete; restoration half repository-verified).
+2. C-D26 (zsh `PIPESTATUS` rc line) — record-only candidate; whether the §16.7 transport line is amended for future pins.
+3. The S2-population issuance ruling, now that its stated precondition is met. Named, not proposed: the §15 invocation shape on unchanged `b198e2e37` with the §7 reading law, in the §18.13 paired-custody form (restoration joint → immediate batch). Nothing is opened by this record.
+
+**Standing after §18.19:** CUSTODY-COMPLETE-01 COMPLETE · WITNESS-05 witness half PASS (§16.4) + restoration half PASS (§18.5.3), both repository-verified · authority SPENT · C-D24 accepted · C-D25 recorded · C-D26 candidate · `b198e2e37` unchanged · WITNESS-02/03/04 residue preserved · S2 population NOT AUTHORIZED (issuance ruling owed) · S3 CLOSED · KERNEL-00 acceptance CLOSED.
