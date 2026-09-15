@@ -17,8 +17,7 @@ SOURCES   P1-03 (04/05/06 ladder slices · adjudications · CLOSE) · P1-04 (MAP
 
 ## IV.0 · How to read Part IV — four distinctions that must survive
 
-These are not stylistic preferences. They are what P1-03 and P1-04 spent their whole passes
-establishing, and every line below is written to keep them:
+These are what P1-03 and P1-04 spent their passes establishing, and every line below keeps them:
 
 ```text
 causal power    ≠  located authority
@@ -52,16 +51,16 @@ NONE LOCATED    ≠  ABSENT
 ⛔ MAY NOT   "No acts are governed."
 ```
 
-⛔ Nothing in Part IV is a verdict of legitimacy, a severity, a ranking, or a repair order.
-⛔ The separately-owned authorization/exposure lane is neither cited, awaited nor answered.
+⛔ Nothing in Part IV is a verdict of legitimacy, a severity, a ranking or a repair order. ⛔ The
+separately-owned authorization/exposure lane is neither cited, awaited nor answered.
 
 ---
 
 ## IV.1 · What the authority map is
 
-`P1-04/MAP3_authority.md` — the authority graph, built from the three adjudicated P1-03 ladder
-slices (`04_ladder_A_B_C.md` · `05_ladder_D_E_F.md` · `06_ladder_G_H_I.md`), which normalize the
-P1-02 organism census without interpreting it.
+`P1-04/MAP3_authority.md`, built from the three adjudicated P1-03 ladder slices
+(`04_ladder_A_B_C.md` · `05_ladder_D_E_F.md` · `06_ladder_G_H_I.md`), which normalize the P1-02
+organism census without interpreting it.
 
 ```text
 REGISTER ROWS        221        (slice 04: 62 · slice 05: 111 · slice 06: 48)   — P1-03 CLOSE
@@ -72,9 +71,8 @@ GATE                 fixed at 418798e3, before the map existed · ✅ 4/4 checks
 ```
 
 **Two axes, never one.** `PARTICIPATION` and `AUTHORITY` are independent (Amendment 3 §2 /
-Amendment 4 §4). ⛔ Neither is derived from the other. `PARTICIPATION UNKNOWN + AUTHORITY GOVERNED`
-is a coherent, reportable state — and it occurs in the wild at `P3-E-29`
-(P1-03 ADJUDICATION 05 §3a).
+Amendment 4 §4); ⛔ neither is derived from the other. `PARTICIPATION UNKNOWN + AUTHORITY GOVERNED`
+is a coherent state and occurs in the wild at `P3-E-29` (P1-03 ADJUDICATION 05 §3a).
 
 ---
 
@@ -364,10 +362,10 @@ I-11  DECIDES               practice-field injection into MAIA's prompt        N
 record calls "the best-behaved practitioner surface in the tree" and it stands in this inventory
 beside the rest.** ⛔ That is the point of the list. Being in it is not a defect finding.
 
-### IV.6d · Seven rows shown in fuller detail — so the KIND of thing is visible
+### IV.6d · Five rows shown in fuller detail — so the KIND of thing is visible
 
-⛔ These seven are **not** the important ones, a shortlist, or a ranking. They are shown because
-their node blocks make the shape of an `EWLA` row legible without reading 62 blocks.
+⛔ These five are **not** the important ones, a shortlist or a ranking. They are shown because their
+node blocks make the shape of an `EWLA` row legible without reading 62 blocks.
 
 ```text
 P3-A-02 · Processing-tier decision (FAST / CORE / DEEP) — chooseProcessingProfile
@@ -376,13 +374,6 @@ P3-A-02 · Processing-tier decision (FAST / CORE / DEEP) — chooseProcessingPro
         "GOVERNANCE GATE — NONE FOUND. No refusal-registry check, no consent gate and no
          member-visible disclosure governs which mind answers a given turn."
   INF-6 ⛔ CONTRIBUTES / CONSIDERS / KNOWS NOT written downward from DECIDES
-
-P3-A-09 · MAIA identity / system prompt — 96 declaration sites
-  CONTRIBUTES [SYN-2 — for the ONE named source only]   AUTH NONE LOCATED
-  BASIS "GOVERNANCE GATE — NONE FOUND for identity-source uniqueness. No guard, registry, or
-         refusal check constrains a new file from declaring 'You are MAIA' and shipping it to
-         a model."
-  ⚠️ the other 95 sources' reach is NOT DETERMINED and carries no position
 
 P3-B-09 · MemoryWritebackService — developmental_memories · breakthrough_moments · insights
   DECIDES [SYN-2]   AUTH NONE LOCATED
@@ -407,14 +398,6 @@ P3-D-06 · enforceFieldSafety → FieldSafetyDecision   ⭐⭐ THE SHARPEST INF-
          commentary is a citation, not a located source."
   → this row is also X-DEF-3; see §IV.8
 
-P3-H-06 · commitOracleTurn(reason) — one idempotent seam, six terminal reasons
-  EXISTS · PARTICIPATES · CONTRIBUTES · DECIDES   AUTH NONE LOCATED
-  BASIS  MEMBER AUTHORITY "none over the seam; showVoiceText governs RENDERING only."
-         the 2026-08-13 MODALITY INDEPENDENCE founder ruling is "cited by name at
-         OracleConversation.tsx:6447 … ⛔ NO document found under docs/canon/** or
-         docs/programme/** bearing this ruling. The law is carried by a comment and by one
-         source-shape test."
-
 P3-I-03 · GET /api/caseload/* (9 routes) — practitioner identity from the query string
   EXISTS · PARTICIPATES · KNOWS · CONTRIBUTES · DECIDES   AUTH NONE LOCATED
   BASIS ⭐⭐ "The check is 'is the member named in the URL a practitioner', not 'is the caller that
@@ -428,9 +411,8 @@ P3-I-03 · GET /api/caseload/* (9 routes) — practitioner identity from the que
 
 ## IV.7 · `INF-6` also fired on rows that are NOT in the 62
 
-⭐ This matters for reading the 62 correctly. The restraint is not a property of high-effect rows;
-it was applied throughout, including where the promotion *would have looked natural* but the effect
-reached no outcome or output. Named in MAP 3, ⛔ not counted away:
+⭐ The restraint is not a property of high-effect rows. It was applied throughout, including where
+the promotion *would have looked natural* but reached no outcome or output. Named, ⛔ not counted away:
 
 ```text
 A-08 (KNOWS, ⛔ not CONSIDERS/CONTRIBUTES) · A-12 · A-13 (EXISTS; ⛔ nothing written from a handler
@@ -547,7 +529,8 @@ KIND 3  RECORD DEFECTS (C4) and VOCABULARY LIMITS
 ```
 
 ⛔ **No item here is ranked by severity, likelihood or repair order.** ⛔ No item is called
-legitimate or illegitimate. ⛔ `ABSENT` is not written anywhere in Part V.
+legitimate or illegitimate. ⛔ `ABSENT` is never written as a claim — it appears only inside the
+prohibitions that forbid it, exactly as `P1-05/02_corpus_register.md` uses it.
 
 ⭐ One structural fact frames the whole part: of the **120 unresolved obligations** P1-05 recorded,
 **88 are blocked by RULING** — *"the single largest reason P1 cannot answer its own questions is not
@@ -875,19 +858,18 @@ RFI / UFI     "RFI → 0 code objects; UFI → one comment that    ⭐ "Once the
                                                                such capability exists elsewhere.
 ```
 
-⚠️ **A note on numbers.** The figures above are the records' own; where two records enumerate the
-same token at different scopes (e.g. `field`: seven families / at least 19 objects / nine referents)
-the register found their non-identity is ⛔ **not** an enumeration conflict, because the scopes
-differ and one enumeration is self-declared non-exhaustive.
+⚠️ **On the numbers.** They are the records' own. Where two records enumerate one token at
+different scopes (`field`: seven families / at least 19 objects / nine referents), the register found
+their non-identity is ⛔ **not** an enumeration conflict — the scopes differ and one enumeration is
+self-declared non-exhaustive.
 
-Also carried and ⛔ not resolved: `resonance` (five objects, including an **exact class-name
-duplication** in two files, *"neither reachable"*); `element` (two live detectors that *"can disagree
-on the same turn and both reach the same prompt by different routes, with nothing reconciling
-them"* — ⚠️ whether they do disagree in production is ⛔ **not** established); `I Ching` (two
-independent corpora, ⛔ *"no artifact declaring which is canonical"*); and
-`VC-names-asserting-what-they-do-not-carry` (`C4-ORGREC`) — ⛔ per the vocabulary rule **an
-identifier cannot stand as one side of a contradiction**, and where a *sentence* rather than a name
-makes the claim, the contradiction is adjudicated at its own item.
+Also carried, ⛔ unresolved: `resonance` (five objects, incl. an **exact class-name duplication** in
+two files, *"neither reachable"*); `element` (two live detectors that *"can disagree on the same turn
+and both reach the same prompt by different routes, with nothing reconciling them"* — ⚠️ whether they
+do disagree in production is ⛔ not established); `I Ching` (two independent corpora, ⛔ *"no artifact
+declaring which is canonical"*); and `VC-names-asserting-what-they-do-not-carry` (`C4-ORGREC`) —
+⛔ per the vocabulary rule **an identifier cannot stand as one side of a contradiction**; where a
+*sentence* rather than a name makes the claim, it is adjudicated at its own item.
 
 ---
 
