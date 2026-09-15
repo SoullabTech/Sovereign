@@ -112,3 +112,46 @@ practitioner/member-visibility mark with the `P1-GOV-ACCESS-01` / `AUTH-EXPOSURE
 P1-05 CLOSE   ⏸ — ⛔ does not close on a partial pass
 P1-06 · P1-07 ⏸ SHUT        HARD STOP in force
 ```
+
+---
+
+## 4 · ⚠️ A correction to §2 of this record — the 22 / 24 question, and whose defect it is
+
+The founder observed that §2 states **22** self-correction entries and then gives mechanism counts
+summing to **24**, and ruled the safe standing as *"whether categories overlap: UNKNOWN from this
+report."*
+
+⭐ **It is not unknown from the artifact. It is unknown from MY REPORT, and that is the defect.**
+
+`03_self_correction.md:457` states it plainly:
+
+> *"several entries appear under more than one grouping because more than one thing caught them."*
+
+⭐ The worker's handback carried the same qualifier — *"entries appear under more than one where
+more than one caught it"* — **and I dropped it when relaying the tally.** The artifact is
+consistent; my summary of it was not.
+
+```text
+22 entries                     ESTABLISHED
+mechanism tallies sum to 24    ESTABLISHED
+categories non-exclusive       ⭐ DECLARED IN THE ARTIFACT — ⛔ not a discrepancy
+```
+
+### What follows, and what does not
+
+- ⛔ **No new criterion is added to the gate.** The founder's instruction stands, and nothing here
+  changes it.
+- ⛔ **Artifact 03 is not edited.** It was already correct.
+- ⛔ **Its 6/6 PASS is unchanged** — check 6 asked whether `HOW CAUGHT` was preserved as
+  first-class evidence, and it is, on all 22.
+- ⭐ **The defect is a NEW SELF-CORRECTION, and it belongs to the lane operator, not to any
+  worker:** a qualifier present in both the source artifact and the worker's own handback was lost
+  in relay, producing an apparent arithmetic failure in an artifact that had none.
+
+⛔ **Routed forward as a candidate entry, ⛔ not inserted into `03_self_correction.md`** — adding it
+there would be repairing the evidence after adjudication, which check 4 forbids. ⭐ *It is also the
+register's own category `THE LANE OPERATOR, ON ITS OWN ACT`, arriving once more.*
+
+⚠️ **Worth stating plainly:** this is the second time in two steps that a defect in a summary was
+mistaken for a defect in the thing summarized. The first was the check-1 false positive at P1-04.
+⭐ **Both were caught, neither by the summarizer.**
