@@ -2189,3 +2189,109 @@ Observation, not a STOP (recorded for the next §16.7 use, nothing repaired): ev
 3. The S2-population issuance ruling, now that its stated precondition is met. Named, not proposed: the §15 invocation shape on unchanged `b198e2e37` with the §7 reading law, in the §18.13 paired-custody form (restoration joint → immediate batch). Nothing is opened by this record.
 
 **Standing after §18.19:** CUSTODY-COMPLETE-01 COMPLETE · WITNESS-05 witness half PASS (§16.4) + restoration half PASS (§18.5.3), both repository-verified · authority SPENT · C-D24 accepted · C-D25 recorded · C-D26 candidate · `b198e2e37` unchanged · WITNESS-02/03/04 residue preserved · S2 population NOT AUTHORIZED (issuance ruling owed) · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+---
+
+## §18.20 — FOUNDER RULING on §18.19 (2026-09-15): §18.19 ACCEPTED · C-D26 ACCEPTED as a non-blocking transport/observability defect (repair NOT authorized here) · **S2 POPULATION AUTHORIZED** (the existing §15 invocation under the existing §7 reading law; nothing else) → execution pin `K00-0506-S2` · Mac act, NOT YET EXECUTED
+
+### 18.20.1 The ruling (founder, verbatim where quoted)
+
+1. **§18.19 ACCEPTED as written.** `S2-RESTORE/WITNESS-05` "now stands wholly on committed evidence"; the restoration half moved from founder-attested/local to repository-verified PASS "by custody transfer only. No restoration, witness, playback, device act or sample was rerun to obtain that upgrade." The paired evidence establishes: RESTORE-03 before 38 · after 69 · Mac Studio Speakers default/builtin · Sound pane absent at both reads · `RESTORE_ACCEPTANCE PASS` · ordinal joint PASS · Block C PASS · `BATCH_PIPELINE_RC` 0 · stimulus custody VALID · governed S2 sample 1 · Block D completed · seals 9/9 · 22/22 · 12/12 · `b198e2e37` unchanged. "The two committed clocks around the joint are accepted as custody of the sequence, not as a replacement for the ordinal law."
+2. **C-D26 ACCEPTED, non-blocking.** Defect: "The §16.7 outer execution wrapper emits an empty `rc=` when invoked from zsh because it references Bash's `${PIPESTATUS[0]}` in the operator shell." Classification: transport/observability · outer wrapper only · experiment, block body and evidence unaffected where the block's own terminal line records its result. `C-D26 OPEN as maintenance candidate · repair NOT AUTHORIZED HERE · population blocker NO`. "No transport repair is folded into the population act."
+3. **S2 POPULATION AUTHORIZED.** "The authority is strictly the already-defined S2 population act: Execute the existing §15 S2-population invocation under the existing §7 reading law. Nothing about the population act changes the witness, classifier, output reader, corpus semantics or evidentiary law. The successful witness does not itself become a population interpretation; it merely establishes that the governed S2 acquisition path is fit to be used."
+4. **Population law unchanged** — "acquisition ≠ interpretation · presence ≠ significance · one sample ≠ pattern · population ≠ acceptance". "No finding is strengthened merely because WITNESS-05 passed. The population may produce whatever the existing law permits it to produce, including null, absence, ambiguous or counter-hypothesis evidence."
+5. **Scope boundary** — authorizes only S2 population; NOT: S3 · KERNEL-00 acceptance · new orchestration · new stimulus · new volume target · new witness architecture · repair of C-D26 · cleanup of WITNESS residue · reinterpretation of prior samples. `b198e2e37` frozen; WITNESS-02/03/04 residue preserved.
+6. **Return** under the existing §15 return contract, then read under §7; a successful execution "does not automatically open S3 or KERNEL-00 acceptance."
+
+Governing distinction, founder's words: *"The witness proved the path. The population may now use the path. What the population means remains governed by the reading law, not by the success of the witness."*
+
+Standing fixed by the ruling: WITNESS-05 PASS · accepted · spent · restoration custody repository-verified · C-D24 ACCEPTED · C-D25 resolved by the corrected transport · C-D26 OPEN, non-blocking · `b198e2e37` unchanged · **S2 population AUTHORIZED** · S3 CLOSED · KERNEL-00 acceptance CLOSED.
+
+### 18.20.2 What the population act is (read from §15 · §7 · §16, nothing new)
+
+- **Invocation** (§15, verbatim shape): `k00-driver-batch.sh K00-0506-S2 10 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02 --stimulus s2-nearend` on unchanged `b198e2e37`; stratum `K00-0506-S2`; N = 10 fixed; no top-up, no auto-rerun; an abort → INCOMPLETE. The batch's own stimulus preflight re-reads fixture SHA · afplay SHA · default output · **volume 69 · unmuted** before sample 1 and STOPs (exit 8) on any mismatch, before playback; every sample carries its `stimulus-sample-N.tsv` custody (INVALID → that row UNMEASURED for the discriminator).
+- **Reading law** (§7.2/§7.3, ratified, unchanged): per invocation, valid stimulus row = the 997 Hz source visible as `signal`-class input in ≥ 2 healthy pre-output baseline windows, else **UNMEASURED**; `signal`-class input persists through the full rendering windows → **A-consistent**; disappears during deep rendering while callbacks/`ioRunning` continue → **A′-consistent**; mixed → **CHARACTERIZE**. No `rmsMean` multiplier decides. Every row also yields the frozen K00-05/K00-06 rows (`k00-output-ledger.py`), evidence only — the K00-06 PASS condition is untouched by S2 and the 3/5/2 population is never pooled with it. The WITNESS-05 sample-1 journal stays outside the population (§16).
+- **Shape of the act** = §16 Blocks A–D on the real Mac with the population tokens, plus the governed pre-Block-C volume read that §18.11 introduced (read-only; it protects the invocation from being spent on a drift STOP). **No restoration hand act is inside this pin** — the ruling authorizes the population, not a restoration; if the pre-C read shows drift, the act STOPs before Block C and returns (the batch was never invoked; disposition of the authority is the founder's; a paired restoration + population issuance would be the §18.13.3 shape with Block C = the population, a separate ruling). Volume was last read 69 at 15:49:59Z (batch preflight, committed); output volume is volatile state on this Mac (§18.13) — the pre-C read is expected to decide.
+- **Transport** = §16.7 unchanged (per C-D26 ruling: no repair folded in). Under zsh the outer `rc=` line prints empty; each block's own terminal line carries its result (`BLOCK_A_PASS=1` · `PREFLIGHT_CLEAN=…` · `BATCH_PIPELINE_RC=…` · the seal listing).
+
+### 18.20.3 Execution pin — `K00-0506-S2` population (Mac act; this session has no Mac)
+
+**Stage 0 — blocks from the immutable source, token-substituted, diff-proven; pre-existence read.** Blocks A/B/C are §16's blocks with exactly these substitutions: run label `S2-WITNESS-01` → `K00-0506-S2` · N `1` → `10` (in the invocation only) · transcript `s2-witness-01-transcript` → `k00-0506-s2-transcript` · worktree `/private/tmp/k0506-s2w-b198e2e37` → `/private/tmp/k0506-s2pop-b198e2e37`. Block D is NOT token-substituted (the §16 post-read names `stimulus-sample-1.tsv`, N = 1); the population post-read `Dpop` is written out in Stage 5 below (globs over `stimulus-sample-*.tsv`, row and journal counts, seal `SHA256SUMS.population`). Expected SHA-256 of the four block files as derived here (must match on the Mac before anything runs):
+
+```text
+e157eaa4fb184d13fda80f597c23b74347d6e9acb51f02f473708105993f3625  /private/tmp/s2pop-blockA.sh
+eee5b2c37b14c45c139c58ea51a5750505370abd769b600f229b1df4a72fe392  /private/tmp/s2pop-blockB.sh
+3f39acd4f3400a086e47bc60e1ab00dd2e7b22fc352ccb5fa73f5c96e8ed952f  /private/tmp/s2pop-blockC.sh
+17e3f18496b485fe5ebf138c7cd820c38dc66f1e29652f4dd4a422943670bc9d  /private/tmp/s2pop-blockDpop.sh
+```
+
+```bash
+cd /Users/soullab/MAIA-SOVEREIGN
+DOC=docs/programme/VOICE-2026/KERNEL-00_VPIO-02_K00-06_PARTIAL-ZERO_DISCRIMINATOR_PLAN_2026-09-15.md
+git show 17b4df63b:$DOC | sed -n '599,625p' > /private/tmp/s2w1-blockA.sh
+git show 17b4df63b:$DOC | sed -n '633,702p' > /private/tmp/s2w1-blockB.sh
+git show 17b4df63b:$DOC | sed -n '710,713p' > /private/tmp/s2w1-blockC.sh
+for b in A B C; do sed -e 's/S2-WITNESS-01 1 --act/K00-0506-S2 10 --act/' -e 's/S2-WITNESS-01/K00-0506-S2/g' -e 's/s2-witness-01/k00-0506-s2/g' -e 's#/private/tmp/k0506-s2w-b198e2e37#/private/tmp/k0506-s2pop-b198e2e37#g' /private/tmp/s2w1-block$b.sh > /private/tmp/s2pop-block$b.sh; done
+for b in A B C; do echo "== block $b diff (only the four tokens may appear)"; diff /private/tmp/s2w1-block$b.sh /private/tmp/s2pop-block$b.sh; done
+shasum -a 256 /private/tmp/s2pop-block[ABC].sh
+test ! -e /private/tmp/k0506-s2pop-b198e2e37 && echo "POP_WORKTREE_PREEXISTS false" || { echo "STOP: /private/tmp/k0506-s2pop-b198e2e37 pre-exists"; exit 2; }
+```
+
+Then write `/private/tmp/s2pop-blockDpop.sh` with exactly the Stage 5 text and confirm `shasum -a 256 /private/tmp/s2pop-blockDpop.sh` = the value above. Any hash mismatch = STOP before Block A.
+
+**Stage 1 — Block A (custody) then Block B (device preflight), §16.7 transport:**
+
+```bash
+bash /private/tmp/s2pop-blockA.sh 2>&1 | tee /private/tmp/s2pop-blockA.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2pop-blockA.out
+bash /private/tmp/s2pop-blockB.sh 2>&1 | tee /private/tmp/s2pop-blockB.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2pop-blockB.out
+```
+
+`BLOCK_A_PASS=1` and `PREFLIGHT_CLEAN=…` must appear; any STOP line ends the act (evidence returned, nothing invoked).
+
+**Stage 2 — governed pre-Block-C read (read-only; §18.11 shape). `output volume:69` ∧ `output muted:false` ∧ pane closed (`rc=1`) → Stage 3 is the very next act. Anything else → STOP, return; no restoration, no adjustment, no retry under this authority:**
+
+```bash
+date -u +%Y-%m-%dT%H:%M:%SZ | tee /private/tmp/s2pop-preC-clock.txt
+osascript -e 'get volume settings' | tee /private/tmp/s2pop-preC-volume.txt
+pgrep -fl "System Settings|Sound.appex" | tee /private/tmp/s2pop-preC-pgrep.txt; echo "[pgrep rc=$?]" | tee -a /private/tmp/s2pop-preC-pgrep.txt
+grep -q 'output volume:69, ' /private/tmp/s2pop-preC-volume.txt && grep -q 'output muted:false' /private/tmp/s2pop-preC-volume.txt && echo "PRE_C_READ OK" || echo "STOP: pre-Block-C volume read is not 69/unmuted — population NOT invoked"
+```
+
+**Stage 3 — Block C, exactly one invocation (the ten samples run inside it; the batch's own stimulus preflight is the second volume boundary and STOPs before playback on drift):**
+
+```bash
+bash /private/tmp/s2pop-blockC.sh 2>&1 | tee /private/tmp/s2pop-blockC.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2pop-blockC.out
+```
+
+`BATCH_PIPELINE_RC=0` and `batch complete` are the PASS lines; an exit 8/9 STOP inside the batch is evidence (nothing sampled on 8; the partial ledger on 9), never rerun.
+
+**Stage 4 — Block Dpop (read-only post-read + seal), only after Block C returned:**
+
+```bash
+bash /private/tmp/s2pop-blockDpop.sh 2>&1 | tee /private/tmp/s2pop-blockDpop.out; echo "rc=${PIPESTATUS[0]}" | tee -a /private/tmp/s2pop-blockDpop.out
+```
+
+**Stage 5 — the `Dpop` block text (write byte-for-byte to `/private/tmp/s2pop-blockDpop.sh` in Stage 0):**
+
+```bash
+cd /private/tmp/k0506-s2pop-b198e2e37
+LD="$(ls -td docs/programme/VOICE-2026/driver-ledger/K00-0506-S2-2* | head -1)"
+echo "LEDGER_DIR=$LD"
+pgrep -x afplay > /private/tmp/s2pop-afplay-after.txt && { cat /private/tmp/s2pop-afplay-after.txt; echo "AFPLAY_PROCESSES_AFTER=nonzero"; } || echo "AFPLAY_PROCESSES_AFTER=0"
+ls -la "$LD/stimulus-preflight"
+cat "$LD/stimulus-preflight/stimulus.sha256" "$LD/stimulus-preflight/afplay.sha256" "$LD/stimulus-preflight/stimulus-wave-metadata.txt" "$LD/stimulus-preflight/volume.txt"
+for f in "$LD"/stimulus-sample-*.tsv; do echo "== $f"; grep -E '^(sample|pid|startEpoch|preRunState|postRunState|waitExitStatus|stopEpoch|custody)' "$f"; done
+grep -c "custody$(printf '\t')VALID" "$LD"/stimulus-sample-*.tsv
+cat "$LD/sample-timing.tsv"
+grep -E 'stimulus|STOP|ABORT|custody|ledgered|batch complete|INFRASTRUCTURE' "$LD/batch.log"
+grep -c '^| AUTOMATED' "$LD/ledger.md"
+ls "$LD/journals" | grep -c '\.jsonl$'
+cp /private/tmp/k00-0506-s2-transcript.txt "$LD/transcript.txt"
+( cd "$LD" && shasum -a 256 transcript.txt stimulus-sample-*.tsv stimulus-sample-*-afplay.log stimulus-preflight/* journals/*.jsonl ledger.md output-ledger.md batch.log sample-timing.tsv daemons/* > SHA256SUMS.population && wc -l SHA256SUMS.population && cat SHA256SUMS.population )
+```
+
+**Return (§15/§16.7 contract):** one `feature/*` branch (e.g. `feature/k00-s2-population-evidence-<stamp>`) carrying `driver-ledger/K00-0506-S2-<stamp>/` complete (ledger · output-ledger · transcript · batch.log · xcodegen/build/sample logs · `sample-timing.tsv` · `stimulus-preflight/` ×5 · `stimulus-sample-1…10.tsv` + afplay logs · `daemons/` · `journals/` · `SHA256SUMS.population`), `driver-ledger/K00-0506-S2-preflight-<stamp>/`, the `s2pop-block[ABC]*.out` + `s2pop-blockDpop.out` + `s2pop-preC-*.txt` copied into the ledger directory, and `BRANCH · HEAD · STAMP · BATCH_PIPELINE_RC`. On a pre-C or in-batch STOP the return is the §18.12/§17 shape (STOP evidence, no population rows). This session then cherry-picks with `-x`, recomputes `SHA256SUMS.population`, reruns `k00-ledger.py --subject vpio-02` and `k00-output-ledger.py` over every journal, applies the §7.2/§7.3 reading per invocation, and records → **§18.21**. Expected gate movement on receipt: the corpus partition moves by the population's size (C-D24 species; 549→559 · vpio-02 51→61 · directories 16→17), read red before any push and maintained in a separate instrument commit as before.
+
+**What a completed population does and does not do:** produces up to ten §7 readings (A / A′ / UNMEASURED / CHARACTERIZE) beside ten frozen K00-05/06 rows; may be null, mixed or counter-hypothesis; earns no K00-06 PASS; opens neither S3 nor KERNEL-00 acceptance; both remain separate founder rulings after §18.21 is read.
+
+**Standing after §18.20:** S2 population AUTHORIZED · pinned · NOT YET EXECUTED (Mac act) · `b198e2e37` unchanged · 69 last committed read 15:49:59Z (pre-C read decides) · C-D26 OPEN, non-blocking · WITNESS-02/03/04 residue preserved · S3 CLOSED · KERNEL-00 acceptance CLOSED.
