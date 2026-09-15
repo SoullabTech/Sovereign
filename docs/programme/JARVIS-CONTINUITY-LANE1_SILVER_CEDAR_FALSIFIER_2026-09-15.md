@@ -81,24 +81,98 @@ Lane 1 is **selective recovery**, not a bigger window.
 
 ---
 
+## 3a. ⭐⭐ THE DEFECT NAMED: carriers aimed at the wrong TEMPORAL DOMAIN
+
+⛔ The memory organism is not absent. Its carriers are pointed at the wrong time.
+
+```
+CURRENT SESSION
+  recent 3 / 4 / 5 exchanges     → cognition
+  older turns in the SAME session → ⛔ STRANDED — no carrier at all
+
+OTHER SESSIONS
+  cross-session turns · conversational recall · developmental memories ·
+  breakthroughs · session remembrances · member-marked episodes · derived
+                                  → variously available
+```
+
+⭐ In a short conversation this behaves reasonably. In a long one the exclusion turns
+pathological — the intent
+
+> *"don't echo the current conversation back at the member"*
+
+quietly becomes
+
+> ⛔ *"exclude the only history that matters right now."*
+
+### 3a.1 ⭐ The missing layer is the TEMPORAL MIDDLE
+
+```
+NOW                                          LONG-TERM
+recent aperture   ←—— ??? ——→   cross-session memory
+```
+
+That `???` is **the displaced remainder of the current ongoing encounter.** For a
+relational system it is decisive, because much of the most meaningful material is
+neither recent enough to remain in working context nor old enough to belong to "past
+sessions." ⭐ It is simply **earlier in the same living conversation** — which is why
+this is obvious from the member's side and easy for the architecture to miss.
+
+> ⭐⭐ **MAIA does not need more memory layers first. She needs the existing memory
+> organism to include the temporal middle: the part of the current relationship that has
+> fallen out of working context but has not ceased to matter.**
+
+---
+
 ## 4. The smallest honest next architecture
 
 ```
-current input
+current utterance
       ↓
-does it refer to displaced same-session material?
-      ↓ YES
-search THIS SESSION'S durable primary turns
+recent aperture REMAINS INTACT
       ↓
-select a small number of RELEVANT exchanges
+search ONLY displaced turns from THIS session
       ↓
-inject as source-bearing recovered context
+EXCLUDE exchanges already represented
       ↓
-answer
+rank for relevance / significance / correction
+      ↓
+return a VERY SMALL source-bearing set
+      ↓
+inject into cognition
 ```
 
 ⛔ No summaries. ⛔ No cross-session retrieval. ⛔ No Spiralogic. ⛔ No identity inference.
 **Only: recover what actually happened earlier in this conversation.**
+
+### 4.1 ⛔⛔ DO NOT REMOVE `session_id <> $2` FROM THE EXISTING CARRIERS
+
+The cheap repair is to drop the exclusion predicate from `MemoryBundle.ts:226` and
+`memoryLoaders.ts:212`. ⛔ **Refused.** That would produce echo, duplication, and
+competing retrieval paths across carriers that were each designed for a different
+temporal domain.
+
+⭐ Lane 1 needs a **dedicated current-session recovery carrier** whose subject is exactly:
+*displaced primary turns from this same session that are relevant to the present
+utterance.* The existing carriers keep their exclusion and keep their jobs.
+
+### 4.2 ⭐⭐ CROSS-LANE CONSTRAINT — Lane 1 MUST feed A6's accounting
+
+⚠️ **If Lane 1 injects recovered exchanges without telling A6, it re-breaks A6.**
+
+A6 derives `absent = depth − represented`, where `represented` is counted at the tier's
+final aperture. Recover two displaced exchanges into cognition and the truth becomes
+`represented = 6 · absent = 33` — while A6, unchanged, still states `4` and `35`.
+
+⛔ **That is a false statement about her own view, which is the precise defect A6 was
+built to repair.** So `represented` must count *everything actually present* —
+aperture **plus** recovered — or Lane 1 will silently restore false wholeness through
+the back door while appearing to improve continuity.
+
+⭐ This is why §4's pipeline says **EXCLUDE exchanges already represented**: without it
+the same exchange can be counted twice and the arithmetic breaks in the other direction.
+
+⛔ Naming this constraint is not authorization to implement it.
 
 ---
 
