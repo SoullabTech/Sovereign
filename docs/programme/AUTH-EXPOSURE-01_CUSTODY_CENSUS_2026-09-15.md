@@ -239,6 +239,9 @@ reading is not an exploitability claim.
 
 - **U-1** Production `ACCESS_CONTROL_MODE`. Decides whether 79 unmapped routes are
   reachable at all. **The first thing any witness act should establish.**
+  → **ADDRESSED 2026-09-15** by `AUTH-EXPOSURE-01_U-1_WITNESS_2026-09-15.md`:
+  **NARROWED, NOT CLOSED** — supply chain closed at the subject, `permissive` **ENTAILED**,
+  ⛔ **not witnessed** (production unreachable from that act's container).
 - **U-2** Whether an unauthenticated request actually reaches these handlers in
   production, or is refused earlier by Caddy, the shell, or a route-level export
   the scanner did not model.
