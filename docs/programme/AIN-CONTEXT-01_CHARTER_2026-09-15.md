@@ -1,7 +1,14 @@
 # `AIN-CONTEXT-01` — LONGITUDINAL CONTINUITY ARCHITECTURE
 
 **Opened:** 2026-09-15 · founder act
-**Status at authoring:** ACT 1 authorized and run. ACT 2 specified, **NOT OPENED**.
+**Status at authoring:** ACT 1 authorized and run. ACT 2 specified, NOT OPENED.
+**Status now (2026-09-15, later the same day):** ⭐ **ACT 2 OPENED by founder act and run as a
+specification and architecture act, with no repair authority.** Its scope is the founder's
+ACT 2 §§1–15, which supersede the narrower ACT 2 sketch in §5 below. Record:
+`docs/programme/AIN-CONTEXT-01_ACT2_ARCHITECTURE_2026-09-15.md`. §5 is kept verbatim as what
+the lane expected ACT 2 to be, ⛔ never edited to read as if it had always said otherwise —
+the reproduction harness it describes is now proposed act **A3**, downstream of the
+standing architecture rather than first.
 **Branch:** `claude/hopeful-faraday-6pcwm2`
 
 ---
@@ -143,7 +150,10 @@ interpretation but omit its subsequent rejection, context engineering makes MAIA
 
 ---
 
-## 5. ACT 2 — Reproduce the historical failure (SPECIFIED · ⛔ NOT OPENED)
+## 5. ACT 2 as originally sketched — reproduce the historical failure
+
+⚠️ **SUPERSEDED 2026-09-15 by the founder's ACT 2 opening**, which made ACT 2 an
+architecture act and re-sited this harness as proposed act **A3**. Kept verbatim below.
 
 ⛔ **Not redesign.** Reproduction.
 
@@ -184,8 +194,12 @@ eventually judged.
 
 ```text
 AIN-CONTEXT-01            OPEN
-ACT 1 census              AUTHORIZED · RUN · READ-ONLY
-ACT 2 reproduction        SPECIFIED · NOT OPENED
+ACT 1 census              COMPLETE · READ-ONLY · corrected in place 2026-09-15
+ACT 2 architecture        OPEN · RUN · SPECIFICATION ONLY
+A3 reproduction harness   PROPOSED · NOT OPENED
+A4-A8                     PROPOSED · NOT OPENED
+F1-F8 falsifiers          SPECIFIED · NOT AUTHORED · NOT RUN
+Interpretive ledger       DORMANT · WIRING NOT AUTHORIZED
 Repair                    NOT AUTHORIZED
 New summarizer            NOT AUTHORIZED
 Context assembler         NOT AUTHORIZED

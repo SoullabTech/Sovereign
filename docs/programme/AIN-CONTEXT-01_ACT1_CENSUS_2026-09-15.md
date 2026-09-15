@@ -225,8 +225,18 @@ which has exactly one caller path:
 
 `components/OracleConversation.tsx:7788`, inside `handleClosingRitualComplete`.
 
-⚠️ **`handleClosingRitualSkip` (`:7803`) does not finalize.** No server-side idle sweeper
-for unfinalized sessions was found.
+⚠️ **`handleClosingRitualSkip` (`:7803`) does not finalize.**
+
+⚠️⚠️ **CORRECTION (2026-09-15, during ACT 2 — this sentence originally read "No server-side
+idle sweeper for unfinalized sessions was found." That was wrong and is corrected in place,
+not deleted.)** A sweeper exists: `scripts/sweep-stale-sessions.ts` closes sessions idle past
+a threshold (default 2h) and enqueues them to `session_summary_queue` with
+`ON CONFLICT DO NOTHING`. It is **not** a compose service, **not** a `package.json` script,
+and **not** referenced by CI. `docs/ops/memory-pipeline.md:73-82` documents it as a manual
+run or a **crontab on the Mac Studio host** — which `CLAUDE.md` names as *not* the production
+host. Whether any crontab invokes it against minisforum is **UNVERIFIED** (requires host
+access). ⭐ The correction changes the remedy, which is why it is worth making: the gap is
+not a missing sweeper, it is **an unscheduled one**.
 
 ⭐ **So the summary pipeline runs only if the member completes a closing ritual.** Tab
 closed, app backgrounded, WebView reset, or simply stopping → no finalize → no job → no
