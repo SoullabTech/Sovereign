@@ -145,6 +145,7 @@ def read(rows):
     first_sched = min(i[0] for i in intervals)
     samples = [r for r in rows if r['event'] == 'input_health_sample']
     outs = [r for r in rows if r['event'] == 'output_render_sample']
+    completion_ends = {t(st['end']) for st in streams if st['end'] and st['end']['event'] == 'stream_complete'}   # C-D22 boundary set
     def window(r):
         w = inum(ev(r).get('windowMs')) or 0
         return (t(r) - w, t(r), w)
@@ -165,7 +166,11 @@ def read(rows):
             if cb > 0 and dz == cb: fails.append(f'digital-zero collapse: {dz}/{cb} at t={t(r)}')
             elif 0 < dz < cb: chars.append(f'partial digital zero {dz}/{cb} at t={t(r)}')
             if e.get('ioRunning') != 'true': fails.append(f'ioRunning={e.get("ioRunning")} at t={t(r)}')
-            if not any(abs(t(o) - t(r)) <= OUTPUT_FAMILY_TOLERANCE_MS for o in outs): fails.append(f'output-health family absent beside the input window at t={t(r)}')
+            # C-D22 (founder ruling 2026-09-15, offline only): a full window that ends at the EXACT timestamp of its stream's
+            # stream_complete has its output-family evidence in that completion record (the stream is complete at that tick, so no
+            # output_render_sample is emitted); exact equality only — a window ending after the completion is not full and is not read here.
+            if not any(abs(t(o) - t(r)) <= OUTPUT_FAMILY_TOLERANCE_MS for o in outs) and t(r) not in completion_ends:
+                fails.append(f'output-health family absent beside the input window at t={t(r)}')
         for i0, i1, _ in intervals:
             for r in faults:
                 if r.get('cause') == 'input_dead' and i0 <= t(r) <= i1 + POST_RENDER_DEAD_MS: fails.append(f'input_dead verdict at t={t(r)} during/after rendering [{i0},{i1}]'); break
@@ -211,7 +216,7 @@ def emit(stratum, index, subject, path):
 # selftest: synthetic journals pin the founder's twelve offline cases plus the nominal and three lawful non-evidence shapes
 def build(*, pre_cancel_sample=True, cancel_ms=5, handle_mismatch=False, complete_frames_mismatch=False, late_completion=False,
           zero_windows=None, rate_drop=False, no_coupling=False, faulted=False, synthetic=False, entry=True, play=True,
-          cancel=True, foreign_fault=False, second_play=True):
+          cancel=True, foreign_fault=False, second_play=True, boundary_complete=False):
     rows = []; seq = [0]
     def rec(event, tm, gen=1, cause=None, evidence=None, **kw):
         seq[0] += 1; r = {'seq': seq[0], 'event': event, 'timeMonotonicMs': tm, 'generation': gen, 'session': 'K00-selftest', 'component': 'x', 'evidence': evidence or {}}
@@ -261,7 +266,12 @@ def build(*, pre_cancel_sample=True, cancel_ms=5, handle_mismatch=False, complet
     rd = 85 if rate_drop else 100
     sample(5458, with_out=(s2, 45984, 'rendering'))
     sample(6458, cb=100, dz=zw.get(6458, 0), with_out=(s2, 93984, 'rendering'))
-    sample(7458, cb=rd, dz=zw.get(7458, 0), with_out=(s2, 141984, 'rendering'))
+    if boundary_complete:
+        # C-D22 equality boundary: the last full window ends at the exact ms of stream_complete and carries NO output_render_sample
+        # beside it (the completion record is the output family's record at that tick). Pre-C-D22 reader: FAIL-06 "family absent".
+        sample(7500, cb=rd, dz=zw.get(7458, 0))
+    else:
+        sample(7458, cb=rd, dz=zw.get(7458, 0), with_out=(s2, 141984, 'rendering'))
     tc = 7900 if late_completion else 7500
     rows.append(rec('stream_complete', tc, cause='frames_rendered', evidence={'framesRendered': '143000' if complete_frames_mismatch else '144000'}, **{'from': s2}))
     rows.append(rec('floor_transition', tc, cause=f'stream_complete:{s2}', to='listening'))
@@ -289,6 +299,7 @@ def selftest():
         ('cancel after completion → NOT-A-CANCEL-ROW (K00-06 still measurable)', build(cancel=False), {'k05_cancel': 'NOT-A-CANCEL-ROW', 'k06': 'PASS-06'}),
         ('foreign input_dead during the cancelled stream → NON-EVIDENCE for K00-05, never automatic FAIL', build(foreign_fault=True), {'k05_cancel': 'NON-EVIDENCE'}),
         ('second Play absent → NO-COMPLETION-ROW · K00-06 UNMEASURED (< 2 full windows)', build(second_play=False), {'k05_complete': 'NO-COMPLETION-ROW', 'k06': 'UNMEASURED-06'}),
+        ('C-D22 equality boundary: full window ending at the exact ms of stream_complete, no output_render_sample beside → PASS-06 (was FAIL-06 family absent)', build(boundary_complete=True), {'k06': 'PASS-06', 'k05_complete': 'PASS-05'}),
     ]
     met = total = 0; fails = []
     for name, rows, want in cases:

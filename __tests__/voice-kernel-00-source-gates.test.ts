@@ -1198,7 +1198,9 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   });
   // ---- K00-05 / K00-06 instrument (founder ruling 2026-09-14, Option C): driver test + batch flags + evidence-only reader; everything else frozen ----
   it('C-D20 (founder ruling 2026-09-14/15): relative to the K00-05/06 instrument 8b111709b only the driver test moved — the batch, the entry classifier, the output reader and the reinstall gate are byte-identical', () => {
-    for (const p of ['scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-output-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_K0506, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    for (const p of ['scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_K0506, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    // C-D22 (founder ruling 2026-09-15): the output reader moved beyond 8b111709b in exactly the closed-boundary family rule; pinned below.
+    expect(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-output-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-output-ledger.py')))).toBe(false);
     expect(histRaw(INSTRUMENT_K0506, 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').equals(readFileSync(join(process.cwd(), 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift')))).toBe(false);
   });
   it('K00-05/06 Option C: the entry classifier and the reinstall gate are byte-identical to the F-W1 instrument 08483cfe4; the organism block above still pins ac12dedf4', () => {
@@ -1266,7 +1268,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(r).not.toMatch(/subprocess|devicectl|xcodebuild|xcrun|os\.system|import k00|k00_ledger|open\([^)]*['"]w/);
     for (const v of ['PASS-05', 'FAIL-05', 'NOT-A-CANCEL-ROW', 'NO-COMPLETION-ROW', 'NON-EVIDENCE', 'INCOMPLETE-05', 'NO-OUTPUT', 'PASS-06', 'FAIL-06', 'CHARACTERIZE-06', 'UNMEASURED-06', 'INVALID', 'EN-ROW', 'DESCRIPTIVE']) expect(r).toContain(`'${v}'`);
     const out = execFileSync('python3', [OUTPUT_READER, '--selftest'], { cwd: process.cwd() }).toString('utf8');
-    expect(out).toMatch(/selftest: 33\/33 expectations met/); expect(out).not.toMatch(/^FAIL/m);
+    expect(out).toMatch(/selftest: 35\/35 expectations met/); expect(out).not.toMatch(/^FAIL/m);   // C-D22: +1 case, +2 expectations
     for (const line of ['cancel with framesRendered > 0 but no pre-cancel sample → admissible: k05_cancel=PASS-05',
                         'cancel > 100 ms → FAIL-05: k05_cancel=FAIL-05',
                         'handle mismatch → FAIL-05: k05_cancel=FAIL-05',
@@ -1286,5 +1288,30 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     const rows = execFileSync('python3', [OUTPUT_READER, '--subject', 'vpio-02', ...journals], { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 }).toString('utf8');
     expect(rows).not.toMatch(/\*\*(PASS|FAIL)-0[56]\*\*/);
     expect((rows.match(/\*\*NO-OUTPUT\*\*/g) ?? []).length).toBe(60); expect((rows.match(/\*\*EN-ROW\*\*/g) ?? []).length).toBe(120);
+  });
+  it('C-D22 (founder ruling 2026-09-15, offline only): a full input window ending at the EXACT ms of its stream_complete satisfies the output-family presence rule; exact equality only; thresholds, the 0.90 criterion, digital-zero and input_dead rules and the full-window definition unchanged; the synthetic boundary case FAILS on 8b111709b and PASSES now; corpus replay changes exactly the S1 row-1 K00-06 verdict', () => {
+    const r = W(OUTPUT_READER);
+    expect(r).toMatch(/completion_ends = \{t\(st\['end'\]\) for st in streams if st\['end'\] and st\['end'\]\['event'\] == 'stream_complete'\}/);
+    expect(r).toMatch(/if not any\(abs\(t\(o\) - t\(r\)\) <= OUTPUT_FAMILY_TOLERANCE_MS for o in outs\) and t\(r\) not in completion_ends:/);
+    expect(r).toContain('CANCEL_WINDOW_MS = 100'); expect(r).toContain('GAP_FRACTION = 0.90'); expect(r).toContain('OUTPUT_FAMILY_TOLERANCE_MS = 250');
+    expect(r).toMatch(/full = \[r for r in samples if any\(i0 <= window\(r\)\[0\] and window\(r\)\[1\] <= i1 for i0, i1, _ in intervals\)\]/);   // full-window definition unchanged
+    expect(r).toContain("build(boundary_complete=True), {'k06': 'PASS-06', 'k05_complete': 'PASS-05'}");
+    const was = histRaw(INSTRUMENT_K0506, OUTPUT_READER).toString('utf8');
+    expect(was).not.toContain('completion_ends');
+    // corpus replay: the produced VP-ON ledger (K00-0506-20260915T004738Z) is reproduced byte-identically; the S1 ledger differs in exactly row 1 K00-06 (FAIL-06 → PASS-06)
+    const rowsOf = (dir: string) => {
+      const led = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/driver-ledger', dir, 'ledger.md'), 'utf8');
+      const files = [...new Set([...led.matchAll(/kernel00-K00-[0-9a-f]+-\d+\.jsonl/g)].map((m) => m[0]))];
+      const out: string[] = [];
+      files.forEach((f, k) => out.push(...execFileSync('python3', [OUTPUT_READER, '--stratum', 'AUTOMATED-COLD-LAUNCH', '--index', String(k + 1), '--subject', 'vpio-02', join('docs/programme/VOICE-2026/driver-ledger', dir, 'journals', f)], { cwd: process.cwd() }).toString('utf8').split('\n').filter((l) => l.startsWith('| AUTOMATED'))));
+      const produced = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/driver-ledger', dir, 'output-ledger.md'), 'utf8').split('\n').map((l) => l.replace(/\r/g, '')).filter((l) => l.startsWith('| AUTOMATED') && !l.includes('DRIVER-MARKER'));
+      return { out, produced };
+    };
+    const on = rowsOf('K00-0506-20260915T004738Z'); expect(on.out).toEqual(on.produced);
+    const s1 = rowsOf('K00-0506-VPOFF-20260915T012817Z');
+    const diff = s1.produced.map((l, k) => [l, s1.out[k]]).filter(([a, b]) => a !== b);
+    expect(diff.length).toBe(1);
+    expect(diff[0][0]).toMatch(/\| 1 \| K00-06 `K00-558df5b2` \| \*\*FAIL-06\*\* \|.*output-health family absent beside the input window at t=1037764041/);
+    expect(diff[0][1]).toMatch(/\| 1 \| K00-06 `K00-558df5b2` \| \*\*PASS-06\*\* \|/);
   });
 });
