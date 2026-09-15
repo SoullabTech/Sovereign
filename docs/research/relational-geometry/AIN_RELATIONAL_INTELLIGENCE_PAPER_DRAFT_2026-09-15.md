@@ -18,9 +18,17 @@
 > custody reversal that leaves no trace is indistinguishable from never having
 > ruled the first way. Both rulings were real, in that order, hours apart.
 >
-> **Status: WORKING BASE for the external-researcher edit pass. ⛔ Conceptual
-> expansion FROZEN — the intellectual chain is complete; edits are compression,
-> legibility, evidence marking and the closing invitation only.**
+> ⭐ **THIRD RULING, 2026-09-15 — FINAL ROLE: EVIDENTIARY COMPARISON SOURCE.**
+> `AIN_RELATIONAL_INTELLIGENCE_PAPER_v1_2026-09-15.md` is the **send document**. Three
+> things were lifted from this file into it and nothing else — the standing marks, E0 with
+> its failure rule, and the code-verified figures. ⛔ This file is **not sent**; it is the
+> place where a claim's evidence can be checked against the repository.
+>
+> ⛔ Both earlier markings are kept above, in the order they were made. Three rulings, one
+> day: superseded → working base → comparison source. *The important fact is not which
+> draft won, but that all three existed in sequence and the record preserves that.*
+>
+> **Conceptual expansion FROZEN.**
 ⚠️ **DRAFT.** Written for one reader and his colleagues. Not published, not a claim of
 result. ⛔ Nothing in it authorizes any experiment described in it.
 

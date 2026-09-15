@@ -5,12 +5,21 @@
 **A research paper for Julian Michels / Sophontic**
 **Soullab / AIN · September 2026**
 
-> ⚠️ **ROLE CHANGED, 2026-09-15, later the same day.** This was landed as the
-> CANONICAL LONG PAPER (marking preserved below). A second founder ruling the same
-> day made `AIN_RELATIONAL_INTELLIGENCE_PAPER_DRAFT_2026-09-15.md` the working base,
-> on the grounds that it carries evidentiary custody this document never had.
-> **This file is now the COMPARISON SOURCE** — consulted for anything the base
-> omits, ⛔ never merged wholesale. Its prose remains founder-authored and verbatim.
+> ⭐ **SEND DOCUMENT — third and final ruling, 2026-09-15.** Two earlier rulings the same
+> day are preserved below in the order they were made. This file is the canonical paper
+> that goes to Sophontic; `AIN_RELATIONAL_INTELLIGENCE_PAPER_DRAFT_2026-09-15.md` is the
+> **evidentiary comparison source**, not a sendable paper.
+>
+> **Bounded reconciliation executed** — exactly three things lifted from the base and
+> nothing else: the `[fact] · [contract] · [hypothesis]` standing marks · **E0** with its
+> predeclared failure rule · current code-verified figures. ⛔ No alternate prose imported,
+> ⛔ no sections restructured, ⛔ no conceptual development reopened.
+>
+> ⚠️ **ROLE CHANGED, earlier the same day** (kept verbatim): this was landed as the
+> CANONICAL LONG PAPER; a second ruling made the repo draft the working base on grounds
+> of evidentiary custody, and this file the comparison source. That is now superseded by
+> the ruling above. ⛔ The sequence is preserved because a custody history that reads as
+> though it had always pointed one way is not a record.
 >
 > **CANONICAL LONG PAPER.** Founder-authored, landed verbatim 2026-09-15.
 > The bridge page (`bridge-page.html`, published artifact) is the short entry point and
@@ -86,6 +95,25 @@ forty-eight paired cases, explicit controls, and failure conditions named in adv
 **And we most want criticism exactly where we may be mixing architecture with
 representation.** That is the error this work is most likely to be making, and the one we
 are least able to catch from inside it.
+
+---
+
+## How to read the standing marks
+
+A recurring failure in this field is prose that lets a design intention, a type
+declaration and a production observation all sound alike. Substantive claims below carry
+one of three marks.
+
+| | means |
+|---|---|
+| **[fact]** | observed in the running system, or exercised by a named test we ran |
+| **[contract]** | the architecture declares it and the compiler enforces it — **nothing has yet observed the system honouring it under load** |
+| **[hypothesis]** | we believe it and have not established it |
+
+⚠️ **[contract] is not a softer way of saying [fact].** It states that a distinction exists
+in the type system and has not been watched working. Eight of the twelve relational
+operators in §10 are [contract]. A validator recomputes each operator's mark from its
+weakest source, so none can quietly claim a better one.
 
 ---
 
@@ -233,9 +261,9 @@ The current substrate exists and differentiated runs occur.
 
 What has **not** been established is that the member-facing effect reflects genuinely differentiated internal cognition.
 
-The substrate is live.
+The substrate is live. **[fact]**
 
-The experiential and representational effect remains an empirical question.
+The experiential and representational effect remains an empirical question. **[hypothesis]**
 
 ---
 
@@ -270,6 +298,11 @@ authority,
 relational context,
 
 and the conditions under which information may enter an encounter.
+
+Those are not aspirations in prose. They are carried by sixteen ratified sovereignty
+invariants — constitutional rules a change must satisfy or not ship — and thirty named
+refusal tests, each existing because a specific way of failing a person had to be made
+structurally impossible rather than merely discouraged. **[fact]**
 
 The aim is not maximum memory.
 
@@ -314,6 +347,10 @@ what a memory system retrieved,
 what was historically believed,
 
 and what is presently warranted.
+
+This is enforced rather than intended. Everything that may contribute to a turn is
+declared in advance — the list currently holds fifty-four entries — and anything not on it
+cannot reach the encounter at all. **[contract]**
 
 This creates an interesting inversion of conventional AI architecture.
 
@@ -367,7 +404,7 @@ It is also capable of destroying the most important information in the situation
 
 AIN therefore began preserving distinctions explicitly.
 
-Authorship became separate from participation mechanism.
+Authorship became separate from participation mechanism. **[contract]**
 
 Present evidence became separate from historical evidence.
 
@@ -375,7 +412,7 @@ Information being unavailable became separate from information being available b
 
 Material restrained by someone's preferences became separate from material that was never admissible in the first place.
 
-An attempted crossing became separate from one that actually occurred.
+An attempted crossing became separate from one that actually occurred. **[fact]**
 
 These distinctions increasingly looked less like arbitrary governance rules and more like examples of a general phenomenon:
 
@@ -499,6 +536,9 @@ The current corpus contains:
 **96 stimuli**
 **balanced A→B / B→A ordering**
 **10 especially strong same-runtime-surface cases**
+
+Those figures are current and machine-checked; the validator reports them, and the corpus
+does not pass while any of its six construction laws is violated. **[fact]**
 
 The validator itself became part of the research.
 
@@ -788,27 +828,10 @@ But its central resource is not merely computation.
 
 It is **participation in relationship**.
 
-Who may contribute?
-
-What may be known?
-
-What may be remembered?
-
-What authority does that memory possess?
-
-Which distinctions must survive integration?
-
-Who can correct them?
-
-What information belongs to an individual?
-
-What can become collective?
-
-What may cross a boundary?
-
-Which system is permitted to act?
-
-Those are operating-system questions expressed in relational form.
+The questions it has to answer are recognisably operating-system questions expressed in
+relational form — who may contribute, what standing a memory carries, which distinctions
+must survive integration, and who is permitted to correct them. Scheduling and permissions,
+but over meaning and authority rather than processes and files.
 
 Spiralogic supplied an early grammar for differentiation and integration.
 
@@ -897,7 +920,27 @@ Every one of those results would improve AIN.
 
 # 20. What We Would Like to Explore With Julian
 
-The collaboration we imagine begins with methodological scrutiny.
+The collaboration we imagine begins with one experiment, small enough to run and sharp
+enough to fail.
+
+> ### E0 · Adversarial review, then one operator through your instruments.
+>
+> **Step one — try to break the corpus.** We send the forty-eight pairs. You tell us
+> whether a relational perturbation is genuinely distinct from the perturbation classes you
+> already study, or whether we have built an elaborate way of restating lexical sensitivity.
+>
+> **Step two — take the single strongest operator and look inside.** Our candidate is the
+> one where the downstream artifact is identical in both conditions, so nothing in the
+> payload can carry the answer. On an open-weight model, does the relational condition
+> separate in representation — and does the separation survive the paraphrase controls,
+> which hold the relation fixed while changing every word around it?
+>
+> **The failure rule, predeclared:** if the relational perturbation and the paraphrase
+> control produce comparable representational separation, the operator is tracking surface
+> form and we drop it. We will report that result whichever way it goes.
+
+That is the whole first ask. The questions below are what we would want to think through
+with you while doing it, not additional requests.
 
 Is a relational perturbation genuinely distinct from the perturbation classes Sophontic already studies?
 
@@ -1010,9 +1053,9 @@ That is enough to begin.
 
 ## Current Standing · September 2026
 
-**AIN / MAIA relational substrate:** live and evolving
-**Spiralogic / Elemental modes:** architecturally instantiated; empirical cognitive status not established
-**Corpus Callosum substrate:** live; member-facing differentiated effect unmeasured
+**AIN / MAIA relational substrate:** live and evolving **[fact]**
+**Spiralogic / Elemental modes:** architecturally instantiated **[contract]**; empirical cognitive status not established **[hypothesis]**
+**Corpus Callosum substrate:** live **[fact]**; member-facing differentiated effect unmeasured **[hypothesis]**
 **JR-01 relational operators:** 12
 **JR-01 paired cases:** 48
 **JR-01 stimuli:** 96
@@ -1025,29 +1068,49 @@ That is enough to begin.
 
 ---
 
-# 22 · ⛔ Open founder decision before sending — disclosure scope
+# 22 · Disclosure scope — RULED
 
-⛔ Not decided here. The paper names internal architecture, and how much of it
-should leave Soullab is a founder call, not an editorial one. The passages that
-carry actual proprietary detail, so the decision can be made on specifics rather
-than on feel:
+⭐ **Ruled by founder, 2026-09-15. Authority granted, execution complete. ⛔ No longer an
+open question.**
 
-| § | What it exposes | Note |
+> **The governing principle: reveal enough architecture to establish why the research
+> object exists, but not enough implementation detail to reconstruct the proprietary
+> system.**
+
+| | ruling | state |
 |---|---|---|
-| 2 | The five Spiralogic modes with their functional glosses | Already public-facing in Soullab material |
-| 3 | Corpus Callosum as an architecture, its selectivity, and that its effect is unmeasured | Names a mechanism, not an implementation |
-| 6 | The four collapsed-relation examples, in a member's voice | ⚠️ The most intimate material in the paper. It is invented illustration, not a real member's words — worth saying so if it stays |
-| 9 | The absent / present-but-empty distinction | A real internal state distinction, named abstractly |
-| 10–11 | Corpus counts, the 32-check failure, the grounding split | ⭐ The most persuasive material and the least proprietary |
-| 17 | The relational-OS question list | Closest thing to a design spec in the paper |
+| §§10–11 — corpus figures, the 32-check failure, the grounding split | **KEEP.** Evidentiary value high, proprietary exposure low. | unchanged |
+| §19 — failure conditions | **KEEP INTACT. Non-negotiable.** Weakening them would make the paper less credible, not safer. | unchanged |
+| §17 — the relational-OS section | **TRIM CANDIDATE, not automatic removal.** Reduce implementation-detail language that approaches reconstructive specification; preserve the lineage and the research logic. | ✅ trimmed, section kept |
+| §6 — member-voice examples | provenance clause added at the point the examples appear | ✅ done |
+| §2 — the five modes | already public-facing in Soullab material | unchanged |
 
-⭐ **Recommendation, not a ruling:** §§10–11 are what make the paper credible and
-give away nothing an outsider could build from — a count and an honest failure.
-§17 is the passage to consider trimming if anything is trimmed, since it reads
-closest to a specification. §6's examples are the ones to mark as invented, so a
-reader never wonders whose material they are.
+### What the §17 edit actually did
 
-⛔ Two things the paper should not acquire in later passes, whatever is decided
-about scope: a claim that the elemental taxonomy is validated, and any softening
-of §11's statement that eight of the twelve operators are compiler-enforced and
-nothing more.
+The ten-question enumeration of the system's control surfaces was the one passage that
+read as a build checklist — not because any single question is secret, but because the
+complete enumeration is the specification. It is replaced by four representative questions
+and the statement of what kind of questions they are.
+
+⭐ **The lineage chain, the research logic, and the closing line — *the research bridge did
+not appear beside the architecture; it emerged from inside it* — are untouched.** That is
+the argument §17 exists to make, and the trim was measured against keeping it.
+
+⛔ Nothing else was removed anywhere in the paper on disclosure grounds.
+
+---
+
+## Send package — final state
+
+```
+Bridge page (artifact, v2) ....... short entry point — SEND FIRST
+Cover note, variant A ............ the ask, one paragraph — SEND WITH IT
+v1 (this paper) .................. second move, if he engages
+The 48-pair corpus ............... ⛔ NOT in a first send
+E0 .............................. the third move, if he engages with the paper
+Working repo draft ............... evidentiary comparison source, never sent
+Geometric bridge ................. candidate, not established
+```
+
+⭐ The first ask is deliberately small: **is this distinction experimentally real, and where
+would you try to break it?**
