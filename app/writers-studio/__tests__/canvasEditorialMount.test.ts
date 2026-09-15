@@ -88,6 +88,28 @@ describe('the panel is handed a conversation and cannot make one', () => {
     expect(panel).not.toMatch(/editorial\/thread[\s\S]{0,200}method:\s*'POST'/);
   });
 
+  it('⭐ 01B — carries no chrome of its own', () => {
+    /* `StudioPanel`: "A panel is chrome around content." Its contract owns the
+       band label, whether the panel is dismissible, and the dismiss control.
+       A second title bar and a second exit inside the content were this
+       component answering a question it was not asked. */
+    const panel = strip(read(PANEL));
+    expect(panel).not.toMatch(/<header/);
+    expect(panel).not.toMatch(/onClose/);
+    expect(panel).not.toMatch(/Put MAIA away/);
+    /* ⭐ But the ORIENTATION stays. The two labels answer different questions:
+       "MAIA · conversation" is what region am I in, "This passage" is what is
+       this conversation about. */
+    expect(panel).toContain('This passage');
+  });
+
+  it('⭐ 01B — and the room hands it no close to hold', () => {
+    const client = strip(read(CLIENT));
+    expect(client).toMatch(/<EditorialConversation\s+threadId=\{editorialThreadId\}\s*\/>/);
+    /* The panel above it still dismisses — the affordance moved, it did not go. */
+    expect(client).toMatch(/onDismiss=\{[\s\S]{0,200}dismiss\('conversation'\)/);
+  });
+
   it('holds no identity of its own', () => {
     const panel = strip(read(PANEL));
     expect(panel).not.toContain('setThreadId');

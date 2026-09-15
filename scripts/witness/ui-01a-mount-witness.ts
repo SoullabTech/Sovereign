@@ -270,9 +270,31 @@ async function main() {
   const four = seen.length;
   eq('D6 four turns stand in the conversation', four, 4);
 
+  /* ══ WS-EDITORIAL-UI-01B · PANEL COMPOSITION ══════════════════════════
+     A panel is chrome around content. StudioPanel's contract owns the band
+     label, whether the panel is dismissible, and the dismiss control — so the
+     editorial content carries no title bar and no exit of its own. */
+  console.log('\n── one header, one close, one conversation ───────────────────────');
+  const panel = page.locator('[data-panel-role="maia"]');
+  eq('P1 ⭐ EXACTLY ONE dismiss control in the conversation region',
+     await panel.getByRole('button', { name: /dismiss|close|put .* away/i }).count(), 1);
+  eq('P2 ⭐ and it is the PANEL’s, not the content’s',
+     await page.getByLabel('Dismiss MAIA · conversation').count(), 1);
+  eq('P3 ⛔ the editorial content declares no header of its own',
+     await page.locator('section[aria-label="Editorial conversation"] header').count(), 0);
+  eq('P4 ⭐ “This passage” still orients the member to what this is ABOUT',
+     (await panel.innerText()).toUpperCase().includes('THIS PASSAGE'), true);
+  eq('P5 ⭐ and the locus wording is unchanged',
+     (await page.locator('section[aria-label="Editorial conversation"] blockquote').innerText()).trim(),
+     SECTION_TEXT);
+  eq('P6 ⛔ the turns are untouched by the composition change', (await transcript(page)).length, 4);
+  await shot(page, '04b-composition');
+
   /* ══ CLOSE · REOPEN ═══════════════════════════════════════════════════ */
   console.log('\n── close the panel, and call her forward again ───────────────────');
-  await page.getByLabel('Put MAIA away').click();
+  /* ⭐ WS-EDITORIAL-UI-01B — putting her away is the PANEL's ×, and there is
+     no longer any other exit gesture to choose between. */
+  await page.getByLabel('Dismiss MAIA · conversation').click();
   await settle(page);
   eq('C1 the panel is gone',
      await page.locator('section[aria-label="Editorial conversation"]').count(), 0);

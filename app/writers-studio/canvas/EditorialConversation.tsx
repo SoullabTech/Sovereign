@@ -15,6 +15,10 @@
  * pane, reopening it, or navigating away changes nothing: there is no component
  * memory to lose.
  *
+ * ⛔ IT CARRIES NO CHROME OF ITS OWN. No title bar, no close — `StudioPanel`
+ * owns the band label and the dismiss control, and a panel is chrome around
+ * content (WS-EDITORIAL-UI-01B).
+ *
  * ⛔ AND IT DOES NOT OPEN ONE. The relationship is opened by the member's
  * Conversations gesture in the room, and its identity lives in the URL. This
  * component is handed a `threadId` and can do nothing but read and speak into
@@ -63,10 +67,9 @@ export interface EditorialConversationProps {
    * address belongs to the URL. This component owns neither.
    */
   threadId: string;
-  onClose: () => void;
 }
 
-export default function EditorialConversation({ threadId, onClose }: EditorialConversationProps) {
+export default function EditorialConversation({ threadId }: EditorialConversationProps) {
   /* ⭐ Disposable presentation state. Losing it costs a refetch and nothing
      else, because the conversation itself is server state. */
   const [view, setView] = useState<ThreadView | null>(null);
@@ -122,23 +125,30 @@ export default function EditorialConversation({ threadId, onClose }: EditorialCo
         borderRadius: RADIUS.panel, padding: SPACE.base, minHeight: 0,
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-        <StudioText as="h2" role="panelLabel">This passage</StudioText>
-        <button type="button" onClick={onClose} aria-label="Put MAIA away"
-          style={{ ...typeStyle('panelLabel'), background: 'none', border: 'none', color: INK.muted, cursor: 'pointer' }}>
-          Close
-        </button>
-      </header>
-
       {/* ⭐ The writer's own wording, as the relationship froze it. It is what
-          the conversation is ABOUT, and it is never replaced by a candidate. */}
+          the conversation is ABOUT, and it is never replaced by a candidate.
+
+          ⭐⭐ "This passage" is CONTENT, not a second title bar. The two labels
+          answer different questions and both are worth keeping:
+
+              MAIA · conversation   what region am I in?     (StudioPanel)
+              This passage          what is this about?      (here)
+
+          ⛔ And there is no close here. StudioPanel's contract owns the band
+          label, whether the panel is dismissible, and the dismiss control —
+          "a panel is chrome around content", so a second exit gesture inside
+          the content was this component answering a question it was not
+          asked. */}
       {view && (
-        <blockquote style={{
-          ...typeStyle('maiaReading'), margin: 0, color: INK.secondary,
-          borderLeft: `2px solid ${RULE.soft}`, paddingLeft: SPACE.snug,
-        }}>
-          {view.locusText}
-        </blockquote>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.tight }}>
+          <StudioText role="panelLabel" style={{ color: INK.muted }}>This passage</StudioText>
+          <blockquote style={{
+            ...typeStyle('maiaReading'), margin: 0, color: INK.secondary,
+            borderLeft: `2px solid ${RULE.soft}`, paddingLeft: SPACE.snug,
+          }}>
+            {view.locusText}
+          </blockquote>
+        </div>
       )}
 
       <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: SPACE.base, minHeight: 0 }}>

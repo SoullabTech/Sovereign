@@ -991,12 +991,11 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
                  discovers its own absence. */
               editorialEnabled ? (
                 editorialThreadId ? (
-                  <EditorialConversation
-                    threadId={editorialThreadId}
-                    /* Puts her away without ending anything. The conversation
-                       is server state and the address still names it. */
-                    onClose={() => dismiss('conversation')}
-                  />
+                  /* ⛔ NO onClose. The StudioPanel above owns the dismiss
+                     control; putting her away is its × and nothing else. The
+                     conversation is server state either way, and the address
+                     still names it. */
+                  <EditorialConversation threadId={editorialThreadId} />
                 ) : (
                   /* ⛔ THE ROOM SAYS WHAT IS MISSING RATHER THAN GUESSING.
                      No most-recent thread, no passage chosen on the writer's

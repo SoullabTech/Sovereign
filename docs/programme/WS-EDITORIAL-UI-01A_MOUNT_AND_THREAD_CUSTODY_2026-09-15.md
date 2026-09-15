@@ -160,6 +160,17 @@ Both come from the screenshots and neither is a data-path question.
    the editorial surface as required; it is `StudioConversation` that brings it.
    Named because legacy retirement is held, not because it is this cut's defect.
 
+   > ⚠️ **CORRECTED 2026-09-15 BY WS-EDITORIAL-UI-01B, AND THE ATTRIBUTION ABOVE
+   > IS WRONG.** The toast is an **app-global inline script in
+   > `app/layout.tsx`** that unlocks `AudioContext` on the FIRST CLICK ANYWHERE
+   > and announces itself. `StudioConversation` does not raise it. UI-01B's
+   > browser run shows it in the **editorial** room, where no legacy surface is
+   > mounted — which is the evidence that settles it. I had seen it only in the
+   > flag-off screenshot and reasoned from where it appeared rather than from
+   > where it comes from. Still outside this lane, but for a different reason:
+   > it is a global-layout question, not a legacy-surface one. Left in place
+   > above rather than edited, so the mistaken reading stays visible.
+
 ---
 
 ## 7 · Gates
