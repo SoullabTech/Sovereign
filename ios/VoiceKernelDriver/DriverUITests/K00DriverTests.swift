@@ -38,6 +38,11 @@ final class K00DriverTests: XCTestCase {
         "vpio-02": Subject(key: "vpio-02", bundleID: "life.soullab.voicekernel.vpio02", iconLabel: "VoiceKernel VPIO-02"),
     ]
     static let springboardBundleID = "com.apple.springboard"
+    /// C-D20 (founder ruling 2026-09-14/15, after the K00-0506 first witness returned ten `'Play 3 s tone' not found after
+    /// Enter` rows): the Output section may sit below the fold of the harness List after Enter. The driver may reveal it by at
+    /// most this many upward swipes, checking the exact label after each; never an unbounded search. A reveal or a hierarchy
+    /// dump is never an audio outcome. The causal explanation is unproven; the bound is the ruling.
+    static let revealSwipeLimit = 4
     struct DriverError: Error, CustomStringConvertible { let description: String }
 
     private var subject: Subject!
@@ -103,7 +108,20 @@ final class K00DriverTests: XCTestCase {
         try setVoiceProcessing(on: vpOn)
         try tap("Enter conversation", timeout: 5)
         let play = harness.buttons["Play 3 s tone"]
-        guard play.waitForExistence(timeout: 5) else { return driverFail("'Play 3 s tone' not found after Enter") }
+        if !play.waitForExistence(timeout: 5) {
+            var revealed = false
+            for i in 1...Self.revealSwipeLimit {
+                harness.swipeUp()
+                Thread.sleep(forTimeInterval: 0.5)
+                revealed = harness.buttons["Play 3 s tone"].exists
+                note("K00-OUTPUT: reveal swipe \(i)/\(Self.revealSwipeLimit) — 'Play 3 s tone' exists: \(revealed)")
+                if revealed { break }
+            }
+            if !revealed {
+                for line in harness.debugDescription.split(separator: "\n", omittingEmptySubsequences: true) { note("K00-HIERARCHY: \(line)") }
+                return driverFail("'Play 3 s tone' not found after Enter (absent after \(Self.revealSwipeLimit) reveal swipes; hierarchy written under K00-HIERARCHY:)")
+            }
+        }
         guard waitEnabled(play, timeout: 5) else {
             note("K00-OUTPUT: entry not reached — 'Play 3 s tone' not enabled within 5 s; no Play tapped (ENTRY-NOT-REACHED)")
             try exportAndTerminate(); return

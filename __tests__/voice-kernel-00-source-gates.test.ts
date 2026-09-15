@@ -1069,6 +1069,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
   const INSTRUMENT = ['ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift', 'scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh'];
   const OUTPUT_READER = 'scripts/witness/k00-output-ledger.py';                      // K00-05/06 (Option C): the one file the instrument may add
   const INSTRUMENT_VPIO02B = '08483cfe4f6c3e98198805337ced99bae92ce911';             // the F-W1 instrument; the entry classifier + reinstall stay at its bytes
+  const INSTRUMENT_K0506 = '8b111709b6e5010b4b6ee7281d257141945276ff';               // the K00-05/06 Option C instrument (DRIVER-COMPILE-01 GREEN; first witness ten infra rows); C-D20 may move only the driver test beyond it
   it('the organism is byte-identical to ac12dedf4: every tracked file under ios/VoiceKernel and ios/VoiceKernelHarness equals its historical bytes; no file added or removed', () => {
     const roots = ['ios/VoiceKernel', 'ios/VoiceKernelHarness'];
     const listed = histList(ORGANISM, roots).sort();
@@ -1181,10 +1182,14 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(new Set(classes('vpio-02', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
   });
   // ---- K00-05 / K00-06 instrument (founder ruling 2026-09-14, Option C): driver test + batch flags + evidence-only reader; everything else frozen ----
+  it('C-D20 (founder ruling 2026-09-14/15): relative to the K00-05/06 instrument 8b111709b only the driver test moved — the batch, the entry classifier, the output reader and the reinstall gate are byte-identical', () => {
+    for (const p of ['scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-output-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_K0506, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    expect(histRaw(INSTRUMENT_K0506, 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').equals(readFileSync(join(process.cwd(), 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift')))).toBe(false);
+  });
   it('K00-05/06 Option C: the entry classifier and the reinstall gate are byte-identical to the F-W1 instrument 08483cfe4; the organism block above still pins ac12dedf4', () => {
     for (const p of ['scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_VPIO02B, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
   });
-  it('K00-05/06 Option C: the driver gains exactly testOutputSample with the ruled sequence (wait Play enabled ≤5 s · settle · Play · cancel-at · Cancel active if enabled · 1 s · Play · 4.5 s · Export); the three historical tests are byte-identical to 08483cfe4; the app under test still receives nothing', () => {
+  it('K00-05/06 Option C + C-D20: the driver gains exactly testOutputSample with the ruled sequence (wait Play present ≤5 s · else ≤4 bounded reveal swipes with an exact-label check each · hierarchy to the runner log then the SAME driver failure · wait Play enabled ≤5 s · settle · Play · cancel-at · Cancel active if enabled · 1 s · Play · 4.5 s · Export); the three historical tests are byte-identical to 08483cfe4; the app under test still receives nothing', () => {
     const now = W('ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift');
     const was = histRaw(INSTRUMENT_VPIO02B, 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').toString('utf8');
     const fn = (src: string, name: string) => { const m = src.match(new RegExp(`    func ${name}\\(\\) throws \\{[\\s\\S]*?\\n    \\}\\n`)); return m ? m[0] : null; };
@@ -1194,11 +1199,23 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect((t.match(/func test[A-Za-z0-9]+\(\) throws/g) ?? []).sort()).toEqual(['func testOneSample() throws', 'func testOutputSample() throws', 'func testTerminateOnly() throws', 'func testW4Sample() throws']);
     expect(t).toMatch(/env\["K00_CANCEL_AT_MS"\] \?\? "1000"/); expect(t).toMatch(/env\["K00_SETTLE_S"\] \?\? "2"/);
     const body = t.slice(t.indexOf('func testOutputSample()'), t.indexOf('func testTerminateOnly()'));
-    const order = ['requireCold()', 'launchCold()', 'setVoiceProcessing(on: vpOn)', 'tap("Enter conversation", timeout: 5)', 'harness.buttons["Play 3 s tone"]', 'waitEnabled(play, timeout: 5)',
+    const order = ['requireCold()', 'launchCold()', 'setVoiceProcessing(on: vpOn)', 'tap("Enter conversation", timeout: 5)', 'harness.buttons["Play 3 s tone"]',
+                   'play.waitForExistence(timeout: 5)', 'for i in 1...Self.revealSwipeLimit', 'harness.swipeUp()', 'harness.buttons["Play 3 s tone"].exists', 'if revealed { break }',
+                   'if !revealed', 'harness.debugDescription', 'K00-HIERARCHY:', "driverFail(\"'Play 3 s tone' not found after Enter", 'waitEnabled(play, timeout: 5)',
                    'ENTRY-NOT-REACHED', 'Thread.sleep(forTimeInterval: settleSeconds)', 'play.tap()', 'TimeInterval(cancelAtMs) / 1000.0', 'harness.buttons["Cancel active"]', 'cancel.exists && cancel.isEnabled',
                    'cancel.tap()', 'NOT-A-CANCEL-ROW', 'Thread.sleep(forTimeInterval: 1.0)', 'waitEnabled(play, timeout: 3)', 'Thread.sleep(forTimeInterval: 4.5)', 'exportAndTerminate()'];
     let at = -1; for (const step of order) { const i = body.indexOf(step, at + 1); expect(i).toBeGreaterThan(at); at = i; }
     expect((body.match(/driverFail\(/g) ?? []).length).toBe(1);                                  // only the missing-button precondition; never an audio outcome
+    expect(t).toMatch(/static let revealSwipeLimit = 4\n/);                                       // C-D20: the bound is the ruling (maximum 4 upward swipes)
+    expect((body.match(/swipeUp\(\)/g) ?? []).length).toBe(1);                                   // exactly one swipe site, inside the bounded loop; no unbounded search
+    expect(body).toMatch(/for i in 1\.\.\.Self\.revealSwipeLimit \{\s*harness\.swipeUp\(\)\s*Thread\.sleep\(forTimeInterval: 0\.5\)\s*revealed = harness\.buttons\["Play 3 s tone"\]\.exists/);
+    expect(body).not.toMatch(/swipeDown|swipeLeft|swipeRight|scrollTo|while /);                   // no other scroll gesture, no open-ended loop
+    expect(body.indexOf('K00-HIERARCHY:')).toBeLessThan(body.indexOf('driverFail('));           // the hierarchy is written BEFORE the same failure returns
+    expect((body.match(/debugDescription/g) ?? []).length).toBe(1);                                // read once, only on the not-revealed path
+    const after = body.slice(body.indexOf('guard waitEnabled(play, timeout: 5)'));               // from the unchanged guard onward: byte-for-byte the 8b111709b act
+    const wasBody = stripComments(histRaw(INSTRUMENT_K0506, 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').toString('utf8'));
+    const wasOut = wasBody.slice(wasBody.indexOf('func testOutputSample()'), wasBody.indexOf('func testTerminateOnly()'));
+    expect(after).toEqual(wasOut.slice(wasOut.indexOf('guard waitEnabled(play, timeout: 5)')));
     expect(body).not.toMatch(/XCTFail|XCTAssert/);
     expect(body).not.toMatch(/Voice processing: OFF|Apply faults|Digital-zero|Stall output|Speaker|System default|Leave|Re-enter/);   // no fault, route, VP-off or exit act inside the output act
     expect(t).toMatch(/private func waitEnabled\(_ b: XCUIElement, timeout: TimeInterval\) -> Bool/);
