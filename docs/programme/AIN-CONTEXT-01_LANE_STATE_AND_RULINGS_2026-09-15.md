@@ -365,3 +365,76 @@ outside the record before each commit.
 requires a new explicit opening act with recoverable durable authority.
 
 *Authority, like memory, requires provenance and standing.*
+
+---
+
+## 10. STATUS, HONESTLY STATED — WHAT THIS LANE DID NOT SOLVE **[F]**
+
+> **Context continuity: architecturally understood, constitutionally bounded, operationally
+> unresolved.**
+
+⛔ **No source, prompt, schema, migration, retrieval, summary, Spiralogic carrier or Bridge D change
+was made in this lane. Today MAIA can still hit the same wall.**
+
+**Resolved — the understanding of the problem:**
+- the durable transcript is largely intact;
+- the live cognition path receives only a narrow recent slice;
+- that slice is narrowed again before prompt assembly;
+- cross-session memory does not recover displaced turns from the **active** session;
+- **MAIA can therefore have continuity in storage while lacking continuity in cognition**;
+- the current Spiralogic carrier is not a true longitudinal spiral substrate;
+- correction standing, provenance, recurrence, freedom and anti-typing are specified well enough
+  that a repair should not accidentally make the deeper problem worse.
+
+**Not resolved — the serving behaviour.** Nothing above changes what a member experiences.
+
+### 10.1 · TWO LEVELS REMAIN, AND THEY ARE NOT THE SAME WORK
+
+| | |
+|---|---|
+| **Immediate context failure** | a long conversation exists, cognition sees a small aperture, and there is no reliable way to recover the relevant displaced material. Needs an **actual repair lane**. |
+| **Longitudinal continuity** | the larger capability found underneath the bug. Requires spiral identity, temporal process relationships, epistemic standing, corrections, provenance, significance, and freedom from accumulated interpretations. |
+
+### 10.2 · ⭐⭐ THE POSTPONEMENT TRAP — RECORDED BECAUSE THIS REPOSITORY HAS ALREADY FALLEN INTO IT
+
+> **[F]** *"Even if we simply gave MAIA 10× more context, she still would not yet possess the
+> architecture needed to recognize 'We have been here before, but not quite like this.' Increasing
+> the context window alone would not solve the real problem. **It would postpone the wall.**"*
+
+⚠️ **[J] This is not a hypothetical temptation. It is the documented history of the very constant
+ACT 1 measured.** `components/OracleConversation.tsx:342`:
+
+> *"Send last 100 messages (~50 exchanges) to API. **Raised from 30** to extend depth before MAIA
+> hits the wall and confabulates about her own architecture."*
+
+**The cap has already been raised once, for exactly this reason, and the wall moved rather than
+fell.** A future session under delivery pressure will reach for the same lever, and it is a
+one-line change that produces immediate visible improvement — which is what makes it dangerous.
+
+> **⛔ Raising `MAX_API_HISTORY` is postponement, not repair. It is not prohibited — it may well be
+> a reasonable stopgap — but it must never be recorded as having addressed C1, C2 or C4, and it
+> resolves none of the five continuities.**
+
+### 10.3 · THE LANE'S OWN CLAIM STATE
+
+Applying `docs/canon/MARKETING_CLAIM_DISCIPLINE.md` to this lane's output, as §8.2 requires:
+
+| Output | Claim state |
+|---|---|
+| ACT 1 / ACT 3 census findings | **LIVE** — observed in source and schema, with their limits stated |
+| LC-1…LC-23, the four discriminators, the six failure forms | **DESIGNED** — specified, ⛔ unratified, ⛔ unimplemented |
+| Longitudinal continuity as a member-facing capability | **VISION** |
+| *"MAIA maintains continuity in a long conversation"* | ⛔ **NOT A CLAIM IN ANY STATE** |
+
+> *We do not tell tomorrow's story as if it were today's.* ⭐ A lane that produced law and no
+> behaviour has produced law and no behaviour, and its records must read that way to anyone who
+> opens them cold.
+
+### 10.4 · WHAT WAS AND WAS NOT ANSWERED
+
+> ✅ **Answered**: *What is actually wrong, and what laws must govern the solution?*
+> ⛔ **Unanswered**: *Can MAIA maintain continuity in a long conversation?*
+
+**Cleanest first move on reopening** **[F]**: **witness C4.** Cheap, bounded, currently derived
+rather than evidenced, and resolving it removes one remaining uncertainty before anything changes
+the live continuity path.
