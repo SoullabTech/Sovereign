@@ -597,9 +597,32 @@ services:
 
     environment:
       # Multilingual model (was base.en, English-only). Server auto-pulls
-      # Systran/faster-whisper-base from HuggingFace; Whisper auto-detects language.
-      # Hold escalation to 'small' until CPU/accuracy measured.
-      WHISPER__MODEL: base
+      # Systran/faster-whisper-<model> from HuggingFace; Whisper auto-detects
+      # language, so the multilingual property established by
+      # docs/specs/CONVERSATIONAL_MULTILINGUAL_UNLOCK_2026-06-14.md is preserved.
+      #
+      # ⭐ ESCALATED base → small, 2026-08-31. The previous line held escalation
+      # "until CPU/accuracy measured". Accuracy was measured on a device, and it
+      # failed in the worst available way: a member said "I'm having a really
+      # hard time" and `base` returned "I'm having a really good time". MAIA then
+      # answered the inverted meaning.
+      #
+      # ⛔ THAT IS NOT AN ACCURACY NIT, IT IS THE SOVEREIGNTY CLASS. This repo
+      # already names it from the D02 walk — MAIA offering framing about words
+      # the member never said. An inverted transcript is worse than an empty one
+      # because it is plausible: silence is noticed, "you're having a good time"
+      # has to be corrected by someone already having a hard time.
+      #
+      # The failure shape is `base`'s, not the microphone's: `hard` and `good`
+      # share no phonetics. A weak acoustic model leaning on its language prior
+      # substitutes the commoner phrase.
+      #
+      # COST, stated rather than discovered: `small` is roughly 2–3× `base` on
+      # CPU, so per-utterance latency rises. Answering the opposite of what a
+      # member said is the worse cost. `start_period` is raised because the first
+      # boot downloads the new model before the health check can pass; the
+      # huggingface cache volume below means that happens once.
+      WHISPER__MODEL: small
       WHISPER__INFERENCE_DEVICE: cpu
 
     volumes:
@@ -613,7 +636,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 120s
+      # 300s, not 120s: the first boot after the model change downloads
+      # Systran/faster-whisper-small before /health can answer. Subsequent boots
+      # hit the cache volume and are fast.
+      start_period: 300s
 
     networks:
       - maia-internal
