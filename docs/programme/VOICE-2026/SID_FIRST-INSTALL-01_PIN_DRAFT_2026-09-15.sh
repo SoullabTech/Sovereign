@@ -29,6 +29,8 @@ test -z "$(git status --porcelain -- scripts/witness/k00-reinstall.sh)"
 MAN="$WT/docs/programme/VOICE-2026/driver-ledger/sid-mac-compile-02-20260915T214212Z/SID-MAC-COMPILE-02.manifest.sha256"
 test "$(shasum -a 256 "$MAN" | cut -d' ' -f1)" = "$MAN_PIN"
 test "$(wc -l < "$MAN" | tr -d ' ')" = 7
+( cd "$APP" && shasum -a 256 -c "$MAN" >/dev/null )
+test "$(cd "$APP" && find . -type f | LC_ALL=C sort)" = "$(awk '{print $2}' "$MAN" | LC_ALL=C sort)"
 mkdir -p "$OUT"
 git rev-parse HEAD | tee "$OUT/head.txt"
 xcrun devicectl device info apps --device "$DEV" --bundle-id "$BID_HIST" --json-output "$OUT/apps-before-vpio02.json"

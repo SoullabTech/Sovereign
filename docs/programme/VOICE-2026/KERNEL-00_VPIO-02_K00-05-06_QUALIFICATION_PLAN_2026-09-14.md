@@ -866,3 +866,8 @@ The SID subject's compile qualification is complete and in custody; the instrume
 ### §10.67 — ENTRY law ruled · FIRST-INSTALL-SID pin drafted, not opened (2026-09-15; discriminator plan §18.47; implementation record §10.17)
 
 The SID subject is identity-complete in the instrument and remains uninstalled, unlaunched, unsampled. K00 obligations for the SID subject: CLOSED; ENTRY = K00-04 axis only, law as ruled (27/30 floor). Nothing opens on this record.
+
+
+### §10.68 — the ENTRY witness instruments exist as drafts before the install (2026-09-15; discriminator plan §18.48; implementation record §10.18)
+
+No qualification change. FIRST-INSTALL-SID not open; ENTRY not open; K00 obligations for the SID subject CLOSED.
