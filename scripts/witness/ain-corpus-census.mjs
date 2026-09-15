@@ -334,7 +334,19 @@ for (const path of files) {
   });
 }
 
+// ---------------------------------------------------------------- trust
+//
+// ONE authority. Amendment 2 declared a 95% trust threshold and then guarded at
+// 0%, so a run at 900/1000 reads would mark content findings untrustworthy, write
+// the report anyway, and close with CENSUS COMPLETE. Failed text reads leave
+// fmPresent=null, domains=[] and soullab=false, so those 100 failures would still
+// be counted downstream as content inspected and found absent. That is the
+// original defect in a narrower form. The threshold and the guard are now the
+// same derived value, computed once and consumed everywhere.
+const TRUST_THRESHOLD = 0.95;
 const textSuccesses = textAttempts - textFailures;
+const textSuccessRate = textAttempts === 0 ? 1 : textSuccesses / textAttempts;
+const contentFindingsTrustworthy = textSuccessRate >= TRUST_THRESHOLD;
 
 const duplicateClusters = [...hashes.entries()]
   .filter(([, paths]) => paths.length > 1)
@@ -367,7 +379,9 @@ const census = {
     text_read_attempts: textAttempts,
     text_read_successes: textSuccesses,
     text_read_failures: textFailures,
-    content_findings_trustworthy: textAttempts === 0 || textSuccesses / textAttempts >= 0.95,
+    text_read_success_rate: +textSuccessRate.toFixed(4),
+    trust_threshold: TRUST_THRESHOLD,
+    content_findings_trustworthy: contentFindingsTrustworthy,
   },
   readability: byReadability,
   by_extension: Object.fromEntries(Object.entries(byExt).sort((a, b) => b[1] - a[1])),
@@ -392,9 +406,12 @@ const census = {
 // FAIL CLOSED. If content reads were attempted and none succeeded, every
 // content-derived finding below is non-observation wearing the shape of a
 // measurement. Refuse rather than report.
-if (textAttempts > 0 && textSuccesses === 0) {
+if (textAttempts > 0 && !contentFindingsTrustworthy) {
   console.error('');
-  console.error(`REFUSED: ${textAttempts} content reads attempted, 0 succeeded.`);
+  console.error(`REFUSED: ${textSuccesses} of ${textAttempts} content reads succeeded ` +
+                `(${(textSuccessRate * 100).toFixed(1)}%).`);
+  console.error(`Content-derived findings require at least ${(TRUST_THRESHOLD * 100).toFixed(0)}% ` +
+                'successful reads.');
   console.error('Frontmatter standing, domain signal, authorship signal, content hashes and');
   console.error('duplication are all derived from file contents and would be reported as');
   console.error('findings while measuring nothing. No report was written.');
@@ -445,7 +462,7 @@ const md = `# AIN Wisdom Corpus Census
 | content hash | ${hashAttempts} | ${hashAttempts - hashFailures} | ${hashFailures} |
 | text read | ${textAttempts} | ${textSuccesses} | ${textFailures} |
 
-**Content-derived findings trustworthy: ${textAttempts === 0 || textSuccesses / textAttempts >= 0.95 ? 'YES' : '⛔ NO'}**
+**Content-derived findings trustworthy: ${contentFindingsTrustworthy ? 'YES' : '⛔ NO'}** (${(textSuccessRate * 100).toFixed(1)}% ≥ ${(TRUST_THRESHOLD * 100).toFixed(0)}% required)
 
 ## Machine readability
 
