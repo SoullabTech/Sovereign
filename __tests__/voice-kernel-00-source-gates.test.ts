@@ -28,7 +28,7 @@
 import { execFileSync } from 'child_process';
 import { createHash } from 'crypto';
 import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
-import { join } from 'path';
+import { basename, dirname, join } from 'path';
 
 const PKG = join(process.cwd(), 'ios', 'VoiceKernel');
 const HARNESS = join(process.cwd(), 'ios', 'VoiceKernelHarness');
@@ -1160,43 +1160,85 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
                         'shared-head refusal (3 steps) qualifies under vpio-02 — trace-indistinguishable, custody decides: failure then recovery']) expect(out).toContain(line);
     expect(out).not.toMatch(/^FAIL/m);
   });
-  it('corpus regression: the VPIO-01 N=30 population reads 30 × failure then degradation under vpio-01 and 30 × SUBJECT-MISMATCH under vpio-02; the VPIO-02 F-W1, fresh K00-0506 and S1 VP-OFF populations read as produced; every engine-era journal under vpio-02 reads SUBJECT-MISMATCH or DRIVER/INFRASTRUCTURE FAILURE', () => {
-    const all = tracked([':(glob)docs/programme/VOICE-2026/driver-ledger/**/kernel00-*.jsonl']);
-    const vpio01 = all.filter((p) => p.includes('/VPIO-01-20260914T200542Z/journals/'));
-    expect(vpio01.length).toBe(30);
-    const classes = (subject: string, files: string[]) =>
-      execFileSync('python3', ['scripts/witness/k00-ledger.py', '--subject', subject, ...files], { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 })
-        .toString('utf8').split('\n').filter(Boolean).map((row) => row.match(/\*\*([^*]+)\*\*/)![1]);
+  it('corpus partition (founder ruling 2026-09-15, structural — replaces the C-D19/C-D21/C-D23 per-directory naming): every tracked journal carries H (its directory\'s ledger header subject=) and C (its own start-trace signature); membership = H ∧ C, a disagreement fails closed naming file · header · signature; the sets are exactly vpio-02 50 · vpio-01 30 · engine 468; the frozen classifier reproduces every produced ledger\'s class column row for row under the header subject; cross-subject reads are SUBJECT-MISMATCH; no directory is named', () => {
+    const LEDGER_ROOT = 'docs/programme/VOICE-2026/driver-ledger';
+    const all = tracked([`:(glob)${LEDGER_ROOT}/**/kernel00-*.jsonl`]);
+    expect(all.length).toBe(548);
+    // H — the declared subject: the nearest ledger.md above the journal (written by the batch from its --subject); no ledger ⇒ none (the archive)
+    const headerOf = (p: string): { dir: string; subject: string } | null => {
+      let d = dirname(p);
+      while (d.startsWith(LEDGER_ROOT) && d !== LEDGER_ROOT) {
+        const lm = join(process.cwd(), d, 'ledger.md');
+        if (existsSync(lm)) { const m = readFileSync(lm, 'utf8').match(/subject=([^\s·|]+)/); return { dir: d, subject: m ? m[1] : 'none' }; }
+        d = dirname(d);
+      }
+      return null;
+    };
+    // C — the physical subject: the journal's own graph_start_trace steps (format_probe_initialize_begin ⇒ vpio-02; input_format_read without the probe ⇒ vpio-01; else engine)
+    const signatureOf = (p: string): string => {
+      const steps = new Set<string>();
+      for (const line of readFileSync(join(process.cwd(), p), 'utf8').split('\n')) {
+        if (!line.includes('"graph_start_trace"')) continue;
+        try { const r = JSON.parse(line); if (r.event === 'graph_start_trace' && r.evidence?.step) steps.add(String(r.evidence.step)); } catch { /* not a record */ }
+      }
+      return steps.has('format_probe_initialize_begin') ? 'vpio-02' : steps.has('input_format_read') ? 'vpio-01' : 'engine';
+    };
+    const carriers = new Map(all.map((p) => { const h = headerOf(p); return [p, { h, hn: h && ['vpio-01', 'vpio-02'].includes(h.subject) ? h.subject : 'engine', c: signatureOf(p) }]; }));
+    const disagreements = all.filter((p) => carriers.get(p)!.hn !== carriers.get(p)!.c).map((p) => `${p}: header=${carriers.get(p)!.h?.subject ?? 'none'} signature=${carriers.get(p)!.c}`);
+    expect(disagreements).toEqual([]);
+    const corpus = (subject: string) => all.filter((p) => carriers.get(p)!.hn === subject && carriers.get(p)!.c === subject);
+    const vpio02 = corpus('vpio-02'), vpio01 = corpus('vpio-01'), engine = corpus('engine');
+    expect([vpio02.length, vpio01.length, engine.length]).toEqual([50, 30, 468]);
+    expect(all.filter((p) => carriers.get(p)!.h === null).length).toBe(154);          // the archive: no header, engine by signature
+    const classify = (subject: string, files: string[]): Map<string, string> => {
+      if (files.length === 0) return new Map();
+      const out = execFileSync('python3', ['scripts/witness/k00-ledger.py', '--subject', subject, ...files], { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 }).toString('utf8');
+      return new Map(out.split('\n').filter(Boolean).map((row) => [row.match(/\(`(kernel00-[^`]+\.jsonl)`\)/)![1], row.match(/\*\*([^*]+)\*\*/)![1]]));
+    };
+    const classes = (subject: string, files: string[]) => { const m = classify(subject, files); return files.map((p) => m.get(basename(p))!); };
+    // historical pins (counts, not membership): VPIO-01 F-W1 30 × degradation; the VPIO-02 corpus 49 × gen-1 listen + 1 × failure then recovery (29+1 · 10 · 10)
     expect(classes('vpio-01', vpio01)).toEqual(Array(30).fill('failure then degradation'));
-    expect(classes('vpio-02', vpio01)).toEqual(Array(30).fill('SUBJECT-MISMATCH'));
-    // C-D19 (2026-09-14): the VPIO-02 F-W1 population (VPIO-02-20260914T223500Z) is its own tracked population; "engine-era" is
-    // every journal outside BOTH VPIO directories, never "everything that is not VPIO-01". The VPIO-02 rows are pinned to the
-    // ledger as produced (29 × gen-1 listen · 1 × failure then recovery under vpio-02; 30 × SUBJECT-MISMATCH under vpio-01).
-    const vpio02 = all.filter((p) => p.includes('/VPIO-02-20260914T223500Z/journals/'));
-    expect(vpio02.length).toBe(30);
     const c02 = classes('vpio-02', vpio02);
-    expect(c02.filter((c) => c === 'gen-1 listen').length).toBe(29);
+    expect(c02.filter((c) => c === 'gen-1 listen').length).toBe(49);
     expect(c02.filter((c) => c === 'failure then recovery').length).toBe(1);
-    expect(classes('vpio-01', vpio02)).toEqual(Array(30).fill('SUBJECT-MISMATCH'));
-    // C-D21 (2026-09-15, same shape as C-D19): the fresh K00-0506 output-act population (K00-0506-20260915T004738Z, after C-D20) is
-    // its own tracked VPIO-02 population — 10 × gen-1 listen under vpio-02, 10 × SUBJECT-MISMATCH under vpio-01 — and is excluded
-    // from "engine-era" like the two F-W1 populations. The first K00-0506 batch (235008Z) produced no journal and needs no row.
-    const k0506 = all.filter((p) => p.includes('/K00-0506-20260915T004738Z/journals/'));
-    expect(k0506.length).toBe(10);
-    expect(classes('vpio-02', k0506)).toEqual(Array(10).fill('gen-1 listen'));
-    expect(classes('vpio-01', k0506)).toEqual(Array(10).fill('SUBJECT-MISMATCH'));
-    // C-D23 (2026-09-15, C-D19/C-D21 shape): the S1 VP-OFF discriminator population (K00-0506-VPOFF-20260915T012817Z) is its own
-    // tracked VPIO-02 population — 10 × gen-1 listen under vpio-02, 10 × SUBJECT-MISMATCH under vpio-01 — excluded from engine-era.
-    // Third explicit naming in a row: a structural partition by the ledger header's subject is a candidate for a founder-ruled
-    // maintenance change; not made here.
-    const s1 = all.filter((p) => p.includes('/K00-0506-VPOFF-20260915T012817Z/journals/'));
-    expect(s1.length).toBe(10);
-    expect(classes('vpio-02', s1)).toEqual(Array(10).fill('gen-1 listen'));
-    expect(classes('vpio-01', s1)).toEqual(Array(10).fill('SUBJECT-MISMATCH'));
-    const engine = all.filter((p) => !vpio01.includes(p) && !vpio02.includes(p) && !k0506.includes(p) && !s1.includes(p));
-    expect(engine.length).toBeGreaterThan(400);
+    // cross-subject: structural, both directions; engine-era reads SUBJECT-MISMATCH or infrastructure under BOTH VPIO subjects
+    expect(classes('vpio-01', vpio02)).toEqual(Array(50).fill('SUBJECT-MISMATCH'));
+    expect(classes('vpio-02', vpio01)).toEqual(Array(30).fill('SUBJECT-MISMATCH'));
     expect(new Set(classes('vpio-02', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
-  });
+    expect(new Set(classes('vpio-01', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
+    // per-population truth from the produced ledger: for every ledgered directory the frozen classifier, run under the header's subject,
+    // reproduces the produced class column row for row (rows without a journal — infrastructure — have nothing to reproduce;
+    // journals under not-a-sample/ are present in `all` and named in no row). The one ledger that names a journal in more than one row
+    // is the C-D5 listing-flood shape (PRE-AUTH, produced before C-D6); its rows are historical evidence and its only delta from the
+    // frozen classifier is the C-D6 gen-1 §3 refusal (one journal, SUBJECT-MISMATCH → failure then degradation), pinned exactly.
+    const byDir = new Map<string, string[]>();
+    for (const p of all) { const h = carriers.get(p)!.h; if (h) byDir.set(h.dir, [...(byDir.get(h.dir) ?? []), p]); }
+    expect(byDir.size).toBe(15);                                                                    // 15 ledgered directories hold journals today (the archive is the 16th population, headerless)
+    const floods: string[] = [];
+    for (const [dir, files] of byDir) {
+      const subject = headerOf(files[0])!.subject;
+      const rows = readFileSync(join(process.cwd(), dir, 'ledger.md'), 'utf8').replace(/\r/g, '').split('\n').filter((l) => /^\| (AUTOMATED|MANUAL)/.test(l))
+        .map((l) => ({ file: l.match(/\(`(kernel00-[^`]+\.jsonl)`\)/)?.[1] ?? null, cls: l.match(/\*\*([^*]+)\*\*/)![1] }));
+      const named = rows.filter((r): r is { file: string; cls: string } => r.file !== null);
+      const present = new Map(files.map((p) => [basename(p), p]));
+      const samples = files.filter((p) => !p.includes('/not-a-sample/'));
+      for (const r of named) expect(present.has(r.file)).toBe(true);                                        // every ledgered journal is tracked in this directory
+      for (const p of files.filter((p) => p.includes('/not-a-sample/'))) expect(named.some((r) => r.file === basename(p))).toBe(false);
+      for (const p of samples) expect(named.some((r) => r.file === basename(p))).toBe(true);
+      const current = classify(subject, samples);
+      const deltas = named.filter((r) => current.get(r.file) !== r.cls).map((r) => `${basename(dir)} ${r.file}: produced=${r.cls} current=${current.get(r.file)}`);
+      const perFile = new Map<string, number>(); for (const r of named) perFile.set(r.file, (perFile.get(r.file) ?? 0) + 1);
+      if ([...perFile.values()].some((n) => n > 1)) {
+        floods.push(dir);
+        expect(subject).toBe('p5b0');
+        expect(new Set(deltas)).toEqual(new Set([`${basename(dir)} kernel00-K00-faf8fa3e-1789240954.jsonl: produced=SUBJECT-MISMATCH current=failure then degradation`]));
+        expect(deltas.length).toBe(10);
+      } else {
+        expect(deltas).toEqual([]);
+      }
+    }
+    expect(floods.length).toBe(1);
+  }, 180_000);
   // ---- K00-05 / K00-06 instrument (founder ruling 2026-09-14, Option C): driver test + batch flags + evidence-only reader; everything else frozen ----
   it('C-D20 (founder ruling 2026-09-14/15): relative to the K00-05/06 instrument 8b111709b only the driver test moved — the batch, the entry classifier, the output reader and the reinstall gate are byte-identical', () => {
     for (const p of ['scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh']) expect(histRaw(INSTRUMENT_K0506, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
