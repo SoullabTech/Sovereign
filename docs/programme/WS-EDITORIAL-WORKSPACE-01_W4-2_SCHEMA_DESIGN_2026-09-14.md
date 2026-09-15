@@ -1026,3 +1026,152 @@ The protected preflight remains **unspent**:
 psql "$PROTECTED_DATABASE_URL" -X \
   -f scripts/witness/w4-2-2-protected-preflight.sql
 ```
+
+---
+
+# W4-2.2 — PROTECTED PREFLIGHT · **RESULT**
+
+**Run** 2026-09-15, founder, from the Mac Studio via
+`ssh soullab@minisforum 'docker exec -i maia-postgres psql …'`
+**Instrument at** `646b9508b`
+
+```
+db                  maia_consciousness
+role                soullab
+read_only           on
+server              PostgreSQL 16.13 (Debian)
+```
+
+⭐ §1 names the protected database. **This is a protected reading**, and it
+supersedes the `NOT RUN` standing recorded in §16.
+
+---
+
+## 29. ⭐⭐ THE FINDING: the entire succession lane is ABSENT from production
+
+The preflight was asked *"is W5-3 present?"* and answered a larger question.
+
+| migration | ledger | catalogue |
+|---|---|---|
+| `20260901000001_ask_threads.sql` | **applied** | `ask_threads` ✅ `ask_turns` ✅ |
+| `20260914000001_proposal_succession.sql` | **ABSENT** | `proposal_chains` ❌ `proposal_versions` ❌ |
+| `20260914000005_editorial_ontology.sql` | **ABSENT** | `proposal_chain_directions` ❌ `proposal_chain_insights` ❌ `ask_threads.proposal_chain_id` ❌ |
+
+⭐ **Ledger and catalogue AGREE on every row.** After 2026-09-07 that is not
+assumed, and it is worth stating plainly: there is **no drift** here. The record
+and the database tell the same story.
+
+⭐⭐ **The consequence relocates the whole W4 schema landing.** W4-S1/S2 declare
+foreign keys into `proposal_chains`, `proposal_versions` and
+`proposal_chain_directions` — **none of which exist on production.** The W4
+migration is not one act away from the protected database; it is behind an
+entire unlanded lane:
+
+```
+20260914000001  proposal_succession        ⛔ NOT APPLIED
+20260914000002  revision_offers            ⚠️ NOT QUERIED
+20260914000003  chains_member_identity     ⚠️ NOT QUERIED
+20260914000004  revision_authorizations    ⚠️ NOT QUERIED
+20260914000005  editorial_ontology         ⛔ NOT APPLIED
+─────────────────────────────────────────────────────────
+W4-S1 / W4-S2                              ⛔ depends on all of the above
+```
+
+⚠️ **`…000002`, `…000003` and `…000004` are NOT MEASURED.** My instrument named
+only three filenames, and the catalogue checks it performs do not cover
+`manuscript_revision_offers` or `manuscript_revision_authorizations`. Their
+absence is *plausible* — they build on `proposal_chains`, which is absent — ⛔
+but plausible is not measured, and this record does not report them as absent.
+**That is an instrument gap**, and it is named rather than filled by inference.
+
+## 30. The decision table, filled
+
+```
+W5-3 protected substrate         ABSENT  (ledger and catalogue agree)
+ledger: 20260914000005           ABSENT FROM LEDGER
+XOR violations                   NOT MEASURABLE   ⛔ never "0"
+editorial+reading collisions     NOT MEASURABLE
+existing editorial threads       NOT MEASURABLE
+
+ask_threads     heap 8192 bytes · total 72 kB · NEVER ANALYZED
+ask_turns       heap 24 kB      · total 72 kB · NEVER ANALYZED
+directions      does not exist
+versions        does not exist
+
+total_threads                    1        ⭐ not zero — see §31
+required UNIQUE already present  NO — only the two primary keys
+INVALID indexes present          NONE
+```
+
+## 31. ⭐ One real Ask thread exists in production
+
+`total_threads = 1`, and `ask_turns` carries 24 kB of heap. ⛔ Small is not
+empty: somebody has held an Ask conversation on the protected database, and the
+migration plan is operating on a table with a real member record in it.
+
+⭐ It also means the **rollback property (§4) is currently clean** — but for a
+structural reason rather than a measured one: `proposal_chain_id` does not
+exist, so there are **no editorial threads to strand**, and
+`ALTER COLUMN anchor SET NOT NULL` would succeed today. ⛔ That is a fact about
+today, and it stops being true the moment the first editorial conversation is
+held.
+
+## 32. RULING EARNED: the unique-lock strategy — **Option A**
+
+```
+A · ordinary unique build        ✅ EARNED
+B · concurrent lane              ⛔ NOT REQUIRED
+```
+
+The two live targets are **8 kB and 24 kB of heap**; the other two do not exist
+yet and will be created empty. An `ACCESS EXCLUSIVE` index build over 72 kB of
+total relation is a blip, and **Option B's machinery is not warranted** — no
+`CONCURRENTLY` precedent in this repository, structural incompatibility with
+`run-sql-migrations.sh`, and an `INVALID`-index recovery path to own, all to
+avoid a lock measured in milliseconds.
+
+⭐ `pg_total_relation_size` decided this, as designed — and it decided it
+**despite** `reltuples` being `NEVER ANALYZED` on both tables. That is exactly
+why sizing and integrity were separated: a `COUNT(*)`-only instrument would have
+reported `1` and told us nothing about index-build cost.
+
+⚠️ **This ruling is dated.** It rests on sizes read on 2026-09-15. If the
+succession lane lands and data accumulates before W4-S1/S2 are authorized,
+**re-run the preflight** — the ruling is earned by a measurement, not by the
+shape of the tables.
+
+## 33. What this result does and does not authorize
+
+```
+protected read                   ✅ SPENT — this
+unique-lock strategy ruling      ✅ EARNED — Option A
+right to DESIGN W4-S1/S2         ✅ EARNED
+
+migration implementation         ⛔ HELD
+migration execution              ⛔ HELD
+canonical merge                  ⛔
+deployment                       ⛔
+data repair                      ⛔
+```
+
+⛔ **And a new prerequisite is now visible**: the succession lane
+(`20260914000001` … `20260914000005`) is itself unlanded and custody-held. W4's
+schema cannot reach production before it does, and **that sequencing is a founder
+act this preflight does not touch.**
+
+## 34. Standing
+
+```
+W4-2   semantic schema design    ✅ CLOSED · f210df118
+W4-2.1 migration phasing         ✅ CLOSED · 46a44928e
+W4-2.2a instrument seal          ✅ CLOSED · 26/0
+W4-2.2 protected RESULT          ✅ RUN 2026-09-15 · W5 substrate ABSENT
+
+unique-lock strategy             ✅ Option A earned (dated)
+…000002/3/4 ledger state         ⚠️ NOT MEASURED — instrument gap, named
+executable W4 migrations         ⛔ HELD
+succession lane landing          ⛔ HELD — and now a visible prerequisite
+
+production mutation              ⛔ NONE — the run was READ ONLY
+maia_focus_witness               FROZEN
+```
