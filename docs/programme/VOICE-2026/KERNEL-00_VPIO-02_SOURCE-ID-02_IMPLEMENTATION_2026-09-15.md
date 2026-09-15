@@ -87,3 +87,25 @@ K00-06 built-in                  CHARACTERIZE ONLY · INCOMPLETE
 KERNEL-00                        NOT ACCEPTED
 device execution authority       NONE
 ```
+
+---
+
+## 9. Founder ruling on `6f0e2e0b2` (2026-09-15) → `SOURCE-ID-02A` offline repair LANDED at `f0c6ae13b` · implementation still NOT ACCEPTED for MAC-COMPILE
+
+**Ruling (substance verbatim):** the implementation surface is substantially right and confined to the ruled files; the five flags are disposed — `SourceEvidence` ACCEPTED · driver row ACCEPTED (custody/selection, not app behaviour) · S-a refusal ACCEPTED IN PRINCIPLE · compile-era Swift risks DEFERRED TO MAC-COMPILE · empty SID pins ACCEPTED (`pins-unrecorded` is the correct fail-closed condition); the estimator is faithful (consumed buffer, four callbacks, observed-rate coefficients, ordered 997/440 envelopes). **Two real offline defects and one control-shape ambiguity** must be fixed before Swift enters the toolchain: **Defect 1** — the batch's historical two-stage parser refused `sid-nearend-gated` as *unknown stimulus* before the SID branch could admit it, so the record's claim that the gated token was lawful on the SID subject was **false in executable behaviour**; **Defect 2** — the reader evaluated SURVIVES and SUPPRESSED before `frameReset`, so a suppressed-amplitude window with healthy capture and a reset inside it read `NEAR-END-SUPPRESSED`; **Ambiguity** — `m2own is None or m2own < M2` let an absent/malformed own-tone control qualify like a measured quiet one. Authority: exactly one narrow offline carrier, `SOURCE-ID-02A` (batch dispatch · reader precedence · undefined-control handling · self-test coverage · gate pins · records); no Swift change, no new bins/thresholds, no compile/install/device/witness/playback/population.
+
+**Repair, at `f0c6ae13b88db29cbd1537bec585d98376c8bc4f` (Swift untouched — `git diff` names only the batch, the reader and the gate):**
+
+1. **Batch — one closed dispatch** (replacing the two-stage parser):
+   ```text
+   ""                  no stimulus
+   s2-nearend          only --subject vpio-02      (the stationary S-a arm is NOT OPEN on the SID subject)
+   sid-nearend-gated   only --subject vpio-02-sid
+   anything else       refused; the refusal names the two lawful pairings
+   ```
+   Gate: exactly one `case "$STIMULUS" in`; both guarded branches precede the catch-all; no unguarded `s2-nearend) ;;`; the old "the only token is s2-nearend" text absent; the dispatch precedes the device lock. (The historical single-line `case` from `b198e2e37` is superseded by this dispatch; it was never a `8b111709b` line, so the preservation law over the K00-05/06 base is unaffected, and every added line is inside the dispatch or SID-allowed.)
+2. **Reader — `frameReset` first:** `frameReset > 0 → INDETERMINATE-SRC: frameReset` is evaluated before SURVIVES and SUPPRESSED. New self-test 21 (suppressed amplitude + callbacks ≥ 90 + `ioRunning` + `frameReset=1` → `frameReset`, never SUPPRESSED).
+3. **Reader — own-tone control law:** `control = clear` iff `m2_440` numeric and `< 0.9`, or `m2_440` undefined with a complete record (all seven bins' Mean/Max/Min parseable) and `e440Mean < max(C_base, C_w)` (no own-band energy to modulate); numeric and `≥ 0.9` → `own_modulated`; absent/malformed while own-band energy is material → **`INDETERMINATE-SRC: own_control_unmeasured`**. `control == clear` is part of SURVIVES; missing control evidence never earns it. Self-tests 22 (undefined + quiet → SURVIVES), 23 (undefined + material → `own_control_unmeasured`), 24 (own-band keys missing → `own_control_unmeasured`). Vocabulary gains exactly that one reason code.
+4. **Self-test 24/24; gate 82/82** (pins for the dispatch, the law order `frameReset → SURVIVES → SUPPRESSED → …`, the control expression, the new reason code and the four new case names); 61 tracked VPIO-02 journals still `no_source_evidence`.
+
+**Standing after §9:** implementation `6f0e2e0b2` + repair `f0c6ae13b` RETURNED · NOT YET ACCEPTED for MAC-COMPILE (the founder adjudicates the whole after this carrier) · core Swift/source design ACCEPTED IN PRINCIPLE · MAC-COMPILE · FIRST-INSTALL · SID ENTRY WITNESS (required) · S-b N=10 CLOSED · S-a NOT OPEN · S3 CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · KERNEL-00 NOT ACCEPTED · device execution authority NONE.
