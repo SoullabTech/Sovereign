@@ -66,3 +66,132 @@ The comparison is window-level (baseline windows vs full rendering windows of th
 Returned: the semantics census (§1), the corpus reading (§2 — convergence tail in stream 2, threshold-edge boundary, sample-1 exception, ambient near-end vanishing), the hypothesis set (§3), the discrimination design on existing fields (§4), and the smallest witnesses (§5). **Nothing implemented, compiled, installed, launched, played or sampled.** Rulings needed before any act: (1) whether S1 (VP-OFF output act, existing instrument) opens as a witness, with its own preflight and authority string; (2) whether S2 opens and in which shape (5.2 a or b); (3) the reading law of §4 ratified as witness criteria (not constitutional); (4) which seam K00-06 governs — this plan assumes the consumed (post-VP) seam, since it is the organism's only input.
 
 **Standing (unchanged by this plan):** K00-04 PASS · K00-05 PASS · CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · organism `ac12dedf4` FROZEN · `.vpio02` installed, untouched · `.vpio01` FROZEN · K00/R1 UNTOUCHED · new instrument / device witness / route / interruption / reset / endurance NOT AUTHORIZED · KERNEL-00 NOT ACCEPTED.
+
+
+## 7. Founder ruling (2026-09-15) — plan ACCEPTED · K00-06 seam RULED · §4 reading law RATIFIED (one amendment) · S1 OPEN after record pin · S2 shape SELECTED, implementation HELD · S3 conditional, not open
+
+**7.1 K00-06 governs the consumed seam — RULED.** K00-06 asks whether usable input remains available to the organism while output renders — the path `VoiceProcessingIO output → AudioUnitRender → organism input callback` — not whether a hypothetical raw microphone upstream keeps capturing. `hardware mic may still capture ≠ K00-06 satisfied`. Hypothesis A′ therefore matters architecturally: a controlled independent near-end source reaching the hardware but suppressed before the consumed seam means duplex at the organism boundary is not yet demonstrated. No raw-mic tap is authorized or needed.
+
+**7.2 §4 reading law — RATIFIED as witness criteria only** (never constitutional, never a change to `k00-output-ledger.py`): N = 10 per arm · valid stimulus row = the independent source visible in ≥ 2 healthy pre-output baseline windows · comparison = baseline windows vs FULL rendering windows within the same invocation · existing evidence only (`callbacks · digitalZero · noiseFloor · signal · rmsMean/rmsMax/peakMax · inputFlow · ioRunning`) · no ms Mac↔phone alignment when the stimulus spans the full invocation. **Amendment:** `rmsMean ≥ 10× the S0 floor` is NOT a deciding threshold — descriptive only (S0 carries the unexplained sample-1 shape and uncontrolled room energy; a numerical boundary from it would be a manufactured threshold). The clean S2/S3 discriminator is the existing classification: stimulus seen at baseline ∧ `signal`-class input persists through the relevant full rendering windows → **A-consistent**; stimulus seen at baseline ∧ `signal`-class input disappears during deep rendering while callbacks/`ioRunning` continue → **A′-consistent**; stimulus not visible at baseline → **UNMEASURED** for the discriminator; mixed rows → **CHARACTERIZE**, never forced. The existing 3 PASS / 5 CHARACTERIZE / 2 UNMEASURED K00-06 population is unchanged.
+
+**7.3 S1 — OPEN after this record is pinned.** Purpose, narrow: *does the progressive near-silence/attenuation shape remain when Voice Processing is bypassed on the same VPIO unit?* Not an attempt to earn K00-06 PASS; cannot reopen K00-05 (CLOSED). Population: stratum `K00-0506-VPOFF` · N 10 · instrument `83a382a1455161996d499f30cbf00504bbd0332a` · organism `ac12dedf4b7b4efc9855c08bb4285a704e7039f1` · subject vpio-02 · act output · cancel-at 1000 ms · settle 2 s · **VP OFF** · Mode L · route unchanged `builtInSpeaker/builtInMic`. No code: `--vp off` exists end-to-end (batch → `TEST_RUNNER_K00_VP=off` → driver taps `Voice processing: OFF (control run)` before Enter → the same VPIO unit journals `vp_properties_set bypassRequested 1` + read-back). **S1 reading (no new PASS/FAIL taxonomy):** return the frozen K00-06 rows plus — VP-OFF own-playback clearly observable at the consumed input with callbacks/`ioRunning` intact → processor-dependent suppression strongly supported, B not supported by S1 · deep near-silence still appears with VP bypassed → B-shaped/below-VP possibility remains, no causal closure from S1 · mixed → CHARACTERIZE. S1 has no labelled near-end source, so absence of ambient energy cannot prove capture collapse.
+
+**7.4 S2 — shape SELECTED: §5.2(b) batch-orchestrated source (custody: file hash + per-sample playback start/stop evidence beats memory of a second device's placement); organism, harness, driver and both readers stay frozen. Implementation HELD.** Sequence: S1 witness → independent reading / founder adjudication → read-only Mac playback-capability census (the playback verb is discovered, not assumed; no `afplay` claim ratified) → exact S2 batch-only design → gate → new orchestration SHA → S2 authority. **S3 conditional, not open.** No S1 result silently opens S2.
+
+## 8. S1 — pinned before it is live (custody, preflight, authority, invocation)
+
+**Source custody — fresh detached worktree** (the §10.10 batch worktree `/private/tmp/k0506-batch-83a382a14` already exists and is not reused; a pre-existing path is STOP for `worktree add`):
+
+```bash
+git -C /Users/soullab/MAIA-SOVEREIGN fetch origin claude/voice-2026-census-01
+git -C /Users/soullab/MAIA-SOVEREIGN worktree add --detach /private/tmp/k0506-vpoff-83a382a14 83a382a1455161996d499f30cbf00504bbd0332a
+cd /private/tmp/k0506-vpoff-83a382a14
+```
+
+**One read-only preflight immediately before the batch** (the §10.10 custody law on the new worktree; the `pgrep` pattern `k00-driver-batch.sh K00-0506` also matches a running `K00-0506-VPOFF` batch by design; paste as a block):
+
+```bash
+cd /private/tmp/k0506-vpoff-83a382a14
+HEAD_NOW="$(git rev-parse HEAD)"
+echo "HEAD=$HEAD_NOW"
+if [ "$HEAD_NOW" != "83a382a1455161996d499f30cbf00504bbd0332a" ]; then
+  echo "STOP: wrong instrument HEAD"
+  exit 90
+fi
+
+git diff --quiet 83a382a1455161996d499f30cbf00504bbd0332a -- \
+  ios/VoiceKernelDriver \
+  scripts/witness/k00-driver-batch.sh \
+  scripts/witness/k00-ledger.py \
+  scripts/witness/k00-output-ledger.py \
+  scripts/witness/k00-reinstall.sh
+DIFF_RC=$?
+echo "PREFLIGHT_DIFF_RC=$DIFF_RC"
+if [ "$DIFF_RC" -ne 0 ]; then
+  echo "STOP: witness surface differs"
+  exit 91
+fi
+
+if pgrep -fl 'k00-driver-batch.sh K00-0506' > /private/tmp/k0506-vpoff-preflight-other-batches.txt; then
+  cat /private/tmp/k0506-vpoff-preflight-other-batches.txt
+  echo "STOP: another K00-0506 batch process exists"
+  exit 92
+else
+  echo "OTHER_K00_0506_BATCHES=0"
+fi
+
+DEV=A0736AC8-793B-516F-AC72-C076DB6CEE38
+PF="docs/programme/VOICE-2026/driver-ledger/K00-0506-VPOFF-preflight-$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$PF"
+
+xcrun devicectl device info apps \
+  --device "$DEV" \
+  --bundle-id life.soullab.voicekernel.vpio02 \
+  --json-output "$PF/apps.json" >/dev/null
+APPS_RC=$?
+echo "APPS_READ_RC=$APPS_RC"
+if [ "$APPS_RC" -ne 0 ]; then
+  echo "STOP: apps listing unreadable"
+  exit 93
+fi
+
+CONTAINER_HITS="$(grep -c 'E3B88028-A10F-46B1-AB27-CF0A1F83FB78' "$PF/apps.json")"
+echo "E3B88028_CONTAINER_HITS=$CONTAINER_HITS"
+if [ "$CONTAINER_HITS" -lt 1 ]; then
+  echo "STOP: ruled VPIO-02 container not found"
+  exit 94
+fi
+
+xcrun devicectl device info processes \
+  --device "$DEV" \
+  --json-output "$PF/processes.json" >/dev/null
+PROCESS_RC=$?
+echo "PROCESS_READ_RC=$PROCESS_RC"
+if [ "$PROCESS_RC" -ne 0 ]; then
+  echo "STOP: process listing unreadable"
+  exit 95
+fi
+
+HCOUNT="$(python3 - "$PF/processes.json" <<'PY'
+import json,re,sys
+s=json.dumps(json.load(open(sys.argv[1])))
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]=='VoiceKernelHarness']
+print(len(hits))
+PY
+)"
+echo "VoiceKernelHarness processes: $HCOUNT"
+if [ "$HCOUNT" != "0" ]; then
+  echo "STOP: harness process present"
+  exit 96
+fi
+
+echo "PREFLIGHT_CLEAN=$PF"
+```
+
+Proceed only on: HEAD exact `83a382a14…` · `PREFLIGHT_DIFF_RC` 0 · `OTHER_K00_0506_BATCHES` 0 · `APPS_READ_RC` 0 · `E3B88028_CONTAINER_HITS` ≥ 1 · `PROCESS_READ_RC` 0 · `VoiceKernelHarness processes` 0. Anything else is STOP; no normalization or corrective device act.
+
+**S1 execution authority — verbatim (2 389 UTF-8 bytes, no apostrophe; reproduced byte-for-byte from the ruling, sha256 `4e77a98214c93f7f…`; an invocation input, never reconstructed from this record):**
+
+```text
+FOUNDER-AUTH: VPIO-02 K00-06 partial-zero discriminator S1 only; execute exactly one N=10 K00-0506-VPOFF automated output witness population on the existing VPIO-02 artifact installed by FIRST-INSTALL-02, using instrument 83a382a1455161996d499f30cbf00504bbd0332a, subject vpio-02, bundle life.soullab.voicekernel.vpio02, Mode L, voice processing OFF, act output, settle 2 seconds, cancel the first 3-second known-PCM tone at 1000 ms, then exercise the second 3-second tone to completion. Purpose is mechanism discrimination only: determine whether the progressive attenuation and partial digital-zero shape observed with voice processing ON remains when voice processing is bypassed on the same Voice-Processing I/O unit. This population cannot reopen K00-05, cannot by itself earn K00-06 PASS, and cannot alter any frozen K00-06 verdict, threshold, reader rule or constitutional criterion. Execute only after the immediately preceding ruled read-only preflight returns HEAD exactly 83a382a1455161996d499f30cbf00504bbd0332a, witness-surface diff rc 0, the installed life.soullab.voicekernel.vpio02 subject resolving to container E3B88028-A10F-46B1-AB27-CF0A1F83FB78, and zero VoiceKernelHarness processes. If any preflight field is unreadable or different, STOP before sampling and return the preflight evidence. Do not normalize state, terminate a harness, reinstall, overwrite, change source, or take a corrective device act. If preflight is clean, finish all ten declared invocations unless the frozen instrument itself aborts. No pilot, no top-up, no automatic rerun, no source change, no reinstall, no threshold change, no fault injection, no manual intervention, no route-change act, no interruption act, no media-services-reset act, no endurance act, no unified-log experiment, no mutation of the frozen .vpio01 artifact, and no historical K00/R1 mutation. The installed .vpio02 app under test must not be rebuilt, replaced or reinstalled. The batch may regenerate and signed-build only its external driver as its frozen orchestration requires. Return the complete preflight, journals, frozen entry rows, frozen output-reader rows, driver markers and batch evidence for independent reading. Report the VP bypass requested and read-back evidence from every valid journal. S1 evidence is descriptive mechanism evidence only. No outcome from S1 authorizes S2, S3 or any subsequent act.
+```
+
+**Exact invocation — same shell, immediately after `PREFLIGHT_CLEAN` (the complete string is carried; an abbreviated rendering is not an invocation):**
+
+```bash
+K00_DEVICE=A0736AC8-793B-516F-AC72-C076DB6CEE38 \
+K00_XCODE_DEST=00008140-00163D9922E0801C \
+K00_EXEC_AUTHORITY='FOUNDER-AUTH: VPIO-02 K00-06 partial-zero discriminator S1 only; execute exactly one N=10 K00-0506-VPOFF automated output witness population on the existing VPIO-02 artifact installed by FIRST-INSTALL-02, using instrument 83a382a1455161996d499f30cbf00504bbd0332a, subject vpio-02, bundle life.soullab.voicekernel.vpio02, Mode L, voice processing OFF, act output, settle 2 seconds, cancel the first 3-second known-PCM tone at 1000 ms, then exercise the second 3-second tone to completion. Purpose is mechanism discrimination only: determine whether the progressive attenuation and partial digital-zero shape observed with voice processing ON remains when voice processing is bypassed on the same Voice-Processing I/O unit. This population cannot reopen K00-05, cannot by itself earn K00-06 PASS, and cannot alter any frozen K00-06 verdict, threshold, reader rule or constitutional criterion. Execute only after the immediately preceding ruled read-only preflight returns HEAD exactly 83a382a1455161996d499f30cbf00504bbd0332a, witness-surface diff rc 0, the installed life.soullab.voicekernel.vpio02 subject resolving to container E3B88028-A10F-46B1-AB27-CF0A1F83FB78, and zero VoiceKernelHarness processes. If any preflight field is unreadable or different, STOP before sampling and return the preflight evidence. Do not normalize state, terminate a harness, reinstall, overwrite, change source, or take a corrective device act. If preflight is clean, finish all ten declared invocations unless the frozen instrument itself aborts. No pilot, no top-up, no automatic rerun, no source change, no reinstall, no threshold change, no fault injection, no manual intervention, no route-change act, no interruption act, no media-services-reset act, no endurance act, no unified-log experiment, no mutation of the frozen .vpio01 artifact, and no historical K00/R1 mutation. The installed .vpio02 app under test must not be rebuilt, replaced or reinstalled. The batch may regenerate and signed-build only its external driver as its frozen orchestration requires. Return the complete preflight, journals, frozen entry rows, frozen output-reader rows, driver markers and batch evidence for independent reading. Report the VP bypass requested and read-back evidence from every valid journal. S1 evidence is descriptive mechanism evidence only. No outcome from S1 authorizes S2, S3 or any subsequent act.' \
+scripts/witness/k00-driver-batch.sh K00-0506-VPOFF 10 \
+  --act output \
+  --cancel-at 1000 \
+  --settle 2 \
+  --vp off \
+  --mode L \
+  --subject vpio-02
+```
+
+The batch does not consume `K00_EXEC_AUTHORITY` mechanically; it is invocation provenance, not a runtime flag. Evidence (preflight directory · `K00-0506-VPOFF-<stamp>/` complete · `output-ledger.md` · journals · logs) returns on a `feature/*` branch → §9. Read here: every valid journal's `vp_properties_set` (`bypassRequested 1`, read-back) and `graph_started voiceProcessing`, the frozen entry and output rows, and the §7.3 discriminator reading per invocation. **S1 authorizes nothing downstream.**
+
+**Standing at the pin:** K00-04 PASS · K00-05 PASS · CLOSED · K00-06 built-in CHARACTERIZE ONLY · INCOMPLETE · K00-06 seam = consumed post-VP input (RULED) · §4 criteria RATIFIED (10×-floor amendment) · **S1 OPEN after record pin · S1 new code NONE** · S2 shape SELECTED (batch-orchestrated) · S2 implementation HELD · S2 witness NOT AUTHORIZED · S3 CONDITIONAL · NOT OPEN · organism FROZEN · `.vpio02` untouched · `.vpio01` FROZEN · K00/R1 UNTOUCHED · route/interruption/reset/endurance NOT AUTHORIZED · KERNEL-00 NOT ACCEPTED.
