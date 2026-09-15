@@ -1,0 +1,4 @@
+Target dependency graph (2 targets)
+Target 'DriverUITests' in project 'VoiceKernelDriver'
+➜ Explicit dependency on target 'DriverHost' in project 'VoiceKernelDriver'
+Target 'DriverHost' in project 'VoiceKernelDriver' (no dependencies)

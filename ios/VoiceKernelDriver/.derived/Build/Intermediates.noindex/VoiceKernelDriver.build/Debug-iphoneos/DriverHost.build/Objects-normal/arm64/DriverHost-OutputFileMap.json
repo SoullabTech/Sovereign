@@ -1,0 +1,19 @@
+{
+  "" : {
+    "diagnostics" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-primary.dia",
+    "emit-module-dependencies" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-primary-emit-module.d",
+    "emit-module-diagnostics" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-primary-emit-module.dia",
+    "pch" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-primary-Bridging-header.pch",
+    "swift-dependencies" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-primary.swiftdeps"
+  },
+  "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/DriverHost/DriverHostApp.swift" : {
+    "const-values" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHostApp.swiftconstvalues",
+    "dependencies" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHostApp.d",
+    "diagnostics" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHostApp.dia",
+    "index-unit-output-path" : "/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHostApp.o",
+    "llvm-bc" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHostApp.bc",
+    "object" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHostApp.o",
+    "swift-dependencies" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHostApp.swiftdeps",
+    "swiftmodule" : "/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHostApp~partial.swiftmodule"
+  }
+}
