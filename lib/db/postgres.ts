@@ -7,6 +7,8 @@
  * NOTE: Conditionally imports pg only on server-side to avoid bundling for browser
  */
 
+import { createHash } from 'crypto';
+
 import type { Pool, QueryResult, QueryResultRow } from 'pg';
 
 // Only create pool on server-side (Node.js environment)
@@ -28,6 +30,49 @@ if (isServer) {
   });
 
   pool = newPool;
+}
+
+/**
+ * SOURCE-CUSTODY-PII-01 · R1.6 — query parameters are DESCRIBED, never printed.
+ *
+ * Both error paths in this file used to log `params` directly, so any query
+ * failure emitted whatever the caller passed. `resolveAdmission` passes a
+ * submitted passkey; member lookups pass emails and ids. A database fault was
+ * therefore a credential- and PII-disclosure path into logs — which are
+ * shipped, aggregated and retained on different terms from the database whose
+ * contents they were describing.
+ *
+ * ⛔ NOT AN ENV FLAG AND NOT A CALL-SITE OPT-IN. A flag defaults wrong on some
+ * host eventually; an opt-in leaves every existing call site unsafe until
+ * somebody remembers it. Redaction is unconditional, so neither configuration
+ * nor forgetfulness can turn it off. This is the same discipline the missing
+ * table ruling below applies to its own question.
+ *
+ * ⭐ DEBUGGABILITY SURVIVES WITHOUT THE VALUES. Type, length and a short digest
+ * distinguish "param 1 was an empty string" from "param 1 was 43 characters",
+ * and let the same value be correlated across two log lines — which is what
+ * operators actually use params for. It is not enough to reconstruct a value.
+ */
+export function describeParams(params: readonly unknown[]): string {
+  if (!params || params.length === 0) return '(none)';
+  return `[${params.map(describeParam).join(', ')}]`;
+}
+
+function describeParam(value: unknown): string {
+  if (value === null) return 'null';
+  if (value === undefined) return 'undefined';
+  if (typeof value === 'boolean') return `boolean(${value})`;
+  if (typeof value === 'number') return 'number';
+  if (value instanceof Date) return 'date';
+  if (Array.isArray(value)) return `array(${value.length})`;
+  if (typeof value === 'string') return `string(${value.length})#${shortDigest(value)}`;
+  if (typeof value === 'object') return 'object';
+  return typeof value;
+}
+
+/** Correlation only. Truncated deliberately: enough to match, not to attack. */
+function shortDigest(value: string): string {
+  return createHash('sha256').update(value).digest('hex').slice(0, 8);
 }
 
 /**
@@ -82,7 +127,7 @@ export async function query<T extends QueryResultRow = any>(
        Ruling + caller inventory: docs/ops/DB_MISSING_TABLE_DEGRADATION_AUDIT_2026-08-01.md */
     console.error('❌ [POSTGRES] Query error:', error);
     console.error('   SQL:', sql);
-    console.error('   Params:', params);
+    console.error('   Params:', describeParams(params));
     throw error;
   }
 }
@@ -142,7 +187,7 @@ export async function queryWithExpectedRefusal<T extends QueryResultRow = any>(
     }
     console.error('❌ [POSTGRES] Query error:', error);
     console.error('   SQL:', sql);
-    console.error('   Params:', params);
+    console.error('   Params:', describeParams(params));
     throw error;
   }
 }
