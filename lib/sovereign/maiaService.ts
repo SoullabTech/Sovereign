@@ -4,6 +4,12 @@ import { incrementTurnCount, addConversationExchange, getConversationHistory, ge
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext, CORE_PROMPT_HISTORY_APERTURE } from './maiaVoice';
 // AIN-CONTEXT-01 · A6 — session self-location + known absence (pure; no I/O, no memory).
 import {
+  recoverDisplacedExchanges,
+  formatRecoveredForPrompt,
+  type DisplacedExchange,
+  type RecoveredExchange,
+} from '@/lib/maia/continuity/sessionRecovery';
+import {
   deriveSessionContinuity,
   formatSessionContinuityForPrompt,
 } from '@/lib/maia/continuity/sessionContinuity';
@@ -780,6 +786,43 @@ async function validateAndRepairResponse(
  * FAST Path: Simple responses using single model call with MAIA runtime prompt
  * Target: < 2s response time
  */
+/**
+ * L1 · CURRENT-SESSION-RECOVERY-01 — the single recovery entry point.
+ *
+ * ⭐⭐ BOTH FAST AND CORE CALL THIS AND ONLY THIS. The architectural obligation on
+ * this lane is that opaque reference ("what was that phrase?") and semantic reference
+ * ("what was I saying about rootedness?") are served by ONE general mechanism, not by
+ * two special-case detectors that happen to pass one probe each. A single entry point
+ * is how that is made checkable rather than asserted.
+ *
+ * DISPLACED SET. The tier aperture is the LAST `apertureCount` exchanges, so the
+ * displaced region is everything before it. Slicing by position makes the two sets
+ * disjoint by construction; the key filter below is belt-and-braces so that a future
+ * change to aperture derivation cannot silently produce a double-count.
+ *
+ * ⛔ Current session only. No cross-session reach, no summaries, no schema change.
+ */
+function recoverForTier(args: {
+  utterance: string;
+  allSessionExchanges: readonly DisplacedExchange[];
+  apertureCount: number;
+}): { recovered: RecoveredExchange[]; block: string } {
+  const all = args.allSessionExchanges;
+  if (all.length === 0) return { recovered: [], block: '' };
+
+  const apertureCount = Math.max(0, Math.min(all.length, args.apertureCount));
+  const displaced = all.slice(0, all.length - apertureCount);
+  const apertureKeys = new Set(all.slice(all.length - apertureCount).map(e => e.exchangeKey));
+
+  const recovered = recoverDisplacedExchanges({
+    utterance: args.utterance,
+    displaced: displaced.filter(e => !apertureKeys.has(e.exchangeKey)),
+    corpus: all,
+  });
+
+  return { recovered, block: formatRecoveredForPrompt(recovered) };
+}
+
 async function fastPathResponse(
   sessionId: string,
   input: string,
@@ -791,6 +834,7 @@ async function fastPathResponse(
   // AIN-CONTEXT-01 · A6 — completed exchanges durably on record for THIS session,
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
+  allSessionExchanges: readonly DisplacedExchange[] = [],
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
@@ -1069,12 +1113,35 @@ ${ainKnowledgeContext}\n`
   // ── AIN-CONTEXT-01 · A6 · FAST self-location + known absence ──────────────
   // ⛔ Sanctuary: the session's own turn record is in-session material and stating
   // its size discloses nothing cross-session, so the block is built identically.
+  //
+  // L1 · recovery runs BEFORE A6 is derived, and A6 then counts what recovery added.
+  // ⭐ This is the ordering that keeps A6 truthful: `represented` must describe the
+  // FINAL composition, so recovering two displaced exchanges and still reporting the
+  // pre-recovery counts would re-break A6 through the back door — a correct answer
+  // delivered alongside a false statement about her own view.
+  const fastRecovery = recoverForTier({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: representedCurrentSessionExchanges,
+  });
+  const fastRepresentedTotal =
+    representedCurrentSessionExchanges + fastRecovery.recovered.length;
+
   const fastContinuity = deriveSessionContinuity({
     durableCompletedExchanges,
-    representedExchanges: representedCurrentSessionExchanges,
+    representedExchanges: fastRepresentedTotal,
   });
   const fastContinuityBlock = formatSessionContinuityForPrompt(fastContinuity);
-  const fastContinuityPrefix = fastContinuityBlock ? `${fastContinuityBlock}\n\n` : '';
+  const fastRecoveredPrefix = fastRecovery.block ? `${fastRecovery.block}\n\n` : '';
+  const fastContinuityPrefix = fastContinuityBlock
+    ? `${fastContinuityBlock}\n\n${fastRecoveredPrefix}`
+    : fastRecoveredPrefix;
+  if (fastRecovery.recovered.length > 0) {
+    console.log('🧵 [L1/FAST] recovered displaced exchanges', {
+      count: fastRecovery.recovered.length,
+      indices: fastRecovery.recovered.map(e => e.index),
+    });
+  }
   console.log('🧭 [A6/FAST] session continuity', {
     depth: fastContinuity.depth,
     represented: fastContinuity.represented,
@@ -1648,6 +1715,7 @@ async function corePathResponse(
   // AIN-CONTEXT-01 · A6 — completed exchanges durably on record for THIS session,
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
+  allSessionExchanges: readonly DisplacedExchange[] = [],
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
@@ -1823,11 +1891,31 @@ async function corePathResponse(
   const coreRepresentedCurrentSession = conversationHistory.length > 0
     ? Math.min(CORE_PROMPT_HISTORY_APERTURE, effectiveHistory.length)
     : 0;
+  // L1 · same single mechanism as FAST, same ordering: recover, then account.
+  const coreRecovery = recoverForTier({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: coreRepresentedCurrentSession,
+  });
+  const coreRepresentedTotal =
+    coreRepresentedCurrentSession + coreRecovery.recovered.length;
+
   const coreContinuity = deriveSessionContinuity({
     durableCompletedExchanges,
-    representedExchanges: coreRepresentedCurrentSession,
+    representedExchanges: coreRepresentedTotal,
   });
-  const coreContinuityBlock = formatSessionContinuityForPrompt(coreContinuity);
+  const coreContinuityBlockBase = formatSessionContinuityForPrompt(coreContinuity);
+  const coreContinuityBlock = coreRecovery.block
+    ? (coreContinuityBlockBase
+        ? `${coreContinuityBlockBase}\n\n${coreRecovery.block}`
+        : coreRecovery.block)
+    : coreContinuityBlockBase;
+  if (coreRecovery.recovered.length > 0) {
+    console.log('🧵 [L1/CORE] recovered displaced exchanges', {
+      count: coreRecovery.recovered.length,
+      indices: coreRecovery.recovered.map(e => e.index),
+    });
+  }
   console.log('🧭 [A6/CORE] session continuity', {
     depth: coreContinuity.depth,
     represented: coreContinuity.represented,
@@ -2866,6 +2954,9 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     const continuityWindow = await getSessionContinuityWindow(sessionId, 10);
     const conversationHistory = continuityWindow.exchanges;
     const durableCompletedExchanges = continuityWindow.durableCompletedExchanges;
+    // L1 · every identified exchange of this session; tiers subtract their own
+    // aperture to obtain the displaced region. No extra rows are read.
+    const allSessionExchanges = continuityWindow.allExchanges;
 
     // 🌀 CONVERGENCE-01 Cut 1A — resolve ONE orientation contract for this turn, here, at
     // the boundary both live surfaces reach. Upstream packet is used verbatim and never
@@ -3496,7 +3587,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {
-        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
+        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3507,7 +3598,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'CORE': {
-        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
+        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3531,7 +3622,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       default: {
         // Fallback to FAST
-        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
+        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
         if (mindContext?.pfiMindState) {
