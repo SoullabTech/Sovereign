@@ -1,0 +1,116 @@
+[0/1] Planning build
+Building for debugging...
+[0/5] Write sources
+[0/6] /private/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.derived/runner.swift
+[2/6] Write sources
+[3/6] Write swift-version--58304C5D6DBC2206.txt
+[5/8] Compiling VoiceKernelTests PureLogicTests.swift
+[6/8] Emitting module VoiceKernelTests
+[7/10] Compiling VoiceKernelPackageTests runner.swift
+[8/10] Emitting module VoiceKernelPackageTests
+[8/10] Write Objects.LinkFileList
+[9/10] Linking VoiceKernelPackageTests
+Build complete! (7.01s)
+Test Suite 'All tests' started at 2026-09-15 17:42:36.743.
+Test Suite 'VoiceKernelPackageTests.xctest' started at 2026-09-15 17:42:36.744.
+Test Suite 'ConfigurationChangeSeamTests' started at 2026-09-15 17:42:36.744.
+Test Case '-[VoiceKernelTests.ConfigurationChangeSeamTests testConfigurationChangeIsBoundedByTheSameRatifiedBudget]' started.
+Test Case '-[VoiceKernelTests.ConfigurationChangeSeamTests testConfigurationChangeIsBoundedByTheSameRatifiedBudget]' passed (0.001 seconds).
+Test Suite 'ConfigurationChangeSeamTests' passed at 2026-09-15 17:42:36.745.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'HealthSupervisorTests' started at 2026-09-15 17:42:36.745.
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testDigitalZeroIsDeadWithinTheRatifiedWindow]' started.
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testDigitalZeroIsDeadWithinTheRatifiedWindow]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testEntryBecomesHealthyOnFirstLiveInput]' started.
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testEntryBecomesHealthyOnFirstLiveInput]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testEntryTimesOutAtRatifiedWindow]' started.
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testEntryTimesOutAtRatifiedWindow]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testMissingCallbacksAreDeadToo]' started.
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testMissingCallbacksAreDeadToo]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testQuietRoomIsHealthyNotDead]' started.
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testQuietRoomIsHealthyNotDead]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testStaleGenerationObservationsAreRejected]' started.
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testStaleGenerationObservationsAreRejected]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testStalledOutputWithinRatifiedWindow]' started.
+Test Case '-[VoiceKernelTests.HealthSupervisorTests testStalledOutputWithinRatifiedWindow]' passed (0.000 seconds).
+Test Suite 'HealthSupervisorTests' passed at 2026-09-15 17:42:36.746.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'InputFormatPreconditionTests' started at 2026-09-15 17:42:36.746.
+Test Case '-[VoiceKernelTests.InputFormatPreconditionTests testInvalidFormatThrowsASwiftErrorCarryingTheObservedNumbers]' started.
+Test Case '-[VoiceKernelTests.InputFormatPreconditionTests testInvalidFormatThrowsASwiftErrorCarryingTheObservedNumbers]' passed (0.001 seconds).
+Test Case '-[VoiceKernelTests.InputFormatPreconditionTests testResolvedHardwareFormatIsValid]' started.
+Test Case '-[VoiceKernelTests.InputFormatPreconditionTests testResolvedHardwareFormatIsValid]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.InputFormatPreconditionTests testTheWitnessedZeroHertzFormatIsInvalid]' started.
+Test Case '-[VoiceKernelTests.InputFormatPreconditionTests testTheWitnessedZeroHertzFormatIsInvalid]' passed (0.000 seconds).
+Test Suite 'InputFormatPreconditionTests' passed at 2026-09-15 17:42:36.748.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'RecoveryPolicyTests' started at 2026-09-15 17:42:36.748.
+Test Case '-[VoiceKernelTests.RecoveryPolicyTests testBudgetAndBackoffAreTheRatifiedSchedule]' started.
+Test Case '-[VoiceKernelTests.RecoveryPolicyTests testBudgetAndBackoffAreTheRatifiedSchedule]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.RecoveryPolicyTests testBudgetIsPerFaultClassAndSlidesOverSixtySeconds]' started.
+Test Case '-[VoiceKernelTests.RecoveryPolicyTests testBudgetIsPerFaultClassAndSlidesOverSixtySeconds]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.RecoveryPolicyTests testGenerationsAreMonotonicAcrossReasons]' started.
+Test Case '-[VoiceKernelTests.RecoveryPolicyTests testGenerationsAreMonotonicAcrossReasons]' passed (0.000 seconds).
+Test Suite 'RecoveryPolicyTests' passed at 2026-09-15 17:42:36.748.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'ReplayTests' started at 2026-09-15 17:42:36.748.
+Test Case '-[VoiceKernelTests.ReplayTests testAutomaticActWithoutCauseOrParentFails]' started.
+Test Case '-[VoiceKernelTests.ReplayTests testAutomaticActWithoutCauseOrParentFails]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.ReplayTests testCausalParentMustExistPrecedeAndNotComeFromALaterGeneration]' started.
+Test Case '-[VoiceKernelTests.ReplayTests testCausalParentMustExistPrecedeAndNotComeFromALaterGeneration]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.ReplayTests testConfigurationChangeDeferralMustBeAttributed]' started.
+Test Case '-[VoiceKernelTests.ReplayTests testConfigurationChangeDeferralMustBeAttributed]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.ReplayTests testJournalAssignsMonotonicSeqAndRoundTripsThroughJSONL]' started.
+Test Case '-[VoiceKernelTests.ReplayTests testJournalAssignsMonotonicSeqAndRoundTripsThroughJSONL]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.ReplayTests testLawfulCausalRunReplaysClean]' started.
+Test Case '-[VoiceKernelTests.ReplayTests testLawfulCausalRunReplaysClean]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.ReplayTests testOrphanTransitionFails]' started.
+Test Case '-[VoiceKernelTests.ReplayTests testOrphanTransitionFails]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.ReplayTests testPostExitRecoveryEdgeIsAnOrphan]' started.
+Test Case '-[VoiceKernelTests.ReplayTests testPostExitRecoveryEdgeIsAnOrphan]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.ReplayTests testUnlawfulEdgeFails]' started.
+Test Case '-[VoiceKernelTests.ReplayTests testUnlawfulEdgeFails]' passed (0.000 seconds).
+Test Suite 'ReplayTests' passed at 2026-09-15 17:42:36.749.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'RouteComparisonTests' started at 2026-09-15 17:42:36.749.
+Test Case '-[VoiceKernelTests.RouteComparisonTests testAMissingBaselineIsNeverTheSameRoute]' started.
+Test Case '-[VoiceKernelTests.RouteComparisonTests testAMissingBaselineIsNeverTheSameRoute]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.RouteComparisonTests testDataSourceAlternationDoesNotChangeRouteIdentity]' started.
+Test Case '-[VoiceKernelTests.RouteComparisonTests testDataSourceAlternationDoesNotChangeRouteIdentity]' passed (0.000 seconds).
+Test Case '-[VoiceKernelTests.RouteComparisonTests testDifferentPortsAreADifferentRoute]' started.
+Test Case '-[VoiceKernelTests.RouteComparisonTests testDifferentPortsAreADifferentRoute]' passed (0.000 seconds).
+Test Suite 'RouteComparisonTests' passed at 2026-09-15 17:42:36.749.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'SnapshotRulesTests' started at 2026-09-15 17:42:36.749.
+Test Case '-[VoiceKernelTests.SnapshotRulesTests testListeningIsDisplayedOnlyWithHealthyInput]' started.
+Test Case '-[VoiceKernelTests.SnapshotRulesTests testListeningIsDisplayedOnlyWithHealthyInput]' passed (0.000 seconds).
+Test Suite 'SnapshotRulesTests' passed at 2026-09-15 17:42:36.750.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'SourceEstimatorTests' started at 2026-09-15 17:42:36.750.
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testAGatedStimulusThroughTheWholeEstimatorCarriesTheSignatureOnTheStimulusBinOnly]' started.
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testAGatedStimulusThroughTheWholeEstimatorCarriesTheSignatureOnTheStimulusBinOnly]' passed (0.023 seconds).
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testAStimulusToneReadsItsOwnBinAtTheCoherentGainAndNothingInTheControls]' started.
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testAStimulusToneReadsItsOwnBinAtTheCoherentGainAndNothingInTheControls]' passed (0.001 seconds).
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testOwnToneHarmonicsLeakIntoTheStimulusBinNoMoreThanTheAmplitudeCoefficientsTheReadingLawPins]' started.
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testOwnToneHarmonicsLeakIntoTheStimulusBinNoMoreThanTheAmplitudeCoefficientsTheReadingLawPins]' passed (0.003 seconds).
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testSilenceReadsZeroEverywhereAndACallbackSizeChangeResetsTheFrame]' started.
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testSilenceReadsZeroEverywhereAndACallbackSizeChangeResetsTheFrame]' passed (0.002 seconds).
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testTheBinSetIsExactlyTheSevenRuledFrequenciesAndAFrameClosesEveryFourthCallback]' started.
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testTheBinSetIsExactlyTheSevenRuledFrequenciesAndAFrameClosesEveryFourthCallback]' passed (0.002 seconds).
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testTheOrderedEnvelopeModulationIndexSeparatesAGatedStimulusFromASteadyOrFluctuatingOne]' started.
+Test Case '-[VoiceKernelTests.SourceEstimatorTests testTheOrderedEnvelopeModulationIndexSeparatesAGatedStimulusFromASteadyOrFluctuatingOne]' passed (0.001 seconds).
+Test Suite 'SourceEstimatorTests' passed at 2026-09-15 17:42:36.783.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.033 (0.033) seconds
+Test Suite 'StartTraceTests' started at 2026-09-15 17:42:36.783.
+Test Case '-[VoiceKernelTests.StartTraceTests testTheTraceNamesExactlyTheFourteenVPIO02SeamsInOrder]' started.
+Test Case '-[VoiceKernelTests.StartTraceTests testTheTraceNamesExactlyTheFourteenVPIO02SeamsInOrder]' passed (0.000 seconds).
+Test Suite 'StartTraceTests' passed at 2026-09-15 17:42:36.783.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'VoiceKernelPackageTests.xctest' passed at 2026-09-15 17:42:36.783.
+	 Executed 33 tests, with 0 failures (0 unexpected) in 0.038 (0.039) seconds
+Test Suite 'All tests' passed at 2026-09-15 17:42:36.783.
+	 Executed 33 tests, with 0 failures (0 unexpected) in 0.038 (0.040) seconds
+◇ Test run started.
+↳ Testing Library Version: 1501
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

@@ -1,0 +1,2 @@
+ ios/VoiceKernelHarness/Harness/Info.plist | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)

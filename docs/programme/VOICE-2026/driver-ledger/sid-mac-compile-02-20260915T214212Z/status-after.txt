@@ -1,0 +1,1 @@
+ M ios/VoiceKernelHarness/Harness/Info.plist

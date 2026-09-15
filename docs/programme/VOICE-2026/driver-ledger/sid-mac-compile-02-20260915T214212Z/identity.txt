@@ -1,0 +1,12 @@
+life.soullab.voicekernel.vpio02sid
+VoiceKernel VPIO-02-SID
+UUID: 4A6AD464-0A19-320F-980E-7446F6AA1440 (arm64) /private/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+a15b399d9a9a3c1071d12ba3c4fb24a56b3f6e51c708f8d3c5dd9cb811bdfc44  /private/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+db036694dcaa415bb50bb6319af249d643e6db76847177541db836f2f1ec5d17  /private/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness
+699ac758b12bd8062145655ad12fab6ed5ac2c96e1b4003cc210a5b39f72c7a4  /private/tmp/sid-mac-compile-02-out-20260915T214212Z/SID-MAC-COMPILE-02.manifest.sha256
+       7 /private/tmp/sid-mac-compile-02-out-20260915T214212Z/SID-MAC-COMPILE-02.manifest.sha256
+Identifier=life.soullab.voicekernel.vpio02sid
+Authority=Apple Development: Kelly Nezat (N9DTF6434L)
+Authority=Apple Worldwide Developer Relations Certification Authority
+Authority=Apple Root CA
+TeamIdentifier=ZVK2X646Z2

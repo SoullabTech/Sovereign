@@ -1,0 +1,113 @@
+jest-haste-map: Haste module naming collision: maia-desktop
+  The following files share their name; please adjust your hasteImpl:
+    * <rootDir>/desktop-app/package.json
+    * <rootDir>/maia-desktop/package.json
+
+PASS __tests__/voice-kernel-00-source-gates.test.ts (5.869 s)
+  KERNEL-00 · K00-01 / VOICE-01 — one hardware sovereign
+    ✓ only AudioSessionAuthority.swift touches AVAudioSession (2 ms)
+    ✓ AudioSessionAuthority is iOS-only by construction and journals every mutation
+  KERNEL-00 · K00-16 — nothing else is in the build
+    ✓ no forbidden symbol appears in kernel or harness source (1 ms)
+    ✓ the package has no dependencies and the harness is not a member of ios/App; the VPIO subject carries its own bundle id (19 ms)
+  KERNEL-00 · VOICE-10 — output has identity and a cancellable lifetime
+    ✓ the substrate schedules only under an OutputStreamID and exposes cancel(id)
+    ✓ the kernel journals every cancel and measures cancel → silence at the render seam (P5)
+  KERNEL-00 · VOICE-06 / -15 / -16 — one recovery owner, bounded, journalled
+    ✓ only HealthSupervisor verdicts reach requestRecovery, and the schedule is the ratified one (1 ms)
+    ✓ stale callbacks are gated by generation and journalled, never acted on
+  KERNEL-00 · PRE-WITNESS-01 — causal, longitudinal, replayable record
+    ✓ every journal record carries seq and an optional causeSeq (P8)
+    ✓ physiology is sampled longitudinally and the app lifecycle is journalled (P4, P7b)
+  KERNEL-00 · PRE-WITNESS-02 — the entry seam is a precondition, not exception handling
+    ✓ a `try …requireValid()` lexically precedes every callback/listener arming in start() (§3.1) (1 ms)
+    ✓ no NSException / ExceptionCatcher / objc_try construct exists anywhere in the package (§3.1)
+    ✓ a refused build and every format change journal the observed input format and generation age (§3.4)
+  KERNEL-00 · ENGINE SUBJECT (history 24a6fcfa1) · PRE-WITNESS-03 — the configuration-change seam is exit-guarded, bounded, never a direct rebuild
+    ✓ D: a configuration-change handler never directly invokes rebuildGraph, and the route_recovery cause is gone (31 ms)
+    ✓ B: a configuration change reaches the graph only through the existing RecoveryPolicy as its own fault class (45 ms)
+    ✓ A: a notification after exit is journalled and dropped before any generation or graph exists (17 ms)
+    ✓ C: voice processing is a journalled, pre-Enter-only kernel command; the harness only projects it (ACTIVE — unchanged files) (1 ms)
+  KERNEL-00 · ENGINE SUBJECT (history 24a6fcfa1) · PRE-WITNESS-04 — the expected VP change is classified one-shot, deferred, and decided by the supervisor
+    ✓ C: classification is a pure, generation-scoped, one-shot function over ports (data source is evidence, not identity) (19 ms)
+    ✓ B: the deferred branch consumes the expectation and touches neither the graph nor the recovery policy (16 ms)
+    ✓ the expectation is armed only at a graph start and retired when the generation is healthy (16 ms)
+    ✓ no new fault class, budget, timer or threshold: the caller set is closed and Replay names the deferral as an automatic act (60 ms)
+    ✓ §2.3: the observation and the samples carry the provenance that proves why C fired (15 ms)
+  KERNEL-00 · ENGINE SUBJECT (history 24a6fcfa1 / 4596b9bdb) · PRE-WITNESS-05 Phase A — instrumentation only: mutating startup order unchanged, added calls read-only, no new timer
+    ✓ the MUTATING startup call order is unchanged from 35b0f61d0 (15 ms)
+    ✓ ADDED calls are observation/read-only or journal instrumentation only; NO new timer · mutation · recovery act · configuration act (31 ms)
+    ✓ the kernel observes isRunning on the EXISTING tick only (no new timer) and journals the first callback per generation (14 ms)
+    ✓ the Phase-A subject 4596b9bdb (reproduced as R1) carries the 14-step trace WITH input_format_before_vp — the shape the ledger reads (17 ms)
+  KERNEL-00 · ENGINE SUBJECT (history 24a6fcfa1) · PRE-WITNESS-05 P5-B0 — removal control: the pre-VP input-format read is gone and NOTHING else moved
+    ✓ no input-format read of any kind precedes setVoiceProcessingEnabled inside start() (16 ms)
+    ✓ exactly ONE input.outputFormat(forBus: 0) read remains in start(), after VP enable and before requireValid (the 35b0f61d0 position) (15 ms)
+    ✓ the seam input_format_before_vp does not exist in any non-test kernel or harness source of the subject (209 ms)
+    ✓ all other Phase-A reads are KEPT: VP read-back, isRunning immediate, elapsed-ms timing, after-VP format (16 ms)
+  KERNEL-00 · VPIO-01 — the substrate is the one file's interior; the invariant substrate is byte-identical
+    ✓ authority · supervisor · policy · state · projection · journal · replay · harness are byte-identical to 24a6fcfa1 (plan §1) (170 ms)
+    ✓ the substitution is confined: ConfigurationChange.swift is gone, RouteComparison.swift is pure, and only AudioGraph.swift links Audio Toolbox (1 ms)
+    ✓ the substrate drives the Voice-Processing I/O unit: VPIO subtype, both I/O elements enabled, VP = bypass property, format read from (Input scope, el 1) before arming, client formats on (Output,1)/(Input,0), pull input + render callback + property listener, initialize before start (1 ms)
+    ✓ G9 (founder header adjudication 2026-09-14): the input buffer is sized by the unit's MaximumFramesPerSlice, read after the formats and before any callback is armed; a larger request is refused, never truncated; no fixed capacity anywhere
+    ✓ the start trace names exactly the fourteen VPIO-02 seams, in order (the format probe visible), and every step is emitted (1 ms)
+    ✓ truthful vocabulary (census §3): ioRunning / io_running_observed / io_format_changed present; every engine-meaning record and field absent from the kernel
+    ✓ io_format_changed is an observation, never an act: exit guard first, generation guard, no graph or policy call in the handler (1 ms)
+    ✓ route recovery is sourced from the authority's route_changed observation, guarded for eligibility, same ports = evidence only, through the existing policy only (plan §11 item 4 / census §5)
+    ✓ the pure-logic tests follow the subject: RouteComparisonTests present, the classifier tests gone, the fourteen-seam VPIO-02 trace pinned
+  KERNEL-00 · DRIVER-01 — automate the witness, not the organism
+    ✓ the engine subject 24a6fcfa1 (the app under test for stages A/B/C) is still byte-identical in history to the pinned tree hashes (288 ms)
+    ✓ the driver is an external instrument: XCTest only, no VoiceKernel, no launch args/env on the app under test, no UserDefaults, no debugger hooks (1 ms)
+    ✓ the ledger classifier is closed to the four classes plus two non-audio rows, and never steers a batch (4 ms)
+  KERNEL-00 · VPIO-01B — witness preparation: instrument-only subject plumbing; the organism moves only inside the VPIO-02 envelope
+    ✓ VPIO-02 envelope (founder adjudication 2026-09-14): relative to the VPIO-01 compile subject 85e5e7154, exactly AudioGraph.swift · PureLogicTests.swift · project.yml moved; kernel, authority, supervisor, policy, state, projection, journal, replay, Package.swift and every harness behavioural file are byte-identical; no file added under those roots (796 ms)
+    ✓ the explicit subject table is the same in the ledger, the driver and the batch: p5b0/phase-a → .k00 · "VoiceKernel K00" · engineRunning; vpio-01 → .vpio01 · "VoiceKernel VPIO-01" · ioRunning; no default bundle, no fall-through (2 ms)
+    ✓ the VPIO first-install gate fails closed: pinned identity × all fields, manifest hashes + file set, just-in-time ABSENT read, authority at invocation, NO uninstall — every refusal lexically before the install verb; historical subjects unchanged (1 ms)
+    ✓ the ledger's offline synthetic VPIO self-test passes (exit 0) — and the VPIO subject rejects a 13-step engine journal (97 ms)
+  KERNEL-00 · VOICE-07 — the harness is a projection
+    ✓ HarnessModel holds no voice state and reduces only kernel snapshots
+    ✓ the harness reaches the journal only through the actor, never the recorder (C2)
+    ✓ the view displays "listening" only via the snapshot rule, never from a local flag
+  KERNEL-00 · VPIO-02 — the format probe lifecycle: initialize → read → uninitialize → guard, before anything is armed or started
+    ✓ the probe brackets the read and is uninitialized before the guard, the client formats, any callback, the real initialize and the start
+    ✓ the read is still the documented property on (Input scope, element 1); the client format is set from the OBSERVED rate; no session-derived rate, no hard-coded rate, no alternate scope, no engine fallback, no retry (1 ms)
+    ✓ the three probe seams are traced with outcome/status/elapsed and the read is stamped afterProbeInitialize; a post-probe refusal ends at the uninitialize seam
+    ✓ the custody identity is the new subject: bundle life.soullab.voicekernel.vpio02 · display name "VoiceKernel VPIO-02"; the frozen .vpio01 identity survives only in the VPIO-01 witness instrument and records (18 ms)
+  KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row lives in the instrument only; the organism is frozen at ac12dedf4; no device act
+    ✓ SOURCE-ID-02 (founder ruling 2026-09-15): the frozen VPIO-02 organism is ac12dedf4 in history; the working tree differs from it in exactly the four ruled files, and every invariant file (authority · supervisor · policy · state · projection · journal · replay · route comparison · Package.swift · every harness Swift file) is byte-identical; no file added or removed (501 ms)
+    ✓ the instrument moved only in the four authorized files relative to de3efd3fb (scripts/witness · ios/VoiceKernelDriver); exactly one file added under those roots — the K00-05/06 output reader (founder ruling 2026-09-14, Option C); nothing removed (570 ms)
+    ✓ the four-subject table is identical across ledger · driver · batch · reinstall: vpio-02 → .vpio02 · "VoiceKernel VPIO-02" · ioRunning; the three historical rows unchanged; no default bundle; the driver still passes the app under test nothing (1 ms)
+    ✓ the ledger VPIO02_STEPS list is exactly the fourteen seams, in order, and equals the AudioGraph.swift enum order of the frozen subject (15 ms)
+    ✓ the reinstall pins the VPIO-02 identity in its own constants (the VPIO-01 pins unchanged), selects PIN_* by subject, refuses a conflicting K00_EXPECT_*, and every refusal precedes the one install verb; the .vpio01 id appears in no executable line but its own pin (1 ms)
+    ✓ the ledger self-test passes 34/34, naming the VPIO-02 full trace, the lawful refusal prefixes, out-of-order/missing-seam refusals, and every cross-subject mismatch (25 ms)
+    ✓ corpus partition (founder ruling 2026-09-15, structural — replaces the C-D19/C-D21/C-D23 per-directory naming): every tracked journal carries H (its directory's ledger header subject=) and C (its own start-trace signature); membership = H ∧ C, a disagreement fails closed naming file · header · signature; the sets are exactly vpio-02 61 · vpio-01 30 · engine 468; the frozen classifier reproduces every produced ledger's class column row for row under the header subject; cross-subject reads are SUBJECT-MISMATCH; no directory is named (1146 ms)
+    ✓ C-D20 (founder ruling 2026-09-14/15): relative to the K00-05/06 instrument 8b111709b the driver test moved (C-D20), the output reader moved (C-D22) and the batch moved (S2, 2026-09-15 — every historical line preserved in order, proven in the S2 block); the entry classifier and the reinstall gate are byte-identical (82 ms)
+    ✓ K00-05/06 Option C: the entry classifier is byte-identical to the F-W1 instrument 08483cfe4; the reinstall differs from it only by the SOURCE-ID-02 custody declarations; the frozen organism is ac12dedf4 in history (32 ms)
+    ✓ K00-05/06 Option C + C-D20: the driver gains exactly testOutputSample with the ruled sequence (wait Play present ≤5 s · else ≤4 bounded reveal swipes with an exact-label check each · hierarchy to the runner log then the SAME driver failure · wait Play enabled ≤5 s · settle · Play · cancel-at · Cancel active if enabled · 1 s · Play · 4.5 s · Export); the three historical tests are byte-identical to 08483cfe4; the app under test still receives nothing (32 ms)
+    ✓ K00-05/06 Option C: the batch carries --act entry|output · --cancel-at · --settle; without --act output the historical invocation is unchanged (same test, same env, same header line); the output act forwards exactly two runner-env values, refuses --w4, and reads every ledgered journal a second time with the evidence-only reader (17 ms)
+    ✓ K00-05/06 Option C: the output reader is evidence-only — closed verdict vocabulary, ratified 100 ms and the 0.90 witness criterion as named constants, no subprocess/device/xcodebuild, no journal write, no import of the entry classifier; --selftest 33/33 naming the founder’s twelve offline cases; every real VPIO journal yields no PASS and no FAIL (118 ms)
+    ✓ C-D22 (founder ruling 2026-09-15, offline only): a full input window ending at the EXACT ms of its stream_complete satisfies the output-family presence rule; exact equality only; thresholds, the 0.90 criterion, digital-zero and input_dead rules and the full-window definition unchanged; the synthetic boundary case FAILS on 8b111709b and PASSES now; corpus replay changes exactly the S1 row-1 K00-06 verdict (554 ms)
+    ✓ S2 design (founder ruling 2026-09-15): the Mac playback-capability probe is DISCOVERY ONLY — help/man/listings with stdin closed; never executes say; no audio file, no volume change, no device selection; C-D11 filename shift; capture-time manifest + seal (1 ms)
+  KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) — a SHA-pinned 997 Hz fixture played by a SHA-pinned /usr/bin/afplay around the run_test seam; read-only Mac output preflight; closed --stimulus token; organism · driver · readers · reinstall frozen; the historical batch path is byte-preserved
+    ✓ S2 stimulus fixture: tracked WAV is exactly PCM16 · mono · 48 000 Hz · 8 640 000 frames (180.000 s) · a continuous 997 Hz sine at peak 0.20 FS with no fade; its SHA-256 equals the sidecar, the batch pin and this gate's pin (file name alone is not custody) (58 ms)
+    ✓ S2 player: /usr/bin/afplay is SHA-pinned to the playback census value; the ONE invocation is verbatim `/usr/bin/afplay -v 0.50 -t 180 "$S2_STIMULUS"`, lives only inside stimulus_start, and the recorded -v / -t constants equal it (1 ms)
+    ✓ S2 preflight fails closed, read-only, BEFORE sample 1: fixture present + SHA = pin + exact WAV format → exactly one default output = Mac Studio Speakers (coreaudio_device_type_builtin) → output volume 69 · muted false → afplay executable + SHA = pin; every clause STOPs (return 1 → exit 8) and nothing is played or changed
+    ✓ no S2 code sets system volume, selects an output device, disconnects Bluetooth, installs a utility or repairs state: osascript only ever reads `get volume settings`; system_profiler only reads SPAudioDataType; no set-volume / SwitchAudioSource / blueutil / defaults-write / sudo anywhere in the batch (1 ms)
+    ✓ --stimulus is closed: the only token is s2-nearend, resolved internally to the tracked fixture path; no command-line path is accepted; lawful only with --act output · --vp on · --mode L · --subject vpio-02, refused before any lock, build or playback; $STIMULUS is never used as a path
+    ✓ stimulus lifetime per sample: start → record PID/epoch → 1 s settle → prove alive & non-zombie (else infrastructure abort, exit 9, no identical rows) → 1 s liveness monitor throughout run_test → run_test → post-run state → explicit TERM → wait that exact child → exit status → custody VALID|INVALID; the -t 180 ceiling is the failsafe, not the stop
+    ✓ stimulus invalidity can never become a physiological verdict: custody is written only to stimulus-sample-N.tsv / stimulus-preflight/; both reader invocations are byte-identical to 8b111709b and receive nothing about the stimulus; k00-ledger.py · k00-output-ledger.py · k00-reinstall.sh · the driver tree are byte-frozen (133 ms)
+    ✓ the historical batch path is preserved: every executable line of the batch at 8b111709b is present, verbatim and in order, in the current batch; every added executable line is inside one of the four S2 functions, an S2/STIMULUS constant, or an `if [ -n "$STIMULUS" ]` block — without --stimulus nothing new runs (19 ms)
+  KERNEL-00 · S2-VOLUME-DRIFT-01 — the drift census instrument is read-only: volume/device/Bluetooth/boot/sleep/preferences/process/unified-log READS with documented flags only; no set-volume, device selection, playback, signal, preference write, phone or batch verb; manifest + seal
+    ✓ reads only, with documented flags; writes only into its own census directory (+ the raw log window off-repo); seals a manifest with every mutation flag false (1 ms)
+  KERNEL-00 · SOURCE-ID-02 — seven-bin Goertzel at the consumed seam (evidence only) · gated 997 Hz fixture · evidence-only source reader · SID custody declarations; implementation is code/offline only
+    ✓ the estimator lives only in AudioGraph.swift: the bin set is exactly the seven ruled frequencies; frames close every fourth callback; coefficients come from the OBSERVED rate after the format guard and before any callback is armed; the fourteen trace seams are unchanged; no new AudioUnit/AudioOutputUnit/AudioComponent call, no timer, no lock, no allocation on the audio path (16 ms)
+    ✓ the kernel journals input_source_sample exactly once, from the existing tick, component SourceEvidence, beside an UNCHANGED input_health_sample; the record is never a causal parent; nothing in supervisor · policy · projection · state reads source evidence (16 ms)
+    ✓ the pure-logic tests carry the source unit vectors: seven bins · coherent gain · the four amplitude-domain leakage coefficients · silence · frame reset · the ordered 2 Hz index (ideal gate ≥ 1.15, steady 0, fluctuation < 0.9) · a gated stimulus through the whole estimator
+    ✓ the gated fixture is exactly PCM16 · mono · 48 000 Hz · 8 640 000 frames · 997 Hz at peak 0.20 FS gated 250 ms on / 250 ms off (2 Hz, 50 % duty) with 2 ms raised-cosine edges; OFF halves are digital zero; SHA-256 equals the sidecar and the batch pin (23 ms)
+    ✓ the source reader is evidence-only: closed vocabulary, the amplitude-domain coefficients and the tail bound pinned, geometry fail-closed, frameReset before any attribution and the own-control law (SOURCE-ID-02A), self-test 24/24 naming every path; every tracked VPIO-02 journal reads UNMEASURED-SRC: no_source_evidence (never PASS/FAIL) (188 ms)
+    ✓ custody declarations: the batch names the SID subject once, maps it to classifier vpio-02, admits sid-nearend-gated only with vpio-02-sid and s2-nearend only with vpio-02, and invokes the source reader only inside the output guard after the two frozen readers; the frozen readers are byte-identical to b198e2e37 (32 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       82 passed, 82 total
+Snapshots:   0 total
+Time:        5.993 s
+Ran all test suites matching /__tests__\/voice-kernel-00-source-gates.test.ts/i.

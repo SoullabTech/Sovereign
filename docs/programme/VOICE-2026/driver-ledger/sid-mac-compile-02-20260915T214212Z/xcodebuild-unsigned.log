@@ -1,0 +1,667 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project VoiceKernelHarness.xcodeproj -scheme VoiceKernelHarness -destination generic/platform=iOS -derivedDataPath /private/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived CODE_SIGNING_ALLOWED=NO build
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  VoiceKernel: /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+
+2026-09-15 17:42:38.161 xcodebuild[67218:31849229] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (3 targets)
+    Target 'VoiceKernelHarness' in project 'VoiceKernelHarness'
+        ➜ Explicit dependency on target 'VoiceKernel' in project 'VoiceKernel'
+    Target 'VoiceKernel' in project 'VoiceKernel'
+        ➜ Explicit dependency on target 'VoiceKernel' in project 'VoiceKernel'
+    Target 'VoiceKernel' in project 'VoiceKernel' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: a1d88ca7efe64bbfda3ca38b9190baeb
+Build description path: /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/XCBuildData/a1d88ca7efe64bbfda3ca38b9190baeb.xcbuilddata
+CreateBuildDirectory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products
+
+CreateBuildDirectory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -o /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+
+CreateBuildDirectory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml
+
+CreateBuildDirectory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos
+
+CreateBuildDirectory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyStaticMetadataFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.hmap
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyMetadataFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyStaticMetadataFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyMetadataFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.modulemap (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.modulemap
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftConstValuesFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.LinkFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.LinkFileList
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-target-headers.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibPath-normal-arm64.txt (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibInstallName-normal-arm64.txt (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibInstallName-normal-arm64.txt
+
+MkDir /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    /bin/mkdir -p /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.LinkFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.LinkFileList
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftConstValuesFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    write-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList
+
+Copy /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/VoiceKernel.modulemap /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.modulemap (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.modulemap /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos
+
+SwiftDriver VoiceKernel normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernel -Onone -enforce-exclusivity\=checked @/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Session.modulevalidation -package-name voicekernel -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources-normal/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h -working-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stdarg-E44PXOICCJSEYIBRZRP2RJ23F.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/ptrauth-B7D7UY0GJ352C3OL17V3MW1WC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_float-CD2UC3XARJKV83DXO20RS6WL2.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stddef-8QPWYQPKQNR5LYN06DG1Z7NFM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_SwiftConcurrencyShims-834HE5SQDZST4M5YSD6BGB6RM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/ptrcheck-32VGO63UDZNFBE4BEYRKRQRVB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/SwiftShims-5RNW508KEHGGQDLMIN5YELYMZ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stdbool-BBX2YY4YFX01CZOM9F94XGD24.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_AvailabilityInternal-D9245WA88C44PCTQOYTSBB5R8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_DarwinFoundation1-1UCZ09EU4JP0JJ9HS9N74NYSH.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_DarwinFoundation2-D1VE3Z0JAEBX43YUY4ZQQOJNU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_limits-1L7ZQEZQO5DAFJB5LBGMQWF24.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/sys_types-76YYH7BKYFWW8BE8FYWT084C8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stdint-1X6XJSD5OX9X3OCE0YA3BF8I5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_tgmath-3EZWPFJGRC44YSM95OSQ4ZFKY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_DarwinFoundation3-4B0X9B9GILV3BQTH6UNIZC5PF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_intrinsics-BGVJSRXDRHBDFP59UHBFYQWV3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stdatomic-F1YT0J65G4URO43T25QNJRHXF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_inttypes-E7V6Y8JTP6CSNCQT1SB9C4J74.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Darwin-7R88DHYFSZO0QOY0K40CWGAA9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/simd-7VYTTDWIZXJ84G2CQ4HMID2V4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/ObjectiveC-6TT1Y0EGMRMQ4DWTVR5TG6JBF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/MachO-5397KNJNWEGGTFVW3F096F27G.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/os_object-70VA7STA3AT6HI854I6KC9VQJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/os_workgroup-E7AOJRM6L7CI6MQHNXMQO9X0A.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Dispatch-5040GYMNN6LI2OCA5VD8FIXSD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreFoundation-B5LQC8483ICEU2003M2FNFTJM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/dnssd-66MPPZZ4RO3F7A2GW5TC1QSEQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/XPC-1DSS1FGR2DR6AVK1B1GKRZDO7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/os-IQNU6HQEAIJRRX8PV9U5KA3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CFNetwork-CQTOC65C0QD7SNL37AN56J2YU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreGraphics-DE1QN91SBV28JH00CGYJ1HBDE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Security-F20ITBV7ADJJO3AYX8TGCIG14.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreAudioTypes-8H9MYMV4AD4V4O8V5LFEB003Q.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreAudio-9H8BNZ0OVMS3JW9CVPN750EMN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Foundation-A9F07U802JDQN4S7PXU92OJKG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/ImageIO-65FO06OUX61UXW8XVVUA2OUVN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/UniformTypeIdentifiers-9CV4Q6VTMIRY5Z5V239L7QK6Q.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/IOSurface-A2WXHBIBNE1D4FSBSSINSPCTX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreMIDI-EGMAU9NAOYS0LQZ5MPGT5IMCN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Network-345EFFBQDPXZSVWIT2G4WIDXI.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Metal-3VHEH2CXLZ8TA4G9UJQ1HRC3J.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/OpenGLES-D1FFLKFS3CVSYENZ0HZEI4HKC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/AudioToolbox-8RN5QAXTFNMW9ZP6IJE3SXRY3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/AVRouting-6C05AJ64MWDRPWEB5VUV5BSX0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreVideo-52S6W31YCJPYJ55JAZZ10C0AT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreMedia-8EHEPGB4A39EBPTJ22ZAXBEVM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreImage-7YU1U918KIAVO2ZTVUQV1ZPDA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/QuartzCore-6YBZ7UERRNKKRIER9CJ0CIY55.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/MediaToolbox-6NSAOP2XPKCR1PFDXNUAQ6HU4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/AVFAudio-7YNGED4MO9G08J8JWQ13V7DHY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/AVFoundation-2KVXCR5VMZ91YD9D12J2OVEN.pcm
+
+SwiftCompile normal arm64 Compiling\ Replay.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/Replay.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/Replay.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ VoiceKernel (in target 'VoiceKernel' from project 'VoiceKernel')
+
+EmitSwiftModule normal arm64 (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ VoiceKernel.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift:161:9: warning: result of 'try?' is unused
+        try? session?.release(cause: "leaveConversation", causeSeq: cmd)
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SwiftCompile normal arm64 Compiling\ StateProjection.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/StateProjection.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/StateProjection.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ RouteComparison.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/RouteComparison.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/RouteComparison.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ Journal.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/Journal.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/Journal.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ KernelState.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/KernelState.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/KernelState.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ HealthSupervisor.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/HealthSupervisor.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/HealthSupervisor.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ RecoveryPolicy.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/RecoveryPolicy.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/RecoveryPolicy.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ AudioSessionAuthority.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/AudioSessionAuthority.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/AudioSessionAuthority.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ AudioGraph.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for VoiceKernel (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriver\ Compilation\ Requirements VoiceKernel normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernel -Onone -enforce-exclusivity\=checked @/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Session.modulevalidation -package-name voicekernel -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources-normal/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h -working-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/VoiceKernel-Swift.h /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    builtin-swiftHeaderTool -arch arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h -o /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/VoiceKernel-Swift.h
+
+Copy /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.swiftdoc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftdoc (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftdoc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.abi.json /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.abi.json (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.abi.json /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.swiftmodule /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftsourceinfo (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftsourceinfo /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftDriver VoiceKernelHarness normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernelHarness -Onone -enforce-exclusivity\=checked @/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -F /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks -F /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources-normal/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h -working-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/SwiftShims-2AA3NQG3SFI6O8F16U563BUTV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/ptrcheck-AKJV2064TM4CP57IRP9BDJF3C.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stdbool-7UZAMIOKCGYIMNTVF8S1SR8G5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_float-4ASVY52P48DAZ47D4VIADVD3M.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stddef-AOIQW60PLXVWQ37N6G1JPXYR6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_SwiftConcurrencyShims-5GQNG9Z7BQYJVS1HTFULY5BPX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stdarg-E62Q43YNR4F501ORTIXCULSL3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/DeveloperToolsSupport-9C031ZHWMI3H881I7DO0KVQ63.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/ptrauth-AD7YHRM22CF1JR43JO8WRQHU7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_AvailabilityInternal-537WCJIHS3HTTW136O3PUIMQ3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_DarwinFoundation1-4F3WULEFLWK2RRRII50JA7VAW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_limits-9BJH4ANYCMK2MSIOVZLODNDQ2.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_DarwinFoundation2-DRWNKN5KMMB04YDJ5DOXFMGJI.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stdint-9CXMT0NPJMJ79FPAA49JQ8KJM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/sys_types-57X9AHY4NHE46VUA3XMLZ4SC2.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_tgmath-DAIKNN24U5ZM5D3DU19RIKPNM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_stdatomic-1FU68VJHQ4Q4BWMJZOIG48441.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_DarwinFoundation3-6OD0Y6I1GZR5N9JHE3ES3EYQL.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_intrinsics-9ZG6V78F3939CXQ0CBJNWDAIH.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/_Builtin_inttypes-AO8JCAUJ3V62EQM94UAP0WS1F.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Darwin-E5DSJXU7RDLHOV83V2JQX2BIU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/simd-DSZPE4M0IHE9YUZBVISJUWX3M.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/ObjectiveC-AYS6KT5NRNCUOHG3HZJCLZLJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/MachO-B29DIQKER7D6FQ93KNPGD3UAN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/os_object-80CCAKXWSOYEWFT67V37EF2CU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Spatial-6Z98CWKXVSJ9BWVNBCF7B6XHN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/os_workgroup-6QQ97S81DFOA6300J2DRCYRGL.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Dispatch-EQWDGBX8Y2JD4GM9BARFQKTGT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/dnssd-EED6KFXTJDT6OYNFHAGHAGTYC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreFoundation-B81365ZKN96VMYQYRAKD1PBGP.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/XPC-9SZJQ79HJMFEGLNYMREK0L2UC.pcm
+
+SwiftDriverJobDiscovery normal arm64 Compiling RouteComparison.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling RecoveryPolicy.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling StateProjection.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Replay.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/os-6VZZIEL9BHR1C9EE7PCTC1TO4.pcm
+
+SwiftDriverJobDiscovery normal arm64 Compiling HealthSupervisor.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Journal.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreGraphics-5NU8JPE50KIP2DEX2NTL23ICD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Security-53VYA0JYMXS52HNJ35UVI1FLV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CFNetwork-7R1YH5BL7VF9HXSO7W1DTLLN8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreAudioTypes-3B8MTZVEV8I36QD6MNP4IYSX3.pcm
+
+SwiftDriverJobDiscovery normal arm64 Compiling KernelState.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreAudio-CLP5LWE4TARMBRTHL8BQ3GE4W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Foundation-30ODQ4GYHGTTSDKG8IIXN5N3W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/ImageIO-D7ZKNBALVJYT0NZHYFIAOC1HT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreText-CC3DF7BCRCSI34RHMOYVVKNJ1.pcm
+
+SwiftDriverJobDiscovery normal arm64 Compiling AudioGraph.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling VoiceKernel.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/IOSurface-4A1QD77RP15K471L6UYOBZ3R5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreData-CX3ILNWC36AUR63E5B7G91R9Y.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/UniformTypeIdentifiers-CEPW7S6T1XDG1TAADTR4W9VA9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreMIDI-DR11QHJT9AO5KX9BZXDFMDVWM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Symbols-9B60BOD11P04BJHKMRCAAGL2D.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/DataDetection-BSS2H7AIY9S5G72260QCJLEHN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/UserNotifications-CH72UNL3786CIDE9CND5FA7K0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Accessibility-CX0R75N0Y3NQV8UFI63S3QE0W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/OSLog-3GUUYUNP8FLP3UB9QZM3TO8NO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/UIUtilities-9SIENC4BIG2OQZSLT8BD7VLIT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/FileProvider-515M920S1FI8FIWJZM82G8CHO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreTransferable-7AEE2Y7FLMPZ8T0LTLK7ME4UB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Network-2DI7EFWRP1AVAXAQPKUEDOXT0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Metal-D7M2P901OM0DDUNELRQSFXFJR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/OpenGLES-B0ALGW6HPBWRQSMHTKNUCFEQU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/AudioToolbox-5S2HRP8AZF3UZUNQBZV5B32ME.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/AVRouting-8C4AIZM6U56ZCKOWYJKKAYFSU.pcm
+
+SwiftDriverJobDiscovery normal arm64 Compiling AudioSessionAuthority.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriver\ Compilation VoiceKernel normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernel -Onone -enforce-exclusivity\=checked @/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Session.modulevalidation -package-name voicekernel -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources-normal/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h -working-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.o normal (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -r -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -L/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -filelist /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.LinkFileList -nostdlib -Xlinker -object_path_lto -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule @/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-linker-args.resp -o /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.o
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreVideo-A7X460NROZIWK7ZNDZR0YLEJ7.pcm
+
+ExtractAppIntentsMetadata (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name VoiceKernel --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 16.0 --bundle-identifier voicekernel.VoiceKernel --output /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.appintents --target-triple arm64-apple-ios16.0 --binary-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.o --dependency-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_dependency_info.dat --stringsdata-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList --metadata-file-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyMetadataFileList --static-metadata-file-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftConstValuesFileList --force --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-09-15 17:42:42.348 appintentsmetadataprocessor[67363:31849924] Starting appintentsmetadataprocessor export
+2026-09-15 17:42:42.422 appintentsmetadataprocessor[67363:31849924] Extracted no relevant App Intents symbols, skipping writing output
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreMedia-QF0P6BECXRYVUKZYM8LHGQKU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/QuartzCore-AET7RADJITZOYNWPMQ8OSTX70.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/CoreImage-5OMXZB6AF027C3IHNK6668T4M.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/SwiftUICore-DTQNR5BTNMIZKTKAGZCO43Z3C.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/UIKit-EQ9VZYEVOZF3S8E58Z3GHIOS5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/MediaToolbox-8FMLRVA8JL8AOA98GCYBBT3I9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/AVFAudio-ICW3A0MTMGG5N5FKKNVDM7BQ.pcm
+
+RegisterExecutionPolicyException /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.o (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernel
+    builtin-RegisterExecutionPolicyException /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernel.o
+
+Ld /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/__preview.dylib normal (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -F/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks -F/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -install_name @rpath/VoiceKernelHarness.debug.dylib -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_dependency_info.dat -o /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/__preview.dylib
+
+ProcessInfoPlistFile /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Info.plist /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/Harness/Info.plist (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-infoPlistUtility /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/Harness/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Info.plist
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/AVFoundation-962Q1D9J2G9QNUEI1V3AUEPJ6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/SwiftUI-2X52TP05KEHRHZ756TT2BVC74.pcm
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ VoiceKernelHarness (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+EmitSwiftModule normal arm64 (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    
+
+SwiftCompile normal arm64 Compiling\ HarnessModel.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/Harness/HarnessModel.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/Harness/HarnessModel.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    
+
+SwiftCompile normal arm64 Compiling\ VoiceKernelHarnessApp.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/Harness/VoiceKernelHarnessApp.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/Harness/VoiceKernelHarnessApp.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    
+
+SwiftCompile normal arm64 Compiling\ HarnessView.swift /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/Harness/HarnessView.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+SwiftCompile normal arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness/Harness/HarnessView.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for VoiceKernelHarness (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftDriver\ Compilation\ Requirements VoiceKernelHarness normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernelHarness -Onone -enforce-exclusivity\=checked @/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -F /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks -F /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources-normal/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h -working-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/VoiceKernelHarness-Swift.h /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-swiftHeaderTool -arch arm64 /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h -o /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/VoiceKernelHarness-Swift.h
+
+Copy /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.abi.json /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.abi.json (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.abi.json /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.swiftmodule /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.swiftdoc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftdoc (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftdoc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftsourceinfo (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftsourceinfo /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling VoiceKernelHarnessApp.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftDriverJobDiscovery normal arm64 Compiling HarnessModel.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftDriverJobDiscovery normal arm64 Compiling HarnessView.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftDriver\ Compilation VoiceKernelHarness normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernelHarness -Onone -enforce-exclusivity\=checked @/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -F /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks -F /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -sdk-module-cache-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources-normal/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/arm64 -Xcc -I/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h -working-directory /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib normal (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -F/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks -F/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -filelist /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.LinkFileList -install_name @rpath/VoiceKernelHarness.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule @/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-linker-args.resp -Wl,-no_warn_duplicate_libraries -framework AudioToolbox -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib -Xlinker -add_ast_path -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule @/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-linker-args.resp
+
+ConstructStubExecutorLinkFileList /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-ExecutorLinkFileList-normal-arm64.txt (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    construct-stub-executor-link-file-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+Ld /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness normal (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -F/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks -F/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-ExecutorLinkFileList-normal-arm64.txt /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib -o /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness
+
+CopySwiftLibs /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib --scan-folder /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Frameworks --scan-folder /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/PlugIns --scan-folder /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/SystemExtensions --scan-folder /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Extensions --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name VoiceKernelHarness --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 16.0 --bundle-identifier life.soullab.voicekernel.vpio02sid --output /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app --target-triple arm64-apple-ios16.0 --binary-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness --dependency-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_dependency_info.dat --stringsdata-file /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList --metadata-file-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyMetadataFileList --static-metadata-file-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-09-15 17:42:44.129 appintentsmetadataprocessor[67384:31850025] Starting appintentsmetadataprocessor export
+2026-09-15 17:42:44.130 appintentsmetadataprocessor[67384:31850025] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+AppIntentsSSUTraining (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Info.plist --temp-dir-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/ssu --bundle-id life.soullab.voicekernel.vpio02sid --product-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app --extracted-metadata-path /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Metadata.appintents --metadata-file-list /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyMetadataFileList --archive-ssu-assets
+2026-09-15 17:42:44.143 appintentsnltrainingprocessor[67385:31850026] Parsing options for appintentsnltrainingprocessor
+2026-09-15 17:42:44.144 appintentsnltrainingprocessor[67385:31850026] No AppShortcuts found - Skipping.
+
+RegisterExecutionPolicyException /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-RegisterExecutionPolicyException /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+
+Validate /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    builtin-validationUtility /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8/ios/VoiceKernelHarness
+    /usr/bin/touch -c /tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+
+** BUILD SUCCEEDED **
+
