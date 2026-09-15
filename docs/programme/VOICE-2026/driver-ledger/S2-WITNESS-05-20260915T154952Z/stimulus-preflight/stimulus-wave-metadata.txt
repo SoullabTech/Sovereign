@@ -1,0 +1,2 @@
+channels=1 sampleRate=48000 sampleWidthBytes=2 frames=8640000 seconds=180.000
+format=EXACT

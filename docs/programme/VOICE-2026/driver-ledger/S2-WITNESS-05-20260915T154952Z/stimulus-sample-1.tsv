@@ -1,0 +1,82 @@
+sample	1
+fixture	/private/tmp/k0506-s2w5-b198e2e37/scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav
+fixtureSha256	1a505b3d38a97b75cb935f85bd33deb889628322e558f74af9a5f05afbfbd00e
+afplay	/usr/bin/afplay
+afplaySha256	88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb
+afplayVolume	0.50
+afplaySeconds	180
+pid	94754
+startEpoch	1789487400
+preRunState	1789487401	alive
+liveness	1789487402	alive
+liveness	1789487403	alive
+liveness	1789487404	alive
+liveness	1789487405	alive
+liveness	1789487406	alive
+liveness	1789487407	alive
+liveness	1789487408	alive
+liveness	1789487409	alive
+liveness	1789487410	alive
+liveness	1789487412	alive
+liveness	1789487413	alive
+liveness	1789487414	alive
+liveness	1789487415	alive
+liveness	1789487416	alive
+liveness	1789487417	alive
+liveness	1789487418	alive
+liveness	1789487419	alive
+liveness	1789487420	alive
+liveness	1789487421	alive
+liveness	1789487422	alive
+liveness	1789487423	alive
+liveness	1789487424	alive
+liveness	1789487425	alive
+liveness	1789487426	alive
+liveness	1789487427	alive
+liveness	1789487428	alive
+liveness	1789487429	alive
+liveness	1789487430	alive
+liveness	1789487431	alive
+liveness	1789487432	alive
+liveness	1789487433	alive
+liveness	1789487434	alive
+liveness	1789487435	alive
+liveness	1789487437	alive
+liveness	1789487438	alive
+liveness	1789487439	alive
+liveness	1789487440	alive
+liveness	1789487441	alive
+liveness	1789487442	alive
+liveness	1789487443	alive
+liveness	1789487444	alive
+liveness	1789487445	alive
+liveness	1789487446	alive
+liveness	1789487447	alive
+liveness	1789487448	alive
+liveness	1789487449	alive
+liveness	1789487450	alive
+liveness	1789487451	alive
+liveness	1789487452	alive
+liveness	1789487453	alive
+liveness	1789487454	alive
+liveness	1789487455	alive
+liveness	1789487456	alive
+liveness	1789487457	alive
+liveness	1789487459	alive
+liveness	1789487460	alive
+liveness	1789487461	alive
+liveness	1789487462	alive
+liveness	1789487463	alive
+liveness	1789487464	alive
+liveness	1789487465	alive
+liveness	1789487466	alive
+liveness	1789487467	alive
+liveness	1789487468	alive
+liveness	1789487469	alive
+liveness	1789487470	alive
+liveness	1789487471	alive
+postRunState	1789487471	alive
+stopRequestedEpoch	1789487471
+waitExitStatus	143
+stopEpoch	1789487471
+custody	VALID
