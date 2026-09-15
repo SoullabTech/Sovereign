@@ -1,0 +1,46 @@
+sample	4
+fixture	/private/tmp/k0506-s2pop2-b198e2e37/scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav
+fixtureSha256	1a505b3d38a97b75cb935f85bd33deb889628322e558f74af9a5f05afbfbd00e
+afplay	/usr/bin/afplay
+afplaySha256	88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb
+afplayVolume	0.50
+afplaySeconds	180
+pid	31467
+startEpoch	1789497820
+preRunState	1789497821	alive
+liveness	1789497822	alive
+liveness	1789497823	alive
+liveness	1789497824	alive
+liveness	1789497825	alive
+liveness	1789497826	alive
+liveness	1789497827	alive
+liveness	1789497828	alive
+liveness	1789497829	alive
+liveness	1789497830	alive
+liveness	1789497831	alive
+liveness	1789497832	alive
+liveness	1789497833	alive
+liveness	1789497834	alive
+liveness	1789497835	alive
+liveness	1789497836	alive
+liveness	1789497837	alive
+liveness	1789497838	alive
+liveness	1789497840	alive
+liveness	1789497841	alive
+liveness	1789497842	alive
+liveness	1789497843	alive
+liveness	1789497844	alive
+liveness	1789497845	alive
+liveness	1789497846	alive
+liveness	1789497847	alive
+liveness	1789497848	alive
+liveness	1789497849	alive
+liveness	1789497850	alive
+liveness	1789497851	alive
+liveness	1789497852	alive
+liveness	1789497853	alive
+postRunState	1789497853	alive
+stopRequestedEpoch	1789497853
+waitExitStatus	143
+stopEpoch	1789497853
+custody	VALID
