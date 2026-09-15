@@ -393,6 +393,7 @@ const census = {
   measurement: {
     readdir_failures: readdirFailures,
     lstat_failures: lstatFailures,
+    structurally_complete: readdirFailures === 0 && lstatFailures === 0,
     hash_attempts: hashAttempts,
     hash_successes: hashAttempts - hashFailures,
     hash_failures: hashFailures,
@@ -429,6 +430,39 @@ const census = {
 // FAIL CLOSED. If content reads were attempted and none succeeded, every
 // content-derived finding below is non-observation wearing the shape of a
 // measurement. Refuse rather than report.
+// ------------------------------------------------- STRUCTURAL COMPLETENESS
+//
+// Exact, not thresholded. A content-read failure has a principled denominator —
+// we know how many files we tried to read. A STRUCTURAL failure does not:
+//
+//   readdir failure : walk() returns early. The omitted subtree could hold one
+//                     file or ten thousand. There is no fraction to compute.
+//   lstat failure   : the path is ALREADY in files[], so files.length counts it,
+//                     while the loop `continue`s before extension, size, hashing
+//                     and the record. Denominator and measured population
+//                     diverge silently.
+//
+// So 95% is the wrong shape here. You may tolerate a declared small fraction of
+// unreadable files; you may not tolerate an unread directory, because you cannot
+// say what fraction it represents.
+if (readdirFailures > 0 || lstatFailures > 0) {
+  console.error('');
+  console.error('REFUSED: the corpus tree was only partially observed.');
+  if (readdirFailures > 0) {
+    console.error(`  readdir failures: ${readdirFailures} — one or more directories could not be`);
+    console.error('    listed. The number of objects omitted is unknowable.');
+  }
+  if (lstatFailures > 0) {
+    console.error(`  lstat failures: ${lstatFailures} — paths counted in the file total but absent`);
+    console.error('    from size, extension, hashing and every derived table.');
+  }
+  console.error('');
+  console.error('Structural completeness is exact: a census cannot report on a tree it did not');
+  console.error('fully see. No report was written.');
+  console.error('');
+  process.exit(6);
+}
+
 const textChannelFails = textAttempts > 0 && !textFindingsTrustworthy;
 const hashChannelFails = hashAttempts > 0 && !hashFindingsTrustworthy;
 if (textChannelFails || hashChannelFails) {
@@ -444,8 +478,8 @@ if (textChannelFails || hashChannelFails) {
                   `(${(hashSuccessRate * 100).toFixed(1)}%) — duplication clusters`);
   }
   console.error('Frontmatter standing, domain signal, authorship signal, content hashes and');
-  console.error('duplication are all derived from file contents and would be reported as');
-  console.error('findings while measuring nothing. No report was written.');
+  console.error('duplication are all derived from file contents and would be reported from');
+  console.error('incomplete observation. No report was written.');
   console.error('');
   console.error(`Filesystem-level observations that DO hold: ${files.length} files, ` +
                 `${(totalBytes / 1e9).toFixed(3)} GB, ${appleDoubleSkipped} AppleDouble, ` +
@@ -488,8 +522,8 @@ const md = `# AIN Wisdom Corpus Census
 
 | Stage | Attempts | Successes | Failures |
 |---|---|---|---|
-| readdir | — | — | ${readdirFailures} |
-| lstat | ${files.length} | ${files.length - lstatFailures} | ${lstatFailures} |
+| **readdir (exact: 0 required)** | — | — | ${readdirFailures} |
+| **lstat (exact: 0 required)** | ${files.length} | ${files.length - lstatFailures} | ${lstatFailures} |
 | content hash | ${hashAttempts} | ${hashAttempts - hashFailures} | ${hashFailures} |
 | text read | ${textAttempts} | ${textSuccesses} | ${textFailures} |
 
