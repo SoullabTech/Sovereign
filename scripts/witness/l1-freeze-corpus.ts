@@ -48,7 +48,27 @@ const tokenize = (t: string) =>
 
 const SALT = randomBytes(32).toString('hex');   // ⛔ never printed, never stored
 const seen = new Map<string, string>();
+
+/**
+ * ⭐⭐ THE PROBE'S OWN TOKENS ARE IDENTITY-MAPPED, and this is load-bearing.
+ *
+ * A first freeze veiled everything, and the CONTROL correctly rejected it: the deployed
+ * scorer recovered NOTHING, because `retrospectiveDemand` is the one part of the scorer
+ * that reads words AS WORDS — it matches " earlier ", " i shared ", " remember " on the
+ * raw string. Veiling erased them, demand fell to 0, and the gate never opened. The
+ * freeze was faithful for every RANKING input and destroyed the GATE.
+ *
+ * ⭐ So the probe's own content tokens map to themselves. Demand then computes exactly
+ * as production logged it, and overlap survives — including the accidental match that
+ * made the long passage win, which is the adversarial part that must not be softened.
+ *
+ * ⛔ What this reveals is only the probe's own words, which are generic and already
+ * quoted openly. No member-authored content is exposed: every other token stays veiled.
+ */
+let identityTokens = new Set<string>();
+
 const pseudo = (tok: string) => {
+  if (identityTokens.has(tok)) return tok;
   let p = seen.get(tok);
   if (!p) {
     p = 'tk' + createHash('sha256').update(SALT + tok).digest('hex').slice(0, 8);
@@ -69,8 +89,8 @@ async function main() {
   const w = await getSessionContinuityWindow(sessionId, 10);
   const all = w.allExchanges;
 
-  // Veil the probe with the SAME mapping, or overlap would be destroyed.
-  const veiledProbe = veil(probe);
+  // Identity-map the probe's tokens BEFORE veiling anything, so the gate survives.
+  identityTokens = new Set(tokenize(probe));
 
   const corpus = all.map(e => ({
     index: e.index,
@@ -83,7 +103,9 @@ async function main() {
     note: 'CONTENT-FREE. Tokens are salted pseudonyms; the salt was discarded. ' +
           'Structure (df, overlap, rarity, recurrence, index, length) is exact.',
     sessionDepth: all.length,
-    probe: veiledProbe,
+    // ⭐ VERBATIM. The scorer must see the real question or the demand gate cannot fire.
+    probe,
+    probeDemandNote: 'verbatim; its tokens are identity-mapped in the corpus',
     corpus,
   }, null, 2));
 }

@@ -1,0 +1,266 @@
+{
+ "note": "CONTENT-FREE. Tokens are salted pseudonyms; the salt was discarded. Structure (df, overlap, rarity, recurrence, index, length) is exact. Frozen from the production session that failed C1 on runtime e57ca1baa.",
+ "sessionDepth": 41,
+ "probe": "tkaf790ead tk1e1c09b0 tk3a497e2a tk7eac0b05",
+ "markerIndex": 22,
+ "markerReturnIndex": 24,
+ "deployedScorerSelected": [
+  2,
+  3,
+  36
+ ],
+ "servedAperture": 3,
+ "servedDepth": 40,
+ "corpus": [
+  {
+   "index": 0,
+   "memberTokenCount": 3,
+   "userMessage": "tkb444184d tkb4015a2a tk93f7a53e",
+   "maiaResponse": "tkb4015a2a tk799e9614 tk98fc02e2 tkb4015a2a tkd6a08bc5 tk7b3fead6 tk1cd866b5 tkc6e31f00"
+  },
+  {
+   "index": 1,
+   "memberTokenCount": 9,
+   "userMessage": "tkcb6ee327 tkb6026e39 tk3f8e86ae tke3323aea tkab879cbd tk8fe5e853 tk82dae366 tk744d0690 tkc5cf75ac",
+   "maiaResponse": "tk8af83493 tke3323aea tkf5c6e2a8 tk2b3e0835 tk671978f7 tka58a520b tk5a27b0d8 tk7b3fead6 tkbd3cbf53 tka685b3b8 tka0f67821 tk411b0081"
+  },
+  {
+   "index": 2,
+   "memberTokenCount": 25,
+   "userMessage": "tk7ce6061a tk0a0c5430 tk883ce6c8 tkd7916b54 tk63f5fdfb tk39a11d41 tk8c92e460 tka9d1cace tkbbe66b2a tkffe5da24 tk744d0690 tkd44156b0 tk1a7903a1 tk8c92e460 tk7ce6061a tk0a0c5430 tkd4850aa4 tka5195146 tk7ce6061a tkf80dcc9e tkad03bd68 tk8f9adc4d tkbc38acf4 tkafed6762 tkc6e31f00",
+   "maiaResponse": "tke3323aea tkc85d8443 tk28fa1911 tkb8c4d229 tk100db8a8 tkcd7a593f tkf7133e5a tkafed6762 tk014a9812 tkc6e31f00 tk1976f57e tk7b3fead6 tk35beee7e tk05f29a11 tk7881f809 tk9bdedb1a"
+  },
+  {
+   "index": 3,
+   "memberTokenCount": 21,
+   "userMessage": "tk9bdedb1a tkc309a7aa tkfc0169df tk7f363cc5 tk8860cfb2 tk52dffd94 tk78099e7d tkb23a08cf tk9c8bac6e tkcc9637ca tkbbe66b2a tkffe5da24 tk3c3783ec tk1a7903a1 tk35beee7e tk8f9a3f1a tkeeff39af tkb23a08cf tk35beee7e tk2bfa633c tkfe9f4a8b",
+   "maiaResponse": "tk3e17a74e tk28fa1911 tkf8c21ebe tkb8fc7d62 tkd7916b54 tkbc0c6f42 tkfbf7d617 tk8f434c6f tk65bdb7d7 tkb23a08cf tk99d0f33b tka5195146 tk662f3d05 tkdf889f21 tkcc421b5c tk0a0c5430 tk6605e71e tk2b3e0835 tkbc0c6f42 tke99576cd tk5ab875c2 tk014a9812 tk8fe025a0 tk45b47d66 tkf2c6e649"
+  },
+  {
+   "index": 4,
+   "memberTokenCount": 18,
+   "userMessage": "tkcc421b5c tk8af83493 tkbc38acf4 tke96e7c84 tkbc0c6f42 tke99576cd tk5ab875c2 tk014a9812 tkd834c46b tkf041a682 tkf2c6e649 tk19c6f214 tk29b16a6a tkda895e54 tk3e17a74e tk87ebf58a tk38e9dcf7 tk744d0690",
+   "maiaResponse": "tk3e17a74e tk28fa1911 tk2cb07221 tkcc421b5c tk8af83493 tka0f67821 tk014a9812 tkd3995aed tk0f5aa27c tk55b9d495 tk1747fb51 tkf041a682 tk202793b2 tk0b809e42 tk82d3208f tk3e17a74e tk33f9ca9f tk42350352 tk73c42611 tkaf1dcf3e tk9bdedb1a tk4ec6f974 tkd421a2f0 tke8965c6e tk0b647115 tk8dacb08e tk05f29a11 tk65bdb7d7 tkf041a682 tk076f95aa tkbc38acf4 tk644526fd tk7b3fead6 tkc615b2d5 tk05f29a11 tk662f3d05"
+  },
+  {
+   "index": 5,
+   "memberTokenCount": 27,
+   "userMessage": "tke4c19ee6 tk87ebf58a tk8b3b3b19 tk014a9812 tkba487dd4 tk1fc8be2d tk8f9adc4d tk468d9343 tkabe6d361 tk9d6dc664 tk7fae60e7 tkaae4fcd6 tk3f8e86ae tk1fc8be2d tk152bc991 tkaedb3c42 tk7ac8faa0 tk98eba6c7 tkbb31b4db tkb3c2e0b0 tk98eba6c7 tkc6c7ff2d tka685b3b8 tk48502cef tkb14d15f8 tk9d6dc664 tkabe6d361",
+   "maiaResponse": "tk3f8e86ae tka387f3c6 tka0f67821 tk7ba5d625 tk3a99a478 tk1a53025f tkaae4fcd6 tkabe6d361 tk078bb9ff tk152bc991 tk2b3e0835 tk014a9812 tk59403f10 tk8b3b3b19 tkbb31b4db tkb3c2e0b0 tkd6c24279 tkebc03aac tkabe6d361 tk9d6dc664 tkf8ba47d2 tk65bdb7d7 tk3f8e86ae tk6b7e1d93 tkcadf6fdd tk3f8e86ae tk19a6fd1d tkb6fa504d tk5f46b595 tka0f67821 tka58a520b tk8fe5e853 tkc5cf75ac tkcf505d57 tkc6e31f00 tkb23a08cf tkd59f1185 tke99576cd tk5ab875c2 tk014a9812 tk8fe025a0 tkf041a682 tk86de3356 tk775923ba tkb4cf1d16 tkb24411fd tk671978f7 tk3fd1a55c tka8eb1fd7 tk548efdb3 tk0f5aa27c tk6238d1e2 tk80241102 tkb1f9603b tkd8015255 tk0e54aea9 tkcc421b5c tk8b3b3b19 tk2cb07221 tke15051d4 tkbc38acf4 tkabe6d361 tk3f8e86ae tk44381469 tk94cc66f2 tkbd3f2dbb tk414cf11b tkfab9ddd0 tke9c914b0 tk65bdb7d7 tka2367b68 tka0f67821 tk662f3d05 tkba71f2fa tk2016ff40 tke17393df tk4efad7aa tk29ca1467 tk98eba6c7 tkbb31b4db tk11500e34 tkf041a682"
+  },
+  {
+   "index": 6,
+   "memberTokenCount": 12,
+   "userMessage": "tkb4015a2a tk8f9adc4d tk7ce6061a tk7a5ef589 tkaae4fcd6 tk4e4bd4b9 tkc874a13f tk152bc991 tkd5f52ef0 tkf969d8ca tkaae4fcd6 tk5e6c5f52",
+   "maiaResponse": "tk3f8e86ae tka387f3c6 tka0f67821 tkba487dd4 tk057869c9 tk3a99a478 tk2829b41d tkabe6d361 tk8f9adc4d tka0f67821 tk7a5ef589 tkaae4fcd6 tk078bb9ff tk152bc991 tkaae4fcd6 tk014a9812 tka5195146 tk65bdb7d7 tk1964069e tkc9e42e16 tkaae4fcd6 tk2345cfa0 tk63de037c tk54a5d98d tkcbbe1d08 tk305b1d7f tk56747476 tk2b08a8a1 tk7b3fead6 tk014a9812 tk6528b185 tk95251545 tka7d2fdc0 tkbd3f2dbb tkcadf6fdd tk52558cb9 tk7b3fead6 tk22efd9f7 tkf216ca7d tkb34f8650 tk1b09ba4c tka8eb1fd7 tk7dcdca42 tk3e524ed9 tk201d85e1 tkabe6d361 tkb142fe50 tk55b9d495 tka92e7a9f tk4a519907 tkaae4fcd6 tkb142fe50 tk55b9d495 tk1bb2b3a1 tk0a7bb020 tka0f67821 tk0be69f81 tk225cfea6"
+  },
+  {
+   "index": 7,
+   "memberTokenCount": 10,
+   "userMessage": "tkbc38acf4 tkdefcdfd6 tkbf9a16e4 tk9b97b977 tk02b50e67 tk3e8a421e tkcb0b7219 tke05344f5 tk5ef5d235 tk6e0f0878",
+   "maiaResponse": "tk3f8e86ae tka387f3c6 tk63af3a56 tk4685f06f tkaae4fcd6 tkabe6d361 tkc511ba43 tk05f29a11 tkb086860a tkd4850aa4 tkbc38acf4 tk6b1d7419 tke4922f10 tk1099b2d7 tka0f67821 tkd5002757 tk4c2f1212 tk2b3e0835 tkb7046761 tk952cbc4d tk3e17a74e tk014a9812 tk28fa1911 tk3497c655 tk1ca01460 tk2b3e0835 tk82d3208f tkc537d905 tkc03a9f43 tk881552fe tk8b3b3b19 tk51272bbf tk54a5d98d tk7b3fead6 tkcadf6fdd tkcda33525 tkff784d0d tkb6026e39 tkfb01be94 tk4685f06f tkd549471b tk5ef5d235 tk05f29a11 tkf0243b69 tkf14d0987 tkf37f8098 tk2b3e0835 tkb6d4b0aa"
+  },
+  {
+   "index": 8,
+   "memberTokenCount": 6,
+   "userMessage": "tkbc38acf4 tkb6fa504d tk5d128c3d tk2cf9f021 tkf37f8098 tka7d04844",
+   "maiaResponse": "tke4c19ee6 tk95251545 tkbc38acf4 tk7aa5c08a tk01b262c8 tk3e17a74e tk8b3b3b19 tkbc38acf4 tkb6fa504d tkff784d0d tkc6067eca tkf14d0987 tkf37f8098 tkf20032a3 tkcbadd0f1 tk7a5ef589 tkb6026e39 tke0c6427e tke99576cd tkf20032a3 tk7499fc12 tkcccb2a02 tk05f29a11 tkbc38acf4 tk1e8bbf08 tkfee82164"
+  },
+  {
+   "index": 9,
+   "memberTokenCount": 9,
+   "userMessage": "tk9bdedb1a tka5195146 tk3f8e86ae tke4922bfa tk7ce6061a tk85c4cc72 tkc0de3da1 tk7ce6061a tk85c4cc72",
+   "maiaResponse": "tke4c19ee6 tk95251545 tkc3f6e805 tkc648fa9e tk8a1b8afd tk014a9812 tk6d74a342 tk80fab508 tka0f67821 tk82d3208f tk37919db6 tk7ac3e77c tkaccbbaa1 tka0f67821 tk7ba5d625 tk1a53025f tk7b3fead6 tka0f67821 tk662f3d05 tk37919db6 tkd0e2643e tk29b16a6a"
+  },
+  {
+   "index": 10,
+   "memberTokenCount": 13,
+   "userMessage": "tkbd060b12 tkf86562e6 tkf14d0987 tk5b7f1901 tk4685f06f tkb444184d tkc7c97588 tkcc55b27b tk6fd27ccf tk3e17a74e tk7b3fead6 tk662f3d05 tke83c72e8",
+   "maiaResponse": "tke4c19ee6 tk3e17a74e tk28fa1911 tk29ca1467 tk548efdb3 tk27f27ee7 tkf041a682 tkc6067eca tk014a9812 tk7a498a31 tk2b3e0835 tk60afa754 tked592be4 tkae393bb4 tkfacf46de tka5195146 tkaecc0a17 tkc646ef2f tkd74f419f tk2b3e0835 tk8897a1eb tk85c4cc72 tkb444184d tk7fae60e7 tk7b3fead6 tk57c7c5c3 tkfe9f4a8b tkf14d0987 tk88885811 tkb444184d tke68c20b0 tk042fe8a1 tk2b3e0835 tk39c2d7b5 tk4685f06f tk244d2eb8"
+  },
+  {
+   "index": 11,
+   "memberTokenCount": 26,
+   "userMessage": "tk08f3f033 tkf37f8098 tk05f29a11 tkbc38acf4 tk9af44e54 tkbc38acf4 tkbc38acf4 tkb6fa504d tk321de245 tke68c20b0 tk6f767add tk042fe8a1 tk29ca1467 tk00eeafa5 tkf14d0987 tk2d0be6de tk5b7f1901 tk7ce6061a tk85c4cc72 tked488dba tkb6026e39 tk2ae20ac9 tk3bc0b832 tk28b3be4b tkc309a7aa tk3e8a421e",
+   "maiaResponse": "tke4c19ee6 tk3e17a74e tk014a9812 tk91e64a0c tkc82a7016 tk4121f88f tkad4eecfa tk27f27ee7 tkb6fa504d tkff784d0d tk56637696 tk4a519907 tka0f67821 tk92224516 tkd0509600 tk54a5d98d tk6c3203b6 tkf14d0987 tk12f0012b tk7db59450 tk51a45dd9 tkf37f8098 tk2d0be6de tk40b000d2 tkd80af8e6 tk8f3bf3c7 tkbc38acf4 tkdf81d531 tk3e156cf7 tk6d74a342 tk37919db6 tk671978f7 tk74d08cd4 tkf14d0987 tk662f3d05 tk87341967 tkc6067eca tkfab9ddd0 tkbaeb59d2"
+  },
+  {
+   "index": 12,
+   "memberTokenCount": 23,
+   "userMessage": "tkbc38acf4 tk42347031 tk42347031 tkaecc0a17 tkf2c6e649 tk42350352 tkcb0b7219 tked488dba tked488dba tk9a74a3f6 tk959ffc31 tk7848e795 tk42347031 tkb7cc3408 tka5195146 tkabe6d361 tkbc38acf4 tk46ff66ce tkc58fcd67 tkbc38acf4 tkbc38acf4 tka97c8e2e tk51c551b3",
+   "maiaResponse": "tke4c19ee6 tk3e17a74e tk3e17a74e tk0b2ca4ce tk48b3b586 tkc26aa891 tk05f29a11 tkbc38acf4 tk28fa1911 tk27f27ee7 tkf8c21ebe tk2b3e0835 tk30b402f0 tke45aaa46 tk6d74a342 tkfa5019ac tk2b3e0835 tka0f67821 tk44437129 tk2b3e0835 tk2ae20ac9 tk7a5ef589"
+  },
+  {
+   "index": 13,
+   "memberTokenCount": 8,
+   "userMessage": "tk2cf9f021 tk3f8e86ae tk44437129 tk2ae20ac9 tk7a5ef589 tk2b3e0835 tk4685f06f tk86de3356",
+   "maiaResponse": "tke4c19ee6 tk81596932 tkfb01be94 tk3e17a74e tk28fa1911 tk88885811 tk7db59450 tk6b7e1d93 tk2b3e0835 tk36edd52b tkc615b2d5 tk4685f06f tk86de3356 tkf14d0987 tk2316ff1b tk06ec5fc5 tk28b3be4b tkafeb3969 tk33911a69 tkb18e002e tk9efd95d6 tk5d655e2f tk4c2f1212"
+  },
+  {
+   "index": 14,
+   "memberTokenCount": 30,
+   "userMessage": "tk5d655e2f tk4b667e5d tk9877e72d tkd7821888 tka92e7a9f tk0bf0dced tk00b513e6 tk4685f06f tk7125359f tkae393bb4 tkcee4972a tke8965c6e tkd455b1cc tk62b6b9a8 tk51f0c31d tk00b513e6 tk91851674 tk4685f06f tk62b6b9a8 tk068e815e tk37cefc8b tk1099b2d7 tked488dba tk2b3e0835 tk2b3e0835 tk6d92e103 tkbc1c0d87 tka92e7a9f tk785e7f90 tk1099b2d7",
+   "maiaResponse": "tke4c19ee6 tk9877e72d tk2cb07221 tk33911a69 tked592be4 tkbc38acf4 tkbc38acf4 tkbc38acf4 tkf3c4fed4 tk4685f06f tk4b667e5d tk339ca771 tk96c7a45f tk52fffab4 tk6bc3f999 tk38e1c902 tk1937f8ad tk3bc0b832 tka8f67c27 tkd22597e0 tk20ab15b2 tk686a0331 tk99d0f33b tk4b1b50fe tkfa69cb73 tka0f67821 tk127cfb61 tk96d1b8f3 tkf14d0987 tkd7821888 tka92e7a9f tk9877e72d tk014a9812 tkaa3b9406 tk42347031 tk05f29a11 tkaecc0a17 tk325be97b tke8965c6e tkaab899e7 tk2b3e0835 tkeb7cb85b tkfb01be94 tk4685f06f tk3316ed0f tk2ae20ac9 tk7a5ef589 tk29ca1467 tk0c2377d9 tk4b667e5d tk9877e72d tka0f67821 tka58a520b tk4121f88f tk25979682 tk662f3d05 tkd0ff2d14 tk3c425955 tkda895e54 tk06ec5fc5 tka72773b9 tk51272bbf tk1a7903a1 tk30ec757d tke9f4200f"
+  },
+  {
+   "index": 15,
+   "memberTokenCount": 8,
+   "userMessage": "tkb4015a2a tk29ca1467 tk7d87917f tk904dcebe tk3f8e86ae tk37919db6 tk01b262c8 tk904dcebe",
+   "maiaResponse": "tkc9e42e16 tke612e796 tk904dcebe tk88885811 tkceace5f3 tkf14d0987 tk12f0012b tkf11b9483 tk4efad7aa tk27f27ee7 tk8f0bb111 tk6d74a342 tk2b3e0835 tk05f29a11 tkb1f9603b tk5d06fbd9 tk60afa754 tk4685f06f tk86de3356 tkaa3b9406 tk4685f06f tk2b3e0835 tk60afa754 tkae393bb4 tk014a9812 tk44381469 tk6b7e1d93 tkcadf6fdd tk89e55d16 tk4684b2e0 tkcadf6fdd tk7b3fead6 tk548efdb3 tk74d08cd4 tk80fab508 tk2e8180a2 tkccb167c8 tk4b667e5d tk9877e72d tk952cbc4d tkdb3f6617 tka92e7a9f tkf3c4fed4 tk4685f06f tkeb7cb85b tk2cf9f021 tk029a9ce0 tk82d3208f tkf068fb91 tk8787b1b4 tk5f3100c7 tk014a9812 tka765ac82 tk7b3fead6 tke612e796 tk093e2184"
+  },
+  {
+   "index": 16,
+   "memberTokenCount": 54,
+   "userMessage": "tke4c19ee6 tk3e17a74e tk2b3e0835 tk0a47b5e5 tkf3c4fed4 tka92e7a9f tk9c9c9d23 tkfec0508d tk7d72ba51 tk5b7f1901 tkbc897dbf tkb521bf1a tkadd1b9ce tkae393bb4 tk6339c3b1 tk48690734 tk30ec757d tk8ebf0dc0 tkfb01be94 tk2b3e0835 tk3c425955 tk2cf9f021 tkd0ff2d14 tkc0e6d784 tk3ab7480e tkc85d8443 tk18b7c9d7 tk19ef29ce tka61715d6 tke393b777 tkdfa812f2 tk7a5ef589 tk2b3e0835 tk3e17a74e tk70c4b2c9 tkb3a1a1ae tk65bdb7d7 tkbf549a1d tked488dba tk2bf21e50 tkfec0508d tk8f450936 tk1099b2d7 tk068e815e tkd0e2643e tka35e9e17 tk662f3d05 tkabe6d361 tk459a1b79 tk31d84bac tke140a8f0 tkcb0b7219 tk953ef8d5 tkae393bb4",
+   "maiaResponse": "tke4c19ee6 tkbd3cbf53 tka566498c tk459a1b79 tk31d84bac tkaecc0a17 tk3e17a74e tkc511ba43 tk7c6608f3 tk0bf6fa8c tkae393bb4 tk952cbc4d tk19ef29ce tkc97ac8f4 tka61715d6 tk045841ed tkb97ad81d tkc85d8443 tk28fa1911 tk548efdb3 tk068e815e tk5a6991d0 tk9efd95d6 tk3f8e86ae tk880e5613 tka0f67821 tk92224516 tk5d06fbd9 tk42350352 tk08bf80f5 tk26da5b31 tka92e7a9f tk4685f06f tk86de3356 tkaa3b9406 tk2cb07221 tka3d5f2ac tk503b97a3 tkbc38acf4 tk2b3e0835 tkee07fa82 tk36edd52b tk06ec5fc5 tk48c850d7 tk9efd95d6 tk662f3d05 tkd59f1185 tka92e7a9f tkfee82164 tk8f9adc4d"
+  },
+  {
+   "index": 17,
+   "memberTokenCount": 35,
+   "userMessage": "tk7c6608f3 tk0b809e42 tkbc897dbf tk8928dfe1 tk2b3e0835 tk07a69018 tk1c2dd63c tkb352c1fa tk979f581d tk0b809e42 tk7b3fead6 tkbb52ca32 tk18b7c9d7 tk9bdedb1a tk0b397bf7 tk80e5fc0c tk1d097f15 tka20dd979 tke4c19ee6 tk3ddbb002 tke8965c6e tk14ff5065 tk048e4db4 tk58d01f44 tk1964069e tk42347031 tk98135177 tkb3e2901a tk2cf9f021 tk4143a975 tk135727c6 tk375bf08e tk42347031 tk77344ef5 tk5ea9c553",
+   "maiaResponse": "tke4c19ee6 tk86de3356 tke79551b3 tk7ba5d625 tk4a519907 tk8616ccf6 tk13323c8d tk0b809e42 tk8616ccf6 tk74fd2c78 tkdaba2ec7 tka0f67821 tk22fb729c tkaa49707a tk014a9812 tkbe3dc89a tk5d06fbd9 tk99d0f33b tka566498c tk53e3ea72 tk2a52057c tkeef7aac5 tk2b3e0835 tk65bdb7d7 tkf20032a3 tkc646ef2f tk548efdb3 tk2cf9f021 tk3e17a74e tk8f2e96f6 tk662f3d05 tk759fb930 tkc8ca3a98 tk9efd95d6 tk80e5fc0c tkc07ea873 tk86f44996 tk663de966 tk8897a1eb tkaaf8a504 tk7b3fead6 tk4c2f1212 tk8e4e6ed3 tk7c6608f3 tk42347031"
+  },
+  {
+   "index": 18,
+   "memberTokenCount": 50,
+   "userMessage": "tk7b3fead6 tk67a525db tkda895e54 tked488dba tk3c3783ec tkd9b79c01 tked488dba tk8248da40 tkdb41402e tkf4ed4547 tkbd4121cc tk6fd27ccf tk85779682 tk785e7f90 tk06fd041d tk7c6608f3 tk80e5fc0c tkd59f1185 tk0571bb9f tk80e5fc0c tk7c6608f3 tkbd70bfde tk648c2a90 tke4a90359 tk42350352 tkab877125 tk7125359f tk3872c4a8 tkc8799181 tk611dcbce tkd7821888 tka92e7a9f tk4685f06f tk2b3e0835 tkf14d0987 tk0c7ff22b tk3e960267 tkbc38acf4 tk135c5b52 tk135c5b52 tkbc38acf4 tkc1886ebd tkae393bb4 tk986de5b0 tka1ff8ef7 tk4f1766f1 tked488dba tk774708f7 tk9ed8cda1 tkffe499ad",
+   "maiaResponse": "tke4c19ee6 tkf14d0987 tk12f0012b tkf771a507 tka92e7a9f tkeeff39af tka92e7a9f tk99d0f33b tka0f67821 tk127cfb61 tkfc9621b2 tk201d85e1 tk785e7f90 tk8a8aa923 tk7a3a3815 tk3e17a74e tk2a52057c tkbc38acf4 tke68deee1 tkd7821888 tkfb01be94 tk17603d57 tk7125359f tk1ad7654d tk9877e72d tk92224516 tkdb3f6617 tk3e960267 tk8a8aa923 tk36edd52b tk2cf9f021 tkaa3b9406 tk82d3208f tkae393bb4 tk29d55066 tkae393bb4 tk17c6d0db tkfab9ddd0 tka0f67821 tkb1f9603b tked797e98 tka237107c tk671978f7 tkbb2984bb tkd9ec8e49 tkdcb89d82"
+  },
+  {
+   "index": 19,
+   "memberTokenCount": 10,
+   "userMessage": "tkbc38acf4 tk5534e460 tkbc38acf4 tkda895e54 tk53668860 tk6c0913cb tk37cefc8b tk7a5ef589 tk2b3e0835 tke0cd73ac",
+   "maiaResponse": "tke4c19ee6 tk36edd52b tkf8d8600a tk5d06fbd9 tkc995f61f tka685b3b8 tk7561e9d7 tk1f52102f tka0f67821 tk7a5ef589 tk8f9adc4d"
+  },
+  {
+   "index": 20,
+   "memberTokenCount": 51,
+   "userMessage": "tk9bdedb1a tk7ce6061a tk0a0c5430 tkf14d0987 tk5b7f1901 tk67a525db tk24dbd570 tkdf81d531 tk29d55066 tk37105170 tk0a0c5430 tkf7225ce5 tkda19e0d3 tkf7225ce5 tkaec525ba tk208b1ff7 tk5d655e2f tk267c99af tkdf81d531 tk31e05927 tkcd2bba12 tkdf81d531 tk7ce6061a tk6fd27ccf tked488dba tk7a974d60 tkfc716bdd tk1fbd080e tkf4ed4547 tk785e7f90 tk07a69018 tke146635a tk9299ca0e tk08f3f033 tk1eee3514 tkf041a682 tkb766ebf2 tk74b80f25 tk2bfa633c tkf4ed4547 tk5b7f1901 tkf1bacac2 tke73eba3b tkfc00c2a9 tka26d53a1 tk27c563f5 tk148129d7 tkec48af90 tk511ead9e tk51272bbf tk6c18ea54",
+   "maiaResponse": "tke4c19ee6 tka0f67821 tk127cfb61 tk2b3e0835 tk28fa1911 tkf14d0987 tk12f0012b tk3316ed0f tkc6067eca tk2cb07221 tk806322f7 tk55d2f442 tk2134b51d tk1fbd080e tkbd3cbf53 tka566498c tk30b402f0 tk6ad2bc09 tk51272bbf tk014a9812 tkcc304e9c tke9f4200f tk752bc52f tkf7133e5a tkf633283c tkd7821888 tk27c563f5 tk8bf5c20f tk5cf8f6e8 tk7b3fead6 tka26d53a1 tka8eb1fd7 tkf0243b69 tkc1982dea tk5a6991d0 tkf1bacac2 tk3bc45bee tk662f3d05"
+  },
+  {
+   "index": 21,
+   "memberTokenCount": 29,
+   "userMessage": "tk3e17a74e tk08f3f033 tk29ca1467 tk148129d7 tk42347031 tk434412c6 tk01b262c8 tk42347031 tk434412c6 tkdf81d531 tkaab899e7 tke99576cd tkb85b768f tk9ccccad9 tkeef7aac5 tk3e17a74e tk2f27cee7 tkb0c14bd1 tk3f8e86ae tk42347031 tk7789130a tk1574e7c1 tk847de858 tk0c4fec64 tka566498c tk3b8fd8b8 tk79b56d1b tk8660f903 tkaf11190a",
+   "maiaResponse": "tk2861016d tk1574e7c1 tk3e17a74e tk33f9ca9f tk42350352 tk73c42611 tk9db2ef43 tkd6a08bc5 tk44437129 tk2b3e0835 tkc996bd7e tk3e17a74e tka2adc8b7 tkbd3f2dbb tk3bc0b832 tk3b8fd8b8 tkaf11190a tkadd1b9ce tk266b8578 tk5f46b595 tkeabb637d tkfab9ddd0 tk7fae60e7 tke8965c6e tkaa5e5f0f tk42350352 tk1495e0ce tk3be9426a tk3f8e86ae tk37919db6 tka3b8ff3d tk434412c6 tk7fae60e7 tk01b262c8 tk2b3e0835 tkbe58657d tk045a2ac3 tk2b3e0835 tkb28b1aef tkfaffd101 tk7b3fead6 tk65bdb7d7 tk014a9812 tk93dc049d tk6eaf358e tkaab899e7"
+  },
+  {
+   "index": 22,
+   "memberTokenCount": 6,
+   "userMessage": "tk10672046 tk48146d3f tk27e3c358 tk3e17a74e tk1cd866b5 tkc6e31f00",
+   "maiaResponse": "tkf2826e7f tk7b3fead6 tk42347031 tkdf262207"
+  },
+  {
+   "index": 23,
+   "memberTokenCount": 8,
+   "userMessage": "tk3f8e86ae tk63596133 tk2b3e0835 tk37cefc8b tk1cd866b5 tk2ce30bc2 tk6730fba5 tk3316ed0f",
+   "maiaResponse": "tk10672046 tk48146d3f tkf8d8600a tk760c6cea tkf3f54f67 tkf216ca7d tk3ab3b426 tk710fe8be tke8e3465f tk880e5613 tk076f95aa tk9cc0956c tkde900682 tk6b328e5e tk42347031"
+  },
+  {
+   "index": 24,
+   "memberTokenCount": 19,
+   "userMessage": "tkbc38acf4 tkddcf2787 tka26d53a1 tk48146d3f tkbc38acf4 tkbc38acf4 tk7fb5c738 tk86a99cc2 tkbadfa447 tk01f5832d tk43656a12 tkff784d0d tk1b8c0c71 tk10672046 tk1b8c0c71 tk6d74a342 tk05f29a11 tk574cf5e3 tk7c370f40",
+   "maiaResponse": "tk3e17a74e tkf6760e75 tk27e3c358 tk574cf5e3 tk86a99cc2 tk04eb55d7 tkabe6d361 tk10672046 tk1b8c0c71 tk6d74a342 tk05f29a11 tkbc38acf4 tk94cc66f2 tk3203b751 tk0dcce823 tkc6e31f00 tkeee3244e tkef900484 tk2b3e0835 tkb6d4b0aa"
+  },
+  {
+   "index": 25,
+   "memberTokenCount": 27,
+   "userMessage": "tk8f2e96f6 tkbc38acf4 tkf14d0987 tk2a034374 tkb458214e tk4ea56f14 tke393b777 tka5195146 tk738de643 tk6bb1c552 tkd29a170c tk80e5fc0c tkfee82164 tk27e3c358 tk6d74a342 tkfb1578fb tk2b3e0835 tkb6026e39 tkf03e5664 tk7ab41be2 tkbc38acf4 tk2a034374 tkbc0c6f42 tkfc5462f9 tk7fd325e7 tk50192b30 tk775923ba",
+   "maiaResponse": "tk6d74a342 tk80fab508 tk10672046 tk48146d3f tk2cb07221 tkddcf2787 tkbc38acf4 tk30542645 tkbc38acf4 tk29b16a6a tk6b1d7419 tkdf262207 tkf216ca7d tkc70d0d01 tkdc0be955 tked488dba tk2b3e0835 tka0f67821 tk460bb704 tk097b69c7 tk11a0ccaf tkcc421b5c tk738de643 tke393b777 tk225cfea6 tk574cf5e3 tkde900682 tkae393bb4 tka566498c tk38628693 tk2b3e0835 tkc511ba43 tk7c6608f3 tkf6a098bc tk99d0f33b tk05f29a11 tkc057e5a4 tk22efd9f7 tkf14d0987 tke8965c6e tkb3f2492f"
+  },
+  {
+   "index": 26,
+   "memberTokenCount": 12,
+   "userMessage": "tka5195146 tkdd083e66 tka5195146 tk3f8e86ae tk7c370f40 tka5195146 tka84b8f56 tk833cbcb7 tk63f5fdfb tk312e3a27 tk3316ed0f tk551a4b7c",
+   "maiaResponse": "tk6d74a342 tk80fab508 tk10672046 tk48146d3f tk2cb07221 tk27e3c358 tkbc38acf4 tkba487dd4 tk2b3e0835 tk3c20b410 tkf24f6162 tk541c01de tk6ad2bc09 tkb4015a2a tkdf81d531 tkcee41875 tk3e17a74e tka566498c tk66a55016 tkc6e31f00 tk8e0cfb2b tk2b3e0835 tk38628693 tkdf262207 tk05f29a11 tk7c6608f3 tk42350352 tkb4070ec5 tkfee82164 tk8f9adc4d"
+  },
+  {
+   "index": 27,
+   "memberTokenCount": 30,
+   "userMessage": "tk9bdedb1a tke8965c6e tk8e0cfb2b tk740a8b5c tk2b3e0835 tkfe9f4a8b tkc8799181 tke8965c6e tk32a63deb tkbc38acf4 tkbc38acf4 tk46e9af3a tk683a4f41 tk299d85e3 tk225ee6aa tkeabae3c3 tka20dd979 tk0a25bcd6 tkc25a6d53 tka16d4bb5 tk2a034374 tk2cb07221 tkaa09f3a6 tk2cb07221 tk0f4c8f2c tkbc38acf4 tkddcf2787 tkbc38acf4 tk9e4ee487 tk6b76361b",
+   "maiaResponse": "tk3e17a74e tk28fa1911 tk888837c3 tk5718f143 tk27e3c358 tk2b3e0835 tk8f9adc4d tkdf262207 tk6ad2bc09 tk10672046 tk48146d3f tk9db2ef43 tk7c6608f3 tke6af42e2 tk77e41b53 tk31eb5f95 tk3e17a74e tk4684b2e0 tk7aa5c08a tk66a55016 tkdf81d531 tk4ea56f14 tkf216ca7d tk369dc1ff tk8f9adc4d tkbc38acf4 tkba487dd4 tk2b3e0835 tk127cfb61 tk4121f88f"
+  },
+  {
+   "index": 28,
+   "memberTokenCount": 7,
+   "userMessage": "tkbc38acf4 tk127cfb61 tkb521bf1a tk4b1b50fe tkf7cfb753 tk1ac87306 tka16d4bb5",
+   "maiaResponse": "tk95251545 tk10672046 tk48146d3f tk2cb07221 tkd7e44b43 tk8f2e96f6 tk3e17a74e tk3871d80f tkbc38acf4 tkc74f7d33 tk06413843 tk926e1460 tk42350352 tkeee3244e tkc511ba43 tk7c6608f3 tkef0d2618 tk99d0f33b tk076f95aa tke0c6427e tk90ba6dae tk057869c9 tkc6c7ff2d tkde900682"
+  },
+  {
+   "index": 29,
+   "memberTokenCount": 11,
+   "userMessage": "tk1ac87306 tkdd083e66 tkf216ca7d tk42347031 tk7c6608f3 tk875da41f tk485c326a tkf4a62f26 tk5d742506 tk79b56d1b tk79b56d1b",
+   "maiaResponse": "tk3e17a74e tk28fa1911 tk1e8bbf08 tkf7133e5a tkdd953f87 tk2b3e0835 tk68253ab9 tkdd083e66 tk12f0012b tkf216ca7d tk731408b0 tkbe8783e1 tkb6026e39 tkc85d8443 tk0b397bf7 tkf5ee1e7a tkf8b56490 tk7dc346ed tk364788b9 tk500f5639 tka0f67821 tk127cfb61 tk4121f88f tkc8ca3a98 tk05e1e74e tk63f5fdfb tk10672046 tk48146d3f tkc105bdee tk32a63deb tkc511ba43 tkaa439cab tk990083ec tk05f29a11 tk66850a4d tk11500e34 tkc6e31f00"
+  },
+  {
+   "index": 30,
+   "memberTokenCount": 7,
+   "userMessage": "tk9c7f1507 tkc8ca3a98 tk3316ed0f tkad37348e tk3f8e86ae tkd96fa865 tk9b3dcc2a",
+   "maiaResponse": "tkc7c8b05b tkad37348e tkd03376cf tk785e7f90 tk7a5ef589 tk014a9812 tk05f29a11 tk5f04f487 tke2f93a7b tkd455b1cc tk28fa1911"
+  },
+  {
+   "index": 31,
+   "memberTokenCount": 16,
+   "userMessage": "tk80fab508 tk342b1376 tk4bedef27 tk98135177 tk42347031 tk29a8694f tkf7133e5a tk3f8e86ae tk15572690 tk8f2e96f6 tk80fab508 tkbc0c6f42 tk593a0afe tk6c131a2e tke393b777 tkb3a1a1ae",
+   "maiaResponse": "tk3e17a74e tke51d1d04 tk3bd262c4 tk2b3e0835 tk662f3d05 tkaa3b9406 tk8a8aa923 tkd5161cf7 tk0dcffbdf tk342b1376 tk4bedef27 tk15572690 tk4b4648f3 tkc8d62105 tka0f67821 tk38628693 tke2f44313 tka566498c tkb32397cc tk7fae60e7 tke8965c6e tk6f1b94cd tk7b3fead6 tk4f1e861c tk671978f7 tk8f450936 tk42347031 tk744307ae"
+  },
+  {
+   "index": 32,
+   "memberTokenCount": 14,
+   "userMessage": "tk3f8e86ae tk56327445 tk82dae366 tkb444184d tk0cbb11b8 tka663648d tkba487dd4 tk56327445 tk350dbfad tk7427b259 tkba0e1746 tkebba7c5b tk2d0be6de tkc04537c0",
+   "maiaResponse": "tk95251545 tk66384381 tked488dba tk2b3e0835 tk56327445 tk709a5a60 tk6c0913cb tk909e6d82 tk877dbbe4 tk1ac87306 tk7b3fead6 tk014a9812 tka0f67821 tka58a520b tk2cb07221 tk3f9e74aa tkbc38acf4 tk8a1b8afd tk42350352 tk12f0012b tk671978f7 tk92224516 tk32a63deb tkf7cfb753 tkad37348e tk593a0afe tkdf81d531 tkf041a682 tkcd63e3a5 tk055d8446 tk05f29a11 tka0f67821 tkb885e943 tk56327445 tk350dbfad"
+  },
+  {
+   "index": 33,
+   "memberTokenCount": 31,
+   "userMessage": "tkbc38acf4 tk9c8bac6e tk42347031 tk89ca69d8 tkbc38acf4 tka5195146 tkfee82164 tkbc38acf4 tk42347031 tk8a7f235a tka3f94bf4 tk79b56d1b tk8abf0d60 tka137bba1 tk2ec6893f tk1937f8ad tkb3a1a1ae tke393b777 tka9972746 tk7f64770f tk5b2e3ac6 tk412e6ec5 tkaf11190a tk79b56d1b tk67523235 tk986de5b0 tkfcddcf4b tk9cbc4794 tke0d628c4 tk3f8e86ae tkf36202a8",
+   "maiaResponse": "tkb6fa504d tk79b56d1b tk9b3dcc2a tk2b3e0835 tka4513412 tk46e60c43 tk3e17a74e tk0c26be3b tk662f3d05 tkaa3b9406 tkf871a248 tk8a6c9237 tk19dae6bc tk71d6bc33 tk05f29a11 tke9f4200f tk7252afd7 tke3388e74 tka0f67821 tk92224516 tk2cb07221 tk262f2fb0 tkd0509600 tkb9e5318c tke0d628c4 tk100db8a8 tkff3d6cb1 tkb3a1a1ae tk172438ec tk5f46b595 tk05f29a11 tk66850a4d tkcf7c6b05 tk98fc02e2 tk0b6efc91 tke393b777 tk3aabd8fd tkfee82164 tk0a4c85ca"
+  },
+  {
+   "index": 34,
+   "memberTokenCount": 23,
+   "userMessage": "tk9cbc4794 tkcf7c6b05 tk7125359f tk53b1649e tk076f95aa tk7a5ef589 tk152bc991 tk0d35e00f tk69826f07 tke73eba3b tk29d55066 tk068e815e tkc2a9521c tk05f29a11 tk3c3783ec tk05f29a11 tkcd63e3a5 tk9eb86a82 tk068e815e tk2b3e0835 tk9cbc4794 tk9cbc4794 tk752bc52f",
+   "maiaResponse": "tk3e17a74e tkfc766d78 tk076f95aa tk7a5ef589 tk17590365 tk628bfbf0 tkc1982dea tke99e37ad tkec1da3bb tked2bd336 tkd6456464 tk068e815e tk82d3208f tk19a6fd1d tk068e815e tkc2a9521c tkbe8783e1 tkb18e002e tk38573847 tkbc38acf4 tk2d92e81a tkbc38acf4 tk2b3e0835 tk9eb86a82 tk068e815e tk8f9adc4d tk57c7c5c3 tk32a63deb tk068e815e tk37e5b245 tk2b3e0835 tkcf7c6b05 tk98fc02e2 tk662f3d05 tk757edb88 tk8f9adc4d tk9003aff7"
+  },
+  {
+   "index": 35,
+   "memberTokenCount": 57,
+   "userMessage": "tk42347031 tk5534e460 tkfee82164 tkd96fa865 tk80fab508 tkda895e54 tk74d08cd4 tk0d35e00f tkb3a1a1ae tkf4ed4547 tk752f3e0e tkd0e2643e tkb352c1fa tk2e8180a2 tkb46c008c tke73eba3b tk02f1370d tk434412c6 tkdf81d531 tk8422ea14 tke146635a tkb3a1a1ae tk8dacb08e tk05f29a11 tk17cbfe2a tk5d06fbd9 tk8478d1d4 tk7499fc12 tk05f29a11 tkeba9c323 tk17cbfe2a tkdf81d531 tk460bb704 tkd96fa865 tkfee82164 tk2240bf7a tkd96fa865 tkfee82164 tk757edb88 tkcee1907a tkff2be7e9 tk7bd93f4e tkff2be7e9 tk75439053 tkff2be7e9 tk8a8aa923 tkdf81d531 tk9bdedb1a tka1aeb0f5 tkc105bdee tk055d8446 tkf14d0987 tkad37348e tk8f9adc4d tk8a8aa923 tka566498c tk0305b34f",
+   "maiaResponse": "tkcadf6fdd tk4cdec5c2 tkcf7c6b05 tk7125359f tk1ac87306 tk7125359f tk055d8446 tk2240bf7a tk74d08cd4 tk0d35e00f tk752f3e0e tkb352c1fa tk4c2f1212 tkbf5dea17 tkc105bdee tkac95666c tkd4850aa4 tka566498c tk0305b34f tk3e17a74e tk0c26be3b tk3e17a74e tkb6fa504d tka2367b68 tk6b3dc0f3 tk99d0f33b tk05f29a11 tk014a9812 tke27b7638 tk98eba6c7 tk66850a4d tkfa5019ac"
+  },
+  {
+   "index": 36,
+   "memberTokenCount": 70,
+   "userMessage": "tk74d08cd4 tk9c8bac6e tk74d08cd4 tk3f8e86ae tkc646ef2f tk2b3e0835 tk17cbfe2a tkbedc1883 tk0c7ff22b tk53668860 tk159b7263 tk7125359f tk152bc991 tk6b302cc4 tkb6d4b0aa tka0ff14f4 tkda895e54 tkc311a587 tk6fcfec91 tk3a0322e7 tke0ffaa19 tkd61c6d26 tk8a7f235a tk77e41b53 tk6b302cc4 tkb6d4b0aa tk9db2ef43 tk078bb9ff tk61dc752b tk8b55da1c tk159b7263 tka833d791 tk4677a478 tk61dc752b tk6fcfec91 tka0ff14f4 tk0586e1a2 tk4e4bd4b9 tk0586e1a2 tk8f450936 tk7a5ef589 tkaf790ead tk775923ba tka26d53a1 tk40a312d6 tk8d264a94 tk89e55d16 tk3203b751 tk8dacb08e tk014a9812 tkc996bd7e tkfedce052 tke90b1e0d tk53668860 tk7a5ef589 tk0586e1a2 tk28b3be4b tk7e4b60e0 tkbc0c6f42 tk8f450936 tk2240bf7a tk75905bed tk24065df2 tk8dbcbf99 tk4588c0e1 tke32ddbd3 tk58d01f44 tk48c24f95 tkb3a56e48 tk64e5985b",
+   "maiaResponse": "tk98fc02e2 tk3a497e2a tk662f3d05 tk365cb6e4 tk8a7f235a tk44437129 tk64e77e6b tk6f1287a3 tk82d11ac8 tk11500e34 tk6500e697 tk6bc3f999 tk0912f7d4 tk2240bf7a tka137bba1 tk2ec6893f tkbf5dea17 tkc2d8c65c tke8965c6e tk58b88a6d tkf1ceb894 tk2b3c9dc2 tkc996bd7e tk3e974e34 tk9b84a486 tk0741c269 tk2b3e0835 tkbaeb59d2 tk28fa1911 tkfc766d78 tkf14d0987 tke584d0d0 tk80e5fc0c tk9a74a3f6 tk7c370f40 tk11500e34 tkc82a7016 tk68f08747 tk48c24f95 tk37cefc8b tk4d0efb1e tk7a5ef589"
+  },
+  {
+   "index": 37,
+   "memberTokenCount": 5,
+   "userMessage": "tkc56210e7 tk365cb6e4 tk670b990f tkfa37e78c tkf7133e5a",
+   "maiaResponse": "tkc56210e7 tkc7c8b05b tkdf262207 tk8c92e460 tk6ad2bc09 tkbc38acf4 tk2bfa633c tkbc38acf4 tk2b3e0835 tkcc3a7d5d tk437ae379 tk7a5ef589 tk91e64a0c tkfa37e78c tkf7133e5a tk078bb9ff tk4c2f1212 tk670b990f"
+  },
+  {
+   "index": 38,
+   "memberTokenCount": 8,
+   "userMessage": "tk7fae60e7 tk904dcebe tkaf790ead tk1e1c09b0 tkcc3a7d5d tkdb3f6617 tk32a63deb tk26974f0c",
+   "maiaResponse": "tk152bc991 tk0a2ce41b tk32a63deb tk6528b185 tkfee82164 tk8f9adc4d tk7d87917f tkdb3f6617 tka566498c tk1e1c09b0 tk91851674 tk3316ed0f tk7a5ef589 tk078bb9ff tk55b9d495 tkfee82164 tkdf81d531"
+  },
+  {
+   "index": 39,
+   "memberTokenCount": 5,
+   "userMessage": "tkaf790ead tk460bb704 tk2b3e0835 tk10672046 tk48146d3f",
+   "maiaResponse": "tk7d87917f tka566498c tk32a63deb tk6528b185 tkfee82164 tk8f9adc4d tkbc38acf4 tk0a2ce41b tk06ec5fc5 tk152bc991 tk01b262c8 tkc6c7ff2d tkaf790ead tke8965c6e tk046ec2a4 tkaab899e7 tkb3a1a1ae tk19c6f214 tk953ef8d5"
+  },
+  {
+   "index": 40,
+   "memberTokenCount": 4,
+   "userMessage": "tkaf790ead tk1e1c09b0 tk3a497e2a tk7eac0b05",
+   "maiaResponse": "tk7d87917f tka566498c tk32a63deb tk6528b185 tkfee82164 tk8f9adc4d tk0a2ce41b tkf591f071 tkaa49707a tk57c7c5c3 tk551b4a00 tk3316ed0f tk7a5ef589 tk078bb9ff tk55b9d495 tk6ad2bc09 tkffcffc20"
+  }
+ ],
+ "displacedRange": [
+  0,
+  37
+ ]
+}
