@@ -1,0 +1,130 @@
+# `RELATIONAL-DISCOURSE-MEMORY-01` — PREPARED CHARTER
+
+**Date** 2026-09-15 · ⛔⛔ **PREPARED, NOT OPENED.** ⛔ Research lane, ⛔ **not an implementation
+lane** · no design · no schema · no graph · no repair authority.
+**Opening requires an explicit founder act.**
+
+⭐ **Supersedes `RELATIONAL-MEMORY-01`** (prepared, never opened, kept verbatim as superseded).
+
+---
+
+## 1 · THE SHIFT
+
+> ⭐⭐ **Stop treating memory mainly as stored content, and study how DISCOURSE creates RELATIONS
+> among remembered things.**
+
+**Question:**
+
+> **Which relational distinctions from discourse, pragmatics and applied linguistics are
+> necessary for persistent conversational memory, and which of those relations does AIN already
+> preserve?**
+
+**Flow:** existing AIN relation census → applied-linguistics prior art → relation taxonomy →
+map overlaps/gaps → counterexamples from **real continuity failures** → minimum candidate
+grammar → founder adjudication → **STOP.** ⛔ No implementation step.
+
+**Required reads:** Centering Theory · discourse deixis & anaphora · **bridging** · Discourse
+Representation Theory · common ground / grounding · discourse relations · conversational repair ·
+information structure.
+
+⭐ **The emerging claim:** *MAIA may already have substantial memory content and substantial
+governance, while lacking the discourse-relational layer that tells remembered things how they
+belong together.*
+
+⭐ And the connection to the geometry direction: **the memory objects are the nodes; applied
+linguistics has spent decades studying the typed relations among them.** ⭐ That is prior art to
+inherit **before** inventing a relational grammar of our own.
+
+---
+
+## 2 · ⭐⭐ BRIDGING — and what it says about the mechanism we just closed
+
+Coreference recovers by **identity**: *"Kelly saw a cedar. **It** was beautiful."*
+Bridging recovers by **relation**: *"Kelly entered a house. **The kitchen** was dark."* — the
+kitchen was never mentioned, and is understood through `house → has-part → kitchen`.
+
+⭐⭐ **`C1-BRIDGE` is named for the one thing it does not do.** It matches tokens — recovery by
+**identity**. The P1 result is the proof: it reached the marker **only because the member
+restated it**, which is coreference, ⛔ not bridging. ⭐ *The name promised the mechanism the
+lane then discovered to be missing.*
+
+⭐⭐⭐ **And this reframes the first-ask case precisely.** A member who asks once and never
+restates the object leaves **no identity to match** — so `FIRST-ASK-OPAQUE-MEMORY-01` is, in
+linguistic terms, **a bridging problem**. ⭐ That moves it from *an unsolved MAIA problem* to *an
+instance of a studied problem with its own literature and benchmarks* — ⛔ which is orientation,
+⛔ **not a solution, and not evidence any of it works.**
+
+⭐ Generalized for AIN — ⛔ candidate vocabulary only, ⛔ nothing ratified:
+
+```text
+session → contains → episode          correction → revises → interpretation
+episode → contains → phrase           symbol → recurs_in → episode
+phrase → spoken_by → member           decision → arose_from → conversation
+theme → elaborated_by → later insight statement → contrasts_with → earlier statement
+```
+
+> ⭐⭐ **association = a discourse relation that makes one thing accessible from another** —
+> ⛔ not semantic proximity.
+
+---
+
+## 3 · OBLIGATIONS CARRIED FORWARD FROM THE SUPERSEDED CHARTER
+
+⛔ **All three survive the merge unchanged in force.**
+
+### 3.1 ⚠️ THE LANE COLLISION IS NOW RESOLVED ONE WAY AND STILL OPEN THE OTHER
+
+⭐ `RELATIONAL-MEMORY-01` is **merged into this lane** — that collision is closed. ⚠️
+`ANTECEDENT-IDENTITY-01` remains prepared, and its question is **one edge of this grammar**
+(`REFERS_TO`). ⛔ **Still undecided, and still to be decided before either opens:**
+
+```text
+(a) this lane is the PARENT; ANTECEDENT-IDENTITY-01 opens inside it as REFERS_TO
+(b) ANTECEDENT-IDENTITY-01 stays NARROW and opens FIRST; this census DEFERS
+    REFERS_TO to it and does not re-adjudicate it
+```
+
+### 3.2 ⚠️ CITATIONS — and ⭐ a pattern worth noticing
+
+⛔ The literature arrived from **external research passes** (`utm_source=chatgpt.com`); ⛔ **none
+verified in-session.** But the corroboration divides cleanly:
+
+```text
+⭐ corroborable from training knowledge — the CANONICAL, load-bearing prior art
+     Centering Theory (Grosz · Joshi · Weinstein, Computational Linguistics 1995)
+     Discourse Representation Theory (SEP) · bridging-resolution survey (COLING 2020)
+     CODI-CRAC shared task on anaphora / bridging / discourse deixis · Apple ReALM
+⚠️ NOT corroborable — every one is a 2025/2026 venue
+     GUMBridge (LREC 2026) · common-ground survey (2025) · Associa · MemORAI ·
+     EventRelBench · the TACL relational-memory work
+```
+
+⭐⭐ **The pattern is itself reassuring: the foundations this lane rests on are the old,
+checkable ones. The unverifiable citations are all recent and none is load-bearing.** ⛔ They
+must still be verified against their venues or dropped — ⛔ an unverified citation never
+licenses a design decision.
+
+### 3.3 ⭐⭐ THE GRAMMAR IS NOT OPEN DESIGN SPACE
+
+Governed already: `WAS_INFERRED_BY` (derived stays visibly derived · `N1` origin) ·
+`WAS_CORRECTED_BY` (**R7b**) · `SUPERSEDES` (succession carried by the successor;
+`superseded_by` **derived, never stored**) · `REFERS_TO` (`CONTINUITY-REMAINDER-01`).
+
+⛔⛔ And **`IS_WITHHELD_FROM` is REFUSED** — a stored confident negative, already adjudicated by
+the disclosure-receipts lane: *no `withheld` state; it would assert a negative the database
+cannot prove.* ⭐ *A relation is not available merely because it is nameable.*
+
+---
+
+## 4 · STANDING
+
+```text
+lane ............................. ⛔ PREPARED · NOT OPENED
+supersedes ....................... RELATIONAL-MEMORY-01 (never opened, kept verbatim)
+parent/child with ANT-IDENT-01 ... ⚠️ UNDECIDED — settle BEFORE either opens (§3.1)
+citations ........................ ⚠️ canonical corroborable · recent UNVERIFIED (§3.2)
+grammar .......................... ⛔ NOT OPEN DESIGN SPACE (§3.3) · IS_WITHHELD_FROM REFUSED
+bridging reframe ................. ⭐ ORIENTATION ONLY — ⛔ not a solution
+design · schema · graph .......... ⛔ NOT AUTHORIZED
+production ....................... e57ca1baa · UNTOUCHED
+```

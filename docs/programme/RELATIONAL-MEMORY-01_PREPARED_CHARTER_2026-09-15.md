@@ -1,4 +1,10 @@
-# `RELATIONAL-MEMORY-01` — PREPARED CHARTER (name provisional)
+# `RELATIONAL-MEMORY-01` — PREPARED CHARTER — ⚠️⚠️ **SUPERSEDED**
+
+> ⚠️⚠️ **SUPERSEDED 2026-09-15 by `RELATIONAL-DISCOURSE-MEMORY-01`**, which has the same first
+> act, a sharper question and better-founded prior art. ⛔ **Never opened.** ⛔ Kept verbatim
+> below — ⛔ not deleted, ⛔ not rewritten — because its **§2 obligations survive the merge and
+> are carried forward**, and because the name was provisional and the merge is the reason.
+> **Do not open this lane.**
 
 **Date** 2026-09-15 · ⛔⛔ **PREPARED, NOT OPENED.** ⛔ Read-only census when opened · ⛔ no design ·
 ⛔ no schema · ⛔ no graph · ⛔ no repair authority. **Opening requires an explicit founder act.**
