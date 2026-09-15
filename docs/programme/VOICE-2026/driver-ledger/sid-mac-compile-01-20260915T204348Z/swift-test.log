@@ -1,0 +1,16 @@
+[0/1] Planning build
+Building for debugging...
+[0/6] Write sources
+[1/6] /private/tmp/sid-mac-compile-01-f0c6ae13b88db29cbd1537bec585d98376c8bc4f/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.derived/runner.swift
+[2/6] Write sources
+[3/6] Write swift-version--58304C5D6DBC2206.txt
+[5/8] Emitting module VoiceKernelTests
+[6/8] Compiling VoiceKernelTests PureLogicTests.swift
+/private/tmp/sid-mac-compile-01-f0c6ae13b88db29cbd1537bec585d98376c8bc4f/ios/VoiceKernel/Tests/VoiceKernelTests/PureLogicTests.swift:485:13: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+483 |         XCTAssertNil(SourceSignature.modulationIndex([Double](repeating: 0, count: 25), frameSeconds: dt), "no energy → no index (journalled as -)")
+484 |         // deterministic fluctuation (a 7 Hz ripple + drift) stays well under the 0.9 witness threshold
+485 |         let ripple = (0..<25).map { k in 0.5 + 0.3 * sin(2.0 * Double.pi * 7.0 * Double(k) * dt) + 0.01 * Double(k) }
+    |             `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+486 |         XCTAssertLessThan(SourceSignature.modulationIndex(ripple, frameSeconds: dt)!, 0.9)
+487 |         // 26 frames (a 1.04 s tick) evaluates over frame time, not a fixed 25-point bin
+error: fatalError
