@@ -20,6 +20,7 @@
  */
 
 import { query, transaction } from '@/lib/db/postgres';
+import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
 import { openChainWithExecutor } from '../proposalChain/store';
 import { readProposalWork } from '../proposalChain/proposalWork';
 import type { VersionAuthor } from '../proposalChain/contract';
@@ -35,7 +36,28 @@ export interface OpenEditorialInput {
   readonly sectionId: string;
 }
 
-export type OpenEditorialRefusal = 'section_not_found' | 'chain_refused';
+/**
+ * ⭐ EDITORIAL-LOCUS-ALIGNMENT-01 · PHASE B — two refusals where the passage
+ * cannot be named.
+ *
+ * ⛔ `section_unprojectable` — the stored slice is not in the shape this cut
+ * knows how to project, so there is no editable passage to point at. ⭐ Refusing
+ * to OPEN is the honest answer: a relationship whose locus can never be located
+ * would later report a manuscript fact that is not true.
+ *
+ * ⚠️ `section_has_no_body` IS A JUDGMENT CALL, FLAGGED. A section that is only a
+ * heading projects to the empty string, and `occurrences(body, '')` is 0 by the
+ * exact-text law's own zero-length guard — so such a chain could never match,
+ * ever, and would reproduce exactly the defect this act closes. It is named
+ * separately rather than folded into the one above, because *cannot be
+ * projected* and *projects to nothing* are two different facts about the
+ * writer's page.
+ */
+export type OpenEditorialRefusal =
+  | 'section_not_found'
+  | 'section_unprojectable'
+  | 'section_has_no_body'
+  | 'chain_refused';
 
 export type OpenEditorialResult =
   | { readonly ok: true; readonly threadId: string; readonly chainId: string }
@@ -53,16 +75,30 @@ export async function openEditorialRelationship(
   try {
     return await transaction(async (tx) => {
       /* ⭐ THE LOCUS, DERIVED — and scoped to this member in the SQL. */
+      /* ⭐ EDITORIAL-LOCUS-ALIGNMENT-01 · PHASE B — the heading joins the read.
+         ⛔ It is not wanted for display; it is the only way to PROJECT, and this
+         statement had no access to it before. */
       const s = await tx.query<{
-        draft_id: string; manuscript_id: string; revision_count: number; text: string;
+        draft_id: string; manuscript_id: string; revision_count: number;
+        text: string; heading: string | null;
       }>(
-        `SELECT s.draft_id, d.manuscript_id, d.revision_count, s.text
+        `SELECT s.draft_id, d.manuscript_id, d.revision_count, s.text, ms.heading
            FROM manuscript_draft_sections s
            JOIN manuscript_working_drafts d ON d.id = s.draft_id
+           LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
           WHERE s.id = $1 AND d.member_id = $2`,
         [input.sectionId, memberId]);
       if (s.rows.length === 0) throw new OpenRefused('section_not_found');
       const row = s.rows[0]!;
+
+      /* ⭐⭐ THE PROJECTION, THROUGH THE ONE AUTHORITY THAT OWNS IT.
+         ⛔ No heading is stripped by assumption here, and no prefix is guessed:
+         `splitStoredSection` is the single definition of what the member's
+         editable body is, and it is the same function the writing surface, the
+         section writer and all three authorization reads already use. */
+      const split = splitStoredSection(row.text, row.heading);
+      if (!split) throw new OpenRefused('section_unprojectable');
+      if (split.body.length === 0) throw new OpenRefused('section_has_no_body');
 
       const chain = await openChainWithExecutor(tx, memberId, {
         locus: {
@@ -70,8 +106,23 @@ export async function openEditorialRelationship(
           draftId: row.draft_id,
           baseVersion: Number(row.revision_count),
           targetSectionId: input.sectionId,
-          /* ⭐ The writer's own wording, as it stands right now. */
-          expectedText: row.text,
+          /* ⭐⭐ THE PROJECTED PASSAGE — the writer's own wording as it stands
+             right now, in the coordinate space every consumer reads.
+
+             ⚠️ IT WAS `row.text`, THE STORED SLICE, AND THAT WAS THE DEFECT.
+             `ProposalLocus.expectedText` is defined as *the exact characters
+             this chain may replace, required to occur exactly once at the
+             target*, and all six consumers compute that against
+             `splitStoredSection(...).body`. With no heading the two coincide,
+             which is why it passed every test for as long as it did; with a
+             heading `occurrences` was 0 and the member was told she had written
+             there since — ⛔ about a passage she had not touched.
+
+             ⛔ Nothing downstream moved to accommodate this. The consumers, the
+             `projected_section_body` coordinate space and `stale_base` are all
+             unchanged: this is the one producer being brought to the contract
+             it was already writing into. */
+          expectedText: split.body,
         },
       });
 

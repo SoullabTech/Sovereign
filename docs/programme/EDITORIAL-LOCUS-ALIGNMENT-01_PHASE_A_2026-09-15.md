@@ -194,3 +194,115 @@ refusal classification         ⛔ NOT TOUCHED
 adoption merge                 ⛔ NOT AUTHORIZED
 production                     UNTOUCHED
 ```
+
+---
+---
+
+# PHASE B — THE PRODUCER WRITES THE PASSAGE
+
+**Branch** `claude/editorial-locus-alignment-01` · **base** canonical `212f417da`.
+⛔ No merge · ⛔ no deploy · ⛔ no migration · ⛔ no chain rewritten.
+
+## B0 · RESULT
+
+```
+behavioural witness   21 passed · 0 failed
+falsification control  8 passed · 8 failed  against the canonical producer
+ship typecheck        229 vs baseline 239 · 0 regressions
+WS + manuscript suites 4 failed / 16 tests — IDENTICAL to canonical, all pre-existing
+check:no-supabase     clean
+```
+
+## B1 · THE REPAIR — ONE PRODUCER, BROUGHT TO ITS OWN CONTRACT
+
+`lib/manuscript/editorialRuntime/thread.ts`, and nothing else:
+
+```
++ LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id     the heading
++ const split = splitStoredSection(row.text, row.heading);            the projection
++ if (!split) throw new OpenRefused('section_unprojectable');
++ if (split.body.length === 0) throw new OpenRefused('section_has_no_body');
+- expectedText: row.text,
++ expectedText: split.body,
+```
+
+⛔ **Nothing downstream moved to accommodate it.** The six consumers, the
+`projected_section_body` coordinate space, `ProposalLocus`, `ChangeLocator` and
+`stale_base` are all untouched. ⭐ The heading is not stripped by assumption:
+`splitStoredSection` is the single authority on what the member's editable body
+is, and it is the same function the writing surface, the section writer and all
+three authorization reads already use.
+
+⚠️ **`section_has_no_body` IS A JUDGMENT CALL, FLAGGED.** A section that is only
+a heading projects to `''`, and `occurrences(body, '')` is 0 by the exact-text
+law's own zero-length guard — so such a chain could never match, ever, and would
+reproduce exactly the defect this act closes. It is named **separately** from
+`section_unprojectable` rather than folded in, because *cannot be projected* and
+*projects to nothing* are two different facts about the writer's page. ⛔ Offered
+for ruling rather than treated as settled.
+
+## B2 · THE WITNESS — 21/21, with a permanent headed fixture
+
+⭐ Every green test this defect survived used a heading-less section, so the
+headed shape is now a **first-class fixture** rather than an afterthought.
+
+```
+L1 · HEADED SECTION
+  L1b  ⭐⭐ the frozen locus is the PROJECTED passage
+  L1c  ⛔ and it carries no heading prefix
+  L1d  "This passage" shows the passage, not the stored slice
+  L1e  ⛔ the STORED slice on disk is untouched and still carries its heading
+  L1e2 and the chain still names the same section
+  L1f  ⭐⭐ authorization SUCCEEDS on a headed section
+  L1g  the binding's expected text is the projected passage
+  L1h  execution applies
+  L1i  ⭐ the heading survives EXACTLY ONCE, not duplicated
+  L1j  ⛔ the other section was untouched
+  L1k  the draft advanced exactly once
+
+L2 · UNHEADED SECTION — ⛔ behaviour unchanged (a–e)
+L3 · UNPROJECTABLE  — refused, and ⭐⭐ NO chain created: the act is whole or nothing
+L4 · HEADING WITH NO BODY — refused, no chain created
+```
+
+⚠️ **One assertion was wrong and is recorded as wrong.** A first draft asserted
+`view.sectionLabel === 'Chapter Ten'` and failed with `null`. ⭐ The witness was
+wrong, not the code: `sectionLabel` is ADOPTION-01's addition to the thread read
+and does not exist on this branch. ⛔ This act must not depend on another act's
+field, so it was replaced by L1e/L1e2 — assertions that are load-bearing *here*:
+**the repair changed what is FROZEN, never what is STORED.**
+
+## B3 · ⭐ THE CONTROL — the witness is lethal
+
+Same witness, canonical's `thread.ts` restored in place:
+
+```
+repaired   21 passed · 0 failed
+canonical   8 passed · 8 failed
+
+L1b  got ["Chapter Ten\n\nThe spiral is not a circle, fixated on its own return."]
+L1f  authorization SUCCEEDS on a headed section → false
+L3b  NO chain was created → got 1
+```
+
+⭐⭐ **And L2 passes on BOTH runs.** That is the *"prove existing consumers and
+write path unchanged"* obligation discharged behaviourally rather than by
+inspection: the repair changed the headed case and left the unheaded case
+byte-for-byte as it was. The file was restored byte-identical afterwards
+(copy-aside, ⛔ never `git checkout --`).
+
+## B4 · STANDING
+
+```
+producer aligned            ✅ one file, five lines
+consumers                   ⛔ UNCHANGED
+stale_base                  ⛔ UNCHANGED
+ProposalLocus contract      ⛔ UNCHANGED
+ChangeLocator space         ⛔ UNCHANGED
+existing chains             ⛔ NOT REWRITTEN — not one row touched
+section_has_no_body         ⚠️ judgment call, flagged for ruling
+
+merge                       ⛔ NOT AUTHORIZED
+adoption merge              ⛔ NOT AUTHORIZED
+production                  UNTOUCHED
+```
