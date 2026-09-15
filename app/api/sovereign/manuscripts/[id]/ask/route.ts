@@ -437,6 +437,9 @@ export async function POST(
 
   const outcome = await askMaia(
     {
+      /* ⭐ ASK-WORK-ANCHOR-01 · B2 — the context is a discriminated union now,
+         and this lane says which kind it is. ⛔ Every other field is unchanged. */
+      kind: 'proposal' as const,
       anchor: check.anchor,
       interpretation: reading.interpretation,
       evidence: reading.evidence,
