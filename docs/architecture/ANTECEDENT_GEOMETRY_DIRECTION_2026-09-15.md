@@ -214,6 +214,49 @@ capability, and ⛔ no member-facing surface follows from it.
 
 ---
 
+## 6A · THE NOTE, AND THREE SESSION OBSERVATIONS ON IT
+
+⭐ The founder's preliminary note is preserved **clean and verbatim** at
+`docs/research/relational-geometry/RELATIONAL_GEOMETRY_PRELIMINARY_NOTE_2026-09-15.md`, so it
+can become a paper section without carrying working annotation. ⛔ **These three observations are
+session notes on the note — they are deliberately NOT in it.**
+
+### 6A.1 ⭐ §4.2 IS NOW SUPERSEDED BY THE NOTE — no drift between the two documents
+
+The note's §5 states the decisive design independently and better: **hold the utterance fixed
+and vary the history.** ⭐ That is the same point as §4.2 above, arrived at without it. **The
+note is the statement of record for that design; §4.2 stands as its working antecedent.**
+
+### 6A.2 ⭐⭐ TWO OF THE SIX RELATION TYPES ARE ALREADY GOVERNED LAW — checked, not supposed
+
+Note §2 lists six candidate relational types. ⭐ **Two of them are not open design space; the
+project has already ratified law over them:**
+
+| relation type in note §2 | existing ratified law |
+| --- | --- |
+| *"this turn **corrects** that earlier interpretation"* | **R7b / Authority × Time** — member statement overrides **as present self-report**, ⛔ does not rewrite history; implicit contradiction → **question, not transition** (`docs/research/human-experience/frameworks/memory/AUTHORITY_X_TIME_2026-09-06.md`) |
+| *"this turn contains an **inference made by MAIA**"* | **derived stays visibly derived** (same ruling) · and `N1`'s **origin** law, which survived the P1 re-adjudication undisturbed |
+
+⭐ **This cuts two ways and both are worth keeping.** It is evidence the typology is **not
+arbitrary** — arrived at from continuity, it lands on distinctions the memory lane ratified
+independently. ⚠️ And it is a **constraint**: any future typed-relation instrument **must not
+contradict those rulings**, and ⛔ a relational type is not open merely because this note names
+it.
+
+### 6A.3 ⚠️ THE NOTE DOES NOT YET CARRY THE ACCESS CONSTRAINT — §4.3
+
+Note §5 says the structure *"may not be shared across models."* ⭐ True, and **narrower than the
+situation.** §4.3 above is the harder fact: MAIA's serving intelligence is **Claude via API,
+which exposes no internal states**, so the experiment is runnable **only against a local
+open-weights model** — ⛔ **a different mind from the one that answers members.**
+
+⚠️ **This should be carried into the note before it becomes a paper section.** ⛔ Not because it
+closes the inquiry — it does not — but because it is **the constraint most likely to be
+discovered late**, after a result exists and is hard to set down. ⭐ Stated early it is a
+scoping fact; ⛔ discovered late it is a retraction.
+
+---
+
 ## 7 · CLASSIFICATION AND BOUNDARY
 
 ⭐ If opened, this belongs in the **R&D lane's** epistemic frame (epistemic kind × product
@@ -231,6 +274,9 @@ relation 2 isolation .............. ⚠️ needs history variation, not probe va
 design-grammar observations ....... ⭐ APPENDED (§5) · ⛔ prior art, never repair authority
 elemental geometry ................ ⭐ PRESERVED (Cat 1, §6) · ⛔ hypothesis source only
 nodes-without-geometry finding .... ⭐ MEASURED in two layers (§6.1) · ⛔ not authorization
+preliminary note .................. ⭐ PRESERVED CLEAN · docs/research/relational-geometry/
+two relation types ................ ⚠️ ALREADY GOVERNED LAW (§6A.2) · ⛔ not open design space
+access constraint in the note ..... ⚠️ OWED before it becomes a paper section (§6A.3)
 CONTINUITY-REMAINDER-01 ........... ⛔ UNCHANGED — repair still not authorized
 FIRST-ASK-OPAQUE-MEMORY-01 ........ ⛔ UNOPENED · PRESERVED
 production ........................ e57ca1baa · UNTOUCHED
