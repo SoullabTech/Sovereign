@@ -1,0 +1,19 @@
+./SID-MAC-COMPILE-02.manifest.sha256: OK
+./build-results.txt: OK
+./diff-after.txt: OK
+./gate.log: OK
+./head-after.txt: OK
+./head.txt: OK
+./identity.txt: OK
+./source-tests-passed-count.txt: OK
+./status-after.txt: OK
+./status-before.txt: OK
+./swift-build.log: OK
+./swift-test.log: OK
+./toolchain.txt: OK
+./xcodebuild-signed.log: OK
+./xcodebuild-unsigned.log: OK
+./xcodegen.log: OK
+seal-file sha256 d835bebc36a86be7d8640fdbdd68b36eca9b26cce1faaaec70b3a12c3c93e2d3 (expected d835bebc36a86be7d8640fdbdd68b36eca9b26cce1faaaec70b3a12c3c93e2d3)
+self-entry preserved: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./SHA256SUMS.compile
+verified-excluding-self: 16 OK

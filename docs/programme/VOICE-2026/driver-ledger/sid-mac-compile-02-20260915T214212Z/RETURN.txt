@@ -1,0 +1,11 @@
+ACT SID-MAC-COMPILE-02
+STAMP 20260915T214212Z
+RESULT PASS final-echo-reached (founder ruling §10.13)
+SUBJECT faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
+OUT /private/tmp/sid-mac-compile-02-out-20260915T214212Z
+COMPILE_SEAL d835bebc36a86be7d8640fdbdd68b36eca9b26cce1faaaec70b3a12c3c93e2d3 (17 entries; self-entry preserved; 16 verified)
+CARRIER_ATTEMPT_1 STOP checker-defect (self-entry) — worktree preserved as residue
+INSTALL 0
+LAUNCH 0
+SAMPLE 0
+TRANSPORT Mac Studio terminal directly

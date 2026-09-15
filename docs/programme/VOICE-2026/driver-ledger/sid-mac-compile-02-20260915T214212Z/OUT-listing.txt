@@ -1,0 +1,22 @@
+total 472
+drwxr-xr-x   19 soullab  wheel     608 Sep 15 17:42 .
+drwxrwxrwt  483 root     wheel   15456 Sep 15 17:56 ..
+-rw-r--r--    1 soullab  wheel      44 Sep 15 17:42 build-results.txt
+-rw-r--r--    1 soullab  wheel     118 Sep 15 17:42 diff-after.txt
+-rw-r--r--    1 soullab  wheel   19573 Sep 15 17:42 gate.log
+-rw-r--r--    1 soullab  wheel      41 Sep 15 17:42 head-after.txt
+-rw-r--r--    1 soullab  wheel      41 Sep 15 17:42 head.txt
+-rw-r--r--    1 soullab  wheel    1196 Sep 15 17:42 identity.txt
+-rw-r--r--    1 soullab  wheel    1458 Sep 15 17:42 SHA256SUMS.compile
+-rw-r--r--    1 soullab  wheel     615 Sep 15 17:42 SID-MAC-COMPILE-02.manifest.sha256
+-rw-r--r--    1 soullab  wheel       9 Sep 15 17:42 source-tests-passed-count.txt
+-rw-r--r--    1 soullab  wheel      45 Sep 15 17:42 status-after.txt
+-rw-r--r--    1 soullab  wheel       0 Sep 15 17:42 status-before.txt
+-rw-r--r--    1 soullab  wheel     643 Sep 15 17:42 swift-build.log
+-rw-r--r--    1 soullab  wheel   10875 Sep 15 17:42 swift-test.log
+-rw-r--r--    1 soullab  wheel     144 Sep 15 17:42 toolchain.txt
+-rw-r--r--    1 soullab  wheel   23777 Sep 15 17:42 xcodebuild-signed.log
+-rw-r--r--    1 soullab  wheel  118407 Sep 15 17:42 xcodebuild-unsigned.log
+-rw-r--r--    1 soullab  wheel     222 Sep 15 17:42 xcodegen.log
+-rw-r--r--  1 soullab  wheel  6177 Sep 15 17:42 /private/tmp/sid-mac-compile-02-transcript-20260915T214212Z.log
+-rw-r--r--  1 soullab  wheel  3692 Sep 15 17:42 /private/tmp/sid-mac-compile-02.sh

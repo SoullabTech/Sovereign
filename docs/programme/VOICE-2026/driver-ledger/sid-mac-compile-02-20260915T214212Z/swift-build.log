@@ -1,0 +1,15 @@
+Building for debugging...
+[0/2] Write sources
+[1/2] Write swift-version--58304C5D6DBC2206.txt
+[3/13] Compiling VoiceKernel StateProjection.swift
+[4/13] Compiling VoiceKernel Journal.swift
+[5/13] Compiling VoiceKernel KernelState.swift
+[6/13] Compiling VoiceKernel VoiceKernel.swift
+[7/13] Compiling VoiceKernel RecoveryPolicy.swift
+[8/13] Compiling VoiceKernel Replay.swift
+[9/13] Compiling VoiceKernel RouteComparison.swift
+[10/13] Compiling VoiceKernel HealthSupervisor.swift
+[11/13] Compiling VoiceKernel AudioSessionAuthority.swift
+[12/13] Emitting module VoiceKernel
+[13/13] Compiling VoiceKernel AudioGraph.swift
+Build complete! (4.00s)
