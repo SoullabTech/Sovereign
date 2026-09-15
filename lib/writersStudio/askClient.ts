@@ -61,15 +61,39 @@ export async function ask(input: {
   question: string;
   anchor?: AskAnchor;
   threadId?: string;
+  /**
+   * ⭐⭐ WHERE SHE PRESENTLY IS — ⛔ NEVER WHO THE CONVERSATION BELONGS TO.
+   *
+   * MAIA-CONVERGENCE-01 · D2. The server has read `body.sectionId` since
+   * ASK-WORK-ANCHOR-01 B3 and no client could send it, so the law *"moving from
+   * one passage to another changes this and nothing else"* was provable on the
+   * route and unreachable from any surface. This field closes that, and closes
+   * only that.
+   *
+   * ⛔ IT IS NOT PART OF THE ANCHOR. It is sent as a sibling of `anchor` /
+   * `threadId`, never merged into the anchor object — a `work` anchor admits
+   * exactly the key `on`, and the route refuses one carrying any other. Folding
+   * a locus into the anchor would make scrolling a change of relationship, which
+   * is the single thing B3's ruling forbade.
+   *
+   * ⛔ AND IT TRAVELS ON A RESUMED TURN TOO, deliberately: a thread continued
+   * from Chapter 9 must be able to say so. The thread's identity is untouched by
+   * it, because identity comes from `threadId`, and the server never re-reads
+   * the anchor of a resumed thread.
+   */
+  sectionId?: string;
 }): Promise<AskOutcome> {
   try {
     const res = await apiFetch(url(input.manuscriptId), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(
-        input.threadId
-          ? { threadId: input.threadId, question: input.question }
-          : { anchor: input.anchor, question: input.question }),
+      body: JSON.stringify({
+        ...(input.threadId
+          ? { threadId: input.threadId }
+          : { anchor: input.anchor }),
+        question: input.question,
+        ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+      }),
     });
     const json = await res.json().catch(() => ({} as Record<string, unknown>));
     if (res.status >= 400) {

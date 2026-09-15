@@ -235,13 +235,57 @@ describe('the room opens a relationship from a gesture, never from a render', ()
   });
 });
 
-describe('false is the existing room, not a degraded one', () => {
+describe('⭐⭐ SUPERSEDED — the flag gates the mode, never MAIA', () => {
   const client = strip(read(CLIENT));
 
-  it('still mounts StudioConversation when the flag is off', () => {
-    expect(client).toMatch(
-      /editorialEnabled \? \([\s\S]*?\) : \([\s\S]{0,400}<StudioConversation/,
-    );
+  /**
+   * ⭐ WHAT THIS BLOCK USED TO SAY, AND IT WAS RIGHT WHEN IT SAID IT:
+   *
+   *     `false is the existing room, not a degraded one`
+   *     `still mounts StudioConversation when the flag is off`
+   *
+   * When ordinary conversation was ephemeral and editorial was the only durable
+   * relationship, an either/or was the honest arrangement, and asserting that
+   * `false` kept the room whole was the right protection.
+   *
+   * ⛔ IT IS THE WRONG PROTECTION NOW. `ASK-WORK-ANCHOR-01` made the ordinary
+   * conversation durable, so a flag that removed it in order to offer the
+   * passage relationship would be trading one mode of MAIA's presence for
+   * another. Superseded by MAIA-CONVERGENCE-01 · CANVAS, whose law is:
+   *
+   *     Turning editorial off removes the EDITORIAL MODE; it does not remove or
+   *     degrade MAIA's ordinary relationship to the Work.
+   *
+   * ⛔ AND THE FLAG IS NOT REPURPOSED into a generic "new MAIA" switch — it
+   * gates one capability, the exact-passage relationship, and this block is
+   * where someone would quietly widen it.
+   */
+
+  it('⭐⭐ mounts the ordinary conversation under BOTH settings of the flag', () => {
+    const panel = client.slice(client.indexOf('conversationOpen && work && manuscript'));
+    const region = panel.slice(0, panel.indexOf('<MaiaColumn'));
+    expect(region).toContain('<WorkConversation');
+    /* ⚠️⚠️ THIS ASSERTION WAS NOT LETHAL AND A MUTANT PROVED IT. It read only the
+       element's OWN PROPS — `slice(indexOf('<WorkConversation'))` — so a mutant
+       that wrote `{!editorialEnabled && <WorkConversation …}` gated the mount
+       from OUTSIDE the slice and survived. ⛔ An element is not unconditional
+       because its attributes are: the condition lives in front of it. */
+    const at = region.indexOf('<WorkConversation');
+    const before = region.slice(Math.max(0, at - 240), at);
+    expect(before).not.toContain('editorialEnabled');
+    const props = region.slice(at, region.indexOf('/>', at));
+    expect(props).not.toContain('editorialEnabled');
+  });
+
+  it('⛔ and the surface the old law named is gone, not merely unmounted', () => {
+    expect(client).not.toContain('StudioConversation');
+  });
+
+  it('⭐ the flag decides only whether the editorial mode can be entered', () => {
+    const panel = client.slice(client.indexOf('conversationOpen && work && manuscript'));
+    const region = panel.slice(0, panel.indexOf('<MaiaColumn'));
+    expect(region).toMatch(/editorialEnabled && \(editorialThreadId !== null \|\| editorialMode\)/);
+    expect(region).toMatch(/editorialEnabled && \([\s\S]{0,400}data-enter-editorial/);
   });
 
   it('says what is missing when enabled with no thread addressed', () => {

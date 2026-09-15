@@ -30,6 +30,7 @@ import {
   canvasForManuscript,
   canvasWithEditorialThread,
   editorialThreadIdFrom,
+  canvasWithoutEditorialThread,
   requestedManuscriptId,
   requestedManuscriptIdFrom,
   resolveManuscript,
@@ -37,7 +38,7 @@ import {
 } from '../canvasIdentity';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { useLivingWorks } from '../useLivingWorks';
-import { resolveWorkContext, currentWork, mintStudioConversationId } from '../workContext';
+import { resolveWorkContext, currentWork } from '../workContext';
 import { WritingFieldVisual } from '../WorkVisual';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
 import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
@@ -63,7 +64,7 @@ import StructuredOutline from './StructuredOutline';
 import StructureReview from './StructureReview';
 import ReadingsEntry from './ReadingsEntry';
 import MaiaColumn from './MaiaColumn';
-import StudioConversation from './StudioConversation';
+import WorkConversation from './WorkConversation';
 import EditorialConversation from './EditorialConversation';
 import RelationshipChooser from './RelationshipChooser';
 import StudioLowerBand from './StudioLowerBand';
@@ -405,11 +406,29 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
      there is nothing to situate, and the room does not choose between several. */
   const conversationOpen = summoned.conversation === true && Boolean(work);
 
-  /* Minted once per page life, when the panel first opens — never discovered.
-     Dismissing and reopening the panel continues the SAME exchange; a reload
-     starts a new one, because asking "which conversation was this Work's?" is
-     a most-recent question and this lane refuses those. */
-  const [conversationId] = useState(mintStudioConversationId);
+  /* ⭐⭐ THE MINTED CONVERSATION ID IS GONE, AND SO IS THE SENTENCE THAT
+     DEFENDED IT. It read: *"a reload starts a new one, because asking 'which
+     conversation was this Work's?' is a most-recent question and this lane
+     refuses those."* ⭐ The refusal was right and the conclusion was not — the
+     lawful answer was never *guess* and never *forget*, it is **find them all
+     and let her choose**, which `resumeDecision` has held all along. The Work
+     thread is discovered on the server; nothing about it is minted here.
+
+     ⭐ WHICH MODE OF ONE PRESENCE, and the member's gesture is what says.
+     ⛔ NOT which MAIA exists: ordinary conversation is available under both
+     settings of the editorial flag. Entering editorial is an act; so is
+     leaving, which is why the address can un-name a thread as well as name one. */
+  const [editorialMode, setEditorialMode] = useState(false);
+
+  const leaveEditorial = useCallback(() => {
+    setEditorialMode(false);
+    setEditorialThreadId(null);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(
+        null, '',
+        canvasWithoutEditorialThread(window.location.pathname, window.location.search));
+    }
+  }, []);
 
   /**
    * ⭐⭐ ONE PLACE THAT PUTS A RELATIONSHIP IN THE ROOM AND IN THE ADDRESS.
@@ -984,45 +1003,108 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
             }}
           >
             {conversationOpen && work && manuscript ? (
-              /* ⭐⭐ ONE FLAG, READ ON THE SERVER, DECIDING ONE THING: which
-                 conversation surface this room draws.
+              /* ⭐⭐ MAIA-CONVERGENCE-01 — WHAT THE FLAG GATES CHANGED, AND THE
+                 OLD LAW IS SUPERSEDED RATHER THAN CONTRADICTED IN SILENCE.
 
-                 ⛔ FALSE IS NOT A DEGRADED EDITORIAL PANEL. It is the existing
-                 behaviour, unchanged — mounting a surface whose seam answers
-                 404 everywhere the flag is unset would be a dead room that
-                 discovers its own absence. */
-              editorialEnabled ? (
-                editorialThreadId ? (
-                  /* ⛔ NO onClose. The StudioPanel above owns the dismiss
-                     control; putting her away is its × and nothing else. The
-                     conversation is server state either way, and the address
-                     still names it. */
-                  <EditorialConversation threadId={editorialThreadId} />
-                ) : (
-                  /* ⭐⭐ RETURN-RELATIONSHIP. The room used to say what was
-                     missing; now it LOOKS. ⛔ Still no most-recent thread and
-                     still no passage chosen on her behalf — the schema admits
-                     many relationships per passage and neither question has a
-                     lawful answer. ⭐ But "find them all and let her choose" is
-                     a lawful answer, and it was available the whole time. */
-                  <RelationshipChooser
-                    sectionId={writing?.activeId ?? null}
-                    opening={editorialOpening}
-                    refusal={editorialRefusal}
-                    onResume={adoptEditorialThread}
-                    onStartNew={() => void openEditorialConversation()}
-                  />
-                )
+                 It read: *"one flag deciding one thing: which conversation
+                 surface this room draws"*, and its suite pinned *"false is the
+                 existing room, not a degraded one."* ⭐ Both were CORRECT for
+                 the architecture they governed — when ordinary conversation was
+                 ephemeral and editorial was the only durable relationship, an
+                 either/or was the honest arrangement.
+
+                 ⛔ IT IS NOT HONEST NOW. Ordinary conversation is durable, and a
+                 flag that removed MAIA's ordinary relationship to the Work in
+                 order to offer a passage relationship would be trading one mode
+                 of her presence for another. The superseding law:
+
+                   Turning editorial off removes the EDITORIAL MODE; it does not
+                   remove or degrade MAIA's ordinary relationship to the Work.
+
+                 ⛔ AND THE FLAG IS NOT REPURPOSED into a generic "new MAIA"
+                 switch. It gates one capability: the exact-passage relationship.
+
+                 ⚠️ THIS IS A VISIBLE MODE DISTINCTION, and it is here because the
+                 alternative is worse rather than because the back end has three
+                 relational kinds. Two conversations stacked in one column is two
+                 composers, and a writer typing into the wrong one would be
+                 addressing a relationship they did not choose. ⛔ It is NOT a
+                 tab bar: there is one gesture in and one gesture back, and no
+                 taxonomy is named at the writer. */
+              editorialEnabled && (editorialThreadId !== null || editorialMode) ? (
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                  {/* ⭐ THE ROOM OWNS THE WAY BACK, not the panel it contains —
+                      `EditorialConversation` carries no chrome of its own and is
+                      handed no control, which is the standing 01B law. */}
+                  <button
+                    type="button"
+                    data-leave-editorial="true"
+                    onClick={leaveEditorial}
+                    style={{
+                      alignSelf: 'flex-start', background: 'none', border: 'none',
+                      padding: 0, marginBottom: SPACE.snug, cursor: 'pointer',
+                      color: INK.quiet,
+                    }}
+                  >
+                    <StudioText role="metadata" as="span">
+                      ← Conversation about this Work
+                    </StudioText>
+                  </button>
+                  <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                    {editorialThreadId ? (
+                      /* ⛔ NO onClose. The StudioPanel above owns the dismiss
+                         control. The conversation is server state either way,
+                         and the address still names it. */
+                      <EditorialConversation threadId={editorialThreadId} />
+                    ) : (
+                      /* ⭐⭐ RETURN-RELATIONSHIP. ⛔ Still no most-recent thread
+                         and still no passage chosen on her behalf. ⭐ "Find them
+                         all and let her choose" is the lawful answer. */
+                      <RelationshipChooser
+                        sectionId={writing?.activeId ?? null}
+                        opening={editorialOpening}
+                        refusal={editorialRefusal}
+                        onResume={adoptEditorialThread}
+                        onStartNew={() => void openEditorialConversation()}
+                      />
+                    )}
+                  </div>
+                </div>
               ) : (
-                <StudioConversation
-                  work={work}
-                  manuscriptId={manuscript.id}
-                  conversationId={conversationId}
-                  /* Puts her away without ending the exchange: the panel is
-                     hidden by `dismiss`, never unmounted, so calling her forward
-                     again returns to the same conversation. */
-                  onClose={() => dismiss('conversation')}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                  <div style={{ flex: 1, minHeight: 0 }}>
+                    {/* ⭐ ALWAYS, UNDER EITHER SETTING OF THE FLAG. ⭐ And the
+                        passage she is in is handed over as CONTEXT — the thread
+                        belongs to the Work, so moving between chapters changes
+                        what MAIA has in view and changes nothing about whose
+                        conversation this is. */}
+                    <WorkConversation
+                      work={work}
+                      manuscriptId={manuscript.id}
+                      sectionId={writing?.activeId ?? null}
+                      /* Puts her away without ending the exchange — and the
+                         exchange is the server's now, so it survives more than
+                         the panel being hidden. */
+                      onClose={() => dismiss('conversation')}
+                    />
+                  </div>
+                  {editorialEnabled && (
+                    <button
+                      type="button"
+                      data-enter-editorial="true"
+                      onClick={() => setEditorialMode(true)}
+                      style={{
+                        alignSelf: 'flex-start', background: 'none', border: 'none',
+                        padding: 0, marginTop: SPACE.snug, cursor: 'pointer',
+                        color: INK.quiet,
+                      }}
+                    >
+                      <StudioText role="metadata" as="span">
+                        Work on an exact passage →
+                      </StudioText>
+                    </button>
+                  )}
+                </div>
               )
             ) : (
               <MaiaColumn context={workContext} />
