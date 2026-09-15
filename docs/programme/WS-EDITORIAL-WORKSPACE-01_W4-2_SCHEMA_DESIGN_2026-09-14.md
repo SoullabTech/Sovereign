@@ -1308,3 +1308,125 @@ route / Canvas                   ⛔
 production mutation              ⛔ NONE
 maia_focus_witness               FROZEN
 ```
+
+---
+
+# W5-LANDING-01 — **RESULT**
+
+**Run** 2026-09-15, founder, from the Mac Studio via
+`ssh soullab@minisforum 'docker exec -i maia-postgres psql …'`
+**Instrument at** `f113f988d`
+
+```
+db          maia_consciousness
+role        soullab
+read_only   on
+```
+
+⭐ §1 names the protected database. **This is a protected reading.**
+
+---
+
+## 41. THE EXACT PENDING SET
+
+```
+20260914000001_proposal_succession.sql                  absent · ABSENT · PENDING
+20260914000002_manuscript_revision_offers.sql           absent · ABSENT · PENDING
+20260914000003_proposal_chains_member_identity.sql      absent · ABSENT · PENDING
+20260914000004_manuscript_revision_authorizations.sql   absent · ABSENT · PENDING
+20260914000005_editorial_ontology.sql                   absent · ABSENT · PENDING
+```
+
+**All five. No exceptions, no partial, no drift.**
+
+```
+DRIFT rows      0
+PARTIAL rows    0
+LANDED rows     0
+PENDING rows    5
+```
+
+## 42. ⭐ 33 independent measurements, unanimous
+
+Five ledger reads and **28 catalogue reads** — every table, index, constraint,
+column, function and trigger the five migrations create — and **all 28 report
+`f`**. Ledger and catalogue agree on every one of the five.
+
+⭐⭐ **The instrument was built to find drift and found none.** That is a
+result, not an absence of one: after 2026-09-07 — where the record said one
+thing and the database another — concordance across 33 measurements is
+positive evidence about the protected database's integrity, and it is worth
+stating rather than assuming.
+
+⭐ And the prohibition held its shape: `…000002`, `…000003` and `…000004` are
+reported ABSENT **because each was measured**, not because `…000001` was. The
+answer happens to match what the dependency graph predicted; ⛔ it is not
+derived from it.
+
+## 43. What this establishes, exactly
+
+> Production is one full architecture generation behind the substrate W4
+> assumes — and the gap is **the entire succession/editorial lane, intact and
+> unstarted**, not a partial application anyone must reconcile.
+
+```
+ask_threads / ask_turns          ✅ applied, live, 1 real thread (W4-2.2 §31)
+succession lane (000001–000004)  ⛔ wholly PENDING
+editorial ontology (000005)      ⛔ PENDING
+W4-S1 / W4-S2                    ⛔ behind all five
+```
+
+⭐ **The clean state is the best available news for a landing package**: there
+is no reconciliation problem, no half-applied migration to adjudicate, and no
+ledger/catalogue disagreement to rule on. The landing question is *sequencing
+and custody*, not repair.
+
+## 44. ⚠️ One limit of this census, named
+
+It measured **these five filenames**. It did **not** measure whether other
+migrations in `database/migrations/` are also unapplied on the protected
+database, nor whether any of them interleave with these five.
+
+⛔ That is not a gap this record fills by inference. If the protected ledger is
+behind on the five, it may be behind on others — and a landing package that
+applies five migrations into a database that is behind on **different** ones has
+a sequencing question nobody has asked yet. **Measured, not assumed, and owed to
+W5-LANDING-02.**
+
+## 45. What the result earns — and what it does not
+
+```
+protected read                   ✅ SPENT — this
+exact pending predecessor set    ✅ ESTABLISHED — all five
+unique-lock strategy             ✅ Option A (W4-2.2, dated)
+
+landing package design           ⛔ W5-LANDING-02 — NOT AUTHORIZED
+migration execution              ⛔
+canonical merge                  ⛔
+deployment                       ⛔
+data repair                      ⛔ — and none is needed
+```
+
+⛔ **No landing package is designed here.** The founder's sequence puts
+`W5-LANDING-02` behind an explicit act, and a clean census is not that act.
+
+## 46. Standing
+
+```
+W4-1.2 relational contract        ✅ CLOSED · a79163ff6
+W4-2   semantic schema design     ✅ CLOSED · f210df118
+W4-2.1 migration phasing          ✅ CLOSED · 46a44928e
+W4-2.2 protected preflight        ✅ RUN · 87c6dd1bb
+W4-2.2a instrument seal           ✅ CLOSED · 26/0
+W5-LANDING-01 census              ✅ RUN 2026-09-15 · all five PENDING · no drift
+
+W5-LANDING-02 landing package     ⛔ awaiting explicit founder act
+succession/W5 production landing  ⛔ HELD
+W4 executable migrations          ⛔ HELD
+producer registration             ⛔
+canonical service seam            ⛔
+route / Canvas                    ⛔
+
+production mutation               ⛔ NONE — both protected runs were READ ONLY
+maia_focus_witness                FROZEN
+```
