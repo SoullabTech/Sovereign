@@ -1210,3 +1210,41 @@ Step 4 — seal (read-only), the same nine files:
 PASS / STOP exactly §18.5.3 (with `RESTORE_ACCEPTANCE PASS` the decisive line). Return as `docs/programme/VOICE-2026/driver-ledger/s2-volume-restore-02-<STAMP>/` on a `feature/*` branch with `BRANCH · HEAD · STAMP`, the parser's seven lines and the `SHA256SUMS`; this session cherry-picks, recomputes every hash, reruns the parser and records §18.8. Nothing plays, samples, touches the phone or edits the batch.
 
 **Standing after §18.7:** `S2-VOLUME-RESTORE-02` AUTHORIZED · pinned · NOT YET EXECUTED (founder hand act) · 69 exact · `b198e2e37` unchanged · `S2-WITNESS-02` NOT ISSUED · S2 population · S3 · KERNEL-00 acceptance CLOSED.
+
+### 18.8 `S2-VOLUME-RESTORE-02` EXECUTED (stamp `20260915T135919Z`) → **PASS** · evidence RECEIVED and VERIFIED HERE · authority SPENT · 69 restored by the stepped-control hand act
+
+#### 18.8.1 Custody
+
+- Evidence branch `feature/k00-s2-volume-restore-02-evidence-20260915T135919Z`, HEAD `988628e0d8110648270636c61a5edb18d5725377`, parent `001970366` (the §18.7 pin), cherry-picked here as `8b8c8f299` (`-x`). Directory `driver-ledger/s2-volume-restore-02-20260915T135919Z/`, nine files + `SHA256SUMS`. **All nine hashes recomputed here = sealed = the founder's supplied list** (byte-identical set). The §18.5.2 parser was re-run here on the returned `audio-after.json` + `volume-after.txt` and reproduces the founder's seven lines exactly.
+
+#### 18.8.2 What the files say
+
+```text
+before-utc            2026-09-15T13:59:19Z
+volume-before         output volume:65 · alert 59 · output muted:false
+sound-pane-before     rc=1  (pane closed)
+after-utc             2026-09-15T14:05:42Z   (6 min 23 s later)
+volume-after          output volume:69 · alert 59 · output muted:false
+sound-pane-after      rc=1  (pane closed)
+audio-after.json      sha 5b7be6ac… == audio-before.json == the §18.6 captures (device state byte-identical across all four reads)
+DEFAULT_OUTPUT        Mac Studio Speakers coreaudio_device_type_builtin 48000 (exactly one line)
+MAC_STUDIO_DEFAULT_OUTPUT True
+OUTPUT_VOLUME         69
+OUTPUT_MUTED          false
+RESTORE_ACCEPTANCE    PASS
+```
+
+B06Ultra connected (A2DP) at the before-read, not default. The before value 65 is the first governed read after the §18.6 post-act adjustment (previously UNKNOWN to the record; 65 is itself off the sixteenth grid, consistent with a slider value — custody only). The Sound pane was closed at both reads.
+
+#### 18.8.3 Adjudication (predeclared §18.7.1 / §18.5.3; nothing invented after the result)
+
+**`S2-VOLUME-RESTORE-02` → PASS. Authority SPENT.** Every acceptance line met: exactly one default output, `Mac Studio Speakers`, `coreaudio_device_type_builtin`, `MAC_STUDIO_DEFAULT_OUTPUT True`, `OUTPUT_VOLUME 69`, `OUTPUT_MUTED false`, `RESTORE_ACCEPTANCE PASS`. Founder-stated: the one hand act was the pinned sequence (Volume Down to the bottom, Volume Up exactly eleven times, stop); nothing downstream was run or opened.
+
+#### 18.8.4 What the PASS is evidence of
+
+- **The S2 precondition (`output volume:69` · Mac Studio Speakers · builtin · unmuted) is re-established as of 14:05:42Z** — a reading at a time, exactly as §14.9 was; the batch preflight re-reads it before any population.
+- **The stepped-control candidate mechanism is supported by one observation:** eleven keyboard steps from zero produced the reported integer 69 on this Mac (11/16 = 68.75 → 69), where the slider had produced 73. One trial, n = 1, on one Mac; it is a witnessed human procedure that reached the exact scalar the batch compares, not a general claim about macOS. If restoration is ever needed again, this is the procedure of record; whether it reproduces is learned only by using it again.
+- **Nothing in the instrument moved.** `b198e2e37` unchanged, target 69 exact, band not adopted. The lesson from §18.6 → §18.8 is procedural, not architectural: on this desktop the exact scalar is reachable by a stepped control and not by the continuous slider.
+- **Drift exposure remains** (§18.4 candidate mechanism, §18.6 slider, the 65 before this act): the prepared state is a scalar on a shared desktop. The conduct rule stands — the next witness should follow restoration closely, with the Sound pane closed, and the preflight refuses on any drift.
+
+**Standing after §18.8:** `S2-VOLUME-DRIFT-01` CLOSED · candidate mechanism · `S2-VOLUME-RESTORE-01` STOP · spent · **`S2-VOLUME-RESTORE-02` PASS · spent · 69 RESTORED at 14:05:42Z** · target 69 exact · `b198e2e37` unchanged, reusable if the batch is byte-unchanged · **`S2-WITNESS-02` NOT ISSUED (its own founder authority; the §16 shape is the natural template — one invocation, N=1, Blocks A–D, §16.4 law)** · S2 population · S3 · KERNEL-00 acceptance CLOSED.
