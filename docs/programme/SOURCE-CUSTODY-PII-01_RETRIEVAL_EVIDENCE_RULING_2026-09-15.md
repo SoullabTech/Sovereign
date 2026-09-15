@@ -192,6 +192,113 @@ statement about the corpus; that is what A3/A4 are for.
 
 ---
 
+---
+
+# RESULT — A1–A4 / D2 / D3, run 2026-09-15
+
+⭐ **Recorded in a SEPARATE COMMIT, after the pre-registration commit.** The
+pre-registration was not amended. Git shows the order:
+*evidence law fixed → production query executed → result form filled.*
+
+**Provenance.** Run on minisforum (`hostname` → `soullab`), database
+`maia_consciousness`, via
+`ssh soullab@minisforum '… | docker exec -i maia-postgres psql …'`.
+
+⚠️ **One void attempt preceded it.** The same pipe was first run from the Mac
+Studio, where `docker exec -i maia-postgres` addresses the *parallel dev stack
+that carries the same container names*. Any output from that would have been the
+dev database wearing the shape of a production answer. Classified **INSTRUMENT
+FAILURE**, no evidentiary conclusion; the host was verified explicitly before
+the run of record. ⭐ *`maia-postgres` is a name. Fifth instance of the
+declared-membership candidate — and the first where the cost would have been the
+truth of the finding rather than a disclosure.*
+
+## The filled form
+
+```
+A1 · known tester sources in ain_knowledge_chunks
+    source files with rows ......... 0
+    chunks per source .............. (none)
+    CURRENT TABLE .................. PRESENT · EMPTY
+    KNOWN TESTER SOURCES ........... VERIFIED ABSENT · CURRENT TABLE ONLY
+    HISTORICAL INGESTION ........... UNKNOWN
+
+A2 · corpus shape
+    total chunks ................... 0
+    distinct sources ............... 0
+
+A3 · broader human-record signals
+    sources flagged ................ 0
+
+A4 · distinct email strings per flagged source
+    (none)
+
+RETRIEVAL
+    class .......................... UNKNOWN · HISTORICALLY UNRESOLVABLE
+    basis .......................... none preserved
+
+§B REMEDIATION .................... NOT APPLICABLE
+
+D1 ................................ NOT RUN (VALUES placeholder unsubstituted)
+D2 ................................ 1 genuine normalized-email duplicate pair
+                                    + 12 members without email
+D3 ................................ 1 pending invite
+```
+
+## ⛔ Why an empty table is still not a historical negative
+
+A2 returned a row, not an error, so the carrier is **PRESENT and EMPTY**. That is
+the `0 rows, table exists` branch: absent **in the current table**, and nothing
+further.
+
+⭐ Amendment 1 was written for a *missing* relation; the same logic governs an
+*empty* one, and here a mechanism that produces exactly this state is already
+documented in this lane: `embed-ain-knowledge.ts --force` runs
+`TRUNCATE ain_knowledge_chunks`. An empty corpus is equally consistent with
+*never populated* and with *populated, then truncated*. `HISTORICAL INGESTION`
+therefore remains **UNKNOWN**, and `0 | 0` must not be read as relief.
+
+`RETRIEVAL` is **UNKNOWN · HISTORICALLY UNRESOLVABLE**: no chunks, no retrieval
+trace, and no evidence that could later answer the historical question.
+
+## ⚠️ D2 — instrument correction, recorded as evidence quality
+
+The query reported `collisions_after_normalization = 13`. **That number is
+inflated and the query is at fault.** `count(DISTINCT email)` ignores NULLs, so
+`count(*) − count(DISTINCT …)` silently folds the 12 email-less members into the
+collision count.
+
+The correct reading:
+
+```
+members_total ................ 93
+with an email ................ 81   (93 − 12)
+distinct normalized emails ... 80
+⇒ genuine duplicate pairs .... 1
+⇒ unreconcilable by email .... 12   (no email at all)
+```
+
+⭐ *A count that conflates absence with collision is the same defect shape as a
+detector that conflates a support address with a roster* — this lane's recurring
+finding, this time in its own SQL. Kept in the record rather than cleaned out:
+the correction is evidence quality, not an embarrassment.
+
+**Consequence for R11:** email is a usable *one-time reconciliation instrument*
+and cannot be a universal identity law. Only uniquely matched contacts may be
+acted on automatically; the duplicate pair and the 12 email-less members are
+human adjudication.
+
+## Closure this result does and does not establish
+
+✅ **No current production knowledge-corpus remediation is required.**
+
+⛔ It does not close historical ingestion.
+⛔ It does not establish historical non-retrieval.
+
+Those questions end exactly where the pre-registration permits them to end.
+
+---
+
 ## Standing at the time of this ruling
 
 ```
