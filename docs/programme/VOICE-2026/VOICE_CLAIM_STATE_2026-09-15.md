@@ -25,3 +25,7 @@
 > *The sovereign voice architecture exists in the repository and parts of it are live on the web client; the new embodied voice organism has passed entry and output qualification on one iPhone harness under KERNEL-00; the new sovereign voice system is deployed and accepted on no MAIA platform.*
 
 This sentence is the highest claim the evidence licenses on 2026-09-15. Moving any row upward requires its own predeclared criterion and attributable evidence, then a founder ruling — never a session's inference from adjacent progress.
+
+## 5. Acceptance (founder, 2026-09-15)
+
+Accepted as written at `eeb176cd1`, including the Desktop sharpening and the sentence of record. Founder: *"KERNEL-00 is qualifying the iPhone VoiceKernel organism/harness, with the Mac Studio acting as orchestration/custody host. Nothing in this lane licenses calling the Desktop MAIA runtime witnessed or under KERNEL-00 qualification."* One dated reference line added to `docs/pitch/CASE_STUDY_LIBRARY.md` (item 4 of its "Evidence-grounding corrections"), records-only, no case study rewritten. DISPOSAL-03 unaffected: authorized · not executed · Mac Studio terminal only.
