@@ -105,6 +105,7 @@ const files = [];
 let skippedDirs = 0;
 let symlinks = 0;
 let unreadable = 0;
+let appleDoubleSkipped = 0;   // macOS AppleDouble sidecars — metadata, never corpus
 
 async function walk(dir) {
   let entries;
@@ -122,6 +123,16 @@ async function walk(dir) {
       await walk(full);
     } else if (entry.isFile()) {
       if (entry.name === '.DS_Store') continue;
+      // AppleDouble resource-fork sidecars (`._name`) are macOS filesystem
+      // metadata created when a tree is copied across filesystems. They are
+      // typically 4 KB, they mirror the name (and therefore the extension) of
+      // a real file, and counting them inflates file counts, the extension
+      // distribution, absent-frontmatter counts and duplication clusters.
+      //
+      // FOUND BEFORE THE FIRST REAL RUN, not after: the AIN tree listing showed
+      // hundreds at a single directory level. Excluded here and COUNTED, so the
+      // exclusion is visible in the report rather than silently applied.
+      if (entry.name.startsWith('._')) { appleDoubleSkipped += 1; continue; }
       files.push(full);
     }
   }
@@ -199,6 +210,7 @@ let totalBytes = 0;
 let withFullFrontmatter = 0;
 let withPartialFrontmatter = 0;
 let withNoFrontmatter = 0;
+let zeroByte = 0;
 let soullabSignal = 0;
 
 for (const path of files) {
@@ -214,6 +226,7 @@ for (const path of files) {
   byReadability[readability] += 1;
   byTopDir[top] = (byTopDir[top] ?? 0) + 1;
   totalBytes += st.size;
+  if (st.size === 0) zeroByte += 1;
 
   let hash = null, hashKind = null;
   try { ({ hash, hashKind } = await hashFile(path, st.size)); } catch { unreadable += 1; }
@@ -272,6 +285,8 @@ const census = {
     directories_skipped: skippedDirs,
     symlinks_not_followed: symlinks,
     unreadable_entries: unreadable,
+    appledouble_sidecars_excluded: appleDoubleSkipped,
+    zero_byte_files: zeroByte,
   },
   readability: byReadability,
   by_extension: Object.fromEntries(Object.entries(byExt).sort((a, b) => b[1] - a[1])),
@@ -318,6 +333,8 @@ const md = `# AIN Wisdom Corpus Census
 | Symlinks (not followed) | ${symlinks} |
 | Unreadable entries | ${unreadable} |
 | Directories skipped | ${skippedDirs} |
+| **AppleDouble sidecars excluded** | ${appleDoubleSkipped} |
+| **Zero-byte files** | ${zeroByte} (${pct(zeroByte)}% of counted files) |
 
 ## Machine readability
 
@@ -386,6 +403,7 @@ ${table(census.by_top_level_dir)}
 await writeFile(join(OUT, 'CENSUS.md'), md);
 
 console.log(`census complete — ${files.length} files, ${census.totals.gigabytes} GB`);
+console.log(`  excluded: ${appleDoubleSkipped} AppleDouble sidecar(s) · zero-byte files counted: ${zeroByte}`);
 console.log(`  readable now: ${byReadability.immediate} · needs conversion: ${byReadability.needs_conversion} · unsuitable: ${byReadability.unsuitable}`);
 console.log(`  ratified frontmatter — complete: ${withFullFrontmatter} · partial: ${withPartialFrontmatter} · absent: ${withNoFrontmatter}`);
 console.log(`  duplicate clusters: ${duplicateClusters.length} (${duplicateFileCount} redundant files)`);
