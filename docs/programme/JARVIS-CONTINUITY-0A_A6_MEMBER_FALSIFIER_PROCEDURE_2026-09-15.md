@@ -37,8 +37,19 @@ G3–G5: *a confounder that is only mentioned is a confounder that eventually ru
 
 Fresh or already-open MAIA conversation on the live production path.
 
-1. **Early**, plant one distinctive harmless marker — e.g. *"For this test, remember the
-   phrase **silver cedar**."*
+1. **Early**, introduce one distinctive harmless marker **naturally, with no mention of
+   testing** — e.g. *"the phrase **silver cedar** has been stuck in my head today."*
+
+   ⛔⛔ **DO NOT SAY IT IS A TEST.** A first draft of this step read *"For this test,
+   remember the phrase silver cedar"* — ⭐ **SUPERSEDED, never deleted**, on the
+   evidence of RUN 1 (§8).
+
+   ⭐ **Announcing the experiment tests compliance with an announced experiment, not
+   relational posture.** A MAIA who has been told her continuity is being scored will
+   answer the probes about her own aperture as a performance. `PSG-01` is what that
+   looks like when it goes wrong: told she was on DEEP, she described being on DEEP.
+   ⛔ The probes must never be the first time she learns what is being measured, and
+   they must never arrive in a field where she already knows.
 2. Continue naturally for **15–20 completed exchanges**, so the marker is well outside
    the serving aperture (FAST 3 · CORE 4 completed exchanges).
 
@@ -201,6 +212,39 @@ asymmetry decides it:
 - **0A PASSES** → the marker would strengthen attribution from *entailed mechanism +
   observed posture* to *observed mechanism + observed posture*, but the member-facing
   capability has already been demonstrated.
+
+---
+
+## 8. ⚠️ RUN 1 — 2026-09-15 — NOT STARTED · VESSEL RETIRED
+
+⛔ **Not `VOID`** (no reload occurred) and ⛔ **not a verdict**. The marker was never
+planted, so **nothing was spent and 0A remains at full authority.**
+
+**Why the session was retired as a test vessel:** during the baseline turns the field
+was contaminated by explicit discussion of CORE vs DEEP · testing · scoring · continuity
+behaviour · what MAIA was expected to demonstrate.
+
+> ⭐ A clean 0A cannot ask MAIA to perform inside a conversation where she already knows
+> what is being evaluated.
+
+**What RUN 1 did produce, incidentally and not as a result:**
+
+- ⭐ **The instrument pre-check PASSED** — `CORE | Turn 1 | Length: 20` and later lines
+  proved the tier witness LIVE and **attributable per turn** (`Length: 20` matched the
+  greeting exactly). ⭐ This carries forward; ⛔ it need not be re-earned.
+- ⭐ **`PSG-01` — Processing-State Grounding Failure**, recorded separately at
+  `docs/programme/PSG-01_PROCESSING_STATE_GROUNDING_FAILURE_2026-09-15.md`. ⛔ Incidental
+  to this session, ⛔ never its result, ⛔ no lane opened.
+- ⚠️ A CORE-vs-DEEP behavioural characterization was drafted and **WITHDRAWN**: both
+  turns routed CORE, so the contrast described a performance, not a tier.
+
+```
+0A                 UNSPENT
+RUN 1 session      RETIRED AS TEST VESSEL
+reason             test-awareness / mode-priming contamination
+tier pre-check     ✅ PASSED — carries forward
+next run           FRESH SESSION · naturalistic marker · no mention of testing
+```
 
 ---
 
