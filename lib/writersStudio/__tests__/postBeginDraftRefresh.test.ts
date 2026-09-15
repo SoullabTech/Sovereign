@@ -21,7 +21,7 @@ import { chooseMount, type WriteState } from '../writeStateClient';
 const REPO = path.resolve(__dirname, '../../..');
 const read = (p: string) => fs.readFileSync(path.join(REPO, p), 'utf8');
 const worktable = () => read('app/writers-studio/canvas/Worktable.tsx');
-const canvas = () => read('app/writers-studio/canvas/page.tsx');
+const canvas = () => read('app/writers-studio/canvas/CanvasClient.tsx');
 
 describe('the state transition the defect lives in', () => {
   it('no_draft mounts worktable — the room that creates the draft', () => {

@@ -45,7 +45,7 @@ import {
 } from '../canvasIdentity';
 import { CANVAS_HREF } from '../studioMap';
 
-const canvasSource = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8');
+const canvasSource = readFileSync(join(__dirname, '..', 'canvas', 'CanvasClient.tsx'), 'utf8');
 /** Comments quote the defect, so assertions about behaviour read only code. */
 const canvasCode = canvasSource
   .replace(/\/\*[\s\S]*?\*\//g, '')

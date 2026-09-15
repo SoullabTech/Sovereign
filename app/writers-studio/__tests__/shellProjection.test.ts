@@ -22,7 +22,7 @@ const read = (...p: string[]) =>
   fs.readFileSync(path.join(__dirname, '..', ...p), 'utf8');
 const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/g, '');
 
-const page = strip(read('canvas', 'page.tsx'));
+const page = strip(read('canvas', 'CanvasClient.tsx'));
 const maiaColumn = strip(read('canvas', 'MaiaColumn.tsx'));
 const outline = strip(read('canvas', 'ManuscriptOutline.tsx'));
 const band = strip(read('canvas', 'StudioLowerBand.tsx'));

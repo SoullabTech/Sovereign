@@ -43,7 +43,7 @@ import { countDraftWords } from '@/lib/writersStudio/draftWords';
 const read = (...p: string[]) => readFileSync(join(__dirname, '..', ...p), 'utf8');
 const worktable = read('canvas', 'Worktable.tsx');
 const writingSurface = read('canvas', 'WritingSurface.tsx');
-const page = read('canvas', 'page.tsx');
+const page = read('canvas', 'CanvasClient.tsx');
 
 /** Every `onMeta?.({ … })` call in a file, as its literal text. */
 function emitSites(source: string): string[] {

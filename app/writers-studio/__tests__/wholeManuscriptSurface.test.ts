@@ -195,7 +195,7 @@ describe('the structural guarantees the view may not quietly drop', () => {
 });
 
 describe('the page passes the two as separate props', () => {
-  const PAGE = strip(readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8'));
+  const PAGE = strip(readFileSync(join(__dirname, '..', 'canvas', 'CanvasClient.tsx'), 'utf8'));
 
   it('gives the surface an arrival AND a command, never one standing in for the other', () => {
     expect(PAGE).toContain('initialOpenAt={session.wholeOpensAt}');

@@ -15,6 +15,11 @@
  * pane, reopening it, or navigating away changes nothing: there is no component
  * memory to lose.
  *
+ * ⛔ AND IT DOES NOT OPEN ONE. The relationship is opened by the member's
+ * Conversations gesture in the room, and its identity lives in the URL. This
+ * component is handed a `threadId` and can do nothing but read and speak into
+ * it — see WS-EDITORIAL-UI-01A.
+ *
  * ⛔ NOT IN THIS CUT: voice (no microphone exists on this surface), Adopt,
  * comparison, and a member VersionComposer. An adjunct is DISPLAYED here; it is
  * never authored from prose by this component or any other.
@@ -47,20 +52,23 @@ interface ThreadView {
 
 export interface EditorialConversationProps {
   /**
-   * ⭐ An existing relationship, if the Work already carries one. When absent,
-   * `sectionId` opens one — ⛔ and the client names ONLY the section; work,
-   * draft, base version and expected text are derived server-side.
+   * ⭐⭐ THE EXACT RELATIONSHIP THIS PANEL IS SHOWING. Required, and the
+   * component never invents one.
+   *
+   * ⛔ UI-01 let this be absent and opened a relationship from the mount
+   * effect. That was wrong twice over: a RE-RENDER IS NOT AN AUTHORED REQUEST
+   * to create a durable editorial relationship, and holding the only copy of
+   * the identity in React state meant a remount could not find its way back to
+   * what it had made. Opening is a member gesture and belongs to the room; the
+   * address belongs to the URL. This component owns neither.
    */
-  threadId?: string;
-  sectionId?: string;
-  onOpened?: (threadId: string) => void;
+  threadId: string;
   onClose: () => void;
 }
 
-export default function EditorialConversation({
-  threadId: given, sectionId, onOpened, onClose,
-}: EditorialConversationProps) {
-  const [threadId, setThreadId] = useState<string | undefined>(given);
+export default function EditorialConversation({ threadId, onClose }: EditorialConversationProps) {
+  /* ⭐ Disposable presentation state. Losing it costs a refetch and nothing
+     else, because the conversation itself is server state. */
   const [view, setView] = useState<ThreadView | null>(null);
   const [draft, setDraft] = useState('');
   /* ⭐⭐ THE MEMBER DECLARES THE ACT. ⛔ Never classified from their wording. */
@@ -76,29 +84,14 @@ export default function EditorialConversation({
     setView(await res.json());
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (threadId) { await reload(threadId); return; }
-      if (!sectionId) return;
-      const res = await apiFetch('/api/writers-studio/editorial/thread', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sectionId }),
-      });
-      if (!res.ok) { setFailure('This passage could not be opened.'); return; }
-      const { threadId: opened } = await res.json();
-      if (cancelled) return;
-      setThreadId(opened); onOpened?.(opened); await reload(opened);
-    })();
-    return () => { cancelled = true; };
-  }, [threadId, sectionId, reload, onOpened]);
+  /* ⛔ READ ONLY. This effect cannot create anything. */
+  useEffect(() => { void reload(threadId); }, [threadId, reload]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }); }, [view, busy]);
 
   const send = async () => {
     const text = draft;
-    if (text.trim().length === 0 || busy || !threadId) return;
+    if (text.trim().length === 0 || busy) return;
     setBusy(true); setFailure(null);
     try {
       const res = await apiFetch('/api/writers-studio/editorial/turn', {
@@ -214,7 +207,7 @@ export default function EditorialConversation({
             />
             Say this as a Direction
           </label>
-          <button type="button" onClick={() => void send()} disabled={busy || !threadId}
+          <button type="button" onClick={() => void send()} disabled={busy}
             style={{ ...typeStyle('panelLabel'), marginLeft: 'auto', background: 'none',
                      border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
                      padding: `${SPACE.tight}px ${SPACE.snug}px`, color: INK.primary, cursor: 'pointer' }}>
