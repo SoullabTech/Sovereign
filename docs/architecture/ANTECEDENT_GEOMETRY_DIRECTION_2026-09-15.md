@@ -112,7 +112,109 @@ should carry the constraint from the start rather than discover it after a resul
 
 ---
 
-## 5 · CLASSIFICATION AND BOUNDARY
+## 5 · DESIGN-GRAMMAR OBSERVATIONS — ⛔ prior art, NEVER repair authority
+
+**Appended by founder act 2026-09-15.** ⛔ Structural vocabulary only. ⛔ No mechanism proposed ·
+no solution imported · `CONTINUITY-REMAINDER-01` repair standing unchanged.
+
+> ⭐⭐ **THE GOVERNING BOUNDARY, ATTACHED TO EVERYTHING IN THIS SECTION:**
+> **The analogy is a source of STRUCTURE, not of AUTHORITY.**
+
+### 5.1 ⭐ TYPED RELATION, NOT SCALAR
+
+Astrology's aspect grammar is structurally useful because **conjunction · opposition · square ·
+trine · sextile are different KINDS of relation, not magnitudes on one axis.** Meaning is
+carried by the *configuration between* positions, ⛔ not by a property of either object alone.
+
+⭐⭐ **That sharpens the measured bridge defect:** `carrier count` is a **scalar** doing work that
+may require **distinct relational types**. The mechanism has **magnitude where it may need
+kind** — and the ratified law already names three relations (intent · antecedent · object) that
+one scalar cannot separate.
+
+⚠️ **ORB, preserved as a SEPARATE observation:** an aspect holds within a tolerance band and
+weakens toward its edge — **graded applicability of a TYPED relation**, which is a different
+shape from *binary admission plus a count*. ⛔ Recorded as an observation about tolerance,
+⛔ **not as a proposed mechanism.**
+
+### 5.2 ⭐⭐ DEIXIS ≠ ANAPHORA
+
+*Reaching back* and *reaching back to THIS antecedent* are **formally different linguistic
+problems**, and have been treated as distinct categories for as long as grammar has been
+written down.
+
+⭐ **This mirrors the ratified continuity law exactly:**
+
+> *Evidence that two turns belong to the same retrospective class may establish class
+> membership, but may not establish that one is the antecedent of the other.*
+
+⭐ **Inherited prior art for the future lane, NAMED and NOT IMPORTED:** Centering Theory and
+related antecedent-resolution work model *which* prior entity a reference resolves to through
+**salience and attentional state** rather than lexical overlap. ⛔ Naming it imports **no
+solution**, authorizes **no instrument**, and settles **nothing** about the forward question.
+
+### 5.3 ⭐ THE CLEANEST STATEMENT OF THE DEFECT
+
+> ⭐⭐ **The bridge tried to read a relation OFF THE OBJECTS instead of representing the relation
+> BETWEEN POSITIONS.**
+
+⭐ That one sentence connects today's continuity defect, the geometric direction, and the older
+relational grammars — ⛔ without asserting anything about any of them.
+
+---
+
+## 6 · ELEMENTAL GEOMETRY — PRESERVED HYPOTHESIS SOURCE (Cat 1)
+
+⛔⛔ **Recorded with its own refusal attached, in the founder's words:** *"I would not tell
+Julian, 'astrology proves relational geometry.' It doesn't."* ⭐ Preserved as a **hypothesis
+generator**, ⛔ never as evidence, and ⛔ never as a claim that any symbolic system is encoded in
+a neural network.
+
+The conceptual structure, and the correspondence independently arrived at:
+
+```text
+Element   quality / mode          ⟷  participant / state
+Aspect    relation                ⟷  relation
+Chart     relational field        ⟷  configuration
+Transit   field through time      ⟷  trajectory
+```
+
+⭐ **The proposition worth preserving** (⛔ stated as hypothesis, ⛔ not as finding):
+
+> Ancient symbolic systems repeatedly modeled intelligence and experience **not as collections
+> of isolated traits, but as patterned relationships among differentiated qualities.**
+
+⭐ Spiralogic makes the same move with the Elements. What astrology adds that Spiralogic does
+not emphasise as strongly is **angular relationship and configuration**.
+
+**The research question that follows** — ⛔ not opened, ⛔ not designed:
+
+> Instead of asking only whether Fire · Water · Air · Earth · Aether are **distinguishable
+> modes**, ask whether their **relationships have distinguishable dynamics** — `Fire → Water` ·
+> `Fire ↔ Water` · `Fire ⟂ Water` · `Fire + Water → integration`, where **the relation itself
+> becomes measurable.**
+
+### 6.1 ⭐⭐ THE SAME DEFECT SHAPE ALREADY EXISTS IN THE ELEMENTAL LAYER — measured, not supposed
+
+⚠️ This is **not** hypothetical in AIN. The **Corpus Callosum substrate is Cat 6 — live, with
+production rows**: eight voices including Fire · Water · Earth · Air · Aether emitting
+same-second under production traffic.
+
+⭐ But `WisdomRoutingResult` declares **`agent: AgentArchetype | null`** — **singular**. The
+router **selects among voices**; ⛔ **nothing anywhere represents a relation BETWEEN them.**
+*Selective integration* is a choice of node, ⛔ not a configuration of nodes.
+
+⭐⭐ **So AIN has independently built the NODES and not the GEOMETRY in two unrelated places —
+the continuity bridge and the elemental layer.** ⛔ That is a structural observation about where
+substrate exists, ⛔ **not** a claim that either layer works, and ⛔ **not** authorization to
+build the missing one.
+
+⚠️ ⛔ **And the inflation rule governs here above all:** *name the mechanism, not the mythology;
+metaphor after measurement, never before.* ⛔ Nothing in §6 may be cited as evidence of any
+capability, and ⛔ no member-facing surface follows from it.
+
+---
+
+## 7 · CLASSIFICATION AND BOUNDARY
 
 ⭐ If opened, this belongs in the **R&D lane's** epistemic frame (epistemic kind × product
 maturity), ⛔ **not** inside `CONTINUITY-REMAINDER-01`, whose object is a shipped mechanism and
@@ -126,6 +228,9 @@ probe · ablation .................. ⛔ NOT BUILT
 model-internals access ............ ⛔ ABSENT for the serving model (§4.3)
 transfer across models ............ ⛔ UNESTABLISHED — a claim, not a premise
 relation 2 isolation .............. ⚠️ needs history variation, not probe variation (§4.2)
+design-grammar observations ....... ⭐ APPENDED (§5) · ⛔ prior art, never repair authority
+elemental geometry ................ ⭐ PRESERVED (Cat 1, §6) · ⛔ hypothesis source only
+nodes-without-geometry finding .... ⭐ MEASURED in two layers (§6.1) · ⛔ not authorization
 CONTINUITY-REMAINDER-01 ........... ⛔ UNCHANGED — repair still not authorized
 FIRST-ASK-OPAQUE-MEMORY-01 ........ ⛔ UNOPENED · PRESERVED
 production ........................ e57ca1baa · UNTOUCHED
