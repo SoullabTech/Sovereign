@@ -132,6 +132,27 @@ UNDISTURBED.** N1 tests **origin** (only member words carry a bridge); N2 tests 
 abstention**. ⛔ Neither law is touched by this ruling. ⛔ The freeze is not reopened here and no
 oracle is amended.
 
+#### 7.1a ⭐ FOUNDER REFINEMENT (ratified 2026-09-15) — P1 is not false, it is non-discriminating
+
+⛔ P1 has **not** become false. It has become **non-discriminating for the newly ratified law**.
+`g => g.includes(MARKER)` can still tell you **whether** the marker was recovered; ⛔ it cannot
+tell you **whether that recovery was lawful antecedent resolution or the lexical coincidence
+now measured in P1**.
+
+```text
+P1 observed outcome ............ preserved
+P1 as recovery regression ...... ⭐ STILL DESCRIBES OLD BEHAVIOUR — a legitimate residual use
+P1 as lawfulness oracle ........ ❌ WITHDRAWN
+N1 origin oracle ............... ✅ undisturbed
+N2 abstention oracle ........... ✅ undisturbed
+frozen acceptance file ......... ⛔ NOT AMENDED
+```
+
+⭐⭐ **We do not rewrite history by making the old test disappear. We stop treating its green as
+evidence for a property it never tested.** ⚠️ This refines §8's coarser
+*"P1 as a discriminating ORACLE — WITHDRAWN BY CONSEQUENCE"*: the withdrawal is of its
+**lawfulness** standing only, ⛔ not of its use as a regression on prior behaviour.
+
 ### 7.2 ⚠️ The forward question may be thinly evidenced in this corpus
 
 > *What evidence is sufficient to establish antecedent identity once retrospective intent has
@@ -144,6 +165,20 @@ tokens; at W1 no admitted hop restated anything, and nothing referential existed
 ⚠️ So this corpus can exhibit antecedent identity **only in the ask-twice case**. ⛔ For a member
 who asks once, it contains no referential evidence at all — which is precisely
 `FIRST-ASK-OPAQUE-MEMORY-01`, preserved and unopened.
+
+#### 7.2a ⭐⭐ FOUNDER REFINEMENT (ratified 2026-09-15) — a missing CONDITION, not a missing algorithm
+
+The corpus **can** show: *when the member restates the object, referential evidence exists.*
+⛔ It **cannot** show: *how antecedent identity should be established when the member does not
+restate the object.*
+
+> ⭐⭐ **That is not a missing clever algorithm. It is a missing EXPERIMENTAL CONDITION.**
+
+⭐ Which places `FIRST-ASK-OPAQUE-MEMORY-01` precisely: ⛔ it is **not merely another continuity
+case.** It is **the condition required to discover whether antecedent identity can be
+established WITHOUT lexical restatement of the remembered object.**
+
+⛔ **The next lane may not let the existing corpus pretend to adjudicate that.**
 
 ⛔ **This is not an instrument, not a proposal, and not an answer.** It is recorded so the next
 lane learns at the start, rather than late, that **its question may be partly unanswerable from
@@ -159,7 +194,8 @@ B · class ⇒ antecedent identity ........... ❌ REFUSED
 
 P1 observed recovery ...................... ✅ HISTORICAL FACT
 P1 as lawful antecedent witness ........... ❌ STANDING WITHDRAWN
-P1 as a discriminating ORACLE ............. ❌ WITHDRAWN BY CONSEQUENCE (§7.1)
+P1 as LAWFULNESS oracle ................... ❌ WITHDRAWN (§7.1a)
+P1 as RECOVERY REGRESSION ................. ✅ PRESERVED (§7.1a)
 N1 · N2 ................................... ✅ UNDISTURBED
 opacity-rule conflict ..................... ❌ NOT ENTAILED
 HOP 1 class detection ..................... ✅ BOUNDED USE
