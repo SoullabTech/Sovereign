@@ -1,0 +1,185 @@
+{
+  "SPBluetoothDataType" : [
+    {
+      "controller_properties" : {
+        "controller_address" : "1C:1D:D3:D7:76:40",
+        "controller_chipset" : "BCM_4388C2",
+        "controller_discoverable" : "attrib_on",
+        "controller_firmwareVersion" : "22.5.190.750",
+        "controller_productID" : "0x4A36",
+        "controller_state" : "attrib_on",
+        "controller_supportedServices" : "0x392039 < HFP AVRCP A2DP HID Braille LEA AACP GATT SerialPort >",
+        "controller_transport" : "PCIe",
+        "controller_vendorID" : "0x004C (Apple)"
+      },
+      "device_connected" : [
+        {
+          "B06Ultra" : {
+            "device_address" : "11:22:33:44:66:D5",
+            "device_minorType" : "Headphones",
+            "device_services" : "0x800018 < AVRCP A2DP ACL >"
+          }
+        },
+        {
+          "EK01 Plus" : {
+            "device_address" : "FE:AB:92:95:A4:65",
+            "device_minorType" : "Keyboard",
+            "device_productID" : "0xF605",
+            "device_services" : "0x400000 < BLE >",
+            "device_vendorID" : "0x3554"
+          }
+        },
+        {
+          "MX Vertical" : {
+            "device_address" : "D3:7B:E9:94:03:4D",
+            "device_batteryLevelMain" : "100%",
+            "device_firmwareVersion" : "MPM16.00_0009",
+            "device_minorType" : "Mouse",
+            "device_productID" : "0xB020",
+            "device_services" : "0x400000 < BLE >",
+            "device_vendorID" : "0x046D"
+          }
+        }
+      ],
+      "device_not_connected" : [
+        {
+          "A Dream Come True" : {
+            "device_address" : "EC:66:D1:C7:DE:B7",
+            "device_minorType" : "Headset"
+          }
+        },
+        {
+          "AirPods" : {
+            "device_address" : "E4:76:84:1B:88:EC",
+            "device_caseVersion" : "1.9.4",
+            "device_firmwareVersion" : "6F21",
+            "device_minorType" : "Headphones",
+            "device_productID" : "0x200F",
+            "device_serialNumber" : "FXXZQD2TLX2Y",
+            "device_serialNumberLeft" : "CC5ZQ5DMJJNV",
+            "device_serialNumberRight" : "CC4ZQH4CJJNW",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "AirPods Max" : {
+            "device_address" : "90:9C:4A:E5:E1:6A",
+            "device_firmwareVersion" : "6F25",
+            "device_minorType" : "Headphones",
+            "device_productID" : "0x200A",
+            "device_serialNumber" : "H0YGPA7XP3W9",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "AirPods Pro" : {
+            "device_address" : "00:8A:76:2D:DE:57",
+            "device_firmwareVersion" : "0.0.1",
+            "device_minorType" : "Headphones",
+            "device_productID" : "0x200E",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "AirPods Pro #2" : {
+            "device_address" : "04:99:B9:25:22:FA",
+            "device_firmwareVersion" : "0.0.1",
+            "device_minorType" : "Headphones",
+            "device_productID" : "0x200E",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "AirPods Pro #3" : {
+            "device_address" : "6C:12:70:13:75:13",
+            "device_caseVersion" : "80.1.41",
+            "device_firmwareVersion" : "8B41",
+            "device_minorType" : "Headphones",
+            "device_productID" : "0x2024",
+            "device_serialNumber" : "JLHQXH16DY",
+            "device_serialNumberLeft" : "J25P32SE26JY",
+            "device_serialNumberRight" : "J25P3XVW26K0",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "Andrea’s AirPods Pro" : {
+            "device_address" : "20:15:82:D2:BE:0E",
+            "device_caseVersion" : "80.111.0",
+            "device_firmwareVersion" : "7​E93",
+            "device_minorType" : "Headphones",
+            "device_productID" : "0x2014",
+            "device_serialNumber" : "NXC79YW03Y",
+            "device_serialNumberLeft" : "HY4KFCZU18JQ",
+            "device_serialNumberRight" : "HXXKH2G518JP",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "Andrea’s MacBook Pro" : {
+            "device_address" : "FE:FE:94:6F:8E:3F"
+          }
+        },
+        {
+          "Andrea’s Magic Mouse" : {
+            "device_address" : "08:65:18:A4:84:F1",
+            "device_firmwareVersion" : "8.6.0",
+            "device_minorType" : "Mouse",
+            "device_productID" : "0x0269",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "Dad’s AirPods Pro" : {
+            "device_address" : "74:65:0C:A6:04:19",
+            "device_firmwareVersion" : "0.0.1",
+            "device_minorType" : "Headphones",
+            "device_productID" : "0x200E",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "Kelly Nezat’s iPhone" : {
+            "device_address" : "9C:DA:A8:61:CD:EC",
+            "device_rssi" : "-58"
+          }
+        },
+        {
+          "kelly’s iPad" : {
+            "device_address" : "EC:2C:E2:C8:B0:C0"
+          }
+        },
+        {
+          "Kelly’s Magic Keyboard" : {
+            "device_address" : "64:0B:D7:12:CD:A9",
+            "device_firmwareVersion" : "2.0.6",
+            "device_minorType" : "Keyboard",
+            "device_productID" : "0x0267",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "kelly’s Magic Mouse" : {
+            "device_address" : "C0:44:42:DA:01:38",
+            "device_firmwareVersion" : "3.1.1",
+            "device_minorType" : "Mouse",
+            "device_productID" : "0x0269",
+            "device_vendorID" : "0x004C"
+          }
+        },
+        {
+          "Living Room" : {
+            "device_address" : "C4:F7:C1:65:B6:AF",
+            "device_rssi" : "-83"
+          }
+        },
+        {
+          "MX Vertical" : {
+            "device_address" : "D3:7B:E9:94:03:4C",
+            "device_minorType" : "Mouse"
+          }
+        }
+      ]
+    }
+  ]
+}

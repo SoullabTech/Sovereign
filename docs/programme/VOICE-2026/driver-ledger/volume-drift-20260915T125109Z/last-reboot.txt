@@ -1,0 +1,45 @@
+$ last reboot
+reboot time                                Sun Aug 30 12:33
+shutdown time                              Sun Aug 30 12:32
+reboot time                                Fri May 29 17:32
+shutdown time                              Fri May 29 17:27
+reboot time                                Wed May 27 18:11
+reboot time                                Mon May 25 12:10
+reboot time                                Wed May 20 07:49
+reboot time                                Thu May 14 18:54
+reboot time                                Sat May  9 22:55
+shutdown time                              Sat May  9 22:50
+reboot time                                Thu May  7 08:04
+reboot time                                Sat Apr 18 12:41
+reboot time                                Sat Mar 28 16:32
+reboot time                                Mon Mar 23 11:07
+reboot time                                Tue Mar  3 08:10
+shutdown time                              Tue Mar  3 08:04
+reboot time                                Wed Feb 18 17:21
+shutdown time                              Wed Feb 18 17:21
+reboot time                                Sun Feb  8 09:18
+shutdown time                              Sun Feb  8 09:13
+reboot time                                Sat Feb  7 15:07
+reboot time                                Wed Feb  4 19:39
+reboot time                                Sat Jan 31 11:09
+reboot time                                Mon Jan 26 23:20
+shutdown time                              Mon Jan 26 23:15
+reboot time                                Mon Jan 26 11:17
+reboot time                                Fri Jan 23 13:25
+reboot time                                Wed Jan 21 14:16
+reboot time                                Tue Jan 20 09:23
+reboot time                                Sun Jan 18 07:53
+shutdown time                              Sun Jan 18 07:49
+reboot time                                Tue Jan 13 06:18
+reboot time                                Fri Dec 26 11:34
+shutdown time                              Fri Dec 26 11:29
+reboot time                                Wed Dec 24 10:43
+reboot time                                Sun Dec  7 09:07
+reboot time                                Sun Dec  7 08:53
+reboot time                                Sat Dec  6 19:01
+reboot time                                Fri Dec  5 07:33
+reboot time                                Tue Nov 25 20:57
+reboot time                                Fri Nov 21 21:38
+
+wtmp begins Wed Nov 19 16:31:02 EST 2025
+[rc=0]

@@ -1,0 +1,97 @@
+$ defaults read com.rogueamoeba.arkaudiod
+{
+    "client-registry" =     (
+                {
+            bundleID = "com.rogueamoeba.Loopback";
+            name = Loopback;
+            path = "/Users/soullab/Downloads/Loopback.app";
+            policy = device;
+        }
+    );
+    ecUserSpatialPreferenceKey = 1;
+    "launch-timestamps" =     (
+        "2026-05-28 00:11:06 +0000",
+        "2026-05-29 21:34:16 +0000",
+        "2026-08-30 16:34:59 +0000"
+    );
+    "loopback-device-version" = 3;
+    "virtual-devices" =     {
+        "com.rogueamoeba.Loopback::5DAE5644-F8A4-429B-9C4B-B1F16F672A52" =         {
+            "channel-count" =             (
+                2,
+                0
+            );
+            hidden = 0;
+            icon = {length = 11126, bytes = 0x69636e73 00002b76 544f4320 00000010 ... 49454e44 ae426082 };
+            "latency-mode" = medium;
+            "loopback-version" = 3;
+            managed = 1;
+            name = "Loopback Audio";
+            "notify-agent" = "com.rogueamoeba.loopbackd";
+            "notify-agent-path-hint" = "/Users/soullab/Library/Application Support/Loopback/Loopback.app/Contents/MacOS/Loopback";
+            "reported-latency" =             (
+                0,
+                0
+            );
+            "safety-agent" = "com.rogueamoeba.Loopback";
+            "safety-agent-path-hint" = "/Users/soullab/Downloads/Loopback.app/Contents/MacOS/Loopback";
+            "safety-timeout" = 1200;
+            "sample-rate" = 44100;
+            sources =             (
+                                {
+                    dref = "{\\"i\\":false,\\"od\\":true}";
+                    ex = 0;
+                    map =                     {
+                        input = 1;
+                        mappings =                         (
+                                                        {
+                                dst = 1;
+                                mc = 1;
+                                src = left;
+                            },
+                                                        {
+                                dst = 2;
+                                mc = 1;
+                                src = right;
+                            }
+                        );
+                    };
+                    mm = capturing;
+                    prefs =                     (
+                        "{\\"bid\\":\\"com.microsoft.teams2\\",\\"h\\":true,\\"n\\":\\"MSTeams\\"}"
+                    );
+                    uid = "DF77FEC0-63E7-4A4E-BADE-880A88A24C3B";
+                    v = 1;
+                    vn = 1;
+                },
+                                {
+                    dref = "{\\"gid\\":\\"AppleUSBAudioEngine:Focusrite:Scarlett 2i2 USB:Y86HRJQ9307EE4:\\",\\"i\\":true,\\"m\\":\\"Focusrite\\",\\"md\\":\\"Scarlett 2i2 USB:1235:8210\\",\\"n\\":\\"Scarlett 2i2 USB\\",\\"t\\":\\"usb \\",\\"uid\\":\\"AppleUSBAudioEngine:Focusrite:Scarlett 2i2 USB:Y86HRJQ9307EE4:1,2\\"}";
+                    ex = 1;
+                    map =                     {
+                        input = 1;
+                        mappings =                         (
+                                                        {
+                                dst = 1;
+                                mc = 1;
+                                src = 1;
+                            },
+                                                        {
+                                dst = 2;
+                                mc = 1;
+                                src = 2;
+                            }
+                        );
+                    };
+                    mm = never;
+                    prefs =                     (
+                    );
+                    uid = "D89AA5FB-4E94-4F6B-AA49-821EE9D43AB2";
+                    v = 1;
+                    vn = 1;
+                }
+            );
+            uid = "com.rogueamoeba.Loopback::5DAE5644-F8A4-429B-9C4B-B1F16F672A52";
+        };
+    };
+}
+[rc=0]

@@ -1,0 +1,9 @@
+$ sh -c defaults domains | tr "," "\n" | sed "s/^ *//" | grep -i -E "audio|sound|volume|coreaudio|bluetooth|systemsound"
+com.apple.ComfortSounds
+com.apple.PersonalAudio
+com.apple.audio.AudioMIDISetup
+com.apple.bluetoothuserd
+com.apple.driver.AppleBluetoothMultitouch.mouse
+com.apple.driver.AppleBluetoothMultitouch.trackpad
+com.rogueamoeba.arkaudiod
+[rc=0]

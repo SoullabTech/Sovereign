@@ -1,0 +1,4 @@
+$ sh -c ls -la "$HOME/Library/Preferences/ByHost" | grep -i -E "audio|sound|coreaudio|bluetooth|volume"
+-rw-------@   1 soullab  staff     72 Feb 11  2026 com.apple.Bluetooth.020FECAE-0098-5C2B-B8F5-04732C957291.plist
+-rw-------@   1 soullab  staff     70 Mar 16  2026 com.apple.soundpref.020FECAE-0098-5C2B-B8F5-04732C957291.plist
+[rc=0]
