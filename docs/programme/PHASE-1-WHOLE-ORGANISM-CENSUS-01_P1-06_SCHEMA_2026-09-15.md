@@ -109,3 +109,61 @@ MAY READ    P1-00 pinned exclusions · P1-01 governing-source census · P1-02 or
 ```
 
 ⭐ The security lane stays independent.
+
+---
+
+## 7 · Two precisions (founder, 2026-09-15) — recorded while the workers ran, relayed before their returns
+
+### 7a · ⭐⭐ `X-05` — the test for `ALIGNED` versus `NOT COMPARABLE`
+
+⛔ **Do NOT decide from the bare fact that matching code is absent.**
+
+```text
+ALIGNED
+  the frozen exclusion is itself a PROHIBITION
+  AND the census established that the prohibited IN-SCOPE mechanism / state
+  is not instantiated
+
+NOT COMPARABLE
+  the frozen choice and the actual evidence concern NON-EQUIVALENT objects / states
+  OR treating non-existence as compliance would require INVENTING a scope or bridge
+  the records do not provide
+```
+
+⭐ **Absence can support alignment — but only where the exclusion's OWN SCOPE makes that inference
+lawful.** That is what stops:
+
+```text
+"nothing matching exists"      ⛔ from automatically becoming
+"the strategic exclusion is satisfied"
+```
+
+without first checking **what exactly `X-05` excludes.**
+
+### 7b · ⭐⭐ `X-29` — provenance limits what the comparison can MEAN
+
+`X-29` is **AUTHORED, NOT RECOVERED.** So even if the row returns `ALIGNED`, the lawful claim is
+narrow:
+
+```text
+✅ LAWFUL
+   The organism at the census subject is aligned with the strategic choice
+   NOW RECORDED as X-29.
+
+⛔ FORBIDDEN
+   "The organism was built according to X-29."
+   "X-29 explains the existing architecture."
+```
+
+⛔ Both would **manufacture historical causation from a present-day comparison.**
+
+### 7c · `X-19` — which axes earn the outcome
+
+The row stays decomposed: `INFER · PERSIST · CONCLUDE · DECIDE · MEMBER-FACING`. The outcome must
+**state which axes earn it.**
+
+⛔ A row may not become `DIVERGENT` merely because ONE axis diverges, **if the frozen exclusion
+actually governs ANOTHER axis.**
+
+⛔ And `MIXED` is lawful only where different **named** axes or objects genuinely land differently —
+⛔ never as a container for unresolved evidence.
