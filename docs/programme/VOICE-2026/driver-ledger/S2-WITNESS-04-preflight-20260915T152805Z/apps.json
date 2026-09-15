@@ -1,0 +1,35 @@
+{
+  "error" : {
+    "code" : 4000,
+    "domain" : "com.apple.dt.CoreDeviceError",
+    "userInfo" : {
+      "DeviceIdentifier" : {
+        "string" : "A0736AC8-793B-516F-AC72-C076DB6CEE38"
+      },
+      "NSLocalizedDescription" : {
+        "string" : "The device disconnected immediately after connecting."
+      }
+    }
+  },
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+      "--bundle-id",
+      "life.soullab.voicekernel.vpio02",
+      "--json-output",
+      "docs/programme/VOICE-2026/driver-ledger/S2-WITNESS-04-preflight-20260915T152805Z/apps.json"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "failed",
+    "version" : "506.7"
+  }
+}
