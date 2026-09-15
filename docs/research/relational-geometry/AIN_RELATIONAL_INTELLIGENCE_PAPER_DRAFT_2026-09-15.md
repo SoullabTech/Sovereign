@@ -3,6 +3,12 @@
 ### AIN as an operating system for relational intelligence — and how a governance architecture produced an experimental object
 
 **Soullab · draft for Sophontic · 2026-09-15**
+
+> ⚠️ **SUPERSEDED, same day.** The canonical long paper is
+> `AIN_RELATIONAL_INTELLIGENCE_PAPER_v1_2026-09-15.md` (founder-authored).
+> This was a parallel draft written before that one landed — it was never a
+> continuation of it and does not govern. ⛔ Do not send this version.
+> Retained as a record, ⛔ never edited to read as if it had always been superseded.
 ⚠️ **DRAFT.** Written for one reader and his colleagues. Not published, not a claim of
 result. ⛔ Nothing in it authorizes any experiment described in it.
 

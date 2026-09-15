@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 730" width="900" height="730" role="img" aria-label="The lineage from Elemental Alchemy through Spiralogic, the preserve-difference-before-synthesis proposition, Corpus Callosum, relational governance, MAIA and JR-01; and the five-rung evidence ladder where Soullab holds rungs one and two and Sophontic holds rungs three to five.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="#5d6b7a"/>
+    </marker>
+    <style>
+      .t  { font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      .hd { font-size: 15px; font-weight: 600; fill: #e4e8ec; letter-spacing: .01em; }
+      .pm { font-size: 14.5px; font-weight: 500; fill: #e4e8ec; }
+      .sb { font-size: 11.5px; fill: #93a0ad; }
+      .em { font-size: 16px; font-weight: 600; fill: #9fcbe6; }
+      .lb { font-size: 10.5px; font-weight: 600; fill: #7f8b98; letter-spacing: .14em; }
+      .rn { font-size: 11px; font-weight: 600; fill: #6f7d8b; }
+      .rt { font-size: 12px; font-weight: 500; fill: #dde3e9; }
+      .ow { font-size: 10.5px; font-weight: 600; letter-spacing: .1em; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="730" rx="10" fill="#141920"/>
+
+  <text class="t lb" x="40" y="42" text-anchor="start">THE LINEAGE, AND WHERE THE BRIDGE SITS</text>
+  <line x1="40" y1="56" x2="860" y2="56" stroke="#262e37" stroke-width="1"/>
+
+  <!-- spine -->
+  <g>
+    <rect x="230" y="84"  width="440" height="46" rx="4" fill="#1b222b" stroke="#2c3540"/>
+    <text class="t pm" x="450" y="112" text-anchor="middle">Elemental Alchemy</text>
+
+    <line x1="450" y1="130" x2="450" y2="146" stroke="#5d6b7a" stroke-width="1.4" marker-end="url(#a)"/>
+
+    <rect x="230" y="150" width="440" height="52" rx="4" fill="#1b222b" stroke="#2c3540"/>
+    <text class="t pm" x="450" y="173" text-anchor="middle">Spiralogic</text>
+    <text class="t sb" x="450" y="190" text-anchor="middle">Water · Fire · Air · Earth · Aether — differentiated modes</text>
+
+    <line x1="450" y1="202" x2="450" y2="218" stroke="#5d6b7a" stroke-width="1.4" marker-end="url(#a)"/>
+
+    <rect x="196" y="222" width="508" height="54" rx="4" fill="#16303f" stroke="#2f6584" stroke-width="1.5"/>
+    <text class="t em" x="450" y="248" text-anchor="middle">Preserve difference before synthesis</text>
+    <text class="t sb" x="450" y="266" text-anchor="middle">the proposition, separable from the taxonomy above it</text>
+
+    <line x1="450" y1="276" x2="450" y2="292" stroke="#5d6b7a" stroke-width="1.4" marker-end="url(#a)"/>
+
+    <rect x="230" y="296" width="440" height="52" rx="4" fill="#1b222b" stroke="#2c3540"/>
+    <text class="t pm" x="450" y="319" text-anchor="middle">Corpus Callosum</text>
+    <text class="t sb" x="450" y="336" text-anchor="middle">differentiated cognition beneath a single encounter</text>
+
+    <line x1="450" y1="348" x2="450" y2="364" stroke="#5d6b7a" stroke-width="1.4" marker-end="url(#a)"/>
+
+    <rect x="230" y="368" width="440" height="52" rx="4" fill="#1b222b" stroke="#2c3540"/>
+    <text class="t pm" x="450" y="391" text-anchor="middle">Relational governance</text>
+    <text class="t sb" x="450" y="408" text-anchor="middle">authorship · time · permission · crossing</text>
+
+    <line x1="450" y1="420" x2="450" y2="436" stroke="#5d6b7a" stroke-width="1.4" marker-end="url(#a)"/>
+
+    <rect x="230" y="440" width="440" height="52" rx="4" fill="#1b222b" stroke="#2c3540"/>
+    <text class="t pm" x="450" y="463" text-anchor="middle">MAIA</text>
+    <text class="t sb" x="450" y="480" text-anchor="middle">one relational voice; the differentiation stays beneath it</text>
+
+    <line x1="450" y1="492" x2="450" y2="508" stroke="#5d6b7a" stroke-width="1.4" marker-end="url(#a)"/>
+
+    <rect x="230" y="512" width="440" height="52" rx="4" fill="#1b222b" stroke="#3a5c72"/>
+    <text class="t pm" x="450" y="535" text-anchor="middle">JR-01 — relational perturbation corpus</text>
+    <text class="t sb" x="450" y="552" text-anchor="middle">12 operators · 48 pairs · 96 stimuli</text>
+  </g>
+
+  <!-- ladder -->
+  <line x1="40" y1="590" x2="860" y2="590" stroke="#262e37" stroke-width="1"/>
+  <text class="t lb" x="40" y="582" text-anchor="start">THE EVIDENCE LADDER</text>
+
+  <g>
+    <rect x="40"  y="602" width="156" height="66" rx="4" fill="#18232c" stroke="#2f4a5c"/>
+    <text class="t rn" x="54" y="622">01</text>
+    <text class="t rt" x="54" y="642">behavioural</text>
+    <text class="t rt" x="54" y="658">discrimination</text>
+
+    <rect x="204" y="602" width="156" height="66" rx="4" fill="#18232c" stroke="#2f4a5c"/>
+    <text class="t rn" x="218" y="622">02</text>
+    <text class="t rt" x="218" y="642">vocabulary</text>
+    <text class="t rt" x="218" y="658">invariance</text>
+
+    <rect x="376" y="602" width="156" height="66" rx="4" fill="#1b222b" stroke="#2c3540"/>
+    <text class="t rn" x="390" y="622">03</text>
+    <text class="t rt" x="390" y="642">representational</text>
+    <text class="t rt" x="390" y="658">discrimination</text>
+
+    <rect x="540" y="602" width="156" height="66" rx="4" fill="#1b222b" stroke="#2c3540"/>
+    <text class="t rn" x="554" y="622">04</text>
+    <text class="t rt" x="554" y="642">causal</text>
+    <text class="t rt" x="554" y="658">intervention</text>
+
+    <rect x="704" y="602" width="156" height="66" rx="4" fill="#1b222b" stroke="#2c3540"/>
+    <text class="t rn" x="718" y="622">05</text>
+    <text class="t rt" x="718" y="642">longitudinal</text>
+    <text class="t rt" x="718" y="658">development</text>
+  </g>
+
+  <!-- the join -->
+  <line x1="368" y1="596" x2="368" y2="700" stroke="#d9a860" stroke-width="1.2" stroke-dasharray="4 4"/>
+  <text class="t ow" x="40"  y="690" fill="#7fb6d8">SOULLAB · BUILT</text>
+  <text class="t ow" x="860" y="690" fill="#d9a860" text-anchor="end">SOPHONTIC</text>
+  <text class="t lb" x="368" y="716" text-anchor="middle" fill="#d9a860">THE BRIDGE</text>
+
+  <!-- corpus feeds the ladder -->
+  <path d="M230,538 L150,538 L150,602" fill="none" stroke="#3a5c72" stroke-width="1.4" marker-end="url(#a)"/>
+</svg>
