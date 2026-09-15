@@ -151,7 +151,52 @@ NO LONGER RED         : (empty)
 
 The 42 standing RED suites are unchanged and are not this act's.
 
-## 8. Standing
+## 8. Founder dispositions, as ruled
+
+```
+StudioConversation capability     PRESERVED / CONVERGED
+StudioConversation.tsx carrier    RETIRED
+```
+
+⭐ **The distinction the ruling drew, and it is not pedantry.** Deleting the file
+is not deleting a capability: the capability survives, backed by the durable Ask
+spine. What disappeared is the obsolete carrier — and leaving it would have
+preserved a ready-made path back into the architecture this act retired.
+
+⭐ **The visible mode distinction STAYS, and the ruling says why better than the
+implementation notes did:** it answers a real human question — *which
+relationship am I speaking into?* — and it names the **human scope**, never the
+implementation:
+
+```
+Conversation about this Work   ≠  "Ask spine"
+Work on an exact passage       ≠  "Editorial mode"
+```
+
+### ⚠️ CLEANUP DEBT, CARRIED — not a blocker, not this act's to discharge
+
+> `mintStudioConversationId()` has **zero callers** after Canvas convergence.
+> Its disposition requires **its own dependency check** before removal.
+
+⛔ This act is not reopened for it. An unused export is dead locally; removing an
+exported symbol can reach another lane.
+
+## 9. ⭐⭐ Two witness laws, promoted out of this act's findings
+
+These are instrument laws, ⛔ not product changes, and they generalize past this
+lane:
+
+> **A mount assertion must observe the condition controlling the mount, not
+> merely inspect the mounted element.**
+
+> **An absence assertion is meaningful only after proving the containing surface
+> exists** — otherwise *"not present"* can mean *"the whole room failed to
+> render."*
+
+Both were paid for here: the first by a mutant that survived a guard, the second
+by an obligation that passed against an empty panel.
+
+## 10. Standing
 
 ```
 canonical base   905f436e4
