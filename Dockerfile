@@ -99,9 +99,10 @@ ENV BUILD_DATE=${BUILD_DATE}
 ENV DEPLOY_LANE=${DEPLOY_LANE_TOKEN}
 
 # Install psql for migrations + curl for worker preflight health checks + ffmpeg for media processing
-# + pandoc and chromium for the Book Studio print render (markdown → PDF via Paged.js)
+# + pandoc/chromium for book render + local OCR for sovereign Writer's Studio source intake.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client curl ffmpeg pandoc chromium fonts-liberation \
+    tesseract-ocr tesseract-ocr-eng poppler-utils \
   && rm -rf /var/lib/apt/lists/*
 
 # Tell Puppeteer to use the system Chromium instead of downloading its own
@@ -137,7 +138,7 @@ COPY --from=builder --chown=node:node /app/lib ./lib
 COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 
 # Create media storage directory owned by node (volume mounts inherit this)
-RUN mkdir -p /app/data/media && chown -R node:node /app/data/media
+RUN mkdir -p /app/data/media /app/data/workbench && chown -R node:node /app/data/media /app/data/workbench
 
 # Audit trail (lib/security/auditLog.ts) — must be writable by the node user;
 # without this every audit write fails EACCES and the trail is silently empty.
