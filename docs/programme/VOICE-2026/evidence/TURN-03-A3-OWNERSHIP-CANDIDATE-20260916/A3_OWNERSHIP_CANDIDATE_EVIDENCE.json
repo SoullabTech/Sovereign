@@ -1,0 +1,491 @@
+{
+  "schemaVersion": 1,
+  "lane": "TURN-03",
+  "act": "A3_ASYMMETRIC_OWNERSHIP_CANDIDATE_03",
+  "shadowOnly": true,
+  "generatedAt": "2026-09-16T20:55:18.167Z",
+  "sources": [
+    {
+      "name": "A3_SYNTH_CONTROL",
+      "path": "docs/programme/VOICE-2026/evidence/TURN-03-A3-SYNTH-01-20260916/A3_SYNTH_CONTROL_EVIDENCE.json",
+      "sha256": "9cc22bea45da34e9ada85504dcd2e76b986fc411155c7c731c7fa043c1588dbf"
+    },
+    {
+      "name": "A3_ADVERSARIAL_02",
+      "path": "docs/programme/VOICE-2026/evidence/TURN-03-A3-ADVERSARIAL-02-20260916/A3_ADVERSARIAL_EVIDENCE.json",
+      "sha256": "8a13e17ee0d427e194fe5c6f2ade696630fd6cac735c3b550b5def25bc492a65"
+    }
+  ],
+  "policy": {
+    "conversationalSpace": "natural",
+    "earliestConsiderationMs": 3500,
+    "ambiguityCeilingMs": 6000,
+    "modelCompletionCanShortenWindow": false,
+    "explicitSemanticYieldCanHandoffAtFloor": true,
+    "strongSemanticContinuationCanHoldPastCeiling": true,
+    "simultaneousSpeechOnsetOutranksTimer": true
+  },
+  "metrics": {
+    "overall": {
+      "samples": 22,
+      "continueSamples": 15,
+      "yieldSamples": 7,
+      "falseFloorSeizures": 0,
+      "falseFloorSeizureRate": 0,
+      "correctYields": 7,
+      "yieldRecall": 1,
+      "medianYieldLatencyMs": 6000
+    },
+    "byClass": {
+      "ordinary_pause": {
+        "samples": 8,
+        "continueSamples": 3,
+        "yieldSamples": 5,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 5,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 6000
+      },
+      "word_search": {
+        "samples": 2,
+        "continueSamples": 2,
+        "yieldSamples": 0,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "hesitation": {
+        "samples": 2,
+        "continueSamples": 2,
+        "yieldSamples": 0,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "emotional_pause": {
+        "samples": 3,
+        "continueSamples": 3,
+        "yieldSamples": 0,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "breath": {
+        "samples": 1,
+        "continueSamples": 1,
+        "yieldSamples": 0,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "unfinished_syntax": {
+        "samples": 2,
+        "continueSamples": 2,
+        "yieldSamples": 0,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "reentry": {
+        "samples": 2,
+        "continueSamples": 2,
+        "yieldSamples": 0,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "explicit_yield": {
+        "samples": 1,
+        "continueSamples": 0,
+        "yieldSamples": 1,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 1,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3500
+      },
+      "question_yield": {
+        "samples": 1,
+        "continueSamples": 0,
+        "yieldSamples": 1,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 1,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3500
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "A3_SYNTH_CONTROL:ordinary-2s",
+      "pauseClass": "ordinary_pause",
+      "label": "continue",
+      "pauseMs": 2000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_SYNTH_CONTROL:word-search-4s",
+      "pauseClass": "word_search",
+      "label": "continue",
+      "pauseMs": 4000,
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "trailing_ellipsis",
+          "dangling_syntax"
+        ]
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": null
+    },
+    {
+      "id": "A3_SYNTH_CONTROL:hesitation-4s",
+      "pauseClass": "hesitation",
+      "label": "continue",
+      "pauseMs": 4000,
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "trailing_ellipsis",
+          "trailing_filler"
+        ]
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": null
+    },
+    {
+      "id": "A3_SYNTH_CONTROL:emotional-6s",
+      "pauseClass": "emotional_pause",
+      "label": "continue",
+      "pauseMs": 6000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_SYNTH_CONTROL:breath-2s",
+      "pauseClass": "breath",
+      "label": "continue",
+      "pauseMs": 2000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_SYNTH_CONTROL:unfinished-4s",
+      "pauseClass": "unfinished_syntax",
+      "label": "continue",
+      "pauseMs": 4000,
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "dangling_syntax"
+        ]
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": null
+    },
+    {
+      "id": "A3_SYNTH_CONTROL:unfinished-6s",
+      "pauseClass": "unfinished_syntax",
+      "label": "continue",
+      "pauseMs": 6000,
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "dangling_syntax"
+        ]
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": null
+    },
+    {
+      "id": "A3_SYNTH_CONTROL:reentry-4s",
+      "pauseClass": "reentry",
+      "label": "continue",
+      "pauseMs": 4000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_SYNTH_CONTROL:explicit-yield",
+      "pauseClass": "explicit_yield",
+      "label": "yield",
+      "pauseMs": 5000,
+      "semantic": {
+        "incomplete": null,
+        "yield": 1,
+        "reasons": [
+          "explicit_yield_phrase"
+        ]
+      },
+      "decision": "yield_candidate",
+      "latencyMs": 3500,
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 3500
+    },
+    {
+      "id": "A3_SYNTH_CONTROL:question-yield",
+      "pauseClass": "question_yield",
+      "label": "yield",
+      "pauseMs": 5000,
+      "semantic": {
+        "incomplete": null,
+        "yield": 1,
+        "reasons": [
+          "explicit_yield_phrase"
+        ]
+      },
+      "decision": "yield_candidate",
+      "latencyMs": 3500,
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 3500
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:reflective-complete-5s",
+      "pauseClass": "emotional_pause",
+      "label": "continue",
+      "pauseMs": 5000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:emotional-complete-6s",
+      "pauseClass": "emotional_pause",
+      "label": "continue",
+      "pauseMs": 6000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:rhetorical-question-4s",
+      "pauseClass": "ordinary_pause",
+      "label": "continue",
+      "pauseMs": 4000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:self-correction-4s",
+      "pauseClass": "hesitation",
+      "label": "continue",
+      "pauseMs": 4000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:list-continuation-5s",
+      "pauseClass": "ordinary_pause",
+      "label": "continue",
+      "pauseMs": 5000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:search-after-complete-4s",
+      "pauseClass": "word_search",
+      "label": "continue",
+      "pauseMs": 4000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:reentry-complete-4s",
+      "pauseClass": "reentry",
+      "label": "continue",
+      "pauseMs": 4000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "wait",
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:implicit-share-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "yield_candidate",
+      "latencyMs": 6000,
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:reflective-conclusion-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "yield_candidate",
+      "latencyMs": 6000,
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:narrative-end-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "yield_candidate",
+      "latencyMs": 6000,
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:gratitude-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "yield_candidate",
+      "latencyMs": 6000,
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    },
+    {
+      "id": "A3_ADVERSARIAL_02:where-i-am-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "decision": "yield_candidate",
+      "latencyMs": 6000,
+      "earliestYieldMs": 3500,
+      "ambiguityCeilingMs": 6000,
+      "genericYieldMs": 6000
+    }
+  ],
+  "authority": {
+    "canCommitTranscript": false,
+    "canDispatchCognition": false,
+    "canStartTts": false,
+    "canAlterEndpointing": false
+  }
+}
