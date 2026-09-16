@@ -3595,3 +3595,6 @@ Authority present and correct (7 lines / 244 bytes), pin `c4b37e69…`/59 verifi
 
 
 ## §18.62 — the road (founder, 2026-09-16): preserve → diagnose automation → terminate old harness → install SID → ENTRY witness → source discrimination; position between steps 1 and 2; phone reported "open and on" (2026-09-16; implementation record §10.34)
+
+
+## §18.63 — step-1 STOP carrier ACCEPTED (`7606892a…`, run shape issued) · step-2 diagnostics OPEN as one read-only act (`SID_STEP2-DIAGNOSTICS-01_READ_2026-09-16.sh`, 52 lines `53b0efa2…`: terminate-01 log · xcresult · devicectl capability discovery · current device state, observation only; run shape issued) · phone state at 20:29:32 UNKNOWN, sleep/lock HYPOTHESIS ONLY · `TERMINATE-02` not drafted until step 2 lands (2026-09-16; implementation record §10.36)
