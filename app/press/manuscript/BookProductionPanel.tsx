@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import BookCoverAssets from './BookCoverAssets';
 import {
   PUBLICATION_MATTER_ROLES,
   type PublicationMatterRole,
@@ -234,6 +235,8 @@ export default function BookProductionPanel({
       ) : null}
       {ready ? (
         <>
+          <BookCoverAssets manuscriptId={manuscriptId} />
+
           <div className="border-y py-5 mb-8" style={{ borderColor: RULE }}>
             <p className="text-[10.5px] tracking-[0.28em] uppercase opacity-45 mb-2">Book readiness</p>
             {finalReady ? (
