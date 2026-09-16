@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { ATMOSPHERES, atmosphereVariables } from '../atmosphere/atmospheres';
+import { StudioModeBar } from '../studio/StudioModeBar';
 import { SERIF, SANS } from '../studioTheme';
 import { useLivingWorks } from '../useLivingWorks';
 import { currentWork, resolveWorkContext } from '../workContext';
@@ -648,10 +649,19 @@ export default function RebuildStudioClient() {
           <span style={{ color: C.quiet, fontSize: 13 }}>|</span>
           <span style={{ fontFamily: SERIF, fontSize: 17 }}>Writer’s Studio</span>
         </div>
-        <nav className="wsr-modebar" style={{ display: 'flex', justifyContent: 'center', gap: 8, fontSize: 12.5 }}>
-          {['Write', 'Develop', 'Explore', 'Review', 'Publish'].map((x) => (
-            <span key={x} style={{ padding: '7px 13px', borderRadius: 999, background: x === 'Write' ? C.goldFill : 'transparent', fontWeight: x === 'Write' ? 650 : 450 }}>{x}</span>
-          ))}
+        {/* ── THE MODE BAR IS THE REAL ONE (D1) ───────────────────────────
+            These five labels were `<span>`s built from a local array. They
+            looked exactly like the Studio's mode bar and none of them went
+            anywhere — so from the canonical Write room Develop was not merely
+            place-forgetting, it was unreachable.
+
+            `StudioModeBar` is the one bar: it knows which four modes have no
+            room and refuses to link them, and it composes the link for the one
+            that does, carrying the Work AND the place the writer is standing
+            in. ⛔ Not restyled here; it reads the same semantic tokens this
+            room already resolves. */}
+        <nav className="wsr-modebar" style={{ display: 'flex', justifyContent: 'center' }}>
+          <StudioModeBar current="write" manuscriptId={context.manuscriptId} />
         </nav>
         <div className="wsr-preview" style={{ textAlign: 'right', fontSize: 12, color: C.muted }}>Rebuild preview</div>
       </header>)}
