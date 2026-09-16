@@ -1,0 +1,74 @@
+PASS old member evidence survives as historical evidence
+PASS later member act becomes the only current standing
+PASS prior MAIA synthesis is not promoted into member claim standing
+PASS correction chain is append-only evidence succession
+PASS superseded evidence renders historically
+PASS current correction renders as present standing
+PASS reorganization remains MAIA provisional synthesis
+PASS trace makes current vs superseded explicit
+PASS superseded member standing cannot be grounded alone
+PASS superseded member standing cannot support synthesis without current head
+PASS system inference cannot mint claim standing
+PASS model plan cannot encode correction status
+PASS stale derived inference cannot bypass correction priority
+PASS stale derived inference is discussable only beside current correction
+{
+  "programme": "JARVIS-MAIA-STRUCTURAL-STANDING-01",
+  "act": "S4 correction / surprise proof",
+  "status": "PASS",
+  "assertions": 14,
+  "standing": {
+    "currentByClaimKey": {
+      "organizing-center": "E-NOW"
+    },
+    "byEvidenceId": {
+      "E-OLD": {
+        "evidenceId": "E-OLD",
+        "claimKey": "organizing-center",
+        "status": "superseded",
+        "predecessorEvidenceId": null,
+        "successorEvidenceId": "E-NOW"
+      },
+      "E-NOW": {
+        "evidenceId": "E-NOW",
+        "claimKey": "organizing-center",
+        "status": "current",
+        "predecessorEvidenceId": "E-OLD",
+        "successorEvidenceId": null
+      }
+    }
+  },
+  "rendered": {
+    "text": "Earlier, you said: “I think autonomy is the center of this for me.”\n\nYou now say: “Actually, grief is the center. Autonomy is how I have been organizing around it.”\n\nOne possibility I see — provisionally: the shape has reorganized: autonomy may be less the center than a way of carrying what sits underneath it\n\nIf that possibility is worth testing rather than assuming, what becomes newly visible when grief is allowed to occupy the center?",
+    "trace": {
+      "grounded": [
+        {
+          "evidenceId": "E-OLD",
+          "authoredBy": "member",
+          "participationClass": "authored",
+          "authority": "situate",
+          "claimStanding": "superseded",
+          "claimKey": "organizing-center"
+        },
+        {
+          "evidenceId": "E-NOW",
+          "authoredBy": "member",
+          "participationClass": "authored",
+          "authority": "situate",
+          "claimStanding": "current",
+          "claimKey": "organizing-center"
+        }
+      ],
+      "synthesis": [
+        {
+          "supportEvidenceIds": [
+            "E-OLD",
+            "E-NOW"
+          ],
+          "standing": "maia_provisional"
+        }
+      ]
+    },
+    "digest": "e3005906fec4543372969e3af098209abec36657d03f9f341ec7e3829afe072d"
+  }
+}
