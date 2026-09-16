@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert';
 import {
   assertEvidenceAuthoredBy,
+  compareGestaltEvidenceRoots,
   tracePrimaryEvidence,
   validateResearchField,
   type GestaltResearchField,
@@ -180,7 +181,7 @@ const nodes: ResearchNode[] = [
   {
     kind: 'temporal_change', id: 'sc-t-rupture', change: 'displaced',
     claim: 'A developed relational arc that was present in the source becomes unavailable to the later cognition aperture.',
-    beforeIds: ['sc-c-late'], afterIds: ['sc-c-rupture'], evidenceIds: ['sc-e-probe', 'sc-e-unavailable'], provisional: true,
+    beforeIds: ['sc-c-early', 'sc-c-middle', 'sc-c-late'], afterIds: ['sc-c-rupture'], evidenceIds: ['sc-e-probe', 'sc-e-unavailable'], provisional: true,
   },
   {
     kind: 'gestalt', id: 'sc-g-availability-rupture', asOf: '2026-09-15T17:51:13.829119Z',
@@ -217,6 +218,13 @@ const ruptureRoots = tracePrimaryEvidence(silverCedarField, 'sc-g-availability-r
 assert.equal(ruptureRoots.some((node) => node.id === 'sc-e-image'), true);
 assert.equal(ruptureRoots.some((node) => node.id === 'sc-e-probe'), true);
 assert.equal(ruptureRoots.some((node) => node.id === 'sc-e-unavailable'), true);
+const availabilityDelta = compareGestaltEvidenceRoots(
+  silverCedarField,
+  'sc-g-positive-arc',
+  'sc-g-availability-rupture',
+);
+assert.deepEqual(availabilityDelta.dropped, []);
+assert.deepEqual([...availabilityDelta.added].sort(), ['sc-e-probe', 'sc-e-unavailable'].sort());
 
 console.log(
   JSON.stringify(
@@ -227,6 +235,8 @@ console.log(
       positiveArcPrimaryRoots: positiveRoots.length,
       positiveArcStanding: positiveStanding,
       availabilityRupturePrimaryRoots: ruptureRoots.length,
+      availabilityAddedRoots: availabilityDelta.added,
+      availabilityDroppedRoots: availabilityDelta.dropped,
       uiShiftLabelsAdmittedAsEvidence: false,
       maiaInterpretationLaunderedAsMemberTruth: false,
     },

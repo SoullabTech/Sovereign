@@ -18,7 +18,7 @@ The canonical A4 apparatus for this programme is now:
 
 - `scripts/research/free-synthesis/a4-gestalt-prototype.ts` — representation + validator;
 - `scripts/research/free-synthesis/a4-gestalt-proof.ts` — synthetic reversibility proof;
-- `scripts/research/free-synthesis/a4-silver-cedar-proof.ts` — founder-owned developmental/source-standing/availability proof.
+- `scripts/research/free-synthesis/a4-silver-cedar-trace.ts` — canonical founder-owned developmental/source-standing/availability proof using observed source line sequence rather than invented timestamps.
 
 The earlier root-level `scripts/research/free-synthesis-a4-prototype.ts` is retired after its useful discriminants are ported. Its historical commit remains part of the research record.
 
@@ -57,3 +57,7 @@ The reconciled apparatus preserves the A3 contract:
 - every Gestalt must descend to primary evidence.
 
 No production prompt, memory, schema, model, route, validator or egress path is changed by this reconciliation.
+
+## Duplicate Silver Cedar fixture disposition
+
+The earlier `a4-silver-cedar-proof.ts` fixture is retired. It was useful in establishing source-standing and availability requirements, but it paraphrased evidence and used synthetic source-order strings. The canonical trace now uses the frozen A2 source utterances with observed source line sequence coordinates and additionally proves that an availability rupture adds gap evidence while dropping **zero** historical roots from the developed arc.
