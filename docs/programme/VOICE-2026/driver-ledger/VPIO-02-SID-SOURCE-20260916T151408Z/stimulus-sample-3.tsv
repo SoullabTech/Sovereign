@@ -1,0 +1,46 @@
+sample	3
+fixture	/private/tmp/sid-source-03-f67575797353bf7e97ffb319a45357997c8d564d-20260916T151404Z/scripts/witness/fixtures/k00-sid-nearend-997hz-gated-2hz-180s.wav
+fixtureSha256	30d51cf4b7527d28131bd9c2535c6bd4dcd2403c8dc0343fc045f6f6959875eb
+afplay	/usr/bin/afplay
+afplaySha256	88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb
+afplayVolume	0.50
+afplaySeconds	180
+pid	89759
+startEpoch	1789571742
+preRunState	1789571743	alive
+liveness	1789571744	alive
+liveness	1789571745	alive
+liveness	1789571746	alive
+liveness	1789571747	alive
+liveness	1789571748	alive
+liveness	1789571749	alive
+liveness	1789571750	alive
+liveness	1789571751	alive
+liveness	1789571752	alive
+liveness	1789571753	alive
+liveness	1789571754	alive
+liveness	1789571755	alive
+liveness	1789571756	alive
+liveness	1789571757	alive
+liveness	1789571758	alive
+liveness	1789571759	alive
+liveness	1789571760	alive
+liveness	1789571761	alive
+liveness	1789571762	alive
+liveness	1789571763	alive
+liveness	1789571764	alive
+liveness	1789571765	alive
+liveness	1789571766	alive
+liveness	1789571767	alive
+liveness	1789571768	alive
+liveness	1789571769	alive
+liveness	1789571770	alive
+liveness	1789571771	alive
+liveness	1789571772	alive
+liveness	1789571773	alive
+liveness	1789571774	alive
+postRunState	1789571775	alive
+stopRequestedEpoch	1789571775
+waitExitStatus	143
+stopEpoch	1789571775
+custody	VALID

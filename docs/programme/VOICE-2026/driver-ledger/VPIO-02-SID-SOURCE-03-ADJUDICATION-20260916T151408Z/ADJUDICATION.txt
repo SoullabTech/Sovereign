@@ -1,0 +1,19 @@
+ACT SID SOURCE-BATCH-03
+RESULT COMPLETE N=10 · SOURCE ATTRIBUTION UNMEASURED
+SUBJECT faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
+INSTRUMENT f67575797353bf7e97ffb319a45357997c8d564d
+ENTRY prerequisite 26116d4e42fdb7f25ffbbede7c20f4a98f226c18 = ENTRY-UNPERTURBED
+PREFLIGHT SID-SOURCE-PREFLIGHT-03 20260916T151404Z CLEAN
+POPULATION VPIO-02-SID-SOURCE-20260916T151408Z
+JOURNALS 10
+ENTRY rows 10/10 gen-1 listen
+PRE-PLAY harness zero 10/10
+JIT harness zero 10/10
+STIMULUS custody VALID 10/10
+SOURCE validity UNMEASURED-SRC 10/10 · reason stimulus_not_visible on every row
+SOURCE near-end attribution NONE EARNED · no SURVIVES/SUPPRESSED population class
+K00-05 evidence PASS-05 cancel 10/10 + completion 10/10 · K00-05 already CLOSED
+K00-06 evidence 9 PASS-06 · 1 UNMEASURED-06 (sample 8; one full rendering window) · 0 FAIL-06
+K00-06 constitutional standing UNCHANGED · built-in CHARACTERIZE ONLY / INCOMPLETE; source population cannot earn K00-06 PASS
+NO top-up · NO automatic rerun · BATCH-03 authority SPENT
+KERNEL-00 acceptance NOT MET under ratified all-obligations-PASS law

@@ -1,0 +1,92 @@
+[15:14:09] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[15:14:09] build-for-testing (driver only; the harness is untouched)
+[15:14:15] xctestrun: /private/tmp/sid-source-03-f67575797353bf7e97ffb319a45357997c8d564d-20260916T151404Z/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+DEFAULT_OUTPUT Mac Studio Speakers coreaudio_device_type_builtin 48000
+DEFAULT_OUTPUT_MATCH True
+[15:14:15] stimulus preflight PASS: fixture 30d51cf4b7527d28131bd9c2535c6bd4dcd2403c8dc0343fc045f6f6959875eb · afplay 88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb · default output Mac Studio Speakers (coreaudio_device_type_builtin) · volume 69 · muted false
+[15:14:16] sample 1/10 — precondition
+SID SOURCE sample 1 preplay harnesses=0
+SID SOURCE sample 1 jit harnesses=0
+[15:14:18] sample 1/10 — driver (testOutputSample, mode L)
+[15:15:00] sample 1 stimulus custody VALID (pid 88415 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:15:04] sample 1 ledgered: kernel00-K00-a1f8ce5d-1789571696.jsonl
+[15:15:04] sample 1 source rows read: kernel00-K00-a1f8ce5d-1789571696.jsonl
+[15:15:04] sample 1 output rows read: kernel00-K00-a1f8ce5d-1789571696.jsonl
+[15:15:04] sample 2/10 — precondition
+SID SOURCE sample 2 preplay harnesses=0
+SID SOURCE sample 2 jit harnesses=0
+[15:15:05] sample 2/10 — driver (testOutputSample, mode L)
+[15:15:38] sample 2 stimulus custody VALID (pid 89003 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:15:41] sample 2 ledgered: kernel00-K00-99c8eb31-1789571734.jsonl
+[15:15:41] sample 2 source rows read: kernel00-K00-99c8eb31-1789571734.jsonl
+[15:15:41] sample 2 output rows read: kernel00-K00-99c8eb31-1789571734.jsonl
+[15:15:41] sample 3/10 — precondition
+SID SOURCE sample 3 preplay harnesses=0
+SID SOURCE sample 3 jit harnesses=0
+[15:15:43] sample 3/10 — driver (testOutputSample, mode L)
+[15:16:15] sample 3 stimulus custody VALID (pid 89759 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:16:18] sample 3 ledgered: kernel00-K00-046b8090-1789571771.jsonl
+[15:16:18] sample 3 source rows read: kernel00-K00-046b8090-1789571771.jsonl
+[15:16:18] sample 3 output rows read: kernel00-K00-046b8090-1789571771.jsonl
+[15:16:18] sample 4/10 — precondition
+SID SOURCE sample 4 preplay harnesses=0
+SID SOURCE sample 4 jit harnesses=0
+[15:16:20] sample 4/10 — driver (testOutputSample, mode L)
+[15:16:52] sample 4 stimulus custody VALID (pid 90312 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:16:56] sample 4 ledgered: kernel00-K00-4ce3d2af-1789571808.jsonl
+[15:16:56] sample 4 source rows read: kernel00-K00-4ce3d2af-1789571808.jsonl
+[15:16:56] sample 4 output rows read: kernel00-K00-4ce3d2af-1789571808.jsonl
+[15:16:56] sample 5/10 — precondition
+SID SOURCE sample 5 preplay harnesses=0
+SID SOURCE sample 5 jit harnesses=0
+[15:16:57] sample 5/10 — driver (testOutputSample, mode L)
+[15:17:30] sample 5 stimulus custody VALID (pid 90725 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:17:34] sample 5 ledgered: kernel00-K00-f6223fa0-1789571846.jsonl
+[15:17:34] sample 5 source rows read: kernel00-K00-f6223fa0-1789571846.jsonl
+[15:17:34] sample 5 output rows read: kernel00-K00-f6223fa0-1789571846.jsonl
+[15:17:34] sample 6/10 — precondition
+SID SOURCE sample 6 preplay harnesses=0
+SID SOURCE sample 6 jit harnesses=0
+[15:17:35] sample 6/10 — driver (testOutputSample, mode L)
+[15:18:07] sample 6 stimulus custody VALID (pid 91627 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:18:11] sample 6 ledgered: kernel00-K00-513c3d03-1789571884.jsonl
+[15:18:11] sample 6 source rows read: kernel00-K00-513c3d03-1789571884.jsonl
+[15:18:11] sample 6 output rows read: kernel00-K00-513c3d03-1789571884.jsonl
+[15:18:11] sample 7/10 — precondition
+SID SOURCE sample 7 preplay harnesses=0
+SID SOURCE sample 7 jit harnesses=0
+[15:18:13] sample 7/10 — driver (testOutputSample, mode L)
+[15:18:46] sample 7 stimulus custody VALID (pid 92021 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:18:50] sample 7 ledgered: kernel00-K00-047022a3-1789571922.jsonl
+[15:18:50] sample 7 source rows read: kernel00-K00-047022a3-1789571922.jsonl
+[15:18:50] sample 7 output rows read: kernel00-K00-047022a3-1789571922.jsonl
+[15:18:50] sample 8/10 — precondition
+SID SOURCE sample 8 preplay harnesses=0
+SID SOURCE sample 8 jit harnesses=0
+[15:18:51] sample 8/10 — driver (testOutputSample, mode L)
+[15:19:23] sample 8 stimulus custody VALID (pid 92421 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:19:28] sample 8 ledgered: kernel00-K00-db311d45-1789571960.jsonl
+[15:19:28] sample 8 source rows read: kernel00-K00-db311d45-1789571960.jsonl
+[15:19:28] sample 8 output rows read: kernel00-K00-db311d45-1789571960.jsonl
+[15:19:28] sample 9/10 — precondition
+SID SOURCE sample 9 preplay harnesses=0
+SID SOURCE sample 9 jit harnesses=0
+[15:19:30] sample 9/10 — driver (testOutputSample, mode L)
+[15:20:03] sample 9 stimulus custody VALID (pid 92864 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:20:07] sample 9 ledgered: kernel00-K00-492f03a4-1789571999.jsonl
+[15:20:07] sample 9 source rows read: kernel00-K00-492f03a4-1789571999.jsonl
+[15:20:07] sample 9 output rows read: kernel00-K00-492f03a4-1789571999.jsonl
+[15:20:07] sample 10/10 — precondition
+SID SOURCE sample 10 preplay harnesses=0
+SID SOURCE sample 10 jit harnesses=0
+[15:20:09] sample 10/10 — driver (testOutputSample, mode L)
+[15:20:41] sample 10 stimulus custody VALID (pid 93327 alive through the governed interval; stopped by the batch, wait rc=143)
+[15:20:46] sample 10 ledgered: kernel00-K00-783cf560-1789572038.jsonl
+[15:20:46] sample 10 source rows read: kernel00-K00-783cf560-1789572038.jsonl
+[15:20:46] sample 10 output rows read: kernel00-K00-783cf560-1789572038.jsonl
+[15:20:46] batch complete — /private/tmp/sid-source-03-f67575797353bf7e97ffb319a45357997c8d564d-20260916T151404Z/docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-SOURCE-20260916T151408Z/ledger.md
+10
+11
+21
+81
+SID-SOURCE-BATCH-03 20260916T151408Z subject faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8 instrument f67575797353bf7e97ffb319a45357997c8d564d preflight 20260916T151404Z ledger /private/tmp/sid-source-03-f67575797353bf7e97ffb319a45357997c8d564d-20260916T151404Z/docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-SOURCE-20260916T151408Z
