@@ -18,12 +18,15 @@
  */
 
 const mockQuery = jest.fn();
+const mockTransaction = jest.fn(async (cb: (client: { query: typeof mockQuery }) => Promise<unknown>) => cb({ query: mockQuery }));
 const mockGetMemberId = jest.fn();
 
 jest.mock('@/lib/db/postgres', () => ({
   __esModule: true,
   default: { query: (s: string, p?: unknown[]) => mockQuery(s, p) },
   query: (s: string, p?: unknown[]) => mockQuery(s, p),
+  transaction: (cb: (client: { query: typeof mockQuery }) => Promise<unknown>) => mockTransaction(cb),
+  describeDbError: (e: unknown) => ({ name: e instanceof Error ? e.name : 'Error' }),
 }));
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({
   __esModule: true,
@@ -61,7 +64,7 @@ function eligible(owner = A) {
   });
 }
 
-beforeEach(() => { mockQuery.mockReset(); mockGetMemberId.mockReset(); });
+beforeEach(() => { mockQuery.mockReset(); mockTransaction.mockClear(); mockGetMemberId.mockReset(); });
 
 describe('anonymous callers are refused', () => {
   beforeEach(() => mockGetMemberId.mockResolvedValue(null));
@@ -130,6 +133,7 @@ describe('the authenticated issuer can still work', () => {
     const res = await createInvite(post('/api/invites/create', { intendedName: 'Tester' }));
     expect(res.status).toBe(200);
     expect(mockQuery.mock.calls.some(([sql]) => /INSERT INTO invites/i.test(sql as string))).toBe(true);
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
   });
 
 

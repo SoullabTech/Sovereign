@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, transaction, describeDbError } from '@/lib/db/postgres';
 import {
   generateInvitePasskey,
   calculateInviteExpiration,
@@ -116,20 +116,31 @@ export async function POST(request: NextRequest) {
 
     const expiresAt = calculateInviteExpiration();
 
-    // Create the invite
-    const inserted = await query(
-      `INSERT INTO invites (passkey, passkey_hash, created_by, intended_name, intended_email, personal_note, expires_at)
-       VALUES (NULL, $1, $2, $3, $4, $5, $6)
-       RETURNING id`,
-      [passkeyHash, memberId, intendedName || null, intendedEmail || null, personalNote || null, expiresAt]
-    );
-    const inviteId = String(inserted.rows[0]?.id ?? '');
-
-    // Decrement remaining invites
-    await query(
-      'UPDATE members SET invites_remaining = invites_remaining - 1 WHERE id = $1',
-      [memberId]
-    );
+    // Persist the hash and spend the invite allowance atomically. Under R12 the
+    // plaintext exists only in this request, so an INSERT that commits before a
+    // later failure would create an unrecoverable orphan. The transaction makes
+    // "invite exists" and "allowance spent" one act.
+    const created = await transaction(async (tx) => {
+      const inserted = await tx.query(
+        `INSERT INTO invites (passkey, passkey_hash, created_by, intended_name, intended_email, personal_note, expires_at)
+         VALUES (NULL, $1, $2, $3, $4, $5, $6)
+         RETURNING id`,
+        [passkeyHash, memberId, intendedName || null, intendedEmail || null, personalNote || null, expiresAt]
+      );
+      const allowance = await tx.query(
+        `UPDATE members
+         SET invites_remaining = invites_remaining - 1
+         WHERE id = $1 AND invites_remaining > 0
+         RETURNING invites_remaining`,
+        [memberId]
+      );
+      if (allowance.rowCount !== 1) throw new Error('invite allowance changed before issuance');
+      return {
+        inviteId: String(inserted.rows[0]?.id ?? ''),
+        invitesRemaining: Number(allowance.rows[0]?.invites_remaining ?? 0),
+      };
+    });
+    const inviteId = created.inviteId;
 
     console.log(`[Invites] created invite id=${inviteId ? inviteId.slice(0, 8) : 'unknown'}`);
 
@@ -142,11 +153,11 @@ export async function POST(request: NextRequest) {
         expiresAt,
         createdBy: member.username,
       },
-      invitesRemaining: member.invites_remaining - 1,
+      invitesRemaining: created.invitesRemaining,
     }, { headers: NO_STORE });
 
   } catch (error) {
-    console.error('[Invites] Create error:', error);
+    console.error('[Invites] Create error:', describeDbError(error));
     return NextResponse.json(
       { error: 'Failed to create invite' },
       { status: 500 }

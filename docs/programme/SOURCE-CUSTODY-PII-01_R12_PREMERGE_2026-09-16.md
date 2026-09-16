@@ -74,7 +74,7 @@ The first mobile capture was rejected because an unrelated transient audio toast
 ## Final exact-tree witnesses
 
 - focused suites: **5 / 5 PASS**;
-- focused tests: **49 / 49 PASS**;
+- focused tests: **50 / 50 PASS**;
 - root TypeScript: **229 errors vs baseline 239 · 0 regressions**;
 - standalone `apps/api` typecheck: **PASS**;
 - standalone `apps/api` build: **PASS**;
@@ -91,3 +91,16 @@ The Next build emitted existing warn-only unresolved internal imports and the ex
 Merge does not itself establish production completion. Production witness must verify the migration applied, pending plaintext count is zero, pending hashes are populated, admission works by hash, and create/list/revoke obey one-time-reveal custody.
 
 Only after that witness may the remaining tracked human-record sources and their obsolete consumers be removed. Corpus rebuild/history remediation remain separate acts.
+
+## Independent PR review amendments
+
+Review after PR creation found two R12-specific defects before merge:
+
+1. **Issuance atomicity.** Hash-only invite insertion and invite-allowance decrement were separate commits. A decrement failure after insertion would leave an unrecoverable pending invite while returning 500. They now execute in one database transaction, with a conditional allowance update; failure rolls the insert back.
+2. **Database enforcement.** Clearing plaintext did not by itself prevent a future writer from storing it again. The migration now adds `invites_plaintext_forbidden CHECK (passkey IS NULL)`, making plaintext invite persistence structurally invalid after R12.
+
+After these amendments, the full focused set is **50 / 50 PASS** and the exact amended tree again completes a full Next production build with **RC = 0**.
+
+A repo-wide writer census found exactly one application writer of `invites`: `app/api/invites/create/route.ts`, now hash-only and transactional. No trigger or sibling writer repopulates `invites.passkey`.
+
+The review also clarified scope: historical `members.passkey` remains a returning-member identifier/recovery artifact. Password sign-in authenticates with username/password, and an existing-member passkey is refused as a new-person registration credential. R12 retires those historical values from invitation admission and portal authorization; it does not claim to erase every member identity field.

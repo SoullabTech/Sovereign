@@ -46,13 +46,17 @@ describe('R12 invite credential custody', () => {
     expect(refusal).toBeGreaterThan(-1);
     expect(clear).toBeGreaterThan(refusal);
     expect(migration).toMatch(/invites_pending_hash_required/);
+    expect(migration).toMatch(/invites_plaintext_forbidden/);
+    expect(migration).toMatch(/CHECK \(passkey IS NULL\)/);
   });
 
-  test('T6 — beta portal standing is member-grounded, not possession of another member passkey', () => {
+  test('T6 — beta portal standing is member-grounded, with no SOULLAB credential ritual', () => {
     const portal = read('app/api/practitioners/verify-passcode/route.ts');
     expect(portal).toMatch(/FROM ops_contacts/);
     expect(portal).toMatch(/member_id = \$1/);
     expect(portal).not.toMatch(/SELECT id FROM members WHERE passkey = \$1/);
+    expect(portal).toMatch(/VALID_PASSCODE_PREFIXES = \['PORTAL-', 'PRO-'\]/);
+    expect(portal.indexOf('const betaMembership')).toBeLessThan(portal.indexOf('await request.json()'));
   });
   test('T7 — deploy-order bridge preserves old invites but refuses new plaintext issuance', () => {
     const admission = read('lib/auth/passkeyAdmission.ts');
@@ -65,6 +69,15 @@ describe('R12 invite credential custody', () => {
     expect(create).toMatch(/information_schema\.columns/);
     expect(create).toMatch(/Invitation service is updating/);
     expect(create).not.toMatch(/VALUES \(\$1, NULL/);
+  });
+
+
+  test('T7 — issuance is atomic so a post-insert failure cannot orphan an unrecoverable invite', () => {
+    const create = read('app/api/invites/create/route.ts');
+    expect(create).toMatch(/transaction\(async \(tx\)/);
+    expect(create).toMatch(/INSERT INTO invites[\s\S]*UPDATE members[\s\S]*RETURNING invites_remaining/);
+    expect(create).toMatch(/allowance\.rowCount !== 1/);
+    expect(create).toMatch(/describeDbError\(error\)/);
   });
 
 });

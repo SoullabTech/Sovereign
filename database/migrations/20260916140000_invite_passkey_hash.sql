@@ -44,5 +44,10 @@ ALTER TABLE invites DROP CONSTRAINT IF EXISTS invites_pending_hash_required;
 ALTER TABLE invites ADD CONSTRAINT invites_pending_hash_required
   CHECK (status <> 'pending' OR passkey_hash IS NOT NULL);
 
+-- Plaintext is not merely unused by current code; the database refuses it.
+ALTER TABLE invites DROP CONSTRAINT IF EXISTS invites_plaintext_forbidden;
+ALTER TABLE invites ADD CONSTRAINT invites_plaintext_forbidden
+  CHECK (passkey IS NULL);
+
 COMMENT ON COLUMN invites.passkey IS 'Legacy plaintext invite credential. R12 clears it and new writes leave it NULL.';
 COMMENT ON COLUMN invites.passkey_hash IS 'SHA-256(soullab-invite-v1: + normalized high-entropy credential); deterministic lookup only.';
