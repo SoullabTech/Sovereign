@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "lane": "TURN-03",
+  "act": "A2_LOCAL_SHADOW_RUNTIME",
+  "shadowOnly": true,
+  "generatedAt": "2026-09-16T19:29:56.879Z",
+  "model": {
+    "path": "/private/tmp/dualturn-shadow-candidate/stream_tick.onnx",
+    "sha256": "6700ea2f919b4c66355b3dafb4f91f2db9dae9e18a302b812730c04340bf819f",
+    "version": "c3860ed71210fe0144af35af340fd7a4dec3d2d3",
+    "provider": "dualturn",
+    "license": "Apache-2.0; base Mimi CC-BY-4.0"
+  },
+  "runtime": {
+    "python": "3.11.14",
+    "packages": [
+      "flatbuffers==25.12.19",
+      "numpy==2.4.6",
+      "onnxruntime==1.30.0",
+      "packaging==26.3",
+      "protobuf==7.36.1"
+    ],
+    "provider": "CPUExecutionProvider",
+    "threads": 4,
+    "sidecarSha256": "7cbbfb56de18721449e95ef7bd5a9ba51343e7e676ce74ed6567853c22282193"
+  },
+  "ingress": {
+    "sourceRateHz": 16000,
+    "modelRateHz": 24000,
+    "channelsFromMember": 1,
+    "secondMicrophone": false,
+    "modelSecondChannel": "synthetic zeros inside sidecar",
+    "externalResampler": "StreamingPcm16Resampler",
+    "resamplerSha256": "e97e7e12c966efa6e2a7df2bebe29263a2d589ddc319ece0da98d3cc2fe4f742"
+  },
+  "fixture": {
+    "id": "deterministic_prosodic_fixture_v1",
+    "sourceSamples": 512001,
+    "sourcePcmFloat32Sha256": "e72ef270b9a44f4105315354e04a1e6b3d4b70eb3d333c5bc40c13cbb4c338ac",
+    "durationMs": 32000.0625,
+    "pattern": "10s cycle: active 0-2s and 5-9.1600625s; silent otherwise",
+    "longRun": true
+  },
+  "continuity": {
+    "oneShotSamples24k": 768000,
+    "chunkedSamples24k": 768000,
+    "oneShotSha256": "8cc6d265f6e390500232bb188e58182ae4fb59154f7117ceffce5d36bcb6935f",
+    "chunkedSha256": "8cc6d265f6e390500232bb188e58182ae4fb59154f7117ceffce5d36bcb6935f",
+    "byteIdentical": true,
+    "fullFrames": 400,
+    "frameSamples": 1920,
+    "frameMs": 80,
+    "bufferedTailSamples": 0,
+    "predictions": 400,
+    "sequenceContinuous": true
+  },
+  "timingMs": {
+    "pacing": "realtime",
+    "modelStartupToHello": 384.04575,
+    "medianSendInterval": 80.013082999998,
+    "p95SendInterval": 81.0470000000023,
+    "medianRoundTrip": 23.343415999999706,
+    "p95RoundTrip": 25.16412499999933,
+    "maxRoundTrip": 32.63670899999852,
+    "minRoundTrip": 12.689250000000015
+  },
+  "resources": {
+    "samples": [
+      {
+        "frame": 0,
+        "cpuPct": 81.1,
+        "rssKb": 463424
+      },
+      {
+        "frame": 8,
+        "cpuPct": 113.5,
+        "rssKb": 495152
+      },
+      {
+        "frame": 16,
+        "cpuPct": 130,
+        "rssKb": 495312
+      },
+      {
+        "frame": 24,
+        "cpuPct": 139.5,
+        "rssKb": 495808
+      },
+      {
+        "frame": 32,
+        "cpuPct": 145.2,
+        "rssKb": 495840
+      },
+      {
+        "frame": 40,
+        "cpuPct": 136.3,
+        "rssKb": 495856
+      },
+      {
+        "frame": 48,
+        "cpuPct": 121,
+        "rssKb": 495856
+      },
+      {
+        "frame": 56,
+        "cpuPct": 129.7,
+        "rssKb": 495856
+      },
+      {
+        "frame": 64,
+        "cpuPct": 137.5,
+        "rssKb": 500016
+      },
+      {
+        "frame": 72,
+        "cpuPct": 123.2,
+        "rssKb": 505920
+      },
+      {
+        "frame": 80,
+        "cpuPct": 131.4,
+        "rssKb": 505936
+      },
+      {
+        "frame": 88,
+        "cpuPct": 143.1,
+        "rssKb": 511728
+      },
+      {
+        "frame": 96,
+        "cpuPct": 148.4,
+        "rssKb": 519856
+      },
+      {
+        "frame": 104,
+        "cpuPct": 146.3,
+        "rssKb": 519856
+      },
+      {
+        "frame": 112,
+        "cpuPct": 142.1,
+        "rssKb": 565360
+      },
+      {
+        "frame": 120,
+        "cpuPct": 134.5,
+        "rssKb": 578640
+      },
+      {
+        "frame": 128,
+        "cpuPct": 153,
+        "rssKb": 578640
+      },
+      {
+        "frame": 136,
+        "cpuPct": 139.7,
+        "rssKb": 578640
+      },
+      {
+        "frame": 144,
+        "cpuPct": 133.5,
+        "rssKb": 578656
+      },
+      {
+        "frame": 152,
+        "cpuPct": 139.3,
+        "rssKb": 578656
+      },
+      {
+        "frame": 160,
+        "cpuPct": 148.5,
+        "rssKb": 578672
+      },
+      {
+        "frame": 168,
+        "cpuPct": 151.7,
+        "rssKb": 578672
+      },
+      {
+        "frame": 176,
+        "cpuPct": 144.3,
+        "rssKb": 578672
+      },
+      {
+        "frame": 184,
+        "cpuPct": 128.7,
+        "rssKb": 578544
+      },
+      {
+        "frame": 192,
+        "cpuPct": 137.7,
+        "rssKb": 578544
+      },
+      {
+        "frame": 200,
+        "cpuPct": 143,
+        "rssKb": 578544
+      },
+      {
+        "frame": 208,
+        "cpuPct": 131.8,
+        "rssKb": 578544
+      },
+      {
+        "frame": 216,
+        "cpuPct": 137.6,
+        "rssKb": 578576
+      },
+      {
+        "frame": 224,
+        "cpuPct": 143,
+        "rssKb": 579712
+      },
+      {
+        "frame": 232,
+        "cpuPct": 150.1,
+        "rssKb": 579712
+      },
+      {
+        "frame": 240,
+        "cpuPct": 145.5,
+        "rssKb": 579712
+      },
+      {
+        "frame": 248,
+        "cpuPct": 133,
+        "rssKb": 579712
+      },
+      {
+        "frame": 256,
+        "cpuPct": 130,
+        "rssKb": 579712
+      },
+      {
+        "frame": 264,
+        "cpuPct": 150.7,
+        "rssKb": 579712
+      },
+      {
+        "frame": 272,
+        "cpuPct": 139.8,
+        "rssKb": 579712
+      },
+      {
+        "frame": 280,
+        "cpuPct": 128.6,
+        "rssKb": 579712
+      },
+      {
+        "frame": 288,
+        "cpuPct": 145,
+        "rssKb": 579664
+      },
+      {
+        "frame": 296,
+        "cpuPct": 148.3,
+        "rssKb": 579664
+      },
+      {
+        "frame": 304,
+        "cpuPct": 150.9,
+        "rssKb": 579648
+      },
+      {
+        "frame": 312,
+        "cpuPct": 138,
+        "rssKb": 579648
+      },
+      {
+        "frame": 320,
+        "cpuPct": 127.6,
+        "rssKb": 579648
+      },
+      {
+        "frame": 328,
+        "cpuPct": 147.3,
+        "rssKb": 579648
+      },
+      {
+        "frame": 336,
+        "cpuPct": 136.7,
+        "rssKb": 579792
+      },
+      {
+        "frame": 344,
+        "cpuPct": 128,
+        "rssKb": 579760
+      },
+      {
+        "frame": 352,
+        "cpuPct": 135.9,
+        "rssKb": 579760
+      },
+      {
+        "frame": 360,
+        "cpuPct": 144.5,
+        "rssKb": 579760
+      },
+      {
+        "frame": 368,
+        "cpuPct": 148.1,
+        "rssKb": 579760
+      },
+      {
+        "frame": 376,
+        "cpuPct": 147.3,
+        "rssKb": 579760
+      },
+      {
+        "frame": 384,
+        "cpuPct": 135.9,
+        "rssKb": 579760
+      },
+      {
+        "frame": 392,
+        "cpuPct": 136.6,
+        "rssKb": 579760
+      },
+      {
+        "frame": 399,
+        "cpuPct": 142.1,
+        "rssKb": 579760
+      },
+      {
+        "frame": 400,
+        "cpuPct": 142.1,
+        "rssKb": 579760
+      }
+    ],
+    "maxRssKb": 579792,
+    "maxCpuPctObserved": 153
+  },
+  "network": {
+    "openSocketsAfterHello": [],
+    "openSocketsAfterFrames": [],
+    "noOpenSocketsObserved": true
+  },
+  "predictions": {
+    "count": 400,
+    "sha256": "0de21eee81f43a2cb55a96a049a07369b027da8e1479496f177f2fe67a8d7ac2",
+    "acousticContinueRange": [
+      0.1823888123035431,
+      0.9867628812789917
+    ],
+    "acousticYieldRange": [
+      0.002565324306488037,
+      0.6661444902420044
+    ],
+    "vadRange": [
+      0.00190696120262146,
+      0.9955003261566162
+    ]
+  },
+  "authority": {
+    "canCommitTranscript": false,
+    "canDispatchCognition": false,
+    "canStartTts": false,
+    "canAlterEndpointing": false
+  }
+}
