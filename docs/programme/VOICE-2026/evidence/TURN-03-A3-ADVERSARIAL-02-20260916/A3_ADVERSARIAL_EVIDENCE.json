@@ -1,0 +1,887 @@
+{
+  "schemaVersion": 1,
+  "lane": "TURN-03",
+  "act": "A3_ADVERSARIAL_02",
+  "shadowOnly": true,
+  "generatedAt": "2026-09-16T20:43:34.877Z",
+  "fixture": {
+    "generator": "macOS say + afconvert",
+    "voice": "Samantha",
+    "sourceRateHz": 16000,
+    "cases": 12,
+    "rawAudioPersistedInRepo": false,
+    "memberData": false
+  },
+  "model": {
+    "provider": "smart-turn",
+    "repositoryRevision": "4786657e242dfe77dd138699ac564ee074a2a543",
+    "modelVersion": "f766f81d3cfdf7737ac64aad813d91bbfd56bf93",
+    "path": "/private/tmp/smart-turn-a3-model/smart-turn-v3.2-cpu.onnx",
+    "sha256": "2bb026316b14a660486a75b1733cd3fbab8c2fd0314dc9af7be49f8cca967e4f",
+    "license": "BSD-2-Clause",
+    "threshold": 0.5,
+    "maxTurnSeconds": 8
+  },
+  "runtime": {
+    "python": "3.11.14",
+    "packages": [
+      "PyYAML==6.0.3",
+      "certifi==2026.7.22",
+      "charset-normalizer==3.5.1",
+      "coloredlogs==15.0.1",
+      "filelock==3.32.7",
+      "flatbuffers==25.12.19",
+      "fsspec==2026.7.0",
+      "hf-xet==1.6.0",
+      "huggingface_hub==0.36.2",
+      "humanfriendly==10.0",
+      "idna==3.19",
+      "mpmath==1.3.0",
+      "numpy==2.3.4",
+      "onnxruntime==1.23.2",
+      "packaging==26.3",
+      "protobuf==7.36.1",
+      "regex==2026.9.10",
+      "requests==2.34.2",
+      "safetensors==0.8.0",
+      "sympy==1.14.0",
+      "tokenizers==0.21.4",
+      "tqdm==4.70.1",
+      "transformers==4.48.2",
+      "typing_extensions==4.16.0",
+      "urllib3==2.8.0"
+    ],
+    "sidecarSha256": "2485178b78fca2e3cd3f94eeea9675a96a82634cca2cb38acd447874b152f580",
+    "offlineEnvironment": true
+  },
+  "network": {
+    "openSocketsAfterHello": [],
+    "openSocketsAfterRun": [],
+    "noOpenSocketsObserved": true
+  },
+  "latencyMs": {
+    "samples": 48,
+    "median": 15.098959000000832,
+    "p95": 17.870458000000326,
+    "max": 21.28270800000064,
+    "min": 12.546500000000378
+  },
+  "metrics": {
+    "baseline": {
+      "overall": {
+        "samples": 12,
+        "continueSamples": 7,
+        "yieldSamples": 5,
+        "falseFloorSeizures": 7,
+        "falseFloorSeizureRate": 1,
+        "correctYields": 5,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3500
+      },
+      "byClass": {
+        "emotional_pause": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 2,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "ordinary_pause": {
+          "samples": 7,
+          "continueSamples": 2,
+          "yieldSamples": 5,
+          "falseFloorSeizures": 2,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 5,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        }
+      }
+    },
+    "semanticOnly": {
+      "overall": {
+        "samples": 12,
+        "continueSamples": 7,
+        "yieldSamples": 5,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "byClass": {
+        "emotional_pause": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "ordinary_pause": {
+          "samples": 7,
+          "continueSamples": 2,
+          "yieldSamples": 5,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        }
+      }
+    },
+    "smartTurn": {
+      "overall": {
+        "samples": 12,
+        "continueSamples": 7,
+        "yieldSamples": 5,
+        "falseFloorSeizures": 7,
+        "falseFloorSeizureRate": 1,
+        "correctYields": 5,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3500
+      },
+      "byClass": {
+        "emotional_pause": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 2,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "ordinary_pause": {
+          "samples": 7,
+          "continueSamples": 2,
+          "yieldSamples": 5,
+          "falseFloorSeizures": 2,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 5,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        }
+      }
+    },
+    "smartTurnSemantic": {
+      "overall": {
+        "samples": 12,
+        "continueSamples": 7,
+        "yieldSamples": 5,
+        "falseFloorSeizures": 7,
+        "falseFloorSeizureRate": 1,
+        "correctYields": 5,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3500
+      },
+      "byClass": {
+        "emotional_pause": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 2,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "ordinary_pause": {
+          "samples": 7,
+          "continueSamples": 2,
+          "yieldSamples": 5,
+          "falseFloorSeizures": 2,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 5,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "reflective-complete-5s",
+      "pauseClass": "emotional_pause",
+      "label": "continue",
+      "pauseMs": 5000,
+      "fixturePcm16Sha256": "fbde5c216f7bb884c342cdbf5c588fb47aa7ae43df440d90be9b27e4a0b1022c",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9647200703620911,
+          "complete": true,
+          "roundTripMs": 18.271625000000085
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.6957479119300842,
+          "complete": true,
+          "roundTripMs": 16.09245799999985
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.8498003482818604,
+          "complete": true,
+          "roundTripMs": 15.863917000000129
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9719371795654297,
+          "complete": true,
+          "roundTripMs": 15.002082999999857
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "emotional-complete-6s",
+      "pauseClass": "emotional_pause",
+      "label": "continue",
+      "pauseMs": 6000,
+      "fixturePcm16Sha256": "8134f66c98580a7c9de93f290a2e5c3b6b8e2e75abf1dc15c2325e227ae0dd90",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.743350088596344,
+          "complete": true,
+          "roundTripMs": 15.580417000000125
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.8547587990760803,
+          "complete": true,
+          "roundTripMs": 16.402082999999948
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.4901544749736786,
+          "complete": false,
+          "roundTripMs": 16.283790999999837
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.828564465045929,
+          "complete": true,
+          "roundTripMs": 17.870458000000326
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "rhetorical-question-4s",
+      "pauseClass": "ordinary_pause",
+      "label": "continue",
+      "pauseMs": 4000,
+      "fixturePcm16Sha256": "1d4b159c020aef927d414ff8caa284dd85051be0726bd30a73fbb0b5a0da3fa5",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9673051834106445,
+          "complete": true,
+          "roundTripMs": 12.964375000000018
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.9801466464996338,
+          "complete": true,
+          "roundTripMs": 14.38458300000002
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.9673051834106445,
+          "complete": true,
+          "roundTripMs": 13.668916999999965
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9719371795654297,
+          "complete": true,
+          "roundTripMs": 15.817791999999827
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "self-correction-4s",
+      "pauseClass": "hesitation",
+      "label": "continue",
+      "pauseMs": 4000,
+      "fixturePcm16Sha256": "1f2cacd0007d55ee34af1bba8ce522aa309244f90749b164f43ea971e222d818",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9466100931167603,
+          "complete": true,
+          "roundTripMs": 13.637375000000247
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.970842719078064,
+          "complete": true,
+          "roundTripMs": 14.9184580000001
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.9485659599304199,
+          "complete": true,
+          "roundTripMs": 14.84099999999944
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9808988571166992,
+          "complete": true,
+          "roundTripMs": 14.386875000000146
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "list-continuation-5s",
+      "pauseClass": "ordinary_pause",
+      "label": "continue",
+      "pauseMs": 5000,
+      "fixturePcm16Sha256": "3234229f9393cc0d15d5056d2be46c851563a77c8ee0128c9d63a75ace239c00",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9897372126579285,
+          "complete": true,
+          "roundTripMs": 13.581708000000617
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.9897372126579285,
+          "complete": true,
+          "roundTripMs": 15.400290999999925
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.9875311851501465,
+          "complete": true,
+          "roundTripMs": 15.507416999999805
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9859892129898071,
+          "complete": true,
+          "roundTripMs": 15.02179200000046
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "search-after-complete-4s",
+      "pauseClass": "word_search",
+      "label": "continue",
+      "pauseMs": 4000,
+      "fixturePcm16Sha256": "e573044aff56a91f44253e9cae8482a4d6dfca2b2e0395e6fa621b9653272352",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9308329224586487,
+          "complete": true,
+          "roundTripMs": 15.038250000000517
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.9740077257156372,
+          "complete": true,
+          "roundTripMs": 15.78887500000019
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.7987582683563232,
+          "complete": true,
+          "roundTripMs": 15.81945799999994
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.8817123174667358,
+          "complete": true,
+          "roundTripMs": 14.411541999999827
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "reentry-complete-4s",
+      "pauseClass": "reentry",
+      "label": "continue",
+      "pauseMs": 4000,
+      "fixturePcm16Sha256": "e8dbaff04bd2945d1e2e3b3e92a05c4890f3a09b4d3b3e601c68fa127d99523c",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.975929319858551,
+          "complete": true,
+          "roundTripMs": 13.634917000000314
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.9697068929672241,
+          "complete": true,
+          "roundTripMs": 15.135457999999744
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.6160098910331726,
+          "complete": true,
+          "roundTripMs": 16.294291999999587
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9729918241500854,
+          "complete": true,
+          "roundTripMs": 16.90099999999984
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "implicit-share-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "fixturePcm16Sha256": "c355da212cc311f7e3a956c9b30ebe9a9699167ff6e7da5f78c42d91c11227db",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9228270053863525,
+          "complete": true,
+          "roundTripMs": 12.786667000000307
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.9884648323059082,
+          "complete": true,
+          "roundTripMs": 14.105291999999281
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.9865230321884155,
+          "complete": true,
+          "roundTripMs": 16.14850000000024
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9859892129898071,
+          "complete": true,
+          "roundTripMs": 16.373791999999412
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "reflective-conclusion-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "fixturePcm16Sha256": "9fd033b910f93fcdab6e102664cc01e1a201f71aee4cd6fa78020a8e1d06568c",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9816229343414307,
+          "complete": true,
+          "roundTripMs": 14.877334000000701
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.9685282111167908,
+          "complete": true,
+          "roundTripMs": 14.589375000001382
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.4606940746307373,
+          "complete": false,
+          "roundTripMs": 15.430040999999619
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9647200703620911,
+          "complete": true,
+          "roundTripMs": 14.961708000000726
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "narrative-end-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "fixturePcm16Sha256": "b2ebda10c0f0c9e5d7b6c24a0a7035dc098a75218c45d806a2b5e419e013b455",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9282535910606384,
+          "complete": true,
+          "roundTripMs": 13.477209000000585
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.5,
+          "complete": false,
+          "roundTripMs": 15.460833999999522
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.16053375601768494,
+          "complete": false,
+          "roundTripMs": 16.37895799999933
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9557313919067383,
+          "complete": true,
+          "roundTripMs": 14.938290999998571
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "gratitude-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "fixturePcm16Sha256": "9dd3fb010d31284ed5d560f54dbac5b884c11e1050827e598312edb379eecf48",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9884648323059082,
+          "complete": true,
+          "roundTripMs": 12.546500000000378
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.9901295900344849,
+          "complete": true,
+          "roundTripMs": 13.795959000000948
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.9897372126579285,
+          "complete": true,
+          "roundTripMs": 17.11408300000039
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9880069494247437,
+          "complete": true,
+          "roundTripMs": 15.098959000000832
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "where-i-am-yield",
+      "pauseClass": "ordinary_pause",
+      "label": "yield",
+      "pauseMs": 5000,
+      "fixturePcm16Sha256": "04ce5a457e851bf8db39b47929ec412574e02d1b15c88c6d58b177d06e696014",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.6066516041755676,
+          "complete": true,
+          "roundTripMs": 13.648083000000042
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.6525336503982544,
+          "complete": true,
+          "roundTripMs": 17.689790999998877
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.5393059253692627,
+          "complete": true,
+          "roundTripMs": 21.28270800000064
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9740077257156372,
+          "complete": true,
+          "roundTripMs": 15.603916999998546
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    }
+  ],
+  "authority": {
+    "canCommitTranscript": false,
+    "canDispatchCognition": false,
+    "canStartTts": false,
+    "canAlterEndpointing": false
+  }
+}
