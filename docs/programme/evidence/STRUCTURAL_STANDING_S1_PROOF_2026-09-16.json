@@ -1,0 +1,43 @@
+PASS member evidence rendered verbatim
+PASS novel synthesis is MAIA-owned and provisional
+PASS support references do not promote synthesis
+PASS trace preserves substrate standing
+PASS plan has no adoption surface
+PASS unknown evidence fails closed
+PASS model cannot smuggle authoredBy into ground
+PASS model cannot smuggle standing into synthesis
+PASS model cannot smuggle authority into top-level plan
+PASS MAIA synthesis cannot borrow member first-person voice
+PASS member-facing question cannot borrow member first-person voice
+PASS member-facing synthesis cannot leak internal member role language
+PASS question cannot silently promote synthesis
+{
+  "programme": "JARVIS-MAIA-STRUCTURAL-STANDING-01",
+  "act": "S1 standing envelope proof",
+  "status": "PASS",
+  "assertions": 13,
+  "rendered": {
+    "text": "You said: “a guardian image for my work and for me”\n\nOne possibility I see — provisionally: the guardian relation may be asking to become a design constraint rather than another symbol to decode\n\nIf that possibility is worth testing rather than assuming, what would change first if you treated it that way in the work?",
+    "trace": {
+      "grounded": [
+        {
+          "evidenceId": "E5",
+          "authoredBy": "member",
+          "participationClass": "authored",
+          "authority": "situate"
+        }
+      ],
+      "synthesis": [
+        {
+          "supportEvidenceIds": [
+            "E3",
+            "E4",
+            "E5"
+          ],
+          "standing": "maia_provisional"
+        }
+      ]
+    },
+    "digest": "79f5c67d58e91443c857f701499bb236ec39144f5a5cf9d565f53d94fb9d6ecb"
+  }
+}

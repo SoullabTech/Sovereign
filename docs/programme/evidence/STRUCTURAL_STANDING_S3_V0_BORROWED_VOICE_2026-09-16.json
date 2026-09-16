@@ -1,0 +1,182 @@
+{
+  "programme": "JARVIS-MAIA-STRUCTURAL-STANDING-01",
+  "act": "S3 Silver Cedar standing-envelope replay",
+  "memberTurn": "the silver cedar",
+  "evidenceDigest": "0e4fe3ba5a54c518d316f0e973de3bc27f587a3bff50f6256b5d0702543fccd6",
+  "model": "llama3.1:8b",
+  "temperature": 0.2,
+  "rows": [
+    {
+      "seed": 42,
+      "model": "llama3.1:8b",
+      "temperature": 0.2,
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E5"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "A guardian that embodies the values and focus I've been cultivating, guiding me toward coherence in my work and life."
+          }
+        ],
+        "question": "How might this guardian's presence influence my decision-making and priorities?"
+      },
+      "rawPlanSha256": "ed28618b1eb9dcce2037e78618eca1d67297f8609c7400e687b6f37c9eb649c7",
+      "rendered": {
+        "text": "You said: “a guardian image for my work and for me”\n\nOne possibility I see — provisionally: A guardian that embodies the values and focus I've been cultivating, guiding me toward coherence in my work and life.\n\nHow might this guardian's presence influence my decision-making and priorities?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E5",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "db326cf020e7eb9e9a2c4366026dffd98159fcc64d7949c6b805a80c174b2f82"
+      },
+      "usage": {
+        "promptEvalCount": 344,
+        "evalCount": 65
+      }
+    },
+    {
+      "seed": 137,
+      "model": "llama3.1:8b",
+      "temperature": 0.2,
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E5"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "A guardian that embodies values, focus, and coherence, guiding my work and life with ancient wisdom."
+          }
+        ],
+        "question": "How can I cultivate a deeper relationship with this guardian, allowing its guidance to inform my daily decisions and actions?"
+      },
+      "rawPlanSha256": "b9a15b87b8bc0cad83575e7e56d242d4bd596b01c98f59a07e0481be386113cf",
+      "rendered": {
+        "text": "You said: “a guardian image for my work and for me”\n\nOne possibility I see — provisionally: A guardian that embodies values, focus, and coherence, guiding my work and life with ancient wisdom.\n\nHow can I cultivate a deeper relationship with this guardian, allowing its guidance to inform my daily decisions and actions?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E5",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "1ec1f56a2d5f775041f640a5670233241a99c2c0d2c3adfa6378b4746fd83bc9"
+      },
+      "usage": {
+        "promptEvalCount": 344,
+        "evalCount": 71
+      }
+    },
+    {
+      "seed": 211,
+      "model": "llama3.1:8b",
+      "temperature": 0.2,
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E5"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "A guardian that embodies values, focus, and coherence, guiding me in my work and life."
+          }
+        ],
+        "question": "How can I embody the Silver Cedar's wisdom in my daily actions and decisions?"
+      },
+      "rawPlanSha256": "26e6eaef57b4609c7c6b7c23b8e6744a85714f254985d97e1c51662754b94d9e",
+      "rendered": {
+        "text": "You said: “a guardian image for my work and for me”\n\nOne possibility I see — provisionally: A guardian that embodies values, focus, and coherence, guiding me in my work and life.\n\nHow can I embody the Silver Cedar's wisdom in my daily actions and decisions?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E5",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "f2044023f4ddce2103e85227c8a35dc129687f742d92184ebdc0d44d6a5bb4bc"
+      },
+      "usage": {
+        "promptEvalCount": 344,
+        "evalCount": 64
+      }
+    },
+    {
+      "seed": 509,
+      "model": "llama3.1:8b",
+      "temperature": 0.2,
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E5"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "A guardian that embodies values, focus, and coherence, guiding me in my work and life."
+          }
+        ],
+        "question": "How might this guardian's presence influence your decision-making and priorities?"
+      },
+      "rawPlanSha256": "56683125d24496c8a0eb85dd178ed6c6863fcf05221bcda3b4bee495257d9424",
+      "rendered": {
+        "text": "You said: “a guardian image for my work and for me”\n\nOne possibility I see — provisionally: A guardian that embodies values, focus, and coherence, guiding me in my work and life.\n\nHow might this guardian's presence influence your decision-making and priorities?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E5",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "0a67949d82d138ae4b89e262b63030590866579cf89087d95901767e6857dea6"
+      },
+      "usage": {
+        "promptEvalCount": 344,
+        "evalCount": 62
+      }
+    }
+  ]
+}
