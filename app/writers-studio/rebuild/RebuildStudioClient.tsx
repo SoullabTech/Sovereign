@@ -685,13 +685,12 @@ export default function RebuildStudioClient() {
               {work?.purpose ?? 'A living manuscript in progress.'}
             </div>
           </div>
-          <div style={{ display: 'grid', gap: 2, marginBottom: 20, fontSize: 12.5 }}>
-            {['Manuscript', 'Materials', 'Notes', 'Versions', 'Goals'].map((x, i) => (
-              <div key={x} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 9px', borderRadius: 7, background: i === 0 ? C.active : 'transparent', fontWeight: i === 0 ? 650 : 450 }}>
-                <span>{x}</span><span style={{ color: C.quiet }}>{x === 'Versions' ? '5' : x === 'Materials' ? '0' : ''}</span>
-              </div>
-            ))}
-          </div>
+          {/* D2 — the rail names only what this surface can actually do.
+              The old block rendered Materials, Notes, Versions and Goals as
+              destination-shaped rows although none had a route or panel here;
+              Versions also carried a literal `5` and Materials a literal `0`.
+              The manuscript outline below is real navigation, so it stays. */}
+          <div data-workbench-scope="manuscript" style={{ padding: '1px 6px 8px', color: C.quiet, fontSize: 10.5, letterSpacing: '.14em', fontWeight: 700 }}>MANUSCRIPT</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 6px 8px', color: C.quiet, fontSize: 10.5, letterSpacing: '.14em', fontWeight: 700 }}><span>OUTLINE</span><span>＋</span></div>
           <div style={{ display: 'grid', gap: 1 }}>
             {tree.map((node) => <OutlineBranch key={node.draftSectionId} node={node} focusId={focusId} chapterId={chapterNode?.draftSectionId ?? null} onSelect={selectSection} />)}
