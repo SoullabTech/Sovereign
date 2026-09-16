@@ -84,7 +84,9 @@ Compatibility is enforced:
 - `published_knowledge` → `soullab_owned`
 - `organizational_public` → `soullab_owned`
 - `third_party_published` → `public_domain | license | permission`
-Every admitting rule must name non-empty evidence. Missing evidence, missing authority, or an incompatible authority kind yields **EXCLUDED**.
+Every admitting rule must carry mechanically locatable evidence. Supported evidence is either an exact marker that must actually occur in the work, or a record under the dedicated `docs/corpus-authority/` namespace whose declared marker must actually occur in that record. A free-text evidence assertion is not sufficient. Missing, malformed, absent, unreadable, out-of-custody, or incompatible evidence yields **EXCLUDED**.
+
+Independent review added one more constraint: **admission authority is item-bound**. A broad directory/prefix rule may hold or exclude descendants, but it may not confer an admitting authority basis on them. T21 is the falsifier: one `soullab_owned` claim attached to `data/ain/source` admits neither sibling file.
 
 A free-text `reason` cannot substitute for structured authority. T14 is the falsifier: a rule whose reason literally says `licensed and definitely okay` but carries no structured authority remains excluded.
 
@@ -92,7 +94,7 @@ The existing content detector still runs after classification + authority and ca
 
 ## Current result
 
-Admission tests: **15 / 15 PASS**.
+Admission tests after independent review: **21 / 21 PASS**.
 
 The shipped corpus remains fully held:
 
@@ -111,7 +113,7 @@ A Soullab-shaped filename remains held unless authorship/organizational authorit
 
 The authority-boundary implementation was validated without changing any corpus membership rule.
 
-- admission/composition suite: **15 / 15 PASS**;
+- admission/composition suite: **21 / 21 PASS**;
 - root TypeScript: **229 errors vs 239 baseline · 0 regressions**;
 - `typecheck:scripts`: canonical base **40** error identities; head **40**; head-only **0**; base-only **0**; sets **identical**;
 - provider governance: **PASS**;
@@ -130,3 +132,40 @@ The authority-boundary implementation was validated without changing any corpus 
 `REBUILD / EMBED / LIVING LIBRARY FORCE = NOT EXECUTED`
 
 The next admissible work is classification of evidence-bearing items or collections. Classification must not infer authorship or rights from title, filename shape, directory location, prior possession, or historical ingestion.
+## Independent review amendment
+
+Independent review found that the first implementation still represented `authority.evidence` as an arbitrary string. That would have allowed a future rule to move an unsupported assertion from `reason` into `evidence` and pass the structural gate.
+
+The reviewed implementation closes that gap. Evidence now has one of two mechanically checked forms:
+
+- `in_file` — an exact marker must actually occur in the candidate work;
+- `governed_record` — a repository-relative record must remain inside repository custody and must actually contain its declared marker.
+
+T16–T20 are the falsifiers: free-text evidence is excluded, absent in-file evidence is excluded, governed-record evidence must resolve and contain its marker, a governed-record path cannot escape repository custody, and an arbitrary repository file outside `docs/corpus-authority/` cannot masquerade as an authority record.
+
+The corpus remains fully held after this amendment: `0 admitted · 736 excluded · 0 refused`.
+
+## Follow-up review after PR #1312
+
+PR #1312 merged before two independent-review amendments were included in its merged head. The merged PR established the first authority requirement while keeping the corpus fully closed; it did **not** include the two later repairs below.
+
+The follow-up branch was reconciled onto current canonical `a0e3aa45e5bbeaabbbf49996dd4b93edb865dec2`. Its diff against canonical is limited to the four CORPUS-AUTHORITY files.
+
+Review repairs:
+
+- `c858e7357` — authority evidence must be mechanically locatable: an in-file marker that actually occurs, or a governed record under `docs/corpus-authority/` containing the declared marker. Free-text evidence does not establish authority.
+- `878bb3205` — admitting authority is exact-item-bound. A directory/prefix may hold or exclude descendants, but one authority claim may not confer admission on sibling/descendant works.
+
+Post-reconciliation validation:
+
+- admission/composition suite: **21 / 21 PASS**;
+- root TypeScript: **229 vs 239 baseline · 0 regressions**;
+- `typecheck:scripts`: fresh-cache canonical **40**, follow-up **40**, head-only **0**, base-only **0**, sets **identical**;
+- an earlier 40-vs-42 observation was traced to stale incremental `tsconfig.scripts.tsbuildinfo` state and is superseded by the fresh-cache comparison;
+- provider governance: **PASS**;
+- no-Supabase: **PASS**;
+- design canon: **PASS**;
+- `git diff --check`: **PASS**;
+- real corpus verdict remains **0 admitted · 736 excluded · 0 refused**.
+
+No corpus build, embed, force rebuild, classification, or production corpus mutation was executed by this follow-up.
