@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
-import Anthropic from '@anthropic-ai/sdk';
+import { readFile } from 'node:fs/promises';
 import { buildMaiaWisePrompt, type MaiaContext } from '../../..//lib/sovereign/maiaVoice';
 import {
   runA5Replay,
@@ -24,9 +23,9 @@ import {
  * - the private file is digest-pinned before use;
  * - current standing direction is built from the present source builder without history,
  *   while the same private recent-context render is supplied to all four conditions;
- * - Anthropic is called directly only when A5_REPLAY_EXECUTE=1;
+ * - this branch performs preflight only; it contains no direct provider caller;
  * - no model gateway, telemetry logger, DB writer, fallback provider or serving route is used;
- * - raw prompts and outputs are written only to a caller-selected local packet path.
+ * - real-model execution requires a separately authorized governed caller outside this file.
  */
 
 const PRIVATE_WINDOW_PATH = process.env.A5_PRIVATE_WINDOW_PATH || '/private/tmp/a5-silver-cedar-private-window.json';
@@ -125,33 +124,6 @@ async function loadPrivateWindow(): Promise<{ raw: Buffer; exchanges: PrivateExc
   return { raw, exchanges: parsed };
 }
 
-function anthropicCaller(apiKey: string): A5ModelCaller {
-  const client = new Anthropic({ apiKey });
-  return async ({ systemPrompt, userInput, model }) => {
-    const started = Date.now();
-    const message = await client.messages.create({
-      model: model.model,
-      max_tokens: model.maxTokens,
-      temperature: model.temperature,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userInput }],
-    });
-    const content = message.content.find((block) => block.type === 'text');
-    if (!content || content.type !== 'text') throw new Error('A5 Anthropic replay returned no text block');
-    return {
-      text: content.text.trim(),
-      provider: 'anthropic',
-      model: message.model,
-      latencyMs: Date.now() - started,
-      usage: {
-        inputTokens: message.usage.input_tokens,
-        outputTokens: message.usage.output_tokens,
-        totalTokens: message.usage.input_tokens + message.usage.output_tokens,
-      },
-    };
-  };
-}
-
 async function main(): Promise<void> {
   const { raw, exchanges } = await loadPrivateWindow();
   const recentContext = renderCurrentCoreWindow(exchanges);
@@ -199,49 +171,12 @@ async function main(): Promise<void> {
 
   console.log(JSON.stringify(preflightReport, null, 2));
 
-  if (process.env.A5_REPLAY_EXECUTE !== '1') return;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('A5_REPLAY_EXECUTE=1 but ANTHROPIC_API_KEY is not set');
-
-  // Independent calls; order is pinned so the raw packet is reproducible as an experiment record.
-  const order = [
-    'relational_structure_gestalt',
-    'current_context',
-    'compact_narrative_gestalt',
-    'reduced_direction',
-  ] as const;
-  const results = await runA5Replay(fixture, anthropicCaller(apiKey), order);
-
-  const packet = {
-    ...preflightReport,
-    executedAt: new Date().toISOString(),
-    order,
-    conditions: conditions.map((condition) => ({
-      ...condition,
-      // local packet intentionally contains full system prompts for forensic replay;
-      // it is not suitable for commit because sharedRecentContext is private.
-    })),
-    results,
-  };
-
-  const outputPath = process.env.A5_REPLAY_OUTPUT || `/private/tmp/a5-silver-cedar-replay-${Date.now()}.json`;
-  await writeFile(outputPath, JSON.stringify(packet, null, 2), { mode: 0o600 });
-  console.log(JSON.stringify({
-    replay: 'COMPLETE',
-    packetPath: outputPath,
-    packetSha256: sha256(await readFile(outputPath)),
-    conditionCount: results.length,
-    results: results.map((result) => ({
-      conditionId: result.conditionId,
-      provider: result.provider,
-      model: result.model,
-      inputChars: result.inputChars,
-      outputChars: result.outputChars,
-      latencyMs: result.latencyMs,
-      usage: result.usage,
-      outputSha256: sha256(result.text),
-    })),
-  }, null, 2));
+  if (process.env.A5_REPLAY_EXECUTE === '1') {
+    throw new Error(
+      'A5 real-model execution is intentionally not implemented in this research branch. ' +
+      'Provider calls must use a separately authorized governed adapter/caller; direct SDK imports are forbidden.'
+    );
+  }
 }
 
 main().catch((error) => {

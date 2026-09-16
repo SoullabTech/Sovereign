@@ -148,7 +148,7 @@ Therefore any C/D difference in the first replay is attributable to representati
 
 ## First replay model specification
 
-The executable binder is pinned to:
+The proposed real-model replication specification is pinned to:
 
 ```text
 provider       anthropic
@@ -162,15 +162,9 @@ Temperature 0 is used for the first causal replay to reduce sampling variance. I
 
 ## Execution boundary
 
-The executable binder:
+This branch deliberately stops at preflight. The Silver Cedar binder contains **no direct provider SDK import and no real-model caller**. Setting `A5_REPLAY_EXECUTE=1` is refused.
 
-- imports Anthropic directly;
-- does not call `modelService`, `maiaService`, telemetry, persistence or a serving route;
-- requires `A5_REPLAY_EXECUTE=1` before any model call;
-- requires `ANTHROPIC_API_KEY` only at execution time;
-- writes full prompts and raw outputs only to a caller-selected local packet with mode `0600`;
-- prints only hashes/counts/usage metadata in its completion summary;
-- has no fallback provider.
+Any future real-model replication must enter through a separately authorized governed provider seam while preserving the same pinned model specification, no-fallback law, condition digests, private-context custody, and C/D evidence-identity checks.
 
 A failed preflight means **no model call**.
 
@@ -203,9 +197,9 @@ A5 mechanical proof                ✅ PASS
 private Silver Cedar window        ✅ bound by digest · not committed
 A5 real-source C/D identity        ✅ inherited from A4
 first replay model spec            ✅ pinned
-real Claude replay                 ⛔ UNSPENT
+real governed-model replication    ⛔ UNSPENT · no caller in this branch
 blind human adjudication           ⛔ UNSPENT · A7
 production wiring                  ⛔ NONE
 ```
 
-**Next A5 act:** after source/CI preflight is green, execute exactly one four-condition Silver Cedar replay packet locally. Preserve raw outputs privately, expose only condition hashes/cost metadata for custody, then pass blind-coded outputs to A7 rather than self-declaring which response is “more alive.”
+**Next A5 act, only if separately authorized:** bind a governed provider caller to the frozen four-condition contract for cross-model replication. This branch does not authorize or implement that caller. Preserve raw outputs privately and keep any phenomenological adjudication outside the system under study.
