@@ -144,3 +144,28 @@ The reviewed implementation closes that gap. Evidence now has one of two mechani
 T16–T20 are the falsifiers: free-text evidence is excluded, absent in-file evidence is excluded, governed-record evidence must resolve and contain its marker, a governed-record path cannot escape repository custody, and an arbitrary repository file outside `docs/corpus-authority/` cannot masquerade as an authority record.
 
 The corpus remains fully held after this amendment: `0 admitted · 736 excluded · 0 refused`.
+
+## Follow-up review after PR #1312
+
+PR #1312 merged before two independent-review amendments were included in its merged head. The merged PR established the first authority requirement while keeping the corpus fully closed; it did **not** include the two later repairs below.
+
+The follow-up branch was reconciled onto current canonical `a0e3aa45e5bbeaabbbf49996dd4b93edb865dec2`. Its diff against canonical is limited to the four CORPUS-AUTHORITY files.
+
+Review repairs:
+
+- `c858e7357` — authority evidence must be mechanically locatable: an in-file marker that actually occurs, or a governed record under `docs/corpus-authority/` containing the declared marker. Free-text evidence does not establish authority.
+- `878bb3205` — admitting authority is exact-item-bound. A directory/prefix may hold or exclude descendants, but one authority claim may not confer admission on sibling/descendant works.
+
+Post-reconciliation validation:
+
+- admission/composition suite: **21 / 21 PASS**;
+- root TypeScript: **229 vs 239 baseline · 0 regressions**;
+- `typecheck:scripts`: fresh-cache canonical **40**, follow-up **40**, head-only **0**, base-only **0**, sets **identical**;
+- an earlier 40-vs-42 observation was traced to stale incremental `tsconfig.scripts.tsbuildinfo` state and is superseded by the fresh-cache comparison;
+- provider governance: **PASS**;
+- no-Supabase: **PASS**;
+- design canon: **PASS**;
+- `git diff --check`: **PASS**;
+- real corpus verdict remains **0 admitted · 736 excluded · 0 refused**.
+
+No corpus build, embed, force rebuild, classification, or production corpus mutation was executed by this follow-up.
