@@ -97,3 +97,19 @@ Before this act is called closed, production must prove:
 5. R12 invite plaintext remains zero.
 
 Removal from HEAD/deployed image does not resolve historical Git/replica custody. History remediation remains a separate later act.
+## Independent PR review amendment
+
+Review after PR creation found one defense-in-depth gap before merge: the new governed `ops_contacts` loader was server-side by architecture and protected by the import-walker witness, but it did not itself declare the framework-level `server-only` boundary.
+
+`lib/ops/sourceCustodyContacts.ts` now imports `server-only`, and the source-removal test requires that declaration. The browser-boundary mutant still attempts a client import of the governed loader and is killed.
+
+After this amendment:
+
+- source-removal/browser-boundary tests: **8 / 8 PASS**;
+- root TypeScript: **229 vs baseline 239 · 0 regressions**;
+- `typecheck:scripts`: **40 base / 40 head · identical identities · 0 head-only**;
+- provider governance: **PASS**;
+- no-Supabase: **PASS**;
+- branch design canon: **PASS**;
+- diff check: **PASS**;
+- full Next production build on the reviewed reconciled tree: **RC = 0**.

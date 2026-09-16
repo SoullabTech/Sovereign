@@ -14,6 +14,7 @@ describe('SOURCE-CUSTODY-PII-01 source removal', () => {
 
   test('operational recipients come only from governed ops_contacts custody', () => {
     const helper = read('lib/ops/sourceCustodyContacts.ts');
+    expect(helper).toMatch(/import\s*['"]server-only['"]/);
     expect(helper).toMatch(/FROM ops_contacts/);
     expect(helper).toMatch(/source-custody-migration/);
     expect(helper).not.toMatch(/passcode|passkey/i);
