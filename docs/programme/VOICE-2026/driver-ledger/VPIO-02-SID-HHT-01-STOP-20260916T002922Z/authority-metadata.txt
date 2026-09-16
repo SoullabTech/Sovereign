@@ -1,0 +1,4 @@
+authority file /private/tmp/sid-hht01-authority.txt (contents NOT carried)
+lines 8
+bytes 275
+sha256 17000e7cd77396015b8c29aff8d7d342779b23d6f708fc9b2105f80bd24af686

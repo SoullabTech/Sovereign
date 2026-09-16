@@ -1,0 +1,6 @@
+/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-comvzxsbabpfcefczwfmswixclmb/Logs/Test/Test-DriverUITests-2026.09.15_20-29-32--0400.xcresult
+total 8
+drwxr-xr-x   4 soullab  staff  128 Sep 15 20:30 .
+drwxr-xr-x   4 soullab  staff  128 Sep 15 20:30 ..
+drwxr-xr-x  26 soullab  staff  832 Sep 15 20:30 Data
+-rw-r--r--   1 soullab  staff  715 Sep 15 20:30 Info.plist
