@@ -28,11 +28,9 @@ export const dynamic = 'force-dynamic';
  *
  *   - **No source.** A blank page was not brought in from anywhere, so no
  *     `manuscript_sections` rows are written. Source means "what you brought
- *     in, unchanged"; fabricating an empty section to satisfy the draft
- *     initializer would assert a provenance that does not exist. The draft is
- *     therefore created here directly rather than through
- *     POST /manuscripts/[id]/draft, whose whole job is deriving a draft FROM a
- *     source. `base_source_hash` is the hash of no sections — which is the
+ *     in, unchanged". The one empty `manuscript_draft_sections` row created
+ *     here is a writable slice, not Source provenance; its `source_section_id`
+ *     is NULL. `base_source_hash` remains the hash of no source sections — the
  *     truthful statement that this draft descends from nothing.
  *
  *   - **No attachment.** Nothing is written to `living_work_expressions`. The
@@ -49,6 +47,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { computeSourceHash } from '@/lib/manuscript/render/renderMemberBook';
+import { partitionFromSections } from '@/lib/manuscript/draftSections';
 
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
@@ -99,7 +98,13 @@ export async function POST(request: NextRequest) {
             AND m.provenance = 'member_written'
             AND m.title IS NULL
             AND d.content = ''
-            AND d.revision_count = 1
+            AND d.version = 1
+            AND d.section_addressable_at IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM living_work_expressions e
+               WHERE e.expression_type = 'manuscript'
+                 AND e.expression_id = m.id
+            )
           ORDER BY m.created_at ASC
           LIMIT 1`,
         [memberId]
@@ -122,19 +127,32 @@ export async function POST(request: NextRequest) {
 
       const draft = await client.query<{ id: string }>(
         `INSERT INTO manuscript_working_drafts
-           (manuscript_id, member_id, content, base_source_hash, revision_count)
-         VALUES ($1, $2, '', $3, 1)
+           (manuscript_id, member_id, content, base_source_hash, revision_count,
+            section_addressable_at, section_conversion_version)
+         VALUES ($1, $2, '', $3, 1, now(), 1)
          RETURNING id`,
         [manuscriptId, memberId, baseSourceHash]
       );
 
-      // The first revision is the empty page itself, so the writer can always
-      // get back to "before I started" by the same gesture that reverses
-      // everything else.
+      /* The first blank writing surface is a DRAFT section, not a Source
+         section. An empty section is explicitly lawful in the substrate and
+         `source_section_id = NULL` says exactly what is true: these words did
+         not arrive from an imported source. No chapter or heading is invented. */
+      const section = await client.query<{ id: string }>(
+        `INSERT INTO manuscript_draft_sections (draft_id, position, text, source_section_id)
+         VALUES ($1, 0, '', NULL)
+         RETURNING id`,
+        [draft.rows[0].id],
+      );
+      const partition = partitionFromSections([{ id: section.rows[0].id, text: '' }]);
+
+      // The first revision is the empty page itself, WITH the boundary that
+      // exists at its birth, so restore/evidence never has to infer it later.
       await client.query(
-        `INSERT INTO working_draft_revisions (draft_id, revision_number, content, saved_by, note)
-         VALUES ($1, 1, '', $2, 'Started writing')`,
-        [draft.rows[0].id, memberId]
+        `INSERT INTO working_draft_revisions
+           (draft_id, revision_number, content, saved_by, note, section_partition)
+         VALUES ($1, 1, '', $2, 'Started writing', $3::jsonb)`,
+        [draft.rows[0].id, memberId, JSON.stringify(partition)]
       );
 
       return { manuscriptId, draftId: draft.rows[0].id, reused: false };
