@@ -3,6 +3,7 @@ room: Writer’s Studio — Experience Rebuild
 human_activity: inhabiting a creative work with MAIA present at the same visible movement, section, scene, passage, stanza, lyric, or other authored locus
 surfaces:
   - app/writers-studio/rebuild/**
+  - app/writers-studio/develop/**
   - app/writers-studio/studioMap.ts
   - app/writers-studio/workContext.ts
   # The mode bar was already named in shared_with_house and was covered by no
@@ -17,6 +18,7 @@ principles:
   - STUDIO_COPY_VOICE — describe what the writer can do, not implementation taxonomy
   - SOULLAB_THEME §3 — accent marks meaning and live state, not decoration
 reference_surfaces:
+  - docs/programme/WS-DEVELOP-WORKBENCH-01_DESIGN_CONSTITUTION_2026-09-16.md
   - docs/programme/WRITERS-STUDIO-EXPERIENCE-REBUILD-01_TARGET_STATE_2026-09-16.md
   - docs/programme/WRITERS-STUDIO-EXPERIENCE-REBUILD-01_PACKAGE_2026-09-16.md
   - docs/design/contracts/writer-worktable-section-native.md

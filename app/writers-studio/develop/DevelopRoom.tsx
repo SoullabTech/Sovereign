@@ -1,27 +1,25 @@
 'use client';
 
 /**
- * BUILD-07D — DEVELOP SURFACE · the room where a writer encounters a reading.
+ * WS-DEVELOP-WORKBENCH-01 — the manuscript seen developmentally.
  *
- * THE SURFACE ENCOUNTERS; IT DOES NOT AUTHOR. Everything shown here is a
- * frozen DevelopmentalReading (07C) plus the words the room puts beside it
- * (developPresentation). The room mints no identity: a reading is named by
- * the id the store minted, an observation by (readingId, key), and both are
- * in the URL so they outlive this component (INV-1, INV-3).
+ * Develop is a stance toward the same Work, not a report page the writer leaves
+ * the manuscript to visit. The manuscript therefore remains visually central
+ * and continuously scrollable; frozen developmental readings, provenance and
+ * dialogue sit beside the exact authored place they concern.
  *
- * WHAT MAIA NOTICED THEN STAYS VISIBLE. A superseded observation is rendered
- * in its place, marked, with what moved — never hidden, never re-read against
- * the current manuscript (07D product rule; INV-4, INV-19–22). Unmeasured is
- * its own state and is never shown as current.
+ * EXISTING READING MACHINERY IS SUBSTRATE, NOT DESIGN AUTHORITY. Immutable
+ * readings, observation identity, staleness, evidence, standing and dialogue
+ * keep their contracts. Their former page composition does not. A storage model
+ * may explain how evidence is kept; it may not dictate how a writer encounters
+ * their own book.
  *
- * NO AUTOMATIC REFRESH. The room reads when it opens and when the writer
- * acts — selects a reading, or asks for a new one. No timer, no refetch on
- * focus, no background re-assessment. The gate beside this file asserts it.
+ * D3 is deliberately section-precise, not passage-precise. Evidence refs already
+ * tell us which section an observation rests on, so an observation can move the
+ * manuscript there. Code-point ranges remain D5 and are never approximated here.
  *
- * WHAT IS ABSENT BY CONSTRUCTION. Interpretation, questions, possibilities,
- * dialogue, accept / reject / hold, revision, any edit to the Work. There is
- * no control here that changes a manuscript, and no control that changes a
- * reading. The only act is: ask for a new reading, under one lens.
+ * DEVELOP DOES NOT EDIT. The shared WholeManuscriptSurface receives every
+ * section with editable=false. Write remains the authority for changing prose.
  */
 
 import { OUTCOME_SENTENCE, causeLine } from '@/lib/writersStudio/developRefusalCopy';
@@ -32,9 +30,11 @@ import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/con
 import { PRESS, SERIF } from '../pressTheme';
 import { CANVAS_HREF } from '../studioMap';
 import { WriterStudioShell } from '../studio/WriterStudioShell';
-import { StudioShellRail } from '../studio/StudioRail';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
+import { locationForSection } from '@/lib/writersStudio/placeInWork';
+import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
+import { DevelopManuscriptRail, DevelopManuscriptSurface } from './DevelopManuscript';
 import { fetchWriteState, type WriteStateSection } from '@/lib/writersStudio/writeStateClient';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { DEVELOPMENTAL_READ_CEILING_CODE_POINTS } from '@/lib/manuscript/developmentalReader/contract';
@@ -217,9 +217,11 @@ function sectionLabel(section: WriteStateSection, index: number): string {
 export default function DevelopRoom({
   manuscriptId,
   requestedReadingId,
+  requestedSectionId,
 }: {
   manuscriptId: string;
   requestedReadingId: string | null;
+  requestedSectionId: string | null;
 }) {
   const [title, setTitle] = useState<string | null | undefined>(undefined);
   const [listPhase, setListPhase] = useState<ListPhase>('loading');
@@ -231,6 +233,9 @@ export default function DevelopRoom({
   /* WS-DEV-SCOPE-01 — what the writer asked MAIA to read. 'whole' is the
      default because it is what this room has always meant by "read this". */
   const [sections, setSections] = useState<WriteStateSection[] | null>(null);
+  const [writeVersion, setWriteVersion] = useState(0);
+  const [placeId, setPlaceId] = useState<string | null>(requestedSectionId);
+  const [jumpTo, setJumpTo] = useState<string | null>(null);
   /* 'whole' until the writer says otherwise, or until the work is too large to
      read at once — in which case the choice is opened FOR them, with the
      reason said in a sentence, rather than left to be discovered by pressing a
@@ -369,6 +374,35 @@ export default function DevelopRoom({
     [payload],
   );
 
+
+  /* D3 — section-level navigation from a frozen observation back into the
+     manuscript. Passage ranges remain D5; here we use only the section identity
+     already carried by each evidence ref. */
+  const evidenceSectionByObservation = useMemo(() => {
+    const out = new Map<string, string>();
+    if (!payload || payload.reading.outcome !== 'reading') return out;
+    for (const observation of payload.reading.observations) {
+      for (const ref of observation.evidenceRefs) {
+        const sectionId = sectionIdsOf(ref)[0];
+        if (sectionId) { out.set(observation.key, sectionId); break; }
+      }
+    }
+    return out;
+  }, [payload]);
+
+  const showPlace = useCallback((sectionId: string, requestJump: boolean) => {
+    setPlaceId(sectionId);
+    if (requestJump) setJumpTo(sectionId);
+    if (typeof window === 'undefined') return;
+    const next = locationForSection(window.location.pathname, window.location.search, sectionId);
+    window.history.replaceState(window.history.state, '', next);
+  }, []);
+
+  const currentSection = useMemo(
+    () => sections?.find((section) => section.id === placeId) ?? null,
+    [sections, placeId],
+  );
+
   /* The draft's own sections — ids, positions and the member's headings.
      
      ⛔ These MUST be the DRAFT sections, not the source ones. The reading scope
@@ -380,8 +414,24 @@ export default function DevelopRoom({
     let live = true;
     void fetchWriteState(manuscriptId, (url) => apiFetch(url)).then((r) => {
       if (!live) return;
-      const secs = r.state?.mode === 'section_aware' ? r.state.sections : [];
+      const aware = r.state?.mode === 'section_aware' ? r.state : null;
+      const secs = aware?.sections ?? [];
       setSections(secs);
+      setWriteVersion(aware?.version ?? 0);
+
+      const requestedExists = requestedSectionId
+        ? secs.some((section) => section.id === requestedSectionId)
+        : false;
+      const initialPlace = requestedExists ? requestedSectionId : (secs[0]?.id ?? null);
+      setPlaceId(initialPlace);
+
+      /* A stale or foreign `s` is not rebound to a different identity. The
+         manuscript may naturally open at its beginning, but the address stops
+         asserting a section this draft does not contain. */
+      if (requestedSectionId && !requestedExists && typeof window !== 'undefined') {
+        const next = locationForSection(window.location.pathname, window.location.search, null);
+        window.history.replaceState(window.history.state, '', next);
+      }
       /* Measured here, before anything is asked. A work larger than one
          sitting opens the choice itself — the writer meets a sentence about
          their book, not a refusal about a ceiling.
@@ -414,7 +464,7 @@ export default function DevelopRoom({
     return () => {
       live = false;
     };
-  }, [manuscriptId]);
+  }, [manuscriptId, requestedSectionId]);
 
   /* ── WHERE MAIA READS ────────────────────────────────────────────────
      One idea, and one the writer already has: read from here to here. Whole
@@ -531,31 +581,73 @@ export default function DevelopRoom({
       manuscriptId={manuscriptId}
       workName={headline}
       workNamed={Boolean(title)}
-      workNote="What MAIA noticed when she read this work, kept exactly as she noticed it."
+      workNote="Developmental view"
       rail={
-        <StudioShellRail
-          hasManuscript
-          manuscriptId={manuscriptId}
-          current="manuscript"
-          openPanels={[]}
-          onSelect={() => {}}
+        <DevelopManuscriptRail
+          sections={sections ?? []}
+          currentSectionId={placeId}
+          onSelect={(sectionId) => showPlace(sectionId, true)}
         />
       }
     >
-    {/* min-w-0 so the interior SHARES the shell's body row with the rail
-        instead of overflowing across it: a flex child's default min-width is
-        its content, and a wide reading is wide. Without it the rail is
-        rendered and then covered, which reads as the Studio disappearing at
-        exactly the moment the writer changes stance. */}
-    <div className="flex-1 min-w-0 flex flex-col min-h-0" style={{ fontFamily: SERIF }}>
-      <div className="flex-1 flex flex-col md:flex-row min-h-0">
-        {/* ── Readings: the ledger of what MAIA has read, newest first ── */}
-        <aside
-          className="md:w-80 shrink-0 border-b md:border-b-0 md:border-r px-5 py-6 overflow-y-auto"
-          style={{ borderColor: PRESS.ruleSoft }}
-          aria-label="Readings"
-        >
-          <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">Readings</h2>
+    <div
+      className="flex-1 min-w-0 min-h-0 flex"
+      style={{ fontFamily: SERIF }}
+      data-develop-workbench
+    >
+      <main
+        className="flex-1 min-w-0 min-h-0 px-6 md:px-10 py-6"
+        data-develop-centre="manuscript"
+        style={{
+          borderRight: `1px solid ${PRESS.ruleSoft}`,
+          display: 'flex', flexDirection: 'column',
+        }}
+      >
+        {sections === null ? (
+          <p className="text-[13px] opacity-40">opening the manuscript…</p>
+        ) : sections.length === 0 ? (
+          <p className="text-[14px] leading-relaxed opacity-60 max-w-md">
+            This draft does not yet have section-aware writing to show here.
+          </p>
+        ) : (
+          <>
+            <div
+              data-develop-locus
+              className="pb-4 mb-4 border-b text-[11.5px] opacity-55"
+              style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}
+            >
+              <span className="opacity-70">Manuscript</span>
+              {currentSection ? <span> &nbsp;›&nbsp; {currentSection.heading?.trim() || 'Untitled section'}</span> : null}
+            </div>
+            <DevelopManuscriptSurface
+              sections={sections}
+              version={writeVersion}
+              initialOpenAt={placeId}
+              jumpTo={jumpTo}
+              onJumpHandled={() => setJumpTo(null)}
+              onPlaceChange={(sectionId) => showPlace(sectionId, false)}
+            />
+          </>
+        )}
+      </main>
+
+      <aside
+        className="w-[390px] max-w-[42vw] shrink-0 overflow-y-auto px-5 py-5"
+        aria-label="Developmental reading"
+        data-develop-intelligence
+      >
+        <div className="pb-4 mb-4 border-b" style={{ borderColor: PRESS.ruleSoft }}>
+          <p className="text-[10.5px] tracking-[0.18em] uppercase opacity-45">Develop</p>
+          <p className="text-[15px] mt-1">{currentSection?.heading?.trim() || 'Manuscript'}</p>
+          <p className="text-[12px] opacity-50 mt-1">
+            {view ? `${view.lensMeaning}.` : 'The manuscript stays in view while MAIA’s reading sits beside it.'}
+          </p>
+        </div>
+
+        <details className="mb-5 border-b pb-4" style={{ borderColor: PRESS.ruleSoft }}>
+          <summary className="cursor-pointer text-[12.5px] opacity-70">Readings & reading focus</summary>
+          <div className="pt-4">
+            <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">Readings</h2>
 
           {listPhase === 'loading' && <p className="text-[13px] opacity-40">opening…</p>}
           {listPhase === 'error' && (
@@ -848,10 +940,12 @@ export default function DevelopRoom({
               )}
             </div>
           )}
-        </aside>
+          </div>
+        </details>
 
-        {/* ── The reading: what MAIA noticed, where it rests, where it stands ── */}
-        <main className="flex-1 min-w-0 px-6 md:px-12 py-7">
+        {/* The reading now sits BESIDE the manuscript rather than where the
+            manuscript should be. Frozen provenance and dialogue are preserved. */}
+        <div className="pb-8">
           {readingPhase === 'idle' && listPhase === 'ready' && summaries.length === 0 && (
             <p className="text-[15px] leading-relaxed opacity-60 max-w-md">
               When you ask, MAIA reads the whole draft under the lens you choose and brings back
@@ -891,10 +985,13 @@ export default function DevelopRoom({
               standings={standings}
               onStanding={adoptStanding}
               onRefresh={() => loadStandings(view.id)}
+              evidenceSectionByObservation={evidenceSectionByObservation}
+              currentSectionId={placeId}
+              onNavigate={(sectionId) => showPlace(sectionId, true)}
             />
           )}
-        </main>
-      </div>
+        </div>
+      </aside>
     </div>
     </WriterStudioShell>
   );
@@ -904,10 +1001,20 @@ export default function DevelopRoom({
 
 function Reading({
   view, manuscriptId, standings, onStanding, onRefresh,
+  evidenceSectionByObservation, currentSectionId, onNavigate,
 }: {
   view: ReadingView; manuscriptId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
+  evidenceSectionByObservation: ReadonlyMap<string, string>;
+  currentSectionId: string | null;
+  onNavigate: (sectionId: string) => void;
 }) {
+  const observations = [...view.observations].sort((a, b) => {
+    const aHere = evidenceSectionByObservation.get(a.key) === currentSectionId ? 0 : 1;
+    const bHere = evidenceSectionByObservation.get(b.key) === currentSectionId ? 0 : 1;
+    return aHere - bHere;
+  });
+
   return (
     <article data-reading-id={view.id} data-reading-state={view.state} className="max-w-[70ch]">
       <header className="mb-7">
@@ -933,7 +1040,7 @@ function Reading({
         </p>
       ) : (
         <ol className="space-y-8" aria-label="Observations">
-          {view.observations.map((o) => (
+          {observations.map((o) => (
             /* THE DIALOGUE SURFACE'S IDENTITY IS (readingId, observationKey) —
                `o1` is stable only WITHIN one reading. The `key` on `Reading`
                above already remounts this subtree; the compound key states the
@@ -947,6 +1054,9 @@ function Reading({
               standings={standings}
               onStanding={onStanding}
               onRefresh={onRefresh}
+              evidenceSectionId={evidenceSectionByObservation.get(o.key) ?? null}
+              activeForPlace={evidenceSectionByObservation.get(o.key) === currentSectionId}
+              onNavigate={onNavigate}
             />
           ))}
         </ol>
@@ -969,9 +1079,12 @@ function Reading({
  */
 function Observation({
   o, manuscriptId, readingId, standings, onStanding, onRefresh,
+  evidenceSectionId, activeForPlace, onNavigate,
 }: {
   o: ObservationView; manuscriptId: string; readingId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
+  evidenceSectionId: string | null; activeForPlace: boolean;
+  onNavigate: (sectionId: string) => void;
 }) {
   const [talking, setTalking] = useState(false);
   return (
@@ -996,6 +1109,18 @@ function Observation({
       >
         {o.observation}
       </p>
+
+      {evidenceSectionId && (
+        <button
+          type="button"
+          onClick={() => onNavigate(evidenceSectionId)}
+          data-observation-show-in-manuscript={o.key}
+          className="mt-2 text-[12px] underline underline-offset-4"
+          style={{ cursor: 'pointer', opacity: activeForPlace ? 1 : 0.58, color: activeForPlace ? PRESS.accent : 'inherit' }}
+        >
+          {activeForPlace ? 'In view' : 'Show in manuscript'}
+        </button>
+      )}
 
       <div className="mt-3 text-[12.5px] leading-relaxed opacity-60">
         <p className="opacity-70 uppercase tracking-[0.15em] text-[10.5px] mb-1">Rests on</p>

@@ -122,11 +122,17 @@ describe('D1-06 — one grammar, one reader, one composer', () => {
     expect(bar).not.toMatch(/['"`]&s=/);
   });
 
-  it('⛔ Develop invents no second location helper', () => {
-    for (const f of ['develop/page.tsx', 'develop/DevelopRoom.tsx']) {
-      const src = source(f);
-      expect(src).not.toContain('locationForSection');
+  it('⛔ Develop invents no second location grammar', () => {
+    const page = source('develop/page.tsx');
+    const room = source('develop/DevelopRoom.tsx');
+    /* D3 now renders a continuous manuscript, so it must keep `s` truthful as
+       the reader scrolls. It does that through the SAME canonical helper D1
+       already transports — never through hand-composed query syntax. */
+    expect(room).toContain('locationForSection');
+    for (const src of [page, room]) {
+      expect(src).not.toMatch(/['"`]\?s=/);
       expect(src).not.toMatch(/['"`]&s=/);
+      expect(src).not.toContain("searchParams.set('s'");
     }
   });
 });
