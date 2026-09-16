@@ -24,8 +24,9 @@
  * Admission is a DECLARATION file, not a path convention. A file enters the
  * corpus only if some rule in `data/ain/corpus-admission.json` names it.
  *
- *     declared + classification permits corpus  ->  ADMITTED
+ *     declared + classification + authority     ->  ADMITTED
  *     not declared by any rule                  ->  EXCLUDED  (the default)
+ *     admitting class without authority basis  ->  EXCLUDED
  *     declared but carrying human-record signal ->  REFUSED   (overrides)
  *
  * ⛔ THE DEFAULT IS EXCLUSION, AND THAT IS THE WHOLE POINT. An undeclared file
@@ -69,12 +70,32 @@ const ADMITTING: ReadonlySet<Classification> = new Set<Classification>([
   'organizational_public',
 ]);
 
+const AUTHORITY_BY_CLASS: Readonly<Record<string, ReadonlySet<CorpusAuthorityKind>>> = {
+  published_knowledge: new Set<CorpusAuthorityKind>(['soullab_owned']),
+  organizational_public: new Set<CorpusAuthorityKind>(['soullab_owned']),
+  third_party_published: new Set<CorpusAuthorityKind>(['public_domain', 'license', 'permission']),
+};
+
+export type CorpusAuthorityKind =
+  | 'soullab_owned'
+  | 'public_domain'
+  | 'license'
+  | 'permission';
+
+export interface CorpusAuthorityBasis {
+  kind: CorpusAuthorityKind;
+  /** Concrete evidence for this authority claim — e.g. in-file copyright line, license, or permission record. */
+  evidence: string;
+}
+
 export interface AdmissionRule {
   /** Path prefix, relative to the repo root. */
   prefix: string;
   classification: Classification;
   /** Why this rule exists. Required: an unexplained admission is not a decision. */
   reason: string;
+  /** Required for every admitting classification. Absence never inherits authority from classification or location. */
+  authority?: CorpusAuthorityBasis;
 }
 
 export interface AdmissionDeclaration {
@@ -166,6 +187,23 @@ export function decideAdmission(
       verdict.excluded.push({
         file: rel,
         reason: `classification '${rule.classification}' does not permit corpus membership`,
+      });
+      continue;
+    }
+
+    const authority = rule.authority;
+    const permittedAuthority = AUTHORITY_BY_CLASS[rule.classification];
+    if (!authority || !authority.evidence?.trim()) {
+      verdict.excluded.push({
+        file: rel,
+        reason: `classification '${rule.classification}' requires a structured corpus authority basis`,
+      });
+      continue;
+    }
+    if (!permittedAuthority?.has(authority.kind)) {
+      verdict.excluded.push({
+        file: rel,
+        reason: `authority '${authority.kind}' is incompatible with classification '${rule.classification}'`,
       });
       continue;
     }
