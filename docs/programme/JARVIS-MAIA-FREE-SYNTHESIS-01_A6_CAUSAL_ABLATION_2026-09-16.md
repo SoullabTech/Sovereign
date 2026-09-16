@@ -34,3 +34,24 @@ Combined with A5, the current evidence points toward a deeper representational i
 A future causal cut should distinguish `more evidence` from `relational organization of the same evidence`. It must hold evidence constant and change only whether established relations / open relations are explicitly represented.
 
 No production change is authorized.
+
+## Second causal cut — same evidence, different organization
+
+A 2×2 factorial held primary evidence and typed relations constant while varying only two derived structures:
+
+- temporal **MOVEMENT** absent/present;
+- explicit **OPEN-loop** status absent/present.
+
+Conditions: `R`, `R_MOVE`, `R_OPEN`, `R_MOVE_OPEN`; two local-model replicates each.
+
+### Result
+
+No factor produced a clean, stable solution. Relations alone still reopened meaning and invented symbolism. Movement sometimes produced a more integrated, non-question response but remained unstable and introduced unsupported claims. Open-loop status shifted attention toward practice/design but did not prevent interpretive invention. Movement+open also continued to elaborate beyond member evidence.
+
+### Finding
+
+Relational organization **changes the conversational move**, but prompt-resident standing labels are not sufficient to keep synthesis inside evidentiary authority. The model continues to elaborate fluent meaning beyond what the member established.
+
+This strengthens, but does not prove, the A3 structural-first hypothesis: provenance, standing and correction may need to constrain composition structurally rather than rely on prose instructions inside cognition.
+
+A6 therefore rejects a simple remedy of either `remove Talk`, `add typed relations`, `add movement`, or `add OPEN status`. The remaining problem is joint: coherent perception **and** authority-preserving composition.
