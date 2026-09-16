@@ -1,0 +1,10 @@
+/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-comvzxsbabpfcefczwfmswixclmb/Logs/Test/Test-DriverUITests-2026.09.15_20-29-32--0400.xcresult
+total 8
+drwxr-xr-x   4 soullab  staff  128 Sep 15 20:30 .
+drwxr-xr-x   4 soullab  staff  128 Sep 15 20:30 ..
+drwxr-xr-x  26 soullab  staff  832 Sep 15 20:30 Data
+-rw-r--r--   1 soullab  staff  715 Sep 15 20:30 Info.plist
+   13831 docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2-DIAG-20260916T003924Z/read2-xcresult-object-legacy.json
+    1340 docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2-DIAG-20260916T003924Z/read2-xcresult-summary.json
+   12430 docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2-DIAG-20260916T003924Z/read2-xcresult-action-log.txt
+   27601 total

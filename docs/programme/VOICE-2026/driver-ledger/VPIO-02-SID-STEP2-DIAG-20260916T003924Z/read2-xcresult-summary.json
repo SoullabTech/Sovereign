@@ -1,0 +1,48 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64e",
+        "deviceId" : "00008140-00163D9922E0801C",
+        "deviceName" : "Kelly Nezat’s iPhone",
+        "modelName" : "iPhone 16 Pro Max",
+        "osBuildNumber" : "23H24",
+        "osVersion" : "26.7",
+        "platform" : "iOS"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "DriverUITests · Built with macOS 15.7.8",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1789518641.853,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "skippedTests" : 0,
+  "startTime" : 1789518572.94,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.)",
+      "targetName" : "DriverUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "DriverUITests-Runner (3537) encountered an error",
+      "testName" : "DriverUITests-Runner (3537) encountered an error"
+    }
+  ],
+  "title" : "Test - DriverUITests",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}

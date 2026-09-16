@@ -1,0 +1,34 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+      "--bundle-id",
+      "life.soullab.voicekernel.vpio02sid",
+      "--json-output",
+      "docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2-DIAG-20260916T003924Z/read4-apps-vpio02sid.json"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "506.7"
+  },
+  "result" : {
+    "apps" : [
+
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "matchingBundleIdentifier" : "life.soullab.voicekernel.vpio02sid",
+    "removableAppsIncluded" : true
+  }
+}
