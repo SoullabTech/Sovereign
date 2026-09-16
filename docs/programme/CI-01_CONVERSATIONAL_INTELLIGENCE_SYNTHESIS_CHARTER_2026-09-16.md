@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-16
 
-**State:** OPEN · RESEARCH / ARCHITECTURE ONLY · NO RUNTIME AUTHORITY
+**State:** COMPLETE · RESEARCH / ARCHITECTURE ONLY · NO RUNTIME AUTHORITY
 
 **Branch:** `feature/ci-01-conversational-intelligence-synthesis-20260916`
 
@@ -248,7 +248,15 @@ No prompt injection, response rewrite, floor action, TTS action, or memory updat
 
 ### A4 — MAIA-CONVERSATION-BENCH-01 specification
 
-**Prepared tracker:** `MAIA-SOVEREIGN-ci01-a4` · **DEFERRED; not authorization**
+**Tracker:** `MAIA-SOVEREIGN-ci01-a4` · **COMPLETE · SPECIFICATION ONLY**
+
+The A4 ruling is recorded in
+`CI-01_ACT4_MAIA_CONVERSATION_BENCH_01_SPEC_2026-09-16.md`. It defines a constitutional,
+multi-domain, outcome-bound benchmark without creating or running one. Corpus validity, causal
+isolation, domain judgment, ecology judgment, encounter outcome, and operational fitness remain
+separate claim layers. The specification preserves timing classes, exact denominators, direct
+member evidence, independent human adjudication, mandatory cross-domain cases, and synergy by
+consequence plus ablation. It rejects a composite conversational-intelligence score.
 
 Define a benchmark for conversational ecology, not answer correctness alone. It must include:
 
@@ -266,15 +274,15 @@ Define a benchmark for conversational ecology, not answer correctness alone. It 
 The benchmark must preserve per-case failures and provenance. An aggregate score may not hide a
 constitutional violation.
 
-### Stop gate
+### Stop gate — reached
 
-CI-01 stops after architecture and benchmark specification. A later lane—provisionally
+CI-01 stops here after architecture and benchmark specification. A later lane—provisionally
 `CI-02 — Conversational Field Runtime`—would require separate authorization before adding types,
 runtime synthesis, storage, prompts, model calls, or behavior.
 
 ## Relationship to TURN-03
 
-TURN-03 remains independent and unchanged:
+TURN-03 remains independent; CI-01 does not import or govern its implementation:
 
 > Can a lawful sovereign acoustic model improve continuation evidence?
 
@@ -284,14 +292,20 @@ become a HEARING witness only after TURN-03 earns it and a later contract admits
 does not need Gestalt, relationship, memory, Spiralogic, or response knowledge, and CI-01 grants it
 none.
 
-CI-01 A3 also read the independent TURN-03 research state at
+CI-01 A3 read the independent TURN-03 research state at
 `897dfcc8c7067ac8d09d9221647f80a7dda0c012`. At that immutable ref, the local DualTurn shadow
 runtime passed feasibility; direct DualTurn and Smart Turn completion evidence failed important
 continuation cases; and an asymmetric floor-ownership rule passed the two sealed synthetic
-populations as a shadow candidate while preserving a known ceiling falsifier. TURN-03 A3 remains
-open, real-human timing remains untested, and no live authority was granted. Those findings
-sharpen A3's comparison and falsifier law; no sibling code, model, evidence store, or authority
-is imported.
+populations as a shadow candidate while preserving a known ceiling falsifier.
+
+During A4 closeout, the remote sibling advanced to
+`296590d3b12fa19d22542b0d7454c11f981fd681`. At that immutable ref, TURN-03 A4's domain-specific
+human-shadow instrumentation is sealed and a local/admin-only founder witness is admitted, but
+the witness is **not executed** and the human population remains **unopened**. Its protocol adds
+useful research precedent—separate opt-in, explicit-floor ground truth, metadata-only telemetry,
+a frozen candidate, and no tuning inside a population—but provides no real-human result and no
+TURN-04 authority. No sibling component, route, observer, model, evidence store, or authority is
+imported into CI-01.
 
 CI-01 asks the complementary question:
 
@@ -315,33 +329,39 @@ Nothing in CI-01 may:
 - promote a research branch merely by citing it;
 - create a runtime `ConversationalFieldSnapshot` type.
 
-## Opening acceptance
+## Programme acceptance
 
-CI-01 is truthfully open when:
+CI-01 is truthfully complete when:
 
 - the charter is durable;
 - the inherited capability map has an evidence-backed baseline;
 - CMT-01, TURN-01/02/03, Gestalt law, prompt-cognition findings, and prior conversational-model
   research are related without conflation;
-- implementation and live-authority exclusions are explicit;
-- later acts are named but unspent.
+- the field contract preserves differentiated witnesses and projections rather than creating a
+  second mind or opaque context object;
+- shadow synthesis is temporally sealed, one-way, and falsifiable before any intelligence claim;
+- the conversation benchmark preserves constitutional failures, direct member evidence, exact
+  denominators, timing classes, and non-aggregation law;
+- implementation and live-authority exclusions remain explicit.
 
 ## Current standing
 
 ```text
-lane ................................ OPEN
+lane ................................ COMPLETE · RESEARCH / ARCHITECTURE ONLY
 A1 baseline census .................. COMPLETE · REPOSITORY / R&D RECORDS ONLY
 A2 field contract ................... COMPLETE · ARCHITECTURE CANDIDATE ONLY
 A2 monolithic field snapshot ........ REJECTED AS FIRST IMPLEMENTATION SHAPE
 A3 shadow synthesizer ............... COMPLETE · ARCHITECTURE ONLY
 A3 runtime / event mirror ........... NOT CREATED
-A4 conversation benchmark ........... NOT OPENED
+A4 conversation benchmark ........... COMPLETE · SPECIFICATION ONLY · NOT RUN
+A4 composite intelligence score ..... REJECTED
 runtime types ....................... UNCHANGED
 prompts ............................. UNCHANGED
 models .............................. CI-01 SELECTED / INSTALLED NONE
-TURN-03 research snapshot ........... A3 ASYMMETRIC SHADOW CANDIDATE · NO LIVE AUTHORITY
+TURN-03 sibling state ............... A4 INSTRUMENTATION SEALED · FOUNDER WITNESS ADMITTED · NOT EXECUTED
 TURN-03 integration into CI-01 ...... NONE
 live floor / response authority ..... UNCHANGED
 TURN-03 ............................. INDEPENDENT
+CI-02 ............................... NOT OPENED
 production .......................... UNTOUCHED
 ```
