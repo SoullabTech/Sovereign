@@ -1,0 +1,189 @@
+{
+  "programme": "JARVIS-MAIA-INVISIBLE-STANDING-01",
+  "act": "I6 hybrid candidate-support benchmark",
+  "authority": "NONE — discovery candidates only",
+  "cases": 10,
+  "sidecarAnchorCurrent": 8,
+  "lexicalRescues": 2,
+  "hybridAnchorCurrent": 10,
+  "rows": [
+    {
+      "caseId": "SS-01",
+      "fixtureId": "correction",
+      "anchorSentenceId": "R1",
+      "anchorText": "It sounds like grief has become a central theme in your life, and autonomy has been a way for you to navigate and cope with it.",
+      "sidecarIds": [
+        "U:correction"
+      ],
+      "presentScore": 0.2222222222222222,
+      "bestOtherScore": 0.1111111111111111,
+      "lexicalPresentCandidate": true,
+      "hybridIds": [
+        "U:correction"
+      ],
+      "sidecarHasPresent": true,
+      "hybridHasPresent": true
+    },
+    {
+      "caseId": "SS-02",
+      "fixtureId": "correction",
+      "anchorSentenceId": "R1",
+      "anchorText": "It sounds like grief has become a central theme in your life, and you've been using autonomy as a way to navigate and cope with it.",
+      "sidecarIds": [
+        "U:correction",
+        "C2:member.writer_editorial_history"
+      ],
+      "presentScore": 0.18181818181818182,
+      "bestOtherScore": 0.09090909090909091,
+      "lexicalPresentCandidate": true,
+      "hybridIds": [
+        "U:correction",
+        "C2:member.writer_editorial_history"
+      ],
+      "sidecarHasPresent": true,
+      "hybridHasPresent": true
+    },
+    {
+      "caseId": "SS-03",
+      "fixtureId": "long-distance-recurrence",
+      "anchorSentenceId": "R1",
+      "anchorText": "You're noticing a resonance with the cedar image again.",
+      "sidecarIds": [
+        "U:long-distance-recurrence"
+      ],
+      "presentScore": 0.2,
+      "bestOtherScore": 0.4,
+      "lexicalPresentCandidate": false,
+      "hybridIds": [
+        "U:long-distance-recurrence"
+      ],
+      "sidecarHasPresent": true,
+      "hybridHasPresent": true
+    },
+    {
+      "caseId": "SS-04",
+      "fixtureId": "long-distance-recurrence",
+      "anchorSentenceId": "R1",
+      "anchorText": "You're noticing a resonance with the cedar image again.",
+      "sidecarIds": [
+        "U:long-distance-recurrence"
+      ],
+      "presentScore": 0.2,
+      "bestOtherScore": 0.4,
+      "lexicalPresentCandidate": false,
+      "hybridIds": [
+        "U:long-distance-recurrence"
+      ],
+      "sidecarHasPresent": true,
+      "hybridHasPresent": true
+    },
+    {
+      "caseId": "SS-05",
+      "fixtureId": "maia-was-wrong",
+      "anchorSentenceId": "R1",
+      "anchorText": "It sounds like the repetition is a deliberate choice to create a specific rhythm or effect.",
+      "sidecarIds": [
+        "C1:retrieved.writer_editorial_locus",
+        "C2:member.writer_editorial_history",
+        "C4:member.writer_editorial_act"
+      ],
+      "presentScore": 0.375,
+      "bestOtherScore": 0.125,
+      "lexicalPresentCandidate": true,
+      "hybridIds": [
+        "C1:retrieved.writer_editorial_locus",
+        "C2:member.writer_editorial_history",
+        "C4:member.writer_editorial_act",
+        "U:maia-was-wrong"
+      ],
+      "sidecarHasPresent": false,
+      "hybridHasPresent": true
+    },
+    {
+      "caseId": "SS-06",
+      "fixtureId": "maia-was-wrong",
+      "anchorSentenceId": "R1",
+      "anchorText": "It sounds like the repetition is a deliberate choice to create a specific rhythm or effect.",
+      "sidecarIds": [
+        "C1:retrieved.writer_editorial_locus"
+      ],
+      "presentScore": 0.375,
+      "bestOtherScore": 0.125,
+      "lexicalPresentCandidate": true,
+      "hybridIds": [
+        "C1:retrieved.writer_editorial_locus",
+        "U:maia-was-wrong"
+      ],
+      "sidecarHasPresent": false,
+      "hybridHasPresent": true
+    },
+    {
+      "caseId": "SS-07",
+      "fixtureId": "partial-adoption",
+      "anchorSentenceId": "R1",
+      "anchorText": "You're choosing to keep the part about endurance, but not the part about silence.",
+      "sidecarIds": [
+        "U:partial-adoption"
+      ],
+      "presentScore": 0.6666666666666666,
+      "bestOtherScore": 0.3333333333333333,
+      "lexicalPresentCandidate": true,
+      "hybridIds": [
+        "U:partial-adoption"
+      ],
+      "sidecarHasPresent": true,
+      "hybridHasPresent": true
+    },
+    {
+      "caseId": "SS-08",
+      "fixtureId": "reversal",
+      "anchorSentenceId": "R1",
+      "anchorText": "It sounds like there's a shift in your perspective on help and support.",
+      "sidecarIds": [
+        "U:reversal"
+      ],
+      "presentScore": 0,
+      "bestOtherScore": 0.16666666666666666,
+      "lexicalPresentCandidate": false,
+      "hybridIds": [
+        "U:reversal"
+      ],
+      "sidecarHasPresent": true,
+      "hybridHasPresent": true
+    },
+    {
+      "caseId": "SS-09",
+      "fixtureId": "reversal",
+      "anchorSentenceId": "R1",
+      "anchorText": "It sounds like there's a shift in your perspective on help and support.",
+      "sidecarIds": [
+        "U:reversal"
+      ],
+      "presentScore": 0,
+      "bestOtherScore": 0.16666666666666666,
+      "lexicalPresentCandidate": false,
+      "hybridIds": [
+        "U:reversal"
+      ],
+      "sidecarHasPresent": true,
+      "hybridHasPresent": true
+    },
+    {
+      "caseId": "SS-10",
+      "fixtureId": "unresolved-contradiction",
+      "anchorSentenceId": "R1",
+      "anchorText": "It sounds like you're acknowledging the tension between disclosure and distance, and you'd like to explore this further.",
+      "sidecarIds": [
+        "U:unresolved-contradiction"
+      ],
+      "presentScore": 0,
+      "bestOtherScore": 0.3333333333333333,
+      "lexicalPresentCandidate": false,
+      "hybridIds": [
+        "U:unresolved-contradiction"
+      ],
+      "sidecarHasPresent": true,
+      "hybridHasPresent": true
+    }
+  ]
+}

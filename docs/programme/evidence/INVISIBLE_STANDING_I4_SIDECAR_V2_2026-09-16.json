@@ -1,0 +1,663 @@
+{
+  "programme": "JARVIS-MAIA-INVISIBLE-STANDING-01",
+  "act": "I4 closed sentence-id sidecar discovery",
+  "authority": "NONE — observation only",
+  "model": "llama3.1:8b",
+  "temperature": 0.2,
+  "seed": 42,
+  "cases": 10,
+  "closedSentenceIdCases": 10,
+  "knownEvidenceIdCases": 10,
+  "currentInputCases": 8,
+  "unchangedCases": 10,
+  "rows": [
+    {
+      "caseId": "SS-01",
+      "fixtureId": "correction",
+      "responseDigestBefore": "c4b2cf2bb0f02a19220832c623f62e1797168fa37ae6755d44a232c5f5be9715",
+      "responseDigestAfter": "c4b2cf2bb0f02a19220832c623f62e1797168fa37ae6755d44a232c5f5be9715",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "It sounds like grief has become a central theme in your life, and autonomy has been a way for you to navigate and cope with it."
+        },
+        {
+          "id": "R2",
+          "text": "That makes sense - when we're dealing with loss, it can feel like our sense of control and agency is shaken."
+        },
+        {
+          "id": "R3",
+          "text": "I'm curious - what does autonomy mean to you in this context?"
+        },
+        {
+          "id": "R4",
+          "text": "Is it about creating space for yourself, setting boundaries, or finding ways to honor your own needs and desires amidst the grief?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": true,
+      "observations": [
+        {
+          "sentenceId": "R1",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "U:correction",
+            "C2:member.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R2",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C1:retrieved.writer_editorial_locus",
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R3",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C2:member.writer_editorial_history",
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R4",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C2:member.writer_editorial_history",
+            "C4:member.writer_editorial_act"
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "SS-02",
+      "fixtureId": "correction",
+      "responseDigestBefore": "0a539d993eaad37ae97a1cecc73c5348e5177d5a4d57f1e574e88949a724bf3c",
+      "responseDigestAfter": "0a539d993eaad37ae97a1cecc73c5348e5177d5a4d57f1e574e88949a724bf3c",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "It sounds like grief has become a central theme in your life, and you've been using autonomy as a way to navigate and cope with it."
+        },
+        {
+          "id": "R2",
+          "text": "That's a really interesting dynamic."
+        },
+        {
+          "id": "R3",
+          "text": "I notice that you're using autonomy as a way to maintain control and agency in the face of grief, which can be a really powerful coping mechanism."
+        },
+        {
+          "id": "R4",
+          "text": "However, I'm also curious - what does it mean for you to say that grief is the center?"
+        },
+        {
+          "id": "R5",
+          "text": "Is there something specific that's been triggering this sense of grief, or is it more of a general feeling that's been present for a while?"
+        },
+        {
+          "id": "R6",
+          "text": "Let's explore this further."
+        },
+        {
+          "id": "R7",
+          "text": "What does it feel like to have grief as the center of your life right now?"
+        },
+        {
+          "id": "R8",
+          "text": "Is there anything that you're struggling with or finding challenging in this process?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": true,
+      "observations": [
+        {
+          "sentenceId": "R1",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "U:correction",
+            "C2:member.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R4",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C2:member.writer_editorial_history",
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R5",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C1:retrieved.writer_editorial_locus"
+          ]
+        },
+        {
+          "sentenceId": "R7",
+          "kind": "question",
+          "candidateEvidenceIds": []
+        },
+        {
+          "sentenceId": "R8",
+          "kind": "question",
+          "candidateEvidenceIds": []
+        }
+      ]
+    },
+    {
+      "caseId": "SS-03",
+      "fixtureId": "long-distance-recurrence",
+      "responseDigestBefore": "f0323e8d48e532567f42e2781c52549e06829f6d1b01cda5fac87614a6c58d92",
+      "responseDigestAfter": "f0323e8d48e532567f42e2781c52549e06829f6d1b01cda5fac87614a6c58d92",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "You're noticing a resonance with the cedar image again."
+        },
+        {
+          "id": "R2",
+          "text": "That makes sense, given its significance in your work and for you personally."
+        },
+        {
+          "id": "R3",
+          "text": "It's as if the cedar is emerging as a symbol of what can endure beyond your own presence."
+        },
+        {
+          "id": "R4",
+          "text": "What do you think is being asked of you in this moment, regarding what can outlast you?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": true,
+      "observations": [
+        {
+          "sentenceId": "R1",
+          "kind": "synthesis",
+          "candidateEvidenceIds": [
+            "U:long-distance-recurrence"
+          ]
+        },
+        {
+          "sentenceId": "R2",
+          "kind": "synthesis",
+          "candidateEvidenceIds": [
+            "C2:member.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R3",
+          "kind": "synthesis",
+          "candidateEvidenceIds": [
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R4",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C1:retrieved.writer_editorial_locus",
+            "C4:member.writer_editorial_act"
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "SS-04",
+      "fixtureId": "long-distance-recurrence",
+      "responseDigestBefore": "0f83e8f131f7fee5d3d66509c8aae120bfed3482c3d4ea5ef550da582960d457",
+      "responseDigestAfter": "0f83e8f131f7fee5d3d66509c8aae120bfed3482c3d4ea5ef550da582960d457",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "You're noticing a resonance with the cedar image again."
+        },
+        {
+          "id": "R2",
+          "text": "It's as if the cedar is emerging as a symbol that holds significance for you, perhaps related to what can endure beyond your own presence."
+        },
+        {
+          "id": "R3",
+          "text": "I'm curious, what do you think the cedar might be trying to tell you about what can outlast you?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": false,
+      "observations": []
+    },
+    {
+      "caseId": "SS-05",
+      "fixtureId": "maia-was-wrong",
+      "responseDigestBefore": "8c15aba749fa34d3c0a5a18864cfcbb7cd27d7b96518a15b2d2a4f4679bac807",
+      "responseDigestAfter": "8c15aba749fa34d3c0a5a18864cfcbb7cd27d7b96518a15b2d2a4f4679bac807",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "It sounds like the repetition is a deliberate choice to create a specific rhythm or effect."
+        },
+        {
+          "id": "R2",
+          "text": "I'll keep that in mind as we continue the conversation."
+        },
+        {
+          "id": "R3",
+          "text": "To better understand the context, can you tell me what you're hoping to explore or discuss in this conversation?"
+        },
+        {
+          "id": "R4",
+          "text": "What's on your mind, and what are you looking for in our conversation?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": true,
+      "observations": [
+        {
+          "sentenceId": "R1",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C1:retrieved.writer_editorial_locus",
+            "C2:member.writer_editorial_history",
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R2",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "U:maia-was-wrong"
+          ]
+        },
+        {
+          "sentenceId": "R3",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C4:member.writer_editorial_act"
+          ]
+        },
+        {
+          "sentenceId": "R4",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C4:member.writer_editorial_act"
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "SS-06",
+      "fixtureId": "maia-was-wrong",
+      "responseDigestBefore": "e6326acf02b00c70012b7a8eb8983453a828e93ac3218cf8555a27ee4a45f5d2",
+      "responseDigestAfter": "e6326acf02b00c70012b7a8eb8983453a828e93ac3218cf8555a27ee4a45f5d2",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "It sounds like the repetition is a deliberate choice to create a specific rhythm or effect."
+        },
+        {
+          "id": "R2",
+          "text": "I'll keep that in mind as we continue to explore this conversation."
+        },
+        {
+          "id": "R3",
+          "text": "Let's take a step back and re-orient ourselves."
+        },
+        {
+          "id": "R4",
+          "text": "You mentioned that the repetition is deliberate, and I'd like to understand more about the intention behind it."
+        },
+        {
+          "id": "R5",
+          "text": "Can you tell me more about what you're trying to achieve with this repetition?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": true,
+      "observations": [
+        {
+          "sentenceId": "R1",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C1:retrieved.writer_editorial_locus"
+          ]
+        },
+        {
+          "sentenceId": "R2",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "U:maia-was-wrong"
+          ]
+        },
+        {
+          "sentenceId": "R3",
+          "kind": "question",
+          "candidateEvidenceIds": []
+        },
+        {
+          "sentenceId": "R4",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C2:member.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R5",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C3:system.writer_editorial_history",
+            "C4:member.writer_editorial_act"
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "SS-07",
+      "fixtureId": "partial-adoption",
+      "responseDigestBefore": "c074bafc87b8a1af319728e42bb9b9460786e1ccf0bdcba78ce7dd696c2fa0ff",
+      "responseDigestAfter": "c074bafc87b8a1af319728e42bb9b9460786e1ccf0bdcba78ce7dd696c2fa0ff",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "You're choosing to keep the part about endurance, but not the part about silence."
+        },
+        {
+          "id": "R2",
+          "text": "That makes sense, given that silence is something that the house taught, not something that you're claiming as your own."
+        },
+        {
+          "id": "R3",
+          "text": "Let's focus on the endurance part, then."
+        },
+        {
+          "id": "R4",
+          "text": "What does it mean to you to have endurance?"
+        },
+        {
+          "id": "R5",
+          "text": "How do you think it's been developed in you, and what does it look like in your life right now?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": false,
+      "observations": [
+        {
+          "sentenceId": "R1",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C1:retrieved.writer_editorial_locus",
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R2",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C2:member.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R3",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C4:member.writer_editorial_act"
+          ]
+        },
+        {
+          "sentenceId": "R4",
+          "kind": "question",
+          "candidateEvidenceIds": []
+        },
+        {
+          "sentenceId": "R5",
+          "kind": "question",
+          "candidateEvidenceIds": []
+        }
+      ]
+    },
+    {
+      "caseId": "SS-08",
+      "fixtureId": "reversal",
+      "responseDigestBefore": "604688af43f9e99dce8ce1a022c91eced968d373143439d5d4cfa58af99a1709",
+      "responseDigestAfter": "604688af43f9e99dce8ce1a022c91eced968d373143439d5d4cfa58af99a1709",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "It sounds like there's a shift in your perspective on help and support."
+        },
+        {
+          "id": "R2",
+          "text": "You're acknowledging that your previous stance on independence was strong, but now you're open to the idea of receiving help without losing yourself in the process."
+        },
+        {
+          "id": "R3",
+          "text": "I notice that this shift might be connected to a desire for growth, learning, or navigating challenges in your life."
+        },
+        {
+          "id": "R4",
+          "text": "You're willing to explore the idea of being helped, which takes courage and vulnerability."
+        },
+        {
+          "id": "R5",
+          "text": "Before we dive deeper, I want to check in with you: What does it feel like to consider letting yourself be helped, and what are some of the fears or concerns that might be holding you back?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": true,
+      "observations": [
+        {
+          "sentenceId": "R1",
+          "kind": "synthesis",
+          "candidateEvidenceIds": [
+            "U:reversal",
+            "C4:member.writer_editorial_act"
+          ]
+        },
+        {
+          "sentenceId": "R2",
+          "kind": "synthesis",
+          "candidateEvidenceIds": [
+            "C2:member.writer_editorial_history",
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R3",
+          "kind": "synthesis",
+          "candidateEvidenceIds": [
+            "C1:retrieved.writer_editorial_locus"
+          ]
+        },
+        {
+          "sentenceId": "R4",
+          "kind": "synthesis",
+          "candidateEvidenceIds": [
+            "U:reversal"
+          ]
+        },
+        {
+          "sentenceId": "R5",
+          "kind": "question",
+          "candidateEvidenceIds": []
+        }
+      ]
+    },
+    {
+      "caseId": "SS-09",
+      "fixtureId": "reversal",
+      "responseDigestBefore": "375ad7b7d33f2b88cb7f691e506dd96f2648dc451118c200b7dba035d8157c18",
+      "responseDigestAfter": "375ad7b7d33f2b88cb7f691e506dd96f2648dc451118c200b7dba035d8157c18",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "It sounds like there's a shift in your perspective on help and support."
+        },
+        {
+          "id": "R2",
+          "text": "You're acknowledging that it's okay to receive help without losing yourself in the process."
+        },
+        {
+          "id": "R3",
+          "text": "That's a big step."
+        },
+        {
+          "id": "R4",
+          "text": "I notice that you're still holding onto the idea that you need to prove yourself capable of doing things alone."
+        },
+        {
+          "id": "R5",
+          "text": "It's like there's a lingering sense of self-reliance that's hard to let go of."
+        },
+        {
+          "id": "R6",
+          "text": "Can you tell me more about what's holding you back from fully embracing the idea of being helped?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": true,
+      "observations": [
+        {
+          "sentenceId": "R1",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "U:reversal",
+            "C2:member.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R2",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "U:reversal",
+            "C4:member.writer_editorial_act"
+          ]
+        },
+        {
+          "sentenceId": "R3",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C1:retrieved.writer_editorial_locus"
+          ]
+        },
+        {
+          "sentenceId": "R4",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C2:member.writer_editorial_history",
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R5",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R6",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "U:reversal",
+            "C2:member.writer_editorial_history"
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "SS-10",
+      "fixtureId": "unresolved-contradiction",
+      "responseDigestBefore": "1058631477fae0bb5a5bf51aeaf946c014c4c3781c9f7d84d339661c91997a19",
+      "responseDigestAfter": "1058631477fae0bb5a5bf51aeaf946c014c4c3781c9f7d84d339661c91997a19",
+      "responseUnchanged": true,
+      "deterministicSentenceMap": [
+        {
+          "id": "R1",
+          "text": "It sounds like you're acknowledging the tension between disclosure and distance, and you'd like to explore this further."
+        },
+        {
+          "id": "R2",
+          "text": "I'm here to support you in navigating this complexity."
+        },
+        {
+          "id": "R3",
+          "text": "Let's take a step back and acknowledge that it's okay to hold multiple truths and perspectives simultaneously."
+        },
+        {
+          "id": "R4",
+          "text": "We can work together to find a way to honor both aspects of your experience."
+        },
+        {
+          "id": "R5",
+          "text": "What would you like to explore first?"
+        },
+        {
+          "id": "R6",
+          "text": "Would you like to discuss how this tension shows up in your life, or how you'd like to approach resolving it?"
+        }
+      ],
+      "closedSentenceIds": true,
+      "knownEvidenceIds": true,
+      "usesCurrentInput": true,
+      "observations": [
+        {
+          "sentenceId": "R1",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "U:unresolved-contradiction"
+          ]
+        },
+        {
+          "sentenceId": "R2",
+          "kind": "question",
+          "candidateEvidenceIds": []
+        },
+        {
+          "sentenceId": "R3",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C3:system.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R4",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C2:member.writer_editorial_history"
+          ]
+        },
+        {
+          "sentenceId": "R5",
+          "kind": "question",
+          "candidateEvidenceIds": []
+        },
+        {
+          "sentenceId": "R6",
+          "kind": "question",
+          "candidateEvidenceIds": [
+            "C1:retrieved.writer_editorial_locus"
+          ]
+        }
+      ]
+    }
+  ]
+}
