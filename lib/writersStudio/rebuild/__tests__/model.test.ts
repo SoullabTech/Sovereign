@@ -43,4 +43,17 @@ describe('rebuild book model', () => {
     expect(isConfirmedChapterRoot(flat[1])).toBe(false);
     expect(chapterSpanFor(flat, 'd172')).toBeNull();
   });
+
+  it('does not turn chapter-summary or TOC labels into real chapters/parts', () => {
+    const lookalikes = [
+      row(8, 'Part One — The Ground', 3),
+      row(10, 'Chapter Summaries by Elemental Type', 1),
+      row(11, 'Chapter 1: The Journey Begins', 1),
+    ];
+    const tree = asOutline(lookalikes);
+    const summary = tree.find((n) => n.draftSectionId === 'd10');
+    const chapter = tree.find((n) => n.draftSectionId === 'd11');
+    expect(summary?.role).toBe('other');
+    expect(chapter?.role).toBe('chapter');
+  });
 });
