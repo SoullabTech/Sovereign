@@ -200,9 +200,24 @@ say "flag"                 "${A_FLAG:-(absent)}"
   || post "the container was NOT recreated, so the running process predates the flag"
 say "container recreated" "${B_CID:0:12}… → ${A_CID:0:12}…  (expected)"
 
+# ⚠️⚠️ THIS ASKED A WEAKER QUESTION THAN THE PRE-CHECK, AND ON 2026-09-16 IT
+# ANSWERED `30`. The pre-check counts THE SEVEN BY NAME; this counted every
+# 2026-09 migration, so it could not have distinguished the seven being present
+# from the seven being gone and thirty others remaining.
+#
+# ⛔ It never failed, because it was never compared to anything — an unscored
+# number printed beside scored ones reads as evidence and is not. Repaired to ask
+# the SAME question as P1, and to STOP on a mismatch like every other clause.
 A_MIGS=$(docker exec maia-postgres psql -qtAX -U soullab maia_consciousness -c "
-  SELECT count(*) FROM schema_migrations WHERE filename LIKE '202609%';" 2>/dev/null | tr -d '[:space:]')
-say "migrations (2026-09)" "$A_MIGS"
+  SELECT count(*) FROM schema_migrations WHERE filename IN (
+   '20260914000001_proposal_succession.sql','20260914000002_manuscript_revision_offers.sql',
+   '20260914000003_proposal_chains_member_identity.sql',
+   '20260914000004_manuscript_revision_authorizations.sql',
+   '20260914000005_editorial_ontology.sql',
+   '20260915000001_ask_threads_subject_preparation.sql',
+   '20260915000002_editorial_turn_bindings.sql');" 2>/dev/null | tr -d '[:space:]')
+say "migrations (the seven)" "$A_MIGS"
+[ "$A_MIGS" = "7" ] || post "migration state is $A_MIGS, not 7, after activation"
 
 # ⭐⭐ ONLY MAIA. Stage 1's deploy recreated ten containers; this must recreate one.
 AFTER_STACK=$(docker ps -a --format '{{.Names}} {{.ID}} {{.CreatedAt}}' | grep -v '^maia-sovereign ' | sort)
