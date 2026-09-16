@@ -190,7 +190,9 @@ const nodes: ResearchNode[] = [
   },
 ];
 
-const silverCedarField: GestaltResearchField = { version: 'A4.v0', nodes };
+export const SILVER_CEDAR_POSITIVE_GESTALT_ID = 'sc-g-positive-arc';
+export const SILVER_CEDAR_RUPTURE_GESTALT_ID = 'sc-g-availability-rupture';
+export const silverCedarField: GestaltResearchField = { version: 'A4.v0', nodes };
 const validation = validateResearchField(silverCedarField);
 assert.equal(validation.ok, true, JSON.stringify(validation.issues, null, 2));
 
