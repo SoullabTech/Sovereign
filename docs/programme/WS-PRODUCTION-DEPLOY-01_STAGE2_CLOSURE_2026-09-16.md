@@ -1,6 +1,6 @@
 # WRITERS-STUDIO-PRODUCTION-DEPLOY-01 · Stage 2 — EDITORIAL ACTIVATION
 
-**Status: ✅ ACTIVATED AND VERIFIED · smoke 14/0 · ⚠️ four surface observations OWED · ⛔ Chapter 10 NOT OPENED**
+**Status: ✅ ACTIVATED AND VERIFIED · smoke 14/0 · ✅ MACHINE-SIDE COMPLETE · ⚠️ four surface observations OWED · ⛔ Chapter 10 NOT OPENED**
 
 ```
 production            ae27205d9   (unchanged — this was an activation, not a deployment)
@@ -54,7 +54,14 @@ establishes is:
 - **ENTAILED** — the act ran `up -d --no-deps --no-build maia`, touched no
   database and recreated no database container (the whole-stack diff proves
   `maia-postgres` was untouched), so no mechanism in it could change the ledger
-- ⛔ **NOT MEASURED** — the seven, by name, after
+- ✅ **MEASURED, 2026-09-16, founder-run** — the seven, by name, **after** activation: **`7`**
+
+> ⭐ **The gap is closed by measurement, not by argument.** The line above stood
+> as `⛔ NOT MEASURED` until the founder ran the query and it returned `7`; it is
+> corrected here rather than rewritten, so the record shows that the entailment
+> was held as entailment until evidence replaced it. ⚠️ An earlier attempt at the
+> same query failed on shell quoting — ⛔ a failed command is not a measurement,
+> and it was not counted as one; the literal rerun is the evidence.
 
 ⭐ **The number was never compared to anything, which is what made it worse than
 a failure**: an unscored value printed beside scored ones reads as evidence and
@@ -96,6 +103,8 @@ Its visibility is observation 3; opening one is Chapter 10's act.
 ```
 Stage 1                    ✅ CLOSED
 Stage 2 activation         ✅ VERIFIED
+named migrations after     ✅ 7 / 7 MEASURED (founder-run, 2026-09-16)
+machine-side record        ✅ COMPLETE — nothing automatable remains
 production smoke           ✅ automated 14/0 · ⚠️ four observations OWED
 REAL-WORK-ACCEPTANCE-01    ⛔ separate act, NOT OPENED
 developmental-reading leg  ⛔ unresolved — no production subject or runtime,
