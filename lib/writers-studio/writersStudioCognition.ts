@@ -28,6 +28,7 @@
  */
 
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { runInvisibleStandingShadowSafely } from './invisibleStandingShadow';
 import { constructWriterTurn, renderWriterTurn, tierInvariant, type WriterHandoffProof } from './canonicalWriterTurn';
 import type { CanonicalTurn, MemberIdentity } from '@/lib/maia/canonical-turn';
 import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
@@ -135,7 +136,19 @@ export function beginCanonicalGeneration(
       onHandoff: () => { signalled = true; settle(true); },
     },
   })
-    .then(r => ({ ok: true, response: r?.text ?? undefined }))
+    .then(r => {
+      const response = r?.text ?? undefined;
+      // 🔬 INVISIBLE-STANDING-SHADOW-02 — exact finalized Writer response, OFF by default.
+      // Zero response authority: the audit return value is deliberately ignored.
+      if (response && process.env.MAIA_INVISIBLE_STANDING_SHADOW === '1') {
+        runInvisibleStandingShadowSafely({
+          turn: prepared.turn,
+          finalText: response,
+          sanctuary: input.posture.sanctuary,
+        });
+      }
+      return { ok: true, response };
+    })
     .catch(err => {
       console.error('[FOCUS] generation failed', {
         crossed: signalled,
