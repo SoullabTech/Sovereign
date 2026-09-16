@@ -620,6 +620,51 @@ export default function HomeView({
   const VISIBLE = 4;
   const shelfCards = showAll ? shelf : shelf.slice(0, VISIBLE);
 
+  /* WS-EMPTY-BEGIN-REACH-01 — one beginning form, reachable from BOTH Home
+     states. The empty-Studio hero used to set `beginning = true` while the
+     only form capable of acting on that state lived behind `kind !== 'begin'`.
+     That made the first-time writer's primary door a no-op. Keeping the form
+     as one JSX value means the empty and established Studio cannot drift into
+     two different implementations of the same member act. */
+  const beginForm = (
+    <div className="flex-1 max-w-lg">
+      <label htmlFor="work-name" className="block text-[13px] opacity-55 mb-2">
+        Give it a name, or leave it blank for now.
+      </label>
+      <div className="flex gap-3">
+        <input
+          id="work-name"
+          autoFocus
+          value={draftName}
+          onChange={(e) => setDraftName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !busy)
+              void run(
+                () => onBegin(draftName.trim()),
+                'Could not begin your work just now. Nothing was changed.',
+              );
+            if (e.key === 'Escape') setBeginning(false);
+          }}
+          className="flex-1 bg-transparent border px-3.5 py-2.5 text-[15px] min-h-[48px] rounded-[2px] outline-none"
+          style={{ borderColor: PRESS.rule, color: PRESS.text, fontFamily: SERIF }}
+        />
+        <button
+          onClick={() =>
+            void run(
+              () => onBegin(draftName.trim()),
+              'Could not begin your work just now. Nothing was changed.',
+            )
+          }
+          disabled={busy}
+          className="px-6 min-h-[48px] text-[14px] rounded-[2px] disabled:opacity-40"
+          style={{ background: PRESS.accent, color: PRESS.ink }}
+        >
+          {busy ? <Loader2 size={16} className="animate-spin" /> : 'Begin'}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <main
       className="min-h-screen px-6 md:px-10 py-10 md:py-16"
@@ -654,14 +699,18 @@ export default function HomeView({
             <h1 className="text-[36px] md:text-[44px] leading-[1.1] mb-10">
               Welcome, writer. You are home.
             </h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <button
-                onClick={() => setBeginning(true)}
-                className={`${FILLED} w-full sm:w-auto`}
-                style={{ background: PRESS.accent, color: PRESS.ink }}
-              >
-                Begin a new work
-              </button>
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
+              {beginning ? (
+                beginForm
+              ) : (
+                <button
+                  onClick={() => setBeginning(true)}
+                  className={`${FILLED} w-full sm:w-auto`}
+                  style={{ background: PRESS.accent, color: PRESS.ink }}
+                >
+                  Begin a new work
+                </button>
+              )}
               <Link
                 href={IMPORT_HREF}
                 className={`${QUIET} w-full sm:w-auto`}
@@ -1108,42 +1157,7 @@ export default function HomeView({
             style={{ borderColor: PRESS.ruleSoft }}
           >
             {beginning ? (
-              <div className="flex-1 max-w-lg">
-                <label htmlFor="work-name" className="block text-[13px] opacity-55 mb-2">
-                  Give it a name, or leave it blank for now.
-                </label>
-                <div className="flex gap-3">
-                  <input
-                    id="work-name"
-                    autoFocus
-                    value={draftName}
-                    onChange={(e) => setDraftName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !busy)
-                        void run(
-                          () => onBegin(draftName.trim()),
-                          'Could not begin your work just now. Nothing was changed.',
-                        );
-                      if (e.key === 'Escape') setBeginning(false);
-                    }}
-                    className="flex-1 bg-transparent border px-3.5 py-2.5 text-[15px] min-h-[48px] rounded-[2px] outline-none"
-                    style={{ borderColor: PRESS.rule, color: PRESS.text, fontFamily: SERIF }}
-                  />
-                  <button
-                    onClick={() =>
-                      void run(
-                        () => onBegin(draftName.trim()),
-                        'Could not begin your work just now. Nothing was changed.',
-                      )
-                    }
-                    disabled={busy}
-                    className="px-6 min-h-[48px] text-[14px] rounded-[2px] disabled:opacity-40"
-                    style={{ background: PRESS.accent, color: PRESS.ink }}
-                  >
-                    {busy ? <Loader2 size={16} className="animate-spin" /> : 'Begin'}
-                  </button>
-                </div>
-              </div>
+              beginForm
             ) : (
               <button
                 onClick={() => setBeginning(true)}
