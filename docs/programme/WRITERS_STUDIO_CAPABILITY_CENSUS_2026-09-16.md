@@ -88,12 +88,12 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 | Mobile Develop workbench | ⏳ LATER | Explicitly outside D3; needs its own responsive composition. |
 | Refusal truth / fail-safe behavior | ✅ LIVE | Developmental refusal copy, write gates, stale-state handling and no-guess identity behavior are heavily tested. |
 | Appearance persistence across reload | ✅ LIVE | Server authority + local anti-flash cache. |
-| Chapter Review persistence across reload | 🟡 PARTIAL | Frozen readings persist, but Write's chapter-review projection is session-local today. |
+| Chapter Review persistence across reload | 🔧 REPAIRING | Durable review-manifest code now records the exact chapter scope, draft revision, completed reading IDs and lens failures. Migration `20260916000001_writer_studio_chapter_review_runs.sql` is written but unspent; runtime reload witness is still owed. |
 | Production authenticated browser witness for current D3 + repairs | 🔧 REPAIRING | Local structural/tests are green; the real member walk remains required before release. |
 ## Completion order from this census
 
 1. **Close current usability defects** — manuscript scroll ownership, visible Pure Canvas return, all Chapter Review findings reachable.
-2. **Chapter Review continuity** — rehydrate frozen review state after reload; partial/completed readings must not disappear from Write merely because React state did.
+2. **Chapter Review continuity witness** — apply the review-manifest migration through the authorized deployment path, then prove complete + partial review reloads reconstruct the exact frozen reading set without rerunning MAIA.
 3. **Develop D4** — human-scale Work / Chapter / Passage stance and truthful lens disclosure; every `LENS_ORDER` member reachable.
 4. **Develop D5** — preserve passage `CodePointRange` into the projection and render only evidence precision actually held.
 5. **Resolve declared-Work context** — Passage Work and every MAIA act must distinguish no Work / one Work / ambiguous Work.
