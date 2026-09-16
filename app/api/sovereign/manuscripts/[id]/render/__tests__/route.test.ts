@@ -69,7 +69,8 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
       .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 }) // manuscript
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 }); // sections → empty
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // no working draft
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }); // source sections → empty
     const res = await POST(req({ format: 'pdf' }), ctx);
     expect(res.status).toBe(400);
     expect(mockRender).not.toHaveBeenCalled();
@@ -79,7 +80,8 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
       .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 }) // manuscript
-      .mockResolvedValueOnce({ rows: [{ heading: 'Ch', body: 'text' }], rowCount: 1 }) // sections
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // no working draft
+      .mockResolvedValueOnce({ rows: [{ heading: 'Ch', body: 'text', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 }) // source
       .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 }) // member name
       .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // INSERT provenance
 
@@ -91,6 +93,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
       pageCount: 1,
       sourceHash: 'abc123',
       sectionCount: 1,
+      productionProfile: 'hallmark-6x9-v1',
     });
 
     const res = await POST(req({ format: 'pdf' }), ctx);
@@ -100,7 +103,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
 
     // author's own name passed to the renderer as book author
     expect(mockRender).toHaveBeenCalledWith(
-      [{ heading: 'Ch', body: 'text' }],
+      [{ heading: 'Ch', body: 'text', headingDepth: 1, headingSignal: 'markdown' }],
       expect.objectContaining({ title: 'My Book', author: 'Ann Author', format: 'pdf' }),
     );
 
@@ -109,6 +112,11 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
       String(c[0]).includes('INSERT INTO manuscript_renders'),
     );
     expect(insertCall).toBeTruthy();
+    expect(String(insertCall?.[0])).toContain('production_profile');
+    expect(insertCall?.[1]).toEqual([
+      'm1', MEMBER, 'pdf', 1, 'abc123', 1,
+      'hallmark-6x9-v1', 'source', null,
+    ]);
 
     // rendered bytes are the response body
     const buf = Buffer.from(await res.arrayBuffer());
@@ -117,6 +125,46 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     // temp artifact deleted — a member manuscript is never persisted server-side
     await new Promise((r) => setTimeout(r, 25));
     await expect(fs.access(tmp)).rejects.toBeTruthy();
+  });
+
+  it('renders the current section-addressable draft instead of stale source prose', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '9', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Chapter One', body: 'CURRENT EDIT', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 });
+
+    const tmp = path.join(os.tmpdir(), `render-draft-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
+    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 current draft'));
+    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 22, pageCount: 1, sourceHash: 'draft-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v1' });
+
+    const res = await POST(req({ format: 'pdf' }), ctx);
+    expect(res.status).toBe(200);
+    expect(mockRender).toHaveBeenCalledWith(
+      [{ heading: 'Chapter One', body: 'CURRENT EDIT', headingDepth: 1, headingSignal: 'markdown' }],
+      expect.objectContaining({ title: 'My Book', author: 'Ann Author', format: 'pdf' }),
+    );
+    const sql = mockQuery.mock.calls.map((c) => String(c[0])).join('\n');
+    expect(sql).toContain('FROM manuscript_draft_sections');
+    const insert = mockQuery.mock.calls.find((c) => String(c[0]).includes('INSERT INTO manuscript_renders'));
+    expect(insert?.[1]?.slice(-3)).toEqual(['hallmark-6x9-v1', 'working_draft', '9']);
+    await new Promise((r) => setTimeout(r, 25));
+  });
+
+  it('refuses rather than substituting source when an addressable draft has no readable sections', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '9', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 });
+
+    const res = await POST(req({ format: 'pdf' }), ctx);
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: expect.stringContaining('Nothing older was substituted') });
+    expect(mockRender).not.toHaveBeenCalled();
+    expect(mockQuery.mock.calls.some((c) => /FROM manuscript_sections WHERE/.test(String(c[0])))).toBe(false);
   });
 });
 
@@ -138,7 +186,8 @@ describe('POST /api/sovereign/manuscripts/[id]/render — nullable title', () =>
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
       .mockResolvedValueOnce({ rows: [{ title }], rowCount: 1 }) // manuscript
-      .mockResolvedValueOnce({ rows: [{ heading: null, body: 'text' }], rowCount: 1 }) // sections
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // no working draft
+      .mockResolvedValueOnce({ rows: [{ heading: null, body: 'text', heading_depth: null, heading_signal: null }], rowCount: 1 }) // source
       .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 }) // member name
       .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // INSERT provenance
 
@@ -153,6 +202,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — nullable title', () =>
       pageCount: 1,
       sourceHash: 'abc123',
       sectionCount: 1,
+      productionProfile: 'hallmark-6x9-v1',
     });
 
     const res = await POST(req({ format: 'pdf' }), ctx);

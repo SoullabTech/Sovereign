@@ -1,27 +1,25 @@
 'use client';
 
 /**
- * BUILD-07D — DEVELOP SURFACE · the room where a writer encounters a reading.
+ * WS-DEVELOP-WORKBENCH-01 — the manuscript seen developmentally.
  *
- * THE SURFACE ENCOUNTERS; IT DOES NOT AUTHOR. Everything shown here is a
- * frozen DevelopmentalReading (07C) plus the words the room puts beside it
- * (developPresentation). The room mints no identity: a reading is named by
- * the id the store minted, an observation by (readingId, key), and both are
- * in the URL so they outlive this component (INV-1, INV-3).
+ * Develop is a stance toward the same Work, not a report page the writer leaves
+ * the manuscript to visit. The manuscript therefore remains visually central
+ * and continuously scrollable; frozen developmental readings, provenance and
+ * dialogue sit beside the exact authored place they concern.
  *
- * WHAT MAIA NOTICED THEN STAYS VISIBLE. A superseded observation is rendered
- * in its place, marked, with what moved — never hidden, never re-read against
- * the current manuscript (07D product rule; INV-4, INV-19–22). Unmeasured is
- * its own state and is never shown as current.
+ * EXISTING READING MACHINERY IS SUBSTRATE, NOT DESIGN AUTHORITY. Immutable
+ * readings, observation identity, staleness, evidence, standing and dialogue
+ * keep their contracts. Their former page composition does not. A storage model
+ * may explain how evidence is kept; it may not dictate how a writer encounters
+ * their own book.
  *
- * NO AUTOMATIC REFRESH. The room reads when it opens and when the writer
- * acts — selects a reading, or asks for a new one. No timer, no refetch on
- * focus, no background re-assessment. The gate beside this file asserts it.
+ * D3 established section-precise navigation. D5 now preserves lawful frozen
+ * passage ranges too: exact current evidence may be illuminated in context, while
+ * superseded ranges remain provenance and are never applied to changed prose.
  *
- * WHAT IS ABSENT BY CONSTRUCTION. Interpretation, questions, possibilities,
- * dialogue, accept / reject / hold, revision, any edit to the Work. There is
- * no control here that changes a manuscript, and no control that changes a
- * reading. The only act is: ask for a new reading, under one lens.
+ * DEVELOP DOES NOT EDIT. The shared WholeManuscriptSurface receives every
+ * section with editable=false. Write remains the authority for changing prose.
  */
 
 import { OUTCOME_SENTENCE, causeLine } from '@/lib/writersStudio/developRefusalCopy';
@@ -32,10 +30,14 @@ import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/con
 import { PRESS, SERIF } from '../pressTheme';
 import { CANVAS_HREF } from '../studioMap';
 import { WriterStudioShell } from '../studio/WriterStudioShell';
-import { StudioShellRail } from '../studio/StudioRail';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
-import { fetchWriteState, type WriteStateSection } from '@/lib/writersStudio/writeStateClient';
+import { locationForSection, replacePlaceAddress } from '@/lib/writersStudio/placeInWork';
+import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
+import type { CodePointRange } from '@/lib/manuscript/development/evidenceRef';
+import { DevelopManuscriptRail, DevelopManuscriptSurface } from './DevelopManuscript';
+import type { WriteStateSection } from '@/lib/writersStudio/writeStateClient';
+import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { DEVELOPMENTAL_READ_CEILING_CODE_POINTS } from '@/lib/manuscript/developmentalReader/contract';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
@@ -63,6 +65,9 @@ import { fetchStandings, postStanding } from '@/lib/writersStudio/standingClient
 
 type ListPhase = 'loading' | 'ready' | 'unauthorized' | 'error';
 type ReadingPhase = 'idle' | 'loading' | 'ready' | 'not_found' | 'error';
+type DevelopScope = 'work' | 'chapter' | 'custom';
+const PRIMARY_LENSES: readonly DevelopmentalLens[] = ['development', 'structure', 'continuity', 'voice'];
+const lensLabel = (lens: DevelopmentalLens) => lens === 'development' ? 'Movement' : lens.charAt(0).toUpperCase() + lens.slice(1);
 
 /**
  * Whether this Work can be read at all, resolved BEFORE the invitation to ask.
@@ -217,9 +222,11 @@ function sectionLabel(section: WriteStateSection, index: number): string {
 export default function DevelopRoom({
   manuscriptId,
   requestedReadingId,
+  requestedSectionId,
 }: {
   manuscriptId: string;
   requestedReadingId: string | null;
+  requestedSectionId: string | null;
 }) {
   const [title, setTitle] = useState<string | null | undefined>(undefined);
   const [listPhase, setListPhase] = useState<ListPhase>('loading');
@@ -228,14 +235,20 @@ export default function DevelopRoom({
   const [readingPhase, setReadingPhase] = useState<ReadingPhase>('idle');
   const [payload, setPayload] = useState<ReadingPayload | null>(null);
   const [lens, setLens] = useState<DevelopmentalLens>('development');
+  const [developScope, setDevelopScope] = useState<DevelopScope>('chapter');
+  const [structuredSections, setStructuredSections] = useState<RebuildSection[] | null>(null);
+  const [manuscriptPhase, setManuscriptPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   /* WS-DEV-SCOPE-01 — what the writer asked MAIA to read. 'whole' is the
      default because it is what this room has always meant by "read this". */
   const [sections, setSections] = useState<WriteStateSection[] | null>(null);
+  const [writeVersion, setWriteVersion] = useState(0);
+  const [placeId, setPlaceId] = useState<string | null>(requestedSectionId);
+  const [jumpTo, setJumpTo] = useState<string | null>(null);
+  const [activeEvidence, setActiveEvidence] = useState<{ observationKey: string; sectionId: string; range: CodePointRange } | null>(null);
   /* 'whole' until the writer says otherwise, or until the work is too large to
      read at once — in which case the choice is opened FOR them, with the
      reason said in a sentence, rather than left to be discovered by pressing a
      button that cannot succeed. */
-  const [readMode, setReadMode] = useState<'whole' | 'part'>('whole');
   const [fromIndex, setFromIndex] = useState(0);
   /* THREE states, and the third is the point: null = the writer has not
      chosen an end yet. -1 = to the end, whatever it is. 0..n = a section.
@@ -271,6 +284,54 @@ export default function DevelopRoom({
     })();
     return () => { cancelled = true; };
   }, [manuscriptId]);
+
+  /* D4/D5 integration — ONE manuscript snapshot, the same authority Write uses.
+     Develop used to fetch `/write-state` for prose and `/rebuild/context` for
+     structure, which allowed two reads of one draft to disagree. The rebuild
+     context already carries draft identity, version, bodies, editability and
+     authored structure, so it is the single read model for this workbench. */
+  useEffect(() => {
+    let cancelled = false;
+    setManuscriptPhase('loading');
+    void (async () => {
+      try {
+        const res = await apiFetch(`/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(manuscriptId)}`);
+        if (cancelled) return;
+        if (!res.ok) { setManuscriptPhase('error'); return; }
+        const body = await res.json();
+        if (cancelled) return;
+        if (body?.state !== 'section_aware' || !Array.isArray(body.sections)) {
+          setStructuredSections(null);
+          setSections([]);
+          setWriteVersion(Number(body?.version ?? 0));
+          setManuscriptPhase('ready');
+          return;
+        }
+        const rebuilt = body.sections as RebuildSection[];
+        const writable: WriteStateSection[] = rebuilt.map((section) => ({
+          id: section.draftSectionId, position: section.position, heading: section.heading,
+          body: section.body, editable: section.editable,
+        }));
+        setStructuredSections(rebuilt);
+        setSections(writable);
+        setWriteVersion(Number(body.version ?? 0));
+
+        const requestedExists = requestedSectionId
+          ? writable.some((section) => section.id === requestedSectionId)
+          : false;
+        setPlaceId(requestedExists ? requestedSectionId : (writable[0]?.id ?? null));
+        if (requestedSectionId && !requestedExists && typeof window !== 'undefined') {
+          const next = locationForSection(window.location.pathname, window.location.search, null);
+          window.history.replaceState(window.history.state, '', next);
+        }
+        if (codePointsOf(writable) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS) setToIndex(null);
+        setManuscriptPhase('ready');
+      } catch {
+        if (!cancelled) setManuscriptPhase('error');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [manuscriptId, requestedSectionId]);
 
   /* The list — read when the room opens, and again only after the writer's
      own commission. `prefer` names the reading to select afterwards. */
@@ -369,52 +430,52 @@ export default function DevelopRoom({
     [payload],
   );
 
-  /* The draft's own sections — ids, positions and the member's headings.
-     
-     ⛔ These MUST be the DRAFT sections, not the source ones. The reading scope
-     speaks in `manuscript_draft_sections` ids; the outline elsewhere in the
-     Studio reads `manuscript_sections`. They are different rows with different
-     ids, and using the outline's would refuse every scope as
-     `unknown_scope_target` — a feature that appears to work and never does. */
-  useEffect(() => {
-    let live = true;
-    void fetchWriteState(manuscriptId, (url) => apiFetch(url)).then((r) => {
-      if (!live) return;
-      const secs = r.state?.mode === 'section_aware' ? r.state.sections : [];
-      setSections(secs);
-      /* Measured here, before anything is asked. A work larger than one
-         sitting opens the choice itself — the writer meets a sentence about
-         their book, not a refusal about a ceiling.
 
-         ⛔ AND IT OPENS AT A RANGE THAT FITS. Founder-witnessed on production
-         2026-09-07: "Part of it" opened at From: first → To: the end, which IS
-         the whole work — so the mode that exists to solve the problem started
-         holding the problem, the ask button was disabled, and the only way
-         forward was to guess which of two dropdowns to change. A choice
-         offered in a state that cannot succeed is not a choice.
-
-         It opens at the FIRST SECTION ALONE — the smallest stretch, at the
-         beginning. That is not the system choosing what is worth reading: it
-         is the least it can offer that works, and the writer widens from
-         there. Choosing a bigger stretch for them, or one that "looks
-         important", is the ranking this room refuses. */
-      if (codePointsOf(secs) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS) {
-        setReadMode('part');
-        /* ⛔ NOT a range chosen for them. An earlier attempt opened at the
-           first section alone — which fits, and which the founder refused:
-           "no automatic first N sections that fit; that would quietly turn
-           the system's capacity into the writer's editorial choice."
-
-           So the end is left UNCHOSEN and the room asks. It does not open in
-           a state that fails (the defect this replaced), and it does not open
-           in a state someone else decided. */
-        setToIndex(null);
+  /* Section-level navigation from frozen evidence. D5 adds exact current
+     passage precision separately; this map remains the section fallback for
+     evidence that names only a section or section run. */
+  const evidenceSectionByObservation = useMemo(() => {
+    const out = new Map<string, string>();
+    if (!payload || payload.reading.outcome !== 'reading') return out;
+    for (const observation of payload.reading.observations) {
+      for (const ref of observation.evidenceRefs) {
+        const sectionId = sectionIdsOf(ref)[0];
+        if (sectionId) { out.set(observation.key, sectionId); break; }
       }
-    });
-    return () => {
-      live = false;
-    };
-  }, [manuscriptId]);
+    }
+    return out;
+  }, [payload]);
+
+  /* D5 — exact passage evidence remains frozen in code points. It may be
+     illuminated against the current manuscript only while the observation is
+     assessed CURRENT; superseded offsets belong to the frozen revision, not to
+     whatever prose occupies those positions now. */
+  const passageEvidenceByObservation = useMemo(() => {
+    const out = new Map<string, { sectionId: string; range: CodePointRange }>();
+    if (!payload || payload.reading.outcome !== 'reading') return out;
+    for (const observation of payload.reading.observations) {
+      const assessed = payload.assessment.observations[observation.key];
+      if (assessed?.state !== 'current') continue;
+      const passage = observation.evidenceRefs.find((ref) => ref.kind === 'passage');
+      if (passage?.kind === 'passage') out.set(observation.key, { sectionId: passage.sectionId, range: passage.range });
+    }
+    return out;
+  }, [payload]);
+
+  useEffect(() => { setActiveEvidence(null); }, [selectedId]);
+
+  const showPlace = useCallback((sectionId: string, requestJump: boolean) => {
+    setPlaceId(sectionId);
+    if (requestJump) setJumpTo(sectionId);
+    if (typeof window === 'undefined') return;
+    const next = locationForSection(window.location.pathname, window.location.search, sectionId);
+    replacePlaceAddress(next);
+  }, []);
+
+  const currentSection = useMemo(
+    () => sections?.find((section) => section.id === placeId) ?? null,
+    [sections, placeId],
+  );
 
   /* ── WHERE MAIA READS ────────────────────────────────────────────────
      One idea, and one the writer already has: read from here to here. Whole
@@ -423,26 +484,37 @@ export default function DevelopRoom({
      gave.
 
      ⛔ Nothing preselects, recommends, or ranks a place to start. */
+  const currentChapter = useMemo(
+    () => structuredSections && placeId ? chapterSpanFor(structuredSections, placeId) : null,
+    [structuredSections, placeId],
+  );
+  const effectiveScope: DevelopScope = developScope === 'chapter' && !currentChapter ? 'work' : developScope;
+
   const last = sections && sections.length > 0 ? sections.length - 1 : 0;
   const endChosen = toIndex !== null;
   const to = toIndex === null ? last : toIndex === -1 ? last : toIndex;
+  const customSections = sections ? sections.slice(fromIndex, to + 1) : [];
+  const chapterIds = new Set(currentChapter?.sections.map((section) => section.draftSectionId) ?? []);
+  const chapterSections = sections?.filter((section) => chapterIds.has(section.id)) ?? [];
+  const scopeSections = effectiveScope === 'chapter' ? chapterSections
+    : effectiveScope === 'custom' ? customSections
+      : (sections ?? []);
+
   const chosenScope: ReadingScope | undefined = (() => {
-    if (!sections || sections.length === 0) return undefined;
-    if (readMode === 'whole') return undefined;
-    if (!endChosen) return undefined;
-    if (fromIndex === 0 && to === last) return undefined;
-    return {
-      kind: 'range',
-      fromSectionId: sections[fromIndex].id,
-      toSectionId: sections[to].id,
-    };
+    if (!sections || sections.length === 0 || effectiveScope === 'work') return undefined;
+    if (effectiveScope === 'chapter') {
+      const first = chapterSections[0];
+      const lastChapter = chapterSections[chapterSections.length - 1];
+      return first && lastChapter
+        ? { kind: 'range', fromSectionId: first.id, toSectionId: lastChapter.id }
+        : undefined;
+    }
+    if (!endChosen || (fromIndex === 0 && to === last)) return undefined;
+    return { kind: 'range', fromSectionId: sections[fromIndex].id, toSectionId: sections[to].id };
   })();
-  const chosenSections = sections ? sections.slice(fromIndex, to + 1) : [];
-  const chosenSize = codePointsOf(readMode === 'whole' ? (sections ?? []) : chosenSections);
-  /* Nothing may be asked while the end is unchosen — not because it would
-     fail, but because no range has been named yet. */
-  const tooLarge =
-    chosenSize > DEVELOPMENTAL_READ_CEILING_CODE_POINTS || (readMode === 'part' && !endChosen);
+  const chosenSize = codePointsOf(scopeSections);
+  const tooLarge = chosenSize > DEVELOPMENTAL_READ_CEILING_CODE_POINTS
+    || (effectiveScope === 'custom' && !endChosen);
 
   const ask = async () => {
     setCommission({ phase: 'reading' });
@@ -531,31 +603,90 @@ export default function DevelopRoom({
       manuscriptId={manuscriptId}
       workName={headline}
       workNamed={Boolean(title)}
-      workNote="What MAIA noticed when she read this work, kept exactly as she noticed it."
+      workNote="Developmental view"
       rail={
-        <StudioShellRail
-          hasManuscript
-          manuscriptId={manuscriptId}
-          current="manuscript"
-          openPanels={[]}
-          onSelect={() => {}}
+        <DevelopManuscriptRail
+          sections={sections ?? []}
+          currentSectionId={placeId}
+          onSelect={(sectionId) => showPlace(sectionId, true)}
         />
       }
     >
-    {/* min-w-0 so the interior SHARES the shell's body row with the rail
-        instead of overflowing across it: a flex child's default min-width is
-        its content, and a wide reading is wide. Without it the rail is
-        rendered and then covered, which reads as the Studio disappearing at
-        exactly the moment the writer changes stance. */}
-    <div className="flex-1 min-w-0 flex flex-col min-h-0" style={{ fontFamily: SERIF }}>
-      <div className="flex-1 flex flex-col md:flex-row min-h-0">
-        {/* ── Readings: the ledger of what MAIA has read, newest first ── */}
-        <aside
-          className="md:w-80 shrink-0 border-b md:border-b-0 md:border-r px-5 py-6 overflow-y-auto"
-          style={{ borderColor: PRESS.ruleSoft }}
-          aria-label="Readings"
-        >
-          <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">Readings</h2>
+    <div
+      className="flex-1 min-w-0 min-h-0 flex"
+      style={{ fontFamily: SERIF }}
+      data-develop-workbench
+    >
+      <main
+        className="flex-1 min-w-0 min-h-0 px-6 md:px-10 py-6"
+        data-develop-centre="manuscript"
+        style={{
+          borderRight: `1px solid ${PRESS.ruleSoft}`,
+          display: 'flex', flexDirection: 'column',
+        }}
+      >
+        {manuscriptPhase === 'error' ? (
+          <p className="text-[14px] leading-relaxed opacity-60 max-w-md" role="status">
+            The manuscript could not be reached just now. Nothing has changed.
+          </p>
+        ) : manuscriptPhase === 'loading' || sections === null ? (
+          <p className="text-[13px] opacity-40">opening the manuscript…</p>
+        ) : sections.length === 0 ? (
+          <p className="text-[14px] leading-relaxed opacity-60 max-w-md">
+            This draft does not yet have section-aware writing to show here.
+          </p>
+        ) : (
+          <>
+            <div
+              data-develop-locus
+              className="pb-4 mb-4 border-b text-[11.5px] opacity-55"
+              style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}
+            >
+              <span className="opacity-70">Manuscript</span>
+              {currentChapter ? <span> &nbsp;›&nbsp; {currentChapter.root.heading?.trim() || 'Current chapter'}</span> : null}
+              {currentSection && currentSection.id !== currentChapter?.root.draftSectionId
+                ? <span> &nbsp;›&nbsp; {currentSection.heading?.trim() || 'Untitled section'}</span> : null}
+            </div>
+            <DevelopManuscriptSurface
+              sections={sections}
+              version={writeVersion}
+              initialOpenAt={placeId}
+              jumpTo={jumpTo}
+              onJumpHandled={() => setJumpTo(null)}
+              onPlaceChange={(sectionId) => showPlace(sectionId, false)}
+              evidenceHighlight={activeEvidence ? { sectionId: activeEvidence.sectionId, range: activeEvidence.range } : null}
+            />
+          </>
+        )}
+      </main>
+
+      <aside
+        className="w-[390px] max-w-[42vw] shrink-0 overflow-y-auto px-5 py-5"
+        aria-label="Developmental reading"
+        data-develop-intelligence
+      >
+        <div className="grid grid-cols-3 gap-1 p-1 mb-4 rounded-full border" style={{ borderColor: PRESS.ruleSoft }} data-develop-scope-tabs>
+          <button type="button" onClick={() => setDevelopScope('work')} aria-pressed={effectiveScope === 'work'}
+            className="rounded-full px-2 py-2 text-[11.5px]"
+            style={{ background: effectiveScope === 'work' ? 'var(--ws-ground-active)' : 'transparent', color: PRESS.text }}>Work</button>
+          <button type="button" onClick={() => setDevelopScope('chapter')} aria-pressed={effectiveScope === 'chapter'} disabled={!currentChapter}
+            className="rounded-full px-2 py-2 text-[11.5px] disabled:opacity-30"
+            style={{ background: effectiveScope === 'chapter' ? 'var(--ws-ground-active)' : 'transparent', color: PRESS.text }}>Chapter</button>
+          <button type="button" disabled aria-disabled="true" title="Exact passage focus is not available in Develop yet"
+            className="rounded-full px-2 py-2 text-[11.5px] opacity-30">Passage</button>
+        </div>
+        <div className="pb-4 mb-4 border-b" style={{ borderColor: PRESS.ruleSoft }}>
+          <p className="text-[10.5px] tracking-[0.18em] uppercase opacity-45">Develop</p>
+          <p className="text-[15px] mt-1">{currentSection?.heading?.trim() || 'Manuscript'}</p>
+          <p className="text-[12px] opacity-50 mt-1">
+            {view ? `${view.lensMeaning}.` : 'The manuscript stays in view while MAIA’s reading sits beside it.'}
+          </p>
+        </div>
+
+        <details className="mb-5 border-b pb-4" style={{ borderColor: PRESS.ruleSoft }}>
+          <summary className="cursor-pointer text-[12.5px] opacity-70">Readings & reading focus</summary>
+          <div className="pt-4">
+            <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">Readings</h2>
 
           {listPhase === 'loading' && <p className="text-[13px] opacity-40">opening…</p>}
           {listPhase === 'error' && (
@@ -680,94 +811,54 @@ export default function DevelopRoom({
                   Behind it the contract is unchanged and exact — draft section
                   ids, coverage per section, no silent trimming, the 60,000
                   ceiling untouched. None of that appears here. */}
-              {sections && sections.length > 1 && (
-                <fieldset disabled={commission.phase === 'reading'} className="mb-4">
+              {sections && sections.length > 0 && (
+                <fieldset disabled={commission.phase === 'reading'} className="mb-4" data-develop-scope>
                   <legend className="text-[12.5px] opacity-60 mb-2">Read</legend>
+                  <p className="text-[11.5px] opacity-50">
+                    {effectiveScope === 'chapter'
+                      ? (currentChapter?.root.heading?.trim() || 'Current chapter')
+                      : effectiveScope === 'custom' ? 'A range you choose' : 'The whole work'}
+                  </p>
 
-                  {/* Too large is said BEFORE the act, in a sentence about the
-                      book. A writer should never press a button that cannot
-                      succeed and receive an engineering refusal for it. */}
-                  {readMode === 'part' && codePointsOf(sections) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS && (
-                    <p className="text-[12.5px] leading-relaxed opacity-70 mb-2.5">
-                      This work is too large to read all at once. Choose where
-                      you&rsquo;d like MAIA to read.
+                  {tooLarge && effectiveScope !== 'custom' && (
+                    <p className="text-[12px] leading-relaxed opacity-70 mt-2">
+                      This scope is more than MAIA reads in one sitting. Choose a custom range.
                     </p>
                   )}
 
-                  <select
-                    value={readMode}
-                    onChange={(e) => setReadMode(e.target.value as 'whole' | 'part')}
-                    disabled={codePointsOf(sections) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS}
-                    className="bg-transparent border px-2 py-1.5 rounded-[2px] text-[13px] disabled:opacity-45"
-                    style={{ borderColor: PRESS.rule, color: PRESS.text }}
-                  >
-                    <option value="whole" style={{ color: PRESS.ink }}>Whole work</option>
-                    <option value="part" style={{ color: PRESS.ink }}>Part of it</option>
-                  </select>
+                  {sections.length > 1 && (
+                    <button type="button" onClick={() => setDevelopScope('custom')}
+                      className="mt-3 text-[12px] underline underline-offset-4 opacity-60 hover:opacity-100">
+                      Custom range
+                    </button>
+                  )}
 
-                  {readMode === 'part' && (
-                    <div className="mt-2.5 space-y-2">
+                  {effectiveScope === 'custom' && sections.length > 1 && (
+                    <div className="mt-3 space-y-2" data-develop-custom-range>
                       <div className="flex flex-wrap items-center gap-2 text-[13px]">
                         <span className="opacity-55 w-8">From</span>
-                        <select
-                          value={fromIndex}
-                          onChange={(e) => {
-                            const next = Number(e.target.value);
-                            setFromIndex(next);
-                            /* The end never falls behind the beginning —
-                               corrected as they choose, not refused after. */
-                            if (toIndex !== null && toIndex !== -1 && next > toIndex) setToIndex(next);
-                          }}
-                          className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
-                          style={{ borderColor: PRESS.rule, color: PRESS.text }}
-                        >
-                          {sections.map((sec, i) => (
-                            <option key={sec.id} value={i} style={{ color: PRESS.ink }}>
-                              {sectionLabel(sec, i)}
-                            </option>
-                          ))}
+                        <select value={fromIndex} onChange={(e) => {
+                          const next = Number(e.target.value);
+                          setFromIndex(next);
+                          if (toIndex !== null && toIndex !== -1 && next > toIndex) setToIndex(next);
+                        }} className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
+                          style={{ borderColor: PRESS.rule, color: PRESS.text }}>
+                          {sections.map((sec, i) => <option key={sec.id} value={i} style={{ color: PRESS.ink }}>{sectionLabel(sec, i)}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-[13px]">
                         <span className="opacity-55 w-8">to</span>
-                        <select
-                          value={toIndex ?? ''}
-                          onChange={(e) => setToIndex(Number(e.target.value))}
+                        <select value={toIndex ?? ''} onChange={(e) => setToIndex(Number(e.target.value))}
                           className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
-                          style={{ borderColor: PRESS.rule, color: PRESS.text }}
-                        >
-                          {/* The ordinary thing a writer means, said the
-                              ordinary way — and it stays true as the book
-                              grows, because -1 resolves to whatever the end is
-                              rather than pinning today's last section. */}
-                          {/* Present only while unchosen, and never selectable
-                              back into — an "unchosen" a writer can re-pick is
-                              a state, not a prompt. */}
-                          {!endChosen && (
-                            <option value="" disabled style={{ color: PRESS.ink }}>
-                              Choose where to stop
-                            </option>
-                          )}
+                          style={{ borderColor: PRESS.rule, color: PRESS.text }}>
+                          {!endChosen && <option value="" disabled style={{ color: PRESS.ink }}>Choose where to stop</option>}
                           <option value={-1} style={{ color: PRESS.ink }}>To the end</option>
                           {sections.map((sec, i) => (
-                            <option
-                              key={sec.id}
-                              value={i}
-                              disabled={i < fromIndex}
-                              style={{ color: PRESS.ink }}
-                            >
-                              {sectionLabel(sec, i)}
-                            </option>
+                            <option key={sec.id} value={i} disabled={i < fromIndex} style={{ color: PRESS.ink }}>{sectionLabel(sec, i)}</option>
                           ))}
                         </select>
                       </div>
-                      {/* Still too much, said while they can still change it. */}
-                      {endChosen && tooLarge && (
-                        <p className="text-[12.5px] leading-relaxed opacity-70">
-                          That is still more than MAIA reads in one sitting.
-                          Choose a smaller stretch.
-                        </p>
-                      )}
+                      {tooLarge && <p className="text-[12px] leading-relaxed opacity-70">That range is still more than MAIA reads in one sitting.</p>}
                     </div>
                   )}
                 </fieldset>
@@ -784,22 +875,32 @@ export default function DevelopRoom({
                 <legend className="text-[12.5px] opacity-60 mb-2">
                   What would you like MAIA to notice?
                 </legend>
-                {LENS_ORDER.map((l) => (
-                  <label key={l} className="flex items-baseline gap-2 text-[13px] cursor-pointer">
-                    <input
-                      type="radio"
-                      name="lens"
-                      value={l}
-                      checked={lens === l}
-                      onChange={() => setLens(l)}
-                      className="translate-y-[1px]"
-                    />
-                    <span className="flex-1 flex items-baseline justify-between gap-3">
-                      <span>{LENS_QUESTION[l]}</span>
-                      <span className="capitalize opacity-40 text-[12px] shrink-0">{l}</span>
-                    </span>
-                  </label>
-                ))}
+                <div className="grid grid-cols-2 gap-1.5 mb-2" data-develop-primary-lenses>
+                  {PRIMARY_LENSES.map((l) => (
+                    <button key={l} type="button" onClick={() => setLens(l)} aria-pressed={lens === l}
+                      className="text-left rounded-md border px-2.5 py-2"
+                      style={{ borderColor: lens === l ? PRESS.accent : PRESS.ruleSoft, background: lens === l ? 'var(--ws-ground-active)' : 'transparent' }}>
+                      <span className="block text-[12px]">{lensLabel(l)}</span>
+                      <span className="block text-[10.5px] opacity-45 mt-0.5">{LENS_QUESTION[l]}</span>
+                    </button>
+                  ))}
+                </div>
+                <details data-develop-all-lenses>
+                  <summary className="cursor-pointer text-[12px] opacity-60">
+                    All lenses{PRIMARY_LENSES.includes(lens) ? '' : ` · ${lensLabel(lens)}`}
+                  </summary>
+                  <div className="mt-2 space-y-1.5">
+                    {LENS_ORDER.map((l) => (
+                      <label key={l} className="flex items-start gap-2 text-[12.5px] cursor-pointer">
+                        <input type="radio" name="lens" value={l} checked={lens === l} onChange={() => setLens(l)} className="mt-1" />
+                        <span className="flex-1">
+                          <span className="block">{lensLabel(l)}</span>
+                          <span className="block opacity-45 text-[11px]">{LENS_MEANING[l]}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </details>
               </fieldset>
               <button
                 onClick={ask}
@@ -848,10 +949,12 @@ export default function DevelopRoom({
               )}
             </div>
           )}
-        </aside>
+          </div>
+        </details>
 
-        {/* ── The reading: what MAIA noticed, where it rests, where it stands ── */}
-        <main className="flex-1 min-w-0 px-6 md:px-12 py-7">
+        {/* The reading now sits BESIDE the manuscript rather than where the
+            manuscript should be. Frozen provenance and dialogue are preserved. */}
+        <div className="pb-8">
           {readingPhase === 'idle' && listPhase === 'ready' && summaries.length === 0 && (
             <p className="text-[15px] leading-relaxed opacity-60 max-w-md">
               When you ask, MAIA reads the whole draft under the lens you choose and brings back
@@ -891,10 +994,19 @@ export default function DevelopRoom({
               standings={standings}
               onStanding={adoptStanding}
               onRefresh={() => loadStandings(view.id)}
+              evidenceSectionByObservation={evidenceSectionByObservation}
+              passageEvidenceByObservation={passageEvidenceByObservation}
+              activeEvidenceKey={activeEvidence?.observationKey ?? null}
+              currentSectionId={placeId}
+              onNavigate={(sectionId) => { setActiveEvidence(null); showPlace(sectionId, true); }}
+              onNavigateEvidence={(observationKey, evidence) => {
+                setActiveEvidence({ observationKey, ...evidence });
+                showPlace(evidence.sectionId, true);
+              }}
             />
           )}
-        </main>
-      </div>
+        </div>
+      </aside>
     </div>
     </WriterStudioShell>
   );
@@ -904,9 +1016,16 @@ export default function DevelopRoom({
 
 function Reading({
   view, manuscriptId, standings, onStanding, onRefresh,
+  evidenceSectionByObservation, passageEvidenceByObservation, activeEvidenceKey, currentSectionId, onNavigate, onNavigateEvidence,
 }: {
   view: ReadingView; manuscriptId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
+  evidenceSectionByObservation: ReadonlyMap<string, string>;
+  passageEvidenceByObservation: ReadonlyMap<string, { sectionId: string; range: CodePointRange }>;
+  activeEvidenceKey: string | null;
+  currentSectionId: string | null;
+  onNavigate: (sectionId: string) => void;
+  onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
   return (
     <article data-reading-id={view.id} data-reading-state={view.state} className="max-w-[70ch]">
@@ -947,6 +1066,12 @@ function Reading({
               standings={standings}
               onStanding={onStanding}
               onRefresh={onRefresh}
+              evidenceSectionId={evidenceSectionByObservation.get(o.key) ?? null}
+              passageEvidence={passageEvidenceByObservation.get(o.key) ?? null}
+              evidenceHighlighted={activeEvidenceKey === o.key}
+              activeForPlace={evidenceSectionByObservation.get(o.key) === currentSectionId}
+              onNavigate={onNavigate}
+              onNavigateEvidence={onNavigateEvidence}
             />
           ))}
         </ol>
@@ -969,9 +1094,15 @@ function Reading({
  */
 function Observation({
   o, manuscriptId, readingId, standings, onStanding, onRefresh,
+  evidenceSectionId, passageEvidence, evidenceHighlighted, activeForPlace, onNavigate, onNavigateEvidence,
 }: {
   o: ObservationView; manuscriptId: string; readingId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
+  evidenceSectionId: string | null;
+  passageEvidence: { sectionId: string; range: CodePointRange } | null;
+  evidenceHighlighted: boolean; activeForPlace: boolean;
+  onNavigate: (sectionId: string) => void;
+  onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
   const [talking, setTalking] = useState(false);
   return (
@@ -996,6 +1127,23 @@ function Observation({
       >
         {o.observation}
       </p>
+
+      {evidenceSectionId && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+          {passageEvidence && (
+            <span data-evidence-precision="passage" className="text-[10.5px] uppercase tracking-[0.12em] opacity-45">Exact passage</span>
+          )}
+          <button
+            type="button"
+            onClick={() => passageEvidence ? onNavigateEvidence(o.key, passageEvidence) : onNavigate(evidenceSectionId)}
+            data-observation-show-in-manuscript={o.key}
+            className="text-[12px] underline underline-offset-4"
+            style={{ cursor: 'pointer', opacity: evidenceHighlighted || activeForPlace ? 1 : 0.58, color: evidenceHighlighted ? PRESS.accent : 'inherit' }}
+          >
+            {evidenceHighlighted ? 'Passage in view' : passageEvidence ? 'Show exact passage' : activeForPlace ? 'Section in view' : 'Show in manuscript'}
+          </button>
+        </div>
+      )}
 
       <div className="mt-3 text-[12.5px] leading-relaxed opacity-60">
         <p className="opacity-70 uppercase tracking-[0.15em] text-[10.5px] mb-1">Rests on</p>

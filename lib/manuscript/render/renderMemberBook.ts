@@ -32,6 +32,78 @@ import { renderHtmlToPdf } from '@/lib/manuscript/render/pagedPdf';
 export interface MemberBookSection {
   heading: string | null;
   body: string;
+  /** Structural evidence carried by the manuscript source. Null means unknown. */
+  headingDepth?: 1 | 2 | 3 | null;
+  /** Provenance for the structural evidence; presentation never manufactures it. */
+  headingSignal?: string | null;
+}
+
+export type PublicationRole =
+  | 'copyright' | 'permissions' | 'dedication' | 'disclaimer' | 'contents' | 'preface'
+  | 'acknowledgments' | 'bibliography' | 'resources' | 'afterword'
+  | 'part' | 'chapter' | 'section' | 'subsection' | 'unclassified';
+
+/**
+ * Conservative production semantics. Heading WORDS may name explicit
+ * publication matter; hierarchy comes only from stored structural evidence.
+ * Body prose is never inspected to decide what kind of book object it is.
+ */
+export function publicationRoleFor(section: MemberBookSection): PublicationRole {
+  const heading = section.heading?.trim() ?? '';
+  const normalized = heading.toLowerCase().replace(/[—–:]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (/^part\b/i.test(heading) && section.headingDepth === 1) return 'part';
+  if (/^chapter\s+(?:\d+|[ivxlcdm]+)\b/i.test(heading) && section.headingDepth === 1) return 'chapter';
+  if (normalized === 'copyright' || normalized === 'copyright notice') return 'copyright';
+  if (normalized === 'permissions') return 'permissions';
+  if (normalized === 'dedication') return 'dedication';
+  if (normalized === 'disclaimer') return 'disclaimer';
+  if (normalized === 'contents') return 'contents';
+  if (normalized === 'preface') return 'preface';
+  if (normalized === 'acknowledgments' || normalized === 'acknowledgements') return 'acknowledgments';
+  if (normalized === 'bibliography') return 'bibliography';
+  if (normalized === 'additional resources' || normalized === 'resources') return 'resources';
+  if (normalized === 'afterword' || normalized.startsWith('afterword ')) return 'afterword';
+  return section.headingDepth === 2 ? 'section'
+    : section.headingDepth === 3 ? 'subsection'
+      : 'unclassified';
+}
+
+export interface BookProductionIssue {
+  code: 'copyright_not_governed' | 'duplicate_copyright_statements';
+  severity: 'blocker';
+  sectionIndexes: number[];
+  message: string;
+}
+
+const COPYRIGHT_STATEMENT = /\bcopyright\s*(?:©|\(c\))?\s*\d{4}\b/i;
+
+/**
+ * Read-only production preflight. It reports; it never edits, deduplicates or
+ * chooses the author's legal language. Copyright becomes governed only when an
+ * explicit Copyright / Copyright Notice heading says so. Body prose cannot
+ * grant itself that authority.
+ */
+export function inspectBookProduction(sections: readonly MemberBookSection[]): BookProductionIssue[] {
+  const copyrightIndexes = sections
+    .map((section, index) => COPYRIGHT_STATEMENT.test(section.body) ? index : -1)
+    .filter((index) => index >= 0);
+  if (copyrightIndexes.length === 0) return [];
+
+  const issues: BookProductionIssue[] = [];
+  const governed = copyrightIndexes.filter((index) => publicationRoleFor(sections[index]!) === 'copyright');
+  if (governed.length !== 1 || governed[0] !== copyrightIndexes[0] || copyrightIndexes.length !== 1) {
+    issues.push({
+      code: 'copyright_not_governed', severity: 'blocker', sectionIndexes: copyrightIndexes,
+      message: 'Copyright language exists, but there is not exactly one explicit governed Copyright object.',
+    });
+  }
+  if (copyrightIndexes.length > 1) {
+    issues.push({
+      code: 'duplicate_copyright_statements', severity: 'blocker', sectionIndexes: copyrightIndexes,
+      message: 'More than one section contains a copyright statement. Choose one canonical publication object before final production.',
+    });
+  }
+  return issues;
 }
 
 export interface RenderMemberBookOptions {
@@ -50,6 +122,8 @@ export interface MemberBookResult {
   /** sha256 over the source sections — provenance / version of this render. */
   sourceHash: string;
   sectionCount: number;
+  /** Versioned physical-composition rules used to make this artifact. */
+  productionProfile: string;
 }
 
 const REPO_ROOT = process.cwd();
@@ -57,18 +131,70 @@ const PRINT_CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/print-book.cs
 const EPUB_CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/epub-book.css');
 const MAX_PANDOC_BUFFER = 256 * 1024 * 1024;
 
+export const HALLMARK_PRODUCTION_PROFILE = 'hallmark-6x9-v1';
+
+const LATIN_RANGE = 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD';
+const LATIN_EXT_RANGE = 'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF';
+
+type SpectralFace = { weight: 400 | 600; style: 'normal' | 'italic'; subset: 'latin' | 'latin-ext'; range: string };
+const SPECTRAL_FACES: readonly SpectralFace[] = [
+  { weight: 400, style: 'normal', subset: 'latin', range: LATIN_RANGE },
+  { weight: 400, style: 'normal', subset: 'latin-ext', range: LATIN_EXT_RANGE },
+  { weight: 400, style: 'italic', subset: 'latin', range: LATIN_RANGE },
+  { weight: 400, style: 'italic', subset: 'latin-ext', range: LATIN_EXT_RANGE },
+  { weight: 600, style: 'normal', subset: 'latin', range: LATIN_RANGE },
+  { weight: 600, style: 'normal', subset: 'latin-ext', range: LATIN_EXT_RANGE },
+  { weight: 600, style: 'italic', subset: 'latin', range: LATIN_RANGE },
+  { weight: 600, style: 'italic', subset: 'latin-ext', range: LATIN_EXT_RANGE },
+];
+
+/** Font assets and page architecture must be separate stylesheets.
+ *
+ * Chromium drops the first @page rule when it immediately follows embedded
+ * @font-face blocks in the same stylesheet. Paged.js would then keep its
+ * built-in Letter default. Keeping these two concerns separate is therefore a
+ * physical-output invariant, not an aesthetic preference.
+ */
+export interface HallmarkPrintStyles {
+  fontCss: string;
+  bookCss: string;
+}
+
+export function buildHallmarkPrintStyles(baseCss: string): HallmarkPrintStyles {
+  const fontCss = SPECTRAL_FACES.map((face) => {
+    const filename = `spectral-${face.weight}-${face.style}-${face.subset}.woff2`;
+    const filePath = path.join(REPO_ROOT, 'public', 'fonts', 'spectral', filename);
+    if (!fsSync.existsSync(filePath)) throw new Error(`Hallmark font asset missing: ${filename}`);
+    const data = fsSync.readFileSync(filePath).toString('base64');
+    return `@font-face {\n  font-family: 'Hallmark Spectral';\n  font-style: ${face.style};\n  font-weight: ${face.weight};\n  font-display: block;\n  src: url('data:font/woff2;base64,${data}') format('woff2');\n  unicode-range: ${face.range};\n}`;
+  }).join('\n\n');
+
+  const bookCss = baseCss
+    .replace(/@import\s+url\(\s*(?:'[^']*'|"[^"]*"|[^)]*)\s*\)\s*;?/gi, '')
+    .replace(/'EB Garamond',\s*Garamond,\s*'Adobe Garamond Pro',\s*'Garamond Premier Pro',\s*serif/g, "'Hallmark Spectral', serif")
+    .replace(/'EB Garamond',\s*Garamond,\s*serif/g, "'Hallmark Spectral', serif")
+    .replace(/font-weight:\s*(?:500|700)\b/g, 'font-weight: 600');
+
+  return { fontCss, bookCss };
+}
+
 /**
- * Assemble the author's sections into a single Markdown document, verbatim.
- * Each section's confirmed heading becomes a level-1 heading (a chapter, which
- * also drives EPUB per-chapter splitting); the body follows unchanged. The
- * book title/author are carried as pandoc metadata, not injected into the text.
+ * Assemble the author's sections into one Markdown document without flattening
+ * the book. Confirmed source depth is preserved as Markdown depth 1/2/3. An
+ * unconfirmed heading is deliberately rendered at level 4: visible, but never
+ * promoted into a chapter merely because it has typography or capital letters.
+ * The BODY follows verbatim. Title/author remain metadata, not manuscript text.
  */
 export function assembleManuscriptMarkdown(sections: MemberBookSection[]): string {
   const parts: string[] = [];
   for (const s of sections) {
     const heading = s.heading?.trim();
     if (heading) {
-      parts.push(`# ${heading}`);
+      const depth = s.headingDepth === 1 || s.headingDepth === 2 || s.headingDepth === 3
+        ? s.headingDepth : 4;
+      const role = publicationRoleFor(s);
+      const roleClass = role === 'unclassified' ? '' : ` {.book-${role}}`;
+      parts.push(`${'#'.repeat(depth)} ${heading}${roleClass}`);
       parts.push('');
     }
     parts.push(s.body);
@@ -78,17 +204,21 @@ export function assembleManuscriptMarkdown(sections: MemberBookSection[]): strin
 }
 
 /**
- * Provenance hash: a stable digest of the exact source sections this render was
- * built from. Two renders of the same manuscript state share a hash; any edit
- * changes it. Records "which words became this book", never their meaning.
- * Explicit field/record separators keep section-boundary changes distinguishable.
+ * Provenance hash: a stable digest of the exact render SOURCE: words plus the
+ * stored structural evidence that determines physical hierarchy. Two renders of
+ * the same manuscript state share a hash; an edit OR a structural depth change
+ * changes it. No interpretation or inferred meaning enters the digest.
  */
 export function computeSourceHash(sections: MemberBookSection[]): string {
-  const FIELD_SEP = '\u0000'; // between a section's heading and body
-  const RECORD_SEP = '\u001e'; // between sections
+  const FIELD_SEP = '\u0000';
+  const RECORD_SEP = '\u001e';
   const h = createHash('sha256');
   for (const s of sections) {
     h.update(s.heading ?? '');
+    h.update(FIELD_SEP);
+    h.update(String(s.headingDepth ?? ''));
+    h.update(FIELD_SEP);
+    h.update(s.headingSignal ?? '');
     h.update(FIELD_SEP);
     h.update(s.body);
     h.update(RECORD_SEP);
@@ -138,15 +268,16 @@ async function renderPdf(
   const bodyHtml = bodyMatch ? bodyMatch[1] : pandocStdout;
 
   const css = fsSync.existsSync(PRINT_CSS_PATH)
-    ? stripCssComments(fsSync.readFileSync(PRINT_CSS_PATH, 'utf-8'))
-    : '';
+    ? buildHallmarkPrintStyles(stripCssComments(fsSync.readFileSync(PRINT_CSS_PATH, 'utf-8')))
+    : { fontCss: '', bookCss: '' };
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <title>${escapeHtml(opts.title)}</title>
-  <style>${css}</style>
+  <style data-hallmark-fonts>${css.fontCss}</style>
+  <style data-hallmark-book>${css.bookCss}</style>
 </head>
 <body>
 ${bodyHtml}
@@ -159,6 +290,7 @@ ${bodyHtml}
     width: '6in',
     height: '9in',
     timeoutMs: 240_000,
+    assertPagedPageSize: true,
   });
 
   const stat = await fs.stat(filePath);
@@ -234,8 +366,8 @@ export async function renderMemberBook(
 
   if (opts.format === 'pdf') {
     const { filePath, sizeBytes, pageCount } = await renderPdf(markdown, opts);
-    return { filePath, sizeBytes, pageCount, sourceHash, sectionCount };
+    return { filePath, sizeBytes, pageCount, sourceHash, sectionCount, productionProfile: HALLMARK_PRODUCTION_PROFILE };
   }
   const { filePath, sizeBytes } = await renderEpub(markdown, opts);
-  return { filePath, sizeBytes, sourceHash, sectionCount };
+  return { filePath, sizeBytes, sourceHash, sectionCount, productionProfile: HALLMARK_PRODUCTION_PROFILE };
 }
