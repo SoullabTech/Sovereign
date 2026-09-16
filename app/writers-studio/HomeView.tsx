@@ -204,7 +204,7 @@ function BeginAndImport({
 }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
-      {beginning ? (
+      {beginning && !primary ? (
         <div className="flex-1 max-w-lg">
           <label htmlFor="work-name" className="block text-[13px] opacity-55 mb-2">
             Give it a name, or leave it blank for now.
@@ -234,12 +234,15 @@ function BeginAndImport({
         </div>
       ) : (
         <button
-          onClick={onOpen}
-          className={`${primary ? FILLED : QUIET} w-full sm:w-auto`}
+          onClick={primary ? onSubmit : onOpen}
+          disabled={busy}
+          className={`${primary ? FILLED : QUIET} w-full sm:w-auto disabled:opacity-40`}
           style={primary ? { background: PRESS.accent, color: PRESS.ink } : { borderColor: PRESS.rule }}
         >
-          <FilePlus2 size={16} style={{ color: primary ? PRESS.ink : PRESS.accent }} aria-hidden="true" />
-          Begin a new work
+          {primary && busy
+            ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+            : <FilePlus2 size={16} style={{ color: primary ? PRESS.ink : PRESS.accent }} aria-hidden="true" />}
+          {primary && busy ? 'Opening your work…' : 'Begin a new work'}
         </button>
       )}
 
@@ -817,7 +820,7 @@ export default function HomeView({
               onOpen={() => setBeginning(true)}
               onName={setDraftName}
               onCancel={() => setBeginning(false)}
-              onSubmit={() => void run(() => onBegin(draftName.trim()), BEGIN_FAILED)}
+              onSubmit={() => void run(() => onBegin(''), BEGIN_FAILED)}
             />
           </div>
         ) : (
