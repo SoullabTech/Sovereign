@@ -55,7 +55,7 @@ interface EvidenceRow {
   readonly producerId: string;
   readonly authoredBy: AuthoredBy;
   readonly participationClass: Participant['participationClass'] | 'authored';
-  readonly text: string;
+  readonly normalizedText: string;
   readonly memberQuoteEligible: boolean;
 }
 
@@ -75,7 +75,7 @@ function evidenceRows(turn: CanonicalTurn): readonly EvidenceRow[] {
     producerId: 'encounter.input',
     authoredBy: 'member',
     participationClass: 'authored',
-    text: turn.encounter.input,
+    normalizedText: normalize(turn.encounter.input),
     memberQuoteEligible: true,
   }];
 
@@ -84,7 +84,7 @@ function evidenceRows(turn: CanonicalTurn): readonly EvidenceRow[] {
       producerId: participant.producerId,
       authoredBy: participant.authoredBy,
       participationClass: participant.participationClass,
-      text: participant.text,
+      normalizedText: normalize(participant.text),
       // `placed`, `marked`, `declared`, computed and inferred blocks can contain
       // formatter/system language. They are not treated as verbatim member speech.
       memberQuoteEligible:
@@ -125,12 +125,12 @@ export function auditInvisibleStandingShadow(
   const quotes = directMemberQuotes(finalText);
   for (const quote of quotes) {
     const memberMatches = rows.filter(
-      (row) => row.memberQuoteEligible && normalize(row.text).includes(quote),
+      (row) => row.memberQuoteEligible && row.normalizedText.includes(quote),
     );
     if (memberMatches.length > 0) continue;
 
     const nonMemberMatches = rows.filter(
-      (row) => row.authoredBy !== 'member' && normalize(row.text).includes(quote),
+      (row) => row.authoredBy !== 'member' && row.normalizedText.includes(quote),
     );
     if (nonMemberMatches.length > 0) {
       findings.push({
