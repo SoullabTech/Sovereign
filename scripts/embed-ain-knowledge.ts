@@ -117,6 +117,28 @@ async function main() {
     await pool.query('SELECT 1');
     console.log('      Database connected');
 
+    /**
+     * SOURCE-CUSTODY-PII-01 · ACT 4 §C — A DESTRUCTIVE REBUILD THAT WOULD
+     * REBUILD NOTHING IS REFUSED.
+     *
+     * `--force` TRUNCATEs the whole table, and it fired before the chunk count
+     * was ever consulted. Corpus admission now defaults to exclusion, so until
+     * the 736 legacy files are classified `processAllSources` legitimately
+     * returns zero chunks — and the old order would have emptied MAIA's
+     * knowledge corpus, embedded nothing, and exited reporting "All sources
+     * already embedded."
+     *
+     * ⛔ The refusal is the point. A classification backlog must not be
+     * discoverable as an empty retrieval corpus in production. This makes the
+     * hold structural rather than a warning in a runbook.
+     */
+    if (isForce && chunks.length === 0) {
+      console.error('\n🛑 REFUSED: --force would TRUNCATE ain_knowledge_chunks and re-embed 0 chunks.');
+      console.error('   Corpus admission admitted nothing — see data/ain/corpus-admission.json.');
+      console.error('   Classify a collection before forcing a rebuild. Nothing was deleted.');
+      process.exit(1);
+    }
+
     // Clear existing if force
     if (isForce) {
       console.log('      [FORCE] Clearing existing chunks...');

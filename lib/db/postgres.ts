@@ -24,10 +24,69 @@ if (isServer) {
 
   // Handle pool errors
   newPool.on('error', (err: Error) => {
-    console.error('❌ [POSTGRES] Unexpected pool error:', err);
+    console.error('❌ [POSTGRES] Unexpected pool error:', describeDbError(err));
   });
 
   pool = newPool;
+}
+
+/**
+ * SOURCE-CUSTODY-PII-01 · R1.6 — query parameters are DESCRIBED, never printed.
+ *
+ * Both error paths in this file used to log `params` directly, so any query
+ * failure emitted whatever the caller passed. `resolveAdmission` passes a
+ * submitted passkey; member lookups pass emails and ids. A database fault was
+ * therefore a credential- and PII-disclosure path into logs — which are
+ * shipped, aggregated and retained on different terms from the database whose
+ * contents they were describing.
+ *
+ * ⛔ NOT AN ENV FLAG AND NOT A CALL-SITE OPT-IN. A flag defaults wrong on some
+ * host eventually; an opt-in leaves every existing call site unsafe until
+ * somebody remembers it. Redaction is unconditional, so neither configuration
+ * nor forgetfulness can turn it off. This is the same discipline the missing
+ * table ruling below applies to its own question.
+ *
+ * ⭐ DEBUGGABILITY SURVIVES WITHOUT VALUE-DERIVED METADATA. Parameter position
+ * and coarse type remain visible, but string length, boolean value, array length
+ * and hashes do not. A short digest is still an offline oracle for low-entropy
+ * credentials and common identifiers, so correlation by value is deliberately
+ * refused here. PostgreSQL error text is treated the same way: free-form
+ * `message`/`detail` fields are not logged because they may contain row values.
+ */
+export function describeParams(params: readonly unknown[]): string {
+  if (!params || params.length === 0) return '(none)';
+  return `[${params.map(describeParam).join(', ')}]`;
+}
+
+function describeParam(value: unknown): string {
+  if (value === null) return 'null';
+  if (value === undefined) return 'undefined';
+  if (typeof value === 'boolean') return 'boolean';
+  if (typeof value === 'number') return 'number';
+  if (value instanceof Date) return 'date';
+  if (Array.isArray(value)) return 'array';
+  if (typeof value === 'string') return 'string';
+  if (typeof value === 'object') return 'object';
+  return typeof value;
+}
+
+
+
+/**
+ * Describe a database error without carrying free-form text into logs.
+ * PostgreSQL `message`/`detail`/`hint` fields can contain actual row values
+ * (for example a unique-constraint detail naming an email), so only structural
+ * metadata with no row payload is admitted here.
+ */
+export function describeDbError(error: unknown): Record<string, string> {
+  const e = (typeof error === 'object' && error !== null ? error : {}) as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  for (const key of ['name', 'code', 'severity', 'schema', 'table', 'column', 'dataType', 'constraint', 'routine']) {
+    const value = e[key];
+    if (typeof value === 'string' && value.length > 0) out[key] = value;
+  }
+  if (Object.keys(out).length === 0) out.name = error instanceof Error ? error.name : typeof error;
+  return out;
 }
 
 /**
@@ -80,9 +139,9 @@ export async function query<T extends QueryResultRow = any>(
        environment flag here, both of which put this layer back in the business
        of deciding product semantics for callers that never asked.
        Ruling + caller inventory: docs/ops/DB_MISSING_TABLE_DEGRADATION_AUDIT_2026-08-01.md */
-    console.error('❌ [POSTGRES] Query error:', error);
+    console.error('❌ [POSTGRES] Query error:', describeDbError(error));
     console.error('   SQL:', sql);
-    console.error('   Params:', params);
+    console.error('   Params:', describeParams(params));
     throw error;
   }
 }
@@ -140,9 +199,9 @@ export async function queryWithExpectedRefusal<T extends QueryResultRow = any>(
       // The refusal the caller declared. ⛔ No SQL, no params, no identities.
       return { refused: true };
     }
-    console.error('❌ [POSTGRES] Query error:', error);
+    console.error('❌ [POSTGRES] Query error:', describeDbError(error));
     console.error('   SQL:', sql);
-    console.error('   Params:', params);
+    console.error('   Params:', describeParams(params));
     throw error;
   }
 }
@@ -183,7 +242,7 @@ export async function transaction<T>(
     return result;
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('❌ [POSTGRES] Transaction rolled back:', error);
+    console.error('❌ [POSTGRES] Transaction rolled back:', describeDbError(error));
     throw error;
   } finally {
     client.release();
@@ -211,7 +270,7 @@ export async function testConnection(): Promise<boolean> {
     console.log('✅ [POSTGRES] Connection successful:', result.rows[0].now);
     return true;
   } catch (error) {
-    console.error('❌ [POSTGRES] Connection failed:', error);
+    console.error('❌ [POSTGRES] Connection failed:', describeDbError(error));
     return false;
   }
 }
@@ -241,7 +300,7 @@ export async function closePool(): Promise<void> {
     await pool.end();
     console.log('✅ [POSTGRES] Pool closed gracefully');
   } catch (error) {
-    console.error('❌ [POSTGRES] Error closing pool:', error);
+    console.error('❌ [POSTGRES] Error closing pool:', describeDbError(error));
   }
 }
 

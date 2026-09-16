@@ -25,6 +25,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import pg from 'pg';
 import { chunkText, estimateTokens, extractTitle } from '../lib/ain/knowledge/ChunkingService';
+import { loadDeclaration, decideAdmission, formatVerdict } from '../lib/corpus/admission';
 import { classifyChunkSpiralogic, mergeTagsIntoMeta, isOperationalFile, inferSourceType, extractAuthor } from '../lib/library/spiralogicTagger';
 import { validateTitle, validateAuthor, resolveIngestStatus } from '../lib/library/ingestIntegrity';
 import { toPgVectorLiteral } from '../lib/db/pgvector';
@@ -206,22 +207,53 @@ async function updateSourceStatus(pool: pg.Pool, sourceId: string, status: strin
 // PHASE A: SOURCE FILE INGESTION
 // =============================================================================
 
-async function ingestSourceFiles(pool: pg.Pool): Promise<{ processed: number; skipped: number; errors: number; chunks: number }> {
+function admittedSourceFiles(): { candidates: string[]; admitted: string[] } {
+  if (!fs.existsSync(SOURCE_DIR)) {
+    return { candidates: [], admitted: [] };
+  }
+
+  const candidates = fs.readdirSync(SOURCE_DIR)
+    .filter(f => f.endsWith('.txt') || f.endsWith('.md'))
+    .sort();
+
+  // SOURCE-CUSTODY-PII-01 · the Living Library is also a knowledge surface.
+  // Presence under data/ain/source is candidacy only; the same declaration that
+  // governs the AIN corpus must explicitly admit a file before library ingestion.
+  const repoRoot = process.cwd();
+  const verdict = decideAdmission(
+    repoRoot,
+    candidates.map(f => path.join(SOURCE_DIR, f)),
+    loadDeclaration(repoRoot),
+  );
+  console.log(formatVerdict(verdict));
+  if (verdict.refused.length > 0) {
+    throw new Error(
+      `library ingestion REFUSED ${verdict.refused.length} declared file(s) carrying human-record signals — fix the declaration, do not bypass this`,
+    );
+  }
+  return {
+    candidates,
+    admitted: verdict.admitted.map(rel => path.basename(rel)).sort(),
+  };
+}
+
+async function ingestSourceFiles(
+  pool: pg.Pool,
+  preflight?: { candidates: string[]; admitted: string[] },
+): Promise<{ processed: number; skipped: number; errors: number; chunks: number }> {
   console.log('\n[Phase A] Ingesting source files from', SOURCE_DIR);
   console.log('─'.repeat(60));
 
   const stats = { processed: 0, skipped: 0, errors: 0, chunks: 0 };
+  const admission = preflight ?? admittedSourceFiles();
+  const { candidates, admitted: files } = admission;
 
   if (!fs.existsSync(SOURCE_DIR)) {
     console.error(`[ERROR] Source directory not found: ${SOURCE_DIR}`);
     return stats;
   }
 
-  const files = fs.readdirSync(SOURCE_DIR)
-    .filter(f => f.endsWith('.txt') || f.endsWith('.md'))
-    .sort();
-
-  console.log(`   Found ${files.length} source files`);
+  console.log(`   Found ${candidates.length} candidate source files · ${files.length} admitted`);
 
   let wisdomFiles = 0;
   let operationalFiles = 0;
@@ -518,6 +550,16 @@ async function main() {
   console.log(`  Batch size:    ${batchSize}`);
   console.log('');
 
+  // Resolve source admission BEFORE any destructive force act (or Ollama/DB work).
+  // A fail-closed manifest may lawfully admit zero. That empty output must not
+  // become authority to erase the existing library and rebuild nothing.
+  const sourceAdmission = skipSources ? null : admittedSourceFiles();
+  if (isForce && !isDryRun && !skipSources && sourceAdmission!.admitted.length === 0) {
+    console.error('🛑 REFUSED: --force would clear the Living Library while source admission admits 0 files.');
+    console.error('   Classify at least one source collection, or use --skip-sources only if intentionally rebuilding Phase B alone.');
+    process.exit(1);
+  }
+
   // Step 1: Check Ollama
   if (!isDryRun) {
     console.log('[1/4] Checking Ollama...');
@@ -581,7 +623,7 @@ async function main() {
     let wisdomStats = { processed: 0, skipped: 0, errors: 0, chunks: 0 };
 
     if (!skipSources) {
-      sourceStats = await ingestSourceFiles(pool);
+      sourceStats = await ingestSourceFiles(pool, sourceAdmission!);
     }
 
     if (!skipWisdom) {

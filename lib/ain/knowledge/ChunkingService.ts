@@ -8,6 +8,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { loadDeclaration, decideAdmission, formatVerdict } from '../../corpus/admission';
+
 export interface KnowledgeChunk {
   sourceFile: string;
   sourceTitle: string;
@@ -222,8 +224,29 @@ export function processSourceFile(filePath: string): KnowledgeChunk[] {
  * Process all source files in directory
  */
 export async function processAllSources(sourceDir: string): Promise<KnowledgeChunk[]> {
-  const files = fs.readdirSync(sourceDir)
+  const candidates = fs.readdirSync(sourceDir)
     .filter(f => f.endsWith('.txt') || f.endsWith('.md'));
+
+  /**
+   * SOURCE-CUSTODY-PII-01 · ACT 4 §C — the guard lives HERE, not in the calling
+   * script, so every caller inherits it. This function is the last point before
+   * text becomes chunks bound for `ain_knowledge_chunks`, which is material
+   * MAIA can retrieve and speak. Reading a directory answers what is present;
+   * it must never answer what MAIA may know.
+   */
+  const repoRoot = process.cwd();
+  const verdict = decideAdmission(
+    repoRoot,
+    candidates.map(f => path.join(sourceDir, f)),
+    loadDeclaration(repoRoot),
+  );
+  console.log(formatVerdict(verdict));
+  if (verdict.refused.length > 0) {
+    throw new Error(
+      `corpus admission REFUSED ${verdict.refused.length} declared file(s) carrying human-record signals — fix the declaration, do not bypass this`,
+    );
+  }
+  const files = verdict.admitted.map(rel => path.basename(rel));
 
   const allChunks: KnowledgeChunk[] = [];
 

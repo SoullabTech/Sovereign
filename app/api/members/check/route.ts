@@ -13,12 +13,17 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
-import { resolveAdmission, admissionRefusalMessage } from '@/lib/auth/passkeyAdmission';
+import { resolveAdmission } from '@/lib/auth/passkeyAdmission';
+import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
 // =============================================================================
+
+const NO_STORE = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+  Pragma: 'no-cache',
+} as const;
 
 const ALLOWED_ORIGINS = new Set([
   'https://soullab.life',
@@ -60,24 +65,16 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 
-// Safe query that returns empty result on table/column errors
-async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[]; error?: string }> {
-  try {
-    const result = await query(sql, params);
-    return { rows: result.rows };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    // Log but don't throw - return empty result
-    if (message.includes('does not exist') || message.includes('column')) {
-      console.warn(`[MEMBERS] Query skipped (missing table/column): ${message}`);
-      return { rows: [], error: message };
-    }
-    throw error; // Re-throw unexpected errors
-  }
-}
-
 export async function POST(request: NextRequest) {
-  const corsHeaders = getCorsHeaders(request);
+  const corsHeaders = { ...getCorsHeaders(request), ...NO_STORE };
+
+  const limit = await checkRateLimit(getClientIP(request), 'ip', 'members/check');
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'Unable to check passkey. Please try again.' },
+      { status: 429, headers: { ...corsHeaders, ...buildRateLimitHeaders(limit) } },
+    );
+  }
 
   try {
     const { passkey } = await request.json();
@@ -90,7 +87,6 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedPasskey = passkey.toUpperCase().trim();
-    console.log(`[MEMBERS] Check passkey: ${normalizedPasskey}`);
 
     /* ONE admission predicate, shared with /api/members/register. This route
        must never answer "valid invite" for something register would refuse:
@@ -99,40 +95,30 @@ export async function POST(request: NextRequest) {
 
     if (admission.kind === 'existing_member') {
       const member = admission.member as Record<string, unknown>;
-      console.log(`[MEMBERS] Found existing member: ${member.username}`);
+      console.log('[MEMBERS] Existing member matched');
       return NextResponse.json({
         exists: true,
         isInvite: false,
-        onboarded: member.onboarded,
-        onboardingStep: member.onboarding_step,
-        username: member.username,
-        name: member.name,
+        onboarded: Boolean(member.onboarded),
       }, { headers: corsHeaders });
     }
 
     if (admission.kind === 'admit') {
-      console.log(`[MEMBERS] Valid invite found for: ${normalizedPasskey}`);
+      console.log('[MEMBERS] Valid invite matched');
       return NextResponse.json({
         exists: false,
         isInvite: true,
         inviteStatus: 'valid',
-        inviterName: admission.inviterName,
-        inviterUsername: admission.inviterUsername,
       }, { headers: corsHeaders });
     }
 
-    /* Refused. `isInvite` reports whether an invite record was FOUND, so a
-       used or expired invite can still be explained to the person holding it —
-       but nothing here reports `inviteStatus: 'valid'`. */
-    const foundAnInvite =
-      admission.reason === 'invite_not_pending' || admission.reason === 'invite_expired';
-    console.log(`[MEMBERS] Passkey refused (${admission.reason}): ${normalizedPasskey}`);
+    /* A refusal is deliberately uniform. These legacy credentials have lost
+       secret standing, so possession is not authority to learn invite state. */
+    console.log(`[MEMBERS] Passkey refused (${admission.reason})`);
     return NextResponse.json({
       exists: false,
-      isInvite: foundAnInvite,
-      ...(admission.reason === 'invite_not_pending' ? { inviteStatus: admission.status } : {}),
-      ...(admission.reason === 'invite_expired' ? { inviteStatus: 'expired' } : {}),
-      error: admissionRefusalMessage(admission.reason),
+      isInvite: false,
+      error: 'Passkey not recognized',
     }, { headers: corsHeaders });
 
   } catch (error) {
@@ -140,7 +126,7 @@ export async function POST(request: NextRequest) {
     console.error(`[MEMBERS] Check passkey error: ${message}`);
     return NextResponse.json(
       { error: 'Failed to check passkey. Please try again.' },
-      { status: 500, headers: getCorsHeaders(request) }
+      { status: 500, headers: { ...getCorsHeaders(request), ...NO_STORE } }
     );
   }
 }

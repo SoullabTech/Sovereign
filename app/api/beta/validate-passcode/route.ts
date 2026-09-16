@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { logAuthEvent, hashCredential, redactPasscode } from '@/lib/security/authAudit';
+import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
 
 // Note: No dynamic export needed - Capacitor apps call remote API server
 
@@ -89,6 +90,29 @@ const VALID_PASSCODES = [
 
 export async function POST(request: NextRequest) {
   try {
+    /**
+     * SOURCE-CUSTODY-PII-01 · R2 — CONTAINMENT, EXPLICITLY NOT REMEDIATION.
+     *
+     * This corpus is 64 credentials: 48 of `SOULLAB-<FIRSTNAME>` form and 14
+     * single dictionary words. A first name is not a secret and neither is
+     * `WISDOM`, so this endpoint was an unthrottled oracle over a guessable
+     * keyspace. Throttling it is worth doing today.
+     *
+     * ⛔ IT IS NOT THE FIX. Per the founder ruling, rate-limiting compromised
+     * credentials is not remediation — these values lost secret standing by
+     * having lived in tracked source, and they must be RETIRED and replaced by
+     * individually revocable, hashed credentials. That replacement needs a
+     * migration path for the people still holding them, so it is its own act.
+     * This limiter must not be mistaken for that act having happened.
+     */
+    const limit = await checkRateLimit(getClientIP(request), 'ip', 'beta/validate-passcode');
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { valid: false, message: 'Invalid invitation code' },
+        { status: 429, headers: buildRateLimitHeaders(limit) },
+      );
+    }
+
     const body: ValidatePasscodeRequest = await request.json();
 
     if (!body.passcode) {

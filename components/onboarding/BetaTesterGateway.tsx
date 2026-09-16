@@ -4,8 +4,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Key, User, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
-import { ganeshaContacts, GaneshaContact } from '@/lib/ganesha/contacts';
-
+/**
+ * SOURCE-CUSTODY-PII-01 · ACT 2 — this module no longer holds human records.
+ *
+ * It previously value-imported `ganeshaContacts` and decided admission in the
+ * browser against the bundled list. Admission is now a server decision
+ * (`POST /api/onboarding/recognize-key`); no personal record data crosses back.
+ *
+ * ⛔ Do not re-import `@/lib/ganesha/contacts` here. It is `server-only` and
+ * guarded by `__tests__/onboarding-human-record-boundary.test.ts`.
+ */
 interface BetaTesterGatewayProps {
   onComplete: (userData: {
     name: string;
@@ -14,30 +22,20 @@ interface BetaTesterGatewayProps {
   }) => void;
 }
 
-// Get all valid passcodes from Ganesha contacts system + general passcodes
-const getAllValidPasscodes = (): string[] => {
-  const ganeshaPasscodes = ganeshaContacts
-    .filter(contact => contact.status === 'active' && contact.metadata.passcode)
-    .map(contact => contact.metadata.passcode!);
-
-  const generalPasscodes = [
-    'CONSCIOUSNESS2025',
-    'DAIMON',
-    'SOULLAB',
-    'ORACLE',
-    'MAIA',
-    'BETA-TESTER-2025'
-  ];
-
-  return [...ganeshaPasscodes, ...generalPasscodes];
-};
-
-// Find existing beta tester by passcode
-const findBetaTesterByPasscode = (passcode: string): GaneshaContact | null => {
-  return ganeshaContacts.find(contact =>
-    contact.status === 'active' &&
-    contact.metadata.passcode === passcode.toUpperCase()
-  ) || null;
+/**
+ * Ask the server whether this passcode admits, and who it belongs to.
+ * ⛔ Fails closed: an unreachable server refuses rather than admitting.
+ */
+const recognizePasscode = async (
+  passcode: string,
+): Promise<{ recognized: boolean; name: string | null }> => {
+  const response = await fetch('/api/onboarding/recognize-key', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: passcode }),
+  });
+  if (!response.ok) throw new Error(`recognize-key failed: ${response.status}`);
+  return response.json();
 };
 
 export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps) {
@@ -51,7 +49,6 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  const [existingBetaTester, setExistingBetaTester] = useState<GaneshaContact | null>(null);
 
   const handlePasscodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,25 +58,26 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
     // Simulate validation delay for sacred feeling
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const validPasscodes = getAllValidPasscodes();
-    const existingTester = findBetaTesterByPasscode(passcode);
-
-    if (validPasscodes.includes(passcode.toUpperCase())) {
+    let verdict: { recognized: boolean; name: string | null };
+    try {
+      verdict = await recognizePasscode(passcode);
+    } catch (err) {
+      console.error('[BetaTesterGateway] Recognition unavailable:', err);
+      setError('We could not check that passcode just now. Please try again in a moment.');
       setIsValidating(false);
-
-      if (existingTester) {
-        // Existing beta tester - show returning user flow
-        setExistingBetaTester(existingTester);
-        setName(existingTester.name);
-        setPhase('returning');
-      } else {
-        // New beta tester with general passcode
-        setPhase('account');
-      }
-    } else {
-      setError('Sacred key not recognized. Please check your passcode.');
-      setIsValidating(false);
+      return;
     }
+
+    setIsValidating(false);
+
+    if (!verdict.recognized) {
+      setError('Sacred key not recognized. Please check your passcode.');
+      return;
+    }
+
+    // Admission never returns identity data. This dormant gateway therefore
+    // continues only to account setup; reactivation needs its own product act.
+    setPhase('account');
   };
 
   const handleAccountSubmit = async (e: React.FormEvent) => {
@@ -457,7 +455,7 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
 
                     <div className="bg-[#0f172a]/30 rounded-lg p-4 border border-[#6EE7B7]/20 mb-6">
                       <p className="text-white/80 text-sm font-light text-center">
-                        Your sacred key {existingBetaTester?.metadata.passcode} has been recognized.<br />
+                        Your sacred key has been recognized.<br />
                         Complete your account setup to continue your consciousness journey.
                       </p>
                     </div>
