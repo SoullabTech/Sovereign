@@ -14,8 +14,15 @@ import RebuildAuthoredBody from './RebuildAuthoredBody';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterNodeFor, chapterSpanFor, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { OutlineNode } from '@/lib/writersStudio/focus/outlineTree';
+import { DEVELOPMENTAL_LENSES } from '@/lib/manuscript/developmentalReader/contract';
 import { focusOn, focusRequest, composerPrompt } from '@/lib/writersStudio/focus/studioFocus';
-import { runChapterReview, findingsForSection, lensCounts, type ChapterReviewBundle } from '@/lib/writersStudio/rebuild/chapterReview';
+import {
+  runChapterReview, rehydrateChapterReview, findingsForSection, lensCounts,
+  type ChapterReviewBundle,
+} from '@/lib/writersStudio/rebuild/chapterReview';
+import {
+  loadChapterReviewManifest, saveChapterReviewManifest,
+} from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { canvasWithEditorialThread, canvasWithoutEditorialThread, CANVAS_EDITORIAL_THREAD_PARAM } from '../canvasIdentity';
 import { locationForSection, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import {
@@ -131,6 +138,7 @@ export default function RebuildStudioClient() {
   const [reviewPhase, setReviewPhase] = useState<'idle' | 'reading' | 'ready' | 'partial'>('idle');
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number; lens: string } | null>(null);
   const [reviewNeedsRefresh, setReviewNeedsRefresh] = useState(false);
+  const [reviewContinuityMessage, setReviewContinuityMessage] = useState<string | null>(null);
   const [maiaAsk, setMaiaAsk] = useState('');
   const [maiaResponse, setMaiaResponse] = useState<string | null>(null);
   const [maiaFailure, setMaiaFailure] = useState<string | null>(null);
@@ -216,13 +224,41 @@ export default function RebuildStudioClient() {
   const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
   const work = currentWork(workContext);
   const chapterRootId = chapter?.root.draftSectionId ?? null;
+  const chapterScopeKey = chapter?.sections.map((section) => section.draftSectionId).join('|') ?? '';
 
   useEffect(() => {
+    let cancelled = false;
     setReview(null);
     setReviewPhase('idle');
     setReviewProgress(null);
     setReviewNeedsRefresh(false);
-  }, [chapterRootId]);
+    setReviewContinuityMessage(null);
+    if (!chapterRootId || !context || !chapter) return () => { cancelled = true; };
+
+    void (async () => {
+      const loaded = await loadChapterReviewManifest(context.manuscriptId, chapterRootId);
+      if (cancelled) return;
+      if (!loaded.ok) {
+        setReviewContinuityMessage('Saved chapter reviews could not be reached just now. Your frozen readings are unaffected.');
+        return;
+      }
+      if (!loaded.run) return;
+      const manifest = loaded.run;
+      const restored = await rehydrateChapterReview(context.manuscriptId, manifest);
+      if (cancelled) return;
+      if (!restored.ok) {
+        setReviewContinuityMessage('The saved chapter review could not be reopened just now. Its frozen readings have not changed.');
+        return;
+      }
+      const currentIds = chapterScopeKey ? chapterScopeKey.split('|') : [];
+      const sameScope = manifest.sectionIds.length === currentIds.length
+        && manifest.sectionIds.every((id, i) => id === currentIds[i]);
+      setReview(restored.bundle);
+      setReviewPhase(restored.bundle.failures.length === 0 ? 'ready' : 'partial');
+      setReviewNeedsRefresh(!sameScope || manifest.draftRevision !== context.version);
+    })();
+    return () => { cancelled = true; };
+  }, [chapterRootId, chapterScopeKey, context?.manuscriptId, context?.version]);
 
   const reviewFindingsForMovement = useCallback((section: RebuildSection) => {
     if (!review || !chapter) return [];
@@ -261,14 +297,26 @@ export default function RebuildStudioClient() {
   const runReview = useCallback(async () => {
     if (!chapter || !context || reviewPhase === 'reading') return;
     if (!(await settleWriting())) return;
+    const reviewRevision = writingRef.current?.currentRevisionId() ?? context.version;
+    setReviewContinuityMessage(null);
     setReviewPhase('reading');
-    setReviewProgress({ done: 0, total: 7, lens: 'development' });
+    setReviewProgress({ done: 0, total: DEVELOPMENTAL_LENSES.length, lens: DEVELOPMENTAL_LENSES[0]! });
     const bundle = await runChapterReview(context.manuscriptId, chapter.sections, (done, total, lens) => {
       setReviewProgress({ done, total, lens });
     });
     setReview(bundle);
     setReviewNeedsRefresh(false);
     setReviewPhase(bundle.failures.length === 0 ? 'ready' : 'partial');
+    const kept = await saveChapterReviewManifest(context.manuscriptId, {
+      chapterRootSectionId: chapter.root.draftSectionId,
+      sectionIds: chapter.sections.map((section) => section.draftSectionId),
+      draftRevision: reviewRevision,
+      readingIds: bundle.readingIds,
+      failures: bundle.failures,
+    });
+    if (!kept.ok) {
+      setReviewContinuityMessage('The readings are kept, but this chapter review could not be remembered as one set. Reload may not restore it yet.');
+    }
   }, [chapter, context, reviewPhase, settleWriting]);
 
   const replaceAddress = useCallback((sectionId: string, threadId: string | null) => {
@@ -825,11 +873,16 @@ export default function RebuildStudioClient() {
                     {reviewPhase === 'reading' && reviewProgress
                       ? `MAIA is reading ${reviewProgress.lens} · ${Math.min(reviewProgress.done + 1, reviewProgress.total)} of ${reviewProgress.total}.`
                       : reviewPhase === 'ready'
-                        ? `MAIA read all ${chapter?.sections.length ?? 0} sections through seven developmental lenses. Her frozen findings stay available as you work.`
+                        ? `MAIA read all ${chapter?.sections.length ?? 0} sections through ${DEVELOPMENTAL_LENSES.length} developmental lenses. Her frozen findings stay available as you work.`
                         : reviewPhase === 'partial'
                           ? `MAIA kept every reading that completed. ${review?.failures.length ?? 0} lens${review?.failures.length === 1 ? '' : 'es'} could not complete, so this is not labeled a full review.`
                           : 'MAIA will read this chapter first, then keep her findings available while you move into individual sections.'}
                   </p>
+                  {reviewContinuityMessage && (
+                    <div role="status" data-review-continuity-message style={{ borderRadius: 9, background: C.panel, padding: '9px 10px', fontSize: 10.5, lineHeight: 1.45, color: C.muted, margin: '-5px 0 12px' }}>
+                      {reviewContinuityMessage}
+                    </div>
+                  )}
                   {reviewNeedsRefresh && review && (
                     <div role="status" style={{ borderRadius: 9, background: C.panel, padding: '9px 10px', fontSize: 10.5, lineHeight: 1.45, color: C.muted, margin: '-5px 0 12px' }}>
                       The Work has changed since this reading. These findings are kept as what MAIA noticed then; review again whenever you want her to read the changed chapter.
