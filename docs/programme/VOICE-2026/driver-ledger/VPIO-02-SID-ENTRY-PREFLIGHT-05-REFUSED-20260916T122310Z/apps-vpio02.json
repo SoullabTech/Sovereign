@@ -1,0 +1,46 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+      "--bundle-id",
+      "life.soullab.voicekernel.vpio02",
+      "--json-output",
+      "/private/tmp/sid-entry-05-9ed72a38cce6fb55e909e747898f4d452dcfdf3d-20260916T122310Z/docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-ENTRY-preflight-20260916T122310Z/apps-vpio02.json"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "506.7"
+  },
+  "result" : {
+    "apps" : [
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "life.soullab.voicekernel.vpio02",
+        "bundleVersion" : "1",
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "VoiceKernel VPIO-02",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/E3B88028-A10F-46B1-AB27-CF0A1F83FB78/VoiceKernelHarness.app/",
+        "version" : "0.0.1"
+      }
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "matchingBundleIdentifier" : "life.soullab.voicekernel.vpio02",
+    "removableAppsIncluded" : true
+  }
+}
