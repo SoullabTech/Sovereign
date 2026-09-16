@@ -109,6 +109,14 @@ describe('ACT 2A · admission oracle abuse control', () => {
     expect(res.headers.get('Cache-Control')).toMatch(/no-store/);
   });
 
+  test('W1b — both legacy shared onboarding keys remain admitted until R12 retirement', async () => {
+    for (const key of ['BETA-TESTER-2025', 'SOUL-PIONEER-2025']) {
+      const res = await post(key);
+      expect(res.status).toBe(200);
+      await expect(res.json()).resolves.toEqual({ recognized: true, name: null });
+    }
+  });
+
   test('W2 — invalid admission fails, and every failure looks identical', async () => {
     const bodies: string[] = [];
     for (const candidate of ['NOPE-1', '', 'SOULLAB-LOOKS-RIGHT', 12345, null]) {

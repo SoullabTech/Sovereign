@@ -19,8 +19,6 @@ import { api, ApiError } from '@/lib/api-client';
  * ⛔ Do not re-import `@/lib/ganesha/contacts` here. It is `server-only` and
  * guarded by `__tests__/onboarding-human-record-boundary.test.ts`.
  */
-type RecognizedSoul = { name: string };
-
 interface SacredSoulInductionProps {
   onComplete: (userData: {
     name: string;
@@ -93,7 +91,6 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isRecognizing, setIsRecognizing] = useState(false);
-  const [recognizedSoul, setRecognizedSoul] = useState<RecognizedSoul | null>(null);
   const [blessings, setBlessings] = useState<string[]>([]);
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -239,18 +236,12 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
       return;
     }
 
-    if (verdict.name) {
-      // Returning consciousness pioneer — the server returned THEIR OWN name.
-      setRecognizedSoul({ name: verdict.name });
-      setName(extractFirstName(verdict.name));
-      setPhase('recognition');
-    } else {
-      // Admitted, but no name on record — derive a starting name from the key.
-      const extractedName = extractFirstName(soulKey);
-      setName(extractedName);
-      setPreferredName(extractedName); // Default preferred name to extracted name
-      setPhase('creation');
-    }
+    // Admission never returns identity data. Existing members were handled by
+    // /api/members/check above; an admitted new arrival starts from the key.
+    const extractedName = extractFirstName(soulKey);
+    setName(extractedName);
+    setPreferredName(extractedName);
+    setPhase('creation');
   };
 
   const handleRecovery = async (e?: React.FormEvent | React.MouseEvent) => {

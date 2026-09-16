@@ -12,7 +12,7 @@
  * pass just as happily against a redactor that did nothing to a value the test
  * happened not to check.
  */
-import { describeParams } from '../postgres';
+import { describeDbError, describeParams } from '../postgres';
 
 const SECRET = 'SOULLAB-A-REAL-LOOKING-CREDENTIAL-VALUE';
 const EMAIL = 'someone@example.com';
@@ -56,5 +56,33 @@ describe('R1.6 · query parameter redaction', () => {
     expect(described).not.toMatch(/#[0-9a-f]+/i);
     expect(described).not.toContain(String(SECRET.length));
     expect(described).not.toContain('true');
+  });
+});
+
+describe('R1.6 · database error metadata redaction', () => {
+  test('T7 — free-form PostgreSQL text cannot carry row values into logs', () => {
+    const leak = 'person@example.com';
+    const credential = 'SOULLAB-PRIVATE-KEY';
+    const described = describeDbError({
+      name: 'error',
+      code: '23505',
+      severity: 'ERROR',
+      table: 'members',
+      constraint: 'members_email_key',
+      message: `duplicate key ${leak}`,
+      detail: `Key (email)=(${leak}) already exists; credential=${credential}`,
+      hint: credential,
+      stack: `${leak} ${credential}`,
+    });
+    const blob = JSON.stringify(described);
+    expect(described).toEqual({
+      name: 'error',
+      code: '23505',
+      severity: 'ERROR',
+      table: 'members',
+      constraint: 'members_email_key',
+    });
+    expect(blob).not.toContain(leak);
+    expect(blob).not.toContain(credential);
   });
 });

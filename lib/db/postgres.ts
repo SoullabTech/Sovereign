@@ -24,7 +24,7 @@ if (isServer) {
 
   // Handle pool errors
   newPool.on('error', (err: Error) => {
-    console.error('❌ [POSTGRES] Unexpected pool error:', err);
+    console.error('❌ [POSTGRES] Unexpected pool error:', describeDbError(err));
   });
 
   pool = newPool;
@@ -50,7 +50,8 @@ if (isServer) {
  * and coarse type remain visible, but string length, boolean value, array length
  * and hashes do not. A short digest is still an offline oracle for low-entropy
  * credentials and common identifiers, so correlation by value is deliberately
- * refused here.
+ * refused here. PostgreSQL error text is treated the same way: free-form
+ * `message`/`detail` fields are not logged because they may contain row values.
  */
 export function describeParams(params: readonly unknown[]): string {
   if (!params || params.length === 0) return '(none)';
@@ -69,6 +70,24 @@ function describeParam(value: unknown): string {
   return typeof value;
 }
 
+
+
+/**
+ * Describe a database error without carrying free-form text into logs.
+ * PostgreSQL `message`/`detail`/`hint` fields can contain actual row values
+ * (for example a unique-constraint detail naming an email), so only structural
+ * metadata with no row payload is admitted here.
+ */
+export function describeDbError(error: unknown): Record<string, string> {
+  const e = (typeof error === 'object' && error !== null ? error : {}) as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  for (const key of ['name', 'code', 'severity', 'schema', 'table', 'column', 'dataType', 'constraint', 'routine']) {
+    const value = e[key];
+    if (typeof value === 'string' && value.length > 0) out[key] = value;
+  }
+  if (Object.keys(out).length === 0) out.name = error instanceof Error ? error.name : typeof error;
+  return out;
+}
 
 /**
  * Execute a parameterized query
@@ -120,7 +139,7 @@ export async function query<T extends QueryResultRow = any>(
        environment flag here, both of which put this layer back in the business
        of deciding product semantics for callers that never asked.
        Ruling + caller inventory: docs/ops/DB_MISSING_TABLE_DEGRADATION_AUDIT_2026-08-01.md */
-    console.error('❌ [POSTGRES] Query error:', error);
+    console.error('❌ [POSTGRES] Query error:', describeDbError(error));
     console.error('   SQL:', sql);
     console.error('   Params:', describeParams(params));
     throw error;
@@ -180,7 +199,7 @@ export async function queryWithExpectedRefusal<T extends QueryResultRow = any>(
       // The refusal the caller declared. ⛔ No SQL, no params, no identities.
       return { refused: true };
     }
-    console.error('❌ [POSTGRES] Query error:', error);
+    console.error('❌ [POSTGRES] Query error:', describeDbError(error));
     console.error('   SQL:', sql);
     console.error('   Params:', describeParams(params));
     throw error;
@@ -223,7 +242,7 @@ export async function transaction<T>(
     return result;
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('❌ [POSTGRES] Transaction rolled back:', error);
+    console.error('❌ [POSTGRES] Transaction rolled back:', describeDbError(error));
     throw error;
   } finally {
     client.release();
@@ -251,7 +270,7 @@ export async function testConnection(): Promise<boolean> {
     console.log('✅ [POSTGRES] Connection successful:', result.rows[0].now);
     return true;
   } catch (error) {
-    console.error('❌ [POSTGRES] Connection failed:', error);
+    console.error('❌ [POSTGRES] Connection failed:', describeDbError(error));
     return false;
   }
 }
@@ -281,7 +300,7 @@ export async function closePool(): Promise<void> {
     await pool.end();
     console.log('✅ [POSTGRES] Pool closed gracefully');
   } catch (error) {
-    console.error('❌ [POSTGRES] Error closing pool:', error);
+    console.error('❌ [POSTGRES] Error closing pool:', describeDbError(error));
   }
 }
 

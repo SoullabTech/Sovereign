@@ -14,8 +14,6 @@ import { Key, User, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react
  * ⛔ Do not re-import `@/lib/ganesha/contacts` here. It is `server-only` and
  * guarded by `__tests__/onboarding-human-record-boundary.test.ts`.
  */
-type RecognizedTester = { name: string };
-
 interface BetaTesterGatewayProps {
   onComplete: (userData: {
     name: string;
@@ -51,7 +49,6 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  const [existingBetaTester, setExistingBetaTester] = useState<RecognizedTester | null>(null);
 
   const handlePasscodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,15 +75,9 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
       return;
     }
 
-    if (verdict.name) {
-      // Existing beta tester — the server returned THEIR OWN name.
-      setExistingBetaTester({ name: verdict.name });
-      setName(verdict.name);
-      setPhase('returning');
-    } else {
-      // Admitted on a shared key, with no name on record.
-      setPhase('account');
-    }
+    // Admission never returns identity data. This dormant gateway therefore
+    // continues only to account setup; reactivation needs its own product act.
+    setPhase('account');
   };
 
   const handleAccountSubmit = async (e: React.FormEvent) => {

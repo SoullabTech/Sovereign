@@ -79,3 +79,25 @@ The first integration commit attempt was refused by the operative design-canon h
 - `BetaTesterGateway.tsx` has zero repository consumers and is covered by a deliberately narrow **structural** dormant-component contract. The contract grants no authority to reactivate it; a future consumer must reopen experiential review.
 
 No browser package installation was required: the already-installed system Chrome supplied the evidence.
+
+## Merge-review amendment — 2026-09-15
+
+Independent PR review found two defects before merge; neither was accepted as harmless drift.
+
+1. **Legacy-key parity:** the server-side shared-key set carried `BETA-TESTER-2025` but accidentally omitted `SOUL-PIONEER-2025`, which the live `SacredSoulInduction` had admitted before this lane. R12 explicitly holds credential retirement, so containment had no authority to retire one legacy key by omission. The key is restored server-side and a regression test requires both legacy shared keys to remain admitted until R12 disposes them.
+2. **Error-object disclosure:** `lib/db/postgres.ts` stopped logging raw query parameters but still logged the full PostgreSQL error object. PostgreSQL `message`/`detail` fields may contain row values (for example a unique-key email). Error logging now admits only structural metadata (`name`, SQLSTATE/code, severity, schema/table/column/dataType/constraint/routine); free-form text, stack, detail and hint are excluded.
+
+The review also removed dead client branches that expected `/api/onboarding/recognize-key` to return a person's name after the integration had deliberately made that response admission-only.
+
+### Post-review exact-tree evidence
+
+- focused Jest: **6/6 suites · 57/57 tests PASS**;
+- standalone `apps/api` typecheck + build: **PASS**;
+- root TypeScript no-regression: **229 vs baseline 239 · 0 regressions**;
+- design-canon: **PASS**;
+- provider governance + no-Supabase: **PASS**;
+- `git diff --check`: **PASS**;
+- full `npm run build`: **PASS / exit 0**;
+- final `.next/static`: **1,742 files**; **0/48 non-Soullab email markers**, **0/48 contact passcodes**, and **0 `SOUL-PIONEER-2025` occurrences**.
+
+No production act is authorized by this amendment. The prior holds remain unchanged.

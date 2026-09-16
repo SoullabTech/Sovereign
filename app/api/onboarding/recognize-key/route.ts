@@ -41,9 +41,8 @@ import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/r
 /**
  * ACT 2A — this endpoint is an AUTHORIZATION ORACLE, so it is rate limited.
  *
- * A caller submits one candidate credential and learns whether it admits, and
- * on a match receives that person's name. Without abuse control that is a
- * guessing machine with a name attached to each success.
+ * A caller submits one candidate credential and learns only whether it admits.
+ * Without abuse control that is still a guessing oracle over a legacy keyspace.
  *
  * `checkRateLimit` is reused rather than reinvented: it is already founder-
  * reasoned to fail to a small in-process ceiling and then BLOCK when the
@@ -78,6 +77,9 @@ const SHARED_ADMISSION_KEYS = new Set([
   'ORACLE',
   'MAIA',
   'BETA-TESTER-2025',
+  // Legacy SacredSoulInduction universal key. Retained until R12 explicitly
+  // retires/reissues legacy credentials; containment must not silently revoke it.
+  'SOUL-PIONEER-2025',
 ]);
 
 export type RecognizeKeyResponse = {
