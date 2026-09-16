@@ -946,3 +946,8 @@ No qualification change. The terminate-01 runner install placed only the test-ru
 ### §10.83 — step-2b device-state calibration open as draft-only; draft returned, not run (2026-09-16; discriminator plan §18.65; implementation record §10.38)
 
 No qualification change. Read-only calibration of the device-state vocabulary; no subject touched.
+
+
+### §10.84 — step-2b accepted; read-only execution open; run shape issued (2026-09-16; discriminator plan §18.66; implementation record §10.39)
+
+No qualification change.

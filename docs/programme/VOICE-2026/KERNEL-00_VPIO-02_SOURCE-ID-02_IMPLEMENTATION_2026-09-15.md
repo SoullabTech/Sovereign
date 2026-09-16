@@ -827,3 +827,29 @@ Stamp `20260916T002922Z` (00:29:22Z = 20:29:22 local; the act's first devicectl 
 **Two disclosed choices for review.** (a) The attestation travels as a file the founder writes in the window rather than as pin text, so the pin never authors the physical-state claim; unlike an authority payload it *is* committed, because it is the calibration's reference reading. (b) The two help reads are separate from the two JSON reads (the ruling's items 1–4 as four files) rather than folded, so a help text that documents a vocabulary the JSON does not carry is visible as such.
 
 **Standing after §10.38.** STEP-2B draft returned, NOT RUN (review → run shape) · `TERMINATE-02` NOT drafted · historical harness ALIVE (last read 00:39:27Z, PID 3347) · FIRST-INSTALL-03 closed · [D]/[E] CLOSED · install 0 · launch 0 · sample 0 · source population 0 · container WITNESS-REQUIRED · siblings HOLD.
+
+### 10.39 FOUNDER RULING (2026-09-16): `STEP-2B DEVICE-STATE CALIBRATION-01` ACCEPTED at `03289d89d` (`b00876bd…` / 46 verified by the founder on the actual pin) · read-only execution OPEN (authority none · device writes none) · conduct requirement for the attestation · run shape ISSUED
+
+**Ruling (verbatim in substance).** Both disclosed choices accepted: the attestation travels with the evidence — *not authority; the human reference state against which `lockState` and `displays` are being calibrated* — copied verbatim and committed; help outputs stay separate from raw JSON because *documentation can describe a vocabulary or behavior that an individual response does not exhibit* — distinct evidence classes. Confirmed: `lockState` JSON raw only · `displays` JSON raw only · no parsed key · no state gate · no inferred awake/unlocked value; process and app summaries observational only. **Conduct requirement:** the attestation must be the founder's observation *at the time of the calibration* — not language supplied by the session, not a remembered earlier state. Immediately before invoking, physically establish whatever is true and write only that; if all four hold, the factual form `phone physically awake · display visibly illuminated · device unlocked · normal UI visible`; if one does not hold, write the actual state instead; *do not make the phone fit the wording after writing it*; keep the observed state unchanged through the two reads if practical — *the purpose is calibration, not passing a gate.* After it lands, the next decision is mechanical: read the actual vocabulary beside the attestation, then derive `TERMINATE-02`'s just-in-time device-state gate from observed semantics, never guessed key names. Standing: TERMINATE-01 STOP · spent · durable · STEP-2B accepted, run next · TERMINATE-02 wait for 2b result · FIRST-INSTALL-03 closed · [D]/[E] closed · no `TERMINATE-02` draft yet.
+
+**Run shape (one fresh Terminal window; no authority; the attestation text is the founder's own and is written only after looking at the phone).**
+
+```text
+1. fresh Terminal window
+2. cd ~
+3. look at the phone, then write ONLY what is true right now:
+   cat > /private/tmp/sid-2b-attestation.txt <<'ATT'
+   <one line per observed fact — e.g. "phone physically awake" / "display visibly illuminated" / "device unlocked" / "normal UI visible"; if any is not true, write the actual state>
+   ATT
+4. test -s /private/tmp/sid-2b-attestation.txt && wc -l /private/tmp/sid-2b-attestation.txt && cat /private/tmp/sid-2b-attestation.txt
+5. git -C ~/MAIA-SOVEREIGN fetch origin claude/voice-2026-census-01 \
+   && git -C ~/MAIA-SOVEREIGN show 03289d89d:docs/programme/VOICE-2026/SID_STEP2B-DEVICE-STATE-CALIBRATION-01_READ_DRAFT_2026-09-16.sh > /private/tmp/sid-step2b-01.sh
+6. shasum -a 256 /private/tmp/sid-step2b-01.sh && wc -l /private/tmp/sid-step2b-01.sh
+   → must print b00876bdc889275d39be5ef7b8fc1307964bed86d82c4b203c106d48777e8d52 and 46; otherwise STOP, invoke nothing
+7. bash /private/tmp/sid-step2b-01.sh 2>&1 | tee ~/sid-step2b-01-transcript-$(date -u +%Y%m%dT%H%M%SZ).log; echo "rc=${PIPESTATUS[0]}"
+   expected final line: SID-STEP2B-DEVICE-STATE-CALIBRATION-01 <stamp> PUSHED harness-now harness lines now: N · historical-container lines: M · vpio02 installed entries: 1 · vpio02sid installed entries: 0
+```
+
+Do not touch the phone between step 3 and the end of step 7 if practical. On the branch's arrival here: cherry-pick `-x`, reseal, then read `attestation.txt` beside `read3-lockState.json` / `read4-displays.json` and the two help texts — that reading is §10.40 and is what `TERMINATE-02`'s device-state gate is derived from.
+
+**Standing after §10.39.** STEP-2B accepted · run next · `TERMINATE-02` NOT drafted · historical harness ALIVE at last read (00:39:27Z, PID 3347) · FIRST-INSTALL-03 closed · [D]/[E] CLOSED · install 0 · launch 0 · sample 0 · source population 0 · container WITNESS-REQUIRED · siblings HOLD.
