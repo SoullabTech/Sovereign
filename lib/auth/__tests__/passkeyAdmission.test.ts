@@ -19,6 +19,7 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 import { hasAcceptedPasskeyFormat, resolveAdmission } from '../passkeyAdmission';
+import { hashInvitePasskey } from '../inviteCredential';
 
 /** No member row, and whatever invite rows the case supplies. */
 function db({ member = [], invite = [] }: { member?: unknown[]; invite?: unknown[] }) {
@@ -67,11 +68,33 @@ describe('a real invite admits', () => {
     });
   });
 
-  it('normalizes case and whitespace before looking anything up', async () => {
+  it('bridges only a missing hash column during deploy ordering, using the legacy pending invite once', async () => {
+    mockQuery.mockImplementation((sql: string) => {
+      if (/FROM members/i.test(sql)) return Promise.resolve({ rows: [] });
+      if (/passkey_hash/i.test(sql)) {
+        const error = Object.assign(new Error('column i.passkey_hash does not exist'), { code: '42703' });
+        return Promise.reject(error);
+      }
+      if (/WHERE i\.passkey = \$1/i.test(sql)) return Promise.resolve({ rows: PENDING });
+      throw new Error(`unexpected query: ${sql}`);
+    });
+    const admission = await resolveAdmission('SOULLAB-AB2CD-EF3GH-JK4M');
+    expect(admission.kind).toBe('admit');
+    expect(mockQuery.mock.calls.some(([sql]) => /passkey_hash/i.test(sql as string))).toBe(true);
+    expect(mockQuery.mock.calls.some(([sql]) => /WHERE i\.passkey = \$1/i.test(sql as string))).toBe(true);
+  });
+
+  it('normalizes once: member lookup gets plaintext identity, invite lookup gets only its hash', async () => {
     db({ invite: PENDING });
+    const normalized = 'SOULLAB-AB2CD-EF3GH-JK4M';
     const admission = await resolveAdmission('  soullab-ab2cd-ef3gh-jk4m  ');
     expect(admission.kind).toBe('admit');
-    expect(mockQuery.mock.calls.every(([, p]) => (p as string[])[0] === 'SOULLAB-AB2CD-EF3GH-JK4M')).toBe(true);
+    const memberCall = mockQuery.mock.calls.find(([sql]) => /FROM members/i.test(sql as string));
+    const inviteCall = mockQuery.mock.calls.find(([sql]) => /FROM invites/i.test(sql as string));
+    expect((memberCall?.[1] as string[])[0]).toBe(normalized);
+    expect((inviteCall?.[1] as string[])[0]).toBe(hashInvitePasskey(normalized));
+    expect(inviteCall?.[0]).toMatch(/passkey_hash/);
+    expect(inviteCall?.[0]).not.toMatch(/i\.passkey\s*=/);
   });
 });
 

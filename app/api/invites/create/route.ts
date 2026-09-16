@@ -9,11 +9,14 @@ export const dynamic = 'force-dynamic';
 
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, transaction, describeDbError } from '@/lib/db/postgres';
 import {
   generateInvitePasskey,
   calculateInviteExpiration,
 } from '@/lib/auth/inviteConfig';
+import { hashInvitePasskey } from '@/lib/auth/inviteCredential';
+
+const NO_STORE = { 'Cache-Control': 'no-store, no-cache, must-revalidate, private', Pragma: 'no-cache' } as const;
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,16 +73,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // DEPLOYMENT-ORDER GATE. The production deploy swaps the reader before
+    // applying migrations. Never create another plaintext invite during that
+    // bounded window: until passkey_hash exists, issuance is temporarily
+    // unavailable rather than falling back to legacy storage.
+    const hashSchema = await query(
+      `SELECT EXISTS (
+         SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = 'invites' AND column_name = 'passkey_hash'
+       ) AS ready`,
+    );
+    if (!hashSchema.rows[0]?.ready) {
+      return NextResponse.json(
+        { error: 'Invitation service is updating. Please try again shortly.' },
+        { status: 503, headers: NO_STORE },
+      );
+    }
+
     // Generate unique passkey (retry if collision)
-    let passkey: string;
+    let passkey = '';
+    let passkeyHash = '';
     let attempts = 0;
     const maxAttempts = 10;
 
     do {
       passkey = generateInvitePasskey();
+      passkeyHash = hashInvitePasskey(passkey);
       const existing = await query(
-        'SELECT id FROM invites WHERE passkey = $1 UNION SELECT id FROM members WHERE passkey = $1',
-        [passkey]
+        'SELECT id FROM invites WHERE passkey_hash = $1 UNION SELECT id FROM members WHERE passkey = $2',
+        [passkeyHash, passkey]
       );
       if (existing.rows.length === 0) break;
       attempts++;
@@ -94,20 +116,33 @@ export async function POST(request: NextRequest) {
 
     const expiresAt = calculateInviteExpiration();
 
-    // Create the invite
-    await query(
-      `INSERT INTO invites (passkey, created_by, intended_name, intended_email, personal_note, expires_at)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [passkey, memberId, intendedName || null, intendedEmail || null, personalNote || null, expiresAt]
-    );
+    // Persist the hash and spend the invite allowance atomically. Under R12 the
+    // plaintext exists only in this request, so an INSERT that commits before a
+    // later failure would create an unrecoverable orphan. The transaction makes
+    // "invite exists" and "allowance spent" one act.
+    const created = await transaction(async (tx) => {
+      const inserted = await tx.query(
+        `INSERT INTO invites (passkey, passkey_hash, created_by, intended_name, intended_email, personal_note, expires_at)
+         VALUES (NULL, $1, $2, $3, $4, $5, $6)
+         RETURNING id`,
+        [passkeyHash, memberId, intendedName || null, intendedEmail || null, personalNote || null, expiresAt]
+      );
+      const allowance = await tx.query(
+        `UPDATE members
+         SET invites_remaining = invites_remaining - 1
+         WHERE id = $1 AND invites_remaining > 0
+         RETURNING invites_remaining`,
+        [memberId]
+      );
+      if (allowance.rowCount !== 1) throw new Error('invite allowance changed before issuance');
+      return {
+        inviteId: String(inserted.rows[0]?.id ?? ''),
+        invitesRemaining: Number(allowance.rows[0]?.invites_remaining ?? 0),
+      };
+    });
+    const inviteId = created.inviteId;
 
-    // Decrement remaining invites
-    await query(
-      'UPDATE members SET invites_remaining = invites_remaining - 1 WHERE id = $1',
-      [memberId]
-    );
-
-    console.log(`[Invites] ${member.username} created invite ${passkey} for ${intendedName || 'unknown'}`);
+    console.log(`[Invites] created invite id=${inviteId ? inviteId.slice(0, 8) : 'unknown'}`);
 
     return NextResponse.json({
       success: true,
@@ -118,11 +153,11 @@ export async function POST(request: NextRequest) {
         expiresAt,
         createdBy: member.username,
       },
-      invitesRemaining: member.invites_remaining - 1,
-    });
+      invitesRemaining: created.invitesRemaining,
+    }, { headers: NO_STORE });
 
   } catch (error) {
-    console.error('[Invites] Create error:', error);
+    console.error('[Invites] Create error:', describeDbError(error));
     return NextResponse.json(
       { error: 'Failed to create invite' },
       { status: 500 }

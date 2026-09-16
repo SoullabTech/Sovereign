@@ -55,7 +55,6 @@ export async function GET(request: NextRequest) {
     const invitesResult = await query(
       `SELECT
          i.id,
-         i.passkey,
          i.intended_name,
          i.intended_email,
          i.status,

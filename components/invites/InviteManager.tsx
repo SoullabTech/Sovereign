@@ -6,7 +6,6 @@ import { Users, Gift, Copy, Check, X, Clock, UserPlus, ChevronDown, ChevronUp } 
 
 interface Invite {
   id: string;
-  passkey: string;
   intended_name: string | null;
   intended_email: string | null;
   status: 'pending' | 'redeemed' | 'expired' | 'revoked';
@@ -59,6 +58,7 @@ export function InviteManager({ memberId }: InviteManagerProps) {
   const [newInviteNote, setNewInviteNote] = useState('');
 
   const [copiedPasskey, setCopiedPasskey] = useState<string | null>(null);
+  const [newlyCreatedPasskey, setNewlyCreatedPasskey] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   const fetchInvites = useCallback(async () => {
@@ -105,6 +105,7 @@ export function InviteManager({ memberId }: InviteManagerProps) {
       const data = await response.json();
 
       if (response.ok) {
+        setNewlyCreatedPasskey(data.invite?.passkey ?? null);
         setNewInviteName('');
         setNewInviteEmail('');
         setNewInviteNote('');
@@ -302,6 +303,37 @@ export function InviteManager({ memberId }: InviteManagerProps) {
         )}
       </AnimatePresence>
 
+      {newlyCreatedPasskey && (
+        <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-300/50 space-y-3">
+          <div>
+            <p className="text-sm font-medium text-teal-900">Copy this passkey now</p>
+            <p className="text-xs text-teal-700/70 mt-1">
+              For privacy, Soullab stores only its one-way hash. This passkey will not be shown again after you dismiss it or leave this page.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-sm font-mono text-teal-900 bg-white/70 px-3 py-2 rounded-lg break-all">
+              {newlyCreatedPasskey}
+            </code>
+            <button
+              type="button"
+              onClick={() => copyPasskey(newlyCreatedPasskey)}
+              className="p-2 text-teal-700 hover:text-teal-900 transition-colors"
+              title="Copy passkey"
+            >
+              {copiedPasskey === newlyCreatedPasskey ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNewlyCreatedPasskey(null)}
+            className="text-xs text-teal-700 underline underline-offset-2"
+          >
+            I’ve saved it — hide this passkey
+          </button>
+        </div>
+      )}
+
       {/* Invite list */}
       <div className="space-y-3">
         {invites.length === 0 ? (
@@ -319,21 +351,9 @@ export function InviteManager({ memberId }: InviteManagerProps) {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <code className="text-sm font-mono text-teal-900 bg-teal-50/50 px-2 py-0.5 rounded">
-                      {invite.passkey}
-                    </code>
+                    <span className="text-sm font-medium text-teal-900">Invite</span>
                     {invite.status === 'pending' && (
-                      <button
-                        onClick={() => copyPasskey(invite.passkey)}
-                        className="p-1 text-teal-600/60 hover:text-teal-600 transition-colors"
-                        title="Copy passkey"
-                      >
-                        {copiedPasskey === invite.passkey ? (
-                          <Check className="w-4 h-4 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </button>
+                      <span className="text-xs text-teal-600/60">Passkey hidden after creation</span>
                     )}
                   </div>
 

@@ -18,12 +18,15 @@
  */
 
 const mockQuery = jest.fn();
+const mockTransaction = jest.fn(async (cb: (client: { query: typeof mockQuery }) => Promise<unknown>) => cb({ query: mockQuery }));
 const mockGetMemberId = jest.fn();
 
 jest.mock('@/lib/db/postgres', () => ({
   __esModule: true,
   default: { query: (s: string, p?: unknown[]) => mockQuery(s, p) },
   query: (s: string, p?: unknown[]) => mockQuery(s, p),
+  transaction: (cb: (client: { query: typeof mockQuery }) => Promise<unknown>) => mockTransaction(cb),
+  describeDbError: (e: unknown) => ({ name: e instanceof Error ? e.name : 'Error' }),
 }));
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({
   __esModule: true,
@@ -51,6 +54,9 @@ function eligible(owner = A) {
     if (/FROM members WHERE id/i.test(sql)) {
       return Promise.resolve({ rows: [{ id: owner, username: 'a', name: 'A', invites_remaining: 10, can_invite_after: null, invite_tier: 'standard' }], rowCount: 1 });
     }
+    if (/information_schema\.columns/i.test(sql) && /passkey_hash/i.test(sql)) {
+      return Promise.resolve({ rows: [{ ready: true }], rowCount: 1 });
+    }
     if (/FROM invites\b/i.test(sql) && /created_by/i.test(sql)) {
       return Promise.resolve({ rows: [{ id: 'inv-B', passkey: 'SOULLAB-X', status: 'pending', created_by: B }], rowCount: 1 });
     }
@@ -58,7 +64,7 @@ function eligible(owner = A) {
   });
 }
 
-beforeEach(() => { mockQuery.mockReset(); mockGetMemberId.mockReset(); });
+beforeEach(() => { mockQuery.mockReset(); mockTransaction.mockClear(); mockGetMemberId.mockReset(); });
 
 describe('anonymous callers are refused', () => {
   beforeEach(() => mockGetMemberId.mockResolvedValue(null));
@@ -127,6 +133,24 @@ describe('the authenticated issuer can still work', () => {
     const res = await createInvite(post('/api/invites/create', { intendedName: 'Tester' }));
     expect(res.status).toBe(200);
     expect(mockQuery.mock.calls.some(([sql]) => /INSERT INTO invites/i.test(sql as string))).toBe(true);
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+  });
+
+
+  it('create refuses before R12 hash schema exists and never writes plaintext', async () => {
+    eligible();
+    mockQuery.mockImplementation((sql: string) => {
+      if (/FROM members WHERE id/i.test(sql)) {
+        return Promise.resolve({ rows: [{ id: A, username: 'a', name: 'A', invites_remaining: 10, can_invite_after: null, invite_tier: 'standard' }], rowCount: 1 });
+      }
+      if (/information_schema\.columns/i.test(sql) && /passkey_hash/i.test(sql)) {
+        return Promise.resolve({ rows: [{ ready: false }], rowCount: 1 });
+      }
+      return Promise.resolve({ rows: [], rowCount: 0 });
+    });
+    const res = await createInvite(post('/api/invites/create', { intendedName: 'Tester' }));
+    expect(res.status).toBe(503);
+    expect(mockQuery.mock.calls.some(([sql]) => /INSERT INTO invites/i.test(sql as string))).toBe(false);
   });
 
   it('revoke succeeds on A own pending invite', async () => {

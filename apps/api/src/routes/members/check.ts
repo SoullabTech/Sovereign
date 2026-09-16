@@ -14,6 +14,7 @@
 import { Request, Response } from 'express';
 import { query } from '../../db/postgres.js';
 import { Errors } from '../../middleware/error.js';
+import { hashInvitePasskey, normalizeInvitePasskey } from '../../security/inviteCredential.js';
 
 
 // SOURCE-CUSTODY-PII-01 — process-local containment for the public check oracle.
@@ -87,7 +88,7 @@ export async function checkPasskey(req: Request, res: Response) {
     throw Errors.badRequest('Passkey required');
   }
 
-  const normalizedPasskey = passkey.toUpperCase().trim();
+  const normalizedPasskey = normalizeInvitePasskey(passkey);
 
   // Check if passkey exists in members table (returning user)
   const memberResult = await safeQuery(
@@ -108,14 +109,25 @@ export async function checkPasskey(req: Request, res: Response) {
     });
   }
 
-  // Check if this is a valid invite passkey (new user with invite)
-  // This query is optional - might fail if invites table doesn't exist
-  const inviteResult = await safeQuery(
+  // Check if this is a valid invite passkey (new user with invite).
+  // DEPLOYMENT-ORDER BRIDGE: production swaps readers before applying schema
+  // migrations. If and only if the hash column is absent, consult the legacy
+  // plaintext column for an already-issued invite. After R12 migration this
+  // fallback is unreachable because the column exists and plaintext is cleared.
+  let inviteResult = await safeQuery(
     `SELECT i.id, i.status, i.expires_at
      FROM invites i
-     WHERE i.passkey = $1`,
-    [normalizedPasskey]
+     WHERE i.passkey_hash = $1`,
+    [hashInvitePasskey(normalizedPasskey)]
   );
+  if (inviteResult.error && /passkey_hash.*does not exist/i.test(inviteResult.error)) {
+    inviteResult = await safeQuery(
+      `SELECT i.id, i.status, i.expires_at
+       FROM invites i
+       WHERE i.passkey = $1`,
+      [normalizedPasskey]
+    );
+  }
 
   if (!inviteResult.error && inviteResult.rows.length > 0) {
     const invite = inviteResult.rows[0];
