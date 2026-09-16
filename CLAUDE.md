@@ -549,3 +549,5 @@ When spawning subagents (Agent/Task tool), the routing block is automatically in
 | `ctx stats` | Call the `ctx_stats` MCP tool and display the full output verbatim |
 | `ctx doctor` | Call the `ctx_doctor` MCP tool, run the returned shell command, display as checklist |
 | `ctx upgrade` | Call the `ctx_upgrade` MCP tool, run the returned shell command, display as checklist |
+
+- ⭐ **SID FIRST-INSTALL-04 PASS (2026-09-16; §10.44 / §18.71 / §10.89):** successful 01:47Z act on instrument `ec60321b7` with outer + JIT harness count 0 installed `life.soullab.voicekernel.vpio02sid` exactly once at container **`85948DBD-BA8F-4679-950D-31767B1C24E5`**; historical `.vpio02` remains at `E3B88028-…`; post harness 0; authority spent by PASS; later 01:56 duplicate stopped at pre-existing-worktree guard before device. Carrier `13b67d085` + completion `dab338f22`, run seal `d92a2821…`, inner install seal 12/12. ENTRY [D] now container-bound as `SID_ENTRY-PREFLIGHT-01_PIN_2026-09-16.sh` **44 lines `1d1eb08d…`**, one placeholder→witnessed-container substitution only; zero-harness law unchanged. [E] CLOSED until [D] PASS; launch 0 · sample 0 · source population 0.
