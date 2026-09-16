@@ -1,3 +1,5 @@
+import type { TurnTakingPreferences } from '@/lib/voice/turnTaking';
+
 /**
  * Voice Controls — types for the MAIA norm + member preference layer.
  *
@@ -28,6 +30,7 @@ export type MemberVoicePreferences = {
   voiceArchetype?: string | null;
   /** Member-chosen TTS provider: auto, cloud, or local */
   ttsProvider?: TTSProviderPref | null;
+  turnTaking: TurnTakingPreferences;
   offset: VoiceControlOffsets;
 };
 

@@ -79,6 +79,11 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
+import {
+  DEFAULT_TURN_TAKING_PREFERENCES,
+  CONVERSATIONAL_SPACE_CONFIG,
+  type TurnTakingPreferences,
+} from '@/lib/voice/turnTaking';
 import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -867,6 +872,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isMicrophonePaused, setIsMicrophonePaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Start muted - user must tap holoflower to activate
   const [isHandsFreeMode, setIsHandsFreeMode] = useState(true); // UI state mirror for hands-free toggle — default ON for natural conversation
+  const [turnTakingPreferences, setTurnTakingPreferences] = useState<TurnTakingPreferences>({ ...DEFAULT_TURN_TAKING_PREFERENCES });
   const hasShownVoiceReentryToastRef = useRef(false); // Show once per session on re-enter voice
 
   // Phase 1.5B — Conversational Keep runtime state (per-session, not persisted)
@@ -2547,6 +2553,40 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🌊 STREAMING VOICE: Server-side sentence TTS for natural conversational flow
   const [streamingResponseComplete, setStreamingResponseComplete] = useState(false);
+
+  // TURN-01 — member-owned turn-taking preferences. This reads the same
+  // account voice-preference surface as VoiceSettingsPanel, but governs when
+  // MAIA may take the floor rather than how her TTS sounds.
+  useEffect(() => {
+    let cancelled = false;
+    const loadTurnTaking = async () => {
+      try {
+        const res = await apiFetch('/api/settings/voice');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data.member?.turnTaking) setTurnTakingPreferences(data.member.turnTaking);
+      } catch (error) {
+        console.warn('[TURN-01] Failed to load turn-taking preference; using Natural', error);
+      }
+    };
+    const onChanged = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail?.turnTaking) setTurnTakingPreferences(detail.turnTaking);
+      else void loadTurnTaking();
+    };
+    void loadTurnTaking();
+    window.addEventListener('maia-voice-settings-changed', onChanged);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('maia-voice-settings-changed', onChanged);
+    };
+  }, []);
+
+  const selectedTurnSilenceMs = CONVERSATIONAL_SPACE_CONFIG[turnTakingPreferences.conversationalSpace].silenceMs;
+  const effectiveTurnSilenceMs =
+    listeningMode === 'session' ? VOICE_TIMING.WEB_SILENCE_SCRIBE_MS :
+    listeningMode === 'patient' ? Math.max(VOICE_TIMING.WEB_SILENCE_CARE_MS, selectedTurnSilenceMs) :
+    selectedTurnSilenceMs;
 
   // Load voice settings from account preferences on mount and listen for changes
   useEffect(() => {
@@ -10343,6 +10383,8 @@ I'm not sure what I'm feeling yet.`;
           }}
           onInterrupt={handleVoiceInterrupt}
           onTextSubmit={(text) => handleTextMessage(text)}
+          explicitYield={turnTakingPreferences.floorControlMode === 'explicit'}
+          onDone={() => voiceMicRef.current?.commitTurn()}
         />
         </div>
       )}
@@ -10420,11 +10462,8 @@ I'm not sure what I'm feeling yet.`;
             isProcessing={isResponding}
             isSpeaking={isAudioPlaying || isMicrophonePaused}
             autoStart={false}
-            silenceThreshold={
-              listeningMode === 'session' ? VOICE_TIMING.WEB_SILENCE_SCRIBE_MS :
-              listeningMode === 'patient' ? VOICE_TIMING.WEB_SILENCE_CARE_MS :
-              VOICE_TIMING.WEB_SILENCE_TALK_MS
-            }
+            silenceThreshold={effectiveTurnSilenceMs}
+            turnTakingPreferences={turnTakingPreferences}
             persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
             onHandsFreeFallback={() => {
               setIsHandsFreeMode(false);

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Keyboard, Send, X } from 'lucide-react';
+import { Check, Keyboard, Send, X } from 'lucide-react';
 
 export type VoiceInteractionState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'recovering';
 
@@ -64,6 +64,9 @@ interface VoiceInteractionBarProps {
   onStop: () => void;
   onInterrupt: () => void;
   onTextSubmit: (text: string) => void;
+  /** TURN-01: silence cannot yield the floor; member must explicitly finish. */
+  explicitYield?: boolean;
+  onDone?: () => void;
   className?: string;
 }
 
@@ -140,6 +143,8 @@ export function VoiceInteractionBar({
   onStop,
   onInterrupt,
   onTextSubmit,
+  explicitYield = false,
+  onDone,
   className = '',
 }: VoiceInteractionBarProps) {
   const [showTextInput, setShowTextInput] = useState(false);
@@ -292,9 +297,28 @@ export function VoiceInteractionBar({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <StateDot state={voiceState} />
           <span className={`text-sm font-light truncate transition-colors duration-200 ${stateLabelClass(voiceState)}`}>
-            {stateLabel(voiceState)}
+            {voiceState === 'listening' && explicitYield ? 'holding your floor' : stateLabel(voiceState)}
           </span>
         </div>
+
+        {/* TURN-01 explicit floor release. This is intentionally a separate
+            action from Stop: “I’m done” sends the held turn; Stop leaves voice. */}
+        <AnimatePresence>
+          {voiceState === 'listening' && explicitYield && onDone && (
+            <motion.button
+              key="im-done"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              onClick={onDone}
+              className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-amber-500/50 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-500/15 active:scale-95 transition-all"
+              aria-label="I'm done speaking — let MAIA respond"
+            >
+              <Check className="w-3.5 h-3.5" />
+              I&apos;m done
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {/* Contextual action button */}
         <AnimatePresence mode="wait">
