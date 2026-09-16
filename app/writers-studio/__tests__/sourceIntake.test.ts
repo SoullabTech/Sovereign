@@ -18,6 +18,8 @@ describe('WS-SOURCE-INTAKE-01 — outside material remains source material', () 
     expect(page).toContain('Accept transcription');
     expect(page).toContain("materialType: 'source_upload'");
     expect(page).toContain('It remains source material, not manuscript text.');
+    expect(page).toContain('Delete source');
+    expect(page).toContain("method: 'DELETE'");
   });
 
   it('Materials renders source_upload as a material rather than a manuscript', () => {

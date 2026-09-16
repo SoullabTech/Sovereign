@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
-import { FileText, Image as ImageIcon, Loader2, Upload, CheckCircle2 } from 'lucide-react';
+import { FileText, Image as ImageIcon, Loader2, Upload, CheckCircle2, Trash2 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import { useLivingWorks, type LivingWork } from '../useLivingWorks';
@@ -22,6 +22,7 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
   const [message, setMessage] = useState<string | null>(null);
   const [workId, setWorkId] = useState(() => (works.length === 1 ? works[0].id : ''));
   const [sentence, setSentence] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const alreadyFeeds = works.filter((w) =>
     w.materials.some((m) => m.materialType === 'source_upload' && m.materialId === source.id),
@@ -80,6 +81,21 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
       onChanged();
     } catch {
       setMessage('Could not bring that source to the Work just now.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deleteSource = async () => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await apiFetch(`/api/writers-studio/sources/${source.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('delete');
+      setConfirmDelete(false);
+      await onChanged();
+    } catch {
+      setMessage('Could not delete that source. Nothing else was changed.');
     } finally {
       setBusy(false);
     }
@@ -157,6 +173,20 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
         </div>
       ) : null}
       {message ? <p className="mt-3 text-[12px] opacity-65">{message}</p> : null}
+
+      <div className="mt-5 pt-3 border-t" style={{ borderColor: PRESS.ruleSoft }}>
+        {confirmDelete ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-[11.5px] opacity-55">Delete the original, its transcription, and its relationships to your Works?</p>
+            <button onClick={() => void deleteSource()} disabled={busy} className="text-[11.5px] underline underline-offset-4 disabled:opacity-40">Delete source</button>
+            <button onClick={() => setConfirmDelete(false)} disabled={busy} className="text-[11.5px] opacity-45 hover:opacity-75">Keep it</button>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmDelete(true)} disabled={busy} className="inline-flex items-center gap-1.5 text-[11.5px] opacity-35 hover:opacity-65 disabled:opacity-25">
+            <Trash2 size={12} aria-hidden="true" /> Delete source
+          </button>
+        )}
+      </div>
     </article>
   );
 }
