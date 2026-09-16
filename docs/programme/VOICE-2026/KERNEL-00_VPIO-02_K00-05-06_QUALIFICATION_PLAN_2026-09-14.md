@@ -1009,3 +1009,7 @@ No physiological qualification changes. The 03:31 census proves the harness popu
 ### §10.95 — PRELIGHT-05 refused cleanly; physiology unchanged; BATCH-05 remains unspent (2026-09-16; discriminator §18.77; implementation §10.51)
 
 No physiological qualification change. PRELIGHT-05 verified the installed SID and historical containers, then refused on one historical `.vpio02` harness before CLEAN. BATCH-05 was not invoked. The refusal is custody, not an ENTRY result. A post-install process-clearance successor is drafted only; it changes device process state, not organism bytes or physiological thresholds. Fresh authority is required before it can execute, and a successful clearance still requires a new PRELIGHT-05 CLEAN before the N=30 population.
+
+### §10.96 — CLEAR-02 STOP target absent; physiology unchanged; fresh PRELIGHT-05 next (2026-09-16)
+
+No qualification change. Both installed subjects remained bound; harness population was already zero at CLEAR-02 PRE; no terminate or sample ran. BATCH-05 remains uninvoked.

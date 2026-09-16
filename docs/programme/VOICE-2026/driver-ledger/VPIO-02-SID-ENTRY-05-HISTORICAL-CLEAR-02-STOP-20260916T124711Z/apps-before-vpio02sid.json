@@ -1,0 +1,46 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+      "--bundle-id",
+      "life.soullab.voicekernel.vpio02sid",
+      "--json-output",
+      "/private/tmp/sid-entry-05-historical-clear-02-out-20260916T124711Z/apps-before-vpio02sid.json"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "506.7"
+  },
+  "result" : {
+    "apps" : [
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "life.soullab.voicekernel.vpio02sid",
+        "bundleVersion" : "1",
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "VoiceKernel VPIO-02-SID",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/85948DBD-BA8F-4679-950D-31767B1C24E5/VoiceKernelHarness.app/",
+        "version" : "0.0.1"
+      }
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "matchingBundleIdentifier" : "life.soullab.voicekernel.vpio02sid",
+    "removableAppsIncluded" : true
+  }
+}
