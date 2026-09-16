@@ -62,6 +62,18 @@ const histRaw = (sha: string, path: string): Buffer =>
 const histBody = (sha: string, path: string): string => stripComments(histRaw(sha, path).toString('utf8'));
 // SOURCE-ID-02 (founder ruling 2026-09-15): an instrument file may move beyond its frozen state ONLY by lines that
 // declare the SID subject; every historical executable line must survive verbatim and in order.
+const SID_JIT_ALLOWED_LINES = new Set([
+  '    PROC_RC=0; PROCS="$(xcrun devicectl device info processes --device "$DEV" 2>&1)" || PROC_RC=$?',
+  `    printf '%s\\n' "$PROCS" > "$LEDGER/sid-jit-processes-before-install.txt"`,
+  '    HCOUNT="$(grep -ci VoiceKernelHarness <<<"$PROCS" || true)"',
+  '    echo "## SID just-in-time harness count before install: $HCOUNT"',
+  '    if [ $PROC_RC -ne 0 ] || [ "$HCOUNT" -ne 0 ]; then',
+  '      grep -i VoiceKernelHarness <<<"$PROCS" || true',
+  '      echo "## REFUSED — SID just-in-time harness-zero precondition failed (process rc=$PROC_RC · harnesses=$HCOUNT); NO install"',
+  '      exit 5',
+  '    fi',
+  '  fi',
+]);
 const sidOnlyDelta = (was: string, now: string, allowed: RegExp): string[] => {
   const ex = (s: string) => s.split('\n').filter((l) => !/^\s*#/.test(l));
   // the one ruled substitution: the unknown-subject refusal names the five-subject closed set; normalized back to history for the scan
@@ -69,7 +81,7 @@ const sidOnlyDelta = (was: string, now: string, allowed: RegExp): string[] => {
   let j = 0; for (const l of w) { while (j < n.length && n[j] !== l) j++; if (j >= n.length) return [`MISSING: ${l}`]; j++; }
   const seen = new Map<string, number>(); for (const l of w) seen.set(l, (seen.get(l) ?? 0) + 1);
   const added: string[] = [];
-  for (const l of n) { const c = seen.get(l) ?? 0; if (c > 0) { seen.set(l, c - 1); continue; } if (/^\s*$/.test(l) || allowed.test(l)) continue; added.push(l); }
+  for (const l of n) { const c = seen.get(l) ?? 0; if (c > 0) { seen.set(l, c - 1); continue; } if (/^\s*$/.test(l) || allowed.test(l) || SID_JIT_ALLOWED_LINES.has(l)) continue; added.push(l); }
   return added;
 };
 const SID_ALLOWED = /VPIO02SID_|vpio-02-sid|vpio02sid|VPIO-02-SID|pins-unrecorded|SOURCE-ID-02|CLASSIFIER_SUBJECT|SOURCE_LEDGER|k00-source-ledger\.py|sid-nearend-gated|classifierSubject=|S-a arm/;
@@ -1213,6 +1225,15 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(rx.indexOf('pins-unrecorded')).toBeGreaterThan(-1);
     expect(rx.indexOf('pins-unrecorded')).toBeLessThan(rx.indexOf('device info apps'));
     expect(rx.indexOf('pins-unrecorded')).toBeLessThan(install);
+    // ChatGPT Voice takeover 2026-09-16: iOS DAS prewarm can resurrect historical harnesses asynchronously.
+    // The SID install path therefore re-reads the process table inside k00-reinstall.sh immediately before the one install verb.
+    const jit = rx.indexOf('sid-jit-processes-before-install.txt');
+    expect(jit).toBeGreaterThan(rx.indexOf('codesign -dv'));
+    expect(jit).toBeLessThan(install);
+    expect(rx).toContain('[ "$PIN_BID" = "$VPIO02SID_BID" ]');
+    expect(rx).toMatch(/PROC_RC=0; PROCS="\$\(xcrun devicectl device info processes --device "\$DEV" 2>&1\)" \|\| PROC_RC=\$\?/);
+    expect(rx).toContain('SID just-in-time harness-zero precondition failed');
+    expect(rx.indexOf('SID just-in-time harness-zero precondition failed')).toBeLessThan(install);
     expect((rx.match(/life\.soullab\.voicekernel\.vpio02sid/g) ?? []).length).toBe(1);
     expect(rx).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(\b(grep|cat|git)\b|==|-f )/);
   });
@@ -1315,7 +1336,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(floods.length).toBe(1);
   }, 180_000);
   // ---- K00-05 / K00-06 instrument (founder ruling 2026-09-14, Option C): driver test + batch flags + evidence-only reader; everything else frozen ----
-  it('C-D20 (founder ruling 2026-09-14/15): relative to the K00-05/06 instrument 8b111709b the driver test moved (C-D20), the output reader moved (C-D22) and the batch moved (S2, 2026-09-15 — every historical line preserved in order, proven in the S2 block); the entry classifier and the reinstall gate are byte-identical', () => {
+  it('C-D20 (founder ruling 2026-09-14/15): relative to the K00-05/06 instrument 8b111709b the driver test moved (C-D20), the output reader moved (C-D22) and the batch moved (S2, 2026-09-15 — every historical line preserved in order, proven in the S2 block); the entry classifier stays byte-identical; reinstall drift is closed to SID custody + the JIT harness-zero guard', () => {
     expect(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-ledger.py')))).toBe(true);
     // SOURCE-ID-02 (founder ruling 2026-09-15): the reinstall moves beyond 8b111709b ONLY by the SID custody declarations
     expect(sidOnlyDelta(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-reinstall.sh').toString('utf8'), readFileSync(join(process.cwd(), 'scripts/witness/k00-reinstall.sh'), 'utf8'), SID_ALLOWED)).toEqual([]);
@@ -1324,7 +1345,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(histRaw(INSTRUMENT_K0506, 'scripts/witness/k00-output-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-output-ledger.py')))).toBe(false);
     expect(histRaw(INSTRUMENT_K0506, 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').equals(readFileSync(join(process.cwd(), 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift')))).toBe(false);
   });
-  it('K00-05/06 Option C: the entry classifier is byte-identical to the F-W1 instrument 08483cfe4; the reinstall differs from it only by the SOURCE-ID-02 custody declarations; the frozen organism is ac12dedf4 in history', () => {
+  it('K00-05/06 Option C: the entry classifier is byte-identical to the F-W1 instrument 08483cfe4; the reinstall differs from it only by SOURCE-ID-02 custody plus the exact SID JIT harness-zero guard; the frozen organism is ac12dedf4 in history', () => {
     expect(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-ledger.py')))).toBe(true);
     expect(sidOnlyDelta(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-reinstall.sh').toString('utf8'), readFileSync(join(process.cwd(), 'scripts/witness/k00-reinstall.sh'), 'utf8'), SID_ALLOWED)).toEqual([]);
   });
@@ -1582,7 +1603,7 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
     const as = fn(bx, 'afplay_state'); expect(as).toContain('ps -o stat= -p'); expect(as).toContain('*Z*) echo zombie'); expect(as).toContain('*afplay*) echo alive'); expect(as).not.toMatch(/kill/);
     expect(bx).toContain("trap 'if [ -n \"${S2_PID:-}\" ]; then kill -TERM \"$S2_PID\" 2>/dev/null; fi; exit 130' INT TERM");   // signals only; the EXIT trap (lock dir) is untouched
   });
-  it('stimulus invalidity can never become a physiological verdict: custody is written only to stimulus-sample-N.tsv / stimulus-preflight/; both reader invocations are byte-identical to 8b111709b and receive nothing about the stimulus; k00-ledger.py · k00-output-ledger.py · k00-reinstall.sh · the driver tree are byte-frozen', () => {
+  it('stimulus invalidity can never become a physiological verdict: custody is written only to stimulus-sample-N.tsv / stimulus-preflight/; both reader invocations are byte-identical to 8b111709b and receive nothing about the stimulus; k00-ledger.py · k00-output-ledger.py · the driver tree are byte-frozen; reinstall drift is closed to SID custody + JIT guard', () => {
     const now = execLines(W(BATCH)); const was = execLines(histRaw(INSTRUMENT_K0506, BATCH).toString('utf8'));
     const readerLines = (s: string) => s.split('\n').filter((l) => /k00-(output-)?ledger\.py" --/.test(l));
     // SOURCE-ID-02: the entry-classifier row line carries the one ruled substitution ($CLASSIFIER_SUBJECT); otherwise verbatim

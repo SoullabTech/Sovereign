@@ -167,6 +167,17 @@ fi
   echo "$UUID_LINE"
   echo "## codesign"
   codesign -dv "$APP" 2>&1 | grep -E 'Identifier|TeamIdentifier|Authority' || true
+  if [ "$PIN_BID" = "$VPIO02SID_BID" ]; then
+    PROC_RC=0; PROCS="$(xcrun devicectl device info processes --device "$DEV" 2>&1)" || PROC_RC=$?
+    printf '%s\n' "$PROCS" > "$LEDGER/sid-jit-processes-before-install.txt"
+    HCOUNT="$(grep -ci VoiceKernelHarness <<<"$PROCS" || true)"
+    echo "## SID just-in-time harness count before install: $HCOUNT"
+    if [ $PROC_RC -ne 0 ] || [ "$HCOUNT" -ne 0 ]; then
+      grep -i VoiceKernelHarness <<<"$PROCS" || true
+      echo "## REFUSED — SID just-in-time harness-zero precondition failed (process rc=$PROC_RC · harnesses=$HCOUNT); NO install"
+      exit 5
+    fi
+  fi
   echo "## install"
   xcrun devicectl device install app --device "$DEV" "$APP" 2>&1
   echo "## post-install processes (harness must be absent)"
