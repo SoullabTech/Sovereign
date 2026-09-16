@@ -112,6 +112,7 @@ function whenWritten(iso: string | null | undefined): string | null {
   })}`;
 }
 
+const BEGIN_FAILED = 'Could not begin your work just now. Nothing was changed.';
 const DELETE_FAILED =
   'That work could not be deleted just now. Nothing was removed — please try again.';
 
@@ -160,6 +161,94 @@ function returnHref(
     cut === -1 ? base : base.slice(0, cut),
     cut === -1 ? '' : base.slice(cut),
     activity.sectionId,
+  );
+}
+
+/* The photograph's scrim, in the writer's own ground. One token, four stops,
+   each carrying the former literal as its fallback — so the arrival cannot
+   drift from the atmosphere again without someone editing this line. */
+const ground = (pct: number) =>
+  `color-mix(in srgb, var(--ws-ground-base, #1A1513) ${pct}%, transparent)`;
+const GROUND_SCRIM =
+  `linear-gradient(to bottom, ${ground(62)} 0%, ${ground(44)} 30%, ${ground(94)} 86%, var(--ws-ground-base, #1A1513) 100%)`;
+
+/* ── ONE WAY IN, WHEREVER YOU ARE STANDING ────────────────────────────────
+   Begin lived twice: as the primary gesture of an empty Studio, and again in
+   the tail of a populated one. Only the second carried the naming step —
+   `beginning` had exactly ONE reader, inside a branch gated on
+   `kind !== 'begin'`, which is the one branch the empty Studio never renders.
+
+   So the emptiest room in the Studio offered a single obvious act, and
+   pressing it did nothing at all: a button naming an outcome it did not
+   produce, which is the exact defect this room was rebuilt to end.
+
+   One component now, used by both states. What differs between them is
+   EMPHASIS — filled and first when there is nothing else to do, quiet and
+   last when there is. Standing is a matter of composition; capability is not
+   allowed to vary with it.
+
+   Declared at module scope deliberately: an inline component is a new type on
+   every parent render, and React would remount the naming field — blurring it
+   on each keystroke, which is how a one-line refactor eats a text input. */
+function BeginAndImport({
+  primary, beginning, draftName, busy, onOpen, onName, onSubmit, onCancel,
+}: {
+  primary: boolean;
+  beginning: boolean;
+  draftName: string;
+  busy: boolean;
+  onOpen: () => void;
+  onName: (v: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+      {beginning ? (
+        <div className="flex-1 max-w-lg">
+          <label htmlFor="work-name" className="block text-[13px] opacity-55 mb-2">
+            Give it a name, or leave it blank for now.
+          </label>
+          <div className="flex gap-3">
+            <input
+              id="work-name"
+              autoFocus
+              value={draftName}
+              onChange={(e) => onName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !busy) onSubmit();
+                if (e.key === 'Escape') onCancel();
+              }}
+              className="flex-1 bg-transparent border px-3.5 py-2.5 text-[15px] min-h-[48px] rounded-[2px] outline-none"
+              style={{ borderColor: PRESS.rule, color: PRESS.text, fontFamily: SERIF }}
+            />
+            <button
+              onClick={onSubmit}
+              disabled={busy}
+              className="px-6 min-h-[48px] text-[14px] rounded-[2px] disabled:opacity-40"
+              style={{ background: PRESS.accent, color: PRESS.ink }}
+            >
+              {busy ? <Loader2 size={16} className="animate-spin" /> : 'Begin'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={onOpen}
+          className={`${primary ? FILLED : QUIET} w-full sm:w-auto`}
+          style={primary ? { background: PRESS.accent, color: PRESS.ink } : { borderColor: PRESS.rule }}
+        >
+          <FilePlus2 size={16} style={{ color: primary ? PRESS.ink : PRESS.accent }} aria-hidden="true" />
+          Begin a new work
+        </button>
+      )}
+
+      {/* Import stays a real door and stops being the same size as writing. */}
+      <Link href={IMPORT_HREF} className={`${QUIET} w-full sm:w-auto`} style={{ borderColor: PRESS.rule }}>
+        <FolderInput size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
+        Import writing
+      </Link>
+    </div>
   );
 }
 
@@ -440,8 +529,15 @@ export default function HomeView({
         <div
           className="absolute inset-0"
           style={{
-            background:
-              'linear-gradient(to bottom, rgba(26,21,19,0.62) 0%, rgba(26,21,19,0.44) 30%, rgba(26,21,19,0.94) 86%, #1A1513 100%)',
+            /* The scrim ends in the CHOSEN ground, not in a remembered one.
+               These four stops were Atelier's espresso, written literally, so
+               a member in Forest or Cloud watched the photograph fade into a
+               colour their Studio no longer used — the arrival quietly
+               keeping its own palette while every room below it obeyed
+               theirs. `--ws-ground-base` is the same token the page already
+               resolves; the fallback is the exact former value, so nothing
+               moves for a member in Atelier. */
+            background: GROUND_SCRIM,
           }}
         />
         <div className="absolute inset-x-0 bottom-0 px-6 md:px-10">
@@ -466,6 +562,31 @@ export default function HomeView({
   const Eyebrow = ({ children }: { children: React.ReactNode }) => (
     <h2 className="text-[10.5px] tracking-[0.3em] uppercase opacity-40">{children}</h2>
   );
+
+  /* ── ONE ARRIVAL, IN MOVEMENTS ──────────────────────────────────────────
+     Every band on this page carried the same margin, so the room asked the
+     writer to weigh seven equal claims before they could act. Eight things
+     of equal weight are not a hierarchy; they are an inventory, and an
+     inventory is what a dashboard hands you at the door.
+
+     A room that receives someone does the weighing itself. What is alive now
+     is given air; what has been moving follows closer; the body of work sits
+     closer still, present without competing. Nothing is hidden and nothing
+     is dimmed — the only instrument is space, which is why this survives
+     every atmosphere and costs no contrast.
+
+     `arrivalFor()` decides WHAT is alive. This decides only how much room
+     the answer is given. */
+  const MOVEMENT = {
+    arrival: 'mb-20 md:mb-28',
+    continuity: 'mb-12 md:mb-16',
+    depth: 'mb-10 md:mb-14',
+  } as const;
+
+  const movement = (weight: keyof typeof MOVEMENT) => ({
+    className: MOVEMENT[weight],
+    'data-movement': weight,
+  });
 
   /* A card with weight: paper catching the lamp from above-left, a hairline
      that warms on hover, and the title at reading size. Not a table row. */
@@ -688,22 +809,16 @@ export default function HomeView({
             <h1 className="text-[36px] md:text-[44px] leading-[1.1] mb-10">
               Welcome, writer. You are home.
             </h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <button
-                onClick={() => setBeginning(true)}
-                className={`${FILLED} w-full sm:w-auto`}
-                style={{ background: PRESS.accent, color: PRESS.ink }}
-              >
-                Begin a new work
-              </button>
-              <Link
-                href={IMPORT_HREF}
-                className={`${QUIET} w-full sm:w-auto`}
-                style={{ borderColor: PRESS.rule }}
-              >
-                Import writing
-              </Link>
-            </div>
+            <BeginAndImport
+              primary
+              beginning={beginning}
+              draftName={draftName}
+              busy={busy}
+              onOpen={() => setBeginning(true)}
+              onName={setDraftName}
+              onCancel={() => setBeginning(false)}
+              onSubmit={() => void run(() => onBegin(draftName.trim()), BEGIN_FAILED)}
+            />
           </div>
         ) : (
           <>
@@ -735,7 +850,7 @@ export default function HomeView({
                  member has is reachable here — the work in the hero, the works
                  past "View all", and unclaimed writing — with the same cards
                  and the same delete they have everywhere else. */
-              <section className="mb-14 md:mb-20">
+              <section {...movement('arrival')}>
                 <Eyebrow>Found</Eyebrow>
                 <div className="mt-5">
                   {foundWorks.length + foundWriting.length === 0 ? (
@@ -785,7 +900,7 @@ export default function HomeView({
 
                 RETURN is also already a stage in the Larger Arc. ─────────── */}
             {kind === 'continue' && resume ? (
-              <section className="mb-14 md:mb-20">
+              <section {...movement('arrival')}>
                 <Eyebrow>Return</Eyebrow>
                 {/* The Work's own image and its name, together. This is where
                     recognition happens — a writer knows their book by its face
@@ -885,7 +1000,7 @@ export default function HomeView({
             ) : feature ? (
               /* Writing exists that no Work has claimed. It is NOT recast as a
                  Work — it is opened, immediately, as itself. */
-              <section className="mb-14 md:mb-20">
+              <section {...movement('arrival')}>
                 <p className="text-[17px] opacity-55 mb-6">Your writing is here.</p>
                 <h1
                   className="leading-[1.08] mb-3 mt-5 max-w-2xl"
@@ -940,7 +1055,7 @@ export default function HomeView({
                 nothing is not shown an invitation to mark something; the
                 gesture lives in the Manuscript Room, where the words are. */}
             {markedLines.length > 0 ? (
-              <section className="mb-14 md:mb-20">
+              <section {...movement('continuity')}>
                 {/* The line that carries the room. Set as the writing it is,
                     not as a pull-quote about the writing. */}
                 <blockquote className="max-w-2xl mb-10">
@@ -1014,7 +1129,7 @@ export default function HomeView({
                 happen, in the open. Grouping is presentation. Summarizing is
                 interpretation. (Founder ruling 2026-09-07.) */}
             {historyActs.length > 0 ? (
-              <section className="mb-14 md:mb-20">
+              <section {...movement('continuity')}>
                 <Eyebrow>History</Eyebrow>
                 <div className="mt-6 space-y-9 max-w-2xl">
                   {byDay(historyActs.slice(0, HISTORY_ACTS)).map((day) => (
@@ -1047,7 +1162,7 @@ export default function HomeView({
 
             {/* ── WORKS the member has declared ───────────────────────── */}
             {shelf.length > 0 ? (
-              <section className="mb-14 md:mb-20">
+              <section {...movement('depth')}>
                 <div className="flex items-baseline justify-between mb-5">
                   <Eyebrow>Your works</Eyebrow>
                   {shelf.length > VISIBLE ? (
@@ -1105,7 +1220,7 @@ export default function HomeView({
 
             {/* ── WRITING that is simply the member's, unclassified ───── */}
             {imported.length > 0 ? (
-              <section className="mb-14 md:mb-20">
+              <section {...movement('depth')}>
                 <div className="mb-5">
                   <Eyebrow>Your writing</Eyebrow>
                 </div>
@@ -1136,67 +1251,24 @@ export default function HomeView({
           </p>
         ) : null}
 
+          {/* ── ANOTHER WAY IN ─────────────────────────────────────────────
+              Last, and quiet. A writer with work underway came here to reach
+              it, not to start something else — so beginning stays present and
+              stops being the same size as returning. The rule above it is the
+              only one on the page: it marks the end of the room rather than
+              fencing off a section. */}
         {kind !== 'begin' && !loading ? (
-          <section
-            className="flex flex-col sm:flex-row gap-3 pt-10 border-t"
-            style={{ borderColor: PRESS.ruleSoft }}
-          >
-            {beginning ? (
-              <div className="flex-1 max-w-lg">
-                <label htmlFor="work-name" className="block text-[13px] opacity-55 mb-2">
-                  Give it a name, or leave it blank for now.
-                </label>
-                <div className="flex gap-3">
-                  <input
-                    id="work-name"
-                    autoFocus
-                    value={draftName}
-                    onChange={(e) => setDraftName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !busy)
-                        void run(
-                          () => onBegin(draftName.trim()),
-                          'Could not begin your work just now. Nothing was changed.',
-                        );
-                      if (e.key === 'Escape') setBeginning(false);
-                    }}
-                    className="flex-1 bg-transparent border px-3.5 py-2.5 text-[15px] min-h-[48px] rounded-[2px] outline-none"
-                    style={{ borderColor: PRESS.rule, color: PRESS.text, fontFamily: SERIF }}
-                  />
-                  <button
-                    onClick={() =>
-                      void run(
-                        () => onBegin(draftName.trim()),
-                        'Could not begin your work just now. Nothing was changed.',
-                      )
-                    }
-                    disabled={busy}
-                    className="px-6 min-h-[48px] text-[14px] rounded-[2px] disabled:opacity-40"
-                    style={{ background: PRESS.accent, color: PRESS.ink }}
-                  >
-                    {busy ? <Loader2 size={16} className="animate-spin" /> : 'Begin'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setBeginning(true)}
-                className={`${QUIET} w-full sm:w-auto`}
-                style={{ borderColor: PRESS.rule }}
-              >
-                <FilePlus2 size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
-                Begin a new work
-              </button>
-            )}
-
-            <Link
-              href={IMPORT_HREF}
-              className={`${QUIET} w-full sm:w-auto`}
-              style={{ borderColor: PRESS.rule }}
-            >
-              <FolderInput size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
-              Import writing
-            </Link>
+          <section className="pt-10 border-t" style={{ borderColor: PRESS.ruleSoft }}>
+            <BeginAndImport
+              primary={false}
+              beginning={beginning}
+              draftName={draftName}
+              busy={busy}
+              onOpen={() => setBeginning(true)}
+              onName={setDraftName}
+              onCancel={() => setBeginning(false)}
+              onSubmit={() => void run(() => onBegin(draftName.trim()), BEGIN_FAILED)}
+            />
           </section>
         ) : null}
       </div>
