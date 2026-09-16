@@ -35,6 +35,7 @@ import {
 import { classifyRecognitionEnd, RAPID_END_LOOP_THRESHOLD } from '@/lib/voice/rapidEndPolicy';
 import { decideTurn, type TurnPredictorSnapshot } from '@/lib/voice/turnArbiter';
 import { inferSemanticTurnSignals } from '@/lib/voice/semanticTurnSignals';
+import { TurnA4ShadowObserver } from '@/lib/voice/turnA4ShadowObserver';
 import {
   DEFAULT_TURN_TAKING_PREFERENCES,
   EMPTY_TURN_RHYTHM,
@@ -202,6 +203,8 @@ export interface ContinuousConversationProps {
   turnTakingPreferences?: TurnTakingPreferences;
   /** TURN-02 predictor outputs. Shadow-only until benchmark promotion. */
   turnPredictorSnapshot?: TurnPredictorSnapshot;
+  /** TURN-03 A4 governed research opt-in. Defaults false; explicit floor alone is never consent. */
+  a4ShadowResearchEnabled?: boolean;
   vadSensitivity?: number; // Voice activity detection sensitivity 0-1
   /** Called when user voice is detected while MAIA is speaking (barge-in interrupt) */
   onInterrupt?: () => void;
@@ -314,6 +317,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     silenceThreshold = 3500, // TURN-01 Natural baseline; parent may raise for Care/Scribe
     turnTakingPreferences = DEFAULT_TURN_TAKING_PREFERENCES,
     turnPredictorSnapshot = {},
+    a4ShadowResearchEnabled = false,
     vadSensitivity = 0.3,
     onInterrupt,
     onVoiceStatus,
@@ -354,6 +358,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const nativeAudioLevelListenerRef = useRef<any>(null); // Store audioLevel listener handle for UV visualizer
   const nativeSilenceTimerRef = useRef<NodeJS.Timeout | null>(null); // Silence detection timer for auto-submit
   const nativeSilenceArmedAtRef = useRef<number>(0);
+  const a4ShadowObserverRef = useRef<TurnA4ShadowObserver | null>(null);
   const turnTakingPreferencesRef = useRef<TurnTakingPreferences>(turnTakingPreferences);
   const turnPredictorSnapshotRef = useRef<TurnPredictorSnapshot>(turnPredictorSnapshot);
   const turnRhythmRef = useRef<TurnRhythmState>({ ...EMPTY_TURN_RHYTHM });
@@ -362,6 +367,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const explicitTurnPrefixRef = useRef<string>('');
   const nativeStatusRef = useRef<'started' | 'stopped'>('stopped'); // 🔑 Single source of truth for native listening state
   const smoothedAudioLevelRef = useRef<number>(0); // EMA-smoothed audio level for UV visualizer
+  const a4NativeSpeakingRef = useRef(false); // A4 observation hysteresis only; never endpoint authority
   const lastHighAudioTimeRef = useRef<number>(0); // Track when we last had speech (for silence detection)
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -588,6 +594,50 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     [],
   );
 
+  const getA4ShadowObserver = useCallback(() => {
+    if (!a4ShadowObserverRef.current) {
+      a4ShadowObserverRef.current = new TurnA4ShadowObserver((event) => {
+        if (event.type === 'checkpoint') logVoiceEvent('voice_turn_a4_checkpoint', event);
+        else if (event.type === 'continued') logVoiceEvent('voice_turn_a4_continued', event);
+        else logVoiceEvent('voice_turn_a4_explicit_yield', event);
+      });
+    }
+    return a4ShadowObserverRef.current;
+  }, []);
+
+  const a4ShadowContext = useCallback((source: string) => {
+    const semantic = inferSemanticTurnSignals(accumulatedTranscript.current);
+    return {
+      source,
+      conversationalSpace: turnTakingPreferencesRef.current.conversationalSpace,
+      floorMs: effectiveSilenceMs(),
+      semanticIncomplete: semantic.semanticIncomplete,
+      semanticYield: semantic.semanticYield,
+      semanticCueCount: semantic.reasons.length,
+      semanticTopCue: semantic.reasons[0] ?? 'none',
+    };
+  }, [effectiveSilenceMs]);
+
+  const noteA4ShadowPauseStarted = useCallback((source: string) => {
+    if (!a4ShadowResearchEnabled || automaticEndpointingAllowed(turnTakingPreferencesRef.current)) return;
+    getA4ShadowObserver().notePauseStarted(a4ShadowContext(source));
+  }, [a4ShadowResearchEnabled, a4ShadowContext, getA4ShadowObserver]);
+
+  const noteA4ShadowSpeechResumed = useCallback((source: string) => {
+    if (!a4ShadowResearchEnabled || automaticEndpointingAllowed(turnTakingPreferencesRef.current)) return;
+    getA4ShadowObserver().noteSpeechResumed(a4ShadowContext(source));
+  }, [a4ShadowResearchEnabled, a4ShadowContext, getA4ShadowObserver]);
+
+  const noteA4ShadowExplicitYield = useCallback((source: string) => {
+    if (!a4ShadowResearchEnabled || automaticEndpointingAllowed(turnTakingPreferencesRef.current)) return;
+    getA4ShadowObserver().noteExplicitYield(a4ShadowContext(source));
+  }, [a4ShadowResearchEnabled, a4ShadowContext, getA4ShadowObserver]);
+
+  useEffect(() => {
+    if (!a4ShadowResearchEnabled) a4ShadowObserverRef.current?.cancel();
+  }, [a4ShadowResearchEnabled]);
+  useEffect(() => () => a4ShadowObserverRef.current?.cancel(), []);
+
   // TURN-02 shadow only. This records what a predictive arbiter would advise at
   // an existing TURN-01 boundary. No caller branches on the result.
   const emitTurnShadowDecision = useCallback((source: string, silenceMs: number) => {
@@ -718,7 +768,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
   const silenceStartTimeRef = useRef<number>(0); // When silence began
   const hasSpokenRef = useRef(false); // Track if user has spoken at all (to differentiate from background noise)
-  const adaptiveSilenceThreshold = 5000; // 5 seconds - generous buffer for natural pauses and thinking
+  const adaptiveSilenceThreshold = 5000; // Historical automatic-mode VAD path; explicit floor mode gates it off.
 
   // 🛑 BARGE-IN INTERRUPT DETECTION - Detect user speech while MAIA is speaking
   // NOTE: Voice-activated interrupt works on web browsers (uses separate MediaStream for audio monitoring)
@@ -2077,6 +2127,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // iOS NATIVE: Must stop recognition due to audio session constraints
   useEffect(() => {
     if (isSpeaking) {
+      a4ShadowObserverRef.current?.cancel();
+      a4NativeSpeakingRef.current = false;
       // 🛑 Reset interrupt detection for this new MAIA turn
       hasTriggeredInterruptRef.current = false;
       interruptSpeechStartRef.current = 0;
@@ -2514,21 +2566,25 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         isSpeakingNowRef.current = true;
         hasSpokenRef.current = true; // Mark that we've detected real speech
         silenceStartTimeRef.current = 0;
+        noteA4ShadowSpeechResumed('web_audio_vad');
         if (process.env.NODE_ENV === 'development') console.log('🗣️ [VAD] User speaking (level:', normalizedLevel.toFixed(2), ')');
       } else if (!isSpeakingNow && wasSpeaking) {
-        // User paused - start silence timer (might be thinking, might be done)
+        // User paused - start silence timer (might be thinking, might be done).
+        // A4 observes the same boundary but never owns commit authority.
         isSpeakingNowRef.current = false;
         silenceStartTimeRef.current = now;
+        noteA4ShadowPauseStarted('web_audio_vad');
         if (process.env.NODE_ENV === 'development') console.log('⏸️ [VAD] Pause detected - listening for continuation...');
       } else if (!isSpeakingNow && silenceStartTimeRef.current > 0 && hasSpokenRef.current) {
-        // Check if pause has lasted long enough AND we have real content
+        // Preserve the historical automatic-mode VAD commit path. Explicit
+        // floor ownership gates it off so A4 silence has zero live authority.
         const silenceDuration = now - silenceStartTimeRef.current;
-        if (silenceDuration >= adaptiveSilenceThreshold && accumulatedTranscript.current.trim()) {
+        if (automaticEndpointingAllowed(turnTakingPreferencesRef.current)
+          && silenceDuration >= adaptiveSilenceThreshold
+          && accumulatedTranscript.current.trim()) {
           console.log('✅ [VAD] Natural completion detected after', silenceDuration, 'ms - sending to MAIA');
-          silenceStartTimeRef.current = 0; // Reset to prevent duplicate triggers
-          hasSpokenRef.current = false; // Reset for next turn
-          // 👁️ The other commit boundary. Recorded so a dropped tail can be
-          // attributed to VAD completion vs. the silence timer rather than guessed.
+          silenceStartTimeRef.current = 0;
+          hasSpokenRef.current = false;
           logVoiceEvent('voice_turn_commit_requested', {
             turnCommitId: turnCommitIdRef.current,
             trigger: 'vad',
@@ -2542,9 +2598,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             }),
           });
           sendTriggerRef.current = 'vad';
-          if (!isProcessingRef.current) {
-            processAccumulatedTranscript();
-          }
+          if (!isProcessingRef.current) processAccumulatedTranscript();
         }
       }
 
@@ -2561,7 +2615,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     };
 
     checkAudioLevel();
-  }, [onAudioLevelChange, vadSensitivity, processAccumulatedTranscript]);
+  }, [onAudioLevelChange, vadSensitivity, processAccumulatedTranscript, noteA4ShadowPauseStarted, noteA4ShadowSpeechResumed]);
 
   // Initialize audio level monitoring
   const initializeAudioMonitoring = useCallback(async () => {
@@ -3092,6 +3146,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         nativeAudioLevelListenerRef.current = await (NativeSpeechRecognition as any).addListener('audioLevel', (data: { level: number }) => {
           const rawLevel = data.level || 0;
           const now = Date.now();
+
+          // TURN-03 A4 observation uses the existing native audio-level stream.
+          // Hysteresis (.02 speech / .01 silence) prevents noise near one threshold
+          // from manufacturing pause/continue events. This has zero send authority.
+          if (!automaticEndpointingAllowed(turnTakingPreferencesRef.current)) {
+            if (rawLevel >= 0.02 && !a4NativeSpeakingRef.current) {
+              a4NativeSpeakingRef.current = true;
+              noteA4ShadowSpeechResumed('native_audio_level');
+            } else if (rawLevel < 0.01 && a4NativeSpeakingRef.current) {
+              a4NativeSpeakingRef.current = false;
+              noteA4ShadowPauseStarted('native_audio_level');
+            }
+          }
 
           // 🔊 AMPLIFY: iOS native mic levels are inherently quiet (0.001-0.03 range)
           // Amplify by 30x to scale into visualizer range (0-1)
@@ -3786,7 +3853,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // Ensure starting flag is always reset, even on unexpected errors
       isStartingRef.current = false;
     }
-  }, [initializeSpeechRecognition, initializeAudioMonitoring, onTranscript, onInterimTranscript, onRecordingStateChange, addDebug, ensureNativeSpeechReady]);
+  }, [initializeSpeechRecognition, initializeAudioMonitoring, onTranscript, onInterimTranscript, onRecordingStateChange, addDebug, ensureNativeSpeechReady, noteA4ShadowPauseStarted, noteA4ShadowSpeechResumed]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // 🎙️ requestRestart — THE single authority for TURN_COMPLETE → NEXT_LISTEN
@@ -3895,6 +3962,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // When false/undefined (internal stop for transcript processing), we keep the ref so mic auto-restarts after MAIA
   const stopListening = useCallback(async (options?: { userExitMode?: boolean }) => {
     console.log('🛑 [ContinuousConversation] stopListening called', options?.userExitMode ? '(USER EXIT MODE)' : '(internal)');
+    a4ShadowObserverRef.current?.cancel();
+    a4NativeSpeakingRef.current = false;
 
     // ⛔ DESKTOP-SOVEREIGN-STT-LIFECYCLE-01 — FIRST, and UNCONDITIONALLY.
     // The sovereign capture is the one this function used not to own: it lived
@@ -4095,6 +4164,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       logVoiceEvent('voice_explicit_yield_ignored', { chars, processing: isProcessingRef.current });
       return;
     }
+    noteA4ShadowExplicitYield('ui_im_done');
     if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
     if (nativeSilenceTimerRef.current) { clearTimeout(nativeSilenceTimerRef.current); nativeSilenceTimerRef.current = null; }
     timerArmedAtRef.current = 0;
@@ -4107,7 +4177,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
     processAccumulatedTranscript();
     if (useNativeSpeechRef.current) NativeSpeechRecognition.stop().catch(() => {});
-  }, [processAccumulatedTranscript]);
+  }, [noteA4ShadowExplicitYield, processAccumulatedTranscript]);
 
 
   // Assign functions to refs after they're defined
