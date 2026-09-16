@@ -2167,3 +2167,36 @@ describe('KERNEL-00 · C1 SID duplex execution pins — exact C1 instrument, rea
     expect(batch).not.toMatch(/top-up|--stimulus|device process terminate|testTerminateOnly/);
   });
 });
+
+
+describe('KERNEL-00 · C1 SID duplex successor after PRELIGHT-01 predicate refusal', () => {
+  it('preserves the refusal honestly and pins fresh PRELIGHT-02/BATCH-02 identities without changing C1 physiology', () => {
+    const refusal = join(process.cwd(), 'docs/programme/VOICE-2026/driver-ledger/SID-DUPLEX-PREFLIGHT-01-REFUSED-20260916T161507Z');
+    const adj = readFileSync(join(refusal, 'ADJUDICATION.txt'), 'utf8');
+    expect(adj).toContain('REFUSED · PIN PREDICATE DEFECT');
+    expect(adj).toContain('BATCH-01 marker remained absent and BATCH-01 was never invoked');
+    const app = JSON.parse(readFileSync(join(refusal, 'apps-vpio02sid.json'), 'utf8'));
+    const hits = app.result.apps.filter((a: any) => a.bundleIdentifier === 'life.soullab.voicekernel.vpio02sid');
+    expect(hits.length).toBe(1);
+    expect(hits[0].url).toContain('85948DBD-BA8F-4679-950D-31767B1C24E5');
+
+    const prePath = join(process.cwd(), 'docs/programme/VOICE-2026/SID_DUPLEX-PREFLIGHT-02_PIN_DRAFT_2026-09-16.sh');
+    const batPath = join(process.cwd(), 'docs/programme/VOICE-2026/SID_DUPLEX-BATCH-02_PIN_DRAFT_2026-09-16.sh');
+    const pre = readFileSync(prePath, 'utf8'), bat = readFileSync(batPath, 'utf8');
+    expect(createHash('sha256').update(readFileSync(prePath)).digest('hex')).toBe('41bc83e50e0dc0154e7c771d92c7ec00dfcea80c9644b74268ee2b0d20126347');
+    expect(createHash('sha256').update(readFileSync(batPath)).digest('hex')).toBe('b04f512bfade9b61d218915fda9d580a12280fdab97ddf687708f906c985ad9c');
+    expect(pre).toContain('SHA=1708d52119e173853e0ad8b7ca7f71ad95c63d8d');
+    expect(pre).toContain("hits=[a for a in apps if a.get('bundleIdentifier') == sys.argv[2]]");
+    expect(pre).toContain("assert len(hits) == 1");
+    expect(pre).toContain("assert sys.argv[3] in hits[0].get('url','')");
+    expect(pre).not.toContain('grep -c ""bundleIdentifier"');
+    expect(pre).toContain('PTR=/private/tmp/sid-duplex-preflight-02-current.txt');
+    expect(pre).toContain('WT=/private/tmp/sid-duplex-02-$SHA-$STAMP');
+    expect(pre).toContain('sid-duplex-preflight-02-$STAMP.SHA256SUMS.preflight');
+    expect(bat).toContain('ACT_MARK=/private/tmp/sid-duplex-batch-02-invoked.txt');
+    expect(bat.indexOf("printf 'SID-DUPLEX-BATCH-02 INVOKED")).toBeLessThan(bat.indexOf('test -n "$K00_EXEC_AUTHORITY"'));
+    expect(bat).toContain('PTR=/private/tmp/sid-duplex-preflight-02-current.txt');
+    expect((bat.match(/k00-driver-batch\.sh VPIO-02-SID-DUPLEX 10 --act duplex/g) ?? []).length).toBe(1);
+    expect(bat).not.toMatch(/top-up|VPIO-02-SID-DUPLEX 5|sid-nearend-gated/);
+  });
+});

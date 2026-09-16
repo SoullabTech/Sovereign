@@ -1,0 +1,8 @@
+SID DUPLEX PRELIGHT-01 · REFUSED · PIN PREDICATE DEFECT
+Executed 2026-09-16T16:15:07Z against instrument 1708d52119e173853e0ad8b7ca7f71ad95c63d8d.
+Offline requalification reached 100/100 PASS; installed SID app read succeeded.
+Preserved JSON contains bundleIdentifier life.soullab.voicekernel.vpio02sid exactly once and witnessed container 85948DBD-BA8F-4679-950D-31767B1C24E5 exactly once.
+The generated shell predicate at preflight line 43 lost the escaped JSON-key quotes and refused immediately after the app read.
+No process read followed; no phone launch, sample, termination, install, stimulus, physiology or batch act occurred.
+PRELIGHT-01 is preserved as refused. BATCH-01 marker remained absent and BATCH-01 was never invoked.
+Fresh successor pins required; no threshold, organism, driver, batch instrument or reader change is licensed by this refusal.

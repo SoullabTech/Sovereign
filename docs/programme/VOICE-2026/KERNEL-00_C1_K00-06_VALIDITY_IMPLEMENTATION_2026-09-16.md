@@ -33,3 +33,9 @@ Final pin SHA-256: PRELIGHT-01 `48eb5899cfd156f7f58e9a1ddc9671ed87fba348f869662e
 ## 4. Standing
 
 C1 implementation **ACCEPTED and PINNED** at `1708d5211`. Device execution requires the direct Mac Studio terminal act and its fresh explicit authority payload. No C1 result can finally close K00-06 until route physiology/coupling travels with K00-11. KERNEL-00 remains OPEN / NOT ACCEPTED; BRIDGE-01 and production remain downstream.
+
+## PRELIGHT-01 refusal and fresh successors — 2026-09-16
+
+PRELIGHT-01 executed read-only at 16:15:07Z and refused immediately after the installed-app read because its generated shell predicate lost the escaped JSON-key quotes. The preserved `apps-vpio02sid.json` proves exactly one `life.soullab.voicekernel.vpio02sid` app and the witnessed container `85948DBD-BA8F-4679-950D-31767B1C24E5`; no process read, phone launch, sample, termination, install, stimulus or physiology followed. `SID-DUPLEX-BATCH-01` marker remained absent: BATCH-01 was never invoked and is superseded pre-execution rather than replayed.
+
+Fresh successors preserve the exact C1 instrument `1708d52119e173853e0ad8b7ca7f71ad95c63d8d`, N=10 duplex law, frozen reader and zero-harness custody. PRELIGHT-02 replaces only the fragile app grep with a JSON parse requiring exactly one matching bundle and the witnessed container in that app URL, and carries fresh worktree/pointer/seal identity. BATCH-02 carries a fresh one-shot marker and consumes only a CLEAN PRELIGHT-02 pointer no older than 300 seconds. No physiological or threshold rule changes.
