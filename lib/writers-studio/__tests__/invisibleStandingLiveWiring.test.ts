@@ -4,42 +4,45 @@ import fs from 'fs';
 import path from 'path';
 
 const CODE = (rel: string) => fs.readFileSync(path.join(process.cwd(), rel), 'utf8');
-
+const COGNITION = () => CODE('lib/writers-studio/writersStudioCognition.ts');
 const SERVICE = () => CODE('lib/sovereign/maiaService.ts');
 const SHADOW = () => CODE('lib/writers-studio/invisibleStandingShadow.ts');
 
 describe('Invisible Standing live-shadow wiring', () => {
   it('is Writer-only and explicitly OFF unless the exact feature gate is 1', () => {
-    const svc = SERVICE();
-    expect(svc).toMatch(
-      /if \(writerStudioTurn && process\.env\.MAIA_INVISIBLE_STANDING_SHADOW === '1'\) \{/,
+    const cognition = COGNITION();
+    expect(cognition).toMatch(
+      /if \(response && process\.env\.MAIA_INVISIBLE_STANDING_SHADOW === '1'\) \{/,
     );
-    expect(svc.match(/runInvisibleStandingShadowSafely\(/g) ?? []).toHaveLength(1);
+    expect(cognition.match(/runInvisibleStandingShadowSafely\(/g) ?? []).toHaveLength(1);
   });
 
-  it('audits the last stable member-facing text after all text-mutating scrubs and before return', () => {
-    const svc = SERVICE();
-    const finalScrub = svc.indexOf('text = scrubIdentityDisclaimers({');
-    const audit = svc.indexOf('runInvisibleStandingShadowSafely({');
-    const finalReturn = svc.indexOf('return {', audit);
-    expect(finalScrub).toBeGreaterThanOrEqual(0);
-    expect(audit).toBeGreaterThan(finalScrub);
-    expect(finalReturn).toBeGreaterThan(audit);
-
-    const betweenAuditAndReturn = svc.slice(audit, finalReturn);
-    // The audit may READ finalText: text; nothing may assign a new member-facing text afterwards.
-    expect(betweenAuditAndReturn).not.toMatch(/\btext\s*=/);
+  it('audits the exact finalized getMaiaResponse text and returns the same response variable', () => {
+    const cognition = COGNITION();
+    const resolved = cognition.indexOf('.then(r => {');
+    const capture = cognition.indexOf('const response = r?.text ?? undefined;', resolved);
+    const audit = cognition.indexOf('runInvisibleStandingShadowSafely({', capture);
+    const returned = cognition.indexOf('return { ok: true, response };', audit);
+    expect(resolved).toBeGreaterThanOrEqual(0);
+    expect(capture).toBeGreaterThan(resolved);
+    expect(audit).toBeGreaterThan(capture);
+    expect(returned).toBeGreaterThan(audit);
+    expect(cognition.slice(audit, returned)).not.toMatch(/\bresponse\s*=/);
   });
 
-  it('does not await, assign, or route the shadow result into member-visible output', () => {
-    const svc = SERVICE();
-    const call = svc.indexOf('runInvisibleStandingShadowSafely({');
-    const lineStart = svc.lastIndexOf('\n', call) + 1;
-    const lineEnd = svc.indexOf('\n', call);
-    const line = svc.slice(lineStart, lineEnd);
+  it('does not await, assign, or route the shadow result into the response', () => {
+    const cognition = COGNITION();
+    const call = cognition.indexOf('runInvisibleStandingShadowSafely({');
+    const lineStart = cognition.lastIndexOf('\n', call) + 1;
+    const lineEnd = cognition.indexOf('\n', call);
+    const line = cognition.slice(lineStart, lineEnd);
     expect(line).not.toContain('await');
     expect(line).not.toContain('=');
     expect(line.trim()).toBe('runInvisibleStandingShadowSafely({');
+  });
+
+  it('keeps the frontier-labeled maiaService free of shadow wiring', () => {
+    expect(SERVICE()).not.toContain('runInvisibleStandingShadowSafely');
   });
 
   it('adds no second model, network, database, or persistence surface', () => {

@@ -6,20 +6,21 @@ Date: 2026-09-16
 
 The production-shaped change is intentionally small:
 
-1. import `runInvisibleStandingShadowSafely` into `lib/sovereign/maiaService.ts`;
-2. after the final `scrubIdentityDisclaimers()` mutation, and before the final return;
-3. only when a canonical `writerStudioTurn` exists;
+1. import `runInvisibleStandingShadowSafely` into `lib/writers-studio/writersStudioCognition.ts`;
+2. wait for `getMaiaResponse()` to resolve its already-finalized `r.text`;
+3. only when that Writer response exists;
 4. only when `MAIA_INVISIBLE_STANDING_SHADOW === '1'`;
-5. invoke synchronously and ignore the returned audit.
+5. invoke synchronously and ignore the returned audit;
+6. return the exact same captured `response` variable.
 
-No other production file is changed.
+`lib/sovereign/maiaService.ts` has **no net change** in the final PR diff.
 
 ## Executable witness
 
-Four suites, **35 / 35 tests PASS**:
+Four suites, **36 / 36 tests PASS**:
 
 - `invisibleStandingShadow.test.ts` — pure audit / incomplete-evidence / content-free telemetry / swallowed-failure laws;
-- `invisibleStandingLiveWiring.test.ts` — final-byte seam, feature gate, zero response authority, no I/O/provider surface;
+- `invisibleStandingLiveWiring.test.ts` — finalized-service-result seam, feature gate, zero response authority, no I/O/provider surface, and no `maiaService` shadow wiring;
 - `invisibleStandingS5Replay.test.ts` — all **10 / 10** human-preferred current responses from sealed S5 pass with zero findings;
 - existing `focusHandoff.test.ts` — handoff/disclosure receipt law remains green.
 

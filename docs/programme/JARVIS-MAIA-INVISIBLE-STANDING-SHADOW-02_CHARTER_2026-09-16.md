@@ -15,7 +15,7 @@ This is a **shadow-only implementation lane**. It may add feature-gated producti
 
 - Writer's Studio canonical turns only.
 - Gate: `MAIA_INVISIBLE_STANDING_SHADOW=1`; OFF otherwise.
-- Audit target: the final `text` after AIN rewrite, SELFLET stripping, and identity-disclaimer scrub, immediately before `getMaiaResponse()` returns.
+- Audit target: the finalized `r.text` received by `writersStudioCognition.ts` after `getMaiaResponse()` has returned.
 - Synchronous/pure audit only: no provider, network, database, persistence, or retrieval I/O.
 - Existing deterministic identity/memory constitutional classes may be re-observed as parity witnesses.
 - New Standing-specific observation: explicit direct member-quote attribution custody.

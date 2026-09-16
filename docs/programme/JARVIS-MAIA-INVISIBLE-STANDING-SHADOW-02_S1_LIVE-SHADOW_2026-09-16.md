@@ -36,8 +36,8 @@ Those may produce `would_refuse` in the shadow result. SHADOW-02 still does not 
 
 ## Wiring
 
-`maiaService.ts` calls the audit only when:
+`writersStudioCognition.ts` receives the finalized `getMaiaResponse()` result and calls the audit only when:
 
-`writerStudioTurn && process.env.MAIA_INVISIBLE_STANDING_SHADOW === '1'`
+`response && process.env.MAIA_INVISIBLE_STANDING_SHADOW === '1'`
 
-The call occurs after the last text scrub and before the final return. Its return value is ignored.
+The audit receives `prepared.turn` plus the exact resolved `response` bytes. Its return value is ignored. `maiaService.ts` has no shadow import or call.

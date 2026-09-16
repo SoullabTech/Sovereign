@@ -10,7 +10,7 @@ The first plausible seam at `maiaService.ts` ~3703 is **not final**. After `fina
 
 The last stable member-facing text is immediately after `scrubIdentityDisclaimers()` and before the final `return { text, ... }` at the tail of `getMaiaResponse()`.
 
-Therefore the live shadow is bound there.
+That trace identifies the final internal mutation boundary. The implementation binds **one layer downstream** in `writersStudioCognition.ts`, where the resolved `getMaiaResponse()` result exposes those already-finalized bytes as `r.text`. This avoids touching the frontier-labeled `maiaService.ts` at all.
 
 ## Existing persistence divergence — explicitly not repaired here
 
