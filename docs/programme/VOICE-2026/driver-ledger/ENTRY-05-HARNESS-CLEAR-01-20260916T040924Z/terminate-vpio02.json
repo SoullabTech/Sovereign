@@ -1,0 +1,35 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "terminate",
+      "--device",
+      "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+      "--pid",
+      "4025",
+      "--json-output",
+      "/private/tmp/ENTRY-05-HARNESS-CLEAR-01-20260916T040924Z/terminate-vpio02.json"
+    ],
+    "commandType" : "devicectl.device.process.terminate",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "506.7"
+  },
+  "result" : {
+    "deviceIdentifier" : "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+    "deviceTimestamp" : "2026-09-16T04:09:24.990Z",
+    "process" : {
+      "executable" : "file:///private/var/containers/Bundle/Application/E3B88028-A10F-46B1-AB27-CF0A1F83FB78/VoiceKernelHarness.app/VoiceKernelHarness",
+      "processIdentifier" : 4025
+    },
+    "signal" : {
+      "name" : "SIGTERM",
+      "value" : 15
+    }
+  }
+}

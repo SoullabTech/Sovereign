@@ -1,0 +1,4 @@
+00:09:24  Acquired tunnel connection to device.
+00:09:24  Enabling developer disk image services.
+00:09:24  Acquired usage assertion.
+Sent signal to terminate process sent to pid 4025
