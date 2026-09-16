@@ -961,3 +961,8 @@ No qualification change. The ENTRY validity premise (no other VoiceKernel organi
 ### §10.86 — zero-harness law preserved; relaunch census + foreign-disposal-04 drafted, not run (2026-09-16; discriminator plan §18.68; implementation record §10.41)
 
 No qualification change. The ENTRY premise (harness 0 at FIRST-INSTALL-03 and [D]) stands unamended.
+
+
+### §10.87 — census and disposal-04 drafts amended per ruling; root grant issued for the amended census; not run (2026-09-16; discriminator plan §18.69; implementation record §10.42)
+
+No qualification change.
