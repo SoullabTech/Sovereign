@@ -775,7 +775,6 @@ export default function HomeView({
   const VISIBLE = 4;
   const shelfCards = showAll ? shelf : shelf.slice(0, VISIBLE);
 
-
   return (
     <main
       className="min-h-screen px-6 md:px-10 py-10 md:py-16"
@@ -810,7 +809,6 @@ export default function HomeView({
             <h1 className="text-[36px] md:text-[44px] leading-[1.1] mb-10">
               Welcome, writer. You are home.
             </h1>
-
             <BeginAndImport
               primary
               beginning={beginning}
@@ -1260,7 +1258,6 @@ export default function HomeView({
               only one on the page: it marks the end of the room rather than
               fencing off a section. */}
         {kind !== 'begin' && !loading ? (
-
           <section className="pt-10 border-t" style={{ borderColor: PRESS.ruleSoft }}>
             <BeginAndImport
               primary={false}
