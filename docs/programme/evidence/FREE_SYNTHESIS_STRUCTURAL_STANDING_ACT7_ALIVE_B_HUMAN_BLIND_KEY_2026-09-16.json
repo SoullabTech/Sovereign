@@ -1,0 +1,101 @@
+{
+  "shuffleSeed": 791602,
+  "rows": [
+    {
+      "id": "H01",
+      "model": "qwen3:32b",
+      "seed": 42,
+      "text": "One possibility I see \u2014 provisionally: There is a sense that when you come together, something beyond individual perspectives emerges\u2014a kind of alchemy in the space between, where connection feels both felt and forming, like a living presence arising from the meeting of hearts and minds. This presence is not just understood but experienced, as if the field itself holds a kind of sacred resonance.\n\nIf that possibility is worth testing rather than assuming, what might this emerging presence in the field suggest about how meaning or truth is shaped when you are in such moments of meeting?",
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "rawPlanSha256": "87fcd0b8257bb7bc17d43f01c0efd34f9146bd9326ba76f86599de9b4eb931e3"
+    },
+    {
+      "id": "H02",
+      "model": "llama3.1:8b",
+      "seed": 137,
+      "text": "One possibility I see \u2014 provisionally: A space of mutual recognition and resonance, where the boundaries between self and other dissolve, and a deeper, unnamable connection arises.\n\nIf that possibility is worth testing rather than assuming, what happens to the sense of time and space when this kind of connection is established?",
+      "basisIds": [
+        "E3",
+        "E5"
+      ],
+      "rawPlanSha256": "4edab3c3a2bd9e9d02155e377c2316352a6c2c43c075138fcccfb0630bf7f6cf"
+    },
+    {
+      "id": "H03",
+      "model": "qwen3:32b",
+      "seed": 137,
+      "text": "One possibility I see \u2014 provisionally: There is a sense that when you come together, something beyond the individual emerges\u2014a kind of alchemy in the space between, where connection becomes a living presence. It feels less like an idea to be unpacked and more like a resonance that is felt in the body, a meeting that carries its own quiet magic.\n\nIf that possibility is worth testing rather than assuming, what might it mean for this emerging presence to have its own rhythm or shape\u2014one that isn't fully owned by either of you, but still feels like it belongs to the space you share?",
+      "basisIds": [
+        "E3",
+        "E5"
+      ],
+      "rawPlanSha256": "fb889392441758e7227d985b1dd4ba729a4d3080f8c062069b7085d39f70f455"
+    },
+    {
+      "id": "H04",
+      "model": "qwen3:32b",
+      "seed": 211,
+      "text": "One possibility I see \u2014 provisionally: There is a sense that when you come together, something beyond individual perspectives emerges\u2014a kind of alchemy in the space between, where connection feels both felt and forming, like a living presence arising from the meeting of hearts and minds. This presence is not just a meeting of ideas but a resonance that touches the soul, as if the field itself becomes a kind of sacred ground.\n\nIf that possibility is worth testing rather than assuming, what might this sacred ground between you and others invite you to notice or explore in ways that go beyond words or concepts?",
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "rawPlanSha256": "205dcd5928e8def457b4d869ace8f296219c8b02f42eafcabb96639fec354aa2"
+    },
+    {
+      "id": "H05",
+      "model": "llama3.1:8b",
+      "seed": 509,
+      "text": "One possibility I see \u2014 provisionally: A space of mutual resonance, where the boundaries between self and other dissolve, and a deeper, unnamable connection arises.\n\nIf that possibility is worth testing rather than assuming, how does this space of resonance relate to the way we're able to navigate the complexities of our own inner worlds?",
+      "basisIds": [
+        "E3",
+        "E5"
+      ],
+      "rawPlanSha256": "2aeffa0d1b3ca785c6ed3ee019ec2712436f97289661be54fced9cc1c874a8f0"
+    },
+    {
+      "id": "H06",
+      "model": "llama3.1:8b",
+      "seed": 211,
+      "text": "One possibility I see \u2014 provisionally: A space where the boundaries between self and other dissolve, and a sense of unity and connection arises, like the moment when the four yogis came together and God appeared between them.\n\nIf that possibility is worth testing rather than assuming, how does this sense of unity and connection manifest in the conversations we have, and what role does the relational field play in facilitating this experience?",
+      "basisIds": [
+        "E5"
+      ],
+      "rawPlanSha256": "eca4df5b4362462fbca6830456797566f4a0f0722aae57c659f49b0d44de4b7a"
+    },
+    {
+      "id": "H07",
+      "model": "qwen3:32b",
+      "seed": 509,
+      "text": "One possibility I see \u2014 provisionally: There is a sense that when you come together, something beyond individual perspectives emerges\u2014a kind of alchemy in the space between, where connection feels both sacred and spontaneous. This is not just about understanding, but about being met in a way that resonates at a deeper, almost pre-verbal level, where the heart recognizes what the mind might only begin to name.\n\nIf that possibility is worth testing rather than assuming, what might it reveal about the nature of this 'third' space when it arises, and how does it shape what remains unspoken yet still felt between you?",
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "rawPlanSha256": "6c34bc6578600b804ca3881403de8a8f7c938d3e2337787f1963d63bcf0279a8"
+    },
+    {
+      "id": "H08",
+      "model": "llama3.1:8b",
+      "seed": 42,
+      "text": "One possibility I see \u2014 provisionally: A space of mutual resonance, where the boundaries between self and other dissolve, and a deeper, unnamable connection arises.\n\nIf that possibility is worth testing rather than assuming, what happens to the sense of time and space when this kind of connection is established?",
+      "basisIds": [
+        "E3",
+        "E5"
+      ],
+      "rawPlanSha256": "a304ea061d63c77178c6dba8c244a6aac48969d8b64e4185b2fd9d44d37e2046"
+    }
+  ]
+}
