@@ -17,9 +17,9 @@
     }
   ],
   "_authority": {
-    "soullab_owned": "May support published_knowledge or organizational_public when ownership evidence is named.",
-    "public_domain": "May support third_party_published only when the work itself—not an image, quotation, or phrase—is evidenced public domain.",
-    "license": "May support third_party_published only when the license evidence governs the work and permits the intended corpus use.",
-    "permission": "May support third_party_published only when explicit permission evidence for corpus use is named."
+    "soullab_owned": "May support published_knowledge or organizational_public only with mechanically locatable evidence: an in-file marker actually present in the work, or a record under docs/corpus-authority/ whose declared marker is present.",
+    "public_domain": "May support third_party_published only when mechanically locatable evidence governs the work itself—not an image, quotation, phrase, or unrelated source.",
+    "license": "May support third_party_published only when mechanically locatable evidence identifies a license that governs the work and permits the intended corpus use.",
+    "permission": "May support third_party_published only when a record under docs/corpus-authority/ carries the declared authorization marker; free-text claims are not authority evidence."
   }
 }
