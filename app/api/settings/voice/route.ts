@@ -17,6 +17,12 @@ import {
 } from '@/lib/voice/voiceControlsService';
 import { isValidArchetype } from '@/lib/voice/voiceArchetypes';
 import type { TTSProviderPref } from '@/lib/types/voiceControls';
+import {
+  DEFAULT_TURN_TAKING_PREFERENCES,
+  isConversationalSpace,
+  isFloorControlMode,
+  type TurnTakingPreferences,
+} from '@/lib/voice/turnTaking';
 
 const VALID_TTS_PROVIDERS: TTSProviderPref[] = ['auto', 'cloud', 'local'];
 
@@ -47,6 +53,19 @@ function validateOffsets(obj: unknown): { pace: number; warmth: number; poetry: 
     poetry: o.poetry as number,
     directiveness: o.directiveness as number,
     energy: o.energy as number,
+  };
+}
+
+function validateTurnTaking(obj: unknown): TurnTakingPreferences | null {
+  if (typeof obj !== 'object' || obj === null) return null;
+  const o = obj as Record<string, unknown>;
+  if (!isConversationalSpace(o.conversationalSpace)) return null;
+  if (!isFloorControlMode(o.floorControlMode)) return null;
+  if (typeof o.learnRhythm !== 'boolean') return null;
+  return {
+    conversationalSpace: o.conversationalSpace,
+    floorControlMode: o.floorControlMode,
+    learnRhythm: o.learnRhythm,
   };
 }
 
@@ -113,10 +132,21 @@ export async function POST(request: NextRequest) {
         ? (body.ttsProvider as TTSProviderPref)
         : null;
 
+    // TURN-01 is backward-compatible with older clients: an omitted turnTaking
+    // block preserves the member's current preference rather than resetting it.
+    const current = await getMemberVoicePreferences(memberId);
+    const turnTaking = body.turnTaking === undefined
+      ? (current.turnTaking ?? DEFAULT_TURN_TAKING_PREFERENCES)
+      : validateTurnTaking(body.turnTaking);
+    if (!turnTaking) {
+      return NextResponse.json({ error: 'Invalid turn-taking preferences.' }, { status: 400 });
+    }
+
     await upsertMemberVoicePreferences(memberId, {
       voiceIdOverride,
       voiceArchetype,
       ttsProvider,
+      turnTaking,
       offset,
     });
 

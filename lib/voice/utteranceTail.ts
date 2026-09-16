@@ -51,6 +51,7 @@
 export type UtteranceSendTrigger =
   | 'silence_timer'   // the silence threshold elapsed with no further results
   | 'vad'             // adaptive VAD judged the utterance naturally complete
+  | 'manual'          // member explicitly yielded the floor (TURN-01)
   | 'other';          // any other call site (manual submit, teardown, etc.)
 
 export interface TailSnapshotInput {

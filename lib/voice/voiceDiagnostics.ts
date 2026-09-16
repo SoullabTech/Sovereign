@@ -113,6 +113,11 @@ export type VoiceDiagEvent =
   | 'voice_turn_commit_requested'
   | 'voice_turn_committed'
   | 'voice_result_after_commit'
+  // TURN-01 — member-owned floor and adaptive patience. Timing/count metadata only.
+  | 'voice_turn_pause_continued'
+  | 'voice_floor_held'
+  | 'voice_explicit_yield'
+  | 'voice_explicit_yield_ignored'
   // Native iOS path (@capacitor-community/speech-recognition)
   // Naming follows "Observable state before interpreted meaning":
   // we report what the plugin emitted, not what we think it meant.
@@ -133,9 +138,9 @@ export type VoiceDiagEvent =
   | 'ios_voice_listening_stopped'
 
   // ── VOICE-CAPTURE-01B-OBS dispatch provenance ───────────────────────────
-  // `processAccumulatedTranscript` is one of EIGHT `onTranscript(...)` call
-  // sites in ContinuousConversation, and the only one behind the two dedup
-  // guards. So a duplicate turn can be produced by a boundary those guards
+  // `processAccumulatedTranscript` is the canonical guarded send path; TURN-01 also
+  // routes native silence commits through it. Other direct boundaries remain
+  // individually witnessed, so a duplicate turn can still be attributed if
   // never see, and no amount of window-tuning on the guarded path would
   // suppress it. These two events name the boundary instead of guessing:
   //

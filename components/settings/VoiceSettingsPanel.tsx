@@ -19,6 +19,13 @@ import {
   type SovereignVoiceId,
 } from '@/lib/voice/sovereignVoices';
 import type { TTSProviderPref } from '@/lib/types/voiceControls';
+import {
+  CONVERSATIONAL_SPACE_CONFIG,
+  DEFAULT_TURN_TAKING_PREFERENCES,
+  type ConversationalSpace,
+  type FloorControlMode,
+  type TurnTakingPreferences,
+} from '@/lib/voice/turnTaking';
 
 const TTS_PROVIDER_OPTIONS: { id: TTSProviderPref; label: string; desc: string }[] = [
   { id: 'auto',  label: 'Auto',        desc: 'Cloud voice with local fallback.' },
@@ -89,6 +96,7 @@ export default function VoiceSettingsPanel() {
   const [systemVoiceId, setSystemVoiceId] = useState<string>('maia_core');
   const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
   const [ttsProvider, setTtsProvider] = useState<TTSProviderPref>('auto');
+  const [turnTaking, setTurnTaking] = useState<TurnTakingPreferences>({ ...DEFAULT_TURN_TAKING_PREFERENCES });
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -119,6 +127,7 @@ export default function VoiceSettingsPanel() {
           }
           setOffset(data.member?.offset ?? { ...DEFAULT_OFFSETS });
           setTtsProvider(data.member?.ttsProvider ?? 'auto');
+          setTurnTaking(data.member?.turnTaking ?? { ...DEFAULT_TURN_TAKING_PREFERENCES });
         }
       } catch (e) {
         console.warn('[voice-settings] Failed to load:', e);
@@ -154,9 +163,10 @@ export default function VoiceSettingsPanel() {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceIdOverride: voiceIdOverride ?? effectiveVoiceId, ttsProvider, offset }),
+        body: JSON.stringify({ voiceIdOverride: voiceIdOverride ?? effectiveVoiceId, ttsProvider, turnTaking, offset }),
       });
       if (res.ok) {
+        window.dispatchEvent(new CustomEvent('maia-voice-settings-changed', { detail: { turnTaking } }));
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
       }
@@ -170,6 +180,7 @@ export default function VoiceSettingsPanel() {
   const onReset = async () => {
     setVoiceIdOverride(null);
     setTtsProvider('auto');
+    setTurnTaking({ ...DEFAULT_TURN_TAKING_PREFERENCES });
     setOffset({ ...DEFAULT_OFFSETS });
     setSaved(false);
 
@@ -181,10 +192,14 @@ export default function VoiceSettingsPanel() {
         body: JSON.stringify({
           voiceIdOverride: systemVoiceId,
           ttsProvider: 'auto',
+          turnTaking: { ...DEFAULT_TURN_TAKING_PREFERENCES },
           offset: { ...DEFAULT_OFFSETS },
         }),
       });
       if (res.ok) {
+        window.dispatchEvent(new CustomEvent('maia-voice-settings-changed', {
+          detail: { turnTaking: { ...DEFAULT_TURN_TAKING_PREFERENCES } },
+        }));
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
         setTimeout(() => onPreview(), 300);
@@ -364,6 +379,88 @@ export default function VoiceSettingsPanel() {
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* ── Conversation Rhythm / TURN-01 ───────────────────────────── */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-5">
+        <div>
+          <div className="text-sm font-medium text-stone-300">Conversational Space</div>
+          <p className="mt-1 text-xs leading-relaxed text-stone-400">
+            How much room MAIA leaves while you are forming a thought. Silence alone is never treated as certainty.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {(Object.keys(CONVERSATIONAL_SPACE_CONFIG) as ConversationalSpace[]).map((space) => {
+            const config = CONVERSATIONAL_SPACE_CONFIG[space];
+            const active = turnTaking.conversationalSpace === space;
+            return (
+              <button
+                key={space}
+                type="button"
+                onClick={() => {
+                  setSaved(false);
+                  setTurnTaking((prev) => ({ ...prev, conversationalSpace: space }));
+                }}
+                className={`rounded-xl border p-3 text-left transition-all ${active
+                  ? 'border-amber-500/60 bg-amber-500/10'
+                  : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/5'}`}
+                aria-pressed={active}
+              >
+                <div className={`text-sm font-semibold ${active ? 'text-amber-300' : 'text-stone-200'}`}>
+                  {config.label}
+                </div>
+                <div className="mt-1 text-[11px] leading-tight text-stone-400">{config.description}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        <label className="flex items-start justify-between gap-4 rounded-xl border border-white/10 bg-black/10 p-3">
+          <div>
+            <div className="text-sm font-medium text-stone-200">Learn my natural rhythm</div>
+            <div className="mt-1 text-xs leading-relaxed text-stone-400">
+              If you repeatedly pause and continue, MAIA becomes more patient within your chosen Space. She never learns to interrupt you sooner.
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={turnTaking.learnRhythm}
+            onChange={(e) => {
+              setSaved(false);
+              setTurnTaking((prev) => ({ ...prev, learnRhythm: e.target.checked }));
+            }}
+            className="mt-1 h-4 w-4 accent-amber-500"
+          />
+        </label>
+
+        <div>
+          <div className="text-sm font-medium text-stone-300">Who decides when your turn is done?</div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {([
+              ['automatic', 'Automatic', 'MAIA listens for your natural turn ending.'],
+              ['explicit', "I’m Done button", "Silence never sends your turn. Tap I’m Done when you want MAIA to respond."],
+            ] as [FloorControlMode, string, string][]).map(([mode, label, desc]) => {
+              const active = turnTaking.floorControlMode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => {
+                    setSaved(false);
+                    setTurnTaking((prev) => ({ ...prev, floorControlMode: mode }));
+                  }}
+                  className={`rounded-xl border p-3 text-left transition-all ${active
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/5'}`}
+                  aria-pressed={active}
+                >
+                  <div className={`text-sm font-semibold ${active ? 'text-amber-300' : 'text-stone-200'}`}>{label}</div>
+                  <div className="mt-1 text-[11px] leading-tight text-stone-400">{desc}</div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
