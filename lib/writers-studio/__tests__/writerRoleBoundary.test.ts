@@ -16,6 +16,10 @@ describe('Writer Studio guide ethic', () => {
     expect(WRITER_ROLE_BOUNDARY).toMatch(/do not silently normalize/i);
     expect(WRITER_ROLE_BOUNDARY).toMatch(/poetry is not failed prose/i);
     expect(WRITER_ROLE_BOUNDARY).toMatch(/may challenge, disagree/i);
+    expect(WRITER_ROLE_BOUNDARY).toMatch(/do not ghostwrite/i);
+    expect(WRITER_ROLE_BOUNDARY).toMatch(/do not confuse respect with restraint/i);
+    expect(WRITER_ROLE_BOUNDARY).toMatch(/teach while you guide/i);
+    expect(WRITER_ROLE_BOUNDARY).toMatch(/editorial courage never becomes hidden authorship/i);
     expect(WRITER_ROLE_BOUNDARY).toMatch(/only the creator authors the Work/i);
   });
 });

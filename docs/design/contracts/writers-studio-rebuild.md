@@ -20,7 +20,7 @@ distinct_to_room: three permanent regions — the Work’s own shape, the author
 screenshot_desktop: docs/design/contracts/screenshots/writers-studio-rebuild-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/writers-studio-rebuild-mobile.png
 experience_verification: >-
-  LOCAL BROWSER WALK, 2026-09-16, against the rebuilt route with controlled Chapter 10 fixture data shaped from the real Living Work topology. Desktop 1440x900 and mobile 390x844 in Google Chrome. Desktop verified three non-overlapping regions and the visible Review this chapter action. Mobile verified explicit Outline / Manuscript / MAIA navigation and return. REVISION COLLABORATION WITNESS, same route and desktop width: selected the exact sentence ‘To be human is to move through cycles.’ directly in section II, verified the persistent amber hold, visible passage scope, Suggest flow, MAIA response, Show changes, explicit Apply revision, and continuity address carrying both section and exact editorial thread. Manuscript scrollTop remained 0 before suggestion, after suggestion, and after apply; only the selected text changed and the neighboring section retained the original wording. Evidence capture: docs/design/contracts/screenshots/writers-studio-rebuild-revision-desktop.png. The real production manuscript was separately measured read-only: Chapter 10 is positions 198–221, 24 sections. No production mutation and no deploy occurred.
+  LOCAL BROWSER WALK, 2026-09-16, against the rebuilt route with controlled Chapter 10 fixture data shaped from the real Living Work topology. Desktop 1440x900 and mobile 390x844 in Google Chrome. Desktop verified three non-overlapping regions and the visible Review this chapter action. Mobile verified explicit Outline / Manuscript / MAIA navigation and return. REVISION COLLABORATION WITNESS: selected the exact sentence ‘To be human is to move through cycles.’ directly in section II, verified the persistent amber hold, visible passage scope, Suggest flow, MAIA response, Show changes, explicit Apply revision, and continuity address carrying both section and exact editorial thread. Manuscript scrollTop remained 0 before suggestion, after suggestion, and after apply; only the selected text changed and the neighboring section retained the original wording. NATIVE WRITING + PURE CANVAS WITNESS: typed directly in section II through the rebuilt manuscript surface, observed serialized saves advance the same draft v5→v6, entered Pure Canvas with no save or identity fork, continued writing to v7, returned with Escape to the same Workspace and exact body, then typed again and immediately asked MAIA. The witness proved the latest writing saved to v8 before the Focus request crossed to cognition. Mobile repeated the Pure Canvas transition and saved another line to v9; outline, MAIA, global header and mobile navigation were absent while expanded and returned intact with the same Work. Captures: writers-studio-rebuild-revision-desktop.png, writers-studio-rebuild-writing-desktop.png, writers-studio-rebuild-pure-canvas-desktop.png, writers-studio-rebuild-writing-mobile.png, writers-studio-rebuild-pure-canvas-mobile.png. The real production manuscript was separately measured read-only: Chapter 10 is positions 198–221, 24 sections. No production mutation had occurred during these local witnesses.
 ---
 
 # Writer’s Studio — Experience Rebuild
@@ -41,6 +41,9 @@ The room names the Work, its current authored place, and the current Focus befor
 |---|---|---|
 | Read the chapter as a whole | Review this chapter | Names the writer’s intent, not a model invocation |
 | Move into a section | Select the section or finding | Direct manipulation; no hidden mode change |
+| Write | Click into the Work and type | The manuscript stays the manuscript; persistence is quiet |
+| Remove distractions | Pure Canvas | The Work expands while the same writing session, Focus, and save queue remain |
+| Return from Pure Canvas | Workspace / Escape | One quiet way back; no mode reconstruction or lost place |
 | Work locally with MAIA | Interpret · Suggest · Explore · Ask | Writer verbs, all consuming the same Focus |
 | Compare language | Show changes | Reveals difference without changing the Work |
 | Change the manuscript | Apply revision | Explicit authority act on the visible passage |
@@ -53,6 +56,8 @@ The room names the Work, its current authored place, and the current Focus befor
 - exposing proposal-chain, thread, authorization, or database vocabulary to the writer
 - a permanent lower dashboard competing with the manuscript
 - fake findings or placeholder intelligence presented as MAIA output
+- ghostwriting that silently transfers authorship from creator to system
+- false deference that withholds useful critique, edits, direction, education, or craft guidance
 - treating chapters and sections as universal creative ontology rather than one Work form
 - chrome, motion, or ornament that competes with the Work instead of deepening presence
 - silently widening a section/passage act to the whole Work

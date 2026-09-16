@@ -153,7 +153,7 @@ export function scopeLabel(focus: StudioFocus): string {
 export function composerPrompt(focus: StudioFocus): string {
   if (focus.scope === 'passage') return 'Ask MAIA about this passage…';
   if (focus.scope === 'section') {
-    return focus.section?.depth === 2
+    return /^chapter\b/i.test(focus.section?.heading?.trim() ?? '')
       ? 'Ask MAIA about this chapter…'
       : 'Ask MAIA about this section…';
   }

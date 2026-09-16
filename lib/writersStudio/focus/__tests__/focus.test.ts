@@ -42,6 +42,11 @@ describe('scope is derived, visible, and never silently held', () => {
     expect(composerPrompt(f)).toBe('Ask MAIA about this passage…');
   });
 
+  it("uses the Work's explicit chapter language rather than treating depth as ontology", () => {
+    expect(composerPrompt(focusOn({ ...base, section: ch10 }))).toBe('Ask MAIA about this chapter…');
+    expect(composerPrompt(focusOn({ ...base, section: two }))).toBe('Ask MAIA about this section…');
+  });
+
   it('a selection without a section is dropped, not honoured', () => {
     const f = focusOn({ ...base, selection: { from: 0, to: 9, revisionNumber: 5 } });
     expect(f.selection).toBeNull();

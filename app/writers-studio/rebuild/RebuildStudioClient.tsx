@@ -7,6 +7,9 @@ import { ATMOSPHERES, atmosphereVariables } from '../atmosphere/atmospheres';
 import { SERIF, SANS } from '../studioTheme';
 import { useLivingWorks } from '../useLivingWorks';
 import { currentWork, resolveWorkContext } from '../workContext';
+import RebuildWritingBoundary from './RebuildWritingBoundary';
+import RebuildAuthoredBody from './RebuildAuthoredBody';
+import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterNodeFor, chapterSpanFor, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { OutlineNode } from '@/lib/writersStudio/focus/outlineTree';
 import { focusOn, focusRequest, composerPrompt } from '@/lib/writersStudio/focus/studioFocus';
@@ -116,6 +119,9 @@ export default function RebuildStudioClient() {
   const [message, setMessage] = useState<string | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [maiaMode, setMaiaMode] = useState<MaiaMode>('chapter');
+  const [canvasExpanded, setCanvasExpanded] = useState(false);
+  const [writingEpoch, setWritingEpoch] = useState(0);
+  const [writingMessage, setWritingMessage] = useState<string | null>(null);
   const [selectedPassage, setSelectedPassage] = useState<PassageSelection | null>(null);
   const [passageTab, setPassageTab] = useState<PassageTab>('ask');
   const [mobilePane, setMobilePane] = useState<'outline' | 'manuscript' | 'maia'>('manuscript');
@@ -138,6 +144,7 @@ export default function RebuildStudioClient() {
   const [relationshipChoices, setRelationshipChoices] = useState<readonly RebuildEditorialRelationship[]>([]);
   const [adoptionBusy, setAdoptionBusy] = useState(false);
   const sessionIdRef = useRef('');
+  const writingRef = useRef<SectionWriting | null>(null);
   const sectionRefs = useRef(new Map<string, HTMLElement>());
   const { phase: worksPhase, works } = useLivingWorks();
 
@@ -186,6 +193,15 @@ export default function RebuildStudioClient() {
 
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
+    if (!canvasExpanded) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setCanvasExpanded(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [canvasExpanded]);
+
+  useEffect(() => {
     if (!sessionIdRef.current && typeof crypto !== 'undefined') {
       sessionIdRef.current = `writers-studio-rebuild-${crypto.randomUUID()}`;
     }
@@ -216,8 +232,33 @@ export default function RebuildStudioClient() {
     return review.findings.filter((f) => f.sectionIds.some((id) => ids.has(id)));
   }, [review, chapter]);
 
+  const settleWriting = useCallback(async (): Promise<boolean> => {
+    const writing = writingRef.current;
+    if (!writing) return true;
+    setWritingMessage(null);
+    const blocked = () => writing.sections.some((section) => {
+      const status = writing.statusOf(section.id);
+      return status === 'conflict' || status === 'error';
+    });
+    if (blocked()) {
+      setWritingMessage('Your latest writing needs attention before MAIA reads or changes the Work. Nothing else was sent.');
+      return false;
+    }
+    writing.flushPending();
+    const deadline = Date.now() + 5000;
+    while (writing.hasUnsavedWork()) {
+      if (blocked() || Date.now() > deadline) {
+        setWritingMessage('Your latest writing is not safely settled yet. MAIA will wait rather than read an older copy.');
+        return false;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    return true;
+  }, []);
+
   const runReview = useCallback(async () => {
     if (!chapter || !context || reviewPhase === 'reading') return;
+    if (!(await settleWriting())) return;
     setReviewPhase('reading');
     setReviewProgress({ done: 0, total: 7, lens: 'development' });
     const bundle = await runChapterReview(context.manuscriptId, chapter.sections, (done, total, lens) => {
@@ -226,7 +267,7 @@ export default function RebuildStudioClient() {
     setReview(bundle);
     setReviewNeedsRefresh(false);
     setReviewPhase(bundle.failures.length === 0 ? 'ready' : 'partial');
-  }, [chapter, context, reviewPhase]);
+  }, [chapter, context, reviewPhase, settleWriting]);
 
   const replaceAddress = useCallback((sectionId: string, threadId: string | null) => {
     if (typeof window === 'undefined') return;
@@ -273,35 +314,38 @@ export default function RebuildStudioClient() {
     return () => { cancelled = true; };
   }, [requestedEditorialThread, focusId, focusSection, context?.version, replaceAddress]);
 
-  const capturePassageSelection = useCallback((
-    section: RebuildSection, element: HTMLDivElement,
+  const holdPassage = useCallback((
+    section: RebuildSection, start: number, end: number, exact: string,
   ) => {
-    if (!context || typeof window === 'undefined') return;
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
-    const range = selection.getRangeAt(0);
-    if (!element.contains(range.startContainer) || !element.contains(range.endContainer)) return;
-
-    const before = document.createRange();
-    before.selectNodeContents(element);
-    before.setEnd(range.startContainer, range.startOffset);
-    const start = [...before.toString()].length;
-    const selectedLength = [...range.toString()].length;
-    const end = start + selectedLength;
-    const exact = [...section.body].slice(start, end).join('');
-    if (!exact.trim()) return;
-
+    if (!context || !exact.trim()) return;
     const sameThread = editorialThread?.targetSectionId === section.draftSectionId
       && editorialThread.locusText === exact;
     if (!sameThread) clearEditorial();
     setFocusId(section.draftSectionId);
     setSelectedPassage({
       draftSectionId: section.draftSectionId, start, end, text: exact,
-      revisionNumber: context.version,
+      revisionNumber: writingRef.current?.currentRevisionId() ?? context.version,
     });
     setMaiaMode('passage');
     replaceAddress(section.draftSectionId, sameThread ? editorialThread?.threadId ?? null : null);
   }, [context, editorialThread, clearEditorial, replaceAddress]);
+
+  const focusWritingSection = useCallback((sectionId: string) => {
+    const moved = sectionId !== focusId;
+    if (moved) { clearEditorial(); setSelectedPassage(null); }
+    setFocusId(sectionId);
+    setMaiaMode('passage');
+    replaceAddress(sectionId, moved ? null : editorialThread?.threadId ?? null);
+  }, [focusId, clearEditorial, replaceAddress, editorialThread?.threadId]);
+
+  const beginWriting = useCallback((sectionId: string) => {
+    clearEditorial();
+    setSelectedPassage(null);
+    setFocusId(sectionId);
+    setMaiaMode('passage');
+    if (review) setReviewNeedsRefresh(true);
+    replaceAddress(sectionId, null);
+  }, [clearEditorial, review, replaceAddress]);
 
   const selectSection = useCallback((id: string, role: OutlineNode['role']) => {
     const moved = id !== focusId;
@@ -320,7 +364,6 @@ export default function RebuildStudioClient() {
   const chapterTitle = chapter?.root.heading ?? focusSection?.heading ?? 'Manuscript';
   const chapterName = labelWithoutPrefix(chapter?.root.heading ?? null);
   const focusName = focusSection?.heading ?? 'this section';
-  const chapterWords = chapter ? wordCount(chapter.sections) : 0;
   const counts = review ? lensCounts(review.findings) : {};
   const focusReviewFindings = focusSection && review ? findingsForSection(review.findings, focusSection.draftSectionId) : [];
   const passageReviewFindings = focusSection?.headingDepth === 2
@@ -358,6 +401,7 @@ export default function RebuildStudioClient() {
     if (!context || !work || !focusWire || !maiaAsk.trim() || maiaBusy) return;
     setMaiaBusy(true); setMaiaFailure(null);
     try {
+      if (!(await settleWriting())) return;
       const sessionId = sessionIdRef.current || `writers-studio-rebuild-${Date.now()}`;
       sessionIdRef.current = sessionId;
       const res = await apiFetch('/api/writers-studio/focus', {
@@ -386,14 +430,22 @@ export default function RebuildStudioClient() {
     } catch {
       setMaiaFailure('MAIA could not be reached just now. Nothing in the manuscript changed.');
     } finally { setMaiaBusy(false); }
-  }, [context, work, focusWire, maiaAsk, maiaBusy]);
+  }, [context, work, focusWire, maiaAsk, maiaBusy, settleWriting]);
 
   const bindEditorialThread = useCallback((thread: RebuildEditorialThread): boolean => {
     if (!focusId || thread.targetSectionId !== focusId) {
       setEditorialFailure('This revision conversation is bound to a different place in the Work, so it cannot open here.');
       return false;
     }
-    setSelectedPassage(selectionFromThread(focusSection, context?.version ?? null, thread));
+    const live = focusSection ? {
+      ...focusSection,
+      body: writingRef.current?.bodyOf(focusSection.draftSectionId) ?? focusSection.body,
+    } : null;
+    setSelectedPassage(selectionFromThread(
+      live,
+      writingRef.current?.currentRevisionId() ?? context?.version ?? null,
+      thread,
+    ));
     setEditorialThread(thread);
     setRelationshipChoices([]);
     setSuggestedVersionId(thread.headVersionId);
@@ -415,10 +467,12 @@ export default function RebuildStudioClient() {
 
   const startNewEditorial = useCallback(async (): Promise<RebuildEditorialThread | null> => {
     if (!focusId || !context) return null;
+    if (!(await settleWriting())) return null;
     const passage = selectedPassage?.draftSectionId === focusId ? selectedPassage : null;
+    const revision = writingRef.current?.currentRevisionId() ?? passage?.revisionNumber ?? context.version;
     const opened = passage
       ? await openBoundEditorialPassage(
-          focusId, { start: passage.start, end: passage.end }, passage.revisionNumber,
+          focusId, { start: passage.start, end: passage.end }, revision,
         )
       : await openBoundEditorialThread(focusId);
     if (!opened.ok) {
@@ -433,12 +487,13 @@ export default function RebuildStudioClient() {
       return null;
     }
     return bindEditorialThread(opened.thread) ? opened.thread : null;
-  }, [focusId, context, selectedPassage, bindEditorialThread]);
+  }, [focusId, context, selectedPassage, bindEditorialThread, settleWriting]);
 
   const resolveEditorialForAct = useCallback(async (): Promise<RebuildEditorialThread | null> => {
     if (!focusId || !focusSection) return null;
     const desiredLocus = selectedPassage?.draftSectionId === focusId
-      ? selectedPassage.text : focusSection.body;
+      ? selectedPassage.text
+      : (writingRef.current?.bodyOf(focusSection.draftSectionId) ?? focusSection.body);
     if (editorialThread?.targetSectionId === focusId
         && editorialThread.locusText === desiredLocus) return editorialThread;
 
@@ -467,6 +522,7 @@ export default function RebuildStudioClient() {
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
     const exactWords = editorialDraft;
     try {
+      if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
       const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords);
@@ -484,7 +540,7 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread]);
+  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -505,6 +561,7 @@ export default function RebuildStudioClient() {
     if (!focusId || !editorialThread || !suggestedVersion || adoptionBusy) return;
     setAdoptionBusy(true); setEditorialFailure(null);
     try {
+      if (!(await settleWriting())) return;
       const out = await adoptBoundEditorialVersion(
         editorialThread.threadId, focusId, suggestedVersion.id,
       );
@@ -517,6 +574,7 @@ export default function RebuildStudioClient() {
         if (review) setReviewNeedsRefresh(true);
         const fresh = await refreshContext();
         if (out.outcome.kind === 'applied' && fresh) {
+          setWritingEpoch((n) => n + 1);
           const section = fresh.sections.find((x) => x.draftSectionId === focusId) ?? null;
           const located = section ? locateUniquePassage(section.body, suggestedVersion.wording) : null;
           setSelectedPassage(section && located ? {
@@ -531,7 +589,7 @@ export default function RebuildStudioClient() {
     } finally {
       setAdoptionBusy(false);
     }
-  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext]);
+  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting]);
 
   const tryAnother = useCallback(() => {
     setPassageTab('suggest');
@@ -563,8 +621,28 @@ export default function RebuildStudioClient() {
   }
 
   return (
-    <main style={{ ...cloud, height: '100vh', overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
-      <header className="wsr-header" style={{ height: 58, display: 'grid', gridTemplateColumns: '300px 1fr 300px', alignItems: 'center', padding: '0 20px', borderBottom: `1px solid ${C.soft}`, background: C.field }}>
+    <RebuildWritingBoundary
+      key={`${context.manuscriptId}:${writingEpoch}`}
+      manuscriptId={context.manuscriptId}
+      version={context.version}
+      sections={context.sections}
+      initialSectionId={focusId}
+      epoch={writingEpoch}
+    >
+      {(writing) => {
+        writingRef.current = writing;
+        const liveChapterSections = (chapter?.sections ?? []).map((section) => ({
+          ...section, body: writing.bodyOf(section.draftSectionId),
+        }));
+        const liveChapterWords = wordCount(liveChapterSections);
+        const statuses = liveChapterSections.map((section) => writing.statusOf(section.draftSectionId));
+        const saveState = statuses.includes('conflict') ? 'Needs attention'
+          : statuses.includes('error') ? 'Save unavailable'
+            : statuses.includes('dirty') ? 'Unsaved'
+              : statuses.includes('saving') ? 'Saving…' : null;
+        return (
+    <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} style={{ ...cloud, height: '100vh', overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
+      {!canvasExpanded && (<header className="wsr-header" style={{ height: 58, display: 'grid', gridTemplateColumns: '300px 1fr 300px', alignItems: 'center', padding: '0 20px', borderBottom: `1px solid ${C.soft}`, background: C.field }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <strong style={{ letterSpacing: '.18em', fontSize: 13 }}>SOULLAB</strong>
           <span style={{ color: C.quiet, fontSize: 13 }}>|</span>
@@ -576,10 +654,15 @@ export default function RebuildStudioClient() {
           ))}
         </nav>
         <div className="wsr-preview" style={{ textAlign: 'right', fontSize: 12, color: C.muted }}>Rebuild preview</div>
-      </header>
+      </header>)}
+      {canvasExpanded && (
+        <button type="button" className="wsr-return-workspace" onClick={() => setCanvasExpanded(false)} title="Return to workspace">
+          Workspace
+        </button>
+      )}
 
-      <div className="wsr-grid" style={{ height: 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: '286px minmax(520px, 1fr) 390px' }}>
-        <aside className={`wsr-outline ${mobilePane !== 'outline' ? 'wsr-mobile-hidden' : ''}`} style={{ borderRight: `1px solid ${C.soft}`, background: C.panel, overflowY: 'auto', padding: 16 }}>
+      <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : '286px minmax(520px, 1fr) 390px' }}>
+        {!canvasExpanded && (<aside className={`wsr-outline ${mobilePane !== 'outline' ? 'wsr-mobile-hidden' : ''}`} style={{ borderRight: `1px solid ${C.soft}`, background: C.panel, overflowY: 'auto', padding: 16 }}>
           <button type="button" style={{ border: 0, background: 'transparent', color: C.muted, fontSize: 12, padding: '3px 2px 15px', cursor: 'pointer' }}>‹ All Works</button>
           <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 14, marginBottom: 18 }}>
             <div style={{ fontFamily: SERIF, fontSize: 17, marginBottom: 4 }}>{title}</div>
@@ -598,27 +681,33 @@ export default function RebuildStudioClient() {
           <div style={{ display: 'grid', gap: 1 }}>
             {tree.map((node) => <OutlineBranch key={node.draftSectionId} node={node} focusId={focusId} chapterId={chapterNode?.draftSectionId ?? null} onSelect={selectSection} />)}
           </div>
-        </aside>
+        </aside>)}
 
-        <section className={`wsr-manuscript ${mobilePane !== 'manuscript' ? 'wsr-mobile-hidden' : ''}`} style={{ background: C.field, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '10px 24px', borderBottom: `1px solid ${C.soft}` }}>
+        <section className={canvasExpanded ? 'wsr-manuscript wsr-pure-manuscript' : `wsr-manuscript ${mobilePane !== 'manuscript' ? 'wsr-mobile-hidden' : ''}`} style={{ background: C.field, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          {!canvasExpanded && (<div style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '10px 24px', borderBottom: `1px solid ${C.soft}` }}>
             <div style={{ minWidth: 0, fontSize: 12.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <strong style={{ color: C.secondary, fontWeight: 600 }}>{title}</strong>
               <span style={{ padding: '0 7px', color: C.quiet }}>/</span>{chapterTitle}
             </div>
-            <button type="button" onClick={() => setMaiaMode(maiaMode === 'chapter' ? 'passage' : 'chapter')}
-              style={{ flexShrink: 0, border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: '8px 12px', color: C.secondary, fontSize: 11.5, cursor: 'pointer' }}>
-              {maiaMode === 'chapter' ? `▣ Reviewing entire chapter` : selectedPassage ? `◎ Focused passage · ${focusName}` : `◎ Focused section · ${focusName}`}&nbsp;⌄
-            </button>
-          </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+              <button type="button" onClick={() => setMaiaMode(maiaMode === 'chapter' ? 'passage' : 'chapter')}
+                style={{ border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: '8px 12px', color: C.secondary, fontSize: 11.5, cursor: 'pointer' }}>
+                {maiaMode === 'chapter' ? `▣ Reviewing entire chapter` : selectedPassage ? `◎ Focused passage · ${focusName}` : `◎ Focused section · ${focusName}`}&nbsp;⌄
+              </button>
+              <button type="button" data-pure-canvas-toggle aria-label="Open Pure Canvas" title="Pure Canvas" onClick={() => setCanvasExpanded(true)}
+                style={{ border: 0, background: 'transparent', color: C.quiet, padding: '7px 5px', fontSize: 16, lineHeight: 1, cursor: 'pointer', opacity: .58 }}>
+                ↗
+              </button>
+            </div>
+          </div>)}
 
-          <div data-manuscript-scroll style={{ flex: 1, overflowY: 'auto', padding: '48px clamp(34px, 7vw, 100px) 90px' }}>
-            <article style={{ maxWidth: 760, margin: '0 auto', fontFamily: SERIF }}>
+          <div data-manuscript-scroll className={canvasExpanded ? 'wsr-pure-scroll' : undefined} style={{ flex: 1, overflowY: 'auto', padding: canvasExpanded ? '72px clamp(40px, 14vw, 220px) 120px' : '48px clamp(34px, 7vw, 100px) 90px' }}>
+            <article style={{ maxWidth: canvasExpanded ? 840 : 760, margin: '0 auto', fontFamily: SERIF }}>
               <div style={{ color: C.gold, fontFamily: SANS, fontSize: 10.5, letterSpacing: '.16em', fontWeight: 700, marginBottom: 9 }}>CHAPTER {chapter?.root.heading?.match(/Chapter\s+(\d+)/i)?.[1] ?? ''}</div>
               <h1 style={{ fontSize: 'clamp(34px, 4vw, 56px)', lineHeight: 1.05, fontWeight: 420, margin: '0 0 14px' }}>{chapterName}</h1>
               <div style={{ height: 1, background: C.soft, marginBottom: 28 }} />
 
-              {maiaMode === 'chapter' && (
+              {maiaMode === 'chapter' && !canvasExpanded && (
                 <div style={{ border: `1px solid ${C.soft}`, background: C.panel, borderRadius: 12, padding: '13px 15px', marginBottom: 34, fontFamily: SANS, display: 'flex', justifyContent: 'space-between', gap: 20 }}>
                   <div><strong style={{ fontSize: 12.5 }}>Full chapter in review</strong><div style={{ fontSize: 11.5, color: C.muted, marginTop: 3 }}>MAIA will read positions {chapter?.sections[0]?.position}–{chapter?.sections.at(-1)?.position}. Select any section to work there directly.</div></div>
                   <span style={{ color: C.gold, fontSize: 12, whiteSpace: 'nowrap' }}>{chapter?.sections.length ?? 0} sections</span>
@@ -626,11 +715,11 @@ export default function RebuildStudioClient() {
               )}
 
               {(chapter?.sections ?? [focusSection].filter(Boolean) as RebuildSection[]).map((section) => {
-                const focused = section.draftSectionId === focusId && maiaMode === 'passage';
+                const focused = !canvasExpanded && section.draftSectionId === focusId && maiaMode === 'passage';
                 const isRoot = section.draftSectionId === chapter?.root.draftSectionId;
                 const held = selectedPassage?.draftSectionId === section.draftSectionId
                   ? selectedPassage : null;
-                const points = held ? [...section.body] : null;
+                const liveBody = writing.bodyOf(section.draftSectionId);
                 return (
                   <section key={section.draftSectionId}
                     ref={(el) => { if (el) sectionRefs.current.set(section.draftSectionId, el); else sectionRefs.current.delete(section.draftSectionId); }}
@@ -639,34 +728,32 @@ export default function RebuildStudioClient() {
                     {!isRoot && section.heading && (
                       <h2 style={{ fontSize: section.headingDepth === 2 ? 24 : 18, lineHeight: 1.2, fontWeight: 480, margin: '0 0 14px', color: C.ink }}>{section.heading}</h2>
                     )}
-                    <div
-                      data-authored-body={section.draftSectionId}
-                      data-held-passage={held ? 'true' : undefined}
-                      onMouseUp={(event) => capturePassageSelection(section, event.currentTarget)}
-                      style={{ fontSize: 17.5, lineHeight: 1.74, color: C.ink, whiteSpace: 'pre-wrap', cursor: 'text' }}
-                    >
-                      {held && points ? (
-                        <>
-                          {points.slice(0, held.start).join('')}
-                          <mark style={{ background: 'color-mix(in srgb, var(--ws-gold-fill, #CDBD91) 58%, transparent)', color: 'inherit', borderRadius: 3, padding: '2px 0', boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone' }}>
-                            {points.slice(held.start, held.end).join('')}
-                          </mark>
-                          {points.slice(held.end).join('')}
-                        </>
-                      ) : section.body}
-                    </div>
+                    <RebuildAuthoredBody
+                      section={section}
+                      body={liveBody}
+                      held={held ? { start: held.start, end: held.end } : null}
+                      onEdit={(body) => writing.editSection(section.draftSectionId, body)}
+                      onEditingBegan={() => beginWriting(section.draftSectionId)}
+                      onFocusPlace={() => focusWritingSection(section.draftSectionId)}
+                      onCaptureBeforeBlur={(body) => writing.captureForUnmount(section.draftSectionId, body)}
+                      onSelectPassage={(start, end, text) => holdPassage(section, start, end, text)}
+                    />
                   </section>
                 );
               })}
             </article>
           </div>
-          <footer style={{ height: 44, borderTop: `1px solid ${C.soft}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', fontSize: 11.5, color: C.muted }}>
-            <span>{chapterWords.toLocaleString()} words · draft v{context.version}</span>
-            <span>✦ Ask MAIA &nbsp;&nbsp; Aa⌄ &nbsp;&nbsp; ☷</span>
-          </footer>
+          {!canvasExpanded ? (
+            <footer style={{ height: 44, borderTop: `1px solid ${C.soft}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', fontSize: 11.5, color: C.muted }}>
+              <span>{liveChapterWords.toLocaleString()} words · draft v{writing.currentRevisionId()}{saveState ? ` · ${saveState}` : ''}</span>
+              <span>✦ Ask MAIA &nbsp;&nbsp; Aa⌄ &nbsp;&nbsp; ☷</span>
+            </footer>
+          ) : saveState ? (
+            <div className="wsr-pure-save-state" role="status">{saveState}</div>
+          ) : null}
         </section>
 
-        <aside className={`wsr-maia ${mobilePane !== 'maia' ? 'wsr-mobile-hidden' : ''}`} style={{ borderLeft: `1px solid ${C.soft}`, background: C.panel, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {!canvasExpanded && (<aside className={`wsr-maia ${mobilePane !== 'maia' ? 'wsr-mobile-hidden' : ''}`} style={{ borderLeft: `1px solid ${C.soft}`, background: C.panel, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '18px 18px 14px', borderBottom: `1px solid ${C.soft}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div><div style={{ fontFamily: SERIF, fontSize: 19 }}>✦ MAIA</div><div style={{ color: C.muted, fontSize: 11.5, marginTop: 2 }}>In relation to: <strong style={{ color: C.secondary }}>{work?.title ?? title}</strong></div></div>
@@ -869,14 +956,18 @@ export default function RebuildStudioClient() {
               </div>
             )}
           </div>
-        </aside>
+        </aside>)}
       </div>
 
-      <div className="wsr-mobile-nav">
+      {!canvasExpanded && (<div className="wsr-mobile-nav">
         <button type="button" onClick={() => setMobilePane('outline')} data-active={mobilePane === 'outline'}>Outline</button>
         <button type="button" onClick={() => setMobilePane('manuscript')} data-active={mobilePane === 'manuscript'}>Manuscript</button>
         <button type="button" onClick={() => setMobilePane('maia')} data-active={mobilePane === 'maia'}>MAIA</button>
-      </div>
+      </div>)}
+      {writingMessage && <div className="wsr-writing-alert" role="status">{writingMessage}</div>}
     </main>
+        );
+      }}
+    </RebuildWritingBoundary>
   );
 }
