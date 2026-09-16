@@ -5,6 +5,7 @@ const read = (rel: string) => readFileSync(join(process.cwd(), 'app/writers-stud
 
 const page = read('develop/page.tsx');
 const room = read('develop/DevelopRoom.tsx');
+const executableRoom = room.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const manuscript = read('develop/DevelopManuscript.tsx');
 const canvas = read('canvas/CanvasClient.tsx');
 
@@ -21,6 +22,13 @@ describe('D3 · Develop is the manuscript seen developmentally', () => {
     expect(room).not.toContain('Part I ›');
   });
 
+
+  it('reads the manuscript from the same rebuild context as Write', () => {
+    expect(room).toContain('/api/writers-studio/rebuild/context?manuscriptId=');
+    expect(executableRoom).not.toContain('fetchWriteState');
+    expect(executableRoom).not.toContain('/write-state');
+    expect(room).toContain("manuscriptPhase === 'error'");
+  });
   it('puts the manuscript in the centre and intelligence beside it', () => {
     expect(room).toContain('data-develop-centre="manuscript"');
     expect(room).toContain('data-develop-intelligence');
@@ -90,7 +98,8 @@ describe('D4 · human-scale developmental scope and lens disclosure', () => {
   it('resolves Chapter from the same structural context Write uses', () => {
     expect(room).toContain('/api/writers-studio/rebuild/context?manuscriptId=');
     expect(room).toContain('chapterSpanFor(structuredSections, placeId)');
-    expect(room).toContain('structureAligned');
+    expect(executableRoom).not.toContain('structureAligned');
+    expect(room).toContain('const rebuilt = body.sections as RebuildSection[]');
   });
 
   it('foregrounds four common lenses without hiding the complete vocabulary', () => {
