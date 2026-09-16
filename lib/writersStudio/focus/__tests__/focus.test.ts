@@ -77,7 +77,7 @@ describe('scope is derived, visible, and never silently held', () => {
     expect(scopeLabel(focusOn({ ...base, section: ch10 }))).toBe('Reviewing entire chapter');
     expect(scopeLabel(focusOn({
       ...base, section: two, selection: { from: 0, to: 9, revisionNumber: 5 },
-    }))).toBe('Focused section: II. Finding Our Place');
+    }))).toBe('Focused passage in: II. Finding Our Place');
   });
 });
 

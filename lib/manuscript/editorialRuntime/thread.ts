@@ -21,6 +21,7 @@
 
 import { query, transaction } from '@/lib/db/postgres';
 import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
+import { projectEditorialSelection, type EditorialSelectionRange } from './selection';
 import { locusIsAdoptable } from '../proposalChain/legacyLocus';
 import { openChainWithExecutor } from '../proposalChain/store';
 import { readProposalWork } from '../proposalChain/proposalWork';
@@ -35,6 +36,13 @@ export interface OpenEditorialInput {
    * never accepted, for the same reason the turn route refuses a `chainId`.
    */
   readonly sectionId: string;
+}
+
+export interface OpenEditorialSelectionInput extends OpenEditorialInput {
+  /** Unicode code points inside the projected section body. Prose never travels. */
+  readonly range: EditorialSelectionRange;
+  /** The draft version the browser selected against. Used only to refuse stale coordinates. */
+  readonly revisionNumber: number;
 }
 
 /**
@@ -58,6 +66,9 @@ export type OpenEditorialRefusal =
   | 'section_not_found'
   | 'section_unprojectable'
   | 'section_has_no_body'
+  | 'selection_stale'
+  | 'selection_invalid'
+  | 'selection_ambiguous'
   | 'chain_refused';
 
 export type OpenEditorialResult =
@@ -72,18 +83,36 @@ export type OpenEditorialResult =
 export async function openEditorialRelationship(
   input: OpenEditorialInput,
 ): Promise<OpenEditorialResult> {
+  return openEditorialRelationshipResolved(input, null);
+}
+
+/**
+ * Rebuild-only passage door. The member names coordinates, never manuscript
+ * prose. The server rereads the section under ownership, verifies that the
+ * draft has not advanced since selection, derives the exact characters, and
+ * opens the same governed chain/thread pair the section door opens.
+ */
+export async function openEditorialRelationshipAtSelection(
+  input: OpenEditorialSelectionInput,
+): Promise<OpenEditorialResult> {
+  return openEditorialRelationshipResolved(input, {
+    range: input.range, revisionNumber: input.revisionNumber,
+  });
+}
+
+async function openEditorialRelationshipResolved(
+  input: OpenEditorialInput,
+  selection: { readonly range: EditorialSelectionRange; readonly revisionNumber: number } | null,
+): Promise<OpenEditorialResult> {
   const memberId = input.identity.memberId;
   try {
     return await transaction(async (tx) => {
-      /* ⭐ THE LOCUS, DERIVED — and scoped to this member in the SQL. */
-      /* ⭐ EDITORIAL-LOCUS-ALIGNMENT-01 · PHASE B — the heading joins the read.
-         ⛔ It is not wanted for display; it is the only way to PROJECT, and this
-         statement had no access to it before. */
       const s = await tx.query<{
-        draft_id: string; manuscript_id: string; revision_count: number;
+        draft_id: string; manuscript_id: string; revision_count: number; draft_version: string;
         text: string; heading: string | null;
       }>(
-        `SELECT s.draft_id, d.manuscript_id, d.revision_count, s.text, ms.heading
+        `SELECT s.draft_id, d.manuscript_id, d.revision_count, d.version AS draft_version,
+                s.text, ms.heading
            FROM manuscript_draft_sections s
            JOIN manuscript_working_drafts d ON d.id = s.draft_id
            LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
@@ -92,14 +121,24 @@ export async function openEditorialRelationship(
       if (s.rows.length === 0) throw new OpenRefused('section_not_found');
       const row = s.rows[0]!;
 
-      /* ⭐⭐ THE PROJECTION, THROUGH THE ONE AUTHORITY THAT OWNS IT.
-         ⛔ No heading is stripped by assumption here, and no prefix is guessed:
-         `splitStoredSection` is the single definition of what the member's
-         editable body is, and it is the same function the writing surface, the
-         section writer and all three authorization reads already use. */
       const split = splitStoredSection(row.text, row.heading);
       if (!split) throw new OpenRefused('section_unprojectable');
       if (split.body.length === 0) throw new OpenRefused('section_has_no_body');
+
+      let expectedText = split.body;
+      if (selection) {
+        if (!Number.isInteger(selection.revisionNumber)
+            || Number(row.draft_version) !== selection.revisionNumber) {
+          throw new OpenRefused('selection_stale');
+        }
+        const projected = projectEditorialSelection(split.body, selection.range);
+        if (!projected.ok) {
+          const reason = projected.reason === 'selection_ambiguous'
+            ? 'selection_ambiguous' : 'selection_invalid';
+          throw new OpenRefused(reason);
+        }
+        expectedText = projected.text;
+      }
 
       const chain = await openChainWithExecutor(tx, memberId, {
         locus: {
@@ -107,41 +146,17 @@ export async function openEditorialRelationship(
           draftId: row.draft_id,
           baseVersion: Number(row.revision_count),
           targetSectionId: input.sectionId,
-          /* ⭐⭐ THE PROJECTED PASSAGE — the writer's own wording as it stands
-             right now, in the coordinate space every consumer reads.
-
-             ⚠️ IT WAS `row.text`, THE STORED SLICE, AND THAT WAS THE DEFECT.
-             `ProposalLocus.expectedText` is defined as *the exact characters
-             this chain may replace, required to occur exactly once at the
-             target*, and all six consumers compute that against
-             `splitStoredSection(...).body`. With no heading the two coincide,
-             which is why it passed every test for as long as it did; with a
-             heading `occurrences` was 0 and the member was told she had written
-             there since — ⛔ about a passage she had not touched.
-
-             ⛔ Nothing downstream moved to accommodate this. The consumers, the
-             `projected_section_body` coordinate space and `stale_base` are all
-             unchanged: this is the one producer being brought to the contract
-             it was already writing into. */
-          expectedText: split.body,
+          expectedText,
         },
       });
 
-      /* ⛔ ANCHOR NULL + CHAIN. The subject XOR makes any other pairing
-         unrepresentable, so this shape is the schema's own definition of an
-         editorial thread rather than a convention. */
       const t = await tx.query<{ id: string }>(
         `INSERT INTO ask_threads
            (manuscript_id, member_id, anchor, reading_identity,
             canonical_at_open, initiated_by, proposal_chain_id)
          VALUES ($1, $2, NULL, NULL, $3, 'author', $4)
          RETURNING id`,
-        [row.manuscript_id, memberId,
-         /* ⭐ The BEFORE of this conversation's own before/after assertion:
-            which draft, at which revision, the locus was taken against.
-            ⛔ Not invented — both halves are read above. */
-         `draft:${row.draft_id}@${row.revision_count}`,
-         chain.id]);
+        [row.manuscript_id, memberId, `draft:${row.draft_id}@${row.revision_count}`, chain.id]);
 
       return { ok: true as const, threadId: t.rows[0]!.id, chainId: chain.id };
     });

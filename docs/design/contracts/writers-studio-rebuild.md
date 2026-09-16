@@ -1,6 +1,6 @@
 ---
 room: Writer’s Studio — Experience Rebuild
-human_activity: writing a book with MAIA present at the same visible chapter, section, or passage
+human_activity: inhabiting a creative work with MAIA present at the same visible movement, section, scene, passage, stanza, lyric, or other authored locus
 surfaces:
   - app/writers-studio/rebuild/**
 change_class: experiential
@@ -16,24 +16,24 @@ reference_surfaces:
   - docs/design/contracts/writer-worktable-section-native.md
   - docs/design/contracts/studio-home.md
 shared_with_house: Soullab atmosphere tokens · Press serif for the writer’s work · restrained gold as state and action · human-language gestures · the Writer’s Studio mode bar
-distinct_to_room: three permanent regions — book outline, manuscript, MAIA — organized around one canonical Focus. Chapter Review and Passage Work are two grains of one relationship, never separate conversation products. The visible manuscript place and MAIA’s subject must be the same place.
+distinct_to_room: three permanent regions — the Work’s own shape, the authored material, and MAIA — organized around one canonical Focus. The current Elemental Alchemy slice renders book language because this Work is a book; the shell may not make book structure the ontology of every creative form. Review and local work are two grains of one relationship, never separate conversation products. The visible authored place and MAIA’s subject must be the same place.
 screenshot_desktop: docs/design/contracts/screenshots/writers-studio-rebuild-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/writers-studio-rebuild-mobile.png
 experience_verification: >-
-  LOCAL BROWSER WALK, 2026-09-16, against the rebuilt route with controlled Chapter 10 fixture data shaped from the real Living Work topology. Desktop 1440x900 and mobile 390x844 in Google Chrome. Desktop verified three non-overlapping regions and the visible Review this chapter action. Mobile verified explicit Outline / Manuscript / MAIA navigation and return. The real production manuscript was separately measured read-only: Chapter 10 is positions 198–221, 24 sections. No production mutation and no deploy occurred.
+  LOCAL BROWSER WALK, 2026-09-16, against the rebuilt route with controlled Chapter 10 fixture data shaped from the real Living Work topology. Desktop 1440x900 and mobile 390x844 in Google Chrome. Desktop verified three non-overlapping regions and the visible Review this chapter action. Mobile verified explicit Outline / Manuscript / MAIA navigation and return. REVISION COLLABORATION WITNESS, same route and desktop width: selected the exact sentence ‘To be human is to move through cycles.’ directly in section II, verified the persistent amber hold, visible passage scope, Suggest flow, MAIA response, Show changes, explicit Apply revision, and continuity address carrying both section and exact editorial thread. Manuscript scrollTop remained 0 before suggestion, after suggestion, and after apply; only the selected text changed and the neighboring section retained the original wording. Evidence capture: docs/design/contracts/screenshots/writers-studio-rebuild-revision-desktop.png. The real production manuscript was separately measured read-only: Chapter 10 is positions 198–221, 24 sections. No production mutation and no deploy occurred.
 ---
 
 # Writer’s Studio — Experience Rebuild
 
 ## What this room is for
 
-The writer comes here to stay inside the book while MAIA reads and works beside it. The primary activity is not managing Studio machinery; it is writing, reviewing a chapter, choosing a section, and developing exact language without losing place.
+The creator comes here to stay inside the Work while MAIA reads and works beside it. The primary activity is not managing Studio machinery; it is entering deep creative presence, sensing the Work as a living whole, moving directly to the part that calls for attention, and developing exact language without losing place. The room must support the structures of nonfiction, fiction, poetry, memoir, plays, screenplays, songs, lyrics and other authored forms without forcing them into book vocabulary.
 
 ## Arrival
 
-> **You are in your book. MAIA is here with you.**
+> **You are inside the Work. MAIA is here with you.**
 
-The room names the Work, the current chapter, and the current Focus before any MAIA act. The outline is book-shaped rather than a numbered database list. Scope is visible and adjustable; it never changes silently.
+The room names the Work, its current authored place, and the current Focus before any MAIA act. Navigation follows the Work’s own form — chapter, scene, act, movement, stanza, sequence, song section, or another member-authored shape — rather than a numbered database list. Scope is visible and adjustable; it never changes silently.
 
 ## Gestures
 
@@ -53,10 +53,31 @@ The room names the Work, the current chapter, and the current Focus before any M
 - exposing proposal-chain, thread, authorization, or database vocabulary to the writer
 - a permanent lower dashboard competing with the manuscript
 - fake findings or placeholder intelligence presented as MAIA output
+- treating chapters and sections as universal creative ontology rather than one Work form
+- chrome, motion, or ornament that competes with the Work instead of deepening presence
 - silently widening a section/passage act to the whole Work
 
 ## The two brand tests
 
 **Same house?** Yes. The rebuild keeps Soullab’s atmosphere system, Writer’s Studio mode language, Press/manuscript typography, restrained accent law, and member-first authority model.
 
-**Distinct room?** Yes. This is the place where a writer inhabits a book with MAIA continuously present. The manuscript remains primary; MAIA’s review, interpretation, suggestions, and revision tools unfold beside the exact material being worked on rather than replacing it.
+**Distinct room?** Yes. This is the place where a creator inhabits a Work with MAIA continuously present. The authored material remains primary; MAIA’s review, interpretation, suggestions, and revision tools unfold beside the exact material being worked on rather than replacing it. The emotional standard is quiet wonder: generous space, beautiful typography, restrained atmosphere, and enough stillness that the creator notices the Work more deeply rather than noticing the software.
+
+## Extensibility without dilution
+
+The Studio may appear inside classrooms, workshops, cohorts, retreats, coaching practices, schools, and other creative communities. Those contexts wrap the creative room; they do not redefine it.
+
+- **Atmospheres** support state and presence. They are chosen, never inferred, and may vary by creator or host.
+- **Classrooms and workshops** may hold prompts, schedules, shared readings, facilitator notes, invitations, and group moments. A participant’s writing relationship with MAIA remains individually centered and private unless they explicitly share work.
+- **Host branding / white-label presentation** may change the outer identity of a hosted space — name, logo, welcome copy, palette, selected atmospheres — without changing MAIA’s constitutional behavior, authorship safeguards, memory boundaries, provenance, or member ownership.
+- **Creative form remains native.** A workshop for poets does not inherit chapter language; a screenplay room does not inherit prose assumptions; a songwriting room does not become a document editor with different labels.
+
+The expansion test is simple: if adding a host, cohort, theme, or brand makes the creator more aware of the software than of the Work, the extension has gone too far.
+
+## The writer’s-guide ethic
+
+MAIA’s purpose here is not to make the writer sound more like MAIA or more statistically fluent. She should help the creator become more fully themselves on the page while making the Work more effective on its own terms.
+
+“Better writing” is therefore evaluated in relation to the creator’s own voice, intention, form, audience, desired effect, and the Work’s established character. Guidance may sharpen craft, clarity, structure, rhythm, dramatic movement, imagery, coherence, accessibility, or reader experience, but it must not silently homogenize style.
+
+The Studio should preserve the conditions in which a person can feel witnessed by their own Work: deep attention, privacy, continuity, authorship, and enough quiet that the act of creating remains human.

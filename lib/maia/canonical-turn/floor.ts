@@ -14,12 +14,16 @@ import {
   MEMORY_SPEECH_ACT_BOUNDARY,
   PLATFORM_KNOWLEDGE_BOUNDARY,
 } from '../../sovereign/maiaVoice';
-import type { ConstitutionalFloor, FloorBlock } from './types';
+import type { ConstitutionalFloor, FloorBlock, RoomKind } from './types';
+import { WRITER_ROLE_BOUNDARY } from '@/lib/writers-studio/writerRoleBoundary';
 
 /** Order is constitutional: runtime prompt FIRST; the three standing guardrails LAST, humility last of all. */
-export function composeConstitutionalFloor(): ConstitutionalFloor {
+export function composeConstitutionalFloor(room?: RoomKind): ConstitutionalFloor {
   const blocks: FloorBlock[] = [
     { producerId: 'floor.runtime_prompt', position: 'first', text: MAIA_RUNTIME_PROMPT },
+    ...(room === 'writers_studio'
+      ? [{ producerId: 'floor.writer_role_boundary' as const, position: 'first' as const, text: WRITER_ROLE_BOUNDARY }]
+      : []),
     { producerId: 'floor.speech_act_boundary', position: 'last', text: MEMORY_SPEECH_ACT_BOUNDARY },
     { producerId: 'house.platform_knowledge', position: 'last', text: PLATFORM_KNOWLEDGE_ADDENDUM },
     { producerId: 'floor.platform_boundary', position: 'last', text: PLATFORM_KNOWLEDGE_BOUNDARY },

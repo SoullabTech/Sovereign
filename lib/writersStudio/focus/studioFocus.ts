@@ -143,7 +143,7 @@ export function scopeLabel(focus: StudioFocus): string {
     if (/^chapter\b/i.test(focus.section?.heading?.trim() ?? '')) return 'Reviewing entire chapter';
     return name ? `Reviewing section: ${name}` : 'Reviewing this section';
   }
-  return name ? `Focused section: ${name}` : 'Focused passage';
+  return name ? `Focused passage in: ${name}` : 'Focused passage';
 }
 
 /**
