@@ -1,0 +1,144 @@
+[
+  {
+    "id": "successful-recall",
+    "claims": [
+      {
+        "claimId": "e0cf6cff9956ba95300b2cae3c0e15257d7bac58f112da4cd626e9d1fd14bfba",
+        "turnId": "fixture:successful-recall",
+        "startChar": 0,
+        "endChar": 78,
+        "exactTextHash": "2508f2ac267898d2aff80478412f6413b120ea11ef504bd09a9bcf5bbff0a8ef",
+        "text": "That phrase came up in an earlier exchange — you were talking about the image.",
+        "kind": "assertion",
+        "segmentationStatus": "composite"
+      },
+      {
+        "claimId": "1fb3f551b2b03740743b3c5c6d0577af4985a03ac2aff19eb45b3d55d7d6d6ea",
+        "turnId": "fixture:successful-recall",
+        "startChar": 79,
+        "endChar": 100,
+        "exactTextHash": "263cb74c456f1c974b199d4fc9db2d0e9b128f111128523fa8eee1b9272e5119",
+        "text": "Here's what you said:",
+        "kind": "fragment",
+        "segmentationStatus": "atomic"
+      },
+      {
+        "claimId": "d048b8222aa21030015e4f56d8bdbfbaff65598c4646ef8e4c8b21961c2cb7c4",
+        "turnId": "fixture:successful-recall",
+        "startChar": 101,
+        "endChar": 171,
+        "exactTextHash": "f2585a4412b9cce69ecbcc69fe2d2b8d068d484e08fa2bc873028561a48f034a",
+        "text": "\"the exact member-authored phrase recovered from the earlier exchange\"",
+        "kind": "quotation",
+        "segmentationStatus": "atomic"
+      },
+      {
+        "claimId": "5b5226069fc91ed5104482cb40c467e92402e5dab2ad8bfd1f202bbb9e54d93d",
+        "turnId": "fixture:successful-recall",
+        "startChar": 172,
+        "endChar": 223,
+        "exactTextHash": "d3e2ae643a22ee398ace40286569c71f998fa260801311bd4581465d965a9d5f",
+        "text": "Does that sound like the one you were reaching for?",
+        "kind": "question",
+        "segmentationStatus": "atomic"
+      }
+    ],
+    "binding": {
+      "gesture": "CONFIRM",
+      "outcome": "BOUND",
+      "reason": "single-confirmable-atomic-claim",
+      "candidateClaimIds": [
+        "d048b8222aa21030015e4f56d8bdbfbaff65598c4646ef8e4c8b21961c2cb7c4"
+      ],
+      "targetClaimId": "d048b8222aa21030015e4f56d8bdbfbaff65598c4646ef8e4c8b21961c2cb7c4"
+    }
+  },
+  {
+    "id": "restart-protest",
+    "claims": [
+      {
+        "claimId": "038f5816a0a62c2eefc4684ccfb610318dbae6fb2f72649bea5a25f91cd992bd",
+        "turnId": "fixture:restart-protest",
+        "startChar": 0,
+        "endChar": 10,
+        "exactTextHash": "5bf2b29eda058068b9ea5d70c635ed38045797f2196e543b994680b82ccf6c19",
+        "text": "The image.",
+        "kind": "assertion",
+        "segmentationStatus": "atomic"
+      },
+      {
+        "claimId": "fa182405db7f221faefccb6a201f0bc0947954e0b69f526800ba13bf8c41e6bf",
+        "turnId": "fixture:restart-protest",
+        "startChar": 11,
+        "endChar": 73,
+        "exactTextHash": "26a12731b32c74760bd8d0efd8e6ef2ebf9174c71f38a9461c7c33f7e3536492",
+        "text": "That phrase has weight — you've returned to it more than once.",
+        "kind": "assertion",
+        "segmentationStatus": "composite"
+      },
+      {
+        "claimId": "43fc8e20ebce67de12aaf87105a4dfa0a6215bf577156ba3ae8c35ba22b9465f",
+        "turnId": "fixture:restart-protest",
+        "startChar": 74,
+        "endChar": 115,
+        "exactTextHash": "bc1d94f5ee4d1aee46f53d0f2b684559c6947c740e26b98e11e892d5382800b8",
+        "text": "What does it hold for you in this moment.",
+        "kind": "question",
+        "segmentationStatus": "atomic"
+      }
+    ],
+    "binding": {
+      "gesture": "RESTART_PROTEST",
+      "outcome": "BOUND",
+      "reason": "single-question-act",
+      "candidateClaimIds": [
+        "43fc8e20ebce67de12aaf87105a4dfa0a6215bf577156ba3ae8c35ba22b9465f"
+      ],
+      "targetClaimId": "43fc8e20ebce67de12aaf87105a4dfa0a6215bf577156ba3ae8c35ba22b9465f"
+    }
+  },
+  {
+    "id": "multi-assertion-confirm",
+    "claims": [
+      {
+        "claimId": "a635b164a7ca3bb92a906c01cfb97c0f900dfb843783013c539f77c53cd849bb",
+        "turnId": "fixture:multi-assertion-confirm",
+        "startChar": 0,
+        "endChar": 35,
+        "exactTextHash": "4bdcdeea91205c66a190c582149696fea73946aefe79e9014328c1946222ed2d",
+        "text": "Silver Cedar is the guardian image.",
+        "kind": "assertion",
+        "segmentationStatus": "atomic"
+      },
+      {
+        "claimId": "cd4db6b2e373856eef632259c5446e1f75d477143e424f246d7e183d207a64d4",
+        "turnId": "fixture:multi-assertion-confirm",
+        "startChar": 36,
+        "endChar": 66,
+        "exactTextHash": "d8968e848a0e18efd5167f21909ee8d6ee3c18505cda6ab683e98a961b8bca48",
+        "text": "It also represents resilience.",
+        "kind": "assertion",
+        "segmentationStatus": "atomic"
+      },
+      {
+        "claimId": "4f5bed3ffb9241a5d681255cd4695079f0ab2d25e24a3052c9edd3ebb80c1bee",
+        "turnId": "fixture:multi-assertion-confirm",
+        "startChar": 67,
+        "endChar": 82,
+        "exactTextHash": "d1291ca1fd5f9734b5edac188e028b84046c351711e2c8635c3bc61f51682d35",
+        "text": "What opens now?",
+        "kind": "question",
+        "segmentationStatus": "atomic"
+      }
+    ],
+    "binding": {
+      "gesture": "CONFIRM",
+      "outcome": "AMBIGUOUS",
+      "reason": "multiple-confirmable-atomic-claims",
+      "candidateClaimIds": [
+        "a635b164a7ca3bb92a906c01cfb97c0f900dfb843783013c539f77c53cd849bb",
+        "cd4db6b2e373856eef632259c5446e1f75d477143e424f246d7e183d207a64d4"
+      ]
+    }
+  }
+]
