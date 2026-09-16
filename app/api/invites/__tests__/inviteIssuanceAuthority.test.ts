@@ -51,6 +51,9 @@ function eligible(owner = A) {
     if (/FROM members WHERE id/i.test(sql)) {
       return Promise.resolve({ rows: [{ id: owner, username: 'a', name: 'A', invites_remaining: 10, can_invite_after: null, invite_tier: 'standard' }], rowCount: 1 });
     }
+    if (/information_schema\.columns/i.test(sql) && /passkey_hash/i.test(sql)) {
+      return Promise.resolve({ rows: [{ ready: true }], rowCount: 1 });
+    }
     if (/FROM invites\b/i.test(sql) && /created_by/i.test(sql)) {
       return Promise.resolve({ rows: [{ id: 'inv-B', passkey: 'SOULLAB-X', status: 'pending', created_by: B }], rowCount: 1 });
     }
@@ -127,6 +130,23 @@ describe('the authenticated issuer can still work', () => {
     const res = await createInvite(post('/api/invites/create', { intendedName: 'Tester' }));
     expect(res.status).toBe(200);
     expect(mockQuery.mock.calls.some(([sql]) => /INSERT INTO invites/i.test(sql as string))).toBe(true);
+  });
+
+
+  it('create refuses before R12 hash schema exists and never writes plaintext', async () => {
+    eligible();
+    mockQuery.mockImplementation((sql: string) => {
+      if (/FROM members WHERE id/i.test(sql)) {
+        return Promise.resolve({ rows: [{ id: A, username: 'a', name: 'A', invites_remaining: 10, can_invite_after: null, invite_tier: 'standard' }], rowCount: 1 });
+      }
+      if (/information_schema\.columns/i.test(sql) && /passkey_hash/i.test(sql)) {
+        return Promise.resolve({ rows: [{ ready: false }], rowCount: 1 });
+      }
+      return Promise.resolve({ rows: [], rowCount: 0 });
+    });
+    const res = await createInvite(post('/api/invites/create', { intendedName: 'Tester' }));
+    expect(res.status).toBe(503);
+    expect(mockQuery.mock.calls.some(([sql]) => /INSERT INTO invites/i.test(sql as string))).toBe(false);
   });
 
   it('revoke succeeds on A own pending invite', async () => {
