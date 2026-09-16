@@ -1,0 +1,322 @@
+# CI-01 — Conversational Intelligence Synthesis · Charter
+
+**Date:** 2026-09-16
+
+**State:** OPEN · RESEARCH / ARCHITECTURE ONLY · NO RUNTIME AUTHORITY
+
+**Branch:** `feature/ci-01-conversational-intelligence-synthesis-20260916`
+
+**Founding anchor:** TURN-03 opening `f5c02193c5ebee4f51b6c4b769ad6a8166b2a80f`
+
+**Inherited head:** TURN-03 A1 census `7ac17a0abf50f3382c9c2c84c9b5ed93630779e3`
+
+**Tracker:** `MAIA-SOVEREIGN-70`
+
+## Founding question
+
+> How should MAIA's existing hearing, turn, memory, Gestalt, relational, cognitive, and
+> expressive capacities inform one another without any subsystem silently acquiring another
+> subsystem's authority?
+
+CI-01 does not seek a new master model or a second conversational mind. Its job is to recover,
+classify, and connect what already exists, then define the missing seams precisely enough that a
+later implementation lane can be judged before it is built.
+
+The governing synthesis is:
+
+> **Integrate evidence, not authority.**
+
+## Why this lane exists
+
+The repository already contains substantial but differently situated intelligence:
+
+- a canonical cognition path shared by typed and spoken turns;
+- a governed canonical-turn and evidence-admission architecture;
+- member-owned floor timing and a shadow turn arbiter;
+- memory, continuity, relationship, elemental, and developmental inputs;
+- Care / Talk / Scribe conversational grammars;
+- response-shape and field telemetry;
+- voice, prosody, full-duplex, and acoustic-model research;
+- Gestalt, relational-standing, and free-synthesis research.
+
+Those capacities do not yet form one governed conversational ecology. Some affect live turns on
+this branch, some only observe, some are disconnected, and some are research records on separate
+branches. Treating all of them as equally live would be false. Treating them as unrelated would
+discard the architecture they collectively reveal.
+
+CI-01 establishes the truthful map between those two errors.
+
+## Constitutional invariants
+
+### CI-1 — One MAIA mind
+
+Typed and spoken conversation converge on canonical MAIA cognition. A voice, turn, acoustic,
+Gestalt, relational, or expression model may alter what evidence MAIA receives or how she is
+expressed. It may not become a hidden replacement cognition path.
+
+### CI-2 — Evidence does not inherit authority
+
+A confidence score, inferred pattern, remembered theme, acoustic projection, developmental frame,
+or relational hypothesis remains evidence with provenance. It does not become member intention,
+consent, identity, or truth through repetition, persistence, or composition.
+
+### CI-3 — Member authority remains lexically and structurally superior
+
+At minimum:
+
+```text
+explicit member hold       > acoustic or semantic continuation model
+current member speech      > a planned MAIA response
+member correction          > stored or inferred interpretation
+member-selected mode/space > an aggressive automatic policy
+present counterevidence    > historical pattern confidence
+```
+
+### CI-4 — Four judgments remain separate
+
+The architecture must not collapse these questions:
+
+1. **Floor state:** is the member's expression still unfolding, and is a conversational
+   opportunity available?
+2. **Relational act:** if participation is appropriate, what kind of act belongs here—silence,
+   acknowledgment, mirror, inquiry, illumination, permission, invitation, challenge, return?
+3. **Cognition:** what does canonical MAIA actually understand, reason, remember, and mean?
+4. **Expression:** how should that act be rendered in wording, length, timing, cadence, prosody,
+   or silence?
+
+`FLOOR_AVAILABLE` would mean only that the floor appears available. It would never mean “speak
+now.”
+
+### CI-5 — CanonicalTurn and conversational state are not the same object
+
+`lib/maia/canonical-turn/` already governs **what evidence may participate in a MAIA turn**, under
+what provenance, disposition, and sovereignty. CI-01 will not replace it with a giant context
+object.
+
+A future conversational-field representation, if admitted, would describe provisional encounter
+state. It would still have to cross the canonical-turn / MIPA custody boundary before influencing
+cognition.
+
+This also names a vocabulary collision that later design must remove:
+
+```text
+CMT-01 “participation”      = evidence admission into a canonical turn
+TURN / CI “participation”  = conversational floor and action opportunity
+```
+
+Future contracts must use distinct names such as `evidenceDisposition` and `floorState`; they may
+not overload one word for both powers.
+
+### CI-6 — Gestalt remains provisional
+
+Gestalt may orient attention to the dynamic whole. It may not manufacture evidence, harden a
+person into a profile, suppress novelty, or survive present contradiction without readjudication.
+The present encounter retains the power to reorganize the whole.
+
+### CI-7 — Observation cannot become control by accident
+
+Shadow logs, telemetry, benchmarks, and research projections do not gain response, prompt,
+endpointing, TTS, memory-write, or dispatch authority merely because CI-01 can see them together.
+
+### CI-8 — A defect finding is not repair authorization
+
+CI-01 may establish that an active capability is fragmented, prompt-heavy, inconsistent across
+tiers, disconnected, or missing. That finding does not authorize changing it in this lane.
+
+## Research domains
+
+CI-01 classifies every admitted capability under one primary domain while preserving cross-domain
+dependencies.
+
+| Domain | Governing question |
+|---|---|
+| **HEARING** | What is observable in speech, silence, text, breath, prosody, and overlap? |
+| **FLOOR** | Is expression still unfolding, and what conversational opportunity exists? |
+| **GESTALT** | What provisional whole is forming across present movement and relevant history? |
+| **RELATIONSHIP** | What act is warranted, invited, permitted, or restrained here? |
+| **COGNITION** | What does canonical MAIA understand, reason, remember, and mean? |
+| **EXPRESSION** | How should the chosen act be rendered—or withheld? |
+| **LEARNING** | What may change over time, from whose evidence, with what correction path? |
+
+`FLOOR` is used instead of `PARTICIPATION` in this charter to avoid collision with CMT-01's
+evidence-participation contract.
+
+## Candidate topology — not a runtime contract
+
+The working architectural hypothesis is:
+
+```text
+member encounter
+    ↓
+provenance-bearing witnesses
+    ↓
+provisional conversational field
+    ↓
+floor judgment
+    ↓
+relational-act judgment
+    ↓
+canonical MAIA cognition
+    ↓
+expression policy
+    ↓
+member encounter continues
+```
+
+This hypothesis is subordinate to `CanonicalTurn`:
+
+```text
+registered evidence producer
+    ↓
+MIPA: HELD / OFFERED / ADMITTED / EXCLUDED
+    ↓
+CanonicalTurn
+    ↓
+canonical cognition
+```
+
+CI-01 Act 2 must adjudicate where a conversational-field projection belongs relative to that
+existing boundary. This charter does not decide whether it is one registered producer, several
+typed producers, a pre-cognition decision object, or something that should not exist at all.
+
+## Programme acts
+
+### A1 — Recovery and capability census
+
+Recover the current implementation and the named R&D corpus. For each capability, record:
+
+- exact implementation or research locus;
+- whether it is effect-bearing, partial, shadow, disconnected, research-only, or absent;
+- what evidence it observes or produces;
+- what authority it currently possesses;
+- which canonical seam, if any, consumes it;
+- what must remain separate from it.
+
+The initial repository census is recorded in
+`CI-01_ACT1_CONVERSATIONAL_INTELLIGENCE_CENSUS_2026-09-16.md`.
+
+### A2 — Conversational field contract candidate
+
+**Prepared tracker:** `MAIA-SOVEREIGN-ci01-a2` · **DEFERRED; not authorization**
+
+Architecture only. Define the minimum ontology and provenance envelope required to represent
+encounter state without duplicating `CanonicalTurn`, leaking an open context bag back into
+cognition, or converting a projection into evidence.
+
+A2 must answer:
+
+- identity and authorship of every observation;
+- observation time, expiry, and encounter scope;
+- confidence and uncertainty without scalar authority collapse;
+- member correction and counterevidence;
+- distinction between member-originated, system-observed, system-inferred, and MAIA-generated
+  material;
+- relation to MIPA producer registration and dispositions;
+- what is recomputed per turn versus durable;
+- what cognition may read and what expression may read.
+
+### A3 — Shadow synthesis architecture
+
+**Prepared tracker:** `MAIA-SOVEREIGN-ci01-a3` · **DEFERRED; not authorization**
+
+Specify a synthesizer that can combine admitted evidence into inspectable field projections while
+remaining causally absent from member-facing behavior.
+
+Required shadow comparison:
+
+```text
+what the live path did
+what each witness observed
+what the synthesizer projected
+what the member did next
+```
+
+No prompt injection, response rewrite, floor action, TTS action, or memory update is authorized.
+
+### A4 — MAIA-CONVERSATION-BENCH-01 specification
+
+**Prepared tracker:** `MAIA-SOVEREIGN-ci01-a4` · **DEFERRED; not authorization**
+
+Define a benchmark for conversational ecology, not answer correctness alone. It must include:
+
+- false floor seizure and re-entry collision;
+- missed invitation and inappropriate action;
+- over-interpretation and inference leakage;
+- premature advice and unnecessary verbosity;
+- lost or falsely continued threads;
+- failed correction uptake;
+- inappropriate backchannel or silence;
+- response-start latency;
+- same-history / different-present sensitivity;
+- continuity across long encounters.
+
+The benchmark must preserve per-case failures and provenance. An aggregate score may not hide a
+constitutional violation.
+
+### Stop gate
+
+CI-01 stops after architecture and benchmark specification. A later lane—provisionally
+`CI-02 — Conversational Field Runtime`—would require separate authorization before adding types,
+runtime synthesis, storage, prompts, model calls, or behavior.
+
+## Relationship to TURN-03
+
+TURN-03 remains independent and unchanged:
+
+> Can a lawful sovereign acoustic model improve continuation evidence?
+
+TURN-03 A1 has independently selected DualTurn `c3860ed` as an **A2 baseline experiment
+candidate only**. It has not granted that candidate live authority. Any future acoustic output may
+become a HEARING witness only after TURN-03 earns it and a later contract admits it. The projector
+does not need Gestalt, relationship, memory, Spiralogic, or response knowledge, and CI-01 grants it
+none.
+
+CI-01 asks the complementary question:
+
+> If acoustic evidence earns admission, how can it coexist with other evidence without acquiring
+> floor, relational, cognitive, or expressive sovereignty?
+
+The two programmes meet only at a separately adjudicated evidence contract.
+
+## Explicit exclusions
+
+Nothing in CI-01 may:
+
+- modify application, library, route, component, hook, schema, migration, or prompt code;
+- install or download a conversational, acoustic, voice, or embedding model;
+- change FAST / CORE / DEEP routing or composition;
+- alter voice capture, endpointing, transcript commit, dispatch, or TTS;
+- change memory retrieval, ranking, writeback, or relationship inference;
+- activate a disconnected full-duplex, Gestalt, field, prosody, or learning service;
+- create a second cognition path;
+- deploy, merge to a production branch, or claim production standing;
+- promote a research branch merely by citing it;
+- create a runtime `ConversationalFieldSnapshot` type.
+
+## Opening acceptance
+
+CI-01 is truthfully open when:
+
+- the charter is durable;
+- the inherited capability map has an evidence-backed baseline;
+- CMT-01, TURN-01/02/03, Gestalt law, prompt-cognition findings, and prior conversational-model
+  research are related without conflation;
+- implementation and live-authority exclusions are explicit;
+- later acts are named but unspent.
+
+## Opening standing
+
+```text
+lane ................................ OPEN
+A1 baseline census .................. COMPLETE · REPOSITORY / R&D RECORDS ONLY
+A2 field contract ................... NOT OPENED
+A3 shadow synthesizer ............... NOT OPENED
+A4 conversation benchmark ........... NOT OPENED
+runtime types ....................... UNCHANGED
+prompts ............................. UNCHANGED
+models .............................. CI-01 SELECTED / INSTALLED NONE
+TURN-03 model standing .............. A2 BASELINE CANDIDATE SELECTED · NO LIVE AUTHORITY
+live floor / response authority ..... UNCHANGED
+TURN-03 ............................. INDEPENDENT · A1 COMPLETE
+production .......................... UNTOUCHED
+```
