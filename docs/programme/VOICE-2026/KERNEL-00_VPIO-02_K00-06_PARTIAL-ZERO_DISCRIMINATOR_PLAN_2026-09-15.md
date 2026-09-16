@@ -3570,3 +3570,8 @@ Act identity is constitutive, not scope expansion (MAC-COMPILE-02 principle). Pr
 
 
 ## §18.55 — `02` carrier ACCEPTED (`5ef55233…`) · seven-step run shape for `SID FIRST-INSTALL-02` ISSUED in-session (payload never in git; expected `wc -l` 7 · `wc -c` 244; `test -s` before export and before invocation) · pin not yet invoked (2026-09-16; implementation record §10.26; qualification plan §10.75)
+
+
+## §18.56 — `SID FIRST-INSTALL-02` INVOKED → STOP at the pre-install harness-process precondition: the historical `.vpio02` harness (`E3B88028-…`, PID 3347) was running; every local custody gate (incl. the seven-file manifest proof) passed; `.vpio02` = 1, `.vpio02sid` = 0; instrument never invoked; install 0; container none (2026-09-16; implementation record §10.27; qualification plan §10.76)
+
+Authority present and correct (7 lines / 244 bytes), pin `c4b37e69…`/59 verified. Under the settled rule the authority is SPENT; founder ruling owed. Cause of the running harness unknown (PID adjacent to a cluster of relaunched user apps; nothing in the lane launched it). Disposition owed: how the lingering harness is ended (manual quit vs bounded `testTerminateOnly` act vs wait); whether a STOP carrier is drafted; a future attempt = new act `03`, preconditions unrelaxed.
