@@ -70,6 +70,8 @@ const ADMITTING: ReadonlySet<Classification> = new Set<Classification>([
   'organizational_public',
 ]);
 
+const GOVERNED_AUTHORITY_RECORD_ROOT = 'docs/corpus-authority';
+
 const AUTHORITY_BY_CLASS: Readonly<Record<string, ReadonlySet<CorpusAuthorityKind>>> = {
   published_knowledge: new Set<CorpusAuthorityKind>(['soullab_owned']),
   organizational_public: new Set<CorpusAuthorityKind>(['soullab_owned']),
@@ -82,10 +84,14 @@ export type CorpusAuthorityKind =
   | 'license'
   | 'permission';
 
+export type CorpusAuthorityEvidence =
+  | { source: 'in_file'; marker: string }
+  | { source: 'governed_record'; ref: string; marker: string };
+
 export interface CorpusAuthorityBasis {
   kind: CorpusAuthorityKind;
-  /** Concrete evidence for this authority claim — e.g. in-file copyright line, license, or permission record. */
-  evidence: string;
+  /** Evidence must be mechanically locatable; a free-text assertion is not evidence. */
+  evidence: CorpusAuthorityEvidence;
 }
 
 export interface AdmissionRule {
@@ -131,6 +137,14 @@ const HUMAN_RECORD_SIGNALS: Array<{ name: string; test: (text: string) => boolea
     test: (t) => /\b(beta[_ -]?tester|contact list|mailing list|invit(e|ation) list)\b/i.test(t),
   },
 ];
+
+function isExistingSymlink(absPath: string): boolean {
+  try {
+    return fs.lstatSync(absPath).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
 
 export function loadDeclaration(repoRoot: string): AdmissionDeclaration {
   const file = path.join(repoRoot, 'data/ain/corpus-admission.json');
@@ -191,9 +205,9 @@ export function decideAdmission(
       continue;
     }
 
-    const authority = rule.authority;
+    const authority = rule.authority as CorpusAuthorityBasis | undefined;
     const permittedAuthority = AUTHORITY_BY_CLASS[rule.classification];
-    if (!authority || !authority.evidence?.trim()) {
+    if (!authority || !authority.evidence || typeof authority.evidence !== 'object') {
       verdict.excluded.push({
         file: rel,
         reason: `classification '${rule.classification}' requires a structured corpus authority basis`,
@@ -203,16 +217,69 @@ export function decideAdmission(
     if (!permittedAuthority?.has(authority.kind)) {
       verdict.excluded.push({
         file: rel,
-        reason: `authority '${authority.kind}' is incompatible with classification '${rule.classification}'`,
+        reason: `authority '${String(authority.kind)}' is incompatible with classification '${rule.classification}'`,
       });
+      continue;
+    }
+
+    const candidateAbs = path.resolve(repoRoot, file);
+    if (isExistingSymlink(candidateAbs)) {
+      verdict.excluded.push({ file: rel, reason: 'candidate corpus file is a symbolic link' });
       continue;
     }
 
     let text = '';
     try {
-      text = readFile(path.resolve(repoRoot, file));
+      text = readFile(candidateAbs);
     } catch {
       verdict.excluded.push({ file: rel, reason: 'unreadable' });
+      continue;
+    }
+
+    const evidence = authority.evidence as CorpusAuthorityEvidence;
+    if (evidence.source === 'in_file') {
+      if (typeof evidence.marker !== 'string' || !evidence.marker.trim()) {
+        verdict.excluded.push({ file: rel, reason: 'authority evidence marker is missing' });
+        continue;
+      }
+      if (!text.includes(evidence.marker)) {
+        verdict.excluded.push({ file: rel, reason: 'declared in-file authority evidence was not found' });
+        continue;
+      }
+    } else if (evidence.source === 'governed_record') {
+      if (typeof evidence.ref !== 'string' || !evidence.ref.trim() ||
+          typeof evidence.marker !== 'string' || !evidence.marker.trim()) {
+        verdict.excluded.push({ file: rel, reason: 'governed authority evidence is incomplete' });
+        continue;
+      }
+      const evidenceAbs = path.resolve(repoRoot, evidence.ref);
+      const evidenceRel = path.relative(repoRoot, evidenceAbs);
+      if (evidenceRel.startsWith('..') || path.isAbsolute(evidenceRel)) {
+        verdict.excluded.push({ file: rel, reason: 'governed authority evidence escapes repository custody' });
+        continue;
+      }
+      const normalizedEvidenceRel = evidenceRel.split(path.sep).join('/');
+      if (normalizedEvidenceRel !== GOVERNED_AUTHORITY_RECORD_ROOT &&
+          !normalizedEvidenceRel.startsWith(`${GOVERNED_AUTHORITY_RECORD_ROOT}/`)) {
+        verdict.excluded.push({ file: rel, reason: 'authority record is outside the governed corpus-authority namespace' });
+        continue;
+      }
+      if (isExistingSymlink(evidenceAbs)) {
+        verdict.excluded.push({ file: rel, reason: 'governed authority evidence record is a symbolic link' });
+        continue;
+      }
+      try {
+        const record = readFile(evidenceAbs);
+        if (!record.includes(evidence.marker)) {
+          verdict.excluded.push({ file: rel, reason: 'governed authority evidence marker was not found' });
+          continue;
+        }
+      } catch {
+        verdict.excluded.push({ file: rel, reason: 'governed authority evidence record is unreadable' });
+        continue;
+      }
+    } else {
+      verdict.excluded.push({ file: rel, reason: 'authority evidence source is unsupported' });
       continue;
     }
 
