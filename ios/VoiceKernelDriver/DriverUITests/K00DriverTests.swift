@@ -150,6 +150,66 @@ final class K00DriverTests: XCTestCase {
         try exportAndTerminate()
     }
 
+    /// C1 K00-06 validity-hardened duplex act (founder direction 2026-09-16).
+    /// Historical testOutputSample remains untouched. This distinct method preserves its first cancelled stream,
+    /// then requires TWO independently completed 3 s streams so the frozen K00-06 reader can receive at least two
+    /// full rendering-overlap health windows without phase-selecting or replacing rows. Missing Play 2/3 is a
+    /// DRIVER/INFRASTRUCTURE FAILURE, never a valid duplex row.
+    func testK0006ValiditySample() throws {
+        try requireCold()
+        try launchCold()
+        try setVoiceProcessing(on: vpOn)
+        try tap("Enter conversation", timeout: 5)
+        let play = harness.buttons["Play 3 s tone"]
+        if !play.waitForExistence(timeout: 5) {
+            var revealed = false
+            for i in 1...Self.revealSwipeLimit {
+                harness.swipeUp()
+                Thread.sleep(forTimeInterval: 0.5)
+                revealed = harness.buttons["Play 3 s tone"].exists
+                note("K00-DUPLEX: reveal swipe \(i)/\(Self.revealSwipeLimit) — 'Play 3 s tone' exists: \(revealed)")
+                if revealed { break }
+            }
+            if !revealed {
+                for line in harness.debugDescription.split(separator: "\n", omittingEmptySubsequences: true) { note("K00-HIERARCHY: \(line)") }
+                return driverFail("K00-DUPLEX: 'Play 3 s tone' not found after Enter")
+            }
+        }
+        guard waitEnabled(play, timeout: 5) else {
+            return driverFail("K00-DUPLEX: entry not reached — 'Play 3 s tone' not enabled within 5 s")
+        }
+        Thread.sleep(forTimeInterval: settleSeconds)
+
+        play.tap()
+        note("K00-DUPLEX: Play 1 tapped")
+        Thread.sleep(forTimeInterval: TimeInterval(cancelAtMs) / 1000.0)
+        let cancel = harness.buttons["Cancel active"]
+        if cancel.exists && cancel.isEnabled {
+            cancel.tap()
+            note("K00-DUPLEX: Cancel active tapped at ≈\(cancelAtMs) ms after Play 1")
+        } else {
+            note("K00-DUPLEX: Cancel active not enabled at ≈\(cancelAtMs) ms after Play 1 (K00-05 collateral non-evidence only)")
+        }
+        Thread.sleep(forTimeInterval: 1.0)
+
+        guard waitEnabled(play, timeout: 3) else {
+            return driverFail("K00-DUPLEX: Play 2 not enabled within 3 s; first completion stream not scheduled")
+        }
+        play.tap()
+        note("K00-DUPLEX: Play 2 tapped (must complete)")
+        guard waitEnabled(play, timeout: 5) else {
+            return driverFail("K00-DUPLEX: Play 2 did not return to listening/enabled state within 5 s")
+        }
+
+        play.tap()
+        note("K00-DUPLEX: Play 3 tapped (must complete)")
+        guard waitEnabled(play, timeout: 5) else {
+            return driverFail("K00-DUPLEX: Play 3 did not return to listening/enabled state within 5 s")
+        }
+        Thread.sleep(forTimeInterval: 4.5)
+        try exportAndTerminate()
+    }
+
     /// Terminate-only: used by the orchestrator when a harness process is found lingering.
     func testTerminateOnly() throws {
         let app = harness

@@ -2,7 +2,7 @@
 # DRIVER-01 — Mac orchestration and evidence custody. One command per declared batch.
 #
 #   usage: scripts/witness/k00-driver-batch.sh <stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a|vpio-01|vpio-02|vpio-02-sid] [--ledger DIR]
-#                                              [--act entry|output] [--cancel-at MS] [--settle S]
+#                                              [--act entry|output|duplex] [--cancel-at MS] [--settle S]
 #                                              [--stimulus s2-nearend]
 #          S2 (founder ruling 2026-09-15, batch-only design): `--stimulus s2-nearend` is the ONE closed token; the batch resolves it
 #          internally to the tracked, SHA-pinned fixture and plays it through /usr/bin/afplay (binary SHA-pinned) around the
@@ -36,8 +36,14 @@ while [ $# -gt 0 ]; do case "$1" in
   --act) ACT="$2"; shift 2;; --cancel-at) CANCEL_AT="$2"; shift 2;; --settle) SETTLE="$2"; shift 2;;
   --stimulus) STIMULUS="$2"; shift 2;;
   *) echo "unknown arg $1" >&2; exit 2;; esac; done
+if [ "$ACT" != duplex ]; then
 case "$ACT" in entry|output) ;; *) echo "unknown act '$ACT' (entry|output); refusing" >&2; exit 2;; esac
+fi
 if [ "$ACT" = output ] && [ -n "$W4" ]; then echo "--act output and --w4 are separate acts; refusing to combine them" >&2; exit 2; fi
+if [ "$ACT" = duplex ] && [ -n "$W4" ]; then echo "--act duplex and --w4 are separate acts; refusing to combine them" >&2; exit 2; fi
+if [ "$ACT" = duplex ] && { [ "$SUBJECT" != vpio-02-sid ] || [ "$VP" != on ] || [ "$MODE" != L ] || [ -n "$STIMULUS" ] || [ "$N" != 10 ]; }; then
+  echo "--act duplex is lawful only for N=10 --subject vpio-02-sid --vp on --mode L with no stimulus (got N=$N subject=$SUBJECT vp=$VP mode=$MODE stimulus=${STIMULUS:-none}); refusing" >&2; exit 2
+fi
 # SOURCE-ID-02A (founder ruling 2026-09-15): ONE closed stimulus dispatch. Exactly two lawful pairings; an admitted token can never sit behind
 # an earlier catch-all refusal (the SOURCE-ID-02 draft rejected sid-nearend-gated as unknown before its own branch — defect 1, repaired here).
 case "$STIMULUS" in "") ;;
@@ -106,9 +112,11 @@ else
 fi
 LABEL="AUTOMATED-COLD-$([ "$MODE" = "L" ] && echo LAUNCH || echo ICON)"
 TEST="$([ -n "$W4" ] && echo testW4Sample || echo testOneSample)"
-# K00-05/06 output act: the driver method and the two runner-env values exist only under --act output (Option C).
+# K00-05/06 output act: historical --act output remains testOutputSample.
+# C1 adds a distinct SID-only --act duplex selecting testK0006ValiditySample; both use the unchanged evidence reader.
 OUTPUT_LEDGER=""; OUTPUT_ENV=""
 if [ "$ACT" = output ]; then TEST=testOutputSample; OUTPUT_LEDGER="$LEDGER_DIR/output-ledger.md"; OUTPUT_ENV="TEST_RUNNER_K00_CANCEL_AT_MS=$CANCEL_AT TEST_RUNNER_K00_SETTLE_S=$SETTLE"; fi
+if [ "$ACT" = duplex ]; then TEST=testK0006ValiditySample; OUTPUT_LEDGER="$LEDGER_DIR/output-ledger.md"; OUTPUT_ENV="TEST_RUNNER_K00_CANCEL_AT_MS=$CANCEL_AT TEST_RUNNER_K00_SETTLE_S=$SETTLE"; fi
 
 log(){ echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$LEDGER_DIR/batch.log"; }
 # Cold precondition: NO VoiceKernelHarness process of ANY bundle may be alive before a sample (both harness bundles share the
@@ -124,6 +132,17 @@ sid_entry_jit_guard(){ # $1 = sample index
   fi
   n="$(grep -ci VoiceKernelHarness "$js" || true)"
   { printf 'SID ENTRY sample %s JIT harnesses=%s\n' "$idx" "$n"; grep -i VoiceKernelHarness "$js" || true; } | tee "$state"
+  [ "$n" -eq 0 ]
+}
+sid_duplex_harness_zero_guard(){ # $1 = sample index · $2 = preact|jit
+  local idx="$1" phase="$2" js="$LEDGER_DIR/sample-$1-duplex-$2-processes.json" out="$LEDGER_DIR/sample-$1-duplex-$2-processes.stdout" state="$LEDGER_DIR/sample-$1-duplex-$2-harness-state.txt" rc=0 n=0
+  xcrun devicectl device info processes --device "$DEV" --json-output "$js" >"$out" 2>&1 || rc=$?
+  if [ $rc -ne 0 ] || [ ! -s "$js" ]; then
+    printf 'SID DUPLEX sample %s %s process read UNREADABLE rc=%s\n' "$idx" "$phase" "$rc" | tee "$state"
+    return 1
+  fi
+  n="$(grep -ci VoiceKernelHarness "$js" || true)"
+  { printf 'SID DUPLEX sample %s %s harnesses=%s\n' "$idx" "$phase" "$n"; grep -i VoiceKernelHarness "$js" || true; } | tee "$state"
   [ "$n" -eq 0 ]
 }
 sid_source_harness_zero_guard(){ # $1 = sample index · $2 = preplay|jit
@@ -269,6 +288,7 @@ failure_signature(){ # $1 = sample log
   echo "stratum=$LABEL · N=$N · vp=$VP · mode=$MODE · hold=${HOLD}s · w4=${W4:-off} · subject=$SUBJECT · bundle=$BID · device=$DEV · xcodeDest=$XDEST"
   [ "$CLASSIFIER_SUBJECT" != "$SUBJECT" ] && echo "classifierSubject=$CLASSIFIER_SUBJECT · declared custody $SUBJECT is trace-compatible with $CLASSIFIER_SUBJECT (SOURCE-ID-02: the frozen entry/output readers classify under it; source rows in source-ledger.md)"
   [ "$ACT" = output ] && echo "act=output · cancelAt=${CANCEL_AT}ms · settle=${SETTLE}s · driver=testOutputSample · reader=k00-output-ledger.py → output-ledger.md (K00-05 / K00-06 / coupling rows, evidence-only)"
+  [ "$ACT" = duplex ] && echo "act=duplex · N=10 · cancelAt=${CANCEL_AT}ms · settle=${SETTLE}s · driver=testK0006ValiditySample · reader=k00-output-ledger.py unchanged → output-ledger.md · C1 built-in K00-06 validity witness only"
   [ -n "$STIMULUS" ] && echo "stimulus=$STIMULUS · fixture=$(basename "$S2_STIMULUS") · fixtureSha256=$S2_STIMULUS_SHA256 · player=$S2_AFPLAY -v $S2_AFPLAY_VOLUME -t $S2_AFPLAY_SECONDS · afplaySha256=$S2_AFPLAY_SHA256 · outputDevice=$S2_OUTPUT_DEVICE ($S2_OUTPUT_TRANSPORT) · outputVolume=$S2_OUTPUT_VOLUME · muted=$S2_OUTPUT_MUTED · custody=stimulus-preflight/ + stimulus-sample-N.tsv (never read by k00-ledger.py / k00-output-ledger.py)"
   echo "installed harness identity (the app under test is NOT rebuilt by this batch):"
   echo '```'
@@ -296,12 +316,20 @@ for i in $(seq 1 "$N"); do
     : # SID ENTRY has one authority: the adjacent JIT process-set guard below. No cleanup path is entered here.
   elif [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = output ] && [ "$STIMULUS" = sid-nearend-gated ]; then
     : # SID SOURCE population is fail-closed too: no testTerminateOnly normalization; PRE-PLAY + JIT guards below own custody.
+  elif [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = duplex ]; then
+    : # C1 SID DUPLEX is fail-closed: no testTerminateOnly normalization; PRE-ACT + JIT guards below own custody.
   elif harness_present; then
     log "harness process present — attempting terminate-only via driver"
     run_test testTerminateOnly > "$LEDGER_DIR/sample-$i-terminate.log" || true
     if harness_present; then
       echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | harness process present before launch and could not be terminated by the driver; batch ABORTED as DRIVER/INFRASTRUCTURE FAILURE at sample $i |" >> "$LEDGER"
       log "ABORT: lingering harness process; infrastructure failure recorded"; exit 4
+    fi
+  fi
+  if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = duplex ]; then
+    if ! sid_duplex_harness_zero_guard "$i" preact; then
+      echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | SID DUPLEX sample $i PRE-ACT harness-zero guard refused; no terminate attempted; no phone sample launched; see sample-$i-duplex-preact-* evidence |" >> "$LEDGER"
+      log "STOP: SID DUPLEX sample $i PRE-ACT harness-zero guard failed — no terminate attempted, no phone sample launched"; exit 12
     fi
   fi
   daemon_snapshot "$i" before
@@ -319,6 +347,12 @@ for i in $(seq 1 "$N"); do
       stimulus_stop "$i"
       echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | SID SOURCE sample $i JIT harness-zero guard refused after stimulus settle; stimulus stopped; no terminate attempted; no phone sample launched; see sample-$i-source-jit-* evidence |" >> "$LEDGER"
       log "STOP: SID SOURCE sample $i JIT harness-zero guard failed — stimulus stopped, no terminate attempted, no phone sample launched"; exit 11
+    fi
+  fi
+  if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = duplex ]; then
+    if ! sid_duplex_harness_zero_guard "$i" jit; then
+      echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | SID DUPLEX sample $i JIT harness-zero guard refused; no terminate attempted; no phone sample launched; see sample-$i-duplex-jit-* evidence |" >> "$LEDGER"
+      log "STOP: SID DUPLEX sample $i JIT harness-zero guard failed — no terminate attempted, no phone sample launched"; exit 12
     fi
   fi
   if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then

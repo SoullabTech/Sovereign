@@ -1368,9 +1368,9 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     for (const name of ['testOneSample', 'testW4Sample', 'testTerminateOnly']) { expect(fn(was, name)).not.toBeNull(); expect(fn(now, name)).toEqual(fn(was, name)); }
     for (const helper of ['requireCold', 'launchCold', 'setVoiceProcessing', 'exportAndTerminate']) expect(fn(now, helper) ?? now.match(new RegExp(`    private func ${helper}[\\s\\S]*?\\n    \\}\\n`))![0]).toEqual(was.match(new RegExp(`    private func ${helper}[\\s\\S]*?\\n    \\}\\n`))![0]);
     const t = stripComments(now);
-    expect((t.match(/func test[A-Za-z0-9]+\(\) throws/g) ?? []).sort()).toEqual(['func testOneSample() throws', 'func testOutputSample() throws', 'func testTerminateOnly() throws', 'func testW4Sample() throws']);
+    expect((t.match(/func test[A-Za-z0-9]+\(\) throws/g) ?? []).sort()).toEqual(['func testK0006ValiditySample() throws', 'func testOneSample() throws', 'func testOutputSample() throws', 'func testTerminateOnly() throws', 'func testW4Sample() throws']);
     expect(t).toMatch(/env\["K00_CANCEL_AT_MS"\] \?\? "1000"/); expect(t).toMatch(/env\["K00_SETTLE_S"\] \?\? "2"/);
-    const body = t.slice(t.indexOf('func testOutputSample()'), t.indexOf('func testTerminateOnly()'));
+    const body = t.slice(t.indexOf('func testOutputSample()'), t.indexOf('func testK0006ValiditySample()'));
     const order = ['requireCold()', 'launchCold()', 'setVoiceProcessing(on: vpOn)', 'tap("Enter conversation", timeout: 5)', 'harness.buttons["Play 3 s tone"]',
                    'play.waitForExistence(timeout: 5)', 'for i in 1...Self.revealSwipeLimit', 'harness.swipeUp()', 'harness.buttons["Play 3 s tone"].exists', 'if revealed { break }',
                    'if !revealed', 'harness.debugDescription', 'K00-HIERARCHY:', "driverFail(\"'Play 3 s tone' not found after Enter", 'waitEnabled(play, timeout: 5)',
@@ -1387,7 +1387,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     const after = body.slice(body.indexOf('guard waitEnabled(play, timeout: 5)'));               // from the unchanged guard onward: byte-for-byte the 8b111709b act
     const wasBody = stripComments(histRaw(INSTRUMENT_K0506, 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').toString('utf8'));
     const wasOut = wasBody.slice(wasBody.indexOf('func testOutputSample()'), wasBody.indexOf('func testTerminateOnly()'));
-    expect(after).toEqual(wasOut.slice(wasOut.indexOf('guard waitEnabled(play, timeout: 5)')));
+    expect(after.trimEnd()).toEqual(wasOut.slice(wasOut.indexOf('guard waitEnabled(play, timeout: 5)')).trimEnd());
     expect(body).not.toMatch(/XCTFail|XCTAssert/);
     expect(body).not.toMatch(/Voice processing: OFF|Apply faults|Digital-zero|Stall output|Speaker|System default|Leave|Re-enter/);   // no fault, route, VP-off or exit act inside the output act
     expect(t).toMatch(/private func waitEnabled\(_ b: XCUIElement, timeout: TimeInterval\) -> Bool/);
@@ -1399,13 +1399,17 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     const was = execLines(histRaw(INSTRUMENT_VPIO02B, 'scripts/witness/k00-driver-batch.sh').toString('utf8'));
     expect(bx).toContain('ACT=entry; CANCEL_AT=1000; SETTLE=2');
     expect(bx).toMatch(/--act\) ACT="\$2"; shift 2;; --cancel-at\) CANCEL_AT="\$2"; shift 2;; --settle\) SETTLE="\$2"; shift 2;;/);
-    expect(bx).toMatch(/case "\$ACT" in entry\|output\) ;; \*\) echo "unknown act '\$ACT' \(entry\|output\); refusing" >&2; exit 2;; esac/);
-    expect(bx).toMatch(/if \[ "\$ACT" = output \] && \[ -n "\$W4" \]; then[^\n]*exit 2; fi/);
+    expect(bx).toMatch(/case "\$ACT" in entry\|output\) ;; \*\) echo "unknown act '\$ACT' \(entry\|output\); refusing" >&2; exit 2;; esac/); // historical line remains verbatim
+    expect(bx).toMatch(/if \[ "\$ACT" = output \] && \[ -n "\$W4" \]; then[^\n]*exit 2; fi/); // historical line remains verbatim
+    expect(bx).toContain('if [ "$ACT" != duplex ]; then');
+    expect(bx).toContain('if [ "$ACT" = duplex ] && [ -n "$W4" ]; then echo "--act duplex and --w4 are separate acts; refusing to combine them" >&2; exit 2; fi');
+    expect(bx).toContain('if [ "$ACT" = duplex ] && { [ "$SUBJECT" != vpio-02-sid ] || [ "$VP" != on ] || [ "$MODE" != L ] || [ -n "$STIMULUS" ] || [ "$N" != 10 ]; }; then');
     expect(bx).toContain('TEST="$([ -n "$W4" ] && echo testW4Sample || echo testOneSample)"');                    // historical selection first, untouched
     expect(bx).toMatch(/if \[ "\$ACT" = output \]; then TEST=testOutputSample; OUTPUT_LEDGER="\$LEDGER_DIR\/output-ledger\.md"; OUTPUT_ENV="TEST_RUNNER_K00_CANCEL_AT_MS=\$CANCEL_AT TEST_RUNNER_K00_SETTLE_S=\$SETTLE"; fi/);
     expect(bx).toContain('OUTPUT_LEDGER=""; OUTPUT_ENV=""');                                                                 // empty under the historical act
     expect(bx).toMatch(/env \$OUTPUT_ENV TEST_RUNNER_K00_MODE="\$MODE" TEST_RUNNER_K00_VP="\$VP" TEST_RUNNER_K00_HOLD_S="\$HOLD" TEST_RUNNER_K00_W4_MS="\$\{W4:-500\}" TEST_RUNNER_K00_SUBJECT="\$SUBJECT"/);
-    expect((bx.match(/TEST_RUNNER_K00_CANCEL_AT_MS/g) ?? []).length).toBe(1);                                              // set in one place, only under output
+    expect((bx.match(/TEST_RUNNER_K00_CANCEL_AT_MS/g) ?? []).length).toBe(2);                                              // historical output + additive C1 duplex dispatch
+    expect(bx).toMatch(/if \[ "\$ACT" = duplex \]; then TEST=testK0006ValiditySample; OUTPUT_LEDGER="\$LEDGER_DIR\/output-ledger\.md"; OUTPUT_ENV="TEST_RUNNER_K00_CANCEL_AT_MS=\$CANCEL_AT TEST_RUNNER_K00_SETTLE_S=\$SETTLE"; fi/);
     const header = 'echo "stratum=$LABEL · N=$N · vp=$VP · mode=$MODE · hold=${HOLD}s · w4=${W4:-off} · subject=$SUBJECT · bundle=$BID · device=$DEV · xcodeDest=$XDEST"';
     expect(bx).toContain(header); expect(was).toContain(header);                                                              // the historical header line is verbatim
     // SOURCE-ID-02 (founder ruling 2026-09-15): a second header line declares the classifier subject when it differs (declared custody ≠ trace subject)
@@ -1495,6 +1499,39 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(pp).toContain('capture audio-devices.txt system_profiler SPAudioDataType');
     expect(pp).toContain("capture output-volume-read.txt osascript -e 'get volume settings'");
     expect(pp).toMatch(/"soundPlayed":False/); expect(pp).toMatch(/SEAL\.sha256/);
+  });
+  it('C1 K00-06 validity witness is additive and closed: historical output body/readers stay frozen; duplex is N=10 SID-only VP-ON Mode-L no-stimulus; two completion streams are mandatory; PRE-ACT/JIT zero guards precede the driver and no duplex path can normalize state', () => {
+    const driverNow = W('ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift');
+    const base = histRaw('0da767644d2ddf3fcbf89759d2020531a3ee431b', 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift').toString('utf8');
+    const bodyOf = (src: string, start: string, end: string) => src.slice(src.indexOf(start), src.indexOf(end, src.indexOf(start)));
+    expect(bodyOf(driverNow, '    func testOutputSample() throws {', '    /// C1 K00-06 validity-hardened duplex act')).toEqual(bodyOf(base, '    func testOutputSample() throws {', '    /// Terminate-only:'));
+    const c1body = bodyOf(stripComments(driverNow), 'func testK0006ValiditySample()', 'func testTerminateOnly()');
+    for (const step of ['requireCold()', 'launchCold()', 'setVoiceProcessing(on: vpOn)', 'tap("Enter conversation", timeout: 5)', 'Thread.sleep(forTimeInterval: settleSeconds)', 'Play 1 tapped', 'Cancel active', 'Play 2 tapped (must complete)', 'Play 3 tapped (must complete)', 'exportAndTerminate()']) expect(c1body).toContain(step);
+    expect((c1body.match(/play\.tap\(\)/g) ?? []).length).toBe(3);
+    expect((c1body.match(/guard waitEnabled\(play, timeout: 5\) else/g) ?? []).length).toBe(3); // entry + completion 2 + completion 3
+    expect(c1body).toContain('driverFail("K00-DUPLEX: Play 2 did not return to listening/enabled state within 5 s")');
+    expect(c1body).toContain('driverFail("K00-DUPLEX: Play 3 did not return to listening/enabled state within 5 s")');
+    expect(c1body).not.toMatch(/Apply faults|Digital-zero|Stall output|Speaker|System default|Leave|Re-enter|Voice processing: OFF/);
+
+    for (const p of ['scripts/witness/k00-ledger.py','scripts/witness/k00-output-ledger.py','scripts/witness/k00-source-ledger.py']) expect(histRaw('0da767644d2ddf3fcbf89759d2020531a3ee431b', p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    const bx = execLines(W('scripts/witness/k00-driver-batch.sh'));
+    expect(bx).toContain('if [ "$ACT" = duplex ] && { [ "$SUBJECT" != vpio-02-sid ] || [ "$VP" != on ] || [ "$MODE" != L ] || [ -n "$STIMULUS" ] || [ "$N" != 10 ]; }; then');
+    expect(bx).toContain('--act duplex is lawful only for N=10 --subject vpio-02-sid --vp on --mode L with no stimulus');
+    expect(bx).toContain('if [ "$ACT" = duplex ]; then TEST=testK0006ValiditySample; OUTPUT_LEDGER="$LEDGER_DIR/output-ledger.md";');
+    const g0 = bx.indexOf('sid_duplex_harness_zero_guard(){'); const g1 = bx.indexOf('\n}\n', g0); expect(g0).toBeGreaterThan(-1); expect(g1).toBeGreaterThan(g0); const gf = bx.slice(g0, g1 + 3);
+    expect(gf).toContain('sample-$1-duplex-$2-processes.json'); expect(gf).toContain('[ "$n" -eq 0 ]');
+    expect(gf).not.toMatch(/testTerminateOnly|process terminate|process signal|install app|xcodebuild|sleep/);
+    const loop = bx.slice(bx.indexOf('for i in $(seq 1 "$N"); do'), bx.indexOf('T0=$(date +%s); run_test "$TEST"'));
+    const bypass = 'elif [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = duplex ]; then';
+    expect(loop).toContain(bypass); expect(loop.indexOf(bypass)).toBeLessThan(loop.indexOf('elif harness_present; then'));
+    const pre = 'if ! sid_duplex_harness_zero_guard "$i" preact; then', jit = 'if ! sid_duplex_harness_zero_guard "$i" jit; then';
+    expect(loop.indexOf(pre)).toBeGreaterThan(loop.indexOf('elif harness_present; then'));
+    expect(loop.indexOf(pre)).toBeLessThan(loop.indexOf('daemon_snapshot "$i" before'));
+    expect(loop.indexOf(jit)).toBeGreaterThan(loop.indexOf('daemon_snapshot "$i" before'));
+    expect(loop.indexOf(jit)).toBeLessThan(loop.indexOf('log "sample $i/$N — driver ($TEST, mode $MODE)"'));
+    const c1pre = loop.slice(loop.indexOf(bypass), loop.indexOf('elif harness_present; then'));
+    expect(c1pre.replace(/#.*$/gm, '')).not.toContain('testTerminateOnly');
+    for (const b of [loop.slice(loop.indexOf(pre), loop.indexOf('daemon_snapshot "$i" before')), loop.slice(loop.indexOf(jit))]) expect(b).toContain('no terminate attempted, no phone sample launched');
   });
 });
 
@@ -1603,7 +1640,7 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
     expect(bx.indexOf(guard)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));
     expect(bx).toContain('S2_STIMULUS="$ROOT/scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav"');
     const uses = bx.split('\n').filter((l) => l.includes('$STIMULUS'));
-    for (const l of uses) expect(l).toMatch(/^(case "\$STIMULUS" in|\s+\*\) echo "unknown stimulus '\$STIMULUS'|if \[ "\$STIMULUS" = sid-nearend-gated \]; then|SOURCE_LEDGER=""; \[ "\$STIMULUS" = sid-nearend-gated \]|if \[ -n "\$STIMULUS" \] && \{|\s+echo "--stimulus \$STIMULUS is lawful only|\s+\[ -n "\$STIMULUS" \] && echo "stimulus=\$STIMULUS|if \[ -n "\$STIMULUS" \]; then|\s+if \[ -n "\$STIMULUS" \]; then|\s+(if|elif) \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = output \] && \[ "\$STIMULUS" = sid-nearend-gated \]; then)/);
+    for (const l of uses) expect(l).toMatch(/^(case "\$STIMULUS" in|\s+\*\) echo "unknown stimulus '\$STIMULUS'|if \[ "\$STIMULUS" = sid-nearend-gated \]; then|SOURCE_LEDGER=""; \[ "\$STIMULUS" = sid-nearend-gated \]|if \[ -n "\$STIMULUS" \] && \{|\s+echo "--stimulus \$STIMULUS is lawful only|\s+\[ -n "\$STIMULUS" \] && echo "stimulus=\$STIMULUS|if \[ -n "\$STIMULUS" \]; then|\s+if \[ -n "\$STIMULUS" \]; then|\s+(if|elif) \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = output \] && \[ "\$STIMULUS" = sid-nearend-gated \]; then|if \[ "\$ACT" = duplex \].*\$STIMULUS|\s+echo "--act duplex is lawful only.*\$STIMULUS)/);
     expect(bx).not.toMatch(/\/\$STIMULUS|-f "\$STIMULUS"|afplay[^\n]*\$STIMULUS[^_]/);
   });
   it('stimulus lifetime per sample: start → record PID/epoch → 1 s settle → prove alive & non-zombie (else infrastructure abort, exit 9, no identical rows) → 1 s liveness monitor throughout run_test → run_test → post-run state → explicit TERM → wait that exact child → exit status → custody VALID|INVALID; the -t 180 ceiling is the failsafe, not the stop', () => {
@@ -1636,10 +1673,16 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
     expect(histRaw(OUTPUT_READER_CD22, 'scripts/witness/k00-output-ledger.py').equals(readFileSync(join(process.cwd(), 'scripts/witness/k00-output-ledger.py')))).toBe(true);
     const driver = histList(INSTRUMENT_CD20, ['ios/VoiceKernelDriver']).sort();
     expect(tracked(['ios/VoiceKernelDriver'])).toEqual(driver);
-    // SOURCE-ID-02: the driver moves beyond C-D20 only by the SID subject row and the two closed-set strings (the app under test still receives nothing)
+    // SOURCE-ID-02 + C1: the driver moves beyond C-D20 only by SID custody plus the one additive C1 method.
     for (const p of driver) {
-      if (p.endsWith('K00DriverTests.swift')) expect(sidOnlyDelta(histRaw(INSTRUMENT_CD20, p).toString('utf8'), readFileSync(join(process.cwd(), p), 'utf8'), SID_ALLOWED)).toEqual([]);
-      else expect(histRaw(INSTRUMENT_CD20, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+      if (p.endsWith('K00DriverTests.swift')) {
+        const current = readFileSync(join(process.cwd(), p), 'utf8');
+        const c1Start = current.indexOf('    /// C1 K00-06 validity-hardened duplex act');
+        const term = current.indexOf('    /// Terminate-only:', c1Start);
+        expect(c1Start).toBeGreaterThan(-1); expect(term).toBeGreaterThan(c1Start);
+        const withoutC1 = current.slice(0, c1Start) + current.slice(term);
+        expect(sidOnlyDelta(histRaw(INSTRUMENT_CD20, p).toString('utf8'), withoutC1, SID_ALLOWED)).toEqual([]);
+      } else expect(histRaw(INSTRUMENT_CD20, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
     }
   });
   it('SID ENTRY never waits out or repairs a nonzero harness set: the adjacent JIT read is the only SID ENTRY process precondition', () => {
@@ -1731,12 +1774,15 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
       if (/^\s*if \[ -n "\$SOURCE_LEDGER" \]; then/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }                    // SOURCE-ID-02
       if (/^sid_entry_jit_guard\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }                    // SID ENTRY-PREP-01
       if (/^sid_source_harness_zero_guard\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }              // SID SOURCE population custody repair
+      if (/^sid_duplex_harness_zero_guard\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }              // C1 SID DUPLEX custody
+      if (/^\s*if \[ "\$ACT" != duplex \]; then$/.test(now[i])) { allowed.add(i); }                                                       // wrapper around the verbatim historical ACT case
+      if (/^\s*if \[ "\$ACT" = duplex \]/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }       // C1 closed dispatch / refusal blocks
       if (/^\s*if \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = entry \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*(fi|elif harness_present; then|elif \[ "\$SUBJECT" = vpio-02-sid \])/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }  // SID ENTRY no-cleanup branch or adjacent JIT refusal block
       if (/^\s*(if|elif) \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = output \] && \[ "\$STIMULUS" = sid-nearend-gated \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*(fi|elif harness_present; then)$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }  // SID SOURCE precondition / PRE-PLAY / JIT refusal blocks
     }
     const wasSet = new Map<string, number>(); for (const l of was) wasSet.set(l, (wasSet.get(l) ?? 0) + 1);
     const added: string[] = [];
-    now.forEach((l, i) => { const n = wasSet.get(l) ?? 0; if (n > 0) { wasSet.set(l, n - 1); return; } if (allowed.has(i)) return; if (/^(STIMULUS=""|S2_[A-Z0-9_]+=")/.test(l) || l.includes('$STIMULUS') || l.includes('--stimulus') || SID_ALLOWED.test(l) || /^\s*(fi|\}|esac|done)?\s*$/.test(l)) return; added.push(l); });   // bare block closers carry no executable content
+    now.forEach((l, i) => { const n = wasSet.get(l) ?? 0; if (n > 0) { wasSet.set(l, n - 1); return; } if (allowed.has(i)) return; if (/^(STIMULUS=""|S2_[A-Z0-9_]+=")/.test(l) || l.includes('$STIMULUS') || l.includes('--stimulus') || SID_ALLOWED.test(l) || /testK0006ValiditySample|SID DUPLEX|K00-DUPLEX|duplex/.test(l) || /^\s*(fi|\}|esac|done)?\s*$/.test(l)) return; added.push(l); });   // C1 additions are separately pinned below; bare block closers carry no executable content
     expect(added).toEqual([]);
     expect(now.filter((l) => l.includes('$STIMULUS')).length).toBeGreaterThanOrEqual(6);
   });
