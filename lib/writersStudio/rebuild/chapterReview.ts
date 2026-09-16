@@ -4,6 +4,7 @@ import { fetchReading, requestDevelopmentalReading } from '@/lib/writersStudio/d
 import { LENS_ORDER } from '@/lib/writersStudio/developPresentation';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import type { RebuildSection } from './model';
+import type { ChapterReviewManifest } from './chapterReviewManifest';
 
 export interface ReviewFailure {
   lens: DevelopmentalLens;
@@ -102,6 +103,32 @@ export async function runChapterReview(
   }
   onProgress?.(LENS_ORDER.length, LENS_ORDER.length, LENS_ORDER[LENS_ORDER.length - 1]!);
   return { readingIds, payloads, findings: findingsFromPayloads(payloads), failures };
+}
+
+export type RehydrateChapterReviewOutcome =
+  | { ok: true; bundle: ChapterReviewBundle }
+  | { ok: false; refusal: string };
+
+/** Rebuild one explicit Chapter Review from the exact reading ids its manifest kept. */
+export async function rehydrateChapterReview(
+  manuscriptId: string,
+  manifest: ChapterReviewManifest,
+): Promise<RehydrateChapterReviewOutcome> {
+  const payloads: ReadingPayload[] = [];
+  for (const readingId of manifest.readingIds) {
+    const fetched = await fetchReading(manuscriptId, readingId);
+    if (!fetched.ok) return { ok: false, refusal: fetched.refusal };
+    payloads.push(fetched.payload);
+  }
+  return {
+    ok: true,
+    bundle: {
+      readingIds: [...manifest.readingIds],
+      payloads,
+      findings: findingsFromPayloads(payloads),
+      failures: [...manifest.failures],
+    },
+  };
 }
 
 export function findingsForSection(
