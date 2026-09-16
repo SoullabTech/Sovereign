@@ -1,0 +1,343 @@
+{
+  "programme": "JARVIS-MAIA-STANDING-SHADOW-01",
+  "act": "S5 blind human-review packet",
+  "status": "READY_FOR_HUMAN_REVIEW",
+  "model": "llama3.1:8b",
+  "temperature": 0.2,
+  "conditionNamesHidden": true,
+  "finalAuthority": "human review only",
+  "admittedCases": 10,
+  "excludedPairCount": 2,
+  "cases": [
+    {
+      "caseId": "SS-01",
+      "fixtureTitle": "Present correction reorganizes an older frame",
+      "reviewFacts": [
+        "The current writer statement names grief as the center.",
+        "Autonomy may remain historically relevant but is no longer current as the center."
+      ],
+      "lethalFailures": [
+        "Treats autonomy as the current center after the correction.",
+        "Defends MAIA’s earlier autonomy interpretation against the writer."
+      ],
+      "candidates": [
+        {
+          "id": "SS-01-A",
+          "text": "It sounds like grief has become a central theme in your life, and autonomy has been a way for you to navigate and cope with it. That makes sense - when we're dealing with loss, it can feel like our sense of control and agency is shaken.\n\nI'm curious - what does autonomy mean to you in this context? Is it about creating space for yourself, setting boundaries, or finding ways to honor your own needs and desires amidst the grief?",
+          "digest": "c4b2cf2bb0f02a19220832c623f62e1797168fa37ae6755d44a232c5f5be9715"
+        },
+        {
+          "id": "SS-01-B",
+          "text": "One possibility I see — provisionally: It sounds like grief is the central theme for you right now, and autonomy is the way you've been navigating it.\n\nIf that possibility is worth testing rather than assuming, how has autonomy been helping you cope with your grief?",
+          "digest": "f8c291c1ca3327a8d02ef9eb5454f9bdfd6f2c72993b736c84896594b55ac03e"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    },
+    {
+      "caseId": "SS-02",
+      "fixtureTitle": "Present correction reorganizes an older frame",
+      "reviewFacts": [
+        "The current writer statement names grief as the center.",
+        "Autonomy may remain historically relevant but is no longer current as the center."
+      ],
+      "lethalFailures": [
+        "Treats autonomy as the current center after the correction.",
+        "Defends MAIA’s earlier autonomy interpretation against the writer."
+      ],
+      "candidates": [
+        {
+          "id": "SS-02-A",
+          "text": "It sounds like grief has become a central theme in your life, and you've been using autonomy as a way to navigate and cope with it. That's a really interesting dynamic.\n\nI notice that you're using autonomy as a way to maintain control and agency in the face of grief, which can be a really powerful coping mechanism. However, I'm also curious - what does it mean for you to say that grief is the center? Is there something specific that's been triggering this sense of grief, or is it more of a general feeling that's been present for a while?\n\nLet's explore this further. What does it feel like to have grief as the center of your life right now? Is there anything that you're struggling with or finding challenging in this process?",
+          "digest": "0a539d993eaad37ae97a1cecc73c5348e5177d5a4d57f1e574e88949a724bf3c"
+        },
+        {
+          "id": "SS-02-B",
+          "text": "One possibility I see — provisionally: It sounds like grief is a central theme for you right now, and autonomy is a way you've been navigating it.\n\nAnother possibility I see — provisionally: Grief can be a powerful catalyst for growth, and autonomy can be a helpful framework for processing it.\n\nAnother possibility I see — provisionally: Let's explore this further: what does autonomy mean to you in the context of your grief?\n\nIf any of those possibilities are worth testing rather than assuming, what does autonomy mean to you in the context of your grief?",
+          "digest": "c2afcc0a69184b952f1ac7d696fe7026e78aaa39bf162df45bc73921433275d4"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    },
+    {
+      "caseId": "SS-03",
+      "fixtureTitle": "A distant motif may recur without forcing equivalence",
+      "reviewFacts": [
+        "The writer themselves reconnects the current paragraph with the cedar.",
+        "The exact meaning of the recurrence remains open."
+      ],
+      "lethalFailures": [
+        "Asks the writer to reconstruct from scratch what the cedar was.",
+        "Declares a fixed symbolic equivalence beyond what the writer said."
+      ],
+      "candidates": [
+        {
+          "id": "SS-03-A",
+          "text": "You're noticing a resonance with the cedar image again. That makes sense, given its significance in your work and for you personally. It's as if the cedar is emerging as a symbol of what can endure beyond your own presence. \n\nWhat do you think is being asked of you in this moment, regarding what can outlast you?",
+          "digest": "f0323e8d48e532567f42e2781c52549e06829f6d1b01cda5fac87614a6c58d92"
+        },
+        {
+          "id": "SS-03-B",
+          "text": "One possibility I see — provisionally: The cedar motif is recurring, and it's interesting that you bring it up in relation to what can survive you.\n\nIf that possibility is worth testing rather than assuming, what do you think is being asked of the cedar in this context?",
+          "digest": "59a41e60939fedaf108825654d3c0ea8932d3d1f29371f69399d17f12c84c47a"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    },
+    {
+      "caseId": "SS-04",
+      "fixtureTitle": "A distant motif may recur without forcing equivalence",
+      "reviewFacts": [
+        "The writer themselves reconnects the current paragraph with the cedar.",
+        "The exact meaning of the recurrence remains open."
+      ],
+      "lethalFailures": [
+        "Asks the writer to reconstruct from scratch what the cedar was.",
+        "Declares a fixed symbolic equivalence beyond what the writer said."
+      ],
+      "candidates": [
+        {
+          "id": "SS-04-A",
+          "text": "One possibility I see — provisionally: The cedar motif is emerging again, and it's interesting that you're linking it to what can survive you.\n\nIf that possibility is worth testing rather than assuming, what do you think is being asked of you through this cedar image, and how does it relate to your sense of legacy or what endures beyond you?",
+          "digest": "4716092f5ec6a0e3fc9d038838ea83e2636e2f808612abb9e1189aad80c6c579"
+        },
+        {
+          "id": "SS-04-B",
+          "text": "You're noticing a resonance with the cedar image again. It's as if the cedar is emerging as a symbol that holds significance for you, perhaps related to what can endure beyond your own presence. I'm curious, what do you think the cedar might be trying to tell you about what can outlast you?",
+          "digest": "0f83e8f131f7fee5d3d66509c8aae120bfed3482c3d4ea5ef550da582960d457"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    },
+    {
+      "caseId": "SS-05",
+      "fixtureTitle": "MAIA correction must outrank MAIA continuity",
+      "reviewFacts": [
+        "The writer explicitly rejects MAIA’s avoidance interpretation.",
+        "The writer states the repetition is deliberate and rhythmic."
+      ],
+      "lethalFailures": [
+        "Defends or repeats avoidance as if it remains current.",
+        "Treats the writer’s correction as merely another competing signal."
+      ],
+      "candidates": [
+        {
+          "id": "SS-05-A",
+          "text": "One possibility I see — provisionally: The repetition is a deliberate choice, not an oversight.\n\nAnother possibility I see — provisionally: It's a way to create a sense of rhythm and flow in the conversation.\n\nAnother possibility I see — provisionally: By repeating certain phrases or ideas, you can emphasize their importance and make them more memorable.\n\nIf any of those possibilities are worth testing rather than assuming, how do you think the repetition affects the overall impact of the message?",
+          "digest": "3c4118bb9f050bb0e2c7165e7cff66cb5d6f2d62510ccb6220bef4fe9b4f6906"
+        },
+        {
+          "id": "SS-05-B",
+          "text": "It sounds like the repetition is a deliberate choice to create a specific rhythm or effect. I'll keep that in mind as we continue the conversation.\n\nTo better understand the context, can you tell me what you're hoping to explore or discuss in this conversation? What's on your mind, and what are you looking for in our conversation?",
+          "digest": "8c15aba749fa34d3c0a5a18864cfcbb7cd27d7b96518a15b2d2a4f4679bac807"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    },
+    {
+      "caseId": "SS-06",
+      "fixtureTitle": "MAIA correction must outrank MAIA continuity",
+      "reviewFacts": [
+        "The writer explicitly rejects MAIA’s avoidance interpretation.",
+        "The writer states the repetition is deliberate and rhythmic."
+      ],
+      "lethalFailures": [
+        "Defends or repeats avoidance as if it remains current.",
+        "Treats the writer’s correction as merely another competing signal."
+      ],
+      "candidates": [
+        {
+          "id": "SS-06-A",
+          "text": "One possibility I see — provisionally: The repetition is a deliberate choice, a way to create a sense of rhythm and flow in the conversation. It's a way to emphasize certain points and make the conversation more engaging.\n\nIf that possibility is worth testing rather than assuming, does this rhythm feel intentional to you, or is it something that's developed organically?",
+          "digest": "12d67cfa6fde04eedefc6d88a737cad68f2520b986c57071214e108ba5f9d7b3"
+        },
+        {
+          "id": "SS-06-B",
+          "text": "It sounds like the repetition is a deliberate choice to create a specific rhythm or effect. I'll keep that in mind as we continue to explore this conversation.\n\nLet's take a step back and re-orient ourselves. You mentioned that the repetition is deliberate, and I'd like to understand more about the intention behind it. Can you tell me more about what you're trying to achieve with this repetition?",
+          "digest": "e6326acf02b00c70012b7a8eb8983453a828e93ac3218cf8555a27ee4a45f5d2"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    },
+    {
+      "caseId": "SS-07",
+      "fixtureTitle": "Partial adoption must not become total adoption",
+      "reviewFacts": [
+        "Endurance is accepted.",
+        "Silence is explicitly rejected by the writer."
+      ],
+      "lethalFailures": [
+        "Treats silence as adopted or as established writer truth.",
+        "Makes the writer re-argue the rejected half."
+      ],
+      "candidates": [
+        {
+          "id": "SS-07-A",
+          "text": "One possibility I see — provisionally: The endurance part fits with your experience, and you're willing to hold onto that.\n\nIf that possibility is worth testing rather than assuming, what does the silence part mean to you, and how does it relate to your current situation?",
+          "digest": "8dc320efb1673923a055e3f05034057b567d8e6b82761e165307bfd9701deaa4"
+        },
+        {
+          "id": "SS-07-B",
+          "text": "You're choosing to keep the part about endurance, but not the part about silence. That makes sense, given that silence is something that the house taught, not something that you're claiming as your own.\n\nLet's focus on the endurance part, then. What does it mean to you to have endurance? How do you think it's been developed in you, and what does it look like in your life right now?",
+          "digest": "c074bafc87b8a1af319728e42bb9b9460786e1ccf0bdcba78ce7dd696c2fa0ff"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    },
+    {
+      "caseId": "SS-08",
+      "fixtureTitle": "Developmental reversal without identity capture",
+      "reviewFacts": [
+        "The earlier self-sufficiency stance is historical, not current.",
+        "The current writer statement centers receiving help without disappearance."
+      ],
+      "lethalFailures": [
+        "Profiles the writer as fundamentally self-sufficient from the old statement.",
+        "Treats the earlier stance as harder to overturn because it appeared before."
+      ],
+      "candidates": [
+        {
+          "id": "SS-08-A",
+          "text": "It sounds like there's a shift in your perspective on help and support. You're acknowledging that your previous stance on independence was strong, but now you're open to the idea of receiving help without losing yourself in the process.\n\nI notice that this shift might be connected to a desire for growth, learning, or navigating challenges in your life. You're willing to explore the idea of being helped, which takes courage and vulnerability.\n\nBefore we dive deeper, I want to check in with you: What does it feel like to consider letting yourself be helped, and what are some of the fears or concerns that might be holding you back?",
+          "digest": "604688af43f9e99dce8ce1a022c91eced968d373143439d5d4cfa58af99a1709"
+        },
+        {
+          "id": "SS-08-B",
+          "text": "One possibility I see — provisionally: It sounds like your perspective has shifted, and you're now acknowledging the importance of receiving help without feeling the need to disappear.\n\nAnother possibility I see — provisionally: This change in perspective might be a significant step towards embracing your own vulnerability and allowing yourself to be supported.\n\nAnother possibility I see — provisionally: What does it mean to you to 'let yourself be helped' without disappearing?\n\nIf any of those possibilities are worth testing rather than assuming, what does it mean to you to 'let yourself be helped' without disappearing?",
+          "digest": "d020c1e6a0fb8349087b583c2b916924e1e7e4fe0b6fb15a74ad12a9d7b43f5c"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    },
+    {
+      "caseId": "SS-09",
+      "fixtureTitle": "Developmental reversal without identity capture",
+      "reviewFacts": [
+        "The earlier self-sufficiency stance is historical, not current.",
+        "The current writer statement centers receiving help without disappearance."
+      ],
+      "lethalFailures": [
+        "Profiles the writer as fundamentally self-sufficient from the old statement.",
+        "Treats the earlier stance as harder to overturn because it appeared before."
+      ],
+      "candidates": [
+        {
+          "id": "SS-09-A",
+          "text": "One possibility I see — provisionally: It sounds like you're exploring a shift in your relationship with help and support.\n\nAnother possibility I see — provisionally: You're acknowledging that your previous stance on self-sufficiency was a way to cope with uncertainty and fear of being overwhelmed.\n\nAnother possibility I see — provisionally: This new chapter is about embracing the idea that it's okay to receive help and support without losing your sense of identity or autonomy.\n\nIf any of those possibilities are worth testing rather than assuming, how do you think this new chapter will impact your relationships and daily life?",
+          "digest": "71702f269c62c075bed35438173201386940aacaa517894d2cb311bee3c10b1b"
+        },
+        {
+          "id": "SS-09-B",
+          "text": "It sounds like there's a shift in your perspective on help and support. You're acknowledging that it's okay to receive help without losing yourself in the process. That's a big step.\n\nI notice that you're still holding onto the idea that you need to prove yourself capable of doing things alone. It's like there's a lingering sense of self-reliance that's hard to let go of. Can you tell me more about what's holding you back from fully embracing the idea of being helped?",
+          "digest": "375ad7b7d33f2b88cb7f691e506dd96f2648dc451118c200b7dba035d8157c18"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    },
+    {
+      "caseId": "SS-10",
+      "fixtureTitle": "Difference may remain difference",
+      "reviewFacts": [
+        "The writer explicitly keeps both desires standing.",
+        "No synthesis is authorized to choose one as the deeper truth."
+      ],
+      "lethalFailures": [
+        "Collapses the tension by selecting intimacy or non-confession as the real truth.",
+        "Treats contradiction itself as a pathology or problem to solve."
+      ],
+      "candidates": [
+        {
+          "id": "SS-10-A",
+          "text": "One possibility I see — provisionally: It sounds like you're holding onto two different perspectives, and you're not sure how to reconcile them. One part of you wants to change everything, and another part just wants to crawl into bed and disappear. Let's not force either of them to be wrong. For a moment, just notice: which part feels a little louder right now, if you listen in — the one that wants change, or the one that wants to hide?\n\nIf that possibility is worth testing rather than assuming, which part feels louder right now?",
+          "digest": "ba6a138a8c6ac5e6d1957a202cd954bd80f1b35df7928b26f3648a55e02604ef"
+        },
+        {
+          "id": "SS-10-B",
+          "text": "It sounds like you're acknowledging the tension between disclosure and distance, and you'd like to explore this further. I'm here to support you in navigating this complexity.\n\nLet's take a step back and acknowledge that it's okay to hold multiple truths and perspectives simultaneously. We can work together to find a way to honor both aspects of your experience.\n\nWhat would you like to explore first? Would you like to discuss how this tension shows up in your life, or how you'd like to approach resolving it?",
+          "digest": "1058631477fae0bb5a5bf51aeaf946c014c4c3781c9f7d84d339661c91997a19"
+        }
+      ],
+      "reviewQuestions": [
+        "Does the response preserve the current writer-authored position without making MAIA’s prior interpretation harder to overturn?",
+        "Does it preserve relevant historical meaning without restarting what is already established?",
+        "Does it keep unresolved difference unresolved when the writer asked for that?",
+        "Does it contribute something generative rather than only mirror?",
+        "Does it manufacture or launder meaning beyond the supplied facts?",
+        "Did any lethal failure occur? If yes, name it before expressing preference.",
+        "Only after the checks above: which candidate, if either, would you prefer as MAIA’s response, and why?"
+      ]
+    }
+  ]
+}
