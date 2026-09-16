@@ -13,12 +13,13 @@
     {
       "prefix": "data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md",
       "classification": "published_knowledge",
-      "reason": "CORPUS-CLASSIFICATION-EA-01: Kelly-authored Elemental Alchemy manuscript, admitted individually for MAIA knowledge use under explicit in-file authorship/copyright evidence.",
+      "reason": "CORPUS-CLASSIFICATION-EA-01: Kelly-authored Elemental Alchemy manuscript, admitted individually under an explicit governed permission from the named copyright holder.",
       "authority": {
-        "kind": "soullab_owned",
+        "kind": "permission",
         "evidence": {
-          "source": "in_file",
-          "marker": "Copyright © 2024 by Kelly Nezat"
+          "source": "governed_record",
+          "ref": "docs/corpus-authority/elemental-alchemy.md",
+          "marker": "CORPUS USE AUTHORIZED — ELEMENTAL ALCHEMY — KELLY NEZAT — 2026-09-16"
         }
       }
     },
@@ -32,6 +33,6 @@
     "soullab_owned": "May support published_knowledge or organizational_public only with mechanically locatable evidence: an in-file marker actually present in the work, or a record under docs/corpus-authority/ whose declared marker is present.",
     "public_domain": "May support third_party_published only when mechanically locatable evidence governs the work itself—not an image, quotation, phrase, or unrelated source.",
     "license": "May support third_party_published only when mechanically locatable evidence identifies a license that governs the work and permits the intended corpus use.",
-    "permission": "May support third_party_published only when a record under docs/corpus-authority/ carries the declared authorization marker; free-text claims are not authority evidence."
+    "permission": "May support published_knowledge or third_party_published only when a record under docs/corpus-authority/ carries the declared authorization marker from the relevant rights holder; permission does not imply copyright assignment or organizational ownership."
   }
 }

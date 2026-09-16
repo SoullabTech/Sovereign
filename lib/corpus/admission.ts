@@ -73,7 +73,7 @@ const ADMITTING: ReadonlySet<Classification> = new Set<Classification>([
 const GOVERNED_AUTHORITY_RECORD_ROOT = 'docs/corpus-authority';
 
 const AUTHORITY_BY_CLASS: Readonly<Record<string, ReadonlySet<CorpusAuthorityKind>>> = {
-  published_knowledge: new Set<CorpusAuthorityKind>(['soullab_owned']),
+  published_knowledge: new Set<CorpusAuthorityKind>(['soullab_owned', 'permission']),
   organizational_public: new Set<CorpusAuthorityKind>(['soullab_owned']),
   third_party_published: new Set<CorpusAuthorityKind>(['public_domain', 'license', 'permission']),
 };

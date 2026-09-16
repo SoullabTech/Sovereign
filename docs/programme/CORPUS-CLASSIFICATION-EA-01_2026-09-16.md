@@ -15,11 +15,12 @@ No directory, filename family, neighboring work, or publication-shaped file inhe
 ## Classification
 
 - classification: `published_knowledge`
-- authority kind: `soullab_owned`
-- evidence source: `in_file`
-- required marker: `Copyright © 2024 by Kelly Nezat`
+- authority kind: `permission`
+- evidence source: `governed_record`
+- authority record: `docs/corpus-authority/elemental-alchemy.md`
+- required marker: `CORPUS USE AUTHORIZED — ELEMENTAL ALCHEMY — KELLY NEZAT — 2026-09-16`
 
-The marker is mechanically present in the work at line 71 on the reviewed tree. Under CORPUS-AUTHORITY-01, the rule is admissible only because the marker is found in the candidate file itself; a free-text assertion would not satisfy the boundary.
+The work itself states `Copyright © 2024 by Kelly Nezat`. Kelly has also stated that Soullab is a registered trademark to Kelly Nezat. The trademark fact is preserved as founder/brand provenance only; it is not treated as a copyright assignment. Corpus authority is therefore expressed as explicit rights-holder permission, not `soullab_owned`.
 
 ## Real-corpus verdict
 
@@ -45,7 +46,7 @@ Therefore this classification changes only future eligibility. It does not expos
 
 ## Local evidence
 
-- admission/composition suite: **23/23 PASS**
+- admission/composition suite: **24/24 PASS**
 - real 736-file verdict: **1 admitted / 735 excluded / 0 refused**
 - root TypeScript: **229 vs baseline 239 · 0 regressions**
 - `typecheck:scripts`: **40 base / 40 head**, head-only **0**, base-only **0**, identity sets identical
@@ -53,6 +54,18 @@ Therefore this classification changes only future eligibility. It does not expos
 - no-Supabase: PASS
 - design canon: PASS — no member-facing UI changes
 - `git diff --check`: PASS
+
+## Independent review amendment
+
+The initial tranche used `soullab_owned` because the work names Kelly Nezat as copyright holder and Kelly also owns the Soullab® trademark. Review rejected that inference: trademark ownership and copyright ownership are separate rights, and the in-file copyright notice does not evidence assignment of the book copyright to Soullab.
+
+The tranche now uses `permission` instead. A governed record under `docs/corpus-authority/elemental-alchemy.md` preserves three distinct facts:
+
+1. the work itself names Kelly Nezat as copyright holder;
+2. Soullab® is a registered trademark to Kelly Nezat, which is identity/brand provenance only;
+3. Kelly Nezat authorizes Soullab / MAIA corpus use of this work.
+
+T24 witnesses that `published_knowledge` may be admitted by governed rights-holder permission without asserting organizational copyright ownership.
 
 ## Explicit holds
 

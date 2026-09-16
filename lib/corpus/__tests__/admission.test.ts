@@ -433,7 +433,7 @@ describe('ACT 4 §C · corpus admission', () => {
     }
   });
 
-  test('T23 — shipped declaration admits Elemental Alchemy only by its in-file Kelly copyright evidence', () => {
+  test('T23 — shipped declaration admits Elemental Alchemy only by governed rights-holder permission', () => {
     const repoRoot = path.resolve(__dirname, '../../..');
     const real = loadDeclaration(repoRoot);
     const ea = path.join(repoRoot, 'data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md');
@@ -441,6 +441,33 @@ describe('ACT 4 §C · corpus admission', () => {
     const v = decideAdmission(repoRoot, [ea, other], real);
     expect(v.admitted).toEqual(['data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md']);
     expect(v.excluded.map((e) => e.file)).toContain('data/ain/source/60-second-protocol.md');
+  });
+
+  test('T24 — published knowledge may be admitted by governed rights-holder permission without claiming organizational ownership', () => {
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/author-work.md'),
+      declaration([
+        {
+          prefix: 'data/ain/source/books/author-work.md',
+          classification: 'published_knowledge',
+          reason: 'author permission',
+          authority: {
+            kind: 'permission',
+            evidence: {
+              source: 'governed_record',
+              ref: 'docs/corpus-authority/author-work.md',
+              marker: 'CORPUS USE AUTHORIZED',
+            },
+          },
+        },
+      ]),
+      reader({
+        'data/ain/source/books/author-work.md': 'Copyright © Author. Published work.',
+        'docs/corpus-authority/author-work.md': 'CORPUS USE AUTHORIZED',
+      }),
+    );
+    expect(v.admitted).toEqual(['data/ain/source/books/author-work.md']);
   });
 
 });
