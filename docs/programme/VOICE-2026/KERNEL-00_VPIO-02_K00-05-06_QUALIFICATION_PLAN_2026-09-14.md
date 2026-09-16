@@ -911,3 +911,8 @@ No qualification change.
 ### §10.76 — FIRST-INSTALL-02 STOP at device pre-state (historical harness running) (2026-09-16; discriminator plan §18.56; implementation record §10.27)
 
 No install; no container; no qualification change. The `.vpio02` subject was observed running outside any governed act — recorded as device-environment fact, cause unknown.
+
+
+### §10.77 — terminate-only act, `02` STOP carrier and `03` pin drafted; nothing executable (2026-09-16; discriminator plan §18.57; implementation record §10.28)
+
+No qualification change.
