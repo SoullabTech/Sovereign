@@ -44,19 +44,37 @@
 .wsr-return-workspace {
   position: fixed;
   top: 18px;
-  right: 22px;
-  z-index: 80;
-  border: 0;
-  background: transparent;
-  color: var(--ws-ink-muted, #766E61);
-  font: 500 11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  letter-spacing: .02em;
-  opacity: .38;
+  left: 22px;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid var(--ws-rule-soft, #DDD6CA);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ws-ground-raised, #EAE6DC) 92%, transparent);
+  color: var(--ws-ink-primary, #26231E);
+  font: 650 12px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .01em;
+  opacity: .88;
   cursor: pointer;
-  transition: opacity 160ms ease;
+  box-shadow: 0 5px 18px rgb(30 25 18 / 9%);
+  backdrop-filter: blur(10px);
+  transition: opacity 160ms ease, transform 160ms ease;
 }
 .wsr-return-workspace:hover,
-.wsr-return-workspace:focus-visible { opacity: .9; }
+.wsr-return-workspace:focus-visible { opacity: 1; transform: translateY(-1px); }
+
+/* A grid/flex item defaults to min-height:auto, which lets its contents make
+   it taller than the viewport. Pure Canvas intentionally locks the outer page,
+   so its manuscript chain must explicitly yield height to the inner document
+   scroller or the wheel has nowhere lawful to go. */
+.wsr-grid, .wsr-manuscript { min-height: 0; }
+.wsr-manuscript { overflow: hidden; }
+[data-manuscript-scroll] { min-height: 0; overscroll-behavior: contain; }
+.wsr-pure-grid, .wsr-pure-manuscript { min-height: 0; overflow: hidden; }
+.wsr-pure-scroll { height: 100%; min-height: 0; overflow-y: auto !important; }
 
 .wsr-writing-alert {
   position: fixed;
@@ -87,5 +105,5 @@
   .wsr-pure-grid { height: 100vh !important; }
   .wsr-pure-manuscript { height: 100vh !important; }
   .wsr-pure-scroll { padding: 64px 28px 96px !important; }
-  .wsr-return-workspace { top: 12px; right: 14px; }
+  .wsr-return-workspace { top: 12px; left: 14px; }
 }

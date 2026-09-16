@@ -362,6 +362,17 @@ export default function RebuildStudioClient() {
     requestAnimationFrame(() => sectionRefs.current.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }, [focusId, selectedPassage, clearEditorial, replaceAddress, editorialThread?.threadId]);
 
+  /* Every frozen review finding must have a member-facing door even when its
+     evidence is whole-chapter or structural rather than attached to one of the
+     movement headings below. A section-linked finding may also take the writer
+     to the first exact section it names; absence of a section never hides the
+     finding itself. */
+  const openReviewFinding = useCallback((finding: ChapterReviewBundle['findings'][number]) => {
+    const target = finding.sectionIds.find((id) => context?.sections.some((section) => section.draftSectionId === id));
+    if (!target) return;
+    selectSection(target, 'section');
+  }, [context, selectSection]);
+
   const title = context?.title ?? 'Writer’s Studio';
   const chapterTitle = chapter?.root.heading ?? focusSection?.heading ?? 'Manuscript';
   const chapterName = labelWithoutPrefix(chapter?.root.heading ?? null);
@@ -671,8 +682,14 @@ export default function RebuildStudioClient() {
         </div>
       </header>)}
       {canvasExpanded && (
-        <button type="button" className="wsr-return-workspace" onClick={() => setCanvasExpanded(false)} title="Return to workspace">
-          Workspace
+        <button
+          type="button"
+          className="wsr-return-workspace"
+          onClick={() => setCanvasExpanded(false)}
+          aria-label="Return to Writer’s Studio workbench"
+          title="Return to workbench"
+        >
+          <span aria-hidden="true">←</span> Workbench
         </button>
       )}
 
@@ -709,7 +726,8 @@ export default function RebuildStudioClient() {
                is the room. Declaring it here makes the field the nearest
                answer for everything inside it. */
             background: C.field, color: C.ink,
-            minWidth: 0, display: 'flex', flexDirection: 'column',
+            minWidth: 0, minHeight: 0, height: '100%', overflow: 'hidden',
+            display: 'flex', flexDirection: 'column',
           } as React.CSSProperties}
         >
           {!canvasExpanded && (<div style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '10px 24px', borderBottom: `1px solid ${C.soft}` }}>
@@ -729,7 +747,7 @@ export default function RebuildStudioClient() {
             </div>
           </div>)}
 
-          <div data-manuscript-scroll className={canvasExpanded ? 'wsr-pure-scroll' : undefined} style={{ flex: 1, overflowY: 'auto', padding: canvasExpanded ? '72px clamp(40px, 14vw, 220px) 120px' : '48px clamp(34px, 7vw, 100px) 90px' }}>
+          <div data-manuscript-scroll className={canvasExpanded ? 'wsr-pure-scroll' : undefined} style={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', padding: canvasExpanded ? '72px clamp(40px, 14vw, 220px) 120px' : '48px clamp(34px, 7vw, 100px) 90px' }}>
             <article style={{ maxWidth: canvasExpanded ? 840 : 760, margin: '0 auto', fontFamily: SERIF }}>
               <div style={{ color: C.gold, fontFamily: SANS, fontSize: 10.5, letterSpacing: '.16em', fontWeight: 700, marginBottom: 9 }}>CHAPTER {chapter?.root.heading?.match(/Chapter\s+(\d+)/i)?.[1] ?? ''}</div>
               <h1 style={{ fontSize: 'clamp(34px, 4vw, 56px)', lineHeight: 1.05, fontWeight: 420, margin: '0 0 14px' }}>{chapterName}</h1>
@@ -835,6 +853,33 @@ export default function RebuildStudioClient() {
                     </div>
                   ))}
                 </div>
+                {review && review.findings.length > 0 && (
+                  <details data-review-all-findings style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, padding: '10px 12px', marginBottom: 18 }}>
+                    <summary style={{ cursor: 'pointer', fontSize: 11.5, fontWeight: 700, color: C.secondary }}>
+                      All findings · {review.findings.length}
+                    </summary>
+                    <div style={{ display: 'grid', gap: 9, marginTop: 11 }}>
+                      {review.findings.map((finding, index) => {
+                        const target = finding.sectionIds.find((id) => context?.sections.some((section) => section.draftSectionId === id)) ?? null;
+                        return (
+                          <article key={finding.id} data-review-finding={finding.id} style={{ borderTop: index === 0 ? 0 : `1px solid ${C.soft}`, paddingTop: index === 0 ? 0 : 9 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+                              <span style={{ fontSize: 10.5, color: C.gold, fontWeight: 750, textTransform: 'capitalize' }}>{finding.lens}</span>
+                              <span style={{ fontSize: 9.5, color: C.quiet }}>{finding.state}</span>
+                            </div>
+                            <p style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, margin: '4px 0 0' }}>{finding.observation}</p>
+                            {target && (
+                              <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
+                                style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0 0', fontSize: 10.5, cursor: 'pointer' }}>
+                                Show in manuscript →
+                              </button>
+                            )}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </details>
+                )}
                 <div style={{ fontSize: 11, color: C.quiet, letterSpacing: '.08em', fontWeight: 700, marginBottom: 8 }}>FINDINGS BY SECTION</div>
                 {(chapter?.sections.filter((s) => s.headingDepth === 2) ?? []).map((movement) => {
                   const findings = reviewFindingsForMovement(movement);
@@ -859,11 +904,20 @@ export default function RebuildStudioClient() {
                 <button type="button" onClick={() => setMaiaMode('chapter')} style={{ border: 0, background: 'transparent', color: C.gold, padding: 0, fontSize: 11.5, cursor: 'pointer', marginBottom: 14 }}>← Back to chapter findings</button>
                 <div style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, padding: 12, marginBottom: 14 }}>
                   <div style={{ color: C.quiet, fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em' }}>FROM CHAPTER REVIEW</div>
-                  <div style={{ fontSize: 12, lineHeight: 1.5, color: C.muted, marginTop: 5 }}>
-                    {passageReviewFindings[0]?.summary
-                      ?? (review ? 'No section-specific finding was attached here; you can still ask MAIA directly.' : 'Run Chapter Review first and its section-linked findings will stay here while you work.')}
-                  </div>
-                  {passageReviewFindings.length > 1 && <div style={{ fontSize: 10.5, color: C.quiet, marginTop: 6 }}>+ {passageReviewFindings.length - 1} more finding{passageReviewFindings.length === 2 ? '' : 's'}</div>}
+                  {passageReviewFindings.length > 0 ? (
+                    <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>
+                      {passageReviewFindings.map((finding) => (
+                        <article key={finding.id} data-section-review-finding={finding.id}>
+                          <div style={{ fontSize: 10, color: C.gold, fontWeight: 750, textTransform: 'capitalize' }}>{finding.lens}</div>
+                          <div style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, marginTop: 3 }}>{finding.observation}</div>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 12, lineHeight: 1.5, color: C.muted, marginTop: 5 }}>
+                      {review ? 'No section-specific finding was attached here; whole-chapter findings remain available in Chapter Review.' : 'Run Chapter Review first and its section-linked findings will stay here while you work.'}
+                    </div>
+                  )}
                 </div>
                 <div style={{ fontSize: 11.5, color: C.muted, marginBottom: 7 }}>{selectedPassage ? '◎ Working with selected passage in' : '◎ Working on'}</div>
                 <h3 style={{ fontFamily: SERIF, fontSize: 21, margin: '0 0 14px', fontWeight: 500 }}>{focusName}</h3>
