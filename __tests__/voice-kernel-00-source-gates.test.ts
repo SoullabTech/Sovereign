@@ -1997,4 +1997,30 @@ describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026
     expect(p).not.toMatch(/xcodebuild|testTerminateOnly|k00-driver-batch|device install|device uninstall/);
   });
 
+
+  it('SID SOURCE successor 03 preserves the guarded full N=10 experiment after BATCH-02 partial STOP, with fresh one-shot identity only', () => {
+    const pre = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-PREFLIGHT-03_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    const batch = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-BATCH-03_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    expect(pre).toContain('SHA=f67575797353bf7e97ffb319a45357997c8d564d');
+    expect(pre).toContain('ENTRY_SHA=26116d4e42fdb7f25ffbbede7c20f4a98f226c18');
+    expect(pre).toContain('PTR=/private/tmp/sid-source-preflight-03-current.txt');
+    expect(batch).toContain('ACT_MARK=/private/tmp/sid-source-batch-03-invoked.txt');
+    expect(batch).toContain('PTR=/private/tmp/sid-source-preflight-03-current.txt');
+    expect(batch).toContain('test "$AGE" -le 300');
+    expect((batch.match(/scripts\/witness\/k00-driver-batch\.sh VPIO-02-SID-SOURCE 10/g) ?? []).length).toBe(1);
+    expect(batch).toContain('--act output --vp on --mode L --hold 15 --subject vpio-02-sid --stimulus sid-nearend-gated --cancel-at 1000 --settle 2');
+    expect(batch).not.toMatch(/top-up|VPIO-02-SID-SOURCE 5/);
+  });
+
+  it('SID SOURCE harness-clear 02 is the fresh exact-set successor and cannot reuse CLEAR-01 output custody', () => {
+    const p = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-HARNESS-CLEAR-02_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    expect(p).toContain('OUT=/private/tmp/sid-source-harness-clear-02-out-$STAMP');
+    expect(p).toContain('SEAL=/private/tmp/sid-source-harness-clear-02-$STAMP.SHA256SUMS.clearance');
+    expect(p).toContain('SID-SOURCE-HARNESS-CLEAR-02');
+    expect((p.match(/device process terminate/g) ?? []).length).toBe(3);
+    expect(p).toContain('readset pre "$K00_CONTAINER" "$V1_CONTAINER" "$V2_CONTAINER"');
+    expect(p).toContain('readset post');
+    expect(p).not.toMatch(/xcodebuild|testTerminateOnly|k00-driver-batch|device install|device uninstall/);
+  });
+
 });

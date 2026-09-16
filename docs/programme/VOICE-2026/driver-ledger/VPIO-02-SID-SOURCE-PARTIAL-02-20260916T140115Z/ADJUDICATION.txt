@@ -1,0 +1,7 @@
+ACT SID SOURCE-BATCH-02
+RESULT PARTIAL STOP SPENT
+COMPLETED 5/10
+SAMPLE 6 PRE-PLAY harnesses=3; no stimulus; no phone launch; no terminate
+SAMPLES 7-10 not attempted
+TOP-UP forbidden; rerun under BATCH-02 forbidden
+SOURCE-ROW completed: 5 VALID / 5 CHARACTERIZE-SRC; descriptive only, no population adjudication

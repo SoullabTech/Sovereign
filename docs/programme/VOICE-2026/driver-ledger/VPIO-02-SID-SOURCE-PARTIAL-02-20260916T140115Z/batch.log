@@ -1,0 +1,36 @@
+[14:01:15] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[14:01:15] build-for-testing (driver only; the harness is untouched)
+[14:01:21] xctestrun: /private/tmp/sid-source-02-f67575797353bf7e97ffb319a45357997c8d564d-20260916T140110Z/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+[14:01:21] stimulus preflight PASS: fixture 30d51cf4b7527d28131bd9c2535c6bd4dcd2403c8dc0343fc045f6f6959875eb · afplay 88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb · default output Mac Studio Speakers (coreaudio_device_type_builtin) · volume 69 · muted false
+[14:01:21] sample 1/10 — precondition
+[14:01:23] sample 1/10 — driver (testOutputSample, mode L)
+[14:01:58] sample 1 stimulus custody VALID (pid 53224 alive through the governed interval; stopped by the batch, wait rc=143)
+[14:02:01] sample 1 ledgered: kernel00-K00-8f7c901f-1789567314.jsonl
+[14:02:01] sample 1 source rows read: kernel00-K00-8f7c901f-1789567314.jsonl
+[14:02:01] sample 1 output rows read: kernel00-K00-8f7c901f-1789567314.jsonl
+[14:02:01] sample 2/10 — precondition
+[14:02:03] sample 2/10 — driver (testOutputSample, mode L)
+[14:02:35] sample 2 stimulus custody VALID (pid 53703 alive through the governed interval; stopped by the batch, wait rc=143)
+[14:02:38] sample 2 ledgered: kernel00-K00-f6a5701b-1789567351.jsonl
+[14:02:38] sample 2 source rows read: kernel00-K00-f6a5701b-1789567351.jsonl
+[14:02:38] sample 2 output rows read: kernel00-K00-f6a5701b-1789567351.jsonl
+[14:02:38] sample 3/10 — precondition
+[14:02:41] sample 3/10 — driver (testOutputSample, mode L)
+[14:03:13] sample 3 stimulus custody VALID (pid 54342 alive through the governed interval; stopped by the batch, wait rc=143)
+[14:03:16] sample 3 ledgered: kernel00-K00-6ad14011-1789567389.jsonl
+[14:03:16] sample 3 source rows read: kernel00-K00-6ad14011-1789567389.jsonl
+[14:03:16] sample 3 output rows read: kernel00-K00-6ad14011-1789567389.jsonl
+[14:03:16] sample 4/10 — precondition
+[14:03:18] sample 4/10 — driver (testOutputSample, mode L)
+[14:03:51] sample 4 stimulus custody VALID (pid 54736 alive through the governed interval; stopped by the batch, wait rc=143)
+[14:03:54] sample 4 ledgered: kernel00-K00-6a660a2a-1789567427.jsonl
+[14:03:54] sample 4 source rows read: kernel00-K00-6a660a2a-1789567427.jsonl
+[14:03:54] sample 4 output rows read: kernel00-K00-6a660a2a-1789567427.jsonl
+[14:03:54] sample 5/10 — precondition
+[14:03:56] sample 5/10 — driver (testOutputSample, mode L)
+[14:04:46] sample 5 stimulus custody VALID (pid 55122 alive through the governed interval; stopped by the batch, wait rc=143)
+[14:04:50] sample 5 ledgered: kernel00-K00-ceb6b807-1789567482.jsonl
+[14:04:50] sample 5 source rows read: kernel00-K00-ceb6b807-1789567482.jsonl
+[14:04:50] sample 5 output rows read: kernel00-K00-ceb6b807-1789567482.jsonl
+[14:04:50] sample 6/10 — precondition
+[14:04:50] STOP: SID SOURCE sample 6 PRE-PLAY harness-zero guard failed — no terminate attempted, no stimulus started, no phone sample launched
