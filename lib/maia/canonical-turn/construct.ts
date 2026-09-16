@@ -76,7 +76,7 @@ export function constructCanonicalTurn(inputs: ConstructInputs): CanonicalTurn {
     encounter: inputs.encounter,
     sovereignty: inputs.sovereignty,
   });
-  const floor = composeConstitutionalFloor();
+  const floor = composeConstitutionalFloor(inputs.encounter.room.kind);
 
   const manifest = buildManifest({
     turnId,

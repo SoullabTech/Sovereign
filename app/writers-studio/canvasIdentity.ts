@@ -198,3 +198,70 @@ export function resolveManuscript<T extends SelectableManuscript>(
   }
   return { kind: 'ambiguous', manuscripts };
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WS-EDITORIAL-UI-01A · THE EDITORIAL THREAD ADDRESS
+
+   ⭐⭐ SERVER STATE PRESERVES THE CONVERSATION. AN ADDRESS PRESERVES WHICH
+   CONVERSATION YOU MEAN. Those are different responsibilities, and UI-01
+   conflated them: the component minted a relationship from its own mount
+   effect and held the only copy of its identity in React state, so a remount
+   lost the thread and a re-render was an authored request to create one.
+
+   ⛔ THE SCHEMA ADMITS MANY THREADS PER CHAIN, so the server cannot lawfully
+   infer "the" thread from a section or a chain. There is no most-recent
+   lookup here and none may be added — the address is exact or there is none.
+
+   ⛔ AND IT IS NOT AUTHORITY. It is an address, exactly like the manuscript
+   identity above. The server still proves the session owns the thread before
+   returning a single word of it; a tampered parameter buys a 404.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** The query parameter naming the editorial thread. Never inline this string. */
+export const CANVAS_EDITORIAL_THREAD_PARAM = 'editorialThread';
+
+/** Reads the editorial thread address out of already-parsed search params. */
+export function editorialThreadIdFrom(
+  params: { get(name: string): string | null },
+): string | null {
+  return params.get(CANVAS_EDITORIAL_THREAD_PARAM);
+}
+
+/**
+ * The same address, with the editorial thread named.
+ *
+ * Every other parameter is PRESERVED — the manuscript identity above is one
+ * of them, and dropping it would strand the room on reload while appearing to
+ * fix the conversation.
+ */
+export function canvasWithEditorialThread(
+  pathname: string,
+  search: string,
+  threadId: string,
+): string {
+  const next = new URLSearchParams(search);
+  next.set(CANVAS_EDITORIAL_THREAD_PARAM, threadId);
+  return `${pathname}?${next.toString()}`;
+}
+
+/**
+ * The same address, with the editorial thread NO LONGER NAMED.
+ *
+ * MAIA-CONVERGENCE-01 · CANVAS. Leaving the editorial mode has to be as
+ * addressable as entering it: a room that could name a relationship and never
+ * un-name it would reopen in editorial on every reload, and the writer's way
+ * back would work exactly once.
+ *
+ * ⛔ IT DELETES ONE PARAMETER AND NOTHING ELSE — the same reason its counterpart
+ * preserves them: the manuscript identity is one of them, and dropping it would
+ * strand the room while appearing to close a conversation.
+ */
+export function canvasWithoutEditorialThread(
+  pathname: string,
+  search: string,
+): string {
+  const next = new URLSearchParams(search);
+  next.delete(CANVAS_EDITORIAL_THREAD_PARAM);
+  const q = next.toString();
+  return q ? `${pathname}?${q}` : pathname;
+}

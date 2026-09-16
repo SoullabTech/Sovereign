@@ -97,10 +97,28 @@ export interface WriterTurnInputs {
   readonly emit?: boolean;
 }
 
-/** Construct ONCE. Membership is fixed here and nowhere else. */
-export function constructWriterTurn(inputs: WriterTurnInputs): CanonicalTurn {
+/**
+ * ⭐⭐ THE ONE PRIVATE WRITER-TURN CONSTRUCTOR — ER-R4.
+ *
+ * ⛔ Both Writer's Studio entry points sit on top of this. There is exactly ONE
+ * answer to *how is a Writer's Studio CanonicalTurn constructed?*, and a second
+ * independent answer is the defect this lane has already deleted twice (the
+ * second succession resolver, the duplicated act vocabulary).
+ *
+ * ⛔ What an entry point may vary is named here and nowhere else: its ingress,
+ * its candidates, and its cognition path. ⭐ Everything constitutional — room
+ * policy, sovereignty, surface, gates — is fixed for both.
+ */
+function buildWriterTurn(
+  inputs: WriterTurnInputs,
+  variant: {
+    readonly ingressId: string;
+    readonly candidates: CandidateBlock[];
+    readonly cognitionPath: 'getMaiaResponse' | 'room_direct';
+  },
+): CanonicalTurn {
   return constructCanonicalTurn({
-    ingressId: 'writers-studio/focus',
+    ingressId: variant.ingressId,
     identity: inputs.identity,
     surface: { modality: 'typed', client: 'unknown', transport: 'http', streaming: false },
     encounter: {
@@ -115,15 +133,46 @@ export function constructWriterTurn(inputs: WriterTurnInputs): CanonicalTurn {
       allowCrossSessionMemory: false,
     },
     cognitionRequest: { mode: 'dialogue', requestedDepth: 'auto', includeAudio: false },
-    candidates: writerCandidates(inputs.participation),
+    candidates: variant.candidates,
     gatesApplied: ['route:disclosure_boundary', 'route:canonical_identity'],
+    cognitionPath: variant.cognitionPath,
+    turnId: inputs.exchangeId,
+    emit: inputs.emit,
+  });
+}
+
+/** Construct ONCE. Membership is fixed here and nowhere else. */
+export function constructWriterTurn(inputs: WriterTurnInputs): CanonicalTurn {
+  return buildWriterTurn(inputs, {
+    ingressId: 'writers-studio/focus',
+    candidates: writerCandidates(inputs.participation),
     // The response is produced by getMaiaResponse — the MAIA service, not a
     // Writer-specific brain. This branch selects a lawful prompt composition
     // path inside it.
     cognitionPath: 'getMaiaResponse',
-    turnId: inputs.exchangeId,
-    emit: inputs.emit,
   });
+}
+
+/**
+ * ⭐ THE EDITORIAL ENTRY POINT. Same constructor, different provenance.
+ *
+ * ⛔ `retrieved.writer_work_context` IS NOT REUSED for the editorial locus. The
+ * contract ruled them different provenance acts: the Focus context is the Work
+ * made readable by a placement; the editorial locus is the chain's own
+ * member-authored wording. Reusing one id for both would make two acts
+ * indistinguishable in the manifest.
+ *
+ * ⛔ `cognitionPath: 'room_direct'` is the honest value — this turn is answered
+ * by `runStructured` under a forced tool contract, not by `getMaiaResponse`.
+ */
+export function constructEditorialWriterTurn(
+  inputs: Omit<WriterTurnInputs, 'participation'>,
+  candidates: readonly CandidateBlock[],
+): CanonicalTurn {
+  return buildWriterTurn(
+    { ...inputs, participation: { focus: { workRef: '', scopeKind: 'whole_work' }, workContext: '' } },
+    { ingressId: 'writers-studio/editorial', candidates: [...candidates], cognitionPath: 'room_direct' },
+  );
 }
 
 /**
@@ -149,19 +198,24 @@ export interface WriterHandoffProof {
  * text is present in the system prompt. That last clause closes the
  * "manifest says it participated, renderer dropped it" gap.
  */
-export function renderWriterTurn(
+/**
+ * ⭐⭐ THE ONE PRIVATE RENDER-AND-PROVE — ER-R4. Both entry points use it; only
+ * the REQUIRED producer set differs. ⛔ Not two verifiers that must agree.
+ */
+function renderAndProve(
   turn: CanonicalTurn,
   strategy: TierStrategy,
+  required: readonly string[],
 ): WriterHandoffProof | null {
-  const admitted = turn.participation.admitted.map(p => p.producerId);
-  for (const required of FIRST_CROSSING_PRODUCERS) {
-    if (!admitted.includes(required)) return null;
+  const admitted: readonly string[] = turn.participation.admitted.map(p => p.producerId);
+  for (const r of required) {
+    if (!admitted.includes(r)) return null;
   }
 
   const rendered = renderTurnForCognition(turn, strategy);
-  for (const required of FIRST_CROSSING_PRODUCERS) {
-    if (!rendered.participantOrder.includes(required)) return null;
-    const block = turn.participation.admitted.find(p => p.producerId === required);
+  for (const r of required) {
+    if (!(rendered.participantOrder as readonly string[]).includes(r)) return null;
+    const block = turn.participation.admitted.find(p => p.producerId === r);
     if (!block || !rendered.systemPrompt.includes(block.text)) return null;
   }
 
@@ -172,6 +226,27 @@ export function renderWriterTurn(
     systemPrompt: rendered.systemPrompt,
     tier: rendered.tier,
   };
+}
+
+export function renderWriterTurn(
+  turn: CanonicalTurn, strategy: TierStrategy,
+): WriterHandoffProof | null {
+  return renderAndProve(turn, strategy, FIRST_CROSSING_PRODUCERS);
+}
+
+/**
+ * ⭐⭐ EVERY SUPPLIED EDITORIAL BLOCK MUST CROSS. The required set is the ids the
+ * assembly actually produced — so a block that is silently dropped by MIPA or by
+ * the renderer REFUSES the handoff.
+ *
+ * ⭐ A missing history block is lawful when that history is EMPTY: the assembly
+ * simply does not produce it, so it is not in the required set. ⛔ A supplied
+ * block disappearing is never lawful.
+ */
+export function renderEditorialTurn(
+  turn: CanonicalTurn, strategy: TierStrategy, supplied: readonly string[],
+): WriterHandoffProof | null {
+  return renderAndProve(turn, strategy, supplied);
 }
 
 /**

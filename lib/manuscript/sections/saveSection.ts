@@ -32,6 +32,7 @@
  */
 
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
+import { splitStoredSection } from './sectionProjection';
 
 export type SaveRefusal =
   | 'draft_not_found'
@@ -46,32 +47,6 @@ export interface SaveResult {
   detail?: string;
   version?: number;
   sectionChars?: number;
-}
-
-/**
- * Split a stored section slice into the part the member may not edit and the
- * part they may. PURE.
- *
- * Returns null when the slice does not begin with the heading the Source
- * records — which means this section is not in the shape this cut knows how to
- * edit, and refusing is the only honest response. Never guesses at a heading
- * by looking at the text.
- */
-export function splitStoredSection(
-  text: string,
-  heading: string | null,
-): { headingPrefix: string; body: string } | null {
-  const h = heading?.trim();
-  if (!h) return { headingPrefix: '', body: text };
-
-  /* The composer writes `heading\n\n` before the body. Accept exactly that,
-     and the degenerate case of a heading with nothing after it. */
-  if (text === h) return { headingPrefix: h, body: '' };
-  if (text.startsWith(`${h}\n`)) {
-    const prefixEnd = text.startsWith(`${h}\n\n`) ? h.length + 2 : h.length + 1;
-    return { headingPrefix: text.slice(0, prefixEnd), body: text.slice(prefixEnd) };
-  }
-  return null;
 }
 
 /** One section, as the writing surface needs it. */
@@ -134,6 +109,22 @@ export async function loadEditableSections(
 
 /**
  * Save one section. ONE logical save, ONE transaction, ONE version increment.
+ *
+ * ⭐ THIS IS NOW A WRAPPER, AND THE BEHAVIOUR IS UNCHANGED. The body moved to
+ * `saveSectionInTransaction` so that an authority which must bind its own
+ * decision to this mutation — RevisionProposal acceptance — can run both on ONE
+ * client, inside ONE transaction.
+ *
+ * ⛔ WHY IT COULD NOT SIMPLY BE CALLED FROM INSIDE ANOTHER TRANSACTION:
+ * `transaction()` takes a NEW client from the pool. Calling this from within an
+ * outer transaction would put the mutation on a different connection, outside
+ * the caller's BEGIN — so a rollback would not undo it. That is exactly the
+ * defect caught in the D1 witness, where a pooled `query('BEGIN')` made the
+ * rollback a fiction.
+ *
+ * ⛔ AND IT IS NOT A SECOND WRITE PATH. It is the same implementation, exposed
+ * at its proper transactional seam. A duplicated read inside one transaction is
+ * acceptable; a duplicated UPDATE is not.
  */
 export async function saveSection(
   manuscriptId: string,
@@ -142,7 +133,28 @@ export async function saveSection(
   body: string,
   baseVersion: number,
 ): Promise<SaveResult> {
-  return transaction(async (tx: TransactionClient) => {
+  return transaction((tx: TransactionClient) =>
+    saveSectionInTransaction(tx, manuscriptId, memberId, draftSectionId, body, baseVersion));
+}
+
+/**
+ * The mutation itself, on a caller-supplied client.
+ *
+ * ⛔ IT KNOWS NOTHING OF PROPOSALS. Expected text, single-use acceptance and
+ * proposal locking are AUTHORIZATION, and they stay with the authority that
+ * owns them. This owns the manuscript lock, the version discipline, the section
+ * mutation, the content derivation and the one version increment — and nothing
+ * else is taught to it.
+ */
+export async function saveSectionInTransaction(
+  tx: TransactionClient,
+  manuscriptId: string,
+  memberId: string,
+  draftSectionId: string,
+  body: string,
+  baseVersion: number,
+): Promise<SaveResult> {
+  {
     const draftRes = await tx.query<{
       id: string; version: string; section_addressable_at: Date | null;
     }>(
@@ -199,7 +211,7 @@ export async function saveSection(
       version: Number(updated.rows[0].version),
       sectionChars: newText.length,
     };
-  });
+  }
 }
 
 /* ────────────────────────────────────────────────────────────────────────
