@@ -1,0 +1,78 @@
+{
+  "schema": "PROSPECTIVE_CLAIM_PLAN_GESTALT_ROUNDTRIP_V1",
+  "planHash": "b90fb54cab01e5c8d75a5908d347abbf3f21a69acee9f4d271dd6f9a85e90f7e",
+  "claimCount": 3,
+  "speechActs": [
+    "GROUNDED",
+    "CANDIDATE",
+    "QUESTION"
+  ],
+  "standings": [
+    "established",
+    "provisional",
+    "open"
+  ],
+  "claimIds": [
+    "17f1d271659a24abe4d46ea817e4f709ce1af7a1fd8cb127fbff31d8e37be0f8",
+    "b8e1716a3ba414ca5e05ff11bebdb0eb152849b5e83ef98d438fdd352acff421",
+    "9920d9b84749fac579ed85bac1ece1693639cfbb66448da8322e46e7c8627cc8"
+  ],
+  "renderedHash": "59f48d3f63f6fe5fa3ba7841e390190dfa1490ce9590236d0b03c6fbfdceca53",
+  "roundTrip": {
+    "ok": true,
+    "reason": "one-to-one",
+    "prospectiveClaimIds": [
+      "17f1d271659a24abe4d46ea817e4f709ce1af7a1fd8cb127fbff31d8e37be0f8",
+      "b8e1716a3ba414ca5e05ff11bebdb0eb152849b5e83ef98d438fdd352acff421",
+      "9920d9b84749fac579ed85bac1ece1693639cfbb66448da8322e46e7c8627cc8"
+    ],
+    "retrospectiveClaimIds": [
+      "5cb2698d0fe262dd84bbd39c27609f18e0ddd802d504db0d4356beb29f26495e",
+      "fbade9fb2cb8ecd312271940a9826def54b09217e6ef66410bc5ce7337084543",
+      "28a7a9119f4e3b2ede4d24f74eb0a11972b03c4019100231b76acb43ec6a9c8c"
+    ],
+    "retrospectiveKinds": [
+      "assertion",
+      "assertion",
+      "question"
+    ],
+    "mappings": [
+      {
+        "prospectiveClaimId": "17f1d271659a24abe4d46ea817e4f709ce1af7a1fd8cb127fbff31d8e37be0f8",
+        "retrospectiveClaimId": "5cb2698d0fe262dd84bbd39c27609f18e0ddd802d504db0d4356beb29f26495e",
+        "startChar": 0,
+        "endChar": 71,
+        "exactTextHash": "5fd42fdfca5448e5337a516a8b5235024d2a6f58d047341d72faa3a67b766f22",
+        "prospectiveSpeechAct": "GROUNDED",
+        "prospectiveStanding": "established",
+        "retrospectiveKind": "assertion"
+      },
+      {
+        "prospectiveClaimId": "b8e1716a3ba414ca5e05ff11bebdb0eb152849b5e83ef98d438fdd352acff421",
+        "retrospectiveClaimId": "fbade9fb2cb8ecd312271940a9826def54b09217e6ef66410bc5ce7337084543",
+        "startChar": 72,
+        "endChar": 162,
+        "exactTextHash": "89610f13194ff32758cdea54cdaacbb3e2fdc129efcc1b66fd37ff193e5a5fa8",
+        "prospectiveSpeechAct": "CANDIDATE",
+        "prospectiveStanding": "provisional",
+        "retrospectiveKind": "assertion"
+      },
+      {
+        "prospectiveClaimId": "9920d9b84749fac579ed85bac1ece1693639cfbb66448da8322e46e7c8627cc8",
+        "retrospectiveClaimId": "28a7a9119f4e3b2ede4d24f74eb0a11972b03c4019100231b76acb43ec6a9c8c",
+        "startChar": 163,
+        "endChar": 246,
+        "exactTextHash": "3a173c7e9978fc853901c9f69cd2da39357a10058610933041bdbf19c0a28ec8",
+        "prospectiveSpeechAct": "QUESTION",
+        "prospectiveStanding": "open",
+        "retrospectiveKind": "question"
+      }
+    ],
+    "droppedClaimCount": 0,
+    "unplannedUnitCount": 0
+  },
+  "invalidCases": {
+    "establishedMeaningReopenRejected": true,
+    "candidateLaunderingRejected": true
+  }
+}

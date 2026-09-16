@@ -1,0 +1,95 @@
+{
+  "schema": "PROSPECTIVE_CLAIM_PLAN_OFFLINE_V1",
+  "planHash": "37c6ddd9d7146a94d08d96a5cb9df655bf38a94477ea123fb01d65996788c65b",
+  "claimCount": 4,
+  "claimIds": [
+    "40c2a0565e3ad00831a4a00964130dae19f0def737136d28342572ce805bd750",
+    "728c8bb7b1135274e31ab97426d12db4d5fda6494328f74179b4832e952840d2",
+    "c22eb998181d4b980bab2fe525c0f9cd2e9457588e23686e9a16c8cdbc6c8206",
+    "4e69fff368006983e7513841bd3ad9c6fef365c3687fae54c224b71c10c6e03c"
+  ],
+  "speechActs": [
+    "GROUNDED",
+    "CANDIDATE",
+    "QUESTION",
+    "QUESTION"
+  ],
+  "standings": [
+    "established",
+    "provisional",
+    "open",
+    "open"
+  ],
+  "renderVerified": true,
+  "renderedHash": "acf5f1ea670fa93328b5125133f7821e761b8c474045dc4bf5e41f729478c57c",
+  "spans": [
+    {
+      "claimId": "40c2a0565e3ad00831a4a00964130dae19f0def737136d28342572ce805bd750",
+      "startChar": 0,
+      "endChar": 71,
+      "speechAct": "GROUNDED",
+      "standing": "established"
+    },
+    {
+      "claimId": "728c8bb7b1135274e31ab97426d12db4d5fda6494328f74179b4832e952840d2",
+      "startChar": 72,
+      "endChar": 148,
+      "speechAct": "CANDIDATE",
+      "standing": "provisional"
+    },
+    {
+      "claimId": "c22eb998181d4b980bab2fe525c0f9cd2e9457588e23686e9a16c8cdbc6c8206",
+      "startChar": 149,
+      "endChar": 189,
+      "speechAct": "QUESTION",
+      "standing": "open"
+    },
+    {
+      "claimId": "4e69fff368006983e7513841bd3ad9c6fef365c3687fae54c224b71c10c6e03c",
+      "startChar": 190,
+      "endChar": 273,
+      "speechAct": "QUESTION",
+      "standing": "open"
+    }
+  ],
+  "gestures": {
+    "confirm": {
+      "gesture": "CONFIRM",
+      "outcome": "BOUND",
+      "reason": "prospective-confirmation-frame",
+      "candidateClaimIds": [
+        "094403e534eba4e7c025a0158a5294e59d5e273de9acd083ecf41db3ee007c0b"
+      ],
+      "targetClaimId": "094403e534eba4e7c025a0158a5294e59d5e273de9acd083ecf41db3ee007c0b"
+    },
+    "correct": {
+      "gesture": "CORRECT",
+      "outcome": "BOUND",
+      "reason": "prospective-confirmation-frame",
+      "candidateClaimIds": [
+        "094403e534eba4e7c025a0158a5294e59d5e273de9acd083ecf41db3ee007c0b"
+      ],
+      "targetClaimId": "094403e534eba4e7c025a0158a5294e59d5e273de9acd083ecf41db3ee007c0b"
+    },
+    "opaque": {
+      "gesture": "OPAQUE_REFERENCE",
+      "outcome": "AMBIGUOUS",
+      "reason": "opaque-reference-needs-referent-evidence",
+      "candidateClaimIds": [
+        "40c2a0565e3ad00831a4a00964130dae19f0def737136d28342572ce805bd750",
+        "728c8bb7b1135274e31ab97426d12db4d5fda6494328f74179b4832e952840d2",
+        "c22eb998181d4b980bab2fe525c0f9cd2e9457588e23686e9a16c8cdbc6c8206",
+        "4e69fff368006983e7513841bd3ad9c6fef365c3687fae54c224b71c10c6e03c"
+      ]
+    },
+    "restart": {
+      "gesture": "RESTART_PROTEST",
+      "outcome": "BOUND",
+      "reason": "single-question-plan-claim",
+      "candidateClaimIds": [
+        "82e2de2c96f65f8d40132d09f0627a68da539fa1ca23c55c83133a35e52ad588"
+      ],
+      "targetClaimId": "82e2de2c96f65f8d40132d09f0627a68da539fa1ca23c55c83133a35e52ad588"
+    }
+  }
+}
