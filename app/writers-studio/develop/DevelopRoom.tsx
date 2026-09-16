@@ -14,9 +14,9 @@
  * may explain how evidence is kept; it may not dictate how a writer encounters
  * their own book.
  *
- * D3 is deliberately section-precise, not passage-precise. Evidence refs already
- * tell us which section an observation rests on, so an observation can move the
- * manuscript there. Code-point ranges remain D5 and are never approximated here.
+ * D3 established section-precise navigation. D5 now preserves lawful frozen
+ * passage ranges too: exact current evidence may be illuminated in context, while
+ * superseded ranges remain provenance and are never applied to changed prose.
  *
  * DEVELOP DOES NOT EDIT. The shared WholeManuscriptSurface receives every
  * section with editable=false. Write remains the authority for changing prose.
@@ -34,6 +34,7 @@ import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
 import { locationForSection } from '@/lib/writersStudio/placeInWork';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
+import type { CodePointRange } from '@/lib/manuscript/development/evidenceRef';
 import { DevelopManuscriptRail, DevelopManuscriptSurface } from './DevelopManuscript';
 import { fetchWriteState, type WriteStateSection } from '@/lib/writersStudio/writeStateClient';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
@@ -242,6 +243,7 @@ export default function DevelopRoom({
   const [writeVersion, setWriteVersion] = useState(0);
   const [placeId, setPlaceId] = useState<string | null>(requestedSectionId);
   const [jumpTo, setJumpTo] = useState<string | null>(null);
+  const [activeEvidence, setActiveEvidence] = useState<{ observationKey: string; sectionId: string; range: CodePointRange } | null>(null);
   /* 'whole' until the writer says otherwise, or until the work is too large to
      read at once — in which case the choice is opened FOR them, with the
      reason said in a sentence, rather than left to be discovered by pressing a
@@ -412,6 +414,24 @@ export default function DevelopRoom({
     }
     return out;
   }, [payload]);
+
+  /* D5 — exact passage evidence remains frozen in code points. It may be
+     illuminated against the current manuscript only while the observation is
+     assessed CURRENT; superseded offsets belong to the frozen revision, not to
+     whatever prose occupies those positions now. */
+  const passageEvidenceByObservation = useMemo(() => {
+    const out = new Map<string, { sectionId: string; range: CodePointRange }>();
+    if (!payload || payload.reading.outcome !== 'reading') return out;
+    for (const observation of payload.reading.observations) {
+      const assessed = payload.assessment.observations[observation.key];
+      if (assessed?.state !== 'current') continue;
+      const passage = observation.evidenceRefs.find((ref) => ref.kind === 'passage');
+      if (passage?.kind === 'passage') out.set(observation.key, { sectionId: passage.sectionId, range: passage.range });
+    }
+    return out;
+  }, [payload]);
+
+  useEffect(() => { setActiveEvidence(null); }, [selectedId]);
 
   const showPlace = useCallback((sectionId: string, requestJump: boolean) => {
     setPlaceId(sectionId);
@@ -665,6 +685,7 @@ export default function DevelopRoom({
               jumpTo={jumpTo}
               onJumpHandled={() => setJumpTo(null)}
               onPlaceChange={(sectionId) => showPlace(sectionId, false)}
+              evidenceHighlight={activeEvidence ? { sectionId: activeEvidence.sectionId, range: activeEvidence.range } : null}
             />
           </>
         )}
@@ -1005,8 +1026,14 @@ export default function DevelopRoom({
               onStanding={adoptStanding}
               onRefresh={() => loadStandings(view.id)}
               evidenceSectionByObservation={evidenceSectionByObservation}
+              passageEvidenceByObservation={passageEvidenceByObservation}
+              activeEvidenceKey={activeEvidence?.observationKey ?? null}
               currentSectionId={placeId}
-              onNavigate={(sectionId) => showPlace(sectionId, true)}
+              onNavigate={(sectionId) => { setActiveEvidence(null); showPlace(sectionId, true); }}
+              onNavigateEvidence={(observationKey, evidence) => {
+                setActiveEvidence({ observationKey, ...evidence });
+                showPlace(evidence.sectionId, true);
+              }}
             />
           )}
         </div>
@@ -1020,13 +1047,16 @@ export default function DevelopRoom({
 
 function Reading({
   view, manuscriptId, standings, onStanding, onRefresh,
-  evidenceSectionByObservation, currentSectionId, onNavigate,
+  evidenceSectionByObservation, passageEvidenceByObservation, activeEvidenceKey, currentSectionId, onNavigate, onNavigateEvidence,
 }: {
   view: ReadingView; manuscriptId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
   evidenceSectionByObservation: ReadonlyMap<string, string>;
+  passageEvidenceByObservation: ReadonlyMap<string, { sectionId: string; range: CodePointRange }>;
+  activeEvidenceKey: string | null;
   currentSectionId: string | null;
   onNavigate: (sectionId: string) => void;
+  onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
   const observations = [...view.observations].sort((a, b) => {
     const aHere = evidenceSectionByObservation.get(a.key) === currentSectionId ? 0 : 1;
@@ -1074,8 +1104,11 @@ function Reading({
               onStanding={onStanding}
               onRefresh={onRefresh}
               evidenceSectionId={evidenceSectionByObservation.get(o.key) ?? null}
+              passageEvidence={passageEvidenceByObservation.get(o.key) ?? null}
+              evidenceHighlighted={activeEvidenceKey === o.key}
               activeForPlace={evidenceSectionByObservation.get(o.key) === currentSectionId}
               onNavigate={onNavigate}
+              onNavigateEvidence={onNavigateEvidence}
             />
           ))}
         </ol>
@@ -1098,12 +1131,15 @@ function Reading({
  */
 function Observation({
   o, manuscriptId, readingId, standings, onStanding, onRefresh,
-  evidenceSectionId, activeForPlace, onNavigate,
+  evidenceSectionId, passageEvidence, evidenceHighlighted, activeForPlace, onNavigate, onNavigateEvidence,
 }: {
   o: ObservationView; manuscriptId: string; readingId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
-  evidenceSectionId: string | null; activeForPlace: boolean;
+  evidenceSectionId: string | null;
+  passageEvidence: { sectionId: string; range: CodePointRange } | null;
+  evidenceHighlighted: boolean; activeForPlace: boolean;
   onNavigate: (sectionId: string) => void;
+  onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
   const [talking, setTalking] = useState(false);
   return (
@@ -1130,15 +1166,20 @@ function Observation({
       </p>
 
       {evidenceSectionId && (
-        <button
-          type="button"
-          onClick={() => onNavigate(evidenceSectionId)}
-          data-observation-show-in-manuscript={o.key}
-          className="mt-2 text-[12px] underline underline-offset-4"
-          style={{ cursor: 'pointer', opacity: activeForPlace ? 1 : 0.58, color: activeForPlace ? PRESS.accent : 'inherit' }}
-        >
-          {activeForPlace ? 'In view' : 'Show in manuscript'}
-        </button>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+          {passageEvidence && (
+            <span data-evidence-precision="passage" className="text-[10.5px] uppercase tracking-[0.12em] opacity-45">Exact passage</span>
+          )}
+          <button
+            type="button"
+            onClick={() => passageEvidence ? onNavigateEvidence(o.key, passageEvidence) : onNavigate(evidenceSectionId)}
+            data-observation-show-in-manuscript={o.key}
+            className="text-[12px] underline underline-offset-4"
+            style={{ cursor: 'pointer', opacity: evidenceHighlighted || activeForPlace ? 1 : 0.58, color: evidenceHighlighted ? PRESS.accent : 'inherit' }}
+          >
+            {evidenceHighlighted ? 'Passage in view' : passageEvidence ? 'Show exact passage' : activeForPlace ? 'Section in view' : 'Show in manuscript'}
+          </button>
+        </div>
       )}
 
       <div className="mt-3 text-[12.5px] leading-relaxed opacity-60">

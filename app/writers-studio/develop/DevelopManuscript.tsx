@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { WriteStateSection } from '@/lib/writersStudio/writeStateClient';
+import type { CodePointRange } from '@/lib/manuscript/development/evidenceRef';
 import { WholeManuscriptSurface } from '../canvas/WholeManuscriptSurface';
 import { INK, RULE, SPACE } from '../studioTheme';
 
@@ -84,7 +85,7 @@ export function DevelopManuscriptRail({
 }
 
 export function DevelopManuscriptSurface({
-  sections, version, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange,
+  sections, version, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, evidenceHighlight = null,
 }: {
   sections: readonly WriteStateSection[];
   version: number;
@@ -92,6 +93,7 @@ export function DevelopManuscriptSurface({
   jumpTo: string | null;
   onJumpHandled: () => void;
   onPlaceChange: (sectionId: string) => void;
+  evidenceHighlight?: { sectionId: string; range: CodePointRange } | null;
 }) {
   const writing = useMemo(() => readOnlyWriting(sections, version), [sections, version]);
 
@@ -111,6 +113,7 @@ export function DevelopManuscriptSurface({
         jumpTo={jumpTo}
         onJumpHandled={onJumpHandled}
         onPlaceChange={onPlaceChange}
+        readOnlyHighlight={evidenceHighlight}
       />
     </div>
   );

@@ -66,9 +66,14 @@ describe('D3 · Develop is the manuscript seen developmentally', () => {
     expect(room).toContain('<DevelopManuscriptRail');
   });
 
-  it('does not invent passage precision before D5', () => {
+  it('D5 carries exact passage precision without inventing paragraph labels', () => {
+    expect(room).toContain('CodePointRange');
+    expect(room).toContain('data-evidence-precision="passage"');
+    expect(room).toContain('Show exact passage');
+    expect(room).toContain("assessed?.state !== 'current'");
     expect(room).not.toContain('paragraphs 3–4');
-    expect(room).not.toContain('CodePointRange');
+    expect(manuscript).toContain('evidenceHighlight');
+    expect(manuscript).toContain('readOnlyHighlight={evidenceHighlight}');
   });
 });
 

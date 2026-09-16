@@ -4,6 +4,9 @@ human_activity: inhabiting a creative work with MAIA present at the same visible
 surfaces:
   - app/writers-studio/rebuild/**
   - app/writers-studio/develop/**
+  # Shared by Write and Develop: one continuous manuscript surface. D5 adds an
+  # optional read-only evidence highlight; editing behavior remains unchanged.
+  - app/writers-studio/canvas/WholeManuscriptSurface.tsx
   - app/writers-studio/studioMap.ts
   - app/writers-studio/workContext.ts
   # The mode bar was already named in shared_with_house and was covered by no

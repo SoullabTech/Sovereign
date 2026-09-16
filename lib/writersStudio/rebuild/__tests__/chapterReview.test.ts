@@ -8,7 +8,7 @@ const payload = {
     coverage: { sections: {} }, provenance: { frozenAt: '', reader: {}, classifier: null },
     observations: [
       { key: 'o1', lens: 'development', observation: 'The second movement introduces a personal turn that is not yet developed.',
-        evidenceRefs: [{ kind: 'section', sectionId: 'd199' }], doesNotEstablish: ['author-intent'], structureDependency: { kind: 'independent' } },
+        evidenceRefs: [{ kind: 'passage', sectionId: 'd199', range: { start: 2, end: 8 } }], doesNotEstablish: ['author-intent'], structureDependency: { kind: 'independent' } },
       { key: 'o2', lens: 'development', observation: 'The transition spans both sections.',
         evidenceRefs: [{ kind: 'section-run', sectionIds: ['d198', 'd199'] }], doesNotEstablish: ['reader-effect'], structureDependency: { kind: 'independent' } },
     ],
@@ -21,6 +21,7 @@ describe('chapter review projection', () => {
   it('links findings to the draft sections their frozen evidence names', () => {
     const f = findingsFromPayloads([payload]);
     expect(f[0]?.sectionIds).toEqual(['d199']);
+    expect(f[0]?.evidenceRefs).toEqual([{ kind: 'passage', sectionId: 'd199', range: { start: 2, end: 8 } }]);
     expect(f[1]?.sectionIds).toEqual(['d198', 'd199']);
     expect(findingsForSection(f, 'd199')).toHaveLength(2);
   });

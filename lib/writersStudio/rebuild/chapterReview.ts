@@ -3,6 +3,7 @@ import type { ReadingPayload } from '@/lib/writersStudio/developClient';
 import { fetchReading, requestDevelopmentalReading } from '@/lib/writersStudio/developClient';
 import { LENS_ORDER } from '@/lib/writersStudio/developPresentation';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
+import type { EvidenceRef } from '@/lib/manuscript/development/evidenceRef';
 import type { RebuildSection } from './model';
 import type { ChapterReviewManifest } from './chapterReviewManifest';
 
@@ -19,6 +20,8 @@ export interface ReviewFinding {
   observation: string;
   summary: string;
   sectionIds: string[];
+  /** Frozen evidence, preserved verbatim so passage precision is not discarded. */
+  evidenceRefs: readonly EvidenceRef[];
   state: 'current' | 'superseded' | 'unmeasured';
 }
 
@@ -54,6 +57,7 @@ export function findingsFromPayloads(payloads: readonly ReadingPayload[]): Revie
         observation: o.observation,
         summary: oneLine(o.observation),
         sectionIds: ids,
+        evidenceRefs: o.evidenceRefs,
         state: assessed.state,
       });
     }
