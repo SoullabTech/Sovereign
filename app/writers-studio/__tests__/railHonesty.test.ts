@@ -18,6 +18,9 @@ describe('D2 · the rebuilt rail tells the truth', () => {
     expect(source).toContain('data-workbench-scope="manuscript"');
     expect(source).toContain('BOOK STRUCTURE');
     expect(source).toContain('<AuthoredStructureBranch');
+    expect(source).toContain('<ImportedStructureBranch');
+    expect(source).toContain('data-imported-structure');
+    expect(source).toContain('Structure carried by the manuscript source');
     expect(source).toContain('data-unplaced-structure');
     expect(source).toContain('sections not organized yet');
   });
