@@ -1,0 +1,276 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H1_V1",
+  "hypothesis": "Typed relation representation preserves relational identity better than scalar semantic similarity; standing + exact claim identity add authority/granularity not present in typed edges alone.",
+  "baseline": {
+    "model": "nomic-embed-text",
+    "note": "Similarity threshold is oracle-selected on this benchmark, so A target accuracy is an optimistic upper bound rather than a deployable held-out estimate."
+  },
+  "fixtures": [
+    {
+      "id": "F1_OPAQUE_REFERENCE",
+      "intent": "OPAQUE_REFERENCE",
+      "expectedTarget": null,
+      "expectedRelation": null,
+      "expectedStanding": null
+    },
+    {
+      "id": "F2_CORRECTION",
+      "intent": "CORRECTION",
+      "expectedTarget": "E_GRIEF",
+      "expectedRelation": "CORRECTS",
+      "expectedStanding": "established"
+    },
+    {
+      "id": "F3_ADOPTION",
+      "intent": "CONFIRM",
+      "expectedTarget": "C_RESILIENCE",
+      "expectedRelation": "CONFIRMS",
+      "expectedStanding": "provisional"
+    },
+    {
+      "id": "F4_DEVELOPMENTAL_RETURN",
+      "intent": "RETURN",
+      "expectedTarget": "EARLIER_CONFIG",
+      "expectedRelation": "RETURNS_TO",
+      "expectedStanding": "historical_only"
+    },
+    {
+      "id": "F5_SILVER_CEDAR_CONTINUITY",
+      "intent": "SYMBOL",
+      "expectedTarget": "GUARDIAN_ROLE",
+      "expectedRelation": "ADOPTED_AS",
+      "expectedStanding": "adopted"
+    }
+  ],
+  "similarity": [
+    {
+      "fixture": "F1_OPAQUE_REFERENCE",
+      "scores": [
+        {
+          "id": "P2",
+          "score": 0.49839102325168627
+        },
+        {
+          "id": "P1",
+          "score": 0.4731628011400502
+        },
+        {
+          "id": "P3",
+          "score": 0.459737829366688
+        }
+      ],
+      "topId": "P2",
+      "topScore": 0.49839102325168627
+    },
+    {
+      "fixture": "F2_CORRECTION",
+      "scores": [
+        {
+          "id": "E_GRIEF",
+          "score": 0.7671576735296738
+        },
+        {
+          "id": "E_FEAR",
+          "score": 0.4919288630350181
+        }
+      ],
+      "topId": "E_GRIEF",
+      "topScore": 0.7671576735296738
+    },
+    {
+      "fixture": "F3_ADOPTION",
+      "scores": [
+        {
+          "id": "Q_CONFIRM",
+          "score": 0.44386535718982023
+        },
+        {
+          "id": "C_RESILIENCE",
+          "score": 0.3845706661040848
+        },
+        {
+          "id": "T_MULTI",
+          "score": 0.3673173818697961
+        }
+      ],
+      "topId": "Q_CONFIRM",
+      "topScore": 0.44386535718982023
+    },
+    {
+      "fixture": "F4_DEVELOPMENTAL_RETURN",
+      "scores": [
+        {
+          "id": "EARLIER_CONFIG",
+          "score": 0.5118046010395509
+        },
+        {
+          "id": "CURRENT_CONFIG",
+          "score": 0.46226879679807337
+        }
+      ],
+      "topId": "EARLIER_CONFIG",
+      "topScore": 0.5118046010395509
+    },
+    {
+      "fixture": "F5_SILVER_CEDAR_CONTINUITY",
+      "scores": [
+        {
+          "id": "SILVER_CEDAR",
+          "score": 0.9905807914533458
+        },
+        {
+          "id": "ANCIENT_QUALITY",
+          "score": 0.41859707759289727
+        },
+        {
+          "id": "GUARDIAN_ROLE",
+          "score": 0.41288829979156066
+        }
+      ],
+      "topId": "SILVER_CEDAR",
+      "topScore": 0.9905807914533458
+    }
+  ],
+  "conditionA": {
+    "threshold": 0.5,
+    "targetCorrect": 3,
+    "targetTotal": 5,
+    "relationCorrect": 1,
+    "relationTotal": 5,
+    "decisions": [
+      {
+        "fixture": "F1_OPAQUE_REFERENCE",
+        "target": null,
+        "expected": null,
+        "ok": true,
+        "topScore": 0.49839102325168627
+      },
+      {
+        "fixture": "F2_CORRECTION",
+        "target": "E_GRIEF",
+        "expected": "E_GRIEF",
+        "ok": true,
+        "topScore": 0.7671576735296738
+      },
+      {
+        "fixture": "F3_ADOPTION",
+        "target": null,
+        "expected": "C_RESILIENCE",
+        "ok": false,
+        "topScore": 0.44386535718982023
+      },
+      {
+        "fixture": "F4_DEVELOPMENTAL_RETURN",
+        "target": "EARLIER_CONFIG",
+        "expected": "EARLIER_CONFIG",
+        "ok": true,
+        "topScore": 0.5118046010395509
+      },
+      {
+        "fixture": "F5_SILVER_CEDAR_CONTINUITY",
+        "target": "SILVER_CEDAR",
+        "expected": "GUARDIAN_ROLE",
+        "ok": false,
+        "topScore": 0.9905807914533458
+      }
+    ],
+    "standingRepresented": false,
+    "exactClaimIdentity": false
+  },
+  "conditionB": {
+    "targetCorrect": 4,
+    "relationCorrect": 5,
+    "total": 5,
+    "decisions": [
+      {
+        "fixture": "F1_OPAQUE_REFERENCE",
+        "target": null,
+        "relation": null,
+        "standing": null,
+        "scope": null
+      },
+      {
+        "fixture": "F2_CORRECTION",
+        "target": "E_GRIEF",
+        "relation": "CORRECTS",
+        "standing": null,
+        "scope": "claim"
+      },
+      {
+        "fixture": "F3_ADOPTION",
+        "target": "T_MULTI",
+        "relation": "CONFIRMS",
+        "standing": null,
+        "scope": "turn"
+      },
+      {
+        "fixture": "F4_DEVELOPMENTAL_RETURN",
+        "target": "EARLIER_CONFIG",
+        "relation": "RETURNS_TO",
+        "standing": null,
+        "scope": "object"
+      },
+      {
+        "fixture": "F5_SILVER_CEDAR_CONTINUITY",
+        "target": "GUARDIAN_ROLE",
+        "relation": "ADOPTED_AS",
+        "standing": null,
+        "scope": "object"
+      }
+    ],
+    "standingRepresented": false,
+    "exactClaimIdentity": false,
+    "continuityPass": 2,
+    "continuityTotal": 2
+  },
+  "conditionC": {
+    "targetCorrect": 5,
+    "relationCorrect": 5,
+    "total": 5,
+    "decisions": [
+      {
+        "fixture": "F1_OPAQUE_REFERENCE",
+        "target": null,
+        "relation": null,
+        "standing": null,
+        "scope": null
+      },
+      {
+        "fixture": "F2_CORRECTION",
+        "target": "E_GRIEF",
+        "relation": "CORRECTS",
+        "standing": "established",
+        "scope": "claim"
+      },
+      {
+        "fixture": "F3_ADOPTION",
+        "target": "C_RESILIENCE",
+        "relation": "CONFIRMS",
+        "standing": "provisional",
+        "scope": "claim"
+      },
+      {
+        "fixture": "F4_DEVELOPMENTAL_RETURN",
+        "target": "EARLIER_CONFIG",
+        "relation": "RETURNS_TO",
+        "standing": "historical_only",
+        "scope": "object"
+      },
+      {
+        "fixture": "F5_SILVER_CEDAR_CONTINUITY",
+        "target": "GUARDIAN_ROLE",
+        "relation": "ADOPTED_AS",
+        "standing": "adopted",
+        "scope": "object"
+      }
+    ],
+    "standingRepresented": true,
+    "standingCorrect": 4,
+    "standingTotal": 4,
+    "exactClaimIdentity": true,
+    "exactClaimTargetPass": true,
+    "continuityPass": 2,
+    "continuityTotal": 2,
+    "falseStandingPromotions": 0
+  }
+}
