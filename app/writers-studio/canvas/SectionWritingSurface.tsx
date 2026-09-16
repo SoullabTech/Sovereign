@@ -30,10 +30,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
-import type { SaveFn } from '@/lib/writersStudio/sectionSaveQueue';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
 import { StudioText } from '../studio/StudioType';
+export { makeSectionSave } from '@/lib/writersStudio/sectionSaveClient';
 
 export interface SectionWritingSurfaceProps {
   /** The shared writing session — see the header. */
@@ -90,36 +90,6 @@ export interface SectionWritingSurfaceProps {
  * the member: no autosave-as-version, no silent checkpoint. A version the
  * writer did not set down is not a version they chose.
  */
-/**
- * Build the save call for a manuscript.
- *
- * `witnessDelayMs` is development-only and only when the witness asks: it holds
- * the RESPONSE so a section can be seen still saving while the next one opens.
- * The mutation commits at the same moment either way.
- */
-export function makeSectionSave(manuscriptId: string, witnessDelayMs?: number): SaveFn {
-  return async (sectionId, body, baseVersion) => {
-    const q = witnessDelayMs ? `?witnessDelayMs=${witnessDelayMs}` : '';
-    const res = await apiFetch(
-      `/api/sovereign/manuscripts/${manuscriptId}/sections/${sectionId}${q}`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body, baseVersion }),
-      },
-    );
-    if (res.ok) {
-      const data = await res.json();
-      return { ok: true, version: data.version };
-    }
-    /* A 409 is a version conflict and must stay one: the latch depends on
-       telling "the draft moved elsewhere" apart from "the save did not
-       arrive". Anything else is an unknown outcome. */
-    if (res.status === 409) return { ok: false, refusal: 'stale_base' };
-    return { ok: false, refusal: 'error' };
-  };
-}
-
 const SETTLE_TIMEOUT_MS = 4000;
 const SETTLE_POLL_MS = 50;
 
