@@ -115,6 +115,17 @@ log(){ echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$LEDGER_DIR/batch.log"; }
 # executable name; a K00 harness alive during a vpio-01 sample would be a second audio-session owner). Stricter than the
 # subject, never looser; the subject-scoped custody references are the container/apps/ledger calls that carry $BID.
 harness_present(){ xcrun devicectl device info processes --device "$DEV" 2>/dev/null | grep -qi VoiceKernelHarness; }
+sid_entry_sample1_jit_guard(){
+  local js="$LEDGER_DIR/sample-1-jit-processes.json" out="$LEDGER_DIR/sample-1-jit-processes.stdout" state="$LEDGER_DIR/sample-1-jit-harness-state.txt" rc=0 n=0
+  xcrun devicectl device info processes --device "$DEV" --json-output "$js" >"$out" 2>&1 || rc=$?
+  if [ $rc -ne 0 ] || [ ! -s "$js" ]; then
+    printf 'SID ENTRY sample 1 JIT process read UNREADABLE rc=%s\n' "$rc" | tee "$state"
+    return 1
+  fi
+  n="$(grep -ci VoiceKernelHarness "$js" || true)"
+  { printf 'SID ENTRY sample 1 JIT harnesses=%s\n' "$n"; grep -i VoiceKernelHarness "$js" || true; } | tee "$state"
+  [ "$n" -eq 0 ]
+}
 # PASS-2 daemon identity witness (founder ruling 2026-09-14): Mac-side snapshot of the audio daemons' process rows, taken
 # immediately BEFORE each sample and AFTER its export. External witness state only — this reads the same process
 # listing the precondition already reads; it never launches, signals, terminates, attaches to or reconfigures any
@@ -270,6 +281,11 @@ BEFORE="$(list_journals)" || { log "ABORT: the container listing failed three ti
 for i in $(seq 1 "$N"); do
   log "sample $i/$N — precondition"
   if harness_present; then
+    if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ] && [ "$i" -eq 1 ]; then
+      sid_entry_sample1_jit_guard || true
+      echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | unexpected harness before SID ENTRY sample 1; no terminate attempted; no sample launched; see sample-1-jit-* evidence |" >> "$LEDGER"
+      log "STOP: unexpected harness before SID ENTRY sample 1 — no terminate attempted, no sample launched"; exit 10
+    fi
     log "harness process present — attempting terminate-only via driver"
     run_test testTerminateOnly > "$LEDGER_DIR/sample-$i-terminate.log" || true
     if harness_present; then
@@ -280,6 +296,12 @@ for i in $(seq 1 "$N"); do
   daemon_snapshot "$i" before
   if [ -n "$STIMULUS" ]; then
     stimulus_start "$i" || { echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | stimulus player not alive before the phone invocation (stimulus-sample-$i.tsv); batch ABORTED as orchestration failure, no identical rows spent |" >> "$LEDGER"; log "ABORT: stimulus player not alive before the phone invocation; orchestration failure recorded"; exit 9; }
+  fi
+  if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ] && [ "$i" -eq 1 ]; then
+    if ! sid_entry_sample1_jit_guard; then
+      echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | SID ENTRY sample 1 just-in-time harness-zero guard refused; no terminate attempted; no sample launched; see sample-1-jit-* evidence |" >> "$LEDGER"
+      log "STOP: SID ENTRY sample 1 JIT harness-zero guard failed — no terminate attempted, no sample launched"; exit 10
+    fi
   fi
   log "sample $i/$N — driver ($TEST, mode $MODE)"
   T0=$(date +%s); run_test "$TEST" > "$LEDGER_DIR/sample-$i-xcodebuild.log"; RC=$?; T1=$(date +%s)
