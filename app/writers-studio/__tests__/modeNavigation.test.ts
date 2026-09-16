@@ -58,6 +58,18 @@ describe('the bar navigates exactly where a room exists', () => {
     }
   });
 
+  it('future rooms are visible invitations without pretending to be built', () => {
+    for (const id of ['explore', 'review', 'publish']) {
+      const mode = STUDIO_MODES.find((m) => m.id === id)!;
+      expect(mode.availability).toBe('later');
+      expect(mode.href).toBeUndefined();
+      expect(mode.preview).toBeTruthy();
+    }
+    const bar = src('studio', 'StudioModeBar.tsx');
+    expect(bar).toContain('Not yet available');
+    expect(bar).toContain('What would you want here?');
+  });
+
   it('two rooms are built, and they are Write and Develop', () => {
     expect(STUDIO_MODES.filter((m) => m.availability === 'available').map((m) => m.id))
       .toEqual(['write', 'develop']);
