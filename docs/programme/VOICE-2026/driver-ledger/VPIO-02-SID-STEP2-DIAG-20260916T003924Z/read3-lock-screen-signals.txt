@@ -1,0 +1,2 @@
+docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2-DIAG-20260916T003924Z/read3-devicectl-device-info-help.txt:32:  displays                Get the device's current display information.
+docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2-DIAG-20260916T003924Z/read3-devicectl-device-info-help.txt:34:  lockState               Get the current locked state of the device.

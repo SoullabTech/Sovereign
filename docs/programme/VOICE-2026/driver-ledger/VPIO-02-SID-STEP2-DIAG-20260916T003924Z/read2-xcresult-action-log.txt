@@ -1,0 +1,290 @@
+{
+  "attachments" : [
+
+  ],
+  "domainType" : "com.apple.dt.unit.cocoaUnitTest",
+  "duration" : 68.9094250202179,
+  "messages" : [
+
+  ],
+  "result" : "succeeded",
+  "startTime" : 1789518572.944,
+  "subsections" : [
+    {
+      "attachments" : [
+
+      ],
+      "domainType" : "Xcode.IDEActivityLogDomainType.LaunchLog",
+      "duration" : 67.87858200073242,
+      "messages" : [
+
+      ],
+      "result" : "succeeded",
+      "startTime" : 1789518573.975,
+      "subsections" : [
+        {
+          "attachments" : [
+
+          ],
+          "domainType" : "com.apple.dt.IDE.LogSection",
+          "duration" : 67.3922129869461,
+          "messages" : [
+            {
+              "annotations" : [
+
+              ],
+              "shortTitle" : "Platform: iOS",
+              "title" : "Platform: iOS",
+              "type" : "notice"
+            },
+            {
+              "annotations" : [
+
+              ],
+              "shortTitle" : "Device Identifier: 00008140-00163D9922E0801C",
+              "title" : "Device Identifier: 00008140-00163D9922E0801C",
+              "type" : "notice"
+            },
+            {
+              "annotations" : [
+
+              ],
+              "shortTitle" : "Operating System Version: 26.7 (23H24)",
+              "title" : "Operating System Version: 26.7 (23H24)",
+              "type" : "notice"
+            },
+            {
+              "annotations" : [
+
+              ],
+              "shortTitle" : "Model: iPhone 16 Pro Max (iPhone17,2)",
+              "title" : "Model: iPhone 16 Pro Max (iPhone17,2)",
+              "type" : "notice"
+            },
+            {
+              "annotations" : [
+
+              ],
+              "shortTitle" : "Target Architecture: arm64e",
+              "title" : "Target Architecture: arm64e",
+              "type" : "notice"
+            }
+          ],
+          "result" : "succeeded",
+          "startTime" : 1789518574.182,
+          "subsections" : [
+            {
+              "attachments" : [
+
+              ],
+              "commandInvocationDetails" : {
+                "commandDetails" : "",
+                "emittedOutput" : "",
+                "exitCode" : 0
+              },
+              "domainType" : "com.apple.dt.IDE.LogSection",
+              "duration" : 6.173262000083923,
+              "messages" : [
+                {
+                  "annotations" : [
+
+                  ],
+                  "shortTitle" : "Installing on Kelly Nezat’s iPhone",
+                  "title" : "Installing on Kelly Nezat’s iPhone",
+                  "type" : "notice"
+                },
+                {
+                  "annotations" : [
+
+                  ],
+                  "shortTitle" : "Successfully installed",
+                  "title" : "Successfully installed",
+                  "type" : "notice"
+                }
+              ],
+              "result" : "succeeded",
+              "startTime" : 1789518574.182,
+              "subsections" : [
+
+              ],
+              "title" : "Installing DriverUITests on Kelly Nezat’s iPhone"
+            },
+            {
+              "attachments" : [
+
+              ],
+              "commandInvocationDetails" : {
+                "commandDetails" : "Environment variables:\nCA_ASSERT_MAIN_THREAD_TRANSACTIONS=0\nXCTestSessionIdentifier=D675AFCD-904A-475D-916A-E505FC5729DA\nRUN_DESTINATION_DEVICE_NAME=Kelly Nezat’s iPhone\nK00_W4_MS=500\nRUN_DESTINATION_DEVICE_UDID=00008140-00163D9922E0801C\nK00_VP=on\nXCTestBundleInjectPath=/usr/lib/libRPAC.dylib:/usr/lib/libMainThreadChecker.dylib:/usr/lib/libRPAC.dylib\nK00_SUBJECT=vpio-02\nCA_DEBUG_TRANSACTIONS=0\nDYLD_FRAMEWORK_PATH=/System/Developer/Library/Frameworks\nDYLD_INSERT_LIBRARIES=/usr/lib/libRPAC.dylib:/usr/lib/libMainThreadChecker.dylib:/usr/lib/libRPAC.dylib\nXCTestConfigurationFilePath=\nXCODE_SCHEME_NAME=DriverUITests\nPERFC_SUPPRESS_SYSTEM_REPORTS=1\nDYLD_LIBRARY_PATH=/System/Developer/usr/lib\nSQLITE_ENABLE_THREAD_ASSERTIONS=1\nNSUnbufferedIO=YES\nXCTestBundlePath=PlugIns/DriverUITests.xctest\nOS_ACTIVITY_DT_MODE=YES\nAPP_DISTRIBUTOR_ID_OVERRIDE=com.apple.AppStore\nPERFC_RESET_INSERT_LIBRARIES=1\nK00_HOLD_S=15\nRUN_DESTINATION_DEVICE_PLATFORM_IDENTIFIER=com.apple.platform.iphoneos\nXCTestManagerVariant=DDI\nTERM=dumb\nPERFC_ENABLE_PROFILE_MODE=1\nRUN_DESTINATION_DEVICE_ECID=6260177412063260\nPERFC_ENABLE_EXTENDED_DIAGNOSTIC_FORMAT=1\nK00_MODE=L",
+                "emittedOutput" : "",
+                "exitCode" : 0
+              },
+              "domainType" : "com.apple.dt.IDE.LogSection",
+              "duration" : 0.6074410676956177,
+              "messages" : [
+                {
+                  "annotations" : [
+
+                  ],
+                  "shortTitle" : "Launching life.soullab.voicekernel.driver.xctest.xctrunner",
+                  "title" : "Launching life.soullab.voicekernel.driver.xctest.xctrunner",
+                  "type" : "notice"
+                },
+                {
+                  "annotations" : [
+
+                  ],
+                  "shortTitle" : "Launching suspended and the launcher is responsible for resuming.",
+                  "title" : "Launching suspended and the launcher is responsible for resuming.",
+                  "type" : "notice"
+                },
+                {
+                  "annotations" : [
+                    {
+                      "location" : null,
+                      "title" : "LaunchSessionToken: 119688970"
+                    },
+                    {
+                      "location" : null,
+                      "title" : "RemotePath: /private/var/containers/Bundle/Application/C3C07082-B253-41E4-9A59-B2EE3887ED8A/DriverUITests-Runner.app"
+                    },
+                    {
+                      "location" : null,
+                      "title" : "AppInstallationResult(applicationBundleId: \"life.soullab.voicekernel.driver.xctest.xctrunner\", installationURL: file:///private/var/containers/Bundle/Application/C3C07082-B253-41E4-9A59-B2EE3887ED8A/DriverUITests-Runner.app/, databaseUUID: D1BDD00F-2C5B-46D3-B19F-44265AAE5471, databaseSequenceNumber: 2832, _persistentIdentifier: 36 bytes)"
+                    },
+                    {
+                      "location" : null,
+                      "title" : "Set in Launch Options"
+                    }
+                  ],
+                  "shortTitle" : "Configure with Install Result",
+                  "title" : "Configure with Install Result",
+                  "type" : "notice"
+                },
+                {
+                  "annotations" : [
+
+                  ],
+                  "shortTitle" : "Requested the device's screen to stay on for the duration of the launch session",
+                  "title" : "Requested the device's screen to stay on for the duration of the launch session",
+                  "type" : "notice"
+                },
+                {
+                  "annotations" : [
+
+                  ],
+                  "shortTitle" : "Console logging policy: Mirror os_logs to std:err, and read stdio from File Descriptors",
+                  "title" : "Console logging policy: Mirror os_logs to std:err, and read stdio from File Descriptors",
+                  "type" : "notice"
+                },
+                {
+                  "annotations" : [
+
+                  ],
+                  "shortTitle" : "Resumed target process.",
+                  "title" : "Resumed target process.",
+                  "type" : "notice"
+                },
+                {
+                  "annotations" : [
+
+                  ],
+                  "shortTitle" : "Successfully launched DriverUITests",
+                  "title" : "Successfully launched DriverUITests",
+                  "type" : "notice"
+                }
+              ],
+              "result" : "succeeded",
+              "startTime" : 1789518580.363,
+              "subsections" : [
+
+              ],
+              "title" : "Launch DriverUITests"
+            }
+          ],
+          "title" : "Launch DriverUITests"
+        }
+      ],
+      "title" : "Launch actions"
+    },
+    {
+      "attachments" : [
+
+      ],
+      "domainType" : "com.apple.dt.unit.cocoaUnitTest",
+      "duration" : 0,
+      "messages" : [
+
+      ],
+      "result" : "succeeded",
+      "startTime" : 1789518574.179,
+      "subsections" : [
+        {
+          "attachments" : [
+
+          ],
+          "domainType" : "com.apple.dt.IDE.UnitTestLogSection.Worker",
+          "duration" : 0,
+          "messages" : [
+            {
+              "annotations" : [
+
+              ],
+              "shortTitle" : "DriverUITests-Runner (3537) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.))",
+              "title" : "DriverUITests-Runner (3537) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.))",
+              "type" : "error"
+            }
+          ],
+          "result" : "succeeded",
+          "startTime" : 1789518574.18,
+          "subsections" : [
+            {
+              "attachments" : [
+
+              ],
+              "commandInvocationDetails" : {
+                "commandDetails" : "/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-comvzxsbabpfcefczwfmswixclmb/Logs/Test/Test-DriverUITests-2026.09.15_20-29-32--0400.xcresult/Staging/1_Test/Diagnostics/DriverUITests-6E812E1D-8B19-4D94-9DA9-53B53DE7BC74-Configuration-Test Scheme Action-Iteration-1/DriverUITests-49349C77-5C5F-4B7E-B558-77FD290BC119/Session-DriverUITests-2026-09-15_202934-ClA474.log",
+                "emittedOutput" : "",
+                "exitCode" : 0
+              },
+              "domainType" : "com.apple.dt.IDE.UnitTestLogSection",
+              "duration" : 6.592273712158203e-05,
+              "messages" : [
+                {
+                  "annotations" : [
+
+                  ],
+                  "location" : {
+                    "concreteTypeName" : "DVTTextDocumentLocation",
+                    "url" : "file:///Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-comvzxsbabpfcefczwfmswixclmb/Logs/Test/Test-DriverUITests-2026.09.15_20-29-32--0400.xcresult/Staging/1_Test/Diagnostics/DriverUITests-6E812E1D-8B19-4D94-9DA9-53B53DE7BC74-Configuration-Test%20Scheme%20Action-Iteration-1/DriverUITests-49349C77-5C5F-4B7E-B558-77FD290BC119/Session-DriverUITests-2026-09-15_202934-ClA474.log"
+                  },
+                  "shortTitle" : "/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-comvzxsbabpfcefczwfmswixclmb/Logs/Test/Test-DriverUITests-2026.09.15_20-29-32--0400.xcresult/Staging/1_Test/Diagnostics/DriverUITests-6E812E1D-8B19-4D94-9DA9-53B53DE7BC74-Configuration-Test Scheme Action-Iteration-1/DriverUITests-49349C77-5C5F-4B7E-B558-77FD290BC119/Session-DriverUITests-2026-09-15_202934-ClA474.log",
+                  "title" : "/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-comvzxsbabpfcefczwfmswixclmb/Logs/Test/Test-DriverUITests-2026.09.15_20-29-32--0400.xcresult/Staging/1_Test/Diagnostics/DriverUITests-6E812E1D-8B19-4D94-9DA9-53B53DE7BC74-Configuration-Test Scheme Action-Iteration-1/DriverUITests-49349C77-5C5F-4B7E-B558-77FD290BC119/Session-DriverUITests-2026-09-15_202934-ClA474.log",
+                  "type" : "notice"
+                }
+              ],
+              "result" : "succeeded",
+              "startTime" : 1789518574.18,
+              "subsections" : [
+
+              ],
+              "title" : "Writing diagnostic log for test runner launch."
+            }
+          ],
+          "testDetails" : {
+            "emittedOutput" : "DriverUITests-Runner (3537) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.))",
+            "runnablePath" : "/tmp/sid-hht-01-3035c02353b3cc0dab0b0ce1823116d6712b8eb1/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app",
+            "runnableUTI" : "com.apple.application-bundle",
+            "testsPassedString" : "0 tests total, 0 passed",
+            "wasSkipped" : false
+          },
+          "title" : "DriverUITests-Runner (3537)"
+        }
+      ],
+      "testDetails" : {
+        "wasSkipped" : false
+      },
+      "title" : "Test target DriverUITests"
+    }
+  ],
+  "title" : "Test DriverUITests"
+}

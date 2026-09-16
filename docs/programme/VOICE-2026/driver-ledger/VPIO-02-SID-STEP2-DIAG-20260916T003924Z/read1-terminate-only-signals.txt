@@ -1,0 +1,6 @@
+13:2026-09-15 20:30:41.651379-0400 DriverUITests-Runner[3537:634040] [Default] Failed to initialize for UI testing: Error Domain=com.apple.dt.XCTest.XCTFuture Code=1000 "Timed out while enabling automation mode." UserInfo={NSLocalizedDescription=Timed out while enabling automation mode.}
+16:*** If you believe this error represents a bug, please attach the result bundle at /Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-comvzxsbabpfcefczwfmswixclmb/Logs/Test/Test-DriverUITests-2026.09.15_20-29-32--0400.xcresult
+22:Test session results, code coverage, and logs:
+25:Testing failed:
+26:	DriverUITests-Runner (3537) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.))
+28:** TEST EXECUTE FAILED **
