@@ -3,7 +3,7 @@
  */
 
 import {
-  EVIDENCE_REF_KINDS, isEvidenceRef, requirementOf, sectionIdsOf, unitIdsOf, isStructural,
+  EVIDENCE_REF_KINDS, isEvidenceRef, requirementOf, sectionIdsOf, unitIdsOf, isStructural, splitCodePointRange,
   type EvidenceRef,
 } from '../evidenceRef';
 
@@ -71,5 +71,17 @@ describe('a ref carries no version and no prose (INV-5, INV-6)', () => {
     expect(unitIdsOf(all[5])).toEqual([]);
     expect(isStructural(all[5])).toBe(true);
     expect(isStructural(all[0])).toBe(false);
+  });
+});
+
+
+describe('CodePointRange remains Unicode code-point based', () => {
+  it('does not reinterpret emoji as two UTF-16 units', () => {
+    const split = splitCodePointRange('A🔥BC', { start: 1, end: 3 });
+    expect(split).toEqual({ before: 'A', selected: '🔥B', after: 'C' });
+  });
+
+  it('refuses a range beyond the code-point length', () => {
+    expect(splitCodePointRange('A🔥', { start: 1, end: 3 })).toBeNull();
   });
 });

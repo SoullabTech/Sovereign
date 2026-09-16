@@ -43,6 +43,7 @@ import {
   useMemo, useRef, useState,
 } from 'react';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
+import { splitCodePointRange, type CodePointRange } from '@/lib/manuscript/development/evidenceRef';
 import {
   evictedIndices, mountedIndices, type WindowInput,
 } from '@/lib/writersStudio/sectionWindow';
@@ -103,7 +104,10 @@ export interface WholeManuscriptSurfaceProps {
    * the viewport covers.
    */
   onPlaceChange?: (sectionId: string) => void;
+  /** Exact frozen passage to illuminate in a read-only manuscript. Never used for editing. */
+  readOnlyHighlight?: { sectionId: string; range: CodePointRange } | null;
 }
+
 
 /** What the parent may ask of a mounted surface. */
 export interface WholeManuscriptSurfaceHandle {
@@ -124,7 +128,7 @@ export interface WholeManuscriptSurfaceHandle {
 export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
-  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange,
+  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, readOnlyHighlight = null,
 }, handleRef) {
   const sections = writing.sections;
   const indexOfId = useMemo(() => {
@@ -388,11 +392,32 @@ export const WholeManuscriptSurface = forwardRef<
                   color: 'inherit', overflow: 'hidden',
                 }}
               />
-            ) : (
-              <StudioText role="prose" as="pre" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-                {body}
-              </StudioText>
-            )}
+            ) : (() => {
+              const exact = readOnlyHighlight?.sectionId === section.id
+                ? splitCodePointRange(body, readOnlyHighlight.range)
+                : null;
+              return (
+                <StudioText role="prose" as="pre" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+                  {exact ? (
+                    <>
+                      {exact.before}
+                      <span
+                        data-development-evidence-marker
+                        aria-hidden="true"
+                        style={{ display: 'inline-block', width: 0, transform: 'translateX(-22px)', color: INK.quiet }}
+                      >◇</span>
+                      <mark
+                        data-development-evidence-highlight
+                        style={{ background: 'var(--ws-gold-fill)', color: 'inherit', borderRadius: 3, padding: '1px 0' }}
+                      >
+                        {exact.selected}
+                      </mark>
+                      {exact.after}
+                    </>
+                  ) : body}
+                </StudioText>
+              );
+            })()}
           </div>
         );
       })}
