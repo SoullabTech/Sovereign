@@ -1,0 +1,796 @@
+{
+  "schemaVersion": 1,
+  "lane": "TURN-03",
+  "act": "A3_SMART_TURN_COMPARATOR_01",
+  "shadowOnly": true,
+  "generatedAt": "2026-09-16T20:33:53.170Z",
+  "controlEvidence": {
+    "path": "docs/programme/VOICE-2026/evidence/TURN-03-A3-SYNTH-01-20260916/A3_SYNTH_CONTROL_EVIDENCE.json",
+    "sha256": "9cc22bea45da34e9ada85504dcd2e76b986fc411155c7c731c7fa043c1588dbf"
+  },
+  "fixture": {
+    "generator": "macOS say + afconvert",
+    "voice": "Samantha",
+    "sourceRateHz": 16000,
+    "cases": 10,
+    "rawAudioPersistedInRepo": false,
+    "memberData": false
+  },
+  "model": {
+    "provider": "smart-turn",
+    "repositoryRevision": "4786657e242dfe77dd138699ac564ee074a2a543",
+    "modelVersion": "f766f81d3cfdf7737ac64aad813d91bbfd56bf93",
+    "path": "/private/tmp/smart-turn-a3-model/smart-turn-v3.2-cpu.onnx",
+    "sha256": "2bb026316b14a660486a75b1733cd3fbab8c2fd0314dc9af7be49f8cca967e4f",
+    "license": "BSD-2-Clause",
+    "threshold": 0.5,
+    "maxTurnSeconds": 8
+  },
+  "runtime": {
+    "python": "3.11.14",
+    "packages": [
+      "PyYAML==6.0.3",
+      "certifi==2026.7.22",
+      "charset-normalizer==3.5.1",
+      "coloredlogs==15.0.1",
+      "filelock==3.32.7",
+      "flatbuffers==25.12.19",
+      "fsspec==2026.7.0",
+      "hf-xet==1.6.0",
+      "huggingface_hub==0.36.2",
+      "humanfriendly==10.0",
+      "idna==3.19",
+      "mpmath==1.3.0",
+      "numpy==2.3.4",
+      "onnxruntime==1.23.2",
+      "packaging==26.3",
+      "protobuf==7.36.1",
+      "regex==2026.9.10",
+      "requests==2.34.2",
+      "safetensors==0.8.0",
+      "sympy==1.14.0",
+      "tokenizers==0.21.4",
+      "tqdm==4.70.1",
+      "transformers==4.48.2",
+      "typing_extensions==4.16.0",
+      "urllib3==2.8.0"
+    ],
+    "sidecarSha256": "2485178b78fca2e3cd3f94eeea9675a96a82634cca2cb38acd447874b152f580",
+    "offlineEnvironment": true
+  },
+  "network": {
+    "openSocketsAfterHello": [],
+    "openSocketsAfterRun": [],
+    "noOpenSocketsObserved": true
+  },
+  "latencyMs": {
+    "samples": 38,
+    "median": 14.713041999999405,
+    "p95": 18.00116700000035,
+    "max": 18.086707999999817,
+    "min": 13.066166000000521
+  },
+  "metrics": {
+    "smartTurn": {
+      "overall": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 5,
+        "falseFloorSeizureRate": 0.625,
+        "correctYields": 2,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3500
+      },
+      "byClass": {
+        "ordinary_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "emotional_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "breath": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "unfinished_syntax": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 2,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "explicit_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500
+        },
+        "question_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500
+        }
+      }
+    },
+    "smartTurnSemantic": {
+      "overall": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 2,
+        "falseFloorSeizureRate": 0.25,
+        "correctYields": 2,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3500
+      },
+      "byClass": {
+        "ordinary_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "emotional_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "breath": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "unfinished_syntax": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "explicit_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500
+        },
+        "question_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500
+        }
+      }
+    },
+    "sealedControls": {
+      "baseline": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 6,
+        "falseFloorSeizureRate": 0.75,
+        "correctYields": 2,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3500
+      },
+      "conservative": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "acoustic": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "semantic": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 2,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3529.875
+      },
+      "fused": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 2,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3529.875
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "ordinary-2s",
+      "pauseClass": "ordinary_pause",
+      "label": "continue",
+      "pauseMs": 2000,
+      "fixturePcm16Sha256": "0bce7acaf6143d6e051b7b07f639c5915200880fad673d5e0d9cf08c8f4f4a5a",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.975929319858551,
+          "complete": true,
+          "roundTripMs": 16.47291599999994
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.970842719078064,
+          "complete": true,
+          "roundTripMs": 15.95270800000003
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.7987582683563232,
+          "complete": true,
+          "roundTripMs": 14.777583999999933
+        }
+      ],
+      "smartTurn": {
+        "decision": "wait"
+      },
+      "smartTurnSemantic": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "word-search-4s",
+      "pauseClass": "word_search",
+      "label": "continue",
+      "pauseMs": 4000,
+      "fixturePcm16Sha256": "90c1982aeb68e5a36991424d099f3eac1aa02c3870a1e7f25a6bd103117b629c",
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "trailing_ellipsis",
+          "dangling_syntax"
+        ]
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.8688222169876099,
+          "complete": true,
+          "roundTripMs": 13.586083000000144
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.7507920265197754,
+          "complete": true,
+          "roundTripMs": 14.3471669999999
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.6957479119300842,
+          "complete": true,
+          "roundTripMs": 14.362916999999925
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.7790932655334473,
+          "complete": true,
+          "roundTripMs": 16.103250000000116
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "hesitation-4s",
+      "pauseClass": "hesitation",
+      "label": "continue",
+      "pauseMs": 4000,
+      "fixturePcm16Sha256": "aada80b8cd2331d9863cd57cd6a2bb14f36a1d982031dfd96be023aa1a8cd6fd",
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "trailing_ellipsis",
+          "trailing_filler"
+        ]
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.006944864988327026,
+          "complete": false,
+          "roundTripMs": 13.294917000000169
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.008443742990493774,
+          "complete": false,
+          "roundTripMs": 13.964249999999993
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.007809102535247803,
+          "complete": false,
+          "roundTripMs": 15.089375000000018
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.02316257357597351,
+          "complete": false,
+          "roundTripMs": 13.859249999999975
+        }
+      ],
+      "smartTurn": {
+        "decision": "wait"
+      },
+      "smartTurnSemantic": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "emotional-6s",
+      "pauseClass": "emotional_pause",
+      "label": "continue",
+      "pauseMs": 6000,
+      "fixturePcm16Sha256": "e1abe6d0c5e4d3690a77c83171bfef9ae047d95baca5bb2131130afe5ac2f938",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9893293380737305,
+          "complete": true,
+          "roundTripMs": 13.238250000000335
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.9880069494247437,
+          "complete": true,
+          "roundTripMs": 15.250208999999813
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.975929319858551,
+          "complete": true,
+          "roundTripMs": 14.16937499999949
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9836374521255493,
+          "complete": true,
+          "roundTripMs": 15.178791999999703
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "breath-2s",
+      "pauseClass": "breath",
+      "label": "continue",
+      "pauseMs": 2000,
+      "fixturePcm16Sha256": "9324544c050989741f5c23024c374b89be70dabf4a501b2b57d0bc8cb4d337e5",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.8170837163925171,
+          "complete": true,
+          "roundTripMs": 13.396999999999935
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.963354766368866,
+          "complete": true,
+          "roundTripMs": 14.991833000000042
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.2642360031604767,
+          "complete": false,
+          "roundTripMs": 14.275749999999789
+        }
+      ],
+      "smartTurn": {
+        "decision": "wait"
+      },
+      "smartTurnSemantic": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "unfinished-4s",
+      "pauseClass": "unfinished_syntax",
+      "label": "continue",
+      "pauseMs": 4000,
+      "fixturePcm16Sha256": "3c5bd5347a4f7d840d428d94ea9ce1cf0ef4f526644d24275ffaa85cfe3a8c18",
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "dangling_syntax"
+        ]
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9485659599304199,
+          "complete": true,
+          "roundTripMs": 14.341957999999977
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.9854345321655273,
+          "complete": true,
+          "roundTripMs": 18.00116700000035
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.9540347456932068,
+          "complete": true,
+          "roundTripMs": 15.350208000000748
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9619386196136475,
+          "complete": true,
+          "roundTripMs": 15.341667000000598
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "unfinished-6s",
+      "pauseClass": "unfinished_syntax",
+      "label": "continue",
+      "pauseMs": 6000,
+      "fixturePcm16Sha256": "7526765b6b18b433baad64f541a1767d14336f06732d90d5a1db6952f12d2d6f",
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "dangling_syntax"
+        ]
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.24920794367790222,
+          "complete": false,
+          "roundTripMs": 13.699333999999908
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.09577557444572449,
+          "complete": false,
+          "roundTripMs": 14.713041999999405
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.256649911403656,
+          "complete": false,
+          "roundTripMs": 16.3446670000003
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.7580885291099548,
+          "complete": true,
+          "roundTripMs": 14.932583999999224
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "reentry-4s",
+      "pauseClass": "reentry",
+      "label": "continue",
+      "pauseMs": 4000,
+      "fixturePcm16Sha256": "5544a117145ba5880d5565fbcc3e617a914055fff93dc881670b09a9ab17a170",
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.19498491287231445,
+          "complete": false,
+          "roundTripMs": 13.351125000000138
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.8642676472663879,
+          "complete": true,
+          "roundTripMs": 18.086707999999817
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.8170837163925171,
+          "complete": true,
+          "roundTripMs": 14.749250000000757
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9573681354522705,
+          "complete": true,
+          "roundTripMs": 14.912124999998923
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "explicit-yield",
+      "pauseClass": "explicit_yield",
+      "label": "yield",
+      "pauseMs": 5000,
+      "fixturePcm16Sha256": "263b10e2327bcc1eba56d244e6efd901416832b3de1cb976873554397a590758",
+      "semantic": {
+        "incomplete": null,
+        "yield": 1,
+        "reasons": [
+          "explicit_yield_phrase"
+        ]
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9042243957519531,
+          "complete": true,
+          "roundTripMs": 13.258166999999958
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.7923524379730225,
+          "complete": true,
+          "roundTripMs": 14.700249999999869
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.9557313919067383,
+          "complete": true,
+          "roundTripMs": 14.648166000000856
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9199748635292053,
+          "complete": true,
+          "roundTripMs": 15.175959000000148
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    },
+    {
+      "id": "question-yield",
+      "pauseClass": "question_yield",
+      "label": "yield",
+      "pauseMs": 5000,
+      "fixturePcm16Sha256": "1f161d062c00b2e7fc634f222125b1c05f03efd6d4ad88e1b2f3081ffd9a90d7",
+      "semantic": {
+        "incomplete": null,
+        "yield": 1,
+        "reasons": [
+          "explicit_yield_phrase"
+        ]
+      },
+      "snapshots": [
+        {
+          "silenceMs": 200,
+          "completeProbability": 0.9228270053863525,
+          "complete": true,
+          "roundTripMs": 13.066166000000521
+        },
+        {
+          "silenceMs": 1000,
+          "completeProbability": 0.970842719078064,
+          "complete": true,
+          "roundTripMs": 14.489458000000013
+        },
+        {
+          "silenceMs": 2000,
+          "completeProbability": 0.9589470624923706,
+          "complete": true,
+          "roundTripMs": 14.85412499999984
+        },
+        {
+          "silenceMs": 3500,
+          "completeProbability": 0.9836374521255493,
+          "complete": true,
+          "roundTripMs": 15.24054100000103
+        }
+      ],
+      "smartTurn": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "smartTurnSemantic": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      }
+    }
+  ],
+  "authority": {
+    "canCommitTranscript": false,
+    "canDispatchCognition": false,
+    "canStartTts": false,
+    "canAlterEndpointing": false
+  }
+}
