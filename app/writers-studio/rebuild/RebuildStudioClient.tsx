@@ -153,10 +153,12 @@ export default function RebuildStudioClient() {
   const [lastEditorialInstruction, setLastEditorialInstruction] = useState('');
   const [relationshipChoices, setRelationshipChoices] = useState<readonly RebuildEditorialRelationship[]>([]);
   const [adoptionBusy, setAdoptionBusy] = useState(false);
+  const [workDeclarationBusy, setWorkDeclarationBusy] = useState(false);
+  const [workDeclarationMessage, setWorkDeclarationMessage] = useState<string | null>(null);
   const sessionIdRef = useRef('');
   const writingRef = useRef<SectionWriting | null>(null);
   const sectionRefs = useRef(new Map<string, HTMLElement>());
-  const { phase: worksPhase, works } = useLivingWorks();
+  const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
 
   const load = useCallback(async () => {
     setPhase('loading'); setMessage(null);
@@ -223,6 +225,48 @@ export default function RebuildStudioClient() {
   const chapterNode = focusId ? chapterNodeFor(tree, focusId) : null;
   const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
   const work = currentWork(workContext);
+  const workContextSentence = workContext.kind === 'work'
+    ? (work?.purpose ?? 'A Work you declared.')
+    : workContext.kind === 'none'
+      ? 'This manuscript is not yet declared as a Work.'
+      : workContext.kind === 'ambiguous'
+        ? `This manuscript belongs to ${workContext.works.length} Works. The Studio will not choose one for you.`
+        : worksPhase === 'error'
+          ? 'The Studio could not establish this manuscript’s Work context just now.'
+          : 'Finding this manuscript’s Work context…';
+
+  const makeThisAWork = useCallback(async () => {
+    if (!context || workContext.kind !== 'none' || workDeclarationBusy) return;
+    setWorkDeclarationBusy(true);
+    setWorkDeclarationMessage(null);
+    try {
+      const create = await apiFetch('/api/sovereign/living-works', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(context.title ? { title: context.title } : {}),
+      });
+      const created = await create.json().catch(() => ({}));
+      const workId = typeof created?.work?.id === 'string' ? created.work.id : null;
+      if (!create.ok || !workId) {
+        setWorkDeclarationMessage('The Work could not be created just now. The manuscript has not changed.');
+        return;
+      }
+      const declare = await apiFetch(`/api/sovereign/living-works/${workId}/expressions`, {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ expressionType: 'manuscript', expressionId: context.manuscriptId }),
+      });
+      await reloadWorks();
+      if (!declare.ok) {
+        setWorkDeclarationMessage('The Work was created, but this manuscript was not placed in it. Nothing about the manuscript changed.');
+        return;
+      }
+      setWorkDeclarationMessage(null);
+    } catch {
+      setWorkDeclarationMessage('The Work could not be created just now. The manuscript has not changed.');
+    } finally {
+      setWorkDeclarationBusy(false);
+    }
+  }, [context, workContext.kind, workDeclarationBusy, reloadWorks]);
+
   const chapterRootId = chapter?.root.draftSectionId ?? null;
   const chapterScopeKey = chapter?.sections.map((section) => section.draftSectionId).join('|') ?? '';
 
@@ -746,9 +790,21 @@ export default function RebuildStudioClient() {
           <button type="button" style={{ border: 0, background: 'transparent', color: C.muted, fontSize: 12, padding: '3px 2px 15px', cursor: 'pointer' }}>‹ All Works</button>
           <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 14, marginBottom: 18 }}>
             <div style={{ fontFamily: SERIF, fontSize: 17, marginBottom: 4 }}>{title}</div>
-            <div style={{ fontSize: 11.5, lineHeight: 1.45, color: C.muted }}>
-              {work?.purpose ?? 'A living manuscript in progress.'}
+            <div data-work-context={workContext.kind} style={{ fontSize: 11.5, lineHeight: 1.45, color: C.muted }}>
+              {workContextSentence}
             </div>
+            {workContext.kind === 'none' && (
+              <button type="button" data-make-this-a-work onClick={() => void makeThisAWork()} disabled={workDeclarationBusy}
+                style={{ marginTop: 9, border: 0, background: 'transparent', padding: 0, color: C.gold, fontSize: 11.5, cursor: workDeclarationBusy ? 'wait' : 'pointer', textDecoration: 'underline', textUnderlineOffset: 4 }}>
+                {workDeclarationBusy ? 'Making this a Work…' : 'Make this a Work'}
+              </button>
+            )}
+            {workContext.kind === 'ambiguous' && (
+              <div style={{ marginTop: 7, fontSize: 10.5, color: C.quiet }}>
+                {workContext.works.map((candidate) => candidate.title ?? 'Unnamed Work').join(' · ')}
+              </div>
+            )}
+            {workDeclarationMessage && <div role="status" style={{ marginTop: 7, fontSize: 10.5, color: C.muted }}>{workDeclarationMessage}</div>}
           </div>
           {/* D2 — the rail names only what this surface can actually do.
               The old block rendered Materials, Notes, Versions and Goals as
@@ -850,7 +906,12 @@ export default function RebuildStudioClient() {
         {!canvasExpanded && (<aside className={`wsr-maia ${mobilePane !== 'maia' ? 'wsr-mobile-hidden' : ''}`} style={{ borderLeft: `1px solid ${C.soft}`, background: C.panel, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '18px 18px 14px', borderBottom: `1px solid ${C.soft}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <div><div style={{ fontFamily: SERIF, fontSize: 19 }}>✦ MAIA</div><div style={{ color: C.muted, fontSize: 11.5, marginTop: 2 }}>In relation to: <strong style={{ color: C.secondary }}>{work?.title ?? title}</strong></div></div>
+              <div>
+                <div style={{ fontFamily: SERIF, fontSize: 19 }}>✦ MAIA</div>
+                <div style={{ color: C.muted, fontSize: 11.5, marginTop: 2 }}>
+                  In relation to {work ? 'Work' : 'manuscript'}: <strong style={{ color: C.secondary }}>{work?.title ?? title}</strong>
+                </div>
+              </div>
               <span style={{ color: C.quiet }}>•••</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: C.field, border: `1px solid ${C.soft}`, borderRadius: 999, padding: 3 }}>
@@ -1085,7 +1146,9 @@ export default function RebuildStudioClient() {
                       style={{ marginTop: 9, width: '100%', border: 0, borderRadius: 10, padding: '11px 14px', background: C.goldFill, color: C.ink, fontWeight: 750, cursor: maiaBusy ? 'wait' : 'pointer', opacity: maiaBusy || !focusWire || !work || !maiaAsk.trim() ? .55 : 1 }}>
                       {maiaBusy ? 'MAIA is reading...' : passageTab === 'explore' ? 'Explore with MAIA' : passageTab === 'interpret' ? 'Ask what MAIA notices' : 'Ask MAIA'}
                     </button>
-                    {!work && <div style={{ fontSize: 10.5, color: C.quiet, marginTop: 7 }}>Passage Work needs one unambiguous declared Work before MAIA can receive manuscript context.</div>}
+                    {workContext.kind === 'none' && <div style={{ fontSize: 10.5, color: C.quiet, marginTop: 7 }}>This manuscript is not yet declared as a Work. MAIA will not invent that relationship.</div>}
+                    {workContext.kind === 'ambiguous' && <div style={{ fontSize: 10.5, color: C.quiet, marginTop: 7 }}>This manuscript belongs to several Works. MAIA will not guess which one you mean.</div>}
+                    {workContext.kind === 'unknown' && <div style={{ fontSize: 10.5, color: C.quiet, marginTop: 7 }}>The Studio has not established a Work context for MAIA yet.</div>}
                   </div>
                 )}
               </div>

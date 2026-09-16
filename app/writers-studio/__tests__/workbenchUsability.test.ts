@@ -43,3 +43,30 @@ describe('Writer workbench usability repair', () => {
     expect(room).not.toContain('+ {passageReviewFindings.length - 1} more finding');
   });
 });
+
+
+describe('Work context is declared, never implied', () => {
+  it('does not let manuscript fallback copy impersonate a declared Work', () => {
+    expect(room).not.toContain("work?.purpose ?? 'A living manuscript in progress.'");
+    expect(room).toContain('data-work-context={workContext.kind}');
+    expect(room).toContain("'This manuscript is not yet declared as a Work.'");
+  });
+
+  it('keeps none and ambiguous as different member-facing states', () => {
+    expect(room).toContain("workContext.kind === 'none'");
+    expect(room).toContain("workContext.kind === 'ambiguous'");
+    expect(room).toContain('The Studio will not choose one for you.');
+    expect(room).toContain('MAIA will not guess which one you mean.');
+  });
+
+  it('offers declaration only as an explicit member gesture', () => {
+    expect(room).toContain('data-make-this-a-work');
+    expect(room).toContain('Make this a Work');
+    expect(room).toContain("expressionType: 'manuscript'");
+    expect(room).toContain('await reloadWorks()');
+  });
+
+  it('names manuscript context as manuscript context when no Work is resolved', () => {
+    expect(room).toContain("In relation to {work ? 'Work' : 'manuscript'}");
+  });
+});
