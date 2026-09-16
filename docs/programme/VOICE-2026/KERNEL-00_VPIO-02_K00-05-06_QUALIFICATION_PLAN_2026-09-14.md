@@ -1023,3 +1023,8 @@ Fresh repaired witness: PRELIGHT-05 CLEAN, BATCH-05 complete N=30, rc 0, every J
 ### §10.98 — SOURCE-SB-01 successor prepared; S-b N=10 remains the next qualification population, not yet executed (2026-09-16; discriminator §18.80; implementation §10.54)
 
 ENTRY validity is satisfied. The already-ratified source-discrimination arm is S-b only (N=10); S-a remains NOT OPEN. Read-only preflight `f675d5d7…`/56 is next and checks durable ENTRY-UNPERTURBED, source-reader 24/24, fixture/player identity, exact Mac output/volume/mute, SID installed container, and harness zero. Population `b43e3709…`/32 is conditional on CLEAN ≤300 s + fresh authority and contains exactly one N=10 gated SID output population with cancel-at 1000 / settle 2. No source criterion changes; source gate 90/90. KERNEL-00 acceptance remains downstream of the returned population + source reading.
+
+
+### §10.99 — SOURCE-SB-01 custody repair closes prewarm-normalization gap; new preflight/batch pins supersede historical preparation before execution (2026-09-16; discriminator §18.81; implementation §10.55)
+
+No source criterion or organism qualification changes. The old SOURCE-SB-01 preparation at `306654d6a` is retained as history but its `9ed72a38…` population path could normalize a globally-observed harness with subject-scoped `testTerminateOnly`. Repair `17c4ee524` makes the S-b tuple fail closed instead: harness zero PRE-PLAY and again JIT after settle, no cleanup, no phone launch on refusal. Successor preflight `46f97f5d…`/78 and batch `4430a8d0…`/48 bind repaired instrument `f67575797…`; gate 91/91. Read-only preflight is next; N=10 remains unspent pending CLEAN + fresh authority.
