@@ -1640,9 +1640,11 @@ describe('KERNEL-00 Â· S2 batch-only orchestration (founder ruling 2026-09-15) â
       else expect(histRaw(INSTRUMENT_CD20, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
     }
   });
-  it('SID ENTRY sample 1 has an adjacent fail-closed harness-zero read and never auto-terminates an unexpected harness before the first SID sample', () => {
+  it('SID ENTRY every sample has an adjacent fail-closed harness-zero read and never auto-terminates an unexpected harness', () => {
     const b = execLines(W(BATCH));
-    const guardFn = fn(b, 'sid_entry_sample1_jit_guard');
+    const guardFn = fn(b, 'sid_entry_jit_guard');
+    expect(guardFn).toContain('local idx="$1"');
+    expect(guardFn).toContain('sample-$1-jit-processes.json');
     expect(guardFn).toContain('xcrun devicectl device info processes --device "$DEV" --json-output "$js" >"$out" 2>&1 || rc=$?');
     expect(guardFn).toContain('n="$(grep -ci VoiceKernelHarness "$js" || true)"');
     expect(guardFn).toContain('[ "$n" -eq 0 ]');
@@ -1651,22 +1653,24 @@ describe('KERNEL-00 Â· S2 batch-only orchestration (founder ruling 2026-09-15) â
     const driverCall = b.indexOf('T0=$(date +%s); run_test "$TEST"', loopStart);
     expect(loopStart).toBeGreaterThan(-1); expect(driverCall).toBeGreaterThan(loopStart);
     const loop = b.slice(loopStart, driverCall);
-    const jit = 'if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ] && [ "$i" -eq 1 ]; then';
+    const jit = 'if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then';
     const preconditionAt = loop.indexOf('if harness_present; then');
     const terminateAt = loop.indexOf('run_test testTerminateOnly', preconditionAt);
     const earlyRefusalAt = loop.indexOf(jit, preconditionAt);
     expect(preconditionAt).toBeGreaterThan(-1); expect(earlyRefusalAt).toBeGreaterThan(preconditionAt); expect(earlyRefusalAt).toBeLessThan(terminateAt);
     const earlyRefusal = loop.slice(earlyRefusalAt, terminateAt);
-    expect(earlyRefusal).toContain('sid_entry_sample1_jit_guard || true');
+    expect(earlyRefusal).toContain('sid_entry_jit_guard "$i" || true');
     expect(earlyRefusal).toContain('no terminate attempted; no sample launched');
     expect(earlyRefusal).toContain('exit 10');
+    expect(earlyRefusal).not.toContain('[ "$i" -eq 1 ]');
     const jitAt = loop.indexOf(jit, terminateAt); expect(jitAt).toBeGreaterThan(loop.indexOf('daemon_snapshot "$i" before'));
     expect(jitAt).toBeLessThan(loop.indexOf('log "sample $i/$N â€” driver ($TEST, mode $MODE)"'));
     const jitBlock = loop.slice(jitAt);
-    expect(jitBlock).toContain('if ! sid_entry_sample1_jit_guard; then');
+    expect(jitBlock).toContain('if ! sid_entry_jit_guard "$i"; then');
     expect(jitBlock).toContain('no terminate attempted, no sample launched');
     expect(jitBlock).toContain('exit 10');
     expect(jitBlock).not.toContain('run_test testTerminateOnly');
+    expect(jitBlock).not.toContain('[ "$i" -eq 1 ]');
   });
   it('the historical batch path is preserved: every executable line of the batch at 8b111709b is present, verbatim and in order, in the current batch; every added executable line is inside one of the four S2 functions, an S2/STIMULUS constant, or an `if [ -n "$STIMULUS" ]` block â€” without --stimulus nothing new runs', () => {
     const was = execLines(histRaw(INSTRUMENT_K0506, BATCH).toString('utf8')).split('\n');
@@ -1680,8 +1684,8 @@ describe('KERNEL-00 Â· S2 batch-only orchestration (founder ruling 2026-09-15) â
       if (/^\s*if \[ -n "\$STIMULUS" \]/.test(now[i]) && /then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }
       if (/^\s*if \[ "\$STIMULUS" = sid-nearend-gated \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }   // SOURCE-ID-02
       if (/^\s*if \[ -n "\$SOURCE_LEDGER" \]; then/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }                    // SOURCE-ID-02
-      if (/^sid_entry_sample1_jit_guard\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }                    // SID ENTRY-PREP-01
-      if (/^\s*if \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = entry \] && \[ "\$i" -eq 1 \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }  // SID ENTRY-PREP-01 JIT refusal block
+      if (/^sid_entry_jit_guard\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }                    // SID ENTRY-PREP-01
+      if (/^\s*if \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = entry \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }  // SID ENTRY all-sample JIT refusal block
     }
     const wasSet = new Map<string, number>(); for (const l of was) wasSet.set(l, (wasSet.get(l) ?? 0) + 1);
     const added: string[] = [];
