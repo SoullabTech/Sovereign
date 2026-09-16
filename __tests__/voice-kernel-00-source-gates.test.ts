@@ -1946,4 +1946,30 @@ describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026
     expect((batch.match(/scripts\/witness\/k00-driver-batch\.sh VPIO-02-SID-ENTRY 30/g) ?? []).length).toBe(1);
     expect(batch).toContain('NEW=$(comm -13 "$BEFORE" "$AFTER")');
   });
+  it('SID SOURCE S-b pins require adjudicated ENTRY ancestry, read-only 69/unmuted stimulus custody, <=300 s freshness, and exactly one one-shot N=10 gated-source population', () => {
+    const pre = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-PREFLIGHT-01_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    const batch = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-BATCH-01_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    const sha = 'f67575797353bf7e97ffb319a45357997c8d564d';
+    const entry = '26116d4e42fdb7f25ffbbede7c20f4a98f226c18';
+    expect(pre).toContain(`SHA=${sha}`); expect(batch).toContain(`SHA=${sha}`);
+    expect(pre).toContain(`ENTRY_SHA=${entry}`); expect(pre).toContain('git merge-base --is-ancestor "$ENTRY_SHA" "$SHA"');
+    expect(pre).toContain('SID_CONTAINER=85948DBD-BA8F-4679-950D-31767B1C24E5');
+    expect(pre).toContain('HIST_CONTAINER=E3B88028-A10F-46B1-AB27-CF0A1F83FB78');
+    expect(pre).toContain('test "$(grep -ci VoiceKernelHarness "$PF/processes.json")" = 0');
+    expect(pre).toContain('FIXTURE_SHA=30d51cf4b7527d28131bd9c2535c6bd4dcd2403c8dc0343fc045f6f6959875eb');
+    expect(pre).toContain('AFPLAY_SHA=88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb');
+    expect(pre).toContain('OUTPUT_DEVICE="Mac Studio Speakers"'); expect(pre).toContain('OUTPUT_TRANSPORT=coreaudio_device_type_builtin');
+    expect(pre).toContain('OUTPUT_VOLUME=69'); expect(pre).toContain('OUTPUT_MUTED=false');
+    expect(pre).toContain("python3 scripts/witness/k00-source-ledger.py --selftest"); expect(pre).toContain("grep -q '^selftest: 24/24$'");
+    expect(pre).not.toMatch(/afplay -v|device process terminate|test-without-building|k00-driver-batch\.sh VPIO-02-SID-SOURCE/);
+    expect(batch).toContain('ACT_MARK=/private/tmp/sid-source-batch-01-invoked.txt');
+    expect(batch.indexOf("printf 'SID-SOURCE-BATCH-01 INVOKED")).toBeLessThan(batch.indexOf('test -n "$K00_EXEC_AUTHORITY"'));
+    expect(batch).toContain('test "$AGE" -le 300');
+    const invocation = 'scripts/witness/k00-driver-batch.sh VPIO-02-SID-SOURCE 10 --act output --vp on --mode L --hold 15 --subject vpio-02-sid --stimulus sid-nearend-gated --cancel-at 1000 --settle 2';
+    expect(batch).toContain(invocation); expect((batch.match(/scripts\/witness\/k00-driver-batch\.sh VPIO-02-SID-SOURCE 10/g) ?? []).length).toBe(1);
+    expect(batch).toContain(`find "$L/journals" -maxdepth 1 -type f -name '*.jsonl' | wc -l`);
+    expect(batch).toContain('NEW=$(comm -13 "$BEFORE" "$AFTER")');
+    expect(batch).not.toMatch(/top-up|SOURCE-BATCH-02|s2-nearend/);
+  });
+
 });
