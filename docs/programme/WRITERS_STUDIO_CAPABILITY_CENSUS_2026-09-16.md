@@ -71,7 +71,7 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 | Develop mode | 🟡 PARTIAL | Reachable and manuscript-centred; Work/Chapter scope, all `LENS_ORDER` lenses, and exact current-passage evidence are implemented. Passage as a cross-mode selection scope and responsive/mobile Develop remain incomplete. |
 | Explore mode | ⏳ LATER | Named in the product grammar; intentionally unavailable. |
 | Review mode | ⏳ LATER | A structure-review route exists, but the top-level Review product area defined in the roadmap is not built. |
-| Publish mode | ⏳ LATER | Intentionally unavailable. |
+| Publish mode / professional typesetting | ⏳ LATER | Intentionally unavailable today. Required future capability: frozen-content typesetting with explicit front-matter roles, locked typography/page tokens, proof-page visual diff, print preflight, KDP/Ingram export profiles, and a human production-proof gate. Typesetting may change presentation but must never silently change manuscript content. |
 | Export | ✅ LIVE | Existing Press export path is the truthful current export surface. |
 | Find / Replace | ⏳ LATER | No live Studio instrument. |
 | Statistics | ⏳ LATER | No live Studio instrument. |
@@ -100,7 +100,8 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 6. **Stage 8 versioning** — professional history, compare, restore and named milestones; do not confuse this with the existing Keep-a-version act.
 7. **Stage 9 Explore / Materials** — build the full research/material field on the existing belonging and source-custody substrate.
 8. **Stage 10 deep companion** — whole-Work relational MAIA with provenance and writer-controlled meaning.
-9. **Stages 11–15** — Field View, Refine, Review, Publish, Expression, in the recorded roadmap order.
+9. **Publish / professional typesetting** — build production-grade book composition as a separate authority from editing: explicit front matter, page architecture, typography tokens, running furniture, image/figure handling, visual proof diff, print preflight, KDP/Ingram profiles, and final human proof.
+10. **Remaining roadmap stages** — Field View, Refine, Review, Expression, in the recorded roadmap order.
 
 ## Governing completion rule
 
