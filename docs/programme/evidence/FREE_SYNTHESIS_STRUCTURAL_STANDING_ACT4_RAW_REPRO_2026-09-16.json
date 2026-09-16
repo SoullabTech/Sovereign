@@ -1,0 +1,49 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 4 exact RAW baseline reproduction",
+  "promptCharsExpected": 1680,
+  "promptCharsObserved": 1680,
+  "allHashesMatch": true,
+  "rows": [
+    {
+      "seed": 42,
+      "expectedRawPlanSha256": "888e2e353d78d59956969582e3abbdc5272b46cfaea39de68c52472fe9ce29d1",
+      "observedRawPlanSha256": "888e2e353d78d59956969582e3abbdc5272b46cfaea39de68c52472fe9ce29d1",
+      "hashMatch": true,
+      "expectedStatus": "rendered",
+      "observedStatus": "rendered",
+      "expectedRefusal": null,
+      "observedRefusal": null
+    },
+    {
+      "seed": 137,
+      "expectedRawPlanSha256": "d7a940ae8aa427d2934f6c24a0674f7759759172863ab250b1d96988f98dfdd6",
+      "observedRawPlanSha256": "d7a940ae8aa427d2934f6c24a0674f7759759172863ab250b1d96988f98dfdd6",
+      "hashMatch": true,
+      "expectedStatus": "rendered",
+      "observedStatus": "rendered",
+      "expectedRefusal": null,
+      "observedRefusal": null
+    },
+    {
+      "seed": 211,
+      "expectedRawPlanSha256": "caa32508215e84b012d12efacb65fdf66dae14abed2a0ee2c74fc07667cb7275",
+      "observedRawPlanSha256": "caa32508215e84b012d12efacb65fdf66dae14abed2a0ee2c74fc07667cb7275",
+      "hashMatch": true,
+      "expectedStatus": "refused",
+      "observedStatus": "refused",
+      "expectedRefusal": "superseded_without_current",
+      "observedRefusal": "superseded_without_current"
+    },
+    {
+      "seed": 509,
+      "expectedRawPlanSha256": "e80c57e3f96f3363834a716167d776178f71fd815cbf7c2145cb831e118fe2f7",
+      "observedRawPlanSha256": "e80c57e3f96f3363834a716167d776178f71fd815cbf7c2145cb831e118fe2f7",
+      "hashMatch": true,
+      "expectedStatus": "rendered",
+      "observedStatus": "rendered",
+      "expectedRefusal": null,
+      "observedRefusal": null
+    }
+  ]
+}

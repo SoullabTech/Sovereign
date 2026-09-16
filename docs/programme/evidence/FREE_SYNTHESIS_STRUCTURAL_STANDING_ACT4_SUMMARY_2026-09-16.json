@@ -1,0 +1,33 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 4 standing-bound interface adjudication",
+  "rawReference": "docs/programme/evidence/FREE_SYNTHESIS_STRUCTURAL_STANDING_ACT1_S4_2026-09-16.json",
+  "rawPromptChars": 1680,
+  "boundPromptChars": 1715,
+  "rawPromptEvalCountsObserved": [
+    389
+  ],
+  "boundPromptEvalCountsObserved": [
+    396
+  ],
+  "rawDirectRendered": 3,
+  "boundDirectRendered": 4,
+  "rawRefusals": [
+    {
+      "seed": 211,
+      "refusal": "superseded_without_current"
+    }
+  ],
+  "boundRefusals": [],
+  "boundCurrentGrounded": 4,
+  "boundCurrentInSynthesisSupport": 4,
+  "boundSeeds": [
+    42,
+    137,
+    211,
+    509
+  ],
+  "promptCharDelta": 35,
+  "observedPromptTokenDelta": 7,
+  "finding": "In the frozen four-seed correction fixture, substrate-binding current standing removes the single raw ground-omission refusal with +35 prompt chars / +7 observed local prompt tokens; no ACT 2 recovery is invoked."
+}
