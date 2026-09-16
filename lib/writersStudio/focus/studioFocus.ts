@@ -140,7 +140,7 @@ export function scopeLabel(focus: StudioFocus): string {
   if (focus.scope === 'whole_work') return 'Reviewing the whole work';
   const name = focus.section?.heading?.trim();
   if (focus.scope === 'section') {
-    if (focus.section?.depth === 2) return 'Reviewing entire chapter';
+    if (/^chapter\b/i.test(focus.section?.heading?.trim() ?? '')) return 'Reviewing entire chapter';
     return name ? `Reviewing section: ${name}` : 'Reviewing this section';
   }
   return name ? `Focused section: ${name}` : 'Focused passage';

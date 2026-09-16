@@ -7,11 +7,11 @@ import { outlineTree, pathTo, chapterOf } from '../outlineTree';
 
 const ch10 = {
   draftSectionId: 'd198', sourceSectionId: 's198', position: 198,
-  heading: 'Chapter 10: The Living Spiral', depth: 2 as const,
+  heading: 'Chapter 10: The Living Spiral', depth: 1 as const,
 };
 const two = {
   draftSectionId: 'd200', sourceSectionId: 's200', position: 200,
-  heading: 'II. Finding Our Place', depth: 3 as const,
+  heading: 'II. Finding Our Place', depth: 2 as const,
 };
 const base = { workRef: 'w1', manuscriptId: 'm1' };
 
@@ -84,17 +84,19 @@ describe('scope is derived, visible, and never silently held', () => {
 describe('the outline is a book, and 198/199 are not rivals', () => {
   const rows = [
     { draftSectionId: 'dP3', position: 197, heading: 'Part Three — The Spiral', depth: 1 },
-    { draftSectionId: 'd198', position: 198, heading: 'Chapter 10: The Living Spiral', depth: 2 },
-    { draftSectionId: 'd199', position: 199, heading: 'I. The Living Spiral', depth: 3 },
-    { draftSectionId: 'd200', position: 200, heading: 'II. Finding Our Place', depth: 3 },
-    { draftSectionId: 'd221', position: 221, heading: 'Chapter 11: Emergence', depth: 2 },
+    { draftSectionId: 'd198', position: 198, heading: 'Chapter 10: The Living Spiral', depth: 1 },
+    { draftSectionId: 'd199', position: 199, heading: 'I. The Living Spiral', depth: 2 },
+    { draftSectionId: 'd200', position: 200, heading: 'II. Finding Our Place', depth: 2 },
+    { draftSectionId: 'd202', position: 202, heading: 'Gathering the Fire', depth: 3 },
+    { draftSectionId: 'd222', position: 222, heading: 'Chapter 11: Emergence', depth: 1 },
   ];
 
   it('nests parts, chapters and sub-sections', () => {
     const t = outlineTree(rows);
     expect(t).toHaveLength(1);
-    expect(t[0]!.children.map((c) => c.draftSectionId)).toEqual(['d198', 'd221']);
+    expect(t[0]!.children.map((c) => c.draftSectionId)).toEqual(['d198', 'd222']);
     expect(t[0]!.children[0]!.children.map((c) => c.draftSectionId)).toEqual(['d199', 'd200']);
+    expect(t[0]!.children[0]!.children[1]!.children.map((c) => c.draftSectionId)).toEqual(['d202']);
   });
 
   it('a chapter does not adopt the previous chapter’s sub-sections', () => {

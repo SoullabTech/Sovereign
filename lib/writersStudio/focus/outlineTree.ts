@@ -1,18 +1,17 @@
 /**
- * WRITERS-STUDIO-EXPERIENCE-REBUILD-01 — the outline, as a book.
+ * WRITERS-STUDIO-EXPERIENCE-REBUILD-01 — project the manuscript as a book.
  *
- * ⭐ `Part Three › Chapter 10 › II. Finding Our Place`, not `189. 190. 191.`
- * A 262-row numbered list is a database rendered as navigation; a writer
- * navigates a book by its parts and chapters.
+ * The stored Source depth is evidence, not a universal Part/Chapter taxonomy.
+ * ELEMENTAL_ALCHEMY proves why: both `Part Three` and `Chapter 10` are depth 1,
+ * while its Roman-numeral movements are depth 2. The UI therefore uses only
+ * explicit semantic headings (`Part …`, `Chapter …`) to distinguish those two
+ * book roles, and uses confirmed depth for everything beneath them.
  *
- * ⛔ AND IT DEGRADES RATHER THAN BLOCKS. `heading_depth` landed on the Source
- * in WS2-08 BUILD-08A, but 08B — member-confirmed imported hierarchy — is on
- * HOLD, and an imported Work may carry no usable depth at all. A Work with no
- * depth renders as one flat level here, which is exactly what it is today.
- * ⛔ Nothing is INFERRED into a hierarchy the member never confirmed: that is
- * FR-06's law, and guessing that ALL CAPS means "chapter" is how a Studio
- * quietly reorganises someone's book.
+ * ⛔ Nothing here writes hierarchy back to the Work. This is navigation only.
+ * ⛔ ALL CAPS or typography never manufactures hierarchy.
  */
+
+export type OutlineRole = 'part' | 'chapter' | 'section' | 'other';
 
 export interface OutlineNode {
   draftSectionId: string;
@@ -20,6 +19,7 @@ export interface OutlineNode {
   position: number;
   heading: string | null;
   depth: 1 | 2 | 3 | null;
+  role: OutlineRole;
   children: OutlineNode[];
 }
 
@@ -34,60 +34,77 @@ export interface OutlineInput {
 const level = (d: number | null | undefined): 1 | 2 | 3 | null =>
   d === 1 || d === 2 || d === 3 ? d : null;
 
+export const explicitRole = (heading: string | null): OutlineRole => {
+  const h = heading?.trim() ?? '';
+  if (/^part\b/i.test(h)) return 'part';
+  if (/^chapter\b/i.test(h)) return 'chapter';
+  return 'other';
+};
+
 /**
- * Fold a flat, position-ordered section list into the book's own shape.
- *
- * A section with no depth belongs to the nearest preceding node that has one —
- * body text under its heading — and stays at the top level when there is no
- * such node. ⛔ No section is ever dropped: a writer who cannot reach part of
- * their manuscript from the outline has lost it, whatever the tree looks like.
+ * Fold the ordered sections into a navigation tree without claiming new
+ * manuscript structure. Explicit Part and Chapter wording is honored; below a
+ * chapter, confirmed depth 2 and 3 rows become nested section levels.
  */
 export function outlineTree(sections: readonly OutlineInput[]): OutlineNode[] {
   const ordered = [...sections].sort((a, b) => a.position - b.position);
   const roots: OutlineNode[] = [];
-  /* The open node at each depth, so a depth-3 heading attaches to the chapter
-     above it rather than to whatever happened to be previous. */
-  const open: (OutlineNode | null)[] = [null, null, null];
+  let part: OutlineNode | null = null;
+  let chapter: OutlineNode | null = null;
+  let subsection: OutlineNode | null = null;
+
+  const attach = (host: OutlineNode | null, node: OutlineNode) => {
+    if (host) host.children.push(node);
+    else roots.push(node);
+  };
 
   for (const s of ordered) {
     const depth = level(s.depth);
+    const explicit = explicitRole(s.heading);
+    const role: OutlineRole = explicit !== 'other'
+      ? explicit
+      : depth === 2 || depth === 3 ? 'section' : 'other';
     const node: OutlineNode = {
       draftSectionId: s.draftSectionId,
       sourceSectionId: s.sourceSectionId ?? null,
       position: s.position,
       heading: s.heading,
       depth,
+      role,
       children: [],
     };
 
+    if (role === 'part') {
+      roots.push(node);
+      part = node; chapter = null; subsection = null;
+      continue;
+    }
+    if (role === 'chapter') {
+      attach(part, node);
+      chapter = node; subsection = null;
+      continue;
+    }
+    if (depth === 2) {
+      attach(chapter ?? part, node);
+      subsection = node;
+      continue;
+    }
+    if (depth === 3) {
+      attach(subsection ?? chapter ?? part, node);
+      continue;
+    }
     if (depth === null) {
-      /* Body under the deepest heading currently open. */
-      const host = open[2] ?? open[1] ?? open[0];
-      if (host) host.children.push(node);
-      else roots.push(node);
+      attach(subsection ?? chapter ?? part, node);
       continue;
     }
 
-    const parent = depth === 1 ? null : (open[depth - 2] ?? null);
-    if (parent) parent.children.push(node);
-    else roots.push(node);
-
-    open[depth - 1] = node;
-    /* Everything deeper closes — a new chapter cannot adopt the last
-       chapter's sub-sections. */
-    for (let d = depth; d < 3; d += 1) open[d] = null;
+    /* A non-Part/non-Chapter depth-1 heading begins a new top-level region. */
+    roots.push(node);
+    part = null; chapter = null; subsection = null;
   }
-
   return roots;
 }
 
-/**
- * The path from the book down to one section: `[Part Three, Chapter 10, II.]`.
- *
- * ⭐ THIS IS WHAT DISSOLVES 198-VERSUS-199. They were never rival answers to
- * "where am I" — they are two depths of one place. The chapter takes the
- * filled mark, the sub-section takes the bar, and nothing has to win.
- */
 export function pathTo(tree: readonly OutlineNode[], draftSectionId: string): OutlineNode[] {
   const walk = (nodes: readonly OutlineNode[], trail: OutlineNode[]): OutlineNode[] | null => {
     for (const n of nodes) {
@@ -101,14 +118,12 @@ export function pathTo(tree: readonly OutlineNode[], draftSectionId: string): Ou
   return walk(tree, []) ?? [];
 }
 
-/** The chapter a section sits in — the deepest ancestor at depth 2, if any. */
-export function chapterOf(
-  tree: readonly OutlineNode[], draftSectionId: string,
-): OutlineNode | null {
+/** The explicit Chapter ancestor for a location, including the chapter itself. */
+export function chapterOf(tree: readonly OutlineNode[], draftSectionId: string): OutlineNode | null {
   const path = pathTo(tree, draftSectionId);
   for (let i = path.length - 1; i >= 0; i -= 1) {
     const n = path[i];
-    if (n && n.depth === 2) return n;
+    if (n?.role === 'chapter') return n;
   }
   return null;
 }
