@@ -809,6 +809,7 @@ export async function POST(req: NextRequest) {
               element: element as any,
               sanctuary,
               conversationHistory: conversationHistory || [],
+              traceId: turnId,
             });
             timer.mark('wisdom_retrieved');
 
@@ -1195,6 +1196,8 @@ export async function POST(req: NextRequest) {
               userId,
               currentInput: message,
               sessionId: effectiveSessionId,
+              traceId: turnId,
+              recordRetrievedCandidates: false,
               scope: 'cross_session',
               maxBullets: 5,
             });

@@ -5,7 +5,7 @@ BEGIN;
 
 CREATE TABLE memory_cut1_trace_runs (
   retrieval_id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,
+  user_id TEXT NOT NULL,
   session_id TEXT NOT NULL,
   message_id TEXT NOT NULL,
   policy_key TEXT NOT NULL,
