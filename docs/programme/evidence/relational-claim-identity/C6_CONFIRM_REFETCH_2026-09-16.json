@@ -1,0 +1,37 @@
+{
+  "schema": "RELATIONAL_CLAIM_IDENTITY_REPLAY_V1",
+  "zeroInfluence": true,
+  "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+  "turnCount": 86,
+  "eventCount": 2,
+  "events": [
+    {
+      "memberTurnHash": "e77e15eb3083f882bb71a2285dbe0ec7125707d29c79ee63fffa0d3f8e19c38a",
+      "priorAssistantTurnHash": "dd4ace1237c3309b6bf0022f64ac19bbd2bf552ae3d266a3712e842e132fb321",
+      "gesture": "OPAQUE_REFERENCE",
+      "outcome": "AMBIGUOUS",
+      "reason": "opaque-reference-needs-referent-evidence",
+      "candidateCount": 2,
+      "targetClaimId": null,
+      "targetKind": null,
+      "targetSegmentationStatus": null,
+      "targetStartChar": null,
+      "targetEndChar": null,
+      "targetTextHash": null
+    },
+    {
+      "memberTurnHash": "6df7809b73e0af832358030cb295af8d226fa292369ab7d2d57a331c51eb1a9b",
+      "priorAssistantTurnHash": "ec5aea1bbf6635fe24333b00484210e4c90c72ad9a4bacd36fbe76750516a4f0",
+      "gesture": "CONFIRM",
+      "outcome": "BOUND",
+      "reason": "single-confirmable-atomic-claim",
+      "candidateCount": 1,
+      "targetClaimId": "e15da08e2f0875b49be51391771bae757e911a332fa70110f44c97676744d19e",
+      "targetKind": "quotation",
+      "targetSegmentationStatus": "atomic",
+      "targetStartChar": 120,
+      "targetEndChar": 268,
+      "targetTextHash": "49dc02c7e87b75eb72c1857e2cdd3f0162b0e203bf807dd147d9c0010114dc60"
+    }
+  ]
+}

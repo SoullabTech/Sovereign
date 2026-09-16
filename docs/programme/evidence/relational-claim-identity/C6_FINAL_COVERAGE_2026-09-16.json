@@ -1,0 +1,2 @@
+{"sessionHash":"7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9","assistantTurns":43,"claimUnits":225,"byKind":{"assertion":155,"question":56,"quotation":7,"fragment":6,"directive":1},"byStatus":{"atomic":147,"composite":78},"meanUnitsPerTurn":5.23,"maxUnitsPerTurn":11}
+{"sessionHash":"6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca","assistantTurns":14,"claimUnits":50,"byKind":{"assertion":33,"quotation":1,"question":16},"byStatus":{"composite":21,"atomic":29},"meanUnitsPerTurn":3.57,"maxUnitsPerTurn":6}
