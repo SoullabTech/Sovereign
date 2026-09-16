@@ -1,7 +1,7 @@
 import {
   assembleManuscriptMarkdown,
   computeSourceHash,
-  stripCssComments, publicationRoleFor, inspectBookProduction, buildHallmarkPrintStyles, HALLMARK_PRODUCTION_PROFILE,
+  stripCssComments, publicationRoleFor, inspectBookProduction, inspectPublicationMatter, buildHallmarkPrintStyles, HALLMARK_PRODUCTION_PROFILE,
 } from '@/lib/manuscript/render/renderMemberBook';
 
 describe('assembleManuscriptMarkdown', () => {
@@ -41,6 +41,17 @@ describe('assembleManuscriptMarkdown', () => {
     ]);
     expect(md.indexOf('# One')).toBeLessThan(md.indexOf('# Two'));
   });
+
+
+  it('wraps governed publication matter for layout without changing its words', () => {
+    const md = assembleManuscriptMarkdown([
+      { heading: 'Permissions', body: 'Copyright © 2026 Kelly W. Nezat. All rights reserved.', headingDepth: 2 },
+    ]);
+    expect(md).toContain('::: {.book-matter .book-permissions}');
+    expect(md).toContain('## Permissions {.book-permissions}');
+    expect(md).toContain('Copyright © 2026 Kelly W. Nezat. All rights reserved.');
+    expect(md).toContain('\n:::\n');
+  });
 });
 
 describe('computeSourceHash', () => {
@@ -67,6 +78,13 @@ describe('computeSourceHash', () => {
   it('changes when structural depth changes even if every word is identical', () => {
     expect(computeSourceHash([{ heading: 'H', body: 'B', headingDepth: 1 }])).not.toBe(
       computeSourceHash([{ heading: 'H', body: 'B', headingDepth: 3 }]),
+    );
+  });
+
+
+  it('changes when an author assigns a publication role even if every word is identical', () => {
+    expect(computeSourceHash([{ heading: 'Elemental Alchemy', body: 'Subtitle', headingDepth: 1 }])).not.toBe(
+      computeSourceHash([{ heading: 'Elemental Alchemy', body: 'Subtitle', headingDepth: 1, publicationRole: 'title-page' }]),
     );
   });
 });
@@ -135,6 +153,51 @@ describe('Hallmark production preflight', () => {
     expect(issues).toHaveLength(1);
     expect(issues[0]?.code).toBe('copyright_not_governed');
   });
+
+
+  it('detects the Hallmark front-matter failure pattern without choosing or editing legal copy', () => {
+    const sections = [
+      { heading: null, body: 'Elemental Alchemy Elemental Alchemy', headingDepth: null },
+      { heading: 'Elemental Alchemy', body: 'The Art of Living a Phenomenal Life. Copyright � 2026 by Kelly Nezat', headingDepth: 1 },
+      { heading: 'Elemental Alchemy', body: 'Contents Preface Part One Chapter 1', headingDepth: 1 },
+      { heading: 'Elemental Alchemy', body: 'The Art of Living a Phenomenal Life. Soullab Press.', headingDepth: 1 },
+      { heading: 'Permissions', body: 'Copyright © 2026 Kelly W. Nezat. All rights reserved.', headingDepth: 2 },
+      { heading: 'Dedication', body: 'For Andrea, Sophie, and Augusten.', headingDepth: 2 },
+      { heading: 'Disclaimer', body: 'For informational and educational purposes.', headingDepth: 2 },
+      { heading: 'Contents', body: 'Preface Introduction', headingDepth: 1 },
+      { heading: 'Part One — The Ground', body: 'Chapter 1 Chapter 2', headingDepth: 3 },
+      { heading: 'Back Matter', body: 'Afterword Acknowledgments', headingDepth: 3 },
+      { heading: 'Chapter Summaries by Elemental Type', body: 'ch003.xhtml ch004.xhtml ch005.xhtml', headingDepth: 1 },
+      { heading: 'Preface', body: 'Once upon a time…', headingDepth: 1 },
+      { heading: 'A Vivid Dream and a New Understanding', body: 'I awoke suddenly…', headingDepth: 3 },
+      { heading: 'Reflection and Interaction', body: 'Many of us…', headingDepth: 3 },
+      { heading: 'Call to Adventure', body: 'As you start to walk…', headingDepth: 3 },
+      { heading: 'Part One — The Ground', body: '', headingDepth: 1 },
+      { heading: 'Chapter 1: The Journey Begins', body: 'In this place…', headingDepth: 1 },
+    ] as const;
+
+    const report = inspectPublicationMatter(sections);
+    expect(report.bodyStartIndex).toBe(15);
+    expect(report.candidates.filter((candidate) => candidate.requiresAuthorRole).map((candidate) => candidate.sectionIndex))
+      .toEqual([0, 1, 2, 3, 10]);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'damaged_copyright_text', sectionIndexes: [1] }),
+      expect.objectContaining({ code: 'copyright_not_governed', sectionIndexes: [1, 4] }),
+      expect.objectContaining({ code: 'duplicate_copyright_statements', sectionIndexes: [1, 4] }),
+      expect.objectContaining({ code: 'front_matter_roles_unresolved', sectionIndexes: [0, 1, 2, 3, 10] }),
+      expect.objectContaining({ code: 'import_navigation_artifact', sectionIndexes: [10] }),
+    ]));
+  });
+
+  it('allows an explicit production role to disambiguate a repeated title without changing its words', () => {
+    const section = {
+      heading: 'Elemental Alchemy', body: 'The Art of Living a Phenomenal Life', headingDepth: 1 as const,
+      publicationRole: 'title-page' as const,
+    };
+    expect(publicationRoleFor(section)).toBe('title-page');
+    expect(section.heading).toBe('Elemental Alchemy');
+    expect(section.body).toBe('The Art of Living a Phenomenal Life');
+  });
 });
 
 
@@ -161,6 +224,6 @@ describe('Hallmark deterministic PDF typography', () => {
   });
 
   it('names the physical production profile independently of source identity', () => {
-    expect(HALLMARK_PRODUCTION_PROFILE).toBe('hallmark-6x9-v1');
+    expect(HALLMARK_PRODUCTION_PROFILE).toBe('hallmark-6x9-v2');
   });
 });

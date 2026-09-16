@@ -7,7 +7,8 @@ export const maxDuration = 300; // full-book render (pandoc + Paged.js) can take
 /**
  * Soullab Press — render the member's manuscript into a book they can hold.
  *
- * POST { format: 'pdf' | 'epub' } → streams the rendered file as a download.
+ * POST { format: 'pdf' | 'epub', stage?: 'proof' | 'final' } → streams the rendered file as a download.
+ * `proof` is the backward-compatible default. `final` refuses unresolved production blockers.
  *
  * The author's own words, set as a book — their sections, in order, verbatim.
  * Nothing generated, woven, or interpreted (see renderMemberBook.ts).
@@ -23,11 +24,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'node:fs';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { renderMemberBook, type MemberBookSection } from '@/lib/manuscript/render/renderMemberBook';
+import { inspectPublicationMatter, renderMemberBook, type MemberBookSection } from '@/lib/manuscript/render/renderMemberBook';
 import { UNTITLED_EXPRESSION } from '@/lib/manuscript/untitledExpression';
 import { memberRef } from '@/lib/privacy/memberRef';
 
 type Format = 'pdf' | 'epub';
+type ProductionStage = 'proof' | 'final';
 
 const MIME: Record<Format, string> = {
   pdf: 'application/pdf',
@@ -57,6 +59,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   const format = (body as { format?: unknown })?.format;
   if (format !== 'pdf' && format !== 'epub') {
     return NextResponse.json({ error: "format must be 'pdf' or 'epub'" }, { status: 400 });
+  }
+  const stageRaw = (body as { stage?: unknown })?.stage;
+  const stage: ProductionStage = stageRaw === undefined ? 'proof' : stageRaw as ProductionStage;
+  if (stage !== 'proof' && stage !== 'final') {
+    return NextResponse.json({ error: "stage must be 'proof' or 'final'" }, { status: 400 });
   }
 
   // Ownership gate: the manuscript must belong to the caller. 404 (never leak).
@@ -171,6 +178,23 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     return NextResponse.json({ error: 'Failed to load manuscript' }, { status: 500 });
   }
 
+  /* A proof may show unresolved production matter because inspection is how the
+   * author resolves it. A final artifact is different: it can proceed only when
+   * the non-mutating Hallmark preflight has no blockers. */
+  if (stage === 'final') {
+    const preflight = inspectPublicationMatter(sections);
+    if (preflight.issues.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'This book still has production decisions to resolve before it can be final.',
+          stage,
+          preflight,
+        },
+        { status: 409 },
+      );
+    }
+  }
+
   // Render (pandoc → PDF/EPUB). Author's verbatim words only.
   let result;
   try {
@@ -195,10 +219,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     await query(
       `INSERT INTO manuscript_renders
          (manuscript_id, member_id, format, source_section_count, source_hash, page_count,
-          production_profile, source_authority, source_revision)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          production_profile, source_authority, source_revision, production_stage)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [id, memberId, format, result.sectionCount, result.sourceHash, result.pageCount ?? null,
-        result.productionProfile, sourceAuthority, sourceRevision],
+        result.productionProfile, sourceAuthority, sourceRevision, stage],
     );
   } catch (err) {
     // Provenance write failure must not deny the author their book — log loudly.
@@ -218,7 +242,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
   console.log(
     `[MAIA/press] manuscript rendered { memberRef: ${memberRef(memberId)}, ` +
-      `manuscriptId: ${id}, format: ${format}, sections: ${result.sectionCount}, ` +
+      `manuscriptId: ${id}, format: ${format}, stage: ${stage}, sections: ${result.sectionCount}, ` +
       `pages: ${result.pageCount ?? 'n/a'}, sizeKB: ${Math.round(result.sizeBytes / 1024)} }`,
   );
 
