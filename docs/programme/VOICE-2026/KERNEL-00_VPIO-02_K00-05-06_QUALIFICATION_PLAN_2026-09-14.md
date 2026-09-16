@@ -896,3 +896,8 @@ No install occurred; nothing changes in qualification standing; a future install
 ### §10.73 — FIRST-INSTALL-02 opened, pin re-issued, not run (2026-09-16; discriminator plan §18.53; implementation record §10.23)
 
 No qualification change.
+
+
+### §10.74 — FIRST-INSTALL-02 pin accepted, carrier re-issued, run held (2026-09-16; discriminator plan §18.54; implementation record §10.25)
+
+No qualification change.
