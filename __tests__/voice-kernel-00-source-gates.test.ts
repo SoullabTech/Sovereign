@@ -1640,60 +1640,53 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
       else expect(histRaw(INSTRUMENT_CD20, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
     }
   });
-  it('SID ENTRY waits read-only for transient prewarm to clear before every sample, bounded to 60 s, without termination or launch', () => {
+  it('SID ENTRY never waits out or repairs a nonzero harness set: the adjacent JIT read is the only SID ENTRY process precondition', () => {
     const b = execLines(W(BATCH));
-    const waitFn = fn(b, 'sid_entry_wait_for_zero');
-    expect(waitFn).toContain('for attempt in $(seq 1 12); do');
-    expect(waitFn).toContain('sleep 5');
-    expect(waitFn).toContain('xcrun devicectl device info processes --device "$DEV" --json-output "$js"');
-    expect(waitFn).toContain('sample-$1-prewarm-wait');
-    expect(waitFn).toContain('natural-zero window NOT reached within 60 s');
-    expect(waitFn).not.toMatch(/testTerminateOnly|device process terminate|device process signal|install app|xcodebuild|launchCold|run_test/);
+    expect(b).not.toContain('sid_entry_wait_for_zero');
+    expect(b).not.toMatch(/natural-zero window|prewarm-wait|sleep 5/);
     const loopStart = b.indexOf('for i in $(seq 1 "$N"); do');
-    const harnessAt = b.indexOf('if harness_present; then', loopStart);
-    const waitAt = b.indexOf('if ! sid_entry_wait_for_zero "$i"; then', loopStart);
-    expect(waitAt).toBeGreaterThan(loopStart); expect(waitAt).toBeLessThan(harnessAt);
-    const waitBlock = b.slice(waitAt, harnessAt);
-    expect(waitBlock).toContain('no terminate attempted; no sample launched');
-    expect(waitBlock).toContain('exit 10');
+    const sidBranch = b.indexOf('if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then', loopStart);
+    const historicalCleanup = b.indexOf('elif harness_present; then', sidBranch);
+    expect(sidBranch).toBeGreaterThan(loopStart); expect(historicalCleanup).toBeGreaterThan(sidBranch);
+    const sidPre = b.slice(sidBranch, historicalCleanup);
+    expect(sidPre).toContain('No cleanup path is entered here');
+    expect(sidPre).not.toMatch(/testTerminateOnly|sleep|terminate|signal/);
   });
-  it('SID ENTRY every sample has an adjacent fail-closed harness-zero read and never auto-terminates an unexpected harness', () => {
+  it('SID ENTRY every sample has one adjacent fail-closed full process-set read; any nonzero/unreadable set is preserved and STOPs before launch with no cleanup', () => {
     const b = execLines(W(BATCH));
     const guardFn = fn(b, 'sid_entry_jit_guard');
     expect(guardFn).toContain('local idx="$1"');
     expect(guardFn).toContain('sample-$1-jit-processes.json');
+    expect(guardFn).toContain('sample-$1-jit-processes.stdout');
+    expect(guardFn).toContain('sample-$1-jit-harness-state.txt');
     expect(guardFn).toContain('xcrun devicectl device info processes --device "$DEV" --json-output "$js" >"$out" 2>&1 || rc=$?');
     expect(guardFn).toContain('n="$(grep -ci VoiceKernelHarness "$js" || true)"');
     expect(guardFn).toContain('[ "$n" -eq 0 ]');
-    expect(guardFn).not.toMatch(/testTerminateOnly|device process terminate|device process signal|install app|xcodebuild|launchCold/);
+    expect(guardFn).not.toMatch(/testTerminateOnly|device process terminate|device process signal|install app|xcodebuild|launchCold|sleep/);
     const loopStart = b.indexOf('for i in $(seq 1 "$N"); do');
     const driverCall = b.indexOf('T0=$(date +%s); run_test "$TEST"', loopStart);
     expect(loopStart).toBeGreaterThan(-1); expect(driverCall).toBeGreaterThan(loopStart);
     const loop = b.slice(loopStart, driverCall);
-    const jit = 'if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then';
-    const preconditionAt = loop.indexOf('if harness_present; then');
-    const terminateAt = loop.indexOf('run_test testTerminateOnly', preconditionAt);
-    const earlyRefusalAt = loop.indexOf(jit, preconditionAt);
-    expect(preconditionAt).toBeGreaterThan(-1); expect(earlyRefusalAt).toBeGreaterThan(preconditionAt); expect(earlyRefusalAt).toBeLessThan(terminateAt);
-    const earlyRefusal = loop.slice(earlyRefusalAt, terminateAt);
-    expect(earlyRefusal).toContain('sid_entry_jit_guard "$i" || true');
-    expect(earlyRefusal).toContain('no terminate attempted; no sample launched');
-    expect(earlyRefusal).toContain('exit 10');
-    expect(earlyRefusal).not.toContain('[ "$i" -eq 1 ]');
-    const jitAt = loop.indexOf(jit, terminateAt); expect(jitAt).toBeGreaterThan(loop.indexOf('daemon_snapshot "$i" before'));
+    const sid = 'if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then';
+    const historicalCleanup = loop.indexOf('elif harness_present; then');
+    expect(historicalCleanup).toBeGreaterThan(loop.indexOf(sid));
+    const cleanupBody = loop.slice(historicalCleanup, loop.indexOf('daemon_snapshot "$i" before'));
+    expect(cleanupBody).toContain('run_test testTerminateOnly');
+    const jitAt = loop.lastIndexOf(sid);
+    expect(jitAt).toBeGreaterThan(loop.indexOf('daemon_snapshot "$i" before'));
     expect(jitAt).toBeLessThan(loop.indexOf('log "sample $i/$N — driver ($TEST, mode $MODE)"'));
     const jitBlock = loop.slice(jitAt);
     expect(jitBlock).toContain('if ! sid_entry_jit_guard "$i"; then');
     expect(jitBlock).toContain('no terminate attempted, no sample launched');
     expect(jitBlock).toContain('exit 10');
     expect(jitBlock).not.toContain('run_test testTerminateOnly');
-    expect(jitBlock).not.toContain('[ "$i" -eq 1 ]');
+    expect(jitBlock).not.toMatch(/sleep|natural-zero|prewarm-wait/);
   });
   it('the historical batch path is preserved: every executable line of the batch at 8b111709b is present, verbatim and in order, in the current batch; every added executable line is inside one of the four S2 functions, an S2/STIMULUS constant, or an `if [ -n "$STIMULUS" ]` block — without --stimulus nothing new runs', () => {
     const was = execLines(histRaw(INSTRUMENT_K0506, BATCH).toString('utf8')).split('\n');
     // SOURCE-ID-02 (founder ruling 2026-09-15): exactly one historical line is substituted — the entry-classifier call receives
     // $CLASSIFIER_SUBJECT (== $SUBJECT for every historical subject). It is normalized back here so the in-order scan sees history verbatim.
-    const now = execLines(W(BATCH)).split('\n').map((l) => l.replace('--subject "$CLASSIFIER_SUBJECT" $([ -n "$W4" ]', '--subject "$SUBJECT" $([ -n "$W4" ]').replace('(p5b0|phase-a|vpio-01|vpio-02|vpio-02-sid)', '(p5b0|phase-a|vpio-01|vpio-02)'));   // + the refusal's five-subject closed set (SOURCE-ID-02)
+    const now = execLines(W(BATCH)).split('\n').map((l) => l.replace('--subject "$CLASSIFIER_SUBJECT" $([ -n "$W4" ]', '--subject "$SUBJECT" $([ -n "$W4" ]').replace('(p5b0|phase-a|vpio-01|vpio-02|vpio-02-sid)', '(p5b0|phase-a|vpio-01|vpio-02)').replace('elif harness_present; then', 'if harness_present; then'));   // + SID refusal set + the ruled SID-only bypass of historical cleanup
     let j = 0; for (const l of was) { while (j < now.length && now[j] !== l) j++; expect(j < now.length ? l : `MISSING: ${l}`).toBe(l); j++; }
     const allowed = new Set<number>();
     for (let i = 0; i < now.length; i++) {
@@ -1702,8 +1695,7 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
       if (/^\s*if \[ "\$STIMULUS" = sid-nearend-gated \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }   // SOURCE-ID-02
       if (/^\s*if \[ -n "\$SOURCE_LEDGER" \]; then/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }                    // SOURCE-ID-02
       if (/^sid_entry_jit_guard\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }                    // SID ENTRY-PREP-01
-      if (/^sid_entry_wait_for_zero\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }                    // SID ENTRY natural prewarm clearance
-      if (/^\s*if \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = entry \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }  // SID ENTRY all-sample JIT refusal block
+      if (/^\s*if \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = entry \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*(fi|elif harness_present; then)$/.test(now[k])) { allowed.add(k); k++; } if (/^\s*elif harness_present; then$/.test(now[k])) allowed.add(k); else allowed.add(k); }  // SID ENTRY no-cleanup branch or adjacent JIT refusal block
     }
     const wasSet = new Map<string, number>(); for (const l of was) wasSet.set(l, (wasSet.get(l) ?? 0) + 1);
     const added: string[] = [];
