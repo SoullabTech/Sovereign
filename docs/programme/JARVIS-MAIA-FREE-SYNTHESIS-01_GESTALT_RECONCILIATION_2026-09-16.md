@@ -27,6 +27,8 @@ They also independently used `G` identifiers for different purposes. The archite
 
 This record resolves the notation without rewriting the historical records that produced it.
 
+A further sequencing rule applies to the `FS-F*` ledger: an identifier already established by an A2 benchmark record retains its meaning. Later reconciliation may extend the ledger but may not silently reassign an existing falsifier number.
+
 ---
 
 ## 2. Authority and precedence
@@ -188,7 +190,15 @@ Preserved from `AM-P03`.
 
 A synthesis passes only if source claims remain traceable to their actual authors, MAIA-added relations remain identifiable as inference/synthesis until adopted, endorsement does not rewrite provenance, later correction remains possible, and compression invents no absent evidence.
 
-### `FS-F5 · GESTALT-REVERSAL`
+### `FS-F5 · SOURCE-STANDING`
+
+Preserved from A2 Expansion 04 / `DC-S01`.
+
+A candidate must not turn witnessed dialogue, MAIA inference, collaborator/agent reasoning, or member statement into interchangeable evidence merely because all are available in the same cognitive field.
+
+Member correction of attribution must immediately revise current standing without requiring deletion of the historically accurate record of what occurred.
+
+### `FS-F6 · GESTALT-REVERSAL`
 
 Construct a long conversation in which the best available organization initially appears approximately as:
 
@@ -218,7 +228,7 @@ Then introduce later member-origin evidence that makes grief a materially strong
 
 The exact geometry is not prescribed. The falsifier asks whether the whole can actually change organization while preserving provenance and the historical fact that the prior organization was once intelligible.
 
-### `FS-F6 · DISTANT-MOTIF-WITHOUT-RESTART`
+### `FS-F7 · DISTANT-MOTIF-WITHOUT-RESTART`
 
 Establish an early member-origin image or motif with sufficient evidence — for example a cedar associated with endurance, inheritance, or abiding presence. After substantial intervening material, introduce a later utterance whose meaning may lawfully relate to that earlier motif — for example concern that the work should "survive me."
 
@@ -280,9 +290,10 @@ Replay and ablation must discriminate at least these causal classes instead of r
 3. **restart behavior** — evidence is represented and recognized but the response nevertheless reopens established meaning;
 4. **collapse failure** — differentiated evidence is prematurely reduced to one interpretation;
 5. **authorship laundering** — useful synthesis loses provenance;
-6. **Gestalt capture** — prior organization resists contradictory or reorganizing present evidence;
-7. **aperture failure** — the relevant temporal horizon is structurally inaccessible or systematically underrepresented;
-8. **instruction-pressure effect** — redundant or competing behavioral authorities alter synthesis even when evidence is held constant.
+6. **source-standing failure** — evidence from different authors/actors is treated as interchangeable;
+7. **Gestalt capture** — prior organization resists contradictory or reorganizing present evidence;
+8. **aperture failure** — the relevant temporal horizon is structurally inaccessible or systematically underrepresented;
+9. **instruction-pressure effect** — redundant or competing behavioral authorities alter synthesis even when evidence is held constant.
 
 A5 comparison conditions remain:
 
@@ -321,12 +332,16 @@ JARVIS-MAIA-FREE-SYNTHESIS-01   OPEN · R&D / ORCHESTRATION ONLY
 architecture Gestalt law        ✅ INHERITED · UNCHANGED
 A0 standing-prompt freeze       ACTIVE
 A1 source census                ✅ FIRST PASS COMPLETE
-A2 benchmark                    OPEN · 3 admitted positives / 2 admitted negatives
-A3–A7                           AUTHORIZED · UNSPENT except A2 construction acts already recorded
+A2 admitted positives           4
+A2 admitted negatives           2
+A2 matched transitions          1
+A2 cross-cutting defeat cases   1
+A2 benchmark                    OPEN · NOT YET CLOSED
+A3–A7                           AUTHORIZED · UNSPENT
 FS-G namespace                  ✅ RECONCILED
-FS-F1a/F1b/F3/F4                ✅ PRESERVED
+FS-F1a/F1b/F3/F4/F5             ✅ PRESERVED
 FS-F2                           ✅ FORMALIZED FROM OPENING SPEC
-FS-F5/F6                        ✅ ADDED AS REPLAY FALSIFIERS
+FS-F6/F7                        ✅ ADDED AS REPLAY FALSIFIERS
 production / serving changes    ⛔ NONE
 ```
 
