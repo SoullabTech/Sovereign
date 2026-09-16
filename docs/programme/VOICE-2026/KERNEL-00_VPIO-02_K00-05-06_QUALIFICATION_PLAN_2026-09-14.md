@@ -981,3 +981,8 @@ No physiological qualification change yet. SID install is now complete and in cu
 ### §10.90 — `SID ENTRY-PREP-01` complete as tooling/records only; successor ENTRY witness drafts returned, execution closed (2026-09-16; discriminator plan §18.72; implementation record §10.45)
 
 No physiological qualification change. FIRST-INSTALL-04 custody is durable. SID ENTRY's first-sample validity boundary is hardened at `36e412f8e…`: unexpected/prewarmed harness state cannot be auto-terminated into a sample; it is preserved and refused, with a second process read adjacent to the first driver invocation. Gate 86/86. PRELIGHT-02 `cecaa12c…`/44 and BATCH-02 `b8941411…`/32 are drafts only; neither was run. K00-04/K00-05/K00-06 standings unchanged; ENTRY evidence remains unmeasured.
+
+
+### §10.91 — ENTRY-01 complete but INDETERMINATE; fresh hardened `03` successor authorized conditionally (2026-09-16; discriminator plan §18.73; implementation record §10.46)
+
+ENTRY-01 is measured, not accepted: 29/30 gen-1 takes, 0 ceiling breaches, Fisher p 0.754237288136 versus F-W1, but observer liveness is 29 LIVE / 1 DORMANT (sample 1 = 9 frames-present records < 10) → **INDETERMINATE-ENTRY · observer-dormant**. Evidence is durable at `6543484f2` / `a4364a842`. The run also predates the sample-1 adjacent JIT harness-zero hardening, so it cannot discharge that later custody law. PRELIGHT-02 correctly refused a live SID harness and launched no successor batch. PRELIGHT-03 `a5c56517…` is OPEN read-only; BATCH-03 `e1ca9cb6…` is conditionally OPEN only after CLEAN ≤300 s, as a fresh full N=30 under the unchanged law. No source population or KERNEL-00 acceptance follows automatically. Gate 86/86 after admitting SID ENTRY as its own custody corpus.
