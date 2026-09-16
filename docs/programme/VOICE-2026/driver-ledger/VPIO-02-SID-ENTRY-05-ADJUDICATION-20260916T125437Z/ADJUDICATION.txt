@@ -1,0 +1,15 @@
+ACT SID ENTRY-BATCH-05
+RESULT ENTRY-UNPERTURBED
+PRELIGHT 20260916T125122Z CLEAN
+BATCH 20260916T125437Z COMPLETE N=30 rc=0
+SUBJECT faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
+INSTRUMENT 9ed72a38cce6fb55e909e747898f4d452dcfdf3d
+CLASSIFIER 30/30 gen-1 listen
+TAKES 30/30 (floor for ENTRY-UNPERTURBED >=27/30)
+FISHER one-sided deterioration vs F-W1 29/30: p=1.0 (not significant)
+CEILING breaches over 1500 ms: 0 (observed listeningMs 315..400)
+OBSERVER-LIVENESS 30/30 LIVE; frames_present min 15 max 18; resets_total 0
+SUBJECT-MISMATCH 0
+INFRASTRUCTURE rows 0
+LAW source: implementation record §10.17 / §10.18 [G] adjudication law
+BOUNDARY this ENTRY class authorizes no source population, KERNEL-00 acceptance, BRIDGE-01, migration or production by itself

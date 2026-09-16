@@ -3657,3 +3657,8 @@ PRELIGHT-05 at `20260916T122310Z` bound both installed subjects/containers, then
 ## §18.78 — CLEAR-02 empty-target STOP: installed subjects preserved; harness already 0; no terminate; fresh PRELIGHT-05 next (2026-09-16; implementation §10.52)
 
 CLEAR-02 observed both installed subjects in their witnessed containers, then total `VoiceKernelHarness = 0`; it refused before PID capture / JIT / terminate. Authority spent; device mutation 0. This is natural disappearance, not a successful disposal. BATCH-05 remains uninvoked; fresh PRELIGHT-05 must independently establish CLEAN.
+
+
+## §18.79 — ENTRY-BATCH-05 complete and adjudicated **ENTRY-UNPERTURBED**; 30/30 gen-1, 30/30 observer-LIVE, Fisher p=1.0, 0 ceiling breaches; source population is next (2026-09-16; implementation §10.53; qualification §10.97)
+
+PRELIGHT-05 CLEAN at 12:51:22Z → one BATCH-05 N=30 at 12:54:37Z, rc 0; every adjacent JIT harness read = 0. Seals reverified. Frozen classifier 30/30 gen-1 listen; listeningMs 315…400; observer liveness 30/30 LIVE (min 15 frames-present, max 18, resets 0); one-sided deterioration Fisher versus F-W1 29/30 = p 1.0. Under the predeclared ≥27/30 + n.s. Fisher + zero-ceiling + all-LIVE law, the result is **ENTRY-UNPERTURBED**. Corpus count maintenance only: total 634, SID 75, SID gen-1 74 + historical degraded 1, headered populations 20; source/output exclusion laws unchanged; source gate 89/89. Source population, KERNEL-00 acceptance, BRIDGE-01, migration and production remain separate downstream acts.

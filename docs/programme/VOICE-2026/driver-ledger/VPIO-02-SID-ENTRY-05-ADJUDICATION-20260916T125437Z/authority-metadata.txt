@@ -1,0 +1,5 @@
+authority-file=/private/tmp/sid-entry-batch-05-authority.txt
+lines=8
+bytes=558
+sha256=68d9330d285d2b8e7b563474500323a53e373e3a80d9e5e1a5af4eb234e5624a
+contents=NOT CARRIED

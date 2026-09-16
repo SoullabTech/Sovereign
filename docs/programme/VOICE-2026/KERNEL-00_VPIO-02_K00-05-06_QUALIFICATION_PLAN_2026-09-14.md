@@ -1013,3 +1013,8 @@ No physiological qualification change. PRELIGHT-05 verified the installed SID an
 ### §10.96 — CLEAR-02 STOP target absent; physiology unchanged; fresh PRELIGHT-05 next (2026-09-16)
 
 No qualification change. Both installed subjects remained bound; harness population was already zero at CLEAR-02 PRE; no terminate or sample ran. BATCH-05 remains uninvoked.
+
+
+### §10.97 — SID ENTRY qualification satisfied: BATCH-05 = **ENTRY-UNPERTURBED**; next gate = source-discrimination population (2026-09-16; discriminator §18.79; implementation §10.53)
+
+Fresh repaired witness: PRELIGHT-05 CLEAN, BATCH-05 complete N=30, rc 0, every JIT harness guard zero. Classifier 30/30 gen-1; 0 infrastructure/subject-mismatch; listeningMs 315…400 so 0 ceiling breaches; liveness 30/30 LIVE with min 15 frames-present and resets 0; one-sided deterioration Fisher vs F-W1 29/30 = p 1.0. The predeclared ENTRY-UNPERTURBED law is fully met. This closes the ENTRY validity gate only; source-discrimination population and KERNEL-00 acceptance remain unopened downstream gates. Corpus-count maintenance preserves the constitutional exclusion of all 75 SID ENTRY journals from output/source interpretation; source gate 89/89.
