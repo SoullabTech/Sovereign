@@ -45,12 +45,12 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 | Editorial collaboration | ✅ LIVE | Exact passage threads, suggested versions, comparison, explicit Apply revision, thread continuity and custody tests exist. |
 | Chapter Review engine | 🔧 REPAIRING | Seven governed readings can complete; current repair makes every frozen finding member-accessible. |
 | Chapter Review reload continuity | 🟡 PARTIAL | Individual readings are frozen server-side, but the rebuilt Write room does not currently rehydrate its `ChapterReviewBundle` after reload. |
-| Develop mode | 🟡 PARTIAL | D3 manuscript workbench + D4 human-scale Work/Chapter scope and complete lens disclosure are implemented on this branch. Passage remains visibly unavailable until exact selection identity crosses the mode boundary; D5 evidence precision remains. |
+| Develop mode | 🟡 PARTIAL | D3 manuscript workbench + D4 Work/Chapter scope + D5 exact current-passage evidence are implemented on this branch. Passage as a mode-level scope remains visibly unavailable until exact selection identity crosses Write → Develop; browser witness is still owed. |
 | Develop reading history | ✅ LIVE | Frozen readings, provenance, staleness and reading identity are retained. |
 | Observation dialogue | ✅ LIVE | Writer can talk with MAIA about one frozen observation; thread identity is anchored to reading + observation. |
 | Writer standing / disposition | 🟡 PARTIAL | Event substrate and UI exist, but the member controls remain kill-switched pending acceptance/adjudication. |
 | Evidence linked to sections | ✅ LIVE | Developmental observations retain section evidence and can navigate to section-level locus. |
-| Passage-precise developmental evidence | 🟡 PARTIAL | `CodePointRange` reaches the browser but is dropped by `ReviewFinding`; D5 is the planned widening. |
+| Passage-precise developmental evidence | 🟡 PARTIAL | D5 implemented: `ReviewFinding` preserves frozen evidence refs; current `PassageRef` ranges can be shown and highlighted exactly in Develop using Unicode code points. Superseded ranges never paint changed prose. Browser witness is still owed. |
 | “Why it may matter” | ⏳ LATER | Not a presentation field today; it would be new interpretive cognition and needs its own governance. |
 
 ## Materials / memory / history
@@ -68,7 +68,7 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 | Capability | State | Current truth |
 |---|---|---|
 | Write mode | ✅ LIVE | Canonical rebuilt Workbench route. |
-| Develop mode | 🟡 PARTIAL | Reachable and manuscript-centred; Work/Chapter scope and all `LENS_ORDER` lenses are reachable. Passage scope and passage-precise evidence are not yet live. |
+| Develop mode | 🟡 PARTIAL | Reachable and manuscript-centred; Work/Chapter scope, all `LENS_ORDER` lenses, and exact current-passage evidence are implemented. Passage as a cross-mode selection scope and responsive/mobile Develop remain incomplete. |
 | Explore mode | ⏳ LATER | Named in the product grammar; intentionally unavailable. |
 | Review mode | ⏳ LATER | A structure-review route exists, but the top-level Review product area defined in the roadmap is not built. |
 | Publish mode | ⏳ LATER | Intentionally unavailable. |
@@ -95,7 +95,7 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 1. **Close current usability defects** — manuscript scroll ownership, visible Pure Canvas return, all Chapter Review findings reachable.
 2. **Chapter Review continuity witness** — apply the review-manifest migration through the authorized deployment path, then prove complete + partial review reloads reconstruct the exact frozen reading set without rerunning MAIA.
 3. **Develop D4 witness** — Work/Chapter scope and truthful full lens disclosure are implemented; browser witness is owed. Passage is deliberately disabled until exact selection identity exists in Develop.
-4. **Develop D5** — preserve passage `CodePointRange` into the projection and render only evidence precision actually held.
+4. **Witness D5 + Chapter Review continuity** — authenticate against real member data, prove exact-passage highlight, Pure Canvas scroll/return, review access, then apply/witness the review-manifest migration through its authorized deployment path.
 5. **Resolve declared-Work context** — Passage Work and every MAIA act must distinguish no Work / one Work / ambiguous Work.
 6. **Stage 8 versioning** — professional history, compare, restore and named milestones; do not confuse this with the existing Keep-a-version act.
 7. **Stage 9 Explore / Materials** — build the full research/material field on the existing belonging and source-custody substrate.
