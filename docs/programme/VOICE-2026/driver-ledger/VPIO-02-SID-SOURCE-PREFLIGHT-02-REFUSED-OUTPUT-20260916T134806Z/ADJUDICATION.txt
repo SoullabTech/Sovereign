@@ -1,0 +1,14 @@
+ACT SID SOURCE-PREFLIGHT-02
+RESULT REFUSED · MAC OUTPUT MISMATCH
+ATTEMPTS 3 · 20260916T134806Z · 20260916T134813Z · 20260916T134823Z
+INSTRUMENT f67575797353bf7e97ffb319a45357997c8d564d
+ENTRY prerequisite 26116d4e42fdb7f25ffbbede7c20f4a98f226c18 satisfied
+SOURCE reader selftest 24/24 on all attempts
+SID and historical installed bundle/container bindings passed on all attempts
+VoiceKernelHarness process count 0 on all attempts
+Gated 997 Hz fixture SHA + WAV geometry passed on all attempts
+DEFAULT OUTPUT observed B06Ultra · coreaudio_device_type_bluetooth · 44100 Hz
+REQUIRED OUTPUT Mac Studio Speakers · coreaudio_device_type_builtin
+PREFLIGHT-CLEAN absent on all attempts
+BATCH-02 marker absent · population 0 · stimulus 0 · phone sample 0
+DISPOSITION read-only refusal; no source physiology; change Mac output state separately, then rerun fresh PRELIGHT-02

@@ -1,0 +1,2 @@
+DEFAULT_OUTPUT B06Ultra coreaudio_device_type_bluetooth 44100
+DEFAULT_OUTPUT_MATCH False

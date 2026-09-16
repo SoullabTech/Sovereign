@@ -1,0 +1,3 @@
+# current Mac audio state diagnosis — read-only — after the three PRELIGHT-02 refusals
+default_outputs=[('B06Ultra', 'coreaudio_device_type_bluetooth', 44100)]
+output volume:13, input volume:missing value, alert volume:59, output muted:false

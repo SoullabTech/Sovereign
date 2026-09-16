@@ -1,0 +1,25 @@
+ok  01 no source evidence (any non-SID journal) → UNMEASURED-SRC / no_source_evidence 
+ok  02 geometry ≠ pinned → UNMEASURED-SRC / geometry 44100.0/1920.0 ≠ pinned 48000.0/1920 
+ok  03 V1 stimulus not visible → UNMEASURED-SRC / stimulus_not_visible (V1: 0 visible baseline windows; B997=5e-05; C_base=3e-05) 
+ok  04 V1 needs ≥2 visible baseline windows → UNMEASURED-SRC / stimulus_not_visible (V1: 1 visible baseline windows; B997=5e-05; C_base=3e-05) 
+ok  05 V2 gate not seen at baseline → UNMEASURED-SRC / gate_not_seen (V2: baseline median m2_997=0.3) 
+ok  06 baseline must be healthy → UNMEASURED-SRC / stimulus_not_visible (V1: 0 visible baseline windows; B997=None; C_base=None) 
+ok  07 no full rendering window → UNMEASURED-SRC / no_full_rendering_window 
+ok  08 NEAR-END SURVIVES (both windows) → VALID / NEAR-END SURVIVES ['NEAR-END-SURVIVES', 'NEAR-END-SURVIVES']
+ok  09 NEAR-END SUPPRESSED (both windows, capture intact) → VALID / NEAR-END SUPPRESSED ['NEAR-END-SUPPRESSED', 'NEAR-END-SUPPRESSED']
+ok  10 suppressed amplitude but capture NOT intact → not SUPPRESSED (floor) → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: floor', 'INDETERMINATE-SRC: floor']
+ok  11 mixed → CHARACTERIZE-SRC → VALID / CHARACTERIZE-SRC ['NEAR-END-SURVIVES', 'NEAR-END-SUPPRESSED']
+ok  12 between (0.01–0.1 × B997) → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: between', 'INDETERMINATE-SRC: between']
+ok  13 floor: above 0.1×B997 but under 10× the window noise → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: floor', 'INDETERMINATE-SRC: floor']
+ok  14 floor by LEAKAGE: an 880 Hz harmonic large enough that Lk dominates F_w → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: floor', 'INDETERMINATE-SRC: floor']
+ok  15 signature_absent: 997 Hz energy present, not gated → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: signature_absent', 'INDETERMINATE-SRC: signature_absent']
+ok  16 own_modulated veto: gated 997 but the own-tone bin carries the same 2 Hz → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: own_modulated', 'INDETERMINATE-SRC: own_modulated']
+ok  17 frameReset in a window is never SURVIVES → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: frameReset', 'NEAR-END-SURVIVES']
+ok  18 own-playback residual is descriptive: SURVIVES stands with a strong 440 Hz residual → VALID / NEAR-END SURVIVES ['NEAR-END-SURVIVES', 'NEAR-END-SURVIVES']
+ok  21 suppressed amplitude + healthy capture + frameReset → frameReset, never SUPPRESSED → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: frameReset', 'NEAR-END-SUPPRESSED']
+ok  22 m2_440 undefined because the own band is quiet (complete record) → control clears, SURVIVES → VALID / NEAR-END SURVIVES ['NEAR-END-SURVIVES', 'NEAR-END-SURVIVES']
+ok  23 m2_440 undefined while own-band energy is material → own_control_unmeasured → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: own_control_unmeasured', 'INDETERMINATE-SRC: own_control_unmeasured']
+ok  24 malformed record (own-band keys missing) never clears the control → VALID / CHARACTERIZE-SRC ['INDETERMINATE-SRC: own_control_unmeasured', 'INDETERMINATE-SRC: own_control_unmeasured']
+ok  19 residual flag rendered PRESENT on the window rows → - / - 
+ok  20 rows never name PASS/FAIL → - / - 
+selftest: 24/24

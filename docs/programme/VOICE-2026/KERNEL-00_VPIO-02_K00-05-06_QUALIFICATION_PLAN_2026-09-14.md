@@ -1032,3 +1032,7 @@ No source criterion or organism qualification changes. The old SOURCE-SB-01 prep
 ### §10.98 — source qualification still unopened physiologically: PRELIGHT-01 refused on prewarm 3; BATCH-01 spent without sample; SOURCE-02 successor chain prepared (2026-09-16; discriminator §18.80; implementation §10.56)
 
 No source-discrimination row exists yet. Device state at PRELIGHT-01 = three historical harnesses; CLEAN absent. BATCH-01 marker spent via wrapper fall-through but no population ran. Fresh path: separately authorized SOURCE-HARNESS-CLEAR-01 exact 3→2→1→0 → fresh read-only PRELIGHT-02 → if CLEAN ≤300 s, fresh one-shot BATCH-02 N=10 under unchanged S-b reading law. Voice gate 93/93.
+
+### §10.100 — source qualification remains physiologically unopened: clearance green, PRELIGHT-02 blocked only by Mac output selection (2026-09-16; discriminator §18.82; implementation §10.57)
+
+No source-discrimination row exists yet. SOURCE-HARNESS-CLEAR-01 passed exact 3→2→1→0 and preserved the installed SID subject. PRELIGHT-02 ×3 then passed phone/source custody through fixture geometry but refused read-only on Mac default output `B06Ultra` Bluetooth instead of the ruled `Mac Studio Speakers` built-in; current volume 13, unmuted. No CLEAN, no BATCH-02 marker, no stimulus, no phone source sample. Source criteria and instrument remain unchanged. Next qualification act is fresh PRELIGHT-02 only after Mac output is manually restored to Mac Studio Speakers at volume 69, unmuted.

@@ -1,0 +1,5 @@
+attempt=2
+stamp=20260916T134813Z
+worktree=/private/tmp/sid-source-02-f67575797353bf7e97ffb319a45357997c8d564d-20260916T134813Z
+preflight=/private/tmp/sid-source-02-f67575797353bf7e97ffb319a45357997c8d564d-20260916T134813Z/docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-SOURCE-preflight-20260916T134813Z
+clean=absent
