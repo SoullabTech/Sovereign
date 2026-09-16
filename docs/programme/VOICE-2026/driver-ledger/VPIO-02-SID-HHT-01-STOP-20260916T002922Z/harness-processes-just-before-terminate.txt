@@ -1,0 +1,1 @@
+        "executable" : "file:///private/var/containers/Bundle/Application/E3B88028-A10F-46B1-AB27-CF0A1F83FB78/VoiceKernelHarness.app/VoiceKernelHarness",

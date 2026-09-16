@@ -1,0 +1,15 @@
+total 656
+drwxr-xr-x   12 soullab  wheel     384 Sep 15 20:29 .
+drwxrwxrwt  521 root     wheel   16672 Sep 15 20:39 ..
+-rw-r--r--    1 soullab  wheel     847 Sep 15 20:29 apps-before-vpio02sid.json
+-rw-r--r--    1 soullab  wheel  145389 Sep 15 20:29 build-for-testing.log
+-rw-r--r--    1 soullab  wheel     155 Sep 15 20:29 harness-processes-before.txt
+-rw-r--r--    1 soullab  wheel     155 Sep 15 20:29 harness-processes-just-before-terminate.txt
+-rw-r--r--    1 soullab  wheel      41 Sep 15 20:29 head.txt
+-rw-r--r--    1 soullab  wheel   52817 Sep 15 20:29 processes-before.json
+-rw-r--r--    1 soullab  wheel   52832 Sep 15 20:29 processes-just-before-terminate.json
+-rw-r--r--    1 soullab  wheel    2838 Sep 15 20:30 terminate-only.log
+-rw-r--r--    1 soullab  wheel     212 Sep 15 20:29 xcodegen.log
+-rw-r--r--    1 soullab  wheel     154 Sep 15 20:29 xctestrun.txt
+-rw-r--r--  1 soullab  wheel  134160 Sep 15 20:30 /private/tmp/sid-hht-01-transcript-20260916T002922Z.log
+-rw-r--r--  1 soullab  wheel    4251 Sep 15 20:29 /private/tmp/sid-hht-01.sh

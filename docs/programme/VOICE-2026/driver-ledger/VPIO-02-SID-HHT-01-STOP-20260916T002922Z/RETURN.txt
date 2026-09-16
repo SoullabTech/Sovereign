@@ -1,0 +1,18 @@
+ACT SID-HISTORICAL-HARNESS-TERMINATE-01
+STAMP 20260916T002922Z
+RESULT STOP · UI-test runner initialization failure (Timed out while enabling automation mode)
+PRE historical harness present PASS · historical-container binding PASS · SID bundle absent PASS
+DRIVER build-for-testing reached
+JUST-IN-TIME harness present PASS · historical binding PASS
+XCODEBUILD-TEST-INVOCATION attempted once
+UI-AUTOMATION-INITIALIZATION FAIL · timeout
+TESTTERMINATEONLY-BODY not executed
+XCUIAPPLICATION-TERMINATE not reached
+POST-PROCESS-READ not reached (none fabricated)
+POST-HARNESS-ABSENT not established
+SEAL not reached (none fabricated)
+INSTALL 0 · UNINSTALL 0 · SAMPLE 0 · INTENTIONAL-LAUNCH-OR-TERMINATE 0
+DEVICE-EFFECT xcodebuild attempted to establish UI automation on the device; the governed test body was never entered
+HARNESS-STATE-AFTER unknown (alive at the just-before read; no read since)
+AUTHORITY SPENT
+TRANSPORT Mac Studio terminal directly
