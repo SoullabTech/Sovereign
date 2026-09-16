@@ -25,16 +25,19 @@
  * ── Mutation matrix (actually run, not asserted) ───────────────────────────
  *
  * Each mutation was applied to the route, the suite run, and the route
- * restored. Baseline is 12/12 green.
+ * restored. Baseline is 14/14 green.
  *
- *   MUT1  remove `pg_advisory_xact_lock` call        → 3 fail
- *   MUT2  disable the reuse branch                   → 3 fail
- *   MUT3  drop `AND d.revision_count = 1`            → 1 fail
- *   MUT4  drop `AND m.title IS NULL`                 → 1 fail
- *   MUT5  drop `AND m.provenance = 'member_written'` → 1 fail
+ *   MUT1  remove `pg_advisory_xact_lock` call             → 3 fail
+ *   MUT2  disable the reuse branch                        → 3 fail
+ *   MUT3  drop `AND d.version = 1`                        → 1 fail
+ *   MUT4  drop `AND m.title IS NULL`                      → 1 fail
+ *   MUT5  drop `AND m.provenance = 'member_written'`      → 1 fail
+ *   MUT6  drop `AND d.section_addressable_at IS NOT NULL` → 1 fail
+ *   MUT7  drop the `NOT EXISTS living_work_expressions`   → 1 fail
  *
- * TWO OF THOSE FAILED TO FAIL AT FIRST, and both blind spots are worth knowing
- * because they are the ordinary way a suite like this ends up decorative:
+ * THREE BLIND SPOTS were found while building and extending this suite; they
+ * are worth recording because they are the ordinary way a concurrency/guard
+ * suite becomes decorative:
  *
  *   1. Yielding only at the SELECT was not enough. Everything after it resolved
  *      on the microtask queue, which drains fully before another macrotask
@@ -42,11 +45,15 @@
  *      second never got a window. MUT1 stayed GREEN. Fixed by yielding on every
  *      statement, as a real client does.
  *
- *   2. The fake originally hardcoded the four reuse conditions in JavaScript —
- *      a restatement of the logic under test. Deleting a condition from the
- *      route's SQL therefore changed nothing, and MUT3/4/5 stayed GREEN. Fixed
- *      by reading each condition out of the statement text and applying it only
- *      if the route actually asked for it.
+ *   2. The fake originally hardcoded the reuse conditions in JavaScript — a
+ *      restatement of the logic under test. Deleting a condition from the
+ *      route's SQL therefore changed nothing. Fixed by reading each condition
+ *      out of the statement text and applying it only when the route asks for it.
+ *
+ *   3. After the section-addressable guard was added, the named/imported
+ *      fixtures were ALSO continuous. That made title/provenance mutations stay
+ *      green because a different predicate still excluded them. Those fixtures
+ *      now satisfy every other reuse condition, so each guard is isolated.
  *
  * A fake that reimplements what it is testing proves only that the copy agrees
  * with itself.
@@ -90,13 +97,16 @@ function makeMutex() {
 }
 
 interface Manuscript { id: string; member_id: string; title: string | null; provenance: string }
-interface Draft { id: string; manuscript_id: string; member_id: string; content: string; revision_count: number }
+interface Draft { id: string; manuscript_id: string; member_id: string; content: string; revision_count: number; version: number; section_addressable_at: Date | null }
+interface DraftSection { id: string; draft_id: string; position: number; text: string; source_section_id: string | null }
 
 /** In-memory stand-in for the tables this route touches. */
 function makeFakeDb() {
   const manuscripts: Manuscript[] = [];
   const drafts: Draft[] = [];
-  const revisions: Array<{ draft_id: string; content: string; note: string }> = [];
+  const sections: DraftSection[] = [];
+  const revisions: Array<{ draft_id: string; content: string; note: string; partition: unknown | null }> = [];
+  const expressions: Array<{ expression_type: string; expression_id: string }> = [];
   const statements: string[] = [];
   const locks = new Map<string, ReturnType<typeof makeMutex>>();
   let seq = 0;
@@ -137,10 +147,9 @@ function makeFakeDb() {
         if (s.startsWith('SELECT m.id, d.id AS draft_id')) {
           /**
            * The reuse predicate is READ OUT OF THE STATEMENT, not reimplemented
-           * here. An earlier version hardcoded the four conditions in JS, which
-           * meant deleting one from the route's SQL changed nothing the fake
-           * did — the suite was blind to exactly the mutation it claimed to
-           * catch (`AND d.revision_count = 1` removed, all ten tests green).
+           * here. An earlier version hardcoded the conditions in JS, which
+           * meant deleting one from the route's SQL changed nothing the fake did — the suite was blind to exactly the mutation it claimed to
+           * catch (`AND d.version = 1` removed, the relevant test stays green unless the fake reads the predicate).
            *
            * A fake that restates the logic under test cannot test it. So each
            * condition is applied only if the route actually asked for it.
@@ -151,7 +160,9 @@ function makeFakeDb() {
             written: s.includes("m.provenance = 'member_written'"),
             unnamed: s.includes('m.title IS NULL'),
             empty: s.includes("d.content = ''"),
-            firstRevision: s.includes('d.revision_count = 1'),
+            firstVersion: s.includes('d.version = 1'),
+            addressable: s.includes('d.section_addressable_at IS NOT NULL'),
+            unbound: s.includes('NOT EXISTS') && s.includes('living_work_expressions'),
           };
           const row = manuscripts
             .filter((m) => (!asks.member || m.member_id === memberId))
@@ -160,7 +171,9 @@ function makeFakeDb() {
             .map((m) => ({ m, d: drafts.find((d) => d.manuscript_id === m.id) }))
             .filter(({ d }) => d !== undefined)
             .filter(({ d }) => (!asks.empty || d!.content === ''))
-            .find(({ d }) => (!asks.firstRevision || d!.revision_count === 1));
+            .filter(({ d }) => (!asks.firstVersion || d!.version === 1))
+            .filter(({ d }) => (!asks.addressable || d!.section_addressable_at !== null))
+            .find(({ m }) => !asks.unbound || !expressions.some((e) => e.expression_type === 'manuscript' && e.expression_id === m.id));
           return row ? { rows: [{ id: row.m.id, draft_id: row.d!.id }] } : { rows: [] };
         }
 
@@ -193,14 +206,44 @@ function makeFakeDb() {
             member_id: String(params[1]),
             content: content[1],
             revision_count: 1,
+            version: 1,
+            section_addressable_at: s.includes('section_addressable_at') ? new Date('2026-09-16T00:00:00Z') : null,
+          });
+          return { rows: [{ id }] };
+        }
+
+        if (s.startsWith('INSERT INTO manuscript_draft_sections')) {
+          const id = nextId('section');
+          sections.push({
+            id,
+            draft_id: String(params[0]),
+            position: 0,
+            text: '',
+            source_section_id: null,
           });
           return { rows: [{ id }] };
         }
 
         if (s.startsWith('INSERT INTO working_draft_revisions')) {
-          const note = /, '([^']*)'\)$/.exec(s);
-          revisions.push({ draft_id: String(params[0]), content: '', note: note ? note[1] : '' });
+          const note = s.includes('Blank page became writable')
+            ? 'Blank page became writable'
+            : s.includes('Started writing') ? 'Started writing' : '';
+          const rawPartition = params[2];
+          revisions.push({
+            draft_id: String(params[0]),
+            content: '',
+            note,
+            partition: typeof rawPartition === 'string' ? JSON.parse(rawPartition) : null,
+          });
           return { rows: [] };
+        }
+
+        if (s.startsWith('UPDATE manuscript_working_drafts')) {
+          const d = drafts.find((candidate) => candidate.id === String(params[0]));
+          if (!d) return { rows: [], rowCount: 0 };
+          d.section_addressable_at = new Date('2026-09-16T00:00:00Z');
+          d.revision_count += 1;
+          return { rows: [], rowCount: 1 };
         }
 
         throw new Error(`fake db: unexpected statement: ${s.slice(0, 90)}`);
@@ -215,7 +258,7 @@ function makeFakeDb() {
     }
   };
 
-  return { manuscripts, drafts, revisions, statements, runTransaction };
+  return { manuscripts, drafts, sections, revisions, expressions, statements, runTransaction };
 }
 
 let db: ReturnType<typeof makeFakeDb>;
@@ -287,6 +330,36 @@ describe('POST /api/sovereign/manuscripts/blank — duplicate guard', () => {
     expect(db.manuscripts).toHaveLength(2);
     expect(db.manuscripts.map((m) => m.member_id).sort()).toEqual([MEMBER, OTHER_MEMBER].sort());
   });
+
+  it('does not reuse an older continuous blank that canonical Write cannot open', async () => {
+    db.manuscripts.push({ id: 'ms-continuous', member_id: MEMBER, title: null, provenance: 'member_written' });
+    db.drafts.push({
+      id: 'draft-continuous', manuscript_id: 'ms-continuous', member_id: MEMBER,
+      content: '', revision_count: 1, version: 1, section_addressable_at: null,
+    });
+
+    const res = await POST(postRequest());
+    const body = await res.json();
+    expect(res.status).toBe(201);
+    expect(body.id).not.toBe('ms-continuous');
+    expect(db.manuscripts).toHaveLength(2);
+    expect(db.sections).toHaveLength(1);
+  });
+
+  it('does not reuse a blank manuscript already declared into another Work', async () => {
+    db.manuscripts.push({ id: 'ms-bound', member_id: MEMBER, title: null, provenance: 'member_written' });
+    db.drafts.push({
+      id: 'draft-bound', manuscript_id: 'ms-bound', member_id: MEMBER,
+      content: '', revision_count: 1, version: 1, section_addressable_at: new Date('2026-09-16T00:00:00Z'),
+    });
+    db.expressions.push({ expression_type: 'manuscript', expression_id: 'ms-bound' });
+
+    const res = await POST(postRequest());
+    const body = await res.json();
+    expect(res.status).toBe(201);
+    expect(body.id).not.toBe('ms-bound');
+    expect(db.manuscripts).toHaveLength(2);
+  });
 });
 
 describe('POST /api/sovereign/manuscripts/blank — once writing has begun', () => {
@@ -297,6 +370,7 @@ describe('POST /api/sovereign/manuscripts/blank — once writing has begun', () 
     // The member writes a sentence. The page is no longer blank.
     db.drafts[0].content = 'The salt road began at the harbour.';
     db.drafts[0].revision_count = 2;
+    db.drafts[0].version = 2;
 
     const second = await POST(postRequest());
     const secondBody = await second.json();
@@ -311,7 +385,7 @@ describe('POST /api/sovereign/manuscripts/blank — once writing has begun', () 
     // the reuse predicate. Only `title IS NULL` keeps Start writing from
     // reopening the member's actual book and calling it a blank page.
     db.manuscripts.push({ id: 'ms-named', member_id: MEMBER, title: 'The Salt Road', provenance: 'member_written' });
-    db.drafts.push({ id: 'draft-named', manuscript_id: 'ms-named', member_id: MEMBER, content: '', revision_count: 1 });
+    db.drafts.push({ id: 'draft-named', manuscript_id: 'ms-named', member_id: MEMBER, content: '', revision_count: 1, version: 1, section_addressable_at: new Date('2026-09-16T00:00:00Z') });
 
     const res = await POST(postRequest());
     const body = await res.json();
@@ -325,7 +399,7 @@ describe('POST /api/sovereign/manuscripts/blank — once writing has begun', () 
     // Same shape, but brought in rather than begun here. Reusing it would hand
     // the writer their own import and call it an empty page.
     db.manuscripts.push({ id: 'ms-imported', member_id: MEMBER, title: null, provenance: 'member_uploaded' });
-    db.drafts.push({ id: 'draft-imported', manuscript_id: 'ms-imported', member_id: MEMBER, content: '', revision_count: 1 });
+    db.drafts.push({ id: 'draft-imported', manuscript_id: 'ms-imported', member_id: MEMBER, content: '', revision_count: 1, version: 1, section_addressable_at: new Date('2026-09-16T00:00:00Z') });
 
     const res = await POST(postRequest());
     const body = await res.json();
@@ -338,10 +412,11 @@ describe('POST /api/sovereign/manuscripts/blank — once writing has begun', () 
   it('a page emptied back out is still not offered as a fresh blank', async () => {
     await POST(postRequest());
     // Content deleted back to '' — but it HAS been written in, and the
-    // revision count is the record of that. Reuse would silently hand the
-    // member a page carrying someone's revision history.
+    // version is the record that an ordinary save landed. Reuse would silently
+    // hand the member a page carrying prior writing history.
     db.drafts[0].content = '';
     db.drafts[0].revision_count = 3;
+    db.drafts[0].version = 3;
 
     const res = await POST(postRequest());
     expect(res.status).toBe(201);
@@ -361,18 +436,23 @@ describe('POST /api/sovereign/manuscripts/blank — what it refuses to invent', 
     expect(db.drafts[0].content).toBe('');
     expect(db.revisions).toHaveLength(1);
     expect(db.revisions[0].note).toBe('Started writing');
+    expect(db.revisions[0].partition).toEqual([{ sectionId: db.sections[0].id, start: 0, end: 0 }]);
+    expect(db.drafts[0].section_addressable_at).not.toBeNull();
   });
 
-  it('writes no Source, no sections, and no Living Work attachment', async () => {
+  it('writes no Source or Work attachment, but creates one provenance-free writable draft section', async () => {
     await POST(postRequest());
 
     const wrote = (table: string) =>
       db.statements.some((s) => s.toLowerCase().includes(table));
 
     // A blank page was not brought in from anywhere: no Source rows.
-    expect(wrote('manuscript_sections')).toBe(false);
+    expect(wrote('INSERT INTO manuscript_sections')).toBe(false);
+    // The writable slice exists but carries no Source provenance.
+    expect(db.sections).toHaveLength(1);
+    expect(db.sections[0]).toMatchObject({ position: 0, text: '', source_section_id: null });
     // Beginning to write is not declaring that this belongs to a work.
-    expect(wrote('living_work_expressions')).toBe(false);
+    expect(db.statements.some((s) => s.startsWith('INSERT INTO living_work_expressions'))).toBe(false);
 
     expect(db.statements.some((s) => s.startsWith('INSERT INTO member_manuscripts'))).toBe(true);
   });

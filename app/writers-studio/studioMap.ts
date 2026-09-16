@@ -128,6 +128,8 @@ export const SOURCE_HREF = '/press/manuscript?tab=manuscript';
  * an empty Studio, so the with-a-book path was never exercised.
  */
 export const IMPORT_HREF = '/press/manuscript?import=1';
+/** Outside material that may feed a Work without becoming its manuscript. */
+export const SOURCE_INTAKE_HREF = '/writers-studio/sources';
 
 /**
  * Writer's Studio canonical Write room — the rebuilt creative workspace. The v0.1
