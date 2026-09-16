@@ -142,3 +142,9 @@ The reviewed implementation closes that gap. Evidence now has one of two mechani
 T16–T20 are the falsifiers: free-text evidence is excluded, absent in-file evidence is excluded, governed-record evidence must resolve and contain its marker, a governed-record path cannot escape repository custody, and an arbitrary repository file outside `docs/corpus-authority/` cannot masquerade as an authority record.
 
 The corpus remains fully held after this amendment: `0 admitted · 736 excluded · 0 refused`.
+
+## Merge-race custody note
+
+PR #1312 merged at head `551a23fd38b4cb8929bee88f5fb231c848f2fafb` before the independent-review amendment was part of that PR head. Its canonical merge is `01942148bd05418b713dd4f832bd94f7a382313c`.
+
+The authority-evidence review amendment therefore travels as a separate successor act based on that canonical merge. It must not be described as already contained by #1312. The successor changes only the same four authority-boundary files and leaves corpus membership unchanged at `0 admitted · 736 excluded · 0 refused`.
