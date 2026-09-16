@@ -79,6 +79,12 @@ refuses('stale derived inference cannot bypass correction priority', () => rende
   question: null,
 }, standing), 'superseded_without_current');
 
+refuses('current correction cannot be hidden only in synthesis support', () => renderStandingEnvelope(evidence, {
+  ground: [{ evidenceId: 'E-OLD' }, { evidenceId: 'M-OLD' }],
+  synthesis: [{ text: 'grief may now be central', supportEvidenceIds: ['E-NOW'] }],
+  question: 'What changes now?',
+}, standing), 'superseded_without_current');
+
 const derivedWithCorrection = renderStandingEnvelope(evidence, {
   ground: [{ evidenceId: 'M-OLD' }, { evidenceId: 'E-NOW' }],
   synthesis: [{ text: 'the earlier autonomy frame may need to be reorganized around the newer grief statement', supportEvidenceIds: ['M-OLD', 'E-NOW'] }],
@@ -89,7 +95,7 @@ ok('stale derived inference is discussable only beside current correction',
   derivedWithCorrection.trace.grounded.some((x) => x.evidenceId === 'E-NOW' && x.claimStanding === 'current'));
 
 console.log(JSON.stringify({
-  programme: 'JARVIS-MAIA-STRUCTURAL-STANDING-01',
+  programme: 'FREE-SYNTHESIS-STRUCTURAL-STANDING-01',
   act: 'S4 correction / surprise proof',
   status: 'PASS',
   assertions: passed,

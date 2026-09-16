@@ -109,15 +109,12 @@ export function parseStandingPlan(input: unknown): StandingPlan {
     const item = record(raw, `synthesis[${i}]`);
     exactKeys(item, ['text', 'supportEvidenceIds'], `synthesis[${i}]`);
     const text = memberFacing(item.text, `synthesis[${i}].text`);
-    const supportEvidenceIds = item.supportEvidenceIds === undefined
-      ? undefined
-      : (() => {
-          if (!Array.isArray(item.supportEvidenceIds)) {
-            throw new StandingEnvelopeRefused('invalid_shape', `synthesis[${i}].supportEvidenceIds`);
-          }
-          return item.supportEvidenceIds.map((id, j) => nonBlank(id, `synthesis[${i}].supportEvidenceIds[${j}]`));
-        })();
-    return { text, ...(supportEvidenceIds ? { supportEvidenceIds } : {}) };
+    if (!Array.isArray(item.supportEvidenceIds) || item.supportEvidenceIds.length === 0) {
+      throw new StandingEnvelopeRefused('synthesis_requires_support', `synthesis[${i}].supportEvidenceIds`);
+    }
+    const supportEvidenceIds = item.supportEvidenceIds.map((id, j) =>
+      nonBlank(id, `synthesis[${i}].supportEvidenceIds[${j}]`));
+    return { text, supportEvidenceIds };
   });
 
   const question = top.question === undefined || top.question === null
@@ -150,8 +147,9 @@ export function renderStandingEnvelope(
   };
 
   const grounded = plan.ground.map(({ evidenceId }) => requireEvidence(evidenceId));
+  const groundedIds = new Set<string>(plan.ground.map((g) => g.evidenceId));
   const referencedIds = new Set<string>([
-    ...plan.ground.map((g) => g.evidenceId),
+    ...groundedIds,
     ...plan.synthesis.flatMap((s) => s.supportEvidenceIds ?? []),
   ]);
 
@@ -173,7 +171,10 @@ export function renderStandingEnvelope(
     for (const evidenceId of referencedIds) {
       for (const state of supersededAncestors(evidenceId) as any[]) {
         const current = claimStanding.currentByClaimKey.get(state.claimKey);
-        if (!current || !referencedIds.has(current)) {
+        // A current correction must be visible in the grounded response, not merely hidden
+        // inside synthesis support. Otherwise stale evidence can remain foregrounded while the
+        // model privately references the correction — a correction-dominance failure.
+        if (!current || !groundedIds.has(current)) {
           throw new StandingEnvelopeRefused('superseded_without_current', evidenceId);
         }
       }

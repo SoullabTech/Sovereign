@@ -52,6 +52,10 @@ refuses('model cannot smuggle authority into top-level plan', () => renderStandi
   ground: [], synthesis: [], question: null, authority: 'situate',
 }), 'unknown_field');
 
+refuses('novel synthesis must descend to admitted evidence', () => renderStandingEnvelope(evidence, {
+  ground: [{ evidenceId: 'E5' }], synthesis: [{ text: 'the guardian may guide design' }], question: null,
+}), 'synthesis_requires_support');
+
 
 refuses('MAIA synthesis cannot borrow member first-person voice', () => renderStandingEnvelope(evidence, {
   ground: [{ evidenceId: 'E5' }], synthesis: [{ text: 'this guides me in my work' }], question: null,
@@ -68,13 +72,13 @@ refuses('member-facing synthesis cannot leak internal member role language', () 
 
 const conditionalQuestion = renderStandingEnvelope(evidence, {
   ground: [{ evidenceId: 'E5' }],
-  synthesis: [{ text: 'the guardian relation may become a design constraint' }],
+  synthesis: [{ text: 'the guardian relation may become a design constraint', supportEvidenceIds: ['E5'] }],
   question: 'How will it affect your next design choice?',
 });
 ok('question cannot silently promote synthesis', conditionalQuestion.text.includes('If that possibility is worth testing rather than assuming, how will it affect'));
 
 console.log(JSON.stringify({
-  programme: 'JARVIS-MAIA-STRUCTURAL-STANDING-01',
+  programme: 'FREE-SYNTHESIS-STRUCTURAL-STANDING-01',
   act: 'S1 standing envelope proof',
   status: 'PASS',
   assertions: passed,

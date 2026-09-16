@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { renderStandingEnvelope, type StandingEvidence } from './standing-envelope';
+import { renderStandingEnvelope, StandingEnvelopeRefused, type StandingEvidence } from './standing-envelope';
 
 const MODEL = 'llama3.1:8b';
 const TEMPERATURE = 0.2;
@@ -38,6 +38,35 @@ Rules for the PLAN:
 - 1 ground reference, 1 synthesis, 1 question.
 `;
 
+const PLAN_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['ground', 'synthesis', 'question'],
+  properties: {
+    ground: {
+      type: 'array', minItems: 1, maxItems: 1,
+      items: {
+        type: 'object', additionalProperties: false, required: ['evidenceId'],
+        properties: { evidenceId: { type: 'string', enum: ['E1', 'E2', 'E3', 'E4', 'E5'] } },
+      },
+    },
+    synthesis: {
+      type: 'array', minItems: 1, maxItems: 1,
+      items: {
+        type: 'object', additionalProperties: false, required: ['text', 'supportEvidenceIds'],
+        properties: {
+          text: { type: 'string' },
+          supportEvidenceIds: {
+            type: 'array', minItems: 1, maxItems: 5,
+            items: { type: 'string', enum: ['E1', 'E2', 'E3', 'E4', 'E5'] },
+          },
+        },
+      },
+    },
+    question: { type: 'string' },
+  },
+} as const;
+
 interface OllamaResponse {
   response: string;
   model: string;
@@ -55,7 +84,7 @@ async function generate(seed: number): Promise<OllamaResponse> {
       model: MODEL,
       prompt,
       stream: false,
-      format: 'json',
+      format: PLAN_SCHEMA,
       options: { temperature: TEMPERATURE, seed },
     }),
   });
@@ -68,25 +97,41 @@ async function main(): Promise<void> {
   for (const seed of SEEDS) {
     const raw = await generate(seed);
     const parsed = JSON.parse(raw.response) as unknown;
-    const rendered = renderStandingEnvelope(evidence, parsed);
-    rows.push({
-      seed,
-      model: raw.model,
-      temperature: TEMPERATURE,
-      rawPlan: parsed,
-      rawPlanSha256: sha(raw.response),
-      rendered,
-      usage: { promptEvalCount: raw.prompt_eval_count ?? null, evalCount: raw.eval_count ?? null },
-    });
+    try {
+      const rendered = renderStandingEnvelope(evidence, parsed);
+      rows.push({
+        seed,
+        status: 'rendered',
+        model: raw.model,
+        temperature: TEMPERATURE,
+        rawPlan: parsed,
+        rawPlanSha256: sha(raw.response),
+        rendered,
+        usage: { promptEvalCount: raw.prompt_eval_count ?? null, evalCount: raw.eval_count ?? null },
+      });
+    } catch (error) {
+      if (!(error instanceof StandingEnvelopeRefused)) throw error;
+      rows.push({
+        seed,
+        status: 'refused',
+        model: raw.model,
+        temperature: TEMPERATURE,
+        rawPlan: parsed,
+        rawPlanSha256: sha(raw.response),
+        refusal: error.code,
+        usage: { promptEvalCount: raw.prompt_eval_count ?? null, evalCount: raw.eval_count ?? null },
+      });
+    }
   }
 
   console.log(JSON.stringify({
-    programme: 'JARVIS-MAIA-STRUCTURAL-STANDING-01',
+    programme: 'FREE-SYNTHESIS-STRUCTURAL-STANDING-01',
     act: 'S3 Silver Cedar standing-envelope replay',
     memberTurn: MEMBER_TURN,
     evidenceDigest: sha(JSON.stringify(evidence)),
     model: MODEL,
     temperature: TEMPERATURE,
+    promptChars: prompt.length,
     rows,
   }, null, 2));
 }

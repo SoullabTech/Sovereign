@@ -1,0 +1,218 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "S4 correction / surprise local replay",
+  "model": "llama3.1:8b",
+  "temperature": 0.2,
+  "promptChars": 1680,
+  "memberTurn": "Actually, grief is the center. Autonomy is how I have been organizing around it.",
+  "currentStanding": {
+    "organizing-center": "E-NOW"
+  },
+  "rows": [
+    {
+      "seed": 42,
+      "status": "rendered",
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E-NOW"
+          },
+          {
+            "evidenceId": "E-OLD"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "You've reorganized your perspective, shifting the center from autonomy to grief, while still using autonomy as a way to navigate and make sense of your grief.",
+            "supportEvidenceIds": [
+              "E-NOW"
+            ]
+          }
+        ],
+        "question": "How does this shift in perspective affect your relationship with autonomy, and what new aspects of your experience become more visible to you now?"
+      },
+      "rawPlanSha256": "888e2e353d78d59956969582e3abbdc5272b46cfaea39de68c52472fe9ce29d1",
+      "rendered": {
+        "text": "You now say: “Actually, grief is the center. Autonomy is how I have been organizing around it.”\n\nEarlier, you said: “I think autonomy is the center of this for me.”\n\nOne possibility I see — provisionally: You've reorganized your perspective, shifting the center from autonomy to grief, while still using autonomy as a way to navigate and make sense of your grief.\n\nIf that possibility is worth testing rather than assuming, how does this shift in perspective affect your relationship with autonomy, and what new aspects of your experience become more visible to you now?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E-NOW",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "current",
+              "claimKey": "organizing-center"
+            },
+            {
+              "evidenceId": "E-OLD",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "superseded",
+              "claimKey": "organizing-center"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [
+                "E-NOW"
+              ],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "8f8044a6476726393d2578448531ea42a80d72fe36dd05dc9744e38882cb2658"
+      },
+      "usage": {
+        "promptEvalCount": 389,
+        "evalCount": 117
+      }
+    },
+    {
+      "seed": 137,
+      "status": "rendered",
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E-OLD"
+          },
+          {
+            "evidenceId": "E-NOW"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "You've reorganized your perspective, shifting the center from autonomy to grief, while still using autonomy as a way to navigate this grief.",
+            "supportEvidenceIds": [
+              "E-NOW"
+            ]
+          }
+        ],
+        "question": "What new aspects of your experience or understanding of grief have become more visible or prominent as a result of this shift in perspective?"
+      },
+      "rawPlanSha256": "d7a940ae8aa427d2934f6c24a0674f7759759172863ab250b1d96988f98dfdd6",
+      "rendered": {
+        "text": "Earlier, you said: “I think autonomy is the center of this for me.”\n\nYou now say: “Actually, grief is the center. Autonomy is how I have been organizing around it.”\n\nOne possibility I see — provisionally: You've reorganized your perspective, shifting the center from autonomy to grief, while still using autonomy as a way to navigate this grief.\n\nIf that possibility is worth testing rather than assuming, what new aspects of your experience or understanding of grief have become more visible or prominent as a result of this shift in perspective?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E-OLD",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "superseded",
+              "claimKey": "organizing-center"
+            },
+            {
+              "evidenceId": "E-NOW",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "current",
+              "claimKey": "organizing-center"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [
+                "E-NOW"
+              ],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "20a3ef68157866cc9893c793824d7d33178bbee5d8d14af4ece4786c59addd40"
+      },
+      "usage": {
+        "promptEvalCount": 389,
+        "evalCount": 112
+      }
+    },
+    {
+      "seed": 211,
+      "status": "refused",
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E-OLD"
+          },
+          {
+            "evidenceId": "M-OLD"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "You've been organizing your experience around autonomy, but it seems grief is the central aspect that autonomy is serving.",
+            "supportEvidenceIds": [
+              "E-NOW"
+            ]
+          }
+        ],
+        "question": "How does this shift in perspective change how you see your relationship between autonomy and grief?"
+      },
+      "rawPlanSha256": "caa32508215e84b012d12efacb65fdf66dae14abed2a0ee2c74fc07667cb7275",
+      "refusal": "superseded_without_current"
+    },
+    {
+      "seed": 509,
+      "status": "rendered",
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E-NOW"
+          },
+          {
+            "evidenceId": "E-OLD"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "You've reorganized your perspective, shifting the center from autonomy to grief, while still using autonomy as a way to navigate and make sense of your grief.",
+            "supportEvidenceIds": [
+              "E-NOW"
+            ]
+          }
+        ],
+        "question": "What new aspects of your experience or understanding of grief have become more visible or prominent with this shift in perspective?"
+      },
+      "rawPlanSha256": "e80c57e3f96f3363834a716167d776178f71fd815cbf7c2145cb831e118fe2f7",
+      "rendered": {
+        "text": "You now say: “Actually, grief is the center. Autonomy is how I have been organizing around it.”\n\nEarlier, you said: “I think autonomy is the center of this for me.”\n\nOne possibility I see — provisionally: You've reorganized your perspective, shifting the center from autonomy to grief, while still using autonomy as a way to navigate and make sense of your grief.\n\nIf that possibility is worth testing rather than assuming, what new aspects of your experience or understanding of grief have become more visible or prominent with this shift in perspective?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E-NOW",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "current",
+              "claimKey": "organizing-center"
+            },
+            {
+              "evidenceId": "E-OLD",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "superseded",
+              "claimKey": "organizing-center"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [
+                "E-NOW"
+              ],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "bd6e16657c5a97f962401a7ad36cb82354eb18008b6278e6de3daff970effae3"
+      },
+      "usage": {
+        "promptEvalCount": 389,
+        "evalCount": 113
+      }
+    }
+  ]
+}

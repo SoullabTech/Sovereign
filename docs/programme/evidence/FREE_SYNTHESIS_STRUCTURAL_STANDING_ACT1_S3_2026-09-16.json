@@ -1,0 +1,223 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "S3 Silver Cedar standing-envelope replay",
+  "memberTurn": "the silver cedar",
+  "evidenceDigest": "0e4fe3ba5a54c518d316f0e973de3bc27f587a3bff50f6256b5d0702543fccd6",
+  "model": "llama3.1:8b",
+  "temperature": 0.2,
+  "promptChars": 1689,
+  "rows": [
+    {
+      "seed": 42,
+      "status": "rendered",
+      "model": "llama3.1:8b",
+      "temperature": 0.2,
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E5"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "Your guardian, the Silver Cedar, embodies the values, focus, and coherence that are foundational to your work and life.",
+            "supportEvidenceIds": [
+              "E3",
+              "E4",
+              "E5"
+            ]
+          }
+        ],
+        "question": "How will your relationship with the Silver Cedar guide your decisions and actions in the coming days?"
+      },
+      "rawPlanSha256": "5fae6b7d6497dfe64879dd4e685e4219ed3001a0f35060c153c2560ca0f07665",
+      "rendered": {
+        "text": "You said: “a guardian image for my work and for me”\n\nOne possibility I see — provisionally: Your guardian, the Silver Cedar, embodies the values, focus, and coherence that are foundational to your work and life.\n\nIf that possibility is worth testing rather than assuming, how will your relationship with the Silver Cedar guide your decisions and actions in the coming days?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E5",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [
+                "E3",
+                "E4",
+                "E5"
+              ],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "0a936479054c41aaf9b1a753dd91f298b3a15e0016e5d117a6e0e2df15f284c4"
+      },
+      "usage": {
+        "promptEvalCount": 403,
+        "evalCount": 85
+      }
+    },
+    {
+      "seed": 137,
+      "status": "rendered",
+      "model": "llama3.1:8b",
+      "temperature": 0.2,
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E5"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "Your guardian image, Silver Cedar, embodies the values and focus you've established as foundational for your work and life.",
+            "supportEvidenceIds": [
+              "E3",
+              "E4",
+              "E5"
+            ]
+          }
+        ],
+        "question": "How will you integrate the wisdom of Silver Cedar into your daily practice and decision-making processes?"
+      },
+      "rawPlanSha256": "6836372a0a95ac4bc02fed2db6c991eedc38be42307c42932d62333716aba0f7",
+      "rendered": {
+        "text": "You said: “a guardian image for my work and for me”\n\nOne possibility I see — provisionally: Your guardian image, Silver Cedar, embodies the values and focus you've established as foundational for your work and life.\n\nIf that possibility is worth testing rather than assuming, how will you integrate the wisdom of Silver Cedar into your daily practice and decision-making processes?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E5",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [
+                "E3",
+                "E4",
+                "E5"
+              ],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "3d00655ed9cb8d599af350c7effdb695106684bb1251a84b9f03355ea95778a8"
+      },
+      "usage": {
+        "promptEvalCount": 403,
+        "evalCount": 84
+      }
+    },
+    {
+      "seed": 211,
+      "status": "rendered",
+      "model": "llama3.1:8b",
+      "temperature": 0.2,
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E5"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "Your guardian, the Silver Cedar, embodies the values, focus, and coherence that are foundational to your work and life.",
+            "supportEvidenceIds": [
+              "E3",
+              "E4",
+              "E5"
+            ]
+          }
+        ],
+        "question": "How will your relationship with the Silver Cedar guide your decisions and actions in the coming days?"
+      },
+      "rawPlanSha256": "5fae6b7d6497dfe64879dd4e685e4219ed3001a0f35060c153c2560ca0f07665",
+      "rendered": {
+        "text": "You said: “a guardian image for my work and for me”\n\nOne possibility I see — provisionally: Your guardian, the Silver Cedar, embodies the values, focus, and coherence that are foundational to your work and life.\n\nIf that possibility is worth testing rather than assuming, how will your relationship with the Silver Cedar guide your decisions and actions in the coming days?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E5",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [
+                "E3",
+                "E4",
+                "E5"
+              ],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "0a936479054c41aaf9b1a753dd91f298b3a15e0016e5d117a6e0e2df15f284c4"
+      },
+      "usage": {
+        "promptEvalCount": 403,
+        "evalCount": 85
+      }
+    },
+    {
+      "seed": 509,
+      "status": "rendered",
+      "model": "llama3.1:8b",
+      "temperature": 0.2,
+      "rawPlan": {
+        "ground": [
+          {
+            "evidenceId": "E5"
+          }
+        ],
+        "synthesis": [
+          {
+            "text": "Your guardian takes the form of a Silver Cedar that embodies your core values, focus, and coherence, guiding your work and life.",
+            "supportEvidenceIds": [
+              "E3",
+              "E4",
+              "E5"
+            ]
+          }
+        ],
+        "question": "How will this guardian image inform your decision-making and actions in your work and life?"
+      },
+      "rawPlanSha256": "71c7a8ff5d5bf148384455a8772efab98f90388321ea98126c69b8fbd0eff694",
+      "rendered": {
+        "text": "You said: “a guardian image for my work and for me”\n\nOne possibility I see — provisionally: Your guardian takes the form of a Silver Cedar that embodies your core values, focus, and coherence, guiding your work and life.\n\nIf that possibility is worth testing rather than assuming, how will this guardian image inform your decision-making and actions in your work and life?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E5",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate"
+            }
+          ],
+          "synthesis": [
+            {
+              "supportEvidenceIds": [
+                "E3",
+                "E4",
+                "E5"
+              ],
+              "standing": "maia_provisional"
+            }
+          ]
+        },
+        "digest": "927ef3b3fde28523e78384e8f600919d2bd6b2937fd27476db740818a8663fd9"
+      },
+      "usage": {
+        "promptEvalCount": 403,
+        "evalCount": 86
+      }
+    }
+  ]
+}

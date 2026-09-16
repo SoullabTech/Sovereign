@@ -47,13 +47,42 @@ Rules:
 - At most 2 ground refs, 1 synthesis, 1 question.
 `;
 
+const PLAN_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['ground', 'synthesis', 'question'],
+  properties: {
+    ground: {
+      type: 'array', minItems: 1, maxItems: 2,
+      items: {
+        type: 'object', additionalProperties: false, required: ['evidenceId'],
+        properties: { evidenceId: { type: 'string', enum: ['E-OLD', 'M-OLD', 'E-NOW'] } },
+      },
+    },
+    synthesis: {
+      type: 'array', minItems: 1, maxItems: 1,
+      items: {
+        type: 'object', additionalProperties: false, required: ['text', 'supportEvidenceIds'],
+        properties: {
+          text: { type: 'string' },
+          supportEvidenceIds: {
+            type: 'array', minItems: 1, maxItems: 3,
+            items: { type: 'string', enum: ['E-OLD', 'M-OLD', 'E-NOW'] },
+          },
+        },
+      },
+    },
+    question: { type: 'string' },
+  },
+} as const;
+
 interface OllamaResponse { response: string; model: string; prompt_eval_count?: number; eval_count?: number }
 const sha = (s: string): string => createHash('sha256').update(s).digest('hex');
 
 async function generate(seed: number): Promise<OllamaResponse> {
   const res = await fetch('http://127.0.0.1:11434/api/generate', {
     method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, prompt, stream: false, format: 'json', options: { temperature: TEMPERATURE, seed } }),
+    body: JSON.stringify({ model: MODEL, prompt, stream: false, format: PLAN_SCHEMA, options: { temperature: TEMPERATURE, seed } }),
   });
   if (!res.ok) throw new Error(`Ollama ${res.status}: ${await res.text()}`);
   return await res.json() as OllamaResponse;
@@ -74,8 +103,8 @@ async function main(): Promise<void> {
     }
   }
   console.log(JSON.stringify({
-    programme: 'JARVIS-MAIA-STRUCTURAL-STANDING-01', act: 'S4 correction / surprise local replay',
-    model: MODEL, temperature: TEMPERATURE, memberTurn: MEMBER_TURN,
+    programme: 'FREE-SYNTHESIS-STRUCTURAL-STANDING-01', act: 'S4 correction / surprise local replay',
+    model: MODEL, temperature: TEMPERATURE, promptChars: prompt.length, memberTurn: MEMBER_TURN,
     currentStanding: Object.fromEntries(standing.currentByClaimKey), rows,
   }, null, 2));
 }
