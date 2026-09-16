@@ -32,6 +32,18 @@ describe('TURN-02 · predictive turn intelligence', () => {
     expect(decideTurn({ ...base, acousticContinue: 0.18, acousticYield: 0.82, semanticYield: 0.78 }).decision).toBe('yield_candidate');
   });
 
+
+  it('contains the measured DualTurn mid-thought false-yield until richer evidence agrees', () => {
+    const measured = { acousticContinue: 0.0731, acousticYield: 0.9861 };
+    // The acoustic model was nearly certain the 3s reflective pause was an ending.
+    expect(decideTurn({ ...base, ...measured, silenceMs: 3000, selectedSilenceMs: 3500 }).decision).toBe('wait');
+    // Acoustic-only evidence becomes unsafe once Natural space is exhausted.
+    expect(decideTurn({ ...base, ...measured, silenceMs: 4000, selectedSilenceMs: 3500 }).decision).toBe('yield_candidate');
+    // Learned member rhythm or semantic incompleteness retains the floor.
+    expect(decideTurn({ ...base, ...measured, silenceMs: 4000, selectedSilenceMs: 6000 }).decision).toBe('wait');
+    expect(decideTurn({ ...base, ...measured, silenceMs: 4000, selectedSilenceMs: 3500, semanticIncomplete: 0.9 }).decision).toBe('wait');
+  });
+
   it('keeps backchannel permission distinct from floor permission', () => {
     const r = decideTurn({ ...base, silenceMs: 900, acousticContinue: 0.8, backchannel: 0.9 });
     expect(r.decision).toBe('backchannel_candidate');

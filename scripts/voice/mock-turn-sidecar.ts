@@ -1,10 +1,10 @@
 #!/usr/bin/env npx tsx
 import readline from 'node:readline';
 import { mockPrediction } from '../../lib/voice/predictors/mockTurnSidecar';
-import { TURN_PREDICTOR_CHANNELS, TURN_PREDICTOR_PROTOCOL, TURN_PREDICTOR_SAMPLE_RATE, type TurnSidecarClientMessage } from '../../lib/voice/predictors/sidecarProtocol';
+import { TURN_PREDICTOR_CHANNELS, TURN_PREDICTOR_PROTOCOL, type TurnSidecarClientMessage } from '../../lib/voice/predictors/sidecarProtocol';
 
 const model = { provider: 'other' as const, modelId: 'deterministic-pipe-test', modelVersion: '1', weightLicense: 'INTERNAL-TEST-ONLY' };
-console.log(JSON.stringify({ type: 'hello', protocol: TURN_PREDICTOR_PROTOCOL, sampleRateHz: TURN_PREDICTOR_SAMPLE_RATE, channels: TURN_PREDICTOR_CHANNELS, model }));
+console.log(JSON.stringify({ type: 'hello', protocol: TURN_PREDICTOR_PROTOCOL, sampleRateHz: 16000, channels: TURN_PREDICTOR_CHANNELS, model }));
 
 const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
 rl.on('line', (line) => {

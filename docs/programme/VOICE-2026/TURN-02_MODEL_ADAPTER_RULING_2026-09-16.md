@@ -35,3 +35,8 @@ Predictors emit raw evidence through `turnPredictorPort.ts`. Adapters may normal
 2. Establish an MIT-weight experiment if technically suitable.
 3. Feed derived scores into MAIA-TURN-BENCH-01.
 4. Keep all live Conversation behavior shadow-only until a separate promotion act.
+## 2026-09-16 candidate succession
+
+The MaAI mono architecture remains a valid reference, but current English mono weights live in the noncommercial `vap_en` repository. The MIT `vap_en_kyoto` repository does not currently include a mono checkpoint. Therefore MaAI does not advance as the first real English shadow asset.
+
+`anyreach-ai/dualturn-endpointing` succeeds it for the first real shadow benchmark: Apache-2.0 model repository, CC-BY-4.0 Mimi base, self-contained streaming ONNX, documented user-only mono fallback, and no cloud/runtime framework dependency beyond ONNX Runtime + NumPy. This is candidate succession, not a change to the TURN-02 constitutional boundary: predictors remain evidence only.

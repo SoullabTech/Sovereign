@@ -7,7 +7,7 @@
 
 `ContinuousConversation` already owns a live `MediaStream` on web/desktop and creates an `AudioContext` / `MediaStreamAudioSourceNode` for capture diagnostics. Existing repository code also demonstrates Float32 -> PCM16 conversion. Therefore a TURN-02 observer can lawfully share the already-open web microphone stream; it does not need to request a second microphone.
 
-The new `StreamingPcm16Resampler` converts arbitrary mono WebAudio sample rates (including 48 kHz and 44.1 kHz) into continuous 16 kHz PCM16 frames while preserving chunk-boundary timing.
+The new `StreamingPcm16Resampler` converts arbitrary mono WebAudio sample rates (including 48 kHz and 44.1 kHz) into continuous PCM16 at the predictor-declared rate (16 kHz or 24 kHz) while preserving chunk-boundary timing.
 
 No predictor is wired to the live web stream in this act because no approved weight is installed yet.
 

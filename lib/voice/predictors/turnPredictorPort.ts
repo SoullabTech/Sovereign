@@ -6,17 +6,29 @@
  * benchmarked without silently changing the meaning of a model probability.
  */
 export type PredictorModelIdentity = {
-  provider: 'maai' | 'kyutai' | 'other';
+  provider: 'maai' | 'kyutai' | 'dualturn' | 'other';
   modelId: string;
   modelVersion?: string;
   weightLicense: string;
 };
+
+export type PredictorSampleRateHz = 16000 | 24000;
 
 export type AcousticTurnFrame = {
   atMs: number;
   pNow: number;
   pFuture: number;
   vad?: number;
+  model: PredictorModelIdentity;
+};
+
+
+export type AcousticEvidenceFrame = {
+  atMs: number;
+  acousticContinue?: number;
+  acousticYield?: number;
+  vad?: number;
+  backchannel?: number;
   model: PredictorModelIdentity;
 };
 
@@ -28,7 +40,7 @@ export type SemanticTurnFrame = {
 };
 
 export interface AcousticTurnPredictorPort {
-  readonly sampleRateHz: 16000;
+  readonly sampleRateHz: PredictorSampleRateHz;
   pushPcm16(samples: Int16Array, atMs: number): void;
   latest(): AcousticTurnFrame | null;
   reset(): void;

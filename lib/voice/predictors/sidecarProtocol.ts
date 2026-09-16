@@ -1,14 +1,15 @@
-import type { AcousticTurnFrame, PredictorModelIdentity } from './turnPredictorPort';
+import type { AcousticEvidenceFrame, PredictorModelIdentity, PredictorSampleRateHz } from './turnPredictorPort';
 
-export const TURN_PREDICTOR_PROTOCOL = 'maia.turn-predictor.v1' as const;
-export const TURN_PREDICTOR_SAMPLE_RATE = 16000 as const;
+export const TURN_PREDICTOR_PROTOCOL = 'maia.turn-predictor.v2' as const;
 export const TURN_PREDICTOR_CHANNELS = 1 as const;
-export const MAX_PCM_SAMPLES_PER_FRAME = 3200; // 200 ms @ 16 kHz
+export const TURN_PREDICTOR_SAMPLE_RATES: readonly PredictorSampleRateHz[] = [16000, 24000] as const;
+export const MAX_PCM_FRAME_MS = 200;
+export const MAX_PCM_SAMPLES_PER_FRAME = 4800; // 200 ms @ highest admitted rate (24 kHz)
 
 export type TurnSidecarHello = {
   type: 'hello';
   protocol: typeof TURN_PREDICTOR_PROTOCOL;
-  sampleRateHz: typeof TURN_PREDICTOR_SAMPLE_RATE;
+  sampleRateHz: PredictorSampleRateHz;
   channels: typeof TURN_PREDICTOR_CHANNELS;
   model: PredictorModelIdentity;
 };
@@ -23,13 +24,15 @@ export type TurnSidecarAudio = {
 export type TurnSidecarReset = { type: 'reset'; seq: number };
 export type TurnSidecarClientMessage = TurnSidecarAudio | TurnSidecarReset;
 
+/** Model-neutral acoustic evidence. A provider may emit continue, yield, or both. */
 export type TurnSidecarPrediction = {
   type: 'prediction';
   seq: number;
   atMs: number;
-  p_now: number;
-  p_future: number;
+  acousticContinue?: number;
+  acousticYield?: number;
   vad?: number;
+  backchannel?: number;
 };
 
 export type TurnSidecarError = {
@@ -57,20 +60,22 @@ export function decodePcm16Frame(message: TurnSidecarAudio): Int16Array {
 
 export function validateSidecarHello(message: TurnSidecarHello): TurnSidecarHello {
   if (message.protocol !== TURN_PREDICTOR_PROTOCOL) throw new Error('protocol mismatch');
-  if (message.sampleRateHz !== TURN_PREDICTOR_SAMPLE_RATE || message.channels !== TURN_PREDICTOR_CHANNELS) throw new Error('audio contract mismatch');
+  if (!TURN_PREDICTOR_SAMPLE_RATES.includes(message.sampleRateHz) || message.channels !== TURN_PREDICTOR_CHANNELS) throw new Error('audio contract mismatch');
   if (!message.model?.modelId || !message.model.weightLicense) throw new Error('model identity required');
   return message;
 }
 
-export function predictionToFrame(message: TurnSidecarPrediction, model: PredictorModelIdentity): AcousticTurnFrame {
+export function predictionToEvidenceFrame(message: TurnSidecarPrediction, model: PredictorModelIdentity): AcousticEvidenceFrame {
   if (!nonnegativeInt(message.seq) || !Number.isFinite(message.atMs)) throw new Error('invalid prediction metadata');
-  if (!probability(message.p_now) || !probability(message.p_future)) throw new Error('invalid prediction probability');
-  if (message.vad != null && !probability(message.vad)) throw new Error('invalid vad probability');
+  const fields = [message.acousticContinue, message.acousticYield, message.vad, message.backchannel];
+  if (fields.some((v) => v != null && !probability(v))) throw new Error('invalid prediction probability');
+  if (message.acousticContinue == null && message.acousticYield == null) throw new Error('prediction requires continue or yield evidence');
   return {
     atMs: message.atMs,
-    pNow: message.p_now,
-    pFuture: message.p_future,
+    ...(message.acousticContinue == null ? {} : { acousticContinue: message.acousticContinue }),
+    ...(message.acousticYield == null ? {} : { acousticYield: message.acousticYield }),
     ...(message.vad == null ? {} : { vad: message.vad }),
+    ...(message.backchannel == null ? {} : { backchannel: message.backchannel }),
     model,
   };
 }

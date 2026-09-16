@@ -1,5 +1,5 @@
 /**
- * Stateful mono Float32 -> 16 kHz PCM16 converter for TURN-02.
+ * Stateful mono Float32 -> predictor-rate PCM16 converter for TURN-02.
  *
  * Keeps source-time continuity across arbitrary WebAudio chunks. This is a
  * transport utility, not voice activity or turn intelligence.

@@ -1,10 +1,6 @@
 import { decodePcm16Frame, type TurnSidecarAudio, type TurnSidecarPrediction } from './sidecarProtocol';
 
-/**
- * Deterministic plumbing witness only — NOT a turn predictor.
- * Maps short-frame absolute PCM energy to a bounded number so streaming,
- * sequencing and benchmark adapters can be tested without a model or weights.
- */
+/** Deterministic transport witness only. It is not a turn-taking model. */
 export function mockPrediction(message: TurnSidecarAudio): TurnSidecarPrediction {
   const pcm = decodePcm16Frame(message);
   let sum = 0;
@@ -14,8 +10,7 @@ export function mockPrediction(message: TurnSidecarAudio): TurnSidecarPrediction
     type: 'prediction',
     seq: message.seq,
     atMs: message.atMs,
-    p_now: Number(activity.toFixed(6)),
-    p_future: Number(activity.toFixed(6)),
-    vad: Number(activity.toFixed(6)),
+    acousticContinue: activity,
+    vad: activity,
   };
 }
