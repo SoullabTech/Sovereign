@@ -31,7 +31,7 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 | Capability | State | Current truth |
 |---|---|---|
 | Section-aware writing | ✅ LIVE | Native section writing, save queue, version checks and conflict states are present. |
-| Continuous manuscript reading | 🔧 REPAIRING | Whole-manuscript substrate exists; current rebuilt manuscript scroll containment is being repaired now. |
+| Continuous manuscript reading | 🟡 PARTIAL | Scroll ownership and Pure Canvas containment are implemented and test-green; authenticated browser witness on the current branch is still owed. |
 | Pure Canvas | 🔧 REPAIRING | Same writing session; Escape already returns. Visible Workbench return + scroll ownership are being repaired now. |
 | Locus continuity (`m + s`) | ✅ LIVE | D1 preserves manuscript and draft-section identity across Write ⇄ Develop. |
 | Outline / section navigation | ✅ LIVE | Real authored section navigation in Write. |
@@ -92,7 +92,7 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 | Production authenticated browser witness for current D3 + repairs | 🔧 REPAIRING | Local structural/tests are green; the real member walk remains required before release. |
 ## Completion order from this census
 
-1. **Close current usability defects** — manuscript scroll ownership, visible Pure Canvas return, all Chapter Review findings reachable.
+1. **Witness current usability repairs** — manuscript scroll ownership, visible Pure Canvas return, all Chapter Review findings reachable, and Develop loading the same manuscript snapshot as Write.
 2. **Chapter Review continuity witness** — apply the review-manifest migration through the authorized deployment path, then prove complete + partial review reloads reconstruct the exact frozen reading set without rerunning MAIA.
 3. **Develop D4 witness** — Work/Chapter scope and truthful full lens disclosure are implemented; browser witness is owed. Passage is deliberately disabled until exact selection identity exists in Develop.
 4. **Witness D5 + Chapter Review continuity** — authenticate against real member data, prove exact-passage highlight, Pure Canvas scroll/return, review access, then apply/witness the review-manifest migration through its authorized deployment path.
