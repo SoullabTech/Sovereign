@@ -1,0 +1,10 @@
+8f283dc1e36ac663dccbf0dce8011fe874aa617ce3ed66f51615b4e096b32ca8  ./OUT-listing.txt
+2561ebd517c768b20af86ccf632bf2f3ca138d2f07466680651733e531a30fc0  ./apps-before-vpio02.json
+6bd9a100a2fde49b00fbd89c07575c95c13e9fe46f30b390d1125e3cd477854e  ./apps-before-vpio02sid.json
+00ff72ae8f99b521820801bdbba9de01eb5b2d762a4f18e016aca8e124c3f026  ./authority-metadata.txt
+d3e5464fa6e004f7267588a1fe573a75182c4836127fe91ada55cffe37bd164c  ./harness-processes-observed.txt
+06bcc190b5865521993b4dc47725501879d867d0eb427d83940cac811f01b7bc  ./head.txt
+3189ebc83afe35a92810381fe15811d1d05ab218b7d1edaefaf881bcc3b3ca70  ./prior-attempts/SID-FIRST-INSTALL-01-STOP-transcript-20260915T235951Z.log
+8eb7d9e51ea27e0d7fe5c6719301df1f90f01d695e18da583ce773b5ae6b6c50  ./processes-before.json
+755b5ef6f6959f61cb42983e133e97bb72145ffb3e96e37bb73813da4043126b  ./sid-first-install-02-transcript-20260916T001215Z.log
+c4b37e696e7b6936b8b4c592407a6c0bcecefa2a5b7dc65324940ea2d1858fdb  ./sid-first-install-02.sh

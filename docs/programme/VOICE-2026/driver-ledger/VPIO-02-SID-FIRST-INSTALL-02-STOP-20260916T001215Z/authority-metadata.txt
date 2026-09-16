@@ -1,0 +1,4 @@
+authority file /private/tmp/sid-fi02-authority.txt (contents NOT carried)
+lines 7
+bytes 244
+sha256 b15364106ff2616bcbf07ab17c16cd621c9305fbb76d7ba303f7ba28fec253bb
