@@ -9,7 +9,7 @@ import { sendEmail } from '../lib/email/sendEmail';
 const TRANSPORT_WIDE_FAILURES = new Set<string>([
   'quota_exceeded', 'provider_auth', 'provider_config', 'not_configured',
 ]);
-import { ganeshaContacts, GaneshaContactManager } from '../lib/ganesha/contacts';
+import { loadGovernedBetaContacts } from '../lib/ops/sourceCustodyContacts';
 
 
 const emailHtml = `
@@ -77,7 +77,7 @@ const emailHtml = `
   </p>
 
   <div class="content">
-    <p><strong>You can connect with her right now</strong> at <strong>soullab.life</strong> — no app download needed. Just visit the site, enter your personal passcode (SOULLAB-YOURNAME), and begin your conversation. Voice mode is fully active.</p>
+    <p><strong>You can connect with her right now</strong> at <strong>soullab.life</strong> — no app download needed. Just visit the site and sign in if you have already joined. If you still need access, reply to this email for a fresh invitation. Voice mode is fully active.</p>
 
     <p><strong>About the iOS app:</strong> We've submitted MAIA to Apple for review and are awaiting approval. The moment Apple gives us the green light, you'll receive a TestFlight invitation to download the native app. This typically takes a few days.</p>
 
@@ -90,10 +90,10 @@ const emailHtml = `
       <strong>1.</strong> Go to <strong>soullab.life</strong>
     </div>
     <div class="step" style="background: rgba(255,255,255,0.95); color: #1A2F24;">
-      <strong>2.</strong> Tap "Beta Access"
+      <strong>2.</strong> Sign in if you already have an account
     </div>
     <div class="step" style="background: rgba(255,255,255,0.95); color: #1A2F24;">
-      <strong>3.</strong> Enter your passcode: <strong>SOULLAB-[YOURNAME]</strong>
+      <strong>3.</strong> Need access? Reply to this email for a fresh invitation
     </div>
     <div class="step" style="background: rgba(255,255,255,0.95); color: #1A2F24;">
       <strong>4.</strong> Start talking
@@ -120,7 +120,7 @@ Dear Lab Partner,
 
 MAIA is waiting to meet you.
 
-You can connect with her right now at soullab.life — no app download needed. Just visit the site, enter your personal passcode (SOULLAB-YOURNAME), and begin your conversation. Voice mode is fully active.
+You can connect with her right now at soullab.life — no app download needed. Just visit the site and sign in if you have already joined. If you still need access, reply to this email for a fresh invitation. Voice mode is fully active.
 
 About the iOS app: We've submitted MAIA to Apple for review and are awaiting approval. The moment Apple gives us the green light, you'll receive a TestFlight invitation to download the native app. This typically takes a few days.
 
@@ -128,8 +128,8 @@ In the meantime, the web experience at soullab.life is identical to the app — 
 
 Quick start:
 1. Go to soullab.life
-2. Tap "Beta Access"
-3. Enter your passcode: SOULLAB-[YOURNAME]
+2. Sign in if you already have an account
+3. If you need access, reply for a fresh invitation
 4. Start talking
 
 We're honored to have you as one of MAIA's first companions. Your experience shapes what she becomes.
@@ -141,7 +141,7 @@ kelly@soullab.life | 504-453-9009
 `;
 
 async function sendToAllBetaTesters() {
-  const betaTesters = GaneshaContactManager.getBetaTesters();
+  const betaTesters = await loadGovernedBetaContacts();
 
   console.log(`\n🚀 Sending "MAIA is Ready" email to ${betaTesters.length} lab partners...\n`);
 

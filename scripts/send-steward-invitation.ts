@@ -15,10 +15,10 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 import { sendEmail } from '../lib/email/sendEmail';
-import { ganeshaContacts, GaneshaContactManager } from '../lib/ganesha/contacts';
+import { loadGovernedBetaContacts } from '../lib/ops/sourceCustodyContacts';
 
 
-function generateEmailHtml(name: string, passkey: string): string {
+function generateEmailHtml(name: string): string {
   const firstName = name.split(' ')[0];
 
   return `
@@ -134,8 +134,8 @@ function generateEmailHtml(name: string, passkey: string): string {
   <p>Over the next weeks, I'll also be sharing occasional Field Letters &mdash; short notes about what's emerging and what we're learning together &mdash; so you can feel the movement even if you're not actively exploring.</p>
 
   <div class="passkey-quiet">
-    Your access is still active: <span class="key">${passkey}</span><br>
-    <a href="https://soullab.life/begin" class="cta-link" style="margin-top: 8px; display: inline-block;">soullab.life/begin</a>
+    Already joined? <a href="https://soullab.life/signin" class="cta-link">Sign in to return.</a><br>
+    Need a fresh invitation? Reply to this email and we'll send one.
   </div>
 
   <p>I'm genuinely grateful you're part of this early circle.</p>
@@ -156,7 +156,7 @@ function generateEmailHtml(name: string, passkey: string): string {
 `;
 }
 
-function generateEmailText(name: string, passkey: string): string {
+function generateEmailText(name: string): string {
   const firstName = name.split(' ')[0];
 
   return `Hi ${firstName},
@@ -185,8 +185,8 @@ No expectations. No pressure to "keep up." You're welcome to move at your own pa
 
 Over the next weeks, I'll also be sharing occasional Field Letters -- short notes about what's emerging and what we're learning together -- so you can feel the movement even if you're not actively exploring.
 
-Your access is still active: ${passkey}
-Start here: https://soullab.life/begin
+Already joined? Sign in here: https://soullab.life/signin
+Need a fresh invitation? Reply to this email and we'll send one.
 
 I'm genuinely grateful you're part of this early circle.
 
@@ -211,13 +211,12 @@ async function sendStewardInvitation() {
     console.log('🔍 DRY RUN MODE - No emails will be sent\n');
   }
 
-  const allTesters = GaneshaContactManager.getBetaTesters();
+  const allTesters = await loadGovernedBetaContacts();
   // Exclude founder Kelly (founder-kelly) from campaign emails
-  const testers = allTesters.filter(t => t.id !== 'founder-kelly');
+  const testers = allTesters.filter(t => t.sourceCustodyKey !== 'ganesha:founder-kelly');
 
   console.log(`Found ${testers.length} beta stewards:\n`);
   for (const tester of testers) {
-    const passkey = (tester.metadata as any).passcode || 'SOULLAB-[YOURNAME]';
     console.log(`  ${tester.name} (${tester.email})`);
   }
   console.log('');
@@ -231,7 +230,6 @@ async function sendStewardInvitation() {
   interface SendTarget {
     recipient: string;
     name: string;
-    passkey: string;
   }
 
   let targets: SendTarget[];
@@ -243,7 +241,6 @@ async function sendStewardInvitation() {
       targets = [{
         recipient: found.email,
         name: found.name,
-        passkey: (found.metadata as any).passcode || 'SOULLAB-[NAME]'
       }];
       console.log(`🎯 Targeted send: ${found.name} (${found.email})\n`);
     } else {
@@ -252,7 +249,6 @@ async function sendStewardInvitation() {
       targets = [{
         recipient: targetEmail,
         name: template.name,
-        passkey: (template.metadata as any).passcode || 'SOULLAB-[NAME]'
       }];
       console.log(`🧪 Test send to: ${targetEmail} (using ${template.name} as template)\n`);
     }
@@ -269,7 +265,6 @@ async function sendStewardInvitation() {
     targets = testers.map(t => ({
       recipient: t.email,
       name: t.name,
-      passkey: (t.metadata as any).passcode || 'SOULLAB-[NAME]'
     }));
 
     console.log(`📤 Sending to all ${targets.length} stewards...\n`);
@@ -285,8 +280,8 @@ async function sendStewardInvitation() {
         from: 'Kelly @ Soullab <kelly@soullab.life>',
         to: target.recipient,
         subject: 'Thank you for being here',
-        html: generateEmailHtml(target.name, target.passkey),
-        text: generateEmailText(target.name, target.passkey),
+        html: generateEmailHtml(target.name),
+        text: generateEmailText(target.name),
         replyTo: 'kelly@soullab.life',
         tags: [
           { name: 'campaign', value: 'steward-invitation' },

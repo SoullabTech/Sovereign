@@ -9,7 +9,7 @@ import { sendEmail } from '../lib/email/sendEmail';
 const TRANSPORT_WIDE_FAILURES = new Set<string>([
   'quota_exceeded', 'provider_auth', 'provider_config', 'not_configured',
 ]);
-import { GaneshaContactManager } from '../lib/ganesha/contacts';
+import { loadGovernedBetaContacts } from '../lib/ops/sourceCustodyContacts';
 
 
 const emailHtml = `
@@ -73,7 +73,7 @@ const emailHtml = `
 
     <p>We've just completed a full pass on <strong>sign-in, signup, and onboarding</strong>, and everything is now working cleanly end-to-end. This includes:</p>
 
-    <div class="list-item">Smooth registration with your SOULLAB passkey</div>
+    <div class="list-item">Secure invitation-based registration</div>
     <div class="list-item">Reliable sign-in (no more onboarding stalls)</div>
     <div class="list-item">Clean handling of edge cases we discovered during early testing</div>
 
@@ -105,7 +105,7 @@ Quick update on the MAIA beta.
 
 We've just completed a full pass on sign-in, signup, and onboarding, and everything is now working cleanly end-to-end. This includes:
 
-- Smooth registration with your SOULLAB passkey
+- Secure invitation-based registration
 - Reliable sign-in (no more onboarding stalls)
 - Clean handling of edge cases we discovered during early testing
 
@@ -122,7 +122,7 @@ kelly@soullab.life
 `;
 
 async function sendToAllBetaTesters() {
-  const betaTesters = GaneshaContactManager.getBetaTesters();
+  const betaTesters = await loadGovernedBetaContacts();
 
   console.log(`\n📧 Sending "Beta Update" email to ${betaTesters.length} lab partners...\n`);
 
