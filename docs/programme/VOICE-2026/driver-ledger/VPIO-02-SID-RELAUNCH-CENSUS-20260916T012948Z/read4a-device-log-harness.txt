@@ -1,0 +1,528 @@
+Timestamp               Ty Process[PID:TID]
+2026-09-15 20:39:27.839 Df dtappserviced[3459:9cbfc] [com.apple.dt.coredevice:action] _send(elements:context:): Pushing stream update to: <dictionary: 0xd7ac25800> { count = 1, transaction: 0, voucher = 0x0, contents =
+	"CoreDevice.XPCMessageKey.sideChannelStatus" => <dictionary: 0xd7ac25980> { count = 1, transaction: 0, voucher = 0x0, contents =
+		"pushing" => <dictionary: 0xd7ac25c80> { count = 1, transaction: 0, voucher = 0x0, contents =
+			"elements" => <array: 0xd7b012fd0> { count = 1, capacity = 8, contents =
+				0: <dictionary: 0xd7ac25ec0> { count = 11, transaction: 0, voucher = 0x0, contents =
+					"isRemovable" => <bool: 0x20e9424c0>: true
+					"name" => <string: 0xd7b011200> { string cache = 0x0, length = 19, contents = "VoiceKernel VPIO-02" }
+					"isFirstParty" => <bool: 0x20e9424e0>: false
+					"path" => <string: 0xd7b010bd0> { string cache = 0x0, length = 102, contents = "/private/var/containers/Bundle/Application/E3B88028-A10F-46B1-AB27-CF0A1F83FB78/VoiceKernelHarness.app" }
+					"bundleIdentifier" => <string: 0xd7b011680> { string cache = 0x0, length = 31, contents = "life.soullab.voiceke<…>. For invocation=<decode: missing data>)
+2026-09-15 20:44:51.096 Df launchd[1:9da60] Coalition Cache Evicted: app<life.soullab.voicekernel.vpio02(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)> [1609]
+2026-09-15 20:49:27.905 Sd runningboardd[36:0] (414F8AC0-7DB6-341F-BF2F-F458D048D380) RBAssertionManager
+<RBAssertionManager| assertionCount:81 systemState:<RBMutableSystemState| > eventQueueCount:0 processStates:{
+	app<com.apple.HeadphoneProxService((null))>="<RBProcessState| role:None>"
+	app<com.apple.SleepLockScreen((null))>="<RBProcessState| role:None>"
+	xpcservice<com.apple.lighthouse.SAExtensionOrchestrator([osservice<com.apple.assistantd>:39])>{vt hash: 0}{definition:com.apple.lighthouse.SAExtensionOrchestrator[standard][client]}:3466="<RBProcessState| role:None>"
+	osservice<com.apple.contactsd>="<RBProcessState| role:None>"
+	osservice<com.apple.businessservicesd>="<RBProcessState| role:None>"
+	osservice<com.apple.imagent>="<RBProcessState| role:None>"
+	osservice<com.apple.WirelessRadioManager>="<RBProcessState| role:None>"
+	osservice<com.apple.seserviced>="<RBProcessState| role:None>"
+	osservice<com.apple.familycircled>="<RBProcessState| role:None>"
+	xpcservice<com.apple.WebKit.Networking([app<com.google.Gmail(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>:3059])>{vt hash: 114736818}[uuid:CE3B7E7B-8625-4DA1-A58B-A4FE0F970A78]{definition:com.apple.WebKit.Networking[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.assistantd>="<RBProcessState| role:None>"
+	osservice<com.apple.healthd>="<RBProcessState| role:None>"
+	osservice<com.apple.passd>="<RBProcessState| role:None>"
+	app<com.apple.AppStore((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.privacyaccountingd>="<RBProcessState| role:None>"
+	osservice<com.apple.siriinferenced>="<RBProcessState| role:None>"
+	osservice<com.apple.telephonyutilities.callservicesd>="<RBProcessState| role:None>"
+	osservice<com.apple.CallHistorySyncHelper>="<RBProcessState| role:None>"
+	osservice<com.apple.airplayd>="<RBProcessState| role:None>"
+	osservice<com.apple.wirelessinsightsd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.tgondeviceinferenceproviderservice([osservice<com.apple.modelmanagerd>:251])>{vt hash: 234165830}[uuid:4C034CB1-62E5-41DE-A9F3-EFD25A3FB8F5]{definition:com.apple.tgondeviceinferenceproviderservice[extension][client]}="<RBProcessState| role:None>"
+	xpcservice<com.apple.mobileslideshow.PhotosReliveWidget([osservice<com.apple.chronod>:120])>{vt hash: 72978104}[uuid:AEAC45E4-29D5-4DA6-A4CD-647D1862FB4D]{definition:com.apple.mobileslideshow.PhotosReliveWidget[extension][client]}="<RBProcessState| role:None>"
+	app<com.burbn.instagram((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.appstored>="<RBProcessState| role:None>"
+	osservice<com.apple.contextstored>="<RBProcessState| role:None>"
+	xpcservice<com.apple.siri.GMSSELFIngestor([xpcservice<com.apple.lighthouse.SAExtensionOrchestrator([osservice<com.apple.assistantd>:39])>{vt hash: 0}{definition:com.apple.lighthouse.SAExtensionOrchestrator[standard][client]}:3466:3466])>{vt hash: 111280681}{definition:com.apple.siri.GMSSELFIngestor[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.FileProvider>="<RBProcessState| role:None>"
+	osservice<com.apple.Maps.geocorrectiond>="<RBProcessState| role:None>"
+	osservice<com.apple.replicatord>="<RBProcessState| role:None>"
+	osservice<com.apple.financed>="<RBProcessState| role:None>"
+	app<com.audible.iphone((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.dataaccess.dataaccessd>="<RBProcessState| role:None>"
+	osservice<com.apple.MobileInternetSharing>="<RBProcessState| role:None>"
+	app<com.apple.mobilesafari((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.dasd>="<RBProcessState| role:None>"
+	osservice<com.apple.tccd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.siri.context.service(no host)>{vt hash: 0}{definition:com.apple.siri.context.service[standard][system]}:3448="<RBProcessState| role:None>"
+	osservice<com.apple.videocodecd>="<RBProcessState| role:None>"
+	anon<dtappserviced>="<RBProcessState| role:None>"
+	osservice<com.apple.watchdogd>="<RBProcessState| role:None>"
+	osservice<com.apple.mlhostd>="<RBProcessState| role:None>"
+	osservice<com.apple.usernotificationsd>="<RBProcessState| role:None>"
+	osservice<com.apple.powerexceptionsd>="<RBProcessState| role:None>"
+	osservice<com.apple.CommCenter>="<RBProcessState| role:None>"
+	xpcservice<com.apple.WebKit.GPU([app<com.google.Gmail(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>:3059])>{vt hash: 223737757}[uuid:61B8D243-DEB2-4E4C-9A67-264336604D1F]{definition:com.apple.WebKit.GPU[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.calaccessd>="<RBProcessState| role:None>"
+	osservice<com.apple.InputUI>="<RBProcessState| role:None>"
+	osservice<com.apple.siriknowledged>="<RBProcessState| role:None>"
+	osservice<com.apple.suggestd>="<RBProcessState| role:None>"
+	osservice<com.apple.communicationtrustd>="<RBProcessState| role:None>"
+	osservice<com.apple.coreidvd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.weather.widget([osservice<com.apple.chronod>:120])>{vt hash: 80458965}[uuid:AEAC45E4-29D5-4DA6-A4CD-647D1862FB4D]{definition:com.apple.weather.widget[extension][client]}="<RBProcessState| role:None>"
+	xpcservice<com.apple.siri.SuggestionsBookkeepingService([osservice<com.apple.siriinferenced>:3451])>{vt hash: 0}{definition:com.apple.siri.SuggestionsBookkeepingService[standard][client]}:3455="<RBProcessState| role:None>"
+	osservice<com.apple.searchd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.TestFlight.ServiceExtension([osservice<com.apple.appstored>:3064])>{vt hash: 0}{definition:com.apple.TestFlight.ServiceExtension[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.instruments.deviceservice>="<RBProcessState| role:None>"
+	osservice<com.apple.photoanalysisd>="<RBProcessState| role:None>"
+	osservice<com.apple.tvremoted>="<RBProcessState| role:None>"
+	osservice<com.apple.nsurlsessiond>="<RBProcessState| role:None>"
+	osservice<com.apple.biometrickitd.pearl>="<RBProcessState| role:None>"
+	osservice<com.apple.ap.promotedcontentd>="<RBProcessState| role:None>"
+	app<com.powercard.wayback((null))>="<RBProcessState| role:None>"
+	xpcservice<com.apple.intelligenceplatform.IntelligencePlatformComputeService([osservice<com.apple.biomed>:54])>{vt hash: 0}{definition:com.apple.intelligenceplatform.IntelligencePlatformComputeService[standard][client]}:364="<RBProcessState| role:None>"
+	osservice<com.apple.navd>="<RBProcessState| role:None>"
+	osservice<com.apple.batteryintelligenced>="<RBProcessState| role:None>"
+	app<net.whatsapp.WhatsApp(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>="<RBProcessState| role:None>"
+	osservice<com.apple.mobileactivationd>="<RBProcessState| role:None>"
+	osservice<com.apple.triald>="<RBProcessState| role:None>"
+	xpcservice<com.apple.mobilecal.CalendarWidgetExtension([osservice<com.apple.chronod>:120])>{vt hash: 50924332}[uuid:AEAC45E4-29D5-4DA6-A4CD-647D1862FB4D]{definition:com.apple.mobilecal.CalendarWidgetExtension[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.assetsubscriptiond>="<RBProcessState| role:None>"
+	osservice<com.apple.neagent-ios>:344="<RBProcessState| role:None>"
+	app<com.google.chrome.ios((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.SpringBoard>="<RBProcessState| role:UserInteractiveFocal>"
+	app<com.apple.Preferences((null))>="<RBProcessState| role:None>"
+	app<com.apple.family(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>="<RBProcessState| role:NonUserInteractive>"
+	osservice<com.apple.accountsd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.cloudos.PCCAgentClientExtension([osservice<com.apple.modelmanagerd>:251])>{vt hash: 36449479}[uuid:BC1D212D-0362-4243-81A4-9A6B97465826]{definition:com.apple.cloudos.PCCAgentClientExtension[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.bluetoothd>="<RBProcessState| role:None>"
+	osservice<com.apple.activitysharingd>="<RBProcessState| role:None>"
+	osservice<com.apple.recentsd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.imdpersistence.IMDPersistenceAgent(no host)>{vt hash: 0}{definition:com.apple.imdpersistence.IMDPersistenceAgent[standard][system]}:3364="<RBProcessState| role:None>"
+	app<com.apple.chrono.WidgetRenderer-Default((null))>="<RBProcessState| role:UserInteractiveFocal>"
+	osservice<com.apple.avconferenced>="<RBProcessState| role:None>"
+	xpcservice<com.apple.quicklook.thumbnail.NotificationExtension([osservice<com.apple.quicklook.ThumbnailsAgent>:3417])>{vt hash: 147707909}{definition:com.apple.quicklook.thumbnail.NotificationExtension[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.PowerUIAgent>="<RBProcessState| role:None>"
+	osservice<com.apple.safetyalertsd>="<RBProcessState| role:None>"
+	osservice<com.apple.intelligentroutingd>="<RBProcessState| role:None>"
+	app<com.openai.chat((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.corespeechd>="<RBProcessState| role:None>"
+	osservice<com.apple.assetsd>="<RBProcessState| role:None>"
+	osservice<com.apple.coreduetd>="<RBProcessState| role:None>"
+	osservice<com.apple.apsd>="<RBProcessState| role:None>"
+	osservice<com.apple.mobilegestalt.xpc>="<RBProcessState| role:None>"
+	osservice<com.apple.siriactionsd>="<RBProcessState| role:None>"
+	osservice<com.apple.mediaremoted>="<RBProcessState| role:None>"
+	xpcservice<com.apple.extensionkitservice([xpcservice<com.apple.lighthouse.SAExtensionOrchestrator([osservice<com.apple.assistantd>:39])>{vt hash: 0}{definition:com.apple.lighthouse.SAExtensionOrchestrator[standard][client]}:3466:3466])>{vt hash: 0}{definition:com.apple.extensionkitservice[standard][client]}:3467="<RBProcessState| role:None>"
+	osservice<com.apple.ind>="<RBProcessState| role:None>"
+	osservice<com.apple.nearbyd>="<RBProcessState| role:None>"
+	osservice<com.apple.DragUI.druid>="<RBProcessState| role:UserInteractiveFocal>"
+	osservice<com.apple.mediaplaybackd>="<RBProcessState| role:None>"
+	app<com.apple.Maps((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.runningboardd>="<RBProcessState| role:None>"
+	osservice<com.apple.textunderstandingd>="<RBProcessState| role:None>"
+	app<com.google.Maps((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.icloud.fmflocatord>="<RBProcessState| role:None>"
+	osservice<com.apple.assistant_service>="<RBProcessState| role:None>"
+	osservice<com.apple.itunescloudd>="<RBProcessState| role:None>"
+	osservice<com.apple.mDNSResponder.reloaded>="<RBProcessState| role:None>"
+	osservice<com.apple.safetycheckd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.CloudDocs.iCloudDriveFileProvider([osservice<com.apple.FileProvider>:265])>{vt hash: 29234620}[uuid:308D5290-27CE-4F6A-AC2E-0BE543A1B4B6]{persona:A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52}{definition:com.apple.CloudDocs.iCloudDriveFileProvider[extension][client]}="<RBProcessState| role:UserInteractiveNonFocal>"
+	osservice<com.apple.frauddefensed>="<RBProcessState| role:None>"
+	osservice<com.apple.AccessibilityUIServer>="<RBProcessState| role:NonUserInteractive>"
+	app<com.brave.ios.browser((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.FileCoordination>="<RBProcessState| role:None>"
+	xpcservice<com.apple.extensionkitservice([osservice<com.apple.quicklook.ThumbnailsAgent>:3417])>{vt hash: 0}{definition:com.apple.extensionkitservice[standard][client]}:3498="<RBProcessState| role:None>"
+	app<com.kobisnir.RedAlert((null))>="<RBProcessState| role:None>"
+	xpcservice<com.apple.CallKit.CallDirectory(no host)>{vt hash: 0}{definition:com.apple.CallKit.CallDirectory[standard][system]}:3442="<RBProcessState| role:None>"
+	osservice<com.apple.cameracaptured>="<RBProcessState| role:None>"
+	osservice<com.apple.amsaccountsd>="<RBProcessState| role:None>"
+	osservice<com.apple.syncdefaultsd>="<RBProcessState| role:None>"
+	osservice<com.apple.cloudd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.extensionkitservice([osservice<com.apple.mlhostd>:3372])>{vt hash: 0}{definition:com.apple.extensionkitservice[standard][client]}:3377="<RBProcessState| role:None>"
+	xpcservice<com.openai.chat.NotificationServiceExtension([osservice<com.apple.SpringBoard>:37])>{vt hash: 0}{definition:com.openai.chat.NotificationServiceExtension[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.sharingd>="<RBProcessState| role:None>"
+	osservice<com.apple.accessoryupdaterd>="<RBProcessState| role:None>"
+	osservice<com.apple.email.maild>="<RBProcessState| role:None>"
+	osservice<com.apple.duetexpertd>="<RBProcessState| role:None>"
+	app<com.google.ios.youtube(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>="<RBProcessState| role:None>"
+	osservice<com.apple.milod>="<RBProcessState| role:None>"
+	osservice<com.apple.gamepolicyd>="<RBProcessState| role:None>"
+	osservice<com.apple.PosterBoard>="<RBProcessState| role:None>"
+	osservice<com.apple.diagnosticextensionsd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.proactive.AppPredictionIntentsHelperService([osservice<com.apple.duetexpertd>:224])>{vt hash: 0}{definition:com.apple.proactive.AppPredictionIntentsHelperService[standard][client]}:558="<RBProcessState| role:None>"
+	osservice<com.apple.transparencyd>="<RBProcessState| role:None>"
+	osservice<com.apple.configd>="<RBProcessState| role:None>"
+	app<com.google.Gmail(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>="<RBProcessState| role:None>"
+	osservice<com.apple.managedappdistributiond>="<RBProcessState| role:None>"
+	xpcservice<com.google.ios.youtube.NotificationServiceExtension([osservice<com.apple.SpringBoard>:37])>{vt hash: 0}{definition:com.google.ios.youtube.NotificationServiceExtension[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.mobileassetd>="<RBProcessState| role:None>"
+	osservice<com.apple.peopled>="<RBProcessState| role:None>"
+	osservice<com.apple.pluginkit.pkd>="<RBProcessState| role:None>"
+	app<net.kortina.labs.Venmo((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.homed>="<RBProcessState| role:None>"
+	osservice<com.apple.icloud.searchpartyd>="<RBProcessState| role:None>"
+	osservice<com.apple.modelcatalogd>="<RBProcessState| role:None>"
+	osservice<com.apple.fontservicesd>="<RBProcessState| role:None>"
+	app<com.chess.iphone((null))>="<RBProcessState| role:None>"
+	app<com.apple.weather((null))>="<RBProcessState| role:None>"
+	xpcservice<com.apple.icloud.FindMyDevice.FindMyExtensionContainer.FMDMagSafeExtension([osservice<com.apple.icloud.findmydeviced>:1369])>{vt hash: 0}{definition:com.apple.icloud.FindMyDevice.FindMyExtensionContainer.FMDMagSafeExtension[extension][client]}="<RBProcessState| role:UserInteractiveNonFocal>"
+	osservice<com.apple.chronod>="<RBProcessState| role:None>"
+	app<com.apple.findmy((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.CoreAuthentication.daemon>="<RBProcessState| role:None>"
+	app<life.soullab.voicekernel.vpio02((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.identityservicesd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.lighthouse.IFTelemetrySELFIngestor([xpcservice<com.apple.lighthouse.SAExtensionOrchestrator([osservice<com.apple.assistantd>:39])>{vt hash: 0}{definition:com.apple.lighthouse.SAExtensionOrchestrator[standard][client]}:3466:3466])>{vt hash: 236615878}{definition:com.apple.lighthouse.IFTelemetrySELFIngestor[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.StatusKitAgent>="<RBProcessState| role:None>"
+	xpcservice<com.apple.PhotosUIPrivate.PhotosPosterProvider([osservice<com.apple.SpringBoard>:37])>{vt hash: 88073953}[uuid:00000000-0000-0000-0000-000000000001]{definition:com.apple.PhotosUIPrivate.PhotosPosterProvider[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.donotdisturbd>="<RBProcessState| role:None>"
+	osservice<com.apple.videosubscriptionsd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.proactive.AppleIntelligenceReportingSELFIngestor([xpcservice<com.apple.lighthouse.SAExtensionOrchestrator([osservice<com.apple.assistantd>:39])>{vt hash: 0}{definition:com.apple.lighthouse.SAExtensionOrchestrator[standard][client]}:3466:3466])>{vt hash: 226341376}{definition:com.apple.proactive.AppleIntelligenceReportingSELFIngestor[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.UserEventAgent-System>="<RBProcessState| role:None>"
+	osservice<com.apple.LocalAuthenticationUIService>="<RBProcessState| role:None>"
+	osservice<com.apple.FamilyControlsAgent>="<RBProcessState| role:None>"
+	app<com.amazon.Amazon((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.accessoryd>="<RBProcessState| role:None>"
+	osservice<com.apple.homeenergyd>="<RBProcessState| role:None>"
+	osservice<com.apple.wcd>="<RBProcessState| role:None>"
+	osservice<com.apple.generativeexperiencesd>="<RBProcessState| role:None>"
+	osservice<com.apple.cloudpaird>="<RBProcessState| role:None>"
+	app<com.apple.mobilecal(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>="<RBProcessState| role:None>"
+	osservice<com.apple.securityd>="<RBProcessState| role:None>"
+	osservice<com.apple.storekitd>="<RBProcessState| role:None>"
+	osservice<com.apple.protectedcloudstorage.protectedcloudkeysyncing>="<RBProcessState| role:None>"
+	osservice<com.apple.Maps.mapssyncd>="<RBProcessState| role:None>"
+	osservice<com.apple.parsecd>="<RBProcessState| role:None>"
+	anon<testmanagerd>="<RBProcessState| role:None>"
+	osservice<com.apple.rapportd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.extensionkitservice([osservice<com.apple.chronod>:120])>{vt hash: 0}{definition:com.apple.extensionkitservice[standard][client]}:3397="<RBProcessState| role:None>"
+	osservice<com.apple.healthappd>="<RBProcessState| role:None>"
+	osservice<com.apple.mediaanalysisd>="<RBProcessState| role:None>"
+	osservice<com.apple.fitcore>="<RBProcessState| role:None>"
+	xpcservice<com.apple.MobileSoftwareUpdate.CleanupPreparePathService(no host)>{vt hash: 0}{definition:com.apple.MobileSoftwareUpdate.CleanupPreparePathService[standard][system]}:3595="<RBProcessState| role:None>"
+	osservice<com.apple.itunesstored>="<RBProcessState| role:None>"
+	osservice<com.apple.cloudphotod>="<RBProcessState| role:None>"
+	osservice<com.apple.networkserviceproxy>="<RBProcessState| role:None>"
+	app<com.ihoment.GoVeeSensor((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.sociallayerd>="<RBProcessState| role:None>"
+	osservice<com.apple.aonsensed>="<RBProcessState| role:None>"
+	osservice<com.apple.installcoordinationd>="<RBProcessState| role:None>"
+	app<com.apple.Passbook((null))>="<RBProcessState| role:None>"
+	xpcservice<com.apple.GenerativeFunctions.GenerativeExperiencesSafetyInferenceProvider([osservice<com.apple.modelmanagerd>:251])>{vt hash: 245806478}[uuid:FFD41367-37AB-4A78-BECB-D022091B4983]{definition:com.apple.GenerativeFunctions.GenerativeExperiencesSafetyInferenceProvider[extension][client]}="<RBProcessState| role:None>"
+	app<com.anthropic.claude((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.backboardd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.Health.Sleep.SleepWidgetExtension([osservice<com.apple.chronod>:120])>{vt hash: 119039502}[uuid:AEAC45E4-29D5-4DA6-A4CD-647D1862FB4D]{definition:com.apple.Health.Sleep.SleepWidgetExtension[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.UsageTrackingAgent>="<RBProcessState| role:None>"
+	osservice<com.apple.aned>="<RBProcessState| role:None>"
+	xpcservice<com.apple.lighthouse.IFTranscriptSELFIngestor([xpcservice<com.apple.lighthouse.SAExtensionOrchestrator([osservice<com.apple.assistantd>:39])>{vt hash: 0}{definition:com.apple.lighthouse.SAExtensionOrchestrator[standard][client]}:3466:3466])>{vt hash: 236615878}{definition:com.apple.lighthouse.IFTranscriptSELFIngestor[extension][client]}="<RBProcessState| role:None>"
+	xpcservice<com.apple.ctcategories.service(no host)>{vt hash: 0}{definition:com.apple.ctcategories.service[standard][system]}:3447="<RBProcessState| role:None>"
+	app<com.apple.Spotlight((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.managedconfiguration.profiled>="<RBProcessState| role:None>"
+	app<com.apple.MobileSMS((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.linkd>="<RBProcessState| role:None>"
+	osservice<com.apple.managedassetsd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.icloud.FindMyDevice.FindMyExtensionContainer.FindMyDeviceBluetoothExtension([osservice<com.apple.icloud.findmydeviced>:1369])>{vt hash: 0}{definition:com.apple.icloud.FindMyDevice.FindMyExtensionContainer.FindMyDeviceBluetoothExtension[extension][client]}="<RBProcessState| role:UserInteractiveNonFocal>"
+	osservice<com.apple.momentsd>="<RBProcessState| role:None>"
+	osservice<com.apple.cmfsyncagent>="<RBProcessState| role:None>"
+	app<com.bowerswilkins.splice((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.pasteboard.pasted>="<RBProcessState| role:None>"
+	osservice<com.apple.routined>="<RBProcessState| role:None>"
+	osservice<com.apple.analyticsd>="<RBProcessState| role:None>"
+	osservice<com.apple.nfcd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.MobileSMS.MessagesAssistantExtension([osservice<com.apple.suggestd>:244])>{vt hash: 0}{definition:com.apple.MobileSMS.MessagesAssistantExtension[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.atc>="<RBProcessState| role:None>"
+	osservice<com.apple.quicklook.ThumbnailsAgent>="<RBProcessState| role:None>"
+	osservice<com.apple.softwareupdateservicesd>="<RBProcessState| role:None>"
+	osservice<com.apple.liveactivitiesd>="<RBProcessState| role:None>"
+	osservice<com.apple.PerfPowerServices>="<RBProcessState| role:None>"
+	osservice<com.apple.akd>="<RBProcessState| role:None>"
+	osservice<com.apple.locationd>="<RBProcessState| role:None>"
+	osservice<com.apple.icloud.findmydeviced>="<RBProcessState| role:None>"
+	osservice<com.apple.audiomxd>="<RBProcessState| role:None>"
+	osservice<com.apple.sleepd>="<RBProcessState| role:None>"
+	app<com.apple.facetime((null))>="<RBProcessState| role:None>"
+	xpcservice<com.apple.lighthouse.BiomeSELFIngestor([xpcservice<com.apple.lighthouse.SAExtensionOrchestrator([osservice<com.apple.assistantd>:39])>{vt hash: 0}{definition:com.apple.lighthouse.SAExtensionOrchestrator[standard][client]}:3466:3466])>{vt hash: 236615833}{definition:com.apple.lighthouse.BiomeSELFIngestor[extension][client]}="<RBProcessState| role:None>"
+	xpcservice<com.apple.NeighborhoodActivityConduitService(no host)>{vt hash: 0}{definition:com.apple.NeighborhoodActivityConduitService[standard][system]}:2984="<RBProcessState| role:None>"
+	osservice<com.apple.amsengagementd>="<RBProcessState| role:None>"
+	app<edu.cornell.birds.merlin((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.mobiletimerd>="<RBProcessState| role:None>"
+	xpcservice<com.apple.tgondeviceinferenceproviderservice([osservice<com.apple.modelmanagerd>:251])>{vt hash: 234165830}[uuid:31883503-2FF3-40EA-B1ED-90B4413EED17]{definition:com.apple.tgondeviceinferenceproviderservice[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.ciphermld>="<RBProcessState| role:None>"
+	osservice<com.apple.symptomsd>="<RBProcessState| role:None>"
+	osservice<com.apple.biomed>="<RBProcessState| role:None>"
+	osservice<com.apple.coreservices.useractivityd>="<RBProcessState| role:None>"
+	osservice<com.apple.bird>="<RBProcessState| role:None>"
+	osservice<com.apple.appleh16camerad>="<RBProcessState| role:None>"
+	osservice<com.apple.findmy.findmylocated>="<RBProcessState| role:None>"
+	xpcservice<com.apple.Health.HealthCycleTrackingWidgetExtension([osservice<com.apple.chronod>:120])>{vt hash: 108116360}[uuid:AEAC45E4-29D5-4DA6-A4CD-647D1862FB4D]{definition:com.apple.Health.HealthCycleTrackingWidgetExtension[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.appleaccountd>="<RBProcessState| role:None>"
+	osservice<com.apple.lsd>="<RBProcessState| role:None>"
+	app<com.apple.mobileslideshow((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.iconservices.iconservicesagent>="<RBProcessState| role:None>"
+	osservice<com.apple.accessibility.heard>="<RBProcessState| role:None>"
+	osservice<com.apple.announced>="<RBProcessState| role:None>"
+	osservice<com.apple.wifid>="<RBProcessState| role:None>"
+	xpcservice<com.apple.siri.LLMCacheSELFIngestor([xpcservice<com.apple.lighthouse.SAExtensionOrchestrator([osservice<com.apple.assistantd>:39])>{vt hash: 0}{definition:com.apple.lighthouse.SAExtensionOrchestrator[standard][client]}:3466:3466])>{vt hash: 88021557}{definition:com.apple.siri.LLMCacheSELFIngestor[extension][client]}="<RBProcessState| role:None>"
+	osservice<com.apple.Maps.mapspushd>="<RBProcessState| role:None>"
+	osservice<com.apple.modelmanagerd>="<RBProcessState| role:None>"
+	app<com.apple.ScreenshotServicesService((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.securemessagingagent>="<RBProcessState| role:None>"
+	osservice<com.apple.gamed>="<RBProcessState| role:None>"
+	app<com.google.Authenticator((null))>="<RBProcessState| role:None>"
+	osservice<com.apple.TextInput.kbd>="<RBProcessState| role:None>"
+	osservice<com.apple.maps.destinationd>="<RBProcessState| role:None>"
+	xpcservice<io.tailscale.ipn.ios.network-extension([osservice<com.apple.neagent-ios>:344:344])>{vt hash: 0}[uuid:9B2E01BD-63B1-4A45-A90E-8C336CB6F958]{definition:io.tailscale.ipn.ios.network-extension[extension][client]}="<RBProcessState| role:UserInteractiveNonFocal>"
+}>
+2026-09-15 20:49:27.937 Sd runningboardd[36:0] (414F8AC0-7DB6-341F-BF2F-F458D048D380) RBSStateCaptureSet Segment 19
+<RBConnectionClient| 96 name:osservice<com.apple.safetyalertsd> entitlements:<RBEntitlements| [
+			com.apple.assertiond.app-state-monitor
+			]> inheritanceManager:<RBClientInheritanceManager| >><RBConnectionClient| 174 name:osservice<com.apple.networkserviceproxy> entitlements:<RBEntitlements| [
+			com.apple.assertiond.app-state-monitor,
+			com.apple.private.applemediaservices
+			]> inheritanceManager:<RBClientInheritanceManager| >><RBAssertion| identifier:36-1369-25592 target:[xpcservice<com.apple.icloud.FindMyDevice.FindMyExtensionContainer.FindMyDeviceBluetoothExtension([osservice<com.apple.icloud.findmydeviced>:1369])>{vt hash: 0}{definition:com.apple.icloud.FindMyDevice.FindMyExtensionContainer.FindMyDeviceBluetoothExtension[extension][client]}:1370] explanation:"com.apple.extension.session" active originator:[osservice<com.apple.icloud.findmydeviced>:1369] transientState:<RBAssertionTransientState| policies:[
+	LaunchTAL=InvalidateAndTerminateProcess
+	NonUserInteractive=InvalidateAndTerminateProcess
+	Background=InvalidateAndTerminateProcess
+	
+	] tags:[
+	Extension> intransientState:<RBAssertionIntransientState| strt:Fixed end:InvalidateAndTerminateProcess nvld:0.00 warn:0.00suspdrel prevSus runningReason:0 legRes:13 doms:(null) invOnConds:{
+    therm = 850;
+}> processState:<RBProcessState| role:UserInteractiveNonFocal> suspended: attributes:[
+	<RBSLegacyAttribute| requestedReason:ViewService reason:Extension flags:( AllowIdleSleep PreventTaskSuspend PreventTaskThrottleDown )>,
+	<RBSAcquisitionCompletionAttribute| policy:AfterValidation>
+	]><RBConnectionClient| 3263 name:osservice<com.apple.protectedcloudstorage.protectedcloudkeysyncing> entitlements:<RBEntitlements| [
+			com.apple.assertiond.app-state-monitor
+			]> inheritanceManager:<RBClientInheritanceManager| >><RBAssertion| identifier:36-36-36041 target:[app<life.soullab.voicekernel.vpio02((null))>:3347] explanation:"RB Underlying Assertion" active originator:[app<life.soullab.voicekernel.vpio02((null))>:3347] transientState:<RBAssertionTransientState| policies:[
+	
+	]> intransientState:<RBAssertionIntransientState| strt:Unspecified end:WarnOnly nvld:0.00 warn:0.00dom runningReason:0 legRes:0 doms:com.apple.underlying:defaultUnderlyingAppAssertion invOnConds:(null)> processState:<RBProcessState| role:None> suspended: attributes:[
+	<RBSDomainAttribute| domain:"com.apple.underlying" name:"defaultUnderlyingAppAssertion" sourceEnvironment:"(null)">,
+	<RBSAcquisitionCompletionAttribute| policy:AfterApplication>
+	]>
+2026-09-15 20:56:17.838 Df runningboardd[36:a32d3] [com.apple.runningboard:ttl] Acquiring assertion targeting app<life.soullab.voicekernel.k00((null))> from originator [osservice<com.apple.dasd>:85] with description <RBSAssertionDescriptor| "DAS Prewarm launch" ID:36-85-39430 target:app<life.soullab.voicekernel.k00((null))> attributes:[
+	<RBSDomainAttribute| domain:"com.apple.dasd" name:"DYLDLaunch" sourceEnvironment:"(null)">
+	]>
+2026-09-15 20:56:17.838 Df runningboardd[36:a32d3] [com.apple.runningboard:ttl] Assertion 36-85-39430 (target:app<life.soullab.voicekernel.k00((null))>) will be created as active
+2026-09-15 20:56:17.839 Df runningboardd[36:a3285] [com.apple.runningboard:job] Creating and launching job for: app<life.soullab.voicekernel.k00((null))>
+2026-09-15 20:56:17.839 Df runningboardd[36:a3285] [com.apple.runningboard:general] _mutateContextIfNeeded called for life.soullab.voicekernel.k00
+2026-09-15 20:56:17.840 Df runningboardd[36:a3285] [com.apple.runningboard:job] app<life.soullab.voicekernel.k00((null))>: -[RBPersonaManager personaForIdentity:context:personaUID:personaUniqueString:] required 0.001073 ms (wallclock); resolved to {1000, A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52}
+2026-09-15 20:56:17.840 Df runningboardd[36:a3285] [com.apple.runningboard:job] 'app<life.soullab.voicekernel.k00(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>' Skipping container path lookup because containerization was prevented (<RBSLaunchContext: 0x85ab10dc0>)
+2026-09-15 20:56:17.875 Df launchd[1:a31a7] [user/501/UIKitApplication:life.soullab.voicekernel.k00[d4c9][rb-legacy] [3617]:] Successfully spawned VoiceKernelHarness[3617] because launch job demand
+2026-09-15 20:56:17.877 Df runningboardd[36:a3285] [com.apple.runningboard:process] [app<life.soullab.voicekernel.k00((null))>:3617] Memory Limits: active 3376 inactive 3376
+ <private>
+2026-09-15 20:56:17.877 Df runningboardd[36:a3285] [com.apple.runningboard:process] [app<life.soullab.voicekernel.k00((null))>:3617] This process will be managed.
+2026-09-15 20:56:17.877 Df runningboardd[36:a3285] [com.apple.runningboard:ttl] Now tracking process: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.879 Df runningboardd[36:a32d3] [com.apple.runningboard:monitor] Calculated state for app<life.soullab.voicekernel.k00((null))>: running-active (role: Background) (endowments: (null))
+2026-09-15 20:56:17.879 Df backboardd[72:a329c] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.879 Df backboardd[72:a329c] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.879 Df audiomxd[113:a2bf5] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.879 Df audiomxd[113:a2bf5] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.880 Df runningboardd[36:a3285] [com.apple.runningboard:assertion] Using default underlying assertion for app: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.880 Df runningboardd[36:a3285] [com.apple.runningboard:ttl] Acquiring assertion targeting [app<life.soullab.voicekernel.k00((null))>:3617] from originator [app<life.soullab.voicekernel.k00((null))>:3617] with description <RBSAssertionDescriptor| "RB Underlying Assertion" ID:36-36-39431 target:3617 attributes:[
+	<RBSDomainAttribute| domain:"com.apple.underlying" name:"defaultUnderlyingAppAssertion" sourceEnvironment:"(null)">,
+	<RBSAcquisitionCompletionAttribute| policy:AfterApplication>
+	]>
+2026-09-15 20:56:17.880 Df runningboardd[36:a3285] [com.apple.runningboard:ttl] Assertion 36-36-39431 (target:[app<life.soullab.voicekernel.k00((null))>:3617]) will be created as active
+2026-09-15 20:56:17.880 Df runningboardd[36:a3257] [com.apple.runningboard:general] [app<life.soullab.voicekernel.k00((null))>:3617] reported to RB as running
+2026-09-15 20:56:17.880 Df runningboardd[36:a3286] [com.apple.runningboard:monitor] Calculated state for app<life.soullab.voicekernel.k00((null))>: running-active (role: Background) (endowments: (null))
+2026-09-15 20:56:17.880 Df runningboardd[36:a3257] [com.apple.runningboard:process] [app<life.soullab.voicekernel.k00((null))>:3617] Set jetsam priority to 0 [0] flag[1]
+2026-09-15 20:56:17.880 Df runningboardd[36:a3257] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.k00((null))>:3617] Resuming task.
+2026-09-15 20:56:17.880 Df runningboardd[36:a3257] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.k00((null))>:3617] Set darwin role to: Background
+2026-09-15 20:56:17.881 Df runningboardd[36:a3257] [com.apple.runningboard:process] [app<life.soullab.voicekernel.k00((null))>:3617] set Memory Limits to Default Inactive (3376)
+2026-09-15 20:56:17.881 Df runningboardd[36:a3257] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.k00((null))>:3617] Set Carplay mode to: 0
+2026-09-15 20:56:17.882 Df runningboardd[36:a32d3] [com.apple.runningboard:assertion] Successfully acquired underlying assertion for [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.882 Df locationd[78:a3306] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.882 Df locationd[78:a3306] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.882 Df locationd[78:a3304] [com.apple.locationd.Core:Core] {"msg":"RBS #AppMonitor process monitor update handler invoked", "pid":3617, "bundleID":"life.soullab.voicekernel.k00", "state":"RunningScheduled"}
+2026-09-15 20:56:17.882 Df locationd[78:a305f] [com.apple.locationd.Core:Core] {"msg":"RBS #AppMonitor Post Application State Change Notification", "notification":"BackgroundRunning", "pid":3617, "bundleId":"life.soullab.voicekernel.k00"}
+2026-09-15 20:56:17.882 Df locationd[78:a3304] [com.apple.locationd.Core:Core] {"msg":"#Warning #ClientResolution the passed keyPath is not registered. Resolving to #nullCKP", "InputCKP":"ilife.soullab.voicekernel.k00:"}
+2026-09-15 20:56:17.882 Df wifid[55:a32a5] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.882 Df wifid[55:a32a5] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.883 Df runningboardd[36:a3257] [com.apple.runningboard:ttl] Acquiring assertion targeting app<life.soullab.voicekernel.vpio01((null))> from originator [osservice<com.apple.dasd>:85] with description <RBSAssertionDescriptor| "DAS Prewarm launch" ID:36-85-39432 target:app<life.soullab.voicekernel.vpio01((null))> attributes:[
+	<RBSDomainAttribute| domain:"com.apple.dasd" name:"DYLDLaunch" sourceEnvironment:"(null)">
+	]>
+2026-09-15 20:56:17.883 Df runningboardd[36:a3257] [com.apple.runningboard:ttl] Assertion 36-85-39432 (target:app<life.soullab.voicekernel.vpio01((null))>) will be created as active
+2026-09-15 20:56:17.883 Df locationd[78:a3304] [com.apple.locationd.Core:Core] {"msg":"#CLIUA AppMonitor notification", "notification":"BackgroundRunning", "pid":3617, "bundleId":"life.soullab.voicekernel.k00", "ClientKey":"ilife.soullab.voicekernel.k00:"}
+2026-09-15 20:56:17.883 Df useractivityd[458:a30fb] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.883 Df useractivityd[458:a30fb] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.884 Df runningboardd[36:a3287] [com.apple.runningboard:job] Creating and launching job for: app<life.soullab.voicekernel.vpio01((null))>
+2026-09-15 20:56:17.884 Df runningboardd[36:a3287] [com.apple.runningboard:general] _mutateContextIfNeeded called for life.soullab.voicekernel.vpio01
+2026-09-15 20:56:17.885 Df WirelessRadioManagerd[53:a31e7] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.885 Df WirelessRadioManagerd[53:a31e7] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.885 Df accessoryd[213:a32dc] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.885 Df accessoryd[213:a32dc] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.885 Df accessoryd[213:a32dc] [com.apple.accessories.platform-plugins:General] Posting application state change {
+    ACCPlatformApplicationStateDisplayIDKey = "life.soullab.voicekernel.k00";
+    ACCPlatformApplicationStateKey = 4;
+    ACCPlatformApplicationStateProcessIDKey = 3617;
+}
+2026-09-15 20:56:17.885 Df accessoryd[213:a32dc] [com.apple.accessories:ExternalAccessory] handling app state change notification {
+    ACCPlatformApplicationStateDisplayIDKey = "life.soullab.voicekernel.k00";
+    ACCPlatformApplicationStateKey = 4;
+    ACCPlatformApplicationStateProcessIDKey = 3617;
+}
+2026-09-15 20:56:17.885 Df PerfPowerServices[304:a327e] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.885 Df PerfPowerServices[304:a327e] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.885 Df symptomsd[164:a2dc8] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.885 Df symptomsd[164:a2dc8] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.885 Df UserEventAgent[34:a3317] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.885 Df UserEventAgent[34:a3317] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.886 Df dasd[85:a32c0] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.886 Df dasd[85:a32c0] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.886 Df gamepolicyd[231:a30ff] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.886 Df watchdogd[63:a26f0] [com.apple.runningboard:process] Hit the server for a process handle d37f5c500000e21 that resolved to: [app<life.soullab.voicekernel.k00((null))>:3617]
+2026-09-15 20:56:17.886 Df gamepolicyd[231:a30ff] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.886 Df watchdogd[63:a26f0] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.886 Df runningboardd[36:a3287] [com.apple.runningboard:job] app<life.soullab.voicekernel.vpio01((null))>: -[RBPersonaManager personaForIdentity:context:personaUID:personaUniqueString:] required 0.000954 ms (wallclock); resolved to {1000, A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52}
+2026-09-15 20:56:17.886 Df runningboardd[36:a3287] [com.apple.runningboard:job] 'app<life.soullab.voicekernel.vpio01(A0AFFB49-C4EB-406C-8DBC-CA2571CA2C52)>' Skipping container path lookup because containerization was prevented (<RBSLaunchContext: 0x85ab11a40>)
+2026-09-15 20:56:17.886 Df wifid[55:a3246] [com.apple.WiFiPolicy:] -[WiFiUserInteractionMonitor setApplicationRunningState:foregroundState:andNetworkingState:forBundleId:]: life.soullab.voicekernel.k00 entered background
+2026-09-15 20:56:17.887 Df gamepolicyd[231:a3343] [com.apple.gamepolicyd:Common] Identified app life.soullab.voicekernel.k00 GM:false DPS:false SEM:Unsupported MMA:false TXN:false
+2026-09-15 20:56:17.910 Df launchd[1:a333b] [user/501/UIKitApplication:life.soullab.voicekernel.vpio01[e57b][rb-legacy] [3618]:] Successfully spawned VoiceKernelHarness[3618] because launch job demand
+2026-09-15 20:56:17.912 Df runningboardd[36:a3287] [com.apple.runningboard:process] [app<life.soullab.voicekernel.vpio01((null))>:3618] Memory Limits: active 3376 inactive 3376
+ <private>
+2026-09-15 20:56:17.912 Df runningboardd[36:a3287] [com.apple.runningboard:process] [app<life.soullab.voicekernel.vpio01((null))>:3618] This process will be managed.
+2026-09-15 20:56:17.912 Df runningboardd[36:a3287] [com.apple.runningboard:ttl] Now tracking process: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.912 Df runningboardd[36:a3286] [com.apple.runningboard:monitor] Calculated state for app<life.soullab.voicekernel.vpio01((null))>: running-active (role: Background) (endowments: (null))
+2026-09-15 20:56:17.913 Df backboardd[72:a323d] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.913 Df backboardd[72:a323d] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.914 Df audiomxd[113:a2c7d] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.914 Df audiomxd[113:a2c7d] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.915 Df runningboardd[36:a3287] [com.apple.runningboard:assertion] Using default underlying assertion for app: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.915 Df runningboardd[36:a3287] [com.apple.runningboard:ttl] Acquiring assertion targeting [app<life.soullab.voicekernel.vpio01((null))>:3618] from originator [app<life.soullab.voicekernel.vpio01((null))>:3618] with description <RBSAssertionDescriptor| "RB Underlying Assertion" ID:36-36-39433 target:3618 attributes:[
+	<RBSDomainAttribute| domain:"com.apple.underlying" name:"defaultUnderlyingAppAssertion" sourceEnvironment:"(null)">,
+	<RBSAcquisitionCompletionAttribute| policy:AfterApplication>
+	]>
+2026-09-15 20:56:17.915 Df runningboardd[36:a3287] [com.apple.runningboard:ttl] Assertion 36-36-39433 (target:[app<life.soullab.voicekernel.vpio01((null))>:3618]) will be created as active
+2026-09-15 20:56:17.916 Df runningboardd[36:a32d4] [com.apple.runningboard:general] [app<life.soullab.voicekernel.vpio01((null))>:3618] reported to RB as running
+2026-09-15 20:56:17.916 Df runningboardd[36:a32d4] [com.apple.runningboard:process] [app<life.soullab.voicekernel.vpio01((null))>:3618] Set jetsam priority to 0 [0] flag[1]
+2026-09-15 20:56:17.916 Df runningboardd[36:a32d4] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.vpio01((null))>:3618] Resuming task.
+2026-09-15 20:56:17.916 Df runningboardd[36:a32d4] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.vpio01((null))>:3618] Set darwin role to: Background
+2026-09-15 20:56:17.916 Df runningboardd[36:a32d4] [com.apple.runningboard:process] [app<life.soullab.voicekernel.vpio01((null))>:3618] set Memory Limits to Default Inactive (3376)
+2026-09-15 20:56:17.916 Df runningboardd[36:a32d4] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.vpio01((null))>:3618] Set Carplay mode to: 0
+2026-09-15 20:56:17.916 Df runningboardd[36:a32d4] [com.apple.runningboard:monitor] Calculated state for app<life.soullab.voicekernel.vpio01((null))>: running-active (role: Background) (endowments: (null))
+2026-09-15 20:56:17.916 Df runningboardd[36:a3287] [com.apple.runningboard:assertion] Successfully acquired underlying assertion for [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.916 Df PerfPowerServices[304:a32bd] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.916 Df PerfPowerServices[304:a32bd] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.916 Df symptomsd[164:a2ade] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.917 Df symptomsd[164:a2ade] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.917 Df watchdogd[63:a26f0] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.917 Df watchdogd[63:a26f0] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.917 Df dasd[85:a3331] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.918 Df dasd[85:a3331] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.918 Df UserEventAgent[34:a3317] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.918 Df UserEventAgent[34:a3317] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.918 Df gamepolicyd[231:a3343] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.918 Df gamepolicyd[231:a3343] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.918 Df wifid[55:a331f] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.918 Df wifid[55:a331f] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.919 Df locationd[78:a3306] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.919 Df locationd[78:a3306] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.919 Df locationd[78:a3305] [com.apple.locationd.Core:Core] {"msg":"RBS #AppMonitor process monitor update handler invoked", "pid":3618, "bundleID":"life.soullab.voicekernel.vpio01", "state":"RunningScheduled"}
+2026-09-15 20:56:17.919 Df locationd[78:a305f] [com.apple.locationd.Core:Core] {"msg":"RBS #AppMonitor Post Application State Change Notification", "notification":"BackgroundRunning", "pid":3618, "bundleId":"life.soullab.voicekernel.vpio01"}
+2026-09-15 20:56:17.919 Df locationd[78:a3305] [com.apple.locationd.Core:Core] {"msg":"#Warning #ClientResolution the passed keyPath is not registered. Resolving to #nullCKP", "InputCKP":"ilife.soullab.voicekernel.vpio01:"}
+2026-09-15 20:56:17.919 Df gamepolicyd[231:a3343] [com.apple.gamepolicyd:Common] Identified app life.soullab.voicekernel.vpio01 GM:false DPS:false SEM:Unsupported MMA:false TXN:false
+2026-09-15 20:56:17.919 Df locationd[78:a3305] [com.apple.locationd.Core:Core] {"msg":"#CLIUA AppMonitor notification", "notification":"BackgroundRunning", "pid":3618, "bundleId":"life.soullab.voicekernel.vpio01", "ClientKey":"ilife.soullab.voicekernel.vpio01:"}
+2026-09-15 20:56:17.920 Df useractivityd[458:a3195] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.920 Df useractivityd[458:a3195] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.920 Df WirelessRadioManagerd[53:a31e7] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.920 Df WirelessRadioManagerd[53:a31e7] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.920 Df accessoryd[213:a32dc] [com.apple.runningboard:process] Hit the server for a process handle d2e6a0900000e22 that resolved to: [app<life.soullab.voicekernel.vpio01((null))>:3618]
+2026-09-15 20:56:17.920 Df accessoryd[213:a32dc] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-active-NotVisible
+2026-09-15 20:56:17.920 Df accessoryd[213:a32dc] [com.apple.accessories.platform-plugins:General] Posting application state change {
+    ACCPlatformApplicationStateDisplayIDKey = "life.soullab.voicekernel.vpio01";
+    ACCPlatformApplicationStateKey = 4;
+    ACCPlatformApplicationStateProcessIDKey = 3618;
+}
+2026-09-15 20:56:17.920 Df accessoryd[213:a32dc] [com.apple.accessories:ExternalAccessory] handling app state change notification {
+    ACCPlatformApplicationStateDisplayIDKey = "life.soullab.voicekernel.vpio01";
+    ACCPlatformApplicationStateKey = 4;
+    ACCPlatformApplicationStateProcessIDKey = 3618;
+}
+2026-09-15 20:56:17.922 Df wifid[55:a331f] [com.apple.WiFiPolicy:] -[WiFiUserInteractionMonitor setApplicationRunningState:foregroundState:andNetworkingState:forBundleId:]: life.soullab.voicekernel.vpio01 entered background
+2026-09-15 20:56:17.989 Df backboardd[72:a32e1] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.989 Df audiomxd[113:a2ea5] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.989 Df PerfPowerServices[304:a3312] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.989 Df symptomsd[164:a2ade] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.989 Df watchdogd[63:a3342] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.990 Df UserEventAgent[34:a3391] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.990 Df dasd[85:a329a] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.990 Df gamepolicyd[231:a3350] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.990 Df wifid[55:a32a5] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.991 Df locationd[78:a3304] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.991 Df useractivityd[458:a3195] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.991 Df WirelessRadioManagerd[53:9fa85] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:17.991 Df accessoryd[213:a3318] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-active-NotVisible
+2026-09-15 20:56:18.012 Df runningboardd[36:a3285] [com.apple.runningboard:ttl] Invalidating assertion 36-85-39432 (target:app<life.soullab.voicekernel.vpio01((null))>) from originator [osservice<com.apple.dasd>:85]
+2026-09-15 20:56:18.012 Df runningboardd[36:a3285] [com.apple.runningboard:assertion] Removed last relative-start-date-defining assertion for process app<life.soullab.voicekernel.vpio01((null))>
+2026-09-15 20:56:18.013 Df runningboardd[36:a3285] [com.apple.runningboard:ttl] Invalidating assertion 36-85-39430 (target:app<life.soullab.voicekernel.k00((null))>) from originator [osservice<com.apple.dasd>:85]
+2026-09-15 20:56:18.013 Df runningboardd[36:a32d3] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.vpio01((null))>:3618] Suspending task.
+2026-09-15 20:56:18.013 Df runningboardd[36:a3257] [com.apple.runningboard:monitor] Calculated state for app<life.soullab.voicekernel.vpio01((null))>: running-suspended (role: None) (endowments: (null))
+2026-09-15 20:56:18.013 Df runningboardd[36:a3285] [com.apple.runningboard:assertion] Removed last relative-start-date-defining assertion for process app<life.soullab.voicekernel.k00((null))>
+2026-09-15 20:56:18.013 Df runningboardd[36:a3257] [com.apple.runningboard:monitor] Calculated state for app<life.soullab.voicekernel.k00((null))>: running-suspended (role: None) (endowments: (null))
+2026-09-15 20:56:18.013 Df backboardd[72:a32e1] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.014 Df runningboardd[36:a32d3] [com.apple.runningboard:process] [app<life.soullab.voicekernel.vpio01((null))>:3618] Shutdown sockets (SVC)
+2026-09-15 20:56:18.014 Df runningboardd[36:a32d3] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.vpio01((null))>:3618] Set darwin role to: None
+2026-09-15 20:56:18.014 Df runningboardd[36:a32d3] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.k00((null))>:3617] Suspending task.
+2026-09-15 20:56:18.015 Df runningboardd[36:a32d3] [com.apple.runningboard:process] [app<life.soullab.voicekernel.k00((null))>:3617] Shutdown sockets (SVC)
+2026-09-15 20:56:18.015 Df runningboardd[36:a32d3] [com.apple.runningboard:ttl] [app<life.soullab.voicekernel.k00((null))>:3617] Set darwin role to: None
+2026-09-15 20:56:18.015 Df runningboardd[36:a32d4] [com.apple.runningboard:process] [app<life.soullab.voicekernel.vpio01((null))>:3618] check if suspended process is holding locks
+2026-09-15 20:56:18.016 Df audiomxd[113:a2c7d] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.016 Df runningboardd[36:a32d4] [com.apple.runningboard:process] [app<life.soullab.voicekernel.k00((null))>:3617] check if suspended process is holding locks
+2026-09-15 20:56:18.016 Df backboardd[72:a329c] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.017 Df audiomxd[113:a2c7d] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.017 Df PerfPowerServices[304:a32bc] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.018 Df symptomsd[164:a2dc8] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.018 Df watchdogd[63:a3342] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.018 Df dasd[85:a329a] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.018 Df UserEventAgent[34:a3317] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.018 Df gamepolicyd[231:a3350] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.019 Df wifid[55:a32a5] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.019 Df locationd[78:a3304] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.019 Df locationd[78:a2146] [com.apple.locationd.Core:Core] {"msg":"RBS #AppMonitor process monitor update handler invoked", "pid":3618, "bundleID":"life.soullab.voicekernel.vpio01", "state":"RunningSuspended"}
+2026-09-15 20:56:18.019 Df locationd[78:a31d7] [com.apple.locationd.Core:Core] {"msg":"RBS #AppMonitor Post Application State Change Notification", "notification":"BackgroundTaskSuspended", "pid":3618, "bundleId":"life.soullab.voicekernel.vpio01"}
+2026-09-15 20:56:18.020 Df locationd[78:a3306] [com.apple.locationd.Core:Core] {"msg":"#Warning #ClientResolution the passed keyPath is not registered. Resolving to #nullCKP", "InputCKP":"ilife.soullab.voicekernel.vpio01:"}
+2026-09-15 20:56:18.020 Df locationd[78:a3306] [com.apple.locationd.Core:Core] {"msg":"#CLIUA AppMonitor notification", "notification":"BackgroundTaskSuspended", "pid":3618, "bundleId":"life.soullab.voicekernel.vpio01", "ClientKey":"ilife.soullab.voicekernel.vpio01:"}
+2026-09-15 20:56:18.020 Df WirelessRadioManagerd[53:9fa85] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.020 Df useractivityd[458:a3195] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.020 Df locationd[78:a3304] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.020 Df locationd[78:a2146] [com.apple.locationd.Core:Core] {"msg":"RBS #AppMonitor process monitor update handler invoked", "pid":3617, "bundleID":"life.soullab.voicekernel.k00", "state":"RunningSuspended"}
+2026-09-15 20:56:18.020 Df locationd[78:a31d7] [com.apple.locationd.Core:Core] {"msg":"RBS #AppMonitor Post Application State Change Notification", "notification":"BackgroundTaskSuspended", "pid":3617, "bundleId":"life.soullab.voicekernel.k00"}
+2026-09-15 20:56:18.020 Df locationd[78:a3306] [com.apple.locationd.Core:Core] {"msg":"#Warning #ClientResolution the passed keyPath is not registered. Resolving to #nullCKP", "InputCKP":"ilife.soullab.voicekernel.k00:"}
+2026-09-15 20:56:18.020 Df locationd[78:a3306] [com.apple.locationd.Core:Core] {"msg":"#CLIUA AppMonitor notification", "notification":"BackgroundTaskSuspended", "pid":3617, "bundleId":"life.soullab.voicekernel.k00", "ClientKey":"ilife.soullab.voicekernel.k00:"}
+2026-09-15 20:56:18.020 Df useractivityd[458:a3195] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.020 Df WirelessRadioManagerd[53:9fa85] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.020 Df accessoryd[213:a3318] [com.apple.runningboard:monitor] Received state update for 3618 (app<life.soullab.voicekernel.vpio01((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.021 Df PerfPowerServices[304:a3312] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.021 Df accessoryd[213:a3318] [com.apple.accessories.platform-plugins:General] Posting application state change {
+    ACCPlatformApplicationStateDisplayIDKey = "life.soullab.voicekernel.vpio01";
+    ACCPlatformApplicationStateKey = 2;
+    ACCPlatformApplicationStateProcessIDKey = 3618;
+}
+2026-09-15 20:56:18.021 Df accessoryd[213:a3318] [com.apple.accessories:ExternalAccessory] handling app state change notification {
+    ACCPlatformApplicationStateDisplayIDKey = "life.soullab.voicekernel.vpio01";
+    ACCPlatformApplicationStateKey = 2;
+    ACCPlatformApplicationStateProcessIDKey = 3618;
+}
+2026-09-15 20:56:18.021 Df symptomsd[164:a2ade] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.021 Df watchdogd[63:a26f0] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.021 Df UserEventAgent[34:a3391] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.021 Df wifid[55:a331f] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.021 Df gamepolicyd[231:a3343] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.021 Df accessoryd[213:a3202] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.021 Df dasd[85:a32c0] [com.apple.runningboard:monitor] Received state update for 3617 (app<life.soullab.voicekernel.k00((null))>, running-suspended-NotVisible
+2026-09-15 20:56:18.021 Df accessoryd[213:a3318] [com.apple.accessories.platform-plugins:General] Posting application state change {
+    ACCPlatformApplicationStateDisplayIDKey = "life.soullab.voicekernel.k00";
+    ACCPlatformApplicationStateKey = 2;
+    ACCPlatformApplicationStateProcessIDKey = 3617;
+}
+2026-09-15 20:56:18.021 Df accessoryd[213:a3318] [com.apple.accessories:ExternalAccessory] handling app state change notification {
+    ACCPlatformApplicationStateDisplayIDKey = "life.soullab.voicekernel.k00";
+    ACCPlatformApplicationStateKey = 2;
+    ACCPlatformApplicationStateProcessIDKey = 3617;
+}
+2026-09-15 20:58:11.715 Df dtappserviced[3459:a3626] [com.apple.dt.coredevice:action] _send(elements:context:): Pushing stream update to: <dictionary: 0xd7ac25920> { count = 1, transaction: 0, voucher = 0x0, contents =
+	"CoreDevice.XPCMessageKey.sideChannelStatus" => <dictionary: 0xd7ac25980> { count = 1, transaction: 0, voucher = 0x0, contents =
+		"pushing" => <dictionary: 0xd7ac25ec0> { count = 1, transaction: 0, voucher = 0x0, contents =
+			"elements" => <array: 0xd7b010f30> { count = 1, capacity = 8, contents =
+				0: <dictionary: 0xd7ac26a00> { count = 11, transaction: 0, voucher = 0x0, contents =
+					"isRemovable" => <bool: 0x20e9424c0>: true
+					"name" => <string: 0xd7b012fd0> { string cache = 0x0, length = 19, contents = "VoiceKernel VPIO-02" }
+					"isFirstParty" => <bool: 0x20e9424e0>: false
+					"path" => <string: 0xd7b0104e0> { string cache = 0x0, length = 102, contents = "/private/var/containers/Bundle/Application/E3B88028-A10F-46B1-AB27-CF0A1F83FB78/VoiceKernelHarness.app" }
+					"bundleIdentifier" => <string: 0xd7b012850> { string cache = 0x0, length = 31, contents = "life.soullab.voiceke<…>. For invocation=<decode: missing data>)
+==========
+/private/tmp/sid-relaunch-census-20260916T012948Z/device.logarchive
+==========
