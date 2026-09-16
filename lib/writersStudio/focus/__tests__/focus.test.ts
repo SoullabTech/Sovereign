@@ -1,7 +1,7 @@
 /**
  * The falsifiers that would have killed 2026-09-16, at unit scope.
  */
-import { describe, it, expect } from 'vitest';
+
 import { focusOn, focusRequest, scopeLabel, composerPrompt } from '../studioFocus';
 import { outlineTree, pathTo, chapterOf } from '../outlineTree';
 
