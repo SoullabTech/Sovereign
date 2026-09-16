@@ -1,0 +1,18 @@
+SID FIRST-INSTALL-04
+EXECUTED · PASS · authority spent by successful transaction
+subject faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
+instrument ec60321b741d9a2ec0ba35b8b7134e16a6cb1f7a
+pin sha256 81f29c59474fdbb147fd2d2c8b55f43ca657a91cb6cb5a49f1dd500ac1bf2e45
+pre historical .vpio02 installed 1
+pre SID .vpio02sid installed 0
+pre harnesses 0
+JIT harnesses immediately before install 0
+install exactly one .vpio02sid
+SID container 85948DBD-BA8F-4679-950D-31767B1C24E5
+post historical .vpio02 installed 1 unchanged container E3B88028-A10F-46B1-AB27-CF0A1F83FB78
+post SID .vpio02sid installed 1 at witnessed container
+post harnesses 0
+launch 0
+sample 0
+source population 0
+01:56Z later duplicate invocation: refused before device by pre-existing worktree; no device effect; no new authority existed to spend

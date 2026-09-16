@@ -1,0 +1,787 @@
+SID-FIRST-INSTALL-04 INVOKE 20260916T014705Z pin-sha256 81f29c59474fdbb147fd2d2c8b55f43ca657a91cb6cb5a49f1dd500ac1bf2e45
+From https://github.com/SoullabTech/Sovereign
+ * branch                claude/voice-2026-census-01 -> FETCH_HEAD
+Preparing worktree (detached HEAD ec60321b7)
+Updating files:  43% (6212/14369)Updating files:  44% (6323/14369)Updating files:  45% (6467/14369)Updating files:  46% (6610/14369)Updating files:  47% (6754/14369)Updating files:  48% (6898/14369)Updating files:  49% (7041/14369)Updating files:  50% (7185/14369)Updating files:  51% (7329/14369)Updating files:  52% (7472/14369)Updating files:  53% (7616/14369)Updating files:  54% (7760/14369)Updating files:  55% (7903/14369)Updating files:  56% (8047/14369)Updating files:  57% (8191/14369)Updating files:  58% (8335/14369)Updating files:  59% (8478/14369)Updating files:  60% (8622/14369)Updating files:  61% (8766/14369)Updating files:  62% (8909/14369)Updating files:  63% (9053/14369)Updating files:  64% (9197/14369)Updating files:  65% (9340/14369)Updating files:  66% (9484/14369)Updating files:  67% (9628/14369)Updating files:  68% (9771/14369)Updating files:  69% (9915/14369)Updating files:  70% (10059/14369)Updating files:  71% (10202/14369)Updating files:  72% (10346/14369)Updating files:  73% (10490/14369)Updating files:  74% (10634/14369)Updating files:  75% (10777/14369)Updating files:  76% (10921/14369)Updating files:  77% (11065/14369)Updating files:  78% (11208/14369)Updating files:  79% (11352/14369)Updating files:  80% (11496/14369)Updating files:  81% (11639/14369)Updating files:  82% (11783/14369)Updating files:  83% (11927/14369)Updating files:  84% (12070/14369)Updating files:  85% (12214/14369)Updating files:  86% (12358/14369)Updating files:  87% (12502/14369)Updating files:  88% (12645/14369)Updating files:  89% (12789/14369)Updating files:  90% (12933/14369)Updating files:  91% (13076/14369)Updating files:  91% (13129/14369)Updating files:  92% (13220/14369)Updating files:  93% (13364/14369)Updating files:  94% (13507/14369)Updating files:  95% (13651/14369)Updating files:  96% (13795/14369)Updating files:  97% (13938/14369)Updating files:  98% (14082/14369)Updating files:  99% (14226/14369)Updating files: 100% (14369/14369)Updating files: 100% (14369/14369), done.
+HEAD is now at ec60321b7 fix(voice-2026): JIT harness-zero guard before SID install
+ec60321b741d9a2ec0ba35b8b7134e16a6cb1f7a
+21:47:09  Acquired tunnel connection to device.
+21:47:09  Enabling developer disk image services.
+21:47:09  Acquired usage assertion.
+Apps installed:
+Name                  Bundle Identifier                 Version   Bundle Version
+-------------------   -------------------------------   -------   --------------
+VoiceKernel VPIO-02   life.soullab.voicekernel.vpio02   0.0.1     1             
+21:47:09  Acquired tunnel connection to device.
+21:47:09  Enabling developer disk image services.
+21:47:09  Acquired usage assertion.
+Apps installed:
+21:47:09  Acquired tunnel connection to device.
+21:47:10  Enabling developer disk image services.
+21:47:10  Acquired usage assertion.
+PID    Executable Path                                                                                                                                                                                   
+----   --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+1      /sbin/launchd                                                                                                                                                                                     
+34     /usr/libexec/UserEventAgent                                                                                                                                                                       
+35     /usr/libexec/logd                                                                                                                                                                                 
+36     /usr/libexec/runningboardd                                                                                                                                                                        
+37     /System/Library/CoreServices/SpringBoard.app/SpringBoard                                                                                                                                          
+39     /System/Library/PrivateFrameworks/AssistantServices.framework/assistantd                                                                                                                          
+40     /usr/libexec/routined                                                                                                                                                                             
+41     /System/Library/PrivateFrameworks/MediaRemote.framework/Support/mediaremoted                                                                                                                      
+42     /System/Library/Frameworks/Accounts.framework/accountsd                                                                                                                                           
+46     /System/Library/Frameworks/HealthKit.framework/healthd                                                                                                                                            
+47     /usr/libexec/configd                                                                                                                                                                              
+49     /System/Library/PrivateFrameworks/TCC.framework/Support/tccd                                                                                                                                      
+50     /System/Library/CoreServices/powerd.bundle/powerd                                                                                                                                                 
+52     /usr/libexec/atc                                                                                                                                                                                  
+53     /usr/sbin/WirelessRadioManagerd                                                                                                                                                                   
+54     /System/Library/PrivateFrameworks/BiomeStreams.framework/Support/biomed                                                                                                                           
+55     /usr/sbin/wifid                                                                                                                                                                                   
+56     /usr/libexec/remoted                                                                                                                                                                              
+61     /System/Library/PrivateFrameworks/MobileTimer.framework/Executables/mobiletimerd                                                                                                                  
+63     /usr/libexec/watchdogd                                                                                                                                                                            
+64     /usr/libexec/nfcd                                                                                                                                                                                 
+65     /System/Library/PrivateFrameworks/IDS.framework/identityservicesd.app/identityservicesd                                                                                                           
+66     /usr/libexec/remotepairingdeviced                                                                                                                                                                 
+68     /usr/libexec/thermalmonitord                                                                                                                                                                      
+69     /System/Library/PrivateFrameworks/CoreDuetContext.framework/Resources/contextstored                                                                                                               
+70     /usr/libexec/cameracaptured                                                                                                                                                                       
+72     /usr/libexec/backboardd                                                                                                                                                                           
+74     /usr/libexec/aonsensed                                                                                                                                                                            
+75     /usr/libexec/timed                                                                                                                                                                                
+76     /usr/libexec/sharingd                                                                                                                                                                             
+78     /usr/libexec/locationd                                                                                                                                                                            
+79     /usr/libexec/powerexceptionsd                                                                                                                                                                     
+80     /System/Library/PrivateFrameworks/IMCore.framework/imagent.app/imagent                                                                                                                            
+82     /usr/libexec/audioaccessoryd                                                                                                                                                                      
+85     /usr/libexec/dasd                                                                                                                                                                                 
+86     /System/Library/PrivateFrameworks/SleepDaemon.framework/sleepd                                                                                                                                    
+89     /usr/libexec/lockdownd                                                                                                                                                                            
+96     /usr/libexec/safetyalertsd                                                                                                                                                                        
+97     /usr/libexec/rapportd                                                                                                                                                                             
+99     /usr/sbin/bluetoothd                                                                                                                                                                              
+101    /usr/sbin/fairplayd.H2                                                                                                                                                                            
+102    /System/Library/Frameworks/CoreTelephony.framework/Support/CommCenter                                                                                                                             
+103    /usr/libexec/fseventsd                                                                                                                                                                            
+105    /usr/libexec/IOMFB_bics_daemon                                                                                                                                                                    
+106    /usr/sbin/distnoted                                                                                                                                                                               
+107    /usr/sbin/notifyd                                                                                                                                                                                 
+111    /usr/sbin/cfprefsd                                                                                                                                                                                
+112    /usr/sbin/cfprefsd                                                                                                                                                                                
+113    /usr/libexec/audiomxd                                                                                                                                                                             
+114    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreauthd                                                                                                                        
+115    /System/Library/DriverExtensions/com.apple.DriverKit-AppleBCMWLAN.dext/com.apple.DriverKit-AppleBCMWLAN                                                                                           
+116    /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsd                                                                                                                      
+117    /usr/libexec/MobileGestaltHelper                                                                                                                                                                  
+119    /System/Library/PrivateFrameworks/SystemStatusServer.framework/Support/systemstatusd                                                                                                              
+120    /System/Library/PrivateFrameworks/ChronoCore.framework/Support/chronod                                                                                                                            
+122    /usr/libexec/lsd                                                                                                                                                                                  
+124    /usr/libexec/powerexperienced                                                                                                                                                                     
+127    /usr/libexec/PowerUIAgent                                                                                                                                                                         
+129    /usr/libexec/biometrickitd                                                                                                                                                                        
+134    /System/Library/PrivateFrameworks/SessionCore.framework/Support/liveactivitiesd                                                                                                                   
+135    /usr/libexec/trustd                                                                                                                                                                               
+136    /usr/libexec/securityd                                                                                                                                                                            
+137    /System/Library/PrivateFrameworks/ApplePushService.framework/apsd                                                                                                                                 
+138    /System/Library/PrivateFrameworks/TelephonyUtilities.framework/callservicesd                                                                                                                      
+139    /System/Library/Frameworks/WirelessInsights.framework/Support/wirelessinsightsd                                                                                                                   
+143    /System/Library/PrivateFrameworks/GeoServices.framework/geod                                                                                                                                      
+144    /usr/libexec/nehelper                                                                                                                                                                             
+149    /usr/libexec/coreduetd                                                                                                                                                                            
+150    /System/Library/PrivateFrameworks/CloudKitDaemon.framework/Support/cloudd                                                                                                                         
+151    /usr/libexec/audioanalyticsd                                                                                                                                                                      
+154    /System/Library/PrivateFrameworks/CoreSpeech.framework/corespeechd                                                                                                                                
+155    /System/Library/Frameworks/AudioToolbox.framework/XPCServices/AudioConverterService.xpc/AudioConverterService                                                                                     
+157    /usr/sbin/mDNSResponder                                                                                                                                                                           
+159    /usr/libexec/fmflocatord                                                                                                                                                                          
+162    /usr/libexec/pkd                                                                                                                                                                                  
+163    /System/Library/PrivateFrameworks/DoNotDisturbServer.framework/Support/donotdisturbd                                                                                                              
+164    /usr/libexec/symptomsd                                                                                                                                                                            
+167    /System/Library/PrivateFrameworks/VoiceShortcuts.framework/Support/siriactionsd                                                                                                                   
+170    /System/Library/PrivateFrameworks/ModelCatalogRuntime.framework/modelcatalogd                                                                                                                     
+172    /System/Library/PrivateFrameworks/InstallCoordination.framework/Support/installcoordinationd                                                                                                      
+174    /usr/libexec/networkserviceproxy                                                                                                                                                                  
+175    /usr/libexec/findmylocated                                                                                                                                                                        
+176    /usr/libexec/mobileactivationd                                                                                                                                                                    
+180    /System/Library/PrivateFrameworks/CalendarDaemon.framework/Support/calaccessd                                                                                                                     
+186    /usr/libexec/milod                                                                                                                                                                                
+189    /System/Library/PrivateFrameworks/AuthKit.framework/akd                                                                                                                                           
+193    /System/Library/PrivateFrameworks/UserNotificationsCore.framework/Support/usernotificationsd                                                                                                      
+196    /System/Library/CoreServices/AccessibilityUIServer.app/AccessibilityUIServer                                                                                                                      
+197    /usr/libexec/nsurlsessiond                                                                                                                                                                        
+200    /System/Library/PrivateFrameworks/GenerativeExperiencesRuntime.framework/generativeexperiencesd                                                                                                   
+208    /usr/libexec/nesessionmanager                                                                                                                                                                     
+213    /System/Library/PrivateFrameworks/CoreAccessories.framework/Support/accessoryd                                                                                                                    
+214    /System/Library/Frameworks/Contacts.framework/Support/contactsd                                                                                                                                   
+224    /usr/libexec/duetexpertd                                                                                                                                                                          
+230    /usr/libexec/audioclocksyncd                                                                                                                                                                      
+231    /usr/libexec/gamepolicyd                                                                                                                                                                          
+234    /usr/libexec/nearbyd                                                                                                                                                                              
+238    /System/Library/PrivateFrameworks/SoftwareUpdateServices.framework/Support/softwareupdateservicesd                                                                                                
+241    /System/Library/PrivateFrameworks/StatusKit.framework/StatusKitAgent                                                                                                                              
+243    /usr/libexec/intelligentroutingd                                                                                                                                                                  
+244    /System/Library/PrivateFrameworks/CoreSuggestions.framework/suggestd                                                                                                                              
+247    /System/Library/PrivateFrameworks/HomeKitDaemon.framework/Support/homed                                                                                                                           
+251    /usr/libexec/modelmanagerd                                                                                                                                                                        
+252    /usr/libexec/searchpartyd                                                                                                                                                                         
+258    /System/Library/PrivateFrameworks/Search.framework/searchd                                                                                                                                        
+265    /System/Library/Frameworks/FileProvider.framework/Support/fileproviderd                                                                                                                           
+271    /usr/libexec/aned                                                                                                                                                                                 
+276    /System/Library/PrivateFrameworks/PrivacyAccounting.framework/Versions/A/Resources/privacyaccountingd                                                                                             
+304    /usr/libexec/PerfPowerServices                                                                                                                                                                    
+316    /System/Library/PrivateFrameworks/iTunesCloud.framework/Support/itunescloudd                                                                                                                      
+319    /usr/libexec/gpsd                                                                                                                                                                                 
+326    /System/Library/PrivateFrameworks/DataAccess.framework/Support/dataaccessd                                                                                                                        
+341    /System/Library/PrivateFrameworks/CommunicationsFilter.framework/CMFSyncAgent                                                                                                                     
+344    /usr/libexec/neagent                                                                                                                                                                              
+357    /usr/libexec/notification_proxy                                                                                                                                                                   
+358    /private/var/containers/Bundle/Application/F570A991-3C57-49BF-8932-57313956404B/Tailscale.app/PlugIns/IPNExtension.appex/IPNExtension                                                             
+361    /usr/libexec/mobile_assertion_agent                                                                                                                                                               
+364    /System/Library/PrivateFrameworks/IntelligencePlatformCompute.framework/XPCServices/IntelligencePlatformComputeService.xpc/IntelligencePlatformComputeService                                     
+375    /usr/libexec/diskimagesiod                                                                                                                                                                        
+376    /usr/libexec/diskarbitrationd                                                                                                                                                                     
+407    /usr/libexec/linkd                                                                                                                                                                                
+413    /System/Library/PrivateFrameworks/EyeRelief.framework/Resources/eyereliefd                                                                                                                        
+416    /usr/libexec/spotlightknowledged.updater                                                                                                                                                          
+421    /System/Library/TextInput/kbd                                                                                                                                                                     
+425    /usr/libexec/diagnosticextensionsd                                                                                                                                                                
+430    /usr/libexec/profiled                                                                                                                                                                             
+436    /System/Library/Frameworks/SystemConfiguration.framework/SCHelper                                                                                                                                 
+439    /usr/libexec/adid                                                                                                                                                                                 
+443    /System/Library/PrivateFrameworks/HearingCore.framework/heard                                                                                                                                     
+458    /System/Library/PrivateFrameworks/UserActivity.framework/Agents/useractivityd                                                                                                                     
+461    /usr/libexec/mediaplaybackd                                                                                                                                                                       
+463    /usr/libexec/mdmd                                                                                                                                                                                 
+464    /usr/sbin/filecoordinationd                                                                                                                                                                       
+472    /System/Library/PrivateFrameworks/CloudPhotoLibrary.framework/Support/cloudphotod                                                                                                                 
+474    /System/Library/PrivateFrameworks/CloudTelemetry.framework/XPCServices/CloudTelemetryService.xpc/CloudTelemetryService                                                                            
+483    /usr/libexec/videocodecd                                                                                                                                                                          
+491    /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/Support/accessoryupdaterd                                                                                                      
+492    /System/Library/PrivateFrameworks/EmailDaemon.framework/maild                                                                                                                                     
+494    /usr/sbin/BTLEServer                                                                                                                                                                              
+502    /System/Library/PrivateFrameworks/ActionPredictionHeuristics.framework/XPCServices/HeuristicInterpreter.xpc/HeuristicInterpreter                                                                  
+529    /System/Library/ExtensionKit/Extensions/PhotosPosterProvider.appex/PhotosPosterProvider                                                                                                           
+530    /System/Library/PrivateFrameworks/DVTInstrumentsFoundation.framework/DTServiceHub                                                                                                                 
+531    /usr/libexec/dtfetchsymbolsd                                                                                                                                                                      
+547    /System/Library/PrivateFrameworks/SecureMessaging.framework/SecureMessagingAgent                                                                                                                  
+558    /System/Library/PrivateFrameworks/AppPredictionFoundation.framework/XPCServices/AppPredictionIntentsHelperService.xpc/AppPredictionIntentsHelperService                                           
+564    /System/Library/PrivateFrameworks/Pasteboard.framework/Support/pasted                                                                                                                             
+596    /usr/libexec/airplayd                                                                                                                                                                             
+597    /usr/sbin/BTAvrcp                                                                                                                                                                                 
+640    /System/Library/PrivateFrameworks/MapsSync.framework/mapssyncd                                                                                                                                    
+651    /System/Library/PrivateFrameworks/CloudDocs.framework/PlugIns/com.apple.CloudDocs.iCloudDriveFileProvider.appex/com.apple.CloudDocs.iCloudDriveFileProvider                                       
+748    /usr/libexec/promotedcontentd                                                                                                                                                                     
+794    /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/XPCServices/EAUpdaterService.xpc/EAUpdaterService                                                                              
+866    /System/Library/PrivateFrameworks/IntelligencePlatformCore.framework/intelligenceplatformd                                                                                                        
+938    /System/Library/ExtensionKit/Extensions/TGOnDeviceInferenceProviderService.appex/TGOnDeviceInferenceProviderService                                                                               
+946    /System/Library/ExtensionKit/Extensions/GenerativeExperiencesSafetyInferenceProvider.appex/GenerativeExperiencesSafetyInferenceProvider                                                           
+947    /System/Library/ExtensionKit/Extensions/TGOnDeviceInferenceProviderService.appex/TGOnDeviceInferenceProviderService                                                                               
+983    /System/Library/PrivateFrameworks/NanoTimeKit.framework/nanotimekitcompaniond                                                                                                                     
+1249   /System/Library/PrivateFrameworks/FileProviderDaemon.framework/XPCServices/FPCKService.xpc/FPCKService                                                                                            
+1369   /usr/libexec/findmydeviced                                                                                                                                                                        
+1370   /Applications/FindMyExtensionContainer.app/PlugIns/FindMyDeviceBluetoothExtension.appex/FindMyDeviceBluetoothExtension                                                                            
+1378   /Applications/FindMyExtensionContainer.app/PlugIns/FMDMagSafeExtension.appex/FMDMagSafeExtension                                                                                                  
+1492   /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsagent                                                                                                                  
+1496   /System/Library/CoreServices/osanalyticshelper                                                                                                                                                    
+1497   /System/Library/PrivateFrameworks/AppleMediaServices.framework/amsaccountsd                                                                                                                       
+1500   /usr/libexec/containermanagerd_system                                                                                                                                                             
+1502   /usr/libexec/usermanagerd                                                                                                                                                                         
+1503   /usr/libexec/avconferenced                                                                                                                                                                        
+1508   /System/Library/PrivateFrameworks/AppleMediaServicesUI.framework/amsengagementd                                                                                                                   
+1509   /System/Library/PrivateFrameworks/SyncedDefaults.framework/Support/syncdefaultsd                                                                                                                  
+1733   /System/Library/PrivateFrameworks/SeymourServices.framework/fitcored                                                                                                                              
+1860   /System/Library/Frameworks/GSS.framework/Helpers/GSSCred                                                                                                                                          
+1862   /System/Library/Frameworks/CryptoTokenKit.framework/ctkd                                                                                                                                          
+1864   /usr/libexec/siriknowledged                                                                                                                                                                       
+1870   /System/Library/PrivateFrameworks/PhotoAnalysis.framework/Support/photoanalysisd                                                                                                                  
+1885   /System/Developer/usr/libexec/testmanagerd                                                                                                                                                        
+1897   /System/Library/PrivateFrameworks/iTunesStore.framework/Support/itunesstored                                                                                                                      
+1904   /usr/libexec/appleaccountd                                                                                                                                                                        
+2112   /System/Library/PrivateFrameworks/FamilyCircle.framework/familycircled                                                                                                                            
+2122   /System/Library/PrivateFrameworks/PassKitCore.framework/passd                                                                                                                                     
+2236   /usr/libexec/announced                                                                                                                                                                            
+2417   /usr/libexec/icloudmailagent                                                                                                                                                                      
+2458   /usr/libexec/keybagd                                                                                                                                                                              
+2459   /private/var/containers/Bundle/Application/18A0ABA3-B6A7-45F2-A208-BA4EB3203ED1/ChatGPT.app/PlugIns/NotificationServiceExtension.appex/NotificationServiceExtension                               
+2491   /usr/libexec/wifip2pd                                                                                                                                                                             
+2522   /usr/libexec/rtcreportingd                                                                                                                                                                        
+2581   /usr/libexec/anomalydetectiond                                                                                                                                                                    
+2584   /Applications/Family.app/Family                                                                                                                                                                   
+2653   /System/Library/PrivateFrameworks/CoreParsec.framework/parsecd                                                                                                                                    
+2664   /System/Library/PrivateFrameworks/DragUI.framework/Support/druid                                                                                                                                  
+2693   /usr/libexec/naturallanguaged                                                                                                                                                                     
+2703   /usr/libexec/containermanagerd                                                                                                                                                                    
+2706   /System/Library/PrivateFrameworks/MediaAnalysis.framework/mediaanalysisd                                                                                                                          
+2710   /System/Library/PrivateFrameworks/AssetCacheServices.framework/XPCServices/AssetCacheLocatorService.xpc/AssetCacheLocatorService                                                                  
+2711   /usr/libexec/textunderstandingd                                                                                                                                                                   
+2732   /System/Library/PrivateFrameworks/AssistantServices.framework/assistant_service                                                                                                                   
+2760   /usr/sbin/absd                                                                                                                                                                                    
+2784   /usr/libexec/mediaparserd                                                                                                                                                                         
+2969   /System/Library/PrivateFrameworks/CloudTelemetry.framework/XPCServices/CloudTelemetryService.xpc/CloudTelemetryService                                                                            
+2982   /usr/libexec/safetycheckd                                                                                                                                                                         
+2984   /System/Library/PrivateFrameworks/NeighborhoodActivityConduit.framework/XPCServices/com.apple.NeighborhoodActivityConduitService.xpc/com.apple.NeighborhoodActivityConduitService                 
+3038   /System/Library/PrivateFrameworks/AppSSO.framework/Support/AppSSODaemon                                                                                                                           
+3039   /System/Library/PrivateFrameworks/iCloudDriveCore.framework/bird                                                                                                                                  
+3057   /System/Library/PrivateFrameworks/UsageTracking.framework/UsageTrackingAgent                                                                                                                      
+3064   /System/Library/PrivateFrameworks/AppStoreDaemon.framework/Support/appstored                                                                                                                      
+3095   /usr/sbin/appleh16camerad                                                                                                                                                                         
+3245   /usr/libexec/ptpd                                                                                                                                                                                 
+3246   /usr/libexec/companion_proxy                                                                                                                                                                      
+3263   /System/Library/PrivateFrameworks/ProtectedCloudStorage.framework/Helpers/ProtectedCloudKeySyncing                                                                                                
+3266   /System/Library/CoreServices/ReportCrash                                                                                                                                                          
+3267   /System/Library/PrivateFrameworks/CoreSymbolication.framework/coresymbolicationd                                                                                                                  
+3269   /System/Library/CoreServices/diagnosticservicesd                                                                                                                                                  
+3289   /System/Library/DriverExtensions/com.apple.AppleUserHIDDrivers.dext/com.apple.AppleUserHIDDrivers                                                                                                 
+3336   /System/Library/Frameworks/Metal.framework/XPCServices/MTLCompilerService.xpc/MTLCompilerService                                                                                                  
+3339   /System/Library/PrivateFrameworks/CloudKitDaemon.framework/Support/ckdiscretionaryd                                                                                                               
+3340   /System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANECompilerService.xpc/ANECompilerService                                                                               
+3355   /usr/libexec/peakpowermanagerd                                                                                                                                                                    
+3357   /System/Library/PrivateFrameworks/MapsSupport.framework/mapspushd                                                                                                                                 
+3359   /usr/libexec/mobileassetd                                                                                                                                                                         
+3360   /System/Library/PrivateFrameworks/CoreFollowUp.framework/followupd                                                                                                                                
+3362   /System/Library/PrivateFrameworks/CoreCDP.framework/cdpd                                                                                                                                          
+3363   /System/Library/PrivateFrameworks/CloudSubscriptionFeatures.framework/featureaccessd                                                                                                              
+3364   /System/Library/PrivateFrameworks/IMDPersistence.framework/XPCServices/IMDPersistenceAgent.xpc/IMDPersistenceAgent                                                                                
+3368   /usr/libexec/logd_helper                                                                                                                                                                          
+3369   /usr/libexec/tailspind                                                                                                                                                                            
+3370   /usr/libexec/triald                                                                                                                                                                               
+3371   /System/Library/PrivateFrameworks/TrialServer.framework/XPCServices/TrialArchivingService.xpc/TrialArchivingService                                                                               
+3372   /usr/libexec/mlhostd                                                                                                                                                                              
+3373   /System/Library/PrivateFrameworks/CallHistory.framework/Support/CallHistorySyncHelper                                                                                                             
+3374   /System/Library/Frameworks/CoreTelephony.framework/Support/CommCenterMobileHelper                                                                                                                 
+3377   /System/Library/Frameworks/ExtensionFoundation.framework/XPCServices/extensionkitservice.xpc/extensionkitservice                                                                                  
+3388   /usr/libexec/transparencyd                                                                                                                                                                        
+3389   /System/Library/ExtensionKit/Extensions/PCCAgentClientExtension.appex/PCCAgentClientExtension                                                                                                     
+3392   /System/Library/PrivateFrameworks/MapsSuggestions.framework/destinationd                                                                                                                          
+3393   /usr/libexec/appprotectiond                                                                                                                                                                       
+3395   /System/Library/Frameworks/FinanceKit.framework/financed                                                                                                                                          
+3396   /usr/libexec/dmd                                                                                                                                                                                  
+3406   /System/Library/PrivateFrameworks/CascadeSets.framework/XPCServices/SetStoreUpdateService.xpc/SetStoreUpdateService                                                                               
+3408   /System/Library/PrivateFrameworks/iCloudNotification.framework/ind                                                                                                                                
+3416   /private/preboot/Cryptexes/App/usr/libexec/webbookmarksd                                                                                                                                          
+3417   /System/Library/Frameworks/QuickLookThumbnailing.framework/Support/com.apple.quicklook.ThumbnailsAgent                                                                                            
+3420   /System/Library/PrivateFrameworks/ScreenTimeCore.framework/ScreenTimeAgent                                                                                                                        
+3424   /System/Library/PrivateFrameworks/People.framework/peopled                                                                                                                                        
+3427   /System/Library/PrivateFrameworks/MapsSupport.framework/geocorrectiond                                                                                                                            
+3430   /private/var/containers/Bundle/Application/F1FECB38-BFD3-4D6A-B23B-892E5904E048/Instagram.app/Instagram                                                                                           
+3438   /System/Library/PrivateFrameworks/CommunicationTrust.framework/Support/communicationtrustd                                                                                                        
+3440   /System/Library/PrivateFrameworks/CoreRecents.framework/recentsd                                                                                                                                  
+3442   /System/Library/Frameworks/CallKit.framework/XPCServices/com.apple.CallKit.CallDirectory.xpc/com.apple.CallKit.CallDirectory                                                                      
+3445   /System/Library/PrivateFrameworks/BusinessChatService.framework/businessservicesd                                                                                                                 
+3448   /System/Library/PrivateFrameworks/ContextKit.framework/XPCServices/ContextService.xpc/ContextService                                                                                              
+3451   /System/Library/PrivateFrameworks/SiriInference.framework/Support/siriinferenced                                                                                                                  
+3455   /System/Library/PrivateFrameworks/SiriSuggestionsSupport.framework/XPCServices/SiriSuggestionsBookkeepingService.xpc/SiriSuggestionsBookkeepingService                                            
+3487   /System/Library/PrivateFrameworks/ActivitySharingServices.framework/activitysharingd                                                                                                              
+3513   /System/Library/Frameworks/CallKit.framework/XPCServices/com.apple.CallKit.CallDirectoryMaintenance.xpc/com.apple.CallKit.CallDirectoryMaintenance                                                
+3518   /usr/libexec/videosubscriptionsd                                                                                                                                                                  
+3520   /System/Library/Frameworks/StoreKit.framework/Support/storekitd                                                                                                                                   
+3521   /System/Library/Frameworks/ManagedAppDistribution.framework/Support/managedappdistributiond                                                                                                       
+3523   /usr/libexec/coreidvd                                                                                                                                                                             
+3525   /System/Library/PrivateFrameworks/ContinuousDialogManagerService.framework/assistant_cdmd                                                                                                         
+3530   /System/Library/PrivateFrameworks/ReplicatorCore.framework/Support/replicatord                                                                                                                    
+3532   /usr/libexec/softposreaderd                                                                                                                                                                       
+3534   /usr/libexec/deviceaccessd                                                                                                                                                                        
+3540   /usr/libexec/gamed                                                                                                                                                                                
+3548   /private/preboot/Cryptexes/App/usr/libexec/AuthenticationServicesAgent                                                                                                                            
+3568   /Applications/WidgetRenderer_Default.app/WidgetRenderer_Default                                                                                                                                   
+3570   /Applications/Spotlight.app/Spotlight                                                                                                                                                             
+3573   /System/Library/PrivateFrameworks/HealthPluginHost.framework/healthappd                                                                                                                           
+3604   /usr/libexec/momentsd                                                                                                                                                                             
+3621   /usr/libexec/applekeystored                                                                                                                                                                       
+3633   /System/Library/PrivateFrameworks/NewsDaemon.framework/newsd                                                                                                                                      
+3647   /Applications/StickerPickerService.app/StickerPickerService                                                                                                                                       
+3662   /System/Library/Frameworks/AssetsLibrary.framework/Support/assetsd                                                                                                                                
+3670   /System/Library/PrivateFrameworks/CascadeSets.framework/XPCServices/SetStoreUpdateService.xpc/SetStoreUpdateService                                                                               
+3671   /usr/libexec/tipsd                                                                                                                                                                                
+3672   /System/Library/Frameworks/Security.framework/XPCServices/TrustedPeersHelper.xpc/TrustedPeersHelper                                                                                               
+3673   /System/Library/Frameworks/Contacts.framework/Support/postersyncd                                                                                                                                 
+3675   /usr/libexec/appleidsetupd                                                                                                                                                                        
+3676   /System/Library/PrivateFrameworks/AppleCredentialManager.framework/AppleCredentialManagerDaemon                                                                                                   
+3677   /System/Library/Frameworks/Intents.framework/XPCServices/intents_helper.xpc/intents_helper                                                                                                        
+3678   /System/Library/PrivateFrameworks/MobileBackup.framework/backupd                                                                                                                                  
+3679   /Applications/PassbookUIService.app/PassbookUIService                                                                                                                                             
+3681   /System/Library/Frameworks/ExtensionFoundation.framework/XPCServices/extensionkitservice.xpc/extensionkitservice                                                                                  
+3682   /System/Library/PrivateFrameworks/AppleMediaDiscovery.framework/PlugIns/AMDEngagementExtension.appex/AMDEngagementExtension                                                                       
+3683   /System/Library/PrivateFrameworks/OnDeviceStorage.framework/Support/amsondevicestoraged                                                                                                           
+3686   /usr/libexec/gamecontrollerd                                                                                                                                                                      
+3687   /usr/libexec/swtransparencyd                                                                                                                                                                      
+3689   /usr/libexec/findmybeaconingd                                                                                                                                                                     
+3690   /usr/libexec/bluetoothuserd                                                                                                                                                                       
+3691   /usr/libexec/metrickitd                                                                                                                                                                           
+3692   /usr/libexec/mobile_storage_proxy                                                                                                                                                                 
+3693   /usr/libexec/cryptexd                                                                                                                                                                             
+3694   /System/Developer/usr/libexec/dtappserviced                                                                                                                                                       
+3695   /usr/libexec/diagnosticd                                                                                                                                                                          
+3697   /System/Library/Frameworks/ExtensionFoundation.framework/XPCServices/extensionkitservice.xpc/extensionkitservice                                                                                  
+3698   /private/var/containers/Bundle/Application/F7FD6FFB-1105-445F-B40E-FBDD6E89144F/Microsoft Authenticator.app/Microsoft Authenticator                                                               
+3699   /usr/libexec/dprivacyd                                                                                                                                                                            
+3700   /private/var/containers/Bundle/Application/5F4CF529-4AD8-4CAC-8B66-4FA7D54876E9/Weather.app/PlugIns/WeatherWidget.appex/WeatherWidget                                                             
+3701   /private/preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariFoundation.framework/XPCServices/CredentialProviderExtensionHelper.xpc/CredentialProviderExtensionHelper                     
+3702   /System/Library/PrivateFrameworks/FontServices.framework/Support/fontservicesd                                                                                                                    
+3703   /System/Library/PrivateFrameworks/FontServices.framework/XPCServices/UserFontManager.xpc/UserFontManager                                                                                          
+3704   /System/Library/PrivateFrameworks/CoreParsec.framework/parsec-fbf                                                                                                                                 
+3705   /System/Library/PrivateFrameworks/GenerationalStorage.framework/revisiond                                                                                                                         
+3706   /System/Library/PrivateFrameworks/CacheDelete.framework/deleted                                                                                                                                   
+3708   /usr/libexec/managedassetsd                                                                                                                                                                       
+3709   /System/Library/PrivateFrameworks/Message.framework/XPCServices/SearchIndexer.xpc/SearchIndexer                                                                                                   
+3710   /System/Library/PrivateFrameworks/CacheDelete.framework/deleted_helper                                                                                                                            
+3711   /usr/libexec/replayd                                                                                                                                                                              
+3712   /System/Library/CoreServices/CacheDeleteAppContainerCaches                                                                                                                                        
+3713   /System/Library/PrivateFrameworks/MusicLibrary.framework/Support/medialibraryd                                                                                                                    
+3714   /System/Library/PrivateFrameworks/MobileBackup.framework/MobileBackupCacheDeleteService                                                                                                           
+3715   /usr/libexec/sensorkitd                                                                                                                                                                           
+3716   /System/Library/Frameworks/AdAttributionKit.framework/Support/attributionkitd                                                                                                                     
+3718   /private/var/containers/Bundle/Application/6E17ABBC-3541-4DF4-A37A-CA5DA740BE20/WhatsApp.app/WhatsApp                                                                                             
+3719   /System/Library/Frameworks/Speech.framework/XPCServices/localspeechrecognition.xpc/localspeechrecognition                                                                                         
+3720   /usr/libexec/wcd                                                                                                                                                                                  
+3721   /System/Library/PrivateFrameworks/DeviceCheckInternal.framework/devicecheckd                                                                                                                      
+3722   /System/Library/Frameworks/CoreTelephony.framework/Support/CTParser.framework/XPCServices/CTParserService.xpc/CTParserService                                                                     
+3725   /System/Library/PrivateFrameworks/IDSBlastDoorSupport.framework/XPCServices/IDSBlastDoorService.xpc/IDSBlastDoorService                                                                           
+3726   /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/XPCServices/MessagesBlastDoorService.xpc/MessagesBlastDoorService                                                            
+3727   /System/Library/PrivateFrameworks/IMTranscoding.framework/XPCServices/IMTranscoderAgent.xpc/IMTranscoderAgent                                                                                     
+3728   /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/XPCServices/MessagesBlastDoorService.xpc/MessagesBlastDoorService                                                            
+3729   /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/XPCServices/MessagesBlastDoorService.xpc/MessagesBlastDoorService                                                            
+3730   /usr/libexec/frauddefensed                                                                                                                                                                        
+3731   /System/Library/Frameworks/Metal.framework/XPCServices/MTLCompilerService.xpc/MTLCompilerService                                                                                                  
+3732   /usr/libexec/ciphermld                                                                                                                                                                            
+3733   /usr/libexec/swcd                                                                                                                                                                                 
+3734   /System/Library/PrivateFrameworks/IMTransferServices.framework/IMTransferAgent.app/IMTransferAgent                                                                                                
+3735   /private/var/containers/Bundle/Application/2A71CFA0-30AC-4AFC-B7D2-6FEEC5CC72C5/MobileSMS.app/PlugIns/MessagesAssistantExtension.appex/MessagesAssistantExtension                                 
+3736   /System/Library/PrivateFrameworks/TelephonyBlastDoorSupport.framework/XPCServices/TelephonyBlastDoorService.xpc/TelephonyBlastDoorService                                                         
+3738   /System/Library/Frameworks/ExtensionFoundation.framework/XPCServices/extensionkitservice.xpc/extensionkitservice                                                                                  
+3739   /System/Library/ExtensionKit/Extensions/Notification.appex/Notification                                                                                                                           
+3740   /System/Library/PrivateFrameworks/ThumbnailsBlastDoorSupport.framework/XPCServices/ThumbnailsBlastDoorService.xpc/ThumbnailsBlastDoorService                                                      
+3741   /System/Library/Frameworks/ManagedSettings.framework/ManagedSettingsAgent                                                                                                                         
+3743   /System/Library/PrivateFrameworks/Categories.framework/XPCServices/CategoriesService.xpc/CategoriesService                                                                                        
+3745   /System/Library/PrivateFrameworks/TelephonyUtilities.framework/XPCServices/com.apple.FaceTime.FTConversationService.xpc/com.apple.FaceTime.FTConversationService                                  
+3746   /System/Library/PrivateFrameworks/FindMyDevice.framework/XPCServices/FindMyDeviceSharedConfigurationXPCService.xpc/FindMyDeviceSharedConfigurationXPCService                                      
+3747   /System/Library/PrivateFrameworks/NewDeviceOutreach.framework/ndoagent                                                                                                                            
+3748   /System/Library/PrivateFrameworks/FindMyDevice.framework/XPCServices/FindMyDeviceBTDiscoveryXPCService.xpc/FindMyDeviceBTDiscoveryXPCService                                                      
+3749   /System/Library/PrivateFrameworks/PowerLog.framework/XPCServices/PerfPowerTelemetryClientRegistrationService.xpc/PerfPowerTelemetryClientRegistrationService                                      
+3750   /System/Library/PrivateFrameworks/IntelligencePlatformCore.framework/knowledgeconstructiond                                                                                                       
+3751   /usr/libexec/misagent                                                                                                                                                                             
+3752   /usr/libexec/symptomsd-diag                                                                                                                                                                       
+3754   /System/Library/PrivateFrameworks/MobileSoftwareUpdate.framework/Support/softwareupdated                                                                                                          
+3755   /System/Library/PrivateFrameworks/MobileSoftwareUpdate.framework/XPCServices/com.apple.MobileSoftwareUpdate.CleanupPreparePathService.xpc/com.apple.MobileSoftwareUpdate.CleanupPreparePathService
+3760   /System/Library/Frameworks/CoreLocation.framework/XPCServices/GNSSLocationService.xpc/GNSSLocationService                                                                                         
+3761   /System/Library/PrivateFrameworks/CoreRoutine.framework/XPCServices/CoreRoutineHelperService.xpc/CoreRoutineHelperService                                                                         
+3762   /System/Library/PrivateFrameworks/ActivityAwardsServices.framework/activityawardsd                                                                                                                
+3763   /System/Library/PrivateFrameworks/HomeEnergyDaemon.framework/Support/homeenergyd                                                                                                                  
+3764   /private/var/containers/Bundle/Application/B5538127-463E-4BDE-B050-3CFBEFEA8C14/MobileCal.app/MobileCal                                                                                           
+3765   /private/var/containers/Bundle/Application/B5538127-463E-4BDE-B050-3CFBEFEA8C14/MobileCal.app/PlugIns/CalendarWidgetExtension.appex/CalendarWidgetExtension                                       
+# reinstall 20260916T014710Z
+## subject: vpio-02-sid · bundle: life.soullab.voicekernel.vpio02sid
+## custody gate: bundle id life.soullab.voicekernel.vpio02sid · executable SHA-256 db036694dcaa415bb50bb6319af249d643e6db76847177541db836f2f1ec5d17 · manifest self SHA-256 699ac758b12bd8062145655ad12fab6ed5ac2c96e1b4003cc210a5b39f72c7a4 (7 files) — MATCH; installed-app state at first install: ABSENT; authority supplied at invocation: yes
+## custody gate: expected 4A6AD464-0A19-320F-980E-7446F6AA1440 — product reads 4A6AD464-0A19-320F-980E-7446F6AA1440 — MATCH
+## custody gate: dylib SHA-256 expected a15b399d9a9a3c1071d12ba3c4fb24a56b3f6e51c708f8d3c5dd9cb811bdfc44 — product reads a15b399d9a9a3c1071d12ba3c4fb24a56b3f6e51c708f8d3c5dd9cb811bdfc44 — MATCH
+## custody gate: manifest /private/tmp/sid-first-install-04-ec60321b741d9a2ec0ba35b8b7134e16a6cb1f7a/docs/programme/VOICE-2026/driver-ledger/sid-mac-compile-02-20260915T214212Z/SID-MAC-COMPILE-02.manifest.sha256 (7 files) — every file hashes identically, file set identical — MATCH
+## dylib uuid (local product, BEFORE install)
+UUID: 4A6AD464-0A19-320F-980E-7446F6AA1440 (arm64) /private/tmp/sid-mac-compile-02-faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+## codesign
+Identifier=life.soullab.voicekernel.vpio02sid
+TeamIdentifier=ZVK2X646Z2
+## SID just-in-time harness count before install: 0
+## install
+21:47:10  Acquired tunnel connection to device.
+21:47:11  Enabling developer disk image services.
+21:47:11  Acquired usage assertion.
+App installed:
+? bundleID: life.soullab.voicekernel.vpio02sid
+? installationURL: file:///private/var/containers/Bundle/Application/85948DBD-BA8F-4679-950D-31767B1C24E5/VoiceKernelHarness.app/
+? launchServicesIdentifier: unknown
+? databaseUUID: D1BDD00F-2C5B-46D3-B19F-44265AAE5471
+? databaseSequenceNumber: 2840
+? options: 
+## post-install processes (harness must be absent)
+(no VoiceKernelHarness process)
+reinstall artefacts written: /private/tmp/sid-first-install-04-out-20260916T014705Z/reinstall-20260916T014710Z.txt
+85948DBD-BA8F-4679-950D-31767B1C24E5
+21:47:15  Acquired tunnel connection to device.
+21:47:15  Enabling developer disk image services.
+21:47:15  Acquired usage assertion.
+Apps installed:
+Name                  Bundle Identifier                 Version   Bundle Version
+-------------------   -------------------------------   -------   --------------
+VoiceKernel VPIO-02   life.soullab.voicekernel.vpio02   0.0.1     1             
+21:47:15  Acquired tunnel connection to device.
+21:47:15  Enabling developer disk image services.
+21:47:16  Acquired usage assertion.
+Apps installed:
+Name                      Bundle Identifier                    Version   Bundle Version
+-----------------------   ----------------------------------   -------   --------------
+VoiceKernel VPIO-02-SID   life.soullab.voicekernel.vpio02sid   0.0.1     1             
+21:47:16  Acquired tunnel connection to device.
+21:47:16  Enabling developer disk image services.
+21:47:16  Acquired usage assertion.
+PID    Executable Path                                                                                                                                                                                   
+----   --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+1      /sbin/launchd                                                                                                                                                                                     
+34     /usr/libexec/UserEventAgent                                                                                                                                                                       
+35     /usr/libexec/logd                                                                                                                                                                                 
+36     /usr/libexec/runningboardd                                                                                                                                                                        
+37     /System/Library/CoreServices/SpringBoard.app/SpringBoard                                                                                                                                          
+39     /System/Library/PrivateFrameworks/AssistantServices.framework/assistantd                                                                                                                          
+40     /usr/libexec/routined                                                                                                                                                                             
+41     /System/Library/PrivateFrameworks/MediaRemote.framework/Support/mediaremoted                                                                                                                      
+42     /System/Library/Frameworks/Accounts.framework/accountsd                                                                                                                                           
+46     /System/Library/Frameworks/HealthKit.framework/healthd                                                                                                                                            
+47     /usr/libexec/configd                                                                                                                                                                              
+49     /System/Library/PrivateFrameworks/TCC.framework/Support/tccd                                                                                                                                      
+50     /System/Library/CoreServices/powerd.bundle/powerd                                                                                                                                                 
+52     /usr/libexec/atc                                                                                                                                                                                  
+53     /usr/sbin/WirelessRadioManagerd                                                                                                                                                                   
+54     /System/Library/PrivateFrameworks/BiomeStreams.framework/Support/biomed                                                                                                                           
+55     /usr/sbin/wifid                                                                                                                                                                                   
+56     /usr/libexec/remoted                                                                                                                                                                              
+61     /System/Library/PrivateFrameworks/MobileTimer.framework/Executables/mobiletimerd                                                                                                                  
+63     /usr/libexec/watchdogd                                                                                                                                                                            
+64     /usr/libexec/nfcd                                                                                                                                                                                 
+65     /System/Library/PrivateFrameworks/IDS.framework/identityservicesd.app/identityservicesd                                                                                                           
+66     /usr/libexec/remotepairingdeviced                                                                                                                                                                 
+68     /usr/libexec/thermalmonitord                                                                                                                                                                      
+69     /System/Library/PrivateFrameworks/CoreDuetContext.framework/Resources/contextstored                                                                                                               
+70     /usr/libexec/cameracaptured                                                                                                                                                                       
+72     /usr/libexec/backboardd                                                                                                                                                                           
+74     /usr/libexec/aonsensed                                                                                                                                                                            
+75     /usr/libexec/timed                                                                                                                                                                                
+76     /usr/libexec/sharingd                                                                                                                                                                             
+78     /usr/libexec/locationd                                                                                                                                                                            
+79     /usr/libexec/powerexceptionsd                                                                                                                                                                     
+80     /System/Library/PrivateFrameworks/IMCore.framework/imagent.app/imagent                                                                                                                            
+82     /usr/libexec/audioaccessoryd                                                                                                                                                                      
+85     /usr/libexec/dasd                                                                                                                                                                                 
+86     /System/Library/PrivateFrameworks/SleepDaemon.framework/sleepd                                                                                                                                    
+89     /usr/libexec/lockdownd                                                                                                                                                                            
+96     /usr/libexec/safetyalertsd                                                                                                                                                                        
+97     /usr/libexec/rapportd                                                                                                                                                                             
+99     /usr/sbin/bluetoothd                                                                                                                                                                              
+101    /usr/sbin/fairplayd.H2                                                                                                                                                                            
+102    /System/Library/Frameworks/CoreTelephony.framework/Support/CommCenter                                                                                                                             
+103    /usr/libexec/fseventsd                                                                                                                                                                            
+105    /usr/libexec/IOMFB_bics_daemon                                                                                                                                                                    
+106    /usr/sbin/distnoted                                                                                                                                                                               
+107    /usr/sbin/notifyd                                                                                                                                                                                 
+111    /usr/sbin/cfprefsd                                                                                                                                                                                
+112    /usr/sbin/cfprefsd                                                                                                                                                                                
+113    /usr/libexec/audiomxd                                                                                                                                                                             
+114    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreauthd                                                                                                                        
+115    /System/Library/DriverExtensions/com.apple.DriverKit-AppleBCMWLAN.dext/com.apple.DriverKit-AppleBCMWLAN                                                                                           
+116    /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsd                                                                                                                      
+117    /usr/libexec/MobileGestaltHelper                                                                                                                                                                  
+119    /System/Library/PrivateFrameworks/SystemStatusServer.framework/Support/systemstatusd                                                                                                              
+120    /System/Library/PrivateFrameworks/ChronoCore.framework/Support/chronod                                                                                                                            
+122    /usr/libexec/lsd                                                                                                                                                                                  
+124    /usr/libexec/powerexperienced                                                                                                                                                                     
+127    /usr/libexec/PowerUIAgent                                                                                                                                                                         
+129    /usr/libexec/biometrickitd                                                                                                                                                                        
+134    /System/Library/PrivateFrameworks/SessionCore.framework/Support/liveactivitiesd                                                                                                                   
+135    /usr/libexec/trustd                                                                                                                                                                               
+136    /usr/libexec/securityd                                                                                                                                                                            
+137    /System/Library/PrivateFrameworks/ApplePushService.framework/apsd                                                                                                                                 
+138    /System/Library/PrivateFrameworks/TelephonyUtilities.framework/callservicesd                                                                                                                      
+139    /System/Library/Frameworks/WirelessInsights.framework/Support/wirelessinsightsd                                                                                                                   
+143    /System/Library/PrivateFrameworks/GeoServices.framework/geod                                                                                                                                      
+144    /usr/libexec/nehelper                                                                                                                                                                             
+149    /usr/libexec/coreduetd                                                                                                                                                                            
+150    /System/Library/PrivateFrameworks/CloudKitDaemon.framework/Support/cloudd                                                                                                                         
+151    /usr/libexec/audioanalyticsd                                                                                                                                                                      
+154    /System/Library/PrivateFrameworks/CoreSpeech.framework/corespeechd                                                                                                                                
+155    /System/Library/Frameworks/AudioToolbox.framework/XPCServices/AudioConverterService.xpc/AudioConverterService                                                                                     
+157    /usr/sbin/mDNSResponder                                                                                                                                                                           
+159    /usr/libexec/fmflocatord                                                                                                                                                                          
+162    /usr/libexec/pkd                                                                                                                                                                                  
+163    /System/Library/PrivateFrameworks/DoNotDisturbServer.framework/Support/donotdisturbd                                                                                                              
+164    /usr/libexec/symptomsd                                                                                                                                                                            
+167    /System/Library/PrivateFrameworks/VoiceShortcuts.framework/Support/siriactionsd                                                                                                                   
+170    /System/Library/PrivateFrameworks/ModelCatalogRuntime.framework/modelcatalogd                                                                                                                     
+172    /System/Library/PrivateFrameworks/InstallCoordination.framework/Support/installcoordinationd                                                                                                      
+174    /usr/libexec/networkserviceproxy                                                                                                                                                                  
+175    /usr/libexec/findmylocated                                                                                                                                                                        
+176    /usr/libexec/mobileactivationd                                                                                                                                                                    
+180    /System/Library/PrivateFrameworks/CalendarDaemon.framework/Support/calaccessd                                                                                                                     
+186    /usr/libexec/milod                                                                                                                                                                                
+189    /System/Library/PrivateFrameworks/AuthKit.framework/akd                                                                                                                                           
+193    /System/Library/PrivateFrameworks/UserNotificationsCore.framework/Support/usernotificationsd                                                                                                      
+196    /System/Library/CoreServices/AccessibilityUIServer.app/AccessibilityUIServer                                                                                                                      
+197    /usr/libexec/nsurlsessiond                                                                                                                                                                        
+200    /System/Library/PrivateFrameworks/GenerativeExperiencesRuntime.framework/generativeexperiencesd                                                                                                   
+208    /usr/libexec/nesessionmanager                                                                                                                                                                     
+213    /System/Library/PrivateFrameworks/CoreAccessories.framework/Support/accessoryd                                                                                                                    
+214    /System/Library/Frameworks/Contacts.framework/Support/contactsd                                                                                                                                   
+224    /usr/libexec/duetexpertd                                                                                                                                                                          
+230    /usr/libexec/audioclocksyncd                                                                                                                                                                      
+231    /usr/libexec/gamepolicyd                                                                                                                                                                          
+234    /usr/libexec/nearbyd                                                                                                                                                                              
+238    /System/Library/PrivateFrameworks/SoftwareUpdateServices.framework/Support/softwareupdateservicesd                                                                                                
+241    /System/Library/PrivateFrameworks/StatusKit.framework/StatusKitAgent                                                                                                                              
+243    /usr/libexec/intelligentroutingd                                                                                                                                                                  
+244    /System/Library/PrivateFrameworks/CoreSuggestions.framework/suggestd                                                                                                                              
+247    /System/Library/PrivateFrameworks/HomeKitDaemon.framework/Support/homed                                                                                                                           
+251    /usr/libexec/modelmanagerd                                                                                                                                                                        
+252    /usr/libexec/searchpartyd                                                                                                                                                                         
+258    /System/Library/PrivateFrameworks/Search.framework/searchd                                                                                                                                        
+265    /System/Library/Frameworks/FileProvider.framework/Support/fileproviderd                                                                                                                           
+271    /usr/libexec/aned                                                                                                                                                                                 
+276    /System/Library/PrivateFrameworks/PrivacyAccounting.framework/Versions/A/Resources/privacyaccountingd                                                                                             
+304    /usr/libexec/PerfPowerServices                                                                                                                                                                    
+316    /System/Library/PrivateFrameworks/iTunesCloud.framework/Support/itunescloudd                                                                                                                      
+319    /usr/libexec/gpsd                                                                                                                                                                                 
+326    /System/Library/PrivateFrameworks/DataAccess.framework/Support/dataaccessd                                                                                                                        
+341    /System/Library/PrivateFrameworks/CommunicationsFilter.framework/CMFSyncAgent                                                                                                                     
+344    /usr/libexec/neagent                                                                                                                                                                              
+357    /usr/libexec/notification_proxy                                                                                                                                                                   
+358    /private/var/containers/Bundle/Application/F570A991-3C57-49BF-8932-57313956404B/Tailscale.app/PlugIns/IPNExtension.appex/IPNExtension                                                             
+361    /usr/libexec/mobile_assertion_agent                                                                                                                                                               
+364    /System/Library/PrivateFrameworks/IntelligencePlatformCompute.framework/XPCServices/IntelligencePlatformComputeService.xpc/IntelligencePlatformComputeService                                     
+375    /usr/libexec/diskimagesiod                                                                                                                                                                        
+376    /usr/libexec/diskarbitrationd                                                                                                                                                                     
+407    /usr/libexec/linkd                                                                                                                                                                                
+413    /System/Library/PrivateFrameworks/EyeRelief.framework/Resources/eyereliefd                                                                                                                        
+416    /usr/libexec/spotlightknowledged.updater                                                                                                                                                          
+421    /System/Library/TextInput/kbd                                                                                                                                                                     
+425    /usr/libexec/diagnosticextensionsd                                                                                                                                                                
+430    /usr/libexec/profiled                                                                                                                                                                             
+436    /System/Library/Frameworks/SystemConfiguration.framework/SCHelper                                                                                                                                 
+439    /usr/libexec/adid                                                                                                                                                                                 
+443    /System/Library/PrivateFrameworks/HearingCore.framework/heard                                                                                                                                     
+458    /System/Library/PrivateFrameworks/UserActivity.framework/Agents/useractivityd                                                                                                                     
+461    /usr/libexec/mediaplaybackd                                                                                                                                                                       
+463    /usr/libexec/mdmd                                                                                                                                                                                 
+464    /usr/sbin/filecoordinationd                                                                                                                                                                       
+472    /System/Library/PrivateFrameworks/CloudPhotoLibrary.framework/Support/cloudphotod                                                                                                                 
+474    /System/Library/PrivateFrameworks/CloudTelemetry.framework/XPCServices/CloudTelemetryService.xpc/CloudTelemetryService                                                                            
+483    /usr/libexec/videocodecd                                                                                                                                                                          
+491    /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/Support/accessoryupdaterd                                                                                                      
+492    /System/Library/PrivateFrameworks/EmailDaemon.framework/maild                                                                                                                                     
+494    /usr/sbin/BTLEServer                                                                                                                                                                              
+502    /System/Library/PrivateFrameworks/ActionPredictionHeuristics.framework/XPCServices/HeuristicInterpreter.xpc/HeuristicInterpreter                                                                  
+529    /System/Library/ExtensionKit/Extensions/PhotosPosterProvider.appex/PhotosPosterProvider                                                                                                           
+530    /System/Library/PrivateFrameworks/DVTInstrumentsFoundation.framework/DTServiceHub                                                                                                                 
+531    /usr/libexec/dtfetchsymbolsd                                                                                                                                                                      
+547    /System/Library/PrivateFrameworks/SecureMessaging.framework/SecureMessagingAgent                                                                                                                  
+558    /System/Library/PrivateFrameworks/AppPredictionFoundation.framework/XPCServices/AppPredictionIntentsHelperService.xpc/AppPredictionIntentsHelperService                                           
+564    /System/Library/PrivateFrameworks/Pasteboard.framework/Support/pasted                                                                                                                             
+596    /usr/libexec/airplayd                                                                                                                                                                             
+597    /usr/sbin/BTAvrcp                                                                                                                                                                                 
+640    /System/Library/PrivateFrameworks/MapsSync.framework/mapssyncd                                                                                                                                    
+651    /System/Library/PrivateFrameworks/CloudDocs.framework/PlugIns/com.apple.CloudDocs.iCloudDriveFileProvider.appex/com.apple.CloudDocs.iCloudDriveFileProvider                                       
+748    /usr/libexec/promotedcontentd                                                                                                                                                                     
+794    /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/XPCServices/EAUpdaterService.xpc/EAUpdaterService                                                                              
+866    /System/Library/PrivateFrameworks/IntelligencePlatformCore.framework/intelligenceplatformd                                                                                                        
+938    /System/Library/ExtensionKit/Extensions/TGOnDeviceInferenceProviderService.appex/TGOnDeviceInferenceProviderService                                                                               
+946    /System/Library/ExtensionKit/Extensions/GenerativeExperiencesSafetyInferenceProvider.appex/GenerativeExperiencesSafetyInferenceProvider                                                           
+947    /System/Library/ExtensionKit/Extensions/TGOnDeviceInferenceProviderService.appex/TGOnDeviceInferenceProviderService                                                                               
+983    /System/Library/PrivateFrameworks/NanoTimeKit.framework/nanotimekitcompaniond                                                                                                                     
+1249   /System/Library/PrivateFrameworks/FileProviderDaemon.framework/XPCServices/FPCKService.xpc/FPCKService                                                                                            
+1369   /usr/libexec/findmydeviced                                                                                                                                                                        
+1370   /Applications/FindMyExtensionContainer.app/PlugIns/FindMyDeviceBluetoothExtension.appex/FindMyDeviceBluetoothExtension                                                                            
+1378   /Applications/FindMyExtensionContainer.app/PlugIns/FMDMagSafeExtension.appex/FMDMagSafeExtension                                                                                                  
+1492   /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsagent                                                                                                                  
+1496   /System/Library/CoreServices/osanalyticshelper                                                                                                                                                    
+1497   /System/Library/PrivateFrameworks/AppleMediaServices.framework/amsaccountsd                                                                                                                       
+1500   /usr/libexec/containermanagerd_system                                                                                                                                                             
+1502   /usr/libexec/usermanagerd                                                                                                                                                                         
+1503   /usr/libexec/avconferenced                                                                                                                                                                        
+1508   /System/Library/PrivateFrameworks/AppleMediaServicesUI.framework/amsengagementd                                                                                                                   
+1509   /System/Library/PrivateFrameworks/SyncedDefaults.framework/Support/syncdefaultsd                                                                                                                  
+1733   /System/Library/PrivateFrameworks/SeymourServices.framework/fitcored                                                                                                                              
+1860   /System/Library/Frameworks/GSS.framework/Helpers/GSSCred                                                                                                                                          
+1862   /System/Library/Frameworks/CryptoTokenKit.framework/ctkd                                                                                                                                          
+1864   /usr/libexec/siriknowledged                                                                                                                                                                       
+1870   /System/Library/PrivateFrameworks/PhotoAnalysis.framework/Support/photoanalysisd                                                                                                                  
+1885   /System/Developer/usr/libexec/testmanagerd                                                                                                                                                        
+1897   /System/Library/PrivateFrameworks/iTunesStore.framework/Support/itunesstored                                                                                                                      
+1904   /usr/libexec/appleaccountd                                                                                                                                                                        
+2112   /System/Library/PrivateFrameworks/FamilyCircle.framework/familycircled                                                                                                                            
+2122   /System/Library/PrivateFrameworks/PassKitCore.framework/passd                                                                                                                                     
+2236   /usr/libexec/announced                                                                                                                                                                            
+2417   /usr/libexec/icloudmailagent                                                                                                                                                                      
+2458   /usr/libexec/keybagd                                                                                                                                                                              
+2459   /private/var/containers/Bundle/Application/18A0ABA3-B6A7-45F2-A208-BA4EB3203ED1/ChatGPT.app/PlugIns/NotificationServiceExtension.appex/NotificationServiceExtension                               
+2491   /usr/libexec/wifip2pd                                                                                                                                                                             
+2522   /usr/libexec/rtcreportingd                                                                                                                                                                        
+2581   /usr/libexec/anomalydetectiond                                                                                                                                                                    
+2584   /Applications/Family.app/Family                                                                                                                                                                   
+2653   /System/Library/PrivateFrameworks/CoreParsec.framework/parsecd                                                                                                                                    
+2664   /System/Library/PrivateFrameworks/DragUI.framework/Support/druid                                                                                                                                  
+2693   /usr/libexec/naturallanguaged                                                                                                                                                                     
+2703   /usr/libexec/containermanagerd                                                                                                                                                                    
+2706   /System/Library/PrivateFrameworks/MediaAnalysis.framework/mediaanalysisd                                                                                                                          
+2710   /System/Library/PrivateFrameworks/AssetCacheServices.framework/XPCServices/AssetCacheLocatorService.xpc/AssetCacheLocatorService                                                                  
+2711   /usr/libexec/textunderstandingd                                                                                                                                                                   
+2732   /System/Library/PrivateFrameworks/AssistantServices.framework/assistant_service                                                                                                                   
+2760   /usr/sbin/absd                                                                                                                                                                                    
+2784   /usr/libexec/mediaparserd                                                                                                                                                                         
+2969   /System/Library/PrivateFrameworks/CloudTelemetry.framework/XPCServices/CloudTelemetryService.xpc/CloudTelemetryService                                                                            
+2982   /usr/libexec/safetycheckd                                                                                                                                                                         
+2984   /System/Library/PrivateFrameworks/NeighborhoodActivityConduit.framework/XPCServices/com.apple.NeighborhoodActivityConduitService.xpc/com.apple.NeighborhoodActivityConduitService                 
+3038   /System/Library/PrivateFrameworks/AppSSO.framework/Support/AppSSODaemon                                                                                                                           
+3039   /System/Library/PrivateFrameworks/iCloudDriveCore.framework/bird                                                                                                                                  
+3057   /System/Library/PrivateFrameworks/UsageTracking.framework/UsageTrackingAgent                                                                                                                      
+3064   /System/Library/PrivateFrameworks/AppStoreDaemon.framework/Support/appstored                                                                                                                      
+3095   /usr/sbin/appleh16camerad                                                                                                                                                                         
+3245   /usr/libexec/ptpd                                                                                                                                                                                 
+3246   /usr/libexec/companion_proxy                                                                                                                                                                      
+3263   /System/Library/PrivateFrameworks/ProtectedCloudStorage.framework/Helpers/ProtectedCloudKeySyncing                                                                                                
+3266   /System/Library/CoreServices/ReportCrash                                                                                                                                                          
+3267   /System/Library/PrivateFrameworks/CoreSymbolication.framework/coresymbolicationd                                                                                                                  
+3269   /System/Library/CoreServices/diagnosticservicesd                                                                                                                                                  
+3289   /System/Library/DriverExtensions/com.apple.AppleUserHIDDrivers.dext/com.apple.AppleUserHIDDrivers                                                                                                 
+3336   /System/Library/Frameworks/Metal.framework/XPCServices/MTLCompilerService.xpc/MTLCompilerService                                                                                                  
+3339   /System/Library/PrivateFrameworks/CloudKitDaemon.framework/Support/ckdiscretionaryd                                                                                                               
+3340   /System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANECompilerService.xpc/ANECompilerService                                                                               
+3355   /usr/libexec/peakpowermanagerd                                                                                                                                                                    
+3357   /System/Library/PrivateFrameworks/MapsSupport.framework/mapspushd                                                                                                                                 
+3359   /usr/libexec/mobileassetd                                                                                                                                                                         
+3360   /System/Library/PrivateFrameworks/CoreFollowUp.framework/followupd                                                                                                                                
+3362   /System/Library/PrivateFrameworks/CoreCDP.framework/cdpd                                                                                                                                          
+3363   /System/Library/PrivateFrameworks/CloudSubscriptionFeatures.framework/featureaccessd                                                                                                              
+3364   /System/Library/PrivateFrameworks/IMDPersistence.framework/XPCServices/IMDPersistenceAgent.xpc/IMDPersistenceAgent                                                                                
+3368   /usr/libexec/logd_helper                                                                                                                                                                          
+3369   /usr/libexec/tailspind                                                                                                                                                                            
+3370   /usr/libexec/triald                                                                                                                                                                               
+3371   /System/Library/PrivateFrameworks/TrialServer.framework/XPCServices/TrialArchivingService.xpc/TrialArchivingService                                                                               
+3372   /usr/libexec/mlhostd                                                                                                                                                                              
+3373   /System/Library/PrivateFrameworks/CallHistory.framework/Support/CallHistorySyncHelper                                                                                                             
+3374   /System/Library/Frameworks/CoreTelephony.framework/Support/CommCenterMobileHelper                                                                                                                 
+3377   /System/Library/Frameworks/ExtensionFoundation.framework/XPCServices/extensionkitservice.xpc/extensionkitservice                                                                                  
+3388   /usr/libexec/transparencyd                                                                                                                                                                        
+3389   /System/Library/ExtensionKit/Extensions/PCCAgentClientExtension.appex/PCCAgentClientExtension                                                                                                     
+3392   /System/Library/PrivateFrameworks/MapsSuggestions.framework/destinationd                                                                                                                          
+3393   /usr/libexec/appprotectiond                                                                                                                                                                       
+3395   /System/Library/Frameworks/FinanceKit.framework/financed                                                                                                                                          
+3396   /usr/libexec/dmd                                                                                                                                                                                  
+3406   /System/Library/PrivateFrameworks/CascadeSets.framework/XPCServices/SetStoreUpdateService.xpc/SetStoreUpdateService                                                                               
+3408   /System/Library/PrivateFrameworks/iCloudNotification.framework/ind                                                                                                                                
+3416   /private/preboot/Cryptexes/App/usr/libexec/webbookmarksd                                                                                                                                          
+3417   /System/Library/Frameworks/QuickLookThumbnailing.framework/Support/com.apple.quicklook.ThumbnailsAgent                                                                                            
+3420   /System/Library/PrivateFrameworks/ScreenTimeCore.framework/ScreenTimeAgent                                                                                                                        
+3424   /System/Library/PrivateFrameworks/People.framework/peopled                                                                                                                                        
+3427   /System/Library/PrivateFrameworks/MapsSupport.framework/geocorrectiond                                                                                                                            
+3430   /private/var/containers/Bundle/Application/F1FECB38-BFD3-4D6A-B23B-892E5904E048/Instagram.app/Instagram                                                                                           
+3438   /System/Library/PrivateFrameworks/CommunicationTrust.framework/Support/communicationtrustd                                                                                                        
+3440   /System/Library/PrivateFrameworks/CoreRecents.framework/recentsd                                                                                                                                  
+3442   /System/Library/Frameworks/CallKit.framework/XPCServices/com.apple.CallKit.CallDirectory.xpc/com.apple.CallKit.CallDirectory                                                                      
+3445   /System/Library/PrivateFrameworks/BusinessChatService.framework/businessservicesd                                                                                                                 
+3448   /System/Library/PrivateFrameworks/ContextKit.framework/XPCServices/ContextService.xpc/ContextService                                                                                              
+3451   /System/Library/PrivateFrameworks/SiriInference.framework/Support/siriinferenced                                                                                                                  
+3455   /System/Library/PrivateFrameworks/SiriSuggestionsSupport.framework/XPCServices/SiriSuggestionsBookkeepingService.xpc/SiriSuggestionsBookkeepingService                                            
+3487   /System/Library/PrivateFrameworks/ActivitySharingServices.framework/activitysharingd                                                                                                              
+3513   /System/Library/Frameworks/CallKit.framework/XPCServices/com.apple.CallKit.CallDirectoryMaintenance.xpc/com.apple.CallKit.CallDirectoryMaintenance                                                
+3518   /usr/libexec/videosubscriptionsd                                                                                                                                                                  
+3520   /System/Library/Frameworks/StoreKit.framework/Support/storekitd                                                                                                                                   
+3521   /System/Library/Frameworks/ManagedAppDistribution.framework/Support/managedappdistributiond                                                                                                       
+3523   /usr/libexec/coreidvd                                                                                                                                                                             
+3525   /System/Library/PrivateFrameworks/ContinuousDialogManagerService.framework/assistant_cdmd                                                                                                         
+3530   /System/Library/PrivateFrameworks/ReplicatorCore.framework/Support/replicatord                                                                                                                    
+3532   /usr/libexec/softposreaderd                                                                                                                                                                       
+3534   /usr/libexec/deviceaccessd                                                                                                                                                                        
+3540   /usr/libexec/gamed                                                                                                                                                                                
+3548   /private/preboot/Cryptexes/App/usr/libexec/AuthenticationServicesAgent                                                                                                                            
+3568   /Applications/WidgetRenderer_Default.app/WidgetRenderer_Default                                                                                                                                   
+3570   /Applications/Spotlight.app/Spotlight                                                                                                                                                             
+3573   /System/Library/PrivateFrameworks/HealthPluginHost.framework/healthappd                                                                                                                           
+3604   /usr/libexec/momentsd                                                                                                                                                                             
+3621   /usr/libexec/applekeystored                                                                                                                                                                       
+3633   /System/Library/PrivateFrameworks/NewsDaemon.framework/newsd                                                                                                                                      
+3647   /Applications/StickerPickerService.app/StickerPickerService                                                                                                                                       
+3662   /System/Library/Frameworks/AssetsLibrary.framework/Support/assetsd                                                                                                                                
+3670   /System/Library/PrivateFrameworks/CascadeSets.framework/XPCServices/SetStoreUpdateService.xpc/SetStoreUpdateService                                                                               
+3671   /usr/libexec/tipsd                                                                                                                                                                                
+3672   /System/Library/Frameworks/Security.framework/XPCServices/TrustedPeersHelper.xpc/TrustedPeersHelper                                                                                               
+3673   /System/Library/Frameworks/Contacts.framework/Support/postersyncd                                                                                                                                 
+3675   /usr/libexec/appleidsetupd                                                                                                                                                                        
+3676   /System/Library/PrivateFrameworks/AppleCredentialManager.framework/AppleCredentialManagerDaemon                                                                                                   
+3677   /System/Library/Frameworks/Intents.framework/XPCServices/intents_helper.xpc/intents_helper                                                                                                        
+3678   /System/Library/PrivateFrameworks/MobileBackup.framework/backupd                                                                                                                                  
+3679   /Applications/PassbookUIService.app/PassbookUIService                                                                                                                                             
+3681   /System/Library/Frameworks/ExtensionFoundation.framework/XPCServices/extensionkitservice.xpc/extensionkitservice                                                                                  
+3682   /System/Library/PrivateFrameworks/AppleMediaDiscovery.framework/PlugIns/AMDEngagementExtension.appex/AMDEngagementExtension                                                                       
+3683   /System/Library/PrivateFrameworks/OnDeviceStorage.framework/Support/amsondevicestoraged                                                                                                           
+3686   /usr/libexec/gamecontrollerd                                                                                                                                                                      
+3687   /usr/libexec/swtransparencyd                                                                                                                                                                      
+3689   /usr/libexec/findmybeaconingd                                                                                                                                                                     
+3690   /usr/libexec/bluetoothuserd                                                                                                                                                                       
+3691   /usr/libexec/metrickitd                                                                                                                                                                           
+3692   /usr/libexec/mobile_storage_proxy                                                                                                                                                                 
+3693   /usr/libexec/cryptexd                                                                                                                                                                             
+3694   /System/Developer/usr/libexec/dtappserviced                                                                                                                                                       
+3695   /usr/libexec/diagnosticd                                                                                                                                                                          
+3697   /System/Library/Frameworks/ExtensionFoundation.framework/XPCServices/extensionkitservice.xpc/extensionkitservice                                                                                  
+3698   /private/var/containers/Bundle/Application/F7FD6FFB-1105-445F-B40E-FBDD6E89144F/Microsoft Authenticator.app/Microsoft Authenticator                                                               
+3699   /usr/libexec/dprivacyd                                                                                                                                                                            
+3700   /private/var/containers/Bundle/Application/5F4CF529-4AD8-4CAC-8B66-4FA7D54876E9/Weather.app/PlugIns/WeatherWidget.appex/WeatherWidget                                                             
+3701   /private/preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariFoundation.framework/XPCServices/CredentialProviderExtensionHelper.xpc/CredentialProviderExtensionHelper                     
+3702   /System/Library/PrivateFrameworks/FontServices.framework/Support/fontservicesd                                                                                                                    
+3703   /System/Library/PrivateFrameworks/FontServices.framework/XPCServices/UserFontManager.xpc/UserFontManager                                                                                          
+3704   /System/Library/PrivateFrameworks/CoreParsec.framework/parsec-fbf                                                                                                                                 
+3705   /System/Library/PrivateFrameworks/GenerationalStorage.framework/revisiond                                                                                                                         
+3706   /System/Library/PrivateFrameworks/CacheDelete.framework/deleted                                                                                                                                   
+3708   /usr/libexec/managedassetsd                                                                                                                                                                       
+3709   /System/Library/PrivateFrameworks/Message.framework/XPCServices/SearchIndexer.xpc/SearchIndexer                                                                                                   
+3710   /System/Library/PrivateFrameworks/CacheDelete.framework/deleted_helper                                                                                                                            
+3711   /usr/libexec/replayd                                                                                                                                                                              
+3712   /System/Library/CoreServices/CacheDeleteAppContainerCaches                                                                                                                                        
+3713   /System/Library/PrivateFrameworks/MusicLibrary.framework/Support/medialibraryd                                                                                                                    
+3714   /System/Library/PrivateFrameworks/MobileBackup.framework/MobileBackupCacheDeleteService                                                                                                           
+3715   /usr/libexec/sensorkitd                                                                                                                                                                           
+3716   /System/Library/Frameworks/AdAttributionKit.framework/Support/attributionkitd                                                                                                                     
+3718   /private/var/containers/Bundle/Application/6E17ABBC-3541-4DF4-A37A-CA5DA740BE20/WhatsApp.app/WhatsApp                                                                                             
+3719   /System/Library/Frameworks/Speech.framework/XPCServices/localspeechrecognition.xpc/localspeechrecognition                                                                                         
+3720   /usr/libexec/wcd                                                                                                                                                                                  
+3721   /System/Library/PrivateFrameworks/DeviceCheckInternal.framework/devicecheckd                                                                                                                      
+3722   /System/Library/Frameworks/CoreTelephony.framework/Support/CTParser.framework/XPCServices/CTParserService.xpc/CTParserService                                                                     
+3725   /System/Library/PrivateFrameworks/IDSBlastDoorSupport.framework/XPCServices/IDSBlastDoorService.xpc/IDSBlastDoorService                                                                           
+3726   /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/XPCServices/MessagesBlastDoorService.xpc/MessagesBlastDoorService                                                            
+3727   /System/Library/PrivateFrameworks/IMTranscoding.framework/XPCServices/IMTranscoderAgent.xpc/IMTranscoderAgent                                                                                     
+3728   /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/XPCServices/MessagesBlastDoorService.xpc/MessagesBlastDoorService                                                            
+3729   /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/XPCServices/MessagesBlastDoorService.xpc/MessagesBlastDoorService                                                            
+3730   /usr/libexec/frauddefensed                                                                                                                                                                        
+3731   /System/Library/Frameworks/Metal.framework/XPCServices/MTLCompilerService.xpc/MTLCompilerService                                                                                                  
+3732   /usr/libexec/ciphermld                                                                                                                                                                            
+3733   /usr/libexec/swcd                                                                                                                                                                                 
+3734   /System/Library/PrivateFrameworks/IMTransferServices.framework/IMTransferAgent.app/IMTransferAgent                                                                                                
+3735   /private/var/containers/Bundle/Application/2A71CFA0-30AC-4AFC-B7D2-6FEEC5CC72C5/MobileSMS.app/PlugIns/MessagesAssistantExtension.appex/MessagesAssistantExtension                                 
+3736   /System/Library/PrivateFrameworks/TelephonyBlastDoorSupport.framework/XPCServices/TelephonyBlastDoorService.xpc/TelephonyBlastDoorService                                                         
+3738   /System/Library/Frameworks/ExtensionFoundation.framework/XPCServices/extensionkitservice.xpc/extensionkitservice                                                                                  
+3739   /System/Library/ExtensionKit/Extensions/Notification.appex/Notification                                                                                                                           
+3740   /System/Library/PrivateFrameworks/ThumbnailsBlastDoorSupport.framework/XPCServices/ThumbnailsBlastDoorService.xpc/ThumbnailsBlastDoorService                                                      
+3741   /System/Library/Frameworks/ManagedSettings.framework/ManagedSettingsAgent                                                                                                                         
+3743   /System/Library/PrivateFrameworks/Categories.framework/XPCServices/CategoriesService.xpc/CategoriesService                                                                                        
+3745   /System/Library/PrivateFrameworks/TelephonyUtilities.framework/XPCServices/com.apple.FaceTime.FTConversationService.xpc/com.apple.FaceTime.FTConversationService                                  
+3746   /System/Library/PrivateFrameworks/FindMyDevice.framework/XPCServices/FindMyDeviceSharedConfigurationXPCService.xpc/FindMyDeviceSharedConfigurationXPCService                                      
+3747   /System/Library/PrivateFrameworks/NewDeviceOutreach.framework/ndoagent                                                                                                                            
+3748   /System/Library/PrivateFrameworks/FindMyDevice.framework/XPCServices/FindMyDeviceBTDiscoveryXPCService.xpc/FindMyDeviceBTDiscoveryXPCService                                                      
+3749   /System/Library/PrivateFrameworks/PowerLog.framework/XPCServices/PerfPowerTelemetryClientRegistrationService.xpc/PerfPowerTelemetryClientRegistrationService                                      
+3750   /System/Library/PrivateFrameworks/IntelligencePlatformCore.framework/knowledgeconstructiond                                                                                                       
+3751   /usr/libexec/misagent                                                                                                                                                                             
+3752   /usr/libexec/symptomsd-diag                                                                                                                                                                       
+3754   /System/Library/PrivateFrameworks/MobileSoftwareUpdate.framework/Support/softwareupdated                                                                                                          
+3755   /System/Library/PrivateFrameworks/MobileSoftwareUpdate.framework/XPCServices/com.apple.MobileSoftwareUpdate.CleanupPreparePathService.xpc/com.apple.MobileSoftwareUpdate.CleanupPreparePathService
+3760   /System/Library/Frameworks/CoreLocation.framework/XPCServices/GNSSLocationService.xpc/GNSSLocationService                                                                                         
+3761   /System/Library/PrivateFrameworks/CoreRoutine.framework/XPCServices/CoreRoutineHelperService.xpc/CoreRoutineHelperService                                                                         
+3762   /System/Library/PrivateFrameworks/ActivityAwardsServices.framework/activityawardsd                                                                                                                
+3763   /System/Library/PrivateFrameworks/HomeEnergyDaemon.framework/Support/homeenergyd                                                                                                                  
+3764   /private/var/containers/Bundle/Application/B5538127-463E-4BDE-B050-3CFBEFEA8C14/MobileCal.app/MobileCal                                                                                           
+3765   /private/var/containers/Bundle/Application/B5538127-463E-4BDE-B050-3CFBEFEA8C14/MobileCal.app/PlugIns/CalendarWidgetExtension.appex/CalendarWidgetExtension                                       
+3766   /System/Library/PrivateFrameworks/InstallCoordination.framework/Support/installcoordination_proxy                                                                                                 
+3767   /System/Library/PrivateFrameworks/MobileInstallation.framework/XPCServices/com.apple.MobileInstallationHelperService.xpc/com.apple.MobileInstallationHelperService                                
+3768   /usr/libexec/installd                                                                                                                                                                             
+3769   /System/Library/PrivateFrameworks/StreamingZip.framework/XPCServices/com.apple.StreamingUnzipService.xpc/com.apple.StreamingUnzipService                                                          
+3770   /System/Library/CoreServices/iconservicesagent                                                                                                                                                    
+3771   /usr/libexec/tvremoted                                                                                                                                                                            
+3772   /usr/libexec/online-auth-agent                                                                                                                                                                    
+3773   /usr/libexec/driverkitd                                                                                                                                                                           
+3774   /System/Library/CoreServices/appplaceholdersyncd                                                                                                                                                  
+3775   /usr/libexec/MTLAssetUpgraderD                                                                                                                                                                    
+3776   /System/Library/Frameworks/FamilyControls.framework/FamilyControlsAgent                                                                                                                           
+3777   /System/Library/PrivateFrameworks/ClipServices.framework/clipserviced                                                                                                                             
+3778   /Applications/PosterBoard.app/PosterBoard                                                                                                                                                         
+3779   /System/Library/PrivateFrameworks/ProfileValidatedAppIdentity.framework/XPCServices/ProfileValidatedAppIdentityService.xpc/ProfileValidatedAppIdentityService                                     
+3780   /usr/libexec/splashboardd                                                                                                                                                                         
+3781   /usr/libexec/seserviced                                                                                                                                                                           
+3782   /System/Library/PrivateFrameworks/AXAssetLoader.framework/Support/axassetsd                                                                                                                       
+3783   /usr/libexec/symptomsd-helper                                                                                                                                                                     
+SID-FIRST-INSTALL-04 20260916T014705Z subject faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8 instrument ec60321b741d9a2ec0ba35b8b7134e16a6cb1f7a container 85948DBD-BA8F-4679-950D-31767B1C24E5 out /private/tmp/sid-first-install-04-out-20260916T014705Z
+SID-FIRST-INSTALL-04 RC=0 transcript=/private/tmp/sid-first-install-04-transcript-20260916T014705Z.log

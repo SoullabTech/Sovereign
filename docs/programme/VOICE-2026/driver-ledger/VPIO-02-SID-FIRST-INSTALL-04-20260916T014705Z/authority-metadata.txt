@@ -1,0 +1,5 @@
+authority-file=/private/tmp/sid-fi04-authority.txt
+lines=7
+bytes=244
+sha256=55fd1594dfa8fc0a2a2dd5212136014a4754a930ca5cfda352c82cf6ab41d0bf
+contents=NOT CARRIED
