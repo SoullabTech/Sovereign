@@ -1,0 +1,172 @@
+{
+  "programme": "JARVIS-MAIA-STANDING-SHADOW-01",
+  "act": "S5 condition key",
+  "warning": "DO NOT OPEN BEFORE HUMAN REVIEW IS SEALED",
+  "admittedCases": 10,
+  "excludedPairs": [
+    {
+      "pairKey": "partial-adoption::137",
+      "reasons": [
+        "shadow_refused"
+      ]
+    },
+    {
+      "pairKey": "unresolved-contradiction::42",
+      "reasons": [
+        "shadow_refused"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "caseId": "SS-01",
+      "fixtureId": "correction",
+      "seed": 137,
+      "candidates": [
+        {
+          "id": "SS-01-A",
+          "condition": "current"
+        },
+        {
+          "id": "SS-01-B",
+          "condition": "shadow"
+        }
+      ]
+    },
+    {
+      "caseId": "SS-02",
+      "fixtureId": "correction",
+      "seed": 42,
+      "candidates": [
+        {
+          "id": "SS-02-A",
+          "condition": "current"
+        },
+        {
+          "id": "SS-02-B",
+          "condition": "shadow"
+        }
+      ]
+    },
+    {
+      "caseId": "SS-03",
+      "fixtureId": "long-distance-recurrence",
+      "seed": 137,
+      "candidates": [
+        {
+          "id": "SS-03-A",
+          "condition": "current"
+        },
+        {
+          "id": "SS-03-B",
+          "condition": "shadow"
+        }
+      ]
+    },
+    {
+      "caseId": "SS-04",
+      "fixtureId": "long-distance-recurrence",
+      "seed": 42,
+      "candidates": [
+        {
+          "id": "SS-04-A",
+          "condition": "shadow"
+        },
+        {
+          "id": "SS-04-B",
+          "condition": "current"
+        }
+      ]
+    },
+    {
+      "caseId": "SS-05",
+      "fixtureId": "maia-was-wrong",
+      "seed": 137,
+      "candidates": [
+        {
+          "id": "SS-05-A",
+          "condition": "shadow"
+        },
+        {
+          "id": "SS-05-B",
+          "condition": "current"
+        }
+      ]
+    },
+    {
+      "caseId": "SS-06",
+      "fixtureId": "maia-was-wrong",
+      "seed": 42,
+      "candidates": [
+        {
+          "id": "SS-06-A",
+          "condition": "shadow"
+        },
+        {
+          "id": "SS-06-B",
+          "condition": "current"
+        }
+      ]
+    },
+    {
+      "caseId": "SS-07",
+      "fixtureId": "partial-adoption",
+      "seed": 42,
+      "candidates": [
+        {
+          "id": "SS-07-A",
+          "condition": "shadow"
+        },
+        {
+          "id": "SS-07-B",
+          "condition": "current"
+        }
+      ]
+    },
+    {
+      "caseId": "SS-08",
+      "fixtureId": "reversal",
+      "seed": 137,
+      "candidates": [
+        {
+          "id": "SS-08-A",
+          "condition": "current"
+        },
+        {
+          "id": "SS-08-B",
+          "condition": "shadow"
+        }
+      ]
+    },
+    {
+      "caseId": "SS-09",
+      "fixtureId": "reversal",
+      "seed": 42,
+      "candidates": [
+        {
+          "id": "SS-09-A",
+          "condition": "shadow"
+        },
+        {
+          "id": "SS-09-B",
+          "condition": "current"
+        }
+      ]
+    },
+    {
+      "caseId": "SS-10",
+      "fixtureId": "unresolved-contradiction",
+      "seed": 137,
+      "candidates": [
+        {
+          "id": "SS-10-A",
+          "condition": "shadow"
+        },
+        {
+          "id": "SS-10-B",
+          "condition": "current"
+        }
+      ]
+    }
+  ]
+}
