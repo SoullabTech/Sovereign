@@ -126,6 +126,17 @@ sid_entry_jit_guard(){ # $1 = sample index
   { printf 'SID ENTRY sample %s JIT harnesses=%s\n' "$idx" "$n"; grep -i VoiceKernelHarness "$js" || true; } | tee "$state"
   [ "$n" -eq 0 ]
 }
+sid_source_harness_zero_guard(){ # $1 = sample index · $2 = preplay|jit
+  local idx="$1" phase="$2" js="$LEDGER_DIR/sample-$1-source-$2-processes.json" out="$LEDGER_DIR/sample-$1-source-$2-processes.stdout" state="$LEDGER_DIR/sample-$1-source-$2-harness-state.txt" rc=0 n=0
+  xcrun devicectl device info processes --device "$DEV" --json-output "$js" >"$out" 2>&1 || rc=$?
+  if [ $rc -ne 0 ] || [ ! -s "$js" ]; then
+    printf 'SID SOURCE sample %s %s process read UNREADABLE rc=%s\n' "$idx" "$phase" "$rc" | tee "$state"
+    return 1
+  fi
+  n="$(grep -ci VoiceKernelHarness "$js" || true)"
+  { printf 'SID SOURCE sample %s %s harnesses=%s\n' "$idx" "$phase" "$n"; grep -i VoiceKernelHarness "$js" || true; } | tee "$state"
+  [ "$n" -eq 0 ]
+}
 
 # PASS-2 daemon identity witness (founder ruling 2026-09-14): Mac-side snapshot of the audio daemons' process rows, taken
 # immediately BEFORE each sample and AFTER its export. External witness state only — this reads the same process
@@ -283,6 +294,8 @@ for i in $(seq 1 "$N"); do
   log "sample $i/$N — precondition"
   if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then
     : # SID ENTRY has one authority: the adjacent JIT process-set guard below. No cleanup path is entered here.
+  elif [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = output ] && [ "$STIMULUS" = sid-nearend-gated ]; then
+    : # SID SOURCE population is fail-closed too: no testTerminateOnly normalization; PRE-PLAY + JIT guards below own custody.
   elif harness_present; then
     log "harness process present — attempting terminate-only via driver"
     run_test testTerminateOnly > "$LEDGER_DIR/sample-$i-terminate.log" || true
@@ -292,8 +305,21 @@ for i in $(seq 1 "$N"); do
     fi
   fi
   daemon_snapshot "$i" before
+  if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = output ] && [ "$STIMULUS" = sid-nearend-gated ]; then
+    if ! sid_source_harness_zero_guard "$i" preplay; then
+      echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | SID SOURCE sample $i PRE-PLAY harness-zero guard refused; no terminate attempted; no stimulus started; no phone sample launched; see sample-$i-source-preplay-* evidence |" >> "$LEDGER"
+      log "STOP: SID SOURCE sample $i PRE-PLAY harness-zero guard failed — no terminate attempted, no stimulus started, no phone sample launched"; exit 11
+    fi
+  fi
   if [ -n "$STIMULUS" ]; then
     stimulus_start "$i" || { echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | stimulus player not alive before the phone invocation (stimulus-sample-$i.tsv); batch ABORTED as orchestration failure, no identical rows spent |" >> "$LEDGER"; log "ABORT: stimulus player not alive before the phone invocation; orchestration failure recorded"; exit 9; }
+  fi
+  if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = output ] && [ "$STIMULUS" = sid-nearend-gated ]; then
+    if ! sid_source_harness_zero_guard "$i" jit; then
+      stimulus_stop "$i"
+      echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | SID SOURCE sample $i JIT harness-zero guard refused after stimulus settle; stimulus stopped; no terminate attempted; no phone sample launched; see sample-$i-source-jit-* evidence |" >> "$LEDGER"
+      log "STOP: SID SOURCE sample $i JIT harness-zero guard failed — stimulus stopped, no terminate attempted, no phone sample launched"; exit 11
+    fi
   fi
   if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then
     if ! sid_entry_jit_guard "$i"; then
