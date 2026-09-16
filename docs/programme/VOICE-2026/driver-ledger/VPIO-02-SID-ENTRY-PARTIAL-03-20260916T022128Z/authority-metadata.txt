@@ -1,0 +1,5 @@
+authority-file=/private/tmp/sid-entry-batch-03-authority.txt
+lines=7
+bytes=241
+sha256=68d8a5271d6acb94fcc375112ef64f926f9616cbd0c4842f8921b375b99c56ae
+contents=NOT-COMMITTED

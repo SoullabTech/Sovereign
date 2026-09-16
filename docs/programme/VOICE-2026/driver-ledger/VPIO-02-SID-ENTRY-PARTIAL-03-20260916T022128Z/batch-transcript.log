@@ -1,0 +1,52 @@
+[02:21:28] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[02:21:28] build-for-testing (driver only; the harness is untouched)
+[02:21:34] xctestrun: /private/tmp/sid-entry-03-36e412f8ed0136cf6ac22ee8dfb2cbd790a75a1c-20260916T022124Z/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+[02:21:34] sample 1/30 — precondition
+SID ENTRY sample 1 JIT harnesses=0
+[02:21:35] sample 1/30 — driver (testOneSample, mode L)
+[02:22:23] sample 1 ledgered: kernel00-K00-07b0d052-1789525321.jsonl
+[02:22:23] sample 2/30 — precondition
+[02:22:23] sample 2/30 — driver (testOneSample, mode L)
+[02:23:11] sample 2 ledgered: kernel00-K00-16401169-1789525368.jsonl
+[02:23:11] sample 3/30 — precondition
+[02:23:11] sample 3/30 — driver (testOneSample, mode L)
+[02:23:59] sample 3 ledgered: kernel00-K00-7ab82165-1789525416.jsonl
+[02:23:59] sample 4/30 — precondition
+[02:24:00] sample 4/30 — driver (testOneSample, mode L)
+[02:24:48] sample 4 ledgered: kernel00-K00-c2028097-1789525464.jsonl
+[02:24:48] sample 5/30 — precondition
+[02:24:49] sample 5/30 — driver (testOneSample, mode L)
+[02:25:38] sample 5 ledgered: kernel00-K00-e3850387-1789525514.jsonl
+[02:25:38] sample 6/30 — precondition
+[02:25:38] sample 6/30 — driver (testOneSample, mode L)
+[02:26:28] sample 6 ledgered: kernel00-K00-cbc0fd1f-1789525563.jsonl
+[02:26:28] sample 7/30 — precondition
+[02:26:28] sample 7/30 — driver (testOneSample, mode L)
+[02:27:19] sample 7 ledgered: kernel00-K00-d4d6f0df-1789525613.jsonl
+[02:27:19] sample 8/30 — precondition
+[02:27:19] sample 8/30 — driver (testOneSample, mode L)
+[02:28:10] sample 8 ledgered: kernel00-K00-26dcf0d4-1789525664.jsonl
+[02:28:10] sample 9/30 — precondition
+[02:28:10] sample 9/30 — driver (testOneSample, mode L)
+[02:29:02] sample 9 ledgered: kernel00-K00-2b70223a-1789525716.jsonl
+[02:29:02] sample 10/30 — precondition
+[02:29:03] sample 10/30 — driver (testOneSample, mode L)
+[02:29:54] sample 10 ledgered: kernel00-K00-3f961760-1789525767.jsonl
+[02:29:54] sample 11/30 — precondition
+[02:29:55] sample 11/30 — driver (testOneSample, mode L)
+[02:30:48] sample 11 ledgered: kernel00-K00-01f93e5b-1789525820.jsonl
+[02:30:48] sample 12/30 — precondition
+[02:30:48] sample 12/30 — driver (testOneSample, mode L)
+[02:31:42] sample 12 ledgered: kernel00-K00-9fa9dfe7-1789525874.jsonl
+[02:31:42] sample 13/30 — precondition
+[02:31:42] sample 13/30 — driver (testOneSample, mode L)
+[02:32:36] sample 13 ledgered: kernel00-K00-0e94f536-1789525927.jsonl
+[02:32:36] sample 14/30 — precondition
+[02:32:36] sample 14/30 — driver (testOneSample, mode L)
+[02:33:30] sample 14 ledgered: kernel00-K00-9cf988a2-1789525981.jsonl
+[02:33:30] sample 15/30 — precondition
+[02:33:30] sample 15/30 — driver (testOneSample, mode L)
+[02:34:24] sample 15 ledgered: kernel00-K00-49a0e74b-1789526035.jsonl
+[02:34:24] sample 16/30 — precondition
+[02:34:24] harness process present — attempting terminate-only via driver
+[02:34:28] ABORT: lingering harness process; infrastructure failure recorded

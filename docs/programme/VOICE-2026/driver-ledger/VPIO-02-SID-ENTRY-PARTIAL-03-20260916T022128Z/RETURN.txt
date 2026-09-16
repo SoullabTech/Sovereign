@@ -1,0 +1,13 @@
+SID ENTRY-BATCH-03 PARTIAL WITNESS
+act: SID ENTRY-BATCH-03
+instrument: 36e412f8ed0136cf6ac22ee8dfb2cbd790a75a1c
+preflight: CLEAN at 20260916T022124Z
+batch: started 20260916T022128Z
+result: STOP/SPENT at sample 16 precondition
+completed samples: 15
+sample 16 launched: NO
+reason: VoiceKernelHarness appeared before sample 16; historical branch attempted testTerminateOnly and the harness remained, so batch aborted rc=4
+completed rows: 15/15 gen-1 listen
+observer liveness: 15/15 LIVE; each completed journal has 15 source records with frames>=1; resets_total=0
+ceiling breaches among completed rows: 0 (firstCallbackMs 6..10)
+final ENTRY class: NONE — N=30 population incomplete; partial evidence only; MUST NOT be topped up or combined into a later N=30 batch
