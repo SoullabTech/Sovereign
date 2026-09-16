@@ -103,6 +103,10 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
 
   const isImage = source.mimeType.startsWith('image/');
   const isPdf = source.mimeType === 'application/pdf' || source.originalName.toLowerCase().endsWith('.pdf');
+  const needsManualTranscription =
+    source.transcriptionStatus === 'error'
+    && (source.sourceKind === 'handwritten_image' || source.sourceKind === 'scanned_pdf');
+  const statusLabel = needsManualTranscription ? 'manual transcription' : source.transcriptionStatus;
 
   return (
     <article className="border p-5" style={{ borderColor: PRESS.ruleSoft }}>
@@ -111,7 +115,7 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
         <div className="min-w-0 flex-1">
           <h2 className="text-[16px] break-words" style={{ fontFamily: SERIF }}>{source.originalName}</h2>
           <p className="text-[12px] opacity-45 mt-1">
-            {source.sourceKind.replaceAll('_', ' ')} · {source.transcriptionStatus}
+            {source.sourceKind.replaceAll('_', ' ')} · {statusLabel}
           </p>
         </div>
       </div>
@@ -144,7 +148,11 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
         </div>
       ) : source.transcriptionStatus === 'error' ? (
         <div className="mt-4">
-          <p className="text-[12px] opacity-60 mb-2">Studio could not transcribe this source. The original remains preserved.</p>
+          <p className="text-[12px] opacity-60 mb-2">
+            {needsManualTranscription
+              ? 'Automatic handwriting transcription is still being tested. The original remains preserved.'
+              : 'Studio could not transcribe this source. The original remains preserved.'}
+          </p>
           <button onClick={() => void openReview()} disabled={busy} className="text-[13px] underline underline-offset-4 disabled:opacity-40">Enter transcription manually</button>
         </div>
       ) : (
@@ -163,7 +171,11 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
             )}
           </div>
           <div>
-            <label htmlFor={`transcription-${source.id}`} className="block text-[12px] opacity-55 mb-2">Transcription — correct anything Studio misread.</label>
+            <label htmlFor={`transcription-${source.id}`} className="block text-[12px] opacity-55 mb-2">
+              {needsManualTranscription
+                ? 'Transcription — type or paste the words from the original.'
+                : 'Transcription — correct anything Studio misread.'}
+            </label>
             <textarea id={`transcription-${source.id}`} value={text} onChange={(e) => setText(e.target.value)} rows={22} className="w-full bg-transparent border p-3 text-[14px] leading-relaxed" style={{ borderColor: PRESS.rule, fontFamily: SERIF }} />
             <div className="flex gap-4 mt-3">
               <button onClick={() => void acceptReview()} disabled={busy} className="text-[13px] underline underline-offset-4 disabled:opacity-40">Accept transcription</button>
@@ -204,6 +216,7 @@ export default function WriterSourcesPage() {
     setUploading(true);
     setMessage(null);
     try {
+      let manualTranscriptions = 0;
       for (const file of Array.from(list)) {
         setMessage(`Bringing in ${file.name}…`);
         const form = new FormData();
@@ -213,8 +226,14 @@ export default function WriterSourcesPage() {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || `Could not bring in ${file.name}`);
         }
+        const body = await res.json().catch(() => ({}));
+        if (body.source?.transcriptionStatus === 'error') manualTranscriptions += 1;
       }
-      setMessage('Source material received. Review any transcription marked draft.');
+      setMessage(
+        manualTranscriptions > 0
+          ? 'Source material received. Handwritten pages are preserved and ready for manual transcription.'
+          : 'Source material received. Review any transcription marked draft.',
+      );
       await reload();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not bring that material in.');
@@ -235,7 +254,7 @@ export default function WriterSourcesPage() {
         <div className="mt-8 mb-10 max-w-2xl">
           <h1 className="text-[34px] md:text-[42px] leading-tight">Bring source material</h1>
           <p className="mt-4 text-[15px] leading-relaxed opacity-65">
-            Notebook pages, scans, notes, drafts, and reference material can live beside a Work without becoming the manuscript. Handwritten and scanned pages are transcribed locally, then wait for your review.
+            Notebook pages, scans, notes, drafts, and reference material can live beside a Work without becoming the manuscript. Originals stay intact beside any transcription. When automatic reading is available, it produces only a draft; you can always enter or correct the words yourself.
           </p>
         </div>
 

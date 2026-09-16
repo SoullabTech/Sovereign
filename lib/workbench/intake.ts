@@ -8,7 +8,14 @@ import { extractPdf } from './extract/pdf';
 import { ocrImage, ocrPdf } from './ocr';
 
 export const MAX_SOURCE_BYTES = 50 * 1024 * 1024;
+export const HANDWRITING_OCR_FLAG = 'WRITERS_STUDIO_HANDWRITING_OCR_ENABLED';
+export const MANUAL_TRANSCRIPTION_MESSAGE =
+  'Automatic handwriting transcription is still being tested. The original is preserved for manual transcription.';
 export type WorkbenchSourceKind = 'typed_text' | 'typed_doc' | 'handwritten_image' | 'scanned_pdf';
+
+export function handwritingOcrEnabled(): boolean {
+  return process.env[HANDWRITING_OCR_FLAG] === '1';
+}
 
 export function classifyWorkbenchUpload(mime: string, ext: string): WorkbenchSourceKind | null {
   const e = ext.toLowerCase();
@@ -46,6 +53,20 @@ export async function ingestWorkbenchUpload(memberId: string, file: File) {
       [relPath, id, memberId],
     );
     const storedPath = originalPath(memberId, id, ext);
+    const preserveForManualTranscription = async (sourceKind: 'handwritten_image' | 'scanned_pdf') => {
+      await query(
+        `UPDATE workbench_uploads
+            SET source_kind = $1, transcription_status = 'error', error_message = $2, updated_at = NOW()
+          WHERE id = $3 AND arranger_id = $4`,
+        [sourceKind, MANUAL_TRANSCRIPTION_MESSAGE, id, memberId],
+      );
+      return {
+        id,
+        sourceKind,
+        transcriptionStatus: 'error' as const,
+        originalName: file.name,
+      };
+    };
     let sourceKind: WorkbenchSourceKind = initialKind;
     let status: 'draft' | 'reviewed' = 'reviewed';
     let text = '';
@@ -59,11 +80,13 @@ export async function ingestWorkbenchUpload(memberId: string, file: File) {
       status = 'draft';
       if (extracted.likelyScanned) {
         sourceKind = 'scanned_pdf';
+        if (!handwritingOcrEnabled()) return await preserveForManualTranscription(sourceKind);
         text = await ocrPdf(storedPath);
       } else {
         text = extracted.text;
       }
     } else if (initialKind === 'handwritten_image') {
+      if (!handwritingOcrEnabled()) return await preserveForManualTranscription(initialKind);
       status = 'draft';
       text = await ocrImage(storedPath);
     }

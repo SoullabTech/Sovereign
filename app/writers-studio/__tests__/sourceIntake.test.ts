@@ -20,6 +20,9 @@ describe('WS-SOURCE-INTAKE-01 — outside material remains source material', () 
     expect(page).toContain('It remains source material, not manuscript text.');
     expect(page).toContain('Delete source');
     expect(page).toContain("method: 'DELETE'");
+    expect(page).toContain('Automatic handwriting transcription is still being tested.');
+    expect(page).toContain('When automatic reading is available');
+    expect(page).not.toContain('Handwritten and scanned pages are transcribed locally');
   });
 
   it('Materials renders source_upload as a material rather than a manuscript', () => {
