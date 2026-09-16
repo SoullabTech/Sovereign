@@ -1,0 +1,90 @@
+{
+  "schema": "PROSPECTIVE_CLAIM_PLAN_P6_ROUNDTRIP_V1",
+  "authority": "deterministic research/shadow evidence only",
+  "planHash": "420cff017e0f43778780af067af841c94e19998cddea2ce08c78f937a67716af",
+  "renderedHash": "50e8ebb3eff4f67f7f27deb8d94aad08b9378f5defcc246c8c1b3ec799914fd6",
+  "prospectiveClaimCount": 3,
+  "retrospectiveClaimCount": 3,
+  "droppedClaimCount": 0,
+  "unplannedUnitCount": 0,
+  "roundTripOk": true,
+  "reason": "one-to-one",
+  "mappings": [
+    {
+      "prospectiveClaimId": "f8857e17f96b2c581545c646b8d467b5e2b9eb5dffe1918a53881411952b89f1",
+      "retrospectiveClaimId": "c1257b9118101623d35c1b738c2f475a1673eeca542ec30f43cdf553637eeacb",
+      "startChar": 0,
+      "endChar": 71,
+      "exactTextHash": "5fd42fdfca5448e5337a516a8b5235024d2a6f58d047341d72faa3a67b766f22",
+      "prospectiveSpeechAct": "GROUNDED",
+      "prospectiveStanding": "established",
+      "retrospectiveKind": "assertion"
+    },
+    {
+      "prospectiveClaimId": "39dd181cf2ce096bd5ca93cc3d6ec5a4360f93c2b180d6c7dedc3c1f6a850317",
+      "retrospectiveClaimId": "122939261d03cb722371d2e27d370ce0ead5c54cec455fb232bcdb6cae5f9db0",
+      "startChar": 72,
+      "endChar": 148,
+      "exactTextHash": "493db27e5c5ee9bb28a0cd3709c49b946fbec419d70ce4649f395ffda6a57d2f",
+      "prospectiveSpeechAct": "CANDIDATE",
+      "prospectiveStanding": "provisional",
+      "retrospectiveKind": "assertion"
+    },
+    {
+      "prospectiveClaimId": "f8d2a16ae1c2fdf3b2b855a724801f7706f61b1cc1b8f76eb44075e2276eabcd",
+      "retrospectiveClaimId": "9e76363db3d31421c063a6b10f499d29c6b2594fdc9b8b8861a57e2cd5da0bb3",
+      "startChar": 149,
+      "endChar": 232,
+      "exactTextHash": "3a173c7e9978fc853901c9f69cd2da39357a10058610933041bdbf19c0a28ec8",
+      "prospectiveSpeechAct": "QUESTION",
+      "prospectiveStanding": "open",
+      "retrospectiveKind": "question"
+    }
+  ],
+  "tamperChecks": {
+    "extraProse": {
+      "ok": false,
+      "reason": "render-contract-failed",
+      "prospectiveClaimIds": [
+        "f8857e17f96b2c581545c646b8d467b5e2b9eb5dffe1918a53881411952b89f1",
+        "39dd181cf2ce096bd5ca93cc3d6ec5a4360f93c2b180d6c7dedc3c1f6a850317",
+        "f8d2a16ae1c2fdf3b2b855a724801f7706f61b1cc1b8f76eb44075e2276eabcd"
+      ],
+      "retrospectiveClaimIds": [
+        "c1257b9118101623d35c1b738c2f475a1673eeca542ec30f43cdf553637eeacb",
+        "122939261d03cb722371d2e27d370ce0ead5c54cec455fb232bcdb6cae5f9db0",
+        "9e76363db3d31421c063a6b10f499d29c6b2594fdc9b8b8861a57e2cd5da0bb3",
+        "c53f3b0d393d7a00994b1d92bc19040d5c79decb8105cdc2b8f107bd84492b8b"
+      ],
+      "retrospectiveKinds": [
+        "assertion",
+        "assertion",
+        "question",
+        "assertion"
+      ],
+      "mappings": [],
+      "droppedClaimCount": 0,
+      "unplannedUnitCount": 1
+    },
+    "mergedSurface": {
+      "ok": false,
+      "reason": "render-contract-failed",
+      "prospectiveClaimIds": [
+        "f8857e17f96b2c581545c646b8d467b5e2b9eb5dffe1918a53881411952b89f1",
+        "39dd181cf2ce096bd5ca93cc3d6ec5a4360f93c2b180d6c7dedc3c1f6a850317",
+        "f8d2a16ae1c2fdf3b2b855a724801f7706f61b1cc1b8f76eb44075e2276eabcd"
+      ],
+      "retrospectiveClaimIds": [
+        "1e85235d1104d212f0fae6c915c8927214c33e73030edead783d9dbd61465bef",
+        "4c210a366181298751159fb1a08355f34c888a16f525958f85b61d3de8cb61e7"
+      ],
+      "retrospectiveKinds": [
+        "assertion",
+        "question"
+      ],
+      "mappings": [],
+      "droppedClaimCount": 1,
+      "unplannedUnitCount": 0
+    }
+  }
+}
