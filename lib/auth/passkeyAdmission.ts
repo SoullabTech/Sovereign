@@ -34,6 +34,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { hashInvitePasskey, normalizeInvitePasskey } from '@/lib/auth/inviteCredential';
 
 /**
  * Accepted passkey FORMATS. `generateInvitePasskey()` emits `SOULLAB-…` by
@@ -84,7 +85,7 @@ export type Admission =
  * because a returning person is not being admitted.
  */
 export async function resolveAdmission(rawPasskey: string): Promise<Admission> {
-  const passkey = rawPasskey.toUpperCase().trim();
+  const passkey = normalizeInvitePasskey(rawPasskey);
 
   if (!hasAcceptedPasskeyFormat(passkey)) {
     return { kind: 'refused', reason: 'bad_format' };
@@ -105,16 +106,39 @@ export async function resolveAdmission(rawPasskey: string): Promise<Admission> {
               m.username AS inviter_username, m.name AS inviter_name
          FROM invites i
          LEFT JOIN members m ON i.created_by = m.id
-        WHERE i.passkey = $1`,
-      [passkey],
+        WHERE i.passkey_hash = $1`,
+      [hashInvitePasskey(passkey)],
     );
     inviteRows = inviteResult.rows as Record<string, unknown>[];
   } catch (error) {
-    /* Fail closed, and say which way we failed. An unreadable invite table
-       must never read as "no restriction applies". */
+    /* DEPLOYMENT-ORDER BRIDGE. Production swaps the reader before it applies
+       migrations. During that bounded window only, a missing passkey_hash
+       column may fall back to the legacy plaintext lookup so an already-issued
+       strong pending invite does not become unusable. Any other failure stays
+       fail-closed. Once R12 lands, this path is unreachable because plaintext
+       is cleared and the hash column exists. */
+    const code = typeof error === 'object' && error && 'code' in error ? String((error as { code?: unknown }).code ?? '') : '';
     const message = error instanceof Error ? error.message : 'unknown';
-    console.error(`[ADMISSION] invite lookup failed: ${message}`);
-    return { kind: 'refused', reason: 'invite_lookup_unavailable' };
+    const hashColumnMissing = code === '42703' || /passkey_hash.*does not exist/i.test(message);
+    if (!hashColumnMissing) {
+      console.error(`[ADMISSION] invite lookup failed: ${message}`);
+      return { kind: 'refused', reason: 'invite_lookup_unavailable' };
+    }
+    try {
+      const legacyResult = await query(
+        `SELECT i.id, i.status, i.expires_at, i.created_by,
+                m.username AS inviter_username, m.name AS inviter_name
+           FROM invites i
+           LEFT JOIN members m ON i.created_by = m.id
+          WHERE i.passkey = $1`,
+        [passkey],
+      );
+      inviteRows = legacyResult.rows as Record<string, unknown>[];
+    } catch (legacyError) {
+      const legacyMessage = legacyError instanceof Error ? legacyError.message : 'unknown';
+      console.error(`[ADMISSION] legacy invite lookup failed: ${legacyMessage}`);
+      return { kind: 'refused', reason: 'invite_lookup_unavailable' };
+    }
   }
 
   if (inviteRows.length === 0) return { kind: 'refused', reason: 'no_invite' };
