@@ -1,0 +1,3 @@
+        "executable" : "file:///private/var/containers/Bundle/Application/E3B88028-A10F-46B1-AB27-CF0A1F83FB78/VoiceKernelHarness.app/VoiceKernelHarness",
+        "executable" : "file:///private/var/containers/Bundle/Application/6A2E406B-D1B8-43A4-92F3-29D50333AF19/VoiceKernelHarness.app/VoiceKernelHarness",
+        "executable" : "file:///private/var/containers/Bundle/Application/0B07D423-97E7-4196-BC1C-C69C96F994BE/VoiceKernelHarness.app/VoiceKernelHarness",
