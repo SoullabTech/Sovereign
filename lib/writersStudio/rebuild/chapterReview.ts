@@ -75,6 +75,7 @@ export async function runChapterReview(
   manuscriptId: string,
   chapterSections: readonly RebuildSection[],
   onProgress?: (done: number, total: number, lens: DevelopmentalLens) => void,
+  onPartial?: (bundle: ChapterReviewBundle, settledLens: DevelopmentalLens) => void,
 ): Promise<ChapterReviewBundle> {
   const first = chapterSections[0];
   const last = chapterSections[chapterSections.length - 1];
@@ -88,6 +89,10 @@ export async function runChapterReview(
     fromSectionId: first.draftSectionId,
     toSectionId: last.draftSectionId,
   };
+  const snapshot = (): ChapterReviewBundle => ({
+    readingIds: [...readingIds], payloads: [...payloads],
+    findings: findingsFromPayloads(payloads), failures: [...failures],
+  });
 
   for (let i = 0; i < LENS_ORDER.length; i += 1) {
     const lens = LENS_ORDER[i]!;
@@ -95,18 +100,21 @@ export async function runChapterReview(
     const commissioned = await requestDevelopmentalReading(manuscriptId, lens, scope);
     if (!commissioned.ok) {
       failures.push({ lens, refusal: commissioned.refusal, stage: commissioned.stage });
+      onPartial?.(snapshot(), lens);
       continue;
     }
     const fetched = await fetchReading(manuscriptId, commissioned.readingId);
     if (!fetched.ok) {
       failures.push({ lens, refusal: fetched.refusal, stage: 'fetch' });
+      onPartial?.(snapshot(), lens);
       continue;
     }
     readingIds.push(commissioned.readingId);
     payloads.push(fetched.payload);
+    onPartial?.(snapshot(), lens);
   }
   onProgress?.(LENS_ORDER.length, LENS_ORDER.length, LENS_ORDER[LENS_ORDER.length - 1]!);
-  return { readingIds, payloads, findings: findingsFromPayloads(payloads), failures };
+  return snapshot();
 }
 
 export type RehydrateChapterReviewOutcome =

@@ -8,6 +8,7 @@ surfaces:
   - app/writers-studio/canvas/Worktable.tsx
   - app/writers-studio/canvas/WritingSurface.tsx
   - app/writers-studio/canvas/SectionWritingSurface.tsx
+  - app/writers-studio/canvas/SectionWritingSession.tsx
   - app/press/manuscript/WorkingDraftEditor.tsx
 change_class: experiential
 principles:

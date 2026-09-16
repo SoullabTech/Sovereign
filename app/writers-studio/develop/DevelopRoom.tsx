@@ -32,7 +32,7 @@ import { CANVAS_HREF } from '../studioMap';
 import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
-import { locationForSection } from '@/lib/writersStudio/placeInWork';
+import { locationForSection, replacePlaceAddress } from '@/lib/writersStudio/placeInWork';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import type { CodePointRange } from '@/lib/manuscript/development/evidenceRef';
 import { DevelopManuscriptRail, DevelopManuscriptSurface } from './DevelopManuscript';
@@ -469,7 +469,7 @@ export default function DevelopRoom({
     if (requestJump) setJumpTo(sectionId);
     if (typeof window === 'undefined') return;
     const next = locationForSection(window.location.pathname, window.location.search, sectionId);
-    window.history.replaceState(window.history.state, '', next);
+    replacePlaceAddress(next);
   }, []);
 
   const currentSection = useMemo(

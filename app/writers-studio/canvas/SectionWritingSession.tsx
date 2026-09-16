@@ -18,7 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { WriteStateSection } from '@/lib/writersStudio/writeStateClient';
-import { locationForSection, readSectionParam } from '@/lib/writersStudio/placeInWork';
+import { locationForSection, readSectionParam, replacePlaceAddress } from '@/lib/writersStudio/placeInWork';
 import {
   DEFAULT_MANUSCRIPT_VIEW, readManuscriptView, writeManuscriptView,
 } from '@/lib/writersStudio/manuscriptViewPreference';
@@ -139,9 +139,7 @@ export default function SectionWritingSession({
     const next = locationForSection(
       window.location.pathname, window.location.search, place,
     );
-    if (next !== window.location.pathname + window.location.search) {
-      window.history.replaceState(window.history.state, '', next);
-    }
+    replacePlaceAddress(next);
   }, [place]);
 
   /**
