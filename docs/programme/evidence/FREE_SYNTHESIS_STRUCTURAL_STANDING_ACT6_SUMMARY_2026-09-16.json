@@ -1,0 +1,27 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 6 interpretive-basis adjudication",
+  "act5PromptChars": 1584,
+  "act6PromptChars": 1582,
+  "act6PromptEvalCountsObserved": [
+    363
+  ],
+  "directRendered": 4,
+  "currentGrounded": 4,
+  "lineageNotEntailment": 4,
+  "basisSets": [
+    [
+      "E-NOW"
+    ],
+    [
+      "E-NOW"
+    ],
+    [
+      "E-NOW"
+    ],
+    [
+      "E-NOW"
+    ]
+  ],
+  "finding": "Evidence references on MAIA-authored synthesis are typed as interpretive lineage, not semantic entailment; grounded standing remains reserved to substrate-owned evidence."
+}

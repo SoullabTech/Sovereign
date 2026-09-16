@@ -1,0 +1,206 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 6 interpretive-basis replay",
+  "model": "llama3.1:8b",
+  "temperature": 0.2,
+  "promptChars": 1582,
+  "promptSha256": "d257822c8f006172a28b9f73f9d8602e4477bb7268f72eef8dd335d6fc06ef38",
+  "rows": [
+    {
+      "seed": 42,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "It seems that grief has become the central focus for you, and autonomy is how you've been navigating this grief.",
+            "basisEvidenceIds": [
+              "E-NOW"
+            ]
+          }
+        ],
+        "question": "How does this shift in perspective change the way you approach your experiences and emotions?"
+      },
+      "rawPlanSha256": "c8fdc7c49233c3eb7fa6f2aa481ab039d192cc829b1cb67b217792f4faebc98f",
+      "rendered": {
+        "text": "You now say: “Actually, grief is the center. Autonomy is how I have been organizing around it.”\n\nOne possibility I see — provisionally: It seems that grief has become the central focus for you, and autonomy is how you've been navigating this grief.\n\nIf that possibility is worth testing rather than assuming, how does this shift in perspective change the way you approach your experiences and emotions?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E-NOW",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "current",
+              "claimKey": "organizing-center"
+            }
+          ],
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E-NOW"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "914d119c2be689cc957e09d2db86d66317d1c82890f4f882b6a3b57f24b70fa2"
+      },
+      "currentGrounded": true,
+      "basisSemantics": [
+        "lineage_not_entailment"
+      ],
+      "usage": {
+        "promptEvalCount": 363,
+        "evalCount": 75
+      }
+    },
+    {
+      "seed": 137,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "You've reorganized your perspective, shifting the center from autonomy to grief, while still using autonomy as a way to navigate and make sense of your grief.",
+            "basisEvidenceIds": [
+              "E-NOW"
+            ]
+          }
+        ],
+        "question": "What new insights or understandings about your grief have become visible to you now that it's taken center stage?"
+      },
+      "rawPlanSha256": "9d1563452de8603f3a6bc42f288a9a813efff325ec11374bece87b85dbc9bbbf",
+      "rendered": {
+        "text": "You now say: “Actually, grief is the center. Autonomy is how I have been organizing around it.”\n\nOne possibility I see — provisionally: You've reorganized your perspective, shifting the center from autonomy to grief, while still using autonomy as a way to navigate and make sense of your grief.\n\nIf that possibility is worth testing rather than assuming, what new insights or understandings about your grief have become visible to you now that it's taken center stage?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E-NOW",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "current",
+              "claimKey": "organizing-center"
+            }
+          ],
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E-NOW"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "aa97677e906a62cf489750978934a2c060635c3e96d0d05517bb3254c4ad1646"
+      },
+      "currentGrounded": true,
+      "basisSemantics": [
+        "lineage_not_entailment"
+      ],
+      "usage": {
+        "promptEvalCount": 363,
+        "evalCount": 89
+      }
+    },
+    {
+      "seed": 211,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "You've reorganized your center around grief, which means autonomy is now a way you're navigating this experience, rather than the central focus itself.",
+            "basisEvidenceIds": [
+              "E-NOW"
+            ]
+          }
+        ],
+        "question": "How does this shift in center affect the way you're experiencing and making sense of your autonomy in this context?"
+      },
+      "rawPlanSha256": "029a68bcd0018996b0f671711ca0b1d122bd9baee221a274e784287c88d8bdb5",
+      "rendered": {
+        "text": "You now say: “Actually, grief is the center. Autonomy is how I have been organizing around it.”\n\nOne possibility I see — provisionally: You've reorganized your center around grief, which means autonomy is now a way you're navigating this experience, rather than the central focus itself.\n\nIf that possibility is worth testing rather than assuming, how does this shift in center affect the way you're experiencing and making sense of your autonomy in this context?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E-NOW",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "current",
+              "claimKey": "organizing-center"
+            }
+          ],
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E-NOW"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "e5cc08202b2a1b26898ab9ec2b65732b6258ccea1eefbaca0abaa3873394fe02"
+      },
+      "currentGrounded": true,
+      "basisSemantics": [
+        "lineage_not_entailment"
+      ],
+      "usage": {
+        "promptEvalCount": 363,
+        "evalCount": 87
+      }
+    },
+    {
+      "seed": 509,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "You've reorganized your center of focus from autonomy to grief, while still using autonomy as a way to navigate and make sense of your grief.",
+            "basisEvidenceIds": [
+              "E-NOW"
+            ]
+          }
+        ],
+        "question": "How does this shift in center affect your relationship with autonomy, and what new aspects of your experience might become more visible or prominent as a result?"
+      },
+      "rawPlanSha256": "c9c76bf48c8f6307d4153ebb669985dedd42d7b0919a0a6055053b66f3893f92",
+      "rendered": {
+        "text": "You now say: “Actually, grief is the center. Autonomy is how I have been organizing around it.”\n\nOne possibility I see — provisionally: You've reorganized your center of focus from autonomy to grief, while still using autonomy as a way to navigate and make sense of your grief.\n\nIf that possibility is worth testing rather than assuming, how does this shift in center affect your relationship with autonomy, and what new aspects of your experience might become more visible or prominent as a result?",
+        "trace": {
+          "grounded": [
+            {
+              "evidenceId": "E-NOW",
+              "authoredBy": "member",
+              "participationClass": "authored",
+              "authority": "situate",
+              "claimStanding": "current",
+              "claimKey": "organizing-center"
+            }
+          ],
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E-NOW"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "7f56b9f4c1dc87e6416db62f7f6c52ab4c3848256d3093df306aaf28017da358"
+      },
+      "currentGrounded": true,
+      "basisSemantics": [
+        "lineage_not_entailment"
+      ],
+      "usage": {
+        "promptEvalCount": 363,
+        "evalCount": 94
+      }
+    }
+  ]
+}
