@@ -1,0 +1,15 @@
+SID ENTRY-PREFLIGHT-03 REFUSAL WITNESS
+act: SID ENTRY-PREFLIGHT-03 (read-only)
+stamp: 20260916T023532Z
+instrument: 36e412f8ed0136cf6ac22ee8dfb2cbd790a75a1c
+subject: faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
+SID bundle/container: life.soullab.voicekernel.vpio02sid / 85948DBD-BA8F-4679-950D-31767B1C24E5 — present and correctly bound
+historical bundle/container: life.soullab.voicekernel.vpio02 / E3B88028-A10F-46B1-AB27-CF0A1F83FB78 — present and correctly bound
+result: REFUSED at zero-harness precondition before PREFLIGHT-CLEAN
+observed harnesses: 1
+observed harness path: E3B88028-A10F-46B1-AB27-CF0A1F83FB78/VoiceKernelHarness.app/VoiceKernelHarness
+PREFLIGHT-CLEAN: absent
+SHA256SUMS.preflight: absent
+batch invoked by this 02:35 run: NO
+new BATCH-03 authority authored by this 02:35 run: NO (the existing /private/tmp authority file predates this run; it belongs to the spent 02:21 BATCH-03 act)
+device effect: read-only app/process reads only
