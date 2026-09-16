@@ -13,7 +13,7 @@ import { fetchStructure, refusalCopy as structureRefusalCopy, type StructureNode
 import RebuildWritingBoundary from './RebuildWritingBoundary';
 import RebuildAuthoredBody from './RebuildAuthoredBody';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
-import { chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { OutlineNode } from '@/lib/writersStudio/focus/outlineTree';
 import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { focusOn, focusRequest, composerPrompt } from '@/lib/writersStudio/focus/studioFocus';
@@ -79,6 +79,42 @@ function selectionFromThread(
     draftSectionId: section.draftSectionId,
     start: located.start, end: located.end, text: thread.locusText, revisionNumber: version,
   } : null;
+}
+
+function ImportedStructureBranch({
+  node, focusId, onSelect, level = 0,
+}: {
+  node: OutlineNode; focusId: string | null;
+  onSelect: (id: string, role: OutlineNode['role']) => void; level?: number;
+}) {
+  const containsFocus = node.draftSectionId === focusId || node.children.some((child) => child.draftSectionId === focusId || child.children.some((grand) => grand.draftSectionId === focusId));
+  const [expanded, setExpanded] = useState(level === 0 || containsFocus);
+  useEffect(() => { if (containsFocus) setExpanded(true); }, [containsFocus]);
+  const label = node.heading ?? `Section ${node.position + 1}`;
+  const roleLabel = node.role === 'part' ? 'Part' : node.role === 'chapter' ? 'Chapter' : node.depth === 2 ? 'Section' : node.depth === 3 ? 'Subsection' : 'Section';
+  return (
+    <div data-imported-structure-node={node.draftSectionId}>
+      <div style={{ display: 'grid', gridTemplateColumns: '22px minmax(0,1fr)', alignItems: 'start' }}>
+        <button type="button" aria-label={node.children.length ? (expanded ? 'Collapse' : 'Expand') : undefined}
+          disabled={node.children.length === 0} onClick={() => node.children.length && setExpanded((value) => !value)}
+          style={{ border: 0, background: 'transparent', color: C.quiet, padding: '8px 1px', cursor: node.children.length ? 'pointer' : 'default', opacity: node.children.length ? .8 : 0 }}>
+          {expanded ? '⌄' : '›'}
+        </button>
+        <button type="button" onClick={() => onSelect(node.draftSectionId, node.role)}
+          style={{ width: '100%', textAlign: 'left', border: 0, borderLeft: node.draftSectionId === focusId ? `3px solid ${C.gold}` : '3px solid transparent', borderRadius: 7, background: node.draftSectionId === focusId ? C.active : 'transparent', color: C.secondary, padding: `7px 8px 7px ${7 + level * 11}px`, cursor: 'pointer' }}>
+          <span style={{ display: 'block', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: node.role === 'chapter' ? C.gold : C.quiet, marginBottom: 2 }}>{roleLabel}</span>
+          <span style={{ display: 'block', fontSize: node.role === 'chapter' ? 12.5 : 11.5, fontWeight: node.role === 'chapter' ? 700 : 500, lineHeight: 1.3 }}>{label}</span>
+        </button>
+      </div>
+      {expanded && node.children.length > 0 && (
+        <div style={{ marginLeft: 8 }}>
+          {node.children.map((child) => (
+            <ImportedStructureBranch key={child.draftSectionId} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function AuthoredStructureBranch({
@@ -240,6 +276,8 @@ export default function RebuildStudioClient() {
 
   const focusSection = context?.sections.find((s) => s.draftSectionId === focusId) ?? null;
   const chapter = context && focusId ? chapterSpanFor(context.sections, focusId) : null;
+  const hasImportedStructure = Boolean(context?.sections.some((section) => section.headingDepth !== null && section.headingSignal));
+  const importedStructureTree = context && hasImportedStructure ? asOutline(context.sections) : [];
   useEffect(() => {
     if (!chapter && maiaMode === 'chapter') setMaiaMode('passage');
   }, [chapter, maiaMode]);
@@ -850,33 +888,57 @@ export default function RebuildStudioClient() {
           {structureNotice ? (
             <div role="status" style={{ fontSize: 11, lineHeight: 1.45, color: C.muted, padding: '4px 6px 12px' }}>{structureNotice}</div>
           ) : authoredStructure ? (
-            <div data-authored-structure style={{ display: 'grid', gap: 2 }}>
-              {authoredStructure.roots.length > 0 ? authoredStructure.roots.map((node) => (
-                <AuthoredStructureBranch key={node.id} node={node} focusId={focusId}
-                  onSelect={(id) => selectSection(id, 'section')} />
-              )) : (
-                <div style={{ fontSize: 11, lineHeight: 1.45, color: C.muted, padding: '4px 6px 10px' }}>No book divisions have been authored yet.</div>
-              )}
-              {authoredStructure.unplacedSectionIds.length > 0 && (
-                <details data-unplaced-structure style={{ marginTop: 8 }}>
-                  <summary style={{ cursor: 'pointer', fontSize: 11, color: C.muted, padding: '6px' }}>
-                    {authoredStructure.unplacedSectionIds.length} sections not organized yet
-                  </summary>
-                  <div style={{ display: 'grid', gap: 1, marginTop: 4 }}>
-                    {authoredStructure.unplacedSectionIds.map((id) => {
-                      const section = context.sections.find((candidate) => candidate.draftSectionId === id);
-                      if (!section) return null;
-                      return (
-                        <button key={id} type="button" onClick={() => selectSection(id, 'section')}
-                          style={{ width: '100%', textAlign: 'left', border: 0, borderLeft: focusId === id ? `3px solid ${C.gold}` : '3px solid transparent', borderRadius: 6, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>
-                          {section.heading ?? `Section ${section.position + 1}`}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </details>
-              )}
-            </div>
+            authoredStructure.roots.length > 0 ? (
+              <div data-authored-structure style={{ display: 'grid', gap: 2 }}>
+                <div style={{ fontSize: 10, color: C.quiet, padding: '0 6px 7px' }}>Member-authored structure</div>
+                {authoredStructure.roots.map((node) => (
+                  <AuthoredStructureBranch key={node.id} node={node} focusId={focusId}
+                    onSelect={(id) => selectSection(id, 'section')} />
+                ))}
+                {authoredStructure.unplacedSectionIds.length > 0 && (
+                  <details data-unplaced-structure style={{ marginTop: 8 }}>
+                    <summary style={{ cursor: 'pointer', fontSize: 11, color: C.muted, padding: '6px' }}>
+                      {authoredStructure.unplacedSectionIds.length} sections not organized yet
+                    </summary>
+                    <div style={{ display: 'grid', gap: 1, marginTop: 4 }}>
+                      {authoredStructure.unplacedSectionIds.map((id) => {
+                        const section = context.sections.find((candidate) => candidate.draftSectionId === id);
+                        if (!section) return null;
+                        return (
+                          <button key={id} type="button" onClick={() => selectSection(id, 'section')}
+                            style={{ width: '100%', textAlign: 'left', border: 0, borderLeft: focusId === id ? `3px solid ${C.gold}` : '3px solid transparent', borderRadius: 6, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>
+                            {section.heading ?? `Section ${section.position + 1}`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </details>
+                )}
+              </div>
+            ) : hasImportedStructure ? (
+              <div data-imported-structure style={{ display: 'grid', gap: 2 }}>
+                <div style={{ fontSize: 10, lineHeight: 1.35, color: C.quiet, padding: '0 6px 7px' }}>Structure carried by the manuscript source</div>
+                {importedStructureTree.map((node) => (
+                  <ImportedStructureBranch key={node.draftSectionId} node={node} focusId={focusId} onSelect={selectSection} />
+                ))}
+              </div>
+            ) : (
+              <div data-authored-structure style={{ display: 'grid', gap: 2 }}>
+                <div style={{ fontSize: 11, lineHeight: 1.45, color: C.muted, padding: '4px 6px 10px' }}>No book hierarchy is established in this manuscript yet.</div>
+                {authoredStructure.unplacedSectionIds.length > 0 && (
+                  <details data-unplaced-structure style={{ marginTop: 4 }}>
+                    <summary style={{ cursor: 'pointer', fontSize: 11, color: C.muted, padding: '6px' }}>{authoredStructure.unplacedSectionIds.length} sections not organized yet</summary>
+                    <div style={{ display: 'grid', gap: 1, marginTop: 4 }}>
+                      {authoredStructure.unplacedSectionIds.map((id) => {
+                        const section = context.sections.find((candidate) => candidate.draftSectionId === id);
+                        if (!section) return null;
+                        return <button key={id} type="button" onClick={() => selectSection(id, 'section')} style={{ width: '100%', textAlign: 'left', border: 0, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>{section.heading ?? `Section ${section.position + 1}`}</button>;
+                      })}
+                    </div>
+                  </details>
+                )}
+              </div>
+            )
           ) : (
             <div style={{ fontSize: 11, color: C.quiet, padding: '4px 6px' }}>Reading the book structure…</div>
           )}
