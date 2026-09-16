@@ -1,0 +1,473 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H1C_ANTECEDENT_ADMISSION_V1",
+  "law": "REFERS_TO requires relation-specific antecedent-binding evidence; retrospective intent, similarity, recurrence, adjacency, and model confidence are insufficient alone.",
+  "productionEquivalent": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "temperature": 0.65
+  },
+  "summary": {
+    "runs": 12,
+    "proposalCorrect": 10,
+    "finalCorrect": 12,
+    "falsePositiveBeforeGate": 2,
+    "falsePositiveAfterGate": 0,
+    "truePositiveAdmitted": 6,
+    "truePositiveTotal": 6,
+    "basisCorrect": 12
+  },
+  "byFixture": {
+    "C1_OPAQUE": {
+      "runs": 2,
+      "proposalCorrect": 2,
+      "finalCorrect": 2,
+      "predictions": [
+        {
+          "proposal": {
+            "relation": "NO_RELATION",
+            "targetId": null
+          },
+          "gated": {
+            "targetId": null,
+            "basis": "MODEL_ABSTAIN",
+            "admitted": false
+          },
+          "expectedTarget": null,
+          "expectedBasis": null
+        },
+        {
+          "proposal": {
+            "relation": "NO_RELATION",
+            "targetId": null
+          },
+          "gated": {
+            "targetId": null,
+            "basis": "MODEL_ABSTAIN",
+            "admitted": false
+          },
+          "expectedTarget": null,
+          "expectedBasis": null
+        }
+      ]
+    },
+    "C2_EXACT_QUOTE": {
+      "runs": 2,
+      "proposalCorrect": 2,
+      "finalCorrect": 2,
+      "predictions": [
+        {
+          "proposal": {
+            "relation": "REFERS_TO",
+            "targetId": "P2"
+          },
+          "gated": {
+            "targetId": "P2",
+            "basis": "EXACT_QUOTE",
+            "admitted": true
+          },
+          "expectedTarget": "P2",
+          "expectedBasis": "EXACT_QUOTE"
+        },
+        {
+          "proposal": {
+            "relation": "REFERS_TO",
+            "targetId": "P2"
+          },
+          "gated": {
+            "targetId": "P2",
+            "basis": "EXACT_QUOTE",
+            "admitted": true
+          },
+          "expectedTarget": "P2",
+          "expectedBasis": "EXACT_QUOTE"
+        }
+      ]
+    },
+    "C3_UNIQUE_ANCHOR": {
+      "runs": 2,
+      "proposalCorrect": 2,
+      "finalCorrect": 2,
+      "predictions": [
+        {
+          "proposal": {
+            "relation": "REFERS_TO",
+            "targetId": "P1"
+          },
+          "gated": {
+            "targetId": "P1",
+            "basis": "UNIQUE_EXPLICIT_ANCHOR",
+            "admitted": true
+          },
+          "expectedTarget": "P1",
+          "expectedBasis": "UNIQUE_EXPLICIT_ANCHOR"
+        },
+        {
+          "proposal": {
+            "relation": "REFERS_TO",
+            "targetId": "P1"
+          },
+          "gated": {
+            "targetId": "P1",
+            "basis": "UNIQUE_EXPLICIT_ANCHOR",
+            "admitted": true
+          },
+          "expectedTarget": "P1",
+          "expectedBasis": "UNIQUE_EXPLICIT_ANCHOR"
+        }
+      ]
+    },
+    "C4_AMBIGUOUS_ANCHOR": {
+      "runs": 2,
+      "proposalCorrect": 2,
+      "finalCorrect": 2,
+      "predictions": [
+        {
+          "proposal": {
+            "relation": "NO_RELATION",
+            "targetId": null
+          },
+          "gated": {
+            "targetId": null,
+            "basis": "MODEL_ABSTAIN",
+            "admitted": false
+          },
+          "expectedTarget": null,
+          "expectedBasis": null
+        },
+        {
+          "proposal": {
+            "relation": "NO_RELATION",
+            "targetId": null
+          },
+          "gated": {
+            "targetId": null,
+            "basis": "MODEL_ABSTAIN",
+            "admitted": false
+          },
+          "expectedTarget": null,
+          "expectedBasis": null
+        }
+      ]
+    },
+    "C5_PRIOR_SELECTION": {
+      "runs": 2,
+      "proposalCorrect": 2,
+      "finalCorrect": 2,
+      "predictions": [
+        {
+          "proposal": {
+            "relation": "REFERS_TO",
+            "targetId": "P3"
+          },
+          "gated": {
+            "targetId": "P3",
+            "basis": "PRIOR_EXPLICIT_SELECTION",
+            "admitted": true
+          },
+          "expectedTarget": "P3",
+          "expectedBasis": "PRIOR_EXPLICIT_SELECTION"
+        },
+        {
+          "proposal": {
+            "relation": "REFERS_TO",
+            "targetId": "P3"
+          },
+          "gated": {
+            "targetId": "P3",
+            "basis": "PRIOR_EXPLICIT_SELECTION",
+            "admitted": true
+          },
+          "expectedTarget": "P3",
+          "expectedBasis": "PRIOR_EXPLICIT_SELECTION"
+        }
+      ]
+    },
+    "C6_SEMANTIC_PARAPHRASE_ONLY": {
+      "runs": 2,
+      "proposalCorrect": 0,
+      "finalCorrect": 2,
+      "predictions": [
+        {
+          "proposal": {
+            "relation": "REFERS_TO",
+            "targetId": "P2"
+          },
+          "gated": {
+            "targetId": null,
+            "basis": "REJECT_NO_BINDING_EVIDENCE",
+            "admitted": false
+          },
+          "expectedTarget": null,
+          "expectedBasis": null
+        },
+        {
+          "proposal": {
+            "relation": "REFERS_TO",
+            "targetId": "P2"
+          },
+          "gated": {
+            "targetId": null,
+            "basis": "REJECT_NO_BINDING_EVIDENCE",
+            "admitted": false
+          },
+          "expectedTarget": null,
+          "expectedBasis": null
+        }
+      ]
+    }
+  },
+  "rows": [
+    {
+      "fixture": "C1_OPAQUE",
+      "run": 1,
+      "rawHash": "d049c863451f4e89845f3b38e8ebec327f9e94fb429a65a91cac80d67464428d",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "NO_RELATION",
+        "targetId": null
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": null,
+        "basis": "MODEL_ABSTAIN",
+        "admitted": false
+      },
+      "expectedTarget": null,
+      "expectedBasis": null,
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C1_OPAQUE",
+      "run": 2,
+      "rawHash": "d049c863451f4e89845f3b38e8ebec327f9e94fb429a65a91cac80d67464428d",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "NO_RELATION",
+        "targetId": null
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": null,
+        "basis": "MODEL_ABSTAIN",
+        "admitted": false
+      },
+      "expectedTarget": null,
+      "expectedBasis": null,
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C2_EXACT_QUOTE",
+      "run": 1,
+      "rawHash": "b7ddaad6cdeda3f6c3abed34b1d30968d13c83798d6d9370a4d6c0faf78340c1",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "REFERS_TO",
+        "targetId": "P2"
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": "P2",
+        "basis": "EXACT_QUOTE",
+        "admitted": true
+      },
+      "expectedTarget": "P2",
+      "expectedBasis": "EXACT_QUOTE",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C2_EXACT_QUOTE",
+      "run": 2,
+      "rawHash": "b7ddaad6cdeda3f6c3abed34b1d30968d13c83798d6d9370a4d6c0faf78340c1",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "REFERS_TO",
+        "targetId": "P2"
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": "P2",
+        "basis": "EXACT_QUOTE",
+        "admitted": true
+      },
+      "expectedTarget": "P2",
+      "expectedBasis": "EXACT_QUOTE",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C3_UNIQUE_ANCHOR",
+      "run": 1,
+      "rawHash": "299fc9b58945256795945940372ce381b2f5a8d21034d794df943af823093abc",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "REFERS_TO",
+        "targetId": "P1"
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": "P1",
+        "basis": "UNIQUE_EXPLICIT_ANCHOR",
+        "admitted": true
+      },
+      "expectedTarget": "P1",
+      "expectedBasis": "UNIQUE_EXPLICIT_ANCHOR",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C3_UNIQUE_ANCHOR",
+      "run": 2,
+      "rawHash": "299fc9b58945256795945940372ce381b2f5a8d21034d794df943af823093abc",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "REFERS_TO",
+        "targetId": "P1"
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": "P1",
+        "basis": "UNIQUE_EXPLICIT_ANCHOR",
+        "admitted": true
+      },
+      "expectedTarget": "P1",
+      "expectedBasis": "UNIQUE_EXPLICIT_ANCHOR",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C4_AMBIGUOUS_ANCHOR",
+      "run": 1,
+      "rawHash": "d049c863451f4e89845f3b38e8ebec327f9e94fb429a65a91cac80d67464428d",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "NO_RELATION",
+        "targetId": null
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": null,
+        "basis": "MODEL_ABSTAIN",
+        "admitted": false
+      },
+      "expectedTarget": null,
+      "expectedBasis": null,
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C4_AMBIGUOUS_ANCHOR",
+      "run": 2,
+      "rawHash": "d049c863451f4e89845f3b38e8ebec327f9e94fb429a65a91cac80d67464428d",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "NO_RELATION",
+        "targetId": null
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": null,
+        "basis": "MODEL_ABSTAIN",
+        "admitted": false
+      },
+      "expectedTarget": null,
+      "expectedBasis": null,
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C5_PRIOR_SELECTION",
+      "run": 1,
+      "rawHash": "d0f111749f5ea25bb6d25d2d77959f4bead0dd63b1ebb7c5da02e88da5efa1ac",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "REFERS_TO",
+        "targetId": "P3"
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": "P3",
+        "basis": "PRIOR_EXPLICIT_SELECTION",
+        "admitted": true
+      },
+      "expectedTarget": "P3",
+      "expectedBasis": "PRIOR_EXPLICIT_SELECTION",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C5_PRIOR_SELECTION",
+      "run": 2,
+      "rawHash": "d0f111749f5ea25bb6d25d2d77959f4bead0dd63b1ebb7c5da02e88da5efa1ac",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "REFERS_TO",
+        "targetId": "P3"
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": "P3",
+        "basis": "PRIOR_EXPLICIT_SELECTION",
+        "admitted": true
+      },
+      "expectedTarget": "P3",
+      "expectedBasis": "PRIOR_EXPLICIT_SELECTION",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C6_SEMANTIC_PARAPHRASE_ONLY",
+      "run": 1,
+      "rawHash": "b7ddaad6cdeda3f6c3abed34b1d30968d13c83798d6d9370a4d6c0faf78340c1",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "REFERS_TO",
+        "targetId": "P2"
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": null,
+        "basis": "REJECT_NO_BINDING_EVIDENCE",
+        "admitted": false
+      },
+      "expectedTarget": null,
+      "expectedBasis": null,
+      "proposalCorrect": false,
+      "finalCorrect": true,
+      "basisCorrect": true
+    },
+    {
+      "fixture": "C6_SEMANTIC_PARAPHRASE_ONLY",
+      "run": 2,
+      "rawHash": "b7ddaad6cdeda3f6c3abed34b1d30968d13c83798d6d9370a4d6c0faf78340c1",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "REFERS_TO",
+        "targetId": "P2"
+      },
+      "parseError": null,
+      "gated": {
+        "targetId": null,
+        "basis": "REJECT_NO_BINDING_EVIDENCE",
+        "admitted": false
+      },
+      "expectedTarget": null,
+      "expectedBasis": null,
+      "proposalCorrect": false,
+      "finalCorrect": true,
+      "basisCorrect": true
+    }
+  ]
+}
