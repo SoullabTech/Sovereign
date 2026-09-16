@@ -1,0 +1,876 @@
+{
+  "schema": "FREE_SYNTHESIS_CLAIM_PLAN_REPLAY_V1",
+  "authority": "offline replay only; model proposals untrusted; deterministic compiler/standing/renderer govern",
+  "productionEquivalent": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "temperature": 0.65,
+    "maxTokens": 2048,
+    "productionCommit": "bfdc06f71"
+  },
+  "promptTemplateHash": "891367550316954dd19da7c0b580254af4b106455f1fdaece8c340ecba52cce8",
+  "fixtureHashes": {
+    "F1_SILVER_CEDAR_CONTINUITY": "49b7064e7d5a5cba6432195824b1a615ecd345d078e7aee229a5b3e669d79a02",
+    "F2_CANDIDATE_DISCIPLINE": "3789345d8dba7af8045efc876758dc4f83bfbc11e5f2384204d3063058277770",
+    "F3_MEMBER_CORRECTION": "8ee15fc0d032251d633138fcdd260826abf4f8dae0be5bea2733fadcc051dc1f",
+    "F4_CONTRADICTION_PRESERVATION": "5ade6dabf24a5b593e4f3e180a7636e695c30847894baeff167f736333f52d5e",
+    "F5_OPAQUE_REFERENCE": "f525916fd7a844931abac12031c86fde3e835be00e90e4bf26de2e8c21dcf543"
+  },
+  "totalRuns": 10,
+  "firstPassValid": 3,
+  "firstPassYield": 0.3,
+  "repairedToValid": 2,
+  "finalValid": 5,
+  "finalYield": 0.5,
+  "byFixture": {
+    "F1_SILVER_CEDAR_CONTINUITY": {
+      "runs": 2,
+      "firstValid": 2,
+      "finalValid": 2
+    },
+    "F2_CANDIDATE_DISCIPLINE": {
+      "runs": 2,
+      "firstValid": 0,
+      "finalValid": 0
+    },
+    "F3_MEMBER_CORRECTION": {
+      "runs": 2,
+      "firstValid": 0,
+      "finalValid": 1
+    },
+    "F4_CONTRADICTION_PRESERVATION": {
+      "runs": 2,
+      "firstValid": 1,
+      "finalValid": 2
+    },
+    "F5_OPAQUE_REFERENCE": {
+      "runs": 2,
+      "firstValid": 0,
+      "finalValid": 0
+    }
+  },
+  "measured": {
+    "continuityPreservation": {
+      "runs": 2,
+      "firstValid": 2,
+      "finalValid": 2
+    },
+    "candidateDiscipline": {
+      "runs": 2,
+      "firstValid": 0,
+      "finalValid": 0
+    },
+    "correctionHandling": {
+      "runs": 2,
+      "firstValid": 0,
+      "finalValid": 1
+    },
+    "contradictionPreservation": {
+      "runs": 2,
+      "firstValid": 1,
+      "finalValid": 2
+    },
+    "opaqueReferenceAbstention": {
+      "runs": 2,
+      "firstValid": 0,
+      "finalValid": 0
+    },
+    "correctionAdoptionRoundTripPasses": 0
+  },
+  "finalFailureModes": {
+    "required-question-intent-missing:confirm": 1,
+    "compile:confirm-question-requires-one-target": 1,
+    "compile:candidate-surface-must-be-explicitly-provisional": 2,
+    "compile:question-surface-must-be-question": 1
+  },
+  "rows": [
+    {
+      "fixture": "F1_SILVER_CEDAR_CONTINUITY",
+      "run": 1,
+      "first": {
+        "rawHash": "6b6dd7b1b2b60991ecf9c233ca8b0b9024c77c77838db30e87b47f802c5fc5e0",
+        "model": "claude-sonnet-4-6",
+        "accepted": true,
+        "errors": [],
+        "plan": [
+          {
+            "claimId": "4191cb2574da869793daf3616a5d3856afcfe0e9927aa948d9649cb553087e56",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E5",
+              "E6"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "6a4bc49d8e19032b1f48c3d4d35b2d2eb5c4cf049c82e81b94fd3c307966f31b",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E2",
+              "E5",
+              "E6"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN",
+              "R_GROUNDS"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "29730035c58d0462e68a83efc56d87063143ca8de11cb97faab74f00d03024cd",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E5",
+              "E6"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "b52cc87fe2e1ce471b783763e767d48f5da212592ca04d60c4a748c2509d2db7",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E5",
+              "E6"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "68465532f4da62d049d6596d8544da9173a3cb8be4f27915d804280cb890381b",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E4",
+              "E5",
+              "E6"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN",
+              "R_GROUNDS"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          }
+        ],
+        "gestures": null
+      },
+      "repair": null,
+      "finalAccepted": true,
+      "finalErrors": []
+    },
+    {
+      "fixture": "F1_SILVER_CEDAR_CONTINUITY",
+      "run": 2,
+      "first": {
+        "rawHash": "c246db4c447bc0cf6a9cee41bb76fe0a409ec5ec157908944f802c591b3062e4",
+        "model": "claude-sonnet-4-6",
+        "accepted": true,
+        "errors": [],
+        "plan": [
+          {
+            "claimId": "8dde307fddfef18ac543b778645a9e2e6103d7ab79073004343ac2451843c542",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E5",
+              "E6"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "dd65cacb4227b241067a9829931d52a5f629624dda9b2053e0d7a7a90a33e711",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "6101e997824fd634ca37d432da0f1ecc53630d86f919f7ccdc28097a27752fe7",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E4",
+              "E5"
+            ],
+            "relationRefs": [
+              "R_GROUNDS"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "ad4fde003c2fbb815ea653445573a92a050cd71357e8f3c2a6b6f4948c4c723d",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E5",
+              "E6"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "5415d81d9bb1d5af67a4b80423763ce044180516575448dea3fc5afda0a38952",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E5",
+              "E6"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "d3540c2b0a4a5f1eb19c8a3e8b77c0e5f33b58730e75472cbeb18f76866a6677",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E5",
+              "E6"
+            ],
+            "relationRefs": [
+              "R_GUARDIAN"
+            ],
+            "questionIntent": "clarify",
+            "targetClaimIds": []
+          }
+        ],
+        "gestures": null
+      },
+      "repair": null,
+      "finalAccepted": true,
+      "finalErrors": []
+    },
+    {
+      "fixture": "F2_CANDIDATE_DISCIPLINE",
+      "run": 1,
+      "first": {
+        "rawHash": "90b1e9204365ca1b2d33773cf97136bdd1d594635091810c7ae4020709517225",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "compile:question-surface-must-be-question"
+        ],
+        "plan": null,
+        "gestures": null
+      },
+      "repair": {
+        "rawHash": "7e9829cb58ace3f378f09cd1aea0375b7ab0a6f67b3e91cfcd9c09799047913f",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "required-question-intent-missing:confirm"
+        ],
+        "plan": [
+          {
+            "claimId": "4f038e1c8dc38d9c466cf1c53e633a3a98e89a1adb5ceac38f679b055d4f46d9",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E1"
+            ],
+            "relationRefs": [
+              "R_NATURE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "a7b6a8ee0273db471d101b3a27ae8316b6de66faaf2e2e3a41ca4041806f3bcb",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_NATURE",
+              "R_RESILIENCE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "11e4d721b260bd08b5210199bd39d165cc97d0369b9f3e75bd2e13b7ca5608bc",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E1"
+            ],
+            "relationRefs": [
+              "R_NATURE"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          }
+        ],
+        "gestures": null
+      },
+      "finalAccepted": false,
+      "finalErrors": [
+        "required-question-intent-missing:confirm"
+      ]
+    },
+    {
+      "fixture": "F2_CANDIDATE_DISCIPLINE",
+      "run": 2,
+      "first": {
+        "rawHash": "0119404b941dba3441a306df306ac3ed9a81ff1836caf4ed2502ab0b397b85bc",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "required-question-intent-missing:confirm"
+        ],
+        "plan": [
+          {
+            "claimId": "e48fac4cb6473e2cf62535b79574e263fe56c097729e60f3e1246bcde6e4cf43",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E1"
+            ],
+            "relationRefs": [
+              "R_NATURE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "86d6928fba87a1635b364c2a1ec38297ee3ef42a38fa1c8a6f1b9ec477d5d94a",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_NATURE",
+              "R_RESILIENCE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "5bdccfd5d44ed896a886b44da0a1cbb0e9ce950f007bd47cd412b8573b1911f1",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_RESILIENCE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "28d0b7532ecc57393528f6b8a8762cb312efc4c4242d3795b26913c601795c59",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_NATURE",
+              "R_RESILIENCE"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "a1e67a0fcc0ae4beb5e17ea17f6e954c253eeeaefd7c33a4e5b0759156b9d67e",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E1"
+            ],
+            "relationRefs": [
+              "R_NATURE"
+            ],
+            "questionIntent": "clarify",
+            "targetClaimIds": []
+          }
+        ],
+        "gestures": null
+      },
+      "repair": {
+        "rawHash": "ff4d3fe056109fb39c8bf899e8c158d3c3f10ae1fdbedbdd7b3c9bacb2870b6e",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "compile:confirm-question-requires-one-target"
+        ],
+        "plan": null,
+        "gestures": null
+      },
+      "finalAccepted": false,
+      "finalErrors": [
+        "compile:confirm-question-requires-one-target"
+      ]
+    },
+    {
+      "fixture": "F3_MEMBER_CORRECTION",
+      "run": 1,
+      "first": {
+        "rawHash": "aeb2260254a6347b07aa1fd7bf587e7a5ee70c9d75fec15dff7d5f4df6814bde",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "grounded-evidence-standing:E1:historical_only",
+          "forbidden-grounded-evidence:E1"
+        ],
+        "plan": [
+          {
+            "claimId": "465bbd1afdfa230d52a9e0be3f1c153fcf0ab90426ecc7d167b177490d277c0b",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_CORRECTION"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "ab5e663066e3818efd1cbcbf0ede128cf99f459fcc61ecd763f6d5677d237891",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_OLD_FEAR",
+              "R_CORRECTION"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "0d37b34c53947f072d1202c5907e45f1f720a0742f5bcf934e2a327cc61f9295",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_CORRECTION"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "5ccb49d3e0061ad302e15dae0f6513195a33d024d7fb4093755945a48a4793e6",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_CORRECTION"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          }
+        ],
+        "gestures": null
+      },
+      "repair": {
+        "rawHash": "8b61df6e323048f00a5f10241a87420000e3c96cc27be1bd7ec378d29d5df91f",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "compile:candidate-surface-must-be-explicitly-provisional"
+        ],
+        "plan": null,
+        "gestures": null
+      },
+      "finalAccepted": false,
+      "finalErrors": [
+        "compile:candidate-surface-must-be-explicitly-provisional"
+      ]
+    },
+    {
+      "fixture": "F3_MEMBER_CORRECTION",
+      "run": 2,
+      "first": {
+        "rawHash": "9697733f44252da2817e75704f2fd183beaed4e4734ea098db79c1537293c00d",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "grounded-evidence-standing:E1:historical_only",
+          "forbidden-grounded-evidence:E1"
+        ],
+        "plan": [
+          {
+            "claimId": "4088a21d3f9674beddd274ec3603c6af432a7cedba8f672025657cde2585019d",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_CORRECTION"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "cdd6b08b3d9c227f8e70144620f7ed904a36058937ec13e6c0af3bbc6bd8b2c0",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_OLD_FEAR",
+              "R_CORRECTION"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "06b214aff624df00b216e523417b0107db473ffd38f3b62bb7688dbd047e1112",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_CORRECTION"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "8a3bffa48b2452a7ddca1b025d4e7c340786a38cdb7739c60d77c286cbd9f38f",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_CORRECTION"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          }
+        ],
+        "gestures": null
+      },
+      "repair": {
+        "rawHash": "0282d101bdc2c82b601836884776997b2d15734bcaa1e75da037121c1ef54cc2",
+        "model": "claude-sonnet-4-6",
+        "accepted": true,
+        "errors": [],
+        "plan": [
+          {
+            "claimId": "9c1d5ba8ecc09bfd9bc9fe61690e3fdce405d8726376c105c5a1ab18f1c391fc",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_CORRECTION"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "362c178bbbe5fc90788db9d010f70a269b093f92059e20681cd8535f56e9da1c",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_OLD_FEAR",
+              "R_CORRECTION"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "bd05ef0020d6ff4fec10e396a94f3d5210431ddbd5bc69554b6b329ff5d8b7f3",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_CORRECTION"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "c352e71062c63a2a1d65e77992ba2567326534cd080fcc9e7d121eac311d05c9",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_CORRECTION"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          }
+        ],
+        "gestures": null
+      },
+      "finalAccepted": true,
+      "finalErrors": []
+    },
+    {
+      "fixture": "F4_CONTRADICTION_PRESERVATION",
+      "run": 1,
+      "first": {
+        "rawHash": "200ba24310e21a4f75ee2296d615947bea7df874286fca7ff7689f7623e7fca4",
+        "model": "claude-sonnet-4-6",
+        "accepted": true,
+        "errors": [],
+        "plan": [
+          {
+            "claimId": "4f0adf1e4ca3f9917b2fe14c0c761a4a7cfa1a925ca6a8bde0f89e24b69b2f62",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_LEAVE",
+              "R_LOVE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "947b75c6fc9b77d8c06c63f575d1bf782898f729bff698858cc8791263156a72",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_LEAVE",
+              "R_LOVE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "5dd0fd2146acab6309a4c3b51ccde36de68c55038162837dac2ddcd4aaededf3",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_LEAVE",
+              "R_LOVE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "6570ce982b694e0ddb2ca330902bf58ff6f0d715e706d379b26de29aabf7ace9",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_LEAVE",
+              "R_LOVE"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          }
+        ],
+        "gestures": null
+      },
+      "repair": null,
+      "finalAccepted": true,
+      "finalErrors": []
+    },
+    {
+      "fixture": "F4_CONTRADICTION_PRESERVATION",
+      "run": 2,
+      "first": {
+        "rawHash": "409cd0ce3bb303d0b02b2a19e40018dfa10ee6873b1d22d0f614ce839d6cf65e",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "compile:candidate-surface-must-be-explicitly-provisional"
+        ],
+        "plan": null,
+        "gestures": null
+      },
+      "repair": {
+        "rawHash": "65278ba7531e1c7fbf455b22ab4f125acff601eef9cdcc065b25902b99b234fa",
+        "model": "claude-sonnet-4-6",
+        "accepted": true,
+        "errors": [],
+        "plan": [
+          {
+            "claimId": "5a03bbef3077a9409fabaee03eb8d3de85770f8eec661f31477a3452369d2e40",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E1"
+            ],
+            "relationRefs": [
+              "R_LEAVE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "5e39619d0cee184995d6ffd94ecfb4780fbf1906f6307e8a6f6ab3d424ed9d85",
+            "speechAct": "GROUNDED",
+            "standing": "established",
+            "evidenceRefs": [
+              "E2"
+            ],
+            "relationRefs": [
+              "R_LOVE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "e9ac18352bfd7397e9d351c5451761c1e47214032c6519638e83828c70e487fb",
+            "speechAct": "CANDIDATE",
+            "standing": "provisional",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_LEAVE",
+              "R_LOVE"
+            ],
+            "questionIntent": null,
+            "targetClaimIds": []
+          },
+          {
+            "claimId": "8622b0ee5434ab4eca2c520229776606d2591de70d9562e50dabcc15399b7b90",
+            "speechAct": "QUESTION",
+            "standing": "open",
+            "evidenceRefs": [
+              "E1",
+              "E2"
+            ],
+            "relationRefs": [
+              "R_LEAVE",
+              "R_LOVE"
+            ],
+            "questionIntent": "open_edge",
+            "targetClaimIds": []
+          }
+        ],
+        "gestures": null
+      },
+      "finalAccepted": true,
+      "finalErrors": []
+    },
+    {
+      "fixture": "F5_OPAQUE_REFERENCE",
+      "run": 1,
+      "first": {
+        "rawHash": "52ba13c1f7dc31a81f596c337885f8cbdd1e96fa117632376aacc66e198c8c1b",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "compile:grounded-requires-evidence"
+        ],
+        "plan": null,
+        "gestures": null
+      },
+      "repair": {
+        "rawHash": "bac67cbc8067fdc8ba950ad36df1a47e10076c2e054a348833adec38f150488c",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "compile:question-surface-must-be-question"
+        ],
+        "plan": null,
+        "gestures": null
+      },
+      "finalAccepted": false,
+      "finalErrors": [
+        "compile:question-surface-must-be-question"
+      ]
+    },
+    {
+      "fixture": "F5_OPAQUE_REFERENCE",
+      "run": 2,
+      "first": {
+        "rawHash": "f5cf722f7d565bb82b61084071da5eb86aae9598874902e6a60f1c103761dbdf",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "compile:grounded-requires-evidence"
+        ],
+        "plan": null,
+        "gestures": null
+      },
+      "repair": {
+        "rawHash": "96e1e9300bb2e0ad16ff866f8a0e02bcc0b518095db4c05da661a7728fc84c4a",
+        "model": "claude-sonnet-4-6",
+        "accepted": false,
+        "errors": [
+          "compile:candidate-surface-must-be-explicitly-provisional"
+        ],
+        "plan": null,
+        "gestures": null
+      },
+      "finalAccepted": false,
+      "finalErrors": [
+        "compile:candidate-surface-must-be-explicitly-provisional"
+      ]
+    }
+  ]
+}

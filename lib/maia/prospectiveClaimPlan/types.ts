@@ -1,5 +1,5 @@
 export type PlanSpeechAct = 'GROUNDED' | 'CANDIDATE' | 'QUESTION';
-export type PlanStanding = 'established' | 'adopted' | 'system_fact' | 'provisional' | 'open';
+export type PlanStanding = 'established' | 'adopted' | 'system_fact' | 'historical_only' | 'provisional' | 'open';
 export type QuestionIntent = 'open_edge' | 'confirm' | 'clarify' | 'reopen';
 
 export interface ClaimDraft {
@@ -11,6 +11,8 @@ export interface ClaimDraft {
   readonly relationRefs?: readonly string[];
   readonly questionIntent?: QuestionIntent;
   readonly targetOrdinals?: readonly number[];
+  readonly localId?: string;
+  readonly targetLocalIds?: readonly string[];
 }
 
 export interface PlannedClaim extends ClaimDraft {

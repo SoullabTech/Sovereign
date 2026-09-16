@@ -38,7 +38,7 @@ function validateDraft(draft: ClaimDraft): void {
   validateSurface(draft);
   const evidence = draft.evidenceRefs ?? [];
   if (draft.speechAct === 'GROUNDED') {
-    if (!['established', 'adopted', 'system_fact'].includes(draft.standing)) throw new Error('grounded-standing-invalid');
+    if (!['established', 'adopted', 'system_fact', 'historical_only'].includes(draft.standing)) throw new Error('grounded-standing-invalid');
     if (evidence.length === 0) throw new Error('grounded-requires-evidence');
   }
   if (draft.speechAct === 'CANDIDATE') {
@@ -56,9 +56,23 @@ function validateDraft(draft: ClaimDraft): void {
 export function compileClaimPlan(planId: string, drafts: readonly ClaimDraft[]): ClaimPlan {
   if (!planId.trim()) throw new Error('plan-id-required');
   drafts.forEach(validateDraft);
+  const localIndex = new Map<string, number>();
+  drafts.forEach((draft, ordinal) => {
+    if (!draft.localId) return;
+    const key = draft.localId.trim();
+    if (!key) throw new Error('empty-local-id');
+    if (localIndex.has(key)) throw new Error('duplicate-local-id');
+    localIndex.set(key, ordinal);
+  });
   const ids = drafts.map((draft, ordinal) => claimIdForDraft(planId, ordinal, draft));
   const claims: PlannedClaim[] = drafts.map((draft, ordinal) => {
-    const targets = [...(draft.targetOrdinals ?? [])];
+    const ordinalTargets = [...(draft.targetOrdinals ?? [])];
+    const localTargets = [...(draft.targetLocalIds ?? [])].map((key) => {
+      const resolved = localIndex.get(key);
+      if (resolved === undefined) throw new Error(`unknown-target-local-id:${key}`);
+      return resolved;
+    });
+    const targets = [...new Set([...ordinalTargets, ...localTargets])];
     if (targets.some((x) => !Number.isInteger(x) || x < 0 || x >= drafts.length || x === ordinal)) {
       throw new Error('invalid-target-ordinal');
     }
