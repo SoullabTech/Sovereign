@@ -20,10 +20,12 @@
 
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { readSectionParam } from '@/lib/writersStudio/placeInWork';
 import { GOLD, GROUND, INK, RADIUS, SPACE } from '../studioTheme';
 import { STUDIO_MODES, type StudioMode } from '../studioMap';
 import { typeStyle } from './StudioType';
-import { canvasForManuscript } from '../canvasIdentity';
+import { modeLocation } from '../studioMap';
 
 export interface StudioModeBarProps {
   /** The mode this room IS. */
@@ -34,10 +36,30 @@ export interface StudioModeBarProps {
 }
 
 export function StudioModeBar({ current, manuscriptId = null, style }: StudioModeBarProps) {
+  /* ── THE PLACE TRAVELS WITH THE MODE (D1) ────────────────────────────────
+     Read from the ADDRESS, not from a prop threaded down through every room.
+
+     That is deliberate, and it is what keeps this bar out of an argument it
+     has no standing in. `s` is already where each room pins the place it is
+     showing, so the bar PRESERVES a locus rather than DECIDING one — and
+     deciding is precisely where the Studio has gone wrong before, when a
+     surface bound to the section it believed was current instead of the one
+     on screen.
+
+     One reader, `readSectionParam`, the same one the rooms use. A second way
+     to read `s` is a second way for it to disagree. */
+  const params = useSearchParams();
+  const sectionId = readSectionParam(params?.toString() ?? '');
   return (
     <nav aria-label="Studio modes" style={{ display: 'flex', gap: SPACE.tight, ...style }}>
       {STUDIO_MODES.map((m) => (
-        <StudioModeItem key={m.id} mode={m} active={m.id === current} manuscriptId={manuscriptId} />
+        <StudioModeItem
+          key={m.id}
+          mode={m}
+          active={m.id === current}
+          manuscriptId={manuscriptId}
+          sectionId={sectionId}
+        />
       ))}
     </nav>
   );
@@ -58,12 +80,14 @@ export function StudioModeBar({ current, manuscriptId = null, style }: StudioMod
  *
  * `needs-work` is deliberately not folded into `unavailable`: "not built" and
  * "nothing to bring" are different facts, and a member is owed the difference.
- * The href is composed by canvasForManuscript, the single definition of how a
- * Work identity travels — see canvasIdentity.ts on why a link is not a binding.
+ * The href is composed by modeLocation, which joins the two existing
+ * authorities — canvasForManuscript for the Work, locationForSection for the
+ * place — and adds no grammar of its own. See canvasIdentity.ts on why a link
+ * is not a binding.
  */
 function StudioModeItem({
-  mode, active, manuscriptId,
-}: { mode: StudioMode; active: boolean; manuscriptId: string | null }) {
+  mode, active, manuscriptId, sectionId,
+}: { mode: StudioMode; active: boolean; manuscriptId: string | null; sectionId: string | null }) {
   const available = mode.availability === 'available';
   const navigable = available && !active && mode.href !== undefined && manuscriptId !== null;
   const state = active ? 'active' : !available ? 'unavailable' : manuscriptId === null ? 'needs-work' : 'rest';
@@ -96,7 +120,7 @@ function StudioModeItem({
   );
   if (!navigable) return body;
   return (
-    <Link href={canvasForManuscript(mode.href!, manuscriptId)} style={{ textDecoration: 'none' }}>
+    <Link href={modeLocation(mode.href!, manuscriptId, sectionId)} style={{ textDecoration: 'none' }}>
       {body}
     </Link>
   );

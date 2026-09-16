@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
 import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
+import { StudioModeBar } from '../studio/StudioModeBar';
 import { SERIF, SANS } from '../studioTheme';
 import { useLivingWorks } from '../useLivingWorks';
 import { currentWork, resolveWorkContext } from '../workContext';
@@ -655,10 +656,8 @@ export default function RebuildStudioClient() {
           <span style={{ color: C.quiet, fontSize: 13 }}>|</span>
           <span style={{ fontFamily: SERIF, fontSize: 17 }}>Writer’s Studio</span>
         </div>
-        <nav className="wsr-modebar" style={{ display: 'flex', justifyContent: 'center', gap: 8, fontSize: 12.5 }}>
-          {['Write', 'Develop', 'Explore', 'Review', 'Publish'].map((x) => (
-            <span key={x} style={{ padding: '7px 13px', borderRadius: 999, background: x === 'Write' ? C.goldFill : 'transparent', fontWeight: x === 'Write' ? 650 : 450 }}>{x}</span>
-          ))}
+        <nav className="wsr-modebar" style={{ display: 'flex', justifyContent: 'center' }}>
+          <StudioModeBar current="write" manuscriptId={context.manuscriptId} />
         </nav>
         {/* ── APPEARANCE ───────────────────────────────────────────────────
             The SAME control Home and the Canvas mount, writing the SAME
