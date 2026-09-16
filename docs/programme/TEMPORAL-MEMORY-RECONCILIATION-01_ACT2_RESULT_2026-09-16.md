@@ -7,7 +7,18 @@ claim ceiling of `…_ACT2_PROCEDURE_2026-09-15.md` / `…_ACT2_PREFLIGHT_2026-0
 
 ---
 
-## 1. ⚠️ INSTRUMENT PROVENANCE — PENDING ONE COMMAND, ⛔ NOT YET VERIFIED
+## 1. ✅ INSTRUMENT PROVENANCE — CLOSED 2026-09-16 · RUN LICENSED
+
+> **CLOSURE (founder, 2026-09-16).** `git hash-object scripts/witness/temporal-memory-audit.sql`
+> on the Mac Studio returned **`f8c06d513ba578e5e0336eaf65b0123f55e69629`** — an exact match to the
+> verified blob. The SQL that ran at `0bd2b6578` **is** the instrument verified against production
+> runtime `637c115d1`. **Stop condition 4 is discharged, the entailment is now witnessed, and every
+> number in §2 is LICENSED.** ⛔ The run does not need to be re-spent.
+
+The rest of this section is kept verbatim as the state before closure, ⛔ not edited to read as
+though it had always said otherwise.
+
+### 1a. Pending state as recorded on 2026-09-16, before the hash was read
 
 The Mac Studio checkout did **not** reach the lane head. `git switch claude/loving-ride-8qaikf`
 failed (`invalid reference` — no local branch), `git pull` failed (`Need to specify how to reconcile
@@ -33,6 +44,8 @@ git hash-object scripts/witness/temporal-memory-audit.sql
 
 **Until that matches, every number below is RECORDED BUT NOT LICENSED.** If it does not match, the
 run is INSTRUMENT FAILURE / NO EVIDENCE and must be re-spent, ⛔ not reinterpreted.
+
+*(Resolved: it matched. See the closure block at the head of §1.)*
 
 ---
 
@@ -223,16 +236,78 @@ Outcome A does not change that; a counterfactual run today is a present-state co
 9 admitted rows in §2.c are rows decay excludes **at this moment, under this data** — ⛔ not a record
 of what any member's turn was denied. Standing unchanged: **NON-CONFORMANT.**
 
-## 8. Standing
+## 8. Standing — after founder adjudication, 2026-09-16
 
 ```
-Stage A ................. RUN · OUTCOME A · availability effect ESTABLISHED (pending provenance)
-Stage B ................. RUN · NO EVIDENCE under §7.3 (stream non-empty, 0 traces)
-instrument provenance ... ⚠️ PENDING — ran from 0bd2b6578, expected blob f8c06d51
-Cut-1 traceability ...... ❌ NON-CONFORMANT (unchanged)
-ratio ≈17.8:1 ........... ⚠️ UNEXERCISED in every observed flip
-half-life table ......... ⚠️ UNEXERCISED — production is 100% `pattern`
-repair .................. ⛔ NOT AUTHORIZED
-new instrumentation ..... ⛔ NOT AUTHORIZED
-production .............. UNTOUCHED
+instrument identity ............... ✅ VERIFIED (f8c06d51…) · run LICENSED
+ACT 2 Stage A ..................... ⭐ OUTCOME A
+Cut-1 membership effect ........... ✅ ESTABLISHED
+Cut-1 availability effect ......... ✅ ESTABLISHED
+Cut-1 recoverability .............. ✅
+Cut-1 historical traceability ..... ❌ NON-CONFORMANT
+
+Stage B voice evidence ............ ⛔ NONE IN FIXED WINDOW
+text-path evidence ................ ⛔ NOT MEASURED
+member-visible consequence ........ ⛔ NOT ESTABLISHED
+
+~17.8x coefficient leverage ....... ✅ mathematical property of the formula
+  caused observed flips ........... ❌ NOT ESTABLISHED
+type-dependent decay divergence ... ✅ latent source divergence
+  exercised in this population .... ❌ NO
+
+repair ............................ ⛔ NOT AUTHORIZED
+new scorer ........................ ⛔ NOT AUTHORIZED
+production ........................ UNTOUCHED
 ```
+
+---
+
+## 9. Founder adjudication (2026-09-16)
+
+**Stage A — OUTCOME A, ESTABLISHED.** Live decay changes which otherwise-valid memories cross Cut 1
+into the top-12 pool: 4 of 37 members with candidates (10.8%), 4 of 14 members where the top-12 is
+actually a cutoff (28.6%), 18 membership flips — 9 admitted when decay is neutralized, 9 displaced
+by the live decay-bearing ranking. **An availability effect, not merely an ordering effect.** The
+strongest permitted claim:
+
+> **Live temporal decay changes the availability of otherwise-valid memories before the member's
+> current utterance participates in retrieval.**
+
+**Stage B — NO EVIDENCE, cleanly adjudicated.** The stream existed, so the command worked; there
+were no matching entries in the fixed 24-hour window. ⛔ Not *no effect*. ⛔ Not text-path evidence.
+⛔ Not permission to broaden the grep retrospectively.
+
+### 9.1 ⭐⭐ Clause 2 now has a real runtime consequence
+
+The live system is **presently non-conformant with Clause 2** — not because decay exists, and not
+because it changes ranking, but because **it can exclude valid memories from cognition and there is
+no durable record of which memories it excluded on the historical turn.** The counterfactual lets us
+reconstruct today; it does not confer historical traceability. *That distinction survived exactly as
+predeclared.*
+
+### 9.2 Two hypotheses got weaker — recorded as the useful negative results they are
+
+**The ≈17.8× coefficient comparison.** All 18 flipped rows carry `confirmed_by_user = false`, so ACT
+2 found **no observed case in which decay defeated the confirmation contribution**. The figure
+remains a mathematical property of the scoring formula; ⛔ **ACT 2 provides no evidence that this
+leverage caused the observed membership flips.**
+
+**Memory-type divergence.** The population in this witness was entirely `memory_type = 'pattern'`, so
+the differing half-life rules for other types were never exercised. The latent TS/live divergence
+remains real **in source**; ⛔ **ACT 2 provides no production evidence about type-dependent decay
+behaviour.** Cleaner than carrying the divergence as though it were affecting members.
+
+### 9.3 The result is narrower and stronger than the argument that motivated the lane
+
+Coefficients and hypothetical type behaviour are no longer needed to establish the core problem,
+because it was measured directly:
+
+> For members whose eligible memory pools exceed the 12-row cutoff, live decay can change which
+> valid memories remain available to MAIA **before conversational relevance is considered** — and
+> for one member, five of twelve slots flipped over roughly a one-month age difference.
+
+Enough to establish the temporal availability issue. ⛔ Still not a member-visible continuity
+failure.
+
+> ⭐⭐ **Decay is not silently changing truth. It is silently changing availability.** That is
+> exactly the boundary the lane was created to determine.
