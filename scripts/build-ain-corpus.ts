@@ -8,6 +8,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import {
+  loadDeclaration,
+  decideAdmission,
+  formatVerdict,
+} from '../lib/corpus/admission';
+
 type TocItem = {
   id: string;
   title: string;
@@ -43,12 +49,32 @@ async function listFiles(dir: string): Promise<string[]> {
   return files;
 }
 
+/**
+ * SOURCE-CUSTODY-PII-01 · ACT 4 §C — being under SRC_DIR is a candidacy, not an
+ * admission. `listFiles` above answers "what is here"; it must never be allowed
+ * to answer "what MAIA may know". Three beta-tester contact lists lived under
+ * this directory and were ingested for no reason other than their location.
+ */
+function admitted(candidates: string[]): string[] {
+  const declaration = loadDeclaration(ROOT);
+  const verdict = decideAdmission(ROOT, candidates, declaration);
+  console.log(formatVerdict(verdict));
+  if (verdict.refused.length > 0) {
+    /* A declaration admitted a path whose content contradicts it. Stop: this is
+       a wrong declaration, not a file to skip quietly past. */
+    throw new Error(
+      `corpus admission REFUSED ${verdict.refused.length} declared file(s) carrying human-record signals — fix the declaration, do not bypass this`,
+    );
+  }
+  return verdict.admitted.map((rel) => path.join(ROOT, rel));
+}
+
 async function main() {
   console.log('🏗️  Building AIN corpus...');
 
   await fs.mkdir(OUT_DIR, { recursive: true });
 
-  const files = await listFiles(SRC_DIR);
+  const files = admitted(await listFiles(SRC_DIR));
   console.log(`📂 Found ${files.length} source files`);
 
   // Heuristic ordering: filename sort (stable + predictable)

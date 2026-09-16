@@ -1,0 +1,19 @@
+{
+  "_doc": "SOURCE-CUSTODY-PII-01 · ACT 4 §C — corpus admission declaration. Enforced by lib/corpus/admission.ts, which is wired into scripts/build-ain-corpus.ts and scripts/embed-ain-knowledge.ts. A file enters MAIA's knowledge corpus ONLY if a rule here names it AND its classification permits corpus membership. Absence of a rule means EXCLUSION, never permission.",
+  "_law": "Membership must be DECLARED and CHECKED, never INHERITED from where a thing happens to sit. A directory is not a classification.",
+  "_state": "The existing corpus is declared unclassified_legacy, which does NOT admit. This is deliberate: 736 files under data/ain/source have never been classified, and admitting them in bulk to keep the build green would reproduce the defect this declaration exists to close. Classification is per-collection founder work; each reclassification is a governed edit to this file.",
+  "_classifications": {
+    "published_knowledge": "ADMITS — authored knowledge intended for MAIA to draw on.",
+    "third_party_published": "ADMITS — third-party published text held under an explicit basis.",
+    "organizational_public": "ADMITS — Soullab's own governed public material.",
+    "unclassified_legacy": "EXCLUDES — present in the tree, never classified.",
+    "operational_human_record": "NEVER ADMITS — known to carry human records."
+  },
+  "rules": [
+    {
+      "prefix": "data/ain/source",
+      "classification": "unclassified_legacy",
+      "reason": "ACT 4 §C: the historical corpus root. Every file here was ingested by directory convention alone, with no classification and no PII exclusion — the defect this declaration closes. Held closed until each collection is classified on its own evidence."
+    }
+  ]
+}
