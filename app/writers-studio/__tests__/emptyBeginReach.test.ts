@@ -21,14 +21,14 @@ describe('WS-EMPTY-BEGIN-REACH-01 — empty Studio beginning is reachable', () =
     expect(CODE).toContain('() => onBegin(draftName.trim())');
   });
 
-  it('the shared component actually consumes beginning state', () => {
+  it('the shared component sends a first writer straight through and names later works', () => {
     const start = CODE.indexOf('function BeginAndImport(');
     const end = CODE.indexOf('export default function HomeView', start);
     const shared = CODE.slice(start, end);
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    expect(shared).toContain('beginning ? (');
-    expect(shared).toContain('onClick={onOpen}');
+    expect(shared).toContain('beginning && !primary ? (');
+    expect(shared).toContain('onClick={primary ? onSubmit : onOpen}');
     expect(shared).toContain('onClick={onSubmit}');
   });
 
@@ -39,8 +39,9 @@ describe('WS-EMPTY-BEGIN-REACH-01 — empty Studio beginning is reachable', () =
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
     expect(emptyHome).toContain('<BeginAndImport');
+    expect(emptyHome).toContain('primary');
     expect(emptyHome).toContain('beginning={beginning}');
-    expect(emptyHome).toContain('onOpen={() => setBeginning(true)}');
+    expect(emptyHome).toContain("onSubmit={() => void run(() => onBegin(''), BEGIN_FAILED)}");
   });
 
   it('the established Studio reaches the same beginning implementation', () => {

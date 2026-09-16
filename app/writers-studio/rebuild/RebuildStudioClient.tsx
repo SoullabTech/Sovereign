@@ -8,6 +8,8 @@ import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
 import { StudioModeBar } from '../studio/StudioModeBar';
 import { SERIF, SANS } from '../studioTheme';
 import { useLivingWorks } from '../useLivingWorks';
+import { useStudioSources } from '../useStudioSources';
+import { SOURCE_INTAKE_HREF } from '../studioMap';
 import { currentWork, resolveWorkContext } from '../workContext';
 import { fetchStructure, refusalCopy as structureRefusalCopy, type StructureNodeDTO, type StructureTreeDTO } from '@/lib/writersStudio/structureClient';
 import RebuildWritingBoundary from './RebuildWritingBoundary';
@@ -202,6 +204,7 @@ export default function RebuildStudioClient() {
   const writingRef = useRef<SectionWriting | null>(null);
   const sectionRefs = useRef(new Map<string, HTMLElement>());
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
+  const { sources } = useStudioSources();
 
   const load = useCallback(async () => {
     setPhase('loading'); setMessage(null);
@@ -283,6 +286,8 @@ export default function RebuildStudioClient() {
   }, [chapter, maiaMode]);
   const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
   const work = currentWork(workContext);
+  const sourceById = new Map(sources.map((source) => [source.id, source]));
+  const workSourceMaterials = (work?.materials ?? []).filter((material) => material.materialType === 'source_upload');
   const workContextSentence = workContext.kind === 'work'
     ? (work?.purpose ?? 'A Work you declared.')
     : workContext.kind === 'none'
@@ -956,6 +961,35 @@ export default function RebuildStudioClient() {
             )
           ) : (
             <div style={{ fontSize: 11, color: C.quiet, padding: '4px 6px' }}>Reading the book structure…</div>
+          )}
+
+          {work && (
+            <div data-work-materials style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${C.soft}` }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, padding: '0 6px 8px' }}>
+                <div style={{ color: C.quiet, fontSize: 10.5, letterSpacing: '.14em', fontWeight: 700 }}>MATERIALS</div>
+                <a href={SOURCE_INTAKE_HREF} style={{ color: C.gold, fontSize: 10.5, textDecoration: 'underline', textUnderlineOffset: 3 }}>bring in</a>
+              </div>
+              {workSourceMaterials.length > 0 ? (
+                <div style={{ display: 'grid', gap: 7 }}>
+                  {workSourceMaterials.map((material) => {
+                    const source = sourceById.get(material.materialId);
+                    return (
+                      <div key={`source:${material.materialId}`} style={{ padding: '7px 8px', borderRadius: 6, background: C.field }}>
+                        <a href={`/api/writers-studio/sources/${material.materialId}/file`} target="_blank" rel="noreferrer"
+                          style={{ display: 'block', color: C.secondary, fontSize: 11.5, lineHeight: 1.35, textDecoration: 'none', overflowWrap: 'anywhere' }}>
+                          {source?.originalName ?? 'Source material'}
+                        </a>
+                        {material.sentence && <div style={{ marginTop: 3, color: C.quiet, fontSize: 10.5, lineHeight: 1.35 }}>{material.sentence}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <a href={SOURCE_INTAKE_HREF} style={{ display: 'block', padding: '4px 6px', color: C.muted, fontSize: 11, lineHeight: 1.45, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                  Bring notes or source material to this Work
+                </a>
+              )}
+            </div>
           )}
         </aside>)}
 

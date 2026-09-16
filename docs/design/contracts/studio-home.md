@@ -29,9 +29,10 @@ screenshot_mobile: docs/design/contracts/screenshots/writers-studio-home-mobile.
 experience_verification: SYNTHETIC COMPONENT RENDER, 2026-08-14 — NOT an authenticated member walk, and must never be recorded as one. The real HomeView component was rendered against synthetic fixtures at 1280x800 and 375x812 (deviceScaleFactor 2) via a temporary preview route since deleted, because neither party could produce a true walk — impersonating a member through the bare x-member-id path was refused (it passes the middleware route gate but getMemberIdFromRequest rejects it, so the page would render an empty room and be photographed as a walk), and the founder could not reach the dev port. Fixtures were deliberately unflattering — a titled book, a second book, an UNTITLED work, and a manuscript no work has claimed — so the awkward states are visible rather than staged. WHAT THIS ESTABLISHES: layout, hierarchy, typography, responsive composition, copy, and that the six NOT YET tiles, the three-card row, the giant New project tile and the duplicate import panel are gone. WHAT IT DOES NOT ESTABLISH, all still OWED: member authentication; real useLivingWorks data binding; that the most-recently-updated work is selected correctly from live data; that Continue writing resolves to the correct manuscript and loads the correct draft; persistence across reload and session; real mobile member behaviour. Criterion "Continue opens the Work" stands as STRUCTURALLY WIRED — behavioural witness owed. Criterion "mobile feels designed rather than compressed" is NOT CLAIMED; the mobile render is the same layout at a narrower width, which is correct but not yet designed. Founder visual review of these four renders was favourable ("this is looking good"); the authenticated walk remains outstanding and this contract is not evidence that it passed.
 deviation: the implementation's primary action reads "Continue writing" and names the work, where
   this contract's Specified language column reads "Continue your work". Secondary actions read
-  "Begin a new work" and "Import a manuscript" rather than "Begin something new" and "Bring
-  something in".
-authority: founder ruling 2026-08-14 — "a button named for an outcome must perform that outcome",
+  "Begin a new work", "Import writing", and "Bring notes & sources" rather than the draft
+  contract’s older two-door wording. Gathering source material is now a lawful arrival even before
+  a Work exists; upload alone does not make that material part of a Work.
+authority: founder rulings 2026-08-14 and 2026-09-16 — "a button named for an outcome must perform that outcome"; on 2026-09-16 the founder explicitly required writers to be able to bring handwritten notes and other supporting material into Studio, including before manuscript integration;
   and the prototype default that the action must name what will happen (Continue writing / Return to
   manuscript / Continue shaping), issued AFTER this contract was drafted. The draft's "Continue your
   work" is the exact generic label the founder's own walk verdict identified as a defect: "a
@@ -64,9 +65,10 @@ stating plainly: **it is judged by how quickly the writer stops being in it.**
 > **Your studio, with your work in it.**
 
 The room opens on the work the writer last touched, named, with one dominant action that leaves
-this room. Their other works sit beneath it. Beginning and importing are present and plainly
-secondary. When no work exists, there are exactly two paths and no continuation is offered —
-`Continue` appears only when there is something real to continue.
+this room. Their other works sit beneath it. Beginning, importing existing writing, and gathering source
+material are present and plainly secondary. When no work exists, there are exactly three lawful
+arrivals: begin writing, import existing writing, or bring notes and sources. No continuation is
+offered until there is something real to continue.
 
 ## The door rule, as built
 
@@ -76,10 +78,11 @@ Every visible action navigates or mutates:
 
 | Control | Performs |
 |---|---|
-| Continue writing | opens `/writers-studio/canvas?id=<manuscript>` |
-| A work in the list | the same, for that work |
-| Begin a new work | creates the work, then lands **inside** the Canvas |
-| Import a manuscript | opens `/press/manuscript?import=1` |
+| Continue writing | opens `/writers-studio/rebuild?m=<manuscript>` |
+| A work in the list | the same canonical Write room, for that work |
+| Begin a new work | for an empty Studio, creates an unnamed Work + blank manuscript and lands **inside** Write in one act |
+| Import writing | opens `/press/manuscript?import=1` |
+| Bring notes & sources | opens `/writers-studio/sources`; custody does not make the source part of any Work |
 
 **Nothing scrolls in place while wearing a door's language.** That was the failure this room
 was rebuilt to end.
