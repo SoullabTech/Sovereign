@@ -285,10 +285,12 @@ export function validateResearchField(field: GestaltResearchField): ValidationRe
   }
 
   const primaryMemo = new Map<NodeId, Set<NodeId>>();
+  const primaryVisiting = new Set<NodeId>();
 
   const collectPrimary = (nodeId: NodeId): Set<NodeId> => {
     const cached = primaryMemo.get(nodeId);
     if (cached) return new Set(cached);
+    if (primaryVisiting.has(nodeId)) return new Set<NodeId>();
 
     const node = byId.get(nodeId);
     if (!node) return new Set<NodeId>();
@@ -298,12 +300,14 @@ export function validateResearchField(field: GestaltResearchField): ValidationRe
       return new Set(only);
     }
 
+    primaryVisiting.add(nodeId);
     const result = new Set<NodeId>();
     for (const depId of dependenciesOf(node)) {
       const dep = byId.get(depId);
       if (!dep || dep.kind === 'gestalt') continue;
       for (const evidenceId of collectPrimary(depId)) result.add(evidenceId);
     }
+    primaryVisiting.delete(nodeId);
     primaryMemo.set(nodeId, result);
     return new Set(result);
   };
