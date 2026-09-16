@@ -42,6 +42,7 @@ export interface VoiceContextInput {
   element?: Element;
   sanctuary: boolean;
   conversationHistory?: Array<{ role: string; content: string }>;
+  traceId?: string; // Existing member-turn identity for Cut-1 trace binding
 }
 
 /**
@@ -139,6 +140,7 @@ export const MaiaWisdomProvider = {
       element = null,
       sanctuary,
       conversationHistory = [],
+      traceId,
     } = input;
 
     // ═══════════════════════════════════════════════════════════════
@@ -171,7 +173,7 @@ export const MaiaWisdomProvider = {
 
     // Parallel retrieval
     const [memoryBundle, activeSpirals] = await Promise.all([
-      this.getMemoryBundle(userId, sessionId, currentInput),
+      this.getMemoryBundle(userId, sessionId, currentInput, traceId),
       this.getActiveSpirals(userId),
     ]);
 
@@ -246,13 +248,16 @@ export const MaiaWisdomProvider = {
   async getMemoryBundle(
     userId: string,
     sessionId: string,
-    currentInput: string
+    currentInput: string,
+    traceId?: string,
   ): Promise<MemoryBundle | null> {
     try {
       return await MemoryBundleService.build({
         userId,
         currentInput,
         sessionId,
+        traceId,
+        recordRetrievedCandidates: false,
         scope: 'cross_session',
         maxBullets: 5,
       });

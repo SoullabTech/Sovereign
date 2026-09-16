@@ -10,12 +10,21 @@
  * Returns a structured bundle ready for prompt injection.
  */
 
+import { randomUUID } from 'crypto';
 import { query } from '@/lib/db/postgres';
 import { TurnsStore } from './stores/TurnsStore';
 import { generateLocalEmbedding } from './embeddings';
 import { calculateDecayedConfidence } from './confidenceDecay';
 import { ConversationMemoryUsesStore } from './stores/ConversationMemoryUsesStore';
 import { memberRef } from '../privacy/memberRef';
+import {
+  CUT1_BASELINE_NONVECTOR_SQL,
+  type Cut1TracePayload,
+  Cut1TraceIdempotencyConflict,
+  extractCut1TracePayload,
+  recordCut1Trace,
+  runObservedCut1Read,
+} from './cut1Trace';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -86,7 +95,8 @@ export interface BuildBundleInput {
   userId: string;
   currentInput: string;           // User's current message (for semantic search)
   sessionId?: string;
-  traceId?: string;               // For memory usage audit trail
+  traceId?: string;               // Existing turn/message trace identity
+  recordRetrievedCandidates?: boolean; // Preserve caller-specific conversation_memory_uses semantics
   facet?: string;                 // Current Spiralogic facet
   scope?: 'session' | 'cross_session' | 'all';  // Permission gate
   maxBullets?: number;            // Default 5
@@ -105,14 +115,18 @@ export const MemoryBundleService = {
    * and returns a structured bundle for prompt injection.
    */
   async build(input: BuildBundleInput): Promise<MemoryBundle> {
-    const { userId, currentInput, sessionId, traceId, facet, scope = 'cross_session', maxBullets = 5 } = input;
+    const {
+      userId, currentInput, sessionId, traceId, facet, scope = 'cross_session', maxBullets = 5,
+      recordRetrievedCandidates = true,
+    } = input;
+    const retrievalId = randomUUID();
 
     console.log(`📦 [MemoryBundle] Building for user: ${memberRef(userId)}`);
 
     // Parallel retrieval from all buckets
     const [recentTurns, semanticMemories, breakthroughs, relationshipData] = await Promise.all([
       this.getRecentTurns(userId, sessionId, scope),
-      this.getSemanticMemories(userId, currentInput, facet),
+      this.getSemanticMemories(userId, currentInput, facet, { retrievalId, sessionId, traceId }),
       this.getBreakthroughs(userId),
       this.getRelationshipData(userId),
     ]);
@@ -126,7 +140,7 @@ export const MemoryBundleService = {
 
     // 📊 MEMORY AUDIT: Record retrieved candidates BEFORE compression (Option B)
     // This captures the canonical "one row per retrieved memory" audit trail
-    if (traceId && sessionId && userId && allCandidates.length > 0) {
+    if (recordRetrievedCandidates && traceId && sessionId && userId && allCandidates.length > 0) {
       try {
         await ConversationMemoryUsesStore.recordRetrievedCandidates({
           sessionId,
@@ -241,48 +255,30 @@ export const MemoryBundleService = {
   async getSemanticMemories(
     userId: string,
     queryText: string,
-    facet?: string
+    facet?: string,
+    trace?: { retrievalId: string; sessionId?: string; traceId?: string },
   ): Promise<MemoryCandidate[]> {
     try {
-      // First try non-vector ranking with confidence decay (works even when tables are empty/no embeddings)
-      // NOTE (2026-04-09): scope/authority clauses removed — columns do not exist in the production schema.
-      // This was the root cause of silent memory retrieval failure. See MAIA_MEMORY_CANON_v1.0.md §VIII
-      // (schema drift = canon violation). Global canon memory is a future feature: when reintroduced,
-      // re-add a WHERE clause against columns that actually exist in developmental_memories.
-      const nonVectorSql = `
-        SELECT
-          id,
-          memory_type,
-          facet_code,
-          entity_tags,
-          content_text,
-          significance,
-          formed_at,
-          last_confirmed_at,
-          confirmed_by_user,
-          recall_count,
-          (
-            0.40 * COALESCE(
-              calculate_decayed_confidence(significance, memory_type, last_confirmed_at, formed_at),
-              significance
-            ) +
-            0.35 * EXP(-EXTRACT(EPOCH FROM (NOW() - formed_at)) / 86400.0 / 30.0) +
-            0.15 * CASE WHEN confirmed_by_user THEN 0.15 ELSE 0 END +
-            0.10 * LEAST(recall_count / 10.0, 1.0)
-          ) AS score
-        FROM developmental_memories
-        WHERE user_id = $1
-          AND content_text IS NOT NULL
-          AND (valid_to IS NULL OR valid_to > NOW())
-        ORDER BY score DESC
-        LIMIT 12
-      `;
+      // First try non-vector ranking with confidence decay (works even when tables are empty/no embeddings).
+      // The baseline query is retained verbatim as the OFF oracle and fallback. When a turn binding exists,
+      // the observed query returns the same LIVE rows plus a bounded same-statement sidecar.
+      let nonVectorResult: Awaited<ReturnType<typeof query>>;
+      let tracePayload: Cut1TracePayload | null = null;
 
-      const nonVectorResult = await query(nonVectorSql, [userId]);
+      if (trace?.sessionId && trace.traceId) {
+        try {
+          nonVectorResult = await runObservedCut1Read(userId);
+          tracePayload = extractCut1TracePayload(nonVectorResult.rows?.[0]);
+        } catch (_observerReadError) {
+          console.warn('[cut1_trace_read_failed]');
+          nonVectorResult = await query(CUT1_BASELINE_NONVECTOR_SQL, [userId]);
+        }
+      } else {
+        nonVectorResult = await query(CUT1_BASELINE_NONVECTOR_SQL, [userId]);
+      }
 
       if (nonVectorResult.rows && nonVectorResult.rows.length > 0) {
-        console.log(`[MemoryBundle] Non-vector retrieval: ${nonVectorResult.rows.length} memories`);
-        return nonVectorResult.rows.map(row => ({
+        const candidates = nonVectorResult.rows.map((row: any) => ({
           id: row.id,
           content: row.content_text,
           source: 'developmental' as const,
@@ -292,6 +288,28 @@ export const MemoryBundleService = {
           similarity: 0,
           compositeScore: parseFloat(row.score) || 0,
         }));
+
+        // The LIVE candidates above are already decided. Trace persistence cannot alter them.
+        if (tracePayload && trace?.sessionId && trace.traceId) {
+          try {
+            await recordCut1Trace({
+              retrievalId: trace.retrievalId,
+              userId,
+              sessionId: trace.sessionId,
+              messageId: trace.traceId,
+              ...tracePayload,
+            });
+          } catch (traceWriteError) {
+            if (traceWriteError instanceof Cut1TraceIdempotencyConflict) {
+              console.warn('[cut1_trace_idempotency_conflict]');
+            } else {
+              console.warn('[cut1_trace_write_failed]');
+            }
+          }
+        }
+
+        console.log(`[MemoryBundle] Non-vector retrieval: ${candidates.length} memories`);
+        return candidates;
       }
 
       // If non-vector returns nothing, try vector search (for future when embeddings exist)

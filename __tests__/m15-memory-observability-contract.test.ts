@@ -98,10 +98,11 @@ describe('SEAM retrieval/formatting/prompt · identical', () => {
     expect(args).toContain('maxBullets: 5');
     expect(args).not.toContain('threshold');
     expect(args).not.toContain('limit:');
-    // D5: no traceId here on purpose — passing it would make MemoryBundle write
-    // conversation_memory_uses rows at RETRIEVAL time, which is the text-path
-    // conflation this cut refuses to reproduce.
-    expect(args).not.toContain('traceId');
+    // TEMPORAL-MEMORY-CUT1-TRACEABILITY-01 binds the existing voice turnId to
+    // Cut 1 while explicitly preserving D5: voice still must not write
+    // conversation_memory_uses merely because retrieval happened.
+    expect(args).toContain('traceId: turnId');
+    expect(args).toContain('recordRetrievedCandidates: false');
   });
 
   it('F10 remains intact — observability did not loosen the Sanctuary boundary', () => {

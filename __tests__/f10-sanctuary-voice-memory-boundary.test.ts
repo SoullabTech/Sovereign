@@ -7,8 +7,10 @@
  * A Sanctuary voice turn therefore retrieved cross-session turns,
  * developmental memories and breakthrough moments via MemoryBundleService and
  * injected the formatted result into voiceSystemPrompt. No write occurred —
- * ConversationMemoryUsesStore.recordRetrievedCandidates is gated on a traceId
- * that call does not pass — so Sanctuary Invariant 1 (no retention) held while
+ * ConversationMemoryUsesStore.recordRetrievedCandidates was historically gated on
+ * a traceId. The Cut-1 traceability lane now binds the existing voice turnId while
+ * explicitly disabling that retrieval-side usage audit, so Sanctuary Invariant 1
+ * remains independent of the new historical Cut-1 observer.
  * Invariant 6 (absolute boundary) did not.
  *
  * These pins witness RETRIEVAL AND INJECTION, not persistence.
@@ -112,7 +114,8 @@ describe('F10 · Negative control — non-Sanctuary retrieval behaviour is uncha
     expect(call).toContain('sessionId: effectiveSessionId');
     expect(call).toContain("scope: 'cross_session'");
     expect(call).toContain('maxBullets: 5');
-    expect(call).not.toContain('traceId');   // F9 — not in this candidate
+    expect(call).toContain('traceId: turnId');
+    expect(call).toContain('recordRetrievedCandidates: false'); // D5 remains intact
     expect(call).not.toContain('threshold'); // M3 — not in this candidate
   });
 
