@@ -3652,3 +3652,7 @@ This founder ruling supersedes the §18.75 execution hold for ENTRY-04 only: the
 ## §18.73 — ENTRY-04 readiness refused before invocation; exact historical three-harness set stable; cleanup-05 + terminate-02 successors drafted, execution closed (2026-09-16; implementation record §10.51)
 
 Outer readiness observed harness=3 for all 12 reads; no PRELIGHT-04 and no BATCH-04 authority file were created. Read-only diagnosis binds the live set to `.k00 0B07D423…` + `.vpio01 6A2E406B…` + historical `.vpio02 E3B88028…`; SID `85948DBD…` remains installed but not running. `FOREIGN-DISPOSAL-05` = 88 lines `5b2034f0…`; `HISTORICAL-HARNESS-TERMINATE-02` = 59 lines `f81fa284…`; both preserve the installed SID container and are draft-only. No device mutation authority issued.
+
+## §18.77 — FOUNDER RULING: installed-SID cleanup sequence OPEN, then conditional ENTRY-04 retry (2026-09-16; implementation §10.52)
+
+PRELIGHT-04 refusal `dc9a30577` proves exactly three historical/foreign harnesses and no BATCH-04 invocation. `FOREIGN-DISPOSAL-05` (`5b2034f0…`/88) is OPEN for one exact-state act: terminate `.k00` + `.vpio01`, preserve historical `.vpio02` + installed SID. On PASS only, `HISTORICAL-HARNESS-TERMINATE-02` (`f81fa284…`/59) is OPEN for one exact-state act: sole `.vpio02` → total harness 0, installed SID preserved. On both PASSes only, PRELIGHT-04/BATCH-04 may proceed under §18.76. Any mismatch STOPs; no top-up/source/downstream authority.

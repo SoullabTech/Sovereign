@@ -1008,3 +1008,7 @@ No physiological qualification change yet. Founder explicitly reopens the `9df4c
 ### §10.91 — ENTRY-04 readiness refused before invocation; exact historical three-harness set stable; cleanup successors drafted (2026-09-16; discriminator plan §18.73; implementation record §10.51)
 
 No qualification change. BATCH-04 authority was never created or spent. Current blocker is external process state: `.k00` + `.vpio01` + historical `.vpio02` alive, SID installed/not running. Cleanup successors preserve SID and remain draft-only; ENTRY-04 physiology and adjudication law are unchanged.
+
+### §10.95 — cleanup sequence authorized to restore ENTRY validity; physiology unchanged (2026-09-16; discriminator §18.77; implementation §10.52)
+
+No physiological qualification change. Cleanup authority is process-state only: `.k00` and `.vpio01` first, historical `.vpio02` second, SID installed and untouched throughout. ENTRY-04 remains the only authorized fresh physiology act, conditional on cleanup PASS + CLEAN preflight <=300 s; no source population or KERNEL-00 acceptance follows automatically.
