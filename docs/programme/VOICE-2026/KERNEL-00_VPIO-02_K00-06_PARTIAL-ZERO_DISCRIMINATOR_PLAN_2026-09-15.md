@@ -3567,3 +3567,6 @@ Act identity is constitutive, not scope expansion (MAC-COMPILE-02 principle). Pr
 
 
 ## §18.54 — `02` pin ACCEPTED (`c4b37e69…`, authority unspent, paste did not invoke it) · `02` carrier re-issued before the run (48 lines, `5ef55233…`: `01` STOP transcript under `prior-attempts/`, predecessor block in `RETURN.txt`, seal via `find` to descend the subdirectory — disclosed) · run shape HELD pending carrier review (2026-09-16; implementation record §10.25; qualification plan §10.74)
+
+
+## §18.55 — `02` carrier ACCEPTED (`5ef55233…`) · seven-step run shape for `SID FIRST-INSTALL-02` ISSUED in-session (payload never in git; expected `wc -l` 7 · `wc -c` 244; `test -s` before export and before invocation) · pin not yet invoked (2026-09-16; implementation record §10.26; qualification plan §10.75)

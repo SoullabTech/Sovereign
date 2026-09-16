@@ -901,3 +901,8 @@ No qualification change.
 ### §10.74 — FIRST-INSTALL-02 pin accepted, carrier re-issued, run held (2026-09-16; discriminator plan §18.54; implementation record §10.25)
 
 No qualification change.
+
+
+### §10.75 — FIRST-INSTALL-02 run shape issued, not yet invoked (2026-09-16; discriminator plan §18.55; implementation record §10.26)
+
+No qualification change.
