@@ -126,6 +126,25 @@ sid_entry_jit_guard(){ # $1 = sample index
   { printf 'SID ENTRY sample %s JIT harnesses=%s\n' "$idx" "$n"; grep -i VoiceKernelHarness "$js" || true; } | tee "$state"
   [ "$n" -eq 0 ]
 }
+sid_entry_wait_for_zero(){ # $1 = sample index; read-only natural-clear wait, max 60 s
+  local idx="$1" d="$LEDGER_DIR/sample-$1-prewarm-wait" attempt js out rc n
+  mkdir -p "$d"; : > "$d/state.tsv"
+  for attempt in $(seq 1 12); do
+    js="$d/attempt-$attempt.json"; out="$d/attempt-$attempt.stdout"; rc=0
+    xcrun devicectl device info processes --device "$DEV" --json-output "$js" >"$out" 2>&1 || rc=$?
+    if [ $rc -ne 0 ] || [ ! -s "$js" ]; then
+      printf '%s\t%s\tUNREADABLE\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$attempt" "$rc" >> "$d/state.tsv"
+    else
+      n="$(grep -ci VoiceKernelHarness "$js" || true)"
+      printf '%s\t%s\tharnesses\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$attempt" "$n" >> "$d/state.tsv"
+      { grep -i VoiceKernelHarness "$js" || true; } > "$d/attempt-$attempt-harnesses.txt"
+      [ "$n" -eq 0 ] && { printf 'SID ENTRY sample %s natural-zero window reached at attempt %s\n' "$idx" "$attempt"; return 0; }
+    fi
+    [ "$attempt" -lt 12 ] && sleep 5
+  done
+  printf 'SID ENTRY sample %s natural-zero window NOT reached within 60 s\n' "$idx" | tee "$d/STOP.txt"
+  return 1
+}
 # PASS-2 daemon identity witness (founder ruling 2026-09-14): Mac-side snapshot of the audio daemons' process rows, taken
 # immediately BEFORE each sample and AFTER its export. External witness state only — this reads the same process
 # listing the precondition already reads; it never launches, signals, terminates, attaches to or reconfigures any
@@ -280,6 +299,12 @@ fi
 BEFORE="$(list_journals)" || { log "ABORT: the container listing failed three times before sample 1; nothing was sampled"; exit 7; }
 for i in $(seq 1 "$N"); do
   log "sample $i/$N — precondition"
+  if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then
+    if ! sid_entry_wait_for_zero "$i"; then
+      echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | SID ENTRY sample $i could not establish a natural zero-harness window within 60 s; no terminate attempted; no sample launched; see sample-$i-prewarm-wait/ |" >> "$LEDGER"
+      log "STOP: SID ENTRY sample $i natural zero-harness window not reached — no terminate attempted, no sample launched"; exit 10
+    fi
+  fi
   if harness_present; then
     if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then
       sid_entry_jit_guard "$i" || true

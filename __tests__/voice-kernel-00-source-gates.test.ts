@@ -1640,6 +1640,23 @@ describe('KERNEL-00 Â· S2 batch-only orchestration (founder ruling 2026-09-15) â
       else expect(histRaw(INSTRUMENT_CD20, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
     }
   });
+  it('SID ENTRY waits read-only for transient prewarm to clear before every sample, bounded to 60 s, without termination or launch', () => {
+    const b = execLines(W(BATCH));
+    const waitFn = fn(b, 'sid_entry_wait_for_zero');
+    expect(waitFn).toContain('for attempt in $(seq 1 12); do');
+    expect(waitFn).toContain('sleep 5');
+    expect(waitFn).toContain('xcrun devicectl device info processes --device "$DEV" --json-output "$js"');
+    expect(waitFn).toContain('sample-$1-prewarm-wait');
+    expect(waitFn).toContain('natural-zero window NOT reached within 60 s');
+    expect(waitFn).not.toMatch(/testTerminateOnly|device process terminate|device process signal|install app|xcodebuild|launchCold|run_test/);
+    const loopStart = b.indexOf('for i in $(seq 1 "$N"); do');
+    const harnessAt = b.indexOf('if harness_present; then', loopStart);
+    const waitAt = b.indexOf('if ! sid_entry_wait_for_zero "$i"; then', loopStart);
+    expect(waitAt).toBeGreaterThan(loopStart); expect(waitAt).toBeLessThan(harnessAt);
+    const waitBlock = b.slice(waitAt, harnessAt);
+    expect(waitBlock).toContain('no terminate attempted; no sample launched');
+    expect(waitBlock).toContain('exit 10');
+  });
   it('SID ENTRY every sample has an adjacent fail-closed harness-zero read and never auto-terminates an unexpected harness', () => {
     const b = execLines(W(BATCH));
     const guardFn = fn(b, 'sid_entry_jit_guard');
@@ -1685,6 +1702,7 @@ describe('KERNEL-00 Â· S2 batch-only orchestration (founder ruling 2026-09-15) â
       if (/^\s*if \[ "\$STIMULUS" = sid-nearend-gated \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }   // SOURCE-ID-02
       if (/^\s*if \[ -n "\$SOURCE_LEDGER" \]; then/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }                    // SOURCE-ID-02
       if (/^sid_entry_jit_guard\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }                    // SID ENTRY-PREP-01
+      if (/^sid_entry_wait_for_zero\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }                    // SID ENTRY natural prewarm clearance
       if (/^\s*if \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = entry \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }  // SID ENTRY all-sample JIT refusal block
     }
     const wasSet = new Map<string, number>(); for (const l of was) wasSet.set(l, (wasSet.get(l) ?? 0) + 1);
