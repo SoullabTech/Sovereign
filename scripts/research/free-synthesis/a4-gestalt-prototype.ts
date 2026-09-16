@@ -24,6 +24,7 @@ export type EvidenceAuthor =
   | 'member'
   | 'maia'
   | 'practitioner'
+  | 'collaborator'
   | 'system'
   | 'house'
   | 'collective';
@@ -36,6 +37,8 @@ export type EvidenceStanding =
   | 'inferred'
   | 'recorded';
 
+export type EvidenceSpeechAct = 'statement' | 'correction' | 'adoption' | 'withdrawal';
+
 export interface PrimaryEvidenceNode {
   readonly kind: 'evidence';
   readonly id: NodeId;
@@ -47,6 +50,10 @@ export interface PrimaryEvidenceNode {
   readonly admissibility: string;
   /** Raw source text. Derived nodes never replace this. */
   readonly content: string;
+  /** A correction/adoption/withdrawal is itself new primary evidence, never a mutation. */
+  readonly speechAct?: EvidenceSpeechAct;
+  /** Non-evidentiary standing target(s) of a correction/adoption/withdrawal. */
+  readonly targetIds?: readonly NodeId[];
 }
 
 export interface ObservationNode {
@@ -67,7 +74,9 @@ export type RelationKind =
   | 'withdraws'
   | 'situates'
   | 'transforms'
+  | 'reorganizes'
   | 'co_occurs'
+  | 'possible_recurrence'
   | 'other';
 
 export interface RelationNode {
@@ -148,6 +157,9 @@ export type ValidationIssueCode =
   | 'gestalt_as_evidence'
   | 'invalid_supersedes_target'
   | 'self_supersedes'
+  | 'invalid_act_target'
+  | 'self_act_target'
+  | 'missing_act_target'
   | 'no_primary_evidence_descent';
 
 export interface ValidationIssue {
@@ -223,6 +235,36 @@ export function validateResearchField(field: GestaltResearchField): ValidationRe
   }
 
   for (const node of field.nodes) {
+    if (node.kind === 'evidence') {
+      const act = node.speechAct ?? 'statement';
+      const targets = node.targetIds ?? [];
+      if (act !== 'statement' && targets.length === 0) {
+        addIssue({
+          code: 'missing_act_target',
+          nodeId: node.id,
+          detail: `${act} must target at least one prior standing object`,
+        });
+      }
+      for (const targetId of targets) {
+        if (targetId === node.id) {
+          addIssue({
+            code: 'self_act_target',
+            nodeId: node.id,
+            detail: `${act} cannot target itself`,
+          });
+          continue;
+        }
+        if (!byId.has(targetId)) {
+          addIssue({
+            code: 'invalid_act_target',
+            nodeId: node.id,
+            detail: `${act} target ${targetId} does not exist`,
+          });
+        }
+      }
+      continue;
+    }
+
     const deps = dependenciesOf(node);
 
     if (requiresDependencies(node) && deps.length === 0) {
@@ -360,6 +402,24 @@ export function tracePrimaryEvidence(
   return [...evidenceIds]
     .map((id) => byId.get(id))
     .filter((node): node is PrimaryEvidenceNode => node?.kind === 'evidence');
+}
+
+/**
+ * Enforce source standing in research fixtures without laundering authorship through a
+ * derived observation. This is intentionally tiny: it checks the primary record only.
+ */
+export function assertEvidenceAuthoredBy(
+  field: GestaltResearchField,
+  evidenceId: NodeId,
+  expectedAuthor: EvidenceAuthor,
+): PrimaryEvidenceNode {
+  assertValidResearchField(field);
+  const node = field.nodes.find((candidate) => candidate.id === evidenceId);
+  if (!node || node.kind !== 'evidence') throw new Error(`${evidenceId} is not primary evidence`);
+  if (node.authoredBy !== expectedAuthor) {
+    throw new Error(`${evidenceId} is authored by ${node.authoredBy}, not ${expectedAuthor}`);
+  }
+  return node;
 }
 
 /**
