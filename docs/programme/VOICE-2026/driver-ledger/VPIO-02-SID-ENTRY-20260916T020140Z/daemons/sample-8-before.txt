@@ -1,0 +1,7 @@
+# daemon snapshot sample 8 before — 2026-09-16T02:05:51Z — listing rc=0
+mediaserverd: NOT PRESENT IN THE DOCUMENTED JSON WINDOW
+coreaudiod: NOT PRESENT IN THE DOCUMENTED JSON WINDOW
+audiomxd: PRESENT — witnessed by PID 113 (/usr/libexec/audiomxd)
+audioclocksyncd: PRESENT — witnessed by PID 230 (/usr/libexec/audioclocksyncd)
+audioaccessoryd: PRESENT — witnessed by PID 82 (/usr/libexec/audioaccessoryd)
+(processes listed: 410)
