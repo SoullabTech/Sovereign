@@ -84,3 +84,10 @@ The procedure's assumption that this live route admits a fresh unauthenticated g
 `SEL-W1` will therefore be served through the running production container's canonical service seam (`ensureSession` + `getMaiaResponse`) against the real production database. This preserves the evidence under test: same deployed image, same session persistence, same FAST/CORE routing, same `recoverForTier` composition, same seven messages, same order, and same first-result rule. It deliberately bypasses only the unrelated HTTP authentication boundary.
 
 No message text, oracle, expected index, retry rule, or pass/fail condition changes. No browser credential, cookie, session token, or authentication bypass is created or harvested.
+## Addendum · continuity-corpus persistence correction (2026-09-15)
+
+The first direct-service run is **VOID**, not a bridge result. `getMaiaResponse` was invoked with anonymous metadata, so `addConversationExchange` updated session history but did not write the `conversation_turns` rows from which A6/L1 derives its durable continuity window. Every turn therefore reported `depth: 0`; the final probe was never presented to a six-exchange continuity corpus. The run continued through the final probe before this was recognized from the transcript; that is an instrument-construction error and is recorded as such.
+
+The corrected harness supplies a fresh synthetic witness UUID as `meta.userId`, mirroring the verified member id that the authenticated HTTP route passes into the service. The UUID is test-only and has no prior memory. After every setup response, the harness must call `getSessionContinuityWindow` and prove `durableCompletedExchanges === completed setup turns`. Any mismatch aborts **before** SEL-W1.
+
+Only after depth is proven `6` may the unchanged final probe be served. No oracle, wording, expected index, or first-result rule changes.
