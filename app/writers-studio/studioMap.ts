@@ -129,14 +129,14 @@ export const SOURCE_HREF = '/press/manuscript?tab=manuscript';
 export const IMPORT_HREF = '/press/manuscript?import=1';
 
 /**
- * Writer Canvas v0.1 — the room the Studio's entry paths lead into. The v0.1
+ * Writer's Studio canonical Write room — the rebuilt creative workspace. The v0.1
  * boundary (docs/design/author-studio/WRITER_CANVAS_V01_IMPLEMENTATION_BOUNDARY
  * _2026-08-05.md) ships the room with ONE real instrument, the writing surface,
  * so the door requires a manuscript: a member with nothing on the table begins
  * at Studio Home. The gathering/development arrival (walk amendment A6) is a
  * later slice and gets its own door only when it is real.
  */
-export const CANVAS_HREF = '/writers-studio/canvas';
+export const CANVAS_HREF = '/writers-studio/rebuild';
 
 /** BUILD-07D — where a writer encounters MAIA's frozen developmental readings, by Work. */
 export const DEVELOP_HREF = '/writers-studio/develop';

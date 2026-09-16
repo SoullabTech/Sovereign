@@ -3,6 +3,8 @@ room: Writer’s Studio — Experience Rebuild
 human_activity: inhabiting a creative work with MAIA present at the same visible movement, section, scene, passage, stanza, lyric, or other authored locus
 surfaces:
   - app/writers-studio/rebuild/**
+  - app/writers-studio/studioMap.ts
+  - app/writers-studio/workContext.ts
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE — rooms come from human activity, not data models
@@ -28,6 +30,10 @@ experience_verification: >-
 ## What this room is for
 
 The creator comes here to stay inside the Work while MAIA reads and works beside it. The primary activity is not managing Studio machinery; it is entering deep creative presence, sensing the Work as a living whole, moving directly to the part that calls for attention, and developing exact language without losing place. The room must support the structures of nonfiction, fiction, poetry, memoir, plays, screenplays, songs, lyrics and other authored forms without forcing them into book vocabulary.
+
+## Canonical cutover
+
+The rebuilt room is the canonical **Write** destination for Writer's Studio navigation and the return destination from MAIA handoffs. The legacy `/writers-studio/canvas` route remains temporarily available only as a rollback surface; ordinary Studio navigation no longer leads there.
 
 ## Arrival
 
