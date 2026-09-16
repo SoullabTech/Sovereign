@@ -138,6 +138,70 @@ marker in the gutter   → panel opens that observation
 
 Both directions, or the mode is two surfaces sharing a screen.
 
+## The act is an INVERSION, not a replacement
+
+Founder refinement, same day. The current Develop page is a **reading archive
+and commissioning interface**: readings are the navigation, a frozen report is
+the central surface, the commissioning form holds a third of the workbench, and
+the manuscript is not on screen at all. That architecture is coherent for
+*storing* readings. It puts MAIA's output at the centre and the writer's book
+offscreen.
+
+**The current page becomes the machinery behind Develop.** Nothing is thrown
+away; the foreground is inverted.
+
+| current Develop | disposition |
+|---|---|
+| Studio shell · Develop tab · `/develop?m=` route | **keep** |
+| frozen readings | **keep, subordinated** → `Current reading · Sep 10 ▾` |
+| lens engine · observation provenance · staleness | **keep** |
+| observation dialogue | **keep** |
+| readings as the navigation | **replace** — the manuscript is the navigation |
+| a long report as the central surface | **replace** |
+| "Ask for a reading" form, permanently visible | **compress** → `Read this chapter` + `Focus the reading ▾` |
+| manuscript absent | **fix fundamentally** |
+| findings detached from prose | **anchor into the manuscript** |
+
+The header subtitle — *"What MAIA noticed when she read this work, kept exactly
+as she noticed it"* — is true, and it defines Develop as a repository of past
+observations. The active mode already says where the writer is standing.
+
+### `RESTS ON` becomes visible rather than enumerated
+
+The epistemic machinery stays whole. What changes is where it is read.
+
+```
+today      RESTS ON · Section 13 · Section 12 · Section 17
+becomes    RESTS ON ✓ visible in manuscript
+           (and the sections are highlighted where the writer can see them)
+```
+
+Exact sections, code-point ranges, frozen version, coverage,
+does-not-establish, current/superseded — all preserved, all moved under
+*Reading details ▾*. ⛔ Nothing is deleted to reduce clutter. The surface stops
+behaving like an epistemology report and starts behaving like an editorial
+workspace.
+
+### ⭐ One staging consequence worth taking
+
+**"Related places" ships on data that already exists; the paragraph-precise
+gutter marker does not.**
+
+`ReviewFinding.sectionIds` is section-level and present today. So *"Related
+places → A Vivid Dream · Preface · Chapter 1"*, each click moving the centre
+manuscript to that place, is composable now — and it is most of the perceptual
+gain, because the writer *sees* the relationship instead of reading a list of
+ids.
+
+The `◇` beside the right paragraph still needs the `CodePointRange` the
+presentation seam discards. **So the inversion does not have to wait on that
+widening.** Section-precision first; paragraph-precision when the seam is
+widened deliberately, as its own act.
+
+⛔ Do not approximate the marker's position in the meantime. A `◇` beside a
+paragraph MAIA did not name is the interface asserting an anchor that does not
+exist — the same class of defect as a fallback indistinguishable from success.
+
 ## Standing
 
 ```
