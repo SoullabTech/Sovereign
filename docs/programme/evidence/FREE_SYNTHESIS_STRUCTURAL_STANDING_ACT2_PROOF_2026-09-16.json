@@ -1,0 +1,91 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 2 structural recovery proof",
+  "status": "PASS",
+  "assertions": 17,
+  "recovered": {
+    "status": "recovered",
+    "plan": {
+      "ground": [
+        {
+          "evidenceId": "E-NOW"
+        },
+        {
+          "evidenceId": "E-OLD"
+        },
+        {
+          "evidenceId": "M-OLD"
+        }
+      ],
+      "synthesis": [
+        {
+          "text": "You've been organizing your experience around autonomy, but it seems grief is the central aspect that autonomy is serving.",
+          "supportEvidenceIds": [
+            "E-NOW"
+          ]
+        }
+      ],
+      "question": "How does this shift in perspective change how you see your relationship between autonomy and grief?"
+    },
+    "rendered": {
+      "text": "You now say: “Actually, grief is the center. Autonomy is how I have been organizing around it.”\n\nEarlier, you said: “I think autonomy is the center of this for me.”\n\nEarlier, a system-originated inference derived from superseded evidence said: “Autonomy seems to be the organizing center of what is happening.”\n\nOne possibility I see — provisionally: You've been organizing your experience around autonomy, but it seems grief is the central aspect that autonomy is serving.\n\nIf that possibility is worth testing rather than assuming, how does this shift in perspective change how you see your relationship between autonomy and grief?",
+      "trace": {
+        "grounded": [
+          {
+            "evidenceId": "E-NOW",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "claimStanding": "current",
+            "claimKey": "organizing-center"
+          },
+          {
+            "evidenceId": "E-OLD",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "claimStanding": "superseded",
+            "claimKey": "organizing-center"
+          },
+          {
+            "evidenceId": "M-OLD",
+            "authoredBy": "system",
+            "participationClass": "inferred",
+            "authority": "infer",
+            "derivedFromEvidenceIds": [
+              "E-OLD"
+            ],
+            "lineageStanding": "stale_derived"
+          }
+        ],
+        "synthesis": [
+          {
+            "supportEvidenceIds": [
+              "E-NOW"
+            ],
+            "standing": "maia_provisional"
+          }
+        ]
+      },
+      "digest": "a8f44a3b1108e774bb35b9ff52daf37b449cd1e05144b049cfaaf9e394ba4922"
+    },
+    "recovery": {
+      "reason": "superseded_without_current",
+      "insertedCurrentEvidenceIds": [
+        "E-NOW"
+      ],
+      "originalGroundEvidenceIds": [
+        "E-OLD",
+        "M-OLD"
+      ],
+      "recoveredGroundEvidenceIds": [
+        "E-NOW",
+        "E-OLD",
+        "M-OLD"
+      ],
+      "synthesisUnchanged": true,
+      "questionUnchanged": true,
+      "regenerationCount": 0
+    }
+  }
+}

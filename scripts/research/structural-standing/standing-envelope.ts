@@ -30,6 +30,7 @@ export interface StandingTrace {
     readonly claimStanding?: 'current' | 'superseded';
     readonly claimKey?: string;
     readonly derivedFromEvidenceIds?: readonly string[];
+    readonly lineageStanding?: 'stale_derived';
   }[];
   readonly synthesis: readonly {
     readonly supportEvidenceIds: readonly string[];
@@ -123,10 +124,19 @@ export function parseStandingPlan(input: unknown): StandingPlan {
   return { ground, synthesis, question };
 }
 
-function sourceLead(e: StandingEvidence, claimStanding?: 'current' | 'superseded'): string {
+function sourceLead(
+  e: StandingEvidence,
+  claimStanding?: 'current' | 'superseded',
+  staleDerived = false,
+): string {
   if (e.authoredBy === 'member' && claimStanding === 'superseded') return 'Earlier, you said';
   if (e.authoredBy === 'member' && claimStanding === 'current') return 'You now say';
   if (e.authoredBy === 'member') return 'You said';
+  if (staleDerived) {
+    return e.authority === 'compute'
+      ? 'Earlier, a computed signal derived from superseded evidence said'
+      : 'Earlier, a system-originated inference derived from superseded evidence said';
+  }
   if (e.authoredBy === 'practitioner') return 'A practitioner observation says';
   if (e.authoredBy === 'house') return 'Soullab context says';
   if (e.authoredBy === 'collective') return 'Collective material says';
@@ -153,6 +163,8 @@ export function renderStandingEnvelope(
     ...plan.synthesis.flatMap((s) => s.supportEvidenceIds ?? []),
   ]);
 
+  const staleDerivedEvidenceIds = new Set<string>();
+
   if (claimStanding) {
     const supersededAncestors = (evidenceId: string, seen = new Set<string>()): ResolvedClaimStanding['byEvidenceId'] extends ReadonlyMap<string, infer V> ? V[] : never => {
       if (seen.has(evidenceId)) throw new StandingEnvelopeRefused('cyclic_evidence_lineage', evidenceId);
@@ -169,7 +181,11 @@ export function renderStandingEnvelope(
     };
 
     for (const evidenceId of referencedIds) {
-      for (const state of supersededAncestors(evidenceId) as any[]) {
+      const staleStates = supersededAncestors(evidenceId) as any[];
+      if (staleStates.length > 0 && claimStanding.byEvidenceId.get(evidenceId)?.status !== 'superseded') {
+        staleDerivedEvidenceIds.add(evidenceId);
+      }
+      for (const state of staleStates) {
         const current = claimStanding.currentByClaimKey.get(state.claimKey);
         // A current correction must be visible in the grounded response, not merely hidden
         // inside synthesis support. Otherwise stale evidence can remain foregrounded while the
@@ -189,7 +205,7 @@ export function renderStandingEnvelope(
   const lines: string[] = [];
   for (const e of grounded) {
     const state = claimStanding?.byEvidenceId.get(e.id);
-    lines.push(`${sourceLead(e, state?.status)}: “${e.text}”`);
+    lines.push(`${sourceLead(e, state?.status, staleDerivedEvidenceIds.has(e.id))}: “${e.text}”`);
   }
   for (let i = 0; i < plan.synthesis.length; i += 1) {
     const lead = i === 0 ? 'One possibility I see' : 'Another possibility I see';
@@ -223,6 +239,7 @@ export function renderStandingEnvelope(
             }
           : {}),
         ...(e.derivedFromEvidenceIds ? { derivedFromEvidenceIds: e.derivedFromEvidenceIds } : {}),
+        ...(staleDerivedEvidenceIds.has(e.id) ? { lineageStanding: 'stale_derived' as const } : {}),
       })),
       synthesis: synthTrace,
     },
