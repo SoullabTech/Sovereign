@@ -36,6 +36,7 @@ import { locationForSection } from '@/lib/writersStudio/placeInWork';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import { DevelopManuscriptRail, DevelopManuscriptSurface } from './DevelopManuscript';
 import { fetchWriteState, type WriteStateSection } from '@/lib/writersStudio/writeStateClient';
+import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { DEVELOPMENTAL_READ_CEILING_CODE_POINTS } from '@/lib/manuscript/developmentalReader/contract';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
@@ -63,6 +64,9 @@ import { fetchStandings, postStanding } from '@/lib/writersStudio/standingClient
 
 type ListPhase = 'loading' | 'ready' | 'unauthorized' | 'error';
 type ReadingPhase = 'idle' | 'loading' | 'ready' | 'not_found' | 'error';
+type DevelopScope = 'work' | 'chapter' | 'custom';
+const PRIMARY_LENSES: readonly DevelopmentalLens[] = ['development', 'structure', 'continuity', 'voice'];
+const lensLabel = (lens: DevelopmentalLens) => lens === 'development' ? 'Movement' : lens.charAt(0).toUpperCase() + lens.slice(1);
 
 /**
  * Whether this Work can be read at all, resolved BEFORE the invitation to ask.
@@ -230,6 +234,8 @@ export default function DevelopRoom({
   const [readingPhase, setReadingPhase] = useState<ReadingPhase>('idle');
   const [payload, setPayload] = useState<ReadingPayload | null>(null);
   const [lens, setLens] = useState<DevelopmentalLens>('development');
+  const [developScope, setDevelopScope] = useState<DevelopScope>('chapter');
+  const [structuredSections, setStructuredSections] = useState<RebuildSection[] | null>(null);
   /* WS-DEV-SCOPE-01 — what the writer asked MAIA to read. 'whole' is the
      default because it is what this room has always meant by "read this". */
   const [sections, setSections] = useState<WriteStateSection[] | null>(null);
@@ -240,7 +246,6 @@ export default function DevelopRoom({
      read at once — in which case the choice is opened FOR them, with the
      reason said in a sentence, rather than left to be discovered by pressing a
      button that cannot succeed. */
-  const [readMode, setReadMode] = useState<'whole' | 'part'>('whole');
   const [fromIndex, setFromIndex] = useState(0);
   /* THREE states, and the third is the point: null = the writer has not
      chosen an end yet. -1 = to the end, whatever it is. 0..n = a section.
@@ -272,6 +277,24 @@ export default function DevelopRoom({
         if (!cancelled) setTitle(list.find((m) => m.id === manuscriptId)?.title ?? null);
       } catch {
         if (!cancelled) setTitle(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [manuscriptId]);
+
+  /* D4 — structural context is read-only and comes from the same rebuild
+     snapshot Write uses. It is used only to resolve a truthful current chapter;
+     the manuscript prose still comes from the write-state read above. */
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await apiFetch(`/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(manuscriptId)}`);
+        if (!res.ok || cancelled) return setStructuredSections(null);
+        const body = await res.json();
+        if (!cancelled) setStructuredSections(body?.state === 'section_aware' && Array.isArray(body.sections) ? body.sections : null);
+      } catch {
+        if (!cancelled) setStructuredSections(null);
       }
     })();
     return () => { cancelled = true; };
@@ -449,7 +472,6 @@ export default function DevelopRoom({
          there. Choosing a bigger stretch for them, or one that "looks
          important", is the ranking this room refuses. */
       if (codePointsOf(secs) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS) {
-        setReadMode('part');
         /* ⛔ NOT a range chosen for them. An earlier attempt opened at the
            first section alone — which fits, and which the founder refused:
            "no automatic first N sections that fit; that would quietly turn
@@ -473,26 +495,41 @@ export default function DevelopRoom({
      gave.
 
      ⛔ Nothing preselects, recommends, or ranks a place to start. */
+  const structureAligned = useMemo(() => {
+    if (!sections || !structuredSections || sections.length !== structuredSections.length) return false;
+    return sections.every((section, i) => section.id === structuredSections[i]?.draftSectionId);
+  }, [sections, structuredSections]);
+  const currentChapter = useMemo(
+    () => structureAligned && structuredSections && placeId ? chapterSpanFor(structuredSections, placeId) : null,
+    [structureAligned, structuredSections, placeId],
+  );
+  const effectiveScope: DevelopScope = developScope === 'chapter' && !currentChapter ? 'work' : developScope;
+
   const last = sections && sections.length > 0 ? sections.length - 1 : 0;
   const endChosen = toIndex !== null;
   const to = toIndex === null ? last : toIndex === -1 ? last : toIndex;
+  const customSections = sections ? sections.slice(fromIndex, to + 1) : [];
+  const chapterIds = new Set(currentChapter?.sections.map((section) => section.draftSectionId) ?? []);
+  const chapterSections = sections?.filter((section) => chapterIds.has(section.id)) ?? [];
+  const scopeSections = effectiveScope === 'chapter' ? chapterSections
+    : effectiveScope === 'custom' ? customSections
+      : (sections ?? []);
+
   const chosenScope: ReadingScope | undefined = (() => {
-    if (!sections || sections.length === 0) return undefined;
-    if (readMode === 'whole') return undefined;
-    if (!endChosen) return undefined;
-    if (fromIndex === 0 && to === last) return undefined;
-    return {
-      kind: 'range',
-      fromSectionId: sections[fromIndex].id,
-      toSectionId: sections[to].id,
-    };
+    if (!sections || sections.length === 0 || effectiveScope === 'work') return undefined;
+    if (effectiveScope === 'chapter') {
+      const first = chapterSections[0];
+      const lastChapter = chapterSections[chapterSections.length - 1];
+      return first && lastChapter
+        ? { kind: 'range', fromSectionId: first.id, toSectionId: lastChapter.id }
+        : undefined;
+    }
+    if (!endChosen || (fromIndex === 0 && to === last)) return undefined;
+    return { kind: 'range', fromSectionId: sections[fromIndex].id, toSectionId: sections[to].id };
   })();
-  const chosenSections = sections ? sections.slice(fromIndex, to + 1) : [];
-  const chosenSize = codePointsOf(readMode === 'whole' ? (sections ?? []) : chosenSections);
-  /* Nothing may be asked while the end is unchosen — not because it would
-     fail, but because no range has been named yet. */
-  const tooLarge =
-    chosenSize > DEVELOPMENTAL_READ_CEILING_CODE_POINTS || (readMode === 'part' && !endChosen);
+  const chosenSize = codePointsOf(scopeSections);
+  const tooLarge = chosenSize > DEVELOPMENTAL_READ_CEILING_CODE_POINTS
+    || (effectiveScope === 'custom' && !endChosen);
 
   const ask = async () => {
     setCommission({ phase: 'reading' });
@@ -617,7 +654,9 @@ export default function DevelopRoom({
               style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}
             >
               <span className="opacity-70">Manuscript</span>
-              {currentSection ? <span> &nbsp;›&nbsp; {currentSection.heading?.trim() || 'Untitled section'}</span> : null}
+              {currentChapter ? <span> &nbsp;›&nbsp; {currentChapter.root.heading?.trim() || 'Current chapter'}</span> : null}
+              {currentSection && currentSection.id !== currentChapter?.root.draftSectionId
+                ? <span> &nbsp;›&nbsp; {currentSection.heading?.trim() || 'Untitled section'}</span> : null}
             </div>
             <DevelopManuscriptSurface
               sections={sections}
@@ -636,6 +675,16 @@ export default function DevelopRoom({
         aria-label="Developmental reading"
         data-develop-intelligence
       >
+        <div className="grid grid-cols-3 gap-1 p-1 mb-4 rounded-full border" style={{ borderColor: PRESS.ruleSoft }} data-develop-scope-tabs>
+          <button type="button" onClick={() => setDevelopScope('work')} aria-pressed={effectiveScope === 'work'}
+            className="rounded-full px-2 py-2 text-[11.5px]"
+            style={{ background: effectiveScope === 'work' ? 'var(--ws-ground-active)' : 'transparent', color: PRESS.text }}>Work</button>
+          <button type="button" onClick={() => setDevelopScope('chapter')} aria-pressed={effectiveScope === 'chapter'} disabled={!currentChapter}
+            className="rounded-full px-2 py-2 text-[11.5px] disabled:opacity-30"
+            style={{ background: effectiveScope === 'chapter' ? 'var(--ws-ground-active)' : 'transparent', color: PRESS.text }}>Chapter</button>
+          <button type="button" disabled aria-disabled="true" title="Exact passage focus is not available in Develop yet"
+            className="rounded-full px-2 py-2 text-[11.5px] opacity-30">Passage</button>
+        </div>
         <div className="pb-4 mb-4 border-b" style={{ borderColor: PRESS.ruleSoft }}>
           <p className="text-[10.5px] tracking-[0.18em] uppercase opacity-45">Develop</p>
           <p className="text-[15px] mt-1">{currentSection?.heading?.trim() || 'Manuscript'}</p>
@@ -772,94 +821,54 @@ export default function DevelopRoom({
                   Behind it the contract is unchanged and exact — draft section
                   ids, coverage per section, no silent trimming, the 60,000
                   ceiling untouched. None of that appears here. */}
-              {sections && sections.length > 1 && (
-                <fieldset disabled={commission.phase === 'reading'} className="mb-4">
+              {sections && sections.length > 0 && (
+                <fieldset disabled={commission.phase === 'reading'} className="mb-4" data-develop-scope>
                   <legend className="text-[12.5px] opacity-60 mb-2">Read</legend>
+                  <p className="text-[11.5px] opacity-50">
+                    {effectiveScope === 'chapter'
+                      ? (currentChapter?.root.heading?.trim() || 'Current chapter')
+                      : effectiveScope === 'custom' ? 'A range you choose' : 'The whole work'}
+                  </p>
 
-                  {/* Too large is said BEFORE the act, in a sentence about the
-                      book. A writer should never press a button that cannot
-                      succeed and receive an engineering refusal for it. */}
-                  {readMode === 'part' && codePointsOf(sections) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS && (
-                    <p className="text-[12.5px] leading-relaxed opacity-70 mb-2.5">
-                      This work is too large to read all at once. Choose where
-                      you&rsquo;d like MAIA to read.
+                  {tooLarge && effectiveScope !== 'custom' && (
+                    <p className="text-[12px] leading-relaxed opacity-70 mt-2">
+                      This scope is more than MAIA reads in one sitting. Choose a custom range.
                     </p>
                   )}
 
-                  <select
-                    value={readMode}
-                    onChange={(e) => setReadMode(e.target.value as 'whole' | 'part')}
-                    disabled={codePointsOf(sections) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS}
-                    className="bg-transparent border px-2 py-1.5 rounded-[2px] text-[13px] disabled:opacity-45"
-                    style={{ borderColor: PRESS.rule, color: PRESS.text }}
-                  >
-                    <option value="whole" style={{ color: PRESS.ink }}>Whole work</option>
-                    <option value="part" style={{ color: PRESS.ink }}>Part of it</option>
-                  </select>
+                  {sections.length > 1 && (
+                    <button type="button" onClick={() => setDevelopScope('custom')}
+                      className="mt-3 text-[12px] underline underline-offset-4 opacity-60 hover:opacity-100">
+                      Custom range
+                    </button>
+                  )}
 
-                  {readMode === 'part' && (
-                    <div className="mt-2.5 space-y-2">
+                  {effectiveScope === 'custom' && sections.length > 1 && (
+                    <div className="mt-3 space-y-2" data-develop-custom-range>
                       <div className="flex flex-wrap items-center gap-2 text-[13px]">
                         <span className="opacity-55 w-8">From</span>
-                        <select
-                          value={fromIndex}
-                          onChange={(e) => {
-                            const next = Number(e.target.value);
-                            setFromIndex(next);
-                            /* The end never falls behind the beginning —
-                               corrected as they choose, not refused after. */
-                            if (toIndex !== null && toIndex !== -1 && next > toIndex) setToIndex(next);
-                          }}
-                          className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
-                          style={{ borderColor: PRESS.rule, color: PRESS.text }}
-                        >
-                          {sections.map((sec, i) => (
-                            <option key={sec.id} value={i} style={{ color: PRESS.ink }}>
-                              {sectionLabel(sec, i)}
-                            </option>
-                          ))}
+                        <select value={fromIndex} onChange={(e) => {
+                          const next = Number(e.target.value);
+                          setFromIndex(next);
+                          if (toIndex !== null && toIndex !== -1 && next > toIndex) setToIndex(next);
+                        }} className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
+                          style={{ borderColor: PRESS.rule, color: PRESS.text }}>
+                          {sections.map((sec, i) => <option key={sec.id} value={i} style={{ color: PRESS.ink }}>{sectionLabel(sec, i)}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-[13px]">
                         <span className="opacity-55 w-8">to</span>
-                        <select
-                          value={toIndex ?? ''}
-                          onChange={(e) => setToIndex(Number(e.target.value))}
+                        <select value={toIndex ?? ''} onChange={(e) => setToIndex(Number(e.target.value))}
                           className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
-                          style={{ borderColor: PRESS.rule, color: PRESS.text }}
-                        >
-                          {/* The ordinary thing a writer means, said the
-                              ordinary way — and it stays true as the book
-                              grows, because -1 resolves to whatever the end is
-                              rather than pinning today's last section. */}
-                          {/* Present only while unchosen, and never selectable
-                              back into — an "unchosen" a writer can re-pick is
-                              a state, not a prompt. */}
-                          {!endChosen && (
-                            <option value="" disabled style={{ color: PRESS.ink }}>
-                              Choose where to stop
-                            </option>
-                          )}
+                          style={{ borderColor: PRESS.rule, color: PRESS.text }}>
+                          {!endChosen && <option value="" disabled style={{ color: PRESS.ink }}>Choose where to stop</option>}
                           <option value={-1} style={{ color: PRESS.ink }}>To the end</option>
                           {sections.map((sec, i) => (
-                            <option
-                              key={sec.id}
-                              value={i}
-                              disabled={i < fromIndex}
-                              style={{ color: PRESS.ink }}
-                            >
-                              {sectionLabel(sec, i)}
-                            </option>
+                            <option key={sec.id} value={i} disabled={i < fromIndex} style={{ color: PRESS.ink }}>{sectionLabel(sec, i)}</option>
                           ))}
                         </select>
                       </div>
-                      {/* Still too much, said while they can still change it. */}
-                      {endChosen && tooLarge && (
-                        <p className="text-[12.5px] leading-relaxed opacity-70">
-                          That is still more than MAIA reads in one sitting.
-                          Choose a smaller stretch.
-                        </p>
-                      )}
+                      {tooLarge && <p className="text-[12px] leading-relaxed opacity-70">That range is still more than MAIA reads in one sitting.</p>}
                     </div>
                   )}
                 </fieldset>
@@ -876,22 +885,32 @@ export default function DevelopRoom({
                 <legend className="text-[12.5px] opacity-60 mb-2">
                   What would you like MAIA to notice?
                 </legend>
-                {LENS_ORDER.map((l) => (
-                  <label key={l} className="flex items-baseline gap-2 text-[13px] cursor-pointer">
-                    <input
-                      type="radio"
-                      name="lens"
-                      value={l}
-                      checked={lens === l}
-                      onChange={() => setLens(l)}
-                      className="translate-y-[1px]"
-                    />
-                    <span className="flex-1 flex items-baseline justify-between gap-3">
-                      <span>{LENS_QUESTION[l]}</span>
-                      <span className="capitalize opacity-40 text-[12px] shrink-0">{l}</span>
-                    </span>
-                  </label>
-                ))}
+                <div className="grid grid-cols-2 gap-1.5 mb-2" data-develop-primary-lenses>
+                  {PRIMARY_LENSES.map((l) => (
+                    <button key={l} type="button" onClick={() => setLens(l)} aria-pressed={lens === l}
+                      className="text-left rounded-md border px-2.5 py-2"
+                      style={{ borderColor: lens === l ? PRESS.accent : PRESS.ruleSoft, background: lens === l ? 'var(--ws-ground-active)' : 'transparent' }}>
+                      <span className="block text-[12px]">{lensLabel(l)}</span>
+                      <span className="block text-[10.5px] opacity-45 mt-0.5">{LENS_QUESTION[l]}</span>
+                    </button>
+                  ))}
+                </div>
+                <details data-develop-all-lenses>
+                  <summary className="cursor-pointer text-[12px] opacity-60">
+                    All lenses{PRIMARY_LENSES.includes(lens) ? '' : ` · ${lensLabel(lens)}`}
+                  </summary>
+                  <div className="mt-2 space-y-1.5">
+                    {LENS_ORDER.map((l) => (
+                      <label key={l} className="flex items-start gap-2 text-[12.5px] cursor-pointer">
+                        <input type="radio" name="lens" value={l} checked={lens === l} onChange={() => setLens(l)} className="mt-1" />
+                        <span className="flex-1">
+                          <span className="block">{lensLabel(l)}</span>
+                          <span className="block opacity-45 text-[11px]">{LENS_MEANING[l]}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </details>
               </fieldset>
               <button
                 onClick={ask}

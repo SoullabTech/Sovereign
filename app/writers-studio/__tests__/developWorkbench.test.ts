@@ -71,3 +71,35 @@ describe('D3 · Develop is the manuscript seen developmentally', () => {
     expect(room).not.toContain('CodePointRange');
   });
 });
+
+
+describe('D4 · human-scale developmental scope and lens disclosure', () => {
+  it('keeps Work and Chapter live while Passage is visibly unavailable', () => {
+    expect(room).toContain('data-develop-scope-tabs');
+    expect(room).toContain("setDevelopScope('work')");
+    expect(room).toContain("setDevelopScope('chapter')");
+    expect(room).toContain('>Passage</button>');
+    expect(room).toContain('disabled aria-disabled="true"');
+  });
+
+  it('resolves Chapter from the same structural context Write uses', () => {
+    expect(room).toContain('/api/writers-studio/rebuild/context?manuscriptId=');
+    expect(room).toContain('chapterSpanFor(structuredSections, placeId)');
+    expect(room).toContain('structureAligned');
+  });
+
+  it('foregrounds four common lenses without hiding the complete vocabulary', () => {
+    expect(room).toContain("['development', 'structure', 'continuity', 'voice']");
+    expect(room).toContain('data-develop-primary-lenses');
+    expect(room).toContain('data-develop-all-lenses');
+    expect(room).toContain('LENS_ORDER.map');
+    expect(room).toContain("lens === 'development' ? 'Movement'");
+  });
+
+  it('preserves the pre-existing custom range capability', () => {
+    expect(room).toContain('Custom range');
+    expect(room).toContain('data-develop-custom-range');
+    expect(room).toContain('fromSectionId: sections[fromIndex].id');
+    expect(room).toContain('toSectionId: sections[to].id');
+  });
+});
