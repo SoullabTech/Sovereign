@@ -1,0 +1,15 @@
+20:58:10  Acquired tunnel connection to device.
+20:58:10  Enabling developer disk image services.
+20:58:11  Acquired usage assertion.
+Current Displays:
+▿ 1: LCD (primary):
+    • bounds: (0.0, 0.0, 1125.0, 2436.0)
+    • currentOrientation: rot0
+    • displayId: 1
+    • name: LCD
+    • nativeOrientation: rot0
+    • pointScale: 3
+    • nativeSize: (1320.0, 2868.0)
+    • primary: true
+Main display backlight state: backlight is on and active
+Main display orientation: faceUp, non-flat orientation: portrait, orientation not locked

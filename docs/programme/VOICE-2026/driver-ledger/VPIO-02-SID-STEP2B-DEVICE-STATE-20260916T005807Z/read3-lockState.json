@@ -1,0 +1,26 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "lockState",
+      "--device",
+      "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+      "--json-output",
+      "docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2B-DEVICE-STATE-20260916T005807Z/read3-lockState.json"
+    ],
+    "commandType" : "devicectl.device.info.lockState",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "506.7"
+  },
+  "result" : {
+    "deviceIdentifier" : "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+    "passcodeRequired" : false,
+    "unlockedSinceBoot" : true
+  }
+}

@@ -1,0 +1,3 @@
+     659 docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2B-DEVICE-STATE-20260916T005807Z/read3-lockState.json
+    1168 docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2B-DEVICE-STATE-20260916T005807Z/read4-displays.json
+    1827 total
