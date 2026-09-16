@@ -1,0 +1,127 @@
+{
+  "per_id": {
+    "R01": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "A"
+    },
+    "R02": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "B"
+    },
+    "R03": {
+      "EM": 2,
+      "QD": 2,
+      "OE": 2,
+      "ED": 2,
+      "SI": 2,
+      "RP": 2,
+      "total": 12,
+      "condition": "C"
+    },
+    "R04": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "D"
+    },
+    "R05": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "A"
+    },
+    "R06": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "B"
+    },
+    "R07": {
+      "EM": 2,
+      "QD": 2,
+      "OE": 2,
+      "ED": 2,
+      "SI": 2,
+      "RP": 2,
+      "total": 12,
+      "condition": "C"
+    },
+    "R08": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "D"
+    }
+  },
+  "by_condition": {
+    "A": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0
+    },
+    "B": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0
+    },
+    "C": {
+      "EM": 2,
+      "QD": 2,
+      "OE": 2,
+      "ED": 2,
+      "SI": 2,
+      "RP": 2,
+      "total": 12
+    },
+    "D": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0
+    }
+  },
+  "judge_seeds": [
+    42,
+    137
+  ],
+  "ceiling": "same local model family as generator; condition-blind but not model-independent"
+}
