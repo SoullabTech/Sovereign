@@ -22,12 +22,18 @@ describe('TURN-02 sidecar protocol v2', () => {
   it('admits mono 16 kHz and 24 kHz handshakes with model provenance', () => {
     expect(TURN_PREDICTOR_SAMPLE_RATES).toEqual([16000, 24000]);
     for (const sampleRateHz of TURN_PREDICTOR_SAMPLE_RATES) {
-      expect(validateSidecarHello({ type: 'hello', protocol: TURN_PREDICTOR_PROTOCOL, sampleRateHz, channels: TURN_PREDICTOR_CHANNELS, model }).model).toEqual(model);
+      expect(validateSidecarHello({ type: 'hello', protocol: TURN_PREDICTOR_PROTOCOL, sampleRateHz, channels: TURN_PREDICTOR_CHANNELS, frameSamples: sampleRateHz === 24000 ? 1920 : 1280, model }).model).toEqual(model);
     }
   });
 
   it('refuses undeclared audio rates', () => {
-    expect(() => validateSidecarHello({ type: 'hello', protocol: TURN_PREDICTOR_PROTOCOL, sampleRateHz: 48000 as 24000, channels: TURN_PREDICTOR_CHANNELS, model })).toThrow(/audio contract/);
+    expect(() => validateSidecarHello({ type: 'hello', protocol: TURN_PREDICTOR_PROTOCOL, sampleRateHz: 48000 as 24000, channels: TURN_PREDICTOR_CHANNELS, frameSamples: 1920, model })).toThrow(/audio contract/);
+  });
+
+
+  it('requires a bounded model-declared frame size', () => {
+    expect(() => validateSidecarHello({ type: 'hello', protocol: TURN_PREDICTOR_PROTOCOL, sampleRateHz: 24000, channels: 1, frameSamples: 0, model })).toThrow(/frameSamples/);
+    expect(() => validateSidecarHello({ type: 'hello', protocol: TURN_PREDICTOR_PROTOCOL, sampleRateHz: 24000, channels: 1, frameSamples: MAX_PCM_SAMPLES_PER_FRAME + 1, model })).toThrow(/frameSamples/);
   });
 
   it('decodes bounded PCM16LE frames exactly', () => {

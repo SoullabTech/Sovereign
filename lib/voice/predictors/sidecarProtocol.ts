@@ -11,6 +11,7 @@ export type TurnSidecarHello = {
   protocol: typeof TURN_PREDICTOR_PROTOCOL;
   sampleRateHz: PredictorSampleRateHz;
   channels: typeof TURN_PREDICTOR_CHANNELS;
+  frameSamples: number;
   model: PredictorModelIdentity;
 };
 
@@ -61,6 +62,7 @@ export function decodePcm16Frame(message: TurnSidecarAudio): Int16Array {
 export function validateSidecarHello(message: TurnSidecarHello): TurnSidecarHello {
   if (message.protocol !== TURN_PREDICTOR_PROTOCOL) throw new Error('protocol mismatch');
   if (!TURN_PREDICTOR_SAMPLE_RATES.includes(message.sampleRateHz) || message.channels !== TURN_PREDICTOR_CHANNELS) throw new Error('audio contract mismatch');
+  if (!Number.isInteger(message.frameSamples) || message.frameSamples <= 0 || message.frameSamples > MAX_PCM_SAMPLES_PER_FRAME) throw new Error('frameSamples invalid');
   if (!message.model?.modelId || !message.model.weightLicense) throw new Error('model identity required');
   return message;
 }

@@ -130,7 +130,7 @@ def main() -> int:
         "modelVersion": args.model_version,
         "weightLicense": LICENSE,
     }
-    emit({"type": "hello", "protocol": PROTOCOL, "sampleRateHz": SAMPLE_RATE, "channels": 1, "model": model})
+    emit({"type": "hello", "protocol": PROTOCOL, "sampleRateHz": SAMPLE_RATE, "channels": 1, "frameSamples": FRAME_SAMPLES, "model": model})
 
     for line in sys.stdin:
         if not line.strip():

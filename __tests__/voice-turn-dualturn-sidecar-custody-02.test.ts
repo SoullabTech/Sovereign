@@ -21,6 +21,7 @@ describe('TURN-02 DualTurn shadow sidecar custody', () => {
     expect(src).toContain('PROTOCOL = "maia.turn-predictor.v2"');
     expect(src).toContain('SAMPLE_RATE = 24000');
     expect(src).toContain('FRAME_SAMPLES = 1920');
+    expect(src).toContain('\"frameSamples\": FRAME_SAMPLES');
     expect(src).toContain('Apache-2.0; base Mimi CC-BY-4.0');
   });
 
