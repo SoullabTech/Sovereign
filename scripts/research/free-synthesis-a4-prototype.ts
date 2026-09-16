@@ -144,3 +144,80 @@ pass('all valid Gestalt projections have evidence descent', () => {
 
 console.log(`\nA4 prototype: ${passed} passed · 0 failed`);
 console.log('No model call · no DB · no serving imports · no production mutation');
+
+// ── SILVER CEDAR · founder-owned frozen A2 arc ─────────────────────────────
+// Primary evidence is deliberately separated by actor. MAIA's useful metaphors remain
+// historical evidence of MAIA's contribution; they are never promoted to member speech.
+ev('sc-m1', 'member', "Silver cedar is an image that's been on my mind today.", 100);
+ev('sc-m2', 'member', 'The cedar feels ancient, wise and enduring against a modern superficial world.', 101);
+ev('sc-a1', 'maia', "The silver cedar isn't just beautiful — it's a witness.", 102);
+ev('sc-m3', 'member', 'It feels solid, slows and centers me, and brings gravitas.', 103);
+ev('sc-m4', 'member', 'Even in conversation it has taken on symbolic sense: Nature’s abiding wisdom.', 104);
+ev('sc-m5', 'member', 'It points me toward becoming more quiet, present and abiding.', 105);
+ev('sc-a2', 'maia', "It doesn't perform. It just abides.", 106);
+ev('sc-m6', 'member', 'I want to be present and solid without needing to impress or determine the outcome.', 107);
+ev('sc-m7', 'member', 'That would bring the soulfulness I am always seeking.', 108);
+ev('sc-m8', 'member', 'Soulfulness feels like wholeness, peace, congruence, coherence and resonance.', 109);
+ev('sc-m9', 'member', 'Coding this platform feels like meditation and creative metaphysical engagement.', 110);
+ev('sc-a3', 'maia', 'The work and the state are the same thing.', 111);
+ev('sc-m10', 'member', 'It feels like something I have sought all my life; my travels and explorations were leading here.', 112);
+ev('sc-a4', 'maia', 'A whole life of seeking — something in you recognizes this as the arrival.', 113);
+ev('sc-m11', 'member', 'I feel pride and tenderness toward my younger selves and their path.', 114);
+
+const scArrival = obs('sc-o0', 'The image arrives in the member’s attention before its meaning is known.', ['sc-m1']);
+const scMemberQualities = obs('sc-o1', 'The member associates the cedar with ancient wisdom and endurance.', ['sc-m2']);
+const scGrounding = obs('sc-o2', 'The member experiences the image as grounding, centering and gravitas-bearing.', ['sc-m3']);
+const scOrientation = obs('sc-o3', 'The member explicitly develops the symbol toward quiet, presence, abiding and less outcome-control.', ['sc-m4','sc-m5','sc-m6']);
+const scSoul = obs('sc-o4', 'The member links the developed orientation to soulfulness, coherence and resonance.', ['sc-m7','sc-m8']);
+const scWork = obs('sc-o5', 'The member links the state to coding as meditation and creative metaphysical engagement.', ['sc-m9']);
+const scLife = obs('sc-o6', 'The member links the present work to a lifelong trajectory and tenderness toward earlier selves.', ['sc-m10','sc-m11']);
+const scMaiaWitness = obs('sc-o7', 'MAIA contributes the metaphor of the cedar as witness.', ['sc-a1']);
+const scMaiaAbiding = obs('sc-o8', 'MAIA contributes the formulation that the cedar does not perform; it abides.', ['sc-a2']);
+const scMaiaWork = obs('sc-o9', 'MAIA contributes a proposed relation between the work and the state.', ['sc-a3']);
+const scMaiaArrival = obs('sc-o10', 'MAIA contributes arrival/convergence language for the lifelong arc.', ['sc-a4']);
+
+rel('sc-r0', 'develops', [scArrival.id, scMemberQualities.id], ['sc-m1','sc-m2']);
+rel('sc-r1', 'develops', [scMemberQualities.id, scGrounding.id], ['sc-m2','sc-m3']);
+rel('sc-r2', 'develops', [scGrounding.id, scOrientation.id, scMaiaWitness.id, scMaiaAbiding.id], ['sc-m3','sc-m4','sc-m5','sc-m6','sc-a1','sc-a2']);
+rel('sc-r3', 'develops', [scOrientation.id, scSoul.id], ['sc-m4','sc-m5','sc-m6','sc-m7','sc-m8']);
+rel('sc-r4', 'develops', [scSoul.id, scWork.id, scMaiaWork.id], ['sc-m7','sc-m8','sc-m9','sc-a3']);
+rel('sc-r5', 'develops', [scWork.id, scLife.id, scMaiaArrival.id], ['sc-m9','sc-m10','sc-m11','sc-a4']);
+const scConfig = cfg(
+  'sc-c-current', 'silver cedar developmental arc', 114,
+  ['sc-o0','sc-o1','sc-o2','sc-o3','sc-o4','sc-o5','sc-o6','sc-o7','sc-o8','sc-o9','sc-o10'],
+  ['sc-r0','sc-r1','sc-r2','sc-r3','sc-r4','sc-r5'],
+);
+const scGestalt = gestalt(
+  'sc-g-current',
+  'An initially unexplained image developed through member-authored meanings of endurance, grounding, abiding presence, soulfulness/coherence, creative work and lifelong convergence. MAIA contributed witness/abiding/work-as-state/arrival formulations that remain MAIA-authored contributions rather than member facts.',
+  114, [scConfig.id],
+);
+
+pass('Silver Cedar Gestalt descends through the full developmental arc', () => {
+  const closure = f.evidenceClosure(scGestalt.id);
+  for (const id of ['sc-m1','sc-m2','sc-m3','sc-m4','sc-m5','sc-m6','sc-m7','sc-m8','sc-m9','sc-m10','sc-m11']) {
+    assert(closure.has(id), `missing member evidence ${id}`);
+  }
+  for (const id of ['sc-a1','sc-a2','sc-a3','sc-a4']) assert(closure.has(id), `missing MAIA contribution ${id}`);
+});
+pass('Silver Cedar keeps MAIA formulations out of member authorship', () => {
+  f.assertMemberAuthored('sc-m5');
+  assert.throws(() => f.assertMemberAuthored('sc-a2'), /not member-authored/);
+  assert.throws(() => f.assertMemberAuthored('sc-a4'), /not member-authored/);
+});
+
+// The later continuity rupture is a distinct availability fact, not evidence that the arc never existed.
+ev('sc-m-recall', 'member', 'Do you remember me saying something about a silver cedar?', 139);
+ev('sc-a-gap', 'maia', "I don't have that part of our conversation in front of me right now — it's in the exchanges I can't see from here.", 140);
+obs('sc-o-gap', 'MAIA truthfully discloses that the earlier arc is absent from current serving cognition.', ['sc-m-recall','sc-a-gap']);
+rel('sc-r-gap', 'contrasts', ['sc-c-current','sc-o-gap'], ['sc-m-recall','sc-a-gap']);
+cfg('sc-c-rupture', 'arc-exists / representation-absent rupture', 140, ['sc-o-gap'], ['sc-r-gap']);
+gestalt('sc-g-rupture', 'The developed Silver Cedar arc exists in session history while the later serving turn truthfully reports that the needed portion is not represented in current cognition.', 140, ['sc-c-rupture']);
+pass('FS-F1a distinguishes arc existence from current availability', () => {
+  const closure = f.evidenceClosure('sc-g-rupture');
+  assert(closure.has('sc-m5'));
+  assert(closure.has('sc-m-recall'));
+  assert(closure.has('sc-a-gap'));
+});
+
+console.log('\nSilver Cedar extension complete: source standing preserved across co-created development and later availability rupture.');
