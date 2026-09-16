@@ -52,6 +52,17 @@ describe('assembleManuscriptMarkdown', () => {
     expect(md).toContain('Copyright © 2026 Kelly W. Nezat. All rights reserved.');
     expect(md).toContain('\n:::\n');
   });
+
+  it('keeps a contiguous multi-section publication role inside one physical object wrapper', () => {
+    const md = assembleManuscriptMarkdown([
+      { heading: 'Elemental Alchemy', body: 'The Art of Living a Phenomenal Life', headingDepth: 1, publicationRole: 'title-page' },
+      { heading: null, body: 'Kelly W. Nezat', headingDepth: null, publicationRole: 'title-page' },
+      { heading: 'Chapter 1: The Journey Begins', body: 'Opening.', headingDepth: 1 },
+    ]);
+    expect(md.match(/::: \{\.book-matter \.book-title-page\}/g)?.length).toBe(1);
+    expect(md).toMatch(/book-title-page[\s\S]*Elemental Alchemy[\s\S]*Kelly W\. Nezat[\s\S]*:::/);
+  });
+
 });
 
 describe('computeSourceHash', () => {
@@ -224,6 +235,6 @@ describe('Hallmark deterministic PDF typography', () => {
   });
 
   it('names the physical production profile independently of source identity', () => {
-    expect(HALLMARK_PRODUCTION_PROFILE).toBe('hallmark-6x9-v2');
+    expect(HALLMARK_PRODUCTION_PROFILE).toBe('hallmark-6x9-v3');
   });
 });

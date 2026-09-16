@@ -25,6 +25,7 @@ import { promises as fs } from 'node:fs';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { inspectPublicationMatter, renderMemberBook, type MemberBookSection } from '@/lib/manuscript/render/renderMemberBook';
+import { isPublicationMatterRole } from '@/lib/manuscript/publicationPlan/roles';
 import { UNTITLED_EXPRESSION } from '@/lib/manuscript/untitledExpression';
 import { memberRef } from '@/lib/privacy/memberRef';
 
@@ -122,11 +123,16 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       sourceRevision = currentDraft.version;
       const draftRows = await query<{
         heading: string | null; body: string; heading_depth: number | null; heading_signal: string | null;
+        publication_role: string | null;
       }>(
-        `SELECT ms.heading, ds.text AS body, ms.heading_depth, ms.heading_signal
+        `SELECT ms.heading, ds.text AS body, ms.heading_depth, ms.heading_signal,
+                po.role AS publication_role
            FROM manuscript_draft_sections ds
            JOIN manuscript_working_drafts d ON d.id = ds.draft_id
            LEFT JOIN manuscript_sections ms ON ms.id = ds.source_section_id
+           LEFT JOIN manuscript_publication_members pm ON pm.draft_section_id = ds.id
+           LEFT JOIN manuscript_publication_objects po
+                  ON po.id = pm.object_id AND po.manuscript_id = d.manuscript_id
           WHERE d.manuscript_id = $1
             AND d.member_id = $2
             AND d.section_addressable_at IS NOT NULL
@@ -145,6 +151,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         headingDepth: r.heading_depth === 1 || r.heading_depth === 2 || r.heading_depth === 3
           ? r.heading_depth : null,
         headingSignal: r.heading_signal,
+        publicationRole: r.publication_role && isPublicationMatterRole(r.publication_role)
+          ? r.publication_role : null,
       }));
     } else {
       const secRows = await query<{
