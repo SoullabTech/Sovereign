@@ -36,6 +36,10 @@ XCTESTRUN="$(ls -t "$DD"/Build/Products/*.xctestrun | head -1)"
 echo "$XCTESTRUN" | tee "$OUT/xctestrun.txt"
 DIAG_FLAGS=""
 if xcodebuild -help 2>&1 | grep -q -- '-collect-test-diagnostics'; then DIAG_FLAGS="-collect-test-diagnostics never"; fi
+xcrun devicectl device info processes --device "$DEV" --json-output "$OUT/processes-just-before-terminate.json"
+test "$(grep -ci VoiceKernelHarness "$OUT/processes-just-before-terminate.json")" -ge 1
+test "$(grep -ic VoiceKernelHarness "$OUT/processes-just-before-terminate.json")" = "$(grep -c "$HIST_CONTAINER/VoiceKernelHarness.app" "$OUT/processes-just-before-terminate.json")"
+grep -i VoiceKernelHarness "$OUT/processes-just-before-terminate.json" | tee "$OUT/harness-processes-just-before-terminate.txt"
 env TEST_RUNNER_K00_MODE=L TEST_RUNNER_K00_VP=on TEST_RUNNER_K00_HOLD_S=15 TEST_RUNNER_K00_W4_MS=500 TEST_RUNNER_K00_SUBJECT=vpio-02 xcodebuild test-without-building -xctestrun "$XCTESTRUN" -destination "id=$XDEST" $DIAG_FLAGS -only-testing:"DriverUITests/K00DriverTests/testTerminateOnly" 2>&1 | tee "$OUT/terminate-only.log" | grep -E "Test Case|TEST (SUCCEEDED|FAILED)|error" | tail -4
 grep -q '\*\* TEST SUCCEEDED \*\*' "$OUT/terminate-only.log"
 grep -q "testTerminateOnly\]' passed" "$OUT/terminate-only.log"

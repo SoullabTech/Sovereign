@@ -916,3 +916,8 @@ No install; no container; no qualification change. The `.vpio02` subject was obs
 ### §10.77 — terminate-only act, `02` STOP carrier and `03` pin drafted; nothing executable (2026-09-16; discriminator plan §18.57; implementation record §10.28)
 
 No qualification change.
+
+
+### §10.78 — STOP carrier run shape issued; terminate pin amended; 03 accepted but closed (2026-09-16; discriminator plan §18.58; implementation record §10.30)
+
+No qualification change.

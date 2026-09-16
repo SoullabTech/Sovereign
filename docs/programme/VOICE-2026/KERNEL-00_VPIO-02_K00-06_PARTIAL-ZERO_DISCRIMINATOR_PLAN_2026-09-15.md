@@ -3580,3 +3580,6 @@ Authority present and correct (7 lines / 244 bytes), pin `c4b37e69…`/59 verifi
 ## §18.57 — `02` ruled STOP · SPENT (harness-process precondition; cause of the running historical harness unknown) · three drafts returned: `SID HISTORICAL-HARNESS-TERMINATE-01` pin (51 lines `4bad7211…`; one `testTerminateOnly`; PRE/POST process reads; container-bound), `02` STOP carrier (49 lines `e5934487…`; partial `$OUT`, authority metadata only, no fabricated seal, `01` lineage segregated), `FIRST-INSTALL-03` label-only pin (59 lines `9b3526c4…`; harness-absent precondition unrelaxed) (2026-09-16; implementation record §10.28; qualification plan §10.77)
 
 `03` may not receive a run shape until the `02` STOP carrier is durable, the terminate-only act is completed, a post-termination read proves the harness absent, the `03` pin is accepted and fresh `03` authority is issued. No device act; no authority issued for any of the three.
+
+
+## §18.58 — terminate-only pin AMENDED (just-in-time bound process read before the one `testTerminateOnly`; 55 lines, `576fd2b2…`) · `02` STOP carrier ACCEPTED (`5e0b755a…`, run shape issued, not yet run) · `03` pin ACCEPTED (`9b3526c4…`, authority unissued) · order: STOP carrier → terminate → post-read → `03` · terminate authority HELD (2026-09-16; implementation record §10.30; qualification plan §10.78)
