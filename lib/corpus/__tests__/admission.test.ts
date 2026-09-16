@@ -65,7 +65,7 @@ describe('ACT 4 §C · corpus admission', () => {
       ROOT,
       files('data/ain/source/books/essay.md'),
       declaration([
-        { prefix: 'data/ain/source/books', classification: 'published_knowledge', reason: 'ok' },
+        { prefix: 'data/ain/source/books', classification: 'published_knowledge', reason: 'ok', authority: { kind: 'soullab_owned', evidence: 'author copyright line' } },
       ]),
       reader({ 'data/ain/source/books/essay.md': 'On the nature of attention.' }),
     );
@@ -85,7 +85,7 @@ describe('ACT 4 §C · corpus admission', () => {
       ROOT,
       files('data/ain/source/books/testers.md'),
       declaration([
-        { prefix: 'data/ain/source/books', classification: 'published_knowledge', reason: 'wrong' },
+        { prefix: 'data/ain/source/books', classification: 'published_knowledge', reason: 'wrong', authority: { kind: 'soullab_owned', evidence: 'author copyright line' } },
       ]),
       reader({ 'data/ain/source/books/testers.md': roster }),
     );
@@ -96,7 +96,7 @@ describe('ACT 4 §C · corpus admission', () => {
 
   test('T5 — the longest matching prefix wins, so a narrow rule can close a broad one', () => {
     const rules = declaration([
-      { prefix: 'data/ain/source', classification: 'published_knowledge', reason: 'broad' },
+      { prefix: 'data/ain/source', classification: 'published_knowledge', reason: 'broad', authority: { kind: 'soullab_owned', evidence: 'author copyright line' } },
       {
         prefix: 'data/ain/source/private',
         classification: 'operational_human_record',
@@ -155,7 +155,7 @@ describe('ACT 4 §C · corpus admission', () => {
       ROOT,
       files('data/ain/source-private/roster.md'),
       declaration([
-        { prefix: 'data/ain/source', classification: 'published_knowledge', reason: 'source only' },
+        { prefix: 'data/ain/source', classification: 'published_knowledge', reason: 'source only', authority: { kind: 'soullab_owned', evidence: 'author copyright line' } },
       ]),
       reader({ 'data/ain/source-private/roster.md': 'harmless prose' }),
     );
@@ -191,6 +191,71 @@ describe('ACT 4 §C · corpus admission', () => {
     expect(refusal).toBeGreaterThan(-1);
     expect(deleteChunks).toBeGreaterThan(refusal);
     expect(deleteSources).toBeGreaterThan(refusal);
+  });
+
+  test('T12 — an admitting classification without structured authority is EXCLUDED', () => {
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/essay.md'),
+      declaration([
+        { prefix: 'data/ain/source/books', classification: 'published_knowledge', reason: 'looks authored' },
+      ]),
+      reader({ 'data/ain/source/books/essay.md': 'On the nature of attention.' }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded[0].reason).toMatch(/requires a structured corpus authority basis/);
+  });
+
+  test('T13 — third-party publication requires third-party authority, not an ownership fiction', () => {
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/essay.md'),
+      declaration([
+        {
+          prefix: 'data/ain/source/books',
+          classification: 'third_party_published',
+          reason: 'published work',
+          authority: { kind: 'soullab_owned', evidence: 'incorrectly asserted' },
+        },
+      ]),
+      reader({ 'data/ain/source/books/essay.md': 'Published prose.' }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded[0].reason).toMatch(/incompatible/);
+  });
+
+  test('T14 — a reason string cannot smuggle authority into the corpus', () => {
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/essay.md'),
+      declaration([
+        {
+          prefix: 'data/ain/source/books',
+          classification: 'third_party_published',
+          reason: 'licensed and definitely okay',
+        },
+      ]),
+      reader({ 'data/ain/source/books/essay.md': 'Published prose.' }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded[0].reason).toMatch(/structured corpus authority basis/);
+  });
+
+  test('T15 — a compatible third-party license basis can admit a clean file', () => {
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/essay.md'),
+      declaration([
+        {
+          prefix: 'data/ain/source/books',
+          classification: 'third_party_published',
+          reason: 'license verified',
+          authority: { kind: 'license', evidence: 'CC BY 4.0 statement in source' },
+        },
+      ]),
+      reader({ 'data/ain/source/books/essay.md': 'Published prose.' }),
+    );
+    expect(v.admitted).toEqual(['data/ain/source/books/essay.md']);
   });
 
 });
