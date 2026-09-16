@@ -42,6 +42,8 @@
  *    path exists, this returns an explicit abstention and the caller recovers nothing.
  */
 
+import { retrospectiveDemand } from './sessionRecovery';
+
 export interface BridgeExchange {
   readonly index: number;
   readonly userMessage: string;
@@ -62,7 +64,8 @@ export type BridgeOutcome =
       readonly kind: 'abstained';
       readonly reason:
         | 'no-member-link-to-recent-context'
-        | 'recent-context-names-nothing-earlier';
+        | 'recent-context-names-nothing-earlier'
+        | 'ambiguous-member-grounded-targets';
     };
 
 export const BRIDGE_MAX_RECOVERED = 3;
@@ -103,55 +106,80 @@ export function recoverViaBridge(input: {
   const { probe, activePrefix, displaced } = input;
   const maxRecovered = input.maxRecovered ?? BRIDGE_MAX_RECOVERED;
 
-  const probeTokens = new Set(tokenize(probe));
-  if (probeTokens.size === 0) {
+  // Selection law A: the bridge only participates in a retrospective act.
+  // Opacity itself remains a serving-seam decision; this guard keeps the pure
+  // mechanism from manufacturing bridges during ordinary forward conversation.
+  if (retrospectiveDemand(probe) <= 0 || maxRecovered <= 0) {
     return { kind: 'abstained', reason: 'no-member-link-to-recent-context' };
   }
 
-  // ── HOP 1 · which recent turn is the ask reaching for? ────────────────────
-  // Member words only. A prefix turn linked to the probe solely through MAIA's reply
-  // is not the member reaching back — it is MAIA having used a similar word.
-  const hops = activePrefix.filter(p =>
-    tokenize(p.userMessage).some(t => probeTokens.has(t))
+  // Selection law B: intent continuity is a RETRIEVAL EPISODE, not exact-token
+  // overlap between two phrasings. Walk newest-to-oldest and stop at the first
+  // ordinary member turn; paraphrase inside one unresolved episode remains linked.
+  const episode: BridgeExchange[] = [];
+  for (const exchange of [...activePrefix].reverse()) {
+    if (retrospectiveDemand(exchange.userMessage) <= 0) break;
+    episode.push(exchange);
+  }
+  if (episode.length === 0) {
+    return { kind: 'abstained', reason: 'no-member-link-to-recent-context' };
+  }
+
+  const earlierMemberVocabulary = new Set(
+    displaced.flatMap(exchange => tokenize(exchange.userMessage))
   );
-  if (hops.length === 0) {
-    return { kind: 'abstained', reason: 'no-member-link-to-recent-context' };
-  }
 
-  // ── HOP 2 · what did THAT turn name, that the probe did not? ──────────────
-  // ⭐ Tokens already in the probe are EXCLUDED as carriers. The probe's own words
-  // cannot tell us what the recent turn was pointing at — only the words the recent
-  // turn ADDS can. Without this exclusion an incidental shared word (in production,
-  // the member's own "remember") drags in unrelated exchanges.
-  const candidates = new Map<number, BridgeRecovered>();
-  for (const hop of hops) {
-    const carriers = new Set(
-      tokenize(hop.userMessage).filter(t => !probeTokens.has(t))
-    );
-    if (carriers.size === 0) continue;
-
-    for (const d of displaced) {
-      const shared = [...new Set(tokenize(d.userMessage))].filter(t => carriers.has(t));
-      if (shared.length === 0) continue;
-      const prior = candidates.get(d.index);
-      if (!prior || shared.length > prior.carriedBy.length) {
-        candidates.set(d.index, {
-          index: d.index, carriedBy: shared, viaPrefixIndex: hop.index,
-        });
-      }
+  // Object continuity is separate from intent continuity. The nearest prior
+  // GROUNDED retrospective ask supplies object identity. Grounding comes only
+  // from the member's residual words that also occur in earlier member language;
+  // MAIA's replies never make a source grounded.
+  let source: { exchange: BridgeExchange; anchors: string[] } | null = null;
+  for (const exchange of episode) {
+    const anchors = [...new Set(tokenize(exchange.userMessage))]
+      .filter(token => !RETRIEVAL_VOCABULARY.has(token))
+      .filter(token => earlierMemberVocabulary.has(token));
+    if (anchors.length > 0) {
+      source = { exchange, anchors };
+      break;
     }
   }
-
-  if (candidates.size === 0) {
+  if (!source) {
     return { kind: 'abstained', reason: 'recent-context-names-nothing-earlier' };
   }
 
-  const exchanges = [...candidates.values()]
-    .sort((a, b) => b.carriedBy.length - a.carriedBy.length || a.index - b.index)
-    .slice(0, maxRecovered);
+  // Selection laws C/D: targets are admitted from MEMBER words only and ranked
+  // by object-anchor COVERAGE. Lower-coverage material is not padded into the
+  // result merely because recovery capacity remains.
+  const anchorSet = new Set(source.anchors);
+  const scored = displaced.map(exchange => {
+    const shared = [...new Set(tokenize(exchange.userMessage))]
+      .filter(token => anchorSet.has(token));
+    return { exchange, shared };
+  });
+  const maxCoverage = Math.max(0, ...scored.map(candidate => candidate.shared.length));
+  if (maxCoverage <= 0) {
+    return { kind: 'abstained', reason: 'recent-context-names-nothing-earlier' };
+  }
 
-  // ⛔ NO FALLBACK BELOW THIS LINE. There is deliberately nothing here.
-  return { kind: 'recovered', exchanges };
+  const strongest = scored
+    .filter(candidate => candidate.shared.length === maxCoverage)
+    .sort((a, b) => a.exchange.index - b.exchange.index);
+
+  // Position may order already-admissible equals for presentation. It may never
+  // decide which object wins. More maximum-coverage targets than capacity is
+  // therefore ambiguity, not permission to truncate by index.
+  if (strongest.length > maxRecovered) {
+    return { kind: 'abstained', reason: 'ambiguous-member-grounded-targets' };
+  }
+
+  return {
+    kind: 'recovered',
+    exchanges: strongest.map(candidate => ({
+      index: candidate.exchange.index,
+      carriedBy: candidate.shared,
+      viaPrefixIndex: source.exchange.index,
+    })),
+  };
 }
 
 /**
