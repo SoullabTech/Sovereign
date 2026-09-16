@@ -886,3 +886,8 @@ The install is the INSTALL TRANSACTION moment only: it establishes presence and 
 ### §10.71 — FIRST-INSTALL attempt 1 not entered (2026-09-15; discriminator plan §18.51; implementation record §10.21)
 
 No install occurred; no container exists; nothing changes in qualification standing.
+
+
+### §10.72 — FIRST-INSTALL-01 STOP · spent (founder ruling 2026-09-16; discriminator plan §18.52; implementation record §10.22)
+
+No install occurred; nothing changes in qualification standing; a future install requires a new act and fresh authority.

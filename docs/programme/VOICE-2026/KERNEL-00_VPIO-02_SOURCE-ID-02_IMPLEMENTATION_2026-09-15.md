@@ -581,3 +581,28 @@ Custody check before the last line: `a052f081…` and `59`. The extracted script
 **Residue.** `/private/tmp/sid-first-install-01.sh` (correct, matches custody — reusable if the founder rules the authority intact) · one transcript `sid-first-install-01-transcript-<stamp>.log` carrying only the `shell-init` line (left in place; a later carrier's glob will carry it as the record of this attempt) · no `$OUT` · no worktree · device untouched.
 
 **Standing after §10.21.** `SID FIRST-INSTALL-01` OPEN · NOT ENTERED (attempt 1: authority payload absent, refused at pin line 3) · **spend/intact ruling owed** · [D]/[E] execution CLOSED · launch 0 · sample 0 · source population 0 · container WITNESS-REQUIRED · siblings HOLD. (Record note: the `Claude-Session` trailer on `7b209b52d` carries a one-character typo in the session id — a commit-message trailer only, no file, hash or record affected; not rewritten; corrected from this commit on.)
+
+### 10.22 FOUNDER RULING on §10.21 (2026-09-16): `SID FIRST-INSTALL-01` **EXECUTED · STOP at the authority precondition · authority SPENT** · carrier NOT OPEN · supersedes this session's "not entered / intact" reading
+
+**Ruling (verbatim in substance).** The accepted pin was invoked but never passed its first substantive precondition: authority file `/private/tmp/sid-fi01-authority.txt` MISSING → `export K00_EXEC_AUTHORITY="$(cat …)"` made the variable empty → the accepted 59-line pin was invoked → line 3 `test -n "$K00_EXEC_AUTHORITY"` FAIL. Founder's independent Mac check: authority file MISSING · transcript `/private/tmp/sid-first-install-01-transcript-20260915T235951Z.log`, **116 bytes**, containing only the `shell-init: error retrieving current directory: getcwd: …` lines · FIRST-INSTALL worktree none · `$OUT` none · device commands none evidenced · install transaction none · container none. *The `getcwd` problem is secondary: bash still entered the script; the silent `test -n` then stopped it.* Under the governing rule already established — **any refusal or failure spends the authority** — standing is `SID FIRST-INSTALL-01 · EXECUTED · STOP at authority precondition · authority SPENT`; **no retry inherits this authority.** Device effect: none — the script stopped before `STAMP`, worktree creation, `$OUT` creation, any `devicectl`, any reinstall invocation, any install, any container creation/capture. **FIRST-INSTALL carrier: NOT OPEN** — its required evidence (`$OUT` · `SHA256SUMS.install` · `container.txt` · `.last-reinstall` · reinstall record · install stamp · container literal) does not exist, so the two placeholders cannot lawfully be filled; running it would only manufacture another predictable refusal.
+
+**Durable record, as the founder framed it:**
+
+```text
+SID FIRST-INSTALL-01
+STOP — authority input absent at invocation
+accepted pin        a052f081bc44b59d51a5d11ccec99f35951f9c37bb0cbee77ae77e560dbbb617
+transcript          sid-first-install-01-transcript-20260915T235951Z.log · 116 bytes
+device verbs reached 0
+install             0
+container           none
+authority           SPENT
+cause               the required authority file did not exist; K00_EXEC_AUTHORITY was therefore empty;
+                    the line-3 authority gate refused the invocation
+```
+
+Terminal context, recorded separately and **not** as the cause of the governed STOP: the window's working directory (`ws-production-preflight-20260915-191643`) had been deleted (`getcwd` failure) and its scrollback carried another lane's command.
+
+**Correction of this record's own reading.** §10.21 offered the classification "NOT ENTERED · authority intact" by analogy to the §10.3/§10.4 paste slips and the transport-refusal law. The founder's ruling draws the line differently and the ruling governs: the accepted pin **was invoked**, and its first gate's refusal is a refusal *of the act*, not a failure to reach it — the authority-first gate is part of the act it guards. The §10.21 reading is withdrawn; its facts stand. Lane law as now settled: **once the accepted pin is invoked, every refusal it or its instrument produces spends the authority, including the authority gate itself.** A future install needs **a new, separately opened FIRST-INSTALL act with fresh authority** — not a rerun of FIRST-INSTALL-01. Whether that act carries a new act identity (`-02` paths, a re-issued pin differing only in labels, as MAC-COMPILE-01 → 02 did) is the founder's to name when and if it is opened; this session drafts nothing toward it unasked.
+
+**Standing after §10.22.** `SID FIRST-INSTALL-01` ⛔ STOP · spent · durable (record only; no `$OUT` to carry — the 116-byte transcript is the sole residue, left in place) · FIRST-INSTALL carrier ⛔ unopened · [D] execution ⛔ CLOSED · [E] execution ⛔ CLOSED · install 0 · launch 0 · sample 0 · source population 0 · container WITNESS-REQUIRED / not yet produced · siblings HOLD · next step record-only.

@@ -3554,3 +3554,8 @@ Authority issued by the founder in-session (seven lines: act · subject `faf918b
 ## §18.51 — `SID FIRST-INSTALL-01` attempt 1: NOT ENTERED — payload file absent, pin refused at `test -n "$K00_EXEC_AUTHORITY"` before any path, worktree, `mkdir`, device read or instrument; window was not fresh (deleted cwd, another lane's scrollback) (2026-09-15; implementation record §10.21; qualification plan §10.71)
 
 Extraction matched custody (`a052f081…`, 59 lines); nothing created but a few-byte transcript; device untouched. Session reading: not a governed refusal but a non-entry (§10.3/§10.4 form) — authority intact; **founder rules spend vs intact.** Next attempt, if intact: fresh window, `cd ~`, step 0 (write the payload), then the five lines.
+
+
+## §18.52 — FOUNDER RULING (2026-09-16): `SID FIRST-INSTALL-01` EXECUTED · STOP at the authority precondition · **SPENT** · carrier NOT OPEN (implementation record §10.22; qualification plan §10.72)
+
+Authority file absent → empty `K00_EXEC_AUTHORITY` → accepted pin invoked → line-3 gate refused; transcript `…T235951Z.log` 116 bytes; worktree/`$OUT`/device verbs/install/container none; the deleted-cwd message is terminal context, not cause. Rule settled: once the accepted pin is invoked, any refusal — the authority gate included — spends the authority; no retry inherits it. §18.51's "intact" reading withdrawn. A future install = a new separately opened act with fresh authority. Standing: install 0 · launch 0 · sample 0 · source population 0 · container not yet produced · [D]/[E] closed.
