@@ -32,6 +32,7 @@
  */
 
 import { CANVAS_MANUSCRIPT_PARAM, canvasForManuscript } from './canvasIdentity';
+import { locationForSection } from '@/lib/writersStudio/placeInWork';
 
 export type StudioAvailability = 'available' | 'later';
 
@@ -519,6 +520,47 @@ export const STUDIO_MODES: StudioMode[] = [
   { id: 'review', label: 'Review', availability: 'later' },
   { id: 'publish', label: 'Publish', availability: 'later' },
 ];
+
+/**
+ * Where a mode link goes, carrying both the Work and the place within it.
+ *
+ * ── WHY THIS IS NOT A THIRD GRAMMAR ───────────────────────────────────────
+ *
+ * `canvasForManuscript` is the single definition of how a WORK identity
+ * travels. `locationForSection` is the single definition of how a PLACE within
+ * that Work travels. A mode switch needs both and nothing else, so this is
+ * their composition and it invents nothing.
+ *
+ * ⛔ No ordinal, no scroll percentage, no serialized selection, no
+ * Develop-specific address. `s` is the same draft-section uuid the outline, the
+ * save queue and the write path already speak, for the reason placeInWork.ts
+ * gives: an ordinal moves when a section is inserted above it, and would
+ * silently reopen a different piece of the book.
+ *
+ * ── WHAT IT REPAIRS ───────────────────────────────────────────────────────
+ *
+ * The bar composed `canvasForManuscript(href, manuscriptId)` and stopped. A
+ * writer standing in section S of Work M pressed Develop and arrived holding M
+ * and nothing else, so the mode boundary erased where they were standing. The
+ * Work survived the switch and the place did not.
+ *
+ * ⛔ A null `sectionId` needs no special case: `locationForSection` deletes the
+ * parameter rather than writing an empty one, so a Work with no place yet
+ * yields exactly the link this produced before.
+ */
+export function modeLocation(
+  base: string,
+  manuscriptId: string,
+  sectionId: string | null,
+): string {
+  const withWork = canvasForManuscript(base, manuscriptId);
+  const q = withWork.indexOf('?');
+  return locationForSection(
+    q < 0 ? withWork : withWork.slice(0, q),
+    q < 0 ? '' : withWork.slice(q),
+    sectionId,
+  );
+}
 
 /** Same honesty invariant as the map, applied to the mode bar. */
 export function assertModesHonest(modes: StudioMode[] = STUDIO_MODES): void {
