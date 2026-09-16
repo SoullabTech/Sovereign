@@ -34,6 +34,7 @@ import {
 } from '@/lib/voice/dispatchProvenance';
 import { classifyRecognitionEnd, RAPID_END_LOOP_THRESHOLD } from '@/lib/voice/rapidEndPolicy';
 import { decideTurn, type TurnPredictorSnapshot } from '@/lib/voice/turnArbiter';
+import { inferSemanticTurnSignals } from '@/lib/voice/semanticTurnSignals';
 import {
   DEFAULT_TURN_TAKING_PREFERENCES,
   EMPTY_TURN_RHYTHM,
@@ -591,7 +592,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // an existing TURN-01 boundary. No caller branches on the result.
   const emitTurnShadowDecision = useCallback((source: string, silenceMs: number) => {
     const selectedSilenceMs = effectiveSilenceMs();
-    const snapshot = turnPredictorSnapshotRef.current;
+    const externalSnapshot = turnPredictorSnapshotRef.current;
+    const semantic = inferSemanticTurnSignals(accumulatedTranscript.current);
+    const snapshot: TurnPredictorSnapshot = {
+      ...externalSnapshot,
+      semanticIncomplete: Math.max(externalSnapshot.semanticIncomplete ?? 0, semantic.semanticIncomplete ?? 0) || null,
+      semanticYield: Math.max(externalSnapshot.semanticYield ?? 0, semantic.semanticYield ?? 0) || null,
+    };
     const result = decideTurn({
       explicitFloorHeld: !automaticEndpointingAllowed(turnTakingPreferencesRef.current),
       speechActive: false,
@@ -613,6 +620,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       silenceMs: Math.max(0, Math.round(silenceMs)),
       selectedSilenceMs,
       predictorEvidence,
+      semanticCueCount: semantic.reasons.length,
+      semanticTopCue: semantic.reasons[0] ?? 'none',
       explicitFloorHeld: !automaticEndpointingAllowed(turnTakingPreferencesRef.current),
     });
   }, [effectiveSilenceMs]);
