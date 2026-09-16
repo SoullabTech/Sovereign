@@ -8,6 +8,7 @@
 import { sendEmail } from '@/lib/email/sendEmail';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { loadGovernedActiveContacts, loadGovernedBetaContacts } from '@/lib/ops/sourceCustodyContacts';
 
 interface EmailTemplate {
   id: string;
@@ -504,62 +505,39 @@ Kelly@soullab.life | 504-453-9009
   }
 
   /**
-   * Internal: Load contact lists from organized Ganesha system
+   * Internal: Load operational contacts from the governed Founder Ops substrate.
+   * SOURCE-CUSTODY-PII-01: tracked human-record source files are no longer a
+   * lawful fallback. If governed custody is unavailable, recipient loading
+   * fails closed instead of reconstructing authority from repository data.
    */
   private async loadContacts() {
     try {
-      // Load from new Ganesha contact system
-      const { GaneshaContactManager } = await import('@/lib/ganesha/contacts');
-      const betaTesters = GaneshaContactManager.getBetaTesters();
+      const [betaTesters, activeContacts] = await Promise.all([
+        loadGovernedBetaContacts(),
+        loadGovernedActiveContacts(),
+      ]);
 
-      betaTesters.forEach(tester => {
+      betaTesters.forEach((tester) => {
         this.addContact({
           email: tester.email,
           name: tester.name,
           tags: tester.tags,
           metadata: {
             joinDate: tester.joinDate,
-            contribution: tester.metadata.contribution,
-            source: tester.metadata.source,
-            groups: tester.groups
-          }
+            contribution: tester.contribution,
+            source: 'ops_contacts',
+            groups: tester.groups,
+          },
         });
       });
 
-      const stats = GaneshaContactManager.getStats();
-      console.log(`🧠 [Ganesha Email] Contact system loaded:`, {
-        betaTesters: stats.betaTesters,
-        totalActive: stats.totalActive,
-        newsletterSubs: stats.newsletterSubscribers
+      console.log(`🧠 [Ganesha Email] Governed contact system loaded:`, {
+        betaTesters: betaTesters.length,
+        totalActive: activeContacts.length,
+        newsletterSubs: activeContacts.filter((c) => c.groups.includes('newsletter')).length,
       });
-
-      // Success - no need for fallback
-      return;
-
     } catch (error) {
-      console.warn('⚠️ [Ganesha Email] Primary contact system failed, trying fallback:', error);
-
-      // Fallback to legacy system
-      try {
-        const { betaTesters } = await import('@/lib/data/betaTesters');
-        console.log('📧 [Ganesha Email] Using legacy contact system as fallback');
-
-        betaTesters.forEach(tester => {
-          if (tester.status === 'active') {
-            this.addContact({
-              email: tester.email,
-              name: tester.name,
-              tags: tester.tags,
-              metadata: {
-                joinDate: tester.joinDate,
-                contribution: tester.contribution
-              }
-            });
-          }
-        });
-      } catch (fallbackError) {
-        console.error('❌ [Ganesha Email] Both contact systems failed:', fallbackError);
-      }
+      console.error('❌ [Ganesha Email] Governed contact loading failed:', error);
     }
   }
 }

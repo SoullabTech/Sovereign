@@ -1,16 +1,15 @@
 /**
  * SOURCE-CUSTODY-PII-01 · ACT 2 — the client/human-record boundary.
  *
- * THE LAW: no module that reaches the browser may import `lib/ganesha/contacts`.
- * That file holds identified human records — name, email, joinDate, status,
- * groups, tags and 48 passcodes. Until 2026-09-15 two `'use client'` onboarding
- * components value-imported it, which placed all of it in the client bundle and
- * decided admission against data the visitor already held.
+ * THE LAW AFTER SOURCE-CUSTODY SUCCESSION: the tracked human-record carrier
+ * `lib/ganesha/contacts` must not exist, and no module that reaches the browser
+ * may import the governed `lib/ops/sourceCustodyContacts` loader. Human records
+ * now live in `ops_contacts`; browser code may ask server boundaries for decisions
+ * but may never acquire the roster itself.
  *
- * ⛔ `import 'server-only'` IS THE MECHANISM; THIS TEST IS THE WITNESS.
- * The mechanism alone is an assertion until something demonstrates it bites —
- * so T3 below reintroduces the violation on purpose and REQUIRES the walker to
- * catch it. A guard that cannot fail is not a guard.
+ * ⛔ DELETION + IMPORT-GRAPH SEPARATION ARE THE MECHANISM; THIS TEST IS THE
+ * WITNESS. T3 deliberately reintroduces a client import of the governed loader
+ * and requires the walker to catch it. A guard that cannot fail is not a guard.
  *
  * ⭐ COMMENTS ARE STRIPPED BEFORE SCANNING. The repaired components and this
  * file both NAME the forbidden module in prose, to say why it must not be
@@ -22,7 +21,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const REPO = path.resolve(__dirname, '..');
-const PROTECTED = 'lib/ganesha/contacts';
+const RETIRED = 'lib/ganesha/contacts';
+const PROTECTED = 'lib/ops/sourceCustodyContacts';
 const CLIENT_ROOTS = ['app', 'components'];
 const EXTS = ['.ts', '.tsx'];
 
@@ -109,10 +109,11 @@ function reachesProtected(entry: string, seen = new Set<string>()): string[] | n
 }
 
 describe('SOURCE-CUSTODY-PII-01 · client/human-record boundary', () => {
-  test('T1 — the protected module declares the server-only boundary', () => {
+  test('T1 — the legacy source carrier is gone and governed custody remains server-side', () => {
+    expect(read(path.join(REPO, RETIRED + '.ts'))).toBeNull();
     const src = read(path.join(REPO, PROTECTED + '.ts'));
     expect(src).not.toBeNull();
-    expect(stripComments(src!)).toMatch(/import\s*['"]server-only['"]/);
+    expect(stripComments(src!)).toMatch(/FROM ops_contacts/);
   });
 
   test('T2 — no client module reaches the human records, transitively', () => {
@@ -138,7 +139,7 @@ describe('SOURCE-CUSTODY-PII-01 · client/human-record boundary', () => {
     const mutant = path.join(REPO, 'components', '__pii_boundary_mutant__.tsx');
     fs.writeFileSync(
       mutant,
-      `'use client';\nimport { ganeshaContacts } from '@/lib/ganesha/contacts';\nexport default function M() { return ganeshaContacts.length; }\n`,
+      `'use client';\nimport { loadGovernedBetaContacts } from '@/lib/ops/sourceCustodyContacts';\nexport default function M() { void loadGovernedBetaContacts; return null; }\n`,
       'utf8',
     );
     try {
