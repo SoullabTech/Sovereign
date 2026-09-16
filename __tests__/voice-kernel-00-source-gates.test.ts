@@ -2135,3 +2135,35 @@ describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026
   });
 
 });
+
+
+describe('KERNEL-00 · C1 SID duplex execution pins — exact C1 instrument, read-only preflight, one-shot N=10 population', () => {
+  const P = 'docs/programme/VOICE-2026/SID_DUPLEX-PREFLIGHT-01_PIN_DRAFT_2026-09-16.sh';
+  const B = 'docs/programme/VOICE-2026/SID_DUPLEX-BATCH-01_PIN_DRAFT_2026-09-16.sh';
+  it('pins exact 1708d5211 instrument; preflight requalifies offline gates and installed SID/zero-harness state; batch marker precedes authority and exactly one fresh N=10 duplex population can be sealed', () => {
+    const pre = readFileSync(join(process.cwd(), P), 'utf8');
+    const batch = readFileSync(join(process.cwd(), B), 'utf8');
+    expect(createHash('sha256').update(pre).digest('hex')).toBe('48eb5899cfd156f7f58e9a1ddc9671ed87fba348f869662e072d3406a241c79c');
+    expect(createHash('sha256').update(batch).digest('hex')).toBe('397866257b0b69cb7992352b34cc5cb3a08360dabe838e12cc209e6216acda02');
+    for (const x of [pre, batch]) {
+      expect(x).toContain('SHA=1708d52119e173853e0ad8b7ca7f71ad95c63d8d');
+      expect(x).toContain('SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8');
+    }
+    expect(pre).toContain('SID_CONTAINER=85948DBD-BA8F-4679-950D-31767B1C24E5');
+    expect(pre).toContain('Tests:       100 passed, 100 total'); // runs inside detached C1 instrument, whose gate has 100 tests
+    expect(pre).toContain('bash -n scripts/witness/k00-driver-batch.sh');
+    expect(pre).toContain('xcrun swiftc -parse ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift');
+    expect(pre).toContain('test "$(grep -ci VoiceKernelHarness "$PF/processes.json")" = 0');
+    expect(pre).not.toMatch(/device process terminate|device process signal|device install|device uninstall|test-without-building|k00-driver-batch\.sh VPIO-02-SID-DUPLEX/);
+    expect(batch).toContain('ACT_MARK=/private/tmp/sid-duplex-batch-01-invoked.txt');
+    expect(batch.indexOf("printf 'SID-DUPLEX-BATCH-01 INVOKED")).toBeLessThan(batch.indexOf('test -n "$K00_EXEC_AUTHORITY"'));
+    expect(batch).toContain('test "$AGE" -le 300');
+    const inv = 'scripts/witness/k00-driver-batch.sh VPIO-02-SID-DUPLEX 10 --act duplex --vp on --mode L --hold 15 --subject vpio-02-sid --cancel-at 1000 --settle 2';
+    expect(batch).toContain(inv); expect((batch.match(/scripts\/witness\/k00-driver-batch\.sh VPIO-02-SID-DUPLEX 10/g) ?? []).length).toBe(1);
+    expect(batch).toContain('test "$JCOUNT" = 10');
+    expect(batch).toContain('test ! -e "$L/source-ledger.md"');
+    expect(batch).toContain('sample-$n-duplex-preact-harness-state.txt');
+    expect(batch).toContain('sample-$n-duplex-jit-harness-state.txt');
+    expect(batch).not.toMatch(/top-up|--stimulus|device process terminate|testTerminateOnly/);
+  });
+});
