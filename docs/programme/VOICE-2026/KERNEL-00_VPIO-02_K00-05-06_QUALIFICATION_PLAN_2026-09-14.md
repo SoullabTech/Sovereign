@@ -976,3 +976,8 @@ No physiological qualification change. Zero-harness validity law is preserved. `
 ### §10.89 — FIRST-INSTALL-04 PASS; SID container witnessed; ENTRY [D] bound (2026-09-16; discriminator plan §18.71; implementation record §10.44)
 
 No physiological qualification change yet. SID install is now complete and in custody: `.vpio02sid` container `85948DBD-BA8F-4679-950D-31767B1C24E5`, historical `.vpio02` unchanged, harness 0 after install. Bound ENTRY preflight pin `1d1eb08d…`/44 preserves all accepted [D] laws and substitutes only the witnessed container literal. [E] remains closed until [D] PASS.
+
+
+### §10.90 — `SID ENTRY-PREP-01` complete as tooling/records only; successor ENTRY witness drafts returned, execution closed (2026-09-16; discriminator plan §18.72; implementation record §10.45)
+
+No physiological qualification change. FIRST-INSTALL-04 custody is durable. SID ENTRY's first-sample validity boundary is hardened at `36e412f8e…`: unexpected/prewarmed harness state cannot be auto-terminated into a sample; it is preserved and refused, with a second process read adjacent to the first driver invocation. Gate 86/86. PRELIGHT-02 `cecaa12c…`/44 and BATCH-02 `b8941411…`/32 are drafts only; neither was run. K00-04/K00-05/K00-06 standings unchanged; ENTRY evidence remains unmeasured.
