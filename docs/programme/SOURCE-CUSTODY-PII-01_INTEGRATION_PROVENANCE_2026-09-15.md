@@ -101,3 +101,19 @@ The review also removed dead client branches that expected `/api/onboarding/reco
 - final `.next/static`: **1,742 files**; **0/48 non-Soullab email markers**, **0/48 contact passcodes**, and **0 `SOUL-PIONEER-2025` occurrences**.
 
 No production act is authorized by this amendment. The prior holds remain unchanged.
+
+## Merge-review amendment 2 — Living Library ingestion bypass
+
+A repository-wide source-root census found a third substantive issue before merge: `scripts/ingest-library.ts` independently walked `data/ain/source/` and wrote admitted content into `library_sources` / `library_chunks` without consulting the new corpus declaration. Its legacy `isOperationalFile()` filter classified the former tester-email filenames as non-operational, so it was not an equivalent privacy boundary.
+
+The Living Library bulk ingestion path now uses the same `loadDeclaration()` → `decideAdmission()` boundary as the AIN corpus. Undeclared / `unclassified_legacy` material is excluded by default, and a declared file carrying a human-record signal refuses the run rather than being skipped silently.
+
+A new T10 guard asserts that every current bulk `data/ain/source` ingestion path reaches the declaration boundary: compiled corpus builder → `decideAdmission`; AIN embedding → guarded `processAllSources`; `ChunkingService.processAllSources` → `decideAdmission`; Living Library ingestion → `decideAdmission`.
+
+`repairIdentity.ts` was reviewed separately and is not an ingestion bypass: it uses exact checksum matches only to repair metadata on already-existing `library_sources` rows and never inserts chunks/content.
+
+### Script typecheck evidence
+
+`npm run typecheck:scripts` is red on canonical before this change. A detached `origin/clean-main-no-secrets` worktree and this amended head each produce the same **40 TypeScript errors**: **0 new, 0 resolved**. Neither `scripts/ingest-library.ts` nor `lib/corpus/admission.ts` appears in the error set. Therefore the evidence is **script typecheck no-regression against a red baseline**, not a green scripts typecheck.
+
+Focused custody/admission tests after this amendment: **6/6 suites · 58/58 tests PASS**.

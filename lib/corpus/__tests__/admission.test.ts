@@ -14,6 +14,7 @@
  * REQUIRES it to fail. A guard whose default is admission is the defect wearing
  * a manifest, and this is what distinguishes the two.
  */
+import * as fs from 'fs';
 import * as path from 'path';
 
 import {
@@ -161,6 +162,24 @@ describe('ACT 4 §C · corpus admission', () => {
     expect(v.admitted).toEqual([]);
     expect(v.excluded).toHaveLength(1);
     expect(v.excluded[0].reason).toMatch(/no admission rule/);
+  });
+
+  test('T10 — every bulk data/ain/source ingestion path reaches the admission boundary', () => {
+    const repoRoot = path.resolve(__dirname, '../../..');
+    const readCode = (rel: string) =>
+      fs.readFileSync(path.join(repoRoot, rel), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+    const builder = readCode('scripts/build-ain-corpus.ts');
+    const embed = readCode('scripts/embed-ain-knowledge.ts');
+    const chunker = readCode('lib/ain/knowledge/ChunkingService.ts');
+    const library = readCode('scripts/ingest-library.ts');
+
+    expect(builder).toMatch(/decideAdmission\(/);
+    expect(embed).toMatch(/processAllSources\(/);
+    expect(chunker).toMatch(/decideAdmission\(/);
+    expect(library).toMatch(/decideAdmission\(/);
   });
 
 });

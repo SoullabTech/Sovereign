@@ -25,6 +25,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import pg from 'pg';
 import { chunkText, estimateTokens, extractTitle } from '../lib/ain/knowledge/ChunkingService';
+import { loadDeclaration, decideAdmission, formatVerdict } from '../lib/corpus/admission';
 import { classifyChunkSpiralogic, mergeTagsIntoMeta, isOperationalFile, inferSourceType, extractAuthor } from '../lib/library/spiralogicTagger';
 import { validateTitle, validateAuthor, resolveIngestStatus } from '../lib/library/ingestIntegrity';
 import { toPgVectorLiteral } from '../lib/db/pgvector';
@@ -217,11 +218,28 @@ async function ingestSourceFiles(pool: pg.Pool): Promise<{ processed: number; sk
     return stats;
   }
 
-  const files = fs.readdirSync(SOURCE_DIR)
+  const candidates = fs.readdirSync(SOURCE_DIR)
     .filter(f => f.endsWith('.txt') || f.endsWith('.md'))
     .sort();
 
-  console.log(`   Found ${files.length} source files`);
+  // SOURCE-CUSTODY-PII-01 · the Living Library is also a knowledge surface.
+  // Presence under data/ain/source is candidacy only; the same declaration that
+  // governs the AIN corpus must explicitly admit a file before library ingestion.
+  const repoRoot = process.cwd();
+  const verdict = decideAdmission(
+    repoRoot,
+    candidates.map(f => path.join(SOURCE_DIR, f)),
+    loadDeclaration(repoRoot),
+  );
+  console.log(formatVerdict(verdict));
+  if (verdict.refused.length > 0) {
+    throw new Error(
+      `library ingestion REFUSED ${verdict.refused.length} declared file(s) carrying human-record signals — fix the declaration, do not bypass this`,
+    );
+  }
+  const files = verdict.admitted.map(rel => path.basename(rel)).sort();
+
+  console.log(`   Found ${candidates.length} candidate source files · ${files.length} admitted`);
 
   let wisdomFiles = 0;
   let operationalFiles = 0;
