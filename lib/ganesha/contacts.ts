@@ -14,9 +14,8 @@
  * The `server-only` import below is the mechanical boundary: any client module
  * that imports this file now fails the build rather than shipping the records.
  * ⛔ Do not remove it to "fix" a build error — a client module reaching for
- * this file IS the error. Read a name through
- * `POST /api/onboarding/recognize-key`, which returns one person's own name
- * and never a list.
+ * this file IS the error. Admission is checked through
+ * `POST /api/onboarding/recognize-key`, which returns no contact identity data.
  *
  * Guarded by `__tests__/onboarding-human-record-boundary.test.ts`.
  */

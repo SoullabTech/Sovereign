@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     const { passkey, username, password, name, email: rawEmail, preferredName, birthDate } = body;
     const email = rawEmail ? rawEmail.toLowerCase().trim() : null;
 
-    console.log(`[MEMBERS] Registration attempt: passkey=${passkey}, username=${username}`);
+    console.log('[MEMBERS] Registration attempt');
 
     if (!passkey || !username || !password) {
       console.log('[MEMBERS] Missing required fields');
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
     const admission = await resolveAdmission(normalizedPasskey);
 
     if (admission.kind === 'existing_member') {
-      console.log(`[MEMBERS] Passkey already registered: ${normalizedPasskey}`);
+      console.log('[MEMBERS] Registration refused: existing member');
       return NextResponse.json(
         { error: 'This passkey has already been used. If this is you, try signing in instead.' },
         { status: 409, headers: corsHeaders }
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (admission.kind === 'refused') {
-      console.log(`[MEMBERS] Registration refused (${admission.reason}): ${normalizedPasskey}`);
+      console.log(`[MEMBERS] Registration refused (${admission.reason})`);
       /* An unreadable invite table is an outage on our side, not the caller's
          error — everything else is a bad or spent credential. */
       const status = admission.reason === 'invite_lookup_unavailable' ? 503 : 400;

@@ -14,8 +14,7 @@ import { api, ApiError } from '@/lib/api-client';
  * It previously value-imported `ganeshaContacts`, which put every contact's
  * name, email and passcode into the browser bundle and decided admission
  * against that bundled list. Admission is now a server decision
- * (`POST /api/onboarding/recognize-key`) and the only personal datum that
- * crosses back is the matched person's OWN name.
+ * (`POST /api/onboarding/recognize-key`) and no personal record data crosses back; the response is admission-only.
  *
  * ⛔ Do not re-import `@/lib/ganesha/contacts` here. It is `server-only` and
  * guarded by `__tests__/onboarding-human-record-boundary.test.ts`.
@@ -207,26 +206,12 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
       const checkData = await api.members.check(soulKey.toUpperCase());
 
       if (checkData.exists) {
-        // Member already registered - redirect to sign in
+        // A passkey proves that an account exists; it is not authority to return
+        // that member's identity. Sign-in is the identity-bearing boundary.
         setIsRecognizing(false);
-        if (checkData.onboarded) {
-          // Fully onboarded - show message and go to sign in
-          setError(`Welcome back${checkData.name ? `, ${checkData.name}` : ''}! Redirecting you to sign in...`);
-          setTimeout(() => {
-            // Pass username to signin if available so they don't have to remember it
-            const signinUrl = checkData.username
-              ? `/signin?username=${encodeURIComponent(checkData.username)}`
-              : '/signin';
-            router.replace(signinUrl);
-          }, 1500);
-          return;
-        } else {
-          // Started but not finished - continue from where they left off
-          setServerMember(checkData.member);
-          setName(checkData.member.name || '');
-          setPhase('recognition');
-          return;
-        }
+        setError('Your account already exists. Redirecting you to sign in...');
+        setTimeout(() => router.replace('/signin'), 1500);
+        return;
       }
     } catch (err) {
       console.error('[SacredSoulInduction] Server check error:', err);

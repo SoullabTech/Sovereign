@@ -25,22 +25,18 @@ describe('R1.6 · query parameter redaction', () => {
     expect(described).not.toContain('short');
   });
 
-  test('T2 — shape is preserved well enough to debug', () => {
+  test('T2 — coarse type shape survives without value-derived metadata', () => {
     const described = describeParams([SECRET, 42, null, true, new Date(), ['a', 'b']]);
-    expect(described).toContain(`string(${SECRET.length})`);
-    expect(described).toContain('number');
-    expect(described).toContain('null');
-    expect(described).toContain('boolean(true)');
-    expect(described).toContain('date');
-    expect(described).toContain('array(2)');
+    expect(described).toBe('[string, number, null, boolean, date, array]');
   });
 
-  test('T3 — equal values correlate, different values do not', () => {
+  test('T3 — values of the same type are deliberately not correlatable', () => {
     const a = describeParams([SECRET]);
-    const b = describeParams([SECRET]);
-    const c = describeParams([SECRET + 'X']);
-    expect(a).toBe(b); // same value → same digest, so logs can be correlated
-    expect(a).not.toBe(c); // different value → different digest
+    const b = describeParams([SECRET + 'X']);
+    const c = describeParams([EMAIL]);
+    expect(a).toBe('[string]');
+    expect(b).toBe(a);
+    expect(c).toBe(a);
   });
 
   test('T4 — MUTANT: the pre-repair behaviour fails this suite', () => {
@@ -54,9 +50,11 @@ describe('R1.6 · query parameter redaction', () => {
     expect(describeParams(undefined as unknown as unknown[])).toBe('(none)');
   });
 
-  test('T6 — a digest is a prefix, not a reversible encoding', () => {
-    const described = describeParams([SECRET]);
-    const digest = described.match(/#([0-9a-f]+)/)?.[1] ?? '';
-    expect(digest).toHaveLength(8);
+  test('T6 — no hash, length, or boolean value survives', () => {
+    const described = describeParams([SECRET, true, ['x', 'y']]);
+    expect(described).toBe('[string, boolean, array]');
+    expect(described).not.toMatch(/#[0-9a-f]+/i);
+    expect(described).not.toContain(String(SECRET.length));
+    expect(described).not.toContain('true');
   });
 });

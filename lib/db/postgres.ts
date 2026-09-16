@@ -7,8 +7,6 @@
  * NOTE: Conditionally imports pg only on server-side to avoid bundling for browser
  */
 
-import { createHash } from 'crypto';
-
 import type { Pool, QueryResult, QueryResultRow } from 'pg';
 
 // Only create pool on server-side (Node.js environment)
@@ -48,10 +46,11 @@ if (isServer) {
  * nor forgetfulness can turn it off. This is the same discipline the missing
  * table ruling below applies to its own question.
  *
- * ⭐ DEBUGGABILITY SURVIVES WITHOUT THE VALUES. Type, length and a short digest
- * distinguish "param 1 was an empty string" from "param 1 was 43 characters",
- * and let the same value be correlated across two log lines — which is what
- * operators actually use params for. It is not enough to reconstruct a value.
+ * ⭐ DEBUGGABILITY SURVIVES WITHOUT VALUE-DERIVED METADATA. Parameter position
+ * and coarse type remain visible, but string length, boolean value, array length
+ * and hashes do not. A short digest is still an offline oracle for low-entropy
+ * credentials and common identifiers, so correlation by value is deliberately
+ * refused here.
  */
 export function describeParams(params: readonly unknown[]): string {
   if (!params || params.length === 0) return '(none)';
@@ -61,19 +60,15 @@ export function describeParams(params: readonly unknown[]): string {
 function describeParam(value: unknown): string {
   if (value === null) return 'null';
   if (value === undefined) return 'undefined';
-  if (typeof value === 'boolean') return `boolean(${value})`;
+  if (typeof value === 'boolean') return 'boolean';
   if (typeof value === 'number') return 'number';
   if (value instanceof Date) return 'date';
-  if (Array.isArray(value)) return `array(${value.length})`;
-  if (typeof value === 'string') return `string(${value.length})#${shortDigest(value)}`;
+  if (Array.isArray(value)) return 'array';
+  if (typeof value === 'string') return 'string';
   if (typeof value === 'object') return 'object';
   return typeof value;
 }
 
-/** Correlation only. Truncated deliberately: enough to match, not to attack. */
-function shortDigest(value: string): string {
-  return createHash('sha256').update(value).digest('hex').slice(0, 8);
-}
 
 /**
  * Execute a parameterized query

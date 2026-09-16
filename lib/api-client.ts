@@ -152,11 +152,7 @@ class ApiClient {
         exists: boolean;
         isInvite: boolean;
         onboarded?: boolean;
-        onboardingStep?: string;
-        username?: string;
-        name?: string;
         inviteStatus?: string;
-        inviterName?: string;
         error?: string;
       }>('/members/check', { passkey }),
 

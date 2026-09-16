@@ -9,8 +9,7 @@ import { Key, User, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react
  *
  * It previously value-imported `ganeshaContacts` and decided admission in the
  * browser against the bundled list. Admission is now a server decision
- * (`POST /api/onboarding/recognize-key`); only the matched person's OWN name
- * crosses back.
+ * (`POST /api/onboarding/recognize-key`); no personal record data crosses back.
  *
  * ⛔ Do not re-import `@/lib/ganesha/contacts` here. It is `server-only` and
  * guarded by `__tests__/onboarding-human-record-boundary.test.ts`.

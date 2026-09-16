@@ -18,25 +18,14 @@
  * Admission here is a real contact record or `resolveAdmission()` — never a
  * shape.
  *
- * ⛔ A REFUSAL IS NOT AN OCCASION TO DISCLOSE. The response carries a boolean
- * and, only on a match, THAT PERSON'S OWN name. No list, no count, no reason,
- * no echo of the submitted key. A caller learns whether the key they already
- * hold is recognized, and nothing about anybody else.
+ * ⛔ A REFUSAL IS NOT AN OCCASION TO DISCLOSE — AND NEITHER IS ADMISSION.
+ * The response carries only a boolean. It never returns a person's name, email,
+ * record class, match reason, list, count, or the submitted key. The legacy
+ * credentials have already lost secret standing, so possession of one must not
+ * become authority to retrieve identity data.
  *
- * ⚠️ TWO RESIDUALS, NAMED RATHER THAN QUIETLY LEFT (ACT 2A):
- *
- * (1) CREDENTIALS CAN STILL REACH SERVER LOGS, AND NOT FROM THIS FILE.
- *     `resolveAdmission` passes the submitted key as a query parameter, and
- *     `lib/db/postgres.ts` logs `SQL` and `Params` on any query error before
- *     rethrowing. So a database fault during admission emits the submitted
- *     credential. This route adds no logging of its own and swallows the throw
- *     rather than re-emitting it — but the emission happens upstream, inside a
- *     helper shared by the whole system. ⛔ Not repaired here: the lawful fix
- *     is an opt-in credential-safe path through that shared helper, which the
- *     S3 lane already identified and which is a founder call. §4 of ACT 2A is
- *     therefore PARTIALLY discharged, and saying so is the point.
- *
- * (2) TIMING. A contact-record hit returns from memory; a miss continues to a
+ * ⚠️ RESIDUAL, NAMED RATHER THAN QUIETLY LEFT (ACT 2A): TIMING. A contact-
+ * record hit returns from memory; a miss continues to a
  *     database lookup. The difference is observable and is an enumeration
  *     signal that rate limiting narrows but does not remove. Constant-time
  *     admission is a redesign, which this act is not.
@@ -94,15 +83,15 @@ const SHARED_ADMISSION_KEYS = new Set([
 export type RecognizeKeyResponse = {
   /** Whether this key admits. Never a reason — see the refusal law above. */
   recognized: boolean;
-  /** The matched person's OWN display name, when there is one. Never a list. */
-  name: string | null;
+  /** Kept for response-shape compatibility; identity is never disclosed here. */
+  name: null;
 };
 
 const refuse = (status = 200, extraHeaders: Record<string, string> = {}) =>
   NextResponse.json(REFUSAL, { status, headers: { ...NO_STORE, ...extraHeaders } });
 
-const admit = (name: string | null) =>
-  NextResponse.json<RecognizeKeyResponse>({ recognized: true, name }, { headers: NO_STORE });
+const admit = () =>
+  NextResponse.json<RecognizeKeyResponse>({ recognized: true, name: null }, { headers: NO_STORE });
 
 export async function POST(request: NextRequest) {
   /* Throttle BEFORE reading the body, so a malformed request costs an attempt
@@ -129,10 +118,10 @@ export async function POST(request: NextRequest) {
   const contact = ganeshaContacts.find(
     (c) => c.status === 'active' && c.metadata.passcode === normalized,
   );
-  if (contact) return admit(contact.name);
+  if (contact) return admit();
 
   // 2. A shared admission key.
-  if (SHARED_ADMISSION_KEYS.has(normalized)) return admit(null);
+  if (SHARED_ADMISSION_KEYS.has(normalized)) return admit();
 
   // 3. The ruled authority: a real pending, unexpired invite — or an existing
   //    member. Anything else, including a well-formed key with no invite
@@ -150,10 +139,8 @@ export async function POST(request: NextRequest) {
     return refuse();
   }
 
-  if (admission.kind === 'admit') return admit(null);
-  if (admission.kind === 'existing_member') {
-    return admit((admission.member.name as string | null) ?? null);
-  }
+  if (admission.kind === 'admit') return admit();
+  if (admission.kind === 'existing_member') return admit();
 
   return refuse();
 }

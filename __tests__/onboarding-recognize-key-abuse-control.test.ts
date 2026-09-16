@@ -3,8 +3,8 @@
  *
  * SOURCE-CUSTODY-PII-01 · ACT 2A — abuse control on the admission oracle.
  *
- * `POST /api/onboarding/recognize-key` answers "does this credential admit, and
- * whose is it". That is a guessing machine unless it is throttled, so this
+ * `POST /api/onboarding/recognize-key` answers only "does this credential
+ * admit". That is still a guessing oracle unless it is throttled, so this
  * suite witnesses the throttle rather than asserting it.
  *
  * ⭐ W4 IS THE LOAD-BEARING TEST. It reruns W3's proposition against a limiter
@@ -52,7 +52,6 @@ jest.mock('@/lib/auth/rateLimiter', () => ({
 
 /* Synthetic record corpus — never the real one. */
 const SYNTHETIC_PASSCODE = 'SYNTHETIC-ADMIT-KEY-0001';
-const SYNTHETIC_NAME = 'Synthetic Person';
 jest.mock('@/lib/ganesha/contacts', () => ({
   ganeshaContacts: [
     {
@@ -106,7 +105,7 @@ describe('ACT 2A · admission oracle abuse control', () => {
   test('W1 — ordinary authorized admission still functions', async () => {
     const res = await post(SYNTHETIC_PASSCODE);
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ recognized: true, name: SYNTHETIC_NAME });
+    await expect(res.json()).resolves.toEqual({ recognized: true, name: null });
     expect(res.headers.get('Cache-Control')).toMatch(/no-store/);
   });
 

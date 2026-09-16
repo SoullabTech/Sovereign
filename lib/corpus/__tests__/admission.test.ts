@@ -148,4 +148,19 @@ describe('ACT 4 §C · corpus admission', () => {
     );
     expect(v.admitted).toEqual([]);
   });
+
+  test('T9 — declaration paths are segment-bounded, not character prefixes', () => {
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source-private/roster.md'),
+      declaration([
+        { prefix: 'data/ain/source', classification: 'published_knowledge', reason: 'source only' },
+      ]),
+      reader({ 'data/ain/source-private/roster.md': 'harmless prose' }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded).toHaveLength(1);
+    expect(v.excluded[0].reason).toMatch(/no admission rule/);
+  });
+
 });

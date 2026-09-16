@@ -122,12 +122,22 @@ export function loadDeclaration(repoRoot: string): AdmissionDeclaration {
   return JSON.parse(fs.readFileSync(file, 'utf8')) as AdmissionDeclaration;
 }
 
-/** The longest matching prefix wins, so a specific rule can narrow a broad one. */
+/**
+ * The longest matching declared path wins, so a specific rule can narrow a broad
+ * one. Matching is segment-bounded: `data/ain/source` may govern descendants of
+ * that directory, but must never silently govern `data/ain/source-private` just
+ * because the characters share a prefix.
+ */
 function ruleFor(relPath: string, declaration: AdmissionDeclaration): AdmissionRule | null {
+  const candidate = relPath.split(path.sep).join('/');
   let best: AdmissionRule | null = null;
   for (const rule of declaration.rules) {
-    if (!relPath.startsWith(rule.prefix)) continue;
-    if (!best || rule.prefix.length > best.prefix.length) best = rule;
+    const prefix = rule.prefix.replace(/\\/g, '/').replace(/\/+$/, '');
+    const matches = candidate === prefix || candidate.startsWith(`${prefix}/`);
+    if (!matches) continue;
+    if (!best || prefix.length > best.prefix.replace(/\\/g, '/').replace(/\/+$/, '').length) {
+      best = rule;
+    }
   }
   return best;
 }

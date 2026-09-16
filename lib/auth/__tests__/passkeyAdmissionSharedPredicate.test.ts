@@ -20,6 +20,7 @@ const code = (rel: string) =>
 
 const CHECK = 'app/api/members/check/route.ts';
 const REGISTER = 'app/api/members/register/route.ts';
+const EXPRESS_CHECK = 'apps/api/src/routes/members/check.ts';
 
 describe('one predicate, two routes', () => {
   it.each([CHECK, REGISTER])('%s imports the shared admission module', (rel) => {
@@ -63,4 +64,39 @@ describe('one predicate, two routes', () => {
     expect(insert).not.toMatch(/\broles\b/);
     expect(insert).not.toMatch(/\btier\b/);
   });
+
+  it('public check surfaces do not disclose member identity fields', () => {
+    for (const rel of [CHECK, EXPRESS_CHECK]) {
+      const src = code(rel);
+      expect(src).not.toMatch(/\busername\s*:/);
+      expect(src).not.toMatch(/\bname\s*:/);
+      expect(src).not.toMatch(/inviter(Name|Username)\s*:/);
+    }
+  });
+
+  it('the standalone MAIA API has no format-only passkey authorization', () => {
+    const src = code(EXPRESS_CHECK);
+    expect(src).not.toMatch(/function\s+isAdminPasskey/);
+    expect(src).not.toMatch(/adminPrefixes\s*=/);
+    expect(src).not.toMatch(/isAdminPasskey\(/);
+  });
+
+  it('both public check surfaces carry abuse control', () => {
+    expect(code(CHECK)).toMatch(/checkRateLimit\(/);
+    expect(code(EXPRESS_CHECK)).toMatch(/allowCheckAttempt\(/);
+  });
+
+  it('public check surfaces are non-cacheable and the standalone API has a global ceiling', () => {
+    expect(code(CHECK)).toMatch(/Cache-Control/);
+    expect(code(EXPRESS_CHECK)).toMatch(/Cache-Control/);
+    expect(code(EXPRESS_CHECK)).toMatch(/CHECK_GLOBAL_MAX/);
+  });
+
+  it('member routes do not log submitted passkey values', () => {
+    for (const rel of [CHECK, REGISTER, EXPRESS_CHECK]) {
+      const src = code(rel);
+      expect(src).not.toMatch(/console\.(log|warn|error)[^\n]*(normalizedPasskey|passkey=\$\{passkey\})/);
+    }
+  });
+
 });

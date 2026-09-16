@@ -15,10 +15,45 @@ import { Request, Response } from 'express';
 import { query } from '../../db/postgres.js';
 import { Errors } from '../../middleware/error.js';
 
-// Check if passkey is an admin passkey (always allowed even without invites table)
-function isAdminPasskey(passkey: string): boolean {
-  const adminPrefixes = ['SOULLAB-', 'MAIA-', 'PIONEER-', 'FOUNDING-'];
-  return adminPrefixes.some(prefix => passkey.toUpperCase().startsWith(prefix));
+
+// SOURCE-CUSTODY-PII-01 — process-local containment for the public check oracle.
+// Five attempts per IP per 15 minutes. This is deliberately bounded in memory
+// and fails closed for new identifiers if the map is saturated. It is not a
+// substitute for the eventual revocable hashed-invite architecture.
+const CHECK_WINDOW_MS = 15 * 60 * 1000;
+const CHECK_MAX_ATTEMPTS = 5;
+const CHECK_GLOBAL_MAX = 500;
+const CHECK_MAX_TRACKED = 10_000;
+type CheckBucket = { count: number; windowStart: number };
+const checkBuckets = new Map<string, CheckBucket>();
+let globalCheckBucket: CheckBucket = { count: 0, windowStart: Date.now() };
+
+function allowCheckAttempt(identifier: string): boolean {
+  const now = Date.now();
+  if (now - globalCheckBucket.windowStart >= CHECK_WINDOW_MS) {
+    globalCheckBucket = { count: 0, windowStart: now };
+  }
+  if (globalCheckBucket.count >= CHECK_GLOBAL_MAX) return false;
+
+  let bucket = checkBuckets.get(identifier);
+  if (bucket && now - bucket.windowStart >= CHECK_WINDOW_MS) {
+    checkBuckets.delete(identifier);
+    bucket = undefined;
+  }
+  if (!bucket) {
+    if (checkBuckets.size >= CHECK_MAX_TRACKED) {
+      for (const [key, candidate] of checkBuckets) {
+        if (now - candidate.windowStart >= CHECK_WINDOW_MS) checkBuckets.delete(key);
+      }
+    }
+    if (checkBuckets.size >= CHECK_MAX_TRACKED) return false;
+    bucket = { count: 0, windowStart: now };
+    checkBuckets.set(identifier, bucket);
+  }
+  if (bucket.count >= CHECK_MAX_ATTEMPTS) return false;
+  bucket.count += 1;
+  globalCheckBucket.count += 1;
+  return true;
 }
 
 // Safe query that returns empty result on table/column errors
@@ -38,6 +73,14 @@ async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: R
 }
 
 export async function checkPasskey(req: Request, res: Response) {
+  res.set({ 'Cache-Control': 'no-store, no-cache, must-revalidate, private', Pragma: 'no-cache' });
+  if (!allowCheckAttempt(req.ip || 'unknown')) {
+    return res.status(429).json({
+      success: false,
+      error: { code: 'RATE_LIMITED', message: 'Unable to check passkey. Please try again.' },
+    });
+  }
+
   const { passkey } = req.body;
 
   if (!passkey) {
@@ -45,26 +88,22 @@ export async function checkPasskey(req: Request, res: Response) {
   }
 
   const normalizedPasskey = passkey.toUpperCase().trim();
-  console.log(`[MEMBERS] Check passkey: ${normalizedPasskey}`);
 
   // Check if passkey exists in members table (returning user)
   const memberResult = await safeQuery(
-    'SELECT id, username, name, onboarded, onboarding_step FROM members WHERE passkey = $1',
+    'SELECT onboarded FROM members WHERE passkey = $1',
     [normalizedPasskey]
   );
 
   if (memberResult.rows.length > 0) {
     const member = memberResult.rows[0];
-    console.log(`[MEMBERS] Found existing member: ${member.username}`);
+    console.log('[MEMBERS] Existing member matched');
     return res.json({
       success: true,
       data: {
         exists: true,
         isInvite: false,
-        onboarded: member.onboarded,
-        onboardingStep: member.onboarding_step,
-        username: member.username,
-        name: member.name
+        onboarded: Boolean(member.onboarded)
       }
     });
   }
@@ -72,9 +111,8 @@ export async function checkPasskey(req: Request, res: Response) {
   // Check if this is a valid invite passkey (new user with invite)
   // This query is optional - might fail if invites table doesn't exist
   const inviteResult = await safeQuery(
-    `SELECT i.id, i.status, i.expires_at, m.username as inviter_username, m.name as inviter_name
+    `SELECT i.id, i.status, i.expires_at
      FROM invites i
-     LEFT JOIN members m ON i.created_by = m.id
      WHERE i.passkey = $1`,
     [normalizedPasskey]
   );
@@ -109,36 +147,19 @@ export async function checkPasskey(req: Request, res: Response) {
     }
 
     // Valid invite - user can register with this passkey
-    console.log(`[MEMBERS] Valid invite found for: ${normalizedPasskey}`);
+    console.log('[MEMBERS] Valid invite matched');
     return res.json({
       success: true,
       data: {
         exists: false,
         isInvite: true,
         inviteStatus: 'valid',
-        inviterName: invite.inviter_name,
-        inviterUsername: invite.inviter_username,
-      }
-    });
-  }
-
-  // If invites table is missing OR no invite found, check if it's an admin passkey
-  // Admin passkeys are always allowed for registration
-  if (isAdminPasskey(normalizedPasskey)) {
-    console.log(`[MEMBERS] Admin passkey allowed: ${normalizedPasskey}`);
-    return res.json({
-      success: true,
-      data: {
-        exists: false,
-        isInvite: true,  // Treat as valid invite
-        inviteStatus: 'valid',
-        isAdminPasskey: true,
       }
     });
   }
 
   // Unknown passkey
-  console.log(`[MEMBERS] Unknown passkey: ${normalizedPasskey}`);
+  console.log('[MEMBERS] Unknown passkey');
   return res.json({
     success: true,
     data: {
