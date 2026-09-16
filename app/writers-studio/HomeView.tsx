@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FilePlus2, FolderInput, Loader2, Trash2 } from 'lucide-react';
+import { FilePlus2, FolderInput, Loader2, NotebookPen, Trash2 } from 'lucide-react';
 import { PRESS, SERIF } from './pressTheme';
-import { CANVAS_HREF, IMPORT_HREF } from './studioMap';
+import { CANVAS_HREF, IMPORT_HREF, SOURCE_INTAKE_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
 import { locationForSection } from '@/lib/writersStudio/placeInWork';
 import { useSectionActivity } from './useSectionActivity';
@@ -247,6 +247,10 @@ function BeginAndImport({
       <Link href={IMPORT_HREF} className={`${QUIET} w-full sm:w-auto`} style={{ borderColor: PRESS.rule }}>
         <FolderInput size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
         Import writing
+      </Link>
+      <Link href={SOURCE_INTAKE_HREF} className={`${QUIET} w-full sm:w-auto`} style={{ borderColor: PRESS.rule }}>
+        <NotebookPen size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
+        Bring notes & sources
       </Link>
     </div>
   );

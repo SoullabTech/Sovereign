@@ -17,7 +17,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const BASE = path.join(process.cwd(), 'uploads', 'workbench');
+const BASE = process.env.WORKBENCH_UPLOADS_DIR?.trim() || path.join(process.cwd(), 'uploads', 'workbench');
 
 export function uploadDir(arrangerId: string, uploadId: string): string {
   return path.join(BASE, arrangerId, uploadId);
