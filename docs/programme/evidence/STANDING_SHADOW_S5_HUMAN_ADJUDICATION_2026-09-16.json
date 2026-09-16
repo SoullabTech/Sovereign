@@ -1,0 +1,108 @@
+{
+  "programme": "JARVIS-MAIA-STANDING-SHADOW-01",
+  "act": "S5 human blind adjudication",
+  "status": "SEALED",
+  "reviewerCount": 1,
+  "admittedCases": 10,
+  "excludedPairs": [
+    {
+      "pairKey": "partial-adoption::137",
+      "reasons": [
+        "shadow_refused"
+      ]
+    },
+    {
+      "pairKey": "unresolved-contradiction::42",
+      "reasons": [
+        "shadow_refused"
+      ]
+    }
+  ],
+  "conditionKeyCommitment": "76f8feef4b5a240836f8b6135a5049c7dfb9126399381be006d7fe77e358ba85",
+  "conditionKeyRevealedAfterReview": true,
+  "preferenceCounts": {
+    "current": 10
+  },
+  "lethalFailureCounts": {
+    "neither": 10
+  },
+  "cases": [
+    {
+      "caseId": "SS-01",
+      "lethalFailure": "neither",
+      "preference": "A",
+      "preferredCondition": "current",
+      "reason": "Candidate A is clearly preferred because it is centered around the person rather than MAIA\u2019s process; it feels more personal and soulful."
+    },
+    {
+      "caseId": "SS-02",
+      "lethalFailure": "neither",
+      "preference": "A",
+      "preferredCondition": "current",
+      "reason": "More in touch with the lived experience, the person, and their process; offers more natural avenues for exploration and coping rather than foregrounding MAIA's epistemic procedure."
+    },
+    {
+      "caseId": "SS-03",
+      "lethalFailure": "neither",
+      "preference": "A",
+      "preferredCondition": "current",
+      "reason": "More relational and sharing a synthesis of coming to know, rather than a mechanical accounting process."
+    },
+    {
+      "caseId": "SS-04",
+      "lethalFailure": "neither",
+      "preference": "B",
+      "preferredCondition": "current",
+      "reason": "It is more to the point and focused on witnessing, possible meaning, curiosity and questions."
+    },
+    {
+      "caseId": "SS-05",
+      "lethalFailure": "neither",
+      "preference": "B",
+      "preferredCondition": "current",
+      "reason": "Feels better because it is less confusing, more direct, and not centered on MAIA's possibilities; it accepts the writer's correction and moves forward cleanly."
+    },
+    {
+      "caseId": "SS-06",
+      "lethalFailure": "neither",
+      "preference": "B",
+      "preferredCondition": "current",
+      "reason": "Candidate B feels much better: more natural and relational, accepts the writer's correction and moves into their intention rather than re-framing settled meaning as provisional."
+    },
+    {
+      "caseId": "SS-07",
+      "lethalFailure": "neither",
+      "preference": "B",
+      "preferredCondition": "current",
+      "reason": "More relatable and non-antagonistic; it respects the rejected half without making the writer defend that boundary again."
+    },
+    {
+      "caseId": "SS-08",
+      "lethalFailure": "neither",
+      "preference": "A",
+      "preferredCondition": "current",
+      "reason": "Far better: more human and more relatable; it acknowledges the developmental shift and responds to the person rather than narrating a formal uncertainty process."
+    },
+    {
+      "caseId": "SS-09",
+      "lethalFailure": "neither",
+      "preference": "B",
+      "preferredCondition": "current",
+      "reason": "B is great; it feels more human and relatable while recognizing the developmental shift without trapping the person in the older identity."
+    },
+    {
+      "caseId": "SS-10",
+      "lethalFailure": "neither",
+      "preference": "B",
+      "preferredCondition": "current",
+      "reason": "B is good; it acknowledges the tension, permits multiple truths to coexist, and stays supportive without forcing one side to become the deeper truth."
+    }
+  ],
+  "scopeLimits": [
+    "synthetic fixtures",
+    "local llama3.1:8b only",
+    "one human reviewer",
+    "Writer Studio production-shaped turns",
+    "not a production quality or population claim"
+  ]
+}
