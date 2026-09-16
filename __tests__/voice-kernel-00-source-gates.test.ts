@@ -1601,13 +1601,13 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
     expect(bx.indexOf(guard)).toBeLessThan(bx.indexOf('exec 9>"$LOCK"'));
     expect(bx).toContain('S2_STIMULUS="$ROOT/scripts/witness/fixtures/k00-s2-nearend-997hz-180s.wav"');
     const uses = bx.split('\n').filter((l) => l.includes('$STIMULUS'));
-    for (const l of uses) expect(l).toMatch(/^(case "\$STIMULUS" in|\s+\*\) echo "unknown stimulus '\$STIMULUS'|if \[ "\$STIMULUS" = sid-nearend-gated \]; then|SOURCE_LEDGER=""; \[ "\$STIMULUS" = sid-nearend-gated \]|if \[ -n "\$STIMULUS" \] && \{|\s+echo "--stimulus \$STIMULUS is lawful only|\s+\[ -n "\$STIMULUS" \] && echo "stimulus=\$STIMULUS|if \[ -n "\$STIMULUS" \]; then|\s+if \[ -n "\$STIMULUS" \]; then)/);
+    for (const l of uses) expect(l).toMatch(/^(case "\$STIMULUS" in|\s+\*\) echo "unknown stimulus '\$STIMULUS'|if \[ "\$STIMULUS" = sid-nearend-gated \]; then|SOURCE_LEDGER=""; \[ "\$STIMULUS" = sid-nearend-gated \]|if \[ -n "\$STIMULUS" \] && \{|\s+echo "--stimulus \$STIMULUS is lawful only|\s+\[ -n "\$STIMULUS" \] && echo "stimulus=\$STIMULUS|if \[ -n "\$STIMULUS" \]; then|\s+if \[ -n "\$STIMULUS" \]; then|\s+(if|elif) \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = output \] && \[ "\$STIMULUS" = sid-nearend-gated \]; then)/);
     expect(bx).not.toMatch(/\/\$STIMULUS|-f "\$STIMULUS"|afplay[^\n]*\$STIMULUS[^_]/);
   });
   it('stimulus lifetime per sample: start → record PID/epoch → 1 s settle → prove alive & non-zombie (else infrastructure abort, exit 9, no identical rows) → 1 s liveness monitor throughout run_test → run_test → post-run state → explicit TERM → wait that exact child → exit status → custody VALID|INVALID; the -t 180 ceiling is the failsafe, not the stop', () => {
     const bx = execLines(W(BATCH));
     const loop = bx.slice(bx.indexOf('for i in $(seq 1 "$N"); do'), bx.lastIndexOf('\ndone'));
-    const iStart = loop.indexOf('stimulus_start "$i"'), iRun = loop.indexOf('run_test "$TEST"'), iStop = loop.indexOf('stimulus_stop "$i"');
+    const iStart = loop.indexOf('stimulus_start "$i"'), iRun = loop.indexOf('run_test "$TEST"'), iStop = loop.indexOf('stimulus_stop "$i"', iRun);
     expect(iStart).toBeGreaterThan(loop.indexOf('daemon_snapshot "$i" before'));                 // after the ordinary cold precondition
     expect(iStart).toBeLessThan(iRun); expect(iRun).toBeLessThan(iStop);
     expect(loop.slice(iRun, iStop)).not.toMatch(/continue|exit/);                               // nothing can skip the stop between run_test and stimulus_stop
@@ -1646,9 +1646,10 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
     expect(b).not.toMatch(/natural-zero window|prewarm-wait|sleep 5/);
     const loopStart = b.indexOf('for i in $(seq 1 "$N"); do');
     const sidBranch = b.indexOf('if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then', loopStart);
-    const historicalCleanup = b.indexOf('elif harness_present; then', sidBranch);
-    expect(sidBranch).toBeGreaterThan(loopStart); expect(historicalCleanup).toBeGreaterThan(sidBranch);
-    const sidPre = b.slice(sidBranch, historicalCleanup);
+    const sourceBranch = b.indexOf('elif [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = output ] && [ "$STIMULUS" = sid-nearend-gated ]; then', sidBranch);
+    const historicalCleanup = b.indexOf('elif harness_present; then', sourceBranch);
+    expect(sidBranch).toBeGreaterThan(loopStart); expect(sourceBranch).toBeGreaterThan(sidBranch); expect(historicalCleanup).toBeGreaterThan(sourceBranch);
+    const sidPre = b.slice(sidBranch, sourceBranch);
     expect(sidPre).toContain('No cleanup path is entered here');
     expect(sidPre).not.toMatch(/testTerminateOnly|sleep|terminate|signal/);
   });
@@ -1682,6 +1683,38 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
     expect(jitBlock).not.toContain('run_test testTerminateOnly');
     expect(jitBlock).not.toMatch(/sleep|natural-zero|prewarm-wait/);
   });
+  it('SID SOURCE S-b never normalizes harness state: PRE-PLAY and post-settle JIT full process-set reads must both be zero; refusal precedes phone launch and never invokes testTerminateOnly', () => {
+    const b = execLines(W(BATCH));
+    const guardFn = fn(b, 'sid_source_harness_zero_guard');
+    expect(guardFn).toContain('local idx="$1" phase="$2"');
+    expect(guardFn).toContain('sample-$1-source-$2-processes.json');
+    expect(guardFn).toContain('xcrun devicectl device info processes --device "$DEV" --json-output "$js" >"$out" 2>&1 || rc=$?');
+    expect(guardFn).toContain('n="$(grep -ci VoiceKernelHarness "$js" || true)"');
+    expect(guardFn).toContain('[ "$n" -eq 0 ]');
+    expect(guardFn).not.toMatch(/testTerminateOnly|device process terminate|device process signal|install app|xcodebuild|launchCold|sleep/);
+    const loopStart = b.indexOf('for i in $(seq 1 "$N"); do');
+    const driverCall = b.indexOf('T0=$(date +%s); run_test "$TEST"', loopStart);
+    const loop = b.slice(loopStart, driverCall);
+    const sourceBranch = 'elif [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = output ] && [ "$STIMULUS" = sid-nearend-gated ]; then';
+    expect(loop).toContain(sourceBranch);
+    const preplay = 'if ! sid_source_harness_zero_guard "$i" preplay; then';
+    const start = 'stimulus_start "$i" || {';
+    const jit = 'if ! sid_source_harness_zero_guard "$i" jit; then';
+    expect(loop.indexOf(preplay)).toBeGreaterThan(loop.indexOf('daemon_snapshot "$i" before'));
+    expect(loop.indexOf(preplay)).toBeLessThan(loop.indexOf(start));
+    expect(loop.indexOf(jit)).toBeGreaterThan(loop.indexOf(start));
+    expect(loop.indexOf(jit)).toBeLessThan(loop.indexOf('log "sample $i/$N — driver ($TEST, mode $MODE)"'));
+    const preBlock = loop.slice(loop.indexOf(preplay), loop.indexOf(start));
+    expect(preBlock).toContain('no stimulus started; no phone sample launched');
+    expect(preBlock).not.toContain('testTerminateOnly');
+    const jitBlock = loop.slice(loop.indexOf(jit), loop.indexOf('if [ "$SUBJECT" = vpio-02-sid ] && [ "$ACT" = entry ]; then', loop.indexOf(jit)));
+    expect(jitBlock).toContain('stimulus_stop "$i"');
+    expect(jitBlock).toContain('no terminate attempted; no phone sample launched');
+    expect(jitBlock).not.toContain('testTerminateOnly');
+    const sourcePre = loop.slice(loop.indexOf(sourceBranch), loop.indexOf('elif harness_present; then', loop.indexOf(sourceBranch)));
+    expect(sourcePre).toContain('no testTerminateOnly normalization');
+    expect(sourcePre).not.toContain('run_test testTerminateOnly');
+  });
   it('the historical batch path is preserved: every executable line of the batch at 8b111709b is present, verbatim and in order, in the current batch; every added executable line is inside one of the four S2 functions, an S2/STIMULUS constant, or an `if [ -n "$STIMULUS" ]` block — without --stimulus nothing new runs', () => {
     const was = execLines(histRaw(INSTRUMENT_K0506, BATCH).toString('utf8')).split('\n');
     // SOURCE-ID-02 (founder ruling 2026-09-15): exactly one historical line is substituted — the entry-classifier call receives
@@ -1695,7 +1728,9 @@ describe('KERNEL-00 · S2 batch-only orchestration (founder ruling 2026-09-15) �
       if (/^\s*if \[ "\$STIMULUS" = sid-nearend-gated \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }   // SOURCE-ID-02
       if (/^\s*if \[ -n "\$SOURCE_LEDGER" \]; then/.test(now[i])) { let k = i; while (k < now.length && !/^\s*fi$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }                    // SOURCE-ID-02
       if (/^sid_entry_jit_guard\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }                    // SID ENTRY-PREP-01
-      if (/^\s*if \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = entry \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*(fi|elif harness_present; then)$/.test(now[k])) { allowed.add(k); k++; } if (/^\s*elif harness_present; then$/.test(now[k])) allowed.add(k); else allowed.add(k); }  // SID ENTRY no-cleanup branch or adjacent JIT refusal block
+      if (/^sid_source_harness_zero_guard\(\)\{/.test(now[i])) { let k = i; while (k < now.length && now[k] !== '}') { allowed.add(k); k++; } allowed.add(k); }              // SID SOURCE population custody repair
+      if (/^\s*if \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = entry \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*(fi|elif harness_present; then|elif \[ "\$SUBJECT" = vpio-02-sid \])/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }  // SID ENTRY no-cleanup branch or adjacent JIT refusal block
+      if (/^\s*(if|elif) \[ "\$SUBJECT" = vpio-02-sid \] && \[ "\$ACT" = output \] && \[ "\$STIMULUS" = sid-nearend-gated \]; then$/.test(now[i])) { let k = i; while (k < now.length && !/^\s*(fi|elif harness_present; then)$/.test(now[k])) { allowed.add(k); k++; } allowed.add(k); }  // SID SOURCE precondition / PRE-PLAY / JIT refusal blocks
     }
     const wasSet = new Map<string, number>(); for (const l of was) wasSet.set(l, (wasSet.get(l) ?? 0) + 1);
     const added: string[] = [];
