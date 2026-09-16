@@ -881,3 +881,8 @@ No qualification change. FIRST-INSTALL-SID closed; ENTRY not open; K00 obligatio
 ### §10.70 — `SID FIRST-INSTALL-01` OPEN (2026-09-15; discriminator plan §18.50; implementation record §10.20)
 
 The install is the INSTALL TRANSACTION moment only: it establishes presence and container, nothing physiological. K00 obligations for the SID subject remain CLOSED; ENTRY [D]/[E] execution CLOSED; S-b CLOSED.
+
+
+### §10.71 — FIRST-INSTALL attempt 1 not entered (2026-09-15; discriminator plan §18.51; implementation record §10.21)
+
+No install occurred; no container exists; nothing changes in qualification standing.

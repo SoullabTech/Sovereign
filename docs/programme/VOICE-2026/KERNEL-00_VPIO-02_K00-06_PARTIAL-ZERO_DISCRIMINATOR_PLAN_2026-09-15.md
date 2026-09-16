@@ -3549,3 +3549,8 @@ Artifacts: `SID_ENTRY-PREFLIGHT-01_PIN_DRAFT` 44 lines `1e77bb05…` · `SID_ENT
 ## §18.50 — [D] · [E] · FIRST-INSTALL carrier · liveness verifier ALL ACCEPTED at `6769627f5` (gate 85/85 accepted) · **`SID FIRST-INSTALL-01` OPEN — one custody-gated transaction** (2026-09-15; implementation record §10.20; qualification plan §10.70)
 
 Authority issued by the founder in-session (seven lines: act · subject `faf918b5c…` · instrument `3035c0235…` · bundle · one transaction · launch 0 · sample 0); by ruling it lives only as the invocation input in a fresh Terminal window and is never committed. Bounded to the accepted 59-line pin `a052f081…`. Permits the pre-install custody chain, the coexistence/absence/process reads, exactly one `k00-reinstall.sh` transaction, container capture from the install result, post-install bind reads, sealing `$OUT`. Does not permit a second attempt, uninstall, overwrite, launch, driver test, [D], [E], sample or source population. Any refusal spends it. Not yet executed.
+
+
+## §18.51 — `SID FIRST-INSTALL-01` attempt 1: NOT ENTERED — payload file absent, pin refused at `test -n "$K00_EXEC_AUTHORITY"` before any path, worktree, `mkdir`, device read or instrument; window was not fresh (deleted cwd, another lane's scrollback) (2026-09-15; implementation record §10.21; qualification plan §10.71)
+
+Extraction matched custody (`a052f081…`, 59 lines); nothing created but a few-byte transcript; device untouched. Session reading: not a governed refusal but a non-entry (§10.3/§10.4 form) — authority intact; **founder rules spend vs intact.** Next attempt, if intact: fresh window, `cd ~`, step 0 (write the payload), then the five lines.
