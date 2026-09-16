@@ -41,22 +41,36 @@
   }
 }
 
-.wsr-return-workspace {
+.wsr-pure-exit {
   position: fixed;
   top: 18px;
   right: 22px;
   z-index: 80;
-  border: 0;
-  background: transparent;
-  color: var(--ws-ink-muted, #766E61);
-  font: 500 11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  letter-spacing: .02em;
-  opacity: .38;
-  cursor: pointer;
-  transition: opacity 160ms ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px;
+  border: 1px solid color-mix(in srgb, var(--ws-rule, #CFC7B8) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ws-ground-raised, #EAE6DC) 92%, transparent);
+  box-shadow: 0 4px 18px rgb(30 25 18 / 8%);
 }
-.wsr-return-workspace:hover,
-.wsr-return-workspace:focus-visible { opacity: .9; }
+.wsr-return-workspace, .wsr-return-workbench {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ws-ink-secondary, #4C473E);
+  padding: 7px 10px;
+  font: 600 11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+.wsr-return-workspace { background: var(--ws-ground-active, #DED5C0); }
+.wsr-return-workspace:hover, .wsr-return-workspace:focus-visible,
+.wsr-return-workbench:hover, .wsr-return-workbench:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ws-gold-text, #8A6727) 45%, transparent);
+  outline-offset: 1px;
+}
 
 .wsr-writing-alert {
   position: fixed;
@@ -87,5 +101,5 @@
   .wsr-pure-grid { height: 100vh !important; }
   .wsr-pure-manuscript { height: 100vh !important; }
   .wsr-pure-scroll { padding: 64px 28px 96px !important; }
-  .wsr-return-workspace { top: 12px; right: 14px; }
+  .wsr-pure-exit { top: 12px; right: 14px; }
 }

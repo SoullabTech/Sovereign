@@ -723,7 +723,7 @@ export default function RebuildStudioClient() {
           <StudioModeBar
             current="write"
             manuscriptId={context.manuscriptId}
-            style={{ justifyContent: 'center', overflowX: 'auto' }}
+            style={{ justifyContent: 'center' }}
           />
         </div>
         <div className="wsr-preview" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10 }}>
@@ -732,9 +732,14 @@ export default function RebuildStudioClient() {
         </div>
       </header>)}
       {canvasExpanded && (
-        <button type="button" className="wsr-return-workspace" onClick={() => setCanvasExpanded(false)} title="Return to workspace">
-          Workspace
-        </button>
+        <div className="wsr-pure-exit">
+          <button type="button" className="wsr-return-workspace" onClick={() => setCanvasExpanded(false)} aria-label="Return to Writer’s Studio workspace">
+            <span aria-hidden="true">←</span> Workspace
+          </button>
+          <Link className="wsr-return-workbench" href="/writers-studio" aria-label="Return to Writer’s Studio workbench">
+            Workbench
+          </Link>
+        </div>
       )}
 
       <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : '286px minmax(520px, 1fr) 390px' }}>

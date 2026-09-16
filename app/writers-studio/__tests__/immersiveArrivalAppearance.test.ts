@@ -86,3 +86,14 @@ describe('rebuilt manuscript movement + developmental continuity', () => {
     expect(modeBar).toContain('canvasForManuscript(mode.href!, manuscriptId)');
   });
 });
+
+describe('Pure Canvas exit law', () => {
+  const rebuild = read('app/writers-studio/rebuild/RebuildStudioClient.tsx');
+  const css = read('app/writers-studio/rebuild/rebuild.css');
+  it('keeps an unmistakable return to workspace and a direct workbench escape', () => {
+    expect(rebuild).toContain('aria-label="Return to Writer’s Studio workspace"');
+    expect(rebuild).toContain('className="wsr-return-workbench" href="/writers-studio"');
+    expect(css).toContain('.wsr-pure-exit');
+    expect(css).not.toContain('opacity: .38');
+  });
+});

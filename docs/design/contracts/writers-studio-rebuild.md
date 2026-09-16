@@ -5,6 +5,7 @@ surfaces:
   - app/writers-studio/rebuild/**
   - app/writers-studio/atmosphere/AppearanceMenu.tsx
   - app/writers-studio/studioMap.ts
+  - app/writers-studio/studio/StudioModeBar.tsx
   - app/writers-studio/workContext.ts
 change_class: experiential
 principles:

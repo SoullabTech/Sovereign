@@ -18,7 +18,7 @@
  */
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { GOLD, GROUND, INK, RADIUS, SPACE } from '../studioTheme';
 import { STUDIO_MODES, type StudioMode } from '../studioMap';
@@ -34,12 +34,25 @@ export interface StudioModeBarProps {
 }
 
 export function StudioModeBar({ current, manuscriptId = null, style }: StudioModeBarProps) {
+  const [preview, setPreview] = useState<StudioMode | null>(null);
   return (
-    <nav aria-label="Studio modes" style={{ display: 'flex', gap: SPACE.tight, ...style }}>
+    <div style={{ position: 'relative', maxWidth: '100%' }}>
+    <nav aria-label="Studio modes" style={{ display: 'flex', gap: SPACE.tight, flexWrap: 'wrap', justifyContent: 'center', ...style }}>
       {STUDIO_MODES.map((m) => (
-        <StudioModeItem key={m.id} mode={m} active={m.id === current} manuscriptId={manuscriptId} />
+        <StudioModeItem key={m.id} mode={m} active={m.id === current} manuscriptId={manuscriptId} onPreview={setPreview} />
       ))}
     </nav>
+    {preview?.availability === 'later' && preview.preview && (
+      <div role="dialog" aria-label={`${preview.label} preview`} style={{ position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', zIndex: 120, width: 'min(340px, calc(100vw - 32px))', padding: 14, border: `1px solid ${GROUND.active}`, borderRadius: RADIUS.panel, background: GROUND.raised, color: INK.primary, boxShadow: '0 12px 36px rgb(20 18 14 / 14%)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+          <div><strong>{preview.label}</strong><div style={{ marginTop: 3, color: INK.quiet, fontSize: 11 }}>Not yet available</div></div>
+          <button type="button" aria-label="Close preview" onClick={() => setPreview(null)} style={{ border: 0, background: 'transparent', color: INK.quiet, cursor: 'pointer' }}>×</button>
+        </div>
+        <p style={{ margin: '10px 0 0', fontSize: 12, lineHeight: 1.5, color: INK.secondary }}>{preview.preview}</p>
+        <div style={{ marginTop: 11, fontSize: 11, color: INK.quiet }}>What would you want here? Tell us through Report a bug while the Studio is in beta.</div>
+      </div>
+    )}
+    </div>
   );
 }
 
@@ -63,7 +76,8 @@ export function StudioModeBar({ current, manuscriptId = null, style }: StudioMod
  */
 function StudioModeItem({
   mode, active, manuscriptId,
-}: { mode: StudioMode; active: boolean; manuscriptId: string | null }) {
+  onPreview,
+}: { mode: StudioMode; active: boolean; manuscriptId: string | null; onPreview: (mode: StudioMode | null) => void }) {
   const available = mode.availability === 'available';
   const navigable = available && !active && mode.href !== undefined && manuscriptId !== null;
   const state = active ? 'active' : !available ? 'unavailable' : manuscriptId === null ? 'needs-work' : 'rest';
@@ -94,7 +108,10 @@ function StudioModeItem({
       {mode.label}
     </span>
   );
-  if (!navigable) return body;
+  if (!navigable) {
+    if (!available && mode.preview) return <button type="button" onClick={() => onPreview(mode)} aria-label={`${mode.label} — not yet available`} style={{ border: 0, padding: 0, background: 'transparent', cursor: 'pointer' }}>{body}</button>;
+    return body;
+  }
   return (
     <Link href={canvasForManuscript(mode.href!, manuscriptId)} style={{ textDecoration: 'none' }}>
       {body}
