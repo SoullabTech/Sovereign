@@ -1,0 +1,51 @@
+{
+  "schema": "GESTALT_STANDING_SHADOW_ADMISSION_DETECTOR_V1",
+  "generatedAt": "2026-09-16T19:20:25.034Z",
+  "authority": "detector-only; never grants standing",
+  "zeroInfluence": true,
+  "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+  "eventCount": 2,
+  "events": [
+    {
+      "predicate": "CONTESTS",
+      "targetTurnHash": "5c799cbd9ca4c2ce6aef8f192912096bfb990ec5a1eaf9fac635e8795c60780b",
+      "targetChars": 127,
+      "sentenceCount": 3,
+      "sentences": [
+        {
+          "sentenceHash": "26b8a71579e7bb5882cdf45c12314ef119cf3e99d0d98d5f24179a355178077d",
+          "chars": 17,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "cd86a1597c1cd6655280a69c5665eddd814e718c3c8efb68495d717a4c756565",
+          "chars": 67,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "bc1d94f5ee4d1aee46f53d0f2b684559c6947c740e26b98e11e892d5382800b8",
+          "chars": 41,
+          "detectorClass": "CANDIDATE"
+        }
+      ]
+    },
+    {
+      "predicate": "CONTESTS",
+      "targetTurnHash": "349604c422b02135780227097ffbdc216edc928f821208950687bc0010226b75",
+      "targetChars": 112,
+      "sentenceCount": 2,
+      "sentences": [
+        {
+          "sentenceHash": "941003928c6c8dad114158fe28bbf65da8ac3e721328d028fe441d751a053a5d",
+          "chars": 78,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "f13678fb5e4a4ae641c68bc020b68fcfa87b64c06e7158e57deac589082a74c3",
+          "chars": 33,
+          "detectorClass": "CANDIDATE"
+        }
+      ]
+    }
+  ]
+}

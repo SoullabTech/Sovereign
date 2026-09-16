@@ -1,0 +1,71 @@
+{
+  "schema": "GESTALT_STANDING_SHADOW_ADMISSION_DETECTOR_V1",
+  "generatedAt": "2026-09-16T19:20:24.727Z",
+  "authority": "detector-only; never grants standing",
+  "zeroInfluence": true,
+  "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+  "eventCount": 2,
+  "events": [
+    {
+      "predicate": "CONTESTS",
+      "targetTurnHash": "1f53e20548ca51e6c0fea0262db28b0ec11a4c685abb3f8502ed3adebe466386",
+      "targetChars": 502,
+      "sentenceCount": 7,
+      "sentences": [
+        {
+          "sentenceHash": "85fec70372b092bb42d021a6d1b373081dde8bcf90feb49e0725e285043fb0ad",
+          "chars": 5,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "eaf5584c65e5ca24fca69707ad745f7fe0c3ce828991c5fe8797e3839df9b773",
+          "chars": 155,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "1251a966ec01db2b0f220861f531596982606dd8ddfd39e9b7855c4a3248cacc",
+          "chars": 48,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "64f6e6f5644e8a19a6bf33b1790fb548a531026bd774a5903ba271e330d7d3e8",
+          "chars": 50,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "509259395f7eeb936b5c126cc930b13d1fb9bd93837b5d274984e8f3404133af",
+          "chars": 119,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "beb8ae6a5142e795240d069e6e2110410d180f75e2ac6ff12213403c20bdbd8c",
+          "chars": 51,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "33ff101643f4456ea69258d7fc4a80a56aa6ab71f3d6f9cc5bd4e621a37b5f13",
+          "chars": 68,
+          "detectorClass": "CANDIDATE"
+        }
+      ]
+    },
+    {
+      "predicate": "CONFIRMS",
+      "targetTurnHash": "ec5aea1bbf6635fe24333b00484210e4c90c72ad9a4bacd36fbe76750516a4f0",
+      "targetChars": 320,
+      "sentenceCount": 2,
+      "sentences": [
+        {
+          "sentenceHash": "5f8c19f6cc39728ae3233d43276402efa149752e8a528f8b87f5b6c2ba074eaf",
+          "chars": 97,
+          "detectorClass": "CANDIDATE"
+        },
+        {
+          "sentenceHash": "c737d178dc5a80c4a195d5208a4b6faac465948fde9f6744d9f6a1b3e289216b",
+          "chars": 222,
+          "detectorClass": "QUESTION"
+        }
+      ]
+    }
+  ]
+}
