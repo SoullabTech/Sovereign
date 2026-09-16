@@ -3499,11 +3499,23 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           if (stage === 'audio_admitted') admit();
         };
 
+        // DESKTOP-SOVEREIGN-STT-INTERIM-01 — first-party provisional text.
+        // Display only: it reaches the live transcript tape, never onTranscript,
+        // persistence, memory, or conversation state. The final result below is
+        // the single authority for the member's turn.
+        const emitProvisional = info.isDesktop
+          ? (text: string) => {
+              if (sovereignGenerationRef.current !== captureGeneration) return;
+              onInterimTranscript?.(text);
+            }
+          : undefined;
+
         try {
           const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
           const result = await recordAndTranscribe(stream, {
             signal: captureController.signal,
             onMilestone: handleMilestone,
+            ...(emitProvisional ? { onPartial: emitProvisional } : {}),
             // ⛔ DESKTOP-SOVEREIGN-STT-UTTERANCE-LIMIT-01 — Desktop turns end in
             // SILENCE, not on a timer. The module default (8 s) is a bound on a
             // one-shot Android recovery attempt; inheriting it here cut members
@@ -3567,6 +3579,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // ⛔ Likewise the UI state: a superseded capture must not drag a live
           // one back to IDLE.
           if (sovereignGenerationRef.current === captureGeneration) {
+            // Provisional words die with their capture on success, failure, or
+            // revocation. They must never read as words MAIA committed.
+            if (emitProvisional) onInterimTranscript?.('');
             setIsListening(false);
             isListeningRef.current = false;
             setMicState('IDLE', 'web_whisper_done');

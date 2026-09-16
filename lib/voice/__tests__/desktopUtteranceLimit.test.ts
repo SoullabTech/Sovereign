@@ -226,20 +226,12 @@ describe('4 — Android-Chrome and Firefox/Zen keep the 8s bound', () => {
   });
 });
 
-// ── 5 & 6 · DEFERRED WITH THE PROVISIONAL PATH ───────────────────────────
+// ── 5 & 6 · PROVISIONAL TEXT AND FINAL AUTHORITY ─────────────────────────
 //
-// ⛔ NOT DELETED, AND NOT RELAXED. Two describes stood here — "exactly one
-// final transcript commits" and "the provisional path closes before final
-// commit". Both drive `recordAndTranscribe` with an `onPartial` callback.
-//
-// DESKTOP-PLATFORM-STT-01 deliberately carried only the utterance ceiling from
-// 1c2c59af9 and left its provisional/interim half behind, so `RunOptions` in
-// this tree has no `onPartial` at all: those tests exercise a capability the
-// module does not yet have, and would assert against silence.
-//
-// They belong to the interim-text unit and travel with it — restore them from
-// 1c2c59af9 when `onPartial` lands, not before. Nothing about the ceiling is
-// left unproven by their absence: sections 1-4 and 7 cover it.
+// `onPartial` has now landed in DESKTOP-SOVEREIGN-STT-INTERIM-01. Its live
+// display, final-only commit, final-flush race, and revocation laws are covered
+// by sovereignPartialTranscription.test.ts. This suite remains responsible for
+// the orthogonal two-minute ceiling and route-exit bound.
 
 // ── 7 · revocation still wins, at any turn length ─────────────────────────
 describe('7 — route exit still aborts immediately', () => {
