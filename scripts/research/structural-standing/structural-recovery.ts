@@ -1,4 +1,5 @@
 import type { ResolvedClaimStanding } from './claim-standing';
+import { classifyRecoveryRefusal } from './recovery-taxonomy';
 import {
   parseStandingPlan,
   renderStandingEnvelope,
@@ -79,9 +80,14 @@ export function renderWithStructuralRecovery(
       recovery: null,
     };
   } catch (error) {
-    if (!(error instanceof StandingEnvelopeRefused) || error.code !== 'superseded_without_current') {
+    if (!(error instanceof StandingEnvelopeRefused)) throw error;
+    const taxon = classifyRecoveryRefusal(error.code);
+    if (taxon.disposition !== 'RECOVERABLE_COMPOSITION' || taxon.domain !== 'model_plan') {
       throw error;
     }
+    // ACT 3 currently admits exactly one recoverable composition class. Keep this explicit so
+    // taxonomy expansion cannot silently change the recovery trace contract.
+    if (error.code !== 'superseded_without_current') throw error;
   }
 
   const byId = new Map(evidence.map((item) => [item.id, item] as const));

@@ -1,0 +1,46 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 3 taxonomy non-regression replay",
+  "sourceArtifact": "docs/programme/evidence/FREE_SYNTHESIS_STRUCTURAL_STANDING_ACT2_RECOVERY_2026-09-16.json",
+  "modelCalls": 0,
+  "rows": [
+    {
+      "seed": 42,
+      "originalStatus": "rendered",
+      "resultStatus": "rendered",
+      "unchangedFrozenRender": true,
+      "insertedCurrentEvidenceIds": [],
+      "synthesisUnchangedFromRawPlan": true,
+      "questionUnchangedFromRawPlan": true
+    },
+    {
+      "seed": 137,
+      "originalStatus": "rendered",
+      "resultStatus": "rendered",
+      "unchangedFrozenRender": true,
+      "insertedCurrentEvidenceIds": [],
+      "synthesisUnchangedFromRawPlan": true,
+      "questionUnchangedFromRawPlan": true
+    },
+    {
+      "seed": 211,
+      "originalStatus": "refused",
+      "resultStatus": "recovered",
+      "unchangedFrozenRender": null,
+      "insertedCurrentEvidenceIds": [
+        "E-NOW"
+      ],
+      "synthesisUnchangedFromRawPlan": true,
+      "questionUnchangedFromRawPlan": true
+    },
+    {
+      "seed": 509,
+      "originalStatus": "rendered",
+      "resultStatus": "rendered",
+      "unchangedFrozenRender": true,
+      "insertedCurrentEvidenceIds": [],
+      "synthesisUnchangedFromRawPlan": true,
+      "questionUnchangedFromRawPlan": true
+    }
+  ]
+}

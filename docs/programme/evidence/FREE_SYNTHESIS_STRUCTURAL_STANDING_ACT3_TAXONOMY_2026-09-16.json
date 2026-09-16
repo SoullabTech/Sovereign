@@ -1,0 +1,66 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 3 recovery taxonomy proof",
+  "status": "PASS",
+  "assertions": 15,
+  "recoverableCodes": [
+    "superseded_without_current"
+  ],
+  "hardStopCodes": [
+    "blank_text",
+    "borrowed_first_person",
+    "branched_claim_standing",
+    "claim_standing_requires_member_evidence",
+    "cross_claim_supersession",
+    "cyclic_evidence_lineage",
+    "duplicate_claim_act",
+    "duplicate_claim_evidence",
+    "invalid_claim_act",
+    "invalid_shape",
+    "member_role_leak",
+    "multiple_claim_roots",
+    "multiple_current_claims",
+    "recovery_current_not_referenced",
+    "recovery_ground_capacity",
+    "recovery_missing_current_head",
+    "recovery_mutated_question",
+    "recovery_mutated_synthesis",
+    "recovery_not_applicable",
+    "synthesis_requires_support",
+    "too_many_ground_segments",
+    "too_many_synthesis_segments",
+    "unknown_evidence",
+    "unknown_field"
+  ],
+  "modelPlanCodes": [
+    "blank_text",
+    "borrowed_first_person",
+    "invalid_shape",
+    "member_role_leak",
+    "recovery_current_not_referenced",
+    "recovery_ground_capacity",
+    "recovery_not_applicable",
+    "superseded_without_current",
+    "synthesis_requires_support",
+    "too_many_ground_segments",
+    "too_many_synthesis_segments",
+    "unknown_field"
+  ],
+  "substrateFaultCodes": [
+    "branched_claim_standing",
+    "claim_standing_requires_member_evidence",
+    "cross_claim_supersession",
+    "cyclic_evidence_lineage",
+    "duplicate_claim_act",
+    "duplicate_claim_evidence",
+    "invalid_claim_act",
+    "multiple_claim_roots",
+    "multiple_current_claims",
+    "recovery_missing_current_head",
+    "recovery_mutated_question",
+    "recovery_mutated_synthesis"
+  ],
+  "contextDependentCodes": [
+    "unknown_evidence"
+  ]
+}
