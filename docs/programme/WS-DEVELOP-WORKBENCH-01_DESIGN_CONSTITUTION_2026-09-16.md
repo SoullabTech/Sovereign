@@ -202,6 +202,56 @@ widened deliberately, as its own act.
 paragraph MAIA did not name is the interface asserting an anchor that does not
 exist — the same class of defect as a fallback indistinguishable from success.
 
+## What the realized mockup settles — and the one risk it adds
+
+Founder mockup, same day, Chapter scope, Chapter 4 · §2 selected.
+
+**Settled.** The inversion is drawn and it holds: the manuscript occupies the
+centre at reading width, surrounded rather than replaced. The breadcrumb
+`Part I › Chapter 4 › 2. The Dream` makes the locus *legible*, which is the
+thing that was previously invisible — a writer can now see that Develop knows
+where they are standing. Observation anatomy renders as specified: **What MAIA
+noticed · Why it may matter · Evidence**, with `Ask MAIA about this` and
+`Explore a direction` separated, and `Reading details ⌄` closed at the foot.
+`Current` sits as a chip beside the reading title rather than as a column of
+dates. `1 of 2` with prev/next replaces the wall of findings.
+
+**⭐ `All Lenses ⌄` is probably the answer to the 7 → 4 ruling, and a good one.**
+Four categories are the default projection; the control beside `6 Observations`
+is the escape hatch to the engine's own vocabulary. That makes the projection
+**total by disclosure** — nothing produced under `arc`, `coherence` or `reader`
+becomes unreachable — while the writer is never made to learn the ontology to
+get started. ⚠️ Confirm that is the intent; if `All Lenses` is only a filter
+over the same four, three lenses are still invisible and the ruling is still
+owed.
+
+**⭐⭐ `Evidence · Chapter 4 · §2 · paragraphs 3–4` promotes the seam widening
+from later to required.** That string is paragraph-precise. It cannot be
+produced today: `findingsFromPayloads` collapses every `evidenceRef` to section
+ids and drops the `CodePointRange`. The gutter `●` in the mockup sits beside
+one specific paragraph for the same reason. **As drawn, this mockup needs the
+range.** The staging note above still holds for *Related places* — those are
+section-level and ship without it — but the Evidence line and the marker do
+not. Either the widening lands with the inversion, or the Evidence line reads
+at section precision until it does. ⛔ It must not be approximated.
+
+**⚠️ THE RISK: the rail is mostly unbuilt.** The mockup's left column carries
+`Materials · Structure · Notes · Versions · Goals`, `Conversations · Discover ·
+Insights · Suggestions`, and `Find/Replace · Statistics · Timeline · Word Web ·
+Export`. Most of those surfaces do not exist. The founder's own rule for this
+programme is explicit:
+
+> Do not invent fake mode functionality. If a mode is not implemented, keep
+> existing honest behavior rather than creating a decorative clickable dead end.
+
+Fourteen labels, each reading as a place to go, is fourteen chances to make the
+Studio feel larger than it is and then smaller than it looked. This is the same
+family as the fallback that reads as success: an affordance that names an
+outcome it does not produce. **The rail must render only what exists, or render
+the rest visibly as not-yet.** ⛔ Deciding which is a founder call, not an
+implementation detail, and it should be made before the rail is built rather
+than discovered by a member clicking `Word Web`.
+
 ## Standing
 
 ```
