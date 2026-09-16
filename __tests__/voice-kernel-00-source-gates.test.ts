@@ -2055,4 +2055,11 @@ describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026
     expect(p).not.toMatch(/sid-source-harness-clear|idevicesyslog|device process terminate|FOUNDER-AUTH/);
   });
 
+  it('SID SOURCE-03 NOW wrapper preserves heredoc and batch-cleanup line boundaries so shell cannot be swallowed into Python', () => {
+    const p = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-03_NOW_RUN_DRAFT_2026-09-16.sh'), 'utf8');
+    expect(p).toContain("\nPY\nVOL=\"$(osascript -e 'get volume settings')\"\n");
+    expect(p).toContain('bash "$BATCH" 2>&1 | tee "$BATCHLOG"\nunset K00_EXEC_AUTHORITY');
+    expect(p).not.toMatch(/PYVOL=|tee "\$BATCHLOG"unset/);
+  });
+
 });
