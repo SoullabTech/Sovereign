@@ -14,10 +14,12 @@ describe('D2 · the rebuilt rail tells the truth', () => {
     expect(source).not.toContain("x === 'Materials' ? '0'");
   });
 
-  it('keeps the real manuscript outline rather than replacing it with another rail', () => {
+  it('projects member-authored book structure and labels unplaced import sections honestly', () => {
     expect(source).toContain('data-workbench-scope="manuscript"');
-    expect(source).toContain('OUTLINE');
-    expect(source).toContain('<OutlineBranch');
+    expect(source).toContain('BOOK STRUCTURE');
+    expect(source).toContain('<AuthoredStructureBranch');
+    expect(source).toContain('data-unplaced-structure');
+    expect(source).toContain('sections not organized yet');
   });
 
   it('member-visible Studio destinations are actionable destinations only', () => {

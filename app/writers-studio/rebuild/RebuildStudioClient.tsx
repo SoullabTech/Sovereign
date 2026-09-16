@@ -1,6 +1,6 @@
  'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
@@ -9,12 +9,13 @@ import { StudioModeBar } from '../studio/StudioModeBar';
 import { SERIF, SANS } from '../studioTheme';
 import { useLivingWorks } from '../useLivingWorks';
 import { currentWork, resolveWorkContext } from '../workContext';
+import { fetchStructure, refusalCopy as structureRefusalCopy, type StructureNodeDTO, type StructureTreeDTO } from '@/lib/writersStudio/structureClient';
 import RebuildWritingBoundary from './RebuildWritingBoundary';
 import RebuildAuthoredBody from './RebuildAuthoredBody';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
-import { asOutline, chapterNodeFor, chapterSpanFor, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { OutlineNode } from '@/lib/writersStudio/focus/outlineTree';
-import { DEVELOPMENTAL_LENSES } from '@/lib/manuscript/developmentalReader/contract';
+import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { focusOn, focusRequest, composerPrompt } from '@/lib/writersStudio/focus/studioFocus';
 import {
   runChapterReview, rehydrateChapterReview, findingsForSection, lensCounts,
@@ -80,41 +81,43 @@ function selectionFromThread(
   } : null;
 }
 
-function OutlineBranch({
-  node, focusId, chapterId, onSelect, level = 0,
+function AuthoredStructureBranch({
+  node, focusId, onSelect, level = 0,
 }: {
-  node: OutlineNode; focusId: string | null; chapterId: string | null;
-  onSelect: (id: string, role: OutlineNode['role']) => void; level?: number;
+  node: StructureNodeDTO; focusId: string | null;
+  onSelect: (sectionId: string) => void; level?: number;
 }) {
-  const active = node.draftSectionId === focusId;
-  const inChapter = node.draftSectionId === chapterId;
-  const visibleLabel = node.heading ?? `Section ${node.position}`;
-  const show = node.role === 'part' || node.role === 'chapter' || node.depth === 2 || level <= 2;
-  if (!show) return null;
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => onSelect(node.draftSectionId, node.role)}
-        style={{
-          width: '100%', textAlign: 'left', border: 0, cursor: 'pointer',
-          background: inChapter ? 'color-mix(in srgb, var(--ws-gold-fill, #CDBD91) 42%, transparent)' : 'transparent',
-          color: active ? C.ink : C.secondary,
-          fontFamily: SANS, fontSize: level === 0 ? 13 : 12.5,
-          lineHeight: 1.35, fontWeight: inChapter || active ? 650 : 480,
-          padding: `7px 10px 7px ${10 + level * 14}px`,
-          borderRadius: 7,
-          borderLeft: active && !inChapter ? `3px solid ${C.gold}` : '3px solid transparent',
-        }}
-      >
-        <span style={{ opacity: node.children.length ? .55 : 0, marginRight: 6 }}>⌄</span>
-        {visibleLabel}
+  const containsFocus = focusId ? node.derivedSectionIds.includes(focusId) : false;
+  const firstSection = node.derivedSectionIds[0] ?? node.sectionIds[0] ?? null;
+  const label = node.title ?? node.kind ?? 'Untitled division';
+  const unit = (
+    <>
+      <span style={{ fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase', color: C.quiet, display: 'block', marginBottom: 2 }}>
+        {node.kind ?? 'Division'}
+      </span>
+      <span>{label}</span>
+    </>
+  );
+  if (node.children.length === 0) {
+    return (
+      <button type="button" disabled={!firstSection} onClick={() => firstSection && onSelect(firstSection)}
+        data-authored-structure-unit={node.id}
+        style={{ width: '100%', textAlign: 'left', border: 0, borderLeft: containsFocus ? `3px solid ${C.gold}` : '3px solid transparent', borderRadius: 7, background: containsFocus ? C.active : 'transparent', color: C.secondary, padding: `7px 9px 7px ${9 + level * 12}px`, cursor: firstSection ? 'pointer' : 'default' }}>
+        {unit}
       </button>
-      {node.children.length > 0 && node.children.map((child) => (
-        <OutlineBranch key={child.draftSectionId} node={child} focusId={focusId}
-          chapterId={chapterId} onSelect={onSelect} level={level + 1} />
-      ))}
-    </div>
+    );
+  }
+  return (
+    <details data-authored-structure-unit={node.id}>
+      <summary style={{ cursor: 'pointer', marginLeft: 14 + level * 12, padding: '7px 5px', color: C.secondary }}>
+        {unit}
+      </summary>
+      <div style={{ marginLeft: 4 }}>
+        {node.children.map((child) => (
+          <AuthoredStructureBranch key={child.id} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} />
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -139,6 +142,8 @@ export default function RebuildStudioClient() {
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number; lens: string } | null>(null);
   const [reviewNeedsRefresh, setReviewNeedsRefresh] = useState(false);
   const [reviewContinuityMessage, setReviewContinuityMessage] = useState<string | null>(null);
+  const [reviewLens, setReviewLens] = useState<DevelopmentalLens | 'all'>('all');
+  const [reviewFindingsOpen, setReviewFindingsOpen] = useState(true);
   const [maiaAsk, setMaiaAsk] = useState('');
   const [maiaResponse, setMaiaResponse] = useState<string | null>(null);
   const [maiaFailure, setMaiaFailure] = useState<string | null>(null);
@@ -155,6 +160,8 @@ export default function RebuildStudioClient() {
   const [adoptionBusy, setAdoptionBusy] = useState(false);
   const [workDeclarationBusy, setWorkDeclarationBusy] = useState(false);
   const [workDeclarationMessage, setWorkDeclarationMessage] = useState<string | null>(null);
+  const [authoredStructure, setAuthoredStructure] = useState<StructureTreeDTO | null>(null);
+  const [structureNotice, setStructureNotice] = useState<string | null>(null);
   const sessionIdRef = useRef('');
   const writingRef = useRef<SectionWriting | null>(null);
   const sectionRefs = useRef(new Map<string, HTMLElement>());
@@ -195,7 +202,7 @@ export default function RebuildStudioClient() {
       const chapter10 = body.sections.find((s) => /^Chapter 10\b/i.test(s.heading ?? ''));
       const initial = requestedRow ?? chapter10 ?? body.sections[0] ?? null;
       setFocusId(initial?.draftSectionId ?? null);
-      setMaiaMode(initial && !/^Chapter\s+\d+\b/i.test(initial.heading ?? '') ? 'passage' : 'chapter');
+      setMaiaMode(isConfirmedChapterRoot(initial) ? 'chapter' : 'passage');
       setPhase('ready');
     } catch {
       setPhase('error');
@@ -204,6 +211,18 @@ export default function RebuildStudioClient() {
   }, [requested, requestedSection]);
 
   useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!context?.manuscriptId) return;
+    let cancelled = false;
+    setAuthoredStructure(null);
+    setStructureNotice(null);
+    void fetchStructure(context.manuscriptId).then((out) => {
+      if (cancelled) return;
+      if (out.ok) setAuthoredStructure(out.tree);
+      else setStructureNotice(structureRefusalCopy(out.refusal));
+    });
+    return () => { cancelled = true; };
+  }, [context?.manuscriptId]);
   useEffect(() => {
     if (!canvasExpanded) return;
     const onKey = (event: KeyboardEvent) => {
@@ -219,10 +238,11 @@ export default function RebuildStudioClient() {
     }
   }, []);
 
-  const tree = useMemo(() => context ? asOutline(context.sections) : [], [context]);
   const focusSection = context?.sections.find((s) => s.draftSectionId === focusId) ?? null;
   const chapter = context && focusId ? chapterSpanFor(context.sections, focusId) : null;
-  const chapterNode = focusId ? chapterNodeFor(tree, focusId) : null;
+  useEffect(() => {
+    if (!chapter && maiaMode === 'chapter') setMaiaMode('passage');
+  }, [chapter, maiaMode]);
   const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
   const work = currentWork(workContext);
   const workContextSentence = workContext.kind === 'work'
@@ -462,14 +482,29 @@ export default function RebuildStudioClient() {
   const openReviewFinding = useCallback((finding: ChapterReviewBundle['findings'][number]) => {
     const target = finding.sectionIds.find((id) => context?.sections.some((section) => section.draftSectionId === id));
     if (!target) return;
-    selectSection(target, 'section');
-  }, [context, selectSection]);
+    /* Revealing review evidence is not the same gesture as entering Passage Work.
+       Keep Chapter Review, lens selection, and review disclosure exactly where the
+       writer left them; move only the manuscript locus. */
+    const moved = target !== focusId;
+    if (moved) { clearEditorial(); setSelectedPassage(null); }
+    setFocusId(target);
+    setMobilePane('manuscript');
+    replaceAddress(target, moved ? null : editorialThread?.threadId ?? null);
+    requestAnimationFrame(() => sectionRefs.current.get(target)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  }, [context, focusId, clearEditorial, replaceAddress, editorialThread?.threadId]);
 
   const title = context?.title ?? 'Writer’s Studio';
   const chapterTitle = chapter?.root.heading ?? focusSection?.heading ?? 'Manuscript';
-  const chapterName = labelWithoutPrefix(chapter?.root.heading ?? null);
   const focusName = focusSection?.heading ?? 'this section';
+  const chapterName = chapter ? labelWithoutPrefix(chapter.root.heading) : focusName;
   const counts = review ? lensCounts(review.findings) : {};
+  const visibleReviewFindings = review
+    ? reviewLens === 'all' ? review.findings : review.findings.filter((finding) => finding.lens === reviewLens)
+    : [];
+  const reviewLensLabel = (lens: DevelopmentalLens): string => ({
+    development: 'Development', structure: 'Structure', continuity: 'Continuity',
+    arc: 'Arc', voice: 'Voice', coherence: 'Coherence', reader: 'Reader',
+  }[lens]);
   const focusReviewFindings = focusSection && review ? findingsForSection(review.findings, focusSection.draftSectionId) : [];
   const passageReviewFindings = focusSection?.headingDepth === 2
     ? reviewFindingsForMovement(focusSection) : focusReviewFindings;
@@ -742,7 +777,7 @@ export default function RebuildStudioClient() {
     >
       {(writing) => {
         writingRef.current = writing;
-        const liveChapterSections = (chapter?.sections ?? []).map((section) => ({
+        const liveChapterSections = (chapter?.sections ?? (focusSection ? [focusSection] : [])).map((section) => ({
           ...section, body: writing.bodyOf(section.draftSectionId),
         }));
         const liveChapterWords = wordCount(liveChapterSections);
@@ -810,12 +845,41 @@ export default function RebuildStudioClient() {
               The old block rendered Materials, Notes, Versions and Goals as
               destination-shaped rows although none had a route or panel here;
               Versions also carried a literal `5` and Materials a literal `0`.
-              The manuscript outline below is real navigation, so it stays. */}
-          <div data-workbench-scope="manuscript" style={{ padding: '1px 6px 8px', color: C.quiet, fontSize: 10.5, letterSpacing: '.14em', fontWeight: 700 }}>MANUSCRIPT</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 6px 8px', color: C.quiet, fontSize: 10.5, letterSpacing: '.14em', fontWeight: 700 }}><span>OUTLINE</span><span>＋</span></div>
-          <div style={{ display: 'grid', gap: 1 }}>
-            {tree.map((node) => <OutlineBranch key={node.draftSectionId} node={node} focusId={focusId} chapterId={chapterNode?.draftSectionId ?? null} onSelect={selectSection} />)}
-          </div>
+              The rail below now projects member-authored book structure; imported section order is navigation only, never book hierarchy. */}
+          <div data-workbench-scope="manuscript" style={{ padding: '1px 6px 8px', color: C.quiet, fontSize: 10.5, letterSpacing: '.14em', fontWeight: 700 }}>BOOK STRUCTURE</div>
+          {structureNotice ? (
+            <div role="status" style={{ fontSize: 11, lineHeight: 1.45, color: C.muted, padding: '4px 6px 12px' }}>{structureNotice}</div>
+          ) : authoredStructure ? (
+            <div data-authored-structure style={{ display: 'grid', gap: 2 }}>
+              {authoredStructure.roots.length > 0 ? authoredStructure.roots.map((node) => (
+                <AuthoredStructureBranch key={node.id} node={node} focusId={focusId}
+                  onSelect={(id) => selectSection(id, 'section')} />
+              )) : (
+                <div style={{ fontSize: 11, lineHeight: 1.45, color: C.muted, padding: '4px 6px 10px' }}>No book divisions have been authored yet.</div>
+              )}
+              {authoredStructure.unplacedSectionIds.length > 0 && (
+                <details data-unplaced-structure style={{ marginTop: 8 }}>
+                  <summary style={{ cursor: 'pointer', fontSize: 11, color: C.muted, padding: '6px' }}>
+                    {authoredStructure.unplacedSectionIds.length} sections not organized yet
+                  </summary>
+                  <div style={{ display: 'grid', gap: 1, marginTop: 4 }}>
+                    {authoredStructure.unplacedSectionIds.map((id) => {
+                      const section = context.sections.find((candidate) => candidate.draftSectionId === id);
+                      if (!section) return null;
+                      return (
+                        <button key={id} type="button" onClick={() => selectSection(id, 'section')}
+                          style={{ width: '100%', textAlign: 'left', border: 0, borderLeft: focusId === id ? `3px solid ${C.gold}` : '3px solid transparent', borderRadius: 6, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>
+                          {section.heading ?? `Section ${section.position + 1}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </details>
+              )}
+            </div>
+          ) : (
+            <div style={{ fontSize: 11, color: C.quiet, padding: '4px 6px' }}>Reading the book structure…</div>
+          )}
         </aside>)}
 
         <section
@@ -840,9 +904,10 @@ export default function RebuildStudioClient() {
               <span style={{ padding: '0 7px', color: C.quiet }}>/</span>{chapterTitle}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
-              <button type="button" onClick={() => setMaiaMode(maiaMode === 'chapter' ? 'passage' : 'chapter')}
-                style={{ border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: '8px 12px', color: C.secondary, fontSize: 11.5, cursor: 'pointer' }}>
-                {maiaMode === 'chapter' ? `▣ Reviewing entire chapter` : selectedPassage ? `◎ Focused passage · ${focusName}` : `◎ Focused section · ${focusName}`}&nbsp;⌄
+              <button type="button" disabled={!chapter} title={chapter ? 'Switch between chapter and passage focus' : 'Chapter focus becomes available when this section belongs to a confirmed chapter.'}
+                onClick={() => chapter && setMaiaMode(maiaMode === 'chapter' ? 'passage' : 'chapter')}
+                style={{ border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: '8px 12px', color: C.secondary, fontSize: 11.5, cursor: chapter ? 'pointer' : 'default', opacity: chapter ? 1 : .72 }}>
+                {maiaMode === 'chapter' ? `▣ Reviewing entire chapter` : selectedPassage ? `◎ Focused passage · ${focusName}` : `◎ Focused section · ${focusName}`}{chapter ? ' ⌄' : ''}
               </button>
               <button type="button" data-pure-canvas-toggle aria-label="Open Pure Canvas" title="Pure Canvas" onClick={() => setCanvasExpanded(true)}
                 style={{ border: 0, background: 'transparent', color: C.quiet, padding: '7px 5px', fontSize: 16, lineHeight: 1, cursor: 'pointer', opacity: .58 }}>
@@ -853,11 +918,20 @@ export default function RebuildStudioClient() {
 
           <div data-manuscript-scroll className={canvasExpanded ? 'wsr-pure-scroll' : undefined} style={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', padding: canvasExpanded ? '72px clamp(40px, 14vw, 220px) 120px' : '48px clamp(34px, 7vw, 100px) 90px' }}>
             <article style={{ maxWidth: canvasExpanded ? 840 : 760, margin: '0 auto', fontFamily: SERIF }}>
-              <div style={{ color: C.gold, fontFamily: SANS, fontSize: 10.5, letterSpacing: '.16em', fontWeight: 700, marginBottom: 9 }}>CHAPTER {chapter?.root.heading?.match(/Chapter\s+(\d+)/i)?.[1] ?? ''}</div>
-              <h1 style={{ fontSize: 'clamp(34px, 4vw, 56px)', lineHeight: 1.05, fontWeight: 420, margin: '0 0 14px' }}>{chapterName}</h1>
+              {chapter ? (
+                <>
+                  <div data-canvas-heading-level="chapter" style={{ color: C.gold, fontFamily: SANS, fontSize: 10.5, letterSpacing: '.16em', fontWeight: 700, marginBottom: 9 }}>CHAPTER {chapter.root.heading?.match(/Chapter\s+(\d+)/i)?.[1] ?? ''}</div>
+                  <h1 style={{ fontSize: 'clamp(34px, 4vw, 56px)', lineHeight: 1.05, fontWeight: 420, margin: '0 0 14px' }}>{chapterName}</h1>
+                </>
+              ) : (
+                <>
+                  <div data-canvas-heading-level="unplaced" style={{ color: C.quiet, fontFamily: SANS, fontSize: 10, letterSpacing: '.16em', fontWeight: 700, marginBottom: 8 }}>SECTION · STRUCTURE NOT YET CONFIRMED</div>
+                  <h1 style={{ fontSize: 'clamp(28px, 3.2vw, 42px)', lineHeight: 1.08, fontWeight: 430, margin: '0 0 12px' }}>{focusName}</h1>
+                </>
+              )}
               <div style={{ height: 1, background: C.soft, marginBottom: 28 }} />
 
-              {maiaMode === 'chapter' && !canvasExpanded && (
+              {maiaMode === 'chapter' && chapter && !canvasExpanded && (
                 <div style={{ border: `1px solid ${C.soft}`, background: C.panel, borderRadius: 12, padding: '13px 15px', marginBottom: 34, fontFamily: SANS, display: 'flex', justifyContent: 'space-between', gap: 20 }}>
                   <div><strong style={{ fontSize: 12.5 }}>Full chapter in review</strong><div style={{ fontSize: 11.5, color: C.muted, marginTop: 3 }}>MAIA will read positions {chapter?.sections[0]?.position}–{chapter?.sections.at(-1)?.position}. Select any section to work there directly.</div></div>
                   <span style={{ color: C.gold, fontSize: 12, whiteSpace: 'nowrap' }}>{chapter?.sections.length ?? 0} sections</span>
@@ -866,7 +940,7 @@ export default function RebuildStudioClient() {
 
               {(chapter?.sections ?? [focusSection].filter(Boolean) as RebuildSection[]).map((section) => {
                 const focused = !canvasExpanded && section.draftSectionId === focusId && maiaMode === 'passage';
-                const isRoot = section.draftSectionId === chapter?.root.draftSectionId;
+                const isRoot = chapter ? section.draftSectionId === chapter.root.draftSectionId : section.draftSectionId === focusId;
                 const held = selectedPassage?.draftSectionId === section.draftSectionId
                   ? selectedPassage : null;
                 const liveBody = writing.bodyOf(section.draftSectionId);
@@ -876,7 +950,16 @@ export default function RebuildStudioClient() {
                     data-rebuild-section={section.draftSectionId}
                     style={{ scrollMarginTop: 24, marginBottom: 34, padding: focused ? '2px 0 2px 16px' : 0, borderLeft: focused ? `2px solid ${C.gold}` : '2px solid transparent', background: 'transparent' }}>
                     {!isRoot && section.heading && (
-                      <h2 style={{ fontSize: section.headingDepth === 2 ? 24 : 18, lineHeight: 1.2, fontWeight: 480, margin: '0 0 14px', color: C.ink }}>{section.heading}</h2>
+                      section.headingDepth === 2 ? (
+                        <div data-canvas-heading-level="section" style={{ margin: '42px 0 16px' }}>
+                          <div style={{ fontFamily: SANS, fontSize: 9.5, letterSpacing: '.15em', fontWeight: 700, color: C.gold, marginBottom: 7 }}>SECTION</div>
+                          <h2 style={{ fontSize: 27, lineHeight: 1.16, fontWeight: 480, margin: 0, color: C.ink }}>{section.heading}</h2>
+                        </div>
+                      ) : section.headingDepth === 3 ? (
+                        <h3 data-canvas-heading-level="subsection" style={{ fontSize: 19, lineHeight: 1.24, fontWeight: 600, margin: '30px 0 12px', color: C.secondary }}>{section.heading}</h3>
+                      ) : (
+                        <h3 data-canvas-heading-level="unconfirmed" style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.3, fontWeight: 650, letterSpacing: '.025em', margin: '26px 0 11px', color: C.muted }}>{section.heading}</h3>
+                      )
                     )}
                     <RebuildAuthoredBody
                       section={section}
@@ -915,7 +998,8 @@ export default function RebuildStudioClient() {
               <span style={{ color: C.quiet }}>•••</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: C.field, border: `1px solid ${C.soft}`, borderRadius: 999, padding: 3 }}>
-              <button type="button" onClick={() => setMaiaMode('chapter')} style={{ border: 0, borderRadius: 999, padding: '8px 10px', cursor: 'pointer', background: maiaMode === 'chapter' ? C.goldFill : 'transparent', color: C.ink, fontWeight: maiaMode === 'chapter' ? 700 : 450, fontSize: 11.5 }}>Chapter Review</button>
+              <button type="button" disabled={!chapter} title={chapter ? 'Review the confirmed chapter' : 'Chapter Review needs a confirmed chapter boundary.'}
+                onClick={() => chapter && setMaiaMode('chapter')} style={{ border: 0, borderRadius: 999, padding: '8px 10px', cursor: chapter ? 'pointer' : 'default', opacity: chapter ? 1 : .45, background: maiaMode === 'chapter' ? C.goldFill : 'transparent', color: C.ink, fontWeight: maiaMode === 'chapter' ? 700 : 450, fontSize: 11.5 }}>Chapter Review</button>
               <button type="button" onClick={() => setMaiaMode('passage')} style={{ border: 0, borderRadius: 999, padding: '8px 10px', cursor: 'pointer', background: maiaMode === 'passage' ? C.goldFill : 'transparent', color: C.ink, fontWeight: maiaMode === 'passage' ? 700 : 450, fontSize: 11.5 }}>Passage Work</button>
             </div>
           </div>
@@ -954,45 +1038,56 @@ export default function RebuildStudioClient() {
                     {reviewPhase === 'reading' ? '✦ MAIA is reading…' : review ? '↻ Review this chapter again' : '✦ Review this chapter'}
                   </button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 18 }}>
-                  {([
-                    ['Development', counts.development ?? 0],
-                    ['Structure', counts.structure ?? 0],
-                    ['Arc', counts.arc ?? 0],
-                    ['Reader', counts.reader ?? 0],
-                  ] as const).map(([name, count]) => (
-                    <div key={name} style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, padding: 12, minHeight: 74 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 11.5, fontWeight: 700 }}><span>{name}</span><span style={{ color: C.gold }}>{review ? count : '—'}</span></div>
-                      <div style={{ fontSize: 11, color: C.quiet, marginTop: 6 }}>{review ? 'Frozen observations from this lens.' : 'Waiting for MAIA’s chapter reading.'}</div>
-                    </div>
-                  ))}
+                <div data-review-lenses style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 10 }}>
+                  {DEVELOPMENTAL_LENSES.map((lens) => {
+                    const active = reviewLens === lens;
+                    const count = counts[lens] ?? 0;
+                    return (
+                      <button key={lens} type="button" data-review-lens={lens} aria-pressed={active} aria-expanded={active && reviewFindingsOpen}
+                        disabled={!review} onClick={() => { setReviewLens(lens); setReviewFindingsOpen((open) => reviewLens === lens ? !open : true); }}
+                        style={{ border: `1px solid ${active ? C.gold : C.soft}`, borderRadius: 11, background: active ? C.active : C.field, padding: 12, minHeight: 74, textAlign: 'left', color: C.secondary, cursor: review ? 'pointer' : 'default', opacity: review ? 1 : .72 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 11.5, fontWeight: 700 }}>
+                          <span>{reviewLensLabel(lens)}</span><span style={{ color: C.gold }}>{review ? count : '—'}</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: active ? C.muted : C.quiet, marginTop: 6 }}>{review ? (active ? 'Showing findings from this lens.' : 'Open findings from this lens.') : 'Waiting for MAIA’s chapter reading.'}</div>
+                      </button>
+                    );
+                  })}
                 </div>
                 {review && review.findings.length > 0 && (
-                  <details data-review-all-findings style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, padding: '10px 12px', marginBottom: 18 }}>
-                    <summary style={{ cursor: 'pointer', fontSize: 11.5, fontWeight: 700, color: C.secondary }}>
-                      All findings · {review.findings.length}
-                    </summary>
-                    <div style={{ display: 'grid', gap: 9, marginTop: 11 }}>
-                      {review.findings.map((finding, index) => {
-                        const target = finding.sectionIds.find((id) => context?.sections.some((section) => section.draftSectionId === id)) ?? null;
-                        return (
-                          <article key={finding.id} data-review-finding={finding.id} style={{ borderTop: index === 0 ? 0 : `1px solid ${C.soft}`, paddingTop: index === 0 ? 0 : 9 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
-                              <span style={{ fontSize: 10.5, color: C.gold, fontWeight: 750, textTransform: 'capitalize' }}>{finding.lens}</span>
-                              <span style={{ fontSize: 9.5, color: C.quiet }}>{finding.state}</span>
-                            </div>
-                            <p style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, margin: '4px 0 0' }}>{finding.observation}</p>
-                            {target && (
-                              <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
-                                style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0 0', fontSize: 10.5, cursor: 'pointer' }}>
-                                Show in manuscript →
-                              </button>
-                            )}
-                          </article>
-                        );
-                      })}
-                    </div>
-                  </details>
+                  <div data-review-findings-navigator style={{ marginBottom: 18 }}>
+                    <button type="button" data-review-all-findings aria-pressed={reviewLens === 'all'} aria-expanded={reviewLens === 'all' && reviewFindingsOpen} onClick={() => { setReviewLens('all'); setReviewFindingsOpen((open) => reviewLens === 'all' ? !open : true); }}
+                      style={{ width: '100%', textAlign: 'left', border: `1px solid ${reviewLens === 'all' ? C.gold : C.soft}`, borderRadius: 11, background: reviewLens === 'all' ? C.active : C.field, padding: '10px 12px', color: C.secondary, cursor: 'pointer', fontSize: 11.5, fontWeight: 700 }}>
+                      Every finding · {review.findings.length}<span style={{ float: 'right', color: C.quiet }}>{reviewLens === 'all' && reviewFindingsOpen ? '▾' : '▸'}</span>
+                    </button>
+                    {reviewFindingsOpen && (<section data-review-findings-panel aria-label={reviewLens === 'all' ? 'Every chapter review finding' : `${reviewLensLabel(reviewLens)} findings`}
+                      style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, marginTop: 8, maxHeight: 'min(46vh, 520px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
+                      <div style={{ position: 'sticky', top: 0, zIndex: 1, display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline', padding: '10px 12px 8px', background: C.field, borderBottom: `1px solid ${C.soft}` }}>
+                        <strong style={{ fontSize: 11.5, color: C.secondary }}>{reviewLens === 'all' ? 'Every finding' : reviewLensLabel(reviewLens)}</strong>
+                        <span style={{ fontSize: 10, color: C.quiet }}>{visibleReviewFindings.length} observation{visibleReviewFindings.length === 1 ? '' : 's'}</span>
+                      </div>
+                      <div data-review-findings-scroll style={{ display: 'grid', gap: 9, padding: '10px 12px 12px' }}>
+                        {visibleReviewFindings.map((finding, index) => {
+                          const target = finding.sectionIds.find((id) => context?.sections.some((section) => section.draftSectionId === id)) ?? null;
+                          return (
+                            <article key={finding.id} data-review-finding={finding.id} style={{ borderTop: index === 0 ? 0 : `1px solid ${C.soft}`, paddingTop: index === 0 ? 0 : 9 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+                                <span style={{ fontSize: 10.5, color: C.gold, fontWeight: 750 }}>{reviewLensLabel(finding.lens)}</span>
+                                <span style={{ fontSize: 9.5, color: C.quiet }}>{finding.state}</span>
+                              </div>
+                              <p style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, margin: '4px 0 0' }}>{finding.observation}</p>
+                              {target && (
+                                <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
+                                  style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0 0', fontSize: 10.5, cursor: 'pointer' }}>
+                                  Show in manuscript →
+                                </button>
+                              )}
+                            </article>
+                          );
+                        })}
+                      </div>
+                    </section>)}
+                  </div>
                 )}
                 <div style={{ fontSize: 11, color: C.quiet, letterSpacing: '.08em', fontWeight: 700, marginBottom: 8 }}>FINDINGS BY SECTION</div>
                 {(chapter?.sections.filter((s) => s.headingDepth === 2) ?? []).map((movement) => {

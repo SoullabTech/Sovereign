@@ -61,7 +61,7 @@ export function outlineTree(sections: readonly OutlineInput[]): OutlineNode[] {
   for (const s of ordered) {
     const depth = level(s.depth);
     const explicit = explicitRole(s.heading);
-    const role: OutlineRole = explicit !== 'other'
+    const role: OutlineRole = explicit !== 'other' && depth === 1
       ? explicit
       : depth === 2 || depth === 3 ? 'section' : 'other';
     const node: OutlineNode = {

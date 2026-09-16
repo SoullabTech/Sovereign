@@ -1027,12 +1027,6 @@ function Reading({
   onNavigate: (sectionId: string) => void;
   onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
-  const observations = [...view.observations].sort((a, b) => {
-    const aHere = evidenceSectionByObservation.get(a.key) === currentSectionId ? 0 : 1;
-    const bHere = evidenceSectionByObservation.get(b.key) === currentSectionId ? 0 : 1;
-    return aHere - bHere;
-  });
-
   return (
     <article data-reading-id={view.id} data-reading-state={view.state} className="max-w-[70ch]">
       <header className="mb-7">
@@ -1058,7 +1052,7 @@ function Reading({
         </p>
       ) : (
         <ol className="space-y-8" aria-label="Observations">
-          {observations.map((o) => (
+          {view.observations.map((o) => (
             /* THE DIALOGUE SURFACE'S IDENTITY IS (readingId, observationKey) —
                `o1` is stable only WITHIN one reading. The `key` on `Reading`
                above already remounts this subtree; the compound key states the

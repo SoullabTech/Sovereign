@@ -16,6 +16,11 @@ export interface ChapterSpan {
   sections: RebuildSection[];
 }
 
+/** A chapter claim requires both chapter wording and confirmed top-level structure. */
+export function isConfirmedChapterRoot(section: RebuildSection | null | undefined): boolean {
+  return Boolean(section && section.headingDepth === 1 && explicitRole(section.heading) === 'chapter');
+}
+
 export function asOutline(sections: readonly RebuildSection[]): OutlineNode[] {
   return outlineTree(sections.map((s) => ({
     draftSectionId: s.draftSectionId,
@@ -40,7 +45,7 @@ export function chapterSpanFor(
 
   let start = -1;
   for (let i = at; i >= 0; i -= 1) {
-    if (explicitRole(ordered[i]!.heading) === 'chapter') { start = i; break; }
+    if (isConfirmedChapterRoot(ordered[i]!)) { start = i; break; }
   }
   if (start < 0) return null;
 

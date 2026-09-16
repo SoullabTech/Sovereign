@@ -1,4 +1,4 @@
-import { asOutline, chapterSpanFor, type RebuildSection } from '../model';
+import { asOutline, chapterSpanFor, isConfirmedChapterRoot, type RebuildSection } from '../model';
 
 const row = (position: number, heading: string, depth: number): RebuildSection => ({
   draftSectionId: `d${position}`, sourceSectionId: `s${position}`, position,
@@ -31,5 +31,16 @@ describe('rebuild book model', () => {
     expect(span?.root.draftSectionId).toBe('d198');
     expect(span?.sections.map((s) => s.position)).toEqual([198, 199, 200, 201, 202, 217, 221]);
     expect(span?.sections.some((s) => s.position === 222)).toBe(false);
+  });
+
+
+  it('does not promote a flat back-matter Chapter label into a chapter', () => {
+    const flat: RebuildSection[] = [
+      { ...row(171, 'CHAPTER 9: AETHER', 1), headingDepth: null, headingSignal: null, body: 'Young. Nested Time.' },
+      { ...row(172, 'CHAPTER 10: THE LIVING SPIRAL', 1), headingDepth: null, headingSignal: null, body: 'Kierkegaard. The Essential Kierkegaard.' },
+      { ...row(173, 'CONCLUSION: EMBRACING YOUR ELEMENTAL SOUL', 1), headingDepth: null, headingSignal: null, body: 'St. John of the Cross.' },
+    ];
+    expect(isConfirmedChapterRoot(flat[1])).toBe(false);
+    expect(chapterSpanFor(flat, 'd172')).toBeNull();
   });
 });
