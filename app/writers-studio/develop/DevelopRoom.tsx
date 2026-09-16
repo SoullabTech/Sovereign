@@ -36,7 +36,7 @@ import { locationForSection } from '@/lib/writersStudio/placeInWork';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import type { CodePointRange } from '@/lib/manuscript/development/evidenceRef';
 import { DevelopManuscriptRail, DevelopManuscriptSurface } from './DevelopManuscript';
-import { fetchWriteState, type WriteStateSection } from '@/lib/writersStudio/writeStateClient';
+import type { WriteStateSection } from '@/lib/writersStudio/writeStateClient';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { DEVELOPMENTAL_READ_CEILING_CODE_POINTS } from '@/lib/manuscript/developmentalReader/contract';
@@ -237,6 +237,7 @@ export default function DevelopRoom({
   const [lens, setLens] = useState<DevelopmentalLens>('development');
   const [developScope, setDevelopScope] = useState<DevelopScope>('chapter');
   const [structuredSections, setStructuredSections] = useState<RebuildSection[] | null>(null);
+  const [manuscriptPhase, setManuscriptPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   /* WS-DEV-SCOPE-01 — what the writer asked MAIA to read. 'whole' is the
      default because it is what this room has always meant by "read this". */
   const [sections, setSections] = useState<WriteStateSection[] | null>(null);
@@ -284,23 +285,53 @@ export default function DevelopRoom({
     return () => { cancelled = true; };
   }, [manuscriptId]);
 
-  /* D4 — structural context is read-only and comes from the same rebuild
-     snapshot Write uses. It is used only to resolve a truthful current chapter;
-     the manuscript prose still comes from the write-state read above. */
+  /* D4/D5 integration — ONE manuscript snapshot, the same authority Write uses.
+     Develop used to fetch `/write-state` for prose and `/rebuild/context` for
+     structure, which allowed two reads of one draft to disagree. The rebuild
+     context already carries draft identity, version, bodies, editability and
+     authored structure, so it is the single read model for this workbench. */
   useEffect(() => {
     let cancelled = false;
+    setManuscriptPhase('loading');
     void (async () => {
       try {
         const res = await apiFetch(`/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(manuscriptId)}`);
-        if (!res.ok || cancelled) return setStructuredSections(null);
+        if (cancelled) return;
+        if (!res.ok) { setManuscriptPhase('error'); return; }
         const body = await res.json();
-        if (!cancelled) setStructuredSections(body?.state === 'section_aware' && Array.isArray(body.sections) ? body.sections : null);
+        if (cancelled) return;
+        if (body?.state !== 'section_aware' || !Array.isArray(body.sections)) {
+          setStructuredSections(null);
+          setSections([]);
+          setWriteVersion(Number(body?.version ?? 0));
+          setManuscriptPhase('ready');
+          return;
+        }
+        const rebuilt = body.sections as RebuildSection[];
+        const writable: WriteStateSection[] = rebuilt.map((section) => ({
+          id: section.draftSectionId, position: section.position, heading: section.heading,
+          body: section.body, editable: section.editable,
+        }));
+        setStructuredSections(rebuilt);
+        setSections(writable);
+        setWriteVersion(Number(body.version ?? 0));
+
+        const requestedExists = requestedSectionId
+          ? writable.some((section) => section.id === requestedSectionId)
+          : false;
+        setPlaceId(requestedExists ? requestedSectionId : (writable[0]?.id ?? null));
+        if (requestedSectionId && !requestedExists && typeof window !== 'undefined') {
+          const next = locationForSection(window.location.pathname, window.location.search, null);
+          window.history.replaceState(window.history.state, '', next);
+        }
+        if (codePointsOf(writable) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS) setToIndex(null);
+        setManuscriptPhase('ready');
       } catch {
-        if (!cancelled) setStructuredSections(null);
+        if (!cancelled) setManuscriptPhase('error');
       }
     })();
     return () => { cancelled = true; };
-  }, [manuscriptId]);
+  }, [manuscriptId, requestedSectionId]);
 
   /* The list — read when the room opens, and again only after the writer's
      own commission. `prefer` names the reading to select afterwards. */
@@ -400,9 +431,9 @@ export default function DevelopRoom({
   );
 
 
-  /* D3 — section-level navigation from a frozen observation back into the
-     manuscript. Passage ranges remain D5; here we use only the section identity
-     already carried by each evidence ref. */
+  /* Section-level navigation from frozen evidence. D5 adds exact current
+     passage precision separately; this map remains the section fallback for
+     evidence that names only a section or section run. */
   const evidenceSectionByObservation = useMemo(() => {
     const out = new Map<string, string>();
     if (!payload || payload.reading.outcome !== 'reading') return out;
@@ -446,68 +477,6 @@ export default function DevelopRoom({
     [sections, placeId],
   );
 
-  /* The draft's own sections — ids, positions and the member's headings.
-     
-     ⛔ These MUST be the DRAFT sections, not the source ones. The reading scope
-     speaks in `manuscript_draft_sections` ids; the outline elsewhere in the
-     Studio reads `manuscript_sections`. They are different rows with different
-     ids, and using the outline's would refuse every scope as
-     `unknown_scope_target` — a feature that appears to work and never does. */
-  useEffect(() => {
-    let live = true;
-    void fetchWriteState(manuscriptId, (url) => apiFetch(url)).then((r) => {
-      if (!live) return;
-      const aware = r.state?.mode === 'section_aware' ? r.state : null;
-      const secs = aware?.sections ?? [];
-      setSections(secs);
-      setWriteVersion(aware?.version ?? 0);
-
-      const requestedExists = requestedSectionId
-        ? secs.some((section) => section.id === requestedSectionId)
-        : false;
-      const initialPlace = requestedExists ? requestedSectionId : (secs[0]?.id ?? null);
-      setPlaceId(initialPlace);
-
-      /* A stale or foreign `s` is not rebound to a different identity. The
-         manuscript may naturally open at its beginning, but the address stops
-         asserting a section this draft does not contain. */
-      if (requestedSectionId && !requestedExists && typeof window !== 'undefined') {
-        const next = locationForSection(window.location.pathname, window.location.search, null);
-        window.history.replaceState(window.history.state, '', next);
-      }
-      /* Measured here, before anything is asked. A work larger than one
-         sitting opens the choice itself — the writer meets a sentence about
-         their book, not a refusal about a ceiling.
-
-         ⛔ AND IT OPENS AT A RANGE THAT FITS. Founder-witnessed on production
-         2026-09-07: "Part of it" opened at From: first → To: the end, which IS
-         the whole work — so the mode that exists to solve the problem started
-         holding the problem, the ask button was disabled, and the only way
-         forward was to guess which of two dropdowns to change. A choice
-         offered in a state that cannot succeed is not a choice.
-
-         It opens at the FIRST SECTION ALONE — the smallest stretch, at the
-         beginning. That is not the system choosing what is worth reading: it
-         is the least it can offer that works, and the writer widens from
-         there. Choosing a bigger stretch for them, or one that "looks
-         important", is the ranking this room refuses. */
-      if (codePointsOf(secs) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS) {
-        /* ⛔ NOT a range chosen for them. An earlier attempt opened at the
-           first section alone — which fits, and which the founder refused:
-           "no automatic first N sections that fit; that would quietly turn
-           the system's capacity into the writer's editorial choice."
-
-           So the end is left UNCHOSEN and the room asks. It does not open in
-           a state that fails (the defect this replaced), and it does not open
-           in a state someone else decided. */
-        setToIndex(null);
-      }
-    });
-    return () => {
-      live = false;
-    };
-  }, [manuscriptId, requestedSectionId]);
-
   /* ── WHERE MAIA READS ────────────────────────────────────────────────
      One idea, and one the writer already has: read from here to here. Whole
      work is not a mode — it is the range that happens to be all of it — so a
@@ -515,13 +484,9 @@ export default function DevelopRoom({
      gave.
 
      ⛔ Nothing preselects, recommends, or ranks a place to start. */
-  const structureAligned = useMemo(() => {
-    if (!sections || !structuredSections || sections.length !== structuredSections.length) return false;
-    return sections.every((section, i) => section.id === structuredSections[i]?.draftSectionId);
-  }, [sections, structuredSections]);
   const currentChapter = useMemo(
-    () => structureAligned && structuredSections && placeId ? chapterSpanFor(structuredSections, placeId) : null,
-    [structureAligned, structuredSections, placeId],
+    () => structuredSections && placeId ? chapterSpanFor(structuredSections, placeId) : null,
+    [structuredSections, placeId],
   );
   const effectiveScope: DevelopScope = developScope === 'chapter' && !currentChapter ? 'work' : developScope;
 
@@ -660,7 +625,11 @@ export default function DevelopRoom({
           display: 'flex', flexDirection: 'column',
         }}
       >
-        {sections === null ? (
+        {manuscriptPhase === 'error' ? (
+          <p className="text-[14px] leading-relaxed opacity-60 max-w-md" role="status">
+            The manuscript could not be reached just now. Nothing has changed.
+          </p>
+        ) : manuscriptPhase === 'loading' || sections === null ? (
           <p className="text-[13px] opacity-40">opening the manuscript…</p>
         ) : sections.length === 0 ? (
           <p className="text-[14px] leading-relaxed opacity-60 max-w-md">
