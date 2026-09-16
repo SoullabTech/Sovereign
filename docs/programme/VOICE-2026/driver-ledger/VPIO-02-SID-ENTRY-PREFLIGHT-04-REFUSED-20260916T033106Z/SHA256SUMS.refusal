@@ -1,0 +1,8 @@
+2331a89395789847fede083c032e245ad630ba369bb94581a1c07b9ca434a457  ./RETURN.txt
+3268743e79b58be0397d62fb0c9809d957f01acadb7bd22a187a0a0d399cb1a4  ./preflight-pin.sh
+1ce3fcbf725bd0127fdcf7af74214ac77ef2609f64e2d11de5bc19149f16fb58  ./preflight-transcript.log
+599d19f66246561ef3090659db06c3f1c5717a9fc8c166f9fc1e502941559dcd  ./preflight/apps-vpio02.json
+452cf179dca530df413785b6b484ec110436a0d3baa8fe872227e5801b03bc6f  ./preflight/apps-vpio02sid.json
+d22e15d5f7aefda6e71a254c9e40747d6ce8d1f79f3dfe5e5908c2dbe0534992  ./preflight/head.txt
+0bbcec72fb9f289b6e6ddb05eec918dcdf9a892ebd712fccbac16e8e66829340  ./preflight/processes.json
+562df1e1a03275877ea8bec9b63251c03d8dbd50653fb2bfb5ad7fa228ed0931  ./preflight/sid-container-expected.txt

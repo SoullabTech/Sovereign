@@ -1,0 +1,13 @@
+SID ENTRY-PREFLIGHT-04 REFUSAL
+act: SID ENTRY-PREFLIGHT-04
+instrument: 9df4c93401a1ba92babd2b7ab297112e974ee1cb
+result: REFUSED before CLEAN
+batch-04 authority instantiated: NO
+batch-04 act marker created: NO
+batch-04 launched: NO
+reason: process-table precondition observed 3 VoiceKernelHarness processes
+observed containers:
+- E3B88028-A10F-46B1-AB27-CF0A1F83FB78 (historical vpio-02)
+- 6A2E406B-D1B8-43A4-92F3-29D50333AF19 (vpio-01)
+- 0B07D423-97E7-4196-BC1C-C69C96F994BE (k00)
+No cleanup, termination, launch, sample, top-up, source population, or downstream act occurred.
