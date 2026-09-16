@@ -23,7 +23,7 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 | Find existing work | ✅ LIVE | Home title search searches beyond the visible shelf. |
 | Delete / remove Work | ✅ LIVE | Explicit confirmation; remove-from-shelf and destroy are distinct acts. |
 | Recent factual history | ✅ LIVE | Home shows bounded recorded acts, not inferred summaries. |
-| Work ↔ manuscript identity | 🟡 PARTIAL | `m` is stable; declared Living Work resolution can still be absent/ambiguous and has its own reconciliation lane. |
+| Work ↔ manuscript identity | 🟡 PARTIAL | `m` is stable and the resolver correctly distinguishes none / one / ambiguous. Production census proved the active `848bbd74…` Elemental Alchemy manuscript has **zero** declared Works; the similarly titled `55742458…` manuscript is a distinct, slightly diverged object declared into `Writing Presence Test`. The Workbench now states no-Work truthfully and offers the existing explicit member gesture `Make this a Work`; no production declaration was changed by this repair. |
 | Source custody / provenance | 🟡 PARTIAL | Strong substrate exists; older programme records still owe some real HTTP-path witness history. |
 
 ## Write / manuscript
@@ -96,7 +96,7 @@ A capability is not LIVE merely because a component, route, schema, or specifica
 2. **Chapter Review continuity witness** — apply the review-manifest migration through the authorized deployment path, then prove complete + partial review reloads reconstruct the exact frozen reading set without rerunning MAIA.
 3. **Develop D4 witness** — Work/Chapter scope and truthful full lens disclosure are implemented; browser witness is owed. Passage is deliberately disabled until exact selection identity exists in Develop.
 4. **Witness D5 + Chapter Review continuity** — authenticate against real member data, prove exact-passage highlight, Pure Canvas scroll/return, review access, then apply/witness the review-manifest migration through its authorized deployment path.
-5. **Resolve declared-Work context** — Passage Work and every MAIA act must distinguish no Work / one Work / ambiguous Work.
+5. **Witness declared-Work context** — the UI now distinguishes no Work / one Work / ambiguous Work and can explicitly declare an undeclared manuscript as a Work. For the active Elemental Alchemy manuscript, the member gesture is still unspent; MAIA must remain manuscript-scoped until the member chooses it.
 6. **Stage 8 versioning** — professional history, compare, restore and named milestones; do not confuse this with the existing Keep-a-version act.
 7. **Stage 9 Explore / Materials** — build the full research/material field on the existing belonging and source-custody substrate.
 8. **Stage 10 deep companion** — whole-Work relational MAIA with provenance and writer-controlled meaning.
