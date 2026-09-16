@@ -966,3 +966,8 @@ No qualification change. The ENTRY premise (harness 0 at FIRST-INSTALL-03 and [D
 ### §10.87 — census and disposal-04 drafts amended per ruling; root grant issued for the amended census; not run (2026-09-16; discriminator plan §18.69; implementation record §10.42)
 
 No qualification change.
+
+
+### §10.88 — relaunch census identified DAS prewarm; current harness set 0; SID install instrument hardened; FIRST-INSTALL-04 drafted, execution closed (2026-09-16; discriminator plan §18.70; implementation record §10.43)
+
+No physiological qualification change. Zero-harness validity law is preserved. `.k00` / `.vpio01` relaunches were iOS DAS app-resume prewarming, external to the organism; current harness read = 0. `FIRST-INSTALL-03` remains unexecuted and receives no authority because its outer zero-harness read is not adjacent to the actual install verb. Instrument `ec60321b…` adds a SID-only just-in-time process read immediately before install; gate 85/85. `FIRST-INSTALL-04` = 59 lines `81f29c59…`, draft only; [D]/[E] remain closed.
