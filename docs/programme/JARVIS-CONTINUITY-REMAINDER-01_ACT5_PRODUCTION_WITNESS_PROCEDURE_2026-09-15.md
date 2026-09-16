@@ -74,3 +74,13 @@ GIT_COMMIT=e57ca1baa
 ```
 
 This safety tag does not alter the running container. The defective generic rollback primitive remains out of scope; if SEL-W1 triggers rollback, restoration must use this explicit image and be verified by baked `GIT_COMMIT`.
+
+## Addendum · HTTP guest boundary correction (2026-09-15)
+
+The first attempt to begin setup through `/api/sovereign/app/maia/list` returned HTTP 401 before MAIA processing. Read-only database checks immediately afterward showed **0** `maia_sessions` rows and **0** `conversation_turns` rows for that attempted session id. Therefore no witness turn was accepted and `SEL-W1` remains unspent.
+
+The procedure's assumption that this live route admits a fresh unauthenticated guest was false. This is an HTTP/auth-boundary fact, not a continuity result.
+
+`SEL-W1` will therefore be served through the running production container's canonical service seam (`ensureSession` + `getMaiaResponse`) against the real production database. This preserves the evidence under test: same deployed image, same session persistence, same FAST/CORE routing, same `recoverForTier` composition, same seven messages, same order, and same first-result rule. It deliberately bypasses only the unrelated HTTP authentication boundary.
+
+No message text, oracle, expected index, retry rule, or pass/fail condition changes. No browser credential, cookie, session token, or authentication bypass is created or harvested.
