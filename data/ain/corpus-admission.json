@@ -13,13 +13,15 @@
     {
       "prefix": "data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md",
       "classification": "published_knowledge",
-      "reason": "CORPUS-CLASSIFICATION-EA-01: Kelly-authored Elemental Alchemy manuscript, admitted individually under an explicit governed permission from the named copyright holder.",
+      "reason": "CORPUS-CLASSIFICATION-EA-01: Kelly-authored Elemental Alchemy manuscript, admitted individually under explicit governed authorization from the named copyright holder.",
       "authority": {
-        "kind": "permission",
+        "kind": "rights_holder_authorized",
+        "rightsHolder": "Kelly Nezat",
         "evidence": {
           "source": "governed_record",
           "ref": "docs/corpus-authority/elemental-alchemy.md",
-          "marker": "CORPUS USE AUTHORIZED — ELEMENTAL ALCHEMY — KELLY NEZAT — 2026-09-16"
+          "marker": "CORPUS USE AUTHORIZED — ELEMENTAL ALCHEMY — KELLY NEZAT — 2026-09-16",
+          "subject_sha256": "f57f17e6ab82f911a4932c1f2d5fa0149e8fe499c7461f60bd87f86d0f657af0"
         }
       }
     },
@@ -30,9 +32,10 @@
     }
   ],
   "_authority": {
-    "soullab_owned": "May support published_knowledge or organizational_public only with mechanically locatable evidence: an in-file marker actually present in the work, or a record under docs/corpus-authority/ whose declared marker is present.",
+    "soullab_owned": "May support published_knowledge or organizational_public only with mechanically locatable evidence that Soullab itself owns the work; brand identity alone is not copyright ownership.",
     "public_domain": "May support third_party_published only when mechanically locatable evidence governs the work itself—not an image, quotation, phrase, or unrelated source.",
     "license": "May support third_party_published only when mechanically locatable evidence identifies a license that governs the work and permits the intended corpus use.",
-    "permission": "May support published_knowledge or third_party_published only when a record under docs/corpus-authority/ carries the declared authorization marker from the relevant rights holder; permission does not imply copyright assignment or organizational ownership."
+    "permission": "May support third_party_published only when a record under docs/corpus-authority/ carries the declared authorization marker from the relevant rights holder; free-text claims are not authority evidence.",
+    "rights_holder_authorized": "May support published_knowledge only when the named rights holder has a governed authorization record and the authorization is bound to the exact candidate SHA-256; authorization does not transfer ownership."
   }
 }

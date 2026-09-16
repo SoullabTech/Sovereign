@@ -50,6 +50,7 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
+import { createHash } from 'crypto';
 
 export type Classification =
   /** Published, authored knowledge intended for MAIA to draw on. */
@@ -73,26 +74,34 @@ const ADMITTING: ReadonlySet<Classification> = new Set<Classification>([
 const GOVERNED_AUTHORITY_RECORD_ROOT = 'docs/corpus-authority';
 
 const AUTHORITY_BY_CLASS: Readonly<Record<string, ReadonlySet<CorpusAuthorityKind>>> = {
-  published_knowledge: new Set<CorpusAuthorityKind>(['soullab_owned', 'permission']),
+  published_knowledge: new Set<CorpusAuthorityKind>(['soullab_owned', 'rights_holder_authorized']),
   organizational_public: new Set<CorpusAuthorityKind>(['soullab_owned']),
   third_party_published: new Set<CorpusAuthorityKind>(['public_domain', 'license', 'permission']),
 };
 
 export type CorpusAuthorityKind =
   | 'soullab_owned'
+  | 'rights_holder_authorized'
   | 'public_domain'
   | 'license'
   | 'permission';
 
 export type CorpusAuthorityEvidence =
   | { source: 'in_file'; marker: string }
-  | { source: 'governed_record'; ref: string; marker: string };
+  | { source: 'governed_record'; ref: string; marker: string; subject_sha256?: string };
 
-export interface CorpusAuthorityBasis {
-  kind: CorpusAuthorityKind;
-  /** Evidence must be mechanically locatable; a free-text assertion is not evidence. */
-  evidence: CorpusAuthorityEvidence;
-}
+export type CorpusAuthorityBasis =
+  | {
+      kind: Exclude<CorpusAuthorityKind, 'rights_holder_authorized'>;
+      /** Evidence must be mechanically locatable; a free-text assertion is not evidence. */
+      evidence: CorpusAuthorityEvidence;
+    }
+  | {
+      kind: 'rights_holder_authorized';
+      rightsHolder: string;
+      /** Rights-holder authority must be bound to a governed record and exact subject digest. */
+      evidence: CorpusAuthorityEvidence;
+    };
 
 export interface AdmissionRule {
   /** Path prefix, relative to the repo root. */
@@ -221,6 +230,21 @@ export function decideAdmission(
       });
       continue;
     }
+    if (authority.kind === 'rights_holder_authorized') {
+      if (typeof authority.rightsHolder !== 'string' || !authority.rightsHolder.trim()) {
+        verdict.excluded.push({ file: rel, reason: 'rights-holder authority requires a named rights holder' });
+        continue;
+      }
+      if (authority.evidence.source !== 'governed_record') {
+        verdict.excluded.push({ file: rel, reason: 'rights-holder authority requires a governed authorization record' });
+        continue;
+      }
+      const digest = authority.evidence.subject_sha256;
+      if (typeof digest !== 'string' || !/^[0-9a-f]{64}$/i.test(digest)) {
+        verdict.excluded.push({ file: rel, reason: 'rights-holder authority requires an exact subject SHA-256' });
+        continue;
+      }
+    }
 
     const candidateAbs = path.resolve(repoRoot, file);
     if (isExistingSymlink(candidateAbs)) {
@@ -237,6 +261,13 @@ export function decideAdmission(
     }
 
     const evidence = authority.evidence as CorpusAuthorityEvidence;
+    if (authority.kind === 'rights_holder_authorized' && evidence.source === 'governed_record') {
+      const actualDigest = createHash('sha256').update(text, 'utf8').digest('hex');
+      if (actualDigest.toLowerCase() !== evidence.subject_sha256!.toLowerCase()) {
+        verdict.excluded.push({ file: rel, reason: 'candidate work does not match the authorized subject SHA-256' });
+        continue;
+      }
+    }
     if (evidence.source === 'in_file') {
       if (typeof evidence.marker !== 'string' || !evidence.marker.trim()) {
         verdict.excluded.push({ file: rel, reason: 'authority evidence marker is missing' });
@@ -273,6 +304,16 @@ export function decideAdmission(
         if (!record.includes(evidence.marker)) {
           verdict.excluded.push({ file: rel, reason: 'governed authority evidence marker was not found' });
           continue;
+        }
+        if (authority.kind === 'rights_holder_authorized') {
+          if (!record.includes(authority.rightsHolder)) {
+            verdict.excluded.push({ file: rel, reason: 'governed authorization record does not name the declared rights holder' });
+            continue;
+          }
+          if (!record.includes(evidence.subject_sha256!)) {
+            verdict.excluded.push({ file: rel, reason: 'governed authorization record does not bind the authorized subject SHA-256' });
+            continue;
+          }
         }
       } catch {
         verdict.excluded.push({ file: rel, reason: 'governed authority evidence record is unreadable' });
