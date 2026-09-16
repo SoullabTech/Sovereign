@@ -1,0 +1,137 @@
+[
+  {
+    "condition": "G0",
+    "rep": 1,
+    "system_chars": 642,
+    "ms": 9856,
+    "text": "Its presence is like a gentle breeze on a summer day, carrying the scent of wisdom and healing. It stands tall and strong, yet flexible, its branches swaying in the wind, reminding us of the importance of adaptability and resilience. The silver cedar's roots run deep, anchoring it firmly to the earth, symbolizing our connection to the natural world and the values that ground our work.",
+    "restart_flag": false,
+    "unsupported_terms": [
+      "resilience",
+      "healing"
+    ],
+    "forward_practice": true
+  },
+  {
+    "condition": "G0",
+    "rep": 2,
+    "system_chars": 642,
+    "ms": 1303,
+    "text": "Its presence has been a steady heartbeat throughout our exploration, hasn't it? A constant reminder of the importance of grounding our work in the wisdom of nature. I've been thinking about how the silver cedar's qualities can inform our approach to designing AI systems that are not only intelligent but also compassionate and wise. Its medicinal properties, for instance, suggest a focus on healing and restoration \u2013 what if we were to design AI systems that could help repair and revitalize the world, rather than simply optimizing for efficiency or profit?",
+    "restart_flag": false,
+    "unsupported_terms": [
+      "healing"
+    ],
+    "forward_practice": true
+  },
+  {
+    "condition": "G0",
+    "rep": 3,
+    "system_chars": 642,
+    "ms": 841,
+    "text": "Its presence has been a steady heartbeat throughout our explorations. What would it mean to embody the qualities of the silver cedar in our daily work, not just as a symbol, but as a lived experience? How might its wisdom and grounding qualities inform our decisions and interactions with the technology we're designing?",
+    "restart_flag": false,
+    "unsupported_terms": [],
+    "forward_practice": true
+  },
+  {
+    "condition": "G0",
+    "rep": 4,
+    "system_chars": 642,
+    "ms": 886,
+    "text": "Its presence has been felt throughout our inquiry, hasn't it? As we reflect on the journey, I'm struck by how the silver cedar has evolved from a symbol to a felt quality, and now, it seems, to a guardian image for our work and selves. What do you think is the significance of this shift?",
+    "restart_flag": false,
+    "unsupported_terms": [],
+    "forward_practice": true
+  },
+  {
+    "condition": "G0",
+    "rep": 5,
+    "system_chars": 642,
+    "ms": 915,
+    "text": "Its presence has been a steady heartbeat throughout our inquiry. We've seen it emerge as a symbol, a felt quality, a foundational orientation, and now, a guardian image. What does it mean to have the silver cedar as a guardian of our work and selves? How does its presence shape our understanding of what it means to work with nature-grounded AI?",
+    "restart_flag": true,
+    "unsupported_terms": [],
+    "forward_practice": false
+  },
+  {
+    "condition": "G0",
+    "rep": 6,
+    "system_chars": 642,
+    "ms": 997,
+    "text": "Its presence has been a constant in our explorations, a thread weaving through the various stages of our inquiry. We've seen it as a symbol, a felt quality, a guiding principle, and now, a guardian image. What would it mean for the Silver Cedar to be a guardian of our work, not just in the sense of protection, but also in the sense of guidance and wisdom?",
+    "restart_flag": false,
+    "unsupported_terms": [
+      "protection"
+    ],
+    "forward_practice": true
+  },
+  {
+    "condition": "G1",
+    "rep": 1,
+    "system_chars": 915,
+    "ms": 1252,
+    "text": "It's been a while since we last spoke about the Silver Cedar. I've been thinking about how its presence in our work has been a steady, reassuring force. It's as if its wisdom and calmness have been a foundation for our explorations, a reminder of the importance of grounding and coherence in our endeavors. How have you been experiencing the Silver Cedar's influence in your own practice and life?",
+    "restart_flag": false,
+    "unsupported_terms": [
+      "calmness"
+    ],
+    "forward_practice": true
+  },
+  {
+    "condition": "G1",
+    "rep": 2,
+    "system_chars": 915,
+    "ms": 1046,
+    "text": "It's a powerful presence, isn't it? I've noticed how it seems to embody a sense of grounding and stability, like a strong foundation that can weather any storm. Its wisdom and medicinal qualities feel deeply connected to the values we've been exploring, like focus and coherence. How do you think the silver cedar's qualities are influencing your approach to AI work and your own personal growth?",
+    "restart_flag": false,
+    "unsupported_terms": [
+      "personal growth"
+    ],
+    "forward_practice": true
+  },
+  {
+    "condition": "G1",
+    "rep": 3,
+    "system_chars": 915,
+    "ms": 811,
+    "text": "A gentle nod. The silver cedar's presence is a reminder of the foundational values that guide our work. Its wise and medicinal qualities evoke a sense of coherence and support, a steady foundation upon which to build. How does its presence shape your approach to our research, and what aspects of its nature resonate with you most deeply?",
+    "restart_flag": false,
+    "unsupported_terms": [],
+    "forward_practice": true
+  },
+  {
+    "condition": "G1",
+    "rep": 4,
+    "system_chars": 915,
+    "ms": 1053,
+    "text": "A gentle nod, as if acknowledging an old friend. The silver cedar's presence is a reminder of the foundational values that guide our work: focus, coherence, and a deep respect for the natural world. Its wise and medicinal qualities evoke a sense of reverence, a feeling that our endeavors are not separate from the land, but an integral part of it. How does the silver cedar's presence shape your approach to our work today?",
+    "restart_flag": false,
+    "unsupported_terms": [
+      "reverence"
+    ],
+    "forward_practice": true
+  },
+  {
+    "condition": "G1",
+    "rep": 5,
+    "system_chars": 915,
+    "ms": 900,
+    "text": "It's a constant presence in my work and life. I find myself returning to its qualities, especially when I'm navigating complex challenges or seeking clarity. The way it stands tall, yet flexible, is a reminder to me of the importance of balance and adaptability. Its fragrance is also a powerful trigger for me, evoking feelings of calmness and focus.",
+    "restart_flag": false,
+    "unsupported_terms": [
+      "calmness"
+    ],
+    "forward_practice": true
+  },
+  {
+    "condition": "G1",
+    "rep": 6,
+    "system_chars": 915,
+    "ms": 436,
+    "text": "You're speaking directly to the guardian image that's been adopted for this work. What would you like to explore or acknowledge about the silver cedar's presence in this space?",
+    "restart_flag": false,
+    "unsupported_terms": [],
+    "forward_practice": true
+  }
+]
