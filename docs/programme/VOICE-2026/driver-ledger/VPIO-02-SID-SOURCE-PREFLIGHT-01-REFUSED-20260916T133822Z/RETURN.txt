@@ -1,0 +1,3 @@
+SOURCE-PREFLIGHT-01 REFUSED: VoiceKernelHarness=3 before CLEAN; no stimulus; no source sample.
+SOURCE-BATCH-01 INVOKED marker created by wrapper fall-through after refused preflight; batch pin exited before population; no ledger directory; authority spent by one-shot invocation.
+Wrapper defect: outer terminal block omitted set -e / explicit conditional stop after PRE_RC test; this is orchestration only and does not alter the batch pin or physiology.

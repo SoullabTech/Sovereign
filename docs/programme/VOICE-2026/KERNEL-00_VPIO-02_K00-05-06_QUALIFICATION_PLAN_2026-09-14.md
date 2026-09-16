@@ -1028,3 +1028,7 @@ ENTRY validity is satisfied. The already-ratified source-discrimination arm is S
 ### §10.99 — SOURCE-SB-01 custody repair closes prewarm-normalization gap; new preflight/batch pins supersede historical preparation before execution (2026-09-16; discriminator §18.81; implementation §10.55)
 
 No source criterion or organism qualification changes. The old SOURCE-SB-01 preparation at `306654d6a` is retained as history but its `9ed72a38…` population path could normalize a globally-observed harness with subject-scoped `testTerminateOnly`. Repair `17c4ee524` makes the S-b tuple fail closed instead: harness zero PRE-PLAY and again JIT after settle, no cleanup, no phone launch on refusal. Successor preflight `46f97f5d…`/78 and batch `4430a8d0…`/48 bind repaired instrument `f67575797…`; gate 91/91. Read-only preflight is next; N=10 remains unspent pending CLEAN + fresh authority.
+
+### §10.98 — source qualification still unopened physiologically: PRELIGHT-01 refused on prewarm 3; BATCH-01 spent without sample; SOURCE-02 successor chain prepared (2026-09-16; discriminator §18.80; implementation §10.56)
+
+No source-discrimination row exists yet. Device state at PRELIGHT-01 = three historical harnesses; CLEAN absent. BATCH-01 marker spent via wrapper fall-through but no population ran. Fresh path: separately authorized SOURCE-HARNESS-CLEAR-01 exact 3→2→1→0 → fresh read-only PRELIGHT-02 → if CLEAN ≤300 s, fresh one-shot BATCH-02 N=10 under unchanged S-b reading law. Voice gate 93/93.
