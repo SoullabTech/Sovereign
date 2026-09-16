@@ -3648,3 +3648,7 @@ BATCH-03 sample 16 is adjudicated as an orchestration/precondition mismatch, not
 ## §18.76 — FOUNDER RULING: `9df4c934…` natural-clear ENTRY-04 law re-accepted; PRELIGHT-04 OPEN; BATCH-04 conditionally OPEN on CLEAN <=300 s (2026-09-16; implementation §10.50)
 
 This founder ruling supersedes the §18.75 execution hold for ENTRY-04 only: the read-only <=60 s natural-clear wait at `9df4c934…` is accepted for this witness, followed by the adjacent JIT full-process-set zero-harness check before every sample. Corrected pins are PRELIGHT-04 `3268743e…` /48 and BATCH-04 `b9fa2971…` /46. PRELIGHT-04 may execute read-only; exactly one fresh N=30 BATCH-04 may execute only if that preflight is CLEAN and <=300 s old. ENTRY-03 remains PARTIAL/STOP/SPENT and may not be topped up. Source population and all downstream acceptance/migration acts remain CLOSED.
+
+## §18.73 — ENTRY-04 readiness refused before invocation; exact historical three-harness set stable; cleanup-05 + terminate-02 successors drafted, execution closed (2026-09-16; implementation record §10.51)
+
+Outer readiness observed harness=3 for all 12 reads; no PRELIGHT-04 and no BATCH-04 authority file were created. Read-only diagnosis binds the live set to `.k00 0B07D423…` + `.vpio01 6A2E406B…` + historical `.vpio02 E3B88028…`; SID `85948DBD…` remains installed but not running. `FOREIGN-DISPOSAL-05` = 88 lines `5b2034f0…`; `HISTORICAL-HARNESS-TERMINATE-02` = 59 lines `f81fa284…`; both preserve the installed SID container and are draft-only. No device mutation authority issued.

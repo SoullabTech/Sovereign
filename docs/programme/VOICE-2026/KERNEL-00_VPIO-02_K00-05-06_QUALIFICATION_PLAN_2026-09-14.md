@@ -1004,3 +1004,7 @@ No physiological qualification change. ENTRY-03 remains PARTIAL/STOP/SPENT with 
 ### §10.94 — ENTRY-04 natural-clear law re-accepted; one fresh N=30 conditionally opened (2026-09-16; discriminator §18.76; implementation §10.50)
 
 No physiological qualification change yet. Founder explicitly reopens the `9df4c934…` successor semantics for this witness: bounded read-only natural-clear polling plus the adjacent fail-closed zero-harness JIT read. PRELIGHT-04 `3268743e…` is OPEN read-only; BATCH-04 `b9fa2971…` is OPEN only after CLEAN <=300 s and for one fresh N=30. No top-up/source population/KERNEL-00 acceptance follows automatically.
+
+### §10.91 — ENTRY-04 readiness refused before invocation; exact historical three-harness set stable; cleanup successors drafted (2026-09-16; discriminator plan §18.73; implementation record §10.51)
+
+No qualification change. BATCH-04 authority was never created or spent. Current blocker is external process state: `.k00` + `.vpio01` + historical `.vpio02` alive, SID installed/not running. Cleanup successors preserve SID and remain draft-only; ENTRY-04 physiology and adjudication law are unchanged.
