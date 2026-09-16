@@ -47,6 +47,20 @@ export interface CodePointRange {
   end: number;
 }
 
+/** Split immutable text by a CodePointRange without reinterpreting it as UTF-16 units. */
+export function splitCodePointRange(
+  body: string,
+  range: CodePointRange,
+): { before: string; selected: string; after: string } | null {
+  const points = Array.from(body);
+  if (range.start < 0 || range.end < range.start || range.end > points.length) return null;
+  return {
+    before: points.slice(0, range.start).join(''),
+    selected: points.slice(range.start, range.end).join(''),
+    after: points.slice(range.end).join(''),
+  };
+}
+
 /** The whole body of one draft section, as it was when read. */
 export interface SectionRef {
   kind: 'section';

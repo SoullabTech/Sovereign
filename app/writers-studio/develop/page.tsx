@@ -11,12 +11,14 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PRESS, SERIF } from '../pressTheme';
+import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import DevelopRoom from './DevelopRoom';
 
 function Body() {
   const params = useSearchParams();
   const manuscriptId = params?.get('m') ?? null;
   const readingId = params?.get('r') ?? null;
+  const sectionId = params?.get(SECTION_PARAM) ?? null;
 
   if (!manuscriptId) {
     return (
@@ -25,7 +27,13 @@ function Body() {
       </p>
     );
   }
-  return <DevelopRoom manuscriptId={manuscriptId} requestedReadingId={readingId} />;
+  return (
+    <DevelopRoom
+      manuscriptId={manuscriptId}
+      requestedReadingId={readingId}
+      requestedSectionId={sectionId}
+    />
+  );
 }
 
 export default function DevelopPage() {
