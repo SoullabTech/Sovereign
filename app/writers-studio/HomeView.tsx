@@ -656,11 +656,17 @@ export default function HomeView({
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <button
-                onClick={() => setBeginning(true)}
-                className={`${FILLED} w-full sm:w-auto`}
+                onClick={() =>
+                  void run(
+                    () => onBegin(''),
+                    'Could not begin your work just now. Nothing was changed.',
+                  )
+                }
+                disabled={busy}
+                className={`${FILLED} w-full sm:w-auto disabled:opacity-40`}
                 style={{ background: PRESS.accent, color: PRESS.ink }}
               >
-                Begin a new work
+                {busy ? <Loader2 size={16} className="animate-spin" /> : 'Begin a new work'}
               </button>
               <Link
                 href={IMPORT_HREF}
