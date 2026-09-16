@@ -207,15 +207,9 @@ async function updateSourceStatus(pool: pg.Pool, sourceId: string, status: strin
 // PHASE A: SOURCE FILE INGESTION
 // =============================================================================
 
-async function ingestSourceFiles(pool: pg.Pool): Promise<{ processed: number; skipped: number; errors: number; chunks: number }> {
-  console.log('\n[Phase A] Ingesting source files from', SOURCE_DIR);
-  console.log('─'.repeat(60));
-
-  const stats = { processed: 0, skipped: 0, errors: 0, chunks: 0 };
-
+function admittedSourceFiles(): { candidates: string[]; admitted: string[] } {
   if (!fs.existsSync(SOURCE_DIR)) {
-    console.error(`[ERROR] Source directory not found: ${SOURCE_DIR}`);
-    return stats;
+    return { candidates: [], admitted: [] };
   }
 
   const candidates = fs.readdirSync(SOURCE_DIR)
@@ -237,7 +231,27 @@ async function ingestSourceFiles(pool: pg.Pool): Promise<{ processed: number; sk
       `library ingestion REFUSED ${verdict.refused.length} declared file(s) carrying human-record signals — fix the declaration, do not bypass this`,
     );
   }
-  const files = verdict.admitted.map(rel => path.basename(rel)).sort();
+  return {
+    candidates,
+    admitted: verdict.admitted.map(rel => path.basename(rel)).sort(),
+  };
+}
+
+async function ingestSourceFiles(
+  pool: pg.Pool,
+  preflight?: { candidates: string[]; admitted: string[] },
+): Promise<{ processed: number; skipped: number; errors: number; chunks: number }> {
+  console.log('\n[Phase A] Ingesting source files from', SOURCE_DIR);
+  console.log('─'.repeat(60));
+
+  const stats = { processed: 0, skipped: 0, errors: 0, chunks: 0 };
+  const admission = preflight ?? admittedSourceFiles();
+  const { candidates, admitted: files } = admission;
+
+  if (!fs.existsSync(SOURCE_DIR)) {
+    console.error(`[ERROR] Source directory not found: ${SOURCE_DIR}`);
+    return stats;
+  }
 
   console.log(`   Found ${candidates.length} candidate source files · ${files.length} admitted`);
 
@@ -536,6 +550,16 @@ async function main() {
   console.log(`  Batch size:    ${batchSize}`);
   console.log('');
 
+  // Resolve source admission BEFORE any destructive force act (or Ollama/DB work).
+  // A fail-closed manifest may lawfully admit zero. That empty output must not
+  // become authority to erase the existing library and rebuild nothing.
+  const sourceAdmission = skipSources ? null : admittedSourceFiles();
+  if (isForce && !isDryRun && !skipSources && sourceAdmission!.admitted.length === 0) {
+    console.error('🛑 REFUSED: --force would clear the Living Library while source admission admits 0 files.');
+    console.error('   Classify at least one source collection, or use --skip-sources only if intentionally rebuilding Phase B alone.');
+    process.exit(1);
+  }
+
   // Step 1: Check Ollama
   if (!isDryRun) {
     console.log('[1/4] Checking Ollama...');
@@ -599,7 +623,7 @@ async function main() {
     let wisdomStats = { processed: 0, skipped: 0, errors: 0, chunks: 0 };
 
     if (!skipSources) {
-      sourceStats = await ingestSourceFiles(pool);
+      sourceStats = await ingestSourceFiles(pool, sourceAdmission!);
     }
 
     if (!skipWisdom) {

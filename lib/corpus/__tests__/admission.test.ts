@@ -182,4 +182,15 @@ describe('ACT 4 §C · corpus admission', () => {
     expect(library).toMatch(/decideAdmission\(/);
   });
 
+  test('T11 — Living Library zero-admission force refusal precedes destructive deletes', () => {
+    const repoRoot = path.resolve(__dirname, '../../..');
+    const src = fs.readFileSync(path.join(repoRoot, 'scripts/ingest-library.ts'), 'utf8');
+    const refusal = src.indexOf("sourceAdmission!.admitted.length === 0");
+    const deleteChunks = src.indexOf("DELETE FROM library_chunks");
+    const deleteSources = src.indexOf("DELETE FROM library_sources");
+    expect(refusal).toBeGreaterThan(-1);
+    expect(deleteChunks).toBeGreaterThan(refusal);
+    expect(deleteSources).toBeGreaterThan(refusal);
+  });
+
 });

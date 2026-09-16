@@ -117,3 +117,13 @@ A new T10 guard asserts that every current bulk `data/ain/source` ingestion path
 `npm run typecheck:scripts` is red on canonical before this change. A detached `origin/clean-main-no-secrets` worktree and this amended head each produce the same **40 TypeScript errors**: **0 new, 0 resolved**. Neither `scripts/ingest-library.ts` nor `lib/corpus/admission.ts` appears in the error set. Therefore the evidence is **script typecheck no-regression against a red baseline**, not a green scripts typecheck.
 
 Focused custody/admission tests after this amendment: **6/6 suites · 58/58 tests PASS**.
+
+## Merge-review amendment 3 — Living Library force composition hazard
+
+Applying the admission boundary to Living Library changed the possible output of Phase A to legitimately empty. Review of the consumer found that `scripts/ingest-library.ts --force` deleted all `library_chunks` and `library_sources` **before** source admission was evaluated. With the current declaration admitting zero legacy source files, `--force --skip-wisdom` would erase the library and rebuild nothing; ordinary `--force` would silently drop all Phase A material and rebuild only Phase B.
+
+The script now resolves source admission before Ollama, database connection, or any destructive act. If source ingestion is in scope and `--force` would proceed with zero admitted source files, it refuses non-zero before either DELETE. `--skip-sources` remains an explicit operator choice to rebuild Phase B only.
+
+T11 asserts the zero-admission force refusal textually precedes both destructive DELETE statements. This is a composition witness: the admission guard's own correctness is not treated as evidence that its consumer is safe under the newly possible empty output.
+
+Post-amendment evidence: **6/6 focused suites · 59/59 tests PASS**; root typecheck **229 vs 239 · 0 regressions**; standalone API typecheck PASS; provider/no-Supabase PASS; scripts typecheck remains the exact canonical **40-error** set with **0 new / 0 resolved**, and neither changed ingestion file appears in it.
