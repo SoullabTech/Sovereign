@@ -1,0 +1,10 @@
+total 120
+drwxr-xr-x    6 soullab  wheel    192 Sep 15 20:12 .
+drwxrwxrwt  510 root     wheel  16320 Sep 15 20:24 ..
+-rw-r--r--    1 soullab  wheel   1333 Sep 15 20:12 apps-before-vpio02.json
+-rw-r--r--    1 soullab  wheel    857 Sep 15 20:12 apps-before-vpio02sid.json
+-rw-r--r--    1 soullab  wheel     41 Sep 15 20:12 head.txt
+-rw-r--r--    1 soullab  wheel  47097 Sep 15 20:12 processes-before.json
+-rw-r--r--  1 soullab  wheel    116 Sep 15 19:59 /private/tmp/sid-first-install-01-transcript-20260915T235951Z.log
+-rw-r--r--  1 soullab  wheel  62605 Sep 15 20:12 /private/tmp/sid-first-install-02-transcript-20260916T001215Z.log
+-rw-r--r--  1 soullab  wheel   3855 Sep 15 20:12 /private/tmp/sid-first-install-02.sh

@@ -1,0 +1,19 @@
+ACT SID-FIRST-INSTALL-02
+STAMP 20260916T001215Z
+RESULT STOP · pre-install harness-process precondition
+OBSERVED VoiceKernelHarness process present (see harness-processes-observed.txt; PID 3347 at the time of the act)
+INSTRUMENT-INVOCATION not reached
+JUST-IN-TIME-ABSENCE-READ not reached
+INSTALL 0
+CONTAINER none
+LAUNCH-BY-THIS-ACT 0
+SAMPLE 0
+DEVICE-READS 3
+DEVICE-WRITES 0
+INSTALL-SEAL none (never reached sealing; none fabricated)
+AUTHORITY SPENT
+PRIOR FIRST-INSTALL-01
+  STOP · authority-precondition refusal · SPENT
+  device-verbs 0 · install 0 · container none
+  transcript prior-attempts/SID-FIRST-INSTALL-01-STOP-transcript-20260915T235951Z.log (separate act, not 02 evidence)
+TRANSPORT Mac Studio terminal directly
