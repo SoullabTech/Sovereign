@@ -6,9 +6,10 @@
  * member, and measures database execution time with EXPLAIN ANALYZE.
  *
  * No member prose is selected or printed. Full member ids remain internal to
- * this process; output uses 8-char prefixes only.
+ * this process; output uses the repository's derived memberRef only.
  */
 import { execFileSync } from 'child_process';
+import { memberRef } from '../../lib/privacy/memberRef';
 import {
   CUT1_BASELINE_NONVECTOR_SQL,
   CUT1_OBSERVED_NONVECTOR_SQL,
@@ -100,7 +101,7 @@ for (const member of members) {
     && base.set_digest === observed.set_digest
     && base.order_digest === observed.order_digest;
   if (!same) {
-    console.log(`EQUIV_FAIL member=${member.userId.slice(0, 8)} pool=${member.pool} base=${JSON.stringify(base)} observed=${JSON.stringify(observed)}`);
+    console.log(`EQUIV_FAIL member=${memberRef(member.userId)} pool=${member.pool} base=${JSON.stringify(base)} observed=${JSON.stringify(observed)}`);
     process.exitCode = 2;
   } else {
     equivalent += 1;
@@ -127,7 +128,7 @@ for (const rep of reps) {
   }
   const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
   console.log(
-    `TIMING member=${rep.userId.slice(0, 8)} pool=${rep.pool} ` +
+    `TIMING member=${memberRef(rep.userId)} pool=${rep.pool} ` +
     `baseline_ms=${baseTimes.map((n) => n.toFixed(3)).join(',')} ` +
     `observed_ms=${obsTimes.map((n) => n.toFixed(3)).join(',')} ` +
     `baseline_avg=${avg(baseTimes).toFixed(3)} observed_avg=${avg(obsTimes).toFixed(3)}`,
