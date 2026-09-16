@@ -223,10 +223,17 @@ A2 must answer:
 
 ### A3 — Shadow synthesis architecture
 
-**Prepared tracker:** `MAIA-SOVEREIGN-ci01-a3` · **DEFERRED; not authorization**
+**Tracker:** `MAIA-SOVEREIGN-ci01-a3` · **COMPLETE · ARCHITECTURE ONLY**
 
 Specify a synthesizer that can combine admitted evidence into inspectable field projections while
 remaining causally absent from member-facing behavior.
+
+The A3 ruling is recorded in
+`CI-01_ACT3_SHADOW_SYNTHESIS_ARCHITECTURE_2026-09-16.md`. It defines the synthesizer as a
+one-way observational pipeline over sealed temporal cuts, not a master model or monolithic field.
+Independent projectors produce attestations; later outcomes are joined only after the evaluated
+projection is frozen. Authority isolation and operational non-interference remain separate proof
+obligations, and neither is claimed as implemented by this architecture record.
 
 Required shadow comparison:
 
@@ -277,6 +284,15 @@ become a HEARING witness only after TURN-03 earns it and a later contract admits
 does not need Gestalt, relationship, memory, Spiralogic, or response knowledge, and CI-01 grants it
 none.
 
+CI-01 A3 also read the independent TURN-03 research state at
+`897dfcc8c7067ac8d09d9221647f80a7dda0c012`. At that immutable ref, the local DualTurn shadow
+runtime passed feasibility; direct DualTurn and Smart Turn completion evidence failed important
+continuation cases; and an asymmetric floor-ownership rule passed the two sealed synthetic
+populations as a shadow candidate while preserving a known ceiling falsifier. TURN-03 A3 remains
+open, real-human timing remains untested, and no live authority was granted. Those findings
+sharpen A3's comparison and falsifier law; no sibling code, model, evidence store, or authority
+is imported.
+
 CI-01 asks the complementary question:
 
 > If acoustic evidence earns admission, how can it coexist with other evidence without acquiring
@@ -317,13 +333,15 @@ lane ................................ OPEN
 A1 baseline census .................. COMPLETE · REPOSITORY / R&D RECORDS ONLY
 A2 field contract ................... COMPLETE · ARCHITECTURE CANDIDATE ONLY
 A2 monolithic field snapshot ........ REJECTED AS FIRST IMPLEMENTATION SHAPE
-A3 shadow synthesizer ............... NOT OPENED
+A3 shadow synthesizer ............... COMPLETE · ARCHITECTURE ONLY
+A3 runtime / event mirror ........... NOT CREATED
 A4 conversation benchmark ........... NOT OPENED
 runtime types ....................... UNCHANGED
 prompts ............................. UNCHANGED
 models .............................. CI-01 SELECTED / INSTALLED NONE
-TURN-03 model standing .............. A2 BASELINE CANDIDATE SELECTED · NO LIVE AUTHORITY
+TURN-03 research snapshot ........... A3 ASYMMETRIC SHADOW CANDIDATE · NO LIVE AUTHORITY
+TURN-03 integration into CI-01 ...... NONE
 live floor / response authority ..... UNCHANGED
-TURN-03 ............................. INDEPENDENT · A1 COMPLETE
+TURN-03 ............................. INDEPENDENT
 production .......................... UNTOUCHED
 ```
