@@ -92,3 +92,13 @@ A5-v0 is complete as comparative local-model evidence.
 No candidate is authorized for production. No prompt removal, gestalt injection, memory change, schema change, routing change, validator change, or egress change follows from this record.
 
 The next authorized act is **A6 — causal ablation**. Its first question should be narrow: determine whether the current Talk/inquiry machinery is itself causally responsible for restart, versus the deeper absence of a whole-arc representation. A6 must preserve the A5 authority-laundering falsifier while doing so.
+
+## 9. Instrument correction — P2 excluded
+
+After A6 rejected an analogous history mismatch, the A5 harness was re-read against turn order. **P2 is not admissible as controlled replay evidence.** The harness reused the pre-P1 four-exchange history for the later P2 utterance instead of reconstructing the actual intervening turns. Conditions also did not receive equivalent temporal representations for that later probe.
+
+Therefore all A5 interpretations derived from P2 are **SUPERSEDED / NO EVIDENCE**. The raw rows remain preserved as instrument history, not evidence.
+
+**P1 remains valid:** its four-exchange snapshot is the correct pre-turn state immediately before the member says `the silver cedar`. A7 blind adjudication must use P1 rows only (`R01`–`R08`).
+
+The surviving A5 finding is narrower: on valid P1, A/B tend to reopen already-developed meaning, while C/D preserve the established guardian relation and move toward the still-open practical consequence; C/D also exhibit unsupported interpretive elaboration.
