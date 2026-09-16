@@ -3583,3 +3583,6 @@ Authority present and correct (7 lines / 244 bytes), pin `c4b37e69…`/59 verifi
 
 
 ## §18.58 — terminate-only pin AMENDED (just-in-time bound process read before the one `testTerminateOnly`; 55 lines, `576fd2b2…`) · `02` STOP carrier ACCEPTED (`5e0b755a…`, run shape issued, not yet run) · `03` pin ACCEPTED (`9b3526c4…`, authority unissued) · order: STOP carrier → terminate → post-read → `03` · terminate authority HELD (2026-09-16; implementation record §10.30; qualification plan §10.78)
+
+
+## §18.59 — `02` STOP carrier in custody (`3f3dcfb40` → cherry-picked; run seal `15e71bd9…`, 10 entries, 0 mismatches; no install artefact; authority metadata only; PID 3347 bound to `E3B88028-…` in the JSON; `01` lineage sealed under `prior-attempts/`) — `03` dependency step 1 satisfied; terminate-only pin review + authority next (2026-09-16; implementation record §10.31; qualification plan §10.79)

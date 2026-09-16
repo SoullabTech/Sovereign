@@ -921,3 +921,8 @@ No qualification change.
 ### §10.78 — STOP carrier run shape issued; terminate pin amended; 03 accepted but closed (2026-09-16; discriminator plan §18.58; implementation record §10.30)
 
 No qualification change.
+
+
+### §10.79 — FIRST-INSTALL-02 STOP evidence durable (2026-09-16; discriminator plan §18.59; implementation record §10.31)
+
+No qualification change.
