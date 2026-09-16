@@ -44,7 +44,9 @@ export interface PrimaryEvidenceNode {
   readonly id: NodeId;
   /** Pointer to the unrewritten source record or synthetic fixture. */
   readonly sourceRef: string;
-  readonly occurredAt: string;
+  /** Use the temporal coordinate the source actually preserves; never invent one. */
+  readonly occurredAt?: string;
+  readonly sequence?: number;
   readonly authoredBy: EvidenceAuthor;
   readonly standing: EvidenceStanding;
   readonly admissibility: string;
@@ -125,7 +127,9 @@ export interface TemporalChangeNode {
 export interface GestaltProjectionNode {
   readonly kind: 'gestalt';
   readonly id: NodeId;
-  readonly asOf: string;
+  /** As with evidence, preserve an observed time or sequence rather than fabricating one. */
+  readonly asOf?: string;
+  readonly asOfSequence?: number;
   readonly claim: string;
   /** Positive support for the current projection. Must be non-Gestalt nodes. */
   readonly supportIds: readonly NodeId[];
@@ -151,6 +155,7 @@ export interface GestaltResearchField {
 
 export type ValidationIssueCode =
   | 'duplicate_id'
+  | 'missing_temporal_coordinate'
   | 'missing_dependency'
   | 'empty_dependency_set'
   | 'non_reversible_stage_order'
@@ -236,6 +241,13 @@ export function validateResearchField(field: GestaltResearchField): ValidationRe
 
   for (const node of field.nodes) {
     if (node.kind === 'evidence') {
+      if (node.occurredAt === undefined && node.sequence === undefined) {
+        addIssue({
+          code: 'missing_temporal_coordinate',
+          nodeId: node.id,
+          detail: 'primary evidence must preserve an observed timestamp or source sequence',
+        });
+      }
       const act = node.speechAct ?? 'statement';
       const targets = node.targetIds ?? [];
       if (act !== 'statement' && targets.length === 0) {
@@ -263,6 +275,14 @@ export function validateResearchField(field: GestaltResearchField): ValidationRe
         }
       }
       continue;
+    }
+
+    if (node.kind === 'gestalt' && node.asOf === undefined && node.asOfSequence === undefined) {
+      addIssue({
+        code: 'missing_temporal_coordinate',
+        nodeId: node.id,
+        detail: 'Gestalt projection must preserve an observed timestamp or source sequence',
+      });
     }
 
     const deps = dependenciesOf(node);
