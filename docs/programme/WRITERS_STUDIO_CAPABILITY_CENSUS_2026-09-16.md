@@ -1,7 +1,7 @@
 # Writer’s Studio — Live Capability Census
 
-**Date:** 2026-09-16  
-**Tree:** `feature/ws-develop-workbench-d3-chatgpt` after D3  
+**Date:** 2026-09-16
+**Tree:** `feature/ws-develop-workbench-d3-chatgpt` after D3
 **Purpose:** one live ledger of what the writer can actually use, what exists only as substrate, and what remains planned.
 
 ## Status law
