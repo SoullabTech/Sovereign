@@ -2041,4 +2041,18 @@ describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026
     expect(p).not.toMatch(/device process terminate|device install|device uninstall|K00_EXEC_AUTHORITY=.*FOUNDER-AUTH/);
   });
 
+  it('SID SOURCE-03 NOW wrapper requires zero harness at invocation and delegates only to pinned PRELIGHT-03/BATCH-03', () => {
+    const p = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-03_NOW_RUN_DRAFT_2026-09-16.sh'), 'utf8');
+    expect(p).toContain('f806e92ae877e08f076b3ec88e8c1087e2ac6f77d6c78c0d60058c325f6cefa6');
+    expect(p).toContain('c2c33b557971e46efd7ea44188eaf2b6b586869e918b360861aec22e63446ba4');
+    expect(p).toContain('test ! -e /private/tmp/sid-source-batch-03-invoked.txt');
+    expect(p).toContain('echo "VoiceKernelHarness=$N"');
+    expect(p).toContain('test "$N" = 0');
+    expect(p).toContain('PTR=/private/tmp/sid-source-preflight-03-current.txt');
+    expect(p).toContain('BATCH_AUTH=/private/tmp/sid-source-batch-03-authority.txt');
+    expect((p.match(/bash "\$PRE"/g) ?? []).length).toBe(1);
+    expect((p.match(/bash "\$BATCH"/g) ?? []).length).toBe(1);
+    expect(p).not.toMatch(/sid-source-harness-clear|idevicesyslog|device process terminate|FOUNDER-AUTH/);
+  });
+
 });
