@@ -149,8 +149,10 @@ const reversalValidation = validateResearchField(reversalField);
 assert.equal(reversalValidation.ok, true, JSON.stringify(reversalValidation.issues, null, 2));
 
 const roots = compareGestaltEvidenceRoots(reversalField, 'g1', 'g2');
+assert.deepEqual(roots.earlier, ['e1', 'e2', 'e3']);
+assert.deepEqual(roots.later, ['e1', 'e2', 'e3', 'e4']);
 assert.deepEqual(roots.added, ['e4']);
-assert.deepEqual(roots.dropped.sort(), ['e1', 'e2', 'e3']);
+assert.deepEqual(roots.dropped, []);
 
 // A prior Gestalt may be superseded, but it may never become evidence for the next Gestalt.
 const bootstrappedField: GestaltResearchField = {
