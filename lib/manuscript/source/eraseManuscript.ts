@@ -103,6 +103,11 @@ export async function eraseManuscript(
         WHERE manuscript_id = $1 AND member_id = $2 AND artifact_ref IS NOT NULL`,
       [manuscriptId, memberId],
     );
+    const covers = await tx.query<{ storage_path: string }>(
+      `SELECT storage_path FROM manuscript_cover_assets
+        WHERE manuscript_id = $1 AND member_id = $2`,
+      [manuscriptId, memberId],
+    );
 
     const removed = await tx.query<{ id: string }>(
       `DELETE FROM member_manuscripts WHERE id = $1 AND member_id = $2 RETURNING id`,
@@ -117,7 +122,10 @@ export async function eraseManuscript(
     /* Written inside the transaction: if the commit fails, nothing was destroyed
        and nothing is owed. If it succeeds, every path is recoverable until it is
        actually gone. */
-    const refs = arrivals.rows.map((r) => r.artifact_ref);
+    const refs = Array.from(new Set([
+      ...arrivals.rows.map((r) => r.artifact_ref),
+      ...covers.rows.map((r) => r.storage_path),
+    ]));
     if (refs.length > 0) {
       await tx.query(
         `INSERT INTO vault_erasure_queue (artifact_ref)

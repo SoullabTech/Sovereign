@@ -3,6 +3,7 @@ room: Book Production
 human_activity: preparing a finished book from the current Work while preserving authorship, production truth, and an inspectable path from proof to final artifact
 surfaces:
   - app/press/manuscript/BookProductionPanel.tsx
+  - app/press/manuscript/BookCoverAssets.tsx
   - app/press/manuscript/page.tsx
 change_class: experiential
 principles:
@@ -18,7 +19,7 @@ shared_with_house: Press serif typography, restrained gold for active state and 
 distinct_to_room: this is where an authored Work becomes a produced book; the room exposes publication readiness, proof/final distinction, front-matter roles, and exact reversible production omissions without turning production metadata into manuscript prose
 screenshot_desktop: docs/design/contracts/screenshots/book-production-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/book-production-mobile.png
-experience_verification: local browser walk on the HPB-04 branch with synthetic member-scoped publication workspace responses; desktop and mobile verified readiness hierarchy, bounded front-matter scrolling, reversible role assignment controls, Proof availability, and Final disabled while blockers remain
+experience_verification: local browser walk on HPB-04/05 branch code with synthetic member-scoped production responses shaped from the Elemental Alchemy Hallmark state. Desktop 1440x1000 and mobile 390x844 verified readiness hierarchy, bounded front-matter scrolling, reversible role assignment, Proof availability, Final disabled while blockers remain, and two independent paperback/hardcover cover-custody slots showing preserved filenames, server-measured PDF page boxes, replacement/removal gestures, and the explicit state “Print geometry not yet certified.” Neither width had horizontal overflow.
 ---
 
 # Book Production — Experience Contract
