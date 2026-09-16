@@ -23,9 +23,14 @@ type Claim = {
 
 type Fixture = { turns: Turn[]; placements?: Placement[] };
 
-const RETRIEVAL_WORDS = new Set([
+// Words that express the act of retrieval / retention / recurrence are evidence
+// vocabulary, not object vocabulary. E3 may not manufacture an object from them.
+const ACT_WORDS = new Set([
   'remember', 'remembered', 'recall', 'recalled', 'earlier', 'before', 'phrase',
   'said', 'saying', 'mentioned', 'mention', 'thing', 'something',
+  'keep', 'keeps', 'kept', 'thinking', 'think', 'thought', 'about', 'mind',
+  'return', 'returns', 'returned', 'returning', 'come', 'coming', 'came', 'back',
+  'lose', 'lost', 'hold', 'onto', 'want',
 ]);
 const STOPWORDS = new Set([
   'a', 'an', 'and', 'are', 'as', 'at', 'be', 'been', 'but', 'by', 'for', 'from',
@@ -142,7 +147,7 @@ function tokens(text: string): Token[] {
 }
 
 function contentTokenCount(normPhrase: string): number {
-  return normPhrase.split(' ').filter((t) => t && !STOPWORDS.has(t) && !RETRIEVAL_WORDS.has(t)).length;
+  return normPhrase.split(' ').filter((t) => t && !STOPWORDS.has(t) && !ACT_WORDS.has(t)).length;
 }
 
 function recognizeE3(turns: Turn[]): Claim[] {
@@ -310,7 +315,8 @@ console.log('✅ N8 single-token recurrence is outside initial E3 recognizer');
 {
   const r = recognize(fixtures.N9_two_e2);
   assert.deepEqual(anchorsOf(r, 'E2'), ['amber willow', 'silver cedar']);
-  console.log('✅ N9 recognizer returns both equal E2 claims; it does not choose');
+  assert.equal(claimsOf(r, 'E3').length, 0, 'retention-act vocabulary must not become an E3 object');
+  console.log('✅ N9 recognizer returns both equal E2 claims and no spurious E3; it does not choose');
 }
 assert.equal(claimsOf(recognize(fixtures.N10_bad_structured_anchor), 'E1').length, 0);
 console.log('✅ N10 structured placement cannot introduce generated/non-source anchor');
@@ -351,6 +357,10 @@ const mutants: Mutant[] = [
     dies: () => fixtures.N8_single_token.turns.filter((t) => /rootedness/i.test(t.member)).length >= 2,
   },
   {
+    name: 'retention-act-words-become-E3-object',
+    dies: () => fixtures.N9_two_e2.turns.filter((t) => /keep thinking about/i.test(t.member)).length >= 2,
+  },
+  {
     name: 'recognizer-chooses-one-equal-E2',
     dies: () => anchorsOf(recognize(fixtures.N9_two_e2), 'E2').length === 2,
   },
@@ -369,4 +379,4 @@ for (const mutant of mutants) {
   console.log(`☠️ ${mutant.name} killed`);
 }
 
-console.log('\nFIRST-ASK-OPAQUE ACT5 recognition: 16/16 reference oracles specified; 11/11 defeat candidates specified.');
+console.log('\nFIRST-ASK-OPAQUE ACT5 recognition: 16/16 reference oracles specified; 12/12 defeat candidates specified.');
