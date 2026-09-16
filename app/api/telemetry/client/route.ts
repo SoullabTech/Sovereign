@@ -56,6 +56,8 @@ const ALLOWED_EVENTS = new Set([
   'voice_status_surfaced',
   'voice_transcript_salvaged',
   'voice_capture_lost',
+  'voice_capture_self_heal',
+  'voice_turn_tail_materialized',
   'voice_track_listeners_attached',
   // ── TTS playback witness (lib/voice/StreamingAudioQueue.ts) ─────────────
   // Capture had telemetry; playback had none. Without these a whole session

@@ -54,6 +54,8 @@ export type VoiceDiagEvent =
   | 'voice_status_surfaced'
   | 'voice_transcript_salvaged'
   | 'voice_capture_lost'
+  | 'voice_capture_self_heal'
+  | 'voice_turn_tail_materialized'
   | 'voice_track_listeners_attached'
   // ── TTS playback witness ────────────────────────────────────────────────
   // Capture had telemetry; playback had none. That asymmetry is why a whole

@@ -24,7 +24,12 @@ import {
 import {
   buildCaptureForensics,
   ANALYSER_PEAK_WINDOW_MS,
+  type CaptureSilenceWitness,
 } from '@/lib/voice/captureForensics';
+import {
+  materializeHeldWebTurn,
+  shouldSelfHealSafariRecognition,
+} from '@/lib/voice/safariSilentDeathRecovery';
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import {
   recordDispatch,
@@ -452,12 +457,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     level: 'info' | 'warning' | 'error'; cause: string; userMessage: string; recoverable: boolean;
   }) => void>();
   const salvageTranscriptFnRef = useRef<(cause: string) => boolean>();
+  const materializeOutstandingWebTailFnRef = useRef<(source: string) => boolean>();
 
   /** Stamp capture activity: the pipeline is demonstrably alive right now. */
-  const markCaptureActivity = useCallback((audioOpened?: boolean) => {
+  const markCaptureActivity = useCallback((audioOpened?: boolean, recognitionResult?: boolean) => {
     lastCaptureActivityAtRef.current = Date.now();
     if (audioOpened) captureAudioOpenedRef.current = true;
-    selfHealAttemptedRef.current = false;
+    // A replacement recognizer is not proven healthy merely because onstart /
+    // onaudiostart / onspeechstart fired — the observed Safari zombie did all
+    // three and then returned no text. Only an actual recognition result resets
+    // the one-attempt self-heal latch.
+    if (recognitionResult) selfHealAttemptedRef.current = false;
   }, []);
 
   // ==========================================================================
@@ -979,11 +989,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // Only stop if no speech detected for a while
           const timeSinceLastSpeech = Date.now() - lastSpeechTime.current;
           if (timeSinceLastSpeech > 8000) {
+            if (!automaticEndpointingAllowed(turnTakingPreferencesRef.current)) {
+              materializeOutstandingWebTailFnRef.current?.('web_cycle_timeout_explicit_floor');
+              session.markForRecreate('explicit_floor_cycle_timeout');
+            }
             recognitionRef.current.stop();
           } else {
             // Reset the timeout if there was recent speech
             recognitionTimeoutRef.current = setTimeout(() => {
               if (recognitionRef.current && isRecordingRef.current) {
+                if (!automaticEndpointingAllowed(turnTakingPreferencesRef.current)) {
+                  materializeOutstandingWebTailFnRef.current?.('web_cycle_timeout_explicit_floor');
+                  session.markForRecreate('explicit_floor_cycle_timeout');
+                }
                 recognitionRef.current.stop();
               }
             }, 20000);
@@ -993,7 +1011,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onresult = session.guard(gen, (event: any) => {
-      markCaptureActivity(true); // 🩺 results are arriving — capture is unambiguously alive
+      markCaptureActivity(true, true); // 🩺 a RESULT proves the replacement recognizer is alive
       logVoiceEvent('voice_transcribe_result', {
         resultCount: event.results?.length ?? 0,
         isFinal: event.results?.[event.results.length - 1]?.isFinal === true,
@@ -1329,6 +1347,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           ...tail,
         });
       }
+      // Explicit-floor turns survive browser epoch boundaries as ONE member
+      // utterance. If Safari ended this epoch while its newest phrase was still
+      // interim, promote that visible phrase into the held turn before a fresh
+      // recognizer generation starts. A browser cycle is never permission to
+      // truncate the member.
+      if (!automaticEndpointingAllowed(turnTakingPreferencesRef.current)) {
+        const carried = materializeOutstandingWebTailFnRef.current?.('web_onend_explicit_floor') ?? false;
+        if (carried) session.markForRecreate('explicit_floor_tail_carry');
+      }
+
       console.log('🏁 [onend] Recognition stopped');
       recognitionActiveRef.current = false; // Clear double-start guard
       setIsRecording(false);
@@ -1679,13 +1707,48 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   }, []);
 
   /**
+   * Promote Safari's outstanding visible interim into the held member turn.
+   *
+   * In explicit-floor mode the member, not a browser epoch boundary, decides
+   * when the utterance is over. Safari can hold the newest phrase as INTERIM
+   * indefinitely; an internal recognizer reset or an explicit I'm Done must
+   * not discard text the member can already see on screen.
+   */
+  const materializeOutstandingWebTail = useCallback((source: string): boolean => {
+    const interimOutstanding =
+      lastInterimAtRef.current > lastFinalAtRef.current &&
+      lastInterimTextRef.current.trim().length > 0;
+    if (!interimOutstanding) return false;
+
+    const before = accumulatedTranscript.current.trim();
+    const interim = lastInterimTextRef.current.trim();
+    const held = materializeHeldWebTurn(before, interim);
+    if (!held) return false;
+
+    accumulatedTranscript.current = held;
+    explicitTurnPrefixRef.current = held;
+    try { getContinuityBuffer().recordPending(held); } catch { /* best-effort */ }
+    logVoiceEvent('voice_turn_tail_materialized', {
+      source,
+      priorFinalChars: before.length,
+      interimChars: interim.length,
+      heldChars: held.length,
+    });
+
+    // The interim is no longer outstanding: it has been deliberately promoted
+    // into the held turn. We do NOT pretend it was a recognizer final.
+    lastInterimCharsRef.current = 0;
+    lastInterimTextRef.current = '';
+    return true;
+  }, []);
+
+  /**
    * Hand back speech that was transcribed but never submitted.
    *
-   * Called on every path where capture is lost mid-utterance. Clears the
-   * accumulator so the same words cannot also be replayed into a later turn —
-   * salvaged text belongs to the member's draft now, not to MAIA's next input.
-   * Returns whether anything was actually salvaged, so the message shown can
-   * truthfully say so.
+   * Called on terminal capture-loss paths. Clears the accumulator so the same
+   * words cannot also be replayed into a later turn — salvaged text belongs to
+   * the member's draft now, not to MAIA's next input. Returns whether anything
+   * was actually salvaged, so the message shown can truthfully say so.
    */
   const salvageTranscript = useCallback((cause: string): boolean => {
     // Prefer the live accumulator; fall back to the continuity buffer, which
@@ -1712,10 +1775,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
    * component state and a later restart's `onstart` would wipe the accumulator.
    * The member's words are rescued first; everything else is bookkeeping.
    *
-   * Recovery is deliberately member-initiated. We attempt no silent retry here:
-   * the entire defect being fixed is a mic that kept *looking* alive while
-   * failing, and an invisible auto-retry would recreate exactly that. The
-   * member taps to resume, and knows what state they are in.
+   * Recovery is member-initiated for every ambiguous or physical capture loss.
+   * There is one bounded exception: Safari + explicit member floor + a forensic
+   * witness that the local analyser is still hearing voice while recognition is
+   * silent. That exact shape gets ONE fresh recognizer generation with the held
+   * turn preserved. A replacement that still returns no recognition result is
+   * terminal and surfaces visibly rather than looping.
    */
   /**
    * 🔬 Read every structural witness at the moment of loss.
@@ -1802,6 +1867,53 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     console.warn('🔬 [forensics]', forensics);
     logVoiceEvent('voice_capture_lost', { cause, reasonCode, ...forensics });
 
+    const canSelfHeal = shouldSelfHealSafariRecognition({
+      cause,
+      witness: String(forensics.witness ?? 'indeterminate') as CaptureSilenceWitness,
+      isSafari: isSafari(),
+      explicitFloorHeld: !automaticEndpointingAllowed(turnTakingPreferencesRef.current),
+      pageHidden: forensics.pageHidden === true,
+      recognitionActive: recognitionActiveRef.current,
+      alreadyAttempted: selfHealAttemptedRef.current,
+    });
+
+    if (canSelfHeal) {
+      selfHealAttemptedRef.current = true;
+      const tailMaterialized = materializeOutstandingWebTail('safari_silent_death_self_heal');
+      const heldChars = accumulatedTranscript.current.trim().length;
+
+      if (recognitionTimeoutRef.current) { clearTimeout(recognitionTimeoutRef.current); recognitionTimeoutRef.current = null; }
+      if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+      timerArmedAtRef.current = 0;
+
+      // A transport restart is the SAME member turn. Preserve the held buffer
+      // across onstart, replace only the spent recognizer object, and keep the
+      // member-facing listening/floor state intact.
+      continuationRestartRef.current = true;
+      discardRecognitionFnRef.current?.('safari_silent_death_self_heal');
+      captureArmedAtRef.current = 0;
+      captureAudioOpenedRef.current = false;
+      lastCaptureActivityAtRef.current = 0;
+      setIsRecording(false);
+      isRecordingRef.current = false;
+
+      const restarted = ensureFreshAndStartFnRef.current?.('safari_silent_death_self_heal') ?? false;
+      logVoiceEvent('voice_capture_self_heal', {
+        cause,
+        reasonCode,
+        witness: String(forensics.witness ?? 'indeterminate'),
+        restarted,
+        tailMaterialized,
+        heldChars,
+      });
+      if (restarted) {
+        console.log(`🩹 [Safari] Recognition self-heal started; holding ${heldChars} chars in the same member turn`);
+        return;
+      }
+      continuationRestartRef.current = false;
+      console.warn('🩹 [Safari] Recognition self-heal failed to start — falling through to truthful stop');
+    }
+
     const preserved = salvageTranscript(cause);
 
     // Stop the watchdog and any pending mute confirmation.
@@ -1837,7 +1949,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       userMessage: describeCaptureLoss(cause, { transcriptPreserved: preserved }),
       recoverable: true,
     });
-  }, [salvageTranscript, reportVoiceStatus, onRecordingStateChange, setMicState, snapshotCaptureForensics]);
+  }, [salvageTranscript, materializeOutstandingWebTail, reportVoiceStatus, onRecordingStateChange, setMicState, snapshotCaptureForensics, isSafari]);
 
   /**
    * Attach loss listeners to the live microphone track.
@@ -2102,7 +2214,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     attachTrackLossListenersFnRef.current = attachTrackLossListeners;
     reportVoiceStatusFnRef.current = reportVoiceStatus;
     salvageTranscriptFnRef.current = salvageTranscript;
-  }, [ensureFreshAndStart, discardRecognition, handleWebDeviceChange, handleCaptureLoss, attachTrackLossListeners, reportVoiceStatus, salvageTranscript]);
+    materializeOutstandingWebTailFnRef.current = materializeOutstandingWebTail;
+  }, [ensureFreshAndStart, discardRecognition, handleWebDeviceChange, handleCaptureLoss, attachTrackLossListeners, reportVoiceStatus, salvageTranscript, materializeOutstandingWebTail]);
 
   // Sync props and state to refs to avoid stale closures in recognition callbacks
   // 🔥 CRITICAL: Sync isSpeaking SYNCHRONOUSLY (not in useEffect) to prevent race conditions
@@ -4159,6 +4272,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
    * provenance and parent dispatch remain identical to automatic turns.
    */
   const commitTurn = useCallback(() => {
+    if (!useNativeSpeechRef.current) materializeOutstandingWebTail('ui_im_done');
     const chars = accumulatedTranscript.current.trim().length;
     if (!chars || isProcessingRef.current) {
       logVoiceEvent('voice_explicit_yield_ignored', { chars, processing: isProcessingRef.current });
@@ -4177,7 +4291,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
     processAccumulatedTranscript();
     if (useNativeSpeechRef.current) NativeSpeechRecognition.stop().catch(() => {});
-  }, [noteA4ShadowExplicitYield, processAccumulatedTranscript]);
+  }, [noteA4ShadowExplicitYield, processAccumulatedTranscript, materializeOutstandingWebTail]);
 
 
   // Assign functions to refs after they're defined
