@@ -1,8 +1,10 @@
 # CORPUS-AUTHORITY-01 · Census and Authority Boundary
 
 **Date:** 2026-09-16
-**Base:** `93b2000f1cfa6622ad6d1203942aed783ef61c9c`
+**Base:** `823d040d377d3b55cbd7c65c1b94ce1864e82f6f`
 **State:** classification census; no rebuild/embed authorized by this record
+
+**Reconciliation:** canonical advanced only by the record-only SOURCE-CUSTODY production-closure merge (#1309); changed-path overlap with CORPUS-AUTHORITY-01 was zero. Admission tests and root TypeScript were rerun after reconciliation.
 
 ## Why this act exists
 
