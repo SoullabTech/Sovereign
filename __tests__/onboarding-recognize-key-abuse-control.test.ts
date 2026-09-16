@@ -50,24 +50,12 @@ jest.mock('@/lib/auth/rateLimiter', () => ({
   buildRateLimitHeaders: jest.fn(() => ({ 'Retry-After': '900' })),
 }));
 
-/* Synthetic record corpus — never the real one. */
-const SYNTHETIC_PASSCODE = 'SYNTHETIC-ADMIT-KEY-0001';
-jest.mock('@/lib/ganesha/contacts', () => ({
-  ganeshaContacts: [
-    {
-      id: 'synthetic-1',
-      name: 'Synthetic Person',
-      email: 'synthetic@example.com',
-      joinDate: '2026-01-01',
-      status: 'active',
-      groups: [],
-      tags: [],
-      metadata: { passcode: 'SYNTHETIC-ADMIT-KEY-0001' },
-    },
-  ],
-}));
-
-const resolveAdmission = jest.fn(async () => ({ kind: 'refused', reason: 'no_invite' as const }));
+const SYNTHETIC_PASSCODE = 'SOULLAB-AB2CD-EF3GH-JK4M';
+const syntheticAdmission = (key: unknown) =>
+  key === SYNTHETIC_PASSCODE
+    ? { kind: 'admit' as const, inviteId: 'synthetic-invite', createdBy: null, inviterUsername: null, inviterName: null }
+    : { kind: 'refused' as const, reason: 'no_invite' as const };
+const resolveAdmission = jest.fn(async (key: unknown) => syntheticAdmission(key));
 jest.mock('@/lib/auth/passkeyAdmission', () => ({
   resolveAdmission: (...args: unknown[]) => resolveAdmission(...(args as [])),
 }));
@@ -87,6 +75,8 @@ const post = (key: unknown) =>
 beforeEach(() => {
   attempts = 0;
   limiterMode = 'real-window';
+  resolveAdmission.mockReset();
+  resolveAdmission.mockImplementation(async (key: unknown) => syntheticAdmission(key));
 });
 
 /** W3's proposition, extracted so W4 can rerun it and require failure. */
@@ -109,11 +99,11 @@ describe('ACT 2A · admission oracle abuse control', () => {
     expect(res.headers.get('Cache-Control')).toMatch(/no-store/);
   });
 
-  test('W1b — both legacy shared onboarding keys remain admitted until R12 retirement', async () => {
+  test('W1b — R12 retires the legacy shared onboarding keys', async () => {
     for (const key of ['BETA-TESTER-2025', 'SOUL-PIONEER-2025']) {
       const res = await post(key);
       expect(res.status).toBe(200);
-      await expect(res.json()).resolves.toEqual({ recognized: true, name: null });
+      await expect(res.json()).resolves.toEqual({ recognized: false, name: null });
     }
   });
 

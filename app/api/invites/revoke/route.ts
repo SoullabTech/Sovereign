@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Get the invite and verify ownership
     const inviteResult = await query(
-      `SELECT id, passkey, status, created_by
+      `SELECT id, status, created_by
        FROM invites
        WHERE id = $1`,
       [inviteId]
