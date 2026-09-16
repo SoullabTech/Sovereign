@@ -1887,4 +1887,19 @@ describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026
     expect(out[0]).toBe('journal\tsource_sample_records\tframes_present_records\tframeReset_nonzero_records\tframeReset_zero_records\tresets_total\tliveness');
     expect(out[1]).toBe(`${one}\t0\t0\t0\t0\t0\tDORMANT`);
   });
+  it('ENTRY-04 successor pins are history-safe and one-shot: fetch the pinned branch, never require an empty historical ENTRY corpus, mark invocation before the authority gate, and bind success to exactly one newly-created ledger', () => {
+    const pre = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_ENTRY-PREFLIGHT-04_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    const batch = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_ENTRY-BATCH-04_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    expect(pre).toContain('SHA=9df4c93401a1ba92babd2b7ab297112e974ee1cb');
+    expect(pre).toContain('git fetch origin fix/chatgpt-voice-jit-install-guard');
+    expect(batch).toContain('ACT_MARK=/private/tmp/sid-entry-batch-04-invoked.txt');
+    expect(batch.indexOf("printf 'SID-ENTRY-BATCH-04 INVOKED")).toBeLessThan(batch.indexOf('test -n "$K00_EXEC_AUTHORITY"'));
+    expect(batch).not.toMatch(/ls -d .*VPIO-02-SID-ENTRY-2.*wc -l/);
+    expect(batch).toContain(`find "$BASE" -maxdepth 1 -type d -name 'VPIO-02-SID-ENTRY-2*' | LC_ALL=C sort > "$BEFORE"`);
+    expect(batch).toContain('NEW=$(comm -13 "$BEFORE" "$AFTER")');
+    expect(batch).toContain('test \"$(printf');
+    expect(batch).toContain('\"$NEW\" | sed \'/^$/d\' | wc -l');
+    expect(batch).toContain('cp "$ACT_MARK" "$L/batch-act-marker.txt"');
+    expect((batch.match(/scripts\/witness\/k00-driver-batch\.sh VPIO-02-SID-ENTRY 30/g) ?? []).length).toBe(1);
+  });
 });

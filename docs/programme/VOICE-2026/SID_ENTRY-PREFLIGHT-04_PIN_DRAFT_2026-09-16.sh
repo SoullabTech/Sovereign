@@ -18,7 +18,7 @@ PTR=/private/tmp/sid-entry-preflight-04-current.txt
 printf 'INCOMPLETE %s\n' "$STAMP" > "$PTR"
 test ! -e "$WT"
 cd /Users/soullab/MAIA-SOVEREIGN
-git fetch origin claude/voice-2026-census-01
+git fetch origin fix/chatgpt-voice-jit-install-guard
 git worktree add --detach "$WT" "$SHA"
 cd "$WT"
 ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
