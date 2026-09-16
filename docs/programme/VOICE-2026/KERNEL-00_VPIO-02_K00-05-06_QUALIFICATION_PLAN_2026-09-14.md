@@ -931,3 +931,8 @@ No qualification change.
 ### §10.80 — terminate-only act open, not yet invoked (2026-09-16; discriminator plan §18.60; implementation record §10.32)
 
 No qualification change; the act touches only the historical `.vpio02` process state.
+
+
+### §10.81 — terminate-01 STOP (driver infrastructure), spent; carrier drafted (2026-09-16; discriminator plan §18.61; implementation record §10.33)
+
+No qualification change. FIRST-INSTALL-03 closed.

@@ -3589,3 +3589,6 @@ Authority present and correct (7 lines / 244 bytes), pin `c4b37e69…`/59 verifi
 
 
 ## §18.60 — terminate-only pin ACCEPTED (`576fd2b2…`) · `SID HISTORICAL-HARNESS-TERMINATE-01` OPEN for exactly one `testTerminateOnly` · authority issued in-session (8 lines / 275 bytes expected; never in git) · seven-step run shape issued · not yet invoked (2026-09-16; implementation record §10.32; qualification plan §10.80)
+
+
+## §18.61 — `SID HISTORICAL-HARNESS-TERMINATE-01` INVOKED → STOP · UI-test runner initialization failure ("Timed out while enabling automation mode") · SPENT — PRE and just-in-time reads both PASS (historical harness alive, container-bound), the one `xcodebuild test` attempted, `testTerminateOnly` body never entered, no POST read, harness state unknown since; precedent = DRIVER-01 Stage-B samples 1–4 and K00-05/06 samples 1–2 (device asleep or locked at start; lesson "awake and unlocked before the batch starts"); STOP carrier drafted (45 lines `d27d8836…`) (2026-09-16; implementation record §10.33; qualification plan §10.81)
