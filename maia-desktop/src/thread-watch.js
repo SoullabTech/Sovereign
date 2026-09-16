@@ -36,6 +36,8 @@
  * @property {string|null} memberId      Who is signed in RIGHT NOW.
  * @property {string|null} canonicalId   The server's current thread for them.
  * @property {boolean} turnInFlight      A turn is mid-flight in this window.
+ * @property {boolean} [conversationActive] A Desktop conversation is live — the
+ *   microphone is open or a turn is underway. Pinned per RESET-01 §5.
  */
 
 function createThreadWatch() {
@@ -102,6 +104,20 @@ function createThreadWatch() {
       // away what they just said to make the bookkeeping tidy. The change is
       // real and will still be there on the next observation; it waits.
       if (o.turnInFlight) return { action: 'defer', reason: 'turn_in_flight', canonicalId: o.canonicalId };
+
+      // ⭐ DESKTOP-CONVERSATION-WIRING-01, per RESET-01 §5. Detection keeps its
+      // eyes; it loses its hands while somebody is standing in the room.
+      // `turnInFlight` alone was never enough: between two spoken turns, with
+      // the microphone still open and the member mid-conversation, no turn is in
+      // flight — and the thread would have been swapped underneath them in that
+      // gap. Cross-device continuity is a persistence property, not permission
+      // to replace the room. Reconciliation resumes when the conversation ends.
+      //
+      // ⛔ A DISTINCT REASON, not a widened `turn_in_flight`. The two defer for
+      // different truths and a witness needs to read which one happened.
+      if (o.conversationActive) {
+        return { action: 'defer', reason: 'conversation_active', canonicalId: o.canonicalId };
+      }
 
       return { action: 'adopt', reason: 'canonical_changed', from: adoptedId, canonicalId: o.canonicalId };
     },

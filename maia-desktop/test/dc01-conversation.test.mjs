@@ -35,23 +35,50 @@ const { createSession } = require('../src/session.js');
 // ── ⭐ the class E regression ───────────────────────────────────────────────
 
 test('CLASS E REGRESSION — the frame handler buffers audio and dispatches a turn', () => {
-  const handler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
-  assert.ok(handler.includes('utterance.push'),
+  // ⭐ DSC-04. The pipeline moved to voice-lifecycle.js; the assertion follows
+  // it, and the dispatch half is now proven on BOTH sides of the boundary —
+  // the pipeline asks, and main wires the ask to the turn.
+  const pipeline = /function frame\([\s\S]*?\n  \}/.exec(strip('voice-lifecycle.js'))[0];
+  assert.ok(pipeline.includes('utterance.push'),
     'frames are not buffered — audio is being dropped, which is the class E defect');
-  assert.ok(/utterance_boundary[\s\S]*?runTurn\(\)/.test(handler),
+  assert.ok(/utterance_boundary[\s\S]*?dispatchTurn\(\)/.test(pipeline),
     'an utterance boundary does not dispatch a turn — transcription is unreachable');
+  assert.ok(/dispatchTurn:\s*\(\)\s*=>\s*\{\s*void turn\.run\(\)/.test(mainJs),
+    'the pipeline dispatches into nothing — main no longer wires it to the turn');
+  const handler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+  assert.ok(/lifecycle\.frame\(/.test(handler), 'the frame handler no longer reaches the pipeline');
 });
 
 test('the turn loop actually calls transcribe AND ask — not one without the other', () => {
-  const turn = /async function runTurn\(\)[\s\S]*?\n\}/.exec(mainJs)[0];
-  assert.ok(turn.includes('conversation.transcribe('), 'never transcribes');
-  assert.ok(turn.includes('conversation.ask('), 'never asks MAIA — stops at "transcription works"');
-  assert.ok(turn.includes("'maia:audio'") || turn.includes('maia:audio'), 'never emits audio');
+  // ⭐ DESKTOP SOVEREIGN CORE 02. The loop moved to turn.js; the assertion
+  // follows it. Both halves are still proven, and the audio half is now proven
+  // in TWO places because the emission crosses the boundary: the turn hands
+  // audio to `speak`, and main wires `speak` to the ratified channel.
+  // ⭐ HOUSE-RECONCILE-01. The answer half is now SHARED by the spoken and typed
+  // paths so they cannot drift apart. Both halves are still proven; the ask half
+  // is asserted where it now lives, and that `run` reaches it.
+  const src = strip('turn.js');
+  const run = /async function run\(\)[\s\S]*?\n  \}/.exec(src)[0];
+  const answer = /async function answer\([\s\S]*?\n  \}/.exec(src)[0];
+  assert.ok(run.includes('conversation().transcribe('), 'never transcribes');
+  // ⭐ DESKTOP-CONVERSATION-WIRING-01. The answer now carries the TICKET — the
+  // generation and turn id captured before the first await. Without it a reply
+  // for a cancelled or replaced conversation would be delivered into whichever
+  // one is here now, so the argument is asserted, not just the call.
+  assert.ok(/return await answer\(said, tkt\)/.test(run), 'the spoken path never reaches the answer');
+  assert.ok(answer.includes('conversation().ask('), 'never asks MAIA — stops at "transcription works"');
+  assert.ok(/speak\(a\.audio\)/.test(answer), 'never emits audio');
+  assert.ok(/speak:\s*\(audio\)\s*=>\s*broadcast\('maia:audio'/.test(mainJs),
+    'the turn emits audio into nothing — main no longer carries it to the surface');
 });
 
 test('a boundary does NOT end the epoch — a pause is still not a finished thought', () => {
-  const handler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
-  assert.ok(!/endEpoch|userStop/.test(handler), 'an utterance boundary tore down capture');
+  // ⭐ DSC-04. Asserted on the frame path itself, not on the handler. The
+  // handler now passes this trivially because the pipeline left it, and a
+  // trivially-passing assertion is not a proof. voice-lifecycle.js DOES contain
+  // userStop — in `end()`, where it belongs — so the scope matters.
+  const pipeline = /function frame\([\s\S]*?\n  \}/.exec(strip('voice-lifecycle.js'))[0];
+  assert.ok(!/endEpoch|userStop|commit\(/.test(pipeline), 'an utterance boundary tore down capture');
 });
 
 // ── audio format ────────────────────────────────────────────────────────────

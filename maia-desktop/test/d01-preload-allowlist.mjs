@@ -27,6 +27,23 @@ export const RATIFIED_INVOKE_CHANNELS = [
     purpose: 'Clear the stored session. Takes no argument; main owns the credential and its removal from encrypted storage.' },
   { channel: 'maia:auth-state', ratified_in: 'DESKTOP-CONVERSATION-01',
     purpose: 'Read WHETHER a session exists and whose it is. Read-only, and deliberately never returns the token itself — a renderer that could read the credential could exfiltrate it.' },
+  // ⭐ THE FIRST CHANNEL ADDED SINCE D01, and it had to argue for itself.
+  //   required          a member cannot type to MAIA without one; there is no
+  //                     existing verb that carries member words to main.
+  //   authorized        DESKTOP-TEXT-01, whose acceptance is exactly this.
+  //   minimal           one string. No thread id, no route, no member id, no
+  //                     modality flag — main owns every one of those, as it
+  //                     owns the epoch on the voice side.
+  //   main-validated    trimmed, capped at 4000 chars, refused when signed out
+  //                     or when a turn is already in flight. The renderer's
+  //                     own trim is a convenience, not the gate.
+  //   doctrine-compat   it forwards WORDS, the same thing `voice-frame`
+  //                     forwards as audio. It grants the renderer no authority
+  //                     it did not already have by speaking aloud.
+  { channel: 'maia:send-text', ratified_in: 'DESKTOP-TEXT-01',
+    purpose: 'Send a typed message to the SAME MAIA the member speaks to. Main trims and caps the text, ends any live capture with normal member-Stop semantics first (text and voice are mutually exclusive), and delivers it through the one shared turn path — same route, same thread, same context assembly, same rendering. The renderer names nothing but the words.' },
+  { channel: 'maia:playback-ended', ratified_in: 'DESKTOP-CONVERSATION-WIRING-01',
+    purpose: 'RESET-01 §6, the half-duplex handoff. Only the renderer holds an output device, so only the renderer can observe that MAIA finished speaking; without the report, main re-armed speech-turn creation while she was still talking and her voice returned through the microphone as a member turn. It carries an OBSERVATION, not authority — like maia:voice-mic-result. The renderer names no turn, generation or conversation; the authority supplies all three and refuses the report if the turn is not maia_speaking, if it arrives twice, or if it belongs to a replaced conversation.' },
   { channel: 'maia:status', ratified_in: 'MAIA-D01',
     purpose: 'Read app identity and build stamp. Read-only. An unstamped build reports UNSTAMPED rather than a fabricated SHA.' },
 ];
