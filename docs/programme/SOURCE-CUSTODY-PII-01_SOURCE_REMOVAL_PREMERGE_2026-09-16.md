@@ -1,7 +1,7 @@
 # SOURCE-CUSTODY-PII-01 · Source Removal Pre-Merge Witness
 
 **Date:** 2026-09-16
-**Base:** `55577e45ec74ff46a5080904867aa3dad1019111`
+**Base:** `7d50e4a531b8e1b42d765878381f172611b8fe43`
 **Branch:** `fix/source-custody-source-removal-20260916`
 
 ## Purpose
@@ -65,11 +65,13 @@ No-Supabase: **PASS**.
 Design canon: **PASS** — no member-facing UI surface changes.
 `git diff --check`: **PASS**.
 Full Next production build on the exact candidate tree: **RC = 0**.
+
+After PR creation, canonical advanced by one non-overlapping Writer’s Studio fix (`aa83e40a9`). The branch was reconciled onto merge commit `7d50e4a531b8e1b42d765878381f172611b8fe43`; the changed paths had zero overlap with this act. The 8/8 custody tests, root typecheck, scripts error-identity comparison, governance/design gates, diff check, and full Next production build were rerun on the reconciled head. The reconciled full build also completed with **RC = 0**.
 ## `typecheck:scripts` classification
 
 `typecheck:scripts` is not green on canonical and is not reported as green here.
 
-Measured on exact canonical base `55577e45ec74ff46a5080904867aa3dad1019111`:
+Measured on exact canonical base `7d50e4a531b8e1b42d765878381f172611b8fe43`:
 
 - error lines: **40**
 - unique error identities: **40**
