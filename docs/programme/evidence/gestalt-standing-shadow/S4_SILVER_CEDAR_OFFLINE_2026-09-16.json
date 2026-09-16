@@ -1,0 +1,389 @@
+{
+  "fixture": "silver-cedar",
+  "scope": "silver-cedar-process",
+  "zeroInfluence": true,
+  "field": {
+    "evidence": [
+      {
+        "id": "E1",
+        "text": "Silver cedar is an image that has been on my mind today.",
+        "kind": "member_statement",
+        "authoredBy": "member",
+        "createdAt": "2026-09-16T14:43:12.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "E2",
+        "text": "It feels ancient and wise and medicinal on a soul level.",
+        "kind": "member_statement",
+        "authoredBy": "member",
+        "createdAt": "2026-09-16T14:43:51.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "E3",
+        "text": "I am reaching back to what is foundational and important for me in this work and my life.",
+        "kind": "member_statement",
+        "authoredBy": "member",
+        "createdAt": "2026-09-16T14:44:24.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "E4",
+        "text": "Values, focus, coherence, and a firm supporting nature-based foundation for AI work.",
+        "kind": "member_statement",
+        "authoredBy": "member",
+        "createdAt": "2026-09-16T14:45:19.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "E5",
+        "text": "I want to hold its symbolic representation as a guardian image for my work and for me.",
+        "kind": "member_statement",
+        "authoredBy": "member",
+        "createdAt": "2026-09-16T14:46:17.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "E6",
+        "text": "The silver cedar.",
+        "kind": "member_statement",
+        "authoredBy": "member",
+        "createdAt": "2026-09-16T14:46:41.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "I1",
+        "text": "Silver Cedar represents resilience.",
+        "kind": "maia_interpretation",
+        "authoredBy": "maia",
+        "createdAt": "2026-09-16T14:47:00.000Z",
+        "processScope": "silver-cedar-process"
+      }
+    ],
+    "relations": [
+      {
+        "id": "R2",
+        "subjectId": "E2",
+        "predicate": "EVOKES",
+        "objectId": "E1",
+        "basisIds": [
+          "E1",
+          "E2"
+        ],
+        "actor": "member",
+        "createdAt": "2026-09-16T14:43:52.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "R3",
+        "subjectId": "E3",
+        "predicate": "CONNECTS_TO",
+        "objectId": "E1",
+        "basisIds": [
+          "E1",
+          "E3"
+        ],
+        "actor": "member",
+        "createdAt": "2026-09-16T14:44:25.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "R4",
+        "subjectId": "E4",
+        "predicate": "GROUNDS",
+        "objectId": "E3",
+        "basisIds": [
+          "E3",
+          "E4"
+        ],
+        "actor": "member",
+        "createdAt": "2026-09-16T14:45:20.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "R5",
+        "subjectId": "E6",
+        "predicate": "ADOPTED_AS",
+        "objectId": "E5",
+        "basisIds": [
+          "E5",
+          "E6"
+        ],
+        "actor": "member",
+        "createdAt": "2026-09-16T14:46:42.000Z",
+        "processScope": "silver-cedar-process"
+      },
+      {
+        "id": "RI1",
+        "subjectId": "I1",
+        "predicate": "INTERPRETS",
+        "objectId": "E2",
+        "basisIds": [
+          "E2",
+          "E3",
+          "E4"
+        ],
+        "actor": "maia",
+        "createdAt": "2026-09-16T14:47:01.000Z",
+        "processScope": "silver-cedar-process"
+      }
+    ],
+    "standing": [
+      {
+        "objectId": "E1",
+        "origin": "member",
+        "useAs": "established",
+        "governingRelationIds": [],
+        "counterRelationIds": [],
+        "evidencePath": [
+          "E1",
+          "E2",
+          "E3"
+        ],
+        "explanationCodes": [
+          "baseline:established"
+        ],
+        "currentScope": "silver-cedar-process"
+      },
+      {
+        "objectId": "E2",
+        "origin": "member",
+        "useAs": "established",
+        "governingRelationIds": [],
+        "counterRelationIds": [],
+        "evidencePath": [
+          "E2",
+          "E3",
+          "E4",
+          "I1"
+        ],
+        "explanationCodes": [
+          "baseline:established"
+        ],
+        "currentScope": "silver-cedar-process"
+      },
+      {
+        "objectId": "E3",
+        "origin": "member",
+        "useAs": "established",
+        "governingRelationIds": [],
+        "counterRelationIds": [],
+        "evidencePath": [
+          "E3",
+          "E4"
+        ],
+        "explanationCodes": [
+          "baseline:established"
+        ],
+        "currentScope": "silver-cedar-process"
+      },
+      {
+        "objectId": "E4",
+        "origin": "member",
+        "useAs": "established",
+        "governingRelationIds": [],
+        "counterRelationIds": [],
+        "evidencePath": [
+          "E4"
+        ],
+        "explanationCodes": [
+          "baseline:established"
+        ],
+        "currentScope": "silver-cedar-process"
+      },
+      {
+        "objectId": "E5",
+        "origin": "member",
+        "useAs": "established",
+        "governingRelationIds": [],
+        "counterRelationIds": [],
+        "evidencePath": [
+          "E5",
+          "E6"
+        ],
+        "explanationCodes": [
+          "baseline:established"
+        ],
+        "currentScope": "silver-cedar-process"
+      },
+      {
+        "objectId": "E6",
+        "origin": "member",
+        "useAs": "established",
+        "governingRelationIds": [],
+        "counterRelationIds": [],
+        "evidencePath": [
+          "E6"
+        ],
+        "explanationCodes": [
+          "baseline:established"
+        ],
+        "currentScope": "silver-cedar-process"
+      },
+      {
+        "objectId": "I1",
+        "origin": "maia",
+        "useAs": "provisional",
+        "governingRelationIds": [
+          "RI1"
+        ],
+        "counterRelationIds": [],
+        "evidencePath": [
+          "E2",
+          "E3",
+          "E4"
+        ],
+        "explanationCodes": [
+          "baseline:provisional"
+        ],
+        "currentScope": "silver-cedar-process"
+      }
+    ],
+    "processScope": "silver-cedar-process"
+  },
+  "projection": {
+    "established": [
+      "Silver cedar is an image that has been on my mind today.",
+      "It feels ancient and wise and medicinal on a soul level.",
+      "I am reaching back to what is foundational and important for me in this work and my life.",
+      "Values, focus, coherence, and a firm supporting nature-based foundation for AI work.",
+      "I want to hold its symbolic representation as a guardian image for my work and for me.",
+      "The silver cedar."
+    ],
+    "adopted": [],
+    "provisional": [
+      "Silver Cedar represents resilience."
+    ],
+    "unresolved": [],
+    "historicalOnly": [],
+    "open": [],
+    "relationIds": [
+      "R2",
+      "R3",
+      "R4",
+      "R5",
+      "RI1"
+    ],
+    "evidenceIds": [
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "I1"
+    ]
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "text": "Silver Cedar is the guardian image you named for this work.",
+      "speechAct": "GROUNDED",
+      "objectRefs": [
+        "E5",
+        "E6"
+      ],
+      "relationRefs": [
+        "R5"
+      ]
+    },
+    {
+      "id": "C2",
+      "text": "I wonder whether resilience is part of what the image carries.",
+      "speechAct": "CANDIDATE",
+      "objectRefs": [
+        "E2",
+        "E3",
+        "E4"
+      ],
+      "relationRefs": [
+        "RI1"
+      ]
+    },
+    {
+      "id": "C3",
+      "text": "What is the guardian image?",
+      "speechAct": "QUESTION",
+      "objectRefs": [
+        "E5"
+      ],
+      "relationRefs": [
+        "R5"
+      ],
+      "reopenedObjectRefs": [
+        "E5"
+      ]
+    },
+    {
+      "id": "C4",
+      "text": "How might the guardian image change concrete practice or design?",
+      "speechAct": "QUESTION",
+      "objectRefs": [
+        "E5",
+        "E6"
+      ],
+      "relationRefs": [
+        "R5"
+      ]
+    }
+  ],
+  "admissions": [
+    {
+      "claimId": "C1",
+      "admission": "grounded",
+      "reasonCodes": [
+        "standing-grounded"
+      ],
+      "evidenceRefs": [
+        "E5",
+        "E6"
+      ],
+      "relationRefs": [
+        "R5"
+      ]
+    },
+    {
+      "claimId": "C2",
+      "admission": "candidate",
+      "reasonCodes": [
+        "maia-origin-candidate"
+      ],
+      "evidenceRefs": [
+        "E2",
+        "E3",
+        "E4"
+      ],
+      "relationRefs": [
+        "RI1"
+      ]
+    },
+    {
+      "claimId": "C3",
+      "admission": "unadmitted",
+      "reasonCodes": [
+        "question-reopens-established"
+      ],
+      "evidenceRefs": [
+        "E5"
+      ],
+      "relationRefs": [
+        "R5"
+      ]
+    },
+    {
+      "claimId": "C4",
+      "admission": "question",
+      "reasonCodes": [
+        "open-inquiry"
+      ],
+      "evidenceRefs": [
+        "E5",
+        "E6"
+      ],
+      "relationRefs": [
+        "R5"
+      ]
+    }
+  ]
+}

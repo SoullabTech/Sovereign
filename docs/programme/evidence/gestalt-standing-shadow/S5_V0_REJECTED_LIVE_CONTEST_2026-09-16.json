@@ -1,0 +1,607 @@
+{
+  "schema": "GESTALT_STANDING_SHADOW_TELEMETRY_V1",
+  "generatedAt": "2026-09-16T19:19:12.311Z",
+  "zeroInfluence": {
+    "mode": "out-of-band-read-only-snapshot",
+    "servingImport": false,
+    "promptInfluence": false,
+    "responseInfluence": false,
+    "memberMemoryWrite": false
+  },
+  "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+  "processScope": "session:6be8fa282204eb105510",
+  "turnCount": 28,
+  "snapshots": [
+    {
+      "index": 0,
+      "at": "2026-09-16 14:39:30.099286+00",
+      "role": "user",
+      "turnHash": "ec1c7d75b8bc93de0f74e65f2cc98400ebcde414c177342aa19d47864fc78461",
+      "contentHash": "f6ab4b8f4b6070ea05ad80cd713ddbeb181498c857adb3f36426ab7470b64176",
+      "contentChars": 60,
+      "standingCounts": {
+        "established": 1
+      },
+      "relationCounts": {}
+    },
+    {
+      "index": 1,
+      "at": "2026-09-16 14:39:34.867467+00",
+      "role": "assistant",
+      "turnHash": "55e74733af099b27c8ca77d5e659b75009e5cf32bb6e386c6df64975b8c08fe4",
+      "contentHash": "4ef799089ecf3326ead46e7bc19fd495c6148902c68835aed8bbb12693bc0d12",
+      "contentChars": 296,
+      "standingCounts": {
+        "established": 1,
+        "provisional": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 1
+      }
+    },
+    {
+      "index": 2,
+      "at": "2026-09-16 14:43:12.564196+00",
+      "role": "user",
+      "turnHash": "b13a0d02824461db7b5a8d2cf7c1f45520bc68bce6f4fc9a95c75d48f750691c",
+      "contentHash": "989f9ed59ce653464e09d66ede1a684ae034622f4a1c8975ffd849dfeb512a94",
+      "contentChars": 54,
+      "standingCounts": {
+        "established": 2,
+        "provisional": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 1
+      }
+    },
+    {
+      "index": 3,
+      "at": "2026-09-16 14:43:17.199471+00",
+      "role": "assistant",
+      "turnHash": "2f14ea999483b55e89271c1378c05482f4661833da0daae1297b13076e329101",
+      "contentHash": "b73ba9920b4d397789a24cd68a6a3f7b8e9c88df5f8c4280b9c824d112ae9543",
+      "contentChars": 61,
+      "standingCounts": {
+        "established": 2,
+        "provisional": 2
+      },
+      "relationCounts": {
+        "INTERPRETS": 2
+      }
+    },
+    {
+      "index": 4,
+      "at": "2026-09-16 14:43:26.189766+00",
+      "role": "user",
+      "turnHash": "3354751881bbc0b3c674712ec73e5a623d24c73ea729fa7ee7deb3992cbea4db",
+      "contentHash": "9fdc1d357f42b25e5a7b3e803567de7b71b177beac5a0ee17b8f8b97e3956a9f",
+      "contentChars": 12,
+      "standingCounts": {
+        "established": 3,
+        "provisional": 2
+      },
+      "relationCounts": {
+        "INTERPRETS": 2
+      }
+    },
+    {
+      "index": 5,
+      "at": "2026-09-16 14:43:29.734801+00",
+      "role": "assistant",
+      "turnHash": "2450ef52f3e4dec8c2e9e606e95deddc8c6161f434e20a5a6f6d577aa5127bb7",
+      "contentHash": "5a18532a1e6c6dfe6865be414b8392af09f1797ed807554f3879a35eeaa53941",
+      "contentChars": 138,
+      "standingCounts": {
+        "established": 3,
+        "provisional": 3
+      },
+      "relationCounts": {
+        "INTERPRETS": 3
+      }
+    },
+    {
+      "index": 6,
+      "at": "2026-09-16 14:43:51.140044+00",
+      "role": "user",
+      "turnHash": "3f5ec139aaa2c977b66e4fda3d12b31ca72add30cb51986cc22cc359b983f3c1",
+      "contentHash": "b6e6193231cd02011c0dbcdcd82ccd2d6e7db260fd40f3a76bbbc98919c7c455",
+      "contentChars": 55,
+      "standingCounts": {
+        "established": 4,
+        "provisional": 3
+      },
+      "relationCounts": {
+        "INTERPRETS": 3
+      }
+    },
+    {
+      "index": 7,
+      "at": "2026-09-16 14:43:53.985718+00",
+      "role": "assistant",
+      "turnHash": "331b33eab72f3c2d03a3decb2808c4b5432c83367d2a803b4be06389bd6cc40c",
+      "contentHash": "1369ffe2d7a690bad00d47f1f0dcc620af02d77ec2e7ee786df7f8c4f7c441ab",
+      "contentChars": 153,
+      "standingCounts": {
+        "established": 4,
+        "provisional": 4
+      },
+      "relationCounts": {
+        "INTERPRETS": 4
+      }
+    },
+    {
+      "index": 8,
+      "at": "2026-09-16 14:44:24.124662+00",
+      "role": "user",
+      "turnHash": "7d2599bf2b1d37835ee09c2248be602bbcb25240c5b5df1ca0e81f8aff1fedac",
+      "contentHash": "d4a81e881c5e94de458e99f441305e9d8de142b4fe72322f2b5dd260b7133736",
+      "contentChars": 109,
+      "standingCounts": {
+        "established": 5,
+        "provisional": 4
+      },
+      "relationCounts": {
+        "INTERPRETS": 4
+      }
+    },
+    {
+      "index": 9,
+      "at": "2026-09-16 14:44:33.246521+00",
+      "role": "assistant",
+      "turnHash": "13ea5d27323e31e454ad5eb105acd08f76e5c2f4bedef36758e27ab58c677605",
+      "contentHash": "25ae3842a3bd788932b39be837785235b8774c3882bf8e588be59248c96097b8",
+      "contentChars": 362,
+      "standingCounts": {
+        "established": 5,
+        "provisional": 5
+      },
+      "relationCounts": {
+        "INTERPRETS": 5
+      }
+    },
+    {
+      "index": 10,
+      "at": "2026-09-16 14:45:19.444105+00",
+      "role": "user",
+      "turnHash": "48a1f2023a0a1674d4a0775c1e397129e9b1a0e2d17e9d3f196403be0dddbf9f",
+      "contentHash": "e4caa72223e3de837702038f7b734bcda441efc373874984c9453ef4d657eabb",
+      "contentChars": 121,
+      "standingCounts": {
+        "established": 6,
+        "provisional": 5
+      },
+      "relationCounts": {
+        "INTERPRETS": 5
+      }
+    },
+    {
+      "index": 11,
+      "at": "2026-09-16 14:45:26.579631+00",
+      "role": "assistant",
+      "turnHash": "8a587c537de47d2a326089b6214570ad38a22977ec9366615a5fe013ede13109",
+      "contentHash": "66df996c4095e0fba75620b57addf22145c549faf75a939f16b7d5f44ee9a13a",
+      "contentChars": 356,
+      "standingCounts": {
+        "established": 6,
+        "provisional": 6
+      },
+      "relationCounts": {
+        "INTERPRETS": 6
+      }
+    },
+    {
+      "index": 12,
+      "at": "2026-09-16 14:45:45.929511+00",
+      "role": "user",
+      "turnHash": "7960d6806325d5da0c6bcadf31c3cce70567fec2a739f5cb6adc1852f825ea7e",
+      "contentHash": "0aab48baeb07e833a0ac0cd208d41fd1da13696124331ba793ed31e72e0b9432",
+      "contentChars": 44,
+      "standingCounts": {
+        "established": 7,
+        "provisional": 6
+      },
+      "relationCounts": {
+        "INTERPRETS": 6
+      }
+    },
+    {
+      "index": 13,
+      "at": "2026-09-16 14:45:51.021026+00",
+      "role": "assistant",
+      "turnHash": "a4b009a2f3730997b42f93ff5118e12d51e49d3768a64679fd1a711d09805164",
+      "contentHash": "610c98ee1b02c445f9042eb0fb106e97858ca709e1a2b8efee2ea45a5188ac5b",
+      "contentChars": 155,
+      "standingCounts": {
+        "established": 7,
+        "provisional": 7
+      },
+      "relationCounts": {
+        "INTERPRETS": 7
+      }
+    },
+    {
+      "index": 14,
+      "at": "2026-09-16 14:46:17.362379+00",
+      "role": "user",
+      "turnHash": "c59a2ab81cb132440b8296e97c408a5e953597d9ec45208132ce8a20e7b8b847",
+      "contentHash": "7ea8e5964240d2c38187a044722aec8a1fae298568f7248afccfb65e797a72a5",
+      "contentChars": 101,
+      "standingCounts": {
+        "established": 8,
+        "provisional": 7
+      },
+      "relationCounts": {
+        "INTERPRETS": 7
+      }
+    },
+    {
+      "index": 15,
+      "at": "2026-09-16 14:46:24.42445+00",
+      "role": "assistant",
+      "turnHash": "88256a97884840643c8b28165e9682d6c5aa91a1f51f4fd0b2aab903bb89865c",
+      "contentHash": "faed83f64f1d59f9709e1d8957b31f09daa97d3e725a3322c0ef89171723e376",
+      "contentChars": 366,
+      "standingCounts": {
+        "established": 8,
+        "provisional": 8
+      },
+      "relationCounts": {
+        "INTERPRETS": 8
+      }
+    },
+    {
+      "index": 16,
+      "at": "2026-09-16 14:46:41.303936+00",
+      "role": "user",
+      "turnHash": "bf98fe377818c704348d09ffd2f570a40700f1315f6d08ba264aa292afa4738a",
+      "contentHash": "dcaaaad9cad87143faa9caade0d887741d20662124329c132651ebdf99856083",
+      "contentChars": 16,
+      "standingCounts": {
+        "established": 9,
+        "provisional": 8
+      },
+      "relationCounts": {
+        "INTERPRETS": 8
+      }
+    },
+    {
+      "index": 17,
+      "at": "2026-09-16 14:46:48.286382+00",
+      "role": "assistant",
+      "turnHash": "5c799cbd9ca4c2ce6aef8f192912096bfb990ec5a1eaf9fac635e8795c60780b",
+      "contentHash": "732c47cd958975b86b003f4f129d3cc820880fc226d7cb754e803e662ccd0dd7",
+      "contentChars": 127,
+      "standingCounts": {
+        "established": 9,
+        "provisional": 9
+      },
+      "relationCounts": {
+        "INTERPRETS": 9
+      }
+    },
+    {
+      "index": 18,
+      "at": "2026-09-16 14:46:57.71594+00",
+      "role": "user",
+      "turnHash": "5d5e80f4ffc6f51033a02624cf203c0ce6b0cd92803a47b93c82c4aadb613f30",
+      "contentHash": "ecd70b546be214b1cdb483365ce96bca5d58e19e5fd9c10b58bd798fa305ee97",
+      "contentChars": 18,
+      "standingCounts": {
+        "established": 10,
+        "provisional": 8,
+        "unresolved": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 9,
+        "CONTESTS": 1
+      }
+    },
+    {
+      "index": 19,
+      "at": "2026-09-16 14:47:07.933653+00",
+      "role": "assistant",
+      "turnHash": "e92a64a7f0362b9a6651ea032cda851c1954741d7388256d747c7930309ee296",
+      "contentHash": "b733b74709057b655844b9afc6e61e877b679e1142e3033cc1a8511eea5daee4",
+      "contentChars": 192,
+      "standingCounts": {
+        "established": 10,
+        "provisional": 9,
+        "unresolved": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 10,
+        "CONTESTS": 1
+      }
+    },
+    {
+      "index": 20,
+      "at": "2026-09-16 14:47:26.313839+00",
+      "role": "user",
+      "turnHash": "003eaa9220554697cfa687aecf7ceebdf9f18278733c00a5b63aaf1041f403a2",
+      "contentHash": "2184f7013942005c91147134544eb02254ba3e3e0eba845663aab526a22a281f",
+      "contentChars": 42,
+      "standingCounts": {
+        "established": 11,
+        "provisional": 9,
+        "unresolved": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 10,
+        "CONTESTS": 1
+      }
+    },
+    {
+      "index": 21,
+      "at": "2026-09-16 14:47:33.479233+00",
+      "role": "assistant",
+      "turnHash": "8314b862d16cfc167995e830182ee2619e09644de19d820a2e4127e07dc7ecf4",
+      "contentHash": "5e3a337cff02c8666aa9731f9bfe74a6be9afc7fcb8fbdca85353fa99193795c",
+      "contentChars": 641,
+      "standingCounts": {
+        "established": 11,
+        "provisional": 10,
+        "unresolved": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 11,
+        "CONTESTS": 1
+      }
+    },
+    {
+      "index": 22,
+      "at": "2026-09-16 14:48:13.993598+00",
+      "role": "user",
+      "turnHash": "1674698d44dd7c8992119dec72ab8c663036ce0113777a2660230eef742d89be",
+      "contentHash": "58ddaa3e8e9ab16f8a8def108779b8cc0fd7a227916de6c798768437c4686d1a",
+      "contentChars": 75,
+      "standingCounts": {
+        "established": 12,
+        "provisional": 10,
+        "unresolved": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 11,
+        "CONTESTS": 1
+      }
+    },
+    {
+      "index": 23,
+      "at": "2026-09-16 14:48:22.979732+00",
+      "role": "assistant",
+      "turnHash": "fc4fc8147a2da49a4d53895339c660bbb293aa898f4a301f5a41b52bd349bbfa",
+      "contentHash": "f04bd79468f6d98c01abb37cd32a99c2104af86721829ddb0e05429c5b81e373",
+      "contentChars": 473,
+      "standingCounts": {
+        "established": 12,
+        "provisional": 11,
+        "unresolved": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 12,
+        "CONTESTS": 1
+      }
+    },
+    {
+      "index": 24,
+      "at": "2026-09-16 14:49:18.069206+00",
+      "role": "user",
+      "turnHash": "bdeeacafb920190363ee54e8d6d0882f1289738780a3fc076eee5fb12529e5c2",
+      "contentHash": "775ea6fc0c8b07fe19c2f11e63ae8d845c576048e578a05e40f11f4b8e56c059",
+      "contentChars": 74,
+      "standingCounts": {
+        "established": 13,
+        "provisional": 11,
+        "unresolved": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 12,
+        "CONTESTS": 1
+      }
+    },
+    {
+      "index": 25,
+      "at": "2026-09-16 14:49:20.447979+00",
+      "role": "assistant",
+      "turnHash": "349604c422b02135780227097ffbdc216edc928f821208950687bc0010226b75",
+      "contentHash": "e96d4f25d434b38a463b1d30942eb9130b0c938d26001da72f44a89e9beb9be7",
+      "contentChars": 112,
+      "standingCounts": {
+        "established": 13,
+        "provisional": 12,
+        "unresolved": 1
+      },
+      "relationCounts": {
+        "INTERPRETS": 13,
+        "CONTESTS": 1
+      }
+    },
+    {
+      "index": 26,
+      "at": "2026-09-16 14:49:43.257841+00",
+      "role": "user",
+      "turnHash": "4862a0ca9843d5367576e83fd1d67621d77ade39f881eaf917809d79a4a529be",
+      "contentHash": "476633a3f6b667dba5fe86dbbe23c13112dc09f36be08824946348288bf455f4",
+      "contentChars": 79,
+      "standingCounts": {
+        "established": 14,
+        "provisional": 11,
+        "unresolved": 2
+      },
+      "relationCounts": {
+        "INTERPRETS": 13,
+        "CONTESTS": 2
+      }
+    },
+    {
+      "index": 27,
+      "at": "2026-09-16 14:49:47.25712+00",
+      "role": "assistant",
+      "turnHash": "342b15b6d28a08d31a543e550dad93f9b0c0d747efcb5ab5c6c9501620c5dc8a",
+      "contentHash": "05f16ee80124afae95de29995ea4dd0d9e951e83fd600d7607c2989f0c7b1cc6",
+      "contentChars": 295,
+      "standingCounts": {
+        "established": 14,
+        "provisional": 12,
+        "unresolved": 2
+      },
+      "relationCounts": {
+        "INTERPRETS": 14,
+        "CONTESTS": 2
+      }
+    }
+  ],
+  "relationEvents": [
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "4c5d2e56fcb1e278862685a1d0effb2de9f03561586fb85f110470c1281a1693",
+      "subjectHash": "d2d1530d5d8ae38caccafc0e275923ac2a1286cbf1da0ce33b70a8a34e226e86",
+      "objectHash": "365150ae2304d00241e5b3c8416750cf02038aa0df6f782ba033b7d96dd78824",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:39:34.867467+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "3ea795a5bd15a33942b42d68f35845ba8bdb0c5e8fd7602104f035042fc2747b",
+      "subjectHash": "0d4ca8050f68424c8bd1d310c23d929b9cb0f2a0c4c8bc1418f930bcb13b84e0",
+      "objectHash": "2be31a0e7fe9b79a1f43ed717eb5fa09c6685d6f93157439b15a60072a70692b",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:43:17.199471+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "c1be8b376ece8ae60c48fa32485b10f5e73c8941a5c67fc8106eb26c8a9adf4f",
+      "subjectHash": "df2bd7cb75131f6ead2f62750fcb2ce59b12fa43a375d4608e7e42ca38982d9e",
+      "objectHash": "e1a316a3a96d217c513843f9c6032595dca31b9ca017f4b13c22b8ae7920fa8c",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:43:29.734801+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "9f3d3a0f6fa977f0e334d5c205745a103a4bd6fb87c73375f65287aee48de1a3",
+      "subjectHash": "141fe94796c68916feaf89ca48711aaa37bdc62c04167b44f9acead7dac5897c",
+      "objectHash": "d5894272407dc5872aef80799282932348dd849081a4b1354e7e6170159ff79b",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:43:53.985718+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "ac268397d91c9d75aceff99611a09feed1597642d30cd1e57e8d389da63a5776",
+      "subjectHash": "6bee3ccbe7b03bf660f409013396859b523bcdf9bbb68a13ba7ea3ce90211dbf",
+      "objectHash": "0a57747611b682a1ab49684257d48ceaa74e639bbd430e9e3c6db599ae79a1dc",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:44:33.246521+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "1f4e39bbea23e777be862c432c3d51c4562967cfb6d739941b2027e1510a7982",
+      "subjectHash": "f72b59a62456aa71faa9be745216314c7ebd62d5794cb6efa8c05cecc70d70c6",
+      "objectHash": "048b93b4b2453359584311d659deec3815848b7c71c8f0cebb2f4aa6dc95e4f8",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:45:26.579631+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "272d907857550b641c09680dcebaf7ee301e32e24258588622121ca8f722646b",
+      "subjectHash": "958d14bfaa43f601bbbf4e682d2150925b5734c0a935fec80ea9dd3de307dff6",
+      "objectHash": "3b006aa8713aa9e24db36901fea56c218063c805ec49c98edb818f68dd6a8f65",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:45:51.021026+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "b397098910484d5d61e3c2fe3bf6fc11e84a545c14ce5c785619dde1a0ddb096",
+      "subjectHash": "bc6085507440be60dc74bcfbeadb88c1fa88714be14fd5854bf19f040ac86554",
+      "objectHash": "066d9779d80818c1c12f7467d568ae0acfccf86482380a1d0227d71f4ca474c5",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:46:24.42445+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "04a91fdde92febaf5bcfc17d6b9272413edfe411cbfb7676204f946eab9cc34f",
+      "subjectHash": "a3c9032b1e7905076f04e5a3427b6328628814bee5fa1d2c07873e0bb91b0382",
+      "objectHash": "9cececb76b72977c131f20ffcfaf11008ed5d49c4c2707f8615cbd9f25950e1a",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:46:48.286382+00"
+    },
+    {
+      "predicate": "CONTESTS",
+      "relationHash": "aebc94a56030a31433bfef24e49e3fddd0839e9530fd79dbd5ec2265f9b0868a",
+      "subjectHash": "a3f79adcf324589e80b158ae36d411604701c682b3f590e21e41ce843766e254",
+      "objectHash": "a3c9032b1e7905076f04e5a3427b6328628814bee5fa1d2c07873e0bb91b0382",
+      "actor": "member",
+      "resultingObjectUseAs": "unresolved",
+      "at": "2026-09-16 14:46:57.71594+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "4d6a9bd5b5b37ce68d9b0b3eed285c4875c1d21520dd2f286d591118f226fd6f",
+      "subjectHash": "90f8800d5a9cfbf0afa27b44444df5fd33c07d35a3d2fa007966b8df57a10c59",
+      "objectHash": "a3f79adcf324589e80b158ae36d411604701c682b3f590e21e41ce843766e254",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:47:07.933653+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "c06cfc207fea52a3ee5a7356470dedb154eef7d912c6dd03398b13c2fbb736df",
+      "subjectHash": "085a67d16243124c6b93b0cdb2260dd85bd41acc699524fc75f2c22cbc565d37",
+      "objectHash": "33e79c3774d8eeb7b8ab0e57e2f833382f7e685917d1fc960e02b089a112c3f7",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:47:33.479233+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "3502dfbaa86f468f95f5962c8c77cd139623fc68791705f515bc96cd101dd2d3",
+      "subjectHash": "f65443c38a0867ff212bc84ce4b99cfb1fc32f64b11c5108ee21c14408474642",
+      "objectHash": "6276d8f98cf15810ce5025c7c3c69359c4560ff3ea4199872232fba91e06e503",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:48:22.979732+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "09c71338d26be033415124c6e544f6da92862f80a2a8e9e2bd2af0a828d0a731",
+      "subjectHash": "9f7959bbc9e7da57e4963bc4e79312eeea6443d126a4e60d8d67be4aa3d0ab2e",
+      "objectHash": "13f32412e9942ff28926a07bc4149d73c12af6e63c8b94fc29b6ddad75a1ff88",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:49:20.447979+00"
+    },
+    {
+      "predicate": "CONTESTS",
+      "relationHash": "aa54d2953a75239de5f53a68cec445e44bf8ae528066a5084c8d85fe2dc580c6",
+      "subjectHash": "2defbb1771c87060d7edcb60d1412ebe88775a9e07af98a0b5b8c1c91f8305d7",
+      "objectHash": "9f7959bbc9e7da57e4963bc4e79312eeea6443d126a4e60d8d67be4aa3d0ab2e",
+      "actor": "member",
+      "resultingObjectUseAs": "unresolved",
+      "at": "2026-09-16 14:49:43.257841+00"
+    },
+    {
+      "predicate": "INTERPRETS",
+      "relationHash": "dd729b0c00abc64bc839718a2c5c4ad37c745f0d51ceca5b137b2fa932dc91fe",
+      "subjectHash": "ace77e583dc32a66904ef6d3a84812dca8742a01693171fd807ad39914910f89",
+      "objectHash": "2defbb1771c87060d7edcb60d1412ebe88775a9e07af98a0b5b8c1c91f8305d7",
+      "actor": "maia",
+      "resultingObjectUseAs": "established",
+      "at": "2026-09-16 14:49:47.25712+00"
+    }
+  ],
+  "projectionCounts": {
+    "established": 14,
+    "adopted": 0,
+    "provisional": 12,
+    "unresolved": 2,
+    "historicalOnly": 0,
+    "open": 0
+  }
+}
