@@ -328,6 +328,25 @@ If not, it does not align with mission.
 
 ---
 
+## Invariant 17 — Declared Membership
+
+**Rule:** Membership, standing, admissibility, or authoritative inclusion must be declared and mechanically checked. It may never be inherited solely from location, container, naming, or access mode.
+
+**Operational form:**
+- Absence of an explicit admission rule means exclusion.
+- A container name (worktree, read-only sandbox, source directory, registry, replica, queue, or later equivalent) is never itself evidence of what may belong.
+- Detectors and scanners may refuse a bad declaration, but they are defence in depth rather than the admission boundary.
+- A new admission boundary must kill a default-admit mutant.
+- If the boundary can produce an empty or sharply reduced output, the downstream consumer must be witnessed against that changed output before destructive or authoritative action.
+
+**Design test:** *What does this container actually admit, and where is that written down and checked?* If the answer is “everything that happens to be inside it,” the boundary does not exist yet.
+
+**Principle:** **Containers do not confer standing. Standing comes from explicit admission under a rule.**
+
+**Relation:** Extends Invariant 5 (Uncertainty Honesty) from claims to system membership and Invariant 8 (Conductor Authority) from relational output to admission architecture. It also constrains agent-context carriers without by itself authorizing a complete Sovereign Agent Boundary implementation. Full ratification record: `DECLARED_MEMBERSHIP_RATIFICATION_2026-09-16.md`.
+
+---
+
 ## The Constitutional Sentence
 
 To sit alongside the Oath:
@@ -368,6 +387,7 @@ They are enforceable at:
 - Feature review (Invariants 9 and 10)
 - The design-review gate — the Sovereignty Invariant Check in `CLAUDE.md` § "Before Making Changes" (Invariant 14: imposed framework / translated meaning / universalized "self / growth / healing / family / spirit")
 - System telemetry (Invariant 3)
+- Admission-boundary declarations, mutant tests, and empty-consumer composition witnesses (Invariant 17)
 
 Any feature, prompt, or architectural change that violates these invariants is invalid, regardless of technical merit or user demand.
 
