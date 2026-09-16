@@ -1,0 +1,37 @@
+{
+  "schema": "RELATIONAL_CLAIM_IDENTITY_REPLAY_V1",
+  "zeroInfluence": true,
+  "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+  "turnCount": 28,
+  "eventCount": 2,
+  "events": [
+    {
+      "memberTurnHash": "5d5e80f4ffc6f51033a02624cf203c0ce6b0cd92803a47b93c82c4aadb613f30",
+      "priorAssistantTurnHash": "5c799cbd9ca4c2ce6aef8f192912096bfb990ec5a1eaf9fac635e8795c60780b",
+      "gesture": "RESTART_PROTEST",
+      "outcome": "BOUND",
+      "reason": "single-question-act",
+      "candidateCount": 1,
+      "targetClaimId": "b99d1e45151757d9eb70dd0fec4918c41968ac96d1af7c41ab4e893b254b9edc",
+      "targetKind": "question",
+      "targetSegmentationStatus": "atomic",
+      "targetStartChar": 86,
+      "targetEndChar": 127,
+      "targetTextHash": "bc1d94f5ee4d1aee46f53d0f2b684559c6947c740e26b98e11e892d5382800b8"
+    },
+    {
+      "memberTurnHash": "4862a0ca9843d5367576e83fd1d67621d77ade39f881eaf917809d79a4a529be",
+      "priorAssistantTurnHash": "349604c422b02135780227097ffbdc216edc928f821208950687bc0010226b75",
+      "gesture": "META_PATTERN",
+      "outcome": "NO_TARGET",
+      "reason": "meta-pattern-not-single-claim",
+      "candidateCount": 0,
+      "targetClaimId": null,
+      "targetKind": null,
+      "targetSegmentationStatus": null,
+      "targetStartChar": null,
+      "targetEndChar": null,
+      "targetTextHash": null
+    }
+  ]
+}
