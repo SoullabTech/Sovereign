@@ -1,0 +1,7 @@
+attested-at-utc: 2026-09-16T00:58:10Z
+attested-at-local: 2026-09-15T20:58:10-0400
+---
+phone physically awake
+display visibly illuminated
+device unlocked
+normal UI visible

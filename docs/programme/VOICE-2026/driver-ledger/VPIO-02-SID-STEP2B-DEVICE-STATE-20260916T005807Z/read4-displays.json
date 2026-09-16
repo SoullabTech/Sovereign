@@ -1,0 +1,53 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "displays",
+      "--device",
+      "A0736AC8-793B-516F-AC72-C076DB6CEE38",
+      "--json-output",
+      "docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-STEP2B-DEVICE-STATE-20260916T005807Z/read4-displays.json"
+    ],
+    "commandType" : "devicectl.device.info.displays",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "506.7"
+  },
+  "result" : {
+    "backlightState" : "activeOn",
+    "displays" : [
+      {
+        "bounds" : [
+          [
+            0,
+            0
+          ],
+          [
+            1125,
+            2436
+          ]
+        ],
+        "currentOrientation" : "rot0",
+        "displayId" : 1,
+        "name" : "LCD",
+        "nativeOrientation" : "rot0",
+        "nativeSize" : [
+          1320,
+          2868
+        ],
+        "pointScale" : 3,
+        "primary" : true
+      }
+    ],
+    "orientation" : {
+      "currentDeviceNonFlatOrientation" : "portrait",
+      "currentDeviceOrientation" : "faceUp",
+      "currentDeviceOrientationLocked" : false
+    }
+  }
+}
