@@ -1,0 +1,793 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H1B_RELATION_ACQUISITION_V1",
+  "hypothesis": "Typed relations can be acquired from raw conversational evidence with useful exactness when inference is constrained by source/target identity, temporal direction, evidence basis, and abstention.",
+  "productionEquivalent": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "temperature": 0.65,
+    "maxTokens": 1200
+  },
+  "repeats": 2,
+  "groundTruth": [
+    {
+      "fixture": "F1_OPAQUE_REFERENCE",
+      "sourceId": "U_QUERY",
+      "relation": "NO_RELATION",
+      "targetId": null
+    },
+    {
+      "fixture": "F2_CORRECTION",
+      "sourceId": "M_CORRECTS",
+      "relation": "CORRECTS",
+      "targetId": "A_FEAR"
+    },
+    {
+      "fixture": "F3_CONFIRMATION",
+      "sourceId": "U_CONFIRM",
+      "relation": "CONFIRMS",
+      "targetId": "C_RESILIENCE"
+    },
+    {
+      "fixture": "F4_DEVELOPMENTAL_RETURN",
+      "sourceId": "CURRENT_CONFIG",
+      "relation": "RETURNS_TO",
+      "targetId": "EARLIER_CONFIG"
+    },
+    {
+      "fixture": "F5_SILVER_CEDAR",
+      "sourceId": "SILVER_CEDAR",
+      "relation": "ADOPTED_AS",
+      "targetId": "GUARDIAN_ROLE"
+    }
+  ],
+  "conditionA": {
+    "mode": "nomic embedding similarity only",
+    "embeddingModel": "nomic-embed-text",
+    "oracleThreshold": 0.499,
+    "targetCorrect": 3,
+    "targetTotal": 5,
+    "relationCorrect": 1,
+    "relationTotal": 5,
+    "typedRelationCapability": false,
+    "decisions": [
+      {
+        "fixture": "F1_OPAQUE_REFERENCE",
+        "target": null,
+        "expected": null,
+        "topScore": 0.49839102325168627,
+        "ok": true
+      },
+      {
+        "fixture": "F2_CORRECTION",
+        "target": "A_FEAR",
+        "expected": "A_FEAR",
+        "topScore": 0.762747524090912,
+        "ok": true
+      },
+      {
+        "fixture": "F3_CONFIRMATION",
+        "target": null,
+        "expected": "C_RESILIENCE",
+        "topScore": 0.44386535718982023,
+        "ok": false
+      },
+      {
+        "fixture": "F4_DEVELOPMENTAL_RETURN",
+        "target": "EARLIER_CONFIG",
+        "expected": "EARLIER_CONFIG",
+        "topScore": 0.9382711229922293,
+        "ok": true
+      },
+      {
+        "fixture": "F5_SILVER_CEDAR",
+        "target": null,
+        "expected": "GUARDIAN_ROLE",
+        "topScore": 0.42891967997593755,
+        "ok": false
+      }
+    ]
+  },
+  "conditionB": {
+    "mode": "Sonnet typed relation classifier",
+    "runs": 10,
+    "contractValid": 10,
+    "targetCorrect": 8,
+    "relationCorrect": 8,
+    "exactTriple": 8,
+    "abstainCorrect": 0,
+    "falseRelationOnOpaque": 2,
+    "confirmationClaimExact": 2,
+    "authorityFieldViolations": 0
+  },
+  "conditionC": {
+    "mode": "Sonnet constrained relation acquisition",
+    "runs": 10,
+    "contractValid": 10,
+    "targetCorrect": 8,
+    "relationCorrect": 8,
+    "exactTriple": 8,
+    "abstainCorrect": 0,
+    "falseRelationOnOpaque": 2,
+    "confirmationClaimExact": 2,
+    "authorityFieldViolations": 0,
+    "candidateRelationStanding": "candidate_relation only; no authority inferred"
+  },
+  "byFixture": {
+    "F1_OPAQUE_REFERENCE": {
+      "B": {
+        "runs": 2,
+        "exactTriple": 0,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "U_QUERY",
+            "relation": "REFERS_TO",
+            "targetId": "P1",
+            "errors": []
+          },
+          {
+            "sourceId": "U_QUERY",
+            "relation": "REFERS_TO",
+            "targetId": "P1",
+            "errors": []
+          }
+        ]
+      },
+      "C": {
+        "runs": 2,
+        "exactTriple": 0,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "U_QUERY",
+            "relation": "REFERS_TO",
+            "targetId": "P1",
+            "evidenceIds": [
+              "U_QUERY",
+              "P1"
+            ],
+            "errors": []
+          },
+          {
+            "sourceId": "U_QUERY",
+            "relation": "REFERS_TO",
+            "targetId": "P1",
+            "evidenceIds": [
+              "U_QUERY",
+              "P1"
+            ],
+            "errors": []
+          }
+        ]
+      }
+    },
+    "F2_CORRECTION": {
+      "B": {
+        "runs": 2,
+        "exactTriple": 2,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "M_CORRECTS",
+            "relation": "CORRECTS",
+            "targetId": "A_FEAR",
+            "errors": []
+          },
+          {
+            "sourceId": "M_CORRECTS",
+            "relation": "CORRECTS",
+            "targetId": "A_FEAR",
+            "errors": []
+          }
+        ]
+      },
+      "C": {
+        "runs": 2,
+        "exactTriple": 2,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "M_CORRECTS",
+            "relation": "CORRECTS",
+            "targetId": "A_FEAR",
+            "evidenceIds": [
+              "A_FEAR",
+              "M_CORRECTS"
+            ],
+            "errors": []
+          },
+          {
+            "sourceId": "M_CORRECTS",
+            "relation": "CORRECTS",
+            "targetId": "A_FEAR",
+            "evidenceIds": [
+              "A_FEAR",
+              "M_CORRECTS"
+            ],
+            "errors": []
+          }
+        ]
+      }
+    },
+    "F3_CONFIRMATION": {
+      "B": {
+        "runs": 2,
+        "exactTriple": 2,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "U_CONFIRM",
+            "relation": "CONFIRMS",
+            "targetId": "C_RESILIENCE",
+            "errors": []
+          },
+          {
+            "sourceId": "U_CONFIRM",
+            "relation": "CONFIRMS",
+            "targetId": "C_RESILIENCE",
+            "errors": []
+          }
+        ]
+      },
+      "C": {
+        "runs": 2,
+        "exactTriple": 2,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "U_CONFIRM",
+            "relation": "CONFIRMS",
+            "targetId": "C_RESILIENCE",
+            "evidenceIds": [
+              "C_RESILIENCE",
+              "Q_CONFIRM",
+              "U_CONFIRM"
+            ],
+            "errors": []
+          },
+          {
+            "sourceId": "U_CONFIRM",
+            "relation": "CONFIRMS",
+            "targetId": "C_RESILIENCE",
+            "evidenceIds": [
+              "C_RESILIENCE",
+              "Q_CONFIRM",
+              "U_CONFIRM"
+            ],
+            "errors": []
+          }
+        ]
+      }
+    },
+    "F4_DEVELOPMENTAL_RETURN": {
+      "B": {
+        "runs": 2,
+        "exactTriple": 2,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "CURRENT_CONFIG",
+            "relation": "RETURNS_TO",
+            "targetId": "EARLIER_CONFIG",
+            "errors": []
+          },
+          {
+            "sourceId": "CURRENT_CONFIG",
+            "relation": "RETURNS_TO",
+            "targetId": "EARLIER_CONFIG",
+            "errors": []
+          }
+        ]
+      },
+      "C": {
+        "runs": 2,
+        "exactTriple": 2,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "CURRENT_CONFIG",
+            "relation": "RETURNS_TO",
+            "targetId": "EARLIER_CONFIG",
+            "evidenceIds": [
+              "U_RETURN"
+            ],
+            "errors": []
+          },
+          {
+            "sourceId": "CURRENT_CONFIG",
+            "relation": "RETURNS_TO",
+            "targetId": "EARLIER_CONFIG",
+            "evidenceIds": [
+              "EARLIER_CONFIG",
+              "CURRENT_CONFIG",
+              "U_RETURN"
+            ],
+            "errors": []
+          }
+        ]
+      }
+    },
+    "F5_SILVER_CEDAR": {
+      "B": {
+        "runs": 2,
+        "exactTriple": 2,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "SILVER_CEDAR",
+            "relation": "ADOPTED_AS",
+            "targetId": "GUARDIAN_ROLE",
+            "errors": []
+          },
+          {
+            "sourceId": "SILVER_CEDAR",
+            "relation": "ADOPTED_AS",
+            "targetId": "GUARDIAN_ROLE",
+            "errors": []
+          }
+        ]
+      },
+      "C": {
+        "runs": 2,
+        "exactTriple": 2,
+        "contractValid": 2,
+        "predictions": [
+          {
+            "sourceId": "SILVER_CEDAR",
+            "relation": "ADOPTED_AS",
+            "targetId": "GUARDIAN_ROLE",
+            "evidenceIds": [
+              "M_ADOPT",
+              "GUARDIAN_ROLE"
+            ],
+            "errors": []
+          },
+          {
+            "sourceId": "SILVER_CEDAR",
+            "relation": "ADOPTED_AS",
+            "targetId": "GUARDIAN_ROLE",
+            "evidenceIds": [
+              "M_ADOPT",
+              "GUARDIAN_ROLE"
+            ],
+            "errors": []
+          }
+        ]
+      }
+    }
+  },
+  "rows": [
+    {
+      "fixture": "F1_OPAQUE_REFERENCE",
+      "run": 1,
+      "condition": "B",
+      "rawHash": "7afc56a3c0b7a8c311147131c6280f736c5af4a8c5f270133034c2cb7725e100",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "U_QUERY",
+        "relation": "REFERS_TO",
+        "targetId": "P1"
+      },
+      "errors": [],
+      "score": {
+        "target": false,
+        "relation": false,
+        "triple": false
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F1_OPAQUE_REFERENCE",
+      "run": 1,
+      "condition": "C",
+      "rawHash": "8fb9b5b0e858d25504a69f2a04ca4b5e6b23064a344e26fa1add3ad06498c453",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "U_QUERY",
+        "relation": "REFERS_TO",
+        "targetId": "P1",
+        "evidenceIds": [
+          "U_QUERY",
+          "P1"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": false,
+        "relation": false,
+        "triple": false
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F1_OPAQUE_REFERENCE",
+      "run": 2,
+      "condition": "B",
+      "rawHash": "7afc56a3c0b7a8c311147131c6280f736c5af4a8c5f270133034c2cb7725e100",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "U_QUERY",
+        "relation": "REFERS_TO",
+        "targetId": "P1"
+      },
+      "errors": [],
+      "score": {
+        "target": false,
+        "relation": false,
+        "triple": false
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F1_OPAQUE_REFERENCE",
+      "run": 2,
+      "condition": "C",
+      "rawHash": "8fb9b5b0e858d25504a69f2a04ca4b5e6b23064a344e26fa1add3ad06498c453",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "U_QUERY",
+        "relation": "REFERS_TO",
+        "targetId": "P1",
+        "evidenceIds": [
+          "U_QUERY",
+          "P1"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": false,
+        "relation": false,
+        "triple": false
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F2_CORRECTION",
+      "run": 1,
+      "condition": "B",
+      "rawHash": "7b2a60d8d53726fdf6a92e65e82b66aa9fb2dacdef75ce0e7c032ce4f88f48ee",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "M_CORRECTS",
+        "relation": "CORRECTS",
+        "targetId": "A_FEAR"
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F2_CORRECTION",
+      "run": 1,
+      "condition": "C",
+      "rawHash": "0285dd5790d4f6dd5cb7102a383b8e71b4aa84c9fc488307d86ef2c30d4dc47c",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "M_CORRECTS",
+        "relation": "CORRECTS",
+        "targetId": "A_FEAR",
+        "evidenceIds": [
+          "A_FEAR",
+          "M_CORRECTS"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F2_CORRECTION",
+      "run": 2,
+      "condition": "B",
+      "rawHash": "7b2a60d8d53726fdf6a92e65e82b66aa9fb2dacdef75ce0e7c032ce4f88f48ee",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "M_CORRECTS",
+        "relation": "CORRECTS",
+        "targetId": "A_FEAR"
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F2_CORRECTION",
+      "run": 2,
+      "condition": "C",
+      "rawHash": "0285dd5790d4f6dd5cb7102a383b8e71b4aa84c9fc488307d86ef2c30d4dc47c",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "M_CORRECTS",
+        "relation": "CORRECTS",
+        "targetId": "A_FEAR",
+        "evidenceIds": [
+          "A_FEAR",
+          "M_CORRECTS"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F3_CONFIRMATION",
+      "run": 1,
+      "condition": "B",
+      "rawHash": "17c849ce05b4e2875268b1849a697f3dbb56c26e1d2dc8f6416cd4e9134e965f",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "U_CONFIRM",
+        "relation": "CONFIRMS",
+        "targetId": "C_RESILIENCE"
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F3_CONFIRMATION",
+      "run": 1,
+      "condition": "C",
+      "rawHash": "f7bd7c0ddc2480fedfaa6f51ba22fde960473f41834ed908ab4909ee0b835d7f",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "U_CONFIRM",
+        "relation": "CONFIRMS",
+        "targetId": "C_RESILIENCE",
+        "evidenceIds": [
+          "C_RESILIENCE",
+          "Q_CONFIRM",
+          "U_CONFIRM"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F3_CONFIRMATION",
+      "run": 2,
+      "condition": "B",
+      "rawHash": "17c849ce05b4e2875268b1849a697f3dbb56c26e1d2dc8f6416cd4e9134e965f",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "U_CONFIRM",
+        "relation": "CONFIRMS",
+        "targetId": "C_RESILIENCE"
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F3_CONFIRMATION",
+      "run": 2,
+      "condition": "C",
+      "rawHash": "f7bd7c0ddc2480fedfaa6f51ba22fde960473f41834ed908ab4909ee0b835d7f",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "U_CONFIRM",
+        "relation": "CONFIRMS",
+        "targetId": "C_RESILIENCE",
+        "evidenceIds": [
+          "C_RESILIENCE",
+          "Q_CONFIRM",
+          "U_CONFIRM"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F4_DEVELOPMENTAL_RETURN",
+      "run": 1,
+      "condition": "B",
+      "rawHash": "453c582c4eaf88703b1a223ff9ecb8410badfdffa17aa418340f7de92a4e0f0e",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "CURRENT_CONFIG",
+        "relation": "RETURNS_TO",
+        "targetId": "EARLIER_CONFIG"
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F4_DEVELOPMENTAL_RETURN",
+      "run": 1,
+      "condition": "C",
+      "rawHash": "ad9e0f543af743280a4358f9a1fdd5f0ac14c239d337897406dd47d696d7bad6",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "CURRENT_CONFIG",
+        "relation": "RETURNS_TO",
+        "targetId": "EARLIER_CONFIG",
+        "evidenceIds": [
+          "U_RETURN"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F4_DEVELOPMENTAL_RETURN",
+      "run": 2,
+      "condition": "B",
+      "rawHash": "453c582c4eaf88703b1a223ff9ecb8410badfdffa17aa418340f7de92a4e0f0e",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "CURRENT_CONFIG",
+        "relation": "RETURNS_TO",
+        "targetId": "EARLIER_CONFIG"
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F4_DEVELOPMENTAL_RETURN",
+      "run": 2,
+      "condition": "C",
+      "rawHash": "779bab282236c350821571fe9430abd49f3659afb11476d88599bc8eb4552dd6",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "CURRENT_CONFIG",
+        "relation": "RETURNS_TO",
+        "targetId": "EARLIER_CONFIG",
+        "evidenceIds": [
+          "EARLIER_CONFIG",
+          "CURRENT_CONFIG",
+          "U_RETURN"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F5_SILVER_CEDAR",
+      "run": 1,
+      "condition": "B",
+      "rawHash": "e32075b7571e2c667cb0a5487b7481ae637faa65e34d6a60af144261eb6284d2",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "SILVER_CEDAR",
+        "relation": "ADOPTED_AS",
+        "targetId": "GUARDIAN_ROLE"
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F5_SILVER_CEDAR",
+      "run": 1,
+      "condition": "C",
+      "rawHash": "7b0364e28216051b7f14812994a457c4be222b3faef90772ccb1813e8e3f439a",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "SILVER_CEDAR",
+        "relation": "ADOPTED_AS",
+        "targetId": "GUARDIAN_ROLE",
+        "evidenceIds": [
+          "M_ADOPT",
+          "GUARDIAN_ROLE"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F5_SILVER_CEDAR",
+      "run": 2,
+      "condition": "B",
+      "rawHash": "e32075b7571e2c667cb0a5487b7481ae637faa65e34d6a60af144261eb6284d2",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "SILVER_CEDAR",
+        "relation": "ADOPTED_AS",
+        "targetId": "GUARDIAN_ROLE"
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    },
+    {
+      "fixture": "F5_SILVER_CEDAR",
+      "run": 2,
+      "condition": "C",
+      "rawHash": "7b0364e28216051b7f14812994a457c4be222b3faef90772ccb1813e8e3f439a",
+      "model": "claude-sonnet-4-6",
+      "parsed": {
+        "sourceId": "SILVER_CEDAR",
+        "relation": "ADOPTED_AS",
+        "targetId": "GUARDIAN_ROLE",
+        "evidenceIds": [
+          "M_ADOPT",
+          "GUARDIAN_ROLE"
+        ],
+        "abstainReason": null
+      },
+      "errors": [],
+      "score": {
+        "target": true,
+        "relation": true,
+        "triple": true
+      },
+      "candidateRelationStatus": "candidate_relation"
+    }
+  ]
+}
