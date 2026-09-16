@@ -38,14 +38,25 @@ grep -i -E "launch|voicekernel|$K00_C|$V01_C|$HIST_C|prewarm|testmanagerd|instal
 wc -l "$DEST/read3-mac-log-extract.txt" | tee -a "$DEST/read3-mac-log-linecount.txt"
 echo "read 4: device unified log for the window — root jurisdiction (LOG-CAL precedent: K00_LOG_SUDO=1 grants root for log collect ONLY)"
 if [ "${K00_LOG_SUDO:-0}" = "1" ]; then
-  echo "read 4 OPEN: one log collect (archive stays on the Mac, never committed), then two log show reads of that archive (default level; options first, archive last)" | tee "$DEST/read4-status.txt"
-  sudo log collect --device-udid "$UDID" --start "$WSTART" --output "$RAW/device.logarchive" > "$DEST/read4-collect.stdout" 2>&1 || true
-  ls -la "$RAW/device.logarchive" > "$DEST/read4-archive-listing.txt" 2>&1 || true
-  ( cd "$RAW" && find device.logarchive -type f | LC_ALL=C sort | xargs shasum -a 256 ) > "$DEST/read4-archive.sha256" 2>&1 || true
-  log show --start "$WSTART" --end "$WEND" --style compact --predicate 'process == "VoiceKernelHarness" OR eventMessage CONTAINS[c] "voicekernel" OR eventMessage CONTAINS "'"$K00_C"'" OR eventMessage CONTAINS "'"$V01_C"'" OR eventMessage CONTAINS "'"$HIST_C"'"' "$RAW/device.logarchive" > "$DEST/read4a-device-log-harness.txt" 2> "$DEST/read4a.stderr" || true
-  log show --start "$WSTART" --end "$WEND" --style compact --predicate '(process == "runningboardd" OR process == "SpringBoard" OR process == "dasd" OR process == "backboardd" OR process == "testmanagerd") AND (eventMessage CONTAINS[c] "launch" OR eventMessage CONTAINS[c] "prewarm" OR eventMessage CONTAINS[c] "voicekernel" OR eventMessage CONTAINS[c] "restor")' "$RAW/device.logarchive" > "$DEST/read4b-device-log-launch-mechanism.txt" 2> "$DEST/read4b.stderr" || true
-  wc -l "$DEST/read4a-device-log-harness.txt" "$DEST/read4b-device-log-launch-mechanism.txt" | tee "$DEST/read4-linecounts.txt"
-  echo "prewarm mentions: $(grep -ci prewarm "$DEST/read4b-device-log-launch-mechanism.txt") · harness launch mentions: $(grep -ci -E 'launch' "$DEST/read4a-device-log-harness.txt")" | tee -a "$DEST/read4-linecounts.txt"
+  echo "read 4 OPEN: one log collect (archive stays on the Mac, never committed); replay only if collect rc=0 AND archive exists" | tee "$DEST/read4-status.txt"
+  COLLECT_RC=0
+  sudo log collect --device-udid "$UDID" --start "$WSTART" --output "$RAW/device.logarchive" > "$DEST/read4-collect.stdout" 2>&1 || COLLECT_RC=$?
+  ARCHIVE_PRESENT=0
+  [ -d "$RAW/device.logarchive" ] && ARCHIVE_PRESENT=1
+  printf 'collect rc %s\narchive present %s\n' "$COLLECT_RC" "$ARCHIVE_PRESENT" | tee "$DEST/read4-collect-status.txt"
+  if [ "$ARCHIVE_PRESENT" = "1" ]; then
+    ls -la "$RAW/device.logarchive" > "$DEST/read4-archive-listing.txt" 2>&1 || true
+    ( cd "$RAW" && find device.logarchive -type f | LC_ALL=C sort | xargs shasum -a 256 ) > "$DEST/read4-archive.sha256" 2>&1 || true
+  fi
+  if [ "$COLLECT_RC" -eq 0 ] && [ "$ARCHIVE_PRESENT" = "1" ]; then
+    echo "read 4 replay OPEN: default-level archive reads, options first / archive last" | tee "$DEST/read4-replay-status.txt"
+    log show --start "$WSTART" --end "$WEND" --style compact --predicate 'process == "VoiceKernelHarness" OR eventMessage CONTAINS[c] "voicekernel" OR eventMessage CONTAINS "'"$K00_C"'" OR eventMessage CONTAINS "'"$V01_C"'" OR eventMessage CONTAINS "'"$HIST_C"'"' "$RAW/device.logarchive" > "$DEST/read4a-device-log-harness.txt" 2> "$DEST/read4a.stderr" || true
+    log show --start "$WSTART" --end "$WEND" --style compact --predicate '(process == "runningboardd" OR process == "SpringBoard" OR process == "dasd" OR process == "backboardd" OR process == "testmanagerd") AND (eventMessage CONTAINS[c] "launch" OR eventMessage CONTAINS[c] "prewarm" OR eventMessage CONTAINS[c] "voicekernel" OR eventMessage CONTAINS[c] "restor")' "$RAW/device.logarchive" > "$DEST/read4b-device-log-launch-mechanism.txt" 2> "$DEST/read4b.stderr" || true
+    wc -l "$DEST/read4a-device-log-harness.txt" "$DEST/read4b-device-log-launch-mechanism.txt" | tee "$DEST/read4-linecounts.txt"
+    echo "prewarm mentions: $(grep -ci prewarm "$DEST/read4b-device-log-launch-mechanism.txt") · harness launch mentions: $(grep -ci -E 'launch' "$DEST/read4a-device-log-harness.txt")" | tee -a "$DEST/read4-linecounts.txt"
+  else
+    echo "read 4 replay SKIPPED: collect did not produce an admissible archive; device launch times / initiators remain UNREAD" | tee "$DEST/read4-replay-status.txt"
+  fi
 else
   echo "read 4 SKIPPED: root not granted (K00_LOG_SUDO unset); the device's persisted log store was not collected; launch times / initiators for 3617 and 3618 remain UNREAD" | tee "$DEST/read4-status.txt"
 fi

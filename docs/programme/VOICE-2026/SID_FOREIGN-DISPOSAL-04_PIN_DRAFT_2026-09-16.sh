@@ -39,17 +39,29 @@ test "$(grep -c '"passcodeRequired" : false' "$OUT/lockState-before-1.json")" = 
 test "$(grep -c '"unlockedSinceBoot" : true' "$OUT/lockState-before-1.json")" = 1
 xcrun devicectl device info displays --device "$DEV" --json-output "$OUT/displays-before-1.json"
 test "$(grep -c '"backlightState" : "activeOn"' "$OUT/displays-before-1.json")" = 1
+xcrun devicectl device info processes --device "$DEV" --json-output "$OUT/processes-jit-before-phase-a.json"
+test "$(grep -ci VoiceKernelHarness "$OUT/processes-jit-before-phase-a.json")" = 3
+test "$(grep -c "$K00_C/VoiceKernelHarness.app" "$OUT/processes-jit-before-phase-a.json")" = 1
+test "$(grep -c "$V01_C/VoiceKernelHarness.app" "$OUT/processes-jit-before-phase-a.json")" = 1
+test "$(grep -c "$HIST_C/VoiceKernelHarness.app" "$OUT/processes-jit-before-phase-a.json")" = 1
 TEST_RUNNER_K00_SUBJECT=phase-a xcodebuild test-without-building -xctestrun "$XR" -destination "id=$XDEST" -collect-test-diagnostics never -only-testing:DriverUITests/K00DriverTests/testTerminateOnly 2>&1 | tee "$OUT/terminate-phase-a.log" | grep -E "Test Case|TEST (SUCCEEDED|FAILED)|error" | tail -4
 grep -q '\*\* TEST SUCCEEDED \*\*' "$OUT/terminate-phase-a.log"
 grep -q "testTerminateOnly\]' passed" "$OUT/terminate-phase-a.log"
 xcrun devicectl device info processes --device "$DEV" --json-output "$OUT/processes-mid.json"
+test "$(grep -ci VoiceKernelHarness "$OUT/processes-mid.json")" = 2
 test "$(grep -c "$K00_C/VoiceKernelHarness.app" "$OUT/processes-mid.json")" = 0
+test "$(grep -c "$V01_C/VoiceKernelHarness.app" "$OUT/processes-mid.json")" = 1
 test "$(grep -c "$HIST_C/VoiceKernelHarness.app" "$OUT/processes-mid.json")" = 1
 xcrun devicectl device info lockState --device "$DEV" --json-output "$OUT/lockState-before-2.json"
 test "$(grep -c '"passcodeRequired" : false' "$OUT/lockState-before-2.json")" = 1
 test "$(grep -c '"unlockedSinceBoot" : true' "$OUT/lockState-before-2.json")" = 1
 xcrun devicectl device info displays --device "$DEV" --json-output "$OUT/displays-before-2.json"
 test "$(grep -c '"backlightState" : "activeOn"' "$OUT/displays-before-2.json")" = 1
+xcrun devicectl device info processes --device "$DEV" --json-output "$OUT/processes-jit-before-vpio01.json"
+test "$(grep -ci VoiceKernelHarness "$OUT/processes-jit-before-vpio01.json")" = 2
+test "$(grep -c "$K00_C/VoiceKernelHarness.app" "$OUT/processes-jit-before-vpio01.json")" = 0
+test "$(grep -c "$V01_C/VoiceKernelHarness.app" "$OUT/processes-jit-before-vpio01.json")" = 1
+test "$(grep -c "$HIST_C/VoiceKernelHarness.app" "$OUT/processes-jit-before-vpio01.json")" = 1
 TEST_RUNNER_K00_SUBJECT=vpio-01 xcodebuild test-without-building -xctestrun "$XR" -destination "id=$XDEST" -collect-test-diagnostics never -only-testing:DriverUITests/K00DriverTests/testTerminateOnly 2>&1 | tee "$OUT/terminate-vpio-01.log" | grep -E "Test Case|TEST (SUCCEEDED|FAILED)|error" | tail -4
 grep -q '\*\* TEST SUCCEEDED \*\*' "$OUT/terminate-vpio-01.log"
 grep -q "testTerminateOnly\]' passed" "$OUT/terminate-vpio-01.log"
