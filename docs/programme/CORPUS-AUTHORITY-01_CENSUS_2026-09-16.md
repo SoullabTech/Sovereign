@@ -142,3 +142,25 @@ The reviewed implementation closes that gap. Evidence now has one of two mechani
 T16–T20 are the falsifiers: free-text evidence is excluded, absent in-file evidence is excluded, governed-record evidence must resolve and contain its marker, a governed-record path cannot escape repository custody, and an arbitrary repository file outside `docs/corpus-authority/` cannot masquerade as an authority record.
 
 The corpus remains fully held after this amendment: `0 admitted · 736 excluded · 0 refused`.
+
+## Independent review amendment · physical custody
+
+Review of the evidence locator found one additional future bypass class: lexical path containment does not prove physical filesystem containment when Git symlinks are permitted.
+
+The repository currently has no symlinks under `data/ain/source` or `docs/corpus-authority`, but Git symlink mode exists elsewhere in the repository. Therefore the authority boundary now refuses:
+
+- a candidate corpus item that is itself a symbolic link;
+- a governed authority record that is a symbolic link.
+
+This prevents a path that *looks* governed from resolving to content outside the declared carrier or authority namespace.
+
+Witnesses T21–T22 cover both cases.
+
+Exact reviewed-tree evidence after this amendment:
+
+- admission/composition tests: **22/22 PASS**;
+- root TypeScript: **229 vs baseline 239 · 0 regressions**;
+- `typecheck:scripts`: **40 base / 40 head**, head-only **0**, base-only **0**, identity sets **identical**;
+- `git diff --check`: PASS.
+
+The shipped corpus declaration remains unchanged in effect: **0 admitted / 736 excluded**. This amendment grants no corpus authority.

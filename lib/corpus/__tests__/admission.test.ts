@@ -15,6 +15,7 @@
  * a manifest, and this is what distinguishes the two.
  */
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 
 import {
@@ -360,6 +361,76 @@ describe('ACT 4 §C · corpus admission', () => {
     );
     expect(v.admitted).toEqual([]);
     expect(v.excluded[0].reason).toMatch(/outside the governed corpus-authority namespace/);
+  });
+
+  test('T21 — governed authority evidence cannot escape its namespace through a symlink', () => {
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'corpus-authority-record-link-'));
+    try {
+      const candidate = path.join(repo, 'data/ain/source/books/essay.md');
+      const authorityDir = path.join(repo, 'docs/corpus-authority');
+      const outsideRecord = path.join(repo, 'docs/unruled-note.md');
+      fs.mkdirSync(path.dirname(candidate), { recursive: true });
+      fs.mkdirSync(authorityDir, { recursive: true });
+      fs.writeFileSync(candidate, 'Published prose.');
+      fs.writeFileSync(outsideRecord, 'CORPUS USE AUTHORIZED');
+      fs.symlinkSync('../unruled-note.md', path.join(authorityDir, 'essay.md'));
+
+      const v = decideAdmission(
+        repo,
+        [candidate],
+        declaration([
+          {
+            prefix: 'data/ain/source/books/essay.md',
+            classification: 'third_party_published',
+            reason: 'permission claimed',
+            authority: {
+              kind: 'permission',
+              evidence: {
+                source: 'governed_record',
+                ref: 'docs/corpus-authority/essay.md',
+                marker: 'CORPUS USE AUTHORIZED',
+              },
+            },
+          },
+        ]),
+      );
+      expect(v.admitted).toEqual([]);
+      expect(v.excluded[0].reason).toMatch(/symbolic link/);
+    } finally {
+      fs.rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test('T22 — a declared corpus item cannot inherit authority through a symlinked carrier', () => {
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'corpus-authority-item-link-'));
+    try {
+      const sourceDir = path.join(repo, 'data/ain/source/books');
+      const outsideWork = path.join(repo, 'outside.md');
+      const candidate = path.join(sourceDir, 'essay.md');
+      fs.mkdirSync(sourceDir, { recursive: true });
+      fs.writeFileSync(outsideWork, 'Copyright © 2026 by Kelly Nezat');
+      fs.symlinkSync(outsideWork, candidate);
+
+      const v = decideAdmission(
+        repo,
+        [candidate],
+        declaration([
+          {
+            prefix: 'data/ain/source/books/essay.md',
+            classification: 'published_knowledge',
+            reason: 'owned work',
+            authority: {
+              kind: 'soullab_owned',
+              evidence: { source: 'in_file', marker: 'Copyright © 2026 by Kelly Nezat' },
+            },
+          },
+        ]),
+      );
+      expect(v.admitted).toEqual([]);
+      expect(v.excluded[0].reason).toMatch(/symbolic link/);
+    } finally {
+      fs.rmSync(repo, { recursive: true, force: true });
+    }
   });
 
 });

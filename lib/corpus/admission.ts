@@ -138,6 +138,14 @@ const HUMAN_RECORD_SIGNALS: Array<{ name: string; test: (text: string) => boolea
   },
 ];
 
+function isExistingSymlink(absPath: string): boolean {
+  try {
+    return fs.lstatSync(absPath).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
 export function loadDeclaration(repoRoot: string): AdmissionDeclaration {
   const file = path.join(repoRoot, 'data/ain/corpus-admission.json');
   if (!fs.existsSync(file)) {
@@ -214,9 +222,15 @@ export function decideAdmission(
       continue;
     }
 
+    const candidateAbs = path.resolve(repoRoot, file);
+    if (isExistingSymlink(candidateAbs)) {
+      verdict.excluded.push({ file: rel, reason: 'candidate corpus file is a symbolic link' });
+      continue;
+    }
+
     let text = '';
     try {
-      text = readFile(path.resolve(repoRoot, file));
+      text = readFile(candidateAbs);
     } catch {
       verdict.excluded.push({ file: rel, reason: 'unreadable' });
       continue;
@@ -248,6 +262,10 @@ export function decideAdmission(
       if (normalizedEvidenceRel !== GOVERNED_AUTHORITY_RECORD_ROOT &&
           !normalizedEvidenceRel.startsWith(`${GOVERNED_AUTHORITY_RECORD_ROOT}/`)) {
         verdict.excluded.push({ file: rel, reason: 'authority record is outside the governed corpus-authority namespace' });
+        continue;
+      }
+      if (isExistingSymlink(evidenceAbs)) {
+        verdict.excluded.push({ file: rel, reason: 'governed authority evidence record is a symbolic link' });
         continue;
       }
       try {
