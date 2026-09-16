@@ -1,0 +1,145 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# OPS-DT-01 — Device Test Environment
+# ═══════════════════════════════════════════════════════════════════════════════
+# A disposable, fully isolated stack for running an explicitly selected branch/SHA
+# against a real iPhone, before merge.
+#
+#   branch build / exact SHA → HTTPS hostname → isolated app → isolated PostgreSQL
+#
+# ISOLATION IS TOPOLOGICAL, NOT CONFIGURATIONAL.
+#
+# This stack declares its OWN private network (`device-test-net`) and does NOT
+# join `maia-sovereign_maia-network`. The production database is therefore not
+# routable from this app container at all — isolation does not depend on a
+# DATABASE_URL being written correctly. A typo cannot reach production, because
+# there is no network path to it.
+#
+# This is the deliberate difference from docker-compose.staging.yml, which joins
+# the production network and shares the production database ("be careful with
+# migrations on staging branches"). That coupling is what makes staging unusable
+# as a pre-merge migration target. Staging is left exactly as it is.
+#
+# Usage (on minisforum):
+#   scripts/device-test-up.sh <SHA>
+#   scripts/verify-device-test-isolation.sh     # run BEFORE deploying a branch
+#   scripts/device-test-down.sh [--wipe]
+#
+# Data here is synthetic and disposable. Never seed it from production content.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Isolated PostgreSQL — owned by this environment, disposable
+  # ═══════════════════════════════════════════════════════════════════════════
+  postgres-device-test:
+    image: postgres:16-alpine
+    container_name: maia-postgres-device-test
+    restart: unless-stopped
+    # NOT published to the host. Reachable only from within device-test-net.
+    # Production postgres publishes 5432; this one publishes nothing, so the two
+    # cannot be confused from outside either.
+    environment:
+      POSTGRES_DB: maia_device_test
+      POSTGRES_USER: devicetest
+      POSTGRES_PASSWORD: ${DEVICE_TEST_DB_PASSWORD:?set DEVICE_TEST_DB_PASSWORD in .env.device-test}
+      # Identity marker asserted by verify-device-test-isolation.sh.
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    volumes:
+      - device_test_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devicetest -d maia_device_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - device-test-net
+    logging:
+      driver: "json-file"
+      options: { max-size: "5m", max-file: "2" }
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Application — built from an explicitly named SHA
+  # ═══════════════════════════════════════════════════════════════════════════
+  maia-device-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Set by scripts/device-test-up.sh from the SHA you name. Never "unknown".
+        GIT_COMMIT: ${GIT_COMMIT:?device-test requires an explicit SHA — use scripts/device-test-up.sh}
+        # This file IS the device-test lane, so it declares its own token
+        # (see docs/ops/DEPLOY_LANE_TOKEN.md — non-production lanes carry it in-file).
+        DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-device-test}
+    image: maia-sovereign:device-test
+    container_name: maia-device-test
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      # The ONLY database this stack can see. Points at the isolated instance by
+      # service name, which resolves only inside device-test-net.
+      DATABASE_URL: postgresql://devicetest:${DEVICE_TEST_DB_PASSWORD}@postgres-device-test:5432/maia_device_test
+      # Loud environment identity — appears in logs and the health endpoint so a
+      # tester can never mistake this for production.
+      MAIA_ENV: device-test
+      NEXT_PUBLIC_MAIA_ENV: device-test
+      # Test-only PHI key. MUST NOT be a production key: capture content written
+      # here is synthetic and this environment is disposable.
+      PHI_ENCRYPTION_KEY: ${DEVICE_TEST_PHI_KEY:?set DEVICE_TEST_PHI_KEY (test-only, never a production key)}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      postgres-device-test:
+        condition: service_healthy
+    networks:
+      - device-test-net
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Caddy — valid public TLS, no manual device trust
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Binds a DEDICATED port so it never contends with the production Caddy on
+  # 80/443. Certificate is obtained via the DNS-01 challenge precisely so this
+  # stack does not need port 80 — see docs/ops/OPS_DT_01_DEVICE_TEST_ENV.md.
+  caddy-device-test:
+    image: ${DEVICE_TEST_CADDY_IMAGE:-caddy:2-alpine}
+    container_name: maia-caddy-device-test
+    restart: unless-stopped
+    ports:
+      - "${DEVICE_TEST_HTTPS_PORT:-8443}:8443"
+    environment:
+      DEVICE_TEST_HOST: ${DEVICE_TEST_HOST:?set DEVICE_TEST_HOST, e.g. device-test.soullab.life}
+      DEVICE_TEST_HTTPS_PORT: ${DEVICE_TEST_HTTPS_PORT:-8443}
+      # Route 53 credentials for the DNS-01 challenge (standard AWS chain).
+      # Scope the IAM policy to this hosted zone only — see the ops doc §3c.
+      AWS_ACCESS_KEY_ID: ${DEVICE_TEST_AWS_ACCESS_KEY_ID:?set DEVICE_TEST_AWS_ACCESS_KEY_ID (Route 53, zone-scoped)}
+      AWS_SECRET_ACCESS_KEY: ${DEVICE_TEST_AWS_SECRET_ACCESS_KEY:?set DEVICE_TEST_AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${DEVICE_TEST_AWS_REGION:-us-east-1}
+    volumes:
+      - ./Caddyfile.device-test:/etc/caddy/Caddyfile:ro
+      - device_test_caddy_data:/data
+      - device_test_caddy_config:/config
+    depends_on:
+      - maia-device-test
+    networks:
+      - device-test-net
+    logging:
+      driver: "json-file"
+      options: { max-size: "5m", max-file: "2" }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Private network — the isolation boundary
+# ═══════════════════════════════════════════════════════════════════════════════
+# Deliberately NOT `external: true`, and deliberately NOT the production network.
+# Nothing in this stack can address maia-postgres.
+networks:
+  device-test-net:
+    name: maia-device-test-net
+    driver: bridge
+
+volumes:
+  device_test_postgres_data:
+    name: maia_device_test_postgres_data
+  device_test_caddy_data:
+  device_test_caddy_config:
