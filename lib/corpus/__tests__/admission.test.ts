@@ -65,7 +65,7 @@ describe('ACT 4 §C · corpus admission', () => {
       ROOT,
       files('data/ain/source/books/essay.md'),
       declaration([
-        { prefix: 'data/ain/source/books', classification: 'published_knowledge', reason: 'ok', authority: { kind: 'soullab_owned', evidence: { source: 'in_file', marker: 'On the nature of attention.' } } },
+        { prefix: 'data/ain/source/books/essay.md', classification: 'published_knowledge', reason: 'ok', authority: { kind: 'soullab_owned', evidence: { source: 'in_file', marker: 'On the nature of attention.' } } },
       ]),
       reader({ 'data/ain/source/books/essay.md': 'On the nature of attention.' }),
     );
@@ -85,7 +85,7 @@ describe('ACT 4 §C · corpus admission', () => {
       ROOT,
       files('data/ain/source/books/testers.md'),
       declaration([
-        { prefix: 'data/ain/source/books', classification: 'published_knowledge', reason: 'wrong', authority: { kind: 'soullab_owned', evidence: { source: 'in_file', marker: 'Beta tester list' } } },
+        { prefix: 'data/ain/source/books/testers.md', classification: 'published_knowledge', reason: 'wrong', authority: { kind: 'soullab_owned', evidence: { source: 'in_file', marker: 'Beta tester list' } } },
       ]),
       reader({ 'data/ain/source/books/testers.md': roster }),
     );
@@ -96,11 +96,17 @@ describe('ACT 4 §C · corpus admission', () => {
 
   test('T5 — the longest matching prefix wins, so a narrow rule can close a broad one', () => {
     const rules = declaration([
-      { prefix: 'data/ain/source', classification: 'published_knowledge', reason: 'broad', authority: { kind: 'soullab_owned', evidence: { source: 'in_file', marker: 'public essay' } } },
+      { prefix: 'data/ain/source', classification: 'unclassified_legacy', reason: 'broad hold' },
+      {
+        prefix: 'data/ain/source/open.md',
+        classification: 'published_knowledge',
+        reason: 'exact-item authority',
+        authority: { kind: 'soullab_owned', evidence: { source: 'in_file', marker: 'public essay' } },
+      },
       {
         prefix: 'data/ain/source/private',
         classification: 'operational_human_record',
-        reason: 'narrow',
+        reason: 'narrow close',
       },
     ]);
     const v = decideAdmission(
@@ -198,7 +204,7 @@ describe('ACT 4 §C · corpus admission', () => {
       ROOT,
       files('data/ain/source/books/essay.md'),
       declaration([
-        { prefix: 'data/ain/source/books', classification: 'published_knowledge', reason: 'looks authored' },
+        { prefix: 'data/ain/source/books/essay.md', classification: 'published_knowledge', reason: 'looks authored' },
       ]),
       reader({ 'data/ain/source/books/essay.md': 'On the nature of attention.' }),
     );
@@ -212,7 +218,7 @@ describe('ACT 4 §C · corpus admission', () => {
       files('data/ain/source/books/essay.md'),
       declaration([
         {
-          prefix: 'data/ain/source/books',
+          prefix: 'data/ain/source/books/essay.md',
           classification: 'third_party_published',
           reason: 'published work',
           authority: { kind: 'soullab_owned', evidence: { source: 'in_file', marker: 'Published prose.' } },
@@ -230,7 +236,7 @@ describe('ACT 4 §C · corpus admission', () => {
       files('data/ain/source/books/essay.md'),
       declaration([
         {
-          prefix: 'data/ain/source/books',
+          prefix: 'data/ain/source/books/essay.md',
           classification: 'third_party_published',
           reason: 'licensed and definitely okay',
         },
@@ -247,7 +253,7 @@ describe('ACT 4 §C · corpus admission', () => {
       files('data/ain/source/books/essay.md'),
       declaration([
         {
-          prefix: 'data/ain/source/books',
+          prefix: 'data/ain/source/books/essay.md',
           classification: 'third_party_published',
           reason: 'license verified',
           authority: { kind: 'license', evidence: { source: 'in_file', marker: 'CC BY 4.0' } },
@@ -264,7 +270,7 @@ describe('ACT 4 §C · corpus admission', () => {
       files('data/ain/source/books/essay.md'),
       declaration([
         {
-          prefix: 'data/ain/source/books',
+          prefix: 'data/ain/source/books/essay.md',
           classification: 'third_party_published',
           reason: 'license claimed',
           authority: { kind: 'license', evidence: 'licensed' } as any,
@@ -282,7 +288,7 @@ describe('ACT 4 §C · corpus admission', () => {
       files('data/ain/source/books/essay.md'),
       declaration([
         {
-          prefix: 'data/ain/source/books',
+          prefix: 'data/ain/source/books/essay.md',
           classification: 'third_party_published',
           reason: 'license claimed',
           authority: { kind: 'license', evidence: { source: 'in_file', marker: 'CC BY 4.0' } },
@@ -300,7 +306,7 @@ describe('ACT 4 §C · corpus admission', () => {
       files('data/ain/source/books/essay.md'),
       declaration([
         {
-          prefix: 'data/ain/source/books',
+          prefix: 'data/ain/source/books/essay.md',
           classification: 'third_party_published',
           reason: 'permission recorded',
           authority: {
@@ -323,7 +329,7 @@ describe('ACT 4 §C · corpus admission', () => {
       files('data/ain/source/books/essay.md'),
       declaration([
         {
-          prefix: 'data/ain/source/books',
+          prefix: 'data/ain/source/books/essay.md',
           classification: 'third_party_published',
           reason: 'permission claimed',
           authority: {
@@ -344,7 +350,7 @@ describe('ACT 4 §C · corpus admission', () => {
       files('data/ain/source/books/essay.md'),
       declaration([
         {
-          prefix: 'data/ain/source/books',
+          prefix: 'data/ain/source/books/essay.md',
           classification: 'third_party_published',
           reason: 'permission claimed',
           authority: {
@@ -360,6 +366,29 @@ describe('ACT 4 §C · corpus admission', () => {
     );
     expect(v.admitted).toEqual([]);
     expect(v.excluded[0].reason).toMatch(/outside the governed corpus-authority namespace/);
+  });
+
+
+  test('T21 — authority cannot fan out from a broad path prefix', () => {
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/one.md', 'data/ain/source/two.md'),
+      declaration([
+        {
+          prefix: 'data/ain/source',
+          classification: 'published_knowledge',
+          reason: 'one ownership claim must not govern a directory',
+          authority: { kind: 'soullab_owned', evidence: { source: 'in_file', marker: 'Copyright © Soullab' } },
+        },
+      ]),
+      reader({
+        'data/ain/source/one.md': 'First work.',
+        'data/ain/source/two.md': 'Second work.',
+      }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded).toHaveLength(2);
+    expect(v.excluded.every((e) => /exact item path/.test(e.reason))).toBe(true);
   });
 
 });

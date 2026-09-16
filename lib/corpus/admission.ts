@@ -197,6 +197,19 @@ export function decideAdmission(
       continue;
     }
 
+    // ⛔ Exclusion/hold rules may govern a directory. Admission authority may not.
+    // An authority claim binds exactly one corpus item; otherwise location would
+    // confer authority on descendants — the same inheritance defect this module closes.
+    const normalizedRulePath = rule.prefix.replace(/\\/g, '/').replace(/\/+$/, '');
+    const normalizedCandidate = rel.split(path.sep).join('/');
+    if (normalizedRulePath !== normalizedCandidate) {
+      verdict.excluded.push({
+        file: rel,
+        reason: `admitting authority must bind the exact item path; '${normalizedRulePath}' cannot confer authority on descendants`,
+      });
+      continue;
+    }
+
     const authority = rule.authority as CorpusAuthorityBasis | undefined;
     const permittedAuthority = AUTHORITY_BY_CLASS[rule.classification];
     if (!authority || !authority.evidence || typeof authority.evidence !== 'object') {

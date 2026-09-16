@@ -1,6 +1,6 @@
 {
   "_doc": "SOURCE-CUSTODY-PII-01 · ACT 4 §C + CORPUS-AUTHORITY-01 — corpus admission declaration. Enforced by lib/corpus/admission.ts. A file enters MAIA's knowledge corpus ONLY when a rule names it, its classification permits corpus membership, AND the rule carries a compatible structured authority basis. Absence of any one means EXCLUSION.",
-  "_law": "Membership and authority must be DECLARED and CHECKED, never INHERITED from location, naming, publication status, or a free-text assurance.",
+  "_law": "Membership and authority must be DECLARED and CHECKED, never INHERITED from location, naming, publication status, a free-text assurance, or a parent path. Exclusion may be broad; admission authority is item-bound.",
   "_state": "The existing corpus is declared unclassified_legacy, which does NOT admit. This is deliberate: 736 files under data/ain/source have never been classified, and admitting them in bulk to keep the build green would reproduce the defect this declaration exists to close. Classification is per-collection founder work; each reclassification is a governed edit to this file.",
   "_classifications": {
     "published_knowledge": "ADMITS — authored knowledge intended for MAIA to draw on.",

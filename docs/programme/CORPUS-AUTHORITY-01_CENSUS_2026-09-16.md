@@ -86,13 +86,15 @@ Compatibility is enforced:
 - `third_party_published` → `public_domain | license | permission`
 Every admitting rule must carry mechanically locatable evidence. Supported evidence is either an exact marker that must actually occur in the work, or a record under the dedicated `docs/corpus-authority/` namespace whose declared marker must actually occur in that record. A free-text evidence assertion is not sufficient. Missing, malformed, absent, unreadable, out-of-custody, or incompatible evidence yields **EXCLUDED**.
 
+Independent review added one more constraint: **admission authority is item-bound**. A broad directory/prefix rule may hold or exclude descendants, but it may not confer an admitting authority basis on them. T21 is the falsifier: one `soullab_owned` claim attached to `data/ain/source` admits neither sibling file.
+
 A free-text `reason` cannot substitute for structured authority. T14 is the falsifier: a rule whose reason literally says `licensed and definitely okay` but carries no structured authority remains excluded.
 
 The existing content detector still runs after classification + authority and can refuse an otherwise admitted rule when human-record signals are present.
 
 ## Current result
 
-Admission tests: **20 / 20 PASS**.
+Admission tests after independent review: **21 / 21 PASS**.
 
 The shipped corpus remains fully held:
 
@@ -111,7 +113,7 @@ A Soullab-shaped filename remains held unless authorship/organizational authorit
 
 The authority-boundary implementation was validated without changing any corpus membership rule.
 
-- admission/composition suite: **20 / 20 PASS**;
+- admission/composition suite: **21 / 21 PASS**;
 - root TypeScript: **229 errors vs 239 baseline · 0 regressions**;
 - `typecheck:scripts`: canonical base **40** error identities; head **40**; head-only **0**; base-only **0**; sets **identical**;
 - provider governance: **PASS**;
