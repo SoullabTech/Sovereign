@@ -62,9 +62,30 @@ echo "════════════════════════�
 echo " STAGE 2 · EDITORIAL ACTIVATION CUSTODY   release $RELEASE_SHA"
 echo "══════════════════════════════════════════════════════════════"
 echo
-[ "$(hostname)" = minisforum ] || die "this must run on minisforum; hostname is $(hostname)"
-[ -f "$COMPOSE" ]  || die "compose file not found: $COMPOSE"
-[ -f "$ENVFILE" ]  || die "env file not found: $ENVFILE"
+# ⚠️⚠️ THIS GUARD WAS WRONG, AND IT PRODUCED A FALSE STOP ON 2026-09-15.
+# It read `[ "$(hostname)" = minisforum ]` — but `minisforum` is the SSH HOST
+# ALIAS, and the machine's own hostname is `soullab`. The wrapper refused a
+# lawful run and reported the production host as the wrong machine.
+#
+# ⭐ The guard behaved correctly in the one way that mattered — it refused rather
+# than proceeded, and changed nothing — but ⛔ a guard that stops the right act
+# for a false reason is still a defect, and one more false stop teaches people to
+# pass a flag to skip it.
+#
+# ⛔ `MAIA_HOST_ID` is NOT the fix either, tempting as it looks: it is a literal
+# in docker-compose.production.yml, so a Mac Studio running the same compose
+# would also answer `minisforum`. It is REPORTED below as a fact, never gated on.
+#
+# ⭐ THE HOST IS IDENTIFIED BY WHAT IT CARRIES, NOT BY WHAT IT IS CALLED: the
+# production stack must actually be here. The decisive protections remain P1's —
+# GIT_COMMIT must equal the pinned release and the image must be :current — which
+# no other stack can satisfy by accident.
+[ -f "$COMPOSE" ]  || die "compose file not found: $COMPOSE — this is not the production host"
+[ -f "$ENVFILE" ]  || die "env file not found: $ENVFILE — this is not the production host"
+docker inspect maia-sovereign >/dev/null 2>&1 || die "no maia-sovereign container here"
+docker inspect maia-postgres  >/dev/null 2>&1 || die "no maia-postgres container here"
+say "hostname"     "$(hostname)   (reported, not gated — see the note above)"
+say "MAIA_HOST_ID" "$(docker exec maia-sovereign printenv MAIA_HOST_ID 2>/dev/null | tr -d '\r')   (reported, not gated)"
 
 # ═══ PHASE 1 · PIN THE BEFORE STATE ══════════════════════════════════════════
 echo "── PHASE 1 · PIN ─────────────────────────────────────────────"
