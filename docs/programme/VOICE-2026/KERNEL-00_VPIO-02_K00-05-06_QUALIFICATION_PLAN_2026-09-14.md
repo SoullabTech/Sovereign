@@ -891,3 +891,8 @@ No install occurred; no container exists; nothing changes in qualification stand
 ### §10.72 — FIRST-INSTALL-01 STOP · spent (founder ruling 2026-09-16; discriminator plan §18.52; implementation record §10.22)
 
 No install occurred; nothing changes in qualification standing; a future install requires a new act and fresh authority.
+
+
+### §10.73 — FIRST-INSTALL-02 opened, pin re-issued, not run (2026-09-16; discriminator plan §18.53; implementation record §10.23)
+
+No qualification change.

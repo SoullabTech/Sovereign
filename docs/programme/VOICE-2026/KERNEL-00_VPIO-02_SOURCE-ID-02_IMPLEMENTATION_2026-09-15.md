@@ -606,3 +606,32 @@ Terminal context, recorded separately and **not** as the cause of the governed S
 **Correction of this record's own reading.** §10.21 offered the classification "NOT ENTERED · authority intact" by analogy to the §10.3/§10.4 paste slips and the transport-refusal law. The founder's ruling draws the line differently and the ruling governs: the accepted pin **was invoked**, and its first gate's refusal is a refusal *of the act*, not a failure to reach it — the authority-first gate is part of the act it guards. The §10.21 reading is withdrawn; its facts stand. Lane law as now settled: **once the accepted pin is invoked, every refusal it or its instrument produces spends the authority, including the authority gate itself.** A future install needs **a new, separately opened FIRST-INSTALL act with fresh authority** — not a rerun of FIRST-INSTALL-01. Whether that act carries a new act identity (`-02` paths, a re-issued pin differing only in labels, as MAC-COMPILE-01 → 02 did) is the founder's to name when and if it is opened; this session drafts nothing toward it unasked.
 
 **Standing after §10.22.** `SID FIRST-INSTALL-01` ⛔ STOP · spent · durable (record only; no `$OUT` to carry — the 116-byte transcript is the sole residue, left in place) · FIRST-INSTALL carrier ⛔ unopened · [D] execution ⛔ CLOSED · [E] execution ⛔ CLOSED · install 0 · launch 0 · sample 0 · source population 0 · container WITNESS-REQUIRED / not yet produced · siblings HOLD · next step record-only.
+
+### 10.23 FOUNDER RULING (2026-09-16): `SID FIRST-INSTALL-02` OPEN under a new act identity · fresh authority ISSUED (uncommitted) · predecessor transcript to be carried under `prior-attempts/`, never via the `02` glob → **`02` pin re-issued, returned for review; NOT RUN**
+
+**Ruling (verbatim in substance).** Proceed with a new act identity; do not reuse the spent `01` namespace. Re-issue the accepted 59-line pin with act-identity substitutions only — `sid-first-install-01-$SHA` → `-02-`, `…-01-out-$STAMP` → `-02-`, `…-01-$STAMP.SHA256SUMS.install` → `-02-`, final echo `SID-FIRST-INSTALL-01` → `-02`; future extraction path and transcript `/private/tmp/sid-first-install-02.sh` / `…-02-transcript-<stamp>.log`. *No substantive custody, device, install, post-install or sealing command may change*; subject `faf918b5c…` and instrument `3035c0235…` unchanged. *Same principle as MAC-COMPILE-02: act identity is constitutive, not a scope expansion.* Return the complete `01→02` diff and the new SHA / line count before execution. **Fresh authority for `02` issued in-session** — a seven-line payload of the same shape naming `SID FIRST-INSTALL-02`, the subject, the instrument, the bundle, the one-transaction bound, launch 0, sample 0 — to live at `/private/tmp/sid-fi02-authority.txt`, **never in git**. Preparation law for the eventual run shape: 1 fresh Terminal window · 2 `cd ~` · 3 create the payload file with exactly the seven lines · 4 `test -s` it · 5 `wc -l` and `wc -c` it · 6 `export K00_EXEC_AUTHORITY` from it · 7 only then extract / verify / invoke the accepted `02` pin. *Invocation of the accepted `02` pin spends this authority on any refusal or failure, including the authority gate itself.* **Predecessor transcript:** the successful `02` carrier carries the spent `01` attempt as lineage, but **not** by broadening the `02` transcript glob — explicitly, under `prior-attempts/SID-FIRST-INSTALL-01-STOP-transcript-20260915T235951Z.log`, with its disposition recorded (`FIRST-INSTALL-01 · STOP · authority precondition · spent · device verbs 0 · install 0 · container none`), so no future reader mistakes the `01` refusal transcript for `02` evidence.
+
+**`02` pin re-issued — `docs/programme/VOICE-2026/SID_FIRST-INSTALL-02_PIN_2026-09-16.sh` · 59 lines · `c4b37e696e7b6936b8b4c592407a6c0bcecefa2a5b7dc65324940ea2d1858fdb`** (`bash -n` only; ⛔ NOT RUN). Derived mechanically from the accepted `01` pin (`a052f081…`) by the two label substitutions; the **complete** `diff` is five lines in two hunks and nothing else:
+
+```diff
+15,16c15,16
+< WT=/private/tmp/sid-first-install-01-$SHA
+< OUT=/private/tmp/sid-first-install-01-out-$STAMP
+---
+> WT=/private/tmp/sid-first-install-02-$SHA
+> OUT=/private/tmp/sid-first-install-02-out-$STAMP
+57,59c57,59
+< ( cd "$OUT" && find . -type f | LC_ALL=C sort | xargs shasum -a 256 ) > "/private/tmp/sid-first-install-01-$STAMP.SHA256SUMS.install"
+< mv "/private/tmp/sid-first-install-01-$STAMP.SHA256SUMS.install" "$OUT/SHA256SUMS.install"
+< echo "SID-FIRST-INSTALL-01 $STAMP subject $SUBJECT_SHA instrument $SHA container $CONTAINER out $OUT"
+---
+> ( cd "$OUT" && find . -type f | LC_ALL=C sort | xargs shasum -a 256 ) > "/private/tmp/sid-first-install-02-$STAMP.SHA256SUMS.install"
+> mv "/private/tmp/sid-first-install-02-$STAMP.SHA256SUMS.install" "$OUT/SHA256SUMS.install"
+> echo "SID-FIRST-INSTALL-02 $STAMP subject $SUBJECT_SHA instrument $SHA container $CONTAINER out $OUT"
+```
+
+Lines 1–14 (authority gate, subject/instrument/bundle/device/pin constants, product path), 17–56 (every precondition, the seven-file manifest proof, the coexistence/absence/process reads, the single `k00-reinstall.sh` invocation, container capture, the bind reads) are byte-identical to the accepted pin. The only other `01` in the file is the lane branch name `claude/voice-2026-census-01` on the fetch line, which is not an act label. Subject and instrument SHAs unchanged. The `01` pin file is left in place as the accepted, spent act's artifact.
+
+**Owed after the `02` pin is reviewed (not drafted unasked):** the run shape in the ruled seven-step form; the `02` carrier as a re-issue of the accepted `01` carrier with `01→02` labels **plus** the explicit `prior-attempts/` copy of the `01` STOP transcript and its disposition line in `RETURN.txt` — the founder's "witness before phenomenon" sequence suggests the carrier re-issue precedes the run; a ruling either way.
+
+**Standing after §10.23.** FIRST-INSTALL-01 ⛔ STOP · spent · FIRST-INSTALL-02 ✅ OPEN · FI02 authority ISSUED (in-session, uncommitted; payload file not yet written on the Mac) · FI02 pin re-issued `c4b37e69…`, **review before run** · FIRST-INSTALL carrier execution CLOSED (`02` re-issue owed) · [D]/[E] execution CLOSED · install 0 · launch 0 · sample 0 · source population 0 · container WITNESS-REQUIRED · siblings HOLD.
