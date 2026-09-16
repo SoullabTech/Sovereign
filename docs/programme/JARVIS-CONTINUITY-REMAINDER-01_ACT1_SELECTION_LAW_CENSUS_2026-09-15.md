@@ -68,3 +68,14 @@ W2 / W3 / S              ⛔ UNSPENT
 rollback repair          ⛔ separate · unopened
 first-ask opaque memory  ⛔ separate · unsolved
 ```
+## §A · Addendum — pre-turn oracle-state mismatch
+
+A later read of the frozen artifact's own metadata exposed a second composition-fidelity defect that does not alter Findings A–C but must govern ACT 3.
+
+The corpus records `servedDepth: 40` and `servedAperture: 3`. The persisted exchange at index `40` is the probe **after that turn completed**. At actual serve time, index `40` could not yet have been part of `allSessionExchanges`.
+
+`c1-bridge-composition.ts` nevertheless passes all 41 persisted exchanges to `recoverForTier` and reuses index `40` as the current `utterance`. Its simulated active prefix is therefore `38,39,40`, not the real pre-turn prefix `37,38,39`.
+
+For P1 this self-probe contributes no carriers after probe-token exclusion, so the known positive outcome is unchanged. The defect is still load-bearing for future oracle construction: **serving tests must snapshot history before the current exchange is persisted.**
+
+ACT 3 may not inherit the old post-turn composition shape as authority.
