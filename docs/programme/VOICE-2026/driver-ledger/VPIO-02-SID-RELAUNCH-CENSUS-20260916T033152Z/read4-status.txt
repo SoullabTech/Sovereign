@@ -1,0 +1,2 @@
+read 4 OPEN: one log collect (archive stays on the Mac, never committed); log show reads run ONLY if collect rc=0 AND the archive exists
+read 4 COLLECTED: rc=0 archive present; two log show reads taken
