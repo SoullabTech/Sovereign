@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
 import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
