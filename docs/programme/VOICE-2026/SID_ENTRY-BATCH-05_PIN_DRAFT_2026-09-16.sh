@@ -1,0 +1,46 @@
+set -e
+set -o pipefail
+SHA=9ed72a38cce6fb55e909e747898f4d452dcfdf3d
+SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
+ACT_MARK=/private/tmp/sid-entry-batch-05-invoked.txt
+test ! -e "$ACT_MARK"
+ACTSTAMP=$(date -u +%Y%m%dT%H%M%SZ)
+printf 'SID-ENTRY-BATCH-05 INVOKED %s subject %s instrument %s\n' "$ACTSTAMP" "$SUBJECT_SHA" "$SHA" > "$ACT_MARK"
+test -n "$K00_EXEC_AUTHORITY"
+PTR=/private/tmp/sid-entry-preflight-05-current.txt
+test -f "$PTR"
+WT=$(sed -n '1p' "$PTR")
+PF=$(sed -n '2p' "$PTR")
+case "$WT" in /private/tmp/sid-entry-05-$SHA-*) ;; *) exit 2;; esac
+case "$PF" in "$WT"/docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-ENTRY-preflight-*) ;; *) exit 2;; esac
+test -d "$WT"
+cd "$WT"
+test "$(git rev-parse HEAD)" = "$SHA"
+test -z "$(git status --porcelain -- scripts/witness/k00-driver-batch.sh scripts/witness/k00-ledger.py scripts/witness/k00-reinstall.sh ios/VoiceKernelDriver)"
+test -f "$PF/SHA256SUMS.preflight"
+( cd "$PF" && shasum -a 256 -c SHA256SUMS.preflight >/dev/null )
+test -f "$PF/PREFLIGHT-CLEAN"
+PFSTAMP=$(basename "$PF" | sed 's/.*preflight-//')
+NOW=$(date -u +%s)
+PFSEC=$(date -u -j -f %Y%m%dT%H%M%SZ "$PFSTAMP" +%s)
+AGE=$((NOW - PFSEC))
+test "$AGE" -ge 0
+test "$AGE" -le 300
+BASE="$WT/docs/programme/VOICE-2026/driver-ledger"
+BEFORE=/private/tmp/sid-entry-batch-05-$ACTSTAMP.before-dirs
+AFTER=/private/tmp/sid-entry-batch-05-$ACTSTAMP.after-dirs
+find "$BASE" -maxdepth 1 -type d -name 'VPIO-02-SID-ENTRY-2*' | LC_ALL=C sort > "$BEFORE"
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+scripts/witness/k00-driver-batch.sh VPIO-02-SID-ENTRY 30 --vp on --mode L --hold 15 --subject vpio-02-sid 2>&1 | tee "/private/tmp/sid-entry-batch-05-$STAMP.log"
+find "$BASE" -maxdepth 1 -type d -name 'VPIO-02-SID-ENTRY-2*' | LC_ALL=C sort > "$AFTER"
+NEW=$(comm -13 "$BEFORE" "$AFTER")
+test "$(printf '%s\n' "$NEW" | sed '/^$/d' | wc -l | tr -d ' ')" = 1
+L="$NEW"
+test -d "$L"
+cp "/private/tmp/sid-entry-batch-05-$STAMP.log" "$L/batch-invocation.log"
+cp "$ACT_MARK" "$L/batch-act-marker.txt"
+ls "$L"/journals/*.jsonl 2>/dev/null | wc -l | tr -d ' ' | tee "$L/journal-count.txt"
+grep -c '^| ' "$L/ledger.md" | tee "$L/ledger-line-count.txt"
+( cd "$L" && find . -type f | LC_ALL=C sort | xargs shasum -a 256 ) > "/private/tmp/sid-entry-batch-05-$STAMP.SHA256SUMS.entry"
+mv "/private/tmp/sid-entry-batch-05-$STAMP.SHA256SUMS.entry" "$L/SHA256SUMS.entry"
+echo "SID-ENTRY-BATCH-05 $STAMP subject $SUBJECT_SHA instrument $SHA preflight $PFSTAMP ledger $L"

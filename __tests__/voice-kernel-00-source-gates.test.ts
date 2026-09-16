@@ -1894,4 +1894,21 @@ describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026
     expect(batch).toContain('cp "$ACT_MARK" "$L/batch-act-marker.txt"');
     expect((batch.match(/scripts\/witness\/k00-driver-batch\.sh VPIO-02-SID-ENTRY 30/g) ?? []).length).toBe(1);
   });
+  it('ENTRY-05 successor pins bind the repaired fail-closed instrument, preserve witnessed containers and <=300 s freshness, and remain one-shot N=30 with no stimulus', () => {
+    const pre = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_ENTRY-PREFLIGHT-05_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    const batch = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_ENTRY-BATCH-05_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    expect(pre).toContain('SHA=9ed72a38cce6fb55e909e747898f4d452dcfdf3d');
+    expect(batch).toContain('SHA=9ed72a38cce6fb55e909e747898f4d452dcfdf3d');
+    expect(pre).toContain('SID_CONTAINER=85948DBD-BA8F-4679-950D-31767B1C24E5');
+    expect(pre).toContain('HIST_CONTAINER=E3B88028-A10F-46B1-AB27-CF0A1F83FB78');
+    expect(pre).toContain('test "$(grep -ci VoiceKernelHarness "$PF/processes.json")" = 0');
+    expect(pre).toContain('git fetch origin fix/chatgpt-voice-jit-install-guard');
+    expect(batch).toContain('test "$AGE" -le 300');
+    expect(batch).toContain('ACT_MARK=/private/tmp/sid-entry-batch-05-invoked.txt');
+    expect(batch.indexOf("printf 'SID-ENTRY-BATCH-05 INVOKED")).toBeLessThan(batch.indexOf('test -n "$K00_EXEC_AUTHORITY"'));
+    expect(batch).toContain('scripts/witness/k00-driver-batch.sh VPIO-02-SID-ENTRY 30 --vp on --mode L --hold 15 --subject vpio-02-sid');
+    expect(batch).not.toContain('--stimulus');
+    expect((batch.match(/scripts\/witness\/k00-driver-batch\.sh VPIO-02-SID-ENTRY 30/g) ?? []).length).toBe(1);
+    expect(batch).toContain('NEW=$(comm -13 "$BEFORE" "$AFTER")');
+  });
 });
