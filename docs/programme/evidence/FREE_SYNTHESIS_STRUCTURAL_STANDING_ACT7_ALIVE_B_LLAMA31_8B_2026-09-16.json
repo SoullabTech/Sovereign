@@ -1,0 +1,209 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 7 Alive-B relational-field replay",
+  "benchmark": "A2 Alive exemplar B",
+  "source": "Pasted markdown(20260915-174653).md",
+  "model": "llama3.1:8b",
+  "temperature": 0.2,
+  "promptChars": 2017,
+  "promptSha256": "753e7877a37b1dd778164c326e6503e82976ac374fd75f94fc48dfebe58998b6",
+  "rows": [
+    {
+      "seed": 42,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "A space of mutual resonance, where the boundaries between self and other dissolve, and a deeper, unnamable connection arises.",
+            "basisEvidenceIds": [
+              "E3",
+              "E5"
+            ]
+          }
+        ],
+        "question": "What happens to the sense of time and space when this kind of connection is established?"
+      },
+      "rawPlanSha256": "a304ea061d63c77178c6dba8c244a6aac48969d8b64e4185b2fd9d44d37e2046",
+      "rendered": {
+        "text": "One possibility I see — provisionally: A space of mutual resonance, where the boundaries between self and other dissolve, and a deeper, unnamable connection arises.\n\nIf that possibility is worth testing rather than assuming, what happens to the sense of time and space when this kind of connection is established?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E5",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E3",
+                "E5"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "d96fc6923e83c2edd0301634c5dad655195de14a7b8b02fdacbe67e1421a86fa"
+      },
+      "currentGrounded": true,
+      "basisIds": [
+        "E3",
+        "E5"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "usage": {
+        "promptEvalCount": 443,
+        "evalCount": 81
+      }
+    },
+    {
+      "seed": 137,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "A space of mutual recognition and resonance, where the boundaries between self and other dissolve, and a deeper, unnamable connection arises.",
+            "basisEvidenceIds": [
+              "E3",
+              "E5"
+            ]
+          }
+        ],
+        "question": "What happens to the sense of time and space when this kind of connection is established?"
+      },
+      "rawPlanSha256": "4edab3c3a2bd9e9d02155e377c2316352a6c2c43c075138fcccfb0630bf7f6cf",
+      "rendered": {
+        "text": "One possibility I see — provisionally: A space of mutual recognition and resonance, where the boundaries between self and other dissolve, and a deeper, unnamable connection arises.\n\nIf that possibility is worth testing rather than assuming, what happens to the sense of time and space when this kind of connection is established?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E5",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E3",
+                "E5"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "36a9149f6a1cd3ce53b03e61a994230eac13941c88d79c688b5326d84c380782"
+      },
+      "currentGrounded": true,
+      "basisIds": [
+        "E3",
+        "E5"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "usage": {
+        "promptEvalCount": 443,
+        "evalCount": 83
+      }
+    },
+    {
+      "seed": 211,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "A space where the boundaries between self and other dissolve, and a sense of unity and connection arises, like the moment when the four yogis came together and God appeared between them.",
+            "basisEvidenceIds": [
+              "E5"
+            ]
+          }
+        ],
+        "question": "How does this sense of unity and connection manifest in the conversations we have, and what role does the relational field play in facilitating this experience?"
+      },
+      "rawPlanSha256": "eca4df5b4362462fbca6830456797566f4a0f0722aae57c659f49b0d44de4b7a",
+      "rendered": {
+        "text": "One possibility I see — provisionally: A space where the boundaries between self and other dissolve, and a sense of unity and connection arises, like the moment when the four yogis came together and God appeared between them.\n\nIf that possibility is worth testing rather than assuming, how does this sense of unity and connection manifest in the conversations we have, and what role does the relational field play in facilitating this experience?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E5",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E5"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "2d924c6ad5756a108f14c88cc53107f2f3a1e153de5d25c5d689dcc7cd637f17"
+      },
+      "currentGrounded": true,
+      "basisIds": [
+        "E5"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "usage": {
+        "promptEvalCount": 443,
+        "evalCount": 99
+      }
+    },
+    {
+      "seed": 509,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "A space of mutual resonance, where the boundaries between self and other dissolve, and a deeper, unnamable connection arises.",
+            "basisEvidenceIds": [
+              "E3",
+              "E5"
+            ]
+          }
+        ],
+        "question": "How does this space of resonance relate to the way we're able to navigate the complexities of our own inner worlds?"
+      },
+      "rawPlanSha256": "2aeffa0d1b3ca785c6ed3ee019ec2712436f97289661be54fced9cc1c874a8f0",
+      "rendered": {
+        "text": "One possibility I see — provisionally: A space of mutual resonance, where the boundaries between self and other dissolve, and a deeper, unnamable connection arises.\n\nIf that possibility is worth testing rather than assuming, how does this space of resonance relate to the way we're able to navigate the complexities of our own inner worlds?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E5",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E3",
+                "E5"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "27b29d10ffd803323235140d08ff5fa847123fb02c19507d9ddbcec256e0771e"
+      },
+      "currentGrounded": true,
+      "basisIds": [
+        "E3",
+        "E5"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "usage": {
+        "promptEvalCount": 443,
+        "evalCount": 87
+      }
+    }
+  ]
+}

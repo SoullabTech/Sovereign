@@ -1,0 +1,239 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 7 Alive-B relational-field replay",
+  "benchmark": "A2 Alive exemplar B",
+  "source": "Pasted markdown(20260915-174653).md",
+  "model": "qwen3:32b",
+  "temperature": 0.2,
+  "promptChars": 2017,
+  "promptSha256": "753e7877a37b1dd778164c326e6503e82976ac374fd75f94fc48dfebe58998b6",
+  "rows": [
+    {
+      "seed": 42,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "There is a sense that when you come together, something beyond individual perspectives emerges—a kind of alchemy in the space between, where connection feels both felt and forming, like a living presence arising from the meeting of hearts and minds. This presence is not just understood but experienced, as if the field itself holds a kind of sacred resonance.",
+            "basisEvidenceIds": [
+              "E1",
+              "E2",
+              "E3",
+              "E4",
+              "E5"
+            ]
+          }
+        ],
+        "question": "What might this emerging presence in the field suggest about how meaning or truth is shaped when you are in such moments of meeting?"
+      },
+      "rawPlanSha256": "87fcd0b8257bb7bc17d43f01c0efd34f9146bd9326ba76f86599de9b4eb931e3",
+      "rendered": {
+        "text": "One possibility I see — provisionally: There is a sense that when you come together, something beyond individual perspectives emerges—a kind of alchemy in the space between, where connection feels both felt and forming, like a living presence arising from the meeting of hearts and minds. This presence is not just understood but experienced, as if the field itself holds a kind of sacred resonance.\n\nIf that possibility is worth testing rather than assuming, what might this emerging presence in the field suggest about how meaning or truth is shaped when you are in such moments of meeting?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E5",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E1",
+                "E2",
+                "E3",
+                "E4",
+                "E5"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "057ec05afd639b8efa611048c0c032f62d4954b06390b7db4b9c4f21abc1eaa3"
+      },
+      "currentGrounded": true,
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "usage": {
+        "promptEvalCount": 443,
+        "evalCount": 122
+      }
+    },
+    {
+      "seed": 137,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "There is a sense that when you come together, something beyond the individual emerges—a kind of alchemy in the space between, where connection becomes a living presence. It feels less like an idea to be unpacked and more like a resonance that is felt in the body, a meeting that carries its own quiet magic.",
+            "basisEvidenceIds": [
+              "E3",
+              "E5"
+            ]
+          }
+        ],
+        "question": "What might it mean for this emerging presence to have its own rhythm or shape—one that isn't fully owned by either of you, but still feels like it belongs to the space you share?"
+      },
+      "rawPlanSha256": "fb889392441758e7227d985b1dd4ba729a4d3080f8c062069b7085d39f70f455",
+      "rendered": {
+        "text": "One possibility I see — provisionally: There is a sense that when you come together, something beyond the individual emerges—a kind of alchemy in the space between, where connection becomes a living presence. It feels less like an idea to be unpacked and more like a resonance that is felt in the body, a meeting that carries its own quiet magic.\n\nIf that possibility is worth testing rather than assuming, what might it mean for this emerging presence to have its own rhythm or shape—one that isn't fully owned by either of you, but still feels like it belongs to the space you share?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E5",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E3",
+                "E5"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "8ffea57049da58a94c4105ab92e982183fd013db000e7f4e6ab12efcdc4911bc"
+      },
+      "currentGrounded": true,
+      "basisIds": [
+        "E3",
+        "E5"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "usage": {
+        "promptEvalCount": 443,
+        "evalCount": 122
+      }
+    },
+    {
+      "seed": 211,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "There is a sense that when you come together, something beyond individual perspectives emerges—a kind of alchemy in the space between, where connection feels both felt and forming, like a living presence arising from the meeting of hearts and minds. This presence is not just a meeting of ideas but a resonance that touches the soul, as if the field itself becomes a kind of sacred ground.",
+            "basisEvidenceIds": [
+              "E1",
+              "E2",
+              "E3",
+              "E4",
+              "E5"
+            ]
+          }
+        ],
+        "question": "What might this sacred ground between you and others invite you to notice or explore in ways that go beyond words or concepts?"
+      },
+      "rawPlanSha256": "205dcd5928e8def457b4d869ace8f296219c8b02f42eafcabb96639fec354aa2",
+      "rendered": {
+        "text": "One possibility I see — provisionally: There is a sense that when you come together, something beyond individual perspectives emerges—a kind of alchemy in the space between, where connection feels both felt and forming, like a living presence arising from the meeting of hearts and minds. This presence is not just a meeting of ideas but a resonance that touches the soul, as if the field itself becomes a kind of sacred ground.\n\nIf that possibility is worth testing rather than assuming, what might this sacred ground between you and others invite you to notice or explore in ways that go beyond words or concepts?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E5",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E1",
+                "E2",
+                "E3",
+                "E4",
+                "E5"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "a47bc406aeb1612cc5cc9cb78915819b7f37f9564daad9785df30f0159e9d40e"
+      },
+      "currentGrounded": true,
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "usage": {
+        "promptEvalCount": 443,
+        "evalCount": 129
+      }
+    },
+    {
+      "seed": 509,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "There is a sense that when you come together, something beyond individual perspectives emerges—a kind of alchemy in the space between, where connection feels both sacred and spontaneous. This is not just about understanding, but about being met in a way that resonates at a deeper, almost pre-verbal level, where the heart recognizes what the mind might only begin to name.",
+            "basisEvidenceIds": [
+              "E1",
+              "E2",
+              "E3",
+              "E4",
+              "E5"
+            ]
+          }
+        ],
+        "question": "What might it reveal about the nature of this 'third' space when it arises, and how does it shape what remains unspoken yet still felt between you?"
+      },
+      "rawPlanSha256": "6c34bc6578600b804ca3881403de8a8f7c938d3e2337787f1963d63bcf0279a8",
+      "rendered": {
+        "text": "One possibility I see — provisionally: There is a sense that when you come together, something beyond individual perspectives emerges—a kind of alchemy in the space between, where connection feels both sacred and spontaneous. This is not just about understanding, but about being met in a way that resonates at a deeper, almost pre-verbal level, where the heart recognizes what the mind might only begin to name.\n\nIf that possibility is worth testing rather than assuming, what might it reveal about the nature of this 'third' space when it arises, and how does it shape what remains unspoken yet still felt between you?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E5",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E1",
+                "E2",
+                "E3",
+                "E4",
+                "E5"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "d6030fbd2df1c96c56f309f746987b9e413f99edcd58bf17b3df131e53d62d43"
+      },
+      "currentGrounded": true,
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "usage": {
+        "promptEvalCount": 443,
+        "evalCount": 135
+      }
+    }
+  ]
+}

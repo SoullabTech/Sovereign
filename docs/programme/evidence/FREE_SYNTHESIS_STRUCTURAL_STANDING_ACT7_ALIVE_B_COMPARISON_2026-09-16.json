@@ -1,0 +1,42 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 7 Alive-B cross-model structural comparison",
+  "humanBenchmark": "A2 Alive exemplar B \u2014 member names the gestalt",
+  "llama31_8b": {
+    "model": "llama3.1:8b",
+    "promptChars": 2017,
+    "directRendered": 4,
+    "basisCardinality": [
+      2,
+      2,
+      1,
+      2
+    ],
+    "fullArcBasis": 0,
+    "currentTurnBound": 4,
+    "lineageNotEntailment": 4,
+    "observedPromptEvalCounts": [
+      443
+    ],
+    "meanOutputChars": 357
+  },
+  "qwen3_32b": {
+    "model": "qwen3:32b",
+    "promptChars": 2017,
+    "directRendered": 4,
+    "basisCardinality": [
+      5,
+      2,
+      5,
+      5
+    ],
+    "fullArcBasis": 3,
+    "currentTurnBound": 4,
+    "lineageNotEntailment": 4,
+    "observedPromptEvalCounts": [
+      443
+    ],
+    "meanOutputChars": 603
+  },
+  "adjudicationBoundary": "Human/founder owns aliveness label. This comparison records structural admissibility, evidence-basis breadth, and qualitative relation to frozen benchmark properties; it does not auto-ratify generated outputs as alive."
+}

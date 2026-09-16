@@ -19,6 +19,12 @@ ok('missing cognition is a hard model-plan refusal',
 ok('missing evidence descent is a hard model-plan refusal',
   classifyRecoveryRefusal('synthesis_requires_support').disposition === 'HARD_STOP' &&
   classifyRecoveryRefusal('synthesis_requires_support').domain === 'model_plan');
+ok('missing interpretive basis is a hard model-plan refusal',
+  classifyRecoveryRefusal('synthesis_requires_basis').disposition === 'HARD_STOP' &&
+  classifyRecoveryRefusal('synthesis_requires_basis').domain === 'model_plan');
+ok('invalid current-turn binding is a substrate integrity fault',
+  classifyRecoveryRefusal('current_turn_requires_member_evidence').disposition === 'HARD_STOP' &&
+  classifyRecoveryRefusal('current_turn_requires_member_evidence').domain === 'substrate_integrity');
 ok('borrowed member voice is a hard model-plan refusal',
   classifyRecoveryRefusal('borrowed_first_person').disposition === 'HARD_STOP' &&
   classifyRecoveryRefusal('borrowed_first_person').domain === 'model_plan');
@@ -47,6 +53,7 @@ const refusalSources = [
   'scripts/research/structural-standing/structural-recovery.ts',
   'scripts/research/structural-standing/standing-bound-plan.ts',
   'scripts/research/structural-standing/support-derived-ground.ts',
+  'scripts/research/structural-standing/current-turn-basis-envelope.ts',
 ];
 const emittedCodes = new Set<string>();
 for (const source of refusalSources) {
