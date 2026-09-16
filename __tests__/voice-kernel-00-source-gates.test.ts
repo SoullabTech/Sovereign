@@ -1256,10 +1256,10 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
                         'shared-head refusal (3 steps) qualifies under vpio-02 — trace-indistinguishable, custody decides: failure then recovery']) expect(out).toContain(line);
     expect(out).not.toMatch(/^FAIL/m);
   });
-  it('corpus partition (founder ruling 2026-09-15; SID custody extension 2026-09-16): every tracked journal carries H (declared subject) and C (physical start-trace signature); vpio-02-sid remains its own custody subject while intentionally sharing the vpio-02 physical trace; disagreement fails closed naming file · header · signature; sets are vpio-02 61 · vpio-02-sid 75 · vpio-01 30 · engine 468; the frozen classifier reproduces every produced ledger under its declared classifier subject; cross-subject reads are SUBJECT-MISMATCH; no directory is named', () => {
+  it('corpus partition (founder ruling 2026-09-15; SID custody extension 2026-09-16): every tracked journal carries H (declared subject) and C (physical start-trace signature); vpio-02-sid remains its own custody subject while intentionally sharing the vpio-02 physical trace; disagreement fails closed naming file · header · signature; sets are vpio-02 61 · vpio-02-sid 80 (ENTRY 75 + SOURCE partial 5) · vpio-01 30 · engine 468; the frozen classifier reproduces every produced ledger under its declared classifier subject; cross-subject reads are SUBJECT-MISMATCH; no directory is named', () => {
     const LEDGER_ROOT = 'docs/programme/VOICE-2026/driver-ledger';
     const all = tracked([`:(glob)${LEDGER_ROOT}/**/kernel00-*.jsonl`]);
-    expect(all.length).toBe(634);
+    expect(all.length).toBe(639);
     // H — the declared subject: the nearest ledger.md above the journal (written by the batch from its --subject); no ledger ⇒ none (the archive)
     const headerOf = (p: string): { dir: string; subject: string } | null => {
       let d = dirname(p);
@@ -1287,8 +1287,10 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(disagreements).toEqual([]);
     const declaredCorpus = (subject: string) => all.filter((p) => carriers.get(p)!.h?.subject === subject && carriers.get(p)!.c === physicalForDeclared(subject));
     const vpio02 = declaredCorpus('vpio-02'), vpio02sid = declaredCorpus('vpio-02-sid'), vpio01 = declaredCorpus('vpio-01');
+    const vpio02sidEntry = vpio02sid.filter((p) => p.includes('/VPIO-02-SID-ENTRY'));
+    const vpio02sidSource = vpio02sid.filter((p) => p.includes('/VPIO-02-SID-SOURCE'));
     const engine = all.filter((p) => physicalForDeclared(carriers.get(p)!.h?.subject) === 'engine' && carriers.get(p)!.c === 'engine');
-    expect([vpio02.length, vpio02sid.length, vpio01.length, engine.length]).toEqual([61, 75, 30, 468]);
+    expect([vpio02.length, vpio02sid.length, vpio02sidEntry.length, vpio02sidSource.length, vpio01.length, engine.length]).toEqual([61, 80, 75, 5, 30, 468]);
     expect(all.filter((p) => carriers.get(p)!.h === null).length).toBe(154);          // the archive: no header, engine by signature
     const classify = (subject: string, files: string[]): Map<string, string> => {
       if (files.length === 0) return new Map();
@@ -1303,11 +1305,11 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     expect(c02.filter((c) => c === 'failure then recovery').length).toBe(1);
     // SID is a separate custody subject whose entry classifier is deliberately vpio-02 (declared in the produced ledger).
     const c02sid = classes('vpio-02', vpio02sid);
-    expect(c02sid.filter((c) => c === 'gen-1 listen').length).toBe(74);
+    expect(c02sid.filter((c) => c === 'gen-1 listen').length).toBe(79);
     expect(c02sid.filter((c) => c === 'failure then degradation').length).toBe(1);
     // cross-subject: structural, both directions; SID also mismatches under vpio-01; engine-era remains closed.
     expect(classes('vpio-01', vpio02)).toEqual(Array(61).fill('SUBJECT-MISMATCH'));
-    expect(classes('vpio-01', vpio02sid)).toEqual(Array(75).fill('SUBJECT-MISMATCH'));
+    expect(classes('vpio-01', vpio02sid)).toEqual(Array(80).fill('SUBJECT-MISMATCH'));
     expect(classes('vpio-02', vpio01)).toEqual(Array(30).fill('SUBJECT-MISMATCH'));
     expect(new Set(classes('vpio-02', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
     expect(new Set(classes('vpio-01', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
@@ -1318,7 +1320,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     // frozen classifier is the C-D6 gen-1 §3 refusal (one journal, SUBJECT-MISMATCH → failure then degradation), pinned exactly.
     const byDir = new Map<string, string[]>();
     for (const p of all) { const h = carriers.get(p)!.h; if (h) byDir.set(h.dir, [...(byDir.get(h.dir) ?? []), p]); }
-    expect(byDir.size).toBe(20);                                                                    // + SID ENTRY-BATCH-05 as its own custody population; archive remains headerless
+    expect(byDir.size).toBe(21);                                                                    // + SID ENTRY-BATCH-05 as its own custody population; archive remains headerless
     const floods: string[] = [];
     for (const [dir, files] of byDir) {
       const declaredSubject = headerOf(files[0])!.subject;
@@ -1446,7 +1448,7 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
     const exactSubject = (p: string) => ledgerText(p).match(/\bsubject=([^\s·|]+)/)?.[1] ?? '';
     const batchLabel = (p: string) => ledgerText(p).match(/^# DRIVER-01 batch — ([^—\n]+) — /m)?.[1].trim() ?? '';
     const outputDirs = outputLedgers.filter((p) => ['VPIO-01', 'VPIO-02'].includes(batchLabel(p))).map((p) => p.replace(/ledger\.md$/, 'journals'));
-    const sidEntryDirs = outputLedgers.filter((p) => exactSubject(p) === 'vpio-02-sid').map((p) => p.replace(/ledger\.md$/, 'journals'));
+    const sidEntryDirs = outputLedgers.filter((p) => exactSubject(p) === 'vpio-02-sid' && p.includes('/VPIO-02-SID-ENTRY')).map((p) => p.replace(/ledger\.md$/, 'journals'));
     const journals = outputDirs.flatMap((d) => execFileSync('git', ['ls-files', d], { cwd: process.cwd() }).toString('utf8').split('\n').filter((f) => f.endsWith('.jsonl') && !f.includes('not-a-sample')));
     const sidEntryJournals = sidEntryDirs.flatMap((d) => execFileSync('git', ['ls-files', d], { cwd: process.cwd() }).toString('utf8').split('\n').filter((f) => f.endsWith('.jsonl') && !f.includes('not-a-sample')));
     expect(journals.length).toBe(60);
@@ -1870,7 +1872,7 @@ describe('KERNEL-00 · SOURCE-ID-02 — seven-bin Goertzel at the consumed seam 
     const sourceLedgers = execFileSync('git', ['ls-files', 'docs/programme/VOICE-2026/driver-ledger'], { cwd: process.cwd() }).toString('utf8').split('\n').filter((p) => p.endsWith('/ledger.md'));
     const exactSourceSubject = (p: string) => readFileSync(join(process.cwd(), p), 'utf8').match(/\bsubject=([^\s·|]+)/)?.[1] ?? '';
     const dirs = sourceLedgers.filter((p) => exactSourceSubject(p) === 'vpio-02');
-    const sidEntryDirs = sourceLedgers.filter((p) => exactSourceSubject(p) === 'vpio-02-sid');
+    const sidEntryDirs = sourceLedgers.filter((p) => exactSourceSubject(p) === 'vpio-02-sid' && p.includes('/VPIO-02-SID-ENTRY'));
     const journals = dirs.flatMap((p) => execFileSync('git', ['ls-files', p.replace(/ledger\.md$/, 'journals')], { cwd: process.cwd() }).toString('utf8').split('\n').filter((f) => f.endsWith('.jsonl') && !f.includes('not-a-sample')));
     const sidEntryJournals = sidEntryDirs.flatMap((p) => execFileSync('git', ['ls-files', p.replace(/ledger\.md$/, 'journals')], { cwd: process.cwd() }).toString('utf8').split('\n').filter((f) => f.endsWith('.jsonl') && !f.includes('not-a-sample')));
     expect(journals.length).toBe(61);
@@ -2021,6 +2023,22 @@ describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026
     expect(p).toContain('readset pre "$K00_CONTAINER" "$V1_CONTAINER" "$V2_CONTAINER"');
     expect(p).toContain('readset post');
     expect(p).not.toMatch(/xcodebuild|testTerminateOnly|k00-driver-batch|device install|device uninstall/);
+  });
+
+
+  it('SID SOURCE-03 post-prewarm wrapper observes DAS first, requires external authorities, and delegates only to pinned CLEAR/PREFLIGHT/BATCH acts', () => {
+    const p = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-03_AFTER-PREWARM_RUN_DRAFT_2026-09-16.sh'), 'utf8');
+    expect(p).toContain('idevicesyslog -u "$UDID" -p dasd --no-colors');
+    expect(p).toContain('Rescheduling repeating task com.apple.appResume.prewarm');
+    expect(p).toContain('CLEAR_AUTH=/private/tmp/sid-source-harness-clear-02-authority.txt');
+    expect(p).toContain('BATCH_AUTH=/private/tmp/sid-source-batch-03-authority.txt');
+    expect(p).toContain('bash "$CLEAR"');
+    expect(p).toContain('bash "$PRE"');
+    expect(p).toContain('bash "$BATCH"');
+    expect(p.indexOf('grep -q \'Rescheduling repeating task com.apple.appResume.prewarm\'')).toBeLessThan(p.indexOf('bash "$CLEAR"'));
+    expect(p.indexOf('bash "$CLEAR"')).toBeLessThan(p.indexOf('bash "$PRE"'));
+    expect(p.indexOf('bash "$PRE"')).toBeLessThan(p.indexOf('bash "$BATCH"'));
+    expect(p).not.toMatch(/device process terminate|device install|device uninstall|K00_EXEC_AUTHORITY=.*FOUNDER-AUTH/);
   });
 
 });
