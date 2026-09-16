@@ -413,50 +413,70 @@ export default function HomeView({
      numbers, no words. It says "you have entered a place for writing"
      before the interface asks the intellect to parse anything. */
   const Hero = () => (
-    <div className="relative -mx-6 md:-mx-10 -mt-10 md:-mt-16 mb-10 md:mb-14">
-      {/* A window into the room, not a banner. Short enough on phone that the
-          member's own title and Open writing are reached almost immediately —
-          the eye should move from warmth to their writing within a beat. */}
-      <div className="relative h-[132px] md:h-[224px] overflow-hidden">
-        {/* Explicit intrinsic dimensions + a fixed-height container: the
-            band can never reflow the writer's title beneath it. Decorative,
-            so alt="" and aria-hidden — it carries no information. A phone
-            takes the 960px file, not the 1920px one. */}
+    <div className="relative -mx-6 md:-mx-10 mb-8 md:mb-12">
+      <div className="relative min-h-[320px] md:h-[430px] overflow-hidden">
         <img
           src="/writers-studio-hero.jpg"
           srcSet="/writers-studio-hero-960.jpg 960w, /writers-studio-hero.jpg 1920w"
-          sizes="(max-width: 767px) 100vw, 100vw"
+          sizes="100vw"
           width={1920}
           height={1071}
           alt=""
           aria-hidden="true"
           decoding="async"
           fetchPriority="high"
-          className="w-full h-full object-cover"
-          style={{ objectPosition: '60% 45%' }}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: '60% 46%' }}
         />
-        {/* The field reclaims the image at its edges so type sits on paper,
-            not on a photograph. */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(to bottom, rgba(26,21,19,0.62) 0%, rgba(26,21,19,0.44) 30%, rgba(26,21,19,0.94) 86%, #1A1513 100%)',
+              'linear-gradient(90deg, rgba(10,12,10,.82) 0%, rgba(10,12,10,.60) 48%, rgba(10,12,10,.48) 72%, rgba(10,12,10,.70) 100%), linear-gradient(to bottom, rgba(10,12,10,.22) 0%, rgba(10,12,10,.18) 55%, rgba(10,12,10,.88) 100%)',
           }}
         />
-        <div className="absolute inset-x-0 bottom-0 px-6 md:px-10">
-          <div className="max-w-4xl mx-auto pb-7">
-            <div className="flex items-center gap-3">
-              <img
-                src="/holoflower-studio-transparent.png"
-                alt=""
-                aria-hidden="true"
-                className="w-6 h-6 opacity-80"
-              />
-              <p className="text-[10.5px] tracking-[0.34em] uppercase opacity-70">
-                Writer&rsquo;s Studio
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-10 pt-5 md:pt-6 text-[#F4EFE6]">
+          <div className="flex items-center justify-between gap-5">
+            <div className="flex items-center gap-3 min-w-0">
+              <strong className="text-[12px] md:text-[13px] tracking-[0.28em] whitespace-nowrap">SOULLAB</strong>
+              <span className="opacity-45">|</span>
+              <span className="text-[18px] md:text-[20px] whitespace-nowrap">Writer&rsquo;s Studio</span>
+            </div>
+            <nav className="hidden lg:flex items-center gap-2 text-[13px]" aria-label="Writer’s Studio modes">
+              {['Write', 'Develop', 'Explore', 'Review', 'Publish'].map((mode) => (
+                <span
+                  key={mode}
+                  className="px-4 py-2 rounded-full"
+                  style={{
+                    background: mode === 'Write' ? 'rgba(239,224,185,.92)' : 'transparent',
+                    color: mode === 'Write' ? '#262015' : 'rgba(244,239,230,.84)',
+                    fontWeight: mode === 'Write' ? 650 : 450,
+                  }}
+                >
+                  {mode}
+                </span>
+              ))}
+            </nav>
+            <div className="flex items-center gap-2 md:gap-3">
+              <AppearanceMenu />
+              <span className="hidden sm:inline-flex rounded-full border border-[#A87C18] px-2.5 py-1 text-[9px] tracking-[.18em] text-[#DAB84D]">BETA</span>
+            </div>
+          </div>
+
+          <div className="pt-16 md:pt-20 max-w-3xl">
+            <div className="flex items-center gap-3 mb-5">
+              <img src="/holoflower-studio-transparent.png" alt="" aria-hidden="true" className="w-5 h-5 opacity-85" />
+              <p className="text-[10px] md:text-[10.5px] tracking-[0.3em] uppercase text-[#D8B361]">
+                A quieter place for bigger ideas
               </p>
             </div>
+            <h1 className="text-[44px] sm:text-[56px] md:text-[72px] leading-[.98] tracking-[-.025em] max-w-3xl">
+              Welcome to your writing studio.
+            </h1>
+            <p className="mt-6 text-[16px] md:text-[18px] leading-relaxed text-[#E8E0D4] max-w-2xl opacity-90">
+              A place to think deeply, write freely, and stay close to what you are making.
+            </p>
           </div>
         </div>
       </div>
@@ -515,7 +535,7 @@ export default function HomeView({
       <div className="group relative">
         <Link
           href={href}
-          className="block rounded-[3px] border p-6 min-h-[136px] overflow-hidden transition-all duration-200 [@media(hover:hover)]:hover:-translate-y-[2px]"
+          className="block rounded-[12px] border p-5 min-h-[154px] overflow-hidden transition-all duration-200 [@media(hover:hover)]:hover:-translate-y-[2px]"
           style={{
             borderColor: PRESS.ruleSoft,
             background:
@@ -588,7 +608,7 @@ export default function HomeView({
   };
 
   const Cards = ({ children }: { children: React.ReactNode }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">{children}</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">{children}</div>
   );
 
   /* Offered beside the writing, never in front of it. */
@@ -649,30 +669,19 @@ export default function HomeView({
 
   /* A bound, not a summary: the room shows recent acts and the rest live with
      the Work. Raising this number cannot make the section interpret more. */
-  const HISTORY_ACTS = 14;
+  const HISTORY_ACTS = 5;
 
   const VISIBLE = 4;
   const shelfCards = showAll ? shelf : shelf.slice(0, VISIBLE);
 
   return (
     <main
-      className="min-h-screen px-6 md:px-10 py-10 md:py-16"
+      className="min-h-screen px-6 md:px-10 pb-16"
       style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
     >
       {!loading ? <Hero /> : null}
 
-      <div className="max-w-4xl mx-auto">
-        {/* The same control the Canvas carries, not a second one: one component,
-            one preference, two doors. A writer changes the room from wherever
-            they happen to be standing. Available in the empty Studio too —
-            someone arriving with nothing written should still get to decide
-            what room they are arriving into. */}
-        {!loading ? (
-          <div className="flex justify-end -mt-4 mb-6">
-            <AppearanceMenu />
-          </div>
-        ) : null}
-
+      <div className="max-w-7xl mx-auto">
         {loading ? (
           <p className="text-[15px] opacity-40">Opening your studio…</p>
         ) : kind === 'begin' ? (
@@ -785,7 +794,14 @@ export default function HomeView({
 
                 RETURN is also already a stage in the Larger Arc. ─────────── */}
             {kind === 'continue' && resume ? (
-              <section className="mb-14 md:mb-20">
+              <section
+                className="mb-10 md:mb-14 rounded-[18px] border p-5 md:p-7 overflow-hidden"
+                style={{
+                  borderColor: PRESS.rule,
+                  background: 'linear-gradient(145deg, color-mix(in srgb, var(--ws-ground-raised) 90%, transparent), color-mix(in srgb, var(--ws-ground-deepest) 74%, transparent))',
+                  boxShadow: '0 22px 70px -44px rgba(0,0,0,.8), inset 0 1px rgba(255,255,255,.04)',
+                }}
+              >
                 <Eyebrow>Return</Eyebrow>
                 {/* The Work's own image and its name, together. This is where
                     recognition happens — a writer knows their book by its face
@@ -920,6 +936,70 @@ export default function HomeView({
               </section>
             ) : null}
 
+        {!loading ? (
+          <section
+            className="flex flex-col sm:flex-row gap-3 mb-12 md:mb-16"
+            style={{ borderColor: PRESS.ruleSoft }}
+          >
+            {beginning ? (
+              <div className="flex-1 max-w-lg">
+                <label htmlFor="work-name" className="block text-[13px] opacity-55 mb-2">
+                  Give it a name, or leave it blank for now.
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    id="work-name"
+                    autoFocus
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !busy)
+                        void run(
+                          () => onBegin(draftName.trim()),
+                          'Could not begin your work just now. Nothing was changed.',
+                        );
+                      if (e.key === 'Escape') setBeginning(false);
+                    }}
+                    className="flex-1 bg-transparent border px-3.5 py-2.5 text-[15px] min-h-[48px] rounded-[2px] outline-none"
+                    style={{ borderColor: PRESS.rule, color: PRESS.text, fontFamily: SERIF }}
+                  />
+                  <button
+                    onClick={() =>
+                      void run(
+                        () => onBegin(draftName.trim()),
+                        'Could not begin your work just now. Nothing was changed.',
+                      )
+                    }
+                    disabled={busy}
+                    className="px-6 min-h-[48px] text-[14px] rounded-[2px] disabled:opacity-40"
+                    style={{ background: PRESS.accent, color: PRESS.ink }}
+                  >
+                    {busy ? <Loader2 size={16} className="animate-spin" /> : 'Begin'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setBeginning(true)}
+                className={`${QUIET} w-full sm:w-auto`}
+                style={{ borderColor: PRESS.rule }}
+              >
+                <FilePlus2 size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
+                Begin a new work
+              </button>
+            )}
+
+            <Link
+              href={IMPORT_HREF}
+              className={`${QUIET} w-full sm:w-auto`}
+              style={{ borderColor: PRESS.rule }}
+            >
+              <FolderInput size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
+              Import writing
+            </Link>
+          </section>
+        ) : null}
+
             {/* ── FROM YOUR WORK ───────────────────────────────────────
                 The writer's own sentences, back in the room with them.
 
@@ -994,54 +1074,6 @@ export default function HomeView({
                     </ul>
                   </>
                 ) : null}
-              </section>
-            ) : null}
-
-            {/* ── HISTORY ──────────────────────────────────────────────
-                What the writer actually did, when they did it.
-
-                Every entry is an immutable record: a declaration, an arrival,
-                a checkpoint, a mark. Nothing here is derived from current
-                state — ⛔ notably NOT `updated_at`, which would give one
-                "returned to" per manuscript that silently RELOCATES to a new
-                date every time the member writes. A history entry that moves
-                is not a history.
-
-                ⛔ A date gathers acts. It never explains them. There is no
-                daily headline, no count, no "a productive day revising Fire",
-                and no field in `HistoryDay` one could be added to without
-                editing the type — which is where the argument would have to
-                happen, in the open. Grouping is presentation. Summarizing is
-                interpretation. (Founder ruling 2026-09-07.) */}
-            {historyActs.length > 0 ? (
-              <section className="mb-14 md:mb-20">
-                <Eyebrow>History</Eyebrow>
-                <div className="mt-6 space-y-9 max-w-2xl">
-                  {byDay(historyActs.slice(0, HISTORY_ACTS)).map((day) => (
-                    <div key={day.key}>
-                      <h3 className="text-[10.5px] tracking-[0.28em] uppercase opacity-35 mb-4">
-                        {day.label}
-                      </h3>
-                      <ul className="space-y-4">
-                        {day.acts.map((act) => {
-                          const said = sentenceFor(act);
-                          /* An act the Studio cannot state without guessing is
-                             omitted rather than approximated. */
-                          if (!said) return null;
-                          const under = beneath(act);
-                          return (
-                            <li key={`${act.kind}-${act.id}`}>
-                              <p className="text-[15.5px] leading-[1.45] opacity-80">{said}</p>
-                              {under ? (
-                                <p className="text-[13px] opacity-45 mt-1">{under}</p>
-                              ) : null}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
               </section>
             ) : null}
 
@@ -1125,6 +1157,55 @@ export default function HomeView({
                 </Cards>
               </section>
             ) : null}
+
+            {/* ── HISTORY ──────────────────────────────────────────────
+                What the writer actually did, when they did it.
+
+                Every entry is an immutable record: a declaration, an arrival,
+                a checkpoint, a mark. Nothing here is derived from current
+                state — ⛔ notably NOT `updated_at`, which would give one
+                "returned to" per manuscript that silently RELOCATES to a new
+                date every time the member writes. A history entry that moves
+                is not a history.
+
+                ⛔ A date gathers acts. It never explains them. There is no
+                daily headline, no count, no "a productive day revising Fire",
+                and no field in `HistoryDay` one could be added to without
+                editing the type — which is where the argument would have to
+                happen, in the open. Grouping is presentation. Summarizing is
+                interpretation. (Founder ruling 2026-09-07.) */}
+            {historyActs.length > 0 ? (
+              <section className="mb-14 md:mb-20">
+                <Eyebrow>Recent activity</Eyebrow>
+                <div className="mt-6 space-y-9 max-w-2xl">
+                  {byDay(historyActs.slice(0, HISTORY_ACTS)).map((day) => (
+                    <div key={day.key}>
+                      <h3 className="text-[10.5px] tracking-[0.28em] uppercase opacity-35 mb-4">
+                        {day.label}
+                      </h3>
+                      <ul className="space-y-4">
+                        {day.acts.map((act) => {
+                          const said = sentenceFor(act);
+                          /* An act the Studio cannot state without guessing is
+                             omitted rather than approximated. */
+                          if (!said) return null;
+                          const under = beneath(act);
+                          return (
+                            <li key={`${act.kind}-${act.id}`}>
+                              <p className="text-[15.5px] leading-[1.45] opacity-80">{said}</p>
+                              {under ? (
+                                <p className="text-[13px] opacity-45 mt-1">{under}</p>
+                              ) : null}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
               </>
             )}
           </>
@@ -1136,69 +1217,7 @@ export default function HomeView({
           </p>
         ) : null}
 
-        {kind !== 'begin' && !loading ? (
-          <section
-            className="flex flex-col sm:flex-row gap-3 pt-10 border-t"
-            style={{ borderColor: PRESS.ruleSoft }}
-          >
-            {beginning ? (
-              <div className="flex-1 max-w-lg">
-                <label htmlFor="work-name" className="block text-[13px] opacity-55 mb-2">
-                  Give it a name, or leave it blank for now.
-                </label>
-                <div className="flex gap-3">
-                  <input
-                    id="work-name"
-                    autoFocus
-                    value={draftName}
-                    onChange={(e) => setDraftName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !busy)
-                        void run(
-                          () => onBegin(draftName.trim()),
-                          'Could not begin your work just now. Nothing was changed.',
-                        );
-                      if (e.key === 'Escape') setBeginning(false);
-                    }}
-                    className="flex-1 bg-transparent border px-3.5 py-2.5 text-[15px] min-h-[48px] rounded-[2px] outline-none"
-                    style={{ borderColor: PRESS.rule, color: PRESS.text, fontFamily: SERIF }}
-                  />
-                  <button
-                    onClick={() =>
-                      void run(
-                        () => onBegin(draftName.trim()),
-                        'Could not begin your work just now. Nothing was changed.',
-                      )
-                    }
-                    disabled={busy}
-                    className="px-6 min-h-[48px] text-[14px] rounded-[2px] disabled:opacity-40"
-                    style={{ background: PRESS.accent, color: PRESS.ink }}
-                  >
-                    {busy ? <Loader2 size={16} className="animate-spin" /> : 'Begin'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setBeginning(true)}
-                className={`${QUIET} w-full sm:w-auto`}
-                style={{ borderColor: PRESS.rule }}
-              >
-                <FilePlus2 size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
-                Begin a new work
-              </button>
-            )}
 
-            <Link
-              href={IMPORT_HREF}
-              className={`${QUIET} w-full sm:w-auto`}
-              style={{ borderColor: PRESS.rule }}
-            >
-              <FolderInput size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
-              Import writing
-            </Link>
-          </section>
-        ) : null}
       </div>
     </main>
   );

@@ -76,7 +76,7 @@ export function AppearanceMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="true"
-        className="inline-flex items-center gap-2 min-h-[40px] px-3 text-[11.5px] tracking-[0.18em] uppercase opacity-45 hover:opacity-90 transition-opacity"
+        className="inline-flex items-center gap-1.5 sm:gap-2 min-h-[40px] px-1.5 sm:px-3 text-[10px] sm:text-[11.5px] tracking-[0.14em] sm:tracking-[0.18em] uppercase opacity-55 hover:opacity-90 transition-opacity"
         style={{ color: 'var(--ws-ink-primary, #F3EDE4)' }}
       >
         <span
@@ -92,7 +92,7 @@ export function AppearanceMenu() {
 
       {open ? (
         <div
-          className="absolute right-0 mt-2 z-30 p-3 rounded-[3px] border"
+          className="fixed left-4 right-4 top-16 z-[100] max-h-[calc(100vh-5rem)] overflow-y-auto p-3 rounded-[8px] border shadow-2xl sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:z-30 sm:max-h-none sm:overflow-visible sm:rounded-[3px] sm:shadow-none"
           style={{
             background: 'var(--ws-ground-deepest, #15120D)',
             borderColor: 'var(--ws-rule, #4A4238)',

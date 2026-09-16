@@ -1,10 +1,14 @@
  'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
-import { ATMOSPHERES, atmosphereVariables } from '../atmosphere/atmospheres';
+import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
+import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
+import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
 import { SERIF, SANS } from '../studioTheme';
+import { StudioModeBar } from '../studio/StudioModeBar';
 import { useLivingWorks } from '../useLivingWorks';
 import { currentWork, resolveWorkContext } from '../workContext';
 import RebuildWritingBoundary from './RebuildWritingBoundary';
@@ -34,6 +38,7 @@ interface ContextReady {
 type ContextPayload = ContextReady | { state: 'no_draft' | 'continuous'; manuscriptId: string; title: string | null };
 type Phase = 'loading' | 'ready' | 'unauthorized' | 'error';
 type MaiaMode = 'chapter' | 'passage';
+type ManuscriptView = 'chapter' | 'section';
 type PassageTab = 'interpret' | 'suggest' | 'explore' | 'ask';
 interface PassageSelection {
   draftSectionId: string; start: number; end: number; text: string; revisionNumber: number;
@@ -119,6 +124,7 @@ export default function RebuildStudioClient() {
   const [message, setMessage] = useState<string | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [maiaMode, setMaiaMode] = useState<MaiaMode>('chapter');
+  const [manuscriptView, setManuscriptView] = useState<ManuscriptView>('chapter');
   const [canvasExpanded, setCanvasExpanded] = useState(false);
   const [writingEpoch, setWritingEpoch] = useState(0);
   const [writingMessage, setWritingMessage] = useState<string | null>(null);
@@ -126,7 +132,7 @@ export default function RebuildStudioClient() {
   const [passageTab, setPassageTab] = useState<PassageTab>('ask');
   const [mobilePane, setMobilePane] = useState<'outline' | 'manuscript' | 'maia'>('manuscript');
   const [review, setReview] = useState<ChapterReviewBundle | null>(null);
-  const [reviewPhase, setReviewPhase] = useState<'idle' | 'reading' | 'ready' | 'partial'>('idle');
+  const [reviewPhase, setReviewPhase] = useState<'idle' | 'reading' | 'ready' | 'partial' | 'failed'>('idle');
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number; lens: string } | null>(null);
   const [reviewNeedsRefresh, setReviewNeedsRefresh] = useState(false);
   const [maiaAsk, setMaiaAsk] = useState('');
@@ -146,7 +152,12 @@ export default function RebuildStudioClient() {
   const sessionIdRef = useRef('');
   const writingRef = useRef<SectionWriting | null>(null);
   const sectionRefs = useRef(new Map<string, HTMLElement>());
+  const manuscriptScrollRef = useRef<HTMLDivElement | null>(null);
+  /* A scroll destination is a one-shot member/arrival gesture, never a standing
+     effect of Focus. It is spent immediately after the matching section mounts. */
+  const pendingManuscriptJumpRef = useRef<string | null>(requestedSection);
   const { phase: worksPhase, works } = useLivingWorks();
+  const canvasSurfaceVars = useCanvasSurfaceVariables();
 
   const load = useCallback(async () => {
     setPhase('loading'); setMessage(null);
@@ -183,7 +194,9 @@ export default function RebuildStudioClient() {
       const chapter10 = body.sections.find((s) => /^Chapter 10\b/i.test(s.heading ?? ''));
       const initial = requestedRow ?? chapter10 ?? body.sections[0] ?? null;
       setFocusId(initial?.draftSectionId ?? null);
-      setMaiaMode(initial && !/^Chapter\s+\d+\b/i.test(initial.heading ?? '') ? 'passage' : 'chapter');
+      const initialIsChapter = Boolean(initial && /^Chapter\s+\d+\b/i.test(initial.heading ?? ''));
+      setMaiaMode(initialIsChapter ? 'chapter' : 'passage');
+      setManuscriptView('chapter');
       setPhase('ready');
     } catch {
       setPhase('error');
@@ -261,12 +274,43 @@ export default function RebuildStudioClient() {
     if (!(await settleWriting())) return;
     setReviewPhase('reading');
     setReviewProgress({ done: 0, total: 7, lens: 'development' });
-    const bundle = await runChapterReview(context.manuscriptId, chapter.sections, (done, total, lens) => {
+
+    /* A developmental reading freezes a revision. Autosave may have advanced
+       the server draft beyond the last frozen revision, so the member's
+       explicit Review gesture first checkpoints SERVER TRUTH. No manuscript
+       prose crosses this request and no background/automatic checkpoint is
+       introduced. */
+    const writing = writingRef.current;
+    if (writing) {
+      const checkpoint = await checkpointServerDraft(apiFetch, context.manuscriptId, {
+        baseRevisionId: writing.currentRevisionId(),
+        idempotencyKey: newIdempotencyKey(),
+      });
+      if (checkpoint.kind !== 'ok') {
+        setReview({ readingIds: [], payloads: [], findings: [], failures: [{
+          lens: 'development',
+          refusal: checkpoint.kind === 'conflict' ? 'revision_moved' : 'checkpoint_failed',
+          stage: 'capture',
+        }] });
+        setReviewPhase('failed');
+        return;
+      }
+    }
+
+    const publishPartial = (partial: ChapterReviewBundle, done: number, total: number, lens: string) => {
+      setReview(partial);
       setReviewProgress({ done, total, lens });
-    });
+    };
+    let bundle = await runChapterReview(
+      context.manuscriptId,
+      chapter.sections,
+      (done, total, lens) => setReviewProgress({ done, total, lens }),
+      publishPartial,
+    );
+
     setReview(bundle);
     setReviewNeedsRefresh(false);
-    setReviewPhase(bundle.failures.length === 0 ? 'ready' : 'partial');
+    setReviewPhase(bundle.failures.length === 0 ? 'ready' : bundle.payloads.length === 0 ? 'failed' : 'partial');
   }, [chapter, context, reviewPhase, settleWriting]);
 
   const replaceAddress = useCallback((sectionId: string, threadId: string | null) => {
@@ -347,6 +391,32 @@ export default function RebuildStudioClient() {
     replaceAddress(sectionId, null);
   }, [clearEditorial, review, replaceAddress]);
 
+  const scrollChapterToSection = useCallback((sectionId: string) => {
+    const scroller = manuscriptScrollRef.current;
+    const target = sectionRefs.current.get(sectionId);
+    if (!scroller || !target) return false;
+    const scrollerBox = scroller.getBoundingClientRect();
+    const targetBox = target.getBoundingClientRect();
+    const top = scroller.scrollTop + (targetBox.top - scrollerBox.top) - 24;
+    scroller.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+    return true;
+  }, []);
+
+  /* One-shot arrival / outline jump. Focus changes, MAIA replies, review state,
+     autosave and ordinary re-renders cannot invoke this. */
+  useLayoutEffect(() => {
+    const destination = pendingManuscriptJumpRef.current;
+    if (!destination || manuscriptView !== 'chapter') return;
+    if (scrollChapterToSection(destination)) pendingManuscriptJumpRef.current = null;
+  }, [chapterRootId, focusId, manuscriptView, scrollChapterToSection]);
+
+  const chooseManuscriptView = useCallback((next: ManuscriptView) => {
+    if (next === manuscriptView) return;
+    if (next === 'chapter' && focusId) pendingManuscriptJumpRef.current = focusId;
+    setManuscriptView(next);
+    if (next === 'section') manuscriptScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+  }, [focusId, manuscriptView]);
+
   const selectSection = useCallback((id: string, role: OutlineNode['role']) => {
     const moved = id !== focusId;
     const changedGrain = selectedPassage !== null;
@@ -357,8 +427,10 @@ export default function RebuildStudioClient() {
     setPassageTab('ask');
     setMobilePane('manuscript');
     replaceAddress(id, moved || changedGrain ? null : editorialThread?.threadId ?? null);
-    requestAnimationFrame(() => sectionRefs.current.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-  }, [focusId, selectedPassage, clearEditorial, replaceAddress, editorialThread?.threadId]);
+    if (role === 'chapter') setManuscriptView('chapter');
+    if (manuscriptView === 'chapter' || role === 'chapter') pendingManuscriptJumpRef.current = id;
+    else manuscriptScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+  }, [focusId, selectedPassage, clearEditorial, replaceAddress, editorialThread?.threadId, manuscriptView]);
 
   const title = context?.title ?? 'Writer’s Studio';
   const chapterTitle = chapter?.root.heading ?? focusSection?.heading ?? 'Manuscript';
@@ -606,7 +678,6 @@ export default function RebuildStudioClient() {
     setEditorialFailure(null);
   }, []);
 
-  const cloud = atmosphereVariables(ATMOSPHERES.cloud);
 
   if (phase !== 'ready' || !context) {
     return (
@@ -641,19 +712,24 @@ export default function RebuildStudioClient() {
             : statuses.includes('dirty') ? 'Unsaved'
               : statuses.includes('saving') ? 'Saving…' : null;
         return (
-    <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} style={{ ...cloud, height: '100vh', overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
+    <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} style={{ height: '100vh', overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
       {!canvasExpanded && (<header className="wsr-header" style={{ height: 58, display: 'grid', gridTemplateColumns: '300px 1fr 300px', alignItems: 'center', padding: '0 20px', borderBottom: `1px solid ${C.soft}`, background: C.field }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <strong style={{ letterSpacing: '.18em', fontSize: 13 }}>SOULLAB</strong>
           <span style={{ color: C.quiet, fontSize: 13 }}>|</span>
           <span style={{ fontFamily: SERIF, fontSize: 17 }}>Writer’s Studio</span>
         </div>
-        <nav className="wsr-modebar" style={{ display: 'flex', justifyContent: 'center', gap: 8, fontSize: 12.5 }}>
-          {['Write', 'Develop', 'Explore', 'Review', 'Publish'].map((x) => (
-            <span key={x} style={{ padding: '7px 13px', borderRadius: 999, background: x === 'Write' ? C.goldFill : 'transparent', fontWeight: x === 'Write' ? 650 : 450 }}>{x}</span>
-          ))}
-        </nav>
-        <div className="wsr-preview" style={{ textAlign: 'right', fontSize: 12, color: C.muted }}>Rebuild preview</div>
+        <div className="wsr-modebar" style={{ minWidth: 0, display: 'flex', justifyContent: 'center' }}>
+          <StudioModeBar
+            current="write"
+            manuscriptId={context.manuscriptId}
+            style={{ justifyContent: 'center', overflowX: 'auto' }}
+          />
+        </div>
+        <div className="wsr-preview" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10 }}>
+          <AppearanceMenu />
+          <span style={{ border: `1px solid ${C.rule}`, borderRadius: 999, padding: '4px 8px', fontSize: 9.5, letterSpacing: '.16em', color: C.gold }}>BETA</span>
+        </div>
       </header>)}
       {canvasExpanded && (
         <button type="button" className="wsr-return-workspace" onClick={() => setCanvasExpanded(false)} title="Return to workspace">
@@ -663,7 +739,7 @@ export default function RebuildStudioClient() {
 
       <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : '286px minmax(520px, 1fr) 390px' }}>
         {!canvasExpanded && (<aside className={`wsr-outline ${mobilePane !== 'outline' ? 'wsr-mobile-hidden' : ''}`} style={{ borderRight: `1px solid ${C.soft}`, background: C.panel, overflowY: 'auto', padding: 16 }}>
-          <button type="button" style={{ border: 0, background: 'transparent', color: C.muted, fontSize: 12, padding: '3px 2px 15px', cursor: 'pointer' }}>‹ All Works</button>
+          <Link href="/writers-studio" aria-label="Return to Writer’s Studio workbench" style={{ display: 'inline-block', textDecoration: 'none', color: C.muted, fontSize: 12, padding: '3px 2px 15px' }}>‹ Workbench</Link>
           <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 14, marginBottom: 18 }}>
             <div style={{ fontFamily: SERIF, fontSize: 17, marginBottom: 4 }}>{title}</div>
             <div style={{ fontSize: 11.5, lineHeight: 1.45, color: C.muted }}>
@@ -683,13 +759,29 @@ export default function RebuildStudioClient() {
           </div>
         </aside>)}
 
-        <section className={canvasExpanded ? 'wsr-manuscript wsr-pure-manuscript' : `wsr-manuscript ${mobilePane !== 'manuscript' ? 'wsr-mobile-hidden' : ''}`} style={{ background: C.field, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <section className={canvasExpanded ? 'wsr-manuscript wsr-pure-manuscript' : `wsr-manuscript ${mobilePane !== 'manuscript' ? 'wsr-mobile-hidden' : ''}`} style={{ ...canvasSurfaceVars, background: C.field, color: C.ink, minWidth: 0, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' } as React.CSSProperties}>
           {!canvasExpanded && (<div style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '10px 24px', borderBottom: `1px solid ${C.soft}` }}>
             <div style={{ minWidth: 0, fontSize: 12.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <strong style={{ color: C.secondary, fontWeight: 600 }}>{title}</strong>
               <span style={{ padding: '0 7px', color: C.quiet }}>/</span>{chapterTitle}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+              <div data-manuscript-view-switch style={{ display: 'flex', alignItems: 'center', border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: 2 }}>
+                {(['chapter', 'section'] as const).map((view) => (
+                  <button
+                    key={view}
+                    type="button"
+                    onClick={() => chooseManuscriptView(view)}
+                    aria-pressed={manuscriptView === view}
+                    style={{
+                      border: 0, borderRadius: 999, background: manuscriptView === view ? C.goldFill : 'transparent',
+                      color: C.secondary, padding: '6px 9px', fontSize: 10.5, fontWeight: manuscriptView === view ? 700 : 500, cursor: 'pointer',
+                    }}
+                  >
+                    {view === 'chapter' ? 'Chapter' : 'Section'}
+                  </button>
+                ))}
+              </div>
               <button type="button" onClick={() => setMaiaMode(maiaMode === 'chapter' ? 'passage' : 'chapter')}
                 style={{ border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: '8px 12px', color: C.secondary, fontSize: 11.5, cursor: 'pointer' }}>
                 {maiaMode === 'chapter' ? `▣ Reviewing entire chapter` : selectedPassage ? `◎ Focused passage · ${focusName}` : `◎ Focused section · ${focusName}`}&nbsp;⌄
@@ -701,20 +793,31 @@ export default function RebuildStudioClient() {
             </div>
           </div>)}
 
-          <div data-manuscript-scroll className={canvasExpanded ? 'wsr-pure-scroll' : undefined} style={{ flex: 1, overflowY: 'auto', padding: canvasExpanded ? '72px clamp(40px, 14vw, 220px) 120px' : '48px clamp(34px, 7vw, 100px) 90px' }}>
+          <div
+            ref={manuscriptScrollRef}
+            data-manuscript-scroll
+            className={canvasExpanded ? 'wsr-pure-scroll' : undefined}
+            style={{
+              flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch',
+              padding: canvasExpanded ? '72px clamp(40px, 14vw, 220px) 120px' : '48px clamp(34px, 7vw, 100px) 90px',
+            }}
+          >
             <article style={{ maxWidth: canvasExpanded ? 840 : 760, margin: '0 auto', fontFamily: SERIF }}>
               <div style={{ color: C.gold, fontFamily: SANS, fontSize: 10.5, letterSpacing: '.16em', fontWeight: 700, marginBottom: 9 }}>CHAPTER {chapter?.root.heading?.match(/Chapter\s+(\d+)/i)?.[1] ?? ''}</div>
               <h1 style={{ fontSize: 'clamp(34px, 4vw, 56px)', lineHeight: 1.05, fontWeight: 420, margin: '0 0 14px' }}>{chapterName}</h1>
               <div style={{ height: 1, background: C.soft, marginBottom: 28 }} />
 
-              {maiaMode === 'chapter' && !canvasExpanded && (
+              {manuscriptView === 'chapter' && maiaMode === 'chapter' && !canvasExpanded && (
                 <div style={{ border: `1px solid ${C.soft}`, background: C.panel, borderRadius: 12, padding: '13px 15px', marginBottom: 34, fontFamily: SANS, display: 'flex', justifyContent: 'space-between', gap: 20 }}>
                   <div><strong style={{ fontSize: 12.5 }}>Full chapter in review</strong><div style={{ fontSize: 11.5, color: C.muted, marginTop: 3 }}>MAIA will read positions {chapter?.sections[0]?.position}–{chapter?.sections.at(-1)?.position}. Select any section to work there directly.</div></div>
                   <span style={{ color: C.gold, fontSize: 12, whiteSpace: 'nowrap' }}>{chapter?.sections.length ?? 0} sections</span>
                 </div>
               )}
 
-              {(chapter?.sections ?? [focusSection].filter(Boolean) as RebuildSection[]).map((section) => {
+              {(manuscriptView === 'section'
+                ? ([focusSection].filter(Boolean) as RebuildSection[])
+                : (chapter?.sections ?? [focusSection].filter(Boolean) as RebuildSection[])
+              ).map((section) => {
                 const focused = !canvasExpanded && section.draftSectionId === focusId && maiaMode === 'passage';
                 const isRoot = section.draftSectionId === chapter?.root.draftSectionId;
                 const held = selectedPassage?.draftSectionId === section.draftSectionId
@@ -773,16 +876,19 @@ export default function RebuildStudioClient() {
                   <h3 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, margin: '0 0 8px' }}>
                     {reviewPhase === 'ready' ? 'Chapter review complete'
                       : reviewPhase === 'partial' ? 'Chapter review partially complete'
+                      : reviewPhase === 'failed' ? 'Chapter review could not complete'
                       : `Read ${chapterName} as a whole`}
                   </h3>
                   <p style={{ fontSize: 12.5, lineHeight: 1.55, color: C.muted, margin: '0 0 16px' }}>
                     {reviewPhase === 'reading' && reviewProgress
-                      ? `MAIA is reading ${reviewProgress.lens} · ${Math.min(reviewProgress.done + 1, reviewProgress.total)} of ${reviewProgress.total}.`
+                      ? `MAIA is reading ${reviewProgress.lens} · ${Math.min(reviewProgress.done + 1, reviewProgress.total)} of ${reviewProgress.total}.${review?.findings.length ? ` ${review.findings.length} observation${review.findings.length === 1 ? '' : 's'} kept so far.` : ''}`
                       : reviewPhase === 'ready'
                         ? `MAIA read all ${chapter?.sections.length ?? 0} sections through seven developmental lenses. Her frozen findings stay available as you work.`
                         : reviewPhase === 'partial'
                           ? `MAIA kept every reading that completed. ${review?.failures.length ?? 0} lens${review?.failures.length === 1 ? '' : 'es'} could not complete, so this is not labeled a full review.`
-                          : 'MAIA will read this chapter first, then keep her findings available while you move into individual sections.'}
+                          : reviewPhase === 'failed'
+                            ? 'MAIA could not begin the chapter reading just now. Nothing in your Work changed.'
+                            : 'MAIA will read this chapter first, then keep her findings available while you move into individual sections.'}
                   </p>
                   {reviewNeedsRefresh && review && (
                     <div role="status" style={{ borderRadius: 9, background: C.panel, padding: '9px 10px', fontSize: 10.5, lineHeight: 1.45, color: C.muted, margin: '-5px 0 12px' }}>
@@ -791,7 +897,7 @@ export default function RebuildStudioClient() {
                   )}
                   <button type="button" data-review-chapter onClick={() => void runReview()} disabled={reviewPhase === 'reading'}
                     style={{ width: '100%', border: 0, borderRadius: 10, padding: '11px 14px', background: C.goldFill, color: C.ink, fontWeight: 750, cursor: reviewPhase === 'reading' ? 'wait' : 'pointer', opacity: reviewPhase === 'reading' ? .65 : 1 }}>
-                    {reviewPhase === 'reading' ? '✦ MAIA is reading…' : review ? '↻ Review this chapter again' : '✦ Review this chapter'}
+                    {reviewPhase === 'reading' ? '✦ MAIA is reading…' : reviewPhase === 'failed' ? '↻ Try chapter review again' : review ? '↻ Review this chapter again' : '✦ Review this chapter'}
                   </button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 18 }}>
@@ -803,7 +909,7 @@ export default function RebuildStudioClient() {
                   ] as const).map(([name, count]) => (
                     <div key={name} style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, padding: 12, minHeight: 74 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 11.5, fontWeight: 700 }}><span>{name}</span><span style={{ color: C.gold }}>{review ? count : '—'}</span></div>
-                      <div style={{ fontSize: 11, color: C.quiet, marginTop: 6 }}>{review ? 'Frozen observations from this lens.' : 'Waiting for MAIA’s chapter reading.'}</div>
+                      <div style={{ fontSize: 11, color: C.quiet, marginTop: 6 }}>{reviewPhase === 'failed' ? 'Reading did not complete.' : review ? 'Frozen observations from this lens.' : 'Waiting for MAIA’s chapter reading.'}</div>
                     </div>
                   ))}
                 </div>
@@ -819,7 +925,7 @@ export default function RebuildStudioClient() {
                         <span style={{ color: C.quiet, fontSize: 11 }}>{findings.length ? `${findings.length} finding${findings.length === 1 ? '' : 's'} ›` : '›'}</span>
                       </div>
                       <div style={{ fontSize: 11, lineHeight: 1.45, color: C.muted, marginTop: 4 }}>
-                        {first?.summary ?? (review ? 'No section-specific observation in this review.' : 'Review the chapter to see MAIA’s findings here.')}
+                        {first?.summary ?? (reviewPhase === 'failed' ? 'The chapter reading did not complete.' : review ? 'No section-specific observation in this review.' : 'Review the chapter to see MAIA’s findings here.')}
                       </div>
                       {first && <div style={{ marginTop: 6, display: 'inline-block', borderRadius: 999, background: C.active, padding: '3px 7px', fontSize: 9.5, textTransform: 'capitalize', color: C.gold }}>{first.lens}</div>}
                     </button>
