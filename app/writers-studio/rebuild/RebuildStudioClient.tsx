@@ -25,7 +25,7 @@ import {
   loadChapterReviewManifest, saveChapterReviewManifest,
 } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { canvasWithEditorialThread, canvasWithoutEditorialThread, CANVAS_EDITORIAL_THREAD_PARAM } from '../canvasIdentity';
-import { locationForSection, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
+import { locationForSection, replacePlaceAddress, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import {
   adoptBoundEditorialVersion, changedSpan, discoverEditorialRelationships, exactVersion,
   locateUniquePassage, openBoundEditorialPassage, openBoundEditorialThread,
@@ -401,11 +401,16 @@ export default function RebuildStudioClient() {
     if (!(await settleWriting())) return;
     const reviewRevision = writingRef.current?.currentRevisionId() ?? context.version;
     setReviewContinuityMessage(null);
+    setReview({ readingIds: [], payloads: [], findings: [], failures: [] });
+    setReviewLens('all');
+    setReviewFindingsOpen(false);
     setReviewPhase('reading');
     setReviewProgress({ done: 0, total: DEVELOPMENTAL_LENSES.length, lens: DEVELOPMENTAL_LENSES[0]! });
-    const bundle = await runChapterReview(context.manuscriptId, chapter.sections, (done, total, lens) => {
-      setReviewProgress({ done, total, lens });
-    });
+    const bundle = await runChapterReview(
+      context.manuscriptId, chapter.sections,
+      (done, total, lens) => setReviewProgress({ done, total, lens }),
+      (partial) => setReview(partial),
+    );
     setReview(bundle);
     setReviewNeedsRefresh(false);
     setReviewPhase(bundle.failures.length === 0 ? 'ready' : 'partial');
@@ -428,9 +433,7 @@ export default function RebuildStudioClient() {
     const next = threadId
       ? canvasWithEditorialThread(window.location.pathname, query, threadId)
       : canvasWithoutEditorialThread(window.location.pathname, query);
-    if (next !== window.location.pathname + window.location.search) {
-      window.history.replaceState(window.history.state, '', next);
-    }
+    replacePlaceAddress(next);
   }, []);
 
   const clearEditorial = useCallback(() => {
@@ -536,6 +539,18 @@ export default function RebuildStudioClient() {
   const focusName = focusSection?.heading ?? 'this section';
   const chapterName = chapter ? labelWithoutPrefix(chapter.root.heading) : focusName;
   const counts = review ? lensCounts(review.findings) : {};
+  const completedReviewLenses = new Set(
+    review?.payloads.map((payload) => payload.reading.scope.commissionedLens) ?? [],
+  );
+  const reviewFailureFor = (lens: DevelopmentalLens) => review?.failures.find((failure) => failure.lens === lens) ?? null;
+  const reviewFailureCopy = (lens: DevelopmentalLens): string => {
+    const failure = reviewFailureFor(lens);
+    if (!failure) return '';
+    if (failure.refusal === 'claim_unbindable') {
+      return 'MAIA could not bind one or more claims from this lens to the frozen evidence, so this lens was not kept. The other completed readings are unaffected.';
+    }
+    return 'This lens could not complete safely, so no findings from it were kept. The other completed readings are unaffected.';
+  };
   const visibleReviewFindings = review
     ? reviewLens === 'all' ? review.findings : review.findings.filter((finding) => finding.lens === reviewLens)
     : [];
@@ -1104,51 +1119,73 @@ export default function RebuildStudioClient() {
                   {DEVELOPMENTAL_LENSES.map((lens) => {
                     const active = reviewLens === lens;
                     const count = counts[lens] ?? 0;
+                    const failure = reviewFailureFor(lens);
+                    const readingNow = reviewPhase === 'reading' && reviewProgress?.lens === lens;
+                    const complete = completedReviewLenses.has(lens);
+                    const status = failure ? 'Could not complete'
+                      : readingNow ? 'Reading…'
+                        : complete ? (count === 0 ? 'Complete · no observations' : active ? 'Showing findings from this lens.' : 'Open findings from this lens.')
+                          : reviewPhase === 'reading' ? 'Waiting in this review.' : review ? 'No completed reading in this review.' : 'Waiting for MAIA’s chapter reading.';
+                    const badge = failure ? '!' : readingNow ? '…' : complete ? String(count) : '—';
                     return (
-                      <button key={lens} type="button" data-review-lens={lens} aria-pressed={active} aria-expanded={active && reviewFindingsOpen}
+                      <button key={lens} type="button" data-review-lens={lens} data-review-lens-state={failure ? 'failed' : readingNow ? 'reading' : complete ? 'complete' : 'waiting'}
+                        aria-pressed={active} aria-expanded={active && reviewFindingsOpen}
                         disabled={!review} onClick={() => { setReviewLens(lens); setReviewFindingsOpen((open) => reviewLens === lens ? !open : true); }}
                         style={{ border: `1px solid ${active ? C.gold : C.soft}`, borderRadius: 11, background: active ? C.active : C.field, padding: 12, minHeight: 74, textAlign: 'left', color: C.secondary, cursor: review ? 'pointer' : 'default', opacity: review ? 1 : .72 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 11.5, fontWeight: 700 }}>
-                          <span>{reviewLensLabel(lens)}</span><span style={{ color: C.gold }}>{review ? count : '—'}</span>
+                          <span>{reviewLensLabel(lens)}</span><span style={{ color: failure ? C.muted : C.gold }}>{badge}</span>
                         </div>
-                        <div style={{ fontSize: 11, color: active ? C.muted : C.quiet, marginTop: 6 }}>{review ? (active ? 'Showing findings from this lens.' : 'Open findings from this lens.') : 'Waiting for MAIA’s chapter reading.'}</div>
+                        <div style={{ fontSize: 11, color: failure ? C.muted : active ? C.muted : C.quiet, marginTop: 6 }}>{status}</div>
                       </button>
                     );
                   })}
                 </div>
-                {review && review.findings.length > 0 && (
+                {review && (review.findings.length > 0 || review.failures.length > 0) && (
                   <div data-review-findings-navigator style={{ marginBottom: 18 }}>
-                    <button type="button" data-review-all-findings aria-pressed={reviewLens === 'all'} aria-expanded={reviewLens === 'all' && reviewFindingsOpen} onClick={() => { setReviewLens('all'); setReviewFindingsOpen((open) => reviewLens === 'all' ? !open : true); }}
-                      style={{ width: '100%', textAlign: 'left', border: `1px solid ${reviewLens === 'all' ? C.gold : C.soft}`, borderRadius: 11, background: reviewLens === 'all' ? C.active : C.field, padding: '10px 12px', color: C.secondary, cursor: 'pointer', fontSize: 11.5, fontWeight: 700 }}>
-                      Every finding · {review.findings.length}<span style={{ float: 'right', color: C.quiet }}>{reviewLens === 'all' && reviewFindingsOpen ? '▾' : '▸'}</span>
-                    </button>
-                    {reviewFindingsOpen && (<section data-review-findings-panel aria-label={reviewLens === 'all' ? 'Every chapter review finding' : `${reviewLensLabel(reviewLens)} findings`}
-                      style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, marginTop: 8, maxHeight: 'min(46vh, 520px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
-                      <div style={{ position: 'sticky', top: 0, zIndex: 1, display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline', padding: '10px 12px 8px', background: C.field, borderBottom: `1px solid ${C.soft}` }}>
-                        <strong style={{ fontSize: 11.5, color: C.secondary }}>{reviewLens === 'all' ? 'Every finding' : reviewLensLabel(reviewLens)}</strong>
-                        <span style={{ fontSize: 10, color: C.quiet }}>{visibleReviewFindings.length} observation{visibleReviewFindings.length === 1 ? '' : 's'}</span>
-                      </div>
-                      <div data-review-findings-scroll style={{ display: 'grid', gap: 9, padding: '10px 12px 12px' }}>
-                        {visibleReviewFindings.map((finding, index) => {
-                          const target = finding.sectionIds.find((id) => context?.sections.some((section) => section.draftSectionId === id)) ?? null;
-                          return (
-                            <article key={finding.id} data-review-finding={finding.id} style={{ borderTop: index === 0 ? 0 : `1px solid ${C.soft}`, paddingTop: index === 0 ? 0 : 9 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
-                                <span style={{ fontSize: 10.5, color: C.gold, fontWeight: 750 }}>{reviewLensLabel(finding.lens)}</span>
-                                <span style={{ fontSize: 9.5, color: C.quiet }}>{finding.state}</span>
-                              </div>
-                              <p style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, margin: '4px 0 0' }}>{finding.observation}</p>
-                              {target && (
-                                <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
-                                  style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0 0', fontSize: 10.5, cursor: 'pointer' }}>
-                                  Show in manuscript →
-                                </button>
-                              )}
-                            </article>
-                          );
-                        })}
-                      </div>
-                    </section>)}
+                    {review.findings.length > 0 && (
+                      <button type="button" data-review-all-findings aria-pressed={reviewLens === 'all'} aria-expanded={reviewLens === 'all' && reviewFindingsOpen} onClick={() => { setReviewLens('all'); setReviewFindingsOpen((open) => reviewLens === 'all' ? !open : true); }}
+                        style={{ width: '100%', textAlign: 'left', border: `1px solid ${reviewLens === 'all' ? C.gold : C.soft}`, borderRadius: 11, background: reviewLens === 'all' ? C.active : C.field, padding: '10px 12px', color: C.secondary, cursor: 'pointer', fontSize: 11.5, fontWeight: 700 }}>
+                        Every finding · {review.findings.length}<span style={{ float: 'right', color: C.quiet }}>{reviewLens === 'all' && reviewFindingsOpen ? '▾' : '▸'}</span>
+                      </button>
+                    )}
+                    {reviewFindingsOpen && reviewLens !== 'all' && reviewFailureFor(reviewLens) && (
+                      <section data-review-lens-failure={reviewLens} role="status"
+                        style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, marginTop: 8, padding: '11px 12px' }}>
+                        <strong style={{ fontSize: 11.5, color: C.secondary }}>{reviewLensLabel(reviewLens)} · could not complete</strong>
+                        <p style={{ fontSize: 11.5, lineHeight: 1.5, color: C.muted, margin: '6px 0 0' }}>{reviewFailureCopy(reviewLens)}</p>
+                      </section>
+                    )}
+                    {reviewFindingsOpen && (reviewLens === 'all' || !reviewFailureFor(reviewLens)) && (reviewLens === 'all' || completedReviewLenses.has(reviewLens)) && (
+                      <section data-review-findings-panel aria-label={reviewLens === 'all' ? 'Every chapter review finding' : `${reviewLensLabel(reviewLens)} findings`}
+                        style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, marginTop: 8, maxHeight: 'min(46vh, 520px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
+                        <div style={{ position: 'sticky', top: 0, zIndex: 1, display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline', padding: '10px 12px 8px', background: C.field, borderBottom: `1px solid ${C.soft}` }}>
+                          <strong style={{ fontSize: 11.5, color: C.secondary }}>{reviewLens === 'all' ? 'Every finding' : reviewLensLabel(reviewLens)}</strong>
+                          <span style={{ fontSize: 10, color: C.quiet }}>{visibleReviewFindings.length} observation{visibleReviewFindings.length === 1 ? '' : 's'}</span>
+                        </div>
+                        <div data-review-findings-scroll style={{ display: 'grid', gap: 9, padding: '10px 12px 12px' }}>
+                          {visibleReviewFindings.length === 0 && reviewLens !== 'all' ? (
+                            <p style={{ fontSize: 11.5, lineHeight: 1.5, color: C.muted, margin: 0 }}>MAIA completed this lens and reported no observations.</p>
+                          ) : visibleReviewFindings.map((finding, index) => {
+                            const target = finding.sectionIds.find((id) => context?.sections.some((section) => section.draftSectionId === id)) ?? null;
+                            return (
+                              <article key={finding.id} data-review-finding={finding.id} style={{ borderTop: index === 0 ? 0 : `1px solid ${C.soft}`, paddingTop: index === 0 ? 0 : 9 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+                                  <span style={{ fontSize: 10.5, color: C.gold, fontWeight: 750 }}>{reviewLensLabel(finding.lens)}</span>
+                                  <span style={{ fontSize: 9.5, color: C.quiet }}>{finding.state}</span>
+                                </div>
+                                <p style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, margin: '4px 0 0' }}>{finding.observation}</p>
+                                {target && (
+                                  <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
+                                    style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0 0', fontSize: 10.5, cursor: 'pointer' }}>
+                                    Show in manuscript →
+                                  </button>
+                                )}
+                              </article>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    )}
                   </div>
                 )}
                 <div style={{ fontSize: 11, color: C.quiet, letterSpacing: '.08em', fontWeight: 700, marginBottom: 8 }}>FINDINGS BY SECTION</div>

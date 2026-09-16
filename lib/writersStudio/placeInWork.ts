@@ -84,3 +84,23 @@ export function locationForSection(
   const q = params.toString();
   return q ? `${pathname}?${q}` : pathname;
 }
+
+
+/**
+ * Browser notification that the member's place within the Work changed.
+ *
+ * `history.replaceState` does not emit `popstate`, and framework search-param
+ * snapshots therefore may not notice a same-document place change. Surfaces
+ * that already compose their location through `locationForSection` call this
+ * tiny publisher after replacing the address. It carries no identity of its
+ * own: listeners re-read the URL through `readSectionParam`.
+ */
+export const STUDIO_PLACE_CHANGE_EVENT = 'writers-studio:place-change';
+
+export function replacePlaceAddress(next: string): void {
+  if (typeof window === 'undefined') return;
+  const current = window.location.pathname + window.location.search;
+  if (next === current) return;
+  window.history.replaceState(window.history.state, '', next);
+  window.dispatchEvent(new Event(STUDIO_PLACE_CHANGE_EVENT));
+}

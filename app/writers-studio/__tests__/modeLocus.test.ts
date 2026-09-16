@@ -108,6 +108,29 @@ describe('D1-05 — a stale place falls back honestly, never silently', () => {
   });
 });
 
+describe('D1-LIVE — same-document place changes reach the mode bar', () => {
+  it('the canonical place boundary publishes after replaceState', () => {
+    const place = source('../../lib/writersStudio/placeInWork.ts');
+    expect(place).toContain("STUDIO_PLACE_CHANGE_EVENT = 'writers-studio:place-change'");
+    expect(place).toContain("window.dispatchEvent(new Event(STUDIO_PLACE_CHANGE_EVENT))");
+  });
+
+  it('the mode bar re-reads the live URL when that event fires', () => {
+    const bar = source('studio/StudioModeBar.tsx');
+    expect(bar).toContain('STUDIO_PLACE_CHANGE_EVENT');
+    expect(bar).toContain('readSectionParam(window.location.search)');
+    expect(bar).toContain("window.addEventListener(STUDIO_PLACE_CHANGE_EVENT, syncFromAddress)");
+    expect(bar).toContain("window.addEventListener('popstate', syncFromAddress)");
+  });
+
+  it('Write and Develop publish their section moves through the shared boundary', () => {
+    const write = source('rebuild/RebuildStudioClient.tsx');
+    const develop = source('develop/DevelopRoom.tsx');
+    expect(write).toContain('replacePlaceAddress(next)');
+    expect(develop).toContain('replacePlaceAddress(next)');
+  });
+});
+
 describe('D1-06 — one grammar, one reader, one composer', () => {
   it('the bar reads `s` through the shared reader', () => {
     const bar = source('studio/StudioModeBar.tsx');

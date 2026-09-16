@@ -18,10 +18,10 @@
  */
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { readSectionParam } from '@/lib/writersStudio/placeInWork';
+import { readSectionParam, STUDIO_PLACE_CHANGE_EVENT } from '@/lib/writersStudio/placeInWork';
 import { GOLD, GROUND, INK, RADIUS, SPACE } from '../studioTheme';
 import { STUDIO_MODES, type StudioMode } from '../studioMap';
 import { typeStyle } from './StudioType';
@@ -49,7 +49,26 @@ export function StudioModeBar({ current, manuscriptId = null, style }: StudioMod
      One reader, `readSectionParam`, the same one the rooms use. A second way
      to read `s` is a second way for it to disagree. */
   const params = useSearchParams();
-  const sectionId = readSectionParam(params?.toString() ?? '');
+  const paramSectionId = readSectionParam(params?.toString() ?? '');
+  const [sectionId, setSectionId] = useState<string | null>(paramSectionId);
+
+  useEffect(() => {
+    /* Next's search-param snapshot is correct on navigation, but a section move
+       is deliberately same-document `replaceState`. That browser act emits no
+       native popstate, so placeInWork publishes one narrow notification. The
+       bar then RE-READS the address through the canonical reader; the event
+       carries no competing section identity. Browser Back/Forward is covered
+       separately by popstate. */
+    const syncFromAddress = () => setSectionId(readSectionParam(window.location.search));
+    syncFromAddress();
+    window.addEventListener(STUDIO_PLACE_CHANGE_EVENT, syncFromAddress);
+    window.addEventListener('popstate', syncFromAddress);
+    return () => {
+      window.removeEventListener(STUDIO_PLACE_CHANGE_EVENT, syncFromAddress);
+      window.removeEventListener('popstate', syncFromAddress);
+    };
+  }, [paramSectionId]);
+
   return (
     <nav aria-label="Studio modes" style={{ display: 'flex', gap: SPACE.tight, ...style }}>
       {STUDIO_MODES.map((m) => (

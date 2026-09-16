@@ -24,6 +24,22 @@ describe('Writer workbench usability repair', () => {
     expect(css).toContain('.wsr-manuscript { overflow: hidden; }');
     expect(css).toContain('.wsr-pure-scroll { height: 100%; min-height: 0; overflow-y: auto !important; }');
   });
+  it('a long review exposes progressive lens state instead of one blocking spinner', () => {
+    expect(room).toContain("data-review-lens-state={failure ? 'failed' : readingNow ? 'reading' : complete ? 'complete' : 'waiting'}");
+    expect(room).toContain("'Could not complete'");
+    expect(room).toContain("'Reading…'");
+    expect(room).toContain("'Waiting in this review.'");
+    expect(room).toContain('setReview({ readingIds: [], payloads: [], findings: [], failures: [] })');
+    expect(room).toContain('(partial) => setReview(partial)');
+  });
+
+  it('failed lenses remain distinct from a completed zero-observation lens', () => {
+    expect(room).toContain('data-review-lens-failure={reviewLens}');
+    expect(room).toContain('could not complete safely');
+    expect(room).toContain('MAIA completed this lens and reported no observations.');
+    expect(room).toContain("failure.refusal === 'claim_unbindable'");
+  });
+
   it('every completed review has an interactive seven-lens navigator', () => {
     expect(room).toContain('data-review-lenses');
     expect(room).toContain('DEVELOPMENTAL_LENSES.map((lens)');
