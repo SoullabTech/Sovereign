@@ -28,11 +28,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 
 import { renderHtmlToPdf } from '@/lib/manuscript/render/pagedPdf';
-
-export type PublicationMatterRole =
-  | 'half-title' | 'title-page' | 'imprint'
-  | 'copyright' | 'permissions' | 'dedication' | 'disclaimer' | 'contents' | 'preface'
-  | 'acknowledgments' | 'bibliography' | 'resources' | 'afterword';
+import { isPublicationMatterRole, type PublicationMatterRole } from '@/lib/manuscript/publicationPlan/roles';
 
 export interface MemberBookSection {
   heading: string | null;
@@ -51,14 +47,6 @@ export interface MemberBookSection {
 
 export type PublicationRole = PublicationMatterRole
   | 'part' | 'chapter' | 'section' | 'subsection' | 'unclassified';
-
-const PUBLICATION_MATTER_ROLES: ReadonlySet<PublicationRole> = new Set<PublicationRole>([
-  'half-title', 'title-page', 'imprint', 'copyright', 'permissions', 'dedication',
-  'disclaimer', 'contents', 'preface', 'acknowledgments', 'bibliography', 'resources', 'afterword',
-]);
-
-const isPublicationMatterRole = (role: PublicationRole): role is PublicationMatterRole =>
-  PUBLICATION_MATTER_ROLES.has(role);
 
 /**
  * Conservative production semantics. An explicit author-owned publication role
@@ -243,7 +231,7 @@ const PRINT_CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/print-book.cs
 const EPUB_CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/epub-book.css');
 const MAX_PANDOC_BUFFER = 256 * 1024 * 1024;
 
-export const HALLMARK_PRODUCTION_PROFILE = 'hallmark-6x9-v2';
+export const HALLMARK_PRODUCTION_PROFILE = 'hallmark-6x9-v3';
 
 const LATIN_RANGE = 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD';
 const LATIN_EXT_RANGE = 'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF';
@@ -299,17 +287,27 @@ export function buildHallmarkPrintStyles(baseCss: string): HallmarkPrintStyles {
  */
 export function assembleManuscriptMarkdown(sections: MemberBookSection[]): string {
   const parts: string[] = [];
+  let openMatterRole: PublicationMatterRole | null = null;
+
   for (const s of sections) {
     const heading = s.heading?.trim();
     const role = publicationRoleFor(s);
     const publicationMatter = isPublicationMatterRole(role);
+    const matterRole = publicationMatter ? role : null;
 
-    /* Publication matter gets a structural wrapper for typesetting only. The
-     * author's heading/body remain byte-for-byte the values supplied here; the
-     * wrapper is production markup, not manuscript prose. */
-    if (publicationMatter) {
-      parts.push(`::: {.book-matter .book-${role}}`);
-      parts.push('');
+    /* One publication object may lawfully span several contiguous draft
+     * sections. Open one wrapper for the whole span rather than turning each
+     * member section into a separate physical page/object. */
+    if (openMatterRole !== matterRole) {
+      if (openMatterRole) {
+        parts.push(':::');
+        parts.push('');
+      }
+      if (matterRole) {
+        parts.push(`::: {.book-matter .book-${matterRole}}`);
+        parts.push('');
+      }
+      openMatterRole = matterRole;
     }
 
     if (heading) {
@@ -321,11 +319,11 @@ export function assembleManuscriptMarkdown(sections: MemberBookSection[]): strin
     }
     parts.push(s.body);
     parts.push('');
+  }
 
-    if (publicationMatter) {
-      parts.push(':::');
-      parts.push('');
-    }
+  if (openMatterRole) {
+    parts.push(':::');
+    parts.push('');
   }
   return parts.join('\n');
 }
@@ -387,14 +385,14 @@ async function renderPdf(
   opts: RenderMemberBookOptions,
 ): Promise<{ filePath: string; sizeBytes: number; pageCount?: number }> {
   // pandoc: markdown (stdin) → standalone HTML5. No lua filters, no plates.
-  const pandocStdout = execFileSync(
+  /* Visible title matter belongs to the author's publication plan. Pandoc
+   * metadata used to synthesize a second title page here. Render a fragment
+   * instead; the outer document below carries non-visible document metadata. */
+  const bodyHtml = execFileSync(
     'pandoc',
-    ['-f', 'markdown', '-t', 'html5', '--standalone', '--no-highlight', ...metadataArgs(opts)],
+    ['-f', 'markdown', '-t', 'html5', '--no-highlight'],
     { input: markdown, encoding: 'utf-8', maxBuffer: MAX_PANDOC_BUFFER },
   );
-
-  const bodyMatch = pandocStdout.match(/<body[^>]*>([\s\S]*)<\/body>/);
-  const bodyHtml = bodyMatch ? bodyMatch[1] : pandocStdout;
 
   const css = fsSync.existsSync(PRINT_CSS_PATH)
     ? buildHallmarkPrintStyles(stripCssComments(fsSync.readFileSync(PRINT_CSS_PATH, 'utf-8')))
@@ -405,6 +403,7 @@ async function renderPdf(
 <head>
   <meta charset="utf-8">
   <title>${escapeHtml(opts.title)}</title>
+  ${opts.author?.trim() ? `<meta name="author" content="${escapeHtml(opts.author.trim())}">` : ''}
   <style data-hallmark-fonts>${css.fontCss}</style>
   <style data-hallmark-book>${css.bookCss}</style>
 </head>
@@ -451,6 +450,7 @@ async function renderEpub(
     '-t', 'epub3',
     ...metadataArgs(opts),
     '--metadata', 'lang=en-US',
+    '--epub-title-page=false',
     '--toc',
     '--toc-depth=2',
     // --epub-chapter-level is back-compatible with the Pandoc 2.17 pinned in

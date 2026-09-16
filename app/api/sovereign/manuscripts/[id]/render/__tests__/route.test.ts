@@ -104,7 +104,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
       pageCount: 1,
       sourceHash: 'abc123',
       sectionCount: 1,
-      productionProfile: 'hallmark-6x9-v2',
+      productionProfile: 'hallmark-6x9-v3',
     });
 
     const res = await POST(req({ format: 'pdf' }), ctx);
@@ -126,7 +126,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     expect(String(insertCall?.[0])).toContain('production_profile');
     expect(insertCall?.[1]).toEqual([
       'm1', MEMBER, 'pdf', 1, 'abc123', 1,
-      'hallmark-6x9-v2', 'source', null, 'proof',
+      'hallmark-6x9-v3', 'source', null, 'proof',
     ]);
 
     // rendered bytes are the response body
@@ -149,18 +149,51 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
 
     const tmp = path.join(os.tmpdir(), `render-draft-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
     await fs.writeFile(tmp, Buffer.from('%PDF-1.4 current draft'));
-    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 22, pageCount: 1, sourceHash: 'draft-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v2' });
+    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 22, pageCount: 1, sourceHash: 'draft-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v3' });
 
     const res = await POST(req({ format: 'pdf' }), ctx);
     expect(res.status).toBe(200);
     expect(mockRender).toHaveBeenCalledWith(
-      [{ heading: 'Chapter One', body: 'CURRENT EDIT', headingDepth: 1, headingSignal: 'markdown' }],
+      [{ heading: 'Chapter One', body: 'CURRENT EDIT', headingDepth: 1, headingSignal: 'markdown', publicationRole: null }],
       expect.objectContaining({ title: 'My Book', author: 'Ann Author', format: 'pdf' }),
     );
     const sql = mockQuery.mock.calls.map((c) => String(c[0])).join('\n');
     expect(sql).toContain('FROM manuscript_draft_sections');
     const insert = mockQuery.mock.calls.find((c) => String(c[0]).includes('INSERT INTO manuscript_renders'));
-    expect(insert?.[1]?.slice(-4)).toEqual(['hallmark-6x9-v2', 'working_draft', '9', 'proof']);
+    expect(insert?.[1]?.slice(-4)).toEqual(['hallmark-6x9-v3', 'working_draft', '9', 'proof']);
+    await new Promise((r) => setTimeout(r, 25));
+  });
+
+  it('carries an author-owned publication role from exact draft-section identity into Final preflight', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '9', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{
+        heading: 'Permissions', body: 'Copyright © 2026 Ann Author', heading_depth: 2, heading_signal: 'markdown',
+        publication_role: 'copyright',
+      }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 });
+
+    const tmp = path.join(os.tmpdir(), `render-role-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
+    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 role'));
+    mockRender.mockResolvedValue({
+      filePath: tmp, sizeBytes: 14, pageCount: 1, sourceHash: 'role-hash', sectionCount: 1,
+      productionProfile: 'hallmark-6x9-v3',
+    });
+
+    const res = await POST(req({ format: 'pdf', stage: 'final' }), ctx);
+    expect(res.status).toBe(200);
+    const expected = [{
+      heading: 'Permissions', body: 'Copyright © 2026 Ann Author', headingDepth: 2, headingSignal: 'markdown',
+      publicationRole: 'copyright',
+    }];
+    expect(mockPreflight).toHaveBeenCalledWith(expected);
+    expect(mockRender).toHaveBeenCalledWith(expected, expect.objectContaining({ format: 'pdf' }));
+    const sql = mockQuery.mock.calls.map((c) => String(c[0])).join('\n');
+    expect(sql).toContain('manuscript_publication_members');
+    expect(sql).toContain('manuscript_publication_objects');
     await new Promise((r) => setTimeout(r, 25));
   });
 
@@ -193,7 +226,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
 
     const tmp = path.join(os.tmpdir(), `render-proof-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
     await fs.writeFile(tmp, Buffer.from('%PDF-1.4 proof'));
-    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 14, pageCount: 1, sourceHash: 'proof-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v2' });
+    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 14, pageCount: 1, sourceHash: 'proof-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v3' });
 
     const res = await POST(req({ format: 'pdf', stage: 'proof' }), ctx);
     expect(res.status).toBe(200);
@@ -232,7 +265,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
 
     const tmp = path.join(os.tmpdir(), `render-final-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
     await fs.writeFile(tmp, Buffer.from('%PDF-1.4 final'));
-    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 14, pageCount: 1, sourceHash: 'final-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v2' });
+    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 14, pageCount: 1, sourceHash: 'final-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v3' });
 
     const res = await POST(req({ format: 'pdf', stage: 'final' }), ctx);
     expect(res.status).toBe(200);
@@ -280,7 +313,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — nullable title', () =>
       pageCount: 1,
       sourceHash: 'abc123',
       sectionCount: 1,
-      productionProfile: 'hallmark-6x9-v2',
+      productionProfile: 'hallmark-6x9-v3',
     });
 
     const res = await POST(req({ format: 'pdf' }), ctx);
