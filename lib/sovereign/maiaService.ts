@@ -23,6 +23,7 @@ const DEEP_CONSULTATION_APERTURE = 5;
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
 import { renderTurnForCognition, type CanonicalTurn } from '../maia/canonical-turn';
+import { runInvisibleStandingShadowSafely } from '../writers-studio/invisibleStandingShadow';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
 import { elementalRouter } from '../consciousness/elemental-context-router';
@@ -4346,6 +4347,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       recentContext: recentContextForScrub,
       conversationHistory: conversationHistory as any,
     });
+
+    // 🔬 INVISIBLE-STANDING-SHADOW-02 — Writer's Studio only, OFF by default.
+    // Zero response authority: audit the exact final member-facing bytes, ignore the
+    // result, and never let shadow instrumentation block/rewrite the response.
+    if (writerStudioTurn && process.env.MAIA_INVISIBLE_STANDING_SHADOW === '1') {
+      runInvisibleStandingShadowSafely({
+        turn: writerStudioTurn,
+        finalText: text,
+        sanctuary: writerStudio?.posture.sanctuary ?? false,
+      });
+    }
 
     // 🔄 Build metadata with feedback linkage IDs
     const responseMetadata = {
