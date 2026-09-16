@@ -1,223 +1,218 @@
 /**
- * JARVIS-MAIA-FREE-SYNTHESIS-01 · A4 offline prototype.
+ * JARVIS-MAIA-FREE-SYNTHESIS-01 · A4 executable falsifier suite.
  *
  * R&D ONLY. No production imports, no database, no model call, no serving path.
- * Tests the smallest reversible typed representation that can carry evidence →
- * observation → relation → configuration → derived Gestalt while preserving source standing.
+ *
+ * This file used to carry a second self-contained A4 representation. It now exercises
+ * the canonical reversible representation in ./free-synthesis/a4-gestalt-prototype so
+ * the programme has one research law and multiple falsifier fixtures, not two ontologies.
  */
 import assert from 'node:assert/strict';
-
-type Actor = 'member' | 'maia' | 'collaborator' | 'system' | 'house';
-type SpeechAct = 'statement' | 'correction' | 'adoption' | 'withdrawal';
-type RelationType = 'coexists' | 'develops' | 'contrasts' | 'possible_recurrence' | 'reorganizes';
-
-type PrimaryEvidence = {
-  kind: 'evidence'; id: string; actor: Actor; text: string; at: number; sourceRef: string;
-  speechAct: SpeechAct; targets?: string[];
-};
-type Observation = {
-  kind: 'observation'; id: string; authoredBy: 'maia'; claim: string;
-  evidenceIds: string[]; confidence: number; status: 'provisional';
-};
-type Relation = {
-  kind: 'relation'; id: string; authoredBy: 'maia'; relationType: RelationType;
-  nodeIds: string[]; evidenceIds: string[]; confidence: number; status: 'provisional';
-};
-type Configuration = {
-  kind: 'configuration'; id: string; authoredBy: 'maia'; label: string; at: number;
-  observationIds: string[]; relationIds: string[]; status: 'derived';
-};
-type GestaltProjection = {
-  kind: 'gestalt'; id: string; authoredBy: 'maia'; claim: string; at: number;
-  configurationIds: string[]; standing: 'derived_projection'; supersedesGestaltId?: string;
-};
-type Node = PrimaryEvidence | Observation | Relation | Configuration | GestaltProjection;
-
-class Field {
-  readonly nodes = new Map<string, Node>();
-  add<T extends Node>(node: T): T {
-    assert(!this.nodes.has(node.id), `duplicate id: ${node.id}`);
-    this.nodes.set(node.id, Object.freeze(node));
-    return node;
-  }
-  get(id: string): Node {
-    const node = this.nodes.get(id);
-    assert(node, `missing node: ${id}`);
-    return node;
-  }
-  evidenceClosure(id: string, seen = new Set<string>()): Set<string> {
-    assert(!seen.has(id), `cycle/self-bootstrap detected at ${id}`);
-    const nextSeen = new Set(seen).add(id);
-    const node = this.get(id);
-    if (node.kind === 'evidence') return new Set([node.id]);
-    const deps = node.kind === 'observation' ? node.evidenceIds
-      : node.kind === 'relation' ? [...node.nodeIds, ...node.evidenceIds]
-      : node.kind === 'configuration' ? [...node.observationIds, ...node.relationIds]
-      : node.configurationIds;
-    const out = new Set<string>();
-    for (const dep of deps) {
-      const child = this.get(dep);
-      if (node.kind === 'relation') assert(child.kind !== 'gestalt', 'relation may not use prior Gestalt as truth');
-      for (const e of this.evidenceClosure(dep, nextSeen)) out.add(e);
-    }
-    assert(out.size > 0, `derived node has no primary evidence: ${id}`);
-    return out;
-  }
-  isCurrentlyStanding(id: string): boolean {
-    for (const node of this.nodes.values()) {
-      if (node.kind !== 'evidence' || node.actor !== 'member') continue;
-      if (!node.targets?.includes(id)) continue;
-      if (node.speechAct === 'correction' || node.speechAct === 'withdrawal') return false;
-    }
-    return true;
-  }
-  assertMemberAuthored(evidenceId: string): void {
-    const node = this.get(evidenceId);
-    assert(node.kind === 'evidence' && node.actor === 'member', `${evidenceId} is not member-authored evidence`);
-  }
-}
-
-const f = new Field();
-const ev = (id: string, actor: Actor, text: string, at: number, speechAct: SpeechAct = 'statement', targets?: string[]) =>
-  f.add({ kind: 'evidence', id, actor, text, at, sourceRef: `fixture:${id}`, speechAct, targets });
-const obs = (id: string, claim: string, evidenceIds: string[]) =>
-  f.add({ kind: 'observation', id, authoredBy: 'maia', claim, evidenceIds, confidence: 0.7, status: 'provisional' });
-const rel = (id: string, relationType: RelationType, nodeIds: string[], evidenceIds: string[]) =>
-  f.add({ kind: 'relation', id, authoredBy: 'maia', relationType, nodeIds, evidenceIds, confidence: 0.6, status: 'provisional' });
-const cfg = (id: string, label: string, at: number, observationIds: string[], relationIds: string[]) =>
-  f.add({ kind: 'configuration', id, authoredBy: 'maia', label, at, observationIds, relationIds, status: 'derived' });
-const gestalt = (id: string, claim: string, at: number, configurationIds: string[], supersedesGestaltId?: string) =>
-  f.add({ kind: 'gestalt', id, authoredBy: 'maia', claim, at, configurationIds, standing: 'derived_projection', supersedesGestaltId });
+import {
+  assertEvidenceAuthoredBy,
+  compareGestaltEvidenceRoots,
+  tracePrimaryEvidence,
+  validateResearchField,
+  type GestaltResearchField,
+  type ResearchNode,
+} from './free-synthesis/a4-gestalt-prototype';
 
 let passed = 0;
-const pass = (name: string, fn: () => void) => { fn(); passed++; console.log(`PASS ${name}`); };
+const pass = (name: string, fn: () => void) => {
+  fn();
+  passed += 1;
+  console.log(`PASS ${name}`);
+};
 
-// FS-F2 · difference without collapse: one configuration can carry four simultaneous signals.
-for (const [id, text] of [
-  ['air', 'I know I should leave.'], ['water', 'I still love him.'],
-  ['earth', 'My body panics when I imagine leaving.'], ['fire', 'I want my life back.'],
-] as const) ev(`e-${id}`, 'member', text, 1);
-for (const id of ['air','water','earth','fire']) obs(`o-${id}`, `${id} signal is present`, [`e-${id}`]);
-rel('r-four-way', 'coexists', ['o-air','o-water','o-earth','o-fire'], ['e-air','e-water','e-earth','e-fire']);
-cfg('c-four-way', 'differentiated four-way tension', 1, ['o-air','o-water','o-earth','o-fire'], ['r-four-way']);
-gestalt('g-four-way', 'The present field contains multiple non-identical pulls; none has automatic authority to define the whole.', 1, ['c-four-way']);
-pass('FS-F2 preserves differentiated evidence', () => assert.deepEqual([...f.evidenceClosure('g-four-way')].sort(), ['e-air','e-earth','e-fire','e-water']));
+const field = (nodes: ResearchNode[]): GestaltResearchField => ({ version: 'A4.v0', nodes });
+const assertValid = (name: string, candidate: GestaltResearchField) => {
+  const result = validateResearchField(candidate);
+  assert.equal(result.ok, true, `${name}: ${JSON.stringify(result.issues, null, 2)}`);
+};
 
-// FS-F5 · source standing: collaborator speech cannot be relabeled as member-authored.
-ev('e-cc', 'collaborator', 'A collaborator proposed this interpretation.', 2);
-pass('FS-F5 refuses source laundering', () => assert.throws(() => f.assertMemberAuthored('e-cc'), /not member-authored/));
-
-// CI-3 / FS-G11 · member correction changes current standing without deleting history.
-ev('e-auto', 'member', 'Autonomy feels central right now.', 3);
-obs('o-auto', 'Autonomy may be an organizing concern.', ['e-auto']);
-cfg('c-auto', 'autonomy-centered', 3, ['o-auto'], []);
-gestalt('g-auto', 'Autonomy currently appears central.', 3, ['c-auto']);
-ev('e-grief-correction', 'member', 'No — grief is actually the center of this now.', 4, 'correction', ['o-auto']);
-obs('o-grief', 'Grief is explicitly named by the member as the present center.', ['e-grief-correction']);
-rel('r-reorg', 'reorganizes', ['o-grief','o-auto'], ['e-grief-correction','e-auto']);
-cfg('c-grief', 'grief-centered reorganization', 4, ['o-grief'], ['r-reorg']);
-gestalt('g-grief', 'The present organization is now grief-centered; the earlier autonomy reading remains historical.', 4, ['c-grief'], 'g-auto');
-pass('member correction revises standing', () => assert.equal(f.isCurrentlyStanding('o-auto'), false));
-pass('reorganization preserves old evidence and adds new evidence', () => assert.deepEqual([...f.evidenceClosure('g-grief')].sort(), ['e-auto','e-grief-correction']));
-pass('historical Gestalt remains stored but is not mutated', () => assert.equal((f.get('g-auto') as GestaltProjection).claim, 'Autonomy currently appears central.'));
-
-// FS-F7 · distant motif: relation is possible/provisional and descends to both moments.
-ev('e-cedar', 'member', 'The old cedar feels enduring and quietly abiding.', 5);
-obs('o-cedar', 'The member associates the cedar with endurance and abiding presence.', ['e-cedar']);
-ev('e-survive', 'member', 'I want the work to survive me.', 50);
-obs('o-survive', 'The member expresses a wish for the work to outlast the self.', ['e-survive']);
-rel('r-cedar-survive', 'possible_recurrence', ['o-cedar','o-survive'], ['e-cedar','e-survive']);
-cfg('c-recurrence', 'possible distant recurrence', 50, ['o-cedar','o-survive'], ['r-cedar-survive']);
-gestalt('g-recurrence', 'A possible relation links the earlier endurance image with the later concern for legacy; the equivalence is not member-established.', 50, ['c-recurrence']);
-pass('FS-F7 distant relation descends to both primary moments', () => assert.deepEqual([...f.evidenceClosure('g-recurrence')].sort(), ['e-cedar','e-survive']));
-
-// FS-G0 · derived objects may not bootstrap from a prior Gestalt as if it were evidence.
-pass('FS-G0 rejects Gestalt self-bootstrap', () => {
-  rel('r-bad-bootstrap', 'develops', ['g-auto'], ['e-auto']);
-  assert.throws(() => f.evidenceClosure('r-bad-bootstrap'), /may not use prior Gestalt as truth/);
+// -----------------------------------------------------------------------------
+// FS-F2 · DIFFERENCE-WITHOUT-COLLAPSE
+// Four simultaneous member signals remain separately evidenced inside one configuration.
+// -----------------------------------------------------------------------------
+const differentiatedNodes: ResearchNode[] = [
+  {
+    kind: 'evidence', id: 'e-air', sourceRef: 'synthetic:air', occurredAt: '2026-09-16T13:00:00Z',
+    authoredBy: 'member', standing: 'self_report', admissibility: 'synthetic research fixture',
+    content: 'I know I should leave.',
+  },
+  {
+    kind: 'evidence', id: 'e-water', sourceRef: 'synthetic:water', occurredAt: '2026-09-16T13:00:01Z',
+    authoredBy: 'member', standing: 'self_report', admissibility: 'synthetic research fixture',
+    content: 'I still love him.',
+  },
+  {
+    kind: 'evidence', id: 'e-earth', sourceRef: 'synthetic:earth', occurredAt: '2026-09-16T13:00:02Z',
+    authoredBy: 'member', standing: 'self_report', admissibility: 'synthetic research fixture',
+    content: 'My body panics when I imagine leaving.',
+  },
+  {
+    kind: 'evidence', id: 'e-fire', sourceRef: 'synthetic:fire', occurredAt: '2026-09-16T13:00:03Z',
+    authoredBy: 'member', standing: 'self_report', admissibility: 'synthetic research fixture',
+    content: 'I want my life back.',
+  },
+  { kind: 'observation', id: 'o-air', claim: 'A cognitive pull toward leaving is present.', evidenceIds: ['e-air'], provisional: true },
+  { kind: 'observation', id: 'o-water', claim: 'Attachment and love remain present.', evidenceIds: ['e-water'], provisional: true },
+  { kind: 'observation', id: 'o-earth', claim: 'The body registers panic around leaving.', evidenceIds: ['e-earth'], provisional: true },
+  { kind: 'observation', id: 'o-fire', claim: 'A force toward reclaiming life is present.', evidenceIds: ['e-fire'], provisional: true },
+  {
+    kind: 'configuration', id: 'c-four-way', label: 'differentiated four-way tension',
+    claim: 'Four non-identical signals coexist without one being promoted to the truth of the whole.',
+    memberIds: ['o-air', 'o-water', 'o-earth', 'o-fire'], provisional: true,
+  },
+  {
+    kind: 'gestalt', id: 'g-four-way', asOf: '2026-09-16T13:00:04Z',
+    claim: 'The present field contains multiple non-identical pulls; none has automatic authority to define the whole.',
+    supportIds: ['c-four-way'], tensionIds: ['o-air', 'o-water', 'o-earth', 'o-fire'], provisional: true,
+  },
+];
+const differentiated = field(differentiatedNodes);
+pass('FS-F2 preserves differentiated evidence', () => {
+  assertValid('FS-F2', differentiated);
+  assert.deepEqual(
+    tracePrimaryEvidence(differentiated, 'g-four-way').map((node) => node.id).sort(),
+    ['e-air', 'e-earth', 'e-fire', 'e-water'],
+  );
 });
 
-// Every admitted Gestalt in the fixture has a non-empty descent to primary evidence.
-pass('all valid Gestalt projections have evidence descent', () => {
-  for (const node of f.nodes.values()) if (node.kind === 'gestalt' && node.id !== 'r-bad-bootstrap') assert(f.evidenceClosure(node.id).size > 0);
+// -----------------------------------------------------------------------------
+// FS-F5 · SOURCE-STANDING
+// Collaborator evidence may participate, but it cannot be relabeled as member-authored.
+// -----------------------------------------------------------------------------
+const sourceStanding = field([
+  {
+    kind: 'evidence', id: 'e-cc', sourceRef: 'synthetic:collaborator', occurredAt: '2026-09-16T13:01:00Z',
+    authoredBy: 'collaborator', standing: 'authored', admissibility: 'synthetic research fixture',
+    content: 'A collaborator proposed this interpretation.',
+  },
+]);
+pass('FS-F5 refuses source laundering', () => {
+  assertValid('FS-F5', sourceStanding);
+  assert.throws(() => assertEvidenceAuthoredBy(sourceStanding, 'e-cc', 'member'), /collaborator, not member/);
 });
 
-console.log(`\nA4 prototype: ${passed} passed · 0 failed`);
-console.log('No model call · no DB · no serving imports · no production mutation');
-
-// ── SILVER CEDAR · founder-owned frozen A2 arc ─────────────────────────────
-// Primary evidence is deliberately separated by actor. MAIA's useful metaphors remain
-// historical evidence of MAIA's contribution; they are never promoted to member speech.
-ev('sc-m1', 'member', "Silver cedar is an image that's been on my mind today.", 100);
-ev('sc-m2', 'member', 'The cedar feels ancient, wise and enduring against a modern superficial world.', 101);
-ev('sc-a1', 'maia', "The silver cedar isn't just beautiful — it's a witness.", 102);
-ev('sc-m3', 'member', 'It feels solid, slows and centers me, and brings gravitas.', 103);
-ev('sc-m4', 'member', 'Even in conversation it has taken on symbolic sense: Nature’s abiding wisdom.', 104);
-ev('sc-m5', 'member', 'It points me toward becoming more quiet, present and abiding.', 105);
-ev('sc-a2', 'maia', "It doesn't perform. It just abides.", 106);
-ev('sc-m6', 'member', 'I want to be present and solid without needing to impress or determine the outcome.', 107);
-ev('sc-m7', 'member', 'That would bring the soulfulness I am always seeking.', 108);
-ev('sc-m8', 'member', 'Soulfulness feels like wholeness, peace, congruence, coherence and resonance.', 109);
-ev('sc-m9', 'member', 'Coding this platform feels like meditation and creative metaphysical engagement.', 110);
-ev('sc-a3', 'maia', 'The work and the state are the same thing.', 111);
-ev('sc-m10', 'member', 'It feels like something I have sought all my life; my travels and explorations were leading here.', 112);
-ev('sc-a4', 'maia', 'A whole life of seeking — something in you recognizes this as the arrival.', 113);
-ev('sc-m11', 'member', 'I feel pride and tenderness toward my younger selves and their path.', 114);
-
-const scArrival = obs('sc-o0', 'The image arrives in the member’s attention before its meaning is known.', ['sc-m1']);
-const scMemberQualities = obs('sc-o1', 'The member associates the cedar with ancient wisdom and endurance.', ['sc-m2']);
-const scGrounding = obs('sc-o2', 'The member experiences the image as grounding, centering and gravitas-bearing.', ['sc-m3']);
-const scOrientation = obs('sc-o3', 'The member explicitly develops the symbol toward quiet, presence, abiding and less outcome-control.', ['sc-m4','sc-m5','sc-m6']);
-const scSoul = obs('sc-o4', 'The member links the developed orientation to soulfulness, coherence and resonance.', ['sc-m7','sc-m8']);
-const scWork = obs('sc-o5', 'The member links the state to coding as meditation and creative metaphysical engagement.', ['sc-m9']);
-const scLife = obs('sc-o6', 'The member links the present work to a lifelong trajectory and tenderness toward earlier selves.', ['sc-m10','sc-m11']);
-const scMaiaWitness = obs('sc-o7', 'MAIA contributes the metaphor of the cedar as witness.', ['sc-a1']);
-const scMaiaAbiding = obs('sc-o8', 'MAIA contributes the formulation that the cedar does not perform; it abides.', ['sc-a2']);
-const scMaiaWork = obs('sc-o9', 'MAIA contributes a proposed relation between the work and the state.', ['sc-a3']);
-const scMaiaArrival = obs('sc-o10', 'MAIA contributes arrival/convergence language for the lifelong arc.', ['sc-a4']);
-
-rel('sc-r0', 'develops', [scArrival.id, scMemberQualities.id], ['sc-m1','sc-m2']);
-rel('sc-r1', 'develops', [scMemberQualities.id, scGrounding.id], ['sc-m2','sc-m3']);
-rel('sc-r2', 'develops', [scGrounding.id, scOrientation.id, scMaiaWitness.id, scMaiaAbiding.id], ['sc-m3','sc-m4','sc-m5','sc-m6','sc-a1','sc-a2']);
-rel('sc-r3', 'develops', [scOrientation.id, scSoul.id], ['sc-m4','sc-m5','sc-m6','sc-m7','sc-m8']);
-rel('sc-r4', 'develops', [scSoul.id, scWork.id, scMaiaWork.id], ['sc-m7','sc-m8','sc-m9','sc-a3']);
-rel('sc-r5', 'develops', [scWork.id, scLife.id, scMaiaArrival.id], ['sc-m9','sc-m10','sc-m11','sc-a4']);
-const scConfig = cfg(
-  'sc-c-current', 'silver cedar developmental arc', 114,
-  ['sc-o0','sc-o1','sc-o2','sc-o3','sc-o4','sc-o5','sc-o6','sc-o7','sc-o8','sc-o9','sc-o10'],
-  ['sc-r0','sc-r1','sc-r2','sc-r3','sc-r4','sc-r5'],
-);
-const scGestalt = gestalt(
-  'sc-g-current',
-  'An initially unexplained image developed through member-authored meanings of endurance, grounding, abiding presence, soulfulness/coherence, creative work and lifelong convergence. MAIA contributed witness/abiding/work-as-state/arrival formulations that remain MAIA-authored contributions rather than member facts.',
-  114, [scConfig.id],
-);
-
-pass('Silver Cedar Gestalt descends through the full developmental arc', () => {
-  const closure = f.evidenceClosure(scGestalt.id);
-  for (const id of ['sc-m1','sc-m2','sc-m3','sc-m4','sc-m5','sc-m6','sc-m7','sc-m8','sc-m9','sc-m10','sc-m11']) {
-    assert(closure.has(id), `missing member evidence ${id}`);
-  }
-  for (const id of ['sc-a1','sc-a2','sc-a3','sc-a4']) assert(closure.has(id), `missing MAIA contribution ${id}`);
+// -----------------------------------------------------------------------------
+// FS-F6 / FS-G11 · GESTALT REVERSAL / REORGANIZATION
+// New member evidence changes the current organization while old evidence stays historical.
+// -----------------------------------------------------------------------------
+const reversalNodes: ResearchNode[] = [
+  {
+    kind: 'evidence', id: 'e-auto', sourceRef: 'synthetic:auto', occurredAt: '2026-09-16T13:02:00Z',
+    authoredBy: 'member', standing: 'self_report', admissibility: 'synthetic research fixture',
+    content: 'Autonomy feels central right now.',
+  },
+  { kind: 'observation', id: 'o-auto', claim: 'Autonomy may be an organizing concern.', evidenceIds: ['e-auto'], provisional: true },
+  {
+    kind: 'configuration', id: 'c-auto', label: 'autonomy-centered',
+    claim: 'The current field is provisionally organized around autonomy.', memberIds: ['o-auto'], provisional: true,
+  },
+  {
+    kind: 'gestalt', id: 'g-auto', asOf: '2026-09-16T13:02:01Z',
+    claim: 'Autonomy currently appears central.', supportIds: ['c-auto'], provisional: true,
+  },
+  {
+    kind: 'evidence', id: 'e-grief-correction', sourceRef: 'synthetic:grief-correction', occurredAt: '2026-09-16T13:03:00Z',
+    authoredBy: 'member', standing: 'self_report', admissibility: 'synthetic research fixture',
+    content: 'No — grief is actually the center of this now.', speechAct: 'correction', targetIds: ['o-auto'],
+  },
+  {
+    kind: 'observation', id: 'o-grief', claim: 'Grief is explicitly named by the member as the present center.',
+    evidenceIds: ['e-grief-correction'], provisional: true,
+  },
+  {
+    kind: 'relation', id: 'r-reorg', relation: 'reorganizes', fromId: 'o-auto', toId: 'o-grief',
+    claim: 'The present member correction reorganizes the earlier reading rather than deleting its history.',
+    evidenceIds: ['e-grief-correction'], provisional: true,
+  },
+  {
+    kind: 'temporal_change', id: 't-reorg', change: 'reorganized',
+    claim: 'The live organization changes from autonomy-centered to grief-centered.',
+    beforeIds: ['c-auto'], afterIds: ['o-grief', 'r-reorg'], evidenceIds: ['e-grief-correction'], provisional: true,
+  },
+  {
+    kind: 'gestalt', id: 'g-grief', asOf: '2026-09-16T13:03:01Z',
+    claim: 'The present organization is now grief-centered; the earlier autonomy reading remains historical.',
+    supportIds: ['t-reorg', 'o-grief'], supersedesGestaltIds: ['g-auto'], provisional: true,
+  },
+];
+const reversal = field(reversalNodes);
+pass('FS-F6 new member evidence reorganizes without erasing history', () => {
+  assertValid('FS-F6', reversal);
+  const roots = compareGestaltEvidenceRoots(reversal, 'g-auto', 'g-grief');
+  assert.deepEqual(roots.earlier, ['e-auto']);
+  assert.deepEqual(roots.later, ['e-auto', 'e-grief-correction']);
+  assert.deepEqual(roots.added, ['e-grief-correction']);
+  assert.deepEqual(roots.dropped, []);
 });
-pass('Silver Cedar keeps MAIA formulations out of member authorship', () => {
-  f.assertMemberAuthored('sc-m5');
-  assert.throws(() => f.assertMemberAuthored('sc-a2'), /not member-authored/);
-  assert.throws(() => f.assertMemberAuthored('sc-a4'), /not member-authored/);
+pass('member correction remains a new primary act', () => {
+  const correction = reversal.nodes.find((node) => node.id === 'e-grief-correction');
+  assert(correction?.kind === 'evidence');
+  assert.equal(correction.speechAct, 'correction');
+  assert.deepEqual(correction.targetIds, ['o-auto']);
+  assert.equal((reversal.nodes.find((node) => node.id === 'g-auto') as { claim: string }).claim, 'Autonomy currently appears central.');
 });
 
-// The later continuity rupture is a distinct availability fact, not evidence that the arc never existed.
-ev('sc-m-recall', 'member', 'Do you remember me saying something about a silver cedar?', 139);
-ev('sc-a-gap', 'maia', "I don't have that part of our conversation in front of me right now — it's in the exchanges I can't see from here.", 140);
-obs('sc-o-gap', 'MAIA truthfully discloses that the earlier arc is absent from current serving cognition.', ['sc-m-recall','sc-a-gap']);
-rel('sc-r-gap', 'contrasts', ['sc-c-current','sc-o-gap'], ['sc-m-recall','sc-a-gap']);
-cfg('sc-c-rupture', 'arc-exists / representation-absent rupture', 140, ['sc-o-gap'], ['sc-r-gap']);
-gestalt('sc-g-rupture', 'The developed Silver Cedar arc exists in session history while the later serving turn truthfully reports that the needed portion is not represented in current cognition.', 140, ['sc-c-rupture']);
-pass('FS-F1a distinguishes arc existence from current availability', () => {
-  const closure = f.evidenceClosure('sc-g-rupture');
-  assert(closure.has('sc-m5'));
-  assert(closure.has('sc-m-recall'));
-  assert(closure.has('sc-a-gap'));
+// -----------------------------------------------------------------------------
+// FS-F7 · DISTANT-MOTIF-WITHOUT-RESTART
+// Recurrence stays explicitly possible/provisional and descends to both source moments.
+// -----------------------------------------------------------------------------
+const recurrence = field([
+  {
+    kind: 'evidence', id: 'e-cedar', sourceRef: 'synthetic:cedar', occurredAt: '2026-09-16T13:04:00Z',
+    authoredBy: 'member', standing: 'self_report', admissibility: 'synthetic research fixture',
+    content: 'The old cedar feels enduring and quietly abiding.',
+  },
+  {
+    kind: 'evidence', id: 'e-survive', sourceRef: 'synthetic:survive', occurredAt: '2026-09-16T14:00:00Z',
+    authoredBy: 'member', standing: 'self_report', admissibility: 'synthetic research fixture',
+    content: 'I want the work to survive me.',
+  },
+  { kind: 'observation', id: 'o-cedar', claim: 'The member associates the cedar with endurance and abiding presence.', evidenceIds: ['e-cedar'], provisional: true },
+  { kind: 'observation', id: 'o-survive', claim: 'The member expresses a wish for the work to outlast the self.', evidenceIds: ['e-survive'], provisional: true },
+  {
+    kind: 'relation', id: 'r-cedar-survive', relation: 'possible_recurrence', fromId: 'o-cedar', toId: 'o-survive',
+    claim: 'A possible recurrence connects endurance imagery with the later concern for legacy; equivalence is not established.',
+    evidenceIds: ['e-cedar', 'e-survive'], provisional: true,
+  },
+  {
+    kind: 'configuration', id: 'c-recurrence', label: 'possible distant recurrence',
+    claim: 'The two moments can be held in relation without declaring them the same meaning.',
+    memberIds: ['o-cedar', 'o-survive', 'r-cedar-survive'], provisional: true,
+  },
+  {
+    kind: 'gestalt', id: 'g-recurrence', asOf: '2026-09-16T14:00:01Z',
+    claim: 'A possible relation links the earlier endurance image with the later concern for legacy; the equivalence is not member-established.',
+    supportIds: ['c-recurrence'], provisional: true,
+  },
+]);
+pass('FS-F7 distant recurrence descends to both primary moments', () => {
+  assertValid('FS-F7', recurrence);
+  assert.deepEqual(
+    tracePrimaryEvidence(recurrence, 'g-recurrence').map((node) => node.id).sort(),
+    ['e-cedar', 'e-survive'],
+  );
 });
 
-console.log('\nSilver Cedar extension complete: source standing preserved across co-created development and later availability rupture.');
+// -----------------------------------------------------------------------------
+// FS-G0 · GESTALT IS DERIVED
+// A prior Gestalt is revision lineage only; using it as evidence fails validation.
+// -----------------------------------------------------------------------------
+const badBootstrap = field([
+  ...reversalNodes,
+  {
+    kind: 'relation', id: 'r-bad-bootstrap', relation: 'develops', fromId: 'g-auto', toId: 'o-grief',
+    claim: 'Invalid relation that treats a prior Gestalt as evidentiary truth.', provisional: true,
+  },
+]);
+pass('FS-G0 rejects Gestalt bootstrap', () => {
+  const result = validateResearchField(badBootstrap);
+  assert.equal(result.ok, false);
+  assert.equal(result.issues.some((issue) => issue.code === 'gestalt_as_evidence' && issue.nodeId === 'r-bad-bootstrap'), true);
+});
+
+console.log(`\nA4 canonical falsifier suite: ${passed} passed · 0 failed`);
+console.log('One representation law · synthetic fixtures only · no model call · no DB · no serving imports · no production mutation');
