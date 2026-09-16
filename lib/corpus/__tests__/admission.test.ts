@@ -433,4 +433,14 @@ describe('ACT 4 §C · corpus admission', () => {
     }
   });
 
+  test('T23 — shipped declaration admits Elemental Alchemy only by its in-file Kelly copyright evidence', () => {
+    const repoRoot = path.resolve(__dirname, '../../..');
+    const real = loadDeclaration(repoRoot);
+    const ea = path.join(repoRoot, 'data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md');
+    const other = path.join(repoRoot, 'data/ain/source/60-second-protocol.md');
+    const v = decideAdmission(repoRoot, [ea, other], real);
+    expect(v.admitted).toEqual(['data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md']);
+    expect(v.excluded.map((e) => e.file)).toContain('data/ain/source/60-second-protocol.md');
+  });
+
 });
