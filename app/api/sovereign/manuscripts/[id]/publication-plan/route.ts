@@ -3,9 +3,9 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   assignPublicationRole,
   clearPublicationRole,
-  readPublicationPlan,
   type PublicationPlanResult,
 } from '@/lib/manuscript/publicationPlan/store';
+import { readPublicationWorkspace } from '@/lib/manuscript/publicationPlan/workspace';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -31,7 +31,9 @@ async function memberAndId(request: NextRequest, ctx: { params: Promise<{ id: st
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const auth = await memberAndId(request, ctx);
   if ('error' in auth) return auth.error;
-  return responseFor(await readPublicationPlan(auth.id, auth.memberId));
+  const result = await readPublicationWorkspace(auth.id, auth.memberId);
+  if (result.status === 'refused') return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(result);
 }
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {

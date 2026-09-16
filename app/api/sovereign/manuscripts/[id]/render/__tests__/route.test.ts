@@ -197,6 +197,32 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     await new Promise((r) => setTimeout(r, 25));
   });
 
+  it('omits only explicitly omitted draft sections from production without deleting manuscript text', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '9', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [
+        { heading: 'Import debris', body: 'ch003.xhtml ch004.xhtml', heading_depth: 1, heading_signal: 'markdown', publication_role: 'omit' },
+        { heading: 'Chapter One', body: 'CURRENT EDIT', heading_depth: 1, heading_signal: 'markdown', publication_role: null },
+      ], rowCount: 2 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 });
+
+    const tmp = path.join(os.tmpdir(), `render-omit-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
+    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 omitted'));
+    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 17, pageCount: 1, sourceHash: 'omit-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v3' });
+
+    const res = await POST(req({ format: 'pdf', stage: 'final' }), ctx);
+    expect(res.status).toBe(200);
+    const expected = [{
+      heading: 'Chapter One', body: 'CURRENT EDIT', headingDepth: 1, headingSignal: 'markdown', publicationRole: null,
+    }];
+    expect(mockPreflight).toHaveBeenCalledWith(expected);
+    expect(mockRender).toHaveBeenCalledWith(expected, expect.objectContaining({ format: 'pdf' }));
+    await new Promise((r) => setTimeout(r, 25));
+  });
+
   it('refuses rather than substituting source when an addressable draft has no readable sections', async () => {
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery

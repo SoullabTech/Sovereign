@@ -6,6 +6,7 @@ import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
 import { CANVAS_HREF } from '../../writers-studio/studioMap';
 import WorkingDraftEditor from './WorkingDraftEditor';
+import BookProductionPanel from './BookProductionPanel';
 
 /**
  * Mirrors MAX_FILE_BYTES in app/api/sovereign/manuscripts/ingest/route.ts.
@@ -258,8 +259,6 @@ function PressManuscriptRoom() {
     setTab('draft'); // the work is where the writing is, so go there
   }, []);
 
-  const [rendering, setRendering] = useState<'pdf' | 'epub' | null>(null);
-  const [renderError, setRenderError] = useState(false);
 
   /**
    * W-2 — a failed load must never look like an empty shelf.
@@ -552,35 +551,6 @@ function PressManuscriptRoom() {
     a.download = `${title || 'keeps'}.md`;
     a.click();
     URL.revokeObjectURL(a.href);
-  };
-
-  // ---- Your Book: render the whole manuscript into a PDF / EPUB ----------
-  const renderBook = async (format: 'pdf' | 'epub') => {
-    if (!active) return;
-    setRenderError(false);
-    setRendering(format);
-    try {
-      const res = await apiFetch(`/api/sovereign/manuscripts/${active}/render`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format }),
-      });
-      if (!res.ok) {
-        setRenderError(true);
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${title || 'manuscript'}.${format}`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      setRenderError(true);
-    } finally {
-      setRendering(null);
-    }
   };
 
   const emerging = useMemo(() => {
@@ -1199,40 +1169,12 @@ function PressManuscriptRoom() {
           </div>
         )}
 
-        {tab === 'book' && (
-          <div>
-            <p className="text-[14px] opacity-70 mb-3 leading-relaxed">
-              Your manuscript, set as a book — the whole of it, in your own words,
-              nothing added. Make a copy you can hold or share.
-            </p>
-            <p className="text-[12px] opacity-50 mb-8">
-              {pageEstimate(totalChars)} pages · {sections.length} section
-              {sections.length === 1 ? '' : 's'}. Set in a clean book design; this can take a
-              moment to prepare.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={() => renderBook('pdf')}
-                disabled={rendering !== null || sections.length === 0}
-                className="px-8 py-3 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
-              >
-                {rendering === 'pdf' ? 'setting your book…' : 'Download PDF'}
-              </button>
-              <button
-                onClick={() => renderBook('epub')}
-                disabled={rendering !== null || sections.length === 0}
-                className="px-8 py-3 border border-[#4A4238] text-[14px] tracking-wide opacity-80 disabled:opacity-30"
-              >
-                {rendering === 'epub' ? 'setting your book…' : 'Download EPUB'}
-              </button>
-            </div>
-            {renderError && (
-              <p className="text-[13px] opacity-70 mt-6">
-                Could not make your book just now. Please try again in a moment.
-              </p>
-            )}
-          </div>
-        )}
+        {tab === 'book' && active ? (
+          <BookProductionPanel
+            manuscriptId={active}
+            title={title}
+          />
+        ) : null}
       </main>
     </div>
   );

@@ -4,17 +4,18 @@ jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: je
 jest.mock('@/lib/manuscript/publicationPlan/store', () => ({
   assignPublicationRole: jest.fn(),
   clearPublicationRole: jest.fn(),
-  readPublicationPlan: jest.fn(),
 }));
+jest.mock('@/lib/manuscript/publicationPlan/workspace', () => ({ readPublicationWorkspace: jest.fn() }));
 
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { assignPublicationRole, clearPublicationRole, readPublicationPlan } from '@/lib/manuscript/publicationPlan/store';
+import { assignPublicationRole, clearPublicationRole } from '@/lib/manuscript/publicationPlan/store';
+import { readPublicationWorkspace } from '@/lib/manuscript/publicationPlan/workspace';
 import { GET, POST, DELETE } from '../route';
 
 const auth = getMemberIdFromRequest as jest.Mock;
 const assign = assignPublicationRole as jest.Mock;
 const clear = clearPublicationRole as jest.Mock;
-const read = readPublicationPlan as jest.Mock;
+const readWorkspace = readPublicationWorkspace as jest.Mock;
 const ctx = { params: Promise.resolve({ id: 'm1' }) };
 const MEMBER = '11111111-1111-1111-1111-111111111111';
 const req = (method: string, body?: unknown) => new NextRequest('http://localhost/x', {
@@ -28,14 +29,21 @@ describe('publication plan route', () => {
   it('is member-scoped', async () => {
     auth.mockResolvedValue(null);
     expect((await GET(req('GET'), ctx)).status).toBe(401);
-    expect(read).not.toHaveBeenCalled();
+    expect(readWorkspace).not.toHaveBeenCalled();
   });
 
   it('reads only the owned manuscript plan', async () => {
-    read.mockResolvedValue({ status: 'ok', placements: [{ role: 'copyright', sectionIds: ['s1'] }] });
+    readWorkspace.mockResolvedValue({ status: 'ok', availability: 'ready', draftVersion: 9, bodyStartPosition: 3, sections: [], placements: [{ role: 'copyright', sectionIds: ['s1'] }], issues: [] });
     const res = await GET(req('GET'), ctx);
     expect(res.status).toBe(200);
-    expect(read).toHaveBeenCalledWith('m1', MEMBER);
+    expect(readWorkspace).toHaveBeenCalledWith('m1', MEMBER);
+  });
+
+  it('reports when publication roles cannot yet bind to a section-aware draft', async () => {
+    readWorkspace.mockResolvedValue({ status: 'ok', availability: 'section_aware_draft_required', draftVersion: 2, bodyStartPosition: null, sections: [], placements: [], issues: [] });
+    const res = await GET(req('GET'), ctx);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ availability: 'section_aware_draft_required', draftVersion: 2 });
   });
 
   it('assigns role by section identities only', async () => {

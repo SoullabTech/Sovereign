@@ -12,6 +12,7 @@ export const PUBLICATION_MATTER_ROLES = [
   'bibliography',
   'resources',
   'afterword',
+  'omit',
 ] as const;
 
 export type PublicationMatterRole = (typeof PUBLICATION_MATTER_ROLES)[number];
