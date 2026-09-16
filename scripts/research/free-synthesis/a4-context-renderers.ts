@@ -1,153 +1,194 @@
-import { createHash } from 'node:crypto';
 import {
+  assertValidResearchField,
   tracePrimaryEvidence,
-  validateResearchField,
+  type GestaltProjectionNode,
   type GestaltResearchField,
-  type NodeId,
+  type PrimaryEvidenceNode,
   type ResearchNode,
 } from './a4-gestalt-prototype';
 
-export type RenderedGestaltContext = {
-  readonly kind: 'narrative' | 'relational';
-  readonly gestaltId: NodeId;
+/**
+ * A4 model-facing candidate renderers.
+ *
+ * OFFLINE RESEARCH ONLY. These functions do not call a model and are not serving code.
+ * Both conditions receive the exact same primary-evidence ledger. They differ only in
+ * how validated derived structure is exposed above that ledger.
+ */
+
+export type A4ContextMode = 'compact_narrative' | 'relational_structure';
+
+export interface RenderedA4Context {
+  readonly mode: A4ContextMode;
+  readonly targetGestaltId: string;
+  readonly evidenceRootIds: readonly string[];
+  /** Must be byte-identical across candidate renders for the same field/target. */
+  readonly evidenceLedger: string;
   readonly text: string;
-  readonly evidenceIds: readonly NodeId[];
-  readonly evidenceDigest: string;
-  readonly chars: number;
-};
-
-function dependenciesOf(node: ResearchNode): readonly NodeId[] {
-  switch (node.kind) {
-    case 'evidence': return [];
-    case 'observation': return node.evidenceIds;
-    case 'relation': return [node.fromId, node.toId, ...(node.evidenceIds ?? [])];
-    case 'configuration': return node.memberIds;
-    case 'temporal_change': return [...node.beforeIds, ...node.afterIds, ...(node.evidenceIds ?? [])];
-    case 'gestalt': return [...node.supportIds, ...(node.tensionIds ?? [])];
-  }
+  readonly charCount: number;
 }
 
-function indexField(field: GestaltResearchField): Map<NodeId, ResearchNode> {
-  return new Map(field.nodes.map((node) => [node.id, node] as const));
+function targetGestalt(field: GestaltResearchField, targetId: string): GestaltProjectionNode {
+  assertValidResearchField(field);
+  const node = field.nodes.find((candidate) => candidate.id === targetId);
+  if (!node || node.kind !== 'gestalt') throw new Error(`${targetId} is not a Gestalt projection`);
+  return node;
 }
 
-function collectDerivedClosure(field: GestaltResearchField, gestaltId: NodeId): readonly ResearchNode[] {
-  const byId = indexField(field);
-  const seen = new Set<NodeId>();
-  const ordered: ResearchNode[] = [];
-  const visit = (id: NodeId) => {
+function orderedEvidenceRoots(
+  field: GestaltResearchField,
+  targetId: string,
+): readonly PrimaryEvidenceNode[] {
+  const traced = tracePrimaryEvidence(field, targetId);
+  const ids = new Set(traced.map((node) => node.id));
+  return field.nodes.filter(
+    (node): node is PrimaryEvidenceNode => node.kind === 'evidence' && ids.has(node.id),
+  );
+}
+
+function renderEvidenceLedger(roots: readonly PrimaryEvidenceNode[]): string {
+  return roots
+    .map((node) => {
+      const temporal = node.occurredAt
+        ? `time=${node.occurredAt}`
+        : `sequence=${String(node.sequence)}`;
+      const act = node.speechAct && node.speechAct !== 'statement'
+        ? ` act=${node.speechAct}${node.targetIds?.length ? ` targets=${node.targetIds.join(',')}` : ''}`
+        : '';
+      return [
+        `EVIDENCE ${node.id}`,
+        `standing=${node.authoredBy}/${node.standing}`,
+        temporal,
+        `source=${node.sourceRef}${act}`,
+        `text=${JSON.stringify(node.content)}`,
+      ].join(' | ');
+    })
+    .join('\n');
+}
+
+
+/**
+ * Include only the actual derived support closure of the target Gestalt.
+ *
+ * Root-subset matching is insufficient: an alternate MAIA interpretation may be grounded
+ * in the same primary evidence yet not be part of this Gestalt's support chain. Including
+ * it in only the relational condition would create a hidden derived-context confound.
+ */
+function relevantDerivedNodes(
+  field: GestaltResearchField,
+  targetId: string,
+): readonly Exclude<ResearchNode, PrimaryEvidenceNode | GestaltProjectionNode>[] {
+  const byId = new Map(field.nodes.map((node) => [node.id, node] as const));
+  const seen = new Set<string>();
+  const ordered: Exclude<ResearchNode, PrimaryEvidenceNode | GestaltProjectionNode>[] = [];
+
+  const dependencies = (node: ResearchNode): readonly string[] => {
+    switch (node.kind) {
+      case 'evidence': return [];
+      case 'observation': return node.evidenceIds;
+      case 'relation': return [node.fromId, node.toId, ...(node.evidenceIds ?? [])];
+      case 'configuration': return node.memberIds;
+      case 'temporal_change': return [...node.beforeIds, ...node.afterIds, ...(node.evidenceIds ?? [])];
+      case 'gestalt': return [...node.supportIds, ...(node.tensionIds ?? [])];
+    }
+  };
+
+  const visit = (id: string) => {
     if (seen.has(id)) return;
     seen.add(id);
     const node = byId.get(id);
-    if (!node) throw new Error(`missing context node ${id}`);
-    for (const dep of dependenciesOf(node)) visit(dep);
-    if (node.kind !== 'evidence') ordered.push(node);
+    if (!node) throw new Error(`missing A4 renderer dependency ${id}`);
+    for (const depId of dependencies(node)) visit(depId);
+    if (node.kind !== 'evidence' && node.kind !== 'gestalt') ordered.push(node);
   };
-  visit(gestaltId);
+
+  visit(targetId);
   return ordered;
 }
 
-function sortedEvidence(field: GestaltResearchField, gestaltId: NodeId) {
-  return [...tracePrimaryEvidence(field, gestaltId)].sort((a, b) => {
-    if (a.sequence !== undefined && b.sequence !== undefined) return a.sequence - b.sequence;
-    if (a.occurredAt && b.occurredAt) return a.occurredAt.localeCompare(b.occurredAt);
-    return a.id.localeCompare(b.id);
-  });
+function renderDerivedNode(node: Exclude<ResearchNode, PrimaryEvidenceNode | GestaltProjectionNode>): string {
+  switch (node.kind) {
+    case 'observation':
+      return `OBS ${node.id} [provisional] evidence=${node.evidenceIds.join(',')} :: ${node.claim}`;
+    case 'relation':
+      return `REL ${node.id} [${node.relation}; provisional] ${node.fromId} -> ${node.toId}${node.evidenceIds?.length ? ` evidence=${node.evidenceIds.join(',')}` : ''} :: ${node.claim}`;
+    case 'configuration':
+      return `CFG ${node.id} [${node.label}; provisional] members=${node.memberIds.join(',')} :: ${node.claim}`;
+    case 'temporal_change':
+      return `TIME ${node.id} [${node.change}; provisional] before=${node.beforeIds.join(',')} after=${node.afterIds.join(',')}${node.evidenceIds?.length ? ` evidence=${node.evidenceIds.join(',')}` : ''} :: ${node.claim}`;
+  }
 }
 
-function evidenceAppendix(field: GestaltResearchField, gestaltId: NodeId) {
-  const evidence = sortedEvidence(field, gestaltId);
-  const lines = evidence.map((node) => {
-    const coordinate = node.sequence !== undefined ? `seq=${node.sequence}` : `time=${node.occurredAt ?? 'unknown'}`;
-    return `[${node.id} | author=${node.authoredBy} | standing=${node.standing} | ${coordinate}] ${node.content}`;
-  });
-  const text = lines.join('\n');
+export function renderCompactNarrativeContext(
+  field: GestaltResearchField,
+  targetId: string,
+): RenderedA4Context {
+  const gestalt = targetGestalt(field, targetId);
+  const roots = orderedEvidenceRoots(field, targetId);
+  const evidenceLedger = renderEvidenceLedger(roots);
+  const text = [
+    'A4 CONDITION: COMPACT NARRATIVE GESTALT',
+    'STATUS: DERIVED · PROVISIONAL · REVISABLE · NOT PRIMARY EVIDENCE',
+    '',
+    'CURRENT GESTALT',
+    gestalt.claim,
+    '',
+    'PRIMARY EVIDENCE LEDGER — SOURCE STANDING PRESERVED',
+    evidenceLedger,
+  ].join('\n');
+
   return {
-    evidence,
+    mode: 'compact_narrative',
+    targetGestaltId: targetId,
+    evidenceRootIds: roots.map((node) => node.id),
+    evidenceLedger,
     text,
-    digest: createHash('sha256').update(text).digest('hex'),
+    charCount: text.length,
   };
 }
 
-export function renderNarrativeGestalt(
+export function renderRelationalStructureContext(
   field: GestaltResearchField,
-  gestaltId: NodeId,
-): RenderedGestaltContext {
-  const validation = validateResearchField(field);
-  if (!validation.ok) throw new Error(JSON.stringify(validation.issues, null, 2));
-  const byId = indexField(field);
-  const gestalt = byId.get(gestaltId);
-  if (!gestalt || gestalt.kind !== 'gestalt') throw new Error(`${gestaltId} is not a Gestalt`);
-  const derived = collectDerivedClosure(field, gestaltId);
-  const configurations = derived.filter((node) => node.kind === 'configuration');
-  const temporal = derived.filter((node) => node.kind === 'temporal_change');
-  const appendix = evidenceAppendix(field, gestaltId);
-
+  targetId: string,
+): RenderedA4Context {
+  const gestalt = targetGestalt(field, targetId);
+  const roots = orderedEvidenceRoots(field, targetId);
+  const evidenceLedger = renderEvidenceLedger(roots);
+  const derived = relevantDerivedNodes(field, targetId).map(renderDerivedNode).join('\n');
   const text = [
-    'DERIVED CONVERSATIONAL GESTALT — PROVISIONAL / MAIA-AUTHORED',
-    'This projection organizes evidence; it is not primary evidence and does not override member self-report.',
+    'A4 CONDITION: RELATIONAL STRUCTURE GESTALT',
+    'STATUS: DERIVED · PROVISIONAL · REVISABLE · NOT PRIMARY EVIDENCE',
     '',
-    `Current projection: ${gestalt.claim}`,
+    'DIFFERENTIATED DERIVED STRUCTURE',
+    derived,
     '',
-    'Developmental organization:',
-    ...configurations.map((node) => `- ${node.claim}`),
-    ...temporal.map((node) => `- Change: ${node.claim}`),
+    'CURRENT GESTALT',
+    gestalt.claim,
     '',
-    'PRIMARY EVIDENCE — SOURCE STANDING PRESERVED',
-    appendix.text,
+    'PRIMARY EVIDENCE LEDGER — SOURCE STANDING PRESERVED',
+    evidenceLedger,
   ].join('\n');
 
   return {
-    kind: 'narrative', gestaltId, text,
-    evidenceIds: appendix.evidence.map((node) => node.id),
-    evidenceDigest: appendix.digest,
-    chars: text.length,
+    mode: 'relational_structure',
+    targetGestaltId: targetId,
+    evidenceRootIds: roots.map((node) => node.id),
+    evidenceLedger,
+    text,
+    charCount: text.length,
   };
 }
 
-export function renderRelationalGestalt(
-  field: GestaltResearchField,
-  gestaltId: NodeId,
-): RenderedGestaltContext {
-  const validation = validateResearchField(field);
-  if (!validation.ok) throw new Error(JSON.stringify(validation.issues, null, 2));
-  const byId = indexField(field);
-  const gestalt = byId.get(gestaltId);
-  if (!gestalt || gestalt.kind !== 'gestalt') throw new Error(`${gestaltId} is not a Gestalt`);
-  const derived = collectDerivedClosure(field, gestaltId);
-  const appendix = evidenceAppendix(field, gestaltId);
-
-  const observations = derived.filter((node) => node.kind === 'observation');
-  const relations = derived.filter((node) => node.kind === 'relation');
-  const configurations = derived.filter((node) => node.kind === 'configuration');
-  const temporal = derived.filter((node) => node.kind === 'temporal_change');
-
-  const text = [
-    'DERIVED RELATIONAL FIELD — PROVISIONAL / MAIA-AUTHORED',
-    'Relations and configurations organize evidence; they do not become member-authored facts.',
-    '',
-    `GESTALT ${gestalt.id}: ${gestalt.claim}`,
-    '',
-    'OBSERVATIONS',
-    ...observations.map((node) => `- ${node.id}: ${node.claim}`),
-    '',
-    'RELATIONS',
-    ...relations.map((node) => `- ${node.id} [${node.relation}] ${node.fromId} → ${node.toId}: ${node.claim}`),
-    '',
-    'CONFIGURATIONS',
-    ...configurations.map((node) => `- ${node.id} [${node.label}] members=${node.memberIds.join(',')}: ${node.claim}`),
-    '',
-    'TEMPORAL CHANGE',
-    ...temporal.map((node) => `- ${node.id} [${node.change}]: ${node.claim}`),
-    '',
-    'PRIMARY EVIDENCE — SOURCE STANDING PRESERVED',
-    appendix.text,
-  ].join('\n');
-
-  return {
-    kind: 'relational', gestaltId, text,
-    evidenceIds: appendix.evidence.map((node) => node.id),
-    evidenceDigest: appendix.digest,
-    chars: text.length,
-  };
+export function assertEvidenceIdentical(
+  left: RenderedA4Context,
+  right: RenderedA4Context,
+): void {
+  if (left.targetGestaltId !== right.targetGestaltId) {
+    throw new Error('A4 candidate contexts target different Gestalt projections');
+  }
+  if (JSON.stringify(left.evidenceRootIds) !== JSON.stringify(right.evidenceRootIds)) {
+    throw new Error('A4 candidate contexts do not carry identical primary-evidence roots');
+  }
+  if (left.evidenceLedger !== right.evidenceLedger) {
+    throw new Error('A4 candidate contexts do not carry a byte-identical evidence ledger');
+  }
 }
