@@ -23,7 +23,16 @@
  * how a gesture aimed at Chapter 10 persists against front matter.
  */
 
-/** The scope MAIA acts at. ⛔ DERIVED, NEVER CHOSEN — see `focusOn`. */
+/**
+ * The scope MAIA acts at.
+ *
+ * ⭐⭐ ALWAYS VISIBLE, NEVER SILENT. The room that failed on 2026-09-16 bound
+ * MAIA to a passage the writer could not see named anywhere, so a wrong
+ * binding was undetectable until the answer came back wrong. Scope is derived
+ * by default — the writer rarely picks — but the derived answer is rendered as
+ * a control in the centre header (`Reviewing entire chapter` · `Focused
+ * section: …`) and may be overridden by an explicit act.
+ */
 export type FocusScope = 'whole_work' | 'section' | 'passage';
 
 /** Where the writer is, in both namespaces at once. */
@@ -64,8 +73,10 @@ export interface StudioFocus {
   /** `null` means no section is in view. ⛔ It NEVER means front matter. */
   section: FocusSection | null;
   selection: FocusSelection | null;
-  /** Derived from the two above. Present so readers need no rules of their own. */
+  /** Derived from the above. Present so readers need no rules of their own. */
   scope: FocusScope;
+  /** True when the writer set this scope rather than it following their attention. */
+  scopeChosen: boolean;
 }
 
 export interface FocusInput {
@@ -73,6 +84,15 @@ export interface FocusInput {
   manuscriptId: string;
   section?: FocusSection | null;
   selection?: FocusSelection | null;
+  /**
+   * An explicit widening or narrowing by the writer, from the scope control.
+   *
+   * ⛔ IT DOES NOT SURVIVE THE ATTENTION IT WAS MADE AGAINST. Held against the
+   * section it was chosen for, so when the writer moves away the scope is
+   * visibly re-derived rather than quietly following them somewhere it was
+   * never chosen.
+   */
+  override?: { scope: FocusScope; forDraftSectionId: string | null } | null;
 }
 
 /**
@@ -90,13 +110,40 @@ export function focusOn(input: FocusInput): StudioFocus {
   /* ⛔ A selection without a section is incoherent, and silently keeping it
      would let a passage act run against no passage. Dropped, not repaired. */
   const selection = section ? (input.selection ?? null) : null;
+  const derived: FocusScope = selection ? 'passage' : section ? 'section' : 'whole_work';
+
+  /* The override is spent the moment the writer's attention leaves the section
+     it was made against. ⛔ A scope that outlives its subject is the silent
+     substitution this module exists to end. */
+  const ov = input.override ?? null;
+  const stillHolds = ov !== null && ov.forDraftSectionId === (section?.draftSectionId ?? null);
+  /* ⛔ And an override may never manufacture a passage: `passage` asserts a
+     selection exists, and no member act can make that true on its own. */
+  const usable = stillHolds && !(ov!.scope === 'passage' && !selection);
+
   return {
     workRef: input.workRef,
     manuscriptId: input.manuscriptId,
     section,
     selection,
-    scope: selection ? 'passage' : section ? 'section' : 'whole_work',
+    scope: usable ? ov!.scope : derived,
+    scopeChosen: usable && ov!.scope !== derived,
   };
+}
+
+/**
+ * What the scope control says in the centre header. ⭐ The writer reads the
+ * binding here BEFORE acting, which is the affordance whose absence made the
+ * 2026-09-16 failure invisible until it had already happened.
+ */
+export function scopeLabel(focus: StudioFocus): string {
+  if (focus.scope === 'whole_work') return 'Reviewing the whole work';
+  const name = focus.section?.heading?.trim();
+  if (focus.scope === 'section') {
+    if (focus.section?.depth === 2) return 'Reviewing entire chapter';
+    return name ? `Reviewing section: ${name}` : 'Reviewing this section';
+  }
+  return name ? `Focused section: ${name}` : 'Focused passage';
 }
 
 /**
