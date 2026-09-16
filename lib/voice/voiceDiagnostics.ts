@@ -110,6 +110,7 @@ export type VoiceDiagEvent =
   | 'voice_turn_commit_requested'
   | 'voice_turn_committed'
   | 'voice_result_after_commit'
+  | 'voice_turn_shadow_decision'
   // TURN-01 — member-owned floor and adaptive patience. Timing/count metadata only.
   | 'voice_turn_pause_continued'
   | 'voice_floor_held'

@@ -33,6 +33,7 @@ import {
   type TranscriptDispatchTrigger,
 } from '@/lib/voice/dispatchProvenance';
 import { classifyRecognitionEnd, RAPID_END_LOOP_THRESHOLD } from '@/lib/voice/rapidEndPolicy';
+import { decideTurn, type TurnPredictorSnapshot } from '@/lib/voice/turnArbiter';
 import {
   DEFAULT_TURN_TAKING_PREFERENCES,
   EMPTY_TURN_RHYTHM,
@@ -198,6 +199,8 @@ export interface ContinuousConversationProps {
   silenceThreshold?: number; // Baseline silence threshold; TURN-01 may lengthen, never shorten
   /** Member-owned turn-taking policy (TURN-01). */
   turnTakingPreferences?: TurnTakingPreferences;
+  /** TURN-02 predictor outputs. Shadow-only until benchmark promotion. */
+  turnPredictorSnapshot?: TurnPredictorSnapshot;
   vadSensitivity?: number; // Voice activity detection sensitivity 0-1
   /** Called when user voice is detected while MAIA is speaking (barge-in interrupt) */
   onInterrupt?: () => void;
@@ -309,6 +312,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     autoStart = false, // Disabled to prevent infinite restart loops
     silenceThreshold = 3500, // TURN-01 Natural baseline; parent may raise for Care/Scribe
     turnTakingPreferences = DEFAULT_TURN_TAKING_PREFERENCES,
+    turnPredictorSnapshot = {},
     vadSensitivity = 0.3,
     onInterrupt,
     onVoiceStatus,
@@ -350,6 +354,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const nativeSilenceTimerRef = useRef<NodeJS.Timeout | null>(null); // Silence detection timer for auto-submit
   const nativeSilenceArmedAtRef = useRef<number>(0);
   const turnTakingPreferencesRef = useRef<TurnTakingPreferences>(turnTakingPreferences);
+  const turnPredictorSnapshotRef = useRef<TurnPredictorSnapshot>(turnPredictorSnapshot);
   const turnRhythmRef = useRef<TurnRhythmState>({ ...EMPTY_TURN_RHYTHM });
   // Native recognizers may cycle mid-turn. In explicit-floor mode this prefix
   // preserves completed segments until the member taps “I’m Done”.
@@ -551,6 +556,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     turnTakingPreferencesRef.current = turnTakingPreferences;
   }, [turnTakingPreferences]);
 
+  useEffect(() => {
+    turnPredictorSnapshotRef.current = turnPredictorSnapshot;
+  }, [turnPredictorSnapshot]);
+
   const effectiveSilenceMs = useCallback(() => resolveTurnSilenceMs(
     turnTakingPreferencesRef.current,
     turnRhythmRef.current,
@@ -577,6 +586,36 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     () => automaticEndpointingAllowed(turnTakingPreferencesRef.current),
     [],
   );
+
+  // TURN-02 shadow only. This records what a predictive arbiter would advise at
+  // an existing TURN-01 boundary. No caller branches on the result.
+  const emitTurnShadowDecision = useCallback((source: string, silenceMs: number) => {
+    const selectedSilenceMs = effectiveSilenceMs();
+    const snapshot = turnPredictorSnapshotRef.current;
+    const result = decideTurn({
+      explicitFloorHeld: !automaticEndpointingAllowed(turnTakingPreferencesRef.current),
+      speechActive: false,
+      silenceMs,
+      selectedSilenceMs,
+      continuedPauseEmaMs: turnRhythmRef.current.continuedPauseEmaMs,
+      ...snapshot,
+    });
+    const predictorEvidence = [
+      snapshot.acousticContinue, snapshot.acousticYield,
+      snapshot.semanticIncomplete, snapshot.semanticYield,
+    ].filter((v) => typeof v === 'number' && Number.isFinite(v)).length;
+    logVoiceEvent('voice_turn_shadow_decision', {
+      source,
+      decision: result.decision,
+      continueScore: Number(result.continueScore.toFixed(3)),
+      yieldScore: Number(result.yieldScore.toFixed(3)),
+      backchannelScore: Number(result.backchannelScore.toFixed(3)),
+      silenceMs: Math.max(0, Math.round(silenceMs)),
+      selectedSilenceMs,
+      predictorEvidence,
+      explicitFloorHeld: !automaticEndpointingAllowed(turnTakingPreferencesRef.current),
+    });
+  }, [effectiveSilenceMs]);
 
   const recognitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSentRef = useRef<string>("");
@@ -1097,6 +1136,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Start new silence timer - use the configurable threshold
         console.log(`⏱️ Starting turn timer (${turnSilenceMs}ms · ${turnTakingPreferencesRef.current.conversationalSpace})`);
         silenceTimerRef.current = setTimeout(() => {
+          emitTurnShadowDecision('web_silence_timer', turnSilenceMs);
           if (!automaticTurnCommitAllowed()) {
             logVoiceEvent('voice_floor_held', {
               source: 'web_silence_timer',
@@ -3011,6 +3051,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               const turnSilenceMs = effectiveSilenceMs();
               nativeSilenceArmedAtRef.current = Date.now();
               nativeSilenceTimerRef.current = setTimeout(() => {
+                emitTurnShadowDecision('native_partial_timer', turnSilenceMs);
                 const finalTranscript = accumulatedTranscript.current.trim();
                 if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current && automaticTurnCommitAllowed()) {
                   logVoiceEvent('ios_voice_final_result_received', {
@@ -3110,6 +3151,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               nativeSilenceArmedAtRef.current = now;
               console.log(`🔕 [TURN-01 Native] Silence detected, holding ${turnSilenceMs}ms`);
               nativeSilenceTimerRef.current = setTimeout(() => {
+                emitTurnShadowDecision('native_audio_timer', turnSilenceMs);
                 if (accumulatedTranscript.current.trim() && !isProcessingRef.current && automaticTurnCommitAllowed()) {
                   const finalTranscript = accumulatedTranscript.current.trim();
                   logVoiceEvent('ios_voice_final_result_received', {
