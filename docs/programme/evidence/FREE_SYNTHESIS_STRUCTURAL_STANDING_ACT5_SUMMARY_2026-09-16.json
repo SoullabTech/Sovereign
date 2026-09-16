@@ -1,0 +1,34 @@
+{
+  "programme": "FREE-SYNTHESIS-STRUCTURAL-STANDING-01",
+  "act": "ACT 5 support-derived grounding adjudication",
+  "raw": {
+    "promptChars": 1680,
+    "promptEvalCountsObserved": [
+      389
+    ],
+    "directRendered": 3
+  },
+  "bound": {
+    "promptChars": 1715,
+    "promptEvalCountsObserved": [
+      396
+    ],
+    "directRendered": 4,
+    "meanRenderedChars": 732.8
+  },
+  "supportDerived": {
+    "promptChars": 1584,
+    "promptEvalCountsObserved": [
+      363
+    ],
+    "directRendered": 4,
+    "currentOnlyGround": 4,
+    "currentInSupport": 4,
+    "meanRenderedChars": 519.2
+  },
+  "openHazard": {
+    "seed": 137,
+    "name": "support-reference semantic insufficiency",
+    "detail": "Synthesis adds previously overshadowed emotions although E-NOW does not establish that claim; provisional standing contains authority but support IDs do not prove entailment."
+  }
+}

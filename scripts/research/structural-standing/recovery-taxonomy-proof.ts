@@ -46,6 +46,7 @@ const refusalSources = [
   'scripts/research/structural-standing/claim-standing.ts',
   'scripts/research/structural-standing/structural-recovery.ts',
   'scripts/research/structural-standing/standing-bound-plan.ts',
+  'scripts/research/structural-standing/support-derived-ground.ts',
 ];
 const emittedCodes = new Set<string>();
 for (const source of refusalSources) {
