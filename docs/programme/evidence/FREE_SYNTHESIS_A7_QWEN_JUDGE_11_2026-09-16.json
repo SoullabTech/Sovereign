@@ -1,0 +1,84 @@
+{
+  "scores": [
+    {
+      "id": "R01",
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "note": "R01 does not directly answer the guardian-image question and instead elaborates on the foundational importance of Silver Cedar."
+    },
+    {
+      "id": "R02",
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "note": "R02 does not directly answer the guardian-image question and instead elaborates on the foundational importance of Silver Cedar."
+    },
+    {
+      "id": "R03",
+      "EM": 0,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0,
+      "note": "R03 integrates the established meaning but introduces new symbolic interpretations and asks for further exploration."
+    },
+    {
+      "id": "R04",
+      "EM": 1,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0,
+      "note": "R04 partially answers the guardian-image question but introduces new symbolic interpretations and asks for further exploration."
+    },
+    {
+      "id": "R05",
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "note": "R05 does not directly answer the guardian-image question and instead elaborates on the foundational importance of Silver Cedar."
+    },
+    {
+      "id": "R06",
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "note": "R06 does not directly answer the guardian-image question and instead elaborates on the foundational importance of Silver Cedar."
+    },
+    {
+      "id": "R07",
+      "EM": 0,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0,
+      "note": "R07 integrates the established meaning but introduces new symbolic interpretations and asks for further exploration."
+    },
+    {
+      "id": "R08",
+      "EM": 1,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0,
+      "note": "R08 partially answers the guardian-image question but introduces new symbolic interpretations and asks for further exploration."
+    }
+  ]
+}
