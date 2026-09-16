@@ -63,6 +63,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   let title: string;
   let author: string | null = null;
   let sections: MemberBookSection[];
+  let sourceAuthority: 'working_draft' | 'source' = 'source';
+  let sourceRevision: string | null = null;
   try {
     const ms = await query<{ title: string | null }>(
       `SELECT title FROM member_manuscripts WHERE id = $1 AND member_id = $2`,
@@ -91,14 +93,73 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
      */
     title = ms.rows[0].title ?? UNTITLED_EXPRESSION;
 
-    const secRows = await query<{ heading: string | null; body: string }>(
-      `SELECT heading, body FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position`,
-      [id],
+    /* HALLMARK BOOK PRODUCTION — render the writing authority, not the import.
+     *
+     * A section-addressable working draft is the manuscript the writer is
+     * actually changing in Writer's Studio. Its text therefore outranks the
+     * immutable source at export time. Source rows still carry the structural
+     * evidence (heading/depth/signal) through `source_section_id`.
+     *
+     * Critical refusal: when an addressable draft exists but its section rows
+     * cannot be read, DO NOT fall back to source. That would quietly hand the
+     * author an older book while claiming to export the current one. */
+    const draft = await query<{ id: string; version: string; section_addressable_at: Date | null }>(
+      `SELECT id, version, section_addressable_at
+         FROM manuscript_working_drafts
+        WHERE manuscript_id = $1 AND member_id = $2`,
+      [id, memberId],
     );
-    if (secRows.rows.length === 0) {
-      return NextResponse.json({ error: 'This manuscript has no sections to render' }, { status: 400 });
+    const currentDraft = draft.rows[0] ?? null;
+    if (currentDraft?.section_addressable_at) {
+      sourceAuthority = 'working_draft';
+      sourceRevision = currentDraft.version;
+      const draftRows = await query<{
+        heading: string | null; body: string; heading_depth: number | null; heading_signal: string | null;
+      }>(
+        `SELECT ms.heading, ds.text AS body, ms.heading_depth, ms.heading_signal
+           FROM manuscript_draft_sections ds
+           JOIN manuscript_working_drafts d ON d.id = ds.draft_id
+           LEFT JOIN manuscript_sections ms ON ms.id = ds.source_section_id
+          WHERE d.manuscript_id = $1
+            AND d.member_id = $2
+            AND d.section_addressable_at IS NOT NULL
+          ORDER BY ds.position`,
+        [id, memberId],
+      );
+      if (draftRows.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'The current writing could not be prepared for export. Nothing older was substituted.' },
+          { status: 409 },
+        );
+      }
+      sections = draftRows.rows.map((r) => ({
+        heading: r.heading,
+        body: r.body,
+        headingDepth: r.heading_depth === 1 || r.heading_depth === 2 || r.heading_depth === 3
+          ? r.heading_depth : null,
+        headingSignal: r.heading_signal,
+      }));
+    } else {
+      const secRows = await query<{
+        heading: string | null; body: string; heading_depth: number | null; heading_signal: string | null;
+      }>(
+        `SELECT heading, body, heading_depth, heading_signal
+           FROM manuscript_sections
+          WHERE manuscript_id = $1
+          ORDER BY position`,
+        [id],
+      );
+      if (secRows.rows.length === 0) {
+        return NextResponse.json({ error: 'This manuscript has no sections to render' }, { status: 400 });
+      }
+      sections = secRows.rows.map((r) => ({
+        heading: r.heading,
+        body: r.body,
+        headingDepth: r.heading_depth === 1 || r.heading_depth === 2 || r.heading_depth === 3
+          ? r.heading_depth : null,
+        headingSignal: r.heading_signal,
+      }));
     }
-    sections = secRows.rows.map((r) => ({ heading: r.heading, body: r.body }));
 
     const who = await query<{ name: string | null }>(
       `SELECT name FROM members WHERE id = $1`,
@@ -133,9 +194,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   try {
     await query(
       `INSERT INTO manuscript_renders
-         (manuscript_id, member_id, format, source_section_count, source_hash, page_count)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [id, memberId, format, result.sectionCount, result.sourceHash, result.pageCount ?? null],
+         (manuscript_id, member_id, format, source_section_count, source_hash, page_count,
+          production_profile, source_authority, source_revision)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [id, memberId, format, result.sectionCount, result.sourceHash, result.pageCount ?? null,
+        result.productionProfile, sourceAuthority, sourceRevision],
     );
   } catch (err) {
     // Provenance write failure must not deny the author their book — log loudly.

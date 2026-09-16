@@ -17,10 +17,17 @@
  * PAGE GEOMETRY
  * ============================================================ */
 
+/* Geometry and margin-box furniture MUST remain separate @page rules.
+ * Chromium's CSSOM drops an @page rule that mixes ordinary declarations
+ * (size/margin) with nested margin boxes; Paged.js then silently keeps its
+ * Letter default. Hallmark production requires the pagination engine itself
+ * to measure at the declared trim before PDF output. */
 @page {
   size: 6in 9in;
   margin: 0.75in 0.6in 0.75in 0.9in; /* T R B L — odd/right pages */
+}
 
+@page {
   @bottom-center {
     content: counter(page);
     font-family: 'EB Garamond', Garamond, serif;
@@ -600,6 +607,8 @@ img.canonical-plate-img {
  * page-break-inside: avoid. */
 @page plate {
   margin: 0.25in 0.25in 0.25in 0.25in;
+}
+@page plate {
   @bottom-center { content: ''; }
 }
 .canonical-plate {

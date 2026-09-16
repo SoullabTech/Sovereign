@@ -37,7 +37,7 @@ const level = (d: number | null | undefined): 1 | 2 | 3 | null =>
 export const explicitRole = (heading: string | null): OutlineRole => {
   const h = heading?.trim() ?? '';
   if (/^part\b/i.test(h)) return 'part';
-  if (/^chapter\b/i.test(h)) return 'chapter';
+  if (/^chapter\s+(?:\d+|[ivxlcdm]+)\b/i.test(h)) return 'chapter';
   return 'other';
 };
 

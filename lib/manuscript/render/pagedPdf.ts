@@ -42,6 +42,12 @@ export interface RenderPdfOptions {
    * Defaults to 60_000.
    */
   timeoutMs?: number;
+  /**
+   * Refuse export when Paged.js's measured page box differs from the requested
+   * physical dimensions. Hallmark print production enables this so a future
+   * CSS/parser regression cannot crop Letter pagination into a 6x9 wrapper.
+   */
+  assertPagedPageSize?: boolean;
 }
 
 export async function renderHtmlToPdf(
@@ -97,6 +103,13 @@ export async function renderHtmlToPdf(
       waitUntil: 'networkidle0',
     });
 
+    // Typography is pagination input. Wait for embedded/local fonts before
+    // Paged.js measures a single line; otherwise a fallback font can paginate
+    // the book and be replaced afterward, producing nondeterministic pages.
+    await page.evaluate(async () => {
+      if (document.fonts) await document.fonts.ready;
+    });
+
     // Configure Paged.js BEFORE loading the polyfill so the `after`
     // hook is registered when pagination completes.
     //
@@ -112,6 +125,38 @@ export async function renderHtmlToPdf(
 
     // Wait for Paged.js to finish.
     await page.waitForFunction('window._pagedDone === true', { timeout });
+
+    if (options.assertPagedPageSize) {
+      const measured = await page.evaluate(
+        (expectedWidth, expectedHeight) => {
+          const pageEl = document.querySelector('.pagedjs_page');
+          if (!(pageEl instanceof HTMLElement)) return null;
+          const probe = document.createElement('div');
+          probe.style.cssText = `position:absolute;visibility:hidden;width:${expectedWidth};height:${expectedHeight};`;
+          document.body.appendChild(probe);
+          const expected = probe.getBoundingClientRect();
+          probe.remove();
+          const actual = pageEl.getBoundingClientRect();
+          return {
+            actualWidth: actual.width, actualHeight: actual.height,
+            expectedWidth: expected.width, expectedHeight: expected.height,
+          };
+        },
+        width,
+        height,
+      );
+      if (!measured) throw new Error('Paged.js produced no measurable page box');
+      const tolerancePx = 0.5;
+      if (
+        Math.abs(measured.actualWidth - measured.expectedWidth) > tolerancePx ||
+        Math.abs(measured.actualHeight - measured.expectedHeight) > tolerancePx
+      ) {
+        throw new Error(
+          `Paged.js page size mismatch: measured ${measured.actualWidth}x${measured.actualHeight}px, ` +
+          `expected ${measured.expectedWidth}x${measured.expectedHeight}px (${width} x ${height})`,
+        );
+      }
+    }
 
     await page.pdf({
       path: options.outputPath,
