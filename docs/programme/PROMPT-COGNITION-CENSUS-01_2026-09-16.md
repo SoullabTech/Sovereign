@@ -367,6 +367,17 @@ not lost, and so its relationship to this census is stated:
 
 ---
 
+## 10a. Subsequent rulings and extensions
+
+- **Q2 RULED 2026-09-16** — `PROMPT-COGNITION-CENSUS-01_Q2_RULING_2026-09-16.md`. One
+  tier-invariant constitutional floor; the FAST/CORE divergence (T2) is the defect. F-C2
+  strengthened. X1 corollary ratified. ⛔ No object moves.
+- **§3/§4 EXTENDED, not corrected** — that ruling's §4 records three further source facts
+  measured at this same SHA: `MAIA_UNIVERSAL_OPUS_STANCE` reaches no tier (Z1); a
+  "single source of truth" comment that is not one (Z2); and ⭐ **FAST's aperture is 3, an
+  unnamed literal, with MAIA's responses truncated to 80 chars — extending A1 to ≈183:1 on
+  FAST.** §4 above was scoped to CORE and remains true as written.
+
 ## 11. Standing
 
 **PROMPT-COGNITION-CENSUS-01 · ACT 1 COMPLETE · READ-ONLY.**
