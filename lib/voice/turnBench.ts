@@ -44,3 +44,18 @@ export function evaluateTurnBench(samples: TurnBenchSample[]): TurnBenchMetrics 
     medianYieldLatencyMs: median,
   };
 }
+
+
+export function evaluateTurnBenchByClass<T extends { pauseClass: string }>(
+  samples: Array<T & TurnBenchSample>,
+): Record<string, TurnBenchMetrics> {
+  const groups = new Map<string, Array<T & TurnBenchSample>>();
+  for (const sample of samples) {
+    const list = groups.get(sample.pauseClass) ?? [];
+    list.push(sample);
+    groups.set(sample.pauseClass, list);
+  }
+  return Object.fromEntries(
+    [...groups.entries()].map(([pauseClass, rows]) => [pauseClass, evaluateTurnBench(rows)]),
+  );
+}
