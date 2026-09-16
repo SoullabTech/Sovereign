@@ -11,7 +11,7 @@ import { Key, User, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react
  * browser against the bundled list. Admission is now a server decision
  * (`POST /api/onboarding/recognize-key`); no personal record data crosses back.
  *
- * ⛔ Do not re-import `@/lib/ganesha/contacts` here. It is `server-only` and
+ * ⛔ Do not recreate or re-import the retired `@/lib/ganesha/contacts` carrier. Governed contact custody is server/database-only and
  * guarded by `__tests__/onboarding-human-record-boundary.test.ts`.
  */
 interface BetaTesterGatewayProps {
