@@ -951,3 +951,8 @@ No qualification change. Read-only calibration of the device-state vocabulary; n
 ### §10.84 — step-2b accepted; read-only execution open; run shape issued (2026-09-16; discriminator plan §18.66; implementation record §10.39)
 
 No qualification change.
+
+
+### §10.85 — step-2b landed and read; device-state vocabulary observed; foreign `.k00` / `.vpio01` harness processes found alive again (2026-09-16; discriminator plan §18.67; implementation record §10.40)
+
+No qualification change. The ENTRY validity premise (no other VoiceKernel organism holding audio during SID entry) is why FIRST-INSTALL-03 and [D] require harness 0; the frozen subjects' *processes* being alive is a device-state finding, not a change to any frozen container.
