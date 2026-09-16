@@ -1,0 +1,4 @@
+     528 docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-RELAUNCH-CENSUS-20260916T033152Z/read4a-device-log-harness.txt
+    3632 docs/programme/VOICE-2026/driver-ledger/VPIO-02-SID-RELAUNCH-CENSUS-20260916T033152Z/read4b-device-log-launch-mechanism.txt
+    4160 total
+prewarm mentions: 132 · harness launch mentions: 13
