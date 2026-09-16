@@ -1,0 +1,1041 @@
+{
+  "schemaVersion": 1,
+  "lane": "TURN-03",
+  "act": "A3_SYNTH_01",
+  "shadowOnly": true,
+  "generatedAt": "2026-09-16T20:24:56.045Z",
+  "fixture": {
+    "generator": "macOS say + afconvert",
+    "voice": "Samantha",
+    "sourceRateHz": 16000,
+    "memberSpaceMs": 3500,
+    "cases": 10,
+    "rawAudioPersistedInRepo": false,
+    "memberData": false
+  },
+  "model": {
+    "provider": "dualturn",
+    "modelId": "anyreach-ai/dualturn-endpointing",
+    "version": "c3860ed71210fe0144af35af340fd7a4dec3d2d3",
+    "sha256": "6700ea2f919b4c66355b3dafb4f91f2db9dae9e18a302b812730c04340bf819f",
+    "modelRateHz": 24000,
+    "frameMs": 80
+  },
+  "policies": {
+    "baseline": "TURN-01 silence threshold",
+    "conservative": "TURN-02 arbiter with no predictor evidence",
+    "acoustic": "TURN-02 arbiter + DualTurn only",
+    "semantic": "TURN-02 arbiter + high-precision semantic cues only",
+    "fused": "TURN-02 arbiter + DualTurn + high-precision semantic cues"
+  },
+  "metrics": {
+    "baseline": {
+      "overall": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 6,
+        "falseFloorSeizureRate": 0.75,
+        "correctYields": 2,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3500
+      },
+      "byClass": {
+        "ordinary_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "emotional_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "breath": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "unfinished_syntax": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 2,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 1,
+          "falseFloorSeizureRate": 1,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "explicit_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500
+        },
+        "question_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500
+        }
+      }
+    },
+    "conservative": {
+      "overall": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "byClass": {
+        "ordinary_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "emotional_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "breath": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "unfinished_syntax": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "explicit_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "question_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        }
+      }
+    },
+    "acoustic": {
+      "overall": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 0,
+        "yieldRecall": 0,
+        "medianYieldLatencyMs": null
+      },
+      "byClass": {
+        "ordinary_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "emotional_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "breath": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "unfinished_syntax": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "explicit_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "question_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        }
+      }
+    },
+    "semantic": {
+      "overall": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 2,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3529.875
+      },
+      "byClass": {
+        "ordinary_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "emotional_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "breath": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "unfinished_syntax": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "explicit_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500.625
+        },
+        "question_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3559.125
+        }
+      }
+    },
+    "fused": {
+      "overall": {
+        "samples": 10,
+        "continueSamples": 8,
+        "yieldSamples": 2,
+        "falseFloorSeizures": 0,
+        "falseFloorSeizureRate": 0,
+        "correctYields": 2,
+        "yieldRecall": 1,
+        "medianYieldLatencyMs": 3529.875
+      },
+      "byClass": {
+        "ordinary_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "word_search": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "hesitation": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "emotional_pause": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "breath": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "unfinished_syntax": {
+          "samples": 2,
+          "continueSamples": 2,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "reentry": {
+          "samples": 1,
+          "continueSamples": 1,
+          "yieldSamples": 0,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 0,
+          "yieldRecall": 0,
+          "medianYieldLatencyMs": null
+        },
+        "explicit_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3500.625
+        },
+        "question_yield": {
+          "samples": 1,
+          "continueSamples": 0,
+          "yieldSamples": 1,
+          "falseFloorSeizures": 0,
+          "falseFloorSeizureRate": 0,
+          "correctYields": 1,
+          "yieldRecall": 1,
+          "medianYieldLatencyMs": 3559.125
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "ordinary-2s",
+      "pauseClass": "ordinary_pause",
+      "label": "continue",
+      "pauseMs": 2000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "0bce7acaf6143d6e051b7b07f639c5915200880fad673d5e0d9cf08c8f4f4a5a",
+      "prefixSamples16k": 26688,
+      "continuationSamples16k": 31522,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.9080147743225098,
+          "silenceMs": 12
+        },
+        "peakYield": {
+          "value": 0.9882877469062805,
+          "silenceMs": 1372
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.07191956043243408,
+        "acousticYield": 0.9855533242225647,
+        "vad": 0.0018324553966522217
+      },
+      "baseline": {
+        "decision": "wait"
+      },
+      "conservative": {
+        "decision": "wait"
+      },
+      "acoustic": {
+        "decision": "wait"
+      },
+      "semanticOnly": {
+        "decision": "wait"
+      },
+      "fused": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "word-search-4s",
+      "pauseClass": "word_search",
+      "label": "continue",
+      "pauseMs": 4000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "90c1982aeb68e5a36991424d099f3eac1aa02c3870a1e7f25a6bd103117b629c",
+      "prefixSamples16k": 36231,
+      "continuationSamples16k": 25332,
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "trailing_ellipsis",
+          "dangling_syntax"
+        ]
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.34205013513565063,
+          "silenceMs": 135.5625
+        },
+        "peakYield": {
+          "value": 0.9846087694168091,
+          "silenceMs": 2295.5625
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.0985460877418518,
+        "acousticYield": 0.0003001987934112549,
+        "vad": 0.0008536875247955322
+      },
+      "baseline": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "conservative": {
+        "decision": "insufficient_evidence"
+      },
+      "acoustic": {
+        "decision": "insufficient_evidence"
+      },
+      "semanticOnly": {
+        "decision": "wait"
+      },
+      "fused": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "hesitation-4s",
+      "pauseClass": "hesitation",
+      "label": "continue",
+      "pauseMs": 4000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "aada80b8cd2331d9863cd57cd6a2bb14f36a1d982031dfd96be023aa1a8cd6fd",
+      "prefixSamples16k": 17403,
+      "continuationSamples16k": 39877,
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "trailing_ellipsis",
+          "trailing_filler"
+        ]
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.6933276653289795,
+          "silenceMs": 32.3125
+        },
+        "peakYield": {
+          "value": 0.7575705051422119,
+          "silenceMs": 2272.3125
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.13017746806144714,
+        "acousticYield": 0.00034356117248535156,
+        "vad": 0.0013620257377624512
+      },
+      "baseline": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "conservative": {
+        "decision": "insufficient_evidence"
+      },
+      "acoustic": {
+        "decision": "insufficient_evidence"
+      },
+      "semanticOnly": {
+        "decision": "wait"
+      },
+      "fused": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "emotional-6s",
+      "pauseClass": "emotional_pause",
+      "label": "continue",
+      "pauseMs": 6000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "e1abe6d0c5e4d3690a77c83171bfef9ae047d95baca5bb2131130afe5ac2f938",
+      "prefixSamples16k": 33039,
+      "continuationSamples16k": 25703,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.9469550848007202,
+          "silenceMs": 15.0625
+        },
+        "peakYield": {
+          "value": 0.9855726361274719,
+          "silenceMs": 2335.0625
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.08321681618690491,
+        "acousticYield": 0.0002397298812866211,
+        "vad": 0.0006004869937896729
+      },
+      "baseline": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "conservative": {
+        "decision": "insufficient_evidence"
+      },
+      "acoustic": {
+        "decision": "insufficient_evidence"
+      },
+      "semanticOnly": {
+        "decision": "insufficient_evidence"
+      },
+      "fused": {
+        "decision": "insufficient_evidence"
+      }
+    },
+    {
+      "id": "breath-2s",
+      "pauseClass": "breath",
+      "label": "continue",
+      "pauseMs": 2000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "9324544c050989741f5c23024c374b89be70dabf4a501b2b57d0bc8cb4d337e5",
+      "prefixSamples16k": 27245,
+      "continuationSamples16k": 28736,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.49110308289527893,
+          "silenceMs": 57.1875
+        },
+        "peakYield": {
+          "value": 0.9870307445526123,
+          "silenceMs": 1417.1875
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.07808306813240051,
+        "acousticYield": 0.9839099645614624,
+        "vad": 0.002057671546936035
+      },
+      "baseline": {
+        "decision": "wait"
+      },
+      "conservative": {
+        "decision": "wait"
+      },
+      "acoustic": {
+        "decision": "wait"
+      },
+      "semanticOnly": {
+        "decision": "wait"
+      },
+      "fused": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "unfinished-4s",
+      "pauseClass": "unfinished_syntax",
+      "label": "continue",
+      "pauseMs": 4000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "3c5bd5347a4f7d840d428d94ea9ce1cf0ef4f526644d24275ffaa85cfe3a8c18",
+      "prefixSamples16k": 30032,
+      "continuationSamples16k": 28953,
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "dangling_syntax"
+        ]
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.29577791690826416,
+          "silenceMs": 123
+        },
+        "peakYield": {
+          "value": 0.9847045540809631,
+          "silenceMs": 2283
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.09480640292167664,
+        "acousticYield": 0.0002206563949584961,
+        "vad": 0.0008259713649749756
+      },
+      "baseline": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "conservative": {
+        "decision": "insufficient_evidence"
+      },
+      "acoustic": {
+        "decision": "insufficient_evidence"
+      },
+      "semanticOnly": {
+        "decision": "wait"
+      },
+      "fused": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "unfinished-6s",
+      "pauseClass": "unfinished_syntax",
+      "label": "continue",
+      "pauseMs": 6000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "7526765b6b18b433baad64f541a1767d14336f06732d90d5a1db6952f12d2d6f",
+      "prefixSamples16k": 27903,
+      "continuationSamples16k": 30658,
+      "semantic": {
+        "incomplete": 0.9,
+        "yield": null,
+        "reasons": [
+          "dangling_syntax"
+        ]
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.4998243451118469,
+          "silenceMs": 16.0625
+        },
+        "peakYield": {
+          "value": 0.9857676029205322,
+          "silenceMs": 2256.0625
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.07988560199737549,
+        "acousticYield": 0.0001328885555267334,
+        "vad": 0.0005453824996948242
+      },
+      "baseline": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "conservative": {
+        "decision": "insufficient_evidence"
+      },
+      "acoustic": {
+        "decision": "insufficient_evidence"
+      },
+      "semanticOnly": {
+        "decision": "wait"
+      },
+      "fused": {
+        "decision": "wait"
+      }
+    },
+    {
+      "id": "reentry-4s",
+      "pauseClass": "reentry",
+      "label": "continue",
+      "pauseMs": 4000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "5544a117145ba5880d5565fbcc3e617a914055fff93dc881670b09a9ab17a170",
+      "prefixSamples16k": 34711,
+      "continuationSamples16k": 31155,
+      "semantic": {
+        "incomplete": null,
+        "yield": null,
+        "reasons": []
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.3207639455795288,
+          "silenceMs": 150.5625
+        },
+        "peakYield": {
+          "value": 0.9832487106323242,
+          "silenceMs": 2310.5625
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.0992279052734375,
+        "acousticYield": 0.00030925869941711426,
+        "vad": 0.0009067654609680176
+      },
+      "baseline": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "conservative": {
+        "decision": "insufficient_evidence"
+      },
+      "acoustic": {
+        "decision": "insufficient_evidence"
+      },
+      "semanticOnly": {
+        "decision": "insufficient_evidence"
+      },
+      "fused": {
+        "decision": "insufficient_evidence"
+      }
+    },
+    {
+      "id": "explicit-yield",
+      "pauseClass": "explicit_yield",
+      "label": "yield",
+      "pauseMs": 5000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "263b10e2327bcc1eba56d244e6efd901416832b3de1cb976873554397a590758",
+      "prefixSamples16k": 11830,
+      "continuationSamples16k": 0,
+      "semantic": {
+        "incomplete": null,
+        "yield": 1,
+        "reasons": [
+          "explicit_yield_phrase"
+        ]
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.20494771003723145,
+          "silenceMs": 60.625
+        },
+        "peakYield": {
+          "value": 0.9819892644882202,
+          "silenceMs": 2300.625
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.09336462616920471,
+        "acousticYield": 0.00011491775512695312,
+        "vad": 0.0006478726863861084
+      },
+      "baseline": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "conservative": {
+        "decision": "insufficient_evidence"
+      },
+      "acoustic": {
+        "decision": "insufficient_evidence"
+      },
+      "semanticOnly": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500.625,
+        "seizureAtMs": 3500.625
+      },
+      "fused": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500.625,
+        "seizureAtMs": 3500.625
+      }
+    },
+    {
+      "id": "question-yield",
+      "pauseClass": "question_yield",
+      "label": "yield",
+      "pauseMs": 5000,
+      "selectedSilenceMs": 3500,
+      "fixturePcm16Sha256": "1f161d062c00b2e7fc634f222125b1c05f03efd6d4ad88e1b2f3081ffd9a90d7",
+      "prefixSamples16k": 16014,
+      "continuationSamples16k": 0,
+      "semantic": {
+        "incomplete": null,
+        "yield": 1,
+        "reasons": [
+          "explicit_yield_phrase"
+        ]
+      },
+      "acousticTrajectory": {
+        "peakContinue": {
+          "value": 0.32457005977630615,
+          "silenceMs": 39.125
+        },
+        "peakYield": {
+          "value": 0.9861252903938293,
+          "silenceMs": 2279.125
+        }
+      },
+      "atMemberFloor": {
+        "acousticContinue": 0.10042643547058105,
+        "acousticYield": 0.00020956993103027344,
+        "vad": 0.0008934140205383301
+      },
+      "baseline": {
+        "decision": "yield_candidate",
+        "latencyMs": 3500
+      },
+      "conservative": {
+        "decision": "insufficient_evidence"
+      },
+      "acoustic": {
+        "decision": "insufficient_evidence"
+      },
+      "semanticOnly": {
+        "decision": "yield_candidate",
+        "latencyMs": 3559.125,
+        "seizureAtMs": 3559.125
+      },
+      "fused": {
+        "decision": "yield_candidate",
+        "latencyMs": 3559.125,
+        "seizureAtMs": 3559.125
+      }
+    }
+  ],
+  "authority": {
+    "canCommitTranscript": false,
+    "canDispatchCognition": false,
+    "canStartTts": false,
+    "canAlterEndpointing": false
+  }
+}
