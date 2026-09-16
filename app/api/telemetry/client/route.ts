@@ -77,6 +77,17 @@ const ALLOWED_EVENTS = new Set([
   'voice_turn_commit_requested',
   'voice_turn_committed',
   'voice_result_after_commit',
+  // ── TURN-01/02/03 turn-taking observation ─────────────────────────────
+  // Timing/count/category metadata only. A4 events are emitted only during a
+  // separately opted-in explicit-floor research walk; no transcript/audio.
+  'voice_turn_shadow_decision',
+  'voice_turn_a4_checkpoint',
+  'voice_turn_a4_continued',
+  'voice_turn_a4_explicit_yield',
+  'voice_turn_pause_continued',
+  'voice_floor_held',
+  'voice_explicit_yield',
+  'voice_explicit_yield_ignored',
   // Add Meeting Audio — listening posture telemetry. Aggregate signal only,
   // used to determine whether the native desktop meeting-app gap is real
   // before considering a companion app. Doctrine: participation before

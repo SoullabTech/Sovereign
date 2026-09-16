@@ -960,6 +960,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const assistantName = useAssistantName();
   // Admin-only diagnostics: SourceHalo, StateCard, level badges
   const { isAdmin: showDiagnostics } = useSession();
+  // TURN-03 A4 founder-walk admission: a query flag requests observation,
+  // but only an authenticated admin session may pass it downstream. The
+  // observer itself separately requires explicit floor mode (I'm Done).
+  const [a4FounderShadowRequested, setA4FounderShadowRequested] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setA4FounderShadowRequested(new URLSearchParams(window.location.search).get('turnA4Shadow') === '1');
+  }, []);
+  const a4FounderShadowEnabled = showDiagnostics && a4FounderShadowRequested;
   const [audioEnabled, setAudioEnabled] = useState(true); // AUTO-START FIX: Start as true to enable immediate voice
   const [audioUnlocked, setAudioUnlocked] = useState(false); // Enhanced Safari audio unlock status
   const [showAudioUnlockUI, setShowAudioUnlockUI] = useState(false); // Show Safari unlock UI
@@ -10464,6 +10473,7 @@ I'm not sure what I'm feeling yet.`;
             autoStart={false}
             silenceThreshold={effectiveTurnSilenceMs}
             turnTakingPreferences={turnTakingPreferences}
+            a4ShadowResearchEnabled={a4FounderShadowEnabled}
             persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
             onHandsFreeFallback={() => {
               setIsHandsFreeMode(false);
