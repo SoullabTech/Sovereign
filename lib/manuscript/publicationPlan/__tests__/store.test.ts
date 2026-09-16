@@ -45,4 +45,10 @@ describe('HPB-03 publication assignment planner', () => {
       ],
     });
   });
+  it('accepts explicit omission as production metadata rather than manuscript deletion', () => {
+    expect(planPublicationAssignment('omit', ['s1'], current, [])).toEqual({
+      status: 'ok', placements: [{ role: 'omit', sectionIds: ['s1'] }],
+    });
+  });
+
 });

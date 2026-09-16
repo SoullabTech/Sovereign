@@ -145,7 +145,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           { status: 409 },
         );
       }
-      sections = draftRows.rows.map((r) => ({
+      const includedDraftRows = draftRows.rows.filter((r) => r.publication_role !== 'omit');
+      if (includedDraftRows.length === 0) {
+        return NextResponse.json(
+          { error: 'Every current section is omitted from book production. Nothing was rendered.' },
+          { status: 409 },
+        );
+      }
+      sections = includedDraftRows.map((r) => ({
         heading: r.heading,
         body: r.body,
         headingDepth: r.heading_depth === 1 || r.heading_depth === 2 || r.heading_depth === 3
