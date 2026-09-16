@@ -941,3 +941,8 @@ No qualification change. FIRST-INSTALL-03 closed.
 ### §10.82 — steps 1 + 2 landed and read; mechanism located, cause unknown; historical harness still alive (2026-09-16; discriminator plan §18.64; implementation record §10.37)
 
 No qualification change. The terminate-01 runner install placed only the test-runner app on the device (tooling, not subject); `.vpio02sid` remains absent; FIRST-INSTALL-03 remains closed behind step 3.
+
+
+### §10.83 — step-2b device-state calibration open as draft-only; draft returned, not run (2026-09-16; discriminator plan §18.65; implementation record §10.38)
+
+No qualification change. Read-only calibration of the device-state vocabulary; no subject touched.
