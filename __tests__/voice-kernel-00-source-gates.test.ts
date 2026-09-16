@@ -1911,4 +1911,32 @@ describe('KERNEL-00 · SID ENTRY observer-liveness verifier (founder ruling 2026
     expect((batch.match(/scripts\/witness\/k00-driver-batch\.sh VPIO-02-SID-ENTRY 30/g) ?? []).length).toBe(1);
     expect(batch).toContain('NEW=$(comm -13 "$BEFORE" "$AFTER")');
   });
+
+  it('SOURCE-SB-01 successor pins require the durable ENTRY-UNPERTURBED adjudication, use a fresh <=300 s read-only preflight, and bind exactly one N=10 gated SID source population with no S-a arm', () => {
+    const pre = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-SB-01_PREFLIGHT_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    const pop = readFileSync(join(process.cwd(), 'docs/programme/VOICE-2026/SID_SOURCE-SB-01_POPULATION_PIN_DRAFT_2026-09-16.sh'), 'utf8');
+    expect(pre).toContain('ENTRY_SHA=26116d4e42fdb7f25ffbbede7c20f4a98f226c18');
+    expect(pre).toContain('git merge-base --is-ancestor "$ENTRY_SHA" FETCH_HEAD');
+    expect(pre).toContain("grep -q '^RESULT ENTRY-UNPERTURBED$'");
+    expect(pre).toContain('SID_CONTAINER=85948DBD-BA8F-4679-950D-31767B1C24E5');
+    expect(pre).toContain("grep -q 'selftest: 24/24'");
+    expect(pre).toContain('30d51cf4b7527d28131bd9c2535c6bd4dcd2403c8dc0343fc045f6f6959875eb');
+    expect(pre).toContain('88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb');
+    expect(pre).toContain("grep -q 'output volume:69,'");
+    expect(pre).toContain("grep -q 'output muted:false'");
+    expect(pre).toContain('test "$(grep -ci VoiceKernelHarness "$P/processes.json")" = 0');
+    expect(pre).not.toMatch(/device process terminate|device install app|device uninstall app/);
+    expect((pre.match(/scripts\/witness\/k00-driver-batch\.sh VPIO/g) ?? []).length).toBe(0);
+    expect(pop).toContain('test "$AGE" -le 300');
+    expect(pop).toContain('ACT_MARK=/private/tmp/sid-source-sb-01-invoked.txt');
+    expect(pop.indexOf("printf 'SID-SOURCE-SB-01 INVOKED")).toBeLessThan(pop.indexOf('PTR=/private/tmp/sid-source-sb-01-preflight-current.txt'));
+    const invocation = 'scripts/witness/k00-driver-batch.sh VPIO-02-SID-SOURCE-SB 10 --act output --vp on --mode L --hold 15 --cancel-at 1000 --settle 2 --subject vpio-02-sid --stimulus sid-nearend-gated';
+    expect(pop).toContain(invocation);
+    expect((pop.match(/scripts\/witness\/k00-driver-batch\.sh VPIO-02-SID-SOURCE-SB 10/g) ?? []).length).toBe(1);
+    expect(pop).not.toContain('--stimulus s2-nearend');
+    expect(pop).toContain('test "$(find "$L/journals" -type f -name \'*.jsonl\' ! -path \'*/not-a-sample/*\' | wc -l | tr -d \' \')" = 10');
+    expect(pop).toContain('test -s "$L/source-ledger.md"');
+    expect(pop).toContain('test -s "$L/output-ledger.md"');
+  });
+
 });
