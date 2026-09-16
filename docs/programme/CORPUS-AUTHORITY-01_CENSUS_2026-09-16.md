@@ -84,7 +84,7 @@ Compatibility is enforced:
 - `published_knowledge` → `soullab_owned`
 - `organizational_public` → `soullab_owned`
 - `third_party_published` → `public_domain | license | permission`
-Every admitting rule must name non-empty evidence. Missing evidence, missing authority, or an incompatible authority kind yields **EXCLUDED**.
+Every admitting rule must carry mechanically locatable evidence. Supported evidence is either an exact marker that must actually occur in the work, or a record under the dedicated `docs/corpus-authority/` namespace whose declared marker must actually occur in that record. A free-text evidence assertion is not sufficient. Missing, malformed, absent, unreadable, out-of-custody, or incompatible evidence yields **EXCLUDED**.
 
 A free-text `reason` cannot substitute for structured authority. T14 is the falsifier: a rule whose reason literally says `licensed and definitely okay` but carries no structured authority remains excluded.
 
@@ -92,7 +92,7 @@ The existing content detector still runs after classification + authority and ca
 
 ## Current result
 
-Admission tests: **15 / 15 PASS**.
+Admission tests: **20 / 20 PASS**.
 
 The shipped corpus remains fully held:
 
@@ -111,7 +111,7 @@ A Soullab-shaped filename remains held unless authorship/organizational authorit
 
 The authority-boundary implementation was validated without changing any corpus membership rule.
 
-- admission/composition suite: **15 / 15 PASS**;
+- admission/composition suite: **20 / 20 PASS**;
 - root TypeScript: **229 errors vs 239 baseline · 0 regressions**;
 - `typecheck:scripts`: canonical base **40** error identities; head **40**; head-only **0**; base-only **0**; sets **identical**;
 - provider governance: **PASS**;
@@ -130,3 +130,15 @@ The authority-boundary implementation was validated without changing any corpus 
 `REBUILD / EMBED / LIVING LIBRARY FORCE = NOT EXECUTED`
 
 The next admissible work is classification of evidence-bearing items or collections. Classification must not infer authorship or rights from title, filename shape, directory location, prior possession, or historical ingestion.
+## Independent review amendment
+
+Independent review found that the first implementation still represented `authority.evidence` as an arbitrary string. That would have allowed a future rule to move an unsupported assertion from `reason` into `evidence` and pass the structural gate.
+
+The reviewed implementation closes that gap. Evidence now has one of two mechanically checked forms:
+
+- `in_file` — an exact marker must actually occur in the candidate work;
+- `governed_record` — a repository-relative record must remain inside repository custody and must actually contain its declared marker.
+
+T16–T20 are the falsifiers: free-text evidence is excluded, absent in-file evidence is excluded, governed-record evidence must resolve and contain its marker, a governed-record path cannot escape repository custody, and an arbitrary repository file outside `docs/corpus-authority/` cannot masquerade as an authority record.
+
+The corpus remains fully held after this amendment: `0 admitted · 736 excluded · 0 refused`.
