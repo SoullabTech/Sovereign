@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
-import { ATMOSPHERES, atmosphereVariables } from '../atmosphere/atmospheres';
+import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
+import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
 import { SERIF, SANS } from '../studioTheme';
 import { useLivingWorks } from '../useLivingWorks';
 import { currentWork, resolveWorkContext } from '../workContext';
@@ -606,7 +607,13 @@ export default function RebuildStudioClient() {
     setEditorialFailure(null);
   }, []);
 
-  const cloud = atmosphereVariables(ATMOSPHERES.cloud);
+  /* The PAGE's variables. The ROOM's arrive from the Studio layout's
+     provider and are simply inherited — this room states none of its own.
+     Applied to the writing field alone, per the law at their definition:
+     Dark emits {} and the field then inherits whatever room the writer
+     chose. `--ws-bg` is never among them, so a page can never repaint the
+     room around it. */
+  const canvasSurfaceVars = useCanvasSurfaceVariables();
 
   if (phase !== 'ready' || !context) {
     return (
@@ -641,7 +648,7 @@ export default function RebuildStudioClient() {
             : statuses.includes('dirty') ? 'Unsaved'
               : statuses.includes('saving') ? 'Saving…' : null;
         return (
-    <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} style={{ ...cloud, height: '100vh', overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
+    <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} style={{ height: '100vh', overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
       {!canvasExpanded && (<header className="wsr-header" style={{ height: 58, display: 'grid', gridTemplateColumns: '300px 1fr 300px', alignItems: 'center', padding: '0 20px', borderBottom: `1px solid ${C.soft}`, background: C.field }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <strong style={{ letterSpacing: '.18em', fontSize: 13 }}>SOULLAB</strong>
@@ -653,7 +660,16 @@ export default function RebuildStudioClient() {
             <span key={x} style={{ padding: '7px 13px', borderRadius: 999, background: x === 'Write' ? C.goldFill : 'transparent', fontWeight: x === 'Write' ? 650 : 450 }}>{x}</span>
           ))}
         </nav>
-        <div className="wsr-preview" style={{ textAlign: 'right', fontSize: 12, color: C.muted }}>Rebuild preview</div>
+        {/* ── APPEARANCE ───────────────────────────────────────────────────
+            The SAME control Home and the Canvas mount, writing the SAME
+            preference. Not a second setting that could disagree with them.
+            It is absent from Pure Canvas by construction — this whole header
+            is, and a writer who asked for nothing but the page should not be
+            handed a toolbar. */}
+        <div className="wsr-preview" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, fontSize: 12, color: C.muted }}>
+          <span>Rebuild preview</span>
+          <AppearanceMenu />
+        </div>
       </header>)}
       {canvasExpanded && (
         <button type="button" className="wsr-return-workspace" onClick={() => setCanvasExpanded(false)} title="Return to workspace">
@@ -683,7 +699,21 @@ export default function RebuildStudioClient() {
           </div>
         </aside>)}
 
-        <section className={canvasExpanded ? 'wsr-manuscript wsr-pure-manuscript' : `wsr-manuscript ${mobilePane !== 'manuscript' ? 'wsr-mobile-hidden' : ''}`} style={{ background: C.field, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <section
+          className={canvasExpanded ? 'wsr-manuscript wsr-pure-manuscript' : `wsr-manuscript ${mobilePane !== 'manuscript' ? 'wsr-mobile-hidden' : ''}`}
+          data-panel-role="writing-field"
+          data-canvas-surface={canvasSurfaceVars['--ws-ground-field'] ? 'material' : 'studio'}
+          style={{
+            ...canvasSurfaceVars,
+            /* The page's ink, stated on the page itself. Setting the variables
+               is not enough alone: anything inheriting its colour resolves
+               against whatever ancestor last declared one, and that ancestor
+               is the room. Declaring it here makes the field the nearest
+               answer for everything inside it. */
+            background: C.field, color: C.ink,
+            minWidth: 0, display: 'flex', flexDirection: 'column',
+          } as React.CSSProperties}
+        >
           {!canvasExpanded && (<div style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '10px 24px', borderBottom: `1px solid ${C.soft}` }}>
             <div style={{ minWidth: 0, fontSize: 12.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <strong style={{ color: C.secondary, fontWeight: 600 }}>{title}</strong>
