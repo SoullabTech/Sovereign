@@ -184,7 +184,7 @@ export function mintStudioConversationId(): string {
 
 /** The Studio address that resolves to this exact manuscript, and no other. */
 export function returnAddress(manuscriptId: string): string {
-  return `/writers-studio/canvas?${CANVAS_MANUSCRIPT_PARAM}=${encodeURIComponent(manuscriptId)}`;
+  return `/writers-studio/rebuild?${CANVAS_MANUSCRIPT_PARAM}=${encodeURIComponent(manuscriptId)}`;
 }
 
 /**

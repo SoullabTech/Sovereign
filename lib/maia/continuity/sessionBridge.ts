@@ -1,0 +1,231 @@
+/**
+ * C1-BRIDGE-02 · member-grounded two-hop recovery.
+ *
+ * Authority: founder ruling 2026-09-15, after R1 rejected the recurrence repair and
+ * C1-BRIDGE-01 established that the production corpus contains a member-grounded path.
+ * Acceptance: P1 / N1 / N2, frozen BEFORE this file existed.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THE PROBLEM THIS SOLVES, AND THE ONE IT DOES NOT.
+ *
+ * One-hop ranking asks: *which displaced exchange resembles the current utterance?*
+ * For an opaque retrospective ask — "what was that phrase I shared earlier" — the
+ * honest answer is NONE. The utterance names only the ACT of remembering; it carries
+ * no evidence about the object. Production proved this: ranking returned [2,3,36]
+ * while the marker sat at 22, and a recurrence repair moved the field around without
+ * touching the term that decided it.
+ *
+ * But the conversation may already contain the missing relation:
+ *
+ *     current ask  →  recent turn that refers back  →  the earlier material
+ *
+ * ⭐ That is a TWO-HOP CONTINUITY problem, not a one-hop ranking problem.
+ *
+ * ⛔⛔ WHAT THIS DOES NOT SOLVE. Bridge recovery serves REPEATED or LINKED retrospective
+ * retrieval. It does NOT solve first-ask opaque memory. In the production corpus the
+ * bridge exists only because the member had already asked once and named the target in
+ * the asking; strip that turn and no path remains. A green P1 must never be read as
+ * "memory fixed" — what eventually solves the ordinary single-ask case probably needs
+ * significance preserved WHEN THE MOMENT OCCURRED, not reconstructed afterwards from
+ * the wording of the request.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⭐⭐ ABSTENTION IS A FIRST-CLASS RESULT, NOT A FAILED SEARCH.
+ *
+ *   ABSENCE OF A BRIDGE IS EVIDENCE. It must not become permission to invent a weaker
+ *   one. DC-3 — the defeat candidate that isolated N2 — had a CORRECT bridge and died
+ *   anyway, because when it found nothing it reached for something. Its defect was not
+ *   the bridge. Its defect was refusing to stop.
+ *
+ * ⛔ So: no fallback retrieval · no threshold lowering · no assistant-echo bridging ·
+ *    no semantic backfill · no "best available" · no widening. If no member-grounded
+ *    path exists, this returns an explicit abstention and the caller recovers nothing.
+ */
+
+import { retrospectiveDemand } from './sessionRecovery';
+
+export interface BridgeExchange {
+  readonly index: number;
+  readonly userMessage: string;
+  readonly maiaResponse: string;
+}
+
+export interface BridgeRecovered {
+  readonly index: number;
+  /** The member's own tokens that carried the second hop. Provenance, not decoration. */
+  readonly carriedBy: string[];
+  /** Index of the prefix exchange the path traversed. */
+  readonly viaPrefixIndex: number;
+}
+
+export type BridgeOutcome =
+  | { readonly kind: 'recovered'; readonly exchanges: BridgeRecovered[] }
+  | {
+      readonly kind: 'abstained';
+      readonly reason:
+        | 'no-member-link-to-recent-context'
+        | 'recent-context-names-nothing-earlier'
+        | 'ambiguous-member-grounded-targets';
+    };
+
+export const BRIDGE_MAX_RECOVERED = 3;
+
+const STOPWORDS = new Set([
+  'a','an','the','and','or','but','if','of','to','in','on','at','by','for','with',
+  'about','as','is','are','was','were','be','been','being','it','its','this','that',
+  'these','those','i','you','we','they','he','she','me','my','your','our','their',
+  'do','does','did','have','has','had','not','no','so','than','then','there','here',
+  'what','which','who','whom','when','where','why','how','can','could','would',
+  'should','will','just','from','up','out','into','over','again','more','some','any',
+  'all','very','really','like','get','got','know','think','one','thing','things',
+]);
+
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s'-]/g, ' ')
+    .split(/\s+/)
+    .filter(t => t.length > 2 && !STOPWORDS.has(t));
+}
+
+/**
+ * ⭐ ORIGIN-AWARE AT BOTH HOPS. Only the MEMBER'S OWN WORDS carry a bridge.
+ *
+ * MAIA's replies are read nowhere in this function. That is not caution, it is
+ * measured: from the production corpus's prior-ask turn, SIXTEEN displaced exchanges
+ * become reachable through MAIA's echo alone. An origin-blind bridge admits all of
+ * them, which is the recurrence inquiry's defect — MAIA's language manufacturing
+ * member significance — reappearing in the topology.
+ */
+export function recoverViaBridge(input: {
+  probe: string;
+  activePrefix: readonly BridgeExchange[];
+  displaced: readonly BridgeExchange[];
+  maxRecovered?: number;
+}): BridgeOutcome {
+  const { probe, activePrefix, displaced } = input;
+  const maxRecovered = input.maxRecovered ?? BRIDGE_MAX_RECOVERED;
+
+  // Selection law A: the bridge only participates in a retrospective act.
+  // Opacity itself remains a serving-seam decision; this guard keeps the pure
+  // mechanism from manufacturing bridges during ordinary forward conversation.
+  if (retrospectiveDemand(probe) <= 0 || maxRecovered <= 0) {
+    return { kind: 'abstained', reason: 'no-member-link-to-recent-context' };
+  }
+
+  // Selection law B: intent continuity is a RETRIEVAL EPISODE, not exact-token
+  // overlap between two phrasings. Walk newest-to-oldest and stop at the first
+  // ordinary member turn; paraphrase inside one unresolved episode remains linked.
+  const episode: BridgeExchange[] = [];
+  for (const exchange of [...activePrefix].reverse()) {
+    if (retrospectiveDemand(exchange.userMessage) <= 0) break;
+    episode.push(exchange);
+  }
+  if (episode.length === 0) {
+    return { kind: 'abstained', reason: 'no-member-link-to-recent-context' };
+  }
+
+  const earlierMemberVocabulary = new Set(
+    displaced.flatMap(exchange => tokenize(exchange.userMessage))
+  );
+
+  // Object continuity is separate from intent continuity. The nearest prior
+  // GROUNDED retrospective ask supplies object identity. Grounding comes only
+  // from the member's residual words that also occur in earlier member language;
+  // MAIA's replies never make a source grounded.
+  let source: { exchange: BridgeExchange; anchors: string[] } | null = null;
+  for (const exchange of episode) {
+    const anchors = [...new Set(tokenize(exchange.userMessage))]
+      .filter(token => !RETRIEVAL_VOCABULARY.has(token))
+      .filter(token => earlierMemberVocabulary.has(token));
+    if (anchors.length > 0) {
+      source = { exchange, anchors };
+      break;
+    }
+  }
+  if (!source) {
+    return { kind: 'abstained', reason: 'recent-context-names-nothing-earlier' };
+  }
+
+  // Selection laws C/D: targets are admitted from MEMBER words only and ranked
+  // by object-anchor COVERAGE. Lower-coverage material is not padded into the
+  // result merely because recovery capacity remains.
+  const anchorSet = new Set(source.anchors);
+  const scored = displaced.map(exchange => {
+    const shared = [...new Set(tokenize(exchange.userMessage))]
+      .filter(token => anchorSet.has(token));
+    return { exchange, shared };
+  });
+  const maxCoverage = Math.max(0, ...scored.map(candidate => candidate.shared.length));
+  if (maxCoverage <= 0) {
+    return { kind: 'abstained', reason: 'recent-context-names-nothing-earlier' };
+  }
+
+  const strongest = scored
+    .filter(candidate => candidate.shared.length === maxCoverage)
+    .sort((a, b) => a.exchange.index - b.exchange.index);
+
+  // Position may order already-admissible equals for presentation. It may never
+  // decide which object wins. More maximum-coverage targets than capacity is
+  // therefore ambiguity, not permission to truncate by index.
+  if (strongest.length > maxRecovered) {
+    return { kind: 'abstained', reason: 'ambiguous-member-grounded-targets' };
+  }
+
+  return {
+    kind: 'recovered',
+    exchanges: strongest.map(candidate => ({
+      index: candidate.exchange.index,
+      carriedBy: candidate.shared,
+      viaPrefixIndex: source.exchange.index,
+    })),
+  };
+}
+
+/**
+ * ⭐⭐ IS THIS AN OPAQUE RETROSPECTIVE REQUEST?
+ *
+ * Founder ruling 2026-09-15: the generic retrieval words themselves — `remember`,
+ * `earlier`, `shared`, `phrase` — must NOT be treated as evidence identifying the
+ * remembered object. Production index 36 already showed why: it won one-hop ranking
+ * on the member's own word "remember" and had nothing to do with what was asked.
+ *
+ * The classification is by EVIDENCE, not by a word list, in two steps:
+ *
+ *   1. strip the retrieval vocabulary — the words that name the ACT of remembering;
+ *   2. ask whether anything that REMAINS actually occurs in the member's own earlier
+ *      messages.
+ *
+ * ⭐ Step 2 is what makes this robust. The real production probe contains "eralier",
+ * a misspelling that no vocabulary list will catch — but it appears nowhere else in
+ * the conversation, so it identifies nothing, and the request is correctly opaque.
+ * A word list alone would have mis-classified it as grounded and handed the turn back
+ * to the scorer that failed.
+ *
+ * Conversely "what was I saying earlier about rootedness" leaves `rootedness`, which
+ * DOES occur in the member's earlier language — genuine evidence about the object —
+ * so that request is GROUNDED and ordinary one-hop recovery may operate on it.
+ */
+const RETRIEVAL_VOCABULARY = new Set([
+  'remember','remembered','recall','recalled','forget','forgot','forgotten',
+  'earlier','previously','before','ago','back','start','started','beginning','last',
+  'said','say','saying','told','tell','telling','mention','mentioned','mentioning',
+  'shared','share','sharing','gave','give','given','brought','talked','discussed',
+  'phrase','word','words','conversation','chat','thread','something','anything',
+]);
+
+export function isOpaqueRetrospectiveRequest(
+  utterance: string,
+  memberHistory: readonly BridgeExchange[]
+): boolean {
+  const residual = tokenize(utterance).filter(t => !RETRIEVAL_VOCABULARY.has(t));
+  if (residual.length === 0) return true;
+
+  const memberVocabulary = new Set(
+    memberHistory.flatMap(e => tokenize(e.userMessage))
+  );
+  // ⭐ Opaque exactly when nothing the member is saying NOW identifies anything the
+  // member said BEFORE. ⛔ MAIA's replies are not consulted: her having used a word
+  // does not make the member's request grounded.
+  return !residual.some(t => memberVocabulary.has(t));
+}

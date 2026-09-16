@@ -420,7 +420,6 @@ export const PRODUCER_REGISTRY = {
     reason: 'the OBSERVATION being pursued remains MAIA/system-originated. Partitioned from '
       + 'member.writer_pursuit so a member act can never launder system authorship.',
   },
-
   /* ══════════════════════════════════════════════════════════════════════
      WRITER'S STUDIO · EDITORIAL DISCOURSE  (ER-R2, 2026-09-15)
      ⭐ The four ids the editorial discourse contract DECLARED and deliberately
