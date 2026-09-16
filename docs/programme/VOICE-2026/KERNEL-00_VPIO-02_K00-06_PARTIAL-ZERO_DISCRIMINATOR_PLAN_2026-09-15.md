@@ -3586,3 +3586,6 @@ Authority present and correct (7 lines / 244 bytes), pin `c4b37e69…`/59 verifi
 
 
 ## §18.59 — `02` STOP carrier in custody (`3f3dcfb40` → cherry-picked; run seal `15e71bd9…`, 10 entries, 0 mismatches; no install artefact; authority metadata only; PID 3347 bound to `E3B88028-…` in the JSON; `01` lineage sealed under `prior-attempts/`) — `03` dependency step 1 satisfied; terminate-only pin review + authority next (2026-09-16; implementation record §10.31; qualification plan §10.79)
+
+
+## §18.60 — terminate-only pin ACCEPTED (`576fd2b2…`) · `SID HISTORICAL-HARNESS-TERMINATE-01` OPEN for exactly one `testTerminateOnly` · authority issued in-session (8 lines / 293 bytes expected; never in git) · seven-step run shape issued · not yet invoked (2026-09-16; implementation record §10.32; qualification plan §10.80)

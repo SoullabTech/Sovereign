@@ -926,3 +926,8 @@ No qualification change.
 ### §10.79 — FIRST-INSTALL-02 STOP evidence durable (2026-09-16; discriminator plan §18.59; implementation record §10.31)
 
 No qualification change.
+
+
+### §10.80 — terminate-only act open, not yet invoked (2026-09-16; discriminator plan §18.60; implementation record §10.32)
+
+No qualification change; the act touches only the historical `.vpio02` process state.
