@@ -197,11 +197,17 @@ The initial repository census is recorded in
 
 ### A2 — Conversational field contract candidate
 
-**Prepared tracker:** `MAIA-SOVEREIGN-ci01-a2` · **DEFERRED; not authorization**
+**Tracker:** `MAIA-SOVEREIGN-ci01-a2` · **COMPLETE · ARCHITECTURE CANDIDATE ONLY**
 
 Architecture only. Define the minimum ontology and provenance envelope required to represent
 encounter state without duplicating `CanonicalTurn`, leaking an open context bag back into
 cognition, or converting a projection into evidence.
+
+The A2 ruling is recorded in
+`CI-01_ACT2_CONVERSATIONAL_FIELD_CONTRACT_2026-09-16.md`. It rejects a monolithic runtime
+`ConversationalFieldSnapshot`: the conversational field is a governed view over differentiated,
+expiring witnesses and purpose-specific projections. Only separately registered outputs could
+ever approach MIPA, and none were registered by A2.
 
 A2 must answer:
 
@@ -304,12 +310,13 @@ CI-01 is truthfully open when:
 - implementation and live-authority exclusions are explicit;
 - later acts are named but unspent.
 
-## Opening standing
+## Current standing
 
 ```text
 lane ................................ OPEN
 A1 baseline census .................. COMPLETE · REPOSITORY / R&D RECORDS ONLY
-A2 field contract ................... NOT OPENED
+A2 field contract ................... COMPLETE · ARCHITECTURE CANDIDATE ONLY
+A2 monolithic field snapshot ........ REJECTED AS FIRST IMPLEMENTATION SHAPE
 A3 shadow synthesizer ............... NOT OPENED
 A4 conversation benchmark ........... NOT OPENED
 runtime types ....................... UNCHANGED
