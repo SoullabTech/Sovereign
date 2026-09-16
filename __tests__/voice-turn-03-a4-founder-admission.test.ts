@@ -5,9 +5,10 @@ const oracle = readFileSync(join(process.cwd(), 'components/OracleConversation.t
 const receiver = readFileSync(join(process.cwd(), 'app/api/telemetry/client/route.ts'), 'utf8');
 
 describe('TURN-03 A4 founder witness admission', () => {
-  it('requires both admin session and explicit query request', () => {
+  it('requires explicit query request and keeps production admin-gated', () => {
     expect(oracle).toContain("get('turnA4Shadow') === '1'");
-    expect(oracle).toContain('const a4FounderShadowEnabled = showDiagnostics && a4FounderShadowRequested;');
+    expect(oracle).toContain('const a4FounderShadowEnabled = a4FounderShadowRequested &&');
+    expect(oracle).toContain("showDiagnostics || process.env.NODE_ENV === 'development'");
     expect(oracle).toContain('a4ShadowResearchEnabled={a4FounderShadowEnabled}');
   });
 

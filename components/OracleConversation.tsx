@@ -968,7 +968,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     if (typeof window === 'undefined') return;
     setA4FounderShadowRequested(new URLSearchParams(window.location.search).get('turnA4Shadow') === '1');
   }, []);
-  const a4FounderShadowEnabled = showDiagnostics && a4FounderShadowRequested;
+  // Local founder instrumentation walks are permitted only in a development
+  // build with the explicit query flag. Production still requires the
+  // authenticated admin role. This avoids mutating member roles just to run
+  // a localhost research witness while keeping deployed admission closed.
+  const a4FounderShadowEnabled = a4FounderShadowRequested &&
+    (showDiagnostics || process.env.NODE_ENV === 'development');
   const [audioEnabled, setAudioEnabled] = useState(true); // AUTO-START FIX: Start as true to enable immediate voice
   const [audioUnlocked, setAudioUnlocked] = useState(false); // Enhanced Safari audio unlock status
   const [showAudioUnlockUI, setShowAudioUnlockUI] = useState(false); // Show Safari unlock UI
