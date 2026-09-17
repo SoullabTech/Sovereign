@@ -42,7 +42,10 @@ jest.mock('@/lib/db/postgres', () => ({
           boundary: 'writers_studio.focus->maia_cognition', source_class: 'work',
           participation_basis: 'member_invoked', source_ref: 'work-1', scope_kind: 'passage',
           section_ref: null, authorized_by: 'member', gesture: 'ask_maia',
-          policy_version: 'context-disclosure-v1', state: 'attempted' }], rowCount: 1 };
+          // The conflict fixture describes the SAME disclosure under whatever
+          // shared policy version the attempted INSERT actually carried.
+          policy_version: String(calls.find(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))?.params[10]),
+          state: 'attempted' }], rowCount: 1 };
       }
       if (/UPDATE/.test(sql)) return confirmFails ? { rows: [], rowCount: 0 } : { rows: [], rowCount: 1 };
     }

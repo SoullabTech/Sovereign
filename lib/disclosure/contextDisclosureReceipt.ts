@@ -39,8 +39,15 @@
 
 import { query, type TransactionClient } from '@/lib/db/postgres';
 
-/** Bump when the disclosure contract changes; recorded on every receipt. */
-export const DISCLOSURE_POLICY_VERSION = 'context-disclosure-v1';
+/**
+ * Version of the shared immutable disclosure-receipt contract used for NEW receipts.
+ *
+ * PV-1 (founder, 2026-09-17): advance when immutable receipt meaning or admitted
+ * authority vocabulary changes. Historical receipts are never rewritten merely
+ * because this constant advances. Refactors/comments/new callers using existing
+ * vocabulary do not require a bump.
+ */
+export const DISCLOSURE_POLICY_VERSION = 'context-disclosure-v2';
 
 /**
  * WHAT kind of context crossed. Intended axis: work · memory · journal · keep ·
