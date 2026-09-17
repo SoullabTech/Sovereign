@@ -1,0 +1,1116 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H23_ELEMENTAL_MULTILAYER_V1",
+  "authority": "offline research only",
+  "productionEquivalent": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "representationTemperature": 0.65,
+    "probeTemperature": 0
+  },
+  "hypotheses": {
+    "H2": "Differentiated Elemental-layer representation preserves task-relevant multiplicity better than a flat integrated narrative.",
+    "H3": "Mediated cross-layer integration preserves relational configuration better than differentiation alone or early fusion."
+  },
+  "fixtureTruth": [
+    {
+      "id": "F1_AMBIVALENCE",
+      "truth": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          [
+            "AIR",
+            "ALIGN",
+            "FIRE"
+          ],
+          [
+            "AIR",
+            "TENSION",
+            "WATER"
+          ],
+          [
+            "EARTH",
+            "ALIGN",
+            "FIRE"
+          ],
+          [
+            "WATER",
+            "TENSION",
+            "FIRE"
+          ]
+        ],
+        "field": "MIXED"
+      }
+    },
+    {
+      "id": "F2_MISSING_EARTH",
+      "truth": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "FIRE"
+        },
+        "absentElements": [
+          "EARTH"
+        ],
+        "supersedes": [],
+        "relations": [
+          [
+            "AIR",
+            "ALIGN",
+            "FIRE"
+          ],
+          [
+            "WATER",
+            "UNRESOLVED",
+            "FIRE"
+          ]
+        ],
+        "field": "MIXED"
+      }
+    },
+    {
+      "id": "F3_CORRECTION",
+      "truth": {
+        "elementBySource": {
+          "U1": "WATER",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [
+          "AIR"
+        ],
+        "supersedes": [
+          [
+            "U2",
+            "U1"
+          ]
+        ],
+        "relations": [
+          [
+            "WATER",
+            "ALIGN",
+            "EARTH"
+          ],
+          [
+            "FIRE",
+            "CONSTRAINS",
+            "WATER"
+          ]
+        ],
+        "field": "UNRESOLVED"
+      }
+    },
+    {
+      "id": "F4_CREATIVE_LAUNCH",
+      "truth": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          [
+            "AIR",
+            "ALIGN",
+            "FIRE"
+          ],
+          [
+            "WATER",
+            "TENSION",
+            "FIRE"
+          ],
+          [
+            "EARTH",
+            "CONSTRAINS",
+            "FIRE"
+          ]
+        ],
+        "field": "MIXED"
+      }
+    },
+    {
+      "id": "F5_CONSONANCE",
+      "truth": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          [
+            "AIR",
+            "ALIGN",
+            "WATER"
+          ],
+          [
+            "AIR",
+            "ALIGN",
+            "EARTH"
+          ],
+          [
+            "AIR",
+            "ALIGN",
+            "FIRE"
+          ],
+          [
+            "WATER",
+            "ALIGN",
+            "EARTH"
+          ],
+          [
+            "WATER",
+            "ALIGN",
+            "FIRE"
+          ],
+          [
+            "EARTH",
+            "ALIGN",
+            "FIRE"
+          ]
+        ],
+        "field": "CONSONANT"
+      }
+    }
+  ],
+  "summary": {
+    "A": {
+      "runs": 5,
+      "elementAccuracy": 1,
+      "elementCorrect": 19,
+      "elementTotal": 19,
+      "absentCorrect": 5,
+      "supersedesCorrect": 5,
+      "relationPrecision": 0.5555555555555556,
+      "relationRecall": 0.5882352941176471,
+      "relationF1": 0.5714285714285715,
+      "relationTp": 10,
+      "relationExpected": 17,
+      "relationActual": 18,
+      "fieldCorrect": 3,
+      "prematureCollapse": 1
+    },
+    "B": {
+      "runs": 5,
+      "elementAccuracy": 0.8947368421052632,
+      "elementCorrect": 17,
+      "elementTotal": 19,
+      "absentCorrect": 4,
+      "supersedesCorrect": 5,
+      "relationPrecision": 0.42857142857142855,
+      "relationRecall": 0.5294117647058824,
+      "relationF1": 0.4736842105263158,
+      "relationTp": 9,
+      "relationExpected": 17,
+      "relationActual": 21,
+      "fieldCorrect": 4,
+      "prematureCollapse": 0
+    },
+    "C": {
+      "runs": 5,
+      "elementAccuracy": 0.9473684210526315,
+      "elementCorrect": 18,
+      "elementTotal": 19,
+      "absentCorrect": 4,
+      "supersedesCorrect": 5,
+      "relationPrecision": 0.375,
+      "relationRecall": 0.5294117647058824,
+      "relationF1": 0.4390243902439025,
+      "relationTp": 9,
+      "relationExpected": 17,
+      "relationActual": 24,
+      "fieldCorrect": 1,
+      "prematureCollapse": 0
+    }
+  },
+  "rows": [
+    {
+      "fixture": "F1_AMBIVALENCE",
+      "condition": "A",
+      "representationHash": "4f6eda20665d6ab2bed05302548d7cc0a00a04a38e0e75cac90fee7bf5589ab7",
+      "probeHash": "d01473176e3a140508304abecabf1566159c22981a8e3afcd4b86def911ea971",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "TENSION",
+            "b": "WATER"
+          },
+          {
+            "a": "EARTH",
+            "relation": "AMPLIFIES",
+            "b": "UNRESOLVED"
+          },
+          {
+            "a": "FIRE",
+            "relation": "ALIGN",
+            "b": "AIR"
+          },
+          {
+            "a": "WATER",
+            "relation": "CONSTRAINS",
+            "b": "FIRE"
+          }
+        ],
+        "field": "UNRESOLVED"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 2,
+          "expected": 4,
+          "actual": 4,
+          "precision": 0.5,
+          "recall": 0.5,
+          "f1": 0.5
+        },
+        "fieldCorrect": false,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F1_AMBIVALENCE",
+      "condition": "B",
+      "representationHash": "df7f7dbd2df631a8caaeef4fabe2eed781cbc61e7a28b1c978a3383b83ab0188",
+      "probeHash": "60dcd99808be728cd7999f45ae098551267008023d31b3ee851b0ba53699d811",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "TENSION",
+            "b": "WATER"
+          },
+          {
+            "a": "EARTH",
+            "relation": "AMPLIFIES",
+            "b": "AIR"
+          },
+          {
+            "a": "FIRE",
+            "relation": "ALIGN",
+            "b": "AIR"
+          },
+          {
+            "a": "WATER",
+            "relation": "TENSION",
+            "b": "FIRE"
+          },
+          {
+            "a": "EARTH",
+            "relation": "CONSTRAINS",
+            "b": "WATER"
+          }
+        ],
+        "field": "MIXED"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 3,
+          "expected": 4,
+          "actual": 5,
+          "precision": 0.6,
+          "recall": 0.75,
+          "f1": 0.6666666666666665
+        },
+        "fieldCorrect": true,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F1_AMBIVALENCE",
+      "condition": "C",
+      "representationHash": "38b0ed1a3598f83c2f7e2888530ad6a676c309a929ab0e0706edf340134dddab",
+      "probeHash": "aa63c0998708452841060c6f7315843d551ceb5c46522197ce6654b8859fd702",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          },
+          {
+            "a": "WATER",
+            "relation": "TENSION",
+            "b": "AIR"
+          },
+          {
+            "a": "EARTH",
+            "relation": "CONSTRAINS",
+            "b": "WATER"
+          },
+          {
+            "a": "EARTH",
+            "relation": "AMPLIFIES",
+            "b": "FIRE"
+          },
+          {
+            "a": "WATER",
+            "relation": "UNRESOLVED",
+            "b": "FIRE"
+          }
+        ],
+        "field": "UNRESOLVED"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 2,
+          "expected": 4,
+          "actual": 5,
+          "precision": 0.4,
+          "recall": 0.5,
+          "f1": 0.4444444444444445
+        },
+        "fieldCorrect": false,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F2_MISSING_EARTH",
+      "condition": "A",
+      "representationHash": "22de95ce6e90b37f2de9ac9b53edac0e0909a826d6016d640cf3c6a472f77ba5",
+      "probeHash": "5cdb4a784fde381109756efd81abbca03c475fb222ba0534c2c89eba9234d8c9",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "FIRE"
+        },
+        "absentElements": [
+          "EARTH"
+        ],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          },
+          {
+            "a": "WATER",
+            "relation": "TENSION",
+            "b": "FIRE"
+          },
+          {
+            "a": "EARTH",
+            "relation": "UNRESOLVED",
+            "b": "AIR"
+          }
+        ],
+        "field": "MIXED"
+      },
+      "score": {
+        "elementCorrect": 3,
+        "elementTotal": 3,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 1,
+          "expected": 2,
+          "actual": 3,
+          "precision": 0.3333333333333333,
+          "recall": 0.5,
+          "f1": 0.4
+        },
+        "fieldCorrect": true,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F2_MISSING_EARTH",
+      "condition": "B",
+      "representationHash": "f24a05a6cbafddca0124040f1b9dffe2a76593d97abaa9fe6381040e039f65cb",
+      "probeHash": "3ec3371fd09a6252e17e168ac98ab3f0d855b4efb01ea2adfe068dc9e48931c0",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "FIRE"
+        },
+        "absentElements": [
+          "EARTH"
+        ],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          },
+          {
+            "a": "WATER",
+            "relation": "TENSION",
+            "b": "FIRE"
+          },
+          {
+            "a": "EARTH",
+            "relation": "UNRESOLVED",
+            "b": "FIRE"
+          }
+        ],
+        "field": "MIXED"
+      },
+      "score": {
+        "elementCorrect": 3,
+        "elementTotal": 3,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 1,
+          "expected": 2,
+          "actual": 3,
+          "precision": 0.3333333333333333,
+          "recall": 0.5,
+          "f1": 0.4
+        },
+        "fieldCorrect": true,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F2_MISSING_EARTH",
+      "condition": "C",
+      "representationHash": "e9d5e9826c08ea40e18403ec3aafca3703ebb69dfa57f2d870146bb75eb736f2",
+      "probeHash": "c9c5a584968c9ad0c8424c4cade8ef243bedaec095a3402ca6fc43063ab22f73",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "FIRE"
+        },
+        "absentElements": [
+          "EARTH"
+        ],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          },
+          {
+            "a": "WATER",
+            "relation": "TENSION",
+            "b": "FIRE"
+          },
+          {
+            "a": "WATER",
+            "relation": "UNRESOLVED",
+            "b": "AIR"
+          },
+          {
+            "a": "EARTH",
+            "relation": "UNRESOLVED",
+            "b": "FIRE"
+          }
+        ],
+        "field": "UNRESOLVED"
+      },
+      "score": {
+        "elementCorrect": 3,
+        "elementTotal": 3,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 1,
+          "expected": 2,
+          "actual": 4,
+          "precision": 0.25,
+          "recall": 0.5,
+          "f1": 0.3333333333333333
+        },
+        "fieldCorrect": false,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F3_CORRECTION",
+      "condition": "A",
+      "representationHash": "dc9679d8a7c7f89c9e9ba2a3f80cafe5f3fa9368344c857e458ecf915c36146e",
+      "probeHash": "29336db566b73194c6e48b8a45d2b60d69637aade4f29b269e31961f78d8395c",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "WATER",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [
+          "AIR"
+        ],
+        "supersedes": [
+          [
+            "U2",
+            "U1"
+          ]
+        ],
+        "relations": [
+          {
+            "a": "WATER",
+            "relation": "TENSION",
+            "b": "EARTH"
+          },
+          {
+            "a": "FIRE",
+            "relation": "CONSTRAINS",
+            "b": "WATER"
+          },
+          {
+            "a": "EARTH",
+            "relation": "AMPLIFIES",
+            "b": "WATER"
+          }
+        ],
+        "field": "CONSONANT"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 1,
+          "expected": 2,
+          "actual": 3,
+          "precision": 0.3333333333333333,
+          "recall": 0.5,
+          "f1": 0.4
+        },
+        "fieldCorrect": false,
+        "prematureCollapse": true
+      }
+    },
+    {
+      "fixture": "F3_CORRECTION",
+      "condition": "B",
+      "representationHash": "95282db8b4bec0d5fd52762c3d733071a4e73e9b4c280bbf48a513f5fafc15a7",
+      "probeHash": "d4465efc5386143141244953479bb856b0022876219c90aae07a5e5a4fb1763e",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "AIR",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [
+          [
+            "U2",
+            "U1"
+          ]
+        ],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "TENSION",
+            "b": "WATER"
+          },
+          {
+            "a": "EARTH",
+            "relation": "AMPLIFIES",
+            "b": "WATER"
+          },
+          {
+            "a": "FIRE",
+            "relation": "CONSTRAINS",
+            "b": "AIR"
+          },
+          {
+            "a": "WATER",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          }
+        ],
+        "field": "MIXED"
+      },
+      "score": {
+        "elementCorrect": 2,
+        "elementTotal": 4,
+        "absentCorrect": false,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 0,
+          "expected": 2,
+          "actual": 4,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "fieldCorrect": false,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F3_CORRECTION",
+      "condition": "C",
+      "representationHash": "d6399d08be0b0bbff9955feb482b58c887112d9b0f061bbe46497ec100b3d24f",
+      "probeHash": "7b5672ba090f0194a41bce8a99ee061af991ed148ff2eea3e47ddaec943b8200",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [
+          [
+            "U2",
+            "U1"
+          ]
+        ],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "TENSION",
+            "b": "WATER"
+          },
+          {
+            "a": "EARTH",
+            "relation": "AMPLIFIES",
+            "b": "WATER"
+          },
+          {
+            "a": "WATER",
+            "relation": "CONSTRAINS",
+            "b": "FIRE"
+          },
+          {
+            "a": "AIR",
+            "relation": "UNRESOLVED",
+            "b": "EARTH"
+          },
+          {
+            "a": "FIRE",
+            "relation": "ALIGN",
+            "b": "WATER"
+          }
+        ],
+        "field": "MIXED"
+      },
+      "score": {
+        "elementCorrect": 3,
+        "elementTotal": 4,
+        "absentCorrect": false,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 0,
+          "expected": 2,
+          "actual": 5,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "fieldCorrect": false,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F4_CREATIVE_LAUNCH",
+      "condition": "A",
+      "representationHash": "4f1300d469538a8b41def3da1ea599fdc03dcaeae8c9859ab63c75bbc3f01911",
+      "probeHash": "482151ec199f59609a0c91d830e790961a168953f02087a9ec2a2c90f7980b20",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "FIRE",
+            "relation": "ALIGN",
+            "b": "AIR"
+          },
+          {
+            "a": "WATER",
+            "relation": "TENSION",
+            "b": "FIRE"
+          },
+          {
+            "a": "EARTH",
+            "relation": "TENSION",
+            "b": "FIRE"
+          },
+          {
+            "a": "EARTH",
+            "relation": "AMPLIFIES",
+            "b": "WATER"
+          }
+        ],
+        "field": "MIXED"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 2,
+          "expected": 3,
+          "actual": 4,
+          "precision": 0.5,
+          "recall": 0.6666666666666666,
+          "f1": 0.5714285714285715
+        },
+        "fieldCorrect": true,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F4_CREATIVE_LAUNCH",
+      "condition": "B",
+      "representationHash": "989c725cf46651ece013c1467758c4862c1d8c6aa173843728a484f0931ef30a",
+      "probeHash": "f8f74c50cc2f5ead38b8649539d0c60bc37d19c2df52626d7f81e08827a92150",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          },
+          {
+            "a": "EARTH",
+            "relation": "TENSION",
+            "b": "FIRE"
+          },
+          {
+            "a": "WATER",
+            "relation": "TENSION",
+            "b": "FIRE"
+          },
+          {
+            "a": "EARTH",
+            "relation": "CONSTRAINS",
+            "b": "AIR"
+          },
+          {
+            "a": "WATER",
+            "relation": "UNRESOLVED",
+            "b": "AIR"
+          }
+        ],
+        "field": "MIXED"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 2,
+          "expected": 3,
+          "actual": 5,
+          "precision": 0.4,
+          "recall": 0.6666666666666666,
+          "f1": 0.5
+        },
+        "fieldCorrect": true,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F4_CREATIVE_LAUNCH",
+      "condition": "C",
+      "representationHash": "e15c462f64a17e23557ad2b14374ebb1acc7a604e95eae913b0387553f905f5a",
+      "probeHash": "891347c4b157e36490b88a423956547da6e77703ba9213d55c8c55e3a89952de",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          },
+          {
+            "a": "WATER",
+            "relation": "TENSION",
+            "b": "FIRE"
+          },
+          {
+            "a": "EARTH",
+            "relation": "CONSTRAINS",
+            "b": "FIRE"
+          },
+          {
+            "a": "EARTH",
+            "relation": "AMPLIFIES",
+            "b": "WATER"
+          },
+          {
+            "a": "AIR",
+            "relation": "UNRESOLVED",
+            "b": "WATER"
+          }
+        ],
+        "field": "MIXED"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 3,
+          "expected": 3,
+          "actual": 5,
+          "precision": 0.6,
+          "recall": 1,
+          "f1": 0.7499999999999999
+        },
+        "fieldCorrect": true,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F5_CONSONANCE",
+      "condition": "A",
+      "representationHash": "bbe7adce290e9d8aad57a647048a7728d1d8d32ce4ca2acf75fa989fdaac585a",
+      "probeHash": "a974cfb344596de24cac99918bf5a26608d683293349dde9d797f70502caf249",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "WATER"
+          },
+          {
+            "a": "WATER",
+            "relation": "ALIGN",
+            "b": "EARTH"
+          },
+          {
+            "a": "EARTH",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          },
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          }
+        ],
+        "field": "CONSONANT"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 4,
+          "expected": 6,
+          "actual": 4,
+          "precision": 1,
+          "recall": 0.6666666666666666,
+          "f1": 0.8
+        },
+        "fieldCorrect": true,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F5_CONSONANCE",
+      "condition": "B",
+      "representationHash": "11bfe7a26a67008d3c57573be9416da38b6ab9c7b643e47c3344b604babe5b25",
+      "probeHash": "ed155597523040766653a86d0b0365bf6da98ef9df3070ba02b2e28e92e33988",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "WATER"
+          },
+          {
+            "a": "WATER",
+            "relation": "AMPLIFIES",
+            "b": "EARTH"
+          },
+          {
+            "a": "EARTH",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          },
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          }
+        ],
+        "field": "CONSONANT"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 3,
+          "expected": 6,
+          "actual": 4,
+          "precision": 0.75,
+          "recall": 0.5,
+          "f1": 0.6
+        },
+        "fieldCorrect": true,
+        "prematureCollapse": false
+      }
+    },
+    {
+      "fixture": "F5_CONSONANCE",
+      "condition": "C",
+      "representationHash": "68701d64da6a0af411a0ccd2eb4321235e0b1de6294e28025e70b975511ec7dd",
+      "probeHash": "4cff7bb69371d84d70e0f57bbe60b5257dd0d407ffd1315ce930642b1a3ee3d9",
+      "representationParsed": true,
+      "probe": {
+        "elementBySource": {
+          "U1": "AIR",
+          "U2": "WATER",
+          "U3": "EARTH",
+          "U4": "FIRE"
+        },
+        "absentElements": [],
+        "supersedes": [],
+        "relations": [
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "WATER"
+          },
+          {
+            "a": "WATER",
+            "relation": "ALIGN",
+            "b": "EARTH"
+          },
+          {
+            "a": "EARTH",
+            "relation": "AMPLIFIES",
+            "b": "FIRE"
+          },
+          {
+            "a": "AIR",
+            "relation": "ALIGN",
+            "b": "FIRE"
+          },
+          {
+            "a": "AIR",
+            "relation": "UNRESOLVED",
+            "b": "WATER|EARTH|FIRE"
+          }
+        ],
+        "field": "UNRESOLVED"
+      },
+      "score": {
+        "elementCorrect": 4,
+        "elementTotal": 4,
+        "absentCorrect": true,
+        "supersedesCorrect": true,
+        "relation": {
+          "tp": 3,
+          "expected": 6,
+          "actual": 5,
+          "precision": 0.6,
+          "recall": 0.5,
+          "f1": 0.5454545454545454
+        },
+        "fieldCorrect": false,
+        "prematureCollapse": false
+      }
+    }
+  ]
+}
