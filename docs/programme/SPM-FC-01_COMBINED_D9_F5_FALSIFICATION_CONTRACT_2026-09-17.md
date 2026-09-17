@@ -647,9 +647,5 @@ NEXT — adversarial adjudication: provenance audit · constitutional review ·
        falsification against each I-n's adversarial case · PASS / FAIL
 ```
 
-> *Standing is earned and accumulates. Warrant is granted and is spent. Erasure is a disposition
-> that must be stated, not a deletion that may be assumed. The one place those two lanes meet is
-> the member who has gone and the permission that stayed — and this contract forbids exactly that,
-> and names which lane earned which half of the forbidding.*
 
 **STOP.**
