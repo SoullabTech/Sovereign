@@ -1,0 +1,455 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H6F_MOTIF_TRANSFORMATION_V1",
+  "authority": "offline deterministic research only",
+  "question": "Does an edge-level change induce a whole-configuration transition that is not represented by the edge delta alone?",
+  "summary": {
+    "cases": 6,
+    "correct": 6,
+    "motifTransitions": 5,
+    "stableControls": 1,
+    "edgeOnlySufficient": 0
+  },
+  "rows": [
+    {
+      "id": "T1_TRIAD_TO_POLAR_MEDIATION",
+      "before": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "A",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          }
+        ]
+      },
+      "after": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "POLARITY",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "A",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          }
+        ]
+      },
+      "expectedBefore": "CROSS_CONSTRAINT_TRIAD",
+      "expectedAfter": "POLAR_MEDIATION_TRIAD",
+      "edgeDelta": "A-B CROSS_CONSTRAINT→POLARITY",
+      "expectStable": false,
+      "beforeDetected": "CROSS_CONSTRAINT_TRIAD",
+      "afterDetected": "POLAR_MEDIATION_TRIAD",
+      "motifChanged": true,
+      "correct": true,
+      "edgeOnlyLabel": "A-B CROSS_CONSTRAINT→POLARITY",
+      "edgeOnlySufficient": false
+    },
+    {
+      "id": "T2_RESONANT_TO_PARTIAL",
+      "before": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "A",
+            "b": "C",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 1,
+            "tol": 0.5
+          }
+        ]
+      },
+      "after": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "A",
+            "b": "C",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 0.3,
+            "tol": 0.5
+          }
+        ]
+      },
+      "expectedBefore": "RESONANT_TRIAD",
+      "expectedAfter": "PARTIAL_RESONANCE",
+      "edgeDelta": "A-C resonance drops below tolerance",
+      "expectStable": false,
+      "beforeDetected": "RESONANT_TRIAD",
+      "afterDetected": "PARTIAL_RESONANCE",
+      "motifChanged": true,
+      "correct": true,
+      "edgeOnlyLabel": "A-C resonance drops below tolerance",
+      "edgeOnlySufficient": false
+    },
+    {
+      "id": "T3_BALANCED_TO_ASYMMETRIC",
+      "before": {
+        "nodes": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "C",
+            "b": "D",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "D",
+            "b": "A",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          }
+        ]
+      },
+      "after": {
+        "nodes": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "C",
+            "b": "D",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "D",
+            "b": "A",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 0.2,
+            "tol": 0.5
+          }
+        ]
+      },
+      "expectedBefore": "BALANCED_CROSS_CONSTRAINT",
+      "expectedAfter": "ASYMMETRIC_CROSS_PRESSURE",
+      "edgeDelta": "D-A constraint drops below tolerance",
+      "expectStable": false,
+      "beforeDetected": "BALANCED_CROSS_CONSTRAINT",
+      "afterDetected": "ASYMMETRIC_CROSS_PRESSURE",
+      "motifChanged": true,
+      "correct": true,
+      "edgeOnlyLabel": "D-A constraint drops below tolerance",
+      "edgeOnlySufficient": false
+    },
+    {
+      "id": "T4_FOCAL_TO_LOCK",
+      "before": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "C",
+            "op": "OPTIONAL_COUPLING",
+            "strength": 0.6,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "OPTIONAL_COUPLING",
+            "strength": 0.6,
+            "tol": 0.5
+          }
+        ]
+      },
+      "after": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "C",
+            "op": "OPTIONAL_COUPLING",
+            "strength": 0.9,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "OPTIONAL_COUPLING",
+            "strength": 0.9,
+            "tol": 0.5
+          }
+        ]
+      },
+      "expectedBefore": "ASYMMETRIC_FOCAL_CONFIGURATION",
+      "expectedAfter": "FOCAL_LOCK",
+      "edgeDelta": "both focal couplings strengthen",
+      "expectStable": false,
+      "beforeDetected": "ASYMMETRIC_FOCAL_CONFIGURATION",
+      "afterDetected": "FOCAL_LOCK",
+      "motifChanged": true,
+      "correct": true,
+      "edgeOnlyLabel": "both focal couplings strengthen",
+      "edgeOnlySufficient": false
+    },
+    {
+      "id": "T5_EMERGENCE",
+      "before": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "A",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 0.2,
+            "tol": 0.5
+          }
+        ]
+      },
+      "after": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 1,
+            "tol": 0.5
+          },
+          {
+            "a": "A",
+            "b": "C",
+            "op": "CROSS_CONSTRAINT",
+            "strength": 0.8,
+            "tol": 0.5
+          }
+        ]
+      },
+      "expectedBefore": "NONE",
+      "expectedAfter": "CROSS_CONSTRAINT_TRIAD",
+      "edgeDelta": "A-C constraint crosses tolerance",
+      "expectStable": false,
+      "beforeDetected": "NONE",
+      "afterDetected": "CROSS_CONSTRAINT_TRIAD",
+      "motifChanged": true,
+      "correct": true,
+      "edgeOnlyLabel": "A-C constraint crosses tolerance",
+      "edgeOnlySufficient": false
+    },
+    {
+      "id": "T6_STABLE_WITHIN_MOTIF",
+      "before": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 0.7,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 0.8,
+            "tol": 0.5
+          },
+          {
+            "a": "A",
+            "b": "C",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 0.75,
+            "tol": 0.5
+          }
+        ]
+      },
+      "after": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": [
+          {
+            "a": "A",
+            "b": "B",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 0.62,
+            "tol": 0.5
+          },
+          {
+            "a": "B",
+            "b": "C",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 0.83,
+            "tol": 0.5
+          },
+          {
+            "a": "A",
+            "b": "C",
+            "op": "FACILITATIVE_RESONANCE",
+            "strength": 0.68,
+            "tol": 0.5
+          }
+        ]
+      },
+      "expectedBefore": "RESONANT_TRIAD",
+      "expectedAfter": "RESONANT_TRIAD",
+      "edgeDelta": "strengths vary but remain above tolerance",
+      "expectStable": true,
+      "beforeDetected": "RESONANT_TRIAD",
+      "afterDetected": "RESONANT_TRIAD",
+      "motifChanged": false,
+      "correct": true,
+      "edgeOnlyLabel": "strengths vary but remain above tolerance",
+      "edgeOnlySufficient": false
+    }
+  ],
+  "law": "Motif identity is a state variable of the relation field. Edge change and configuration change are distinct facts; neither substitutes for the other."
+}
