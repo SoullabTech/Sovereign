@@ -20,13 +20,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { RhythmHoloflower } from '@/components/liquid/RhythmHoloflower';
+import FieldNowArrival from './FieldNowArrival';
 import { ModernTextInput } from '@/components/ui/ModernTextInput';
 import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
 import { resolveDisplayName } from '@/lib/services/greetingService';
 import { MAIA_WORLDS, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import type { MaiaRailItem } from '@/lib/navigation/types';
 
-type View = 'current' | 'splash' | 'signinA' | 'signinB' | 'arrivalA' | 'arrivalB' | 'arrivalC' | 'conversation' | 'house';
+type View = 'current' | 'splash' | 'signinA' | 'signinB' | 'arrivalA' | 'arrivalB' | 'arrivalC' | 'fieldnow' | 'conversation' | 'house';
 
 const VIEWS: { id: View; label: string }[] = [
   { id: 'current', label: 'Current' },
@@ -36,6 +37,7 @@ const VIEWS: { id: View; label: string }[] = [
   { id: 'arrivalA', label: 'Arrival A · Begin' },
   { id: 'arrivalB', label: 'Arrival B · Immediate' },
   { id: 'arrivalC', label: 'Arrival C · Emergent' },
+  { id: 'fieldnow', label: 'Your Field Now · P1' },
   { id: 'conversation', label: 'In Conversation' },
   { id: 'house', label: 'The House' },
 ];
@@ -374,6 +376,7 @@ export default function ArrivalPrototypeShell({ isFounder }: { isFounder: boolea
             {view === 'arrivalA' && <ArrivalView variant="A" greeting={greeting} holoSize={holoSize} onNavigate={setView} />}
             {view === 'arrivalB' && <ArrivalView variant="B" greeting={greeting} holoSize={holoSize} onNavigate={setView} />}
             {view === 'arrivalC' && <ArrivalView variant="C" greeting={greeting} holoSize={holoSize} onNavigate={setView} />}
+            {view === 'fieldnow' && <FieldNowArrival />}
             {view === 'conversation' && <ConversationView greeting={greeting} onNavigate={setView} />}
             {view === 'house' && <HouseView isFounder={isFounder} />}
           </>
