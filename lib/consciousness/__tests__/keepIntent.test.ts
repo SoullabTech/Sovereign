@@ -79,6 +79,51 @@ describe('ordinary uses of "keep" do not trigger the affordance', () => {
   });
 });
 
+describe('speech-act scope: CONTINUE and REFUSE are not KEEP', () => {
+  const continueActs = [
+    'keep this question open',
+    "let's keep this question open",
+    'keep this conversation going',
+    'keep this thread alive',
+    'keep this inquiry open',
+    'keep this possibility open',
+    'keep this work going',
+    'keep this open',
+    'keep this alive',
+    'keeping this conversation going',
+  ];
+
+  it.each(continueActs)('CONTINUE: "%s" does not become Keep', (utterance) => {
+    expect(detectKeepIntent(utterance).kind).toBeNull();
+  });
+
+  const refuseActs = [
+    "don't keep this",
+    'do not keep this',
+    "I don't want to keep this",
+    "please don't keep this",
+    'never keep this',
+    "don't open Keep",
+    'please do not open the Keep',
+  ];
+
+  it.each(refuseActs)('REFUSE: "%s" does not become Keep', (utterance) => {
+    expect(detectKeepIntent(utterance).kind).toBeNull();
+  });
+
+  it('a blocked act does not poison a later explicit Keep in the same turn', () => {
+    expect(
+      detectKeepIntent('keep this question open — actually, can we keep this moment?'),
+    ).toEqual({ kind: 'keep_material', matched: 'keep this moment' });
+    expect(detectKeepIntent("don't keep this — actually, keep this").kind).toBe(
+      'keep_material',
+    );
+    expect(detectKeepIntent("don't open Keep; actually, open Keep").kind).toBe(
+      'open_keep',
+    );
+  });
+});
+
 describe('a guarded occurrence does not disqualify a real request', () => {
   it('reads both halves of "keep going — actually, can we keep this?"', () => {
     expect(
