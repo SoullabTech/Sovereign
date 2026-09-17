@@ -130,7 +130,7 @@ Book Companion currently fails gracefully when that build directory is absent. C
 
 ## Local evidence
 
-- admission + EA-01 build suites: **38/38 PASS**;
+- admission + EA-01 build suites: **39/39 PASS**;
 - root TypeScript: **229 vs baseline 239 · 0 regressions**;
 - `typecheck:scripts`: **40 base / 40 head**, head-only **0**, base-only **0**, identity sets identical;
 - plan-only executor: PASS, no Ollama/DB access;
@@ -145,7 +145,7 @@ Merging or deploying this implementation does **not** authorize `--execute`. Pro
 
 On the exact implementation tree before commit:
 
-- admission + EA-01 build suites: **38/38 PASS**;
+- admission + EA-01 build suites: **39/39 PASS**;
 - plan-only build witness: **215 AIN / 244 Library**, exact raw + normalized digests;
 - root TypeScript: **229 vs baseline 239 · 0 regressions**;
 - `typecheck:scripts`: **40 base / 40 head**, head-only **0**, base-only **0**, identity sets identical;
@@ -177,3 +177,15 @@ Migration rollback is separate from corpus-row rollback. Companion file:
 removes only the `ain_knowledge_new_rows_require_provenance` enforcement gate so legacy code can write again after a code rollback. It deliberately retains the additive provenance columns, checksum-shape constraint, and indexes.
 
 This follows the repository's evidence-preserving rollback rule: a rollback may relax a new writer gate, but it must not erase custody evidence already recorded in the database. B9 binds that the rollback contains no `DROP COLUMN`, `DROP TABLE`, or `DROP INDEX` operation.
+
+## Independent PR review amendment · complete provenance substrate
+
+PR review found that the first `--execute` preflight verified the five AIN provenance columns but did not mechanically require the associated enforcement/index substrate.
+
+The executor now refuses before any embedding work unless PostgreSQL also contains:
+
+- `ain_knowledge_new_rows_require_provenance` check constraint;
+- `ain_knowledge_source_checksum_shape` check constraint; and
+- `idx_ain_knowledge_provenance_chunk` as a **unique** index.
+
+B10 binds those objects and requires `verifyProvenanceSchema(pool)` to occur before `precomputeEmbeddings(plan)`. The exact reviewed tree passes **39/39** focused admission/build tests, root TypeScript with zero regressions, the unchanged 40-error scripts baseline, and blank-database reconstruction.

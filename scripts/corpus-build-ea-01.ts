@@ -79,14 +79,38 @@ async function precomputeEmbeddings(plan: Ea01BuildPlan): Promise<{
 
 async function verifyProvenanceSchema(db: Db): Promise<void> {
   const result = await db.query(`
-    SELECT column_name
-    FROM information_schema.columns
-    WHERE table_schema = 'public'
-      AND table_name = 'ain_knowledge_chunks'
-      AND column_name IN ('source_checksum', 'content_checksum', 'normalization_id', 'authority_ref', 'corpus_build_id')
+    SELECT
+      (SELECT COUNT(*)::int
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = 'ain_knowledge_chunks'
+         AND column_name IN ('source_checksum', 'content_checksum', 'normalization_id', 'authority_ref', 'corpus_build_id')) AS provenance_columns,
+      (SELECT COUNT(*)::int
+       FROM pg_constraint
+       WHERE conrelid = 'ain_knowledge_chunks'::regclass
+         AND conname = 'ain_knowledge_new_rows_require_provenance'
+         AND contype = 'c') AS provenance_gate,
+      (SELECT COUNT(*)::int
+       FROM pg_constraint
+       WHERE conrelid = 'ain_knowledge_chunks'::regclass
+         AND conname = 'ain_knowledge_source_checksum_shape'
+         AND contype = 'c') AS checksum_shape_gate,
+      (SELECT COUNT(*)::int
+       FROM pg_indexes
+       WHERE schemaname = 'public'
+         AND tablename = 'ain_knowledge_chunks'
+         AND indexname = 'idx_ain_knowledge_provenance_chunk'
+         AND indexdef ILIKE 'CREATE UNIQUE INDEX%') AS provenance_unique_index
   `);
-  if (result.rows.length !== 5) {
-    throw new Error('AIN provenance migration is not applied; refusing corpus write');
+  const row = result.rows[0] ?? {};
+  const complete = Number(row.provenance_columns) === 5
+    && Number(row.provenance_gate) === 1
+    && Number(row.checksum_shape_gate) === 1
+    && Number(row.provenance_unique_index) === 1;
+  if (!complete) {
+    throw new Error(
+      `AIN provenance substrate is incomplete: columns=${row.provenance_columns ?? 0}; gate=${row.provenance_gate ?? 0}; checksum=${row.checksum_shape_gate ?? 0}; unique_index=${row.provenance_unique_index ?? 0}`,
+    );
   }
 }
 async function readState(db: Db, plan: Ea01BuildPlan): Promise<Ea01DbState> {

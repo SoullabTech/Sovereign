@@ -180,3 +180,17 @@ describe('CORPUS-BUILD-EA-01 schema rollback', () => {
     expect(sql).toContain('Provenance columns/indexes retained intentionally');
   });
 });
+
+
+describe('CORPUS-BUILD-EA-01 execution preflight', () => {
+  test('B10 — executor requires the complete AIN provenance substrate, not columns alone', () => {
+    const script = fs.readFileSync(path.join(ROOT, 'scripts/corpus-build-ea-01.ts'), 'utf8');
+    expect(script).toContain("ain_knowledge_new_rows_require_provenance");
+    expect(script).toContain("ain_knowledge_source_checksum_shape");
+    expect(script).toContain("idx_ain_knowledge_provenance_chunk");
+    expect(script).toContain("indexdef ILIKE 'CREATE UNIQUE INDEX%'");
+    expect(script).toContain('AIN provenance substrate is incomplete');
+    expect(script.indexOf('await verifyProvenanceSchema(pool)'))
+      .toBeLessThan(script.indexOf('const embeddings = await precomputeEmbeddings(plan)'));
+  });
+});
