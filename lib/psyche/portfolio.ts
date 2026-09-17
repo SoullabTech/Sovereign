@@ -39,6 +39,7 @@ import type {
   PortfolioSourceCandidate,
   PortfolioView,
   ReturnPreference,
+  ReturnPreferenceAuthority,
 } from './types';
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -58,6 +59,7 @@ interface AtomRow {
   thread_ids: string[];
   status: CrystallizedMemory['status'];
   return_preference: ReturnPreference;
+  return_authority: ReturnPreferenceAuthority;
   last_surfaced_at: string | null;
   surface_count: number;
   member_response_status: MemberResponseStatus | null;
@@ -97,6 +99,7 @@ function rowToAtom(row: AtomRow): CrystallizedMemory {
     threadIds: row.thread_ids ?? [],
     status: row.status,
     returnPreference: row.return_preference,
+    returnAuthority: row.return_authority,
     lastSurfacedAt: row.last_surfaced_at,
     surfaceCount: row.surface_count,
     memberResponseStatus: row.member_response_status ?? null,
@@ -134,7 +137,7 @@ function rowToLensPass(row: LensPassRow): LensPass {
 const ATOM_COLUMNS = `
   id, member_id, source_type, source_id, title, body,
   primary_register, registers, elemental_lenses, thread_ids,
-  status, return_preference, last_surfaced_at, surface_count,
+  status, return_preference, return_authority, last_surfaced_at, surface_count,
   member_response_status, member_response_at,
   kept_at, last_touched_at, created_at, updated_at, crossing_allowed
 `;
@@ -460,13 +463,13 @@ export async function keepSource(
     `INSERT INTO member_memory_atoms (
        member_id, source_type, source_id, title, body,
        primary_register, registers, elemental_lenses, thread_ids,
-       status,
+       status, return_preference, return_authority,
        kept_at, last_touched_at,
        posture_at_creation, generated_by
      ) VALUES (
        $1, $2, $3, $4, $5,
        $6, $7, $8, $9,
-       'active',
+       'active', 'member_pulled', 'default_private',
        NOW(), NOW(),
        'normal', 'member-gesture'
      )
@@ -639,7 +642,9 @@ export async function applyAtomGesture(
 
     case 'set_return_preference':
       sql = `UPDATE member_memory_atoms
-                SET return_preference = $3, last_touched_at = NOW()
+                SET return_preference = $3,
+                    return_authority = 'member_explicit',
+                    last_touched_at = NOW()
               WHERE member_id = $1 AND id = $2
               RETURNING ${ATOM_COLUMNS}`;
       params = [memberId, atomId, gesture.preference];
