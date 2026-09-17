@@ -320,7 +320,8 @@ console.log('\n==================== exclusions the ruling required =============
     all.includes('jarvis-runtime-pipeline'));
   report('the mechanism is resolved from the BOUND root, not a nearby copy',
     code('builder-mechanism.js').includes('mechanismDir'));
-  report('no model work added', !all.includes('anthropic') && !all.includes('claude-opus'));
+  report('no Anthropic/Claude model dependency reintroduced',
+    !all.includes('anthropic') && !all.includes('claude-opus'));
   const preload = code('preload.js');
   const channels = [...preload.matchAll(/ipcRenderer\.invoke\('([^']+)'/g)].map(m => m[1]).sort();
   // Was four. The three repo-* channels are the persisted-repository binding
