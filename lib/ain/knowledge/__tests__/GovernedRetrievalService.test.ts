@@ -143,6 +143,16 @@ test('consumes J6 authority, attests J7 corpus, then uses the fixed SELECTIVE co
   expect(options).not.toHaveProperty('domains');
   expect(options).not.toHaveProperty('categories');
   expect(mockedEmbedding).toHaveBeenCalledTimes(6); // query + 5 scope descriptors
+
+  // Grant-effect sufficiency order is load-bearing: exact J7 corpus/vector
+  // attestation must pass before the first member-query embedding can create
+  // either a positive or negative current-turn selection effect.
+  expect(mockedModelAttestation.mock.invocationCallOrder[0])
+    .toBeLessThan(mockedAttestation.mock.invocationCallOrder[0]);
+  expect(mockedAttestation.mock.invocationCallOrder[0])
+    .toBeLessThan(mockedEmbedding.mock.invocationCallOrder[0]);
+  expect(mockedEmbedding.mock.invocationCallOrder[0])
+    .toBeLessThan(mockedRetrieve.mock.invocationCallOrder[0]);
 });
 
 test.each([
@@ -201,10 +211,12 @@ test.each([
   ['confusable query'],
   ['ambiguous query'],
   ['weak unrelated query'],
-])('inapplicable scope %s narrows authority before corpus attestation or chunk selection', async (queryText) => {
+])('inapplicable scope %s refuses only after corpus attestation and before chunk selection', async (queryText) => {
   const hits = await retrieveGovernedKnowledge(queryText);
   expect(hits).toEqual([]);
-  expect(mockedAttestation).not.toHaveBeenCalled();
+  expect(mockedAttestation).toHaveBeenCalledTimes(1);
+  expect(mockedAttestation.mock.invocationCallOrder[0])
+    .toBeLessThan(mockedEmbedding.mock.invocationCallOrder[0]);
   expect(mockedRetrieve).not.toHaveBeenCalled();
 });
 
@@ -215,6 +227,7 @@ test('corpus attestation failure refuses before SELECTIVE chunk ranking', async 
   const hits = await retrieveGovernedKnowledge('positive query');
 
   expect(hits).toEqual([]);
+  expect(mockedEmbedding).not.toHaveBeenCalled();
   expect(mockedRetrieve).not.toHaveBeenCalled();
   expect(warn).toHaveBeenCalledWith(
     '[AIN Governed] authority/applicability/attestation failed closed:',
@@ -244,7 +257,9 @@ test('applicability embedding failure fails closed and never queries corpus rows
   const hits = await retrieveGovernedKnowledge('positive query');
 
   expect(hits).toEqual([]);
-  expect(mockedAttestation).not.toHaveBeenCalled();
+  expect(mockedAttestation).toHaveBeenCalledTimes(1);
+  expect(mockedAttestation.mock.invocationCallOrder[0])
+    .toBeLessThan(mockedEmbedding.mock.invocationCallOrder[0]);
   expect(mockedRetrieve).not.toHaveBeenCalled();
   expect(warn).toHaveBeenCalledWith(
     '[AIN Governed] authority/applicability/attestation failed closed:',
