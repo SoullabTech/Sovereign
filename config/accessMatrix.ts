@@ -568,6 +568,14 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/commons/contributions/review-queue', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
   { regex: /^\/api\/commons\/contributions\/[^/]+\/review$/, minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review action' },
 
+  // W1 / SPM-F5 — retired legacy sovereignty surfaces are declared explicitly.
+  // The exact destructive rule is checked before prefixes; the narrower summary
+  // prefix is ordered before /api/sovereign. Neither route now acquires authority
+  // merely because "sovereignty" begins with "sovereign".
+  // The handlers themselves are 410 retirement tombstones and perform no data access.
+  { exact: '/api/sovereignty/delete-my-memory', minTier: 'free', notes: 'RETIRED — legacy sovereignty deletion tombstone; explicit classification prevents lexical /api/sovereign inheritance (SPM-F5 W1)' },
+  { prefix: '/api/sovereignty/my-data-summary/', minTier: 'free', notes: 'RETIRED — legacy sovereignty summary tombstone; explicit classification prevents lexical /api/sovereign inheritance (SPM-F5 W1)' },
+
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
 

@@ -1,8 +1,8 @@
 /**
- * 🗑️ DELETE MY MEMORY - User Data Sovereignty Service
+ * Legacy User Data Sovereignty Service.
  *
- * Complete user data erasure functionality ensuring absolute user control
- * over their consciousness data and wisdom memory
+ * W1 / SPM-F5 retires the destructive deletion and data-summary corridors.
+ * The unrelated pause-learning handler remains for this bounded wave.
  */
 
 const express = require('express');
@@ -25,260 +25,37 @@ const pool = new Pool({
 });
 
 /**
- * User Data Sovereignty Manager
- * Provides complete control over consciousness data retention and deletion
+ * Legacy sovereignty handlers.
+ * Destructive deletion and legacy summary methods are retirement tombstones.
  */
 class UserDataSovereignty {
 
-  /**
-   * POST /api/sovereignty/delete-my-memory
-   * Complete user data erasure across all consciousness computing systems
-   */
+  /** Retired destructive endpoint: always returns 410 before database access. */
   static async deleteUserMemory(req, res) {
-    const { userId, confirmationPhrase, deleteReason } = req.body;
-
-    // Require explicit confirmation
-    if (confirmationPhrase !== 'DELETE ALL MY CONSCIOUSNESS DATA') {
-      return res.status(400).json({
-        error: 'Invalid confirmation phrase. Must type exactly: "DELETE ALL MY CONSCIOUSNESS DATA"',
-        required_phrase: 'DELETE ALL MY CONSCIOUSNESS DATA',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    if (!userId) {
-      return res.status(400).json({
-        error: 'User ID is required for memory deletion',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    try {
-      console.log(`🗑️ INITIATING COMPLETE MEMORY DELETION for user: ${userId}`);
-      console.log(`📝 Deletion reason: ${deleteReason || 'Not specified'}`);
-
-      // Begin transaction for atomic deletion
-      const client = await pool.connect();
-
-      try {
-        await client.query('BEGIN');
-
-        // 1. Delete from elemental_evolution (consciousness patterns)
-        const elementalResult = await client.query(
-          'DELETE FROM elemental_evolution WHERE user_id = $1 RETURNING id',
-          [userId]
-        );
-
-        // 2. Delete from wisdom_moments (Navigator effectiveness data)
-        const wisdomResult = await client.query(
-          'DELETE FROM wisdom_moments WHERE user_id = $1 RETURNING id',
-          [userId]
-        );
-
-        // 3. Delete from ain_consciousness_memory (complete wisdom snapshots)
-        const memoryResult = await client.query(
-          'DELETE FROM ain_consciousness_memory WHERE user_id = $1 RETURNING id',
-          [userId]
-        );
-
-        // 4. Delete from elemental_personalities (cached personality profiles)
-        const personalityResult = await client.query(
-          'DELETE FROM elemental_personalities WHERE user_id = $1 RETURNING user_id',
-          [userId]
-        );
-
-        // 5. Delete from maia_adaptations (MAIA adaptation instructions)
-        const adaptationResult = await client.query(
-          'DELETE FROM maia_adaptations WHERE user_id = $1 RETURNING user_id',
-          [userId]
-        );
-
-        // 6. Log the deletion for transparency (anonymized)
-        const deletionLogResult = await client.query(
-          `INSERT INTO user_deletion_log
-           (deleted_at, deletion_reason, elemental_records_deleted, wisdom_records_deleted,
-            memory_snapshots_deleted, personality_deleted, adaptations_deleted)
-           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-          [
-            new Date().toISOString(),
-            deleteReason || 'User-requested complete data deletion',
-            elementalResult.rowCount,
-            wisdomResult.rowCount,
-            memoryResult.rowCount,
-            personalityResult.rowCount > 0,
-            adaptationResult.rowCount > 0
-          ]
-        );
-
-        await client.query('COMMIT');
-
-        const deletionSummary = {
-          success: true,
-          deletion_complete: true,
-          user_id: userId,
-          records_deleted: {
-            elemental_evolution_records: elementalResult.rowCount,
-            wisdom_moments_records: wisdomResult.rowCount,
-            consciousness_memory_snapshots: memoryResult.rowCount,
-            personality_profile_deleted: personalityResult.rowCount > 0,
-            maia_adaptations_deleted: adaptationResult.rowCount > 0
-          },
-          deletion_log_id: deletionLogResult.rows[0]?.id,
-          message: 'All consciousness data has been completely and permanently deleted',
-          timestamp: new Date().toISOString()
-        };
-
-        console.log(`✅ COMPLETE MEMORY DELETION SUCCESSFUL for user: ${userId}`);
-        console.log(`📊 Records deleted:`, deletionSummary.records_deleted);
-
-        res.json(deletionSummary);
-
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
-      }
-
-    } catch (error) {
-      console.error(`❌ Memory deletion failed for user ${userId}:`, error);
-
-      res.status(500).json({
-        success: false,
-        error: 'Memory deletion failed - your data remains protected',
-        details: error.message,
-        support_message: 'Contact support if deletion continues to fail',
-        timestamp: new Date().toISOString()
-      });
-    }
+    // W1 / SPM-F5: retired before any caller-selected subject, confirmation
+    // phrase, database connection, queue claim, or destructive statement exists.
+    return res.status(410).json({
+      success: false,
+      error: 'legacy_sovereignty_retired',
+      message: 'This legacy deletion service is retired and performs no deletion.',
+      accountChanged: false,
+      nextStep: 'account_settings',
+      timestamp: new Date().toISOString()
+    });
   }
 
-  /**
-   * GET /api/sovereignty/my-data-summary
-   * Show user what data exists about them
-   */
+  /** Retired legacy summary endpoint: always returns 410 before database access. */
   static async getDataSummary(req, res) {
-    const { userId } = req.params;
-
-    if (!userId) {
-      return res.status(400).json({
-        error: 'User ID is required',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    try {
-      console.log(`📊 Generating data summary for user: ${userId}`);
-
-      // Count records across all tables
-      const elementalCount = await pool.query(
-        'SELECT COUNT(*) as count FROM elemental_evolution WHERE user_id = $1',
-        [userId]
-      );
-
-      const wisdomCount = await pool.query(
-        'SELECT COUNT(*) as count FROM wisdom_moments WHERE user_id = $1',
-        [userId]
-      );
-
-      const memoryCount = await pool.query(
-        'SELECT COUNT(*) as count FROM ain_consciousness_memory WHERE user_id = $1',
-        [userId]
-      );
-
-      const personalityExists = await pool.query(
-        'SELECT user_id FROM elemental_personalities WHERE user_id = $1',
-        [userId]
-      );
-
-      const adaptationExists = await pool.query(
-        'SELECT user_id FROM maia_adaptations WHERE user_id = $1',
-        [userId]
-      );
-
-      // Get date range of data
-      const dateRangeResult = await pool.query(
-        `SELECT
-          MIN(recorded_at) as earliest_data,
-          MAX(recorded_at) as latest_data
-         FROM (
-          SELECT recorded_at FROM elemental_evolution WHERE user_id = $1
-          UNION ALL
-          SELECT recorded_at FROM wisdom_moments WHERE user_id = $1
-          UNION ALL
-          SELECT recorded_at FROM ain_consciousness_memory WHERE user_id = $1
-        ) as all_dates`,
-        [userId]
-      );
-
-      const dataSummary = {
-        user_id: userId,
-        data_exists: true,
-        data_summary: {
-          consciousness_patterns: {
-            elemental_evolution_sessions: parseInt(elementalCount.rows[0].count),
-            description: 'Records of your elemental balance and consciousness evolution over time'
-          },
-          wisdom_learning: {
-            wisdom_moments_recorded: parseInt(wisdomCount.rows[0].count),
-            description: 'Records of how effective different guidance approaches were for you'
-          },
-          complete_snapshots: {
-            memory_snapshots_stored: parseInt(memoryCount.rows[0].count),
-            description: 'Complete consciousness context snapshots for MAIA personalization'
-          },
-          personality_profile: {
-            profile_exists: personalityExists.rowCount > 0,
-            description: 'Pre-computed elemental personality profile for faster MAIA adaptation'
-          },
-          maia_adaptations: {
-            adaptations_exist: adaptationExists.rowCount > 0,
-            description: 'Cached MAIA voice and approach adaptations based on your patterns'
-          }
-        },
-        data_timeline: {
-          earliest_data: dateRangeResult.rows[0]?.earliest_data,
-          latest_data: dateRangeResult.rows[0]?.latest_data,
-          total_days_of_data: dateRangeResult.rows[0]?.earliest_data ?
-            Math.ceil((new Date(dateRangeResult.rows[0].latest_data) - new Date(dateRangeResult.rows[0].earliest_data)) / (1000 * 60 * 60 * 24)) + 1 : 0
-        },
-        privacy_notes: [
-          'All data is stored with strong encryption and privacy protection',
-          'Data is only used for improving your personal MAIA experience',
-          'No data is shared with third parties or used for advertising',
-          'Collective analytics are completely anonymized before aggregation',
-          'You can delete all data instantly using the "Delete My Memory" feature'
-        ],
-        deletion_info: {
-          deletion_available: true,
-          deletion_permanent: true,
-          deletion_immediate: true,
-          required_confirmation: 'DELETE ALL MY CONSCIOUSNESS DATA'
-        },
-        timestamp: new Date().toISOString()
-      };
-
-      // Check if user has any data at all
-      const totalRecords = parseInt(elementalCount.rows[0].count) +
-                          parseInt(wisdomCount.rows[0].count) +
-                          parseInt(memoryCount.rows[0].count);
-
-      if (totalRecords === 0 && !personalityExists.rowCount && !adaptationExists.rowCount) {
-        dataSummary.data_exists = false;
-        dataSummary.message = 'No consciousness data found for this user';
-      }
-
-      res.json(dataSummary);
-
-    } catch (error) {
-      console.error(`❌ Data summary failed for user ${userId}:`, error);
-
-      res.status(500).json({
-        error: 'Failed to generate data summary',
-        details: error.message,
-        timestamp: new Date().toISOString()
-      });
-    }
+    // W1 / SPM-F5: the legacy summary previously implied real account-data
+    // inspection and advertised deletion guarantees. It now refuses before
+    // touching PostgreSQL and does not echo a caller-selected user id.
+    return res.status(410).json({
+      error: 'legacy_sovereignty_retired',
+      message: 'This legacy data-summary service is retired.',
+      accountChanged: false,
+      nextStep: 'account_settings',
+      timestamp: new Date().toISOString()
+    });
   }
 
   /**
@@ -371,8 +148,8 @@ if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🗑️ User Data Sovereignty API running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
-    console.log(`Delete Memory: POST http://localhost:${PORT}/api/sovereignty/delete-my-memory`);
-    console.log(`Data Summary: GET http://localhost:${PORT}/api/sovereignty/my-data-summary/:userId`);
+    console.log('Retired deletion route: 410');
+    console.log('Retired summary route: 410');
   });
 }
 
