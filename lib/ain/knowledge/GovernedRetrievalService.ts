@@ -177,8 +177,16 @@ export async function retrieveGovernedKnowledge(
       await assertGovernedEmbeddingModelAttestation(contract);
     }
 
+    // The founder SELECTIVE grant is conditioned on exact corpus/vector
+    // attestation. That attestation must therefore pass before any member-query
+    // representation can cause either inclusion OR exclusion from this turn.
+    for (const { source, contract } of granted) {
+      await assertGovernedCorpusAttestation(source, contract);
+    }
+
     // One member-query vector is reused for SELECTIVE source applicability and
-    // chunk relevance. Similarity never establishes upstream corpus authority.
+    // chunk relevance only after authority + grant + model + corpus attestations
+    // have all passed. Similarity never establishes upstream corpus authority.
     const queryEmbedding = await embedGovernedText(queryText);
     const applicable: typeof granted = [];
 
@@ -190,10 +198,6 @@ export async function retrieveGovernedKnowledge(
 
     const hits: GovernedRetrievalHit[] = [];
     for (const { source, contract } of applicable) {
-      // ATTESTATION must turn red if the stored text/vector representations are
-      // substituted, missing, dimensionally invalid, or no longer the J7 corpus.
-      await assertGovernedCorpusAttestation(source, contract);
-
       const chunks = await retrieveKnowledge(queryText, {
         limit: contract.chunkSelection.maxChunks,
         minSimilarity: contract.chunkSelection.minChunkSimilarity,
