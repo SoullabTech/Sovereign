@@ -1,0 +1,49 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:11434/v1"
+      },
+      "models": {
+        "qwen2.5:7b": { "name": "Qwen 2.5 7B (local-fast)" },
+        "qwen3-coder:30b": { "name": "Qwen3 Coder 30B (local)" },
+        "maia-coder:latest": { "name": "MAIA Coder (local)" }
+      }
+    },
+    "nvidia": {
+      "env": ["NVIDIA_API_KEY"],
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "NVIDIA NIM",
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1",
+        "apiKey": "{env:NVIDIA_API_KEY}"
+      },
+      "models": {
+        "nemotron-3-ultra-550b-a55b": {
+          "name": "nvidia/nemotron-3-ultra-550b-a55b",
+          "limit": { "context": 1000000, "output": 32768 }
+        }
+      }
+    },
+    "tinker": {
+      "env": ["TINKER_API_KEY"],
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Thinking Machines Tinker",
+      "options": {
+        "baseURL": "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1",
+        "apiKey": "{env:TINKER_API_KEY}"
+      },
+      "models": {
+        "thinkingmachines/Inkling": {
+          "name": "thinkingmachines/Inkling",
+          "attachment": false,
+          "reasoning": true,
+          "tool_call": true
+        }
+      }
+    }
+  }
+}
