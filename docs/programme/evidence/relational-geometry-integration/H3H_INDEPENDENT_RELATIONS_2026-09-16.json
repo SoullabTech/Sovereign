@@ -1,0 +1,897 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H3H_INDEPENDENT_RELATIONS_V1",
+  "authority": "offline research only",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "local Claude CLI restricted/no-tools",
+    "effort": "low"
+  },
+  "hypothesis": "Dynamic interaction and configuration are independently representable and require dimension-specific evidence.",
+  "summary": {
+    "runs": 12,
+    "allCorrect": 7,
+    "axisTotals": {
+      "dynamicPredicate": {
+        "correct": 9,
+        "total": 12
+      },
+      "dynamicDirection": {
+        "correct": 9,
+        "total": 12
+      },
+      "dynamicEndpoints": {
+        "correct": 9,
+        "total": 12
+      },
+      "dynamicBasis": {
+        "correct": 9,
+        "total": 12
+      },
+      "configPredicate": {
+        "correct": 8,
+        "total": 12
+      },
+      "configDirection": {
+        "correct": 8,
+        "total": 12
+      },
+      "configEndpoints": {
+        "correct": 8,
+        "total": 12
+      },
+      "configBasis": {
+        "correct": 8,
+        "total": 12
+      }
+    },
+    "bothExpected": {
+      "runs": 4,
+      "allCorrect": 2
+    },
+    "dynamicOnly": {
+      "runs": 2,
+      "allCorrect": 1
+    },
+    "configOnly": {
+      "runs": 4,
+      "allCorrect": 2
+    },
+    "neither": {
+      "runs": 2,
+      "allCorrect": 2
+    }
+  },
+  "byFixture": {
+    "H1_DYNAMIC_PLUS_ALIGNMENT": {
+      "runs": 2,
+      "allCorrect": 2,
+      "predictions": [
+        {
+          "dynamic": {
+            "predicate": "EVOKES",
+            "directionality": "DIRECTED",
+            "sourceId": "AIR_LEAVE",
+            "targetId": "EARTH_SETTLE",
+            "evidenceBasis": "EXPLICIT_ELICITATION"
+          },
+          "configuration": {
+            "predicate": "ALIGNMENT",
+            "directionality": "SYMMETRIC",
+            "endpointIds": [
+              "AIR_LEAVE",
+              "EARTH_SETTLE"
+            ],
+            "evidenceBasis": "EXPLICIT_CONSONANCE"
+          }
+        },
+        {
+          "dynamic": {
+            "predicate": "EVOKES",
+            "directionality": "DIRECTED",
+            "sourceId": "AIR_LEAVE",
+            "targetId": "EARTH_SETTLE",
+            "evidenceBasis": "EXPLICIT_ELICITATION"
+          },
+          "configuration": {
+            "predicate": "ALIGNMENT",
+            "directionality": "SYMMETRIC",
+            "endpointIds": [
+              "AIR_LEAVE",
+              "EARTH_SETTLE"
+            ],
+            "evidenceBasis": "EXPLICIT_CONSONANCE"
+          }
+        }
+      ]
+    },
+    "H2_TENSION_ONLY": {
+      "runs": 2,
+      "allCorrect": 1,
+      "predictions": [
+        {
+          "dynamic": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "sourceId": null,
+            "targetId": null,
+            "evidenceBasis": "NONE"
+          },
+          "configuration": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "endpointIds": [],
+            "evidenceBasis": "NONE"
+          }
+        },
+        {
+          "dynamic": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "sourceId": null,
+            "targetId": null,
+            "evidenceBasis": "NONE"
+          },
+          "configuration": {
+            "predicate": "TENSION",
+            "directionality": "SYMMETRIC",
+            "endpointIds": [
+              "WATER_LOVE",
+              "FIRE_LEAVE"
+            ],
+            "evidenceBasis": "EXPLICIT_CONTRAST"
+          }
+        }
+      ]
+    },
+    "H3_INHIBITS_PLUS_TENSION": {
+      "runs": 2,
+      "allCorrect": 0,
+      "predictions": [
+        {
+          "dynamic": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "sourceId": null,
+            "targetId": null,
+            "evidenceBasis": "NONE"
+          },
+          "configuration": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "endpointIds": [],
+            "evidenceBasis": "NONE"
+          }
+        },
+        {
+          "dynamic": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "sourceId": null,
+            "targetId": null,
+            "evidenceBasis": "NONE"
+          },
+          "configuration": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "endpointIds": [],
+            "evidenceBasis": "NONE"
+          }
+        }
+      ]
+    },
+    "H4_DYNAMIC_ONLY": {
+      "runs": 2,
+      "allCorrect": 1,
+      "predictions": [
+        {
+          "dynamic": {
+            "predicate": "EVOKES",
+            "directionality": "DIRECTED",
+            "sourceId": "AIR_RISK",
+            "targetId": "EARTH_TIGHTEN",
+            "evidenceBasis": "EXPLICIT_ELICITATION"
+          },
+          "configuration": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "endpointIds": [],
+            "evidenceBasis": "NONE"
+          }
+        },
+        {
+          "dynamic": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "sourceId": null,
+            "targetId": null,
+            "evidenceBasis": "NONE"
+          },
+          "configuration": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "endpointIds": [],
+            "evidenceBasis": "NONE"
+          }
+        }
+      ]
+    },
+    "H5_ALIGNMENT_ONLY": {
+      "runs": 2,
+      "allCorrect": 1,
+      "predictions": [
+        {
+          "dynamic": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "sourceId": null,
+            "targetId": null,
+            "evidenceBasis": "NONE"
+          },
+          "configuration": {
+            "predicate": "ALIGNMENT",
+            "directionality": "SYMMETRIC",
+            "endpointIds": [
+              "AIR_WAIT",
+              "FIRE_WAIT"
+            ],
+            "evidenceBasis": "EXPLICIT_CONSONANCE"
+          }
+        },
+        {
+          "dynamic": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "sourceId": null,
+            "targetId": null,
+            "evidenceBasis": "NONE"
+          },
+          "configuration": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "endpointIds": [],
+            "evidenceBasis": "NONE"
+          }
+        }
+      ]
+    },
+    "H6_NEITHER": {
+      "runs": 2,
+      "allCorrect": 2,
+      "predictions": [
+        {
+          "dynamic": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "sourceId": null,
+            "targetId": null,
+            "evidenceBasis": "NONE"
+          },
+          "configuration": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "endpointIds": [],
+            "evidenceBasis": "NONE"
+          }
+        },
+        {
+          "dynamic": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "sourceId": null,
+            "targetId": null,
+            "evidenceBasis": "NONE"
+          },
+          "configuration": {
+            "predicate": "NONE",
+            "directionality": "NONE",
+            "endpointIds": [],
+            "evidenceBasis": "NONE"
+          }
+        }
+      ]
+    }
+  },
+  "rows": [
+    {
+      "fixture": "H1_DYNAMIC_PLUS_ALIGNMENT",
+      "run": 1,
+      "rawHash": "f79e794664c25b754b76cf9919b287f6fe26a1dc8a94858563b83bf1117d8b05",
+      "prediction": {
+        "dynamic": {
+          "predicate": "EVOKES",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "evidenceBasis": "EXPLICIT_ELICITATION"
+        },
+        "configuration": {
+          "predicate": "ALIGNMENT",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_LEAVE",
+            "EARTH_SETTLE"
+          ],
+          "evidenceBasis": "EXPLICIT_CONSONANCE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "EVOKES",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "evidenceBasis": "EXPLICIT_ELICITATION"
+        },
+        "configuration": {
+          "predicate": "ALIGNMENT",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_LEAVE",
+            "EARTH_SETTLE"
+          ],
+          "evidenceBasis": "EXPLICIT_CONSONANCE"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": true,
+        "dynamicDirection": true,
+        "dynamicEndpoints": true,
+        "dynamicBasis": true,
+        "configPredicate": true,
+        "configDirection": true,
+        "configEndpoints": true,
+        "configBasis": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "H1_DYNAMIC_PLUS_ALIGNMENT",
+      "run": 2,
+      "rawHash": "a2a88e825eb49e9df57b40d0abbe170f7cafb3fede548f846e1a531011b2107a",
+      "prediction": {
+        "dynamic": {
+          "predicate": "EVOKES",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "evidenceBasis": "EXPLICIT_ELICITATION"
+        },
+        "configuration": {
+          "predicate": "ALIGNMENT",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_LEAVE",
+            "EARTH_SETTLE"
+          ],
+          "evidenceBasis": "EXPLICIT_CONSONANCE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "EVOKES",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "evidenceBasis": "EXPLICIT_ELICITATION"
+        },
+        "configuration": {
+          "predicate": "ALIGNMENT",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_LEAVE",
+            "EARTH_SETTLE"
+          ],
+          "evidenceBasis": "EXPLICIT_CONSONANCE"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": true,
+        "dynamicDirection": true,
+        "dynamicEndpoints": true,
+        "dynamicBasis": true,
+        "configPredicate": true,
+        "configDirection": true,
+        "configEndpoints": true,
+        "configBasis": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "H2_TENSION_ONLY",
+      "run": 1,
+      "rawHash": "b3a505b6b3fdd74e35907c8dfc3b010fa2864360c433dad2310a3cebd2f0c165",
+      "prediction": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "TENSION",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "WATER_LOVE",
+            "FIRE_LEAVE"
+          ],
+          "evidenceBasis": "EXPLICIT_CONTRAST"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": true,
+        "dynamicDirection": true,
+        "dynamicEndpoints": true,
+        "dynamicBasis": true,
+        "configPredicate": false,
+        "configDirection": false,
+        "configEndpoints": false,
+        "configBasis": false
+      },
+      "allCorrect": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 329 (line 16 column 1)"
+    },
+    {
+      "fixture": "H2_TENSION_ONLY",
+      "run": 2,
+      "rawHash": "1fa4b297892190d1843c423feb9760f2104543a5cf54528fa98815dc2d7bef4b",
+      "prediction": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "TENSION",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "WATER_LOVE",
+            "FIRE_LEAVE"
+          ],
+          "evidenceBasis": "EXPLICIT_CONTRAST"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "TENSION",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "WATER_LOVE",
+            "FIRE_LEAVE"
+          ],
+          "evidenceBasis": "EXPLICIT_CONTRAST"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": true,
+        "dynamicDirection": true,
+        "dynamicEndpoints": true,
+        "dynamicBasis": true,
+        "configPredicate": true,
+        "configDirection": true,
+        "configEndpoints": true,
+        "configBasis": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "H3_INHIBITS_PLUS_TENSION",
+      "run": 1,
+      "rawHash": "35f9f148a887c7cf025db9c8deba5b1394d158ea21634c9b5457f1c6a41292ef",
+      "prediction": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "INHIBITS",
+          "directionality": "DIRECTED",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "evidenceBasis": "EXPLICIT_INHIBITION"
+        },
+        "configuration": {
+          "predicate": "TENSION",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "EARTH_EXHAUST",
+            "FIRE_LAUNCH"
+          ],
+          "evidenceBasis": "EXPLICIT_CONTRAST"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": false,
+        "dynamicDirection": false,
+        "dynamicEndpoints": false,
+        "dynamicBasis": false,
+        "configPredicate": false,
+        "configDirection": false,
+        "configEndpoints": false,
+        "configBasis": false
+      },
+      "allCorrect": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 376 (line 16 column 1)"
+    },
+    {
+      "fixture": "H3_INHIBITS_PLUS_TENSION",
+      "run": 2,
+      "rawHash": "058f9ed1547bb10ab88e7128c9bf1b07e7772446c4ae35d66d017e78d62ec77c",
+      "prediction": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "INHIBITS",
+          "directionality": "DIRECTED",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "evidenceBasis": "EXPLICIT_INHIBITION"
+        },
+        "configuration": {
+          "predicate": "TENSION",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "EARTH_EXHAUST",
+            "FIRE_LAUNCH"
+          ],
+          "evidenceBasis": "EXPLICIT_CONTRAST"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": false,
+        "dynamicDirection": false,
+        "dynamicEndpoints": false,
+        "dynamicBasis": false,
+        "configPredicate": false,
+        "configDirection": false,
+        "configEndpoints": false,
+        "configBasis": false
+      },
+      "allCorrect": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 376 (line 16 column 1)"
+    },
+    {
+      "fixture": "H4_DYNAMIC_ONLY",
+      "run": 1,
+      "rawHash": "66e2fdfad48126cd626bc840fd0c7cc278e32043aff112d12ff4b822a81fa8e3",
+      "prediction": {
+        "dynamic": {
+          "predicate": "EVOKES",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN",
+          "evidenceBasis": "EXPLICIT_ELICITATION"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "EVOKES",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN",
+          "evidenceBasis": "EXPLICIT_ELICITATION"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": true,
+        "dynamicDirection": true,
+        "dynamicEndpoints": true,
+        "dynamicBasis": true,
+        "configPredicate": true,
+        "configDirection": true,
+        "configEndpoints": true,
+        "configBasis": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "H4_DYNAMIC_ONLY",
+      "run": 2,
+      "rawHash": "96dde71b85fb18950e8ecc0513350cf0aab093b853e6b589a46b4309d2f3fafe",
+      "prediction": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "EVOKES",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN",
+          "evidenceBasis": "EXPLICIT_ELICITATION"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": false,
+        "dynamicDirection": false,
+        "dynamicEndpoints": false,
+        "dynamicBasis": false,
+        "configPredicate": true,
+        "configDirection": true,
+        "configEndpoints": true,
+        "configBasis": true
+      },
+      "allCorrect": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 321 (line 16 column 1)"
+    },
+    {
+      "fixture": "H5_ALIGNMENT_ONLY",
+      "run": 1,
+      "rawHash": "ed45d8c1da9f6343aea78d623f86868d2c4827333831d793ea0204e64d97ec67",
+      "prediction": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "ALIGNMENT",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_WAIT",
+            "FIRE_WAIT"
+          ],
+          "evidenceBasis": "EXPLICIT_CONSONANCE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "ALIGNMENT",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_WAIT",
+            "FIRE_WAIT"
+          ],
+          "evidenceBasis": "EXPLICIT_CONSONANCE"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": true,
+        "dynamicDirection": true,
+        "dynamicEndpoints": true,
+        "dynamicBasis": true,
+        "configPredicate": true,
+        "configDirection": true,
+        "configEndpoints": true,
+        "configBasis": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "H5_ALIGNMENT_ONLY",
+      "run": 2,
+      "rawHash": "47326d81e8d43b0a3d7d000c42b9603a6e77efdd6a75aa97404521add68962c1",
+      "prediction": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "ALIGNMENT",
+          "directionality": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_WAIT",
+            "FIRE_WAIT"
+          ],
+          "evidenceBasis": "EXPLICIT_CONSONANCE"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": true,
+        "dynamicDirection": true,
+        "dynamicEndpoints": true,
+        "dynamicBasis": true,
+        "configPredicate": false,
+        "configDirection": false,
+        "configEndpoints": false,
+        "configBasis": false
+      },
+      "allCorrect": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 330 (line 16 column 1)"
+    },
+    {
+      "fixture": "H6_NEITHER",
+      "run": 1,
+      "rawHash": "f16713804bf1d2c74c492f23b0aac3e1136bb9b2cf937f83a3f26a11da0a5a87",
+      "prediction": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": true,
+        "dynamicDirection": true,
+        "dynamicEndpoints": true,
+        "dynamicBasis": true,
+        "configPredicate": true,
+        "configDirection": true,
+        "configEndpoints": true,
+        "configBasis": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "H6_NEITHER",
+      "run": 2,
+      "rawHash": "f16713804bf1d2c74c492f23b0aac3e1136bb9b2cf937f83a3f26a11da0a5a87",
+      "prediction": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "expected": {
+        "dynamic": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "evidenceBasis": "NONE"
+        },
+        "configuration": {
+          "predicate": "NONE",
+          "directionality": "NONE",
+          "endpointIds": [],
+          "evidenceBasis": "NONE"
+        }
+      },
+      "axes": {
+        "dynamicPredicate": true,
+        "dynamicDirection": true,
+        "dynamicEndpoints": true,
+        "dynamicBasis": true,
+        "configPredicate": true,
+        "configDirection": true,
+        "configEndpoints": true,
+        "configBasis": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    }
+  ]
+}
