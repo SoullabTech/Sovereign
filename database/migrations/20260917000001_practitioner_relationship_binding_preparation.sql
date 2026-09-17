@@ -272,19 +272,26 @@ RETURNS trigger AS $$
 DECLARE
   reciprocal_id uuid;
 BEGIN
-  IF TG_TABLE_NAME = 'sessions' AND NEW.scribe_session_id IS NOT NULL THEN
-    SELECT booking_id INTO reciprocal_id
-      FROM scribe_sessions WHERE id = NEW.scribe_session_id;
-    IF reciprocal_id IS NOT NULL AND reciprocal_id IS DISTINCT FROM NEW.id THEN
-      RAISE EXCEPTION 'A3-R2: booking % and Session Room % contain conflicting reciprocal links',
-        NEW.id, NEW.scribe_session_id;
+  -- Dispatch on the trigger table before touching table-specific NEW fields.
+  -- PostgreSQL resolves a trigger record against the active row type, so a
+  -- combined boolean condition cannot safely mention fields from both tables.
+  IF TG_TABLE_NAME = 'sessions' THEN
+    IF NEW.scribe_session_id IS NOT NULL THEN
+      SELECT booking_id INTO reciprocal_id
+        FROM scribe_sessions WHERE id = NEW.scribe_session_id;
+      IF reciprocal_id IS NOT NULL AND reciprocal_id IS DISTINCT FROM NEW.id THEN
+        RAISE EXCEPTION 'A3-R2: booking % and Session Room % contain conflicting reciprocal links',
+          NEW.id, NEW.scribe_session_id;
+      END IF;
     END IF;
-  ELSIF TG_TABLE_NAME = 'scribe_sessions' AND NEW.booking_id IS NOT NULL THEN
-    SELECT scribe_session_id INTO reciprocal_id
-      FROM sessions WHERE id = NEW.booking_id;
-    IF reciprocal_id IS NOT NULL AND reciprocal_id IS DISTINCT FROM NEW.id THEN
-      RAISE EXCEPTION 'A3-R2: Session Room % and booking % contain conflicting reciprocal links',
-        NEW.id, NEW.booking_id;
+  ELSIF TG_TABLE_NAME = 'scribe_sessions' THEN
+    IF NEW.booking_id IS NOT NULL THEN
+      SELECT scribe_session_id INTO reciprocal_id
+        FROM sessions WHERE id = NEW.booking_id;
+      IF reciprocal_id IS NOT NULL AND reciprocal_id IS DISTINCT FROM NEW.id THEN
+        RAISE EXCEPTION 'A3-R2: Session Room % and booking % contain conflicting reciprocal links',
+          NEW.id, NEW.booking_id;
+      END IF;
     END IF;
   END IF;
   RETURN NEW;
