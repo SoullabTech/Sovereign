@@ -34,6 +34,15 @@ import {
 } from '@/lib/voice/dispatchProvenance';
 import { classifyRecognitionEnd, RAPID_END_LOOP_THRESHOLD } from '@/lib/voice/rapidEndPolicy';
 import {
+  DEFAULT_TURN_TAKING_PREFERENCES,
+  EMPTY_TURN_RHYTHM,
+  automaticEndpointingAllowed,
+  observeContinuedPause,
+  resolveTurnSilenceMs,
+  type TurnRhythmState,
+  type TurnTakingPreferences,
+} from '@/lib/voice/turnTaking';
+import {
   TURN_COMPLETE_RECOVERABLE,
   shouldNormalizeToIdle,
   restartPolicy,
@@ -186,7 +195,9 @@ export interface ContinuousConversationProps {
   isProcessing?: boolean;
   isSpeaking?: boolean; // When Maya is speaking
   autoStart?: boolean; // Start listening immediately
-  silenceThreshold?: number; // Silence detection threshold in ms (default 2000)
+  silenceThreshold?: number; // Baseline silence threshold; TURN-01 may lengthen, never shorten
+  /** Member-owned turn-taking policy (TURN-01). */
+  turnTakingPreferences?: TurnTakingPreferences;
   vadSensitivity?: number; // Voice activity detection sensitivity 0-1
   /** Called when user voice is detected while MAIA is speaking (barge-in interrupt) */
   onInterrupt?: () => void;
@@ -244,6 +255,8 @@ export interface ContinuousConversationRef {
   stopListening: (options?: { userExitMode?: boolean }) => void;
   toggleListening: () => void;
   extendRecording: () => void; // Reset silence timer to keep recording longer
+  /** Explicitly yield the floor and commit the accumulated member turn. */
+  commitTurn: () => void;
   setHandsFree: (active: boolean) => void; // Toggle hands-free mode (auto-restart after MAIA speaks)
   /** Notify CC that an iOS audio interruption occurred (phone call, Siri, BT, etc.) */
   onInterruptionStart: () => void;
@@ -294,7 +307,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isProcessing = false,
     isSpeaking = false,
     autoStart = false, // Disabled to prevent infinite restart loops
-    silenceThreshold = 12000, // 12s to capture full thoughts - extra generous for reflecting on MAIA's words
+    silenceThreshold = 3500, // TURN-01 Natural baseline; parent may raise for Care/Scribe
+    turnTakingPreferences = DEFAULT_TURN_TAKING_PREFERENCES,
     vadSensitivity = 0.3,
     onInterrupt,
     onVoiceStatus,
@@ -334,6 +348,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const nativeStateListenerRef = useRef<any>(null); // Store listeningState listener handle
   const nativeAudioLevelListenerRef = useRef<any>(null); // Store audioLevel listener handle for UV visualizer
   const nativeSilenceTimerRef = useRef<NodeJS.Timeout | null>(null); // Silence detection timer for auto-submit
+  const nativeSilenceArmedAtRef = useRef<number>(0);
+  const turnTakingPreferencesRef = useRef<TurnTakingPreferences>(turnTakingPreferences);
+  const turnRhythmRef = useRef<TurnRhythmState>({ ...EMPTY_TURN_RHYTHM });
+  // Native recognizers may cycle mid-turn. In explicit-floor mode this prefix
+  // preserves completed segments until the member taps “I’m Done”.
+  const explicitTurnPrefixRef = useRef<string>('');
   const nativeStatusRef = useRef<'started' | 'stopped'>('stopped'); // 🔑 Single source of truth for native listening state
   const smoothedAudioLevelRef = useRef<number>(0); // EMA-smoothed audio level for UV visualizer
   const lastHighAudioTimeRef = useRef<number>(0); // Track when we last had speech (for silence detection)
@@ -493,6 +513,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     generation: number;
     stream: MediaStream | null;
     controller: AbortController;
+    finishController?: AbortController;
   } | null>(null);
   const sovereignGenerationRef = useRef(0);
 
@@ -527,6 +548,37 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     micStateRef.current = newState;
     console.log(`🔄 [MicState] ${prev} → ${newState} (via ${source})`);
   }, []);
+  useEffect(() => {
+    turnTakingPreferencesRef.current = turnTakingPreferences;
+  }, [turnTakingPreferences]);
+
+  const effectiveSilenceMs = useCallback(() => resolveTurnSilenceMs(
+    turnTakingPreferencesRef.current,
+    turnRhythmRef.current,
+    silenceThreshold,
+  ), [silenceThreshold]);
+
+  const notePauseContinuation = useCallback((armedAt: number, source: string) => {
+    if (!armedAt || !turnTakingPreferencesRef.current.learnRhythm) return;
+    const pauseMs = Math.max(0, Date.now() - armedAt);
+    const before = turnRhythmRef.current;
+    const after = observeContinuedPause(before, pauseMs);
+    turnRhythmRef.current = after;
+    if (after.continuedPauseSamples !== before.continuedPauseSamples) {
+      logVoiceEvent('voice_turn_pause_continued', {
+        source,
+        pauseMs,
+        samples: after.continuedPauseSamples,
+        learnedSilenceMs: resolveTurnSilenceMs(turnTakingPreferencesRef.current, after, silenceThreshold),
+      });
+    }
+  }, [silenceThreshold]);
+
+  const automaticTurnCommitAllowed = useCallback(
+    () => automaticEndpointingAllowed(turnTakingPreferencesRef.current),
+    [],
+  );
+
   const recognitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSentRef = useRef<string>("");
   const lastSentTimeRef = useRef<number>(0); // Track when we last sent a transcript
@@ -1015,8 +1067,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         // Reset silence timer on speech
         if (silenceTimerRef.current) {
+          notePauseContinuation(timerArmedAtRef.current, 'web_result_after_pause');
           clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+          timerArmedAtRef.current = 0;
         }
+
+        const turnSilenceMs = effectiveSilenceMs();
 
         // 👁️ Timer armed. On THIS path the timer is armed by a result of
         // either kind but its callback commits accumulated FINALS alone — so
@@ -1033,14 +1090,25 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               armedByInterim: finalTranscript.length === 0 && interimTranscript.length > 0,
               interimCharCount: lastInterimCharsRef.current,
               finalCharCount: accumulatedTranscript.current.length,
-              timerDeadlineMs: silenceThreshold,
+              timerDeadlineMs: turnSilenceMs,
             });
           }
         }
 
         // Start new silence timer - use the configurable threshold
-        console.log(`⏱️ Starting silence timer (${silenceThreshold}ms)`);
+        console.log(`⏱️ Starting turn timer (${turnSilenceMs}ms · ${turnTakingPreferencesRef.current.conversationalSpace})`);
         silenceTimerRef.current = setTimeout(() => {
+          if (!automaticTurnCommitAllowed()) {
+            logVoiceEvent('voice_floor_held', {
+              source: 'web_silence_timer',
+              turnCommitId: turnCommitIdRef.current,
+              floorControlMode: turnTakingPreferencesRef.current.floorControlMode,
+            });
+            console.log('🤲 [TURN-01] Silence observed; member still owns the floor');
+            silenceTimerRef.current = null;
+            timerArmedAtRef.current = 0;
+            return;
+          }
           // 👁️ Witness FIRST — the state that PRODUCED the decision, before the
           // decision consumes or clears anything. tailAtRisk=true here is
           // ordering D in mechanical form.
@@ -1050,7 +1118,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             logVoiceEvent('voice_silence_timer_fired', {
               turnCommitId: turnCommitIdRef.current,
               timerAgeMs: timerArmedAtRef.current ? firedAt - timerArmedAtRef.current : -1,
-              timerDeadlineMs: silenceThreshold,
+              timerDeadlineMs: turnSilenceMs,
               committableCharCount: committable.length,
               willCommit: !isProcessingRef.current && committable.length > 0,
               ...readTailSnapshot({
@@ -1073,7 +1141,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           } else {
             console.log('⚠️ Silence timer fired but conditions not met to process');
           }
-        }, silenceThreshold); // Use configurable threshold from props
+        }, turnSilenceMs); // TURN-01 member space + learned patience
       }
 
       // Show user the accumulated finals + current interim for live feedback
@@ -1474,7 +1542,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     return recognition;
-  }, [silenceThreshold, onInterimTranscript, onRecordingStateChange, isSafari, getWebSession, setMicState]);
+  }, [silenceThreshold, onInterimTranscript, onRecordingStateChange, isSafari, getWebSession, setMicState, effectiveSilenceMs, notePauseContinuation, automaticTurnCommitAllowed]);
 
   // ==========================================================================
   // 🔁 WEB SPEECH LIFECYCLE HELPERS
@@ -1531,6 +1599,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
     if (!text) return false;
     accumulatedTranscript.current = '';
+    explicitTurnPrefixRef.current = '';
     try { getContinuityBuffer().clearPending(); } catch { /* best-effort */ }
     logVoiceEvent('voice_transcript_salvaged', { cause, chars: text.length });
     console.log(`💾 [salvage] Preserving ${text.length} chars lost to ${cause}`);
@@ -1969,6 +2038,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         console.log('🧹 Discarding accumulated transcript (MAIA started):',
           accumulatedTranscript.current.substring(0, 50));
         accumulatedTranscript.current = '';
+        explicitTurnPrefixRef.current = '';
       }
 
       // Clear timers to prevent delayed processing
@@ -2174,6 +2244,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           turnCommitId: turnCommitIdRef.current,
         });
         accumulatedTranscript.current = ""; // Clear duplicate
+        explicitTurnPrefixRef.current = "";
         isCallingProcessRef.current = false;
         return;
       }
@@ -2195,6 +2266,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (looksLikeMaiaVoice && normalizedTranscript.split(' ').length < 15) {
       console.log('🔇 [ECHO BLOCK] Transcript looks like MAIA\'s voice:', transcript);
       accumulatedTranscript.current = ""; // Clear echo
+      explicitTurnPrefixRef.current = "";
       isCallingProcessRef.current = false;
       return;
     }
@@ -2206,6 +2278,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     // CRITICAL: Clear accumulated transcript IMMEDIATELY to prevent double-send
     accumulatedTranscript.current = "";
+    explicitTurnPrefixRef.current = "";
     continuationRestartRef.current = false; // turn submitted — next start is a fresh turn
     // 🧵 The turn is genuinely sent: move it out of pending into the continuity
     // log, so a later loss cannot hand it back as an unsent draft and cause the
@@ -2892,6 +2965,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         if (nativeSilenceTimerRef.current) {
           clearTimeout(nativeSilenceTimerRef.current);
           nativeSilenceTimerRef.current = null;
+          nativeSilenceArmedAtRef.current = 0;
         }
 
         // Set up listener for partial results
@@ -2914,39 +2988,49 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // 🔥 FIX: Reset restart counter when user actually speaks - prevents stopping during valid conversation
             consecutiveRestartCount.current = 0;
 
-            // Send interim transcript
-            if (onInterimTranscript) {
-              onInterimTranscript(transcript);
-            }
+            // Accumulate the live native segment. Explicit-floor turns survive
+            // native recognizer restarts by prepending segments already witnessed
+            // before the internal stop.
+            const heldPrefix = explicitTurnPrefixRef.current.trim();
+            accumulatedTranscript.current = heldPrefix ? `${heldPrefix} ${transcript}`.trim() : transcript;
 
-            // Accumulate transcript
-            accumulatedTranscript.current = transcript;
+            // Send the whole member-owned turn for live feedback, not just the
+            // latest plugin segment.
+            onInterimTranscript?.(accumulatedTranscript.current);
+            try { getContinuityBuffer().recordPending(accumulatedTranscript.current); } catch { /* best-effort */ }
 
-            // 🔥 FALLBACK SILENCE DETECTION: Reset timer on each partial
-            // If no partials for 2.5s after speech, auto-submit (audio levels may not fire on iOS)
+            // TURN-01: a new partial after a pending silence timer is direct
+            // evidence that the member paused and continued. Learn only patience.
             if (nativeSilenceTimerRef.current) {
+              notePauseContinuation(nativeSilenceArmedAtRef.current, 'native_partial_after_pause');
               clearTimeout(nativeSilenceTimerRef.current);
-            }
-            nativeSilenceTimerRef.current = setTimeout(() => {
-              const finalTranscript = accumulatedTranscript.current.trim();
-              if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current) {
-                logVoiceEvent('ios_voice_final_result_received', {
-                  source: 'partial_silence_timeout_2500ms',
-                  transcriptLength: finalTranscript.length,
-                });
-                console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
-                addDebug('⏱️ Auto-submit (2.5s silence)');
-                accumulatedTranscript.current = '';
-                isProcessingRef.current = true;
-                setIsRecording(false);
-                isRecordingRef.current = false;
-                witnessDispatch('native_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
-                onTranscript(finalTranscript);
-                // Stop native recognition
-                NativeSpeechRecognition.stop().catch(() => {});
-              }
               nativeSilenceTimerRef.current = null;
-            }, 2500); // 2.5s of no partials = end of speech
+              nativeSilenceArmedAtRef.current = 0;
+            }
+
+            if (automaticTurnCommitAllowed()) {
+              const turnSilenceMs = effectiveSilenceMs();
+              nativeSilenceArmedAtRef.current = Date.now();
+              nativeSilenceTimerRef.current = setTimeout(() => {
+                const finalTranscript = accumulatedTranscript.current.trim();
+                if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current && automaticTurnCommitAllowed()) {
+                  logVoiceEvent('ios_voice_final_result_received', {
+                    source: 'partial_silence_timeout',
+                    transcriptLength: finalTranscript.length,
+                    turnSilenceMs,
+                    conversationalSpace: turnTakingPreferencesRef.current.conversationalSpace,
+                  });
+                  console.log(`⏱️ [TURN-01 Native] ${turnSilenceMs}ms silence — committing turn`);
+                  sendTriggerRef.current = 'silence_timer';
+                  processAccumulatedTranscript();
+                  NativeSpeechRecognition.stop().catch(() => {});
+                }
+                nativeSilenceTimerRef.current = null;
+                nativeSilenceArmedAtRef.current = 0;
+              }, turnSilenceMs);
+            } else {
+              logVoiceEvent('voice_floor_held', { source: 'native_partial', floorControlMode: 'explicit' });
+            }
           } else {
             logVoiceEvent('ios_voice_result_empty');
             addDebug('⚠️ partialResults fired but no matches');
@@ -3016,39 +3100,38 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // 2. We have any transcript (at least 1 char - don't gate on length, SR already handles this)
           // 3. We had recent speech (high audio within last 2s) - prevents false triggers on ambient noise
           const transcript = accumulatedTranscript.current.trim();
-          const hasRecentSpeech = (now - lastHighAudioTimeRef.current) < 2000; // 2s window for natural pauses
+          const hasRecentSpeech = (now - lastHighAudioTimeRef.current) < Math.max(3500, effectiveSilenceMs());
           const hasAnyTranscript = transcript.length > 0;
 
-          if (rawLevel < 0.01 && hasAnyTranscript && hasRecentSpeech) {
-            // Start silence timer if not already running
+          if (rawLevel < 0.01 && hasAnyTranscript && hasRecentSpeech && automaticTurnCommitAllowed()) {
+            // The partial-results path usually owns this timer. Audio-level VAD
+            // is a fallback, but it obeys the exact same TURN-01 threshold.
             if (!nativeSilenceTimerRef.current) {
-              console.log('🔕 [Native] Silence detected after speech, starting 1.5s timer');
+              const turnSilenceMs = effectiveSilenceMs();
+              nativeSilenceArmedAtRef.current = now;
+              console.log(`🔕 [TURN-01 Native] Silence detected, holding ${turnSilenceMs}ms`);
               nativeSilenceTimerRef.current = setTimeout(() => {
-                // Double-check we still have transcript
-                if (accumulatedTranscript.current.trim() && !isProcessingRef.current) {
+                if (accumulatedTranscript.current.trim() && !isProcessingRef.current && automaticTurnCommitAllowed()) {
                   const finalTranscript = accumulatedTranscript.current.trim();
-                  if (finalTranscript) {
-                    logVoiceEvent('ios_voice_final_result_received', {
-                      source: 'audio_level_silence_timeout_1500ms',
-                      transcriptLength: finalTranscript.length,
-                    });
-                  }
-                  console.log('⏱️ [Native] Silence timeout - auto-submitting:', finalTranscript);
-                  accumulatedTranscript.current = '';
-                  isProcessingRef.current = true;
-                  setIsRecording(false);
-                  isRecordingRef.current = false;
-                  witnessDispatch('native_audio_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
-                  onTranscript(finalTranscript);
+                  logVoiceEvent('ios_voice_final_result_received', {
+                    source: 'audio_level_silence_timeout',
+                    transcriptLength: finalTranscript.length,
+                    turnSilenceMs,
+                    conversationalSpace: turnTakingPreferencesRef.current.conversationalSpace,
+                  });
+                  sendTriggerRef.current = 'silence_timer';
+                  processAccumulatedTranscript();
                 }
                 nativeSilenceTimerRef.current = null;
-              }, 1500); // 1.5s of silence = end of speech (balanced for responsiveness)
+                nativeSilenceArmedAtRef.current = 0;
+              }, turnSilenceMs);
             }
           } else if (rawLevel >= 0.02) {
-            // Clear silence timer if speech detected (higher threshold than silence)
             if (nativeSilenceTimerRef.current) {
+              notePauseContinuation(nativeSilenceArmedAtRef.current, 'native_audio_after_pause');
               clearTimeout(nativeSilenceTimerRef.current);
               nativeSilenceTimerRef.current = null;
+              nativeSilenceArmedAtRef.current = 0;
             }
           }
         });
@@ -3089,15 +3172,28 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // wantsContinuousConversationRef persists the user's intent to continue conversation
             const wantsToListen = isListeningRef.current || wantsContinuousConversationRef.current;
 
-            // Process accumulated transcript (only if we were actively listening)
+            // An engine stop is NOT a conversational yield. In explicit-floor
+            // mode preserve the whole turn and let the restart continue it. Only
+            // automatic mode retains the historical native-stop submission.
             if (isListeningRef.current && accumulatedTranscript.current.trim()) {
               const finalTranscript = accumulatedTranscript.current.trim();
-              console.log('✅ [Native] Final transcript:', finalTranscript);
-              accumulatedTranscript.current = '';
-              setIsRecording(false);
-              isRecordingRef.current = false;
-              witnessDispatch('native_stop', 'native_stop', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
-              onTranscript(finalTranscript);
+              if (!automaticTurnCommitAllowed()) {
+                explicitTurnPrefixRef.current = finalTranscript;
+                try { getContinuityBuffer().recordPending(finalTranscript); } catch { /* best-effort */ }
+                logVoiceEvent('voice_floor_held', {
+                  source: 'native_stop',
+                  charsHeld: finalTranscript.length,
+                  floorControlMode: 'explicit',
+                });
+                console.log(`🤲 [TURN-01] Native cycle ended; holding ${finalTranscript.length} chars for member`);
+              } else {
+                console.log('✅ [Native] Final transcript:', finalTranscript);
+                accumulatedTranscript.current = '';
+                setIsRecording(false);
+                isRecordingRef.current = false;
+                witnessDispatch('native_stop', 'native_stop', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
+                onTranscript(finalTranscript);
+              }
             }
 
             // 🔥 FIX: Only handle restart logic if user wants continuous conversation
@@ -3442,10 +3538,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         revokeSovereignCapture('superseded');
         const captureGeneration = sovereignGenerationRef.current;
         const captureController = new AbortController();
+        const finishController = new AbortController();
+        const explicitYield = info.isDesktop && !automaticTurnCommitAllowed();
         sovereignCaptureRef.current = {
           generation: captureGeneration,
           stream,
           controller: captureController,
+          finishController,
         };
 
         isProcessingRef.current = false;
@@ -3499,11 +3598,28 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           if (stage === 'audio_admitted') admit();
         };
 
+        // DESKTOP-SOVEREIGN-STT-INTERIM-01 — first-party provisional text.
+        // Display only: it reaches the live transcript tape, never onTranscript,
+        // persistence, memory, or conversation state. The final result below is
+        // the single authority for the member's turn.
+        const emitProvisional = info.isDesktop
+          ? (text: string) => {
+              if (sovereignGenerationRef.current !== captureGeneration) return;
+              onInterimTranscript?.(text);
+            }
+          : undefined;
+
+        const observeDesktopPause = (pauseMs: number) => {
+          if (sovereignGenerationRef.current !== captureGeneration || !turnTakingPreferencesRef.current.learnRhythm) return;
+          turnRhythmRef.current = observeContinuedPause(turnRhythmRef.current, pauseMs);
+        };
+
         try {
           const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
           const result = await recordAndTranscribe(stream, {
             signal: captureController.signal,
             onMilestone: handleMilestone,
+            ...(emitProvisional ? { onPartial: emitProvisional } : {}),
             // ⛔ DESKTOP-SOVEREIGN-STT-UTTERANCE-LIMIT-01 — Desktop turns end in
             // SILENCE, not on a timer. The module default (8 s) is a bound on a
             // one-shot Android recovery attempt; inheriting it here cut members
@@ -3512,7 +3628,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             //
             // ⛔ Desktop ONLY. Firefox/Zen reach this same branch by absence of
             // Web Speech and keep the module's own 8 s bound, unchanged.
-            ...(info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS } : {}),
+            ...(info.isDesktop ? {
+              maxMs: DESKTOP_MAX_UTTERANCE_MS,
+              waitForSpeech: true,
+              explicitYield,
+              finishSignal: finishController.signal,
+              getSilenceHoldoffMs: effectiveSilenceMs,
+              onContinuedPause: observeDesktopPause,
+            } : {}),
           });
 
           // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve
@@ -3522,6 +3645,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // witnessDispatch, onTranscript, or the member's conversation.
           if (sovereignGenerationRef.current !== captureGeneration) {
             console.log('🛡️ [sovereign capture] stale result discarded');
+            return;
+          }
+
+          if (result.ok && result.transcript && explicitYield && result.stopReason !== 'member_done') {
+            // A safety ceiling releases capture; it never yields the member's floor.
+            onTranscriptSalvage?.({ text: result.transcript, cause: 'desktop_capture_limit' });
+            onVoiceUnavailable?.({ reason: 'desktop_capture_limit', userMessage: 'Recording paused at its safety limit. Your words are in the text box for you to review and send.' });
             return;
           }
 
@@ -3537,7 +3667,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             onVoiceUnavailable?.({
               reason: `web_whisper_${result.reason ?? 'unknown'}`,
               userMessage:
-                result.reason === 'transcribe_disabled'
+                result.reason === 'no_speech'
+                  ? 'Listening paused without a spoken turn. Tap Speak when you are ready.'
+                  : result.reason === 'transcribe_disabled'
                   ? 'Voice transcription is not enabled on the server right now. You can type to MAIA instead.'
                   // ⛔ PLATFORM-D02A-01. The apparatus never heard. Saying "I
                   // could not hear that clearly" here blames the member for
@@ -3567,6 +3699,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // ⛔ Likewise the UI state: a superseded capture must not drag a live
           // one back to IDLE.
           if (sovereignGenerationRef.current === captureGeneration) {
+            // Provisional words die with their capture on success, failure, or
+            // revocation. They must never read as words MAIA committed.
+            if (emitProvisional) onInterimTranscript?.('');
             setIsListening(false);
             isListeningRef.current = false;
             setMicState('IDLE', 'web_whisper_done');
@@ -3918,23 +4053,58 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
   }, [startListening, stopListening]);
 
-  // Extend recording - reset silence timer to keep recording longer
+  // Extend recording - reset automatic endpoint timer. Explicit-floor mode
+  // already has no endpoint timer, so there is nothing to extend.
   const extendRecording = useCallback(() => {
-    console.log('⏱️ [extendRecording] Resetting silence timer');
-
-    // Clear existing silence timer
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
+    if (!automaticTurnCommitAllowed()) {
+      console.log('🤲 [TURN-01] extendRecording ignored — member owns floor explicitly');
+      return;
     }
-
-    // Restart silence timer with full threshold
+    console.log('⏱️ [extendRecording] Resetting turn timer');
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    const turnSilenceMs = effectiveSilenceMs();
+    timerArmedAtRef.current = Date.now();
     silenceTimerRef.current = setTimeout(() => {
-      console.log('🔕 Silence detected after extension - processing transcript');
+      if (!automaticTurnCommitAllowed()) return;
       if (!isProcessingRef.current && accumulatedTranscript.current.trim()) {
+        sendTriggerRef.current = 'silence_timer';
         processAccumulatedTranscript();
       }
-    }, silenceThreshold);
-  }, [silenceThreshold, processAccumulatedTranscript]);
+    }, turnSilenceMs);
+  }, [automaticTurnCommitAllowed, effectiveSilenceMs, processAccumulatedTranscript]);
+
+  /**
+   * TURN-01 explicit yield. This is the ONE UI-triggered path behind “I’m Done”.
+   * It commits through processAccumulatedTranscript so dedup, continuity,
+   * provenance and parent dispatch remain identical to automatic turns.
+   */
+  const commitTurn = useCallback(() => {
+    const capture = sovereignCaptureRef.current;
+    if (capture?.finishController) {
+      // Finish the real recording, not the display-only provisional words.
+      // The final Whisper response still passes the generation/revocation gate.
+      capture.finishController.abort();
+      return;
+    }
+    const chars = accumulatedTranscript.current.trim().length;
+    if (!chars || isProcessingRef.current) {
+      logVoiceEvent('voice_explicit_yield_ignored', { chars, processing: isProcessingRef.current });
+      return;
+    }
+    if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+    if (nativeSilenceTimerRef.current) { clearTimeout(nativeSilenceTimerRef.current); nativeSilenceTimerRef.current = null; }
+    timerArmedAtRef.current = 0;
+    nativeSilenceArmedAtRef.current = 0;
+    sendTriggerRef.current = 'manual';
+    logVoiceEvent('voice_explicit_yield', {
+      charCount: chars,
+      conversationalSpace: turnTakingPreferencesRef.current.conversationalSpace,
+      learnedPauseSamples: turnRhythmRef.current.continuedPauseSamples,
+    });
+    processAccumulatedTranscript();
+    if (useNativeSpeechRef.current) NativeSpeechRecognition.stop().catch(() => {});
+  }, [processAccumulatedTranscript]);
+
 
   // Assign functions to refs after they're defined
   useEffect(() => {
@@ -4093,6 +4263,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     stopListening: (options?: { userExitMode?: boolean }) => stopListeningFnRef.current?.(options),
     toggleListening: () => toggleListeningFnRef.current?.(),
     extendRecording: () => extendRecordingFnRef.current?.(),
+    commitTurn: () => commitTurn(),
     setHandsFree: (active: boolean) => {
       const prev = listeningModeRef.current;
       handsFreeActiveRef.current = active;
@@ -4115,7 +4286,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isHandsFree: handsFreeActiveRef.current,
     micState: micStateRef.current,
     listeningMode: listeningModeRef.current,
-  }), [isListening, isRecording, handleInterruptionStart, handleInterruptionEnd]);
+  }), [isListening, isRecording, handleInterruptionStart, handleInterruptionEnd, commitTurn]);
 
   // DISABLED: Auto-start temporarily disabled to fix initialization issues
   // TODO: Re-enable with proper initialization order

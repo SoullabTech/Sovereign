@@ -1,8 +1,8 @@
  'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
 import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
@@ -849,7 +849,14 @@ export default function RebuildStudioClient() {
     <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} style={{ height: '100vh', overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
       {!canvasExpanded && (<header className="wsr-header" style={{ height: 58, display: 'grid', gridTemplateColumns: '300px 1fr 300px', alignItems: 'center', padding: '0 20px', borderBottom: `1px solid ${C.soft}`, background: C.field }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-          <strong style={{ letterSpacing: '.18em', fontSize: 13 }}>SOULLAB</strong>
+          <Link
+            href="/maia"
+            aria-label="Return to MAIA"
+            title="Return to MAIA"
+            style={{ color: C.ink, fontSize: 12, textDecoration: 'none', letterSpacing: '.08em' }}
+          >
+            <span aria-hidden="true">←</span> MAIA
+          </Link>
           <span style={{ color: C.quiet, fontSize: 13 }}>|</span>
           <span style={{ fontFamily: SERIF, fontSize: 17 }}>Writer’s Studio</span>
         </div>
@@ -880,7 +887,7 @@ export default function RebuildStudioClient() {
 
       <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : '286px minmax(520px, 1fr) 390px' }}>
         {!canvasExpanded && (<aside className={`wsr-outline ${mobilePane !== 'outline' ? 'wsr-mobile-hidden' : ''}`} style={{ borderRight: `1px solid ${C.soft}`, background: C.panel, overflowY: 'auto', padding: 16 }}>
-          <button type="button" style={{ border: 0, background: 'transparent', color: C.muted, fontSize: 12, padding: '3px 2px 15px', cursor: 'pointer' }}>‹ All Works</button>
+          <Link href="/writers-studio" aria-label="Return to all Writer’s Studio works" style={{ display: 'inline-block', color: C.muted, fontSize: 12, padding: '3px 2px 15px', textDecoration: 'none' }}>‹ All Works</Link>
           <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 14, marginBottom: 18 }}>
             <div style={{ fontFamily: SERIF, fontSize: 17, marginBottom: 4 }}>{title}</div>
             <div data-work-context={workContext.kind} style={{ fontSize: 11.5, lineHeight: 1.45, color: C.muted }}>

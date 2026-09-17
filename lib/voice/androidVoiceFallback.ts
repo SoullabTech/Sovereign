@@ -26,6 +26,7 @@
 import { readTranscript } from './transcribeResponse';
 import { logVoiceEvent } from './voiceDiagnostics';
 import { apiFetch } from '@/lib/http/apiBase';
+import { createRollingPartialTranscriber } from './rollingPartialTranscription';
 
 const PREFERRED_MIME_TYPES = [
   'audio/webm;codecs=opus', // Android Chrome default
@@ -95,12 +96,14 @@ export type CaptureMilestone =
  */
 interface CaptureOutcome {
   blob: Blob;
-  stopReason: 'silence' | 'max' | 'error' | 'aborted' | 'no_admission';
+  stopReason: 'silence' | 'max' | 'error' | 'aborted' | 'no_admission' | 'member_done';
+  heardSpeech: boolean;
 }
 
 export interface FallbackResult {
   ok: boolean;
   transcript?: string;
+  stopReason?: CaptureOutcome['stopReason'];
   reason?:
     | 'recording_unsupported'  // MediaRecorder not available / no supported mime
     | 'recording_error'         // MediaRecorder threw mid-recording
@@ -111,6 +114,7 @@ export interface FallbackResult {
     | 'transcribe_http_error'   // /api/voice/transcribe-simple non-2xx
     | 'transcribe_disabled'     // 410 from the route (env gate off)
     | 'aborted'                 // the caller revoked this capture's authority
+    | 'no_speech'              // Desktop waited, but no speech was detected
     | 'empty_transcript'        // Whisper returned blank text
     | 'unknown';
   durationMs?: number;
@@ -149,7 +153,20 @@ interface RunOptions {
    * constant, so the bound cannot drift per call site.
    */
   admissionDeadlineMs?: number;
+  /** Desktop-only provisional text for display; never a committed turn. */
+  onPartial?: (text: string) => void;
+  /** Minimum wall-clock between provisional Whisper requests. */
+  partialIntervalMs?: number;
+  /** Desktop: a quiet arrival is not an utterance-ending pause. */
+  waitForSpeech?: boolean;
+  /** Explicit completion is separate from cancellation: Done may send; Stop may not. */
+  finishSignal?: AbortSignal;
+  explicitYield?: boolean;
+  getSilenceHoldoffMs?: () => number;
+  onContinuedPause?: (pauseMs: number) => void;
 }
+
+const PARTIAL_TIMESLICE_MS = 400;
 
 function pickMimeType(): string | null {
   if (typeof MediaRecorder === 'undefined') return null;
@@ -198,6 +215,15 @@ export async function recordAndTranscribe(
   const startedAt = Date.now();
   logVoiceEvent('voice_fallback_recording_started', { mimeType, maxMs });
 
+  const partial = options.onPartial
+    ? createRollingPartialTranscriber({
+        mimeType,
+        onPartial: options.onPartial,
+        ...(options.partialIntervalMs === undefined ? {} : { intervalMs: options.partialIntervalMs }),
+        ...(signal ? { signal } : {}),
+      })
+    : null;
+
   // ── Record ────────────────────────────────────────────────────────────
   let outcome: CaptureOutcome;
   try {
@@ -205,11 +231,21 @@ export async function recordAndTranscribe(
       maxMs,
       silenceHoldoffMs,
       minMs,
+      waitForSpeech: options.waitForSpeech ?? false,
+      finishSignal: options.finishSignal,
+      explicitYield: options.explicitYield,
+      getSilenceHoldoffMs: options.getSilenceHoldoffMs,
+      onContinuedPause: options.onContinuedPause,
       signal,
       ...(options.onMilestone ? { onMilestone: options.onMilestone } : {}),
       admissionDeadlineMs: options.admissionDeadlineMs ?? ADMISSION_DEADLINE_MS,
+      ...(partial ? {
+        timesliceMs: PARTIAL_TIMESLICE_MS,
+        onPrefix: (prefix: Blob) => partial.offerPrefix(prefix),
+      } : {}),
     });
   } catch (err: unknown) {
+    partial?.close();
     const name = err instanceof Error ? err.name : 'unknown';
     logVoiceEvent('voice_fallback_failed', {
       reason: 'recording_error',
@@ -217,6 +253,9 @@ export async function recordAndTranscribe(
     });
     return { ok: false, reason: 'recording_error' };
   }
+  // From here the final transcript is the only authority. A late provisional
+  // response must not overwrite or outlive it.
+  partial?.close();
 
   const { blob } = outcome;
   const durationMs = Date.now() - startedAt;
@@ -244,6 +283,10 @@ export async function recordAndTranscribe(
       reason: 'no_audio_admitted', durationMs, bytes: blob.size,
     });
     return { ok: false, reason: 'no_audio_admitted', durationMs, bytes: blob.size };
+  }
+
+  if (options.waitForSpeech && !outcome.heardSpeech) {
+    return { ok: false, reason: 'no_speech', durationMs, bytes: blob.size, stopReason: outcome.stopReason };
   }
 
   if (blob.size === 0) {
@@ -347,7 +390,7 @@ export async function recordAndTranscribe(
     bytes: blob.size,
     mimeType,
   });
-  return { ok: true, transcript, durationMs, bytes: blob.size };
+  return { ok: true, transcript, durationMs, bytes: blob.size, stopReason: outcome.stopReason };
 }
 
 /**
@@ -363,10 +406,18 @@ async function recordWithSilenceDetection(
   mimeType: string,
   opts: {
     maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal;
+    waitForSpeech: boolean;
+    finishSignal?: AbortSignal;
+    explicitYield?: boolean;
+    getSilenceHoldoffMs?: () => number;
+    onContinuedPause?: (pauseMs: number) => void;
     /** PLATFORM-D02A-01 — capture stage reports. Observations only. */
     onMilestone?: (stage: CaptureMilestone, detail?: Record<string, unknown>) => void;
     /** PLATFORM-D02A-01 — how long admission may fail to occur before it is named. */
     admissionDeadlineMs: number;
+    /** Flush cadence and growing-prefix observer for provisional display. */
+    timesliceMs?: number;
+    onPrefix?: (prefix: Blob) => void;
   },
 ): Promise<CaptureOutcome> {
   return new Promise<CaptureOutcome>((resolve, reject) => {
@@ -393,6 +444,7 @@ async function recordWithSilenceDetection(
     };
     milestone('recorder_created', { mimeType });
 
+    let heardSpeech = false;
     let stopped = false;
     let stopReason: CaptureOutcome['stopReason'] = 'silence';
 
@@ -422,16 +474,27 @@ async function recordWithSilenceDetection(
       }
     }
 
+    const onFinish = () => stop('member_done');
+    if (opts.finishSignal?.aborted) queueMicrotask(onFinish);
+    else opts.finishSignal?.addEventListener('abort', onFinish, { once: true });
+
     recorder.ondataavailable = (e: BlobEvent) => {
       if (e.data && e.data.size > 0) chunks.push(e.data);
+      // Never start a provisional request from the final flush. That request
+      // could race the authoritative full transcription after capture stops.
+      if ((!opts.waitForSpeech || heardSpeech) && !stopped && recorder.state === 'recording' && opts.onPrefix && chunks.length > 0) {
+        try { opts.onPrefix(new Blob(chunks, { type: mimeType })); }
+        catch { /* provisional display cannot break capture */ }
+      }
     };
     recorder.onerror = () => stop('error');
     recorder.onstop = () => {
       opts.signal?.removeEventListener('abort', onAbort);
+      opts.finishSignal?.removeEventListener('abort', onFinish);
       cleanup();
       const blob = new Blob(chunks, { type: mimeType });
       milestone('capture_stopped', { reason: stopReason, bytes: blob.size });
-      resolve({ blob, stopReason });
+      resolve({ blob, stopReason, heardSpeech });
     };
 
     // ── Silence detection via Web Audio API analyser ───────────────────
@@ -453,6 +516,7 @@ async function recordWithSilenceDetection(
     source.connect(analyser);
     const buf = new Float32Array(analyser.fftSize);
 
+    let quietSince: number | null = null;
     let lastLoudAt = Date.now();
     /** When audio was first demonstrably admitted. Null until it is. */
     let admittedAt: number | null = null;
@@ -488,8 +552,15 @@ async function recordWithSilenceDetection(
       }
 
       if (rms >= SILENCE_RMS_THRESHOLD) {
+        if (heardSpeech && quietSince !== null) {
+          try { opts.onContinuedPause?.(now - quietSince); } catch { /* observer only */ }
+        }
+        quietSince = null;
+        heardSpeech = true;
         lastLoudAt = now;
         milestone('speech_detected', { afterMs: now - startedAt });
+      } else if (heardSpeech && quietSince === null) {
+        quietSince = now;
       }
       const elapsed = now - startedAt;
       const silenceFor = now - lastLoudAt;
@@ -508,7 +579,8 @@ async function recordWithSilenceDetection(
         stop('max');
         return;
       }
-      if (elapsed >= opts.minMs && silenceFor >= opts.silenceHoldoffMs) {
+      const holdoffMs = opts.getSilenceHoldoffMs?.() ?? opts.silenceHoldoffMs;
+      if (!opts.explicitYield && (!opts.waitForSpeech || heardSpeech) && elapsed >= opts.minMs && silenceFor >= holdoffMs) {
         stop('silence');
         return;
       }
@@ -517,6 +589,8 @@ async function recordWithSilenceDetection(
     const hardTimer = setTimeout(() => stop('max'), opts.maxMs + 200);
 
     const cleanup = () => {
+      opts.signal?.removeEventListener('abort', onAbort);
+      opts.finishSignal?.removeEventListener('abort', onFinish);
       clearInterval(silenceTimer);
       clearTimeout(hardTimer);
       try { source.disconnect(); } catch { /* noop */ }
@@ -524,7 +598,9 @@ async function recordWithSilenceDetection(
     };
 
     try {
-      recorder.start();
+      // A timeslice changes only when bytes are delivered, not what is captured.
+      if (opts.timesliceMs) recorder.start(opts.timesliceMs);
+      else recorder.start();
     } catch (err) {
       cleanup();
       reject(err);

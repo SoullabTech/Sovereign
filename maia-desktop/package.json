@@ -1,14 +1,53 @@
 {
   "name": "maia-desktop",
-  "version": "0.0.1-d01",
+  "version": "0.1.0-beta.1",
   "private": true,
-  "description": "MAIA Desktop Companion — canonical member-facing desktop tree. MAIA-D01 native voice witness shell; not yet the Companion.",
+  "productName": "MAIA Desktop",
+  "description": "The governed native desktop doorway into the current MAIA platform.",
+  "author": "Soullab",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test 'test/*.test.mjs'"
+    "test": "node --test 'test/*.test.mjs'",
+    "pack:mac": "node scripts/build.mjs --dir",
+    "dist:mac": "node scripts/build.mjs",
+    "verify:package": "node scripts/verify-package.mjs",
+    "beta:mac": "npm test && npm run dist:mac && npm run verify:package"
   },
   "devDependencies": {
-    "electron": "^28.0.0"
+    "electron": "44.4.1",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "life.soullab.maia.desktop",
+    "productName": "MAIA Desktop",
+    "artifactName": "MAIA-Desktop-${version}-${arch}.${ext}",
+    "asar": true,
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.lifestyle",
+      "icon": "build/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "MAIA uses your microphone only when you choose voice conversation."
+      }
+    },
+    "dmg": {
+      "sign": false
+    }
   }
 }

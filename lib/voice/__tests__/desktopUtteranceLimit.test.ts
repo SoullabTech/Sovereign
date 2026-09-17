@@ -222,24 +222,16 @@ describe('4 — Android-Chrome and Firefox/Zen keep the 8s bound', () => {
     expect(uses.length).toBe(2);
     const call = src.indexOf('recordAndTranscribe(stream, {');
     const args = src.slice(call, src.indexOf('});', call));
-    expect(args).toContain('info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS }');
+    expect(args).toMatch(/info\.isDesktop \? \{\s*maxMs: DESKTOP_MAX_UTTERANCE_MS,\s*waitForSpeech: true/);
   });
 });
 
-// ── 5 & 6 · DEFERRED WITH THE PROVISIONAL PATH ───────────────────────────
+// ── 5 & 6 · PROVISIONAL TEXT AND FINAL AUTHORITY ─────────────────────────
 //
-// ⛔ NOT DELETED, AND NOT RELAXED. Two describes stood here — "exactly one
-// final transcript commits" and "the provisional path closes before final
-// commit". Both drive `recordAndTranscribe` with an `onPartial` callback.
-//
-// DESKTOP-PLATFORM-STT-01 deliberately carried only the utterance ceiling from
-// 1c2c59af9 and left its provisional/interim half behind, so `RunOptions` in
-// this tree has no `onPartial` at all: those tests exercise a capability the
-// module does not yet have, and would assert against silence.
-//
-// They belong to the interim-text unit and travel with it — restore them from
-// 1c2c59af9 when `onPartial` lands, not before. Nothing about the ceiling is
-// left unproven by their absence: sections 1-4 and 7 cover it.
+// `onPartial` has now landed in DESKTOP-SOVEREIGN-STT-INTERIM-01. Its live
+// display, final-only commit, final-flush race, and revocation laws are covered
+// by sovereignPartialTranscription.test.ts. This suite remains responsible for
+// the orthogonal two-minute ceiling and route-exit bound.
 
 // ── 7 · revocation still wins, at any turn length ─────────────────────────
 describe('7 — route exit still aborts immediately', () => {
@@ -270,5 +262,162 @@ describe('7 — route exit still aborts immediately', () => {
     const result = await p;
     expect(result.reason).toBe('aborted');
     expect(transcribeCalls()).toHaveLength(0);
+  });
+});
+
+
+describe('Desktop quiet arrival', () => {
+  it('waits through a pause before speech on each of three consecutive turns', async () => {
+    jest.useFakeTimers();
+    for (let turn = 0; turn < 3; turn++) {
+      level = 0;
+      const pending = recordAndTranscribe(fakeStream(), {
+        maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      });
+      await advance(5_000);
+      expect(recorders[turn].state).toBe('recording');
+      expect(transcribeCalls()).toHaveLength(turn);
+      level = 0.2;
+      await advance(1_000);
+      level = 0;
+      await advance(2_000);
+      expect((await pending).ok).toBe(true);
+      expect(transcribeCalls()).toHaveLength(turn + 1);
+    }
+  });
+
+  it('revokes during the initial pause without sending audio', async () => {
+    jest.useFakeTimers();
+    level = 0;
+    const controller = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true, signal: controller.signal,
+    });
+    await advance(4_000);
+    controller.abort();
+    expect((await pending).reason).toBe('aborted');
+    expect(recorders[0].state).toBe('inactive');
+    expect(transcribeCalls()).toHaveLength(0);
+  });
+
+  it('retains the hard ceiling even when speech never arrives', async () => {
+    jest.useFakeTimers();
+    level = 0;
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: 5_000, waitForSpeech: true,
+    });
+    await advance(5_500);
+    expect(recorders[0].state).toBe('inactive');
+    await pending;
+  });
+
+  it('keeps the ordinary fallback initial-silence behavior', async () => {
+    jest.useFakeTimers();
+    level = 0;
+    const pending = recordAndTranscribe(fakeStream());
+    await advance(2_000);
+    expect(recorders[0].state).toBe('inactive');
+    await pending;
+  });
+});
+
+
+describe('Desktop member-owned turn completion', () => {
+  it.each([1800, 3500, 6000, 10000])('honors a selected %ims pause', async (holdoff) => {
+    jest.useFakeTimers();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      getSilenceHoldoffMs: () => holdoff,
+    });
+    await advance(1_000);
+    level = 0;
+    await advance(holdoff - 200);
+    expect(recorders[0].state).toBe('recording');
+    await advance(300);
+    expect((await pending).stopReason).toBe('silence');
+    expect(transcribeCalls()).toHaveLength(1);
+  });
+
+  it('holds across long pauses until Done and sends the final transcript once', async () => {
+    jest.useFakeTimers();
+    const finish = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      explicitYield: true, finishSignal: finish.signal,
+    });
+    await advance(1_000);
+    level = 0;
+    await advance(20_000, 500);
+    expect(recorders[0].state).toBe('recording');
+    expect(transcribeCalls()).toHaveLength(0);
+    level = 0.2;
+    await advance(1_000);
+    finish.abort();
+    finish.abort();
+    const result = await pending;
+    expect(result.stopReason).toBe('member_done');
+    expect(result.transcript).toBe('hello there');
+    expect(transcribeCalls()).toHaveLength(1);
+  });
+
+  it('Stop cancels a held turn and a late Done cannot submit it', async () => {
+    jest.useFakeTimers();
+    const cancel = new AbortController();
+    const finish = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      explicitYield: true, signal: cancel.signal, finishSignal: finish.signal,
+    });
+    await advance(1_000);
+    cancel.abort();
+    finish.abort();
+    expect((await pending).reason).toBe('aborted');
+    expect(transcribeCalls()).toHaveLength(0);
+  });
+
+  it('returns the safety ceiling as max, never as member completion', async () => {
+    jest.useFakeTimers();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: 3_000, waitForSpeech: true, explicitYield: true,
+    });
+    await advance(3_500);
+    expect((await pending).stopReason).toBe('max');
+    const src = fs.readFileSync(path.resolve(__dirname, '../../../components/voice/ContinuousConversation.tsx'), 'utf8');
+    expect(src).toContain("explicitYield && result.stopReason !== 'member_done'");
+    expect(src).toContain("onTranscriptSalvage?.({ text: result.transcript, cause: 'desktop_capture_limit' })");
+  });
+
+  it('does not transcribe silence when Done is pressed before speaking', async () => {
+    jest.useFakeTimers();
+    level = 0;
+    const finish = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      explicitYield: true, finishSignal: finish.signal,
+    });
+    await advance(1_000);
+    finish.abort();
+    expect((await pending).reason).toBe('no_speech');
+    expect(transcribeCalls()).toHaveLength(0);
+  });
+
+  it('learns only from a pause followed by resumed speech', async () => {
+    jest.useFakeTimers();
+    const pauses: number[] = [];
+    const finish = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      explicitYield: true, finishSignal: finish.signal,
+      onContinuedPause: (ms) => pauses.push(ms),
+    });
+    await advance(1_000);
+    level = 0;
+    await advance(4_000);
+    expect(pauses).toHaveLength(0);
+    level = 0.2;
+    await advance(500);
+    expect(pauses).toEqual([4_000]);
+    finish.abort();
+    await pending;
   });
 });

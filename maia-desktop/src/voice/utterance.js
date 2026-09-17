@@ -60,6 +60,31 @@ function createUtteranceBuffer(config = {}) {
       return result;
     },
 
+    /**
+     * ⭐ DESKTOP-CONVERSATION-WIRING-01. Drop the audio captured across a turn
+     * window, ACCOUNTED.
+     *
+     * Frames accumulate continuously — that is the pre-roll rule above — so
+     * while MAIA is being asked and is speaking, the buffer keeps filling with
+     * the pause, the room, and MAIA's own voice arriving back through the
+     * microphone. None of that is the member's next utterance. Left in place it
+     * is prepended to whatever they say next, which is how a reply gets
+     * answered as if the member had said it.
+     *
+     * ⛔ IT IS NOT A SILENT CLEAR. It returns how many samples it removed so
+     * the caller can say so in the diagnostic record. `take()` remains the only
+     * path that hands audio onward; this is the only path that drops it, and it
+     * reports what it dropped. Audio still never disappears without a number
+     * attached to it.
+     *
+     * @returns {number} samples discarded
+     */
+    discard() {
+      const gone = total;
+      chunks = []; total = 0; dropped = 0;
+      return gone;
+    },
+
     /** Discard without returning — only legitimate when a session ends entirely. */
     clear() { chunks = []; total = 0; dropped = 0; },
     size() { return total; },

@@ -79,6 +79,11 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
+import {
+  DEFAULT_TURN_TAKING_PREFERENCES,
+  CONVERSATIONAL_SPACE_CONFIG,
+  type TurnTakingPreferences,
+} from '@/lib/voice/turnTaking';
 import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -867,6 +872,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isMicrophonePaused, setIsMicrophonePaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Start muted - user must tap holoflower to activate
   const [isHandsFreeMode, setIsHandsFreeMode] = useState(true); // UI state mirror for hands-free toggle — default ON for natural conversation
+  const [turnTakingPreferences, setTurnTakingPreferences] = useState<TurnTakingPreferences>({ ...DEFAULT_TURN_TAKING_PREFERENCES });
   const hasShownVoiceReentryToastRef = useRef(false); // Show once per session on re-enter voice
 
   // Phase 1.5B — Conversational Keep runtime state (per-session, not persisted)
@@ -2547,6 +2553,40 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🌊 STREAMING VOICE: Server-side sentence TTS for natural conversational flow
   const [streamingResponseComplete, setStreamingResponseComplete] = useState(false);
+
+  // TURN-01 — member-owned turn-taking preferences. This reads the same
+  // account voice-preference surface as VoiceSettingsPanel, but governs when
+  // MAIA may take the floor rather than how her TTS sounds.
+  useEffect(() => {
+    let cancelled = false;
+    const loadTurnTaking = async () => {
+      try {
+        const res = await apiFetch('/api/settings/voice');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data.member?.turnTaking) setTurnTakingPreferences(data.member.turnTaking);
+      } catch (error) {
+        console.warn('[TURN-01] Failed to load turn-taking preference; using Natural', error);
+      }
+    };
+    const onChanged = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail?.turnTaking) setTurnTakingPreferences(detail.turnTaking);
+      else void loadTurnTaking();
+    };
+    void loadTurnTaking();
+    window.addEventListener('maia-voice-settings-changed', onChanged);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('maia-voice-settings-changed', onChanged);
+    };
+  }, []);
+
+  const selectedTurnSilenceMs = CONVERSATIONAL_SPACE_CONFIG[turnTakingPreferences.conversationalSpace].silenceMs;
+  const effectiveTurnSilenceMs =
+    listeningMode === 'session' ? VOICE_TIMING.WEB_SILENCE_SCRIBE_MS :
+    listeningMode === 'patient' ? Math.max(VOICE_TIMING.WEB_SILENCE_CARE_MS, selectedTurnSilenceMs) :
+    selectedTurnSilenceMs;
 
   // Load voice settings from account preferences on mount and listen for changes
   useEffect(() => {
@@ -7833,6 +7873,66 @@ I'm not sure what I'm feeling yet.`;
 
   // DIAGNOSTIC LOGGING - Removed to reduce console noise and improve performance
 
+  // Both visible Speak controls use the same explicit member gesture.
+  const requestSpeak = () => {
+    // 🎙️ ATOMIC TRANSITION (P0 — speak-button-arms-mic).
+    // This previously did ONLY `setShowChatInterface(false)`,
+    // moving the visible UI into voice mode while leaving
+    // `lastSendWasVoiceRef` at whatever the last turn set.
+    // After a TYPED turn that ref is deliberately false (the
+    // consent boundary in `handleTextMessage`: typed input is
+    // not voice re-consent), and every auto-restart path is
+    // gated `if (lastSendWasVoiceRef.current)`. Net effect:
+    // member taps "Speak", the voice field appears, and the
+    // mic is never armed. It looked intermittent only because
+    // it still worked when the member had not yet typed.
+    //
+    // The consent boundary is NOT weakened — it is honored
+    // more precisely: tapping "Speak" IS an explicit member
+    // gesture to speak, so this handler is the right place to
+    // record voice consent. Auto-re-arm after a typed turn
+    // stays prohibited; only this deliberate tap re-arms.
+    //
+    // Mirrors the already-working audio-enable sequence
+    // (UI -> unmute -> enableAudio -> startListening) so both
+    // entry points into voice mode leave identical state.
+    setShowChatInterface(false);
+    setIsMuted(false);
+    lastSendWasVoiceRef.current = true;
+    setMicRequestState('pending');
+    enableAudio().then(() => {
+      setTimeout(async () => {
+        if (voiceSession.state.capabilities.canStartListening) {
+          await voiceSession.methods.startListening('speak_button_gesture');
+          console.log('🎤 [mode] Speak tapped — mic armed');
+        } else {
+          // NOT a failure. `canStartListening` is
+          // `phase === 'idle' && !error && !isSpeaking && !isProcessing`
+          // (hooks/useVoiceSession.ts), so it is transiently false
+          // whenever MAIA is still speaking/processing or the session
+          // has not reached idle. That is "not ready yet", not
+          // "cannot" — and `failed` may only mean an event has
+          // ESTABLISHED that activation failed.
+          //
+          // The one authoritative signal here is the session's own
+          // recoverable-error phase; everything else stays `pending`,
+          // where elapsed time will soften the wording instead of
+          // concluding failure.
+          const sessionError = voiceSession.state.error;
+          console.warn('🎤 [mode] Speak tapped but canStartListening=false', {
+            phase: voiceSession.state.phase,
+            hasError: !!sessionError,
+          });
+          if (sessionError) setMicRequestState('failed');
+        }
+      }, 100);
+    }).catch((err) => {
+      // Authoritative failure event — the only route to 'failed'.
+      console.warn('🎤 [mode] Speak tap: enableAudio failed', err);
+      setMicRequestState('failed');
+    });
+  };
+
   return (
     // GEOMETRY INVARIANT (#703): in the normal full-room presentation this shell
     // must NOT be the containing block for its position:fixed descendants.
@@ -9134,8 +9234,11 @@ I'm not sure what I'm feeling yet.`;
         {/* Tap to Speak / Listening label - below holoflower */}
         {!isResponding && !isAudioPlaying && !isProcessing && (
           <div className="pointer-events-none text-center w-full" style={{ marginTop: 8 }}>
-            <span
-              className="text-amber-200/85 text-xs font-medium tracking-widest uppercase"
+            <button
+              type="button"
+              onClick={requestSpeak}
+              disabled={isListening || micRequestState === 'pending'}
+              className="pointer-events-auto min-h-[44px] px-3 text-amber-200/85 text-xs font-medium tracking-widest uppercase disabled:cursor-default"
               style={{
                 letterSpacing: '0.16em',
                 textShadow: '0 0 12px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35)',
@@ -9148,7 +9251,7 @@ I'm not sure what I'm feeling yet.`;
                 : isListening
                 ? 'Listening'
                 : 'Tap to Speak'}
-            </span>
+            </button>
           </div>
         )}
       </motion.div>
@@ -10113,64 +10216,7 @@ I'm not sure what I'm feeling yet.`;
                           immediately to its left. Icon/onClick/behavior
                           unchanged. */}
                       <button
-                        onClick={() => {
-                          // 🎙️ ATOMIC TRANSITION (P0 — speak-button-arms-mic).
-                          // This previously did ONLY `setShowChatInterface(false)`,
-                          // moving the visible UI into voice mode while leaving
-                          // `lastSendWasVoiceRef` at whatever the last turn set.
-                          // After a TYPED turn that ref is deliberately false (the
-                          // consent boundary in `handleTextMessage`: typed input is
-                          // not voice re-consent), and every auto-restart path is
-                          // gated `if (lastSendWasVoiceRef.current)`. Net effect:
-                          // member taps "Speak", the voice field appears, and the
-                          // mic is never armed. It looked intermittent only because
-                          // it still worked when the member had not yet typed.
-                          //
-                          // The consent boundary is NOT weakened — it is honored
-                          // more precisely: tapping "Speak" IS an explicit member
-                          // gesture to speak, so this handler is the right place to
-                          // record voice consent. Auto-re-arm after a typed turn
-                          // stays prohibited; only this deliberate tap re-arms.
-                          //
-                          // Mirrors the already-working audio-enable sequence
-                          // (UI -> unmute -> enableAudio -> startListening) so both
-                          // entry points into voice mode leave identical state.
-                          setShowChatInterface(false);
-                          setIsMuted(false);
-                          lastSendWasVoiceRef.current = true;
-                          setMicRequestState('pending');
-                          enableAudio().then(() => {
-                            setTimeout(async () => {
-                              if (voiceSession.state.capabilities.canStartListening) {
-                                await voiceSession.methods.startListening('speak_button_gesture');
-                                console.log('🎤 [mode] Speak tapped — mic armed');
-                              } else {
-                                // NOT a failure. `canStartListening` is
-                                // `phase === 'idle' && !error && !isSpeaking && !isProcessing`
-                                // (hooks/useVoiceSession.ts), so it is transiently false
-                                // whenever MAIA is still speaking/processing or the session
-                                // has not reached idle. That is "not ready yet", not
-                                // "cannot" — and `failed` may only mean an event has
-                                // ESTABLISHED that activation failed.
-                                //
-                                // The one authoritative signal here is the session's own
-                                // recoverable-error phase; everything else stays `pending`,
-                                // where elapsed time will soften the wording instead of
-                                // concluding failure.
-                                const sessionError = voiceSession.state.error;
-                                console.warn('🎤 [mode] Speak tapped but canStartListening=false', {
-                                  phase: voiceSession.state.phase,
-                                  hasError: !!sessionError,
-                                });
-                                if (sessionError) setMicRequestState('failed');
-                              }
-                            }, 100);
-                          }).catch((err) => {
-                            // Authoritative failure event — the only route to 'failed'.
-                            console.warn('🎤 [mode] Speak tap: enableAudio failed', err);
-                            setMicRequestState('failed');
-                          });
-                        }}
+                        onClick={requestSpeak}
                         className="flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium text-white/30 transition-colors hover:text-white/60"
                         title="Speak instead of typing"
                         aria-label="Switch to speaking"
@@ -10343,6 +10389,8 @@ I'm not sure what I'm feeling yet.`;
           }}
           onInterrupt={handleVoiceInterrupt}
           onTextSubmit={(text) => handleTextMessage(text)}
+          explicitYield={turnTakingPreferences.floorControlMode === 'explicit'}
+          onDone={() => voiceMicRef.current?.commitTurn()}
         />
         </div>
       )}
@@ -10420,11 +10468,8 @@ I'm not sure what I'm feeling yet.`;
             isProcessing={isResponding}
             isSpeaking={isAudioPlaying || isMicrophonePaused}
             autoStart={false}
-            silenceThreshold={
-              listeningMode === 'session' ? VOICE_TIMING.WEB_SILENCE_SCRIBE_MS :
-              listeningMode === 'patient' ? VOICE_TIMING.WEB_SILENCE_CARE_MS :
-              VOICE_TIMING.WEB_SILENCE_TALK_MS
-            }
+            silenceThreshold={effectiveTurnSilenceMs}
+            turnTakingPreferences={turnTakingPreferences}
             persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
             onHandsFreeFallback={() => {
               setIsHandsFreeMode(false);
