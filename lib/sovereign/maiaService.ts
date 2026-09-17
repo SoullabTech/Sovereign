@@ -1082,6 +1082,9 @@ async function fastPathResponse(
   // 📚 AIN KNOWLEDGE: Mode-aware wisdom from embedded source texts
   const ainKnowledgeContext = (meta as any).ainKnowledgeContext as string | undefined;
   const hasAinKnowledge = !!(meta as any).ainKnowledge;
+  // JARVIS-GKF-J8-REPAIR-01: exact-source governed retrieval is distinct from
+  // the historical FAST-only ainKnowledgeContext seam.
+  const governedKnowledgeAddendum = (meta as any).governedKnowledgeAddendum as string | undefined;
 
   if (ainKnowledgeContext && hasAinKnowledge) {
     const ainMeta = (meta as any).ainKnowledge;
@@ -1108,6 +1111,10 @@ async function fastPathResponse(
   const ainKnowledgeBlock = ainKnowledgeContext && ainKnowledgeContext.length > 0
     ? `\n\n📚 RELEVANT WISDOM (from your training sources - draw upon naturally, don't cite directly):
 ${ainKnowledgeContext}\n`
+    : '';
+
+  const governedKnowledgeBlock = governedKnowledgeAddendum?.trim()
+    ? `\n\n${governedKnowledgeAddendum.trim()}\n`
     : '';
 
   // ── AIN-CONTEXT-01 · A6 · FAST self-location + known absence ──────────────
@@ -1161,14 +1168,14 @@ ${ainKnowledgeContext}\n`
     : '';
   if (memoryContext && memoryContext.length > 0) {
     // Memory bundle (relationship snapshot + ranked cross-session memories) AND live thread
-    contextPrompt = `${fastContinuityPrefix}${memoryContext}\n\n${recentThreadBlock}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `${fastContinuityPrefix}${memoryContext}\n\n${recentThreadBlock}${ainKnowledgeBlock}${governedKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
     console.log(`🧠 [FAST/MemoryDebug] Using MEMORY BUNDLE + recent thread (bundle=${memoryContext.length} chars, recent=${recentContext.length} chars)`);
   } else if (recentContext.length > 0) {
     // No bundle yet — recent in-session thread carries continuity on its own
-    contextPrompt = `${fastContinuityPrefix}Recent conversation:\n${recentContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `${fastContinuityPrefix}Recent conversation:\n${recentContext}${ainKnowledgeBlock}${governedKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
     console.log(`🧠 [FAST/MemoryDebug] Using RECENT CONTEXT fallback (${recentContext.length} chars)`);
   } else {
-    contextPrompt = `${fastContinuityPrefix}${ainKnowledgeBlock}${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
+    contextPrompt = `${fastContinuityPrefix}${ainKnowledgeBlock}${governedKnowledgeBlock}${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
     console.log(`⚠️ [FAST/MemoryDebug] NO MEMORY CONTEXT - using bare input only`);
   }
 
@@ -1974,6 +1981,8 @@ async function corePathResponse(
     scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
     // 🚪 KNOWLEDGE GATE: AIN source well modulation
     knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
+    // 📚 GOVERNED KNOWLEDGE: exact-source retrieved published material
+    governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
     // 🕸️ MEMBER WEB: Patterns + session summaries + journals
     memberWebAddendum: (meta as any)?.memberWebAddendum as string | undefined,
     // 🌟 ASTROLOGY: Natal chart + cosmic weather context
@@ -2508,13 +2517,19 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     elementalResonance: elementalTrendToResonance(conversationContext.profile.elementalTrend),
     observerLevel: Math.max(1, Math.min(effectiveHistory.length + 1, 7)),
     temporalWindow: conversationContext.profile.conversationPhase === 'transcending' ? 'eternal' : 'present',
-    metaAwareness: conversationContext.profile.conversationPhase === 'transcending' || conversationContext.profile.dominantElement === 'aether'
+    metaAwareness: conversationContext.profile.conversationPhase === 'transcending' || conversationContext.profile.dominantElement === 'aether',
+    governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
   };
 
   // STEP 1: MAIA generates initial response using local consciousness processing
   // ⚡ Fail-fast wrapper: if deepseek is slow/unavailable, proceed to Opus without blocking
   let consciousnessResponse: any = null;
   let maiaInitialResponse: string;
+  // J8-R1: raw governed evidence participates once in DEEP response production.
+  // If the local DEEP stage completes, any later optional consultation receives
+  // the already-grounded draft but not a second copy of the source block. If the
+  // local stage times out/fails, the consultation may become the one raw-evidence seam.
+  let governedKnowledgeConsumedInLocalStage = false;
 
   try {
     consciousnessResponse = await Promise.race([
@@ -2525,6 +2540,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     ]);
 
     maiaInitialResponse = consciousnessResponse.response;
+    governedKnowledgeConsumedInLocalStage = Boolean((meta as any)?.governedKnowledgeAddendum);
 
     console.log(`🎯 MAIA initial consciousness processing complete:`);
     console.log(`   Layers activated: ${consciousnessResponse.layersActivated.join(', ')}`);
@@ -2563,7 +2579,14 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
       // member-marked episodic moments, prior cross-session exchanges, and
       // member-placed atoms. Empty for sanctuary turns and members without
       // recall material — the route-level gates upstream decide what is here.
-      const consultationRecallAddenda = [
+      const consultationContextAddenda = [
+        // Published governed source evidence crosses raw only once. If the local
+        // DEEP stage already consumed it, the consultation sees the grounded
+        // draft rather than a second copy of the source. On local-stage failure,
+        // consultation becomes the one raw-evidence seam.
+        !governedKnowledgeConsumedInLocalStage
+          ? (meta as any)?.governedKnowledgeAddendum
+          : undefined,
         (meta as any)?.conversationalRecallAddendum,
         (meta as any)?.episodicRecallAddendum,
         (meta as any)?.atomsAddendum,
@@ -2572,8 +2595,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         (meta as any)?.divinationInterpretationAddendum,
         (meta as any)?.relationalContextAddendum,
       ].filter(Boolean).join('\n\n');
-      if (consultationRecallAddenda) {
-        console.log('[MAIA] deep-consultation recall-addenda', { chars: consultationRecallAddenda.length });
+      if (consultationContextAddenda) {
+        console.log('[MAIA] deep-consultation context-addenda', { chars: consultationContextAddenda.length });
       }
 
       // 🌀 CONVERGENCE-01 Cut 1A — orientation shadow on DEEP.
@@ -2588,8 +2611,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         emitOrientationShadow({
           tier: 'DEEP',
           resolved: orientation,
-          legacyPrompt: consultationRecallAddenda,
-          sentPrompt: consultationRecallAddenda,
+          legacyPrompt: consultationContextAddenda,
+          sentPrompt: consultationContextAddenda,
           sanctuary: isSanctuaryDeep,
         });
       }
@@ -2602,7 +2625,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
           maiaResponse: ex.maiaResponse || ''
         })),
         consultationType,
-        contextAddenda: consultationRecallAddenda || undefined,
+        contextAddenda: consultationContextAddenda || undefined,
         sessionMetadata: {
           // AIN-CONTEXT-01 · A6 — WAS `effectiveHistory.length + 1` (the window
           // length, saturating at 11). NOW authoritative completed exchanges on
@@ -2698,6 +2721,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         studioAddendum: (meta as any)?.studioAddendum as string | undefined,
         // 🚪 KNOWLEDGE GATE: AIN source well modulation
         knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
+        // 📚 GOVERNED KNOWLEDGE: exact-source retrieved published material
+        governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
         // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
         consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
         // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
