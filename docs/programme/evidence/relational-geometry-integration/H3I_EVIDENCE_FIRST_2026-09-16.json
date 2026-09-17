@@ -1,0 +1,837 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H3I_EVIDENCE_FIRST_V1",
+  "authority": "offline research only",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "local Claude CLI restricted/no-tools",
+    "effort": "low"
+  },
+  "law": "Model extracts exact evidence spans and basis classes; deterministic code admits and canonicalizes relation dimensions.",
+  "summary": {
+    "runs": 12,
+    "exact": 10,
+    "tp": 12,
+    "fp": 0,
+    "fn": 2,
+    "precision": 1,
+    "recall": 0.8571428571428571,
+    "falsePositiveOnNeither": 0
+  },
+  "byFixture": {
+    "I1_DYNAMIC_PLUS_ALIGNMENT": {
+      "runs": 2,
+      "exact": 0,
+      "rows": [
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_CONSONANCE",
+              "sourceId": "AIR_LEAVE",
+              "targetId": "EARTH_SETTLE"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "CONFIGURATION",
+              "predicate": "ALIGNMENT",
+              "direction": "SYMMETRIC",
+              "endpointIds": [
+                "AIR_LEAVE",
+                "EARTH_SETTLE"
+              ]
+            }
+          ],
+          "score": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 1,
+            "exact": false
+          }
+        },
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_CONSONANCE",
+              "sourceId": "AIR_LEAVE",
+              "targetId": "EARTH_SETTLE"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "CONFIGURATION",
+              "predicate": "ALIGNMENT",
+              "direction": "SYMMETRIC",
+              "endpointIds": [
+                "AIR_LEAVE",
+                "EARTH_SETTLE"
+              ]
+            }
+          ],
+          "score": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 1,
+            "exact": false
+          }
+        }
+      ]
+    },
+    "I2_TENSION_ONLY": {
+      "runs": 2,
+      "exact": 2,
+      "rows": [
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_CONTRAST",
+              "sourceId": "WATER_LOVE",
+              "targetId": "FIRE_LEAVE"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "CONFIGURATION",
+              "predicate": "TENSION",
+              "direction": "SYMMETRIC",
+              "endpointIds": [
+                "FIRE_LEAVE",
+                "WATER_LOVE"
+              ]
+            }
+          ],
+          "score": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        },
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_CONTRAST",
+              "sourceId": "WATER_LOVE",
+              "targetId": "FIRE_LEAVE"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "CONFIGURATION",
+              "predicate": "TENSION",
+              "direction": "SYMMETRIC",
+              "endpointIds": [
+                "FIRE_LEAVE",
+                "WATER_LOVE"
+              ]
+            }
+          ],
+          "score": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        }
+      ]
+    },
+    "I3_INHIBITS_PLUS_TENSION": {
+      "runs": 2,
+      "exact": 2,
+      "rows": [
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_INHIBITION",
+              "sourceId": "EARTH_EXHAUST",
+              "targetId": "FIRE_LAUNCH"
+            },
+            {
+              "basis": "EXPLICIT_CONTRAST",
+              "sourceId": "EARTH_EXHAUST",
+              "targetId": "FIRE_LAUNCH"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "DYNAMIC",
+              "predicate": "INHIBITS",
+              "direction": "DIRECTED",
+              "sourceId": "EARTH_EXHAUST",
+              "targetId": "FIRE_LAUNCH"
+            },
+            {
+              "dimension": "CONFIGURATION",
+              "predicate": "TENSION",
+              "direction": "SYMMETRIC",
+              "endpointIds": [
+                "EARTH_EXHAUST",
+                "FIRE_LAUNCH"
+              ]
+            }
+          ],
+          "score": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        },
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_INHIBITION",
+              "sourceId": "EARTH_EXHAUST",
+              "targetId": "FIRE_LAUNCH"
+            },
+            {
+              "basis": "EXPLICIT_CONTRAST",
+              "sourceId": "EARTH_EXHAUST",
+              "targetId": "FIRE_LAUNCH"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "DYNAMIC",
+              "predicate": "INHIBITS",
+              "direction": "DIRECTED",
+              "sourceId": "EARTH_EXHAUST",
+              "targetId": "FIRE_LAUNCH"
+            },
+            {
+              "dimension": "CONFIGURATION",
+              "predicate": "TENSION",
+              "direction": "SYMMETRIC",
+              "endpointIds": [
+                "EARTH_EXHAUST",
+                "FIRE_LAUNCH"
+              ]
+            }
+          ],
+          "score": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        }
+      ]
+    },
+    "I4_DYNAMIC_ONLY": {
+      "runs": 2,
+      "exact": 2,
+      "rows": [
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_ELICITATION",
+              "sourceId": "AIR_RISK",
+              "targetId": "EARTH_TIGHTEN"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "DYNAMIC",
+              "predicate": "EVOKES",
+              "direction": "DIRECTED",
+              "sourceId": "AIR_RISK",
+              "targetId": "EARTH_TIGHTEN"
+            }
+          ],
+          "score": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        },
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_ELICITATION",
+              "sourceId": "AIR_RISK",
+              "targetId": "EARTH_TIGHTEN"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "DYNAMIC",
+              "predicate": "EVOKES",
+              "direction": "DIRECTED",
+              "sourceId": "AIR_RISK",
+              "targetId": "EARTH_TIGHTEN"
+            }
+          ],
+          "score": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        }
+      ]
+    },
+    "I5_ALIGNMENT_ONLY": {
+      "runs": 2,
+      "exact": 2,
+      "rows": [
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_CONSONANCE",
+              "sourceId": "AIR_WAIT",
+              "targetId": "FIRE_WAIT"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "CONFIGURATION",
+              "predicate": "ALIGNMENT",
+              "direction": "SYMMETRIC",
+              "endpointIds": [
+                "AIR_WAIT",
+                "FIRE_WAIT"
+              ]
+            }
+          ],
+          "score": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        },
+        {
+          "admitted": [
+            {
+              "basis": "EXPLICIT_CONSONANCE",
+              "sourceId": "AIR_WAIT",
+              "targetId": "FIRE_WAIT"
+            }
+          ],
+          "rejected": [],
+          "canonical": [
+            {
+              "dimension": "CONFIGURATION",
+              "predicate": "ALIGNMENT",
+              "direction": "SYMMETRIC",
+              "endpointIds": [
+                "AIR_WAIT",
+                "FIRE_WAIT"
+              ]
+            }
+          ],
+          "score": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        }
+      ]
+    },
+    "I6_NEITHER": {
+      "runs": 2,
+      "exact": 2,
+      "rows": [
+        {
+          "admitted": [],
+          "rejected": [],
+          "canonical": [],
+          "score": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        },
+        {
+          "admitted": [],
+          "rejected": [],
+          "canonical": [],
+          "score": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "exact": true
+          }
+        }
+      ]
+    }
+  },
+  "rows": [
+    {
+      "fixture": "I1_DYNAMIC_PLUS_ALIGNMENT",
+      "run": 1,
+      "rawHash": "f60e08d1f0dc65d6a4a1c523227072a3b667c01078e0cd4e94f1109067dafc10",
+      "proposedCount": 1,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "CONFIGURATION",
+          "predicate": "ALIGNMENT",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_LEAVE",
+            "EARTH_SETTLE"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        },
+        {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        }
+      ],
+      "score": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "exact": false
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I1_DYNAMIC_PLUS_ALIGNMENT",
+      "run": 2,
+      "rawHash": "f60e08d1f0dc65d6a4a1c523227072a3b667c01078e0cd4e94f1109067dafc10",
+      "proposedCount": 1,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "CONFIGURATION",
+          "predicate": "ALIGNMENT",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_LEAVE",
+            "EARTH_SETTLE"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        },
+        {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        }
+      ],
+      "score": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "exact": false
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I2_TENSION_ONLY",
+      "run": 1,
+      "rawHash": "02a3756591eef81488238819b26be7c3ad7203d8771d9d1a809a3bef0ab14838",
+      "proposedCount": 1,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "CONFIGURATION",
+          "predicate": "TENSION",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "FIRE_LEAVE",
+            "WATER_LOVE"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE"
+        }
+      ],
+      "score": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I2_TENSION_ONLY",
+      "run": 2,
+      "rawHash": "02a3756591eef81488238819b26be7c3ad7203d8771d9d1a809a3bef0ab14838",
+      "proposedCount": 1,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "CONFIGURATION",
+          "predicate": "TENSION",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "FIRE_LEAVE",
+            "WATER_LOVE"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE"
+        }
+      ],
+      "score": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I3_INHIBITS_PLUS_TENSION",
+      "run": 1,
+      "rawHash": "c3179adb69c5eb66ef9ce1bf4f12ad8aa02857ac50c35448c1bf148569c3b0e4",
+      "proposedCount": 2,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "DYNAMIC",
+          "predicate": "INHIBITS",
+          "direction": "DIRECTED",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        {
+          "dimension": "CONFIGURATION",
+          "predicate": "TENSION",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "EARTH_EXHAUST",
+            "FIRE_LAUNCH"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        }
+      ],
+      "score": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I3_INHIBITS_PLUS_TENSION",
+      "run": 2,
+      "rawHash": "c3179adb69c5eb66ef9ce1bf4f12ad8aa02857ac50c35448c1bf148569c3b0e4",
+      "proposedCount": 2,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "DYNAMIC",
+          "predicate": "INHIBITS",
+          "direction": "DIRECTED",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        {
+          "dimension": "CONFIGURATION",
+          "predicate": "TENSION",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "EARTH_EXHAUST",
+            "FIRE_LAUNCH"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        }
+      ],
+      "score": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I4_DYNAMIC_ONLY",
+      "run": 1,
+      "rawHash": "0653d71e0bb40325e7c3a78cc72ea2d06c6cf1ef9239bfdbc6e67574793b50e1",
+      "proposedCount": 1,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "DYNAMIC",
+          "predicate": "EVOKES",
+          "direction": "DIRECTED",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        }
+      ],
+      "score": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I4_DYNAMIC_ONLY",
+      "run": 2,
+      "rawHash": "f58177ba18d9b804f8379da97fc40206f823cbbdb02a398010c1b8d3bb2bb925",
+      "proposedCount": 1,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "DYNAMIC",
+          "predicate": "EVOKES",
+          "direction": "DIRECTED",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        }
+      ],
+      "score": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I5_ALIGNMENT_ONLY",
+      "run": 1,
+      "rawHash": "d37133f32802a6222ddbe6a4cc7674c9094f0bfd41427d07d6784f16f9ccc747",
+      "proposedCount": 1,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "CONFIGURATION",
+          "predicate": "ALIGNMENT",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_WAIT",
+            "FIRE_WAIT"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT"
+        }
+      ],
+      "score": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I5_ALIGNMENT_ONLY",
+      "run": 2,
+      "rawHash": "f46cd2eaaed40f774f5f016b90b0f417aacb900569c30884d8fd8006dff123ac",
+      "proposedCount": 1,
+      "admitted": [
+        {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT"
+        }
+      ],
+      "rejected": [],
+      "canonical": [
+        {
+          "dimension": "CONFIGURATION",
+          "predicate": "ALIGNMENT",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_WAIT",
+            "FIRE_WAIT"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT"
+        }
+      ],
+      "score": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I6_NEITHER",
+      "run": 1,
+      "rawHash": "f797469e0978a939e373491715b83b5e870c7dbb4e26de55b5cc4cfaa14d94c5",
+      "proposedCount": 0,
+      "admitted": [],
+      "rejected": [],
+      "canonical": [],
+      "expected": [],
+      "score": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    },
+    {
+      "fixture": "I6_NEITHER",
+      "run": 2,
+      "rawHash": "f797469e0978a939e373491715b83b5e870c7dbb4e26de55b5cc4cfaa14d94c5",
+      "proposedCount": 0,
+      "admitted": [],
+      "rejected": [],
+      "canonical": [],
+      "expected": [],
+      "score": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "exact": true
+      },
+      "parseError": null
+    }
+  ]
+}
