@@ -1,7 +1,8 @@
 # MAIA-MAVEN-T1A — KEEP INVOCATION
 
-**Status:** ⭐ **OPEN — narrowly chartered.**
-**Gate:** **J4 — experience / semantic contract.** ⛔ J5 build NOT authorized.
+**Status:** ⭐ **J4 CLOSED 2026-09-17.** Contract ratified —
+`MAIA-MAVEN-T1A_J4_CONTRACT_2026-09-17.md` is authoritative over this charter.
+**Gate:** J4 ✅ closed. ⛔ J5 build NOT authorized.
 **Date:** 2026-09-17
 **Authority:** `MAIA-MAVEN-CANON-01_FOUNDER_ADJUDICATION_2026-09-17.md` (R1–R8)
 
@@ -14,7 +15,7 @@ J0  Canon / founder rulings ............... ✓
 J1  Repository truth ...................... ✓
 J2  Constitutional reconciliation ......... ✓
 J3  Existing substrate .................... ✓
-J4  Experience / semantic contract ........ ← THIS LANE
+J4  Experience / semantic contract ........ ✅ CLOSED (see J4 CONTRACT record)
 J5  Bounded build ......................... ⛔ NOT AUTHORIZED
 ```
 
@@ -162,6 +163,8 @@ When the contract is written, ⛔ **STOP.** Return it for founder adjudication.
 
 ## 7. Standing
 
-`MAIA-MAVEN-T1A` OPEN at **J4** · contract NOT authored · ⛔ J5 build NOT authorized · ⛔ no
+`MAIA-MAVEN-T1A` **J4 ✅ CLOSED** · contract RATIFIED (four acts: ENCOUNTER · KEEP · REOPEN ·
+CONTINUE; `SANCTUARY = ENCOUNTER ONLY`) · ⚠️ qualified Keep names and the negative-control
+falsifier OWED · ⛔ J5 build NOT authorized · ⛔ no
 capability-registry, memory, Sanctuary or `/maia` work in scope · T1-B / T1-C / T1-D remain
 unopened · production UNTOUCHED.

@@ -142,14 +142,41 @@ Maven renames its structure rather than redefining existing canon.
 
 > ⭐ **Constitutional principle: one canonical term, one canonical referent.**
 
-**Executed by this lane:** `MAIA-NODE-15` renamed to **the Standing Model**; its members are
-**standings**, not layers; the file was renamed `…_FOUR_LAYER_MEMORY_MODEL_…` →
-`…_STANDING_MODEL_…` via `git mv`.
+**Executed by this lane:** `MAIA-NODE-15` was first renamed to *the Standing Model*, then
+corrected — see **R4 CORRECTION** below. Current name: **the Continuity Stack**, members
+**positions**, file `…_CONTINUITY_STACK_…`.
 
 ⚠️ The word "layer" was dropped entirely rather than re-prefixed, because it is claimed twice —
-by `FOUR_LAYER_SUBSTITUTION.md` and by the twelve-layer continuity stack. ⚠️ **"Standing" is the
-lane's selection under the principle, not a founder-chosen term**, and is confined to programme
-records with no source identifier, so it remains changeable at zero cost.
+by `FOUR_LAYER_SUBSTITUTION.md` and by the twelve content layers of canon §II.
+
+---
+
+## 4a. R4 CORRECTION — "STANDING" REJECTED AS THE NOUN
+
+**Entered 2026-09-17, post-close. A documentary correction to R4, ⛔ NOT a reopening of the
+canon or of implementation.** `MAIA-MAVEN-CANON-01` remains **CLOSED**.
+
+> *"Standing" is useful elsewhere as a property of an object — epistemic standing, disclosure
+> standing, authorization standing — but it should not become the noun for this architecture.
+> That creates a second ambiguity immediately after removing "layer."*
+
+**The established name for `Encounter → History → Memory → Continuation` is the CONTINUITY
+STACK.** Executed: file renamed `…_STANDING_MODEL_…` → `…_CONTINUITY_STACK_…` via `git mv`;
+architectural use of *standings* replaced by **the Continuity Stack** and its **positions**;
+substance preserved unchanged.
+
+⭐ *Standing* survives as a **property** — a Keep *has Memory standing* — never as the name.
+
+### ⚠️ Collision reported, ⛔ not resolved, ⛔ canon not touched
+
+The corrected name is already in ratified use for a **different** referent:
+`MAIA_MEMORY_CANON_v1.0.md:21` (`## II. The Continuity Stack — 12 Layers`),
+`lib/maia/memoryHealth.ts:44`, and `app/accounted-for/page.tsx:386` — **a public-facing surface**.
+
+⭐⭐ This is the same defect R4 removed, relocated, and now stronger: load-bearing in canon,
+runtime and a published page rather than across two documents. **One line of founder ruling is
+owed.** Three options are recorded in `MAIA-NODE-15_CONTINUITY_STACK_2026-09-17.md` §0a; ⛔ none
+taken. The ruling was executed as given; this reports what executing it collided with.
 
 ---
 
@@ -237,7 +264,7 @@ authorized** by this ruling.
 | Record | Amendment |
 |---|---|
 | `MAIA-MAVEN-01_GOVERNING_ARCHITECTURE` | §4.6 resolved by R1 · §6 resolved by R2 · §3 resolved by R3 |
-| `MAIA-NODE-15_STANDING_MODEL` | renamed + rewritten under R4 · R1 applied at §4 |
+| `MAIA-NODE-15_CONTINUITY_STACK` | renamed + rewritten under R4 and the R4 CORRECTION · R1 applied at §4 · ⚠️ name collision OPEN (§0a) |
 | `MAIA-NODE-16_CONTEXT_MEMORY_POLICY_MATRIX` | §II carve-out WITHDRAWN by R5 · §III by R1 · §XVI by R7 · §XIX by R5 |
 | `MAIA-MAVEN-T1_TRUTHFUL_AWARENESS_CHARTER` | §1.2 resolved by R8 |
 | `MAIA-MAVEN_DERIVATION_INDEX` | NODE-15 reference updated |
@@ -254,6 +281,8 @@ authorized** by this ruling.
 MAIA-MAVEN-CANON-01 ...................... ✅ CLOSED
 MAIA-MAVEN-01 ............................ CANDIDATE CANONICAL AUTHORITY
 R1 … R8 .................................. RATIFIED
+R4 CORRECTION ............................ RATIFIED (post-close, documentary)
+T1A J4 contract .......................... RATIFIED / CLOSED
 T-1 … T-5 ................................ RESOLVED
 NODE-05 .................................. ⛔ OPEN AT J5, no retroactive PASS
 LF-SCOPE-01 .............................. ⛔ UNATTESTED
@@ -261,5 +290,9 @@ Implementation ........................... ⛔ UNOPENED
 Production ............................... UNTOUCHED
 ```
 
-**Next movement:** `MAIA-MAVEN-T1A_KEEP_INVOCATION_CHARTER_2026-09-17.md` — narrowly chartered,
-at **J4** only.
+**Next movement:** ⭐ `MAIA-MAVEN-T1A` opened and its **J4 contract is now RATIFIED and CLOSED** —
+see `MAIA-MAVEN-T1A_J4_CONTRACT_2026-09-17.md` (four acts: ENCOUNTER · KEEP · REOPEN ·
+CONTINUE; `SANCTUARY = ENCOUNTER ONLY`). ⛔ J5 build NOT authorized.
+
+⚠️ **Open after closure:** the Continuity-Stack name collision (§4a) · the qualified Keep names
+under R8 · the J5 negative-control falsifier.
