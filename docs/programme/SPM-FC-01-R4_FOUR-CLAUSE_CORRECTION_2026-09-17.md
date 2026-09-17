@@ -33,7 +33,7 @@ If R4 is ratified:
 #### I-12 · Withdrawal may change present standing or authority without rewriting history
 
 1. **Law.** A withdrawal must be able to remove the present effect that the member is withdrawing —
-   including present standing, participation, or authority as applicable — without falsifying or
+   including present standing or authority as applicable — without falsifying or
    destroying the historical fact that the prior state, claim, or act existed. Withdrawal is not
    universally assigned to the warrant axis; the affected axis is determined by what was withdrawn.
 2. **Evidence.** D9A §2.10 and §8.2 — present standing is explicitly non-monotonic: `valid_to`,
