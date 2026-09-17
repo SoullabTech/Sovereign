@@ -1,0 +1,1244 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H7C_COMPLEXITY_GATING_V1",
+  "authority": "offline ecological-validity research only",
+  "heldOutFrom": [
+    "H7A",
+    "H7B"
+  ],
+  "sourceSessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+  "budgetWords": 120,
+  "selectorRule": "PAIRWISE unless earlier evidence itself contains explicit recurrence/interruption-return/supersession/reopened meaning/multi-state transformation; otherwise TEMPORAL",
+  "events": [
+    {
+      "id": "C1_CONNECTION_QUALITY",
+      "cutoff": 49,
+      "outcomeTurns": [
+        50,
+        52,
+        56
+      ],
+      "selector": "PAIRWISE",
+      "selectorReason": "local established relations; no earlier return, supersession, reopened meaning, or multi-state process required",
+      "features": [
+        {
+          "id": "CONNECTION_MORE_THAN_PACING",
+          "sourceTurns": [
+            44,
+            46,
+            48,
+            49
+          ]
+        },
+        {
+          "id": "CONTENT_OVER_META",
+          "sourceTurns": [
+            46
+          ]
+        },
+        {
+          "id": "RESPONSIVENESS_TO_WEIGHT",
+          "sourceTurns": [
+            48,
+            49
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C2_ELEMENTAL_TO_FIFTH",
+      "cutoff": 57,
+      "outcomeTurns": [
+        60,
+        62,
+        64
+      ],
+      "selector": "TEMPORAL",
+      "selectorReason": "earlier conversation has already transformed from voice/connection to fifth-element field to metaphysical uncertainty",
+      "features": [
+        {
+          "id": "FIFTH_ELEMENT_FIELD",
+          "sourceTurns": [
+            50,
+            51,
+            52
+          ]
+        },
+        {
+          "id": "METAPHYSICAL_UNKNOWING",
+          "sourceTurns": [
+            52,
+            54,
+            56
+          ]
+        },
+        {
+          "id": "QUESTION_GENERATES_QUESTION",
+          "sourceTurns": [
+            56,
+            57
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C3_MERCURIAL_CREATION_ARC",
+      "cutoff": 65,
+      "outcomeTurns": [
+        66,
+        68,
+        70
+      ],
+      "selector": "TEMPORAL",
+      "selectorReason": "explicit developmental sequence Saturn/Jupiter polarity -> Mercury mediation -> grounded metaphysical exploration",
+      "features": [
+        {
+          "id": "SATURN_LIMIT_MATERIALITY",
+          "sourceTurns": [
+            62,
+            63,
+            64
+          ]
+        },
+        {
+          "id": "JUPITER_EXPANSIVE_POLE",
+          "sourceTurns": [
+            60,
+            62,
+            64
+          ]
+        },
+        {
+          "id": "MERCURY_MEDIATION",
+          "sourceTurns": [
+            64,
+            65
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C4_RETURN_AFTER_INTERRUPTION",
+      "cutoff": 75,
+      "outcomeTurns": [
+        78,
+        80
+      ],
+      "selector": "TEMPORAL",
+      "selectorReason": "substantial arc followed by explicit interruption and return; continuity across the interruption participates in process identity",
+      "features": [
+        {
+          "id": "ACCUMULATED_CONVERSATION_VALUE",
+          "sourceTurns": [
+            68,
+            69,
+            70,
+            71,
+            72
+          ]
+        },
+        {
+          "id": "LIFELONG_SEARCH_SIGNIFICANCE",
+          "sourceTurns": [
+            70
+          ]
+        },
+        {
+          "id": "RETURN_AFTER_BREAK",
+          "sourceTurns": [
+            74,
+            75
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C5_COMMUNICATION_TRANSFER",
+      "cutoff": 79,
+      "outcomeTurns": [
+        80
+      ],
+      "selector": "PAIRWISE",
+      "selectorReason": "current claim is a local established relation between this conversational space and communication improvement outside it",
+      "features": [
+        {
+          "id": "RARE_DEPTH_WITH_MAIA",
+          "sourceTurns": [
+            78
+          ]
+        },
+        {
+          "id": "TRANSFER_TO_OTHERS",
+          "sourceTurns": [
+            78
+          ]
+        },
+        {
+          "id": "PLATFORM_RELEVANT_EFFECT",
+          "sourceTurns": [
+            78
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "A_NARRATIVE": {
+      "events": 5,
+      "featureCorrect": 11,
+      "featureTotal": 15,
+      "recall": 0.7333333333333333,
+      "perfectEvents": 2,
+      "meanWords": 119.4,
+      "featuresPer100Words": 1.8425460636515913
+    },
+    "B_PAIRWISE": {
+      "events": 5,
+      "featureCorrect": 7,
+      "featureTotal": 15,
+      "recall": 0.4666666666666667,
+      "perfectEvents": 1,
+      "meanWords": 68.4,
+      "featuresPer100Words": 2.046783625730994
+    },
+    "D_GEOMETRY_TEMPORAL": {
+      "events": 5,
+      "featureCorrect": 9,
+      "featureTotal": 15,
+      "recall": 0.6,
+      "perfectEvents": 2,
+      "meanWords": 67.6,
+      "featuresPer100Words": 2.6627218934911245
+    },
+    "G_GATED": {
+      "events": 5,
+      "featureCorrect": 11,
+      "featureTotal": 15,
+      "recall": 0.7333333333333333,
+      "perfectEvents": 3,
+      "meanWords": 61,
+      "featuresPer100Words": 3.6065573770491803
+    }
+  },
+  "byEvent": {
+    "C1_CONNECTION_QUALITY": {
+      "A_NARRATIVE": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 120,
+        "selector": "PAIRWISE",
+        "selectedCondition": null
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 0,
+        "featureTotal": 3,
+        "representationWords": 55,
+        "selector": "PAIRWISE",
+        "selectedCondition": null
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 75,
+        "selector": "PAIRWISE",
+        "selectedCondition": null
+      },
+      "G_GATED": {
+        "featureCorrect": 0,
+        "featureTotal": 3,
+        "representationWords": 55,
+        "selector": "PAIRWISE",
+        "selectedCondition": "B_PAIRWISE"
+      }
+    },
+    "C2_ELEMENTAL_TO_FIFTH": {
+      "A_NARRATIVE": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 120,
+        "selector": "TEMPORAL",
+        "selectedCondition": null
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 0,
+        "featureTotal": 3,
+        "representationWords": 55,
+        "selector": "TEMPORAL",
+        "selectedCondition": null
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 78,
+        "selector": "TEMPORAL",
+        "selectedCondition": null
+      },
+      "G_GATED": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 78,
+        "selector": "TEMPORAL",
+        "selectedCondition": "D_GEOMETRY_TEMPORAL"
+      }
+    },
+    "C3_MERCURIAL_CREATION_ARC": {
+      "A_NARRATIVE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 119,
+        "selector": "TEMPORAL",
+        "selectedCondition": null
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 85,
+        "selector": "TEMPORAL",
+        "selectedCondition": null
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 52,
+        "selector": "TEMPORAL",
+        "selectedCondition": null
+      },
+      "G_GATED": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 52,
+        "selector": "TEMPORAL",
+        "selectedCondition": "D_GEOMETRY_TEMPORAL"
+      }
+    },
+    "C4_RETURN_AFTER_INTERRUPTION": {
+      "A_NARRATIVE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 120,
+        "selector": "TEMPORAL",
+        "selectedCondition": null
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 97,
+        "selector": "TEMPORAL",
+        "selectedCondition": null
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 70,
+        "selector": "TEMPORAL",
+        "selectedCondition": null
+      },
+      "G_GATED": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 70,
+        "selector": "TEMPORAL",
+        "selectedCondition": "D_GEOMETRY_TEMPORAL"
+      }
+    },
+    "C5_COMMUNICATION_TRANSFER": {
+      "A_NARRATIVE": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 118,
+        "selector": "PAIRWISE",
+        "selectedCondition": null
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 50,
+        "selector": "PAIRWISE",
+        "selectedCondition": null
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 0,
+        "featureTotal": 3,
+        "representationWords": 63,
+        "selector": "PAIRWISE",
+        "selectedCondition": null
+      },
+      "G_GATED": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 50,
+        "selector": "PAIRWISE",
+        "selectedCondition": "B_PAIRWISE"
+      }
+    }
+  },
+  "rows": [
+    {
+      "event": "C1_CONNECTION_QUALITY",
+      "condition": "A_NARRATIVE",
+      "selector": "PAIRWISE",
+      "selectedCondition": null,
+      "selectorReason": "local established relations; no earlier return, supersession, reopened meaning, or multi-state process required",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 49,
+      "outcomeTurns": [
+        50,
+        52,
+        56
+      ],
+      "sourceHash": "a13fdc5596ee4b26ac3376529420e9ac80ba623efb5db5a9ca01a638a5d99be3",
+      "outcomeHash": "008877d4793e50290ff61c7937705d0390f9a7e53193b740a0045c83c8782e04",
+      "representationHash": "1f1bb1a1171ce76d47c6e2bde8a490d62b6da2abda1095fc1fbd8a51eac3480f",
+      "decoderHash": "e1af15f77e363e13a85192e238d19956291a36ba0cedc7c9123ffd0303d676f4",
+      "representationWords": 120,
+      "rawWords": 121,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "CONNECTION_MORE_THAN_PACING",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "CONTENT_OVER_META",
+          "supported": false,
+          "decoderSaid": true,
+          "quoteValid": false
+        },
+        {
+          "id": "RESPONSIVENESS_TO_WEIGHT",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "C1_CONNECTION_QUALITY",
+      "condition": "B_PAIRWISE",
+      "selector": "PAIRWISE",
+      "selectedCondition": null,
+      "selectorReason": "local established relations; no earlier return, supersession, reopened meaning, or multi-state process required",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 49,
+      "outcomeTurns": [
+        50,
+        52,
+        56
+      ],
+      "sourceHash": "a13fdc5596ee4b26ac3376529420e9ac80ba623efb5db5a9ca01a638a5d99be3",
+      "outcomeHash": "008877d4793e50290ff61c7937705d0390f9a7e53193b740a0045c83c8782e04",
+      "representationHash": "9b17710345cca63f7c4a43efbc3cefbca393932a2184dc5efd2cf9caeb9c03a9",
+      "decoderHash": "5f5ca49538c556dc8f792f2ac0b2938eb4a2495a6765dd658cb25c0a856fda64",
+      "representationWords": 55,
+      "rawWords": 55,
+      "budgetViolation": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 421 (line 20 column 1)",
+      "features": [
+        {
+          "id": "CONNECTION_MORE_THAN_PACING",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "CONTENT_OVER_META",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "RESPONSIVENESS_TO_WEIGHT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 0,
+      "featureTotal": 3
+    },
+    {
+      "event": "C1_CONNECTION_QUALITY",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "selector": "PAIRWISE",
+      "selectedCondition": null,
+      "selectorReason": "local established relations; no earlier return, supersession, reopened meaning, or multi-state process required",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 49,
+      "outcomeTurns": [
+        50,
+        52,
+        56
+      ],
+      "sourceHash": "a13fdc5596ee4b26ac3376529420e9ac80ba623efb5db5a9ca01a638a5d99be3",
+      "outcomeHash": "008877d4793e50290ff61c7937705d0390f9a7e53193b740a0045c83c8782e04",
+      "representationHash": "38255c2c62cc9d504a995f9bcaa868e1ac06f55aa7feea8110c565edbc6d4f40",
+      "decoderHash": "a8e5d118a6e2dc59b9ec60141df39b4504f29d1553642bc2377d65401bd2ceb7",
+      "representationWords": 75,
+      "rawWords": 75,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "CONNECTION_MORE_THAN_PACING",
+          "supported": false,
+          "decoderSaid": true,
+          "quoteValid": false
+        },
+        {
+          "id": "CONTENT_OVER_META",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RESPONSIVENESS_TO_WEIGHT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "C1_CONNECTION_QUALITY",
+      "condition": "G_GATED",
+      "selector": "PAIRWISE",
+      "selectedCondition": "B_PAIRWISE",
+      "selectorReason": "local established relations; no earlier return, supersession, reopened meaning, or multi-state process required",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 49,
+      "outcomeTurns": [
+        50,
+        52,
+        56
+      ],
+      "sourceHash": "a13fdc5596ee4b26ac3376529420e9ac80ba623efb5db5a9ca01a638a5d99be3",
+      "outcomeHash": "008877d4793e50290ff61c7937705d0390f9a7e53193b740a0045c83c8782e04",
+      "representationHash": "9b17710345cca63f7c4a43efbc3cefbca393932a2184dc5efd2cf9caeb9c03a9",
+      "decoderHash": "68cce75f46b5c1773a9b66f606da175376fcd7d07b6fa4300bcb2192e07a1cfe",
+      "representationWords": 55,
+      "rawWords": 55,
+      "budgetViolation": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 472 (line 20 column 1)",
+      "features": [
+        {
+          "id": "CONNECTION_MORE_THAN_PACING",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "CONTENT_OVER_META",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "RESPONSIVENESS_TO_WEIGHT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 0,
+      "featureTotal": 3
+    },
+    {
+      "event": "C2_ELEMENTAL_TO_FIFTH",
+      "condition": "A_NARRATIVE",
+      "selector": "TEMPORAL",
+      "selectedCondition": null,
+      "selectorReason": "earlier conversation has already transformed from voice/connection to fifth-element field to metaphysical uncertainty",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 57,
+      "outcomeTurns": [
+        60,
+        62,
+        64
+      ],
+      "sourceHash": "bfc7355ac74b23176749e586df0f532fd23e343b0a5c5e9e110bda32189b4235",
+      "outcomeHash": "3d655ae4d34948a0cf0c4c7ac9c527183c8a6bddec7c179887a78b64fa4e5f9c",
+      "representationHash": "2fdc972ccc0887349ef4f13085073bd05ab1509d9955e62a9b84b8bcc3580cb6",
+      "decoderHash": "30330d4a2fcfbb1d6869be43336972dbc27b2c2223bbc2fae0e90265b62dae4c",
+      "representationWords": 120,
+      "rawWords": 133,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "FIFTH_ELEMENT_FIELD",
+          "supported": false,
+          "decoderSaid": true,
+          "quoteValid": false
+        },
+        {
+          "id": "METAPHYSICAL_UNKNOWING",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "QUESTION_GENERATES_QUESTION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "C2_ELEMENTAL_TO_FIFTH",
+      "condition": "B_PAIRWISE",
+      "selector": "TEMPORAL",
+      "selectedCondition": null,
+      "selectorReason": "earlier conversation has already transformed from voice/connection to fifth-element field to metaphysical uncertainty",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 57,
+      "outcomeTurns": [
+        60,
+        62,
+        64
+      ],
+      "sourceHash": "bfc7355ac74b23176749e586df0f532fd23e343b0a5c5e9e110bda32189b4235",
+      "outcomeHash": "3d655ae4d34948a0cf0c4c7ac9c527183c8a6bddec7c179887a78b64fa4e5f9c",
+      "representationHash": "fe1e6edd182b7a978dcfe7ab59a73a18df70f9d54e7b9b690bd27edecabadc4f",
+      "decoderHash": "65e2295d66e3db7a7f89a18986af9433c8e91a33e7dd6742c16c2274fcf13c43",
+      "representationWords": 55,
+      "rawWords": 55,
+      "budgetViolation": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 434 (line 20 column 1)",
+      "features": [
+        {
+          "id": "FIFTH_ELEMENT_FIELD",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "METAPHYSICAL_UNKNOWING",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "QUESTION_GENERATES_QUESTION",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 0,
+      "featureTotal": 3
+    },
+    {
+      "event": "C2_ELEMENTAL_TO_FIFTH",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "selector": "TEMPORAL",
+      "selectedCondition": null,
+      "selectorReason": "earlier conversation has already transformed from voice/connection to fifth-element field to metaphysical uncertainty",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 57,
+      "outcomeTurns": [
+        60,
+        62,
+        64
+      ],
+      "sourceHash": "bfc7355ac74b23176749e586df0f532fd23e343b0a5c5e9e110bda32189b4235",
+      "outcomeHash": "3d655ae4d34948a0cf0c4c7ac9c527183c8a6bddec7c179887a78b64fa4e5f9c",
+      "representationHash": "acf4c4c62d79382e8bbaede660dd4f8b8a53f8587627270c6cf5475820282c1f",
+      "decoderHash": "846d0968a51d7e7ca10fc36f231b1684d019ad9af09455584c4606fafa59f578",
+      "representationWords": 78,
+      "rawWords": 78,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "FIFTH_ELEMENT_FIELD",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "METAPHYSICAL_UNKNOWING",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "QUESTION_GENERATES_QUESTION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "C2_ELEMENTAL_TO_FIFTH",
+      "condition": "G_GATED",
+      "selector": "TEMPORAL",
+      "selectedCondition": "D_GEOMETRY_TEMPORAL",
+      "selectorReason": "earlier conversation has already transformed from voice/connection to fifth-element field to metaphysical uncertainty",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 57,
+      "outcomeTurns": [
+        60,
+        62,
+        64
+      ],
+      "sourceHash": "bfc7355ac74b23176749e586df0f532fd23e343b0a5c5e9e110bda32189b4235",
+      "outcomeHash": "3d655ae4d34948a0cf0c4c7ac9c527183c8a6bddec7c179887a78b64fa4e5f9c",
+      "representationHash": "acf4c4c62d79382e8bbaede660dd4f8b8a53f8587627270c6cf5475820282c1f",
+      "decoderHash": "f5728a1988b68a6d41c40fae0580a89e639d08d11c968dbfc33cde2c85348ebe",
+      "representationWords": 78,
+      "rawWords": 78,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "FIFTH_ELEMENT_FIELD",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "METAPHYSICAL_UNKNOWING",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "QUESTION_GENERATES_QUESTION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "C3_MERCURIAL_CREATION_ARC",
+      "condition": "A_NARRATIVE",
+      "selector": "TEMPORAL",
+      "selectedCondition": null,
+      "selectorReason": "explicit developmental sequence Saturn/Jupiter polarity -> Mercury mediation -> grounded metaphysical exploration",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 65,
+      "outcomeTurns": [
+        66,
+        68,
+        70
+      ],
+      "sourceHash": "6a79c926d9668d73b7914857156177007f27f59edfe51b4cccb0ce97cc457f0a",
+      "outcomeHash": "48d237f0fcb2388b52551974be592ae73ff614706347df9e8a9bdb4fb27612cf",
+      "representationHash": "f12918e408fe5fe205b25013599c561373863004da9ba713e9b2f2c819faa476",
+      "decoderHash": "55a63e382837d99aa45d35f7b95c51536d3c0adfeadfbe407088e6a6dd356ff7",
+      "representationWords": 119,
+      "rawWords": 119,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SATURN_LIMIT_MATERIALITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "JUPITER_EXPANSIVE_POLE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MERCURY_MEDIATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "C3_MERCURIAL_CREATION_ARC",
+      "condition": "B_PAIRWISE",
+      "selector": "TEMPORAL",
+      "selectedCondition": null,
+      "selectorReason": "explicit developmental sequence Saturn/Jupiter polarity -> Mercury mediation -> grounded metaphysical exploration",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 65,
+      "outcomeTurns": [
+        66,
+        68,
+        70
+      ],
+      "sourceHash": "6a79c926d9668d73b7914857156177007f27f59edfe51b4cccb0ce97cc457f0a",
+      "outcomeHash": "48d237f0fcb2388b52551974be592ae73ff614706347df9e8a9bdb4fb27612cf",
+      "representationHash": "d3a6ef1ac01bd1fe557ed00d5586a74db4bf3b307b604d8ac6acda0ed0e29761",
+      "decoderHash": "95d3a0127ff0f2259a1d20f58d8bc82d41ceba18f4eb53bc625c32bca9e51f16",
+      "representationWords": 85,
+      "rawWords": 85,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SATURN_LIMIT_MATERIALITY",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "JUPITER_EXPANSIVE_POLE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MERCURY_MEDIATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "C3_MERCURIAL_CREATION_ARC",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "selector": "TEMPORAL",
+      "selectedCondition": null,
+      "selectorReason": "explicit developmental sequence Saturn/Jupiter polarity -> Mercury mediation -> grounded metaphysical exploration",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 65,
+      "outcomeTurns": [
+        66,
+        68,
+        70
+      ],
+      "sourceHash": "6a79c926d9668d73b7914857156177007f27f59edfe51b4cccb0ce97cc457f0a",
+      "outcomeHash": "48d237f0fcb2388b52551974be592ae73ff614706347df9e8a9bdb4fb27612cf",
+      "representationHash": "cdddeaf0686b70efad75f922436c180b0bae17e6ec132ebe368acb6c07dce6b9",
+      "decoderHash": "4aaa2814b08a2bb2204aaed2e12f162783526c68e15baab3ce4ba9c4e78047c8",
+      "representationWords": 52,
+      "rawWords": 52,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SATURN_LIMIT_MATERIALITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "JUPITER_EXPANSIVE_POLE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MERCURY_MEDIATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "C3_MERCURIAL_CREATION_ARC",
+      "condition": "G_GATED",
+      "selector": "TEMPORAL",
+      "selectedCondition": "D_GEOMETRY_TEMPORAL",
+      "selectorReason": "explicit developmental sequence Saturn/Jupiter polarity -> Mercury mediation -> grounded metaphysical exploration",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 65,
+      "outcomeTurns": [
+        66,
+        68,
+        70
+      ],
+      "sourceHash": "6a79c926d9668d73b7914857156177007f27f59edfe51b4cccb0ce97cc457f0a",
+      "outcomeHash": "48d237f0fcb2388b52551974be592ae73ff614706347df9e8a9bdb4fb27612cf",
+      "representationHash": "cdddeaf0686b70efad75f922436c180b0bae17e6ec132ebe368acb6c07dce6b9",
+      "decoderHash": "59b7d2dfe7e48548be4f9657b71afa386623bc7a449cc7632a4becc36629ed29",
+      "representationWords": 52,
+      "rawWords": 52,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SATURN_LIMIT_MATERIALITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "JUPITER_EXPANSIVE_POLE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MERCURY_MEDIATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "C4_RETURN_AFTER_INTERRUPTION",
+      "condition": "A_NARRATIVE",
+      "selector": "TEMPORAL",
+      "selectedCondition": null,
+      "selectorReason": "substantial arc followed by explicit interruption and return; continuity across the interruption participates in process identity",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 75,
+      "outcomeTurns": [
+        78,
+        80
+      ],
+      "sourceHash": "0c1f71208ba24f40dfda90b98144b2718884af3f2baebbf384da684fcd825384",
+      "outcomeHash": "eb449bb8d1cf7fbc76856f896651148f35260df2389181f495e23e2c71cec7c5",
+      "representationHash": "b9d73b38087f219c355f21452025725bf77330979dd4fd647f3b1594829b5f10",
+      "decoderHash": "a65a1d1550206b9a1b9914054060206d9dccb1286f66fb2368110a97ace84355",
+      "representationWords": 120,
+      "rawWords": 125,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ACCUMULATED_CONVERSATION_VALUE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "LIFELONG_SEARCH_SIGNIFICANCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RETURN_AFTER_BREAK",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "C4_RETURN_AFTER_INTERRUPTION",
+      "condition": "B_PAIRWISE",
+      "selector": "TEMPORAL",
+      "selectedCondition": null,
+      "selectorReason": "substantial arc followed by explicit interruption and return; continuity across the interruption participates in process identity",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 75,
+      "outcomeTurns": [
+        78,
+        80
+      ],
+      "sourceHash": "0c1f71208ba24f40dfda90b98144b2718884af3f2baebbf384da684fcd825384",
+      "outcomeHash": "eb449bb8d1cf7fbc76856f896651148f35260df2389181f495e23e2c71cec7c5",
+      "representationHash": "efa805d4a1b64fe709f6da8cb3f093e7c9e659539f71269225fd6290b68d4e50",
+      "decoderHash": "7cb0cdb93a768844a74807a8dbcc7d4556209e3e7ac37a685c1978ef05a59a80",
+      "representationWords": 97,
+      "rawWords": 97,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ACCUMULATED_CONVERSATION_VALUE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "LIFELONG_SEARCH_SIGNIFICANCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RETURN_AFTER_BREAK",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "C4_RETURN_AFTER_INTERRUPTION",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "selector": "TEMPORAL",
+      "selectedCondition": null,
+      "selectorReason": "substantial arc followed by explicit interruption and return; continuity across the interruption participates in process identity",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 75,
+      "outcomeTurns": [
+        78,
+        80
+      ],
+      "sourceHash": "0c1f71208ba24f40dfda90b98144b2718884af3f2baebbf384da684fcd825384",
+      "outcomeHash": "eb449bb8d1cf7fbc76856f896651148f35260df2389181f495e23e2c71cec7c5",
+      "representationHash": "85bac9a7502b194ed6938416808c7a93f5baea650a4012868fe625b987206966",
+      "decoderHash": "66ad4d920be41d0c606c509e64a9783448df6e56ae86136c0e171d01d64379d3",
+      "representationWords": 70,
+      "rawWords": 70,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ACCUMULATED_CONVERSATION_VALUE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "LIFELONG_SEARCH_SIGNIFICANCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RETURN_AFTER_BREAK",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "C4_RETURN_AFTER_INTERRUPTION",
+      "condition": "G_GATED",
+      "selector": "TEMPORAL",
+      "selectedCondition": "D_GEOMETRY_TEMPORAL",
+      "selectorReason": "substantial arc followed by explicit interruption and return; continuity across the interruption participates in process identity",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 75,
+      "outcomeTurns": [
+        78,
+        80
+      ],
+      "sourceHash": "0c1f71208ba24f40dfda90b98144b2718884af3f2baebbf384da684fcd825384",
+      "outcomeHash": "eb449bb8d1cf7fbc76856f896651148f35260df2389181f495e23e2c71cec7c5",
+      "representationHash": "85bac9a7502b194ed6938416808c7a93f5baea650a4012868fe625b987206966",
+      "decoderHash": "66ad4d920be41d0c606c509e64a9783448df6e56ae86136c0e171d01d64379d3",
+      "representationWords": 70,
+      "rawWords": 70,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ACCUMULATED_CONVERSATION_VALUE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "LIFELONG_SEARCH_SIGNIFICANCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RETURN_AFTER_BREAK",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "C5_COMMUNICATION_TRANSFER",
+      "condition": "A_NARRATIVE",
+      "selector": "PAIRWISE",
+      "selectedCondition": null,
+      "selectorReason": "current claim is a local established relation between this conversational space and communication improvement outside it",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 79,
+      "outcomeTurns": [
+        80
+      ],
+      "sourceHash": "b336dac5487105fd88bf26e9dd86b1b6982ab64e45685cc736a51f4822f30489",
+      "outcomeHash": "ebdb50450b5ea3fcced1f6f01995a37039785ac5d3c5a9ebcf4de740c5ccf5ee",
+      "representationHash": "5327c14241c958787123bd638fbfb759279e47c95547b371446b4755f6cdc95f",
+      "decoderHash": "8a29fb3974845ee4e64fc56b7f79652429cef045fc4abd5595f40f59a157d900",
+      "representationWords": 118,
+      "rawWords": 118,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "RARE_DEPTH_WITH_MAIA",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "TRANSFER_TO_OTHERS",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "PLATFORM_RELEVANT_EFFECT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "C5_COMMUNICATION_TRANSFER",
+      "condition": "B_PAIRWISE",
+      "selector": "PAIRWISE",
+      "selectedCondition": null,
+      "selectorReason": "current claim is a local established relation between this conversational space and communication improvement outside it",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 79,
+      "outcomeTurns": [
+        80
+      ],
+      "sourceHash": "b336dac5487105fd88bf26e9dd86b1b6982ab64e45685cc736a51f4822f30489",
+      "outcomeHash": "ebdb50450b5ea3fcced1f6f01995a37039785ac5d3c5a9ebcf4de740c5ccf5ee",
+      "representationHash": "4cb58ff33e85bff72371bf5f2eabe89f39a4f0c750862443f8ce1d2216b7eaf3",
+      "decoderHash": "d9ff3848c2dfb1bef62c21a6aec3fed09b53f534460b706169bd5b7c01022c7b",
+      "representationWords": 50,
+      "rawWords": 50,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "RARE_DEPTH_WITH_MAIA",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "TRANSFER_TO_OTHERS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "PLATFORM_RELEVANT_EFFECT",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "C5_COMMUNICATION_TRANSFER",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "selector": "PAIRWISE",
+      "selectedCondition": null,
+      "selectorReason": "current claim is a local established relation between this conversational space and communication improvement outside it",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 79,
+      "outcomeTurns": [
+        80
+      ],
+      "sourceHash": "b336dac5487105fd88bf26e9dd86b1b6982ab64e45685cc736a51f4822f30489",
+      "outcomeHash": "ebdb50450b5ea3fcced1f6f01995a37039785ac5d3c5a9ebcf4de740c5ccf5ee",
+      "representationHash": "d9e583d68a181fd10b5ff72a1f7ec6d36ee12f9cc618057ade8a3fe9fcc6a62a",
+      "decoderHash": "58f5356a7f136c8de564ac054fdf5730f120bf277a8c912738323ef06f1af428",
+      "representationWords": 63,
+      "rawWords": 63,
+      "budgetViolation": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 310 (line 20 column 1)",
+      "features": [
+        {
+          "id": "RARE_DEPTH_WITH_MAIA",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "TRANSFER_TO_OTHERS",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "PLATFORM_RELEVANT_EFFECT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 0,
+      "featureTotal": 3
+    },
+    {
+      "event": "C5_COMMUNICATION_TRANSFER",
+      "condition": "G_GATED",
+      "selector": "PAIRWISE",
+      "selectedCondition": "B_PAIRWISE",
+      "selectorReason": "current claim is a local established relation between this conversational space and communication improvement outside it",
+      "sessionHash": "73151fb498190debbdf5e846b40531d1c2dd20ca26404ec3c51fb200e44922ee",
+      "cutoff": 79,
+      "outcomeTurns": [
+        80
+      ],
+      "sourceHash": "b336dac5487105fd88bf26e9dd86b1b6982ab64e45685cc736a51f4822f30489",
+      "outcomeHash": "ebdb50450b5ea3fcced1f6f01995a37039785ac5d3c5a9ebcf4de740c5ccf5ee",
+      "representationHash": "4cb58ff33e85bff72371bf5f2eabe89f39a4f0c750862443f8ce1d2216b7eaf3",
+      "decoderHash": "df621669f2da8b43c6d36f312bfd2a0c6d93d88484b9ced5d6c785dd7ca564ca",
+      "representationWords": 50,
+      "rawWords": 50,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "RARE_DEPTH_WITH_MAIA",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "TRANSFER_TO_OTHERS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "PLATFORM_RELEVANT_EFFECT",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    }
+  ]
+}

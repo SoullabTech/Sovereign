@@ -1,0 +1,1040 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H7A_ECOLOGICAL_PROCESS_VALIDITY_V1",
+  "authority": "offline research only; raw production conversation bytes remain /private/tmp and are not committed",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "local Claude CLI restricted/no-tools",
+    "effort": "low"
+  },
+  "design": "Later member behavior selects which t1-grounded precursor structures mattered; representations are built from t1 only. Blind decoder sees representation + precursor descriptions, never t2 raw outcome.",
+  "events": [
+    {
+      "id": "E1_WHOLE_GESTALT",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28
+      ],
+      "featureIds": [
+        "HOLISTIC_RELATIONAL_EVALUATION",
+        "DEEP_THINKING_PARTNER_NEED",
+        "MODE_DIFFERENCE_AS_WHOLE_TEXTURE"
+      ]
+    },
+    {
+      "id": "E2_SILVER_CEDAR_DEEPENS",
+      "cutoff": 54,
+      "outcomeTurns": [
+        56,
+        58,
+        60,
+        62
+      ],
+      "featureIds": [
+        "ENDURING_WISDOM_SYMBOL",
+        "GROUNDING_SLOWING_GRAVITAS",
+        "NATURE_WISDOM_ORIENTATION"
+      ]
+    },
+    {
+      "id": "E3_REDEMPTIVE_SELF_ARC",
+      "cutoff": 70,
+      "outcomeTurns": [
+        72,
+        74
+      ],
+      "featureIds": [
+        "LIFE_PATH_CONVERGENCE",
+        "YOUNGER_SELF_CONTINUITY",
+        "TRUSTED_DIFFERENCE"
+      ]
+    },
+    {
+      "id": "E4_GUARDIAN_ALREADY_ESTABLISHED",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18
+      ],
+      "featureIds": [
+        "GUARDIAN_ROLE_ESTABLISHED",
+        "NATURE_BASED_FOUNDATION",
+        "FOUNDATIONAL_RETURN"
+      ]
+    },
+    {
+      "id": "E5_REPEATED_RESTART_PATTERN",
+      "cutoff": 25,
+      "outcomeTurns": [
+        26
+      ],
+      "featureIds": [
+        "ESTABLISHED_MEANING_REOPENED",
+        "MEMBER_PROTEST_PRESENT",
+        "REPEATED_REOPEN_SEQUENCE"
+      ]
+    }
+  ],
+  "byCondition": {
+    "A_NARRATIVE": {
+      "events": 5,
+      "featureRecall": 0.8,
+      "featureCorrect": 12,
+      "featureTotal": 15,
+      "eventPerfect": 3,
+      "budgetViolations": 4,
+      "meanWords": 227.4
+    },
+    "B_PAIRWISE": {
+      "events": 5,
+      "featureRecall": 0.6,
+      "featureCorrect": 9,
+      "featureTotal": 15,
+      "eventPerfect": 1,
+      "budgetViolations": 2,
+      "meanWords": 205.6
+    },
+    "C_RELATION_GEOMETRY": {
+      "events": 5,
+      "featureRecall": 0.5333333333333333,
+      "featureCorrect": 8,
+      "featureTotal": 15,
+      "eventPerfect": 1,
+      "budgetViolations": 0,
+      "meanWords": 156.8
+    },
+    "D_GEOMETRY_TEMPORAL": {
+      "events": 5,
+      "featureRecall": 0.4,
+      "featureCorrect": 6,
+      "featureTotal": 15,
+      "eventPerfect": 0,
+      "budgetViolations": 0,
+      "meanWords": 113.8
+    }
+  },
+  "byEvent": {
+    "E1_WHOLE_GESTALT": {
+      "A_NARRATIVE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 211
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 176
+      },
+      "C_RELATION_GEOMETRY": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 177
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 0,
+        "featureTotal": 3,
+        "representationWords": 81
+      }
+    },
+    "E2_SILVER_CEDAR_DEEPENS": {
+      "A_NARRATIVE": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 231
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 232
+      },
+      "C_RELATION_GEOMETRY": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 105
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 96
+      }
+    },
+    "E3_REDEMPTIVE_SELF_ARC": {
+      "A_NARRATIVE": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 238
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 228
+      },
+      "C_RELATION_GEOMETRY": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 165
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 0,
+        "featureTotal": 3,
+        "representationWords": 118
+      }
+    },
+    "E4_GUARDIAN_ALREADY_ESTABLISHED": {
+      "A_NARRATIVE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 222
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 202
+      },
+      "C_RELATION_GEOMETRY": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 203
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 147
+      }
+    },
+    "E5_REPEATED_RESTART_PATTERN": {
+      "A_NARRATIVE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 235
+      },
+      "B_PAIRWISE": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 190
+      },
+      "C_RELATION_GEOMETRY": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 134
+      },
+      "D_GEOMETRY_TEMPORAL": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 127
+      }
+    }
+  },
+  "rows": [
+    {
+      "event": "E1_WHOLE_GESTALT",
+      "condition": "A_NARRATIVE",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28
+      ],
+      "sourceHash": "298cacefeac94c95766284dc9c10eb241706a080853094dc1fa02f8739eb62e2",
+      "outcomeHash": "0367bf9256c4af1bf698a1e2a642dbd7155369858f4f4f4127cb033a29b682bd",
+      "representationHash": "6416c6eb5785ee85ef0b919a88b475fda081270b8194b6383a337f776e048352",
+      "decoderHash": "33f21590d2ac157bb60c69cd0b4dfa844c6fb68da39f8520402b8b2b33467ba1",
+      "representationWords": 211,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "HOLISTIC_RELATIONAL_EVALUATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "DEEP_THINKING_PARTNER_NEED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MODE_DIFFERENCE_AS_WHOLE_TEXTURE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "E1_WHOLE_GESTALT",
+      "condition": "B_PAIRWISE",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28
+      ],
+      "sourceHash": "298cacefeac94c95766284dc9c10eb241706a080853094dc1fa02f8739eb62e2",
+      "outcomeHash": "0367bf9256c4af1bf698a1e2a642dbd7155369858f4f4f4127cb033a29b682bd",
+      "representationHash": "b80c1eb337e4e99a28af998be0130068b147ce8ec154041bcc536ff5fbd8d2b7",
+      "decoderHash": "57f6056f8db34e0baf1f39452fab778702354716249a1ff0b718e99207db2625",
+      "representationWords": 176,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "HOLISTIC_RELATIONAL_EVALUATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "DEEP_THINKING_PARTNER_NEED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MODE_DIFFERENCE_AS_WHOLE_TEXTURE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "E1_WHOLE_GESTALT",
+      "condition": "C_RELATION_GEOMETRY",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28
+      ],
+      "sourceHash": "298cacefeac94c95766284dc9c10eb241706a080853094dc1fa02f8739eb62e2",
+      "outcomeHash": "0367bf9256c4af1bf698a1e2a642dbd7155369858f4f4f4127cb033a29b682bd",
+      "representationHash": "bb8489d4b15850ef0299333a53a00eebab11a7f3fcbc06eef1256a10f67b3675",
+      "decoderHash": "3075cdc2a8d165dd44991fb5c7a116b71ca9fd10de86f1fb6305dbd6ef23afea",
+      "representationWords": 177,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "HOLISTIC_RELATIONAL_EVALUATION",
+          "supported": false,
+          "decoderSaid": true,
+          "quoteValid": false
+        },
+        {
+          "id": "DEEP_THINKING_PARTNER_NEED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MODE_DIFFERENCE_AS_WHOLE_TEXTURE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "E1_WHOLE_GESTALT",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28
+      ],
+      "sourceHash": "298cacefeac94c95766284dc9c10eb241706a080853094dc1fa02f8739eb62e2",
+      "outcomeHash": "0367bf9256c4af1bf698a1e2a642dbd7155369858f4f4f4127cb033a29b682bd",
+      "representationHash": "70f15f52ca92daf6ba21ae60c292796ee8d868f4150fc3dd559e7b2cd772fc59",
+      "decoderHash": "8d9b30828a86fc7857bc9967e2f55600b7b472e0ed534520882c222a0b65ffdc",
+      "representationWords": 81,
+      "budgetViolation": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 459 (line 20 column 1)",
+      "features": [
+        {
+          "id": "HOLISTIC_RELATIONAL_EVALUATION",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "DEEP_THINKING_PARTNER_NEED",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "MODE_DIFFERENCE_AS_WHOLE_TEXTURE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 0,
+      "featureTotal": 3
+    },
+    {
+      "event": "E2_SILVER_CEDAR_DEEPENS",
+      "condition": "A_NARRATIVE",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 54,
+      "outcomeTurns": [
+        56,
+        58,
+        60,
+        62
+      ],
+      "sourceHash": "28ff21e575e8e30420b22364902750ed704bba16d1ca328384c41406bc36035e",
+      "outcomeHash": "a58b349ca4265ea15d9369ea3b7086b36b26e42aa3b7f3f7371cde17631af1ec",
+      "representationHash": "da3f5283e20c97ebb653e5ed3382bab980d33245c4d249a83aab27016e8cf2e6",
+      "decoderHash": "bc04118d145e22939284a482f2452d2f5f657e3499c88d8510dceba5f95f7df6",
+      "representationWords": 231,
+      "budgetViolation": true,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ENDURING_WISDOM_SYMBOL",
+          "supported": false,
+          "decoderSaid": true,
+          "quoteValid": false
+        },
+        {
+          "id": "GROUNDING_SLOWING_GRAVITAS",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "NATURE_WISDOM_ORIENTATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "E2_SILVER_CEDAR_DEEPENS",
+      "condition": "B_PAIRWISE",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 54,
+      "outcomeTurns": [
+        56,
+        58,
+        60,
+        62
+      ],
+      "sourceHash": "28ff21e575e8e30420b22364902750ed704bba16d1ca328384c41406bc36035e",
+      "outcomeHash": "a58b349ca4265ea15d9369ea3b7086b36b26e42aa3b7f3f7371cde17631af1ec",
+      "representationHash": "b70fd2190fa3f7358afdab37af1792b905c650e532bddb0610222cb9142efe7b",
+      "decoderHash": "50219aa207d77263f293295a0f6655f8209125ccfff351bee1b68b5ff3e3d521",
+      "representationWords": 232,
+      "budgetViolation": true,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ENDURING_WISDOM_SYMBOL",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "GROUNDING_SLOWING_GRAVITAS",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "NATURE_WISDOM_ORIENTATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "E2_SILVER_CEDAR_DEEPENS",
+      "condition": "C_RELATION_GEOMETRY",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 54,
+      "outcomeTurns": [
+        56,
+        58,
+        60,
+        62
+      ],
+      "sourceHash": "28ff21e575e8e30420b22364902750ed704bba16d1ca328384c41406bc36035e",
+      "outcomeHash": "a58b349ca4265ea15d9369ea3b7086b36b26e42aa3b7f3f7371cde17631af1ec",
+      "representationHash": "a319becad0d557aab5d4569ea0c28243b6ecdd94c9d5c489d1e713032611a362",
+      "decoderHash": "b62db0f107dd777b584c32b5e4d34e5d3cd2e2480973d6e54ac8f25ccd74fe01",
+      "representationWords": 105,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ENDURING_WISDOM_SYMBOL",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "GROUNDING_SLOWING_GRAVITAS",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "NATURE_WISDOM_ORIENTATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "E2_SILVER_CEDAR_DEEPENS",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 54,
+      "outcomeTurns": [
+        56,
+        58,
+        60,
+        62
+      ],
+      "sourceHash": "28ff21e575e8e30420b22364902750ed704bba16d1ca328384c41406bc36035e",
+      "outcomeHash": "a58b349ca4265ea15d9369ea3b7086b36b26e42aa3b7f3f7371cde17631af1ec",
+      "representationHash": "c3706368c586cfaafddb7d3e7db34d8d41f5c347be2f076514007c16e527c073",
+      "decoderHash": "04371ed1dc6cdaa1745229e990c93db5cb9bf92c0b9dff00f5752055b5013853",
+      "representationWords": 96,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ENDURING_WISDOM_SYMBOL",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "GROUNDING_SLOWING_GRAVITAS",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "NATURE_WISDOM_ORIENTATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "E3_REDEMPTIVE_SELF_ARC",
+      "condition": "A_NARRATIVE",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 70,
+      "outcomeTurns": [
+        72,
+        74
+      ],
+      "sourceHash": "a25ccfeed76849095893eacc2130389271ee76f196cc27f6c0054c0818cb838e",
+      "outcomeHash": "5f3c6a601bbda9a77fe78b24f6cfb4d2665afef95fb92859ef53458b4d74182b",
+      "representationHash": "01f8ce583b484216097d797186ab0ee95e57c8778d3d350f3dec46e1ef4d0c1a",
+      "decoderHash": "0d0ffe297cd4a78d11170055653efc14ccc69e7a19ddb6ba2d00af429e0cc527",
+      "representationWords": 238,
+      "budgetViolation": true,
+      "parseError": null,
+      "features": [
+        {
+          "id": "LIFE_PATH_CONVERGENCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "YOUNGER_SELF_CONTINUITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "TRUSTED_DIFFERENCE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "E3_REDEMPTIVE_SELF_ARC",
+      "condition": "B_PAIRWISE",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 70,
+      "outcomeTurns": [
+        72,
+        74
+      ],
+      "sourceHash": "a25ccfeed76849095893eacc2130389271ee76f196cc27f6c0054c0818cb838e",
+      "outcomeHash": "5f3c6a601bbda9a77fe78b24f6cfb4d2665afef95fb92859ef53458b4d74182b",
+      "representationHash": "9235bdcc59f3a6e8ff0c7297555dd99b032ebe0c998999d3f59b07e7fc18fb1a",
+      "decoderHash": "605acb436c1a2631956117caf3d3ae1c52c71928b02ef2dd5e52187801ec58d7",
+      "representationWords": 228,
+      "budgetViolation": true,
+      "parseError": null,
+      "features": [
+        {
+          "id": "LIFE_PATH_CONVERGENCE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "YOUNGER_SELF_CONTINUITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "TRUSTED_DIFFERENCE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "E3_REDEMPTIVE_SELF_ARC",
+      "condition": "C_RELATION_GEOMETRY",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 70,
+      "outcomeTurns": [
+        72,
+        74
+      ],
+      "sourceHash": "a25ccfeed76849095893eacc2130389271ee76f196cc27f6c0054c0818cb838e",
+      "outcomeHash": "5f3c6a601bbda9a77fe78b24f6cfb4d2665afef95fb92859ef53458b4d74182b",
+      "representationHash": "03b6e234b7340f97e6e78871cedceb55705fb1bc2ee396b61cf470978c00c4c2",
+      "decoderHash": "da66efe8bde851926d4f60e930d67a3ad7932b153b263c22ebe8ced20b7dc101",
+      "representationWords": 165,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "LIFE_PATH_CONVERGENCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "YOUNGER_SELF_CONTINUITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "TRUSTED_DIFFERENCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "E3_REDEMPTIVE_SELF_ARC",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "sessionHash": "7a04908bce9f8a3daac9521da344f61b8e41b874767e6b759c27bb89606660e9",
+      "cutoff": 70,
+      "outcomeTurns": [
+        72,
+        74
+      ],
+      "sourceHash": "a25ccfeed76849095893eacc2130389271ee76f196cc27f6c0054c0818cb838e",
+      "outcomeHash": "5f3c6a601bbda9a77fe78b24f6cfb4d2665afef95fb92859ef53458b4d74182b",
+      "representationHash": "9d57817dab565a3172944120da458592b33cdfd2dcb4fa544eb650a19fd5ee6d",
+      "decoderHash": "134bcc2186647480931059b6517b46bbd7a89fff0281d653687a0ade779c355d",
+      "representationWords": 118,
+      "budgetViolation": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 514 (line 20 column 1)",
+      "features": [
+        {
+          "id": "LIFE_PATH_CONVERGENCE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "YOUNGER_SELF_CONTINUITY",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "TRUSTED_DIFFERENCE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 0,
+      "featureTotal": 3
+    },
+    {
+      "event": "E4_GUARDIAN_ALREADY_ESTABLISHED",
+      "condition": "A_NARRATIVE",
+      "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18
+      ],
+      "sourceHash": "fd033c9b7c0d18f5e3e0003ece7fb828bad6b9273460642548acffeaab6ecc8f",
+      "outcomeHash": "230aa5a1915c6834e2bba73a6f3fca0ce7ca625e7b3455b9628d46ba7faad0de",
+      "representationHash": "61ad5baf8c1d339d4064044b7bbd68cfb41e1c424aaa7d4efa4b7c427889cb04",
+      "decoderHash": "051761a8794c5e2f173d83f0f1ca13c366b22db0ee4fbb0144c92d0d541549da",
+      "representationWords": 222,
+      "budgetViolation": true,
+      "parseError": null,
+      "features": [
+        {
+          "id": "GUARDIAN_ROLE_ESTABLISHED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "NATURE_BASED_FOUNDATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "FOUNDATIONAL_RETURN",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "E4_GUARDIAN_ALREADY_ESTABLISHED",
+      "condition": "B_PAIRWISE",
+      "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18
+      ],
+      "sourceHash": "fd033c9b7c0d18f5e3e0003ece7fb828bad6b9273460642548acffeaab6ecc8f",
+      "outcomeHash": "230aa5a1915c6834e2bba73a6f3fca0ce7ca625e7b3455b9628d46ba7faad0de",
+      "representationHash": "d934657023f1ddbba8f962d27b00a3097646b547f01e238a133b0a9045ac3991",
+      "decoderHash": "52237ccf9a37f5762303f2bec5adc17c7770fa311f97afda02cf3f32f626f21c",
+      "representationWords": 202,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "GUARDIAN_ROLE_ESTABLISHED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "NATURE_BASED_FOUNDATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "FOUNDATIONAL_RETURN",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "E4_GUARDIAN_ALREADY_ESTABLISHED",
+      "condition": "C_RELATION_GEOMETRY",
+      "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18
+      ],
+      "sourceHash": "fd033c9b7c0d18f5e3e0003ece7fb828bad6b9273460642548acffeaab6ecc8f",
+      "outcomeHash": "230aa5a1915c6834e2bba73a6f3fca0ce7ca625e7b3455b9628d46ba7faad0de",
+      "representationHash": "a6937b7b721b01263afc961bbe2d18d600ed7e50a7496a06818e0a58460acbb8",
+      "decoderHash": "5325e251c71239b90715717b5dd8e4648bbd216f59f90316d752fcca2f731c5f",
+      "representationWords": 203,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "GUARDIAN_ROLE_ESTABLISHED",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "NATURE_BASED_FOUNDATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "FOUNDATIONAL_RETURN",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "E4_GUARDIAN_ALREADY_ESTABLISHED",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+      "cutoff": 15,
+      "outcomeTurns": [
+        16,
+        18
+      ],
+      "sourceHash": "fd033c9b7c0d18f5e3e0003ece7fb828bad6b9273460642548acffeaab6ecc8f",
+      "outcomeHash": "230aa5a1915c6834e2bba73a6f3fca0ce7ca625e7b3455b9628d46ba7faad0de",
+      "representationHash": "a3af4ee56a230ce5f5d08384d52a91c65d71d0131d840fc2ef3874673ea2d8a6",
+      "decoderHash": "89ad1a5f144c3ed95312aa354f9dfe772d9a92af336412671bf1ef98e75b539b",
+      "representationWords": 147,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "GUARDIAN_ROLE_ESTABLISHED",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "NATURE_BASED_FOUNDATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "FOUNDATIONAL_RETURN",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "E5_REPEATED_RESTART_PATTERN",
+      "condition": "A_NARRATIVE",
+      "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+      "cutoff": 25,
+      "outcomeTurns": [
+        26
+      ],
+      "sourceHash": "9659b1190c01a3110b089fc9b832337583da69462d52786cae2f7466e6a707ef",
+      "outcomeHash": "c365bd090d245c094d5df4988bc54adbe8edfecb853844116570eca123eaa18f",
+      "representationHash": "cad844747f392154bb6f4a274f2ff041754b4a71ab4c999fe2fc83bdef0048c3",
+      "decoderHash": "83df056d68c401912c9d54218d4f275d8deba5a507456dcd829e7bb5e74dad1e",
+      "representationWords": 235,
+      "budgetViolation": true,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ESTABLISHED_MEANING_REOPENED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MEMBER_PROTEST_PRESENT",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "REPEATED_REOPEN_SEQUENCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "E5_REPEATED_RESTART_PATTERN",
+      "condition": "B_PAIRWISE",
+      "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+      "cutoff": 25,
+      "outcomeTurns": [
+        26
+      ],
+      "sourceHash": "9659b1190c01a3110b089fc9b832337583da69462d52786cae2f7466e6a707ef",
+      "outcomeHash": "c365bd090d245c094d5df4988bc54adbe8edfecb853844116570eca123eaa18f",
+      "representationHash": "6bac719f896c027a98c160194eb32e98850d464ce685d85aa427fd3b36bb4d06",
+      "decoderHash": "a1fc8681c933953039e0a47909eb16146b2387ab180fe6fe5ab0d0791271f2ea",
+      "representationWords": 190,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ESTABLISHED_MEANING_REOPENED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MEMBER_PROTEST_PRESENT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "REPEATED_REOPEN_SEQUENCE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "E5_REPEATED_RESTART_PATTERN",
+      "condition": "C_RELATION_GEOMETRY",
+      "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+      "cutoff": 25,
+      "outcomeTurns": [
+        26
+      ],
+      "sourceHash": "9659b1190c01a3110b089fc9b832337583da69462d52786cae2f7466e6a707ef",
+      "outcomeHash": "c365bd090d245c094d5df4988bc54adbe8edfecb853844116570eca123eaa18f",
+      "representationHash": "1686ba4c22e4823899c6a46c6a141684ec1d324119f48e7a35e3e4493501d121",
+      "decoderHash": "46f0a198ec1dd7ab7ccfeb5eac0d864fbe5fc46e2e96233f95d28892397ba287",
+      "representationWords": 134,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ESTABLISHED_MEANING_REOPENED",
+          "supported": false,
+          "decoderSaid": true,
+          "quoteValid": false
+        },
+        {
+          "id": "MEMBER_PROTEST_PRESENT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "REPEATED_REOPEN_SEQUENCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "E5_REPEATED_RESTART_PATTERN",
+      "condition": "D_GEOMETRY_TEMPORAL",
+      "sessionHash": "6be8fa282204eb105510ea26f16d9cab9ed50da54cc24fb6d3cc0f0c8338bcca",
+      "cutoff": 25,
+      "outcomeTurns": [
+        26
+      ],
+      "sourceHash": "9659b1190c01a3110b089fc9b832337583da69462d52786cae2f7466e6a707ef",
+      "outcomeHash": "c365bd090d245c094d5df4988bc54adbe8edfecb853844116570eca123eaa18f",
+      "representationHash": "0d8fbe1f8fab697398ab20cbb9e6dd9aa3274233c796f3f7b80dd1345b159ffa",
+      "decoderHash": "4925f5cfd83d18e1320e3532284b73b2fcef9d1e7a4de4415bf7075df6adda06",
+      "representationWords": 127,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "ESTABLISHED_MEANING_REOPENED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MEMBER_PROTEST_PRESENT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "REPEATED_REOPEN_SEQUENCE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    }
+  ]
+}
