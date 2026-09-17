@@ -1,0 +1,176 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H5B_RECURRENCE_VS_SAMENESS_V1",
+  "authority": "offline deterministic research only",
+  "law": "Endpoint recurrence is not relation identity. Recurrence, persistence, scope, and geometry change must remain distinct.",
+  "summary": {
+    "fixtures": 7,
+    "endpointOnlyCorrect": 2,
+    "fullGeometryCorrect": 7,
+    "transformedReturns": 3,
+    "transformedReturnsPreserved": 3
+  },
+  "rows": [
+    {
+      "fixture": "B1_EXACT_RETURN",
+      "expected": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "endpointOnly": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "fullGeometry": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "endpointOnlyCorrect": true,
+      "fullGeometryCorrect": true
+    },
+    {
+      "fixture": "B2_RETURN_CONFIG_CHANGED",
+      "expected": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "configuration"
+        ]
+      },
+      "endpointOnly": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "fullGeometry": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "configuration"
+        ]
+      },
+      "endpointOnlyCorrect": false,
+      "fullGeometryCorrect": true
+    },
+    {
+      "fixture": "B3_RETURN_DYNAMIC_CHANGED",
+      "expected": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "dynamic"
+        ]
+      },
+      "endpointOnly": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "fullGeometry": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "dynamic"
+        ]
+      },
+      "endpointOnlyCorrect": false,
+      "fullGeometryCorrect": true
+    },
+    {
+      "fixture": "B4_RETURN_STANDING_CHANGED",
+      "expected": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "standing"
+        ]
+      },
+      "endpointOnly": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "fullGeometry": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "standing"
+        ]
+      },
+      "endpointOnlyCorrect": false,
+      "fullGeometryCorrect": true
+    },
+    {
+      "fixture": "B5_PERSISTS_NOT_RETURN",
+      "expected": {
+        "trajectory": "PERSISTS",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "endpointOnly": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "fullGeometry": {
+        "trajectory": "PERSISTS",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "endpointOnlyCorrect": false,
+      "fullGeometryCorrect": true
+    },
+    {
+      "fixture": "B6_NEW_ENDPOINT_PAIR",
+      "expected": {
+        "trajectory": "NEW_RELATION",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "endpoints"
+        ]
+      },
+      "endpointOnly": {
+        "trajectory": "NEW_RELATION",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "endpoints"
+        ]
+      },
+      "fullGeometry": {
+        "trajectory": "NEW_RELATION",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "endpoints"
+        ]
+      },
+      "endpointOnlyCorrect": true,
+      "fullGeometryCorrect": true
+    },
+    {
+      "fixture": "B7_SCOPE_BOUNDARY",
+      "expected": {
+        "trajectory": "NEW_RELATION",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "scope"
+        ]
+      },
+      "endpointOnly": {
+        "trajectory": "RETURNS_TO",
+        "sameGeometry": true,
+        "changedDimensions": []
+      },
+      "fullGeometry": {
+        "trajectory": "NEW_RELATION",
+        "sameGeometry": false,
+        "changedDimensions": [
+          "scope"
+        ]
+      },
+      "endpointOnlyCorrect": false,
+      "fullGeometryCorrect": true
+    }
+  ]
+}
