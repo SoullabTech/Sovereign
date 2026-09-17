@@ -3,7 +3,7 @@
 **Status:** CANDIDATE matrix, subject to repository reconciliation.
 **Lane:** `MAIA-MAVEN-CANON-01` — documentation only. ⛔ Implementation NOT AUTHORIZED.
 **Date:** 2026-09-17
-**Depends on:** `MAIA-NODE-15_CONTINUITY_STACK_2026-09-17.md` (renamed under **R4** + correction)
+**Depends on:** `MAIA-NODE-15_CONTINUITY_POSITIONS_2026-09-17.md` (renamed under **R4** + correction)
 **⭐ AMENDED 2026-09-17 by founder adjudication** — see
 `MAIA-MAVEN-CANON-01_FOUNDER_ADJUDICATION_2026-09-17.md`, authoritative over this record.
 §II amended by **R5** · §III by **R1** · §XVI by **R7** · §XIX by **R5**. Prior text kept

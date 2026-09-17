@@ -189,7 +189,7 @@ constraint, declared mechanical ordering, transparent narrowing, or refusal — 
 | 3 | Narrowing rule incl. over-set behaviour | ✅ §7 |
 | 4 | Provenance contract | ✅ §5 — member-adopted MAIA material retains provenance |
 | 5 | Negative control | ⚠️ **OWED at J5** — stated as law in §5–6; ⛔ no falsifier authored |
-| 6 | Continuity-stack placement | ✅ Memory = explicit member standing · Continuation = not implied (§1, §3) |
+| 6 | Continuity-Positions placement | ✅ Memory = explicit member standing · Continuation = not implied (§1, §3) |
 | 7 | R1 interaction | ✅ §3 — KEEP does not reopen, including inside `START_FRESH` |
 | — | Sanctuary origination | ✅ §2 — RULING: NO |
 

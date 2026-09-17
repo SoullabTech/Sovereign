@@ -60,7 +60,7 @@ stops for a ruling.
 | **12** | Intent Resolution | ⛔ not authored | none — ⚠️ NEW SYNTHESIS |
 | **13** | Maven Evidence Gates | ⛔ not authored | `lib/navigation/houseDispositions.ts`; `CLAIM_STATE_AUTHORITY.md`; `MARKETING_CLAIM_DISCIPLINE.md` |
 | **14** | Conversational Continuity Without Memory Capture | ⛔ not authored | `lib/maia/memorySelectionPolicy.ts` (`OPERATIONAL_CONTINUITY_DECLARATION`) |
-| **15** | The Continuity Stack *(renamed under R4 + correction; was "four-layer memory model", then briefly "Standing Model")* | ✅ `MAIA-NODE-15_CONTINUITY_STACK_2026-09-17.md` | `MAIA_MEMORY_CANON_v1.0.md` §II (12-layer stack) |
+| **15** | **Continuity Positions** *(renamed under R4 + correction; was "four-layer memory model", then briefly "Standing Model" / "Continuity Stack")* | ✅ `MAIA-NODE-15_CONTINUITY_POSITIONS_2026-09-17.md` | `MAIA_MEMORY_CANON_v1.0.md` §II (12-layer stack) |
 | **16** | Context Memory Policy Matrix | ✅ `MAIA-NODE-16_CONTEXT_MEMORY_POLICY_MATRIX_2026-09-17.md` | `LONGITUDINAL_MEMORY_CATEGORY_GRADIENT.md`; `turnPosture.ts` |
 
 ⚠️ **Only NODE-15 and NODE-16 were authored by this lane**, because only those two were handed

@@ -46,7 +46,7 @@ only **after** this contract is explicit.
 | Excluded | Why |
 |---|---|
 | Capability-registry work | R3 — declaration is not availability; reconciling the registry is its own founder decision |
-| Memory redesign | The Standing Model describes standing; it does not authorize storage change |
+| Memory redesign | Continuity Positions describe authority; they do not authorize storage change |
 | Sanctuary modification | R5 — content may not cross; the guard is constitutionally correct |
 | `/maia` redesign | MAIA-MAVEN-01 §5 — preserve the center |
 | Journal READ (T1-B) | separate tranche item, unauthorized |
@@ -131,7 +131,7 @@ not covert selection. ⭐ *Refusing to narrow, and saying so, is an admissible a
 4. **Provenance contract** — the route already carries provenance with every line; state what
    MAIA must say about where a kept line came from.
 5. **Negative control** — the falsifier proving MAIA cannot return a line the member never kept.
-6. **Standing-model placement** — confirm Memory = *yes, explicit member standing*;
+6. **Continuity-Positions placement** — confirm Memory = *yes, explicit member standing*;
    Continuation = *no automatically* (NODE-15; NODE-16 §V).
 7. **R1 interaction** — state what Keep invocation does under `START_FRESH`. ⭐ A deliberate
    member invocation is plausibly a *deliberate reopening of continuity*, which R1 expressly

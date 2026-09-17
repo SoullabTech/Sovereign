@@ -1,44 +1,46 @@
-# MAIA-NODE-15 — THE CONTINUITY STACK
+# MAIA-NODE-15 — CONTINUITY POSITIONS
 
 **Status:** CANDIDATE. Derivation record beneath `MAIA-MAVEN-01`.
 **Lane:** `MAIA-MAVEN-CANON-01` — documentation only. ⛔ Implementation NOT AUTHORIZED.
 **Date:** 2026-09-17
 **Amended:** 2026-09-17 by founder adjudication **R4**, then by the **R4 terminology correction**
-— see `MAIA-MAVEN-CANON-01_FOUNDER_ADJUDICATION_2026-09-17.md`.
+(two passes) — see `MAIA-MAVEN-CANON-01_FOUNDER_ADJUDICATION_2026-09-17.md`.
 
 ---
 
-## 0. Naming history — two corrections, both recorded
+## 0. Naming history — three corrections, all recorded
 
 | Stage | Model name | Members | File |
 |---|---|---|---|
 | As authored | "the four-layer memory model" | layers | `…_FOUR_LAYER_MEMORY_MODEL_…` |
 | **R4** | "the Standing Model" | standings | `…_STANDING_MODEL_…` |
-| **R4 correction (current)** | **the Continuity Stack** | **positions** | `…_CONTINUITY_STACK_…` |
+| **R4 correction, pass 1** | "the Continuity Stack" | positions | `…_CONTINUITY_STACK_…` |
+| **R4 correction, pass 2 (current)** | **Continuity Positions** | **positions** | `…_CONTINUITY_POSITIONS_…` |
+
+**The substance of this record is unchanged across all three corrections. Only the nouns moved.**
 
 **R4** reserved *Four-Layer* permanently to `docs/canon/FOUR_LAYER_SUBSTITUTION.md`
 (Content / Form / Meta / Frame), under the principle:
 
 > ⭐ **One canonical term, one canonical referent.**
 
-**R4 terminology correction** then rejected *"Standing"* as the noun for this architecture:
+**Pass 1** rejected *"Standing"* as the noun:
 
 > *"Standing" is useful elsewhere as a property of an object — epistemic standing, disclosure
 > standing, authorization standing — but it should not become the noun for this architecture.
 > That creates a second ambiguity immediately after removing "layer."*
 
-⭐ **"Standing" therefore survives as a property, never as the name.** It remains correct to say
-a Keep *has Memory standing*; it is no longer correct to call the stack "the Standing Model" or
-its positions "standings".
+⭐ *Standing* therefore survives as a **property** — a Keep *has Memory standing* — never as the
+name.
 
-The substance of this record is unchanged across both corrections. Only the nouns moved.
+**Pass 2** resolved the collision that pass 1 landed on. See §0a.
 
 ---
 
-## ⚠️ 0a. UNRESOLVED COLLISION — one line of founder ruling is owed
+## ⭐ 0a. The name collision — RESOLVED, option (b)
 
-The corrected name is **already in use in ratified canon for a different referent**, and this
-record will not pretend otherwise.
+Pass 1 renamed this record *the Continuity Stack*, and that name was **already in ratified use
+for a different referent**:
 
 | Site | Referent |
 |---|---|
@@ -46,26 +48,29 @@ record will not pretend otherwise.
 | `lib/maia/memoryHealth.ts:44` — *"Layer meanings (per Canon §II — The Continuity Stack)"* | same twelve |
 | `app/accounted-for/page.tsx:386` — *"The Continuity Stack — the twelve layers named in…"* | same twelve, **on a public-facing surface** |
 
-⭐⭐ **This is the same defect R4 was entered to remove, relocated** — one noun, two referents,
-both inside MAIA's memory domain. It is now stronger than the collision it replaced, because the
-term is load-bearing in **canon, runtime comment, and a published page** governed by
-`MARKETING_CLAIM_DISCIPLINE.md`, whereas *"four-layer"* collided only across two documents.
+⭐⭐ That was the same defect R4 was entered to remove, relocated — and **stronger** than the one
+it replaced, because the term is load-bearing in **canon, runtime, and a published page**
+governed by `MARKETING_CLAIM_DISCIPLINE.md`, whereas *"four-layer"* collided only across two
+documents.
 
-⛔ **Not resolved here, and ⛔ ratified canon was not touched.** Three options, recorded for the
-ruling, ⛔ none taken:
+### Founder ruling — R4 terminology correction, pass 2
 
-- **(a)** This record keeps *the Continuity Stack*; canon §II is renamed (e.g. *the Memory Layer
-  Stack*). ⭐ Cheapest in text — canon §II already calls its own members "layers" throughout —
-  but it amends **ratified canon** plus two code/page sites, and one of them is public. A founder
-  act, not a lane act.
-- **(b)** This record takes a non-colliding noun derived from function (e.g. *the Continuity
-  Positions*, *the Continuity Gradient*); canon is untouched.
-- **(c)** Both are permitted under permanent qualification — *the twelve-layer Continuity Stack*
-  vs *the four-position Continuity Stack*. ⚠️ Weakest: it reintroduces the ambiguity R4 removed
-  and relies on every future writer qualifying correctly.
+> **`Continuity Stack` remains the exclusive canonical name of the twelve-layer memory
+> architecture. NODE-15 is renamed `Continuity Positions`, with members
+> Encounter · History · Memory · Continuation. Ratified memory canon, runtime references, and
+> the public surface remain untouched. One canonical term, one canonical referent.**
 
-⚠️ **The ruling was executed as given**; this note reports what executing it collided with. ⛔ It
-does not reopen `MAIA-MAVEN-CANON-01`, which remains CLOSED.
+**Option (b) taken.** Options (a) — rename canon §II — and (c) — permanent qualification —
+were ⛔ **not taken**. ⭐ The ruled option is the only one of the three that touches **no ratified
+canon, no runtime, and no public surface**: the cost falls entirely on the newest and least
+entrenched record, which is where it belongs.
+
+⭐⭐ **The name also carries the law.** *Positions* avoids implying a ladder or automatic
+progression — which matters precisely because this record's governing law (§2) is that **no
+position automatically grants the next.** A word like *stack*, *ladder* or *stages* would have
+quietly argued against the thing the model exists to say.
+
+**Collision status: ✅ CLOSED.** ⛔ No canon, runtime or public-surface edit was made.
 
 ---
 
@@ -108,9 +113,10 @@ And:
 
 ---
 
-## 3. ⭐⭐ Relation to the twelve content layers
+## 3. ⭐⭐ Relation to the Continuity Stack (canon §II)
 
-`MAIA_MEMORY_CANON_v1.0.md` §II stratifies MAIA's memory into **twelve layers** (turn · session ·
+The **Continuity Stack** (`MAIA_MEMORY_CANON_v1.0.md` §II) stratifies MAIA's memory into
+**twelve layers** (turn · session ·
 conversational · episodic · semantic · relational · developmental · pattern · somatic-affective ·
 breakthrough · field/collective · meta).
 
@@ -119,10 +125,11 @@ different axes:
 
 | | Axis | Question answered |
 |---|---|---|
-| **The twelve layers** (canon §II) | **CONTENT CLASS** | *What kind of memory is this?* |
-| **The four positions** (NODE-15) | **AUTHORITY / STANDING** | *By what authority may this be here?* |
+| **the Continuity Stack** — twelve layers (canon §II) | **CONTENT CLASS** | *What kind of memory is this?* |
+| **Continuity Positions** — four (NODE-15) | **AUTHORITY / STANDING** | *By what authority may this be here?* |
 
-⭐ Any of the twelve content classes can occupy any of the four positions. An episodic memory can
+⭐ Any of the Continuity Stack's twelve content classes can occupy any of the four Continuity
+Positions. An episodic memory can
 be Encounter-only (retrieved for this turn), History (recorded), Memory (eligible to return), or
 Continuation (marked for resumption) — and which it occupies is an authority question the twelve
 layers do not ask.
@@ -130,7 +137,8 @@ layers do not ask.
 **Classification: REFINEMENT.** This record adds an axis. It does not contradict, reorder, or
 deprecate the twelve layers. ⛔ Future work treating it as a *replacement* is misreading both.
 
-⚠️ See §0a: the two models currently contend for one name.
+⭐ See §0a: the two names are now disjoint — *Continuity Stack* is the twelve content layers;
+*Continuity Positions* is this authority axis.
 
 ---
 
@@ -198,7 +206,8 @@ it does not assert that durable relational memory presently exists.
 
 ## 7. Standing of this record
 
-CANDIDATE · derivation beneath `MAIA-MAVEN-01` · renamed under **R4** and the **R4 terminology
-correction** · ⚠️ **name collision with canon §II OPEN, one ruling owed (§0a)** · REFINEMENT of
-`MAIA_MEMORY_CANON_v1.0` §II, not a replacement · **R1** applied at §4 · ⛔ no storage, schema or
-retrieval change authorized · production UNTOUCHED.
+CANDIDATE · derivation beneath `MAIA-MAVEN-01` · named **Continuity Positions** under **R4** +
+the **R4 terminology correction (two passes)** · ⭐ **name collision with canon §II ✅ CLOSED via
+option (b)** · REFINEMENT of the Continuity Stack (`MAIA_MEMORY_CANON_v1.0` §II), not a
+replacement · **R1** applied at §4 · ⛔ no canon, runtime or public-surface edit made · ⛔ no
+storage, schema or retrieval change authorized · production UNTOUCHED.

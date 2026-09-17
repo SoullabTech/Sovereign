@@ -19,7 +19,7 @@ AUTHORITY.** Three TENSIONS require founder ruling before any implementation.
 | File | Role |
 |---|---|
 | `docs/programme/MAIA-MAVEN-01_GOVERNING_ARCHITECTURE_2026-09-17.md` | CANDIDATE canonical authority |
-| `docs/programme/MAIA-NODE-15_FOUR_LAYER_MEMORY_MODEL_2026-09-17.md` → **renamed under R4 + correction to `…_CONTINUITY_STACK_…`** | Derivation record |
+| `docs/programme/MAIA-NODE-15_FOUR_LAYER_MEMORY_MODEL_2026-09-17.md` → **renamed under R4 + correction to `…_CONTINUITY_POSITIONS_…`** | Derivation record |
 | `docs/programme/MAIA-NODE-16_CONTEXT_MEMORY_POLICY_MATRIX_2026-09-17.md` | Derivation record |
 | `docs/programme/MAIA-MAVEN-T1_TRUTHFUL_AWARENESS_CHARTER_2026-09-17.md` | Future programme charter |
 | `docs/programme/MAIA-MAVEN_DERIVATION_INDEX_2026-09-17.md` | Lineage index |

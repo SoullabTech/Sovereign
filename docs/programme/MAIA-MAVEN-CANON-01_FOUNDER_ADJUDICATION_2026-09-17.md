@@ -142,9 +142,9 @@ Maven renames its structure rather than redefining existing canon.
 
 > ⭐ **Constitutional principle: one canonical term, one canonical referent.**
 
-**Executed by this lane:** `MAIA-NODE-15` was first renamed to *the Standing Model*, then
-corrected — see **R4 CORRECTION** below. Current name: **the Continuity Stack**, members
-**positions**, file `…_CONTINUITY_STACK_…`.
+**Executed by this lane:** `MAIA-NODE-15` was renamed *the Standing Model*, then corrected twice
+— see **R4 CORRECTION** below. Current name: **Continuity Positions**, members
+**Encounter · History · Memory · Continuation**, file `…_CONTINUITY_POSITIONS_…`.
 
 ⚠️ The word "layer" was dropped entirely rather than re-prefixed, because it is claimed twice —
 by `FOUR_LAYER_SUBSTITUTION.md` and by the twelve content layers of canon §II.
@@ -162,8 +162,7 @@ canon or of implementation.** `MAIA-MAVEN-CANON-01` remains **CLOSED**.
 
 **The established name for `Encounter → History → Memory → Continuation` is the CONTINUITY
 STACK.** Executed: file renamed `…_STANDING_MODEL_…` → `…_CONTINUITY_STACK_…` via `git mv`;
-architectural use of *standings* replaced by **the Continuity Stack** and its **positions**;
-substance preserved unchanged.
+architectural use of *standings* replaced by **positions**; substance preserved unchanged.
 
 ⭐ *Standing* survives as a **property** — a Keep *has Memory standing* — never as the name.
 
@@ -173,10 +172,26 @@ The corrected name is already in ratified use for a **different** referent:
 `MAIA_MEMORY_CANON_v1.0.md:21` (`## II. The Continuity Stack — 12 Layers`),
 `lib/maia/memoryHealth.ts:44`, and `app/accounted-for/page.tsx:386` — **a public-facing surface**.
 
-⭐⭐ This is the same defect R4 removed, relocated, and now stronger: load-bearing in canon,
-runtime and a published page rather than across two documents. **One line of founder ruling is
-owed.** Three options are recorded in `MAIA-NODE-15_CONTINUITY_STACK_2026-09-17.md` §0a; ⛔ none
-taken. The ruling was executed as given; this reports what executing it collided with.
+⭐⭐ That was the same defect R4 removed, relocated, and stronger: load-bearing in canon, runtime
+and a published page rather than across two documents.
+
+### ⭐ PASS 2 — COLLISION RESOLVED, OPTION (b)
+
+> **`Continuity Stack` remains the exclusive canonical name of the twelve-layer memory
+> architecture. NODE-15 is renamed `Continuity Positions`, with members
+> Encounter · History · Memory · Continuation. Ratified memory canon, runtime references, and
+> the public surface remain untouched. One canonical term, one canonical referent.**
+
+Executed: `…_CONTINUITY_STACK_…` → `…_CONTINUITY_POSITIONS_…` via `git mv`; §0a rewritten as
+resolved; §3 now names both models disjointly.
+
+⭐ Option (b) is the only one of the three that touches **no ratified canon, no runtime, and no
+public surface** — the cost falls on the newest and least entrenched record, which is where it
+belongs. ⭐⭐ It also carries the law: *positions* avoids implying a ladder or automatic
+progression, which matters because the governing law is that **no position automatically grants
+the next**.
+
+**Collision status: ✅ CLOSED.** ⛔ No canon, runtime or public-surface edit was made.
 
 ---
 
@@ -264,7 +279,7 @@ authorized** by this ruling.
 | Record | Amendment |
 |---|---|
 | `MAIA-MAVEN-01_GOVERNING_ARCHITECTURE` | §4.6 resolved by R1 · §6 resolved by R2 · §3 resolved by R3 |
-| `MAIA-NODE-15_CONTINUITY_STACK` | renamed + rewritten under R4 and the R4 CORRECTION · R1 applied at §4 · ⚠️ name collision OPEN (§0a) |
+| `MAIA-NODE-15_CONTINUITY_POSITIONS` | renamed + rewritten under R4 and the R4 CORRECTION (2 passes) · R1 applied at §4 · ⭐ name collision ✅ CLOSED (§0a) |
 | `MAIA-NODE-16_CONTEXT_MEMORY_POLICY_MATRIX` | §II carve-out WITHDRAWN by R5 · §III by R1 · §XVI by R7 · §XIX by R5 |
 | `MAIA-MAVEN-T1_TRUTHFUL_AWARENESS_CHARTER` | §1.2 resolved by R8 |
 | `MAIA-MAVEN_DERIVATION_INDEX` | NODE-15 reference updated |
@@ -281,7 +296,8 @@ authorized** by this ruling.
 MAIA-MAVEN-CANON-01 ...................... ✅ CLOSED
 MAIA-MAVEN-01 ............................ CANDIDATE CANONICAL AUTHORITY
 R1 … R8 .................................. RATIFIED
-R4 CORRECTION ............................ RATIFIED (post-close, documentary)
+R4 CORRECTION (2 passes) ................. RATIFIED (post-close, documentary)
+NODE-15 name collision ................... ✅ CLOSED — option (b), Continuity Positions
 T1A J4 contract .......................... RATIFIED / CLOSED
 T-1 … T-5 ................................ RESOLVED
 NODE-05 .................................. ⛔ OPEN AT J5, no retroactive PASS
@@ -294,5 +310,5 @@ Production ............................... UNTOUCHED
 see `MAIA-MAVEN-T1A_J4_CONTRACT_2026-09-17.md` (four acts: ENCOUNTER · KEEP · REOPEN ·
 CONTINUE; `SANCTUARY = ENCOUNTER ONLY`). ⛔ J5 build NOT authorized.
 
-⚠️ **Open after closure:** the Continuity-Stack name collision (§4a) · the qualified Keep names
-under R8 · the J5 negative-control falsifier.
+⚠️ **Open after closure:** the qualified Keep names under R8 · the J5 negative-control falsifier.
+*(The NODE-15 name collision is ✅ CLOSED — see §4a pass 2.)*
