@@ -1,0 +1,913 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H7F_CONTRAST_PRESERVING_PROJECTION_V1",
+  "authority": "offline attention-non-collapse research only",
+  "inference": {
+    "model": "claude-sonnet-4-6",
+    "transport": "production-container direct Anthropic SDK via temporary /tmp helper",
+    "substrateTemperature": 0.2,
+    "selectorTemperature": 0,
+    "decoderTemperature": 0,
+    "servingRouteUsed": false
+  },
+  "manifestHash": "3fa38e7e06e1ee3abbd65fc294c6d4e39d9fc10786187a6ba6de9568450bfc69",
+  "maxSubstrateLines": 12,
+  "maxQueryLines": 3,
+  "events": [
+    {
+      "id": "F1_TECH_FRUSTRATION",
+      "historyCutoff": 15,
+      "queryTurn": 16,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "TEXT_RECOVERED_AFTER_DELAY",
+      "features": [
+        {
+          "id": "MID_SENTENCE_CUTOFF",
+          "sourceTurns": [
+            10
+          ]
+        },
+        {
+          "id": "FIREFOX_TEST_CONTEXT",
+          "sourceTurns": [
+            6
+          ]
+        },
+        {
+          "id": "TEXT_RECOVERED_AFTER_DELAY",
+          "sourceTurns": [
+            14
+          ]
+        }
+      ]
+    },
+    {
+      "id": "F2_CLIENT_CONFLICT",
+      "historyCutoff": 19,
+      "queryTurn": 20,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "POSITIVE_BETA_FUNCTIONALITY_EXISTS",
+      "features": [
+        {
+          "id": "CLIENT_REPORTED_MAIA_FRUSTRATION",
+          "sourceTurns": [
+            16,
+            18
+          ]
+        },
+        {
+          "id": "SIMPLE_EASY_START_GOAL",
+          "sourceTurns": [
+            16,
+            18
+          ]
+        },
+        {
+          "id": "POSITIVE_BETA_FUNCTIONALITY_EXISTS",
+          "sourceTurns": [
+            16,
+            18
+          ]
+        }
+      ]
+    },
+    {
+      "id": "F3_MOVEMENT_WITH_MULTIPLE_LAYERS",
+      "historyCutoff": 12,
+      "queryTurn": 13,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "VISIONARY_TEACHING_ALSO_MATTER",
+      "features": [
+        {
+          "id": "BOOK_FOUNDATION_OF_SOULLAB_AIN",
+          "sourceTurns": [
+            3
+          ]
+        },
+        {
+          "id": "ARCHITECTURAL_LAYER_IS_ALIVE",
+          "sourceTurns": [
+            12
+          ]
+        },
+        {
+          "id": "VISIONARY_TEACHING_ALSO_MATTER",
+          "sourceTurns": [
+            12
+          ]
+        }
+      ]
+    },
+    {
+      "id": "F4_BOOK_RELAUNCH",
+      "historyCutoff": 7,
+      "queryTurn": 8,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "ORIGINAL_JUNE15_WAS_INCOMPLETE",
+      "features": [
+        {
+          "id": "JUNE21_RELAUNCH",
+          "sourceTurns": [
+            0,
+            2
+          ]
+        },
+        {
+          "id": "SOULLAB_PRESS_IDENTITY",
+          "sourceTurns": [
+            0,
+            2
+          ]
+        },
+        {
+          "id": "ORIGINAL_JUNE15_WAS_INCOMPLETE",
+          "sourceTurns": [
+            0,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "F5_COLLAB_READINESS",
+      "historyCutoff": 11,
+      "queryTurn": 12,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "NOTIFICATION_TAGGING_GAP",
+      "features": [
+        {
+          "id": "COLLAB_ONE_PLACE_GOAL",
+          "sourceTurns": [
+            0,
+            2,
+            10
+          ]
+        },
+        {
+          "id": "MUCH_IS_TECHNICALLY_WORKING",
+          "sourceTurns": [
+            4,
+            11
+          ]
+        },
+        {
+          "id": "NOTIFICATION_TAGGING_GAP",
+          "sourceTurns": [
+            4,
+            11
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C1_ABSTAIN",
+      "historyCutoff": 1,
+      "queryTurn": 2,
+      "counterweightExpected": false,
+      "counterweightFeatureId": null,
+      "features": []
+    }
+  ],
+  "summary": {
+    "QUERY_ONLY": {
+      "events": 5,
+      "featureCorrect": 7,
+      "featureTotal": 15,
+      "recall": 0.4666666666666667,
+      "perfectEvents": 1,
+      "meanWords": 74.2,
+      "featuresPer100Words": 1.8867924528301887
+    },
+    "QUERY_PLUS_COUNTERWEIGHT": {
+      "events": 5,
+      "featureCorrect": 8,
+      "featureTotal": 15,
+      "recall": 0.5333333333333333,
+      "perfectEvents": 1,
+      "meanWords": 86,
+      "featuresPer100Words": 1.8604651162790697
+    }
+  },
+  "primary": {
+    "QUERY_ONLY": {
+      "correct": 5,
+      "total": 10,
+      "recall": 0.5
+    },
+    "QUERY_PLUS_COUNTERWEIGHT": {
+      "correct": 5,
+      "total": 10,
+      "recall": 0.5
+    }
+  },
+  "counter": {
+    "QUERY_ONLY": {
+      "correct": 2,
+      "total": 5,
+      "recall": 0.4
+    },
+    "QUERY_PLUS_COUNTERWEIGHT": {
+      "correct": 3,
+      "total": 5,
+      "recall": 0.6
+    }
+  },
+  "byEvent": {
+    "F1_TECH_FRUSTRATION": {
+      "QUERY_ONLY": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R4",
+          "R3",
+          "R2"
+        ],
+        "counterweight": null,
+        "projectionWords": 56
+      },
+      "QUERY_PLUS_COUNTERWEIGHT": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R4",
+          "R3",
+          "R2"
+        ],
+        "counterweight": null,
+        "projectionWords": 56
+      }
+    },
+    "F2_CLIENT_CONFLICT": {
+      "QUERY_ONLY": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R8",
+          "R9",
+          "R10"
+        ],
+        "counterweight": {
+          "id": "R7",
+          "relation": "QUALIFIES",
+          "targetId": "R9"
+        },
+        "projectionWords": 101
+      },
+      "QUERY_PLUS_COUNTERWEIGHT": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R8",
+          "R9",
+          "R10"
+        ],
+        "counterweight": {
+          "id": "R7",
+          "relation": "QUALIFIES",
+          "targetId": "R9"
+        },
+        "projectionWords": 129
+      }
+    },
+    "F3_MOVEMENT_WITH_MULTIPLE_LAYERS": {
+      "QUERY_ONLY": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R3",
+          "R4",
+          "R5"
+        ],
+        "counterweight": null,
+        "projectionWords": 71
+      },
+      "QUERY_PLUS_COUNTERWEIGHT": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R3",
+          "R4",
+          "R5"
+        ],
+        "counterweight": null,
+        "projectionWords": 71
+      }
+    },
+    "F4_BOOK_RELAUNCH": {
+      "QUERY_ONLY": {
+        "featureCorrect": 0,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R8",
+          "R9",
+          "R10"
+        ],
+        "counterweight": null,
+        "projectionWords": 70
+      },
+      "QUERY_PLUS_COUNTERWEIGHT": {
+        "featureCorrect": 0,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R8",
+          "R9",
+          "R10"
+        ],
+        "counterweight": null,
+        "projectionWords": 70
+      }
+    },
+    "F5_COLLAB_READINESS": {
+      "QUERY_ONLY": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R2",
+          "R7",
+          "R8"
+        ],
+        "counterweight": {
+          "id": "R4",
+          "relation": "QUALIFIES",
+          "targetId": "R2"
+        },
+        "projectionWords": 73
+      },
+      "QUERY_PLUS_COUNTERWEIGHT": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "querySelectedIds": [
+          "R2",
+          "R7",
+          "R8"
+        ],
+        "counterweight": {
+          "id": "R4",
+          "relation": "QUALIFIES",
+          "targetId": "R2"
+        },
+        "projectionWords": 104
+      }
+    },
+    "C1_ABSTAIN": {
+      "QUERY_ONLY": {
+        "featureCorrect": 0,
+        "featureTotal": 0,
+        "querySelectedIds": [
+          "R1",
+          "R2"
+        ],
+        "counterweight": null,
+        "projectionWords": 26
+      },
+      "QUERY_PLUS_COUNTERWEIGHT": {
+        "featureCorrect": 0,
+        "featureTotal": 0,
+        "querySelectedIds": [
+          "R1",
+          "R2"
+        ],
+        "counterweight": null,
+        "projectionWords": 26
+      }
+    }
+  },
+  "acceptance": {
+    "aggregateImproved": true,
+    "primaryNotLower": true,
+    "counterweightImproved": true,
+    "counterweightsPreserved": 3,
+    "requiredCounterweights": 4,
+    "controlAbstained": true
+  },
+  "passed": false,
+  "rows": [
+    {
+      "event": "F1_TECH_FRUSTRATION",
+      "condition": "QUERY_ONLY",
+      "sourceFileHash": "70cc51254469ac9e438c92774f0a6a5212bfc731872c5117eb5ff1e7c7fd7227",
+      "sessionHash": "4fc4002e43c61b3191adde03ab79277a53ba47dc1354b205fe582f00ee18df29",
+      "historyCutoff": 15,
+      "queryTurn": 16,
+      "queryHash": "1574b2edb1d9f05802f364ad8b09fccdee0788960a7363ffe983b6dc5200bd04",
+      "substrateHash": "0ed5f09fd37787820d2cc1e67d59fb6d0a6be0b56880239267e2a4617bf225db",
+      "substrateLineCount": 4,
+      "querySelectorHash": "b8341d4019e5f33a10f68346676784e02dfd4fea85ebbb0910255c4d323729dc",
+      "counterSelectorHash": "eb5d1e597aa47e428c683de8c506eed4ecb3d7a4b641a96b5cb0eab4fe247808",
+      "querySelectedIds": [
+        "R4",
+        "R3",
+        "R2"
+      ],
+      "counterweight": null,
+      "projectionHash": "141b3909a2a00bf8a44ba0f3d09fe77e789ab67c246e3eaafc586aa1a2f0023d",
+      "projectionWords": 56,
+      "decoderHash": "fe4d7d72e3d17452b6c2056d01b1d9e71f237292f1596da60d6c7a1afd22139e",
+      "features": [
+        {
+          "id": "MID_SENTENCE_CUTOFF",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "FIREFOX_TEST_CONTEXT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "TEXT_RECOVERED_AFTER_DELAY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "TEXT_RECOVERED_AFTER_DELAY"
+    },
+    {
+      "event": "F1_TECH_FRUSTRATION",
+      "condition": "QUERY_PLUS_COUNTERWEIGHT",
+      "sourceFileHash": "70cc51254469ac9e438c92774f0a6a5212bfc731872c5117eb5ff1e7c7fd7227",
+      "sessionHash": "4fc4002e43c61b3191adde03ab79277a53ba47dc1354b205fe582f00ee18df29",
+      "historyCutoff": 15,
+      "queryTurn": 16,
+      "queryHash": "1574b2edb1d9f05802f364ad8b09fccdee0788960a7363ffe983b6dc5200bd04",
+      "substrateHash": "0ed5f09fd37787820d2cc1e67d59fb6d0a6be0b56880239267e2a4617bf225db",
+      "substrateLineCount": 4,
+      "querySelectorHash": "b8341d4019e5f33a10f68346676784e02dfd4fea85ebbb0910255c4d323729dc",
+      "counterSelectorHash": "eb5d1e597aa47e428c683de8c506eed4ecb3d7a4b641a96b5cb0eab4fe247808",
+      "querySelectedIds": [
+        "R4",
+        "R3",
+        "R2"
+      ],
+      "counterweight": null,
+      "projectionHash": "141b3909a2a00bf8a44ba0f3d09fe77e789ab67c246e3eaafc586aa1a2f0023d",
+      "projectionWords": 56,
+      "decoderHash": "fe4d7d72e3d17452b6c2056d01b1d9e71f237292f1596da60d6c7a1afd22139e",
+      "features": [
+        {
+          "id": "MID_SENTENCE_CUTOFF",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "FIREFOX_TEST_CONTEXT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "TEXT_RECOVERED_AFTER_DELAY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "TEXT_RECOVERED_AFTER_DELAY"
+    },
+    {
+      "event": "F2_CLIENT_CONFLICT",
+      "condition": "QUERY_ONLY",
+      "sourceFileHash": "5dc0df6088733991e5e2190b16364f20aba8d58e98e99f176bb9114b05634e06",
+      "sessionHash": "9f4a83dcdbe620e4221173873351354e7174350914cdcbb802503f55dcb1489d",
+      "historyCutoff": 19,
+      "queryTurn": 20,
+      "queryHash": "595c1192bbe922b62d2f915fa98a93c981de2a4574f3e6fb285916705cab1603",
+      "substrateHash": "15fd5ca225392df98923304f983d1610f19c3544f6c76a60a3482402b01656b6",
+      "substrateLineCount": 12,
+      "querySelectorHash": "2bda33974283b60150a84ed903e33f17ad0b14839307f043dfd1256ffd4ec5b2",
+      "counterSelectorHash": "c462ce8e990b0e08b0c1b8717076784694178c7cbc34b05f8d4de7b4a5774084",
+      "querySelectedIds": [
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "counterweight": {
+        "id": "R7",
+        "relation": "QUALIFIES",
+        "targetId": "R9"
+      },
+      "projectionHash": "5cc18d636b17c42f73b5d186f0e732698c5495f5053fe598a688d7532ae4ab74",
+      "projectionWords": 101,
+      "decoderHash": "6a7a9fe82516462ae6669130e70814ae6fc8694e817382d3e949ca87b0604c40",
+      "features": [
+        {
+          "id": "CLIENT_REPORTED_MAIA_FRUSTRATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "SIMPLE_EASY_START_GOAL",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "POSITIVE_BETA_FUNCTIONALITY_EXISTS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "POSITIVE_BETA_FUNCTIONALITY_EXISTS"
+    },
+    {
+      "event": "F2_CLIENT_CONFLICT",
+      "condition": "QUERY_PLUS_COUNTERWEIGHT",
+      "sourceFileHash": "5dc0df6088733991e5e2190b16364f20aba8d58e98e99f176bb9114b05634e06",
+      "sessionHash": "9f4a83dcdbe620e4221173873351354e7174350914cdcbb802503f55dcb1489d",
+      "historyCutoff": 19,
+      "queryTurn": 20,
+      "queryHash": "595c1192bbe922b62d2f915fa98a93c981de2a4574f3e6fb285916705cab1603",
+      "substrateHash": "15fd5ca225392df98923304f983d1610f19c3544f6c76a60a3482402b01656b6",
+      "substrateLineCount": 12,
+      "querySelectorHash": "2bda33974283b60150a84ed903e33f17ad0b14839307f043dfd1256ffd4ec5b2",
+      "counterSelectorHash": "c462ce8e990b0e08b0c1b8717076784694178c7cbc34b05f8d4de7b4a5774084",
+      "querySelectedIds": [
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "counterweight": {
+        "id": "R7",
+        "relation": "QUALIFIES",
+        "targetId": "R9"
+      },
+      "projectionHash": "83db02e457603202a757844e297499dcb1f3809f70ae133c5dface87ba297569",
+      "projectionWords": 129,
+      "decoderHash": "6a7a9fe82516462ae6669130e70814ae6fc8694e817382d3e949ca87b0604c40",
+      "features": [
+        {
+          "id": "CLIENT_REPORTED_MAIA_FRUSTRATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "SIMPLE_EASY_START_GOAL",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "POSITIVE_BETA_FUNCTIONALITY_EXISTS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "POSITIVE_BETA_FUNCTIONALITY_EXISTS"
+    },
+    {
+      "event": "F3_MOVEMENT_WITH_MULTIPLE_LAYERS",
+      "condition": "QUERY_ONLY",
+      "sourceFileHash": "707580c6d583a10d05f00b982629f20bfba831aa27c335a04bb712d38aa9e589",
+      "sessionHash": "a2192b4622fc1838235512f1d8285b5dd0ada37210a93d6417e4abe35d96d489",
+      "historyCutoff": 12,
+      "queryTurn": 13,
+      "queryHash": "b927ba14f4cd1913fd9da904c59bdcc62056f1c08bb1c6d104d563d96c1fcb5c",
+      "substrateHash": "8af2316d5e62df3aa5a3932bde43568ddc4c8a207c66dc74df97cbdba4ee5e47",
+      "substrateLineCount": 11,
+      "querySelectorHash": "4704a86e9f5ffed9b8164441f2855a3c5f810565b84e1f3e05959b3f6e02fb68",
+      "counterSelectorHash": "eb5d1e597aa47e428c683de8c506eed4ecb3d7a4b641a96b5cb0eab4fe247808",
+      "querySelectedIds": [
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "counterweight": null,
+      "projectionHash": "c158a894b6772b79f73ce97ac4dd8aa6fa7782251a1ef0d7f60dcbdb3948a154",
+      "projectionWords": 71,
+      "decoderHash": "baddce76161dd29cbde9bd24a4735135e633a9c99eed268aec10cffe4d23560f",
+      "features": [
+        {
+          "id": "BOOK_FOUNDATION_OF_SOULLAB_AIN",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "ARCHITECTURAL_LAYER_IS_ALIVE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "VISIONARY_TEACHING_ALSO_MATTER",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "VISIONARY_TEACHING_ALSO_MATTER"
+    },
+    {
+      "event": "F3_MOVEMENT_WITH_MULTIPLE_LAYERS",
+      "condition": "QUERY_PLUS_COUNTERWEIGHT",
+      "sourceFileHash": "707580c6d583a10d05f00b982629f20bfba831aa27c335a04bb712d38aa9e589",
+      "sessionHash": "a2192b4622fc1838235512f1d8285b5dd0ada37210a93d6417e4abe35d96d489",
+      "historyCutoff": 12,
+      "queryTurn": 13,
+      "queryHash": "b927ba14f4cd1913fd9da904c59bdcc62056f1c08bb1c6d104d563d96c1fcb5c",
+      "substrateHash": "8af2316d5e62df3aa5a3932bde43568ddc4c8a207c66dc74df97cbdba4ee5e47",
+      "substrateLineCount": 11,
+      "querySelectorHash": "4704a86e9f5ffed9b8164441f2855a3c5f810565b84e1f3e05959b3f6e02fb68",
+      "counterSelectorHash": "eb5d1e597aa47e428c683de8c506eed4ecb3d7a4b641a96b5cb0eab4fe247808",
+      "querySelectedIds": [
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "counterweight": null,
+      "projectionHash": "c158a894b6772b79f73ce97ac4dd8aa6fa7782251a1ef0d7f60dcbdb3948a154",
+      "projectionWords": 71,
+      "decoderHash": "baddce76161dd29cbde9bd24a4735135e633a9c99eed268aec10cffe4d23560f",
+      "features": [
+        {
+          "id": "BOOK_FOUNDATION_OF_SOULLAB_AIN",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "ARCHITECTURAL_LAYER_IS_ALIVE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "VISIONARY_TEACHING_ALSO_MATTER",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "VISIONARY_TEACHING_ALSO_MATTER"
+    },
+    {
+      "event": "F4_BOOK_RELAUNCH",
+      "condition": "QUERY_ONLY",
+      "sourceFileHash": "7f1003991b55745a49c05b7fb6296104c434d3e97022a2284cd87f4501e8bcaf",
+      "sessionHash": "bed6bec28bb15670932723ba3347976ba44cd7607ec649d77a4f0740f4dd73a1",
+      "historyCutoff": 7,
+      "queryTurn": 8,
+      "queryHash": "1121b944b8a98ed71cb427d720f6dc406030f1431c97964d82bb407c41ffead4",
+      "substrateHash": "06e155a0375f1ec94fc32aa72585efe2645b524ea131707b67e0d8c542be742d",
+      "substrateLineCount": 10,
+      "querySelectorHash": "2bda33974283b60150a84ed903e33f17ad0b14839307f043dfd1256ffd4ec5b2",
+      "counterSelectorHash": "eb5d1e597aa47e428c683de8c506eed4ecb3d7a4b641a96b5cb0eab4fe247808",
+      "querySelectedIds": [
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "counterweight": null,
+      "projectionHash": "e052982c44376de7305155a95052cd494fba605db351b58135e39c80a00c26f9",
+      "projectionWords": 70,
+      "decoderHash": "174409552a87b90ba549c8d87790a127d81ae884d854de0fa8b02afccf78b1e9",
+      "features": [
+        {
+          "id": "JUNE21_RELAUNCH",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "SOULLAB_PRESS_IDENTITY",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "ORIGINAL_JUNE15_WAS_INCOMPLETE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 0,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "ORIGINAL_JUNE15_WAS_INCOMPLETE"
+    },
+    {
+      "event": "F4_BOOK_RELAUNCH",
+      "condition": "QUERY_PLUS_COUNTERWEIGHT",
+      "sourceFileHash": "7f1003991b55745a49c05b7fb6296104c434d3e97022a2284cd87f4501e8bcaf",
+      "sessionHash": "bed6bec28bb15670932723ba3347976ba44cd7607ec649d77a4f0740f4dd73a1",
+      "historyCutoff": 7,
+      "queryTurn": 8,
+      "queryHash": "1121b944b8a98ed71cb427d720f6dc406030f1431c97964d82bb407c41ffead4",
+      "substrateHash": "06e155a0375f1ec94fc32aa72585efe2645b524ea131707b67e0d8c542be742d",
+      "substrateLineCount": 10,
+      "querySelectorHash": "2bda33974283b60150a84ed903e33f17ad0b14839307f043dfd1256ffd4ec5b2",
+      "counterSelectorHash": "eb5d1e597aa47e428c683de8c506eed4ecb3d7a4b641a96b5cb0eab4fe247808",
+      "querySelectedIds": [
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "counterweight": null,
+      "projectionHash": "e052982c44376de7305155a95052cd494fba605db351b58135e39c80a00c26f9",
+      "projectionWords": 70,
+      "decoderHash": "174409552a87b90ba549c8d87790a127d81ae884d854de0fa8b02afccf78b1e9",
+      "features": [
+        {
+          "id": "JUNE21_RELAUNCH",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "SOULLAB_PRESS_IDENTITY",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "ORIGINAL_JUNE15_WAS_INCOMPLETE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 0,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "ORIGINAL_JUNE15_WAS_INCOMPLETE"
+    },
+    {
+      "event": "F5_COLLAB_READINESS",
+      "condition": "QUERY_ONLY",
+      "sourceFileHash": "2a4f09f53166ca27c80a1a0a80c9d12538c481326a5b08948bd5db6586826ca9",
+      "sessionHash": "8f1d2811b9daaf6d3176d34e7f7a075ad020d3001c0dbf27c51e4035df8d5ae8",
+      "historyCutoff": 11,
+      "queryTurn": 12,
+      "queryHash": "609c561cb1012961474838746f4976ec9929ee1c04a37dae83f49cb99d5f13d7",
+      "substrateHash": "37f16f30cb3f12c9095ed5eb7307637bb35328134ebb06d06e1b66f560259b49",
+      "substrateLineCount": 8,
+      "querySelectorHash": "712ee1b871eeb469856fb1da98e3e1777c058b211318e4fcba4f9ee0f3f45f9c",
+      "counterSelectorHash": "f25f6eeb17106542b2f52219467c8ca01553df1128629a108f940ccefe238d06",
+      "querySelectedIds": [
+        "R2",
+        "R7",
+        "R8"
+      ],
+      "counterweight": {
+        "id": "R4",
+        "relation": "QUALIFIES",
+        "targetId": "R2"
+      },
+      "projectionHash": "55adfe3ec46932b1d7758b10375276c004c1df792cee428172845468aee1be66",
+      "projectionWords": 73,
+      "decoderHash": "60d987fbd2a7812bfee2da29b59247d1177c4c9eddc5002f4b05fd9229fef0e8",
+      "features": [
+        {
+          "id": "COLLAB_ONE_PLACE_GOAL",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MUCH_IS_TECHNICALLY_WORKING",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "NOTIFICATION_TAGGING_GAP",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "NOTIFICATION_TAGGING_GAP"
+    },
+    {
+      "event": "F5_COLLAB_READINESS",
+      "condition": "QUERY_PLUS_COUNTERWEIGHT",
+      "sourceFileHash": "2a4f09f53166ca27c80a1a0a80c9d12538c481326a5b08948bd5db6586826ca9",
+      "sessionHash": "8f1d2811b9daaf6d3176d34e7f7a075ad020d3001c0dbf27c51e4035df8d5ae8",
+      "historyCutoff": 11,
+      "queryTurn": 12,
+      "queryHash": "609c561cb1012961474838746f4976ec9929ee1c04a37dae83f49cb99d5f13d7",
+      "substrateHash": "37f16f30cb3f12c9095ed5eb7307637bb35328134ebb06d06e1b66f560259b49",
+      "substrateLineCount": 8,
+      "querySelectorHash": "712ee1b871eeb469856fb1da98e3e1777c058b211318e4fcba4f9ee0f3f45f9c",
+      "counterSelectorHash": "f25f6eeb17106542b2f52219467c8ca01553df1128629a108f940ccefe238d06",
+      "querySelectedIds": [
+        "R2",
+        "R7",
+        "R8"
+      ],
+      "counterweight": {
+        "id": "R4",
+        "relation": "QUALIFIES",
+        "targetId": "R2"
+      },
+      "projectionHash": "f3afa97aafd3f71e564ba1c0c380a389fe78f853bc0576221b8d8ea323819e0d",
+      "projectionWords": 104,
+      "decoderHash": "c470585855b40b234f4726e0176c44d61677df71ecd5406d8bfe38b9e2118853",
+      "features": [
+        {
+          "id": "COLLAB_ONE_PLACE_GOAL",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MUCH_IS_TECHNICALLY_WORKING",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "NOTIFICATION_TAGGING_GAP",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3,
+      "counterweightExpected": true,
+      "counterweightFeatureId": "NOTIFICATION_TAGGING_GAP"
+    },
+    {
+      "event": "C1_ABSTAIN",
+      "condition": "QUERY_ONLY",
+      "sourceFileHash": "70cc51254469ac9e438c92774f0a6a5212bfc731872c5117eb5ff1e7c7fd7227",
+      "sessionHash": "4fc4002e43c61b3191adde03ab79277a53ba47dc1354b205fe582f00ee18df29",
+      "historyCutoff": 1,
+      "queryTurn": 2,
+      "queryHash": "29a07596509827cfbcc15ee1fd3668b7a18e892de2c443a12a3cbbe8a99ae4ed",
+      "substrateHash": "c4fa59867c1d7ceb29997ed7c8d89f46d7b939d24cce1e433a7e69fc215c86fe",
+      "substrateLineCount": 2,
+      "querySelectorHash": "1a53ceef761d1bfac56204f257ef5d27f42c86ec9185642a2b0de9ffef9ccbf5",
+      "counterSelectorHash": "eb5d1e597aa47e428c683de8c506eed4ecb3d7a4b641a96b5cb0eab4fe247808",
+      "querySelectedIds": [
+        "R1",
+        "R2"
+      ],
+      "counterweight": null,
+      "projectionHash": "c4fa59867c1d7ceb29997ed7c8d89f46d7b939d24cce1e433a7e69fc215c86fe",
+      "projectionWords": 26,
+      "decoderHash": null,
+      "features": [],
+      "featureCorrect": 0,
+      "featureTotal": 0,
+      "counterweightExpected": false,
+      "counterweightFeatureId": null
+    },
+    {
+      "event": "C1_ABSTAIN",
+      "condition": "QUERY_PLUS_COUNTERWEIGHT",
+      "sourceFileHash": "70cc51254469ac9e438c92774f0a6a5212bfc731872c5117eb5ff1e7c7fd7227",
+      "sessionHash": "4fc4002e43c61b3191adde03ab79277a53ba47dc1354b205fe582f00ee18df29",
+      "historyCutoff": 1,
+      "queryTurn": 2,
+      "queryHash": "29a07596509827cfbcc15ee1fd3668b7a18e892de2c443a12a3cbbe8a99ae4ed",
+      "substrateHash": "c4fa59867c1d7ceb29997ed7c8d89f46d7b939d24cce1e433a7e69fc215c86fe",
+      "substrateLineCount": 2,
+      "querySelectorHash": "1a53ceef761d1bfac56204f257ef5d27f42c86ec9185642a2b0de9ffef9ccbf5",
+      "counterSelectorHash": "eb5d1e597aa47e428c683de8c506eed4ecb3d7a4b641a96b5cb0eab4fe247808",
+      "querySelectedIds": [
+        "R1",
+        "R2"
+      ],
+      "counterweight": null,
+      "projectionHash": "c4fa59867c1d7ceb29997ed7c8d89f46d7b939d24cce1e433a7e69fc215c86fe",
+      "projectionWords": 26,
+      "decoderHash": null,
+      "features": [],
+      "featureCorrect": 0,
+      "featureTotal": 0,
+      "counterweightExpected": false,
+      "counterweightFeatureId": null
+    }
+  ]
+}
