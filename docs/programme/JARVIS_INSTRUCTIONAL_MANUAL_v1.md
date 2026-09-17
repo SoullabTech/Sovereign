@@ -30,7 +30,7 @@ LANE-SPECIFIC CHARTERS / PLANS
 IMPLEMENTATION
 ```
 
-**Standing:** Canonical design authority for the MAIA Maven architecture as of 17 September 2026. This designation governs future design and implementation interpretation subject to higher constitutional law and does not upgrade unimplemented or unwitnessed capabilities to LIVE status.
+**Standing:** Canonical design authority for the Soullab / MAIA / AIN architecture and design system as of 17 September 2026. This designation governs future design and implementation interpretation subject to higher constitutional law and does not upgrade unimplemented or unwitnessed capabilities to LIVE status.
 
 **Canonical for architecture and design intent; runtime truth still governs what is actually implemented, available, or witnessed.** Repository and runtime evidence continue to govern implementation standing. Nothing in this manual may be cited as evidence that a described capability is built, wired, surfacing, deployed, or exercised by a member.
 
