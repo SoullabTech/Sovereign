@@ -7,6 +7,29 @@
 
 ---
 
+## 0. Required five-field preamble — reconstructed after stale-canonical discovery
+
+> **Procedural nonconformance, preserved rather than rewritten:** canonical commit
+> `680097e0c` made the five-field lane preamble mandatory at 2026-09-17 16:04:39 EDT.
+> This repair lane opened at `69fbeffa6` at 16:12:19 EDT on a stale canonical base and therefore
+> acted before carrying the newly required declaration. The preamble is reconstructed here
+> before publication / PR. Per the manual, the preamble is declarative and does not create
+> authority; the specific founder R9–R11 ruling already supplied the substantive authority.
+
+```text
+Class: Class A — memory handling / member sovereignty / consent boundary
+Governing authority: MAIA-MAVEN-T1A J4 §§3,5–7 + founder rulings R9, R10, R11
+Current gate: J5 bounded repair / technical evidence
+Evidence subject: branch feature/maia-maven-t1a-repair-20260917; J5 correction base 2b3f6092; exact repair artifacts and tests named in the evidence record
+Stop boundary: no merge, deploy, J6 witness, legacy-consent reinterpretation, or capability widening beyond R9–R11
+```
+
+**Consequence:** the missing preamble is a process defect, not an authority grant supplied after
+the fact. It must be visible in the record, and the repaired lane must reconcile to current
+canonical and rerun decisive evidence before a PR head can be treated as a Class A candidate.
+
+---
+
 ## 1. Defects admitted
 
 ### NC-6 — selector substitution
