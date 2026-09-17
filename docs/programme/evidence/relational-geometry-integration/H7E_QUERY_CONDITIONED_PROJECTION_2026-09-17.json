@@ -1,0 +1,741 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H7E_QUERY_CONDITIONED_PROJECTION_V1",
+  "authority": "offline projection-mechanism research only",
+  "inference": {
+    "model": "claude-sonnet-4-6",
+    "transport": "production-container direct Anthropic SDK via temporary /tmp helper",
+    "substrateTemperature": 0.2,
+    "selectorTemperature": 0,
+    "decoderTemperature": 0,
+    "servingRouteUsed": false
+  },
+  "manifestHash": "a7203f360be507d649850d7df45f26d6d859a17ea41c660dc178ce34cbc7869b",
+  "maxSubstrateLines": 12,
+  "maxSelectedLines": 4,
+  "events": [
+    {
+      "id": "Q1_KEEP_CORRECTION",
+      "historyCutoff": 11,
+      "queryTurn": 12,
+      "features": [
+        {
+          "id": "DESKTOP_CONTEXT",
+          "sourceTurns": [
+            6,
+            8
+          ]
+        },
+        {
+          "id": "KEEP_NAMED_AS_MISSING_DESKTOP_NEED",
+          "sourceTurns": [
+            8
+          ]
+        },
+        {
+          "id": "KEEP_AVAILABILITY_ASSUMED_FROM_VISIBLE_BOOKMARK",
+          "sourceTurns": [
+            9
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Q2_ASSUMPTION_REFRAME",
+      "historyCutoff": 19,
+      "queryTurn": 20,
+      "features": [
+        {
+          "id": "KEEP_FUNCTIONAL_NOT_COSMETIC",
+          "sourceTurns": [
+            15,
+            17,
+            18
+          ]
+        },
+        {
+          "id": "WEB_UI_ASSUMPTION",
+          "sourceTurns": [
+            17,
+            19
+          ]
+        },
+        {
+          "id": "STRATEGIC_DESIGN_REVIEW",
+          "sourceTurns": [
+            18,
+            19
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Q3_SWITCH_TO_TEXT",
+      "historyCutoff": 11,
+      "queryTurn": 12,
+      "features": [
+        {
+          "id": "VOICE_AUDIO_WORKS",
+          "sourceTurns": [
+            8,
+            10
+          ]
+        },
+        {
+          "id": "DUPLICATE_SEND_PERSISTS",
+          "sourceTurns": [
+            7,
+            9,
+            11
+          ]
+        },
+        {
+          "id": "DEFECT_IS_NOT_AUDIO_QUALITY",
+          "sourceTurns": [
+            9,
+            11
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Q4_IOS_FRUSTRATION",
+      "historyCutoff": 21,
+      "queryTurn": 22,
+      "features": [
+        {
+          "id": "PERSISTENT_DUPLICATION",
+          "sourceTurns": [
+            15,
+            17,
+            19
+          ]
+        },
+        {
+          "id": "MODE_SWITCHING_DID_NOT_CLOSE_DEFECT",
+          "sourceTurns": [
+            12,
+            14,
+            16,
+            18
+          ]
+        },
+        {
+          "id": "PARTIAL_SUCCESS_WITH_UNRESOLVED_BUG",
+          "sourceTurns": [
+            17,
+            19
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Q5_GIVE_DESKTOP_VOICE",
+      "historyCutoff": 25,
+      "queryTurn": 26,
+      "features": [
+        {
+          "id": "DESKTOP_MAIA_GOAL",
+          "sourceTurns": [
+            4,
+            6,
+            22
+          ]
+        },
+        {
+          "id": "TEXT_CONNECTION_NOW_WORKS",
+          "sourceTurns": [
+            22,
+            24
+          ]
+        },
+        {
+          "id": "VOICE_QUALITY_ALREADY_IN_FIELD",
+          "sourceTurns": [
+            0,
+            1
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "GLOBAL": {
+      "events": 5,
+      "featureCorrect": 9,
+      "featureTotal": 15,
+      "recall": 0.6,
+      "perfectEvents": 0,
+      "meanWords": 88.2,
+      "featuresPer100Words": 2.0408163265306123
+    },
+    "QUERY": {
+      "events": 5,
+      "featureCorrect": 12,
+      "featureTotal": 15,
+      "recall": 0.8,
+      "perfectEvents": 3,
+      "meanWords": 85.6,
+      "featuresPer100Words": 2.803738317757009
+    }
+  },
+  "byEvent": {
+    "Q1_KEEP_CORRECTION": {
+      "GLOBAL": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R2",
+          "R4",
+          "R5",
+          "R6"
+        ],
+        "projectionWords": 81
+      },
+      "QUERY": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R3",
+          "R5",
+          "R1",
+          "R2"
+        ],
+        "projectionWords": 95
+      }
+    },
+    "Q2_ASSUMPTION_REFRAME": {
+      "GLOBAL": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R2",
+          "R3",
+          "R5",
+          "R6"
+        ],
+        "projectionWords": 93
+      },
+      "QUERY": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R4",
+          "R2",
+          "R5",
+          "R6"
+        ],
+        "projectionWords": 94
+      }
+    },
+    "Q3_SWITCH_TO_TEXT": {
+      "GLOBAL": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R1",
+          "R2",
+          "R5",
+          "R6"
+        ],
+        "projectionWords": 84
+      },
+      "QUERY": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R1",
+          "R2",
+          "R5",
+          "R6"
+        ],
+        "projectionWords": 84
+      }
+    },
+    "Q4_IOS_FRUSTRATION": {
+      "GLOBAL": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R5",
+          "R6",
+          "R8",
+          "R9"
+        ],
+        "projectionWords": 80
+      },
+      "QUERY": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R5",
+          "R6",
+          "R1",
+          "R8"
+        ],
+        "projectionWords": 83
+      }
+    },
+    "Q5_GIVE_DESKTOP_VOICE": {
+      "GLOBAL": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R1",
+          "R3",
+          "R4",
+          "R5"
+        ],
+        "projectionWords": 103
+      },
+      "QUERY": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "selectedIds": [
+          "R1",
+          "R2",
+          "R6"
+        ],
+        "projectionWords": 72
+      }
+    }
+  },
+  "acceptance": {
+    "queryBeatsGlobal": true,
+    "queryWorseEvents": 1,
+    "maxAllowedWorseEvents": 1,
+    "queryBestOrTiedEvents": 4,
+    "requiredBestOrTiedEvents": 4
+  },
+  "passed": true,
+  "rows": [
+    {
+      "event": "Q1_KEEP_CORRECTION",
+      "condition": "GLOBAL",
+      "sourceFileHash": "8d2c8f8660bdaac669a10aef256cb018e2918f0d98f3a26e2bb3a890a5b8eb04",
+      "sessionHash": "735fd9fc1b9df747f511bd6ce8223da56725dd890c06dea8bc03dda158c72800",
+      "historyCutoff": 11,
+      "queryTurn": 12,
+      "queryHash": "d11864d45c8286cfd23502fb74cb724c774c21f9a9c22defb3a1b50460ce25f8",
+      "substrateHash": "56c0acd38cfacb6e6f312ef38cc0a7eb1bede8a46ef980b6464be86dbd6c2581",
+      "substrateLineCount": 6,
+      "selectorHash": "5a44733ea717e17622c47704ed584bc5a363b5ee6019fe1a79cb604b68fdd300",
+      "selectedIds": [
+        "R2",
+        "R4",
+        "R5",
+        "R6"
+      ],
+      "projectionHash": "77843f0b760017eeb3a58c57e48ff8061a6b22e8627e2baf07ac0cdb789fce91",
+      "projectionWords": 81,
+      "decoderHash": "66ac7814697f4d957f5824d4e47f423d67c2d0cbd85929f904ea423c847b96b5",
+      "features": [
+        {
+          "id": "DESKTOP_CONTEXT",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "KEEP_NAMED_AS_MISSING_DESKTOP_NEED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "KEEP_AVAILABILITY_ASSUMED_FROM_VISIBLE_BOOKMARK",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "Q1_KEEP_CORRECTION",
+      "condition": "QUERY",
+      "sourceFileHash": "8d2c8f8660bdaac669a10aef256cb018e2918f0d98f3a26e2bb3a890a5b8eb04",
+      "sessionHash": "735fd9fc1b9df747f511bd6ce8223da56725dd890c06dea8bc03dda158c72800",
+      "historyCutoff": 11,
+      "queryTurn": 12,
+      "queryHash": "d11864d45c8286cfd23502fb74cb724c774c21f9a9c22defb3a1b50460ce25f8",
+      "substrateHash": "56c0acd38cfacb6e6f312ef38cc0a7eb1bede8a46ef980b6464be86dbd6c2581",
+      "substrateLineCount": 6,
+      "selectorHash": "073e0d1a8b2b0e0f63f23a6b1c2ff921a9dc0294935d17cc0524527458935c88",
+      "selectedIds": [
+        "R3",
+        "R5",
+        "R1",
+        "R2"
+      ],
+      "projectionHash": "6393ed05525a4be9bb3a2115537be778119687e4b56191a759e1f648b7765d61",
+      "projectionWords": 95,
+      "decoderHash": "dedc7982cd09fc5c375f17f4b7af1c31e7d8dd63e34eab4a9fe9b41973e6497f",
+      "features": [
+        {
+          "id": "DESKTOP_CONTEXT",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "KEEP_NAMED_AS_MISSING_DESKTOP_NEED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "KEEP_AVAILABILITY_ASSUMED_FROM_VISIBLE_BOOKMARK",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "Q2_ASSUMPTION_REFRAME",
+      "condition": "GLOBAL",
+      "sourceFileHash": "8d2c8f8660bdaac669a10aef256cb018e2918f0d98f3a26e2bb3a890a5b8eb04",
+      "sessionHash": "735fd9fc1b9df747f511bd6ce8223da56725dd890c06dea8bc03dda158c72800",
+      "historyCutoff": 19,
+      "queryTurn": 20,
+      "queryHash": "c327b963d2d832f5d85c863f5f05bde644eaff3599a6e6e8cda5066d4769fb6c",
+      "substrateHash": "d21bb30da82fbf0a3ac760124191d96276e584a7a0907578714125e803c59e90",
+      "substrateLineCount": 7,
+      "selectorHash": "0dac22e8029a1024d771c6c0f7a6bc96a456e8b83ed8f650945528b6ff203cf7",
+      "selectedIds": [
+        "R2",
+        "R3",
+        "R5",
+        "R6"
+      ],
+      "projectionHash": "22efd05bb3fc5c8f6709f035751fa3d51e469cb2322eef514d6e5f8b94461453",
+      "projectionWords": 93,
+      "decoderHash": "2b8111fd966c835f60788430ffd51a0dfea3feb32dc1d923168ab9fe311217a1",
+      "features": [
+        {
+          "id": "KEEP_FUNCTIONAL_NOT_COSMETIC",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "WEB_UI_ASSUMPTION",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "STRATEGIC_DESIGN_REVIEW",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "Q2_ASSUMPTION_REFRAME",
+      "condition": "QUERY",
+      "sourceFileHash": "8d2c8f8660bdaac669a10aef256cb018e2918f0d98f3a26e2bb3a890a5b8eb04",
+      "sessionHash": "735fd9fc1b9df747f511bd6ce8223da56725dd890c06dea8bc03dda158c72800",
+      "historyCutoff": 19,
+      "queryTurn": 20,
+      "queryHash": "c327b963d2d832f5d85c863f5f05bde644eaff3599a6e6e8cda5066d4769fb6c",
+      "substrateHash": "d21bb30da82fbf0a3ac760124191d96276e584a7a0907578714125e803c59e90",
+      "substrateLineCount": 7,
+      "selectorHash": "291b00eaad107868ede80eb80e4087e4c0f8f78dc7aaed14e597d3574ac6e1cf",
+      "selectedIds": [
+        "R4",
+        "R2",
+        "R5",
+        "R6"
+      ],
+      "projectionHash": "b6fe5f6ffdf9ffce2c2a7fc8852efdb39a7698598e9ded1830cd052eabda8cf7",
+      "projectionWords": 94,
+      "decoderHash": "b700d20b0109e0a7f4310125bc3480832b98d4e9db06777993cd03a8ac54e45e",
+      "features": [
+        {
+          "id": "KEEP_FUNCTIONAL_NOT_COSMETIC",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "WEB_UI_ASSUMPTION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "STRATEGIC_DESIGN_REVIEW",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "Q3_SWITCH_TO_TEXT",
+      "condition": "GLOBAL",
+      "sourceFileHash": "498e0add1505d387e3d4776f49fbf91a7f26594caf9fe73daa93d4aa55956416",
+      "sessionHash": "cb0461d16c8c1b32046b35879df95bb2cf1ca849c1562d8579c5bcfbe192b3d6",
+      "historyCutoff": 11,
+      "queryTurn": 12,
+      "queryHash": "43b65620d3bdd50d95ff1d96592605ddd39db0f3de157054224c418374128b31",
+      "substrateHash": "4ccaef210062cc5790f2957e843daeb85d8c2a935415c489e650e6ab56dcc66b",
+      "substrateLineCount": 6,
+      "selectorHash": "0ca5af4e84102b5178c9301292bdc83b25eef7bd8630e26ec8e72fb29a2e9bc4",
+      "selectedIds": [
+        "R1",
+        "R2",
+        "R5",
+        "R6"
+      ],
+      "projectionHash": "fb5a2cc8fe5f2f854132517256f1b9f8ab2a4bbdaf05c1dbc84fcb8574694378",
+      "projectionWords": 84,
+      "decoderHash": "cc88e5a52bee36cf29b3df845f7ca7523eec39c0e06d4b55ca2906fa7e933192",
+      "features": [
+        {
+          "id": "VOICE_AUDIO_WORKS",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "DUPLICATE_SEND_PERSISTS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "DEFECT_IS_NOT_AUDIO_QUALITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "Q3_SWITCH_TO_TEXT",
+      "condition": "QUERY",
+      "sourceFileHash": "498e0add1505d387e3d4776f49fbf91a7f26594caf9fe73daa93d4aa55956416",
+      "sessionHash": "cb0461d16c8c1b32046b35879df95bb2cf1ca849c1562d8579c5bcfbe192b3d6",
+      "historyCutoff": 11,
+      "queryTurn": 12,
+      "queryHash": "43b65620d3bdd50d95ff1d96592605ddd39db0f3de157054224c418374128b31",
+      "substrateHash": "4ccaef210062cc5790f2957e843daeb85d8c2a935415c489e650e6ab56dcc66b",
+      "substrateLineCount": 6,
+      "selectorHash": "0ca5af4e84102b5178c9301292bdc83b25eef7bd8630e26ec8e72fb29a2e9bc4",
+      "selectedIds": [
+        "R1",
+        "R2",
+        "R5",
+        "R6"
+      ],
+      "projectionHash": "fb5a2cc8fe5f2f854132517256f1b9f8ab2a4bbdaf05c1dbc84fcb8574694378",
+      "projectionWords": 84,
+      "decoderHash": "843431862bcd338f8f2235a6a897fab55f7954909785a5fb5c3c23106b1bb30c",
+      "features": [
+        {
+          "id": "VOICE_AUDIO_WORKS",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "DUPLICATE_SEND_PERSISTS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "DEFECT_IS_NOT_AUDIO_QUALITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "Q4_IOS_FRUSTRATION",
+      "condition": "GLOBAL",
+      "sourceFileHash": "498e0add1505d387e3d4776f49fbf91a7f26594caf9fe73daa93d4aa55956416",
+      "sessionHash": "cb0461d16c8c1b32046b35879df95bb2cf1ca849c1562d8579c5bcfbe192b3d6",
+      "historyCutoff": 21,
+      "queryTurn": 22,
+      "queryHash": "bcd171b79e5f0439db2032437dc312954a51287763f7b50924f4a57310725c75",
+      "substrateHash": "c549a8be19f590fdda0f30a4f7746568aa91096f8f87218a35d602e254888e01",
+      "substrateLineCount": 9,
+      "selectorHash": "fb8cf95f554642488c5cedcf5c4fc42c4856ba7de90af87d3a7bbe4e3c0e2420",
+      "selectedIds": [
+        "R5",
+        "R6",
+        "R8",
+        "R9"
+      ],
+      "projectionHash": "61ec0f468cc5910a580f413a5d4dc4c5261f1e6722605f263742c146aedc4814",
+      "projectionWords": 80,
+      "decoderHash": "0ecb516f07a74bcb50492fa4a063fc24156698bf8634c2f28b849fab2bcdefcb",
+      "features": [
+        {
+          "id": "PERSISTENT_DUPLICATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MODE_SWITCHING_DID_NOT_CLOSE_DEFECT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "PARTIAL_SUCCESS_WITH_UNRESOLVED_BUG",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "Q4_IOS_FRUSTRATION",
+      "condition": "QUERY",
+      "sourceFileHash": "498e0add1505d387e3d4776f49fbf91a7f26594caf9fe73daa93d4aa55956416",
+      "sessionHash": "cb0461d16c8c1b32046b35879df95bb2cf1ca849c1562d8579c5bcfbe192b3d6",
+      "historyCutoff": 21,
+      "queryTurn": 22,
+      "queryHash": "bcd171b79e5f0439db2032437dc312954a51287763f7b50924f4a57310725c75",
+      "substrateHash": "c549a8be19f590fdda0f30a4f7746568aa91096f8f87218a35d602e254888e01",
+      "substrateLineCount": 9,
+      "selectorHash": "ccfe6b99c934fb3baebbfc3445822c51d505e2f719115266e3e39e12e483f483",
+      "selectedIds": [
+        "R5",
+        "R6",
+        "R1",
+        "R8"
+      ],
+      "projectionHash": "787868b7ca9cd79e10e1da56982333547d295d6d5dcaef20b4aef366ec1a38c8",
+      "projectionWords": 83,
+      "decoderHash": "43cd97583972aa0db05e9d5157cf3b911e94dd620e9c12035970d46e0aead807",
+      "features": [
+        {
+          "id": "PERSISTENT_DUPLICATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "MODE_SWITCHING_DID_NOT_CLOSE_DEFECT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "PARTIAL_SUCCESS_WITH_UNRESOLVED_BUG",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "Q5_GIVE_DESKTOP_VOICE",
+      "condition": "GLOBAL",
+      "sourceFileHash": "a340977e0ddc06a57d89642a668c2d9d3c78b4185adb372289a957ab916298ed",
+      "sessionHash": "1f5ebb9374342814a9d4dd50ab78fcc37cfd2697f1f6d9afac82d3bf4e943dec",
+      "historyCutoff": 25,
+      "queryTurn": 26,
+      "queryHash": "fef2e8bc55b560ea42e894ddaedaf5200e1b2a0866afec4f435a8050849d8d9a",
+      "substrateHash": "b8066ea31b9f66e7f54c87246d7585ef12fd5c080c9be254c8355b983ba3ed7b",
+      "substrateLineCount": 6,
+      "selectorHash": "4cef9d685cf723ee28204b448492b5f1361afbaaa8ec070754904dc230a0ff1e",
+      "selectedIds": [
+        "R1",
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "projectionHash": "3055e283fb94c22247944d28d65663fb574cd311421a697aba242fc863915ae3",
+      "projectionWords": 103,
+      "decoderHash": "d6b4a17759049ebf40994cb040a8f1fd5fbc4a1516deed95155fb227a9881573",
+      "features": [
+        {
+          "id": "DESKTOP_MAIA_GOAL",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "TEXT_CONNECTION_NOW_WORKS",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "VOICE_QUALITY_ALREADY_IN_FIELD",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "Q5_GIVE_DESKTOP_VOICE",
+      "condition": "QUERY",
+      "sourceFileHash": "a340977e0ddc06a57d89642a668c2d9d3c78b4185adb372289a957ab916298ed",
+      "sessionHash": "1f5ebb9374342814a9d4dd50ab78fcc37cfd2697f1f6d9afac82d3bf4e943dec",
+      "historyCutoff": 25,
+      "queryTurn": 26,
+      "queryHash": "fef2e8bc55b560ea42e894ddaedaf5200e1b2a0866afec4f435a8050849d8d9a",
+      "substrateHash": "b8066ea31b9f66e7f54c87246d7585ef12fd5c080c9be254c8355b983ba3ed7b",
+      "substrateLineCount": 6,
+      "selectorHash": "5d342e423849fe2affb6a17c56758d3c21becb05a3a23ffdda0ad780564d276b",
+      "selectedIds": [
+        "R1",
+        "R2",
+        "R6"
+      ],
+      "projectionHash": "1fd7c3acd0519f85e6872c22d655b4ae0d4010f540f0039f3c5f2bc9cd08de46",
+      "projectionWords": 72,
+      "decoderHash": "8d36918bca07c1494c30536d44525b94632c9b61f51cf28bc676ab7e1b072cb6",
+      "features": [
+        {
+          "id": "DESKTOP_MAIA_GOAL",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "TEXT_CONNECTION_NOW_WORKS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "VOICE_QUALITY_ALREADY_IN_FIELD",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    }
+  ]
+}
