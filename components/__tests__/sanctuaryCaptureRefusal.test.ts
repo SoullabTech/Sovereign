@@ -84,6 +84,10 @@ describe('Sanctuary refusal lives inside handleCaptureSpirit', () => {
 
 describe('the button guard remains, as defense in depth', () => {
   it('the persistent bookmark is still not offered in Sanctuary', () => {
-    expect(SOURCE).toContain('{!isSanctuary &&');
+    const bookmark = SOURCE.indexOf('aria-label=\"Keep something from this conversation\"');
+    expect(bookmark).toBeGreaterThan(-1);
+    // The bookmark now sits behind a composite render condition; Sanctuary
+    // remains one conjunct rather than being the first token in the expression.
+    expect(SOURCE.slice(Math.max(0, bookmark - 1800), bookmark)).toContain('!isSanctuary &&');
   });
 });
