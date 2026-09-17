@@ -50,3 +50,21 @@
   .ws-insight .wsi-grid { grid-template-columns:minmax(0,1fr); }
   .ws-insight button, .ws-insight .wsi-link { min-height:44px; }
 }
+
+/* Keep related excerpts and the writer's purpose in one working field. */
+.ws-insight .wsi-exploration { display:grid; grid-template-columns:minmax(0,1fr) 280px; gap:20px; align-items:start; }
+.ws-insight .wsi-comparison-main { grid-column:1; grid-row:1; min-width:0; }
+.ws-insight .wsi-intention { grid-column:2; grid-row:1; position:sticky; top:0; max-height:70dvh; overflow:auto; }
+.ws-insight .wsi-intention .wsi-grid { grid-template-columns:1fr; gap:4px; }
+.ws-insight .wsi-intention textarea { min-height:95px; }
+.ws-insight .wsi-intention select { width:100%; max-width:100%; }
+.ws-insight .wsi-passage-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr)); gap:12px; align-items:start; }
+.ws-insight .wsi-passage-grid .wsi-passage { margin:0; min-width:0; padding:12px; border:1px solid var(--wsi-line); border-top:3px solid var(--ws-gold-text); border-radius:7px; }
+.ws-insight .wsi-passage-grid .wsi-prose { max-height:380px; overflow:auto; font-size:16px; line-height:1.65; padding-right:6px; }
+.ws-insight .wsi-passage-grid button, .ws-insight .wsi-passage-grid a { margin:5px 3px 0 0; }
+@media(max-width:1000px) {
+  .ws-insight .wsi-exploration { grid-template-columns:1fr; }
+  .ws-insight .wsi-intention, .ws-insight .wsi-comparison-main { grid-column:1; grid-row:auto; position:static; max-height:none; }
+}
+
+.ws-insight select { color:var(--wsi-ink); background:var(--wsi-paper); border:1px solid var(--ws-rule); border-radius:6px; padding:8px; font:inherit; }
