@@ -43,6 +43,7 @@ The flow exists to refuse one specific failure: **material becoming knowable bec
 5. **A refusal is not an occasion to disclose.** A refused crossing reports that it refused, not what it was refusing to hand over.
 6. **Withdrawal must remain possible.** A subject that cannot be removed from the corpus was never lawfully admissible.
 7. **⭐ One crossing, or none.** A pathway that can produce retrievable rows without passing J1–J4 defeats the flow entirely — not partially. The existence of a second, ungoverned ingestion route makes J1–J4 optional in practice regardless of how rigorously they were executed.
+8. **The crossing executable is governed too.** Corpus digests bind what may cross; they do not by themselves bind the code that interprets and writes it. J6 and J7 must run from a clean execution tree whose adjudicated ingestion implementation hashes and governed corpus identity match the crossing record. A corpus-hash match never excuses executable drift.
 
 ## 5 · Why law 7 is load-bearing for the current run
 
@@ -55,17 +56,15 @@ Therefore: **J10 for Elemental Alchemy may not close while an alternate ungovern
 ## 6 · Current position — Elemental Alchemy
 
 ```
-J0 ✅  J1 ✅  J2 ✅  J3 ✅  J4 ✅  ▶ J5  ·  J6  ·  J7  ·  J8  ·  J9  ·  J10
+J0 ✅  J1 ✅  J2 ✅  J3 ✅  J4 ✅  J5 ✅  ▶ J6  ·  J7  ·  J8  ·  J9  ·  J10
 ```
 
-- Canonical head carrying the governed mechanism: `78a85f652` (merge of PR #1337).
-- Production runtime at time of writing: `8b80ec210`.
-- Production corpus: **0 rows**. Nothing has entered MAIA.
-- J5 attempt stopped correctly on the deploy gate's disk-space floor (~23–24 GB free against a ≥60 GB requirement). A gate that refused is a gate working.
-
-⚠️ **J5/J6 carry an open packaging finding recorded separately:**
-`docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J5-J6_PREFLIGHT_FINDING_2026-09-17.md`.
-It is not a defect in the governed mechanism; it determines *where* J6 and J7 may lawfully run. It must be adjudicated before the deploy is spent.
+- Canonical reviewed mechanism: `78a85f652` (merge of PR #1337).
+- **J5 direct production witness, 2026-09-17:** `maia-sovereign` healthy and reporting `GIT_COMMIT=78a85f652`.
+- Build host (`minisforum`) direct disk witness at J5/J6 control-lane open: **137 GB free** on `/`; the earlier ~23–24 GB reading was from the wrong host and is not the production build-host state.
+- Production corpus remains governed by the no-write sequence; J6 is the next gate.
+- The packaging finding is dispositioned host-side: `data/ain/source` is build-and-authority material, not runtime serving material. J6/J7 execute on `minisforum` from a clean governed worktree against production services; the 736-file source population is not shipped into the runtime image merely to prove exclusion.
+- Law 8 execution bind and the live host-side evidence are recorded in `docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J5-J6_HOST-SIDE_DISPOSITION_2026-09-17.md`.
 
 ## 7 · Scope of this charter
 
