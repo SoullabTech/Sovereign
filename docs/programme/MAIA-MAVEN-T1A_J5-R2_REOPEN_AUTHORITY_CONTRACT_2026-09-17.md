@@ -1,6 +1,6 @@
 # MAIA-MAVEN-T1A · J5-R2 — REOPEN AUTHORITY CONTRACT
 
-**Status:** CANDIDATE FOR FOUNDER ADJUDICATION
+**Status:** ⭐ RATIFIED — founder adjudication recorded in `MAIA-MAVEN-T1A_J5-R2_REOPEN_AUTHORITY_ADJUDICATION_2026-09-17.md`
 **Date:** 2026-09-17
 **Lane:** `MAIA-MAVEN-T1A_J5-R2_REOPEN_AUTHORITY_LANE_2026-09-17.md`
 **Census:** `MAIA-MAVEN-T1A_J5-R2_REOPEN_AUTHORITY_CENSUS_2026-09-17.md`
@@ -142,7 +142,7 @@ Even a broader span ends with the current encounter. It does not survive into a 
 
 A stored receipt proving that REOPEN happened is historical evidence, not reusable crossing authority.
 
-**Founder decision owed:** ratify, narrow, or replace this proposed lifetime rule before implementation.
+**Founder ruling:** RATIFIED — current response by default; explicit member language may broaden to the present encounter only.
 
 ## 8. START_FRESH
 
@@ -219,17 +219,17 @@ A later implementation is not accepted by happy-path examples alone. At minimum 
 
 The falsifier population must include every producer named by the current census, not only MemoryBundle.
 
-## 13. Founder adjudications still owed
+## 13. Founder adjudications — CLOSED
 
-The J4 law already determines that ambient retrieval is unauthorized. The following implementation-shaping points are genuinely new and require explicit founder disposition:
+The J4 law already determines that ambient retrieval is unauthorized. The three implementation-shaping points raised by this contract are now founder-ratified:
 
-1. **Authority span:** proposed default = current response only; explicit member language may broaden to the present encounter.
-2. **Compound CONTINUE + REOPEN:** proposed YES when the present utterance clearly asks a prior thread to enter now; prior CONTINUE standing alone remains insufficient.
-3. **Explicit object handoff:** proposed YES as object-bounded REOPEN evidence when the gesture truthfully communicates generative use with MAIA, subject to the authority-span ruling above.
+1. **Authority span:** current response by default; explicit member language may broaden to the present encounter.
+2. **Compound CONTINUE + REOPEN:** YES when the present utterance clearly asks a prior thread to enter now; prior CONTINUE standing alone remains insufficient.
+3. **Explicit object handoff:** YES as object-bounded REOPEN evidence when the gesture truthfully communicates generative use with MAIA, subject to the authority-span ruling above.
 
 `START_FRESH` is **not** an owed ruling here: J4 already requires refusal of prior memory→generative-context crossing. The current UI mismatch is therefore an implementation defect against inherited law, not a new semantic choice.
 
-No implementation may silently decide the three open points above.
+The bounded J5 implementation tranche may now implement these three rulings. No broader authority is conferred.
 
 ## 14. Explicit non-authorizations
 
@@ -255,12 +255,12 @@ J5-R2 lane preamble ............................. ✅ RECORDED
 current canonical census ....................... ✅ RECORDED
 ambient REOPEN defect .......................... ⛔ CONFIRMED
 START_FRESH semantic mismatch .................. ⛔ CONFIRMED
-REOPEN authority contract ...................... ⚠️ CANDIDATE
-founder adjudications .......................... ⚠️ OWED (3)
-runtime repair ................................. ⛔ NOT AUTHORIZED
+REOPEN authority contract ...................... ✅ RATIFIED
+founder adjudications .......................... ✅ CLOSED (3/3)
+runtime repair ................................. ✅ J5 BOUNDED TRANCHE AUTHORIZED
 J5 closure ..................................... ⛔ NOT CLAIMED
 J6 ............................................. ⛔ UNOPENED
 merge / deploy / production .................... ⛔ UNTOUCHED
 ```
 
-**STOP:** return this contract for founder adjudication before any runtime build.
+**NEXT:** bounded J5 implementation + R-F1…R-F10 only; stop before J6/merge/deploy.
