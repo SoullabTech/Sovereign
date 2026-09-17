@@ -729,6 +729,18 @@ The charter should make it possible for a new session to know what not to do.
 
 ## 27 · Template — opening a lane inside an existing flow
 
+Every new lane opened under this manual must begin with a compact five-field preamble **before any action**:
+
+```text
+Class: <A | B | C | Frontier-Dependent>
+Governing authority: <specific authority source + clause / ruling>
+Current gate: <one gate presently open>
+Evidence subject: <exact artifact / SHA / runtime / population the evidence can speak about>
+Stop boundary: <first consequence or authority boundary this lane may not cross>
+```
+
+This preamble is mandatory and declarative; it does not replace the fuller lane charter below. These five lines do not create authority; they expose the authority the lane already carries. If any field cannot be named honestly, the lane is not ready to act. More-specific ratified programme / constitutional law and explicit founder rulings continue to govern over this manual.
+
 ```markdown
 # <FLOW> · <GATE>-R<n> — <LANE NAME>
 
