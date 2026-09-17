@@ -25,7 +25,7 @@ PRODUCTION                  UNTOUCHED
 | `scripts/witness/account-erasure-p5b-shadow-witness.ts` | `2c198301c86f7a4b5f55e7e4f8718559133e0843` |
 | `scripts/erasure/account-erasure-registry-core.ts` | `df6eee51411a7c427941c91fe89b891d9b767bff` |
 | `scripts/check-account-erasure-registry.ts` | `8bce457c4ddd8bb1926ce7f4ece94718aa872545` |
-| `F5-CONFORMANCE-REPAIR-01_P5B_FOUNDER_AUTHORIZATION_2026-09-17.md` | `db5fa75934ecc649e4d43ab1f6570a0e7a68c39f` |
+| `docs/programme/F5-CONFORMANCE-REPAIR-01_P5B_FOUNDER_AUTHORIZATION_2026-09-17.md` | `db5fa75934ecc649e4d43ab1f6570a0e7a68c39f` |
 
 P5-A registry v1 is preserved. P5-B adds v2 rather than rewriting v1.
 
