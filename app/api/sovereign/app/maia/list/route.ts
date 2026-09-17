@@ -87,6 +87,7 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { tryChangesContinuityTurn } from '@/lib/maia/continuity/changesTurn';
 import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/runner';
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
@@ -365,6 +366,41 @@ export async function POST(req: NextRequest) {
         `⚠️ Sovereign request rejected in ${duration}ms: missing message`
       );
       return jsonWithCors(req, { error: 'Missing `message` in request body', code: 'NO_MESSAGE' }, 400);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 🧭 MAIA-NODE-05 — Changes continuity capability
+    //
+    // Placed HERE, deliberately: identity is resolved and the message is
+    // well-formed, but the turn-acceptance boundary below has not yet run. §12
+    // requires this capability to write nothing, and accepting a turn is a
+    // durable act — so a capability answer must return before that, forming no
+    // turn, no memory and no episode.
+    //
+    // ⛔ Member-initiated only (§10): this fires because the member asked about
+    // their Changes, never because MAIA judged Changes to be relevant.
+    // ⛔ The answer is CONSTRUCTED from the canonical read, not generated (§8):
+    // a Change absent from the capability result is absent from the answer,
+    // because the model never sees the question.
+    // ⛔ Ordinary reflective language ("a lot is changing") does not reach here —
+    // `isChangesContinuityRequest` requires an authored Changes question.
+    try {
+      const changesTurn = await tryChangesContinuityTurn(userId, message);
+      if (changesTurn.handled) {
+        return jsonWithCors(req, {
+          message: changesTurn.message,
+          capability: changesTurn.capability,
+          route: {
+            endpoint: '/api/sovereign/app/maia',
+            type: 'Sovereign Consciousness Interface',
+            operational: true,
+          },
+        }, 200);
+      }
+    } catch (capabilityError) {
+      // A fault in the capability seam must never cost the member their turn:
+      // fall through to ordinary conversation rather than failing the request.
+      console.error('[maia/list] changes continuity capability error', capabilityError);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

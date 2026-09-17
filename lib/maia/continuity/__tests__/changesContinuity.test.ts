@@ -240,13 +240,22 @@ describe('MAIA-NODE-04 · authority and containment', () => {
   });
 
   it('the canonical authority scopes by member under a verified credential', () => {
-    const route = require('fs').readFileSync(
-      require('path').join(process.cwd(), 'app/api/changes/route.ts'), 'utf8',
-    );
+    // MAIA-NODE-05 §1 moved the query into lib/changes/readMemberChanges so the
+    // conversational capability could call the SAME read. Authorization stayed
+    // in the route; member scoping travelled with the query. Both halves are
+    // asserted, so the seam repair cannot have dropped either.
+    const read = (rel: string) =>
+      require('fs').readFileSync(require('path').join(process.cwd(), rel), 'utf8');
+    const route = read('app/api/changes/route.ts');
+    const reader = read('lib/changes/readMemberChanges.ts');
+
     expect(route).toContain('getMemberIdFromRequest');
     expect(route).not.toContain('probeAuthPosture');
-    expect(route).toContain('WHERE c.member_id = $1');
     expect(route).toContain("{ error: 'Unauthorized' }, { status: 401 }");
+    expect(route).toContain('readMemberChanges(memberId');
+
+    expect(reader).toContain('WHERE c.member_id = $1');
+    expect(reader).toContain("ORDER BY c.created_at DESC");
   });
 
   it('reads no generic memory, affinity or inferred source', () => {
