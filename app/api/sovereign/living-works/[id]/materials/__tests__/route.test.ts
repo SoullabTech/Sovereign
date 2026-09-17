@@ -265,3 +265,41 @@ describe('POST /materials — a lost race is a 409, never a 500', () => {
     expect(res.status).toBe(500);
   });
 });
+
+describe('WS-SOURCE-INTAKE-01 — reviewed source material may feed a Work', () => {
+  it('refuses an unreviewed or Sanctuary source', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    const res = await POST(
+      jsonRequest('POST', { materialType: 'source_upload', materialId: THING }),
+      ctx,
+    );
+    expect(res.status).toBe(404);
+    expect(String(mockQuery.mock.calls[1][0])).toContain("transcription_status = 'reviewed'");
+    expect(String(mockQuery.mock.calls[1][0])).toContain('sanctuary = FALSE');
+  });
+
+  it('lets the member explicitly bring their reviewed source without changing its type', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    txReturning(
+      { rows: [] },
+      { rows: [{ ...BROUGHT, material_type: 'source_upload', relationship_sentence: 'notes behind chapter four' }] },
+    );
+    const res = await POST(
+      jsonRequest('POST', {
+        materialType: 'source_upload',
+        materialId: THING,
+        sentence: 'notes behind chapter four',
+      }),
+      ctx,
+    );
+    expect(res.status).toBe(201);
+    const insert = txCalls.find((c) => String(c[0]).includes('INSERT INTO living_work_materials'));
+    expect(insert![1]).toEqual([WORK, 'source_upload', THING, 'notes behind chapter four', MEMBER]);
+  });
+});

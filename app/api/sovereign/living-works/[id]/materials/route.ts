@@ -56,6 +56,18 @@ async function memberOwnsMaterial(
     );
     return r.rows.length > 0;
   }
+  if (materialType === 'source_upload') {
+    /* SOURCE-INTAKE-01 — only a REVIEWED, non-Sanctuary source can cross into
+       a Work. Upload is custody; review establishes the writer's transcription;
+       this declaration is the separate belonging gesture. */
+    const r = await query<{ id: string }>(
+      `SELECT id FROM workbench_uploads
+        WHERE id = $1 AND arranger_id = $2
+          AND transcription_status = 'reviewed' AND sanctuary = FALSE`,
+      [materialId, memberId]
+    );
+    return r.rows.length > 0;
+  }
   // Openness of the ontology is not openness of this gate: a type this route
   // cannot verify is refused rather than trusted.
   return false;

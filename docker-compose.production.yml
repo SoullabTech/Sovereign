@@ -165,6 +165,8 @@ services:
       # MAIA_TEXT_PROVIDER: "local"   # enable when route timeout raised; 7b@5.8tok/s = ~30s/turn
       # Voice notes storage directory
       VOICE_NOTES_DIR: "/app/storage/voice-notes"
+      # Writer's Studio / Workbench source originals + reviewed transcriptions
+      WORKBENCH_UPLOADS_DIR: "/app/data/workbench"
       # Feature flag: Explainer Scripts for HeyGen (Phase 1)
       NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS: "true"
       # Sovereign TTS: Kokoro is the production voice provider (zero-OpenAI doctrine).
@@ -194,6 +196,8 @@ services:
       - voice_notes_data:/app/storage/voice-notes
       # Media Studio storage - sovereign local media pipeline
       - media_data:/app/data/media
+      # Writer source originals/transcriptions - must survive container replacement
+      - workbench_data:/app/data/workbench
       # AIN Obsidian Vault — sovereign field-context knowledge base (read-only)
       # Host source: /home/soullab/AIN (synced from Mac Studio
       # /Users/soullab/Documents/AIN/ via rsync). Read by ObsidianVaultBridge
@@ -1052,6 +1056,8 @@ volumes:
   voice_notes_data:
     driver: local
   media_data:
+    driver: local
+  workbench_data:
     driver: local
   palisades_data:
     driver: local

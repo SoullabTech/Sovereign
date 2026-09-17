@@ -128,6 +128,8 @@ export const SOURCE_HREF = '/press/manuscript?tab=manuscript';
  * an empty Studio, so the with-a-book path was never exercised.
  */
 export const IMPORT_HREF = '/press/manuscript?import=1';
+/** Outside material that may feed a Work without becoming its manuscript. */
+export const SOURCE_INTAKE_HREF = '/writers-studio/sources';
 
 /**
  * Writer's Studio canonical Write room — the rebuilt creative workspace. The v0.1
@@ -509,6 +511,8 @@ export interface StudioMode {
   label: string;
   availability: StudioAvailability;
   href?: string;
+  /** Honest preview copy for a named future room. No capability claim. */
+  preview?: string;
 }
 
 export const STUDIO_MODES: StudioMode[] = [
@@ -516,9 +520,9 @@ export const STUDIO_MODES: StudioMode[] = [
   /* BUILD-07D built the room. The mode is no longer a promise: it is
      available and it goes somewhere. assertModesHonest enforces the pairing. */
   { id: 'develop', label: 'Develop', availability: 'available', href: DEVELOP_HREF },
-  { id: 'explore', label: 'Explore', availability: 'later' },
-  { id: 'review', label: 'Review', availability: 'later' },
-  { id: 'publish', label: 'Publish', availability: 'later' },
+  { id: 'explore', label: 'Explore', availability: 'later', preview: 'Gather ideas, research, images, questions, and possibilities around your Work.' },
+  { id: 'review', label: 'Review', availability: 'later', preview: 'Step back from the creative process and see the Work as it now stands.' },
+  { id: 'publish', label: 'Publish', availability: 'later', preview: 'Prepare the finished Work to meet the world.' },
 ];
 
 /**

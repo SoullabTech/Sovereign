@@ -7,7 +7,12 @@ surfaces:
   # Shared by Write and Develop: one continuous manuscript surface. D5 adds an
   # optional read-only evidence highlight; editing behavior remains unchanged.
   - app/writers-studio/canvas/WholeManuscriptSurface.tsx
+  # Supporting material belongs to the same Writer's Studio ecology, but it
+  # remains source material unless the writer explicitly brings it to a Work.
+  - app/writers-studio/canvas/MaterialsDrawer.tsx
+  - app/writers-studio/sources/**
   - app/writers-studio/studioMap.ts
+  - app/writers-studio/studio/StudioModeBar.tsx
   - app/writers-studio/workContext.ts
   # The mode bar was already named in shared_with_house and was covered by no
   # surface glob, so the room shared a component no contract governed. D1 makes
@@ -24,6 +29,7 @@ reference_surfaces:
   - docs/programme/WS-DEVELOP-WORKBENCH-01_DESIGN_CONSTITUTION_2026-09-16.md
   - docs/programme/WRITERS-STUDIO-EXPERIENCE-REBUILD-01_TARGET_STATE_2026-09-16.md
   - docs/programme/WRITERS-STUDIO-EXPERIENCE-REBUILD-01_PACKAGE_2026-09-16.md
+  - docs/programme/WS-SOURCE-INTAKE-01_2026-09-16.md
   - docs/design/contracts/writer-worktable-section-native.md
   - docs/design/contracts/studio-home.md
 shared_with_house: Soullab atmosphere tokens · Press serif for the writer’s work · restrained gold as state and action · human-language gestures · the Writer’s Studio mode bar
@@ -93,6 +99,12 @@ The Studio may appear inside classrooms, workshops, cohorts, retreats, coaching 
 - **Creative form remains native.** A workshop for poets does not inherit chapter language; a screenplay room does not inherit prose assumptions; a songwriting room does not become a document editor with different labels.
 
 The expansion test is simple: if adding a host, cohort, theme, or brand makes the creator more aware of the software than of the Work, the extension has gone too far.
+
+## Source intake addendum — evidence boundary
+
+`WS-SOURCE-INTAKE-01` extends this Studio ecology to material that exists before or beside the manuscript: photographed notebook pages, scans, notes, drafts, and references. The governing distinction is **bringing material into a Work does not make it manuscript**. Custody, transcription review, and belonging are separate writer acts. OCR is a draft-producing instrument only; the writer reviews handwritten/scanned transcription before it may cross into a Work, and the Work relationship is always an explicit member gesture.
+
+The screenshots named in this contract predate this source-intake slice and evidence the canonical rebuilt **Write** room only. They are retained because that is the room this slice must remain visually subordinate to; **they are not claimed as a visual witness of `/writers-studio/sources`.** The source-intake room currently has structural tests, route tests, a real local image-OCR witness, and a real scanned-PDF OCR witness. An authenticated desktop/mobile browser walk of the source-intake room remains **OWED before production acceptance**, as does a recognition-quality witness using real handwriting rather than the rasterized text specimen used to prove the local OCR execution path. This contract records that evidence boundary rather than retroactively treating an older screenshot as proof of a new surface.
 
 ## The writer’s-guide ethic
 
