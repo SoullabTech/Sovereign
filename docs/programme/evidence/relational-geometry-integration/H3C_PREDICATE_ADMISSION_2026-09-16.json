@@ -1,0 +1,315 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H3C_PREDICATE_ADMISSION_V1",
+  "authority": "offline research only",
+  "assumption": "binding-evidence class is already known; this experiment tests predicate-specific mediation, not automatic evidence-class acquisition",
+  "law": "An admitted edge must have relation-specific evidence sufficient for its predicate; generic edge evidence may not authorize a stronger or different predicate.",
+  "summary": {
+    "runs": 12,
+    "correct": 12,
+    "canonicalized": 3,
+    "rejectedUnbound": 2,
+    "falseRelationsAfterGate": 0
+  },
+  "rows": [
+    {
+      "fixture": "M1_ALIGNMENT",
+      "run": 1,
+      "rawHash": "fa17be15aee05818f9c0495c051a50748cbb069bbe5119791910d5336bf149c6",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "ALIGNMENT",
+        "sourceId": "AIR_LEAVE",
+        "targetId": "EARTH_SETTLE"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "ALIGNMENT",
+        "admitted": true,
+        "basis": "EXPLICIT_WHEN_THEN"
+      },
+      "expected": "ALIGNMENT",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": "EXPLICIT_WHEN_THEN",
+        "relation": "ALIGNMENT",
+        "action": "ADMIT_MODEL"
+      }
+    },
+    {
+      "fixture": "M1_ALIGNMENT",
+      "run": 2,
+      "rawHash": "fa17be15aee05818f9c0495c051a50748cbb069bbe5119791910d5336bf149c6",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "ALIGNMENT",
+        "sourceId": "AIR_LEAVE",
+        "targetId": "EARTH_SETTLE"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "ALIGNMENT",
+        "admitted": true,
+        "basis": "EXPLICIT_WHEN_THEN"
+      },
+      "expected": "ALIGNMENT",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": "EXPLICIT_WHEN_THEN",
+        "relation": "ALIGNMENT",
+        "action": "ADMIT_MODEL"
+      }
+    },
+    {
+      "fixture": "M2_TENSION",
+      "run": 1,
+      "rawHash": "6a0230184fdd74fed0c54f600d4841cec47461a498bd1adaaf2476aec4f90fc2",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "TENSION",
+        "sourceId": "WATER_LOVE",
+        "targetId": "FIRE_LEAVE"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "TENSION",
+        "admitted": true,
+        "basis": "EXPLICIT_CONTRAST"
+      },
+      "expected": "TENSION",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": "EXPLICIT_CONTRAST",
+        "relation": "TENSION",
+        "action": "ADMIT_MODEL"
+      }
+    },
+    {
+      "fixture": "M2_TENSION",
+      "run": 2,
+      "rawHash": "6a0230184fdd74fed0c54f600d4841cec47461a498bd1adaaf2476aec4f90fc2",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "TENSION",
+        "sourceId": "WATER_LOVE",
+        "targetId": "FIRE_LEAVE"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "TENSION",
+        "admitted": true,
+        "basis": "EXPLICIT_CONTRAST"
+      },
+      "expected": "TENSION",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": "EXPLICIT_CONTRAST",
+        "relation": "TENSION",
+        "action": "ADMIT_MODEL"
+      }
+    },
+    {
+      "fixture": "M3_INHIBITS",
+      "run": 1,
+      "rawHash": "8923735b9578698dc4fd3016cc4a82d125904646d817443a84694eba69bac9a9",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "TENSION",
+        "sourceId": "FIRE_LAUNCH",
+        "targetId": "EARTH_EXHAUST"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "TENSION",
+        "admitted": true,
+        "basis": "EXPLICIT_INHIBITION"
+      },
+      "expected": "INHIBITS",
+      "proposalCorrect": false,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": "EXPLICIT_INHIBITION",
+        "relation": "INHIBITS",
+        "action": "CANONICALIZE_FROM_BINDING_BASIS"
+      }
+    },
+    {
+      "fixture": "M3_INHIBITS",
+      "run": 2,
+      "rawHash": "8923735b9578698dc4fd3016cc4a82d125904646d817443a84694eba69bac9a9",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "TENSION",
+        "sourceId": "FIRE_LAUNCH",
+        "targetId": "EARTH_EXHAUST"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "TENSION",
+        "admitted": true,
+        "basis": "EXPLICIT_INHIBITION"
+      },
+      "expected": "INHIBITS",
+      "proposalCorrect": false,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": "EXPLICIT_INHIBITION",
+        "relation": "INHIBITS",
+        "action": "CANONICALIZE_FROM_BINDING_BASIS"
+      }
+    },
+    {
+      "fixture": "M4_UNBOUND",
+      "run": 1,
+      "rawHash": "462ae90e41e15a5f183f56d37168e5854cbe10a39d0ffa62ec575faf332a6ee8",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "ALIGNMENT",
+        "sourceId": "AIR_UNCERTAIN",
+        "targetId": "WATER_AFRAID"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "NO_RELATION",
+        "admitted": false,
+        "basis": "REJECT_NO_BINDING_EVIDENCE"
+      },
+      "expected": "NO_RELATION",
+      "proposalCorrect": false,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": null,
+        "relation": "NO_RELATION",
+        "action": "REJECT_UNBOUND"
+      }
+    },
+    {
+      "fixture": "M4_UNBOUND",
+      "run": 2,
+      "rawHash": "462ae90e41e15a5f183f56d37168e5854cbe10a39d0ffa62ec575faf332a6ee8",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "ALIGNMENT",
+        "sourceId": "AIR_UNCERTAIN",
+        "targetId": "WATER_AFRAID"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "NO_RELATION",
+        "admitted": false,
+        "basis": "REJECT_NO_BINDING_EVIDENCE"
+      },
+      "expected": "NO_RELATION",
+      "proposalCorrect": false,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": null,
+        "relation": "NO_RELATION",
+        "action": "REJECT_UNBOUND"
+      }
+    },
+    {
+      "fixture": "M5_COOCCUR",
+      "run": 1,
+      "rawHash": "64d25ed50b83902e4c80154a046304923f7a8c5ffb8bbc7181156a5fadcd532f",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "NO_RELATION",
+        "sourceId": null,
+        "targetId": null
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "NO_RELATION",
+        "admitted": false,
+        "basis": "MODEL_ABSTAIN"
+      },
+      "expected": "NO_RELATION",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": null,
+        "relation": "NO_RELATION",
+        "action": "MODEL_ABSTAIN"
+      }
+    },
+    {
+      "fixture": "M5_COOCCUR",
+      "run": 2,
+      "rawHash": "64d25ed50b83902e4c80154a046304923f7a8c5ffb8bbc7181156a5fadcd532f",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "NO_RELATION",
+        "sourceId": null,
+        "targetId": null
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "NO_RELATION",
+        "admitted": false,
+        "basis": "MODEL_ABSTAIN"
+      },
+      "expected": "NO_RELATION",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": null,
+        "relation": "NO_RELATION",
+        "action": "MODEL_ABSTAIN"
+      }
+    },
+    {
+      "fixture": "M6_EXPLICIT_LINK",
+      "run": 1,
+      "rawHash": "19977d734ff6cd1fa1bcb8abe1a01fd5547165434e00ed3de7fedde1d1705956",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "EVOKES",
+        "sourceId": "AIR_NEWPATH",
+        "targetId": "WATER_HOPE"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "EVOKES",
+        "admitted": true,
+        "basis": "EXPLICIT_LINK"
+      },
+      "expected": "EVOKES",
+      "proposalCorrect": true,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": "EXPLICIT_LINK",
+        "relation": "EVOKES",
+        "action": "ADMIT_MODEL"
+      }
+    },
+    {
+      "fixture": "M6_EXPLICIT_LINK",
+      "run": 2,
+      "rawHash": "d52b38e1f91feb25a8ffc506d7ec022dea0e731a8c243e1c413a2f35d1a112b8",
+      "model": "claude-sonnet-4-6",
+      "proposal": {
+        "relation": "ALIGNMENT",
+        "sourceId": "AIR_NEWPATH",
+        "targetId": "WATER_HOPE"
+      },
+      "parseError": null,
+      "gated": {
+        "relation": "ALIGNMENT",
+        "admitted": true,
+        "basis": "EXPLICIT_LINK"
+      },
+      "expected": "EVOKES",
+      "proposalCorrect": false,
+      "finalCorrect": true,
+      "predicateGate": {
+        "basis": "EXPLICIT_LINK",
+        "relation": "EVOKES",
+        "action": "CANONICALIZE_FROM_BINDING_BASIS"
+      }
+    }
+  ]
+}
