@@ -1,0 +1,559 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H5A_TEMPORAL_ORDER_V1",
+  "authority": "offline research only",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "parallel local Claude CLI restricted/no-tools",
+    "effort": "low"
+  },
+  "hypothesis": "Temporal order carries transition information unavailable in an unordered multiset of the same relation states.",
+  "summary": {
+    "runs": 12,
+    "orderedCorrect": 12,
+    "unorderedCorrect": 12,
+    "directionalOrderedCorrect": 10,
+    "directionalTotal": 10,
+    "directionalUnorderedAbstainCorrect": 10,
+    "persistenceOrdered": 2,
+    "persistenceUnordered": 2
+  },
+  "byFixture": {
+    "T1_EMERGES": {
+      "runs": 2,
+      "orderedCorrect": 2,
+      "unorderedCorrect": 2,
+      "orderedPredictions": [
+        {
+          "operator": "EMERGES",
+          "fromState": "NONE",
+          "toState": "TENSION"
+        },
+        {
+          "operator": "EMERGES",
+          "fromState": "NONE",
+          "toState": "TENSION"
+        }
+      ],
+      "unorderedPredictions": [
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        }
+      ]
+    },
+    "T2_DISSOLVES": {
+      "runs": 2,
+      "orderedCorrect": 2,
+      "unorderedCorrect": 2,
+      "orderedPredictions": [
+        {
+          "operator": "DISSOLVES",
+          "fromState": "TENSION",
+          "toState": "NONE"
+        },
+        {
+          "operator": "DISSOLVES",
+          "fromState": "TENSION",
+          "toState": "NONE"
+        }
+      ],
+      "unorderedPredictions": [
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        }
+      ]
+    },
+    "T3_ALIGN_TO_TENSION": {
+      "runs": 2,
+      "orderedCorrect": 2,
+      "unorderedCorrect": 2,
+      "orderedPredictions": [
+        {
+          "operator": "TRANSFORMS",
+          "fromState": "ALIGNMENT",
+          "toState": "TENSION"
+        },
+        {
+          "operator": "TRANSFORMS",
+          "fromState": "ALIGNMENT",
+          "toState": "TENSION"
+        }
+      ],
+      "unorderedPredictions": [
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        }
+      ]
+    },
+    "T4_TENSION_TO_ALIGN": {
+      "runs": 2,
+      "orderedCorrect": 2,
+      "unorderedCorrect": 2,
+      "orderedPredictions": [
+        {
+          "operator": "TRANSFORMS",
+          "fromState": "TENSION",
+          "toState": "ALIGNMENT"
+        },
+        {
+          "operator": "TRANSFORMS",
+          "fromState": "TENSION",
+          "toState": "ALIGNMENT"
+        }
+      ],
+      "unorderedPredictions": [
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        }
+      ]
+    },
+    "T5_RETURN": {
+      "runs": 2,
+      "orderedCorrect": 2,
+      "unorderedCorrect": 2,
+      "orderedPredictions": [
+        {
+          "operator": "RETURNS_TO",
+          "fromState": "TENSION",
+          "toState": "TENSION"
+        },
+        {
+          "operator": "RETURNS_TO",
+          "fromState": "TENSION",
+          "toState": "TENSION"
+        }
+      ],
+      "unorderedPredictions": [
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        }
+      ]
+    },
+    "T6_PERSISTS": {
+      "runs": 2,
+      "orderedCorrect": 2,
+      "unorderedCorrect": 2,
+      "orderedPredictions": [
+        {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        },
+        {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        }
+      ],
+      "unorderedPredictions": [
+        {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        },
+        {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        }
+      ]
+    }
+  },
+  "rows": [
+    {
+      "fixture": "T1_EMERGES",
+      "run": 1,
+      "ordered": {
+        "hash": "8b88050bf3ff6868549e3b2c33ed6b88dded66cd1e86b4252a6ec4ebfb630328",
+        "prediction": {
+          "operator": "EMERGES",
+          "fromState": "NONE",
+          "toState": "TENSION"
+        },
+        "expected": {
+          "operator": "EMERGES",
+          "fromState": "NONE",
+          "toState": "TENSION"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T1_EMERGES",
+      "run": 2,
+      "ordered": {
+        "hash": "8b88050bf3ff6868549e3b2c33ed6b88dded66cd1e86b4252a6ec4ebfb630328",
+        "prediction": {
+          "operator": "EMERGES",
+          "fromState": "NONE",
+          "toState": "TENSION"
+        },
+        "expected": {
+          "operator": "EMERGES",
+          "fromState": "NONE",
+          "toState": "TENSION"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T2_DISSOLVES",
+      "run": 1,
+      "ordered": {
+        "hash": "4ab64db1e262ab2c28d8a107d53d96b3d049fdec3402fdb7d9d79d32099058ec",
+        "prediction": {
+          "operator": "DISSOLVES",
+          "fromState": "TENSION",
+          "toState": "NONE"
+        },
+        "expected": {
+          "operator": "DISSOLVES",
+          "fromState": "TENSION",
+          "toState": "NONE"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T2_DISSOLVES",
+      "run": 2,
+      "ordered": {
+        "hash": "4ab64db1e262ab2c28d8a107d53d96b3d049fdec3402fdb7d9d79d32099058ec",
+        "prediction": {
+          "operator": "DISSOLVES",
+          "fromState": "TENSION",
+          "toState": "NONE"
+        },
+        "expected": {
+          "operator": "DISSOLVES",
+          "fromState": "TENSION",
+          "toState": "NONE"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T3_ALIGN_TO_TENSION",
+      "run": 1,
+      "ordered": {
+        "hash": "66f577dcfbe3e9f79005962ec8a51ee2de784844644cea74337101607366913d",
+        "prediction": {
+          "operator": "TRANSFORMS",
+          "fromState": "ALIGNMENT",
+          "toState": "TENSION"
+        },
+        "expected": {
+          "operator": "TRANSFORMS",
+          "fromState": "ALIGNMENT",
+          "toState": "TENSION"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T3_ALIGN_TO_TENSION",
+      "run": 2,
+      "ordered": {
+        "hash": "66f577dcfbe3e9f79005962ec8a51ee2de784844644cea74337101607366913d",
+        "prediction": {
+          "operator": "TRANSFORMS",
+          "fromState": "ALIGNMENT",
+          "toState": "TENSION"
+        },
+        "expected": {
+          "operator": "TRANSFORMS",
+          "fromState": "ALIGNMENT",
+          "toState": "TENSION"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T4_TENSION_TO_ALIGN",
+      "run": 1,
+      "ordered": {
+        "hash": "c1a347fe0b9d1bf104dc569e90f32a46c7a3bec3549cb6aa9c62945de54faf36",
+        "prediction": {
+          "operator": "TRANSFORMS",
+          "fromState": "TENSION",
+          "toState": "ALIGNMENT"
+        },
+        "expected": {
+          "operator": "TRANSFORMS",
+          "fromState": "TENSION",
+          "toState": "ALIGNMENT"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T4_TENSION_TO_ALIGN",
+      "run": 2,
+      "ordered": {
+        "hash": "c1a347fe0b9d1bf104dc569e90f32a46c7a3bec3549cb6aa9c62945de54faf36",
+        "prediction": {
+          "operator": "TRANSFORMS",
+          "fromState": "TENSION",
+          "toState": "ALIGNMENT"
+        },
+        "expected": {
+          "operator": "TRANSFORMS",
+          "fromState": "TENSION",
+          "toState": "ALIGNMENT"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T5_RETURN",
+      "run": 1,
+      "ordered": {
+        "hash": "2cd39798a8534be9ce08433a671a0dfa32c2bf7dd03b929a1eb366197d5e9c84",
+        "prediction": {
+          "operator": "RETURNS_TO",
+          "fromState": "TENSION",
+          "toState": "TENSION"
+        },
+        "expected": {
+          "operator": "RETURNS_TO",
+          "fromState": "TENSION",
+          "toState": "TENSION"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T5_RETURN",
+      "run": 2,
+      "ordered": {
+        "hash": "2cd39798a8534be9ce08433a671a0dfa32c2bf7dd03b929a1eb366197d5e9c84",
+        "prediction": {
+          "operator": "RETURNS_TO",
+          "fromState": "TENSION",
+          "toState": "TENSION"
+        },
+        "expected": {
+          "operator": "RETURNS_TO",
+          "fromState": "TENSION",
+          "toState": "TENSION"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "f5420ac7b3b450bd4c03448b998a3738a0947bb0ed685d358ac6ca5e4ac418b2",
+        "prediction": {
+          "operator": "AMBIGUOUS",
+          "fromState": null,
+          "toState": null
+        },
+        "expectedOperator": "AMBIGUOUS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T6_PERSISTS",
+      "run": 1,
+      "ordered": {
+        "hash": "68ef10141ce6d4f7daee8610502349fa5a038ca8b8595f9445b67c0764422469",
+        "prediction": {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        },
+        "expected": {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "17d77aab82dc90a64452e582f7693c7b1dc2f04275366f67e3c2faf3c3f79c88",
+        "prediction": {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        },
+        "expectedOperator": "PERSISTS",
+        "correct": true,
+        "parseError": null
+      }
+    },
+    {
+      "fixture": "T6_PERSISTS",
+      "run": 2,
+      "ordered": {
+        "hash": "17d77aab82dc90a64452e582f7693c7b1dc2f04275366f67e3c2faf3c3f79c88",
+        "prediction": {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        },
+        "expected": {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        },
+        "correct": true,
+        "parseError": null
+      },
+      "unordered": {
+        "hash": "17d77aab82dc90a64452e582f7693c7b1dc2f04275366f67e3c2faf3c3f79c88",
+        "prediction": {
+          "operator": "PERSISTS",
+          "fromState": "ALIGNMENT",
+          "toState": "ALIGNMENT"
+        },
+        "expectedOperator": "PERSISTS",
+        "correct": true,
+        "parseError": null
+      }
+    }
+  ]
+}
