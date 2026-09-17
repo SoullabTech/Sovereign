@@ -1,0 +1,331 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H6A_NEUTRAL_STRUCTURAL_OPERATORS_V1",
+  "authority": "offline research only",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "local Claude CLI restricted/no-tools",
+    "effort": "low"
+  },
+  "rule": "Astrological names are not shown to the inference model; neutral operators must earn discrimination independently.",
+  "summary": {
+    "runs": 12,
+    "correct": 12,
+    "truePositive": 10,
+    "truePositiveTotal": 10,
+    "trueNegative": 2,
+    "trueNegativeTotal": 2,
+    "falsePositive": 0
+  },
+  "byFixture": {
+    "S1_POLARITY": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        {
+          "operator": "POLARITY",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        },
+        {
+          "operator": "POLARITY",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        }
+      ]
+    },
+    "S2_CROSS_CONSTRAINT": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        {
+          "operator": "CROSS_CONSTRAINT",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        },
+        {
+          "operator": "CROSS_CONSTRAINT",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        }
+      ]
+    },
+    "S3_FACILITATIVE": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        {
+          "operator": "FACILITATIVE_RESONANCE",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        },
+        {
+          "operator": "FACILITATIVE_RESONANCE",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        }
+      ]
+    },
+    "S4_OPTIONAL_COUPLING": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        {
+          "operator": "OPTIONAL_COUPLING",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        },
+        {
+          "operator": "OPTIONAL_COUPLING",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        }
+      ]
+    },
+    "S5_FUSION": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        {
+          "operator": "FUSION_PRESSURE",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        },
+        {
+          "operator": "FUSION_PRESSURE",
+          "admitted": true,
+          "reason": "EXACT_OPERATOR_EVIDENCE"
+        }
+      ]
+    },
+    "S6_NONE": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        {
+          "operator": "NONE",
+          "admitted": false,
+          "reason": "MODEL_NONE"
+        },
+        {
+          "operator": "NONE",
+          "admitted": false,
+          "reason": "MODEL_NONE"
+        }
+      ]
+    }
+  },
+  "symbolicAnalogues": {
+    "POLARITY": "opposition-like hypothesis source",
+    "CROSS_CONSTRAINT": "square-like hypothesis source",
+    "FACILITATIVE_RESONANCE": "trine-like hypothesis source",
+    "OPTIONAL_COUPLING": "sextile-like hypothesis source",
+    "FUSION_PRESSURE": "conjunction-like hypothesis source"
+  },
+  "rows": [
+    {
+      "fixture": "S1_POLARITY",
+      "run": 1,
+      "rawHash": "39728966012d737a27d7ec235935b952a008aa4308eb8ce1abd67ac51f644d26",
+      "proposal": {
+        "operator": "POLARITY",
+        "quoteHash": "57c97256820d2e49c68250ff2778d0d2506f13f1eb99f1046616ecdfb53d28af"
+      },
+      "gated": {
+        "operator": "POLARITY",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "POLARITY",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S1_POLARITY",
+      "run": 2,
+      "rawHash": "39728966012d737a27d7ec235935b952a008aa4308eb8ce1abd67ac51f644d26",
+      "proposal": {
+        "operator": "POLARITY",
+        "quoteHash": "57c97256820d2e49c68250ff2778d0d2506f13f1eb99f1046616ecdfb53d28af"
+      },
+      "gated": {
+        "operator": "POLARITY",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "POLARITY",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S2_CROSS_CONSTRAINT",
+      "run": 1,
+      "rawHash": "10a148abedf203bbac5d88a2b4a463e9c9f14d9b73fcecd87d2f063006eafcd5",
+      "proposal": {
+        "operator": "CROSS_CONSTRAINT",
+        "quoteHash": "b416fcfc6d3f11ed08e3240c0cadbdeabf8c9353f08dea201efa856b9513a08d"
+      },
+      "gated": {
+        "operator": "CROSS_CONSTRAINT",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "CROSS_CONSTRAINT",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S2_CROSS_CONSTRAINT",
+      "run": 2,
+      "rawHash": "10a148abedf203bbac5d88a2b4a463e9c9f14d9b73fcecd87d2f063006eafcd5",
+      "proposal": {
+        "operator": "CROSS_CONSTRAINT",
+        "quoteHash": "b416fcfc6d3f11ed08e3240c0cadbdeabf8c9353f08dea201efa856b9513a08d"
+      },
+      "gated": {
+        "operator": "CROSS_CONSTRAINT",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "CROSS_CONSTRAINT",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S3_FACILITATIVE",
+      "run": 1,
+      "rawHash": "abb91cb51e87c1bb7f49822e417b06e26d06f8bee682425e04e1b83b4a3556f2",
+      "proposal": {
+        "operator": "FACILITATIVE_RESONANCE",
+        "quoteHash": "d0b3957fc3cd26fd495b98c2ce3af764c1006d803f190fa38eab9419e87e1d7e"
+      },
+      "gated": {
+        "operator": "FACILITATIVE_RESONANCE",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "FACILITATIVE_RESONANCE",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S3_FACILITATIVE",
+      "run": 2,
+      "rawHash": "cb38f6a1f7ff1803d321187e088fdab270af46163dd2b1537f64a71e68c17a5f",
+      "proposal": {
+        "operator": "FACILITATIVE_RESONANCE",
+        "quoteHash": "3714bbf5cdfba7aacd60ef7a1b5e87c8a570425e27f993eb29a0d8cf7d3465f6"
+      },
+      "gated": {
+        "operator": "FACILITATIVE_RESONANCE",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "FACILITATIVE_RESONANCE",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S4_OPTIONAL_COUPLING",
+      "run": 1,
+      "rawHash": "92bc0b747dd2bc79cf4de9b0bcc3c845cf6e4e74f1054d6dc8b8d2b3000da8f6",
+      "proposal": {
+        "operator": "OPTIONAL_COUPLING",
+        "quoteHash": "962a2167887e15f7ebddc9ae33d946c4dbb14f972e14f145f9b895e0b8e2ab25"
+      },
+      "gated": {
+        "operator": "OPTIONAL_COUPLING",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "OPTIONAL_COUPLING",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S4_OPTIONAL_COUPLING",
+      "run": 2,
+      "rawHash": "92bc0b747dd2bc79cf4de9b0bcc3c845cf6e4e74f1054d6dc8b8d2b3000da8f6",
+      "proposal": {
+        "operator": "OPTIONAL_COUPLING",
+        "quoteHash": "962a2167887e15f7ebddc9ae33d946c4dbb14f972e14f145f9b895e0b8e2ab25"
+      },
+      "gated": {
+        "operator": "OPTIONAL_COUPLING",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "OPTIONAL_COUPLING",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S5_FUSION",
+      "run": 1,
+      "rawHash": "bbc3c96c0fd2dba9f01764abd48b67db2307b473aa9fd04303c77414d15514e5",
+      "proposal": {
+        "operator": "FUSION_PRESSURE",
+        "quoteHash": "0a0c2e4427fa2f723be390ba0bfd1e58581be54587b69b255db65fb375f06128"
+      },
+      "gated": {
+        "operator": "FUSION_PRESSURE",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "FUSION_PRESSURE",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S5_FUSION",
+      "run": 2,
+      "rawHash": "bbc3c96c0fd2dba9f01764abd48b67db2307b473aa9fd04303c77414d15514e5",
+      "proposal": {
+        "operator": "FUSION_PRESSURE",
+        "quoteHash": "0a0c2e4427fa2f723be390ba0bfd1e58581be54587b69b255db65fb375f06128"
+      },
+      "gated": {
+        "operator": "FUSION_PRESSURE",
+        "admitted": true,
+        "reason": "EXACT_OPERATOR_EVIDENCE"
+      },
+      "expected": "FUSION_PRESSURE",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S6_NONE",
+      "run": 1,
+      "rawHash": "ed02ed73eb7871202d55fbadda761afc3460cb663a79ae154135a6fe218763e6",
+      "proposal": {
+        "operator": "NONE",
+        "quoteHash": null
+      },
+      "gated": {
+        "operator": "NONE",
+        "admitted": false,
+        "reason": "MODEL_NONE"
+      },
+      "expected": "NONE",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "S6_NONE",
+      "run": 2,
+      "rawHash": "ed02ed73eb7871202d55fbadda761afc3460cb663a79ae154135a6fe218763e6",
+      "proposal": {
+        "operator": "NONE",
+        "quoteHash": null
+      },
+      "gated": {
+        "operator": "NONE",
+        "admitted": false,
+        "reason": "MODEL_NONE"
+      },
+      "expected": "NONE",
+      "correct": true,
+      "parseError": null
+    }
+  ]
+}
