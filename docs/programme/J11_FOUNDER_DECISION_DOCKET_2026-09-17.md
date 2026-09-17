@@ -1,12 +1,12 @@
 # J11 — FOUNDER DECISION DOCKET
 
-**Status:** OPEN FOR FOUNDER RULING · documentary only
+**Status:** ✅ RULED — TAKE BOUNDED · documentary only
 
 **Class:** Class C — documentation / adjudication support only
-**Governing authority:** canonical `REPRESENTATION_AUTHORITY_LAW.md` + J9/J10/J11/J11-R1 + canonical JARVIS operating manual
-**Current gate:** founder adjudication of the bounded J11 grant/effect candidate
+**Governing authority:** founder ruling 2026-09-17 + canonical `REPRESENTATION_AUTHORITY_LAW.md` + J9/J10/J11/J11-R1 + canonical JARVIS operating manual
+**Current gate:** record founder TAKE BOUNDED ruling and open second falsification only
 **Evidence subject:** canonical `51d4060d71198ad5a36cfc6131dbfb9155617ba6`, including J11 first falsification and J11-R1 correction
-**Stop boundary:** no doctrine promotion, repair, implementation, runtime, schema, migration, deployment, production write, or production-state claim before the founder ruling
+**Stop boundary:** no universality claim, doctrine expansion, repair, implementation, runtime, schema, migration, deployment, production write, or production-state claim; only a second bounded falsification stage is opened
 
 ---
 
@@ -34,11 +34,11 @@ The evidence supports **one constitutional invariant + domain-specific enforceme
 
 ### Why a founder ruling is required
 
-J11 has exhausted the authority of documentary falsification. Evidence can show that the candidate survived this bounded test; evidence cannot decide whether Soullab should promote it, amend it, hold it, or reject it as a governing synthesis.
+J11 exhausted the authority of documentary falsification. Evidence showed that the candidate survived this bounded test; evidence could not decide whether Soullab should promote it, amend it, hold it, or reject it as a governing synthesis.
 
 ---
 
-## Options
+## Options presented to the founder
 
 ### A · TAKE BOUNDED
 
@@ -73,15 +73,15 @@ Consequence: future lanes may cite the individual retrieval / capability / Keep 
 
 ---
 
-## JARVIS recommendation — proposal only
+## JARVIS recommendation — historical proposal
 
-**Recommend A · TAKE BOUNDED.**
+**Recommended A · TAKE BOUNDED.**
 
 Reason: it preserves the strongest thing the evidence actually established while retaining the defeater that prevents rhetorical convergence from becoming architecture by analogy. It also avoids the two opposite errors already exposed in this programme: pretending the seams share one implementation mechanism, or discarding a repeated constitutional boundary merely because its enforcement differs by domain.
 
-The recommendation does **not** propose implementation. The next lawful act under A would be further falsification, not repair.
+The recommendation did **not** propose implementation. The next lawful act under A is further falsification, not repair.
 
-### Proposed second-falsification population if A is ruled
+### Second-falsification population opened by the ruling
 
 Use independent seams already named by the Representation Authority Law but not relied on as J11's four primary cells:
 
@@ -97,7 +97,7 @@ If any seam fits only by changing those meanings, the candidate must narrow or f
 
 ## Explicitly not decided by this ruling
 
-No option above by itself decides or authorizes:
+This ruling does not decide or authorize:
 
 - merge/deploy of J8 PR #1344;
 - LF-SCOPE-01 PR #1346;
@@ -107,17 +107,15 @@ No option above by itself decides or authorizes:
 - schema or migration changes;
 - production writes;
 - public/member claims;
-- expansion or amendment of `REPRESENTATION_AUTHORITY_LAW.md`.
+- expansion or amendment of `REPRESENTATION_AUTHORITY_LAW.md`;
+- promotion of the bounded candidate to universal law.
 
 ---
 
 ## Founder ruling
 
-**OPEN**
+**FOUNDER RULING — TAKE BOUNDED**
 
-Expected forms:
+**Founder utterance:** `I accept recommendation.`
 
-- `FOUNDER RULING — TAKE BOUNDED`
-- `FOUNDER RULING — AMEND: <exact amendment>`
-- `FOUNDER RULING — HOLD`
-- `FOUNDER RULING — REJECT`
+**Adjudicated meaning:** the founder accepts Option A, the sole recommendation presented in this docket. The J11 grant/effect formulation acquires standing as a **working constitutional candidate** only. Universality remains unestablished. The Representation Authority Law remains unchanged. Domain-specific enforcement remains required. Generic shared authority infrastructure remains unauthorized. A second bounded falsification stage is authorized across LF-SCOPE-01, temporal memory, and Interface Humility. Repair, implementation, deployment, and production remain closed absent later explicit authority.
