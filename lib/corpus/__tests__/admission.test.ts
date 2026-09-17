@@ -14,6 +14,7 @@
  * REQUIRES it to fail. A guard whose default is admission is the defect wearing
  * a manifest, and this is what distinguishes the two.
  */
+import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -431,6 +432,158 @@ describe('ACT 4 §C · corpus admission', () => {
     } finally {
       fs.rmSync(repo, { recursive: true, force: true });
     }
+  });
+
+  test('T23 — shipped declaration admits Elemental Alchemy only by governed rights-holder authorization', () => {
+    const repoRoot = path.resolve(__dirname, '../../..');
+    const real = loadDeclaration(repoRoot);
+    const ea = path.join(repoRoot, 'data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md');
+    const other = path.join(repoRoot, 'data/ain/source/60-second-protocol.md');
+    const v = decideAdmission(repoRoot, [ea, other], real);
+    expect(v.admitted).toEqual(['data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md']);
+    expect(v.excluded.map((e) => e.file)).toContain('data/ain/source/60-second-protocol.md');
+  });
+
+  test('T24 — published knowledge may be admitted by exact governed rights-holder authorization without claiming organizational ownership', () => {
+    const work = 'Copyright © Author. Published work.';
+    const digest = createHash('sha256').update(work, 'utf8').digest('hex');
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/author-work.md'),
+      declaration([
+        {
+          prefix: 'data/ain/source/books/author-work.md',
+          classification: 'published_knowledge',
+          reason: 'rights-holder authorization',
+          authority: {
+            kind: 'rights_holder_authorized',
+            rightsHolder: 'Author Name',
+            evidence: {
+              source: 'governed_record',
+              ref: 'docs/corpus-authority/author-work.md',
+              marker: 'CORPUS USE AUTHORIZED',
+              subject_sha256: digest,
+            },
+          },
+        },
+      ]),
+      reader({
+        'data/ain/source/books/author-work.md': work,
+        'docs/corpus-authority/author-work.md': `CORPUS USE AUTHORIZED\nAuthor Name\n${digest}`,
+      }),
+    );
+    expect(v.admitted).toEqual(['data/ain/source/books/author-work.md']);
+  });
+
+  test('T25 — rights-holder authorization requires a named rights holder', () => {
+    const work = 'Copyright © Author. Published work.';
+    const digest = createHash('sha256').update(work, 'utf8').digest('hex');
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/author-work.md'),
+      declaration([{
+        prefix: 'data/ain/source/books/author-work.md',
+        classification: 'published_knowledge',
+        reason: 'missing rights holder',
+        authority: {
+          kind: 'rights_holder_authorized',
+          rightsHolder: '',
+          evidence: { source: 'governed_record', ref: 'docs/corpus-authority/author-work.md', marker: 'AUTHORIZED', subject_sha256: digest },
+        },
+      }]),
+      reader({ 'data/ain/source/books/author-work.md': work, 'docs/corpus-authority/author-work.md': 'AUTHORIZED' }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded[0].reason).toMatch(/named rights holder/);
+  });
+
+  test('T26 — rights-holder authorization requires a governed authorization record', () => {
+    const work = 'Copyright © Author. Published work.';
+    const digest = createHash('sha256').update(work, 'utf8').digest('hex');
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/author-work.md'),
+      declaration([{
+        prefix: 'data/ain/source/books/author-work.md',
+        classification: 'published_knowledge',
+        reason: 'wrong evidence source',
+        authority: {
+          kind: 'rights_holder_authorized',
+          rightsHolder: 'Author Name',
+          evidence: { source: 'in_file', marker: 'Copyright © Author' },
+        },
+      }]),
+      reader({ 'data/ain/source/books/author-work.md': work }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded[0].reason).toMatch(/governed authorization record/);
+  });
+
+  test('T27 — rights-holder authorization is bound to the exact candidate SHA-256', () => {
+    const work = 'Copyright © Author. Revised published work.';
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/author-work.md'),
+      declaration([{
+        prefix: 'data/ain/source/books/author-work.md',
+        classification: 'published_knowledge',
+        reason: 'digest mismatch',
+        authority: {
+          kind: 'rights_holder_authorized',
+          rightsHolder: 'Author Name',
+          evidence: { source: 'governed_record', ref: 'docs/corpus-authority/author-work.md', marker: 'AUTHORIZED', subject_sha256: '0'.repeat(64) },
+        },
+      }]),
+      reader({ 'data/ain/source/books/author-work.md': work, 'docs/corpus-authority/author-work.md': 'AUTHORIZED' }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded[0].reason).toMatch(/authorized subject SHA-256/);
+  });
+
+  test('T28 — governed rights-holder record must name the declared rights holder', () => {
+    const work = 'Copyright © Author. Published work.';
+    const digest = createHash('sha256').update(work, 'utf8').digest('hex');
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/author-work.md'),
+      declaration([{
+        prefix: 'data/ain/source/books/author-work.md',
+        classification: 'published_knowledge',
+        reason: 'record holder mismatch',
+        authority: {
+          kind: 'rights_holder_authorized',
+          rightsHolder: 'Author Name',
+          evidence: { source: 'governed_record', ref: 'docs/corpus-authority/author-work.md', marker: 'AUTHORIZED', subject_sha256: digest },
+        },
+      }]),
+      reader({ 'data/ain/source/books/author-work.md': work, 'docs/corpus-authority/author-work.md': `AUTHORIZED
+Different Person
+${digest}` }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded[0].reason).toMatch(/does not name the declared rights holder/);
+  });
+
+  test('T29 — governed rights-holder record must bind the authorized subject SHA-256', () => {
+    const work = 'Copyright © Author. Published work.';
+    const digest = createHash('sha256').update(work, 'utf8').digest('hex');
+    const v = decideAdmission(
+      ROOT,
+      files('data/ain/source/books/author-work.md'),
+      declaration([{
+        prefix: 'data/ain/source/books/author-work.md',
+        classification: 'published_knowledge',
+        reason: 'record digest missing',
+        authority: {
+          kind: 'rights_holder_authorized',
+          rightsHolder: 'Author Name',
+          evidence: { source: 'governed_record', ref: 'docs/corpus-authority/author-work.md', marker: 'AUTHORIZED', subject_sha256: digest },
+        },
+      }]),
+      reader({ 'data/ain/source/books/author-work.md': work, 'docs/corpus-authority/author-work.md': `AUTHORIZED\nAuthor Name\nno digest here` }),
+    );
+    expect(v.admitted).toEqual([]);
+    expect(v.excluded[0].reason).toMatch(/does not bind the authorized subject SHA-256/);
   });
 
 });

@@ -1,7 +1,7 @@
 {
   "_doc": "SOURCE-CUSTODY-PII-01 · ACT 4 §C + CORPUS-AUTHORITY-01 — corpus admission declaration. Enforced by lib/corpus/admission.ts. A file enters MAIA's knowledge corpus ONLY when a rule names it, its classification permits corpus membership, AND the rule carries a compatible structured authority basis. Absence of any one means EXCLUSION.",
   "_law": "Membership and authority must be DECLARED and CHECKED, never INHERITED from location, naming, publication status, or a free-text assurance.",
-  "_state": "The existing corpus is declared unclassified_legacy, which does NOT admit. This is deliberate: 736 files under data/ain/source have never been classified, and admitting them in bulk to keep the build green would reproduce the defect this declaration exists to close. Classification is per-collection founder work; each reclassification is a governed edit to this file.",
+  "_state": "One individually governed item is now classified and admissible: Elemental Alchemy. The remaining 735 files under data/ain/source remain unclassified_legacy and excluded. Classification continues item/collection by item/collection; no bulk inheritance from the directory.",
   "_classifications": {
     "published_knowledge": "ADMITS — authored knowledge intended for MAIA to draw on.",
     "third_party_published": "ADMITS — third-party published text held under an explicit basis.",
@@ -11,15 +11,31 @@
   },
   "rules": [
     {
+      "prefix": "data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md",
+      "classification": "published_knowledge",
+      "reason": "CORPUS-CLASSIFICATION-EA-01: Kelly-authored Elemental Alchemy manuscript, admitted individually under explicit governed authorization from the named copyright holder.",
+      "authority": {
+        "kind": "rights_holder_authorized",
+        "rightsHolder": "Kelly Nezat",
+        "evidence": {
+          "source": "governed_record",
+          "ref": "docs/corpus-authority/elemental-alchemy.md",
+          "marker": "CORPUS USE AUTHORIZED — ELEMENTAL ALCHEMY — KELLY NEZAT — 2026-09-16",
+          "subject_sha256": "f57f17e6ab82f911a4932c1f2d5fa0149e8fe499c7461f60bd87f86d0f657af0"
+        }
+      }
+    },
+    {
       "prefix": "data/ain/source",
       "classification": "unclassified_legacy",
       "reason": "ACT 4 §C: the historical corpus root. Every file here was ingested by directory convention alone, with no classification and no PII exclusion — the defect this declaration closes. Held closed until each collection is classified on its own evidence."
     }
   ],
   "_authority": {
-    "soullab_owned": "May support published_knowledge or organizational_public only with mechanically locatable evidence: an in-file marker actually present in the work, or a record under docs/corpus-authority/ whose declared marker is present.",
+    "soullab_owned": "May support published_knowledge or organizational_public only with mechanically locatable evidence that Soullab itself owns the work; brand identity alone is not copyright ownership.",
     "public_domain": "May support third_party_published only when mechanically locatable evidence governs the work itself—not an image, quotation, phrase, or unrelated source.",
     "license": "May support third_party_published only when mechanically locatable evidence identifies a license that governs the work and permits the intended corpus use.",
-    "permission": "May support third_party_published only when a record under docs/corpus-authority/ carries the declared authorization marker; free-text claims are not authority evidence."
+    "permission": "May support third_party_published only when a record under docs/corpus-authority/ carries the declared authorization marker from the relevant rights holder; free-text claims are not authority evidence.",
+    "rights_holder_authorized": "May support published_knowledge only when the named rights holder has a governed authorization record and the authorization is bound to the exact candidate SHA-256; authorization does not transfer ownership."
   }
 }
