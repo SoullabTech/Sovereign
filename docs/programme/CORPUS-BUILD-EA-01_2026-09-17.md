@@ -130,7 +130,7 @@ Book Companion currently fails gracefully when that build directory is absent. C
 
 ## Local evidence
 
-- admission + EA-01 build suites: **37/37 PASS**;
+- admission + EA-01 build suites: **38/38 PASS**;
 - root TypeScript: **229 vs baseline 239 · 0 regressions**;
 - `typecheck:scripts`: **40 base / 40 head**, head-only **0**, base-only **0**, identity sets identical;
 - plan-only executor: PASS, no Ollama/DB access;
@@ -145,7 +145,7 @@ Merging or deploying this implementation does **not** authorize `--execute`. Pro
 
 On the exact implementation tree before commit:
 
-- admission + EA-01 build suites: **37/37 PASS**;
+- admission + EA-01 build suites: **38/38 PASS**;
 - plan-only build witness: **215 AIN / 244 Library**, exact raw + normalized digests;
 - root TypeScript: **229 vs baseline 239 · 0 regressions**;
 - `typecheck:scripts`: **40 base / 40 head**, head-only **0**, base-only **0**, identity sets identical;
