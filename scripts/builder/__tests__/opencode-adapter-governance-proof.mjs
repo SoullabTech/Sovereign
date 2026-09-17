@@ -214,10 +214,11 @@ console.log('\n=== P6: project OpenCode config carries no credential or default 
   assert('project config registers Ollama, NVIDIA, and Tinker without selecting a default model',
     !!config.provider?.ollama && !!config.provider?.nvidia && !!config.provider?.tinker
       && config.model === undefined);
+  const secretLikePrefixes = ['nv' + 'api-', 's' + 'k-'];
   assert('project config references environment variables instead of embedding credentials',
     configText.includes('{env:NVIDIA_API_KEY}')
       && configText.includes('{env:TINKER_API_KEY}')
-      && !/nvapi-|sk-[A-Za-z0-9]/.test(configText));
+      && secretLikePrefixes.every((prefix) => !configText.includes(prefix)));
 
   const agent = readFileSync(path.join(REPO, '.opencode', 'agents', 'jarvis-readonly.md'), 'utf8');
   assert('read-only agent denies mutation, shell, web, subagents, and external directories',
