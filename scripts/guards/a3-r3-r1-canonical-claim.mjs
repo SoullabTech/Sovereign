@@ -122,6 +122,33 @@ for (const path of [CLAIM_ROUTE, SIGNIN_ROUTE]) {
 }
 
 // ---------------------------------------------------------------------------
+// G-R1-4 — the booking-email binding is not optional
+//
+// Founder ruling 2026-09-17: the booking email is the identity anchor for the claim
+// ceremony. Where it is absent the claim must refuse — the client may not establish an
+// address of record by supplying one at claim time.
+//
+// The retired duplicate expressed this control as `invite.booking_email && ...`, which
+// skips the comparison exactly when there is nothing to compare. That shape is rejected
+// anywhere on the portal surface: it is what makes a control optional.
+// ---------------------------------------------------------------------------
+{
+  const src = read(CLAIM_ROUTE);
+  if (src) {
+    const flat = norm(src);
+    if (!/booking_email/.test(flat)) {
+      failures.push('G-R1-4: the canonical claim route does not resolve the client booking email; D5 cannot be enforced.');
+    }
+    if (!/!\s*bookingEmail\s*\|\|/.test(flat)) {
+      failures.push('G-R1-4: the claim route does not fail closed when no booking email is on record.');
+    }
+    if (/booking_email\s*&&/.test(flat) || /bookingEmail\s*&&\s*\w+\s*!==/.test(flat)) {
+      failures.push('G-R1-4: the booking-email comparison is guarded by the field being present, which makes the control optional.');
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // G-R1-3 — one claim authority
 //
 // Exactly one route under app/api/portal may consume an invite; the retired duplicate
@@ -182,7 +209,7 @@ for (const path of [CLAIM_ROUTE, SIGNIN_ROUTE]) {
 
 for (const n of notes) console.log(`  note  ${n}`);
 if (failures.length === 0) {
-  console.log('\nA3-R3-R1 guards: PASS (G-R1-1, G-R1-2, G-R1-3)');
+  console.log('\nA3-R3-R1 guards: PASS (G-R1-1, G-R1-2, G-R1-3, G-R1-4)');
   process.exit(0);
 }
 console.error('\nA3-R3-R1 guards: FAIL');

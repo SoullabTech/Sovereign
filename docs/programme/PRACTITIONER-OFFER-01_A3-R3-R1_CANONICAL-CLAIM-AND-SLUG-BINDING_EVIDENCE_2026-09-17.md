@@ -99,10 +99,10 @@ the defect it closes, must not fail for saying so.
 
 | Result | Run |
 |---|---|
-| **FAIL — 12 findings, exit 1** | against the pre-repair tree materialized from `087b7fa3` |
+| **FAIL — 14 findings, exit 1** | against the pre-repair tree materialized from `087b7fa3` |
 | **PASS — exit 0** | against the repaired tree |
 
-The twelve pre-repair failures, each naming a real defect:
+The fourteen pre-repair failures, each naming a real defect:
 
 - G-R1-1 ×2 — claim and sign-in mint a session without binding the slug as a predicate
 - G-R1-1 ×1 — sign-in resolves the client before the practice via `LEFT JOIN`
@@ -110,6 +110,14 @@ The twelve pre-repair failures, each naming a real defect:
   exactly-one-row assertion; mutates invite state on a refusal path
 - G-R1-3 ×4 — retired route still reads `client_invites`, hashes an invite code, writes
   portal credentials; UI still calls the retired endpoint
+- G-R1-4 ×2 — canonical route does not resolve the booking email at all, and therefore
+  cannot fail closed when none is on record
+
+**G-R1-4 was added after the 2026-09-17 ruling** so that the booking-email binding cannot
+quietly become optional again. It rejects the `invite.booking_email && …` shape anywhere
+on the portal surface — the construction the retired duplicate used, which skips the
+comparison exactly when there is nothing to compare. It is red against `087b7fa3` for the
+reason above and green against the repaired tree.
 
 **Each guard was red before it was trusted.** A guard that has never failed is an
 assertion, not an instrument.
@@ -180,7 +188,7 @@ verified by running the identical check against it. It is an artifact of the unr
 
 ---
 
-## 7. Open question — booking email absent
+## 7. Booking email absent — RAISED AS AN OPEN QUESTION, RULED 2026-09-17
 
 Founder ruling: canonical `/claim` must require the normalized submitted email to equal
 the client's existing booking email.
@@ -190,23 +198,57 @@ When `practitioner_clients.email` is null or empty there is nothing to equal. Th
 optional for exactly the rows least able to prove identity — and an optional control is
 the defect class this lane exists to refuse.
 
-**This is reported, not resolved.** If practices legitimately issue invites to clients
-with no email on record, fail-closed refusal is a behaviour change affecting them, and a
-founder ruling is required on whether those invites need a different ceremony. The
-alternative — skipping the check when the field is empty — reintroduces the bypass and
-should not be adopted silently.
+**As raised, this was reported and not resolved.** If practices legitimately issue invites
+to clients with no email on record, fail-closed refusal is a behaviour change affecting
+them, and a founder ruling was required on whether those invites need a different
+ceremony. The alternative — skipping the check when the field is empty — reintroduces the
+bypass and should not be adopted silently.
+
+The paragraph above is kept as it stood when the question was raised. It is not edited to
+read as though the answer had always been settled.
+
+### Founder ruling, 2026-09-17 — FAIL CLOSED
+
+> **Fail closed when no booking email exists.** The booking email is the identity anchor
+> for this claim ceremony. If it is absent, the client must not be allowed to claim merely
+> by supplying a new email. The practitioner must first establish or verify the client's
+> email through a separate governed workflow, then issue a new invitation. That preserves
+> D5 as a real control rather than an optional one.
+
+**The ruling confirms the behaviour already landed at `ce5b9fd7`. No code change follows
+from it.** The canonical route refuses when `practitioner_clients.email` is null or empty,
+and the refusal is the same `email_mismatch` a wrong address receives — a refusal is not
+an occasion to disclose which of the two conditions applied.
+
+Two consequences are now settled rather than open:
+
+1. **A claim may never establish the address of record.** Where no booking email exists,
+   the missing step is upstream — the practitioner establishes or verifies the email
+   through its own governed workflow and issues a fresh invitation. Claim consumes an
+   identity; it does not create one.
+2. **The absence of a governed email-establishment workflow is not a reason to weaken
+   this control.** If that workflow does not yet exist, it is a gap in the practitioner
+   surface to be opened as its own unit — never an argument for making D5 conditional.
+
+⛔ This ruling does not authorize building that workflow, and it is not R3-R1's to build.
 
 ---
 
 ## 8. Owed before A3-I1 can witness this unit
 
-1. `npm run typecheck` against the exact parent, with dependencies installed.
-2. `check-private-routes`, `check-member-owned-boundary`, `check-internal-imports`,
-   `check:no-supabase` — none could run here.
-3. Route-level T1–T10 against `maia_consciousness_test` owned by `maia_test_user`,
-   including the T3 database witness through two independent connections **against the
-   route**, and T6 rollback with an induced mid-transaction failure.
-4. A ruling on §7.
+Founder ruling, 2026-09-17: **closure is PROVISIONAL, not fully accepted, until the
+environment-capable gates below run on the Mac Studio against published commit
+`2bf7ba9b`** — without migrations, PR, merge, or deployment.
+
+| # | Gate | State |
+|---|---|---|
+| 1 | `npm run typecheck` comparison against the exact parent, with dependencies installed | **OWED** — no `node_modules` in the authoring environment |
+| 2 | `check-private-routes` · `check-member-owned-boundary` · `check-internal-imports` · `check:no-supabase` | **OWED** — none could run here |
+| 3 | Route-level T1–T10 against `maia_consciousness_test` owned by `maia_test_user`, including the T3 database witness through two independent connections **against the route**, and T6 rollback under an induced mid-transaction failure | **OWED** |
+| 4 | Closure record incorporates the no-booking-email ruling | **DISCHARGED** — §7, this commit |
+
+⛔ **R3-R2 does not open until gates 1–3 return.** A provisional closure is not a closed
+one, and the next unit may not inherit an unverified base.
 
 ---
 
@@ -242,6 +284,9 @@ The checkpoint `ce5b9fd7` was committed and **published to origin before any ver
 ran**, per founder authorization, explicitly claiming no pass. A3-I1 was lost because it
 was never pushed; this unit could not be lost the same way from the moment it existed.
 
-**A3-R3-R1-RECONSTRUCTION STATUS: REPAIR LANDED · GUARDS LETHAL AND GREEN · STATEMENT-LEVEL
-FALSIFICATION WITNESSED · ROUTE-LEVEL WITNESS OWED · §7 AWAITING RULING · NO MIGRATION ·
-NO PR · NO MERGE · NO DEPLOY · PRODUCTION UNTOUCHED.**
+**A3-R3-R1-RECONSTRUCTION STATUS: CLOSURE PROVISIONAL, NOT FULLY ACCEPTED · REPAIR LANDED ·
+GUARDS LETHAL AND GREEN · STATEMENT-LEVEL FALSIFICATION WITNESSED · ROUTE-LEVEL WITNESS
+OWED · TYPECHECK AND REPOSITORY GUARDS OWED · §7 RULED, FAIL CLOSED, NO CODE CHANGE ·
+R3-R2 NOT OPENED · `lib/coachField/invitation.ts` ROUTED OUT AS SEPARATE SECURITY DEBT,
+⛔ NEVER ABSORBED HERE · NO MIGRATION · NO PR · NO MERGE · NO DEPLOY · PRODUCTION
+UNTOUCHED.**
