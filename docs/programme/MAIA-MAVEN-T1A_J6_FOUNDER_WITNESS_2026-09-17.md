@@ -6,7 +6,7 @@ Current gate: J6 — founder experiential witness
 Evidence subject: frozen Class A candidate `7b5942c70e00a065b67f196033f20630ecb368da` in PR #1350; founder experience in a disposable witness environment only
 Stop boundary: failure or ambiguity stops the witness; no repair, merge, production migration, deploy, capability widening, or legacy-consent reinterpretation
 
-**Status:** OPEN · procedure frozen before the walk · witness NOT YET SPENT
+**Status:** ⛔ STOPPED AT W2 · founder witness spent · candidate remains unmerged
 **Production:** UNTOUCHED
 **PR #1350:** draft · candidate head frozen
 
@@ -131,3 +131,78 @@ occurs inside J6.
 ⛔ add MAIA-authored exact-message adoption
 ⛔ broaden T1-A beyond Press Keep READ
 
+---
+
+## 7. Witness execution result
+
+### W0 — PASS
+
+The witness ran against frozen candidate `7b5942c70e00a065b67f196033f20630ecb368da` on `localhost:3109` with PostgreSQL 17.7, a disposable database reconstructed from the canonical baseline plus all migrations, synthetic member `j6_witness`, and local-only Ollama inference.
+
+No production database, member, session, migration, or deployment was touched.
+
+Pre-state before W1:
+
+```text
+member_memory_atoms  0
+episodic_memories    0
+reflection_capsules  0
+```
+### W1 — PASS
+
+Founder entered two plausible synthetic referents and then said `keep this`.
+
+The surface responded:
+
+> Which exact words do you want to keep? I won’t choose for you.
+
+No recent-turn window, Reflection Capsule, summary, gold-line selection, or other interpretive referent opened automatically.
+
+Post-state remained:
+
+```text
+member_memory_atoms  0
+episodic_memories    0
+reflection_capsules  0
+```
+
+The repeated local-inference fallback sentence (“I’ve saved your message…”) was traced to fixed degraded-mode copy in `lib/ai/sovereignRouter.ts`; it did not create a Keep, moment, or capsule object.
+### W2 — AMBIGUOUS → STOP
+
+Founder selected the exact member-authored message:
+
+```text
+Witness phrase two: river bell.
+```
+
+The visible surface showed the message as `Kept`.
+
+The persisted text itself remained exact. However, immediately after W2 the disposable database contained **two durable episodic-memory rows** for that same sentence. W1 had established `episodic_memories = 0` immediately beforehand.
+
+The runtime log likewise recorded **two separate successful POSTs** to `/api/sovereign/episodes/mark`, each returning `201`, for the same 31-character verbatim text in the same witness session.
+
+Exactness is preserved, but persistence cardinality is ambiguous. Under the founder ruling, ambiguity on a material point is a STOP. No attempt is made inside J6 to deduplicate, clean up, explain away, or repair the rows.
+
+### W3–W5 — NOT RUN
+
+The witness stopped at W2 as required. No further Keep/REOPEN gestures were performed.
+---
+
+## 8. Standing after J6
+
+```text
+J5 technical evidence ..................... ✅ PASS
+J6 W0 ..................................... ✅ PASS
+J6 W1 ..................................... ✅ PASS
+J6 W2 ..................................... ⚠️ AMBIGUOUS → STOP
+J6 W3–W5 .................................. ⛔ NOT RUN
+PR #1350 .................................. DRAFT · UNMERGED
+candidate 7b5942c70e00... .................. FROZEN · UNCHANGED
+production ................................ UNTOUCHED
+merge ..................................... ⛔ NOT AUTHORIZED
+deploy .................................... ⛔ NOT AUTHORIZED
+```
+
+**J6 DOES NOT PASS.** The candidate remains unmerged.
+
+The next lawful act is a separate founder adjudication of the W2 duplicate-persistence finding. J6 itself confers no repair authority.
