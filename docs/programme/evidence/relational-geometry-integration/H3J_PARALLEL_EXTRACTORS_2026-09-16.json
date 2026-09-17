@@ -1,0 +1,795 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H3J_PARALLEL_EXTRACTORS_V1",
+  "authority": "offline research only",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "parallel local Claude CLI restricted/no-tools",
+    "effort": "low"
+  },
+  "hypothesis": "Dimension-specific parallel evidence extraction improves multidimensional recall without increasing false-positive relations.",
+  "summary": {
+    "runs": 12,
+    "allCorrect": 12,
+    "dynamicCorrect": 12,
+    "configurationCorrect": 12,
+    "falsePositiveDynamic": 0,
+    "falsePositiveConfiguration": 0
+  },
+  "byFixture": {
+    "J1_DYNAMIC_PLUS_ALIGNMENT": {
+      "runs": 2,
+      "allCorrect": 2,
+      "dynamicCorrect": 2,
+      "configurationCorrect": 2
+    },
+    "J2_TENSION_ONLY": {
+      "runs": 2,
+      "allCorrect": 2,
+      "dynamicCorrect": 2,
+      "configurationCorrect": 2
+    },
+    "J3_INHIBITS_PLUS_TENSION": {
+      "runs": 2,
+      "allCorrect": 2,
+      "dynamicCorrect": 2,
+      "configurationCorrect": 2
+    },
+    "J4_DYNAMIC_ONLY": {
+      "runs": 2,
+      "allCorrect": 2,
+      "dynamicCorrect": 2,
+      "configurationCorrect": 2
+    },
+    "J5_ALIGNMENT_ONLY": {
+      "runs": 2,
+      "allCorrect": 2,
+      "dynamicCorrect": 2,
+      "configurationCorrect": 2
+    },
+    "J6_NEITHER": {
+      "runs": 2,
+      "allCorrect": 2,
+      "dynamicCorrect": 2,
+      "configurationCorrect": 2
+    }
+  },
+  "rows": [
+    {
+      "fixture": "J1_DYNAMIC_PLUS_ALIGNMENT",
+      "run": 1,
+      "dynamicHash": "e158f5ca78efb12e6d96b082043bf29f5bacf51fd3c7bdbf016d45ad5f838709",
+      "configHash": "23861173e9a0c69e9e000bdbf1dc6eba1ed34903213d57b92cb4b25ca09bffd6",
+      "dynamic": {
+        "proposal": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "quote": "Thinking about leaving brings a settling in my body"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "dimension": "DYNAMIC",
+          "predicate": "EVOKES",
+          "direction": "DIRECTED",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        }
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "quote": "the thought and bodily response both point in the same direction"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "predicate": "ALIGNMENT",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_LEAVE",
+            "EARTH_SETTLE"
+          ],
+          "dimension": "CONFIGURATION"
+        }
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J1_DYNAMIC_PLUS_ALIGNMENT",
+      "run": 2,
+      "dynamicHash": "e158f5ca78efb12e6d96b082043bf29f5bacf51fd3c7bdbf016d45ad5f838709",
+      "configHash": "23861173e9a0c69e9e000bdbf1dc6eba1ed34903213d57b92cb4b25ca09bffd6",
+      "dynamic": {
+        "proposal": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "quote": "Thinking about leaving brings a settling in my body"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "dimension": "DYNAMIC",
+          "predicate": "EVOKES",
+          "direction": "DIRECTED",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        }
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "quote": "the thought and bodily response both point in the same direction"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "predicate": "ALIGNMENT",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_LEAVE",
+            "EARTH_SETTLE"
+          ],
+          "dimension": "CONFIGURATION"
+        }
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J2_TENSION_ONLY",
+      "run": 1,
+      "dynamicHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "configHash": "b3baa84a327eb45a59bc6cdd7760a621a9924ce366c033b50f0fced559ef764d",
+      "dynamic": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE",
+          "quote": "Those two truths pull against each other"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "predicate": "TENSION",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "FIRE_LEAVE",
+            "WATER_LOVE"
+          ],
+          "dimension": "CONFIGURATION"
+        }
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J2_TENSION_ONLY",
+      "run": 2,
+      "dynamicHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "configHash": "b3baa84a327eb45a59bc6cdd7760a621a9924ce366c033b50f0fced559ef764d",
+      "dynamic": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE",
+          "quote": "Those two truths pull against each other"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "WATER_LOVE",
+          "targetId": "FIRE_LEAVE"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "predicate": "TENSION",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "FIRE_LEAVE",
+            "WATER_LOVE"
+          ],
+          "dimension": "CONFIGURATION"
+        }
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J3_INHIBITS_PLUS_TENSION",
+      "run": 1,
+      "dynamicHash": "efc0866dc474e24663edb6dc641dca5dd7fc0df0bc99d57ca3af5d5892121fc1",
+      "configHash": "c3efbff02055b8b78d4cf149a934ce9c7f0a37861f4f27aed4fbc086c5b2e99e",
+      "dynamic": {
+        "proposal": {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "quote": "physical exhaustion prevents me from sustaining the launch"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "dimension": "DYNAMIC",
+          "predicate": "INHIBITS",
+          "direction": "DIRECTED",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        }
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "quote": "bodily limit pulls directly against the push I want to make"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "predicate": "TENSION",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "EARTH_EXHAUST",
+            "FIRE_LAUNCH"
+          ],
+          "dimension": "CONFIGURATION"
+        }
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J3_INHIBITS_PLUS_TENSION",
+      "run": 2,
+      "dynamicHash": "efc0866dc474e24663edb6dc641dca5dd7fc0df0bc99d57ca3af5d5892121fc1",
+      "configHash": "c3efbff02055b8b78d4cf149a934ce9c7f0a37861f4f27aed4fbc086c5b2e99e",
+      "dynamic": {
+        "proposal": {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "quote": "physical exhaustion prevents me from sustaining the launch"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_INHIBITION",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "dimension": "DYNAMIC",
+          "predicate": "INHIBITS",
+          "direction": "DIRECTED",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        }
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "quote": "bodily limit pulls directly against the push I want to make"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_CONTRAST",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "predicate": "TENSION",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "EARTH_EXHAUST",
+            "FIRE_LAUNCH"
+          ],
+          "dimension": "CONFIGURATION"
+        }
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J4_DYNAMIC_ONLY",
+      "run": 1,
+      "dynamicHash": "76235fed4daacf6192c6bb6d8740d335c6be3ac06814be0c7ab5f22d78b962ce",
+      "configHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "dynamic": {
+        "proposal": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN",
+          "quote": "Thinking about the financial risk brings tightness into my chest"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "dimension": "DYNAMIC",
+          "predicate": "EVOKES",
+          "direction": "DIRECTED",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        }
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J4_DYNAMIC_ONLY",
+      "run": 2,
+      "dynamicHash": "76235fed4daacf6192c6bb6d8740d335c6be3ac06814be0c7ab5f22d78b962ce",
+      "configHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "dynamic": {
+        "proposal": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN",
+          "quote": "Thinking about the financial risk brings tightness into my chest"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_ELICITATION",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "dimension": "DYNAMIC",
+          "predicate": "EVOKES",
+          "direction": "DIRECTED",
+          "sourceId": "AIR_RISK",
+          "targetId": "EARTH_TIGHTEN"
+        }
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J5_ALIGNMENT_ONLY",
+      "run": 1,
+      "dynamicHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "configHash": "4198f852e7b2dd2f25c0ce7168a862ffd940a0500d4856f86a4e1c22d1050fe6",
+      "dynamic": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT",
+          "quote": "They point the same way"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "predicate": "ALIGNMENT",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_WAIT",
+            "FIRE_WAIT"
+          ],
+          "dimension": "CONFIGURATION"
+        }
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J5_ALIGNMENT_ONLY",
+      "run": 2,
+      "dynamicHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "configHash": "b14697b86ff6b1d1b1aeff2a1ee5ba24b0ad04d6b4013c78297efffac0bec82b",
+      "dynamic": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT",
+          "quote": "point the same way"
+        },
+        "admitted": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT",
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "EXPLICIT_CONSONANCE",
+          "sourceId": "AIR_WAIT",
+          "targetId": "FIRE_WAIT"
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": {
+          "predicate": "ALIGNMENT",
+          "direction": "SYMMETRIC",
+          "endpointIds": [
+            "AIR_WAIT",
+            "FIRE_WAIT"
+          ],
+          "dimension": "CONFIGURATION"
+        }
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J6_NEITHER",
+      "run": 1,
+      "dynamicHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "configHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "dynamic": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "allCorrect": true
+    },
+    {
+      "fixture": "J6_NEITHER",
+      "run": 2,
+      "dynamicHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "configHash": "9fcaaa9ffc0caee23f2d309dab6e4fd379e647058f03c7d1955a734c030d8348",
+      "dynamic": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "configuration": {
+        "proposal": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "admitted": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "quote": null
+        },
+        "rejected": null,
+        "expected": {
+          "basis": "NONE",
+          "sourceId": null,
+          "targetId": null
+        },
+        "correct": true,
+        "parseError": null,
+        "canonical": null
+      },
+      "allCorrect": true
+    }
+  ]
+}
