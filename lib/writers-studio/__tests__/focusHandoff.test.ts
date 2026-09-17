@@ -150,9 +150,13 @@ describe('H2 · NO RESPONSE BYPASS', () => {
 });
 
 describe('H3 · POSTURE IDENTITY — one turn, one privacy posture', () => {
-  it('the service uses the carried posture and does not re-resolve it', () => {
+  it('the service preserves the carried Writer posture when another trusted lane exists', () => {
     const svc = SVC();
     expect(svc).toMatch(/const turnPosture = writerStudio\?\.posture \?\? TurnPosture\.resolve\(meta\)/);
+    expect(svc).toMatch(/const governedTurnPosture = personalKeepsRead\?\.posture \?\? turnPosture/);
+    // The two trusted participation lanes are mutually exclusive, so on every
+    // Writer turn governedTurnPosture is the exact Writer-carried object.
+    expect(svc).toMatch(/writerStudio\s*&&\s*personalKeepsRead/);
   });
 
   it('the legacy meta.sanctuary reading is derived from that same posture', () => {
@@ -237,7 +241,7 @@ describe('W2 · a pre-handoff refusal leaves no response the writer never saw', 
   it('the tail persistence sites are AFTER the crossing, which is correct', () => {
     const s = svc();
     const branch = BRANCH();
-    expect(s.indexOf('TurnsStore.addExchange(turnPosture')).toBeGreaterThan(branch);
+    expect(s.indexOf('TurnsStore.addExchange(governedTurnPosture')).toBeGreaterThan(branch);
   });
 
   it('the refusal still travels outward — suppressed persistence, not suppressed information', () => {

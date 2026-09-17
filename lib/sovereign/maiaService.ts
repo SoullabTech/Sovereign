@@ -113,6 +113,11 @@ import {
   type ResolvedOrientation,
 } from '../maia/orientation/contract';
 import { TurnPosture } from '../sanctuary/turnPosture';
+import {
+  invokePersonalKeepsResponse,
+  renderPersonalKeepsReadBlock,
+  type PersonalKeepsReadCognitionInput,
+} from '../disclosure/personalKeepsReadCognition';
 import { recordConsentState } from '../provenance/consentState';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
@@ -655,6 +660,12 @@ type MaiaRequest = {
    *       with her.
    */
   writerStudio?: WriterStudioInput | null;
+  /**
+   * MAIA-MAVEN-T1A · J5-4 — trusted, server-only Personal Keeps crossing input.
+   * Never read from `meta`: the live route body contributes to that object.
+   * J5-4 defines the dormant cognition seam only; J5-5 will decide route wiring.
+   */
+  personalKeepsRead?: PersonalKeepsReadCognitionInput | null;
 };
 
 /**
@@ -835,6 +846,7 @@ async function fastPathResponse(
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
   allSessionExchanges: readonly DisplacedExchange[] = [],
+  personalKeepsRead: PersonalKeepsReadCognitionInput | null = null,
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
@@ -1663,8 +1675,15 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
     });
   }
 
-  // Use single model call with complete MAIA intelligence stack
-  const { text: response, provider } = await generateText({
+  // J5-4: render only the already-authorized bounded projection. The block
+  // contains no receipt/disclosure ids and no sourced-body reconstruction.
+  if (personalKeepsRead) {
+    baseSystemPrompt += '\n\n' + renderPersonalKeepsReadBlock(personalKeepsRead.projection);
+  }
+
+  // Use single model call with complete MAIA intelligence stack. On a Personal
+  // Keeps turn, invocation occurs before the handoff callback confirms receipts.
+  const invokeFastGeneration = () => generateText({
     systemPrompt: baseSystemPrompt,
     userInput: contextPrompt,
     meta: {
@@ -1675,6 +1694,9 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
       responseTarget: 'conversational'
     }
   });
+  const { text: response, provider } = personalKeepsRead
+    ? await invokePersonalKeepsResponse(invokeFastGeneration, personalKeepsRead.onHandoff)
+    : await invokeFastGeneration();
 
   // 🔮 Log provider for sovereignty auditing
   if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -1716,6 +1738,7 @@ async function corePathResponse(
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
   allSessionExchanges: readonly DisplacedExchange[] = [],
+  personalKeepsRead: PersonalKeepsReadCognitionInput | null = null,
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
@@ -2144,7 +2167,13 @@ The current user has not provided their name. Address them as "friend" or "there
     });
   }
 
-  const { text: response, provider: coreProvider } = await generateText({
+  // J5-4: the same bounded projection reaches CORE through the same governed
+  // prompt seam; tier changes strategy, not membership.
+  if (personalKeepsRead) {
+    adaptivePrompt += '\n\n' + renderPersonalKeepsReadBlock(personalKeepsRead.projection);
+  }
+
+  const invokeCoreGeneration = () => generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
     meta: {
@@ -2155,6 +2184,9 @@ The current user has not provided their name. Address them as "friend" or "there
       inputComplexity: 'moderate'
     }
   });
+  const { text: response, provider: coreProvider } = personalKeepsRead
+    ? await invokePersonalKeepsResponse(invokeCoreGeneration, personalKeepsRead.onHandoff)
+    : await invokeCoreGeneration();
 
   // 🔮 Log provider for sovereignty auditing (returned request-locally, not module-level)
   if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -2168,8 +2200,9 @@ The current user has not provided their name. Address them as "friend" or "there
     response,
     meta,
     'CORE',
-    // Regeneration function for CORE path
-    async (repairPrompt: string) => {
+    // A Personal Keeps receipt authorizes one model crossing, not a validator
+    // regeneration that would disclose the same member-owned projection twice.
+    personalKeepsRead ? undefined : async (repairPrompt: string) => {
       const repairedContext = { ...context };
       let repairedPrompt = buildMaiaWisePrompt(repairedContext, input, effectiveHistory);
 
@@ -2888,12 +2921,25 @@ class WriterCanonicalOnly extends Error {
   }
 }
 
+/** J5-4: a Keep projection may cross only through tiers with an attested seam. */
+class PersonalKeepsReadTierUnsupported extends Error {
+  constructor(public readonly tier: string) {
+    super(`[personal-keeps] ${tier} has no governed Personal Keeps cognition seam`);
+    this.name = 'PersonalKeepsReadTierUnsupported';
+  }
+}
+
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
   // FOCUS-PRODUCER-01: present only for writers_studio, and only when the route
   // built and adjudicated the turn. Absent → every existing caller is unchanged.
   const writerStudio = req.writerStudio ?? null;
   const writerStudioTurn = writerStudio?.turn ?? null;
+  // J5-4: trusted top-level server input only; never derived from client-forgeable meta.
+  const personalKeepsRead = req.personalKeepsRead ?? null;
+  if (writerStudio && personalKeepsRead) {
+    throw new Error('[MAIA] writers_studio and Personal Keeps cannot share one cognition turn');
+  }
   // NOTE: read from `req`, never from `meta`. See MaiaRequest.orientationContract.
   const trustedOrientation = req.orientationContract ?? null;
   const startTime = Date.now();
@@ -2902,11 +2948,16 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // H3: the Writer lane carries its already-resolved posture; every other caller
   // resolves its own exactly as before.
   const turnPosture = writerStudio?.posture ?? TurnPosture.resolve(meta);
+  const governedTurnPosture = personalKeepsRead?.posture ?? turnPosture;
   if (writerStudio) {
     // The legacy tail reads `meta.sanctuary` directly. Deriving it from the one
     // trusted posture keeps both readings identical; it can only ever make the
     // turn MORE protective, never less.
     (meta as Record<string, unknown>).sanctuary = writerStudio.posture.sanctuary;
+  } else if (personalKeepsRead) {
+    // Same one-posture law for J5-4. The projection was authorized under this
+    // posture and downstream legacy gates must see the identical state.
+    (meta as Record<string, unknown>).sanctuary = personalKeepsRead.posture.sanctuary;
   }
   // One exchange identity per member action, minted at the boundary and shared
   // by every persistence path in this request: addConversationExchange (which
@@ -2936,7 +2987,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // correlate by one identifier.
   recordConsentState({
     requestId: exchangeId,
-    posture: turnPosture,
+    posture: governedTurnPosture,
     memberId: (meta as any)?.userId ?? null,
     sessionId,
   });
@@ -2966,7 +3017,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       trusted: trustedOrientation,
       input,
       conversationHistory,
-      sanctuary: turnPosture.sanctuary,
+      sanctuary: governedTurnPosture.sanctuary,
     });
 
     // 🛡️ FIELD SAFETY GATE: Check ALL paths (FAST/CORE/DEEP) before any processing
@@ -3405,6 +3456,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // this first Writer lane rather than made conditional.
     // Try RCN for appropriate queries (non-blocking - falls back to standard paths)
     try {
+      if (personalKeepsRead) throw new PersonalKeepsReadTierUnsupported('RCN');
       if (writerStudioTurn) throw new WriterCanonicalOnly('rcn');
       const rcnDecision = await maiaRcnProcess(input, rcnContext);
       if (rcnDecision.used) {
@@ -3453,7 +3505,9 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         }
       }
     } catch (rcnError) {
-      if (rcnError instanceof WriterCanonicalOnly) {
+      if (rcnError instanceof PersonalKeepsReadTierUnsupported) {
+        console.log('🔐 [RCN] excluded — Personal Keeps must reach an accounted FAST/CORE model handoff');
+      } else if (rcnError instanceof WriterCanonicalOnly) {
         // ⭐ W1 · An intentional room-policy exclusion must not wear the telemetry
         // of a runtime failure. *A refusal witness must prove the intended
         // refusal, not merely prove that the operation failed* — and the same
@@ -3587,7 +3641,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {
-        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
+        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges, personalKeepsRead);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3598,7 +3652,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'CORE': {
-        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
+        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges, personalKeepsRead);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3609,6 +3663,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'DEEP': {
+        if (personalKeepsRead) throw new PersonalKeepsReadTierUnsupported('DEEP');
         const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
@@ -3622,7 +3677,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       default: {
         // Fallback to FAST
-        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
+        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges, personalKeepsRead);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
         if (mindContext?.pfiMindState) {
@@ -3766,7 +3821,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         console.log('🔒 [TurnsStore] Skipping persist - sensitive data detected');
       } else {
         try {
-          await TurnsStore.addExchange(turnPosture, effectiveUserId, sessionId, input, text, exchangeId);
+          await TurnsStore.addExchange(governedTurnPosture, effectiveUserId, sessionId, input, text, exchangeId);
           console.log(`✅ [TurnsStore] Persisted exchange for ${memberRef(effectiveUserId)}`);
         } catch (turnsErr) {
           console.error('❌ [TurnsStore] persist failed', turnsErr);
@@ -4187,7 +4242,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             // 🔥 Elemental parallel processing (the real corpus callosum!)
             elementalAgents: elementalAgents,
             elementalSynthesis: elementalSynthesis,
-          }, turnPosture);
+          }, governedTurnPosture);
 
           const elementalCount = traceResult.elementalRunIds?.length ?? 0;
           if (traceResult.integrationId) {
@@ -4260,7 +4315,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           !!shape.signals?.eitherOrMenu ||
           !!shape.signals?.optionABMenu;
 
-        if (rewriteEnabled && (shape.flags.menuMode || hardProseMenu)) {
+        if (rewriteEnabled && !personalKeepsRead && (shape.flags.menuMode || hardProseMenu)) {
           try {
             const rewriteSystem = AIN_NO_MENU_REWRITE_PROMPT;
 
