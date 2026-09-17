@@ -1,5 +1,16 @@
 # SPM-FC-01 — COMBINED D9 + F5 FALSIFICATION CONTRACT
 
+> ⚠️ **SUPERSEDED IN PART — HISTORICAL BASE TEXT, NOT SUFFICIENT WHEN READ ALONE.**
+> The evidence and original clause text below are preserved. Governing corrections live in separately
+> custodied records and must be read with this file: **R2** `f40d4134a` replaces I-1 · I-3 · I-4 ·
+> I-7 · I-10 · I-16 · I-20 · I-25 · I-26 · I-32; **R3** `9d0539b3f` deliberately removed the
+> overbroad closing synthesis; **R4** `ea422fa4d` replaces I-12 · I-14 · I-15 · I-17; **R5**
+> `a2626c915` replaces I-8 and rules I-33 **KEEP as an imported binding dependency**, with accounting
+> corrected at `8dafd0bfe`. The independent provenance sweep at `40f1d821c` verifies the D9-A class
+> after those corrections. Final constitutional standing is carried by the latest founder
+> ratification record on this lineage; this historical source file does not confer ratification by
+> itself. **Where an inline supersession marker appears below, the named replacement governs.**
+
 **Synthesis only. Constructed from evidence already earned. ⛔ No census. ⛔ No schema. ⛔ No
 migration. ⛔ No FK, route or UI design. ⛔ No repair. ⛔ No implementation. ⛔ No SPM runtime.**
 
@@ -202,6 +213,8 @@ and **FAIL** are observable outcomes of running that case.
 
 #### I-8 · Standing and warrant are independent axes
 
+> ⚠️ **SUPERSEDED — HISTORICAL CLAUSE PRESERVED.** Governing I-8 law: `SPM-FC-01-R5_TWO-LOCI_DISPOSITION_2026-09-17.md` @ `a2626c915` §1. The broad standing⊥warrant hypothesis below is not constitutional law; the R5 replacement governs only seams already shown to require independent authority.
+
 1. **Law.** Standing answers *how well is this known, and on whose authority*; warrant answers *may
    this be placed here, now, for this purpose*. **No quantity of standing produces a warrant. No
    warrant improves standing.**
@@ -269,6 +282,8 @@ and **FAIL** are observable outcomes of running that case.
 
 #### I-12 · Withdrawal is warrant-side, not standing-side
 
+> ⚠️ **SUPERSEDED — HISTORICAL CLAUSE PRESERVED.** Governing replacement: `SPM-FC-01-R4_FOUR-CLAUSE_CORRECTION_2026-09-17.md` @ `ea422fa4d` §1. Withdrawal is not universally assigned to the warrant axis; the affected axis is determined by what was withdrawn.
+
 1. **Law.** A member taking something back removes permission; it does not falsify the historical
    record that the thing was once held or believed.
 2. **Evidence.** D9-A §6.2 C3 · D9-A §1 (`refusedReason = 'withdrawn_by_member'`; *"Correction is
@@ -293,6 +308,8 @@ and **FAIL** are observable outcomes of running that case.
 
 #### I-14 · Repetition is not confirmation
 
+> ⚠️ **SUPERSEDED — HISTORICAL CLAUSE PRESERVED.** Governing replacement: `SPM-FC-01-R4_FOUR-CLAUSE_CORRECTION_2026-09-17.md` @ `ea422fa4d` §2. System repetition may affect salience/ranking; current evidence does not show that repetition itself confers member standing.
+
 1. **Law.** System retrieval frequency may affect salience. It may never substitute for a member act.
 2. **Evidence.** D9-A §2 — **INVERTED** in the organism: Cut-1 gives `recall_count` (system
    retrieval) max 0.10 against `confirmed_by_user` max 0.0225, **≈4.4× the wrong way**. D9-B B7
@@ -308,6 +325,8 @@ and **FAIL** are observable outcomes of running that case.
 ### DOMAIN 7 — ADOPTION
 
 #### I-15 · Persistence is not adoption
+
+> ⚠️ **SUPERSEDED — HISTORICAL CLAUSE PRESERVED.** Governing replacement: `SPM-FC-01-R4_FOUR-CLAUSE_CORRECTION_2026-09-17.md` @ `ea422fa4d` §3. Persistence alone does not imply adoption, while a member persistence gesture may explicitly carry a fused return/adoption disposition.
 
 1. **Law.** That material was stored is not that the member took it up.
 2. **Evidence.** D9-A §2 — **INVERTED at the atoms loader**:
@@ -332,6 +351,8 @@ and **FAIL** are observable outcomes of running that case.
 6. **FAIL.** Permitted.
 
 #### I-17 · Warrants do not compose
+
+> ⚠️ **SUPERSEDED — HISTORICAL CLAUSE PRESERVED.** Governing replacement: `SPM-FC-01-R4_FOUR-CLAUSE_CORRECTION_2026-09-17.md` @ `ea422fa4d` §4. Authorization does not silently exceed its declared scope; whether MAIA-as-speaker representation requires a distinct second act remains unevidenced.
 
 1. **Law.** A warrant for one crossing is not a warrant for a second crossing of the same material.
 2. **Evidence.** D9-A §6.2 C2 — T-8: the offer records the **reading** warrant and there is no
@@ -583,6 +604,8 @@ and **FAIL** are observable outcomes of running that case.
 
 #### I-33 · Traceability is a property of the record, not of a query
 
+> ⭐ **DISPOSITION UPDATED — HISTORICAL CLAUSE BODY PRESERVED.** R5 founder disposition `a2626c915` §2 rules **KEEP**: I-33 is a binding dependency imported from ratified temporal-memory law, excluded from the local D9/F5 count, citeable here but not amendable by SPM-FC-01.
+
 1. **Law.** Where an act must be accountable, the record must carry it. A counterfactual that
    reconstructs today's answer does not confer historical traceability.
 2. **Evidence.** ⛔ **Not earned by D9 or F5.** Carried from the ratified temporal-memory law
@@ -627,6 +650,8 @@ SPM CLOSED · REPAIR NOT AUTHORIZED.**
 ---
 
 ## 5 · STANDING
+
+> ⚠️ **SUPERSEDED STANDING BLOCK.** The historical block below is preserved for lineage. Current accounting is `16 unchanged + 10 R2 + 4 R4 + 1 R5 = 31` locally earned D9/F5 laws, plus I-19 as a declared gap and I-33 as an imported binding dependency; see `8dafd0bfe`, `a8c63faca`, and the latest founder ratification record.
 
 ```
 SPM-FC-01        DELIVERED — ⛔ NOT ADJUDICATED, ⛔ NOT RATIFIED
