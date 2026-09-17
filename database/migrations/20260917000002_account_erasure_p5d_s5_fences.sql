@@ -282,41 +282,68 @@ CREATE TRIGGER account_erasure_member_row_fence
   FOR EACH ROW EXECUTE FUNCTION account_erasure_refuse_erased_member_row();
 
 -- Circle history has different semantics: representation authority ends, but the
--- historical membership/response fact remains. Governed restore transforms old
--- rows back into their tombstone state instead of deleting those facts.
-CREATE OR REPLACE FUNCTION account_erasure_circle_state_fence()
+-- historical membership/response fact remains. R2 deliberately uses one trigger
+-- function per row shape: PL/pgSQL trigger RECORDs may not safely dereference a
+-- field that is absent from another relation sharing the same function.
+CREATE OR REPLACE FUNCTION account_erasure_shared_artifact_state_fence()
 RETURNS trigger AS $$
 DECLARE
-  member_ref text;
   fence_at timestamptz;
 BEGIN
-  member_ref := CASE TG_TABLE_NAME
-    WHEN 'shared_artifacts' THEN NEW.shared_by::text
-    ELSE NEW.member_id::text
-  END;
   SELECT tombstoned_at INTO fence_at FROM provenance_tombstones
-   WHERE object_kind = 'members' AND object_id = member_ref;
+   WHERE object_kind = 'members' AND object_id = NEW.shared_by::text;
   IF fence_at IS NULL THEN RETURN NEW; END IF;
 
   IF current_setting('s5.restore_lane', TRUE) = 'governed' THEN
-    IF TG_TABLE_NAME = 'shared_artifacts' THEN
-      NEW.revoked_at := COALESCE(NEW.revoked_at, fence_at);
-    ELSIF TG_TABLE_NAME = 'circle_inquiry_responses' THEN
-      NEW.withdrawn_at := COALESCE(NEW.withdrawn_at, fence_at);
-      NEW.response_text := NULL;
-      NEW.response_type := NULL;
-    ELSIF TG_TABLE_NAME = 'circle_memberships' THEN
-      NEW.status := 'left';
-    END IF;
+    NEW.revoked_at := COALESCE(NEW.revoked_at, fence_at);
     RETURN NEW;
   END IF;
 
-  IF TG_TABLE_NAME = 'shared_artifacts' AND NEW.revoked_at IS NULL THEN
+  IF NEW.revoked_at IS NULL THEN
     RAISE EXCEPTION '[F5 P5-D] active Circle share for erased member refused';
-  ELSIF TG_TABLE_NAME = 'circle_inquiry_responses'
-        AND (NEW.withdrawn_at IS NULL OR NEW.response_text IS NOT NULL OR NEW.response_type IS NOT NULL) THEN
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION account_erasure_circle_response_state_fence()
+RETURNS trigger AS $$
+DECLARE
+  fence_at timestamptz;
+BEGIN
+  SELECT tombstoned_at INTO fence_at FROM provenance_tombstones
+   WHERE object_kind = 'members' AND object_id = NEW.member_id::text;
+  IF fence_at IS NULL THEN RETURN NEW; END IF;
+
+  IF current_setting('s5.restore_lane', TRUE) = 'governed' THEN
+    NEW.withdrawn_at := COALESCE(NEW.withdrawn_at, fence_at);
+    NEW.response_text := NULL;
+    NEW.response_type := NULL;
+    RETURN NEW;
+  END IF;
+
+  IF NEW.withdrawn_at IS NULL OR NEW.response_text IS NOT NULL OR NEW.response_type IS NOT NULL THEN
     RAISE EXCEPTION '[F5 P5-D] live Circle response for erased member refused';
-  ELSIF TG_TABLE_NAME = 'circle_memberships' AND NEW.status = 'active' THEN
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION account_erasure_circle_membership_state_fence()
+RETURNS trigger AS $$
+DECLARE
+  fence_at timestamptz;
+BEGIN
+  SELECT tombstoned_at INTO fence_at FROM provenance_tombstones
+   WHERE object_kind = 'members' AND object_id = NEW.member_id::text;
+  IF fence_at IS NULL THEN RETURN NEW; END IF;
+
+  IF current_setting('s5.restore_lane', TRUE) = 'governed' THEN
+    NEW.status := 'left';
+    RETURN NEW;
+  END IF;
+
+  IF NEW.status = 'active' THEN
     RAISE EXCEPTION '[F5 P5-D] active Circle membership for erased member refused';
   END IF;
   RETURN NEW;
@@ -326,15 +353,15 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS account_erasure_circle_state_fence ON shared_artifacts;
 CREATE TRIGGER account_erasure_circle_state_fence
   BEFORE INSERT OR UPDATE ON shared_artifacts
-  FOR EACH ROW EXECUTE FUNCTION account_erasure_circle_state_fence();
+  FOR EACH ROW EXECUTE FUNCTION account_erasure_shared_artifact_state_fence();
 DROP TRIGGER IF EXISTS account_erasure_circle_state_fence ON circle_inquiry_responses;
 CREATE TRIGGER account_erasure_circle_state_fence
   BEFORE INSERT OR UPDATE ON circle_inquiry_responses
-  FOR EACH ROW EXECUTE FUNCTION account_erasure_circle_state_fence();
+  FOR EACH ROW EXECUTE FUNCTION account_erasure_circle_response_state_fence();
 DROP TRIGGER IF EXISTS account_erasure_circle_state_fence ON circle_memberships;
 CREATE TRIGGER account_erasure_circle_state_fence
   BEFORE INSERT OR UPDATE ON circle_memberships
-  FOR EACH ROW EXECUTE FUNCTION account_erasure_circle_state_fence();
+  FOR EACH ROW EXECUTE FUNCTION account_erasure_circle_membership_state_fence();
 
 COMMIT;
 

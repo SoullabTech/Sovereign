@@ -31,6 +31,34 @@ describe('F5 P5-D S5 successor', () => {
     expect(migration).not.toMatch(/FROM information_schema\.columns[\s\S]*CREATE TRIGGER account_erasure_member_fence/);
   });
 
+  it('R2 binds one Circle trigger function to each concrete row shape', () => {
+    expect(migration).toMatch(/account_erasure_shared_artifact_state_fence/);
+    expect(migration).toMatch(/account_erasure_circle_response_state_fence/);
+    expect(migration).toMatch(/account_erasure_circle_membership_state_fence/);
+    expect(migration).not.toMatch(/CREATE OR REPLACE FUNCTION account_erasure_circle_state_fence\(\)/);
+
+    const share = migration.slice(
+      migration.indexOf('CREATE OR REPLACE FUNCTION account_erasure_shared_artifact_state_fence'),
+      migration.indexOf('CREATE OR REPLACE FUNCTION account_erasure_circle_response_state_fence'),
+    );
+    expect(share).toMatch(/NEW\.shared_by/);
+    expect(share).not.toMatch(/NEW\.member_id/);
+
+    const response = migration.slice(
+      migration.indexOf('CREATE OR REPLACE FUNCTION account_erasure_circle_response_state_fence'),
+      migration.indexOf('CREATE OR REPLACE FUNCTION account_erasure_circle_membership_state_fence'),
+    );
+    expect(response).toMatch(/NEW\.member_id/);
+    expect(response).not.toMatch(/NEW\.shared_by/);
+
+    const membership = migration.slice(
+      migration.indexOf('CREATE OR REPLACE FUNCTION account_erasure_circle_membership_state_fence'),
+      migration.indexOf('DROP TRIGGER IF EXISTS account_erasure_circle_state_fence ON shared_artifacts'),
+    );
+    expect(membership).toMatch(/NEW\.member_id/);
+    expect(membership).not.toMatch(/NEW\.shared_by|NEW\.response_text|NEW\.response_type|NEW\.revoked_at/);
+  });
+
   it('does not physically delete Circle history during governed restore', () => {
     expect(migration).toMatch(/NEW\.status := 'left'/);
     expect(migration).toMatch(/NEW\.response_text := NULL/);
