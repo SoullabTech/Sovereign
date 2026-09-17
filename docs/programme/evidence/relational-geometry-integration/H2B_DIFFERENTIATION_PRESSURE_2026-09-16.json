@@ -1,0 +1,1071 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H2B_DIFFERENTIATION_PRESSURE_V1",
+  "authority": "offline research only",
+  "productionEquivalent": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "representationTemperature": 0.65,
+    "decoderTemperature": 0
+  },
+  "budgetWords": 70,
+  "hypothesis": "Differentiated channels preserve simultaneous signals under compression better than early integrated synthesis.",
+  "fixtureTruth": [
+    {
+      "id": "F1_RELATIONSHIP",
+      "atoms": [
+        {
+          "id": "A1",
+          "element": "AIR",
+          "text": "Leaving makes sense."
+        },
+        {
+          "id": "A2",
+          "element": "AIR",
+          "text": "A rational case for staying still exists."
+        },
+        {
+          "id": "W1",
+          "element": "WATER",
+          "text": "I still love him."
+        },
+        {
+          "id": "W2",
+          "element": "WATER",
+          "text": "I also feel resentful and exhausted."
+        },
+        {
+          "id": "E1",
+          "element": "EARTH",
+          "text": "My chest tightens when I imagine staying."
+        },
+        {
+          "id": "E2",
+          "element": "EARTH",
+          "text": "My body settles when I imagine my own place."
+        },
+        {
+          "id": "F1",
+          "element": "FIRE",
+          "text": "I want my life back."
+        },
+        {
+          "id": "F2",
+          "element": "FIRE",
+          "text": "I do not want to decide impulsively."
+        }
+      ],
+      "tensionPairs": [
+        [
+          "A1",
+          "A2"
+        ],
+        [
+          "W1",
+          "W2"
+        ],
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "absentElements": []
+    },
+    {
+      "id": "F2_CREATIVE",
+      "atoms": [
+        {
+          "id": "A1",
+          "element": "AIR",
+          "text": "The manuscript is ready enough to test."
+        },
+        {
+          "id": "A2",
+          "element": "AIR",
+          "text": "Several details are still unresolved."
+        },
+        {
+          "id": "W1",
+          "element": "WATER",
+          "text": "I feel excited."
+        },
+        {
+          "id": "W2",
+          "element": "WATER",
+          "text": "I feel exposed imagining people reading it."
+        },
+        {
+          "id": "E1",
+          "element": "EARTH",
+          "text": "I have barely slept and my body feels spent."
+        },
+        {
+          "id": "E2",
+          "element": "EARTH",
+          "text": "Certain pages still make me feel physically alive."
+        },
+        {
+          "id": "F1",
+          "element": "FIRE",
+          "text": "I want to release the beta this week."
+        },
+        {
+          "id": "F2",
+          "element": "FIRE",
+          "text": "I do not want momentum to become self-abandonment."
+        }
+      ],
+      "tensionPairs": [
+        [
+          "A1",
+          "A2"
+        ],
+        [
+          "W1",
+          "W2"
+        ],
+        [
+          "E1",
+          "E2"
+        ],
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "absentElements": []
+    },
+    {
+      "id": "F3_GRIEF",
+      "atoms": [
+        {
+          "id": "A1",
+          "element": "AIR",
+          "text": "I understand intellectually that the death is coming."
+        },
+        {
+          "id": "A2",
+          "element": "AIR",
+          "text": "I cannot imagine what life afterward will mean."
+        },
+        {
+          "id": "W1",
+          "element": "WATER",
+          "text": "I feel grief."
+        },
+        {
+          "id": "W2",
+          "element": "WATER",
+          "text": "There is also relief that the suffering may end."
+        },
+        {
+          "id": "E1",
+          "element": "EARTH",
+          "text": "There is heavy pressure in my chest."
+        },
+        {
+          "id": "E2",
+          "element": "EARTH",
+          "text": "At other moments I feel physically numb."
+        },
+        {
+          "id": "F1",
+          "element": "FIRE",
+          "text": "I do not want to fix any of this."
+        },
+        {
+          "id": "F2",
+          "element": "FIRE",
+          "text": "I still want to keep showing up for what matters."
+        }
+      ],
+      "tensionPairs": [
+        [
+          "A1",
+          "A2"
+        ],
+        [
+          "W1",
+          "W2"
+        ],
+        [
+          "E1",
+          "E2"
+        ],
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "absentElements": []
+    },
+    {
+      "id": "F4_WORK",
+      "atoms": [
+        {
+          "id": "A1",
+          "element": "AIR",
+          "text": "The new direction has real opportunity."
+        },
+        {
+          "id": "A2",
+          "element": "AIR",
+          "text": "The financial risk is also real."
+        },
+        {
+          "id": "W1",
+          "element": "WATER",
+          "text": "I feel excited by the possibility."
+        },
+        {
+          "id": "W2",
+          "element": "WATER",
+          "text": "I am afraid of losing an identity I know."
+        },
+        {
+          "id": "E1",
+          "element": "EARTH",
+          "text": "My energy drops in the old environment."
+        },
+        {
+          "id": "E2",
+          "element": "EARTH",
+          "text": "My nervous system settles when I imagine the new path."
+        },
+        {
+          "id": "F1",
+          "element": "FIRE",
+          "text": "I want to leave."
+        },
+        {
+          "id": "F2",
+          "element": "FIRE",
+          "text": "I do not want to abandon people who depend on me."
+        }
+      ],
+      "tensionPairs": [
+        [
+          "A1",
+          "A2"
+        ],
+        [
+          "W1",
+          "W2"
+        ],
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "absentElements": []
+    },
+    {
+      "id": "F5_MISSING_EARTH",
+      "atoms": [
+        {
+          "id": "A1",
+          "element": "AIR",
+          "text": "The decision criteria are clear."
+        },
+        {
+          "id": "A2",
+          "element": "AIR",
+          "text": "I can see two logically viable routes."
+        },
+        {
+          "id": "W1",
+          "element": "WATER",
+          "text": "I feel hopeful."
+        },
+        {
+          "id": "W2",
+          "element": "WATER",
+          "text": "I also feel apprehensive."
+        },
+        {
+          "id": "F1",
+          "element": "FIRE",
+          "text": "I want to choose soon."
+        },
+        {
+          "id": "F2",
+          "element": "FIRE",
+          "text": "I do not want urgency to make the choice for me."
+        }
+      ],
+      "tensionPairs": [
+        [
+          "A1",
+          "A2"
+        ],
+        [
+          "W1",
+          "W2"
+        ],
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "absentElements": [
+        "EARTH"
+      ]
+    }
+  ],
+  "summary": {
+    "A_FLAT": {
+      "runs": 10,
+      "atomRetention": 0.9868421052631579,
+      "atomCorrect": 75,
+      "atomTotal": 76,
+      "pairBothRate": 0.9705882352941176,
+      "pairBoth": 33,
+      "pairTotal": 34,
+      "forcedResolution": 1,
+      "absentCorrect": 10,
+      "missingChannelHallucinations": 0,
+      "budgetViolationsBeforeClip": 0
+    },
+    "B_DIFFERENTIATED": {
+      "runs": 10,
+      "atomRetention": 1,
+      "atomCorrect": 76,
+      "atomTotal": 76,
+      "pairBothRate": 1,
+      "pairBoth": 34,
+      "pairTotal": 34,
+      "forcedResolution": 0,
+      "absentCorrect": 10,
+      "missingChannelHallucinations": 0,
+      "budgetViolationsBeforeClip": 0
+    }
+  },
+  "rows": [
+    {
+      "fixture": "F1_RELATIONSHIP",
+      "condition": "A_FLAT",
+      "run": 1,
+      "representationHash": "3bfc90ac8b808b3b47a50408f77487123f616d46b5b936a5e09e324ffa8b13ba",
+      "representationWordCount": 44,
+      "clippedWordCount": 44,
+      "decoderHash": "6bf06763b2fc0a2c5e7e7596a0ce3415eaeea9cbff439cd8e8b65c3de7a7fc17",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F1_RELATIONSHIP",
+      "condition": "A_FLAT",
+      "run": 2,
+      "representationHash": "4310025fe5abd8f9bd01c5d6d83beab4fceb3aa8e07e45323f2e3fe71d947775",
+      "representationWordCount": 47,
+      "clippedWordCount": 47,
+      "decoderHash": "553d49f8d4ed6f0beb4bf23f50758e492d219b700f375ec82689710ad4810c19",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "ONLY_SECOND"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 7,
+        "atomTotal": 8,
+        "pairBoth": 2,
+        "pairTotal": 3,
+        "forcedResolution": 1,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F1_RELATIONSHIP",
+      "condition": "B_DIFFERENTIATED",
+      "run": 1,
+      "representationHash": "0ee898ffcc0883a3f27492bb7d9a3cf754d8b705c4efd73a38f9f66b326f2581",
+      "representationWordCount": 34,
+      "clippedWordCount": 34,
+      "decoderHash": "6bf06763b2fc0a2c5e7e7596a0ce3415eaeea9cbff439cd8e8b65c3de7a7fc17",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F1_RELATIONSHIP",
+      "condition": "B_DIFFERENTIATED",
+      "run": 2,
+      "representationHash": "88b0d9a55005687bc1a8e23f13cf1d58c9133d40b95e9eb8145dd30a9d090afe",
+      "representationWordCount": 42,
+      "clippedWordCount": 42,
+      "decoderHash": "6bf06763b2fc0a2c5e7e7596a0ce3415eaeea9cbff439cd8e8b65c3de7a7fc17",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F2_CREATIVE",
+      "condition": "A_FLAT",
+      "run": 1,
+      "representationHash": "5cf355a9c62edf4290508d4b0601ba790777df2eb7f42a08b635d0e737718ca1",
+      "representationWordCount": 46,
+      "clippedWordCount": 46,
+      "decoderHash": "082ee2ea23e1d869a848ee32c3234276910406663b3469a59113a5232862d558",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "E1|E2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 4,
+        "pairTotal": 4,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F2_CREATIVE",
+      "condition": "A_FLAT",
+      "run": 2,
+      "representationHash": "f1d457a333eb82c615a7669169f0074554fa3c352e61ecf6877ffb5c404d0851",
+      "representationWordCount": 53,
+      "clippedWordCount": 53,
+      "decoderHash": "db694f2c8fb7273ab4d8a23dffaedc6d504a1c3a3f6f711c753f9b56244a888c",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "E1|E2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 4,
+        "pairTotal": 4,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F2_CREATIVE",
+      "condition": "B_DIFFERENTIATED",
+      "run": 1,
+      "representationHash": "edaae0cd1a047fd69035f8ca06d6856ce9e5eceee84e2d7d95b48543b27d4d26",
+      "representationWordCount": 46,
+      "clippedWordCount": 46,
+      "decoderHash": "082ee2ea23e1d869a848ee32c3234276910406663b3469a59113a5232862d558",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "E1|E2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 4,
+        "pairTotal": 4,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F2_CREATIVE",
+      "condition": "B_DIFFERENTIATED",
+      "run": 2,
+      "representationHash": "5fe3f55200aa2a5ebcbb81f29deeb3413de8432085ddb6d2a18ed34391ab2cdb",
+      "representationWordCount": 46,
+      "clippedWordCount": 46,
+      "decoderHash": "082ee2ea23e1d869a848ee32c3234276910406663b3469a59113a5232862d558",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "E1|E2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 4,
+        "pairTotal": 4,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F3_GRIEF",
+      "condition": "A_FLAT",
+      "run": 1,
+      "representationHash": "2c14bfd3544b7f958e61f80bc24db9d8fadd91037ec20d415347d5404ee0062d",
+      "representationWordCount": 56,
+      "clippedWordCount": 56,
+      "decoderHash": "db694f2c8fb7273ab4d8a23dffaedc6d504a1c3a3f6f711c753f9b56244a888c",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "E1|E2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 4,
+        "pairTotal": 4,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F3_GRIEF",
+      "condition": "A_FLAT",
+      "run": 2,
+      "representationHash": "61a4fca4584787a23b28cbad1ac2b42735ce5a474c73670e3214e9cdcfab1374",
+      "representationWordCount": 37,
+      "clippedWordCount": 37,
+      "decoderHash": "db694f2c8fb7273ab4d8a23dffaedc6d504a1c3a3f6f711c753f9b56244a888c",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "E1|E2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 4,
+        "pairTotal": 4,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F3_GRIEF",
+      "condition": "B_DIFFERENTIATED",
+      "run": 1,
+      "representationHash": "8758eff8c0d237b79108be1cbb0cee2a01482e3ee7df47525626a912fd969987",
+      "representationWordCount": 33,
+      "clippedWordCount": 33,
+      "decoderHash": "db694f2c8fb7273ab4d8a23dffaedc6d504a1c3a3f6f711c753f9b56244a888c",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "E1|E2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 4,
+        "pairTotal": 4,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F3_GRIEF",
+      "condition": "B_DIFFERENTIATED",
+      "run": 2,
+      "representationHash": "4ac888bb5b5b2b9e91b2bf39ef3e9ec4eff34f9048a685320a8b9e952ac1003c",
+      "representationWordCount": 36,
+      "clippedWordCount": 36,
+      "decoderHash": "db694f2c8fb7273ab4d8a23dffaedc6d504a1c3a3f6f711c753f9b56244a888c",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "E1|E2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 4,
+        "pairTotal": 4,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F4_WORK",
+      "condition": "A_FLAT",
+      "run": 1,
+      "representationHash": "cb845c203a9923537edadcba3f7ad2e9fdff267c229b58cf7169a280545ec5bf",
+      "representationWordCount": 44,
+      "clippedWordCount": 44,
+      "decoderHash": "6bf06763b2fc0a2c5e7e7596a0ce3415eaeea9cbff439cd8e8b65c3de7a7fc17",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F4_WORK",
+      "condition": "A_FLAT",
+      "run": 2,
+      "representationHash": "90e41072ef22af860db0c7abecd2293fe756c5a2b3ec7fb719d9ac894c34919c",
+      "representationWordCount": 55,
+      "clippedWordCount": 55,
+      "decoderHash": "6bf06763b2fc0a2c5e7e7596a0ce3415eaeea9cbff439cd8e8b65c3de7a7fc17",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F4_WORK",
+      "condition": "B_DIFFERENTIATED",
+      "run": 1,
+      "representationHash": "4bbeb2550c9ca1c2bc6e9d4e212ac5a58fbb41cd8566bc7ece298ae8499afcfa",
+      "representationWordCount": 37,
+      "clippedWordCount": 37,
+      "decoderHash": "6bf06763b2fc0a2c5e7e7596a0ce3415eaeea9cbff439cd8e8b65c3de7a7fc17",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F4_WORK",
+      "condition": "B_DIFFERENTIATED",
+      "run": 2,
+      "representationHash": "18d078bb87ae0560e33f6ee4dfb14bc3354407558816fbb15c5942249727684f",
+      "representationWordCount": 38,
+      "clippedWordCount": 38,
+      "decoderHash": "6bf06763b2fc0a2c5e7e7596a0ce3415eaeea9cbff439cd8e8b65c3de7a7fc17",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "E1",
+          "E2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": []
+      },
+      "score": {
+        "atomCorrect": 8,
+        "atomTotal": 8,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F5_MISSING_EARTH",
+      "condition": "A_FLAT",
+      "run": 1,
+      "representationHash": "90df61d6cd81110e1cd6e1a6aace784e170467fb7e5adf88091dd154b3773d5f",
+      "representationWordCount": 33,
+      "clippedWordCount": 33,
+      "decoderHash": "562ab2b813b79e0bd9a03ac99b962cd0e0a37c0b2978f53d6ebec0da46c33bc1",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": [
+          "EARTH"
+        ]
+      },
+      "score": {
+        "atomCorrect": 6,
+        "atomTotal": 6,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F5_MISSING_EARTH",
+      "condition": "A_FLAT",
+      "run": 2,
+      "representationHash": "4173e2039f54bd49206df56e9c8dd3a25f7c07b1f098d22ab085b78b3463eb87",
+      "representationWordCount": 28,
+      "clippedWordCount": 28,
+      "decoderHash": "562ab2b813b79e0bd9a03ac99b962cd0e0a37c0b2978f53d6ebec0da46c33bc1",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": [
+          "EARTH"
+        ]
+      },
+      "score": {
+        "atomCorrect": 6,
+        "atomTotal": 6,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F5_MISSING_EARTH",
+      "condition": "B_DIFFERENTIATED",
+      "run": 1,
+      "representationHash": "415cd96a52cd7cd9bcd53bcbfaaca8fb96f585fe8632c9f45d4a7ba919789b06",
+      "representationWordCount": 28,
+      "clippedWordCount": 28,
+      "decoderHash": "562ab2b813b79e0bd9a03ac99b962cd0e0a37c0b2978f53d6ebec0da46c33bc1",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": [
+          "EARTH"
+        ]
+      },
+      "score": {
+        "atomCorrect": 6,
+        "atomTotal": 6,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    },
+    {
+      "fixture": "F5_MISSING_EARTH",
+      "condition": "B_DIFFERENTIATED",
+      "run": 2,
+      "representationHash": "fcafb1a96760b1fc3cb5bc2e9c3737729ac19fd101d3d26a3a53477fd83c8ba2",
+      "representationWordCount": 24,
+      "clippedWordCount": 24,
+      "decoderHash": "562ab2b813b79e0bd9a03ac99b962cd0e0a37c0b2978f53d6ebec0da46c33bc1",
+      "decoder": {
+        "retainedAtomIds": [
+          "A1",
+          "A2",
+          "W1",
+          "W2",
+          "F1",
+          "F2"
+        ],
+        "pairStatus": {
+          "A1|A2": "BOTH",
+          "W1|W2": "BOTH",
+          "F1|F2": "BOTH"
+        },
+        "absentElements": [
+          "EARTH"
+        ]
+      },
+      "score": {
+        "atomCorrect": 6,
+        "atomTotal": 6,
+        "pairBoth": 3,
+        "pairTotal": 3,
+        "forcedResolution": 0,
+        "absentCorrect": true,
+        "missingChannelHallucinated": false
+      }
+    }
+  ]
+}
