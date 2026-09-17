@@ -10,6 +10,8 @@
  * - Stabilize perception. Organize inner data. Reflect pattern. Name the field.
  * - One honest next move, not a list of options.
  * - For inner figures: honor them as real presences, not problems to fix.
+ * - MAIA may carry forward her own prior hypotheses, but they never become
+ *   independent evidence merely because she said them before.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -99,19 +101,29 @@ function cleanOutput(text: string): string {
   return text.replace(/\*{1,2}/g, '').replace(/^#+\s*/gm, '').trim();
 }
 
+/**
+ * Keep member-grounded material and MAIA's prior hypotheses explicitly separate.
+ *
+ * MAIA is allowed to develop longitudinal understanding. The provenance rule is
+ * simply that a previous MAIA reflection does not become a second piece of
+ * member evidence just because it is present in memory.
+ */
 function buildRecentContext(entries: CheckInInput['recentEntries']): string {
   if (!entries || entries.length === 0) return 'No previous entries.';
 
   return entries.slice(0, 3).map(e => {
-    const parts: string[] = [];
+    const grounded: string[] = [];
+    const hypotheses: string[] = [];
+
     if (e.kind === 'checkin' && e.feltSignals?.length) {
-      parts.push(`Check-in (${e.feltSignals.join(', ')})`);
-      if (e.freeText) parts.push(`Sensing: "${e.freeText}"`);
-      if (e.maiaReflection) parts.push(`Reflected: ${e.maiaReflection}`);
+      grounded.push(`Member check-in (${e.feltSignals.join(', ')})`);
+      if (e.freeText) grounded.push(`Member sensing: "${e.freeText}"`);
+      if (e.maiaReflection) hypotheses.push(`Previous MAIA reflection (hypothesis): ${e.maiaReflection}`);
     } else if (e.content) {
-      parts.push(`${e.kind}: "${e.content.substring(0, 200)}"`);
+      grounded.push(`Member-authored ${e.kind}: "${e.content.substring(0, 200)}"`);
     }
-    return parts.join(' — ');
+
+    return [...grounded, ...hypotheses].join(' — ');
   }).join('\n');
 }
 
@@ -127,17 +139,23 @@ function buildPrompt(input: CheckInInput): string {
 Realm: ${input.realm}
 ${realmGuide[input.realm]}
 
-Current signals: ${input.feltSignals.join(', ')}
-${input.freeText ? `What they are sensing: "${input.freeText}"` : ''}
-${input.lastFieldTone ? `Previous field tone: ${input.lastFieldTone}` : 'No previous field tone recorded.'}
+Current member-grounded signals: ${input.feltSignals.join(', ')}
+${input.freeText ? `Current member sensing: "${input.freeText}"` : ''}
+${input.lastFieldTone ? `Previous field-tone inference: ${input.lastFieldTone}` : 'No previous field-tone inference recorded.'}
 
-Recent history:
+Recent history (provenance is explicit):
 ${buildRecentContext(input.recentEntries)}
+
+Important epistemic rule:
+- Member check-ins and member-authored entries are evidence about what the member reported or selected.
+- Previous MAIA reflections and field tones are prior hypotheses. They may tune your attention and help you notice continuity, but they are NOT independent evidence that a pattern is true.
+- Do not count a previous MAIA reflection as recurrence. Recurrence requires repeated member-grounded material.
+- A present member report that contradicts prior inference outranks the inference.
 
 Respond with exactly four labeled sections. Each should be 1-2 sentences maximum.
 
 REFLECTION: Mirror back what you notice. Not analysis. Not interpretation. Just clear seeing.
-PATTERN: If something repeats across entries, name it simply. If not enough history, say "Not enough history yet."
+PATTERN: If member-grounded material genuinely repeats across entries, name the possible pattern simply and provisionally. If not enough grounded history, say "Not enough history yet."
 FIELD_TONE: One word or short phrase for the current atmosphere in this field.
 MOVEMENT: One grounded next step. Not advice. The next honest move.
 
@@ -146,7 +164,7 @@ FIELD_TONE must be exactly one of: open, contracted, unclear, tense, warm, dista
 Constraints:
 - Do not diagnose. Do not prescribe. Do not flatten.
 - Language should feel like clear water, not clinical assessment.
-- Do not fabricate patterns where insufficient data exists.
+- Do not fabricate patterns where insufficient member-grounded data exists.
 - The movement should feel like something a wise friend might quietly suggest.
 - Keep each section to 1-2 sentences. Brevity is clarity.
 - Match your depth to the input depth. If the input is one signal with no free text, reflect simply. Do not add metaphor or richness that the input does not support.
@@ -158,7 +176,7 @@ function parseResponse(text: string, entryCount: number): CheckInResult {
 
   const labels = ['REFLECTION', 'PATTERN', 'FIELD_TONE', 'MOVEMENT'];
   for (const label of labels) {
-    const regex = new RegExp(`${label}:\\s*(.+?)(?=\\n(?:${labels.join('|')}):|\$)`, 's');
+    const regex = new RegExp(`${label}:\\s*(.+?)(?=\\n(?:${labels.join('|')}):|$)`, 's');
     const match = text.match(regex);
     sections[label] = match ? match[1].trim() : '';
   }
