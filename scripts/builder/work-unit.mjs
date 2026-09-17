@@ -88,7 +88,10 @@ const attemptsPath = (id) => path.join(RESULTS_DIR(), `${id}.attempts.jsonl`);
 
 // ---------------------------------------------------------------- defaults (compatibility)
 export const DEFAULT_AUTHORIZED_ACTS = ['repo.read', 'repo.write:worktree', 'tests.run'];
-export const DEFAULT_NOT_AUTHORIZED_ACTS = ['production.read', 'production.write', 'deploy', 'authority.change'];
+export const DEFAULT_NOT_AUTHORIZED_ACTS = [
+  'production.read', 'production.write', 'deploy', 'authority.change',
+  'network.external', 'provider.spend',
+];
 export const DEFAULT_INTEGRATION_ACTOR = 'jarvis';
 export const DEFAULT_RISK_CLASS = 'mechanical';
 export const DEFAULT_AUTONOMY_CEILING = 'LEVEL_2_IMPLEMENT';
@@ -241,6 +244,10 @@ export function derivePermissionEnvelope(workUnit) {
     production_write: allow('production.write'),
     deploy: allow('deploy'),
     authority_change: allow('authority.change'),
+    // External provider use is capability, never implicit permission.
+    // Existing Work Units default both acts to denied for backward-compatible safety.
+    external_network: allow('network.external'),
+    provider_spend: allow('provider.spend'),
   };
 }
 
