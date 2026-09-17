@@ -56,13 +56,15 @@ Therefore: **J10 for Elemental Alchemy may not close while an alternate ungovern
 ## 6 · Current position — Elemental Alchemy
 
 ```
-J0 ✅  J1 ✅  J2 ✅  J3 ✅  J4 ✅  J5 ✅  ▶ J6  ·  J7  ·  J8  ·  J9  ·  J10
+J0 ✅  J1 ✅  J2 ✅  J3 ✅  J4 ✅  J5 ✅  J6 ✅  ▶ J7  ·  J8  ·  J9  ·  J10
 ```
 
 - Canonical reviewed mechanism: `78a85f652` (merge of PR #1337).
 - **J5 direct production witness, 2026-09-17:** `maia-sovereign` healthy and reporting `GIT_COMMIT=78a85f652`.
 - Build host (`minisforum`) direct disk witness at J5/J6 control-lane open: **137 GB free** on `/`; the earlier ~23–24 GB reading was from the wrong host and is not the production build-host state.
-- Production corpus remains governed by the no-write sequence; J6 is the next gate.
+- **J6 production witness: PASS.** The isolated witness reproduced `736 → 1 admitted / 735 excluded / 0 refused`, source SHA-256 `f57f17e6…`, 1,238 chunks, and chunk-set SHA-256 `87b0cbaa…`; no embeddings were generated and no database connection was opened.
+- J6 evidence: `docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J6_PRODUCTION_WITNESS_2026-09-17.md`.
+- J7 is next and remains a separate explicit production-write act.
 - The packaging finding is dispositioned host-side: `data/ain/source` is build-and-authority material, not runtime serving material. J6/J7 execute on `minisforum` from a clean governed worktree against production services; the 736-file source population is not shipped into the runtime image merely to prove exclusion.
 - Law 8 execution bind and the live host-side evidence are recorded in `docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J5-J6_HOST-SIDE_DISPOSITION_2026-09-17.md`.
 
