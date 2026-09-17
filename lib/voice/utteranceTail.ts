@@ -146,6 +146,59 @@ export function shouldEmitThrottled(
   return now - lastEmitAt >= minIntervalMs;
 }
 
+
+
+/**
+ * Choose what may cross the Web Speech silence boundary.
+ *
+ * Chrome ordinarily emits a final result before the timer fires, so the
+ * browser-final accumulator remains the only committable text there. Safari
+ * can instead produce a stable sequence of interim results and never emit
+ * `isFinal=true` at all. In that exact ordering, waiting for a browser final
+ * means a complete utterance is visible in the UI but nothing can ever submit.
+ *
+ * This repair is intentionally narrow:
+ *   - Safari only;
+ *   - browser-final text wins whenever it exists;
+ *   - an interim may be promoted only when it is still outstanding
+ *     (`lastInterimAt > lastFinalAt`);
+ *   - the text is returned as the member actually spoke it, not normalized.
+ *
+ * It does NOT append an outstanding interim to an existing final. That broader
+ * tail-merging problem needs its own overlap/adjudication rule; this function
+ * closes only the demonstrated interim-only Safari failure.
+ */
+export type SilenceBoundarySelectionSource =
+  | 'browser_final'
+  | 'safari_interim_promotion'
+  | 'none';
+
+export interface SilenceBoundarySelection {
+  readonly text: string;
+  readonly source: SilenceBoundarySelectionSource;
+}
+
+export function selectSilenceBoundaryTranscript(input: {
+  readonly isSafari: boolean;
+  readonly finalText: string;
+  readonly interimText: string;
+  readonly lastInterimAt: number;
+  readonly lastFinalAt: number;
+}): SilenceBoundarySelection {
+  const finalText = (input.finalText || '').trim();
+  if (finalText) return { text: finalText, source: 'browser_final' };
+
+  const interimText = (input.interimText || '').trim();
+  const interimOutstanding =
+    input.lastInterimAt > 0 && input.lastInterimAt > input.lastFinalAt;
+
+  if (input.isSafari && interimOutstanding && interimText) {
+    return { text: interimText, source: 'safari_interim_promotion' };
+  }
+
+  return { text: '', source: 'none' };
+}
+
 /**
  * How much of a previous epoch's unfinalized tail reappeared at the head of the
  * next epoch's first final.
