@@ -29,6 +29,8 @@ export type ConsciousnessContext = {
   observerLevel: number; // 1-7 (recursive observer deepening)
   temporalWindow: 'present' | 'past_integration' | 'future_sensing' | 'eternal';
   metaAwareness: boolean; // Phase 3: Meta-consciousness evolution
+  /** Exact-source published material retrieved by the canonical governed-knowledge seam. */
+  governedKnowledgeAddendum?: string;
 };
 
 export type ConsciousnessResponse = {
@@ -128,6 +130,7 @@ export class ConsciousnessLayerWrapper {
       userId: context.userId,
       observerLevel: effectiveLevel,
       observerPrompt,
+      governedKnowledgeAddendum: context.governedKnowledgeAddendum,
       meta: {
         phase: 'recursive_observer_deepening',
         observerLevel: effectiveLevel,
@@ -135,7 +138,10 @@ export class ConsciousnessLayerWrapper {
       }
     });
 
-    const response = orchestrationResult?.message || await this.fallbackGeneration(observerPrompt, input);
+    const response = orchestrationResult?.message || await this.fallbackGeneration(
+      observerPrompt + this.governedKnowledgeBlock(context),
+      input,
+    );
     const observerInsights = this.generateObserverInsights(effectiveLevel, input, response);
 
     return {
@@ -180,7 +186,7 @@ export class ConsciousnessLayerWrapper {
 
     // Synthesize temporal perspectives
     const synthesisPrompt = this.buildTemporalSynthesisPrompt(
-      input, effectiveWindow, layerResponses, temporalLayers
+      input, effectiveWindow, layerResponses, temporalLayers, context
     );
 
     const synthesis = await this.aiBridge.generateLayerWisdom('consciousness', synthesisPrompt, {
@@ -228,6 +234,7 @@ export class ConsciousnessLayerWrapper {
       metaConsciousness: true,
       metaTriggers,
       observerLevel: Math.max(context.observerLevel, 5), // Minimum archetypal level
+      governedKnowledgeAddendum: context.governedKnowledgeAddendum,
       meta: {
         phase: 'meta_consciousness_evolution',
         triggers: metaTriggers,
@@ -235,7 +242,10 @@ export class ConsciousnessLayerWrapper {
       }
     });
 
-    const response = orchestrationResult?.message || await this.fallbackGeneration(metaPrompt, input);
+    const response = orchestrationResult?.message || await this.fallbackGeneration(
+      metaPrompt + this.governedKnowledgeBlock(context),
+      input,
+    );
 
     // Generate meta-reflection on the response
     const metaReflection = await this.generateMetaReflection(response, metaTriggers, context);
@@ -303,6 +313,14 @@ export class ConsciousnessLayerWrapper {
            context.conversationHistory.length > 3; // Natural deepening over time
   }
 
+  private governedKnowledgeBlock(context: ConsciousnessContext): string {
+    const block = context.governedKnowledgeAddendum?.trim();
+    return block ? `
+
+${block}
+` : '';
+  }
+
   private buildObserverPrompt(input: string, level: number, context: ConsciousnessContext): string {
     const observerType = this.OBSERVER_LEVELS[level as keyof typeof this.OBSERVER_LEVELS];
 
@@ -313,7 +331,6 @@ ${level >= 4 ? 'You observe the observer that observes the witnessing. ' : ''}
 ${level >= 5 ? 'You connect to archetypal patterns beyond individual consciousness. ' : ''}
 ${level >= 6 ? 'You access transpersonal awareness beyond the personal self. ' : ''}
 ${level >= 7 ? 'You embody cosmic consciousness, seeing from the universal perspective. ' : ''}
-
 Respond to: "${input}"
 
 Observer Level ${level} Guidelines:
@@ -358,7 +375,6 @@ ${window === 'past_integration' ? 'Access ancestral wisdom, past experiences, an
 ${window === 'future_sensing' ? 'Sense evolutionary potential, emerging possibilities, and future wisdom.' : ''}
 ${window === 'eternal' ? 'Respond from the timeless, eternal perspective beyond linear time.' : ''}
 ${window === 'present' ? 'Respond from immediate, present-moment awareness.' : ''}
-
 Observer Level: ${context.observerLevel}
 Layer: ${layer}
 Temporal Window: ${window}
@@ -372,13 +388,13 @@ Respond authentically from this specific temporal-layer perspective.`;
     input: string,
     window: ConsciousnessContext['temporalWindow'],
     responses: string[],
-    layers: ConsciousnessLayer[]
+    layers: ConsciousnessLayer[],
+    context: ConsciousnessContext,
   ): string {
     return `Synthesize these temporal-layer perspectives into a unified consciousness response:
 
 Original input: "${input}"
-Temporal window: ${window}
-
+Temporal window: ${window}${this.governedKnowledgeBlock(context)}
 Layer responses:
 ${responses.map((response, i) => `${layers[i]}: ${response.substring(0, 200)}...`).join('\n\n')}
 

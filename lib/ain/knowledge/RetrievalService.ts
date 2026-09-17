@@ -28,6 +28,10 @@ export interface RetrievalOptions {
   domains?: string[];
   /** Filter to specific categories */
   categories?: string[];
+  /** Exact source-file allowlist. Undefined = no filter; explicit empty = no authorized sources. */
+  sourceFiles?: string[];
+  /** Optional precomputed query vector so governed callers can reuse one embedding. */
+  queryEmbedding?: readonly number[];
   /** User ID for tracking */
   userId?: string;
   /** Session mode for tracking */
@@ -94,16 +98,33 @@ export async function retrieveKnowledge(
     minSimilarity = 0.3,
     domains,
     categories,
+    sourceFiles,
+    queryEmbedding: providedQueryEmbedding,
     userId,
     sessionMode,
   } = options;
 
   try {
-    // Generate embedding for query
-    const queryEmbedding = await generateLocalEmbedding(queryText);
+    // An explicitly supplied source allowlist is an authority boundary. Empty
+    // means no source is authorized — never widen an empty allowlist to all rows.
+    if (sourceFiles !== undefined && sourceFiles.length === 0) {
+      return [];
+    }
 
-    if (!queryEmbedding || queryEmbedding.length === 0) {
-      console.warn('[AIN Retrieval] No embedding generated, falling back to empty');
+    // Generate once unless a governed caller already produced and validated the
+    // query vector for an upstream applicability decision. Reuse prevents one
+    // member turn from being interpreted through two independently embedded queries.
+    const queryEmbedding = providedQueryEmbedding !== undefined
+      ? [...providedQueryEmbedding]
+      : await generateLocalEmbedding(queryText);
+
+    if (
+      !queryEmbedding ||
+      queryEmbedding.length === 0 ||
+      !queryEmbedding.every(Number.isFinite) ||
+      !queryEmbedding.some((value) => value !== 0)
+    ) {
+      console.warn('[AIN Retrieval] No valid embedding generated, falling back to empty');
       return [];
     }
 
@@ -123,6 +144,14 @@ export async function retrieveKnowledge(
 
     const params: (string | number | string[])[] = [toPgVectorLiteral(queryEmbedding)];
     let paramIndex = 2;
+
+    // Exact source-file allowlist. Canonical governed retrieval uses this
+    // boundary so legacy domain/category heuristics cannot widen authority.
+    if (sourceFiles && sourceFiles.length > 0) {
+      sql += ` AND source_file = ANY($${paramIndex})`;
+      params.push(sourceFiles);
+      paramIndex++;
+    }
 
     // Domain filter
     if (domains && domains.length > 0) {

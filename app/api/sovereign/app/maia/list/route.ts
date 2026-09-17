@@ -167,6 +167,7 @@ import {
 
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
+import { retrieveGovernedKnowledge, formatGovernedKnowledgeAddendum } from '@/lib/ain/knowledge/GovernedRetrievalService';
 
 // 🌿 Wu Xing (Five Elements) integration
 import { buildWuXingSnapshot, computeWuXingConstitution, computeWuXingMoment, generateWuXingPromptAddendum, type BaZiProfile, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
@@ -853,6 +854,32 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       }
     }
 
+    // 📚 GOVERNED KNOWLEDGE RETRIEVAL: exact-source allowlist, read-only.
+    // Distinct from Knowledge Gate weighting above. The existing env flag is an
+    // operational rollout kill-switch only; source authority comes from the closed
+    // governed registry + its J6 admission-derived equivalence witness. No userId
+    // is passed, so this path cannot write retrieval analytics. Sanctuary refuses
+    // before any governed retrieval call.
+    let governedKnowledgeAddendum: string | null = null;
+    if (process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1' && !isSanctuary) {
+      try {
+        const governedHits = await retrieveGovernedKnowledge(message, {
+          limit: 3,
+          minSimilarity: 0.55,
+        });
+        governedKnowledgeAddendum = formatGovernedKnowledgeAddendum(governedHits);
+        if (governedHits.length > 0) {
+          const sources = [...new Set(governedHits.map((hit) => hit.source.subjectId))];
+          const maxSimilarity = Math.max(...governedHits.map((hit) => Number(hit.chunk.similarity)));
+          console.log(`[AIN Governed] retrieved=${governedHits.length} sources=${sources.join(',')} maxSimilarity=${maxSimilarity.toFixed(3)}`);
+        } else {
+          console.log('[AIN Governed] no governed source cleared relevance threshold');
+        }
+      } catch (err) {
+        console.warn('[AIN Governed] retrieval failed closed (non-blocking):', err);
+      }
+    }
+
     // ═══ MEMORY ORCHESTRATOR (Phase 1.5 — live activation in sovereign chat route) ═══
     // Build memory plan + forward-readiness BEFORE generation. Both flow into
     // maiaService through meta.memoryInfluenceAddendum / meta.forwardReadinessAddendum,
@@ -1236,6 +1263,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         astrology: astrologyAddendum || undefined,
         studio: studioAddendum || undefined,
         knowledgeGate: knowledgeGateAddendum || undefined,
+        governedKnowledge: governedKnowledgeAddendum || undefined,
         wuxing: wuxingAddendum || undefined,
         // 💬 Phase 2 — conversational recall observability (PROMPT_BLOCK_CHARS sums this).
         // Emission detail lives in [MAIA] conversational-block log line above.
@@ -1287,6 +1315,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           studioAddendum,
           practiceFieldAddendum,
           knowledgeGateAddendum,
+          governedKnowledgeAddendum,
           memberWebAddendum: memberWebAddendum || undefined,
           astrologyAddendum: astrologyAddendum || undefined,
           divinationIntentAddendum,
@@ -1416,6 +1445,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           studioAddendum, // 🏢 Studio prompt cap (when surface === 'studio')
           practiceFieldAddendum, // 🤝 Practice Field: practitioner accompaniment context
           knowledgeGateAddendum, // 🚪 AIN Knowledge Gate: source well modulation (Phase 1)
+          governedKnowledgeAddendum, // 📚 Exact-source governed retrieval (server-authored, read-only)
           memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
           astrologyAddendum: astrologyAddendum || undefined, // 🌟 Natal chart + cosmic weather context
           // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — placed AFTER ...meta so server-built

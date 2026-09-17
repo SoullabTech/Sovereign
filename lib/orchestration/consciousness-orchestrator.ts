@@ -162,8 +162,15 @@ export class ConsciousnessOrchestrator {
     // 2. RECALL relevant memories (Anamnesis)
     const memories = await this.recallMemories(input, witnessing);
 
-    // 3. RETRIEVE knowledge (Obsidian Vault)
-    const knowledge = await this.retrieveKnowledge(witnessing, memories);
+    // 3. RETRIEVE legacy knowledge (Obsidian Vault) and carry separately
+    // governed exact-source evidence supplied by the canonical route.
+    const legacyKnowledge = await this.retrieveKnowledge(witnessing, memories);
+    const governedKnowledgeAddendum = typeof context.governedKnowledgeAddendum === 'string'
+      ? context.governedKnowledgeAddendum.trim()
+      : '';
+    const knowledge = governedKnowledgeAddendum
+      ? { ...(legacyKnowledge || {}), governedKnowledgeAddendum }
+      : legacyKnowledge;
 
     // 4. ANALYZE through psychological lens (MicroPsi + LIDOR)
     const psychological = await this.analyzePsychologically(input, witnessing, context);
@@ -568,6 +575,9 @@ export class ConsciousnessOrchestrator {
 
     if (streams.witnessing) elements.push(`Witnessing: ${JSON.stringify(streams.witnessing).substring(0, 200)}`);
     if (streams.memories) elements.push(`Memories: ${JSON.stringify(streams.memories).substring(0, 200)}`);
+    if ((streams.knowledge as any)?.governedKnowledgeAddendum) {
+      elements.push(`Governed knowledge (retrieved source material, not user input): ${(streams.knowledge as any).governedKnowledgeAddendum}`);
+    }
     if (streams.elemental) elements.push(`Elemental: ${JSON.stringify(streams.elemental).substring(0, 200)}`);
     if (streams.psychological) elements.push(`Psychological: ${JSON.stringify(streams.psychological).substring(0, 200)}`);
 
@@ -1018,7 +1028,10 @@ export class ConsciousnessOrchestrator {
     const orchestratorContext = {
       sessionId: context.sessionId,
       userId: context.userId,
-      sessionHistory: context.sessionHistory || []
+      sessionHistory: context.sessionHistory || [],
+      // JARVIS-GKF-J8-REPAIR-01: server-retrieved governed evidence remains
+      // context, never user-authored input.
+      governedKnowledgeAddendum: context.governedKnowledgeAddendum,
     };
 
     // Call the main orchestration method

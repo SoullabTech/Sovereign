@@ -101,6 +101,8 @@ export interface MaiaContext {
   studioAddendum?: string;
   // 🚪 KNOWLEDGE GATE: AIN source well modulation
   knowledgeGateAddendum?: string;
+  // 📚 GOVERNED KNOWLEDGE: exact-source retrieved published material
+  governedKnowledgeAddendum?: string;
   // 🕸️ MEMBER WEB: Patterns + session summaries + journals
   memberWebAddendum?: string;
   // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
@@ -452,6 +454,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'scribeSessionDiscussionAddendum', log: () => `📝 [Scribe Discussion] Session context injected` },
   { field: 'studioAddendum',                  log: () => `🏢 [Studio] Practitioner context injected` },
   { field: 'knowledgeGateAddendum',           log: () => `🚪 [Knowledge Gate] Source well modulation injected` },
+  { field: 'governedKnowledgeAddendum',       log: v => `📚 [Governed Knowledge] Exact-source retrieval injected (${v.length} chars)` },
   { field: 'memberWebAddendum',               log: () => `🕸️ [Member Web] Patterns+summaries+journals injected` },
   { field: 'consultationAddendum',            log: () => `🏛️ [Consultation] Council insights injected` },
   { field: 'fieldWisdomAddendum',             log: () => `🌀 [Field Wisdom] Collective intelligence injected` },

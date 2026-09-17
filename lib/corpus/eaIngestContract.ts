@@ -4,12 +4,13 @@ import * as path from 'path';
 
 import { processAllSources, type KnowledgeChunk } from '../ain/knowledge/ChunkingService';
 import { decideAdmission, loadDeclaration, type AdmissionVerdict } from './admission';
+import { ELEMENTAL_ALCHEMY_GOVERNED_SOURCE } from './governedKnowledgeRegistry';
 
 export const EA_INGEST_CONTRACT = Object.freeze({
-  act: 'CORPUS-INGEST-EA-01',
-  sourcePath: 'data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md',
-  sourceFile: 'Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md',
-  sourceSha256: 'f57f17e6ab82f911a4932c1f2d5fa0149e8fe499c7461f60bd87f86d0f657af0',
+  act: ELEMENTAL_ALCHEMY_GOVERNED_SOURCE.ingestAct,
+  sourcePath: ELEMENTAL_ALCHEMY_GOVERNED_SOURCE.sourcePath,
+  sourceFile: ELEMENTAL_ALCHEMY_GOVERNED_SOURCE.sourceFile,
+  sourceSha256: ELEMENTAL_ALCHEMY_GOVERNED_SOURCE.sourceSha256,
   candidateCount: 736,
   runtimeCandidateCount: 1,
   runtimeAdmittedCount: 1,

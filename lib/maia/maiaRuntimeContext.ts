@@ -138,6 +138,7 @@ export type PromptBlockSummary = {
     astrology: boolean;
     studio: boolean;
     knowledgeGate: boolean;
+    governedKnowledge: boolean;
     wuxing: boolean;
     /** Phase 2 conversational recall block (cross-session continuity, system-retrieved). */
     conversational: boolean;
@@ -196,6 +197,8 @@ export type MaiaRuntimeContextInputs = {
     astrology?: string;
     studio?: string;
     knowledgeGate?: string;
+    /** Exact-source governed retrieval, distinct from Knowledge Gate weighting. */
+    governedKnowledge?: string;
     wuxing?: string;
     /** Phase 2 conversational recall block (cross-session continuity, system-retrieved). */
     conversational?: string;
@@ -305,6 +308,7 @@ function summarizePromptBlock(
     (addenda.astrology?.length ?? 0) +
     (addenda.studio?.length ?? 0) +
     (addenda.knowledgeGate?.length ?? 0) +
+    (addenda.governedKnowledge?.length ?? 0) +
     (addenda.wuxing?.length ?? 0) +
     (addenda.conversational?.length ?? 0) +
     (addenda.episodic?.length ?? 0) +
@@ -321,6 +325,7 @@ function summarizePromptBlock(
       astrology: !!addenda.astrology,
       studio: !!addenda.studio,
       knowledgeGate: !!addenda.knowledgeGate,
+      governedKnowledge: !!addenda.governedKnowledge,
       wuxing: !!addenda.wuxing,
       conversational: !!addenda.conversational,
       episodic: !!addenda.episodic,
