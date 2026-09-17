@@ -82,7 +82,10 @@ describe('R10 KEEP does not grant REOPEN', () => {
       .filter((file) => /SET\s+return_preference\s*=\s*\$\d+[\s\S]{0,160}return_authority\s*=\s*['"]member_explicit['"]/i.test(readFileSync(file, 'utf8')))
       .map((file) => file.replace(process.cwd() + '/', ''))
       .sort();
-    expect(explicitMutators).toEqual(['lib/psyche/portfolio.ts']);
+    expect(explicitMutators).toEqual([
+      'app/api/sovereign/episodes/mark/route.ts',
+      'lib/psyche/portfolio.ts',
+    ]);
 
     const inserts = files.flatMap((file) => {
       const source = readFileSync(file, 'utf8');

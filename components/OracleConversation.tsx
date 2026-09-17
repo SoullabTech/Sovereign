@@ -1038,7 +1038,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showCapturePanel, setShowCapturePanel] = useState(false);
   const [showCaptureSuggestion, setShowCaptureSuggestion] = useState(false);
   const [captureSuggestionDismissed, setCaptureSuggestionDismissed] = useState(false);
-  // The Keep draft currently on screen. Until the member confirms, this is an
+  // The Reflection draft currently on screen. Until the member confirms, this is an
   // UNSAVED preview: distilled server-side, held in memory here, with no row
   // behind it and no `id`. `capturedCapsule.id` is therefore only meaningful
   // once capsulePersisted is true.
@@ -4720,7 +4720,7 @@ I'm not sure what I'm feeling yet.`;
       }
 
       const data = await response.json();
-      console.log('✅ [Capsule] Keep draft prepared (nothing persisted):', data);
+      console.log('✅ [Capsule] Reflection draft prepared (nothing persisted):', data);
 
       // The route returns { draft } and no longer returns { capsule }: opening
       // Keep writes nothing, so there is no row and no id to hold. Reading
@@ -4732,7 +4732,7 @@ I'm not sure what I'm feeling yet.`;
       // Track the OPENING, not a keep. Nothing was kept by this event, and the
       // name says so — `spirit_captured` fired on open would misreport the
       // member's consent gesture in every downstream count.
-      trackEvent('keep_panel_opened', {
+      trackEvent('reflection_panel_opened', {
         userId,
         sessionId,
         messageCount: messages.length,
@@ -4809,7 +4809,7 @@ I'm not sure what I'm feeling yet.`;
   }, [router]);
 
   // Update captured capsule (quick edits)
-  // CONFIRM KEEP — the member's governing gesture, and the first moment anything
+  // CONFIRM REFLECTION SAVE — the member's governing gesture, and the first moment anything
   // is written. Before this runs, the panel has been showing an unsaved preview.
   //
   // Two paths, one boundary: the first confirm CREATES the row from the draft the
@@ -4850,15 +4850,15 @@ I'm not sure what I'm feeling yet.`;
         });
 
         if (!response.ok) {
-          throw new Error('Failed to keep this');
+          throw new Error('Failed to save reflection');
         }
 
         const data = await response.json();
         setCapturedCapsule(data.capsule);
         setCapsulePersisted(true);
         persistedCapsuleIdRef.current = data.capsule.id;
-        trackEvent('keep_confirmed', { userId, sessionId, capsuleId: data.capsule.id });
-        toast.success('Kept');
+        trackEvent('reflection_saved', { userId, sessionId, capsuleId: data.capsule.id });
+        toast.success('Reflection saved');
         return;
       }
 
@@ -4884,13 +4884,13 @@ I'm not sure what I'm feeling yet.`;
   const handleBringCapsuleIntoLab = useCallback(async () => {
     if (!capturedCapsule) return;
 
-    // Promotion acts on a row, so it requires a confirmed Keep. The panel runs
+    // Promotion acts on a row, so it requires a saved Reflection. The panel runs
     // its save first, which is what creates that row; read the id from the ref
     // rather than from state, which has not re-rendered yet within this tick.
     const capsuleId = persistedCapsuleIdRef.current ?? capturedCapsule.id;
     if (!capsuleId) {
-      console.warn('⚠️ [Capsule] Bring into Lab with no confirmed Keep — nothing to promote');
-      toast.error('Keep this first, then bring it into the Lab');
+      console.warn('⚠️ [Capsule] Bring into Lab with no saved Reflection — nothing to promote');
+      toast.error('Save this reflection first, then bring it into the Lab');
       return;
     }
 
@@ -6324,8 +6324,8 @@ I'm not sure what I'm feeling yet.`;
           oracleMessage.intent = undefined;
           oracleMessage.uiAction = {
             type: 'open_keep_home',
-            label: 'Open Keep',
-            leadIn: 'You asked to open Keep.',
+            label: 'My Keeps',
+            leadIn: 'You asked to open your Keeps.',
             confidence: 1,
           };
           console.log('🔖 [Keep] room doorway attached', { matched: keepIntent.matched });
@@ -8196,7 +8196,6 @@ I'm not sure what I'm feeling yet.`;
                   onArrivalCrossed?.();
                 }}
                 onOpenHouse={() => window.dispatchEvent(new CustomEvent('openMaiaHouse'))}
-                onKeep={() => window.dispatchEvent(new CustomEvent('labAction', { detail: { action: 'capture-spirit' } }))}
               />
             );
           }
@@ -8421,17 +8420,9 @@ I'm not sure what I'm feeling yet.`;
           "Keep this moment" gesture in this cut. Hidden in Sanctuary as
           defense-in-depth. 44x44 touch target; visible glyph is smaller.
 
-          Rendered as the exact COMPLEMENT of the arrival/greeting block above
-          (same shouldRenderArrival / !hasActivated condition): that composition
-          renders its OWN Keep affordance, so showing ours simultaneously would
-          put two bookmarks on screen at once. The rule is NOT "one Keep in
-          every state" — it is: a Keep exists wherever there is something to
-          keep. The arrival composition carries its own Keep pre-activation;
-          this bookmark covers the live conversation (the very surface Kelly
-          flagged as missing it); and the returning-member pre-activation
-          welcome state (legacy greeting, hasActivated=false,
-          shouldRenderArrival=false) has NO Keep anywhere, by design — nothing
-          exists to capture yet (the capture flow itself requires ≥2 messages). */}
+          Hidden during Arrival because no conversational material exists yet.
+          Once the conversation is live this bookmark opens My Keeps; it never
+          invokes Reflection distillation or chooses a recent conversation window. */}
       {!isContainedPresentation && !isSanctuary &&
         !(shouldRenderArrival || (!hasActivated && !isProcessing && !isResponding)) && (
         <div
@@ -8442,8 +8433,8 @@ I'm not sure what I'm feeling yet.`;
             type="button"
             onClick={() => router.push('/maia/keep-capture')}
             className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-maia-spice-400/60 backdrop-blur-sm transition-colors hover:bg-white/5 hover:text-maia-spice-400"
-            title="Open Keep"
-            aria-label="Open Keep"
+            title="My Keeps"
+            aria-label="My Keeps"
           >
             <Bookmark className="h-5 w-5" strokeWidth={2} />
           </button>
@@ -9591,6 +9582,7 @@ I'm not sure what I'm feeling yet.`;
                           body: JSON.stringify({
                             verbatimText,
                             sourceSessionId: sessionId,
+                            sourceTurnId: message.id,
                           }),
                         });
                         if (!res.ok) {
@@ -10323,12 +10315,12 @@ I'm not sure what I'm feeling yet.`;
         onSave={handleUpdateCapsule}
         onBringIntoLab={handleBringCapsuleIntoLab}
         onViewInLab={() => {
-          // Only a confirmed Keep has a page to view. An unsaved preview has no
+          // Only a saved Reflection has a page to view. An unsaved preview has no
           // row and no route — navigating on its absent id would 404 and read
           // to the member as data loss.
           const capsuleId = persistedCapsuleIdRef.current ?? capturedCapsule?.id;
           if (!capsuleId) {
-            toast.error('Keep this first, then you can view it in the Lab');
+            toast.error('Save this reflection first, then you can view it in the Lab');
             return;
           }
           setShowCapturePanel(false);

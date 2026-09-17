@@ -131,7 +131,7 @@ export const PRODUCER_REGISTRY = {
   },
   'member.episodic_recall': {
     authoredBy: 'member', participationClass: 'marked', authority: 'situate',
-    provenance: 'lib/maia/memoryLoaders loadRecentMarkedEpisodes', consentBasis: 'episodic_recall_enabled',
+    provenance: 'lib/maia/memoryLoaders loadRecentMarkedEpisodes', consentBasis: 'episodic_recall_enabled + per-Moment member_explicit return authority',
     requires: { identity: 'verified', notSanctuary: true, recallPref: 'episodic' }, rooms: ['sovereign_chat', 'writers_studio'], mandatory: false, scope: 'route',
     partitionPending: true,
     ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: member-MARKED and recall-preference gated] member-marked significant moments; block carries the exchange (member + MAIA text) — partition owed at M3',

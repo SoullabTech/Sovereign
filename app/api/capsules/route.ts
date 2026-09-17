@@ -3,16 +3,16 @@ export const dynamic = 'force-dynamic';
 /**
  * GET  /api/capsules — list capsules for the authenticated member.
  *                      Query params: q, archived, pinned, draft, tag, limit, cursor
- * POST /api/capsules — CONFIRM KEEP. The member-confirmed write.
+ * POST /api/capsules — CONFIRM REFLECTION SAVE. The member-confirmed write.
  *
  * ═══════════════════════════════════════════════════════════════════════════
- * KEEP AUTHORITY CONTRACT (Kelly ruling 2026-08-28)
+ * REFLECTION SAVE AUTHORITY CONTRACT (Kelly ruling 2026-08-28)
  *
- *   OPEN KEEP     = UI/navigation act        = zero persistence
- *   PREPARE KEEP  = distill for preview      = ephemeral only, zero durable write
- *   CONFIRM KEEP  = explicit member action   = persistence permitted  ← POST here
+ *   OPEN REFLECTION     = UI/navigation act        = zero persistence
+ *   PREPARE REFLECTION  = distill for preview      = ephemeral only, zero durable write
+ *   CONFIRM REFLECTION SAVE  = explicit member action   = persistence permitted  ← POST here
  *
- * This POST is the Keep flow's only write seam. /api/capsules/from-chat-window
+ * This POST is the Reflection flow's only write seam. /api/capsules/from-chat-window
  * prepares a draft and writes nothing; the member reviews and edits it; landing
  * here is their governing gesture. "MAIA may operate the House. The member
  * governs memory."

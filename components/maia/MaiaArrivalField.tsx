@@ -80,11 +80,9 @@ export interface MaiaArrivalFieldProps {
   onActivate: () => void;
   /** Open The House sheet (the real registry). */
   onOpenHouse: () => void;
-  /** Save the moment — the existing "capture the spirit" gesture. */
-  onKeep?: () => void;
 }
 
-export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend, onActivate, onOpenHouse, onKeep }: MaiaArrivalFieldProps) {
+export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend, onActivate, onOpenHouse }: MaiaArrivalFieldProps) {
   const [draft, setDraft] = useState('');
   // Portal to <body>: OracleConversation renders inside MaiaCenterField's z-10
   // stacking context, which would trap this field beneath the top bar (z-70)
@@ -197,14 +195,6 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
           </span>
         </button>
         <div className="flex items-center gap-3 text-[#b7ad9c]">
-          {onKeep && (
-            <button type="button" onClick={onKeep} title="Keep this moment" aria-label="Keep this moment"
-              className="flex h-11 w-11 items-center justify-center text-[rgba(230,169,74,0.85)] transition-colors hover:text-[#e6a94a] focus:outline-none">
-              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
-              </svg>
-            </button>
-          )}
           <span className="text-[12px] font-semibold tracking-[0.26em]">MAIA</span>
           <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full border border-[rgba(230,169,74,0.5)] text-[12px] font-semibold text-[#e6a94a]">
             {userInitial}

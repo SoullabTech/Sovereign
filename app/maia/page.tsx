@@ -1125,7 +1125,7 @@ function MAIAPageContent() {
                     )}
                   </motion.button>
 
-                  {/* ✨ Keep Button - Mobile (after Scribe, before Session) */}
+                  {/* ✨ Reflect Button - Mobile (after Scribe, before Session) */}
                   <motion.button
                     onClick={() => {
                       window.dispatchEvent(new CustomEvent('labAction', {
@@ -1136,10 +1136,10 @@ function MAIAPageContent() {
                              bg-[#D4B896]/10 hover:bg-[#D4B896]/20
                              border border-[#D4B896]/30 hover:border-[#D4B896]/50
                              text-[#D4B896] text-xs font-light transition-all flex-shrink-0"
-                    title="Keep this moment from the last few turns"
+                    title="Capture a reflection from this conversation"
                   >
                     <Sparkles className="w-3 h-3" />
-                    <span className="text-xs">Keep</span>
+                    <span className="text-xs">Reflect</span>
                   </motion.button>
 
                   {/* Session Button - Inside mode selector, after Capture */}
@@ -1385,7 +1385,7 @@ function MAIAPageContent() {
                     </motion.button>
                   </FeatureTooltip>
 
-                  {/* Keep Button - Desktop (after Scribe, before Session) */}
+                  {/* Reflect Button - Desktop (after Scribe, before Session) */}
                   <FeatureTooltip featureId="capture" side="bottom">
                     <motion.button
                       onClick={() => {
@@ -1399,10 +1399,10 @@ function MAIAPageContent() {
                                text-[#D4B896] text-xs font-light transition-all"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      title="Keep this moment from the last few turns"
+                      title="Capture a reflection from this conversation"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      Keep
+                      Reflect
                     </motion.button>
                   </FeatureTooltip>
 

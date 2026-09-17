@@ -7,11 +7,11 @@ export const dynamic = 'force-dynamic';
  * returns an UNSAVED draft. This endpoint writes nothing.
  *
  * ═══════════════════════════════════════════════════════════════════════════
- * KEEP AUTHORITY CONTRACT (Kelly ruling 2026-08-28 — KEEP-OPEN-NONPERSISTENT-01)
+ * REFLECTION SAVE AUTHORITY CONTRACT (Kelly ruling 2026-08-28 — KEEP-OPEN-NONPERSISTENT-01)
  *
- *   OPEN KEEP     = UI/navigation act        = zero persistence
- *   PREPARE KEEP  = distill for preview      = ephemeral only, zero durable write
- *   CONFIRM KEEP  = explicit member action   = persistence permitted
+ *   OPEN REFLECTION     = UI/navigation act        = zero persistence
+ *   PREPARE REFLECTION  = distill for preview      = ephemeral only, zero durable write
+ *   CONFIRM REFLECTION SAVE  = explicit member action   = persistence permitted
  *
  * Recognition must never silently collapse into commitment. "MAIA may operate
  * the House. The member governs memory."
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     };
 
     console.log(
-      `[API] Prepared Keep draft from chat window for member ${memberRef(memberId)} — nothing persisted`
+      `[API] Prepared Reflection draft from chat window for member ${memberRef(memberId)} — nothing persisted`
     );
 
     // 200, not 201: nothing was created.

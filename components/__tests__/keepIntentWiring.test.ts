@@ -108,7 +108,7 @@ describe('explicit "open Keep" means the Keep room, not Reflection capture', () 
   });
 
   it('the persistent generic Keep bookmark also opens the Keep room', () => {
-    const bookmark = SOURCE.indexOf('aria-label="Open Keep"');
+    const bookmark = SOURCE.indexOf('aria-label="My Keeps"');
     expect(bookmark).toBeGreaterThan(-1);
     expect(SOURCE.slice(Math.max(0, bookmark - 500), bookmark)).toContain("router.push('/maia/keep-capture')");
   });

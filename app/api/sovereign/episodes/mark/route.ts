@@ -54,10 +54,11 @@
  *     docs/architecture/EPISODIC_MARK_PROVENANCE_CONTRACT_2026-07-17.md
  *   - Sovereign placement includes removal: the member who marked a moment
  *     may also unmark it. See DELETE below.
- *   - This is the write path only. It does NOT govern recall. Whether marked
- *     moments resurface in the prompt is a separate consent gated by
- *     members.episodic_recall_enabled (read-path). Marking and recalling are
- *     distinct consents; this route deliberately does not consult the recall gate.
+ *   - This route writes a new Moment as private/sealed by default. Ambient return
+ *     is a separate member act handled by PATCH, which atomically writes both
+ *     return_preference and member_explicit authority provenance.
+ *   - members.episodic_recall_enabled remains a master suppression switch only;
+ *     it cannot grant return authority to a Moment by itself.
  *
  * OWNERSHIP
  *   - Requires an authenticated member (getMemberIdFromRequest). The episode is
@@ -84,7 +85,10 @@ interface MarkedEpisodeRow {
   marked_by_member: boolean;
   source_turn_id: string | null;
   source_session_id: string | null;
+  return_preference: 'member_pulled' | 'contextual_doorway';
+  return_authority: 'legacy_ambiguous' | 'default_private' | 'member_explicit';
   created_at: Date;
+  was_created?: boolean;
 }
 
 function shape(row: MarkedEpisodeRow) {
@@ -95,6 +99,8 @@ function shape(row: MarkedEpisodeRow) {
     markedByMember: row.marked_by_member,
     sourceTurnId: row.source_turn_id,
     sourceSessionId: row.source_session_id,
+    returnPreference: row.return_preference,
+    returnAuthority: row.return_authority,
     createdAt: row.created_at,
   };
 }
@@ -125,7 +131,7 @@ export async function GET(request: NextRequest) {
 
     const result = await query<MarkedEpisodeRow>(
       `SELECT id, episode_id, verbatim_text, marked_by_member,
-              source_turn_id, source_session_id, created_at
+              source_turn_id, source_session_id, return_preference, return_authority, created_at
          FROM episodic_memories
         WHERE user_id = $1 AND marked_by_member = TRUE
         ORDER BY created_at DESC
@@ -149,12 +155,12 @@ export async function GET(request: NextRequest) {
 /**
  * POST — preserve a member-marked moment, verbatim.
  *
- * Body: { verbatimText: string; sourceSessionId: string; sourceTurnId?: string }
+ * Body: { verbatimText: string; sourceSessionId: string; sourceTurnId: string }
  *   - verbatimText:    the member's exact words. Required, non-empty.
  *   - sourceSessionId: provenance — the session the mark came from. REQUIRED;
  *                      must resolve to a session owned by the authenticated
  *                      member (governing rule above).
- *   - sourceTurnId:    provenance pointer to the marked turn (optional).
+ *   - sourceTurnId:    REQUIRED stable identity of the exact member message; the idempotency key for retries.
  *
  * 201 with the stored episode, 400 on empty/invalid verbatim, 401 if no
  * member, 403 (refusal R18) on missing/unresolvable provenance or a Sanctuary
@@ -220,6 +226,13 @@ export async function POST(request: NextRequest) {
           refusal: 'R18',
         },
         { status: 403 },
+      );
+    }
+
+    if (turnId === null) {
+      return NextResponse.json(
+        { error: 'sourceTurnId is required so retries cannot create duplicate durable Moments.' },
+        { status: 400 },
       );
     }
 
@@ -302,34 +315,105 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Six columns. Nothing interpretive. Every omitted interpretive column stays
-    // NULL (the meaning the system refuses to author); every omitted vector
-    // defaults to []. verbatim_text is inserted raw (no trim/normalize).
+    // Exact member words, private by default. The database uniqueness boundary
+    // makes the same source message idempotent under retry/double-event races.
+    // Identical text from a different sourceTurnId is a different member act.
     const result = await query<MarkedEpisodeRow>(
       `INSERT INTO episodic_memories
          (user_id, episode_id, verbatim_text, marked_by_member, source_turn_id, source_session_id,
-          posture_at_creation)
-       VALUES ($1, $2, $3, TRUE, $4, $5, 'normal')
+          posture_at_creation, return_preference, return_authority)
+       VALUES ($1, $2, $3, TRUE, $4, $5, 'normal', 'member_pulled', 'default_private')
+       ON CONFLICT (user_id, source_session_id, source_turn_id)
+         WHERE marked_by_member = TRUE
+           AND source_session_id IS NOT NULL
+           AND source_turn_id IS NOT NULL
+       DO UPDATE SET source_turn_id = EXCLUDED.source_turn_id
        RETURNING id, episode_id, verbatim_text, marked_by_member,
-                 source_turn_id, source_session_id, created_at`,
+                 source_turn_id, source_session_id, return_preference, return_authority,
+                 created_at, (xmax = 0) AS was_created`,
       [memberId, randomUUID(), verbatimText, turnId, sessionId],
     );
 
-    // Discoverable log marker. Member data minimized: prefix + counts only,
-    // never the verbatim content.
+    const stored = result.rows[0];
+
     console.log(
-      `[MAIA/sovereign] episodic moment marked { memberRef: ${memberRef(memberId)}, ` +
-        `episodeId: ${result.rows[0].episode_id}, verbatimChars: ${verbatimText.length}, ` +
-        `hasTurn: ${turnId !== null}, hasSession: ${sessionId !== null} }`,
+      `[MAIA/sovereign] episodic moment ${stored.was_created ? 'marked' : 'already marked'} { memberRef: ${memberRef(memberId)}, ` +
+        `episodeId: ${stored.episode_id}, verbatimChars: ${verbatimText.length}, ` +
+        `hasTurn: true, hasSession: true }`,
     );
 
-    return NextResponse.json({ episode: shape(result.rows[0]) }, { status: 201 });
+    return NextResponse.json(
+      { episode: shape(stored), created: stored.was_created === true },
+      { status: stored.was_created === true ? 201 : 200 },
+    );
   } catch (err) {
     console.error('[episodes/mark] POST error:', err);
     return NextResponse.json({ error: 'Failed to mark episode' }, { status: 500 });
   }
 }
 
+/**
+ * PATCH — set per-Moment return preference by explicit member act.
+ *
+ * Body: { episodeId: string; returnPreference: 'member_pulled' | 'contextual_doorway' }
+ * The preference and member_explicit authority provenance are written atomically.
+ * Keeping a Moment never calls this path.
+ */
+export async function PATCH(request: NextRequest) {
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
+  }
+
+  try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const { episodeId, returnPreference } = (body ?? {}) as {
+      episodeId?: unknown;
+      returnPreference?: unknown;
+    };
+
+    if (typeof episodeId !== 'string' || episodeId.length === 0) {
+      return NextResponse.json({ error: 'episodeId is required' }, { status: 400 });
+    }
+    if (returnPreference !== 'member_pulled' && returnPreference !== 'contextual_doorway') {
+      return NextResponse.json(
+        { error: "returnPreference must be 'member_pulled' or 'contextual_doorway'" },
+        { status: 400 },
+      );
+    }
+
+    const result = await query<MarkedEpisodeRow>(
+      `UPDATE episodic_memories
+          SET return_preference = $3,
+              return_authority = 'member_explicit'
+        WHERE episode_id = $1
+          AND user_id = $2
+          AND marked_by_member = TRUE
+        RETURNING id, episode_id, verbatim_text, marked_by_member,
+                  source_turn_id, source_session_id, return_preference, return_authority, created_at`,
+      [episodeId, memberId, returnPreference],
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ episode: shape(result.rows[0]) });
+  } catch (err) {
+    console.error('[episodes/mark] PATCH error:', err);
+    return NextResponse.json({ error: 'Failed to update moment return preference' }, { status: 500 });
+  }
+}
 /**
  * DELETE — unmark a member-marked moment. Sovereign placement includes
  * removal: the member who placed the mark is the only one who can lift it.

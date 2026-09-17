@@ -84,7 +84,7 @@ describe('Sanctuary refusal lives inside handleCaptureSpirit', () => {
 
 describe('the generic Keep bookmark remains Sanctuary-suppressed', () => {
   it('the persistent bookmark is still not offered in Sanctuary', () => {
-    const bookmark = SOURCE.indexOf('aria-label=\"Open Keep\"');
+    const bookmark = SOURCE.indexOf('aria-label=\"My Keeps\"');
     expect(bookmark).toBeGreaterThan(-1);
     // The bookmark now sits behind a composite render condition; Sanctuary
     // remains one conjunct rather than being the first token in the expression.
