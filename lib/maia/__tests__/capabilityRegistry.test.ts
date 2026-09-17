@@ -73,14 +73,28 @@ describe('MAIA-NODE-03 · registry', () => {
 
 // ───────────────────────────────────────────────────────────────────────────
 describe('MAIA-NODE-03 · drift guard', () => {
-  it('every executable capability names a destination the House registers', () => {
+  it('every executable NAVIGATE capability names a destination the House registers', () => {
     for (const cap of CAPABILITY_REGISTRY) {
-      if (!isExecutable(cap)) continue;
+      if (!isExecutable(cap) || cap.operationClass !== 'NAVIGATE') continue;
       expect(cap.destinationId).toBeTruthy();
       const d = getDestination(cap.destinationId!);
       // Fails loudly if a House destination is renamed or removed.
       expect({ capability: cap.id, destinationId: cap.destinationId, resolved: Boolean(d) })
         .toEqual({ capability: cap.id, destinationId: cap.destinationId, resolved: true });
+    }
+  });
+
+  it('every executable capability names SOMETHING that owns execution', () => {
+    // The guard generalizes rather than weakens: a NAVIGATE capability defers to
+    // a House destination, a READ capability defers to a domain authority, and
+    // an executable capability that defers to NEITHER would be MAIA claiming to
+    // own the operation herself — which is the one thing the nodal architecture
+    // forbids.
+    for (const cap of CAPABILITY_REGISTRY) {
+      if (!isExecutable(cap)) continue;
+      const owns = Boolean(cap.destinationId) || Boolean(cap.authority);
+      expect({ capability: cap.id, hasOwner: owns })
+        .toEqual({ capability: cap.id, hasOwner: true });
     }
   });
 
@@ -102,9 +116,30 @@ describe('MAIA-NODE-03 · drift guard', () => {
     expect(getDestination('journal')?.route).toBe('/journal');
   });
 
-  it('the capability layer carries no route literals of its own', () => {
+  it('no capability carries a member-facing NAVIGATION route of its own', () => {
+    // The law is that the House owns where places ARE. A capability may name the
+    // canonical API operation that owns execution (see the next test) — that is
+    // a different kind of path and naming it is the point. What it may never do
+    // is restate a route a member navigates to.
+    const houseRoutes = HOUSE_DESTINATIONS.map((d) => d.route).filter(Boolean) as string[];
     for (const cap of CAPABILITY_REGISTRY) {
-      expect(JSON.stringify(cap)).not.toMatch(/"\/[a-z]/);
+      const { authority, ...rest } = cap;
+      const serialized = JSON.stringify(rest);
+      expect(serialized).not.toMatch(/"\/[a-z]/);
+      for (const route of houseRoutes) {
+        expect(serialized).not.toContain(route);
+      }
+    }
+  });
+
+  it('an authority path is an API operation, never a member-facing route', () => {
+    const houseRoutes = new Set(
+      HOUSE_DESTINATIONS.map((d) => d.route).filter(Boolean) as string[],
+    );
+    for (const cap of CAPABILITY_REGISTRY) {
+      if (cap.authority?.kind !== 'route') continue;
+      expect(cap.authority.path.startsWith('/api/')).toBe(true);
+      expect(houseRoutes.has(cap.authority.path)).toBe(false);
     }
   });
 });
@@ -213,24 +248,43 @@ describe('MAIA-NODE-03 · safety', () => {
     expect(resolveNavigationTarget('show me my chart')).toBeNull();
   });
 
-  it('the whole slice is read-only — no module performs a write or a fetch', () => {
-    const src = [
-      require('fs').readFileSync(require('path').join(process.cwd(), 'lib/maia/capabilityResolution.ts'), 'utf8'),
-      require('fs').readFileSync(require('path').join(process.cwd(), 'lib/maia/capabilities.ts'), 'utf8'),
-    ].join('\n');
-    const code = src
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/^\s*\/\/[^\n]*$/gm, '');
-    for (const forbidden of ['fetch(', 'apiFetch', 'INSERT', 'UPDATE', 'DELETE', 'query('] ) {
-      expect(code).not.toContain(forbidden);
+  it('no slice module performs a write, a query or a fetch', () => {
+    // Scoped to CALLS, not to the words. `CapabilityAuthority` legitimately
+    // declares 'DELETE' as a method a future capability could name — declaring
+    // that a domain operation exists is not performing one, and a test that
+    // could not tell those apart would be the kind of scanner that fails a file
+    // for documenting itself.
+    const read = (rel: string) =>
+      require('fs')
+        .readFileSync(require('path').join(process.cwd(), rel), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/[^\n]*$/gm, '');
+    const modules = [
+      'lib/maia/capabilityResolution.ts',
+      'lib/maia/capabilities.ts',
+      'lib/maia/continuity/changesContinuity.ts',
+    ];
+    for (const rel of modules) {
+      const code = read(rel);
+      for (const call of ['fetch(', 'apiFetch(', 'query(', 'db.', 'INSERT INTO', 'UPDATE ', 'DELETE FROM']) {
+        expect({ module: rel, call, present: code.includes(call) })
+          .toEqual({ module: rel, call, present: false });
+      }
     }
   });
 
   it('resolution mutates no state — repeated calls are identical', () => {
+    const before = CAPABILITY_REGISTRY.length;
+    const beforeSnapshot = JSON.stringify(CAPABILITY_REGISTRY);
     const a = resolveNavigationTarget('open relationships');
+    resolveOrientation('what is living field for?');
+    resolveNavigationIntent('take me to my journal');
     const b = resolveNavigationTarget('open relationships');
     expect(a!.destination).toEqual(b!.destination);
-    expect(CAPABILITY_REGISTRY).toHaveLength(18);
+    // Measured before/after, not a constant that would have to be edited every
+    // time the registry grows — and not a comparison of a value with itself.
+    expect(CAPABILITY_REGISTRY.length).toBe(before);
+    expect(JSON.stringify(CAPABILITY_REGISTRY)).toBe(beforeSnapshot);
   });
 });
 

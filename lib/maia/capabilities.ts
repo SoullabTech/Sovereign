@@ -33,7 +33,9 @@ export type MaiaCapability =
   | 'relationships.open'
   | 'livingField.open'
   | 'keeps.open'
-  | 'writersStudio.open';
+  | 'writersStudio.open'
+  // ── MAIA-NODE-04 · READ slice ──────────────────────────────────────────
+  | 'changes.continuity';
 
 // --- Operation classes (MAIA-NODE-01 §XIII) ---
 
@@ -63,6 +65,17 @@ export type CapabilityAvailability =
   | { state: 'executable' }
   | { state: 'withheld'; reason: string }
   | { state: 'unknown'; reason: string };
+
+/**
+ * WHO owns execution — never MAIA. A capability names the canonical operation
+ * it defers to; it does not become the operation. Added in MAIA-NODE-04 because
+ * the Changes READ slice is the first capability with a domain authority to
+ * name, and the registry grows by evidence.
+ */
+export type CapabilityAuthority =
+  | { kind: 'route'; method: 'GET' | 'POST' | 'PATCH' | 'DELETE'; path: string }
+  | { kind: 'navigation' }
+  | { kind: 'unresolved'; note: string };
 
 // --- Capability Definition ---
 
@@ -96,6 +109,10 @@ export interface CapabilityDefinition {
   destinationId?: string;
   /** Absent means `unknown` — see CapabilityAvailability. */
   availability?: CapabilityAvailability;
+  /** The canonical operation that owns execution. ⛔ Never MAIA herself. */
+  authority?: CapabilityAuthority;
+  /** Which member context this may run in. Absent means unconstrained-by-record. */
+  allowedContexts?: readonly string[];
 }
 
 // --- Registry ---
@@ -274,6 +291,38 @@ export const CAPABILITY_REGISTRY: CapabilityDefinition[] = [
       "take me to writer's studio", 'take me to writers studio', "open writer's studio",
       'open writers studio', "go to writer's studio", 'go to writers studio',
       'take me back to my writing',
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // MAIA-NODE-04 · READ slice — truthful continuity over Changes
+  //
+  // The first capability that reads member material. It answers only what the
+  // member asks about Changes, from recorded lifecycle state, through the
+  // canonical member-owned read authority. ⛔ It decides nothing: a Change is
+  // open because the member left it open, not because MAIA judges it unfinished.
+  //
+  // ⛔ NOT a navigation capability. MAIA-NODE-04 §XIII: the House models Changes
+  // as a SHEET while a historical literal pushes '/studio/changes', and that
+  // disagreement is not reconciled here — so this slice adds no
+  // "take me to Changes" transition at all.
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: 'changes.continuity',
+    label: 'Open Changes',
+    purpose: 'The Changes you have named and not yet completed, with the state you left them in.',
+    operationClass: 'READ',
+    authority: { kind: 'route', method: 'GET', path: '/api/changes' },
+    allowedContexts: ['personal'],
+    availability: { state: 'executable' },
+    voicePhrases: [
+      'what changes do i still have open',
+      'what changes are still open',
+      'am i working with any changes',
+      'remind me which changes are not complete',
+      'what changes have i named',
+      'my open changes',
+      'do i have any open changes',
     ],
   },
 ];
