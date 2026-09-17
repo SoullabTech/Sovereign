@@ -88,8 +88,8 @@ entitled to that authority?**
 **DESCRIPTIVE** — the default. May inform, orient, rank, display, suggest or assist **without independently
 determining authoritative standing.**
 
-**SELECTIVE** — may **narrow a valid candidate set** because a governed act has explicitly authorized that
-form of selection.
+**SELECTIVE** — may **determine membership in a governed selection result** when that form of selection
+has been explicitly authorized.
 
 **AUTHORITATIVE** — may **establish or alter** identity, validity, admission, eligibility, rights, crossing,
 or equivalent governed state.
@@ -97,16 +97,52 @@ or equivalent governed state.
 > **Promotion from DESCRIPTIVE is never inferred from usefulness, accuracy, confidence, salience,
 > implementation convenience, or repeated use. It requires a governed grant.**
 
-⭐ **SELECTIVE is the class that makes the law usable rather than absolutist.** Most real systems need a
-representation to narrow a candidate set; the law does not forbid that. It requires the narrowing to be
-*authorized as narrowing* — and, critically, **a SELECTIVE representation may not decide that something does
-not exist.** Narrowing operates inside an already-established corpus; it never establishes one.
+⭐ **SELECTIVE is authority over a bounded choice — not a weaker form of existence authority.** That is what
+lets retrieval be genuinely useful without allowing retrieval machinery to rewrite corpus reality.
 
-⚠️ **Open vocabulary item, not resolved here.** `J8-R3 §VII` proposes a **four**-class taxonomy on this same
-axis (AUTHORITATIVE / DERIVED-GOVERNED / DESCRIPTIVE / EXPERIMENTAL). These three are ratified; those four are
-a candidate contract. `DERIVED-GOVERNED` and `SELECTIVE` are not obviously the same class, and `EXPERIMENTAL`
-has no counterpart here. **One canonical term, one canonical referent** — the reconciliation is owed before
-both vocabularies reach implementation. ⛔ Not reconciled by silent merge.
+> **A SELECTIVE representation may determine that an otherwise valid object is not selected for this governed
+> result. It may not thereby alter or imply the object's upstream identity, corpus authority, admission,
+> rights, or eligibility.**
+>
+> Shortest form: **Not selected here does not mean not legitimately here.**
+
+⚠️ **A prior draft read *"may narrow, but may not decide that something does not exist."* That had the right
+constitutional direction and was too broad** — selection necessarily produces exclusion from a particular
+result. The refinement above locates the boundary correctly: exclusion *from this result* is lawful; exclusion
+*from the corpus* is not. An embedding may legitimately fail to produce a candidate; a similarity score may
+legitimately place something outside a bounded result; a domain constraint may legitimately narrow a search.
+⛔ None of those facts may silently mean *this source is not part of the authorized corpus.*
+
+**Selection begins after authority.**
+
+### The J8-R3 four-class taxonomy is NOT a second authority taxonomy
+
+⭐ **RULED 2026-09-17: the apparent collision is real, and the deeper defect is that the four candidate classes
+mix different dimensions.** They do not constitute one coherent axis:
+
+- `AUTHORITATIVE` and `DESCRIPTIVE` concern **decision authority**.
+- `DERIVED-GOVERNED` combines at least three properties — **derivation** (machine-derived), **governance**
+  (versioned/attested), and **authority** (explicitly permitted).
+- `EXPERIMENTAL` concerns **execution/deployment state**.
+
+⛔ **They must not be mapped one-for-one onto DESCRIPTIVE / SELECTIVE / AUTHORITATIVE. No silent aliasing is
+permitted.** This law owns the **authority-effect axis** and answers exactly one question: *what is this
+representation permitted to do?* The J8-R3 taxonomy remains **candidate material requiring decomposition**
+before implementation.
+
+⛔ **No canonical counterpart for `DERIVED-GOVERNED` or `EXPERIMENTAL` is minted here.** The distinctions are
+preserved instead as **four separate questions** for the next contract work:
+
+| Question | Asks |
+|---|---|
+| **Authority effect** | What may it do? |
+| **Derivation / provenance** | Where did it come from, and how was it produced? |
+| **Governance / attestation** | What governed its production, and what detects invalidation? |
+| **Execution state** | May it affect canonical behavior, or is it evaluated without canonical effect? |
+
+`DERIVED-GOVERNED` is then expressible **by properties** rather than masquerading as an authority class, and
+`EXPERIMENTAL` remains an execution-state concept **without becoming a fourth degree of authority**. Exact
+canonical names are chosen only after repository census.
 
 ## 5. Existing doctrines remain independently authoritative
 
