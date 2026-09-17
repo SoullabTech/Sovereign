@@ -14,6 +14,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { setPractitionerContext } from '@/lib/auth/practitionerAuth';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface MemberSession {
   id: string;
@@ -61,7 +62,7 @@ export default function PractitionerSignupPage() {
         }));
 
         // Check if already a practitioner
-        const checkRes = await fetch('/api/practitioners/check', {
+        const checkRes = await apiFetch('/api/practitioners/check', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ memberId: user.id }),
@@ -170,7 +171,7 @@ export default function PractitionerSignupPage() {
     setError(null);
 
     try {
-      const res = await fetch('/api/practitioners/create', {
+      const res = await apiFetch('/api/practitioners/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

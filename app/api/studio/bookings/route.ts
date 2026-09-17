@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 // Valid session statuses (allowlist prevents silent empty results)
 const VALID_STATUSES = ['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'] as const;
@@ -130,6 +131,16 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return unauthenticatedResponse();
+    }
+
+    const practitionerId = await getPractitionerIdForMember(memberId);
+    if (!practitionerId) {
+      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
+    }
+
     const body = await request.json();
     const { id, status, practitionerNotes, scribeSessionId } = body;
 
@@ -158,6 +169,20 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (scribeSessionId) {
+      const scribeSession = await db.query(
+        `SELECT id
+           FROM scribe_sessions
+          WHERE id = $1
+            AND member_id = $2
+            AND container = 'practitioner'
+          LIMIT 1`,
+        [scribeSessionId, memberId]
+      );
+
+      if (scribeSession.rows.length === 0) {
+        return NextResponse.json({ error: 'Session Room record not found' }, { status: 404 });
+      }
+
       updates.push(`scribe_session_id = $${params.length + 1}`);
       params.push(scribeSessionId);
     }
@@ -168,10 +193,19 @@ export async function PATCH(request: NextRequest) {
 
     updates.push(`updated_at = NOW()`);
 
-    await db.query(
-      `UPDATE sessions SET ${updates.join(', ')} WHERE id = $1`,
+    params.push(practitionerId);
+    const result = await db.query(
+      `UPDATE sessions
+          SET ${updates.join(', ')}
+        WHERE id = $1
+          AND practitioner_id = $${params.length}
+        RETURNING id`,
       params
     );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

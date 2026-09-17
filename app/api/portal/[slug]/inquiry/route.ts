@@ -16,6 +16,40 @@ import crypto from 'crypto';
 import { getPractitionerFeaturesBySlug } from '@/lib/practitioner/features';
 import { sendInquiryNotification } from '@/lib/portal/notifications';
 import { logAction } from '@/lib/focus/weightTracking';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
+
+type InquiryAdminAuthorization =
+  | { practitionerId: string }
+  | { response: NextResponse };
+
+async function authorizeInquiryAdmin(
+  request: NextRequest,
+  slug: string
+): Promise<InquiryAdminAuthorization> {
+  const memberId = await getMemberIdFromRequest(request);
+  if (!memberId) {
+    return { response: unauthenticatedResponse() };
+  }
+
+  const practitionerResult = await db.query(
+    `SELECT id
+       FROM practitioners
+      WHERE slug = $1
+        AND member_id = $2
+        AND status = 'active'
+      LIMIT 1`,
+    [slug, memberId]
+  );
+
+  if (practitionerResult.rows.length === 0) {
+    return {
+      response: NextResponse.json({ error: 'Portal not found' }, { status: 404 }),
+    };
+  }
+
+  return { practitionerId: practitionerResult.rows[0].id };
+}
 
 export async function POST(
   request: NextRequest,
@@ -156,24 +190,17 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    const authorization = await authorizeInquiryAdmin(request, slug);
+    if ('response' in authorization) {
+      return authorization.response;
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status'); // new, replied, archived
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // TODO: Add authentication - only practitioner should access
-    // For now, we'll just check the portal exists
-
-    const practitionerResult = await db.query(
-      `SELECT id FROM practitioners WHERE slug = $1 AND status = 'active'`,
-      [slug]
-    );
-
-    if (practitionerResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Portal not found' }, { status: 404 });
-    }
-
-    const practitionerId = practitionerResult.rows[0].id;
+    const { practitionerId } = authorization;
 
     // Build query
     let query = `
@@ -237,6 +264,11 @@ export async function PATCH(
 ) {
   try {
     const { slug } = await params;
+    const authorization = await authorizeInquiryAdmin(request, slug);
+    if ('response' in authorization) {
+      return authorization.response;
+    }
+
     const body = await request.json();
     const { inquiry_id, status } = body;
 
@@ -254,14 +286,12 @@ export async function PATCH(
       );
     }
 
-    // TODO: Add authentication
-
     const result = await db.query(
       `UPDATE portal_inquiries
        SET status = $1
-       WHERE id = $2 AND portal_slug = $3
+       WHERE id = $2 AND practitioner_id = $3
        RETURNING id, status`,
-      [status, inquiry_id, slug]
+      [status, inquiry_id, authorization.practitionerId]
     );
 
     if (result.rows.length === 0) {
