@@ -1,0 +1,317 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H3F_OPERATOR_DIRECTIONALITY_V1",
+  "authority": "offline research only",
+  "productionEquivalent": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "temperature": 0.65
+  },
+  "summary": {
+    "runs": 12,
+    "correct": 8,
+    "byFixture": {
+      "D1_INHIBIT": {
+        "correct": 2,
+        "runs": 2,
+        "predictions": [
+          {
+            "predicate": "INHIBITS",
+            "sourceId": "EARTH_EXHAUST",
+            "targetId": "FIRE_LAUNCH"
+          },
+          {
+            "predicate": "INHIBITS",
+            "sourceId": "EARTH_EXHAUST",
+            "targetId": "FIRE_LAUNCH"
+          }
+        ]
+      },
+      "D2_TENSION": {
+        "correct": 2,
+        "runs": 2,
+        "predictions": [
+          {
+            "predicate": "TENSION",
+            "sourceId": "WATER_LOVE",
+            "targetId": "FIRE_LEAVE"
+          },
+          {
+            "predicate": "TENSION",
+            "sourceId": "WATER_LOVE",
+            "targetId": "FIRE_LEAVE"
+          }
+        ]
+      },
+      "D3_EVOKES": {
+        "correct": 2,
+        "runs": 2,
+        "predictions": [
+          {
+            "predicate": "EVOKES",
+            "sourceId": "AIR_NEWPATH",
+            "targetId": "WATER_HOPE"
+          },
+          {
+            "predicate": "EVOKES",
+            "sourceId": "AIR_NEWPATH",
+            "targetId": "WATER_HOPE"
+          }
+        ]
+      },
+      "D4_ALIGNMENT": {
+        "correct": 0,
+        "runs": 2,
+        "predictions": [
+          {
+            "predicate": "EVOKES",
+            "sourceId": "AIR_LEAVE",
+            "targetId": "EARTH_SETTLE"
+          },
+          {
+            "predicate": "EVOKES",
+            "sourceId": "AIR_LEAVE",
+            "targetId": "EARTH_SETTLE"
+          }
+        ]
+      },
+      "D5_NONE": {
+        "correct": 0,
+        "runs": 2,
+        "predictions": [
+          {
+            "predicate": "ALIGNMENT",
+            "sourceId": "AIR_UNCERTAIN",
+            "targetId": "WATER_AFRAID"
+          },
+          {
+            "predicate": "ALIGNMENT",
+            "sourceId": "AIR_UNCERTAIN",
+            "targetId": "WATER_AFRAID"
+          }
+        ]
+      },
+      "D6_EVOKES_BODY": {
+        "correct": 2,
+        "runs": 2,
+        "predictions": [
+          {
+            "predicate": "EVOKES",
+            "sourceId": "AIR_RISK",
+            "targetId": "EARTH_TIGHTEN"
+          },
+          {
+            "predicate": "EVOKES",
+            "sourceId": "AIR_RISK",
+            "targetId": "EARTH_TIGHTEN"
+          }
+        ]
+      }
+    }
+  },
+  "rows": [
+    {
+      "fixture": "D1_INHIBIT",
+      "run": 1,
+      "rawHash": "23f5fc8b2498497f1cdd05bed637c4122be4dac2ee4305e0a2af995cdf42cd66",
+      "model": "claude-sonnet-4-6",
+      "predicate": "INHIBITS",
+      "sourceId": "EARTH_EXHAUST",
+      "targetId": "FIRE_LAUNCH",
+      "expected": {
+        "predicate": "INHIBITS",
+        "sourceId": "EARTH_EXHAUST",
+        "targetId": "FIRE_LAUNCH",
+        "symmetric": false
+      },
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "D1_INHIBIT",
+      "run": 2,
+      "rawHash": "23f5fc8b2498497f1cdd05bed637c4122be4dac2ee4305e0a2af995cdf42cd66",
+      "model": "claude-sonnet-4-6",
+      "predicate": "INHIBITS",
+      "sourceId": "EARTH_EXHAUST",
+      "targetId": "FIRE_LAUNCH",
+      "expected": {
+        "predicate": "INHIBITS",
+        "sourceId": "EARTH_EXHAUST",
+        "targetId": "FIRE_LAUNCH",
+        "symmetric": false
+      },
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "D2_TENSION",
+      "run": 1,
+      "rawHash": "12ef27fc7e1bd0600eb82b7d01209f2f17a0a1d4b5e63bdeb2df07c28d44f84e",
+      "model": "claude-sonnet-4-6",
+      "predicate": "TENSION",
+      "sourceId": "WATER_LOVE",
+      "targetId": "FIRE_LEAVE",
+      "expected": {
+        "predicate": "TENSION",
+        "sourceId": "WATER_LOVE",
+        "targetId": "FIRE_LEAVE",
+        "symmetric": true
+      },
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "D2_TENSION",
+      "run": 2,
+      "rawHash": "12ef27fc7e1bd0600eb82b7d01209f2f17a0a1d4b5e63bdeb2df07c28d44f84e",
+      "model": "claude-sonnet-4-6",
+      "predicate": "TENSION",
+      "sourceId": "WATER_LOVE",
+      "targetId": "FIRE_LEAVE",
+      "expected": {
+        "predicate": "TENSION",
+        "sourceId": "WATER_LOVE",
+        "targetId": "FIRE_LEAVE",
+        "symmetric": true
+      },
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "D3_EVOKES",
+      "run": 1,
+      "rawHash": "889e81283de65d519cd1a0cba8e361654257f0a7c12ac9f0d5bc24f2128f154e",
+      "model": "claude-sonnet-4-6",
+      "predicate": "EVOKES",
+      "sourceId": "AIR_NEWPATH",
+      "targetId": "WATER_HOPE",
+      "expected": {
+        "predicate": "EVOKES",
+        "sourceId": "AIR_NEWPATH",
+        "targetId": "WATER_HOPE",
+        "symmetric": false
+      },
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "D3_EVOKES",
+      "run": 2,
+      "rawHash": "889e81283de65d519cd1a0cba8e361654257f0a7c12ac9f0d5bc24f2128f154e",
+      "model": "claude-sonnet-4-6",
+      "predicate": "EVOKES",
+      "sourceId": "AIR_NEWPATH",
+      "targetId": "WATER_HOPE",
+      "expected": {
+        "predicate": "EVOKES",
+        "sourceId": "AIR_NEWPATH",
+        "targetId": "WATER_HOPE",
+        "symmetric": false
+      },
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "D4_ALIGNMENT",
+      "run": 1,
+      "rawHash": "6136ba3cfaeee130f409c7f04a7aa60f50a286139a06140fb61b7f0256514ef8",
+      "model": "claude-sonnet-4-6",
+      "predicate": "EVOKES",
+      "sourceId": "AIR_LEAVE",
+      "targetId": "EARTH_SETTLE",
+      "expected": {
+        "predicate": "ALIGNMENT",
+        "sourceId": "AIR_LEAVE",
+        "targetId": "EARTH_SETTLE",
+        "symmetric": true
+      },
+      "parseError": null,
+      "correct": false
+    },
+    {
+      "fixture": "D4_ALIGNMENT",
+      "run": 2,
+      "rawHash": "6136ba3cfaeee130f409c7f04a7aa60f50a286139a06140fb61b7f0256514ef8",
+      "model": "claude-sonnet-4-6",
+      "predicate": "EVOKES",
+      "sourceId": "AIR_LEAVE",
+      "targetId": "EARTH_SETTLE",
+      "expected": {
+        "predicate": "ALIGNMENT",
+        "sourceId": "AIR_LEAVE",
+        "targetId": "EARTH_SETTLE",
+        "symmetric": true
+      },
+      "parseError": null,
+      "correct": false
+    },
+    {
+      "fixture": "D5_NONE",
+      "run": 1,
+      "rawHash": "749c4540f5fe96f67695bdb5e1bd55e85a541333a95ef12c22657c4147a4054c",
+      "model": "claude-sonnet-4-6",
+      "predicate": "ALIGNMENT",
+      "sourceId": "AIR_UNCERTAIN",
+      "targetId": "WATER_AFRAID",
+      "expected": {
+        "predicate": "NO_RELATION",
+        "sourceId": null,
+        "targetId": null,
+        "symmetric": false
+      },
+      "parseError": null,
+      "correct": false
+    },
+    {
+      "fixture": "D5_NONE",
+      "run": 2,
+      "rawHash": "749c4540f5fe96f67695bdb5e1bd55e85a541333a95ef12c22657c4147a4054c",
+      "model": "claude-sonnet-4-6",
+      "predicate": "ALIGNMENT",
+      "sourceId": "AIR_UNCERTAIN",
+      "targetId": "WATER_AFRAID",
+      "expected": {
+        "predicate": "NO_RELATION",
+        "sourceId": null,
+        "targetId": null,
+        "symmetric": false
+      },
+      "parseError": null,
+      "correct": false
+    },
+    {
+      "fixture": "D6_EVOKES_BODY",
+      "run": 1,
+      "rawHash": "bc58836835e4266e87fe4d0876b4f72b378c40fe5a4c54516571a74db2a20eb3",
+      "model": "claude-sonnet-4-6",
+      "predicate": "EVOKES",
+      "sourceId": "AIR_RISK",
+      "targetId": "EARTH_TIGHTEN",
+      "expected": {
+        "predicate": "EVOKES",
+        "sourceId": "AIR_RISK",
+        "targetId": "EARTH_TIGHTEN",
+        "symmetric": false
+      },
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "D6_EVOKES_BODY",
+      "run": 2,
+      "rawHash": "bc58836835e4266e87fe4d0876b4f72b378c40fe5a4c54516571a74db2a20eb3",
+      "model": "claude-sonnet-4-6",
+      "predicate": "EVOKES",
+      "sourceId": "AIR_RISK",
+      "targetId": "EARTH_TIGHTEN",
+      "expected": {
+        "predicate": "EVOKES",
+        "sourceId": "AIR_RISK",
+        "targetId": "EARTH_TIGHTEN",
+        "symmetric": false
+      },
+      "parseError": null,
+      "correct": true
+    }
+  ]
+}

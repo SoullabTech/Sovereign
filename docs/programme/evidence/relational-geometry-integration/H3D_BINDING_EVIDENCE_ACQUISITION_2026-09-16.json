@@ -1,0 +1,185 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H3D_BINDING_EVIDENCE_ACQUISITION_V1",
+  "authority": "offline research only",
+  "productionEquivalent": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "temperature": 0.65
+  },
+  "summary": {
+    "runs": 12,
+    "correct": 10,
+    "byClass": {
+      "M1_ALIGNMENT": {
+        "correct": 2,
+        "runs": 2,
+        "predictions": [
+          "EXPLICIT_WHEN_THEN",
+          "EXPLICIT_WHEN_THEN"
+        ]
+      },
+      "M2_TENSION": {
+        "correct": 2,
+        "runs": 2,
+        "predictions": [
+          "EXPLICIT_CONTRAST",
+          "EXPLICIT_CONTRAST"
+        ]
+      },
+      "M3_INHIBITS": {
+        "correct": 2,
+        "runs": 2,
+        "predictions": [
+          "EXPLICIT_INHIBITION",
+          "EXPLICIT_INHIBITION"
+        ]
+      },
+      "M4_UNBOUND": {
+        "correct": 2,
+        "runs": 2,
+        "predictions": [
+          "NONE",
+          "NONE"
+        ]
+      },
+      "M5_COOCCUR": {
+        "correct": 2,
+        "runs": 2,
+        "predictions": [
+          "NONE",
+          "NONE"
+        ]
+      },
+      "M6_EXPLICIT_LINK": {
+        "correct": 0,
+        "runs": 2,
+        "predictions": [
+          "EXPLICIT_WHEN_THEN",
+          "EXPLICIT_WHEN_THEN"
+        ]
+      }
+    }
+  },
+  "rows": [
+    {
+      "fixture": "M1_ALIGNMENT",
+      "run": 1,
+      "rawHash": "12d0701f72de9a2724f01b9ef2662e293614303e4435d031991dc8c5213d6092",
+      "model": "claude-sonnet-4-6",
+      "basis": "EXPLICIT_WHEN_THEN",
+      "expected": "EXPLICIT_WHEN_THEN",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M1_ALIGNMENT",
+      "run": 2,
+      "rawHash": "12d0701f72de9a2724f01b9ef2662e293614303e4435d031991dc8c5213d6092",
+      "model": "claude-sonnet-4-6",
+      "basis": "EXPLICIT_WHEN_THEN",
+      "expected": "EXPLICIT_WHEN_THEN",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M2_TENSION",
+      "run": 1,
+      "rawHash": "975bf5c723355645d2d8c1c6d09c115fe357eb3e5c79d2e68194e78a70f6981b",
+      "model": "claude-sonnet-4-6",
+      "basis": "EXPLICIT_CONTRAST",
+      "expected": "EXPLICIT_CONTRAST",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M2_TENSION",
+      "run": 2,
+      "rawHash": "975bf5c723355645d2d8c1c6d09c115fe357eb3e5c79d2e68194e78a70f6981b",
+      "model": "claude-sonnet-4-6",
+      "basis": "EXPLICIT_CONTRAST",
+      "expected": "EXPLICIT_CONTRAST",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M3_INHIBITS",
+      "run": 1,
+      "rawHash": "35563c142a837bfc4326078b367665fe1b1fd57001d30701248aeb14eb17740a",
+      "model": "claude-sonnet-4-6",
+      "basis": "EXPLICIT_INHIBITION",
+      "expected": "EXPLICIT_INHIBITION",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M3_INHIBITS",
+      "run": 2,
+      "rawHash": "35563c142a837bfc4326078b367665fe1b1fd57001d30701248aeb14eb17740a",
+      "model": "claude-sonnet-4-6",
+      "basis": "EXPLICIT_INHIBITION",
+      "expected": "EXPLICIT_INHIBITION",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M4_UNBOUND",
+      "run": 1,
+      "rawHash": "ed00912972ba9c6ee076512ad3c1a3b7722a0c0c5eac55834f875af3879ebbbc",
+      "model": "claude-sonnet-4-6",
+      "basis": "NONE",
+      "expected": "NONE",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M4_UNBOUND",
+      "run": 2,
+      "rawHash": "ed00912972ba9c6ee076512ad3c1a3b7722a0c0c5eac55834f875af3879ebbbc",
+      "model": "claude-sonnet-4-6",
+      "basis": "NONE",
+      "expected": "NONE",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M5_COOCCUR",
+      "run": 1,
+      "rawHash": "ed00912972ba9c6ee076512ad3c1a3b7722a0c0c5eac55834f875af3879ebbbc",
+      "model": "claude-sonnet-4-6",
+      "basis": "NONE",
+      "expected": "NONE",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M5_COOCCUR",
+      "run": 2,
+      "rawHash": "ed00912972ba9c6ee076512ad3c1a3b7722a0c0c5eac55834f875af3879ebbbc",
+      "model": "claude-sonnet-4-6",
+      "basis": "NONE",
+      "expected": "NONE",
+      "parseError": null,
+      "correct": true
+    },
+    {
+      "fixture": "M6_EXPLICIT_LINK",
+      "run": 1,
+      "rawHash": "12d0701f72de9a2724f01b9ef2662e293614303e4435d031991dc8c5213d6092",
+      "model": "claude-sonnet-4-6",
+      "basis": "EXPLICIT_WHEN_THEN",
+      "expected": "EXPLICIT_LINK",
+      "parseError": null,
+      "correct": false
+    },
+    {
+      "fixture": "M6_EXPLICIT_LINK",
+      "run": 2,
+      "rawHash": "12d0701f72de9a2724f01b9ef2662e293614303e4435d031991dc8c5213d6092",
+      "model": "claude-sonnet-4-6",
+      "basis": "EXPLICIT_WHEN_THEN",
+      "expected": "EXPLICIT_LINK",
+      "parseError": null,
+      "correct": false
+    }
+  ]
+}

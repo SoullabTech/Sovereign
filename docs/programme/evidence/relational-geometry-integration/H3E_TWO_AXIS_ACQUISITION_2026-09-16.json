@@ -1,0 +1,272 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H3E_TWO_AXIS_ACQUISITION_V1",
+  "authority": "offline research only",
+  "productionEquivalent": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "temperature": 0.65
+  },
+  "summary": {
+    "runs": 12,
+    "formCorrect": 10,
+    "predicateCorrect": 10,
+    "bothCorrect": 10,
+    "falseRelation": 0,
+    "byFixture": {
+      "M1_ALIGNMENT": {
+        "bothCorrect": 2,
+        "runs": 2,
+        "predictions": [
+          {
+            "form": "CONDITIONAL_LINK",
+            "predicate": "ALIGNMENT"
+          },
+          {
+            "form": "CONDITIONAL_LINK",
+            "predicate": "ALIGNMENT"
+          }
+        ]
+      },
+      "M2_TENSION": {
+        "bothCorrect": 2,
+        "runs": 2,
+        "predictions": [
+          {
+            "form": "CONTRASTIVE_LINK",
+            "predicate": "TENSION"
+          },
+          {
+            "form": "CONTRASTIVE_LINK",
+            "predicate": "TENSION"
+          }
+        ]
+      },
+      "M3_INHIBITS": {
+        "bothCorrect": 0,
+        "runs": 2,
+        "predictions": [
+          {
+            "form": "CONTRASTIVE_LINK",
+            "predicate": "TENSION"
+          },
+          {
+            "form": "CONTRASTIVE_LINK",
+            "predicate": "TENSION"
+          }
+        ]
+      },
+      "M4_UNBOUND": {
+        "bothCorrect": 2,
+        "runs": 2,
+        "predictions": [
+          {
+            "form": "NONE",
+            "predicate": "NO_RELATION"
+          },
+          {
+            "form": "NONE",
+            "predicate": "NO_RELATION"
+          }
+        ]
+      },
+      "M5_COOCCUR": {
+        "bothCorrect": 2,
+        "runs": 2,
+        "predictions": [
+          {
+            "form": "NONE",
+            "predicate": "NO_RELATION"
+          },
+          {
+            "form": "NONE",
+            "predicate": "NO_RELATION"
+          }
+        ]
+      },
+      "M6_EVOCATION": {
+        "bothCorrect": 2,
+        "runs": 2,
+        "predictions": [
+          {
+            "form": "CONDITIONAL_LINK",
+            "predicate": "EVOKES"
+          },
+          {
+            "form": "CONDITIONAL_LINK",
+            "predicate": "EVOKES"
+          }
+        ]
+      }
+    }
+  },
+  "rows": [
+    {
+      "fixture": "M1_ALIGNMENT",
+      "run": 1,
+      "rawHash": "76ef6d109157f089ee3b9a235eac8de52ce15037e6693e80224c5df2eda85cbe",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "CONDITIONAL_LINK",
+      "predicate": "ALIGNMENT",
+      "expectedForm": "CONDITIONAL_LINK",
+      "expectedPredicate": "ALIGNMENT",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    },
+    {
+      "fixture": "M1_ALIGNMENT",
+      "run": 2,
+      "rawHash": "76ef6d109157f089ee3b9a235eac8de52ce15037e6693e80224c5df2eda85cbe",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "CONDITIONAL_LINK",
+      "predicate": "ALIGNMENT",
+      "expectedForm": "CONDITIONAL_LINK",
+      "expectedPredicate": "ALIGNMENT",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    },
+    {
+      "fixture": "M2_TENSION",
+      "run": 1,
+      "rawHash": "75ca91acf379361ef5bb01ba557f0fe13da02be98225cc99c20e3c9ce02b0c42",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "CONTRASTIVE_LINK",
+      "predicate": "TENSION",
+      "expectedForm": "CONTRASTIVE_LINK",
+      "expectedPredicate": "TENSION",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    },
+    {
+      "fixture": "M2_TENSION",
+      "run": 2,
+      "rawHash": "75ca91acf379361ef5bb01ba557f0fe13da02be98225cc99c20e3c9ce02b0c42",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "CONTRASTIVE_LINK",
+      "predicate": "TENSION",
+      "expectedForm": "CONTRASTIVE_LINK",
+      "expectedPredicate": "TENSION",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    },
+    {
+      "fixture": "M3_INHIBITS",
+      "run": 1,
+      "rawHash": "75ca91acf379361ef5bb01ba557f0fe13da02be98225cc99c20e3c9ce02b0c42",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "CONTRASTIVE_LINK",
+      "predicate": "TENSION",
+      "expectedForm": "INHIBITORY_LINK",
+      "expectedPredicate": "INHIBITS",
+      "parseError": null,
+      "formCorrect": false,
+      "predicateCorrect": false,
+      "bothCorrect": false
+    },
+    {
+      "fixture": "M3_INHIBITS",
+      "run": 2,
+      "rawHash": "75ca91acf379361ef5bb01ba557f0fe13da02be98225cc99c20e3c9ce02b0c42",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "CONTRASTIVE_LINK",
+      "predicate": "TENSION",
+      "expectedForm": "INHIBITORY_LINK",
+      "expectedPredicate": "INHIBITS",
+      "parseError": null,
+      "formCorrect": false,
+      "predicateCorrect": false,
+      "bothCorrect": false
+    },
+    {
+      "fixture": "M4_UNBOUND",
+      "run": 1,
+      "rawHash": "75ea6ba1a21ee66dbb15e5ae39a4b034ed350b8393fb8182762c151032c62012",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "NONE",
+      "predicate": "NO_RELATION",
+      "expectedForm": "NONE",
+      "expectedPredicate": "NO_RELATION",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    },
+    {
+      "fixture": "M4_UNBOUND",
+      "run": 2,
+      "rawHash": "75ea6ba1a21ee66dbb15e5ae39a4b034ed350b8393fb8182762c151032c62012",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "NONE",
+      "predicate": "NO_RELATION",
+      "expectedForm": "NONE",
+      "expectedPredicate": "NO_RELATION",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    },
+    {
+      "fixture": "M5_COOCCUR",
+      "run": 1,
+      "rawHash": "75ea6ba1a21ee66dbb15e5ae39a4b034ed350b8393fb8182762c151032c62012",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "NONE",
+      "predicate": "NO_RELATION",
+      "expectedForm": "NONE",
+      "expectedPredicate": "NO_RELATION",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    },
+    {
+      "fixture": "M5_COOCCUR",
+      "run": 2,
+      "rawHash": "75ea6ba1a21ee66dbb15e5ae39a4b034ed350b8393fb8182762c151032c62012",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "NONE",
+      "predicate": "NO_RELATION",
+      "expectedForm": "NONE",
+      "expectedPredicate": "NO_RELATION",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    },
+    {
+      "fixture": "M6_EVOCATION",
+      "run": 1,
+      "rawHash": "59ebd72bf196b05bc81063a654aa113a01108196aa4b7ce7e49cc329831370ad",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "CONDITIONAL_LINK",
+      "predicate": "EVOKES",
+      "expectedForm": "CONDITIONAL_LINK",
+      "expectedPredicate": "EVOKES",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    },
+    {
+      "fixture": "M6_EVOCATION",
+      "run": 2,
+      "rawHash": "59ebd72bf196b05bc81063a654aa113a01108196aa4b7ce7e49cc329831370ad",
+      "model": "claude-sonnet-4-6",
+      "bindingForm": "CONDITIONAL_LINK",
+      "predicate": "EVOKES",
+      "expectedForm": "CONDITIONAL_LINK",
+      "expectedPredicate": "EVOKES",
+      "parseError": null,
+      "formCorrect": true,
+      "predicateCorrect": true,
+      "bothCorrect": true
+    }
+  ]
+}

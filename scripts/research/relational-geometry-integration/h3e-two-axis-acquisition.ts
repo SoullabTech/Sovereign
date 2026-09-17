@@ -1,0 +1,24 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+type Form='CONDITIONAL_LINK'|'CONTRASTIVE_LINK'|'INHIBITORY_LINK'|'EXPLICIT_LINK'|'NONE';
+type Pred='ALIGNMENT'|'TENSION'|'INHIBITS'|'EVOKES'|'NO_RELATION';
+type F={id:string;raw:string;form:Form;pred:Pred};
+const fixtures:F[]=[
+{id:'M1_ALIGNMENT',raw:'Leaving makes sense to me, and when I imagine actually leaving my body settles.',form:'CONDITIONAL_LINK',pred:'ALIGNMENT'},
+{id:'M2_TENSION',raw:'I still love him, and at the same time I want to leave.',form:'CONTRASTIVE_LINK',pred:'TENSION'},
+{id:'M3_INHIBITS',raw:'I want to launch this week, but I am so physically exhausted that I cannot sustain the push.',form:'INHIBITORY_LINK',pred:'INHIBITS'},
+{id:'M4_UNBOUND',raw:'I am uncertain about the plan. I also feel afraid today.',form:'NONE',pred:'NO_RELATION'},
+{id:'M5_COOCCUR',raw:'The financial risk is real. I have also been tired all week.',form:'NONE',pred:'NO_RELATION'},
+{id:'M6_EVOCATION',raw:'When I think about the new path, I feel hope rise immediately.',form:'CONDITIONAL_LINK',pred:'EVOKES'},
+];
+const MODEL='claude-sonnet-4-6',TEMP=0.65,MAX=400,REPEATS=2; const sha=(s:string)=>crypto.createHash('sha256').update(s).digest('hex');
+const remoteCode=String.raw`const mod=require('/app/node_modules/@anthropic-ai/sdk'); const Anthropic=mod.default||mod; let b=''; process.stdin.setEncoding('utf8'); process.stdin.on('data',c=>b+=c); process.stdin.on('end',async()=>{const r=JSON.parse(b); const client=new Anthropic({apiKey:process.env.ANTHROPIC_API_KEY}); const m=await client.messages.create({model:r.model,max_tokens:r.maxTokens,temperature:r.temperature,system:r.system,messages:[{role:'user',content:r.user}]}); const text=m.content.filter(x=>x.type==='text').map(x=>x.text).join(''); process.stdout.write(JSON.stringify({text,model:m.model}));});`;
+const REMOTE='/tmp/relational-geometry-h3e.js'; function ssh(command:string,input?:string){const p=spawnSync('ssh',['soullab@minisforum',command],{input,encoding:'utf8',timeout:90000,maxBuffer:8*1024*1024});if(p.status!==0)throw new Error(`ssh:${p.status}:${(p.stderr||'').slice(0,200)}`);return p.stdout;} function install(){ssh(`docker exec -i maia-sovereign sh -c 'cat > ${REMOTE}'`,remoteCode);} function remove(){try{ssh(`docker exec maia-sovereign rm -f ${REMOTE}`);}catch{}}
+const system=`Offline relational-geometry research. Return JSON only: {"bindingForm":"CONDITIONAL_LINK"|"CONTRASTIVE_LINK"|"INHIBITORY_LINK"|"EXPLICIT_LINK"|"NONE","predicate":"ALIGNMENT"|"TENSION"|"INHIBITS"|"EVOKES"|"NO_RELATION"}. Binding form says HOW two states are linked in the language. Predicate says WHAT the relation means. A conditional form does not determine the predicate. Mere co-occurrence is NONE/NO_RELATION. Do not infer hidden links.`;
+function call(f:F){const req=JSON.stringify({model:MODEL,maxTokens:MAX,temperature:TEMP,system,user:`MEMBER LANGUAGE:\n${f.raw}`});return JSON.parse(ssh(`docker exec -i maia-sovereign node ${REMOTE}`,req).trim()) as {text:string;model:string};}
+function parse(s:string){return JSON.parse(s.trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'')) as {bindingForm:Form;predicate:Pred};}
+async function main(){install();const rows:any[]=[];try{for(const f of fixtures)for(let run=1;run<=REPEATS;run++){const r=call(f);let x={bindingForm:'NONE' as Form,predicate:'NO_RELATION' as Pred};let parseError:string|null=null;try{x=parse(r.text);}catch(e){parseError=e instanceof Error?e.message:String(e);} rows.push({fixture:f.id,run,rawHash:sha(r.text),model:r.model,...x,expectedForm:f.form,expectedPredicate:f.pred,parseError,formCorrect:x.bindingForm===f.form,predicateCorrect:x.predicate===f.pred,bothCorrect:x.bindingForm===f.form&&x.predicate===f.pred});}}finally{remove();}
+const summary={runs:rows.length,formCorrect:rows.filter(r=>r.formCorrect).length,predicateCorrect:rows.filter(r=>r.predicateCorrect).length,bothCorrect:rows.filter(r=>r.bothCorrect).length,falseRelation:rows.filter(r=>r.expectedPredicate==='NO_RELATION'&&r.predicate!=='NO_RELATION').length,byFixture:Object.fromEntries(fixtures.map(f=>{const rs=rows.filter(r=>r.fixture===f.id);return[f.id,{bothCorrect:rs.filter(r=>r.bothCorrect).length,runs:rs.length,predictions:rs.map(r=>({form:r.bindingForm,predicate:r.predicate}))}]}))}; const out={schema:'RELATIONAL_GEOMETRY_H3E_TWO_AXIS_ACQUISITION_V1',authority:'offline research only',productionEquivalent:{provider:'anthropic',model:MODEL,temperature:TEMP},summary,rows}; fs.writeFileSync(path.join(process.cwd(),'docs/programme/evidence/relational-geometry-integration/H3E_TWO_AXIS_ACQUISITION_2026-09-16.json'),JSON.stringify(out,null,2)+'\n'); console.log(JSON.stringify(summary,null,2));}
+main().catch(e=>{remove();console.error(e);process.exit(1)});
