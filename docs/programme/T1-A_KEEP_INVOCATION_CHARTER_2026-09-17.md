@@ -55,6 +55,14 @@ objects** wearing the name, including a Work-scoped manuscript Keep and a versio
 neither of those three branches covers. ⛔ The tree is not wrong — it is **incomplete**, and completing it is
 J4 work, not an implementation detail.
 
+> ⛔ **FINDING (2) BELOW IS WITHDRAWN AS TO ITS EVIDENCE — 2026-09-17.**
+> `keepOpenNonPersistent` parses as **(keep-open)(non-persistent)** — *opening the Keep panel must write
+> nothing* — not *(keep)(open)*. It is a Keep-authority guard, not a Continuation collision. Claim withdrawn.
+> ⭐ **The concern was correct and the true evidence is worse**: `lib/consciousness/keepIntent.ts` recognizes
+> *"keep this open"* and *"keep this question open"* as `keep_material` (preservation) — a witnessed, live
+> collapse of CONTINUE into KEEP. See `MAVEN-CUSTODY-01_RECONCILIATION_2026-09-17.md` §7.
+> Original text retained below as authored.
+
 **(2) ⚠️ "Keep" and "Keep open" are different acts sharing a verb.** Manual §5 (*a Keep is something you
 deliberately choose to preserve*) and §7 (*leave this open — something you intend to return to*) are already
 separated in member language, and §7 states the distinction explicitly: *something can be worth keeping

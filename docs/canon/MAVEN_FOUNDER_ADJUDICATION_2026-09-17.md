@@ -8,6 +8,16 @@
 
 ## §0 — Custody qualification (read first)
 
+> ⚠️ **CORRECTED 2026-09-17 by `docs/programme/MAVEN-CUSTODY-01_RECONCILIATION_2026-09-17.md`.**
+> Two claims in this section were wrong and are corrected there, not here:
+> **(a)** `CAPABILITY_REGISTRY` is **NOT absent** — it is at `lib/maia/capabilities.ts`, on canonical and in
+> the working tree. The prior search used a filename assumption (`*capabilityRegistry*`). **R3 is unaffected
+> and is now evidenced**: 0 consumers, 0 callers, 0 emissions.
+> **(b)** The searches ran in a **shallow clone** (10 grafts, 293 commits, 2 of 1,587 branches). Absence
+> there carried no information about the repository. The cited commits `6adbc3bb` and `194e3054` **both
+> exist** and are branch-local.
+> The paragraph below is retained as authored.
+
 ⚠️ **The reconciliation object `MAIA-MAVEN-CANON-01` is NOT PRESENT IN THIS REPOSITORY.** A full-tree search
 returns zero Maven documents and zero references to the lane identifier. `CAPABILITY_REGISTRY` is likewise
 absent as an artifact.
