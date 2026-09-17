@@ -1,0 +1,52 @@
+.ws-insight {
+  --wsi-paper: var(--ws-ground-field); --wsi-panel: var(--ws-ground-raised);
+  --wsi-ink: var(--ws-ink-primary); --wsi-muted: var(--ws-ink-secondary);
+  --wsi-line: var(--ws-rule-soft);
+  --wsi-evidence: color-mix(in srgb, var(--ws-gold-fill) 38%, var(--wsi-paper));
+  --wsi-proposal: color-mix(in srgb, var(--ws-gold-fill) 18%, var(--wsi-paper));
+  --wsi-revision: var(--ws-ground-active);
+  padding:0; width:min(1400px, calc(100vw - 40px)); max-width:none;
+  height:min(940px, calc(100dvh - 88px)); max-height:calc(100dvh - 24px);
+  border:1px solid var(--ws-rule); border-radius:12px;
+  background:var(--wsi-paper); color:var(--wsi-ink);
+  font:14px/1.55 var(--font-inter, ui-sans-serif, system-ui, sans-serif);
+  box-shadow:0 18px 80px rgb(0 0 0 / 24%);
+}
+.ws-insight[open] { display:flex; flex-direction:column; }
+.ws-insight::backdrop { background:rgb(0 0 0 / 35%); }
+.ws-insight * { box-sizing:border-box; }
+.ws-insight .wsi-header { flex-shrink:0; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:18px 24px; border-bottom:1px solid var(--wsi-line); background:var(--wsi-panel); }
+.ws-insight h2 { font:500 24px/1.3 var(--font-spectral, Georgia, serif); margin:5px 0 0; }
+.ws-insight h3 { font:500 19px/1.4 var(--font-spectral, Georgia, serif); margin:8px 0 12px; }
+.ws-insight .wsi-eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--wsi-muted); }
+.ws-insight .wsi-scroll { overflow:auto; min-height:0; padding:24px; overscroll-behavior:contain; }
+.ws-insight button, .ws-insight .wsi-link { border:1px solid var(--ws-rule); border-radius:7px; padding:9px 13px; font:inherit; background:var(--wsi-panel); color:var(--wsi-ink); cursor:pointer; text-decoration:none; display:inline-block; }
+.ws-insight button:disabled { cursor:default; opacity:.55; }
+.ws-insight button[aria-pressed=true] { background:var(--ws-ground-active); border-color:var(--ws-gold-text); }
+.ws-insight button:focus-visible, .ws-insight a:focus-visible, .ws-insight input:focus-visible, .ws-insight textarea:focus-visible { outline:2px solid var(--ws-gold-text); outline-offset:3px; }
+.ws-insight .wsi-primary { background:var(--ws-gold-fill); color:var(--ws-ink-primary); }
+.ws-insight .wsi-bar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:14px 0; }
+.ws-insight .wsi-grid { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:24px; align-items:start; }
+.ws-insight .wsi-grid > * { min-width:0; }
+.ws-insight .wsi-prose { font:17px/1.75 var(--font-spectral, Georgia, serif); white-space:pre-wrap; overflow-wrap:anywhere; }
+.ws-insight .wsi-muted { color:var(--wsi-muted); font-size:12px; }
+.ws-insight .wsi-passage { padding:16px 18px; border-left:3px solid var(--ws-rule); margin:18px 0; }
+.ws-insight .wsi-passage[data-selected=true] { border-left-color:var(--ws-gold-text); background:var(--wsi-panel); }
+.ws-insight mark { background:var(--wsi-evidence); color:inherit; }
+.ws-insight .wsi-current { padding:16px; background:var(--wsi-panel); border-radius:7px; }
+.ws-insight .wsi-proposed { padding:16px; background:var(--wsi-proposal); border:1px dashed var(--ws-rule); border-radius:7px; }
+.ws-insight ins { background:var(--wsi-proposal); text-decoration:underline; }
+.ws-insight del { background:var(--wsi-evidence); }
+.ws-insight textarea { display:block; width:100%; min-height:130px; resize:vertical; padding:14px; margin:8px 0; border:1px solid var(--ws-rule); border-radius:7px; color:var(--wsi-ink); background:var(--wsi-paper); font:16px/1.6 var(--font-spectral, Georgia, serif); }
+.ws-insight textarea.wsi-revision { background:var(--wsi-revision); min-height:210px; }
+.ws-insight input[type=range] { width:180px; max-width:100%; accent-color:var(--ws-gold-text); }
+.ws-insight .wsi-observation { max-width:85ch; white-space:pre-wrap; }
+.ws-insight details { margin:16px 0; }
+.ws-insight summary { cursor:pointer; }
+@media(max-width:760px) {
+  .ws-insight { width:calc(100vw - 16px); height:calc(100dvh - 24px); }
+  .ws-insight .wsi-header { padding:14px; flex-wrap:wrap; }
+  .ws-insight .wsi-scroll { padding:16px; }
+  .ws-insight .wsi-grid { grid-template-columns:minmax(0,1fr); }
+  .ws-insight button, .ws-insight .wsi-link { min-height:44px; }
+}
