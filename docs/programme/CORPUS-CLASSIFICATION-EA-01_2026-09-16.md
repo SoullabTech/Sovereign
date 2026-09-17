@@ -76,3 +76,8 @@ T24 witnesses that `published_knowledge` may be admitted by governed rights-hold
 ## Explicit holds
 
 This tranche does **not** run or authorize corpus rebuild/embed. It does not classify any third-party work, operational artifact, or neighboring Soullab file. Any future corpus addition requires its own declared classification and mechanically verified authority evidence.
+
+
+## Final reconciliation
+
+EA-01 was reconciled forward again to canonical `8b80ec21060a102ee2007d12f3182049c7c6ad43`. After reconciliation, the branch-only diff against canonical remains exactly **five governed files**: the admission manifest, governed Elemental Alchemy authority record, tranche record, admission tests, and admission engine. The 29-test suite, full 736-file verdict, exact subject-digest witness, root TypeScript gate, scripts identity comparison, provider governance, no-Supabase, design canon, and `git diff --check` were rerun on this final tree.
