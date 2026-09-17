@@ -1,0 +1,78 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H6G_MOTIF_CONVERGENCE_V1",
+  "authority": "offline deterministic research only",
+  "metric": "symmetric graph-edge edit distance to neutral motif prototype",
+  "summary": {
+    "cases": 6,
+    "correct": 6
+  },
+  "rows": [
+    {
+      "id": "G1_CONVERGE_CROSS",
+      "prototype": "CROSS_TRIAD",
+      "distances": [
+        4,
+        1,
+        0
+      ],
+      "expected": "CONVERGING",
+      "got": "CONVERGING",
+      "correct": true
+    },
+    {
+      "id": "G2_DIVERGE_RESONANT",
+      "prototype": "RESONANT_TRIAD",
+      "distances": [
+        0,
+        1,
+        2
+      ],
+      "expected": "PASSED_EXACT",
+      "got": "PASSED_EXACT",
+      "correct": true
+    },
+    {
+      "id": "G3_EXACT",
+      "prototype": "POLAR_MEDIATION",
+      "distances": [
+        0,
+        0
+      ],
+      "expected": "EXACT",
+      "got": "EXACT",
+      "correct": true
+    },
+    {
+      "id": "G4_STABLE_OFFSET",
+      "prototype": "CROSS_TRIAD",
+      "distances": [
+        1,
+        1
+      ],
+      "expected": "STABLE",
+      "got": "STABLE",
+      "correct": true
+    },
+    {
+      "id": "G5_PASSED_EXACT",
+      "prototype": "CROSS_TRIAD",
+      "distances": [
+        2,
+        0,
+        3
+      ],
+      "expected": "PASSED_EXACT",
+      "got": "PASSED_EXACT",
+      "correct": true
+    },
+    {
+      "id": "G6_UNORDERED",
+      "prototype": "RESONANT_TRIAD",
+      "distances": null,
+      "expected": "INDETERMINATE",
+      "got": "INDETERMINATE",
+      "correct": true
+    }
+  ],
+  "law": "Configuration motion is defined downstream of an admitted motif prototype. Convergence/divergence changes no standing and cannot create the motif."
+}
