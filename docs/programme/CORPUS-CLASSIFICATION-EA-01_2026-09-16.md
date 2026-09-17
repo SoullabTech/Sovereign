@@ -1,7 +1,7 @@
 # CORPUS-CLASSIFICATION-EA-01 · Elemental Alchemy
 
-**Date:** 2026-09-16  
-**Base:** `445a4d1a6f9a673231d12b9d5ab02519100e4fff`  
+**Date:** 2026-09-16
+**Base:** `b603fe52e33b0cd251a10dea0e0de7d29a95143e`
 **State:** single-item classification candidate; rebuild/embed remains separately held
 
 ## Subject
@@ -36,7 +36,7 @@ The sole admitted path is the Elemental Alchemy subject above. Every other legac
 
 ## Production state before this tranche
 
-Production is running `GIT_COMMIT=924845107c70a574c1ae2d4167ca201cbe6453d5`, which mechanically contains the authority-evidence repair merge `bfdc06f71176841f62b3805806dc52f6433e08cd`.
+Production is running `GIT_COMMIT=d2a48d8052997b7048748a86c80fe1fc8ab8078a`, which mechanically contains the authority-evidence repair merge `bfdc06f71176841f62b3805806dc52f6433e08cd`.
 
 The runtime image does **not** contain `data/ain/source`; corpus source material is not available to the running application for accidental runtime ingestion.
 Production corpus stores were witnessed immediately before this tranche:
@@ -48,7 +48,7 @@ Therefore this classification changes only future eligibility. It does not expos
 
 ## Reconciliation to current canonical
 
-While EA-01 was under review, `clean-main-no-secrets` advanced from `bfdc06f71176841f62b3805806dc52f6433e08cd` to `445a4d1a6f9a673231d12b9d5ab02519100e4fff`. The intervening canonical range changed **102 paths** and had **zero path overlap** with EA-01's five governed files. The branch was merged forward without conflict, then the admission suite, digest witness, full 736-file verdict, root TypeScript gate, scripts identity comparison, provider governance, no-Supabase, design canon, and `git diff --check` were rerun on the reconciled tree.
+While EA-01 was under review, `clean-main-no-secrets` advanced again to `b603fe52e33b0cd251a10dea0e0de7d29a95143e`. The final intervening range from `445a4d1a6f9a673231d12b9d5ab02519100e4fff` changed **41 paths** and had **zero path overlap** with EA-01's five governed files. The branch was merged forward without conflict, then the admission suite, digest witness, full 736-file verdict, root TypeScript gate, scripts identity comparison, provider governance, no-Supabase, design canon, and `git diff --check` were rerun on the reconciled tree.
 
 ## Local evidence
 
