@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-17
 **Lane charter:** `MAIA-MAVEN-T1A_J5-R2_REOPEN_AUTHORITY_LANE_2026-09-17.md`
-**Canonical evidence SHA:** `69b7c7fb4edad226b41042a75e782220f885242f`
+**Canonical evidence SHA:** `51d4060d71198ad5a36cfc6131dbfb9155617ba6`
 **Prior J5 stop:** `5b8b5c495a570281b9bc030a671ac4abd8c82b24`
 **J4 authority custody:** corrected contract at `bd9bf3c44ee21219383afa15060e05cd907499ed`
 **Standing:** READ-ONLY CENSUS · NO REPAIR AUTHORIZED
@@ -23,6 +23,8 @@ It separately establishes:
 - Sanctuary is ENCOUNTER ONLY.
 
 The independently ratified crossing law in `SPM-FC-01-R5_FOUNDER_RATIFICATION_2026-09-17.md` adds a compatible narrow rule: where a governed crossing requires authority independent of material standing, standing cannot substitute for that authority.
+
+Current canon now also includes `docs/canon/REPRESENTATION_AUTHORITY_LAW.md`: a representation may alter **crossing** only when a governed act explicitly grants it that authority **and** an attestation can fail when the authority-bearing condition becomes stale, absent, substituted, or invalid. This applies directly here because any parsed REOPEN signal, memory-mode flag, identity flag, or handoff identifier is a representation used by software to decide whether a crossing occurs.
 ## 2. Canonical route gate
 
 The live sovereign MAIA route currently establishes cross-session availability with:
@@ -35,7 +37,7 @@ For recognized users, the route defaults `memoryMode` to `continuity`; the clien
 
 No present member REOPEN act participates in either decision.
 
-The route file is byte-unchanged between the prior J5 stop base `2e82ca9f` and current canonical `69b7c7fb4`; current evidence therefore confirms, rather than merely inherits, the earlier finding.
+The route file is byte-unchanged between the prior J5 stop base `2e82ca9f` and current canonical `51d4060d7`; current evidence therefore confirms, rather than merely inherits, the earlier finding.
 
 ## 3. Prior→present producer census
 
@@ -62,6 +64,18 @@ They do not answer:
 > Did the member authorize prior continuity to enter this encounter now?
 
 The current architecture therefore has meaningful eligibility controls underneath an absent encounter-level REOPEN authority.
+
+### 4.1 Representation Authority defeater applied
+
+| Representation | Substitution changes crossing? | Governed REOPEN grant present? | Failing attestation? | Result |
+|---|---:|---:|---:|---|
+| `isRecognizedUser` | Yes | No | No | spurious crossing authority |
+| non-Sanctuary posture | Yes | No — it removes a prohibition; it does not author retrieval | Sanctuary attestation exists, REOPEN attestation does not | insufficient |
+| `memoryMode = continuity` | Yes for MemoryBundle | No | No | spurious REOPEN substitute |
+| recall / return preference | Yes for eligible items | grants item eligibility only, not present encounter reopening | item-level checks exist | valid eligibility, insufficient crossing authority |
+| explicit member handoff id | Yes | candidate yes, if the member gesture is ruled to grant bounded generative use | must be added/verified | legitimate precedent, not yet general REOPEN law |
+
+Under the canonical defeater, the defect is not that these representations exist. The defect is that some currently determine crossing without a governed REOPEN grant and crossing-specific attestation.
 
 ## 5. No explicit REOPEN seam found
 

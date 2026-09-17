@@ -2,9 +2,9 @@
 
 ```text
 Class: A
-Governing authority: MAIA-MAVEN-T1A J4 contract @ bd9bf3c44 §§1,3,7; J5 stop record @ 5b8b5c495 §§5,7,9-10; JARVIS manual §27
+Governing authority: MAIA-MAVEN-T1A J4 contract @ bd9bf3c44 §§1,3,7; Representation Authority Law §§1,3-4; J5 stop @ 5b8b5c495 §§5,7,9-10; JARVIS manual §27
 Current gate: J5 — documentary REOPEN authority contract and falsifier design
-Evidence subject: clean-main-no-secrets @ 69b7c7fb4; prior→present crossings in app/api/sovereign/app/maia/list/route.ts and their directly named loaders
+Evidence subject: clean-main-no-secrets @ 51d4060d7; prior→present crossings in app/api/sovereign/app/maia/list/route.ts and their directly named loaders
 Stop boundary: no runtime/source/schema/UI/memory-loader change; no merge; no deploy; no J6; return candidate contract for founder adjudication before build
 ```
 

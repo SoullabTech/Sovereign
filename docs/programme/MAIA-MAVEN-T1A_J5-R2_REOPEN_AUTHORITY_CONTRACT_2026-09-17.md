@@ -4,7 +4,7 @@
 **Date:** 2026-09-17
 **Lane:** `MAIA-MAVEN-T1A_J5-R2_REOPEN_AUTHORITY_LANE_2026-09-17.md`
 **Census:** `MAIA-MAVEN-T1A_J5-R2_REOPEN_AUTHORITY_CENSUS_2026-09-17.md`
-**Canonical evidence SHA:** `69b7c7fb4edad226b41042a75e782220f885242f`
+**Canonical evidence SHA:** `51d4060d71198ad5a36cfc6131dbfb9155617ba6`
 **Build authority:** ⛔ NONE · documentary contract only
 
 ---
@@ -50,6 +50,19 @@ Therefore:
 - a producer's technical availability does not create REOPEN authority.
 
 If the REOPEN stage is absent, the prior-content contribution to generative context is **zero**.
+
+### 2.1 Representation Authority application
+
+The member utterance or explicit gesture is the **governed source act**. Any software result that says *"this was REOPEN"* is a **representation of that act**, descriptive by default.
+
+If that representation is used to admit or refuse prior material into generative context, it is exercising **AUTHORITATIVE** effect under `REPRESENTATION_AUTHORITY_LAW.md` because it determines a crossing. It therefore needs both:
+
+1. a governed grant tying that exact representation to the member-authored REOPEN act and its constraint; and
+2. an attestation that becomes red when the act is absent, stale, revoked, mismatched, substituted, or used beyond its authorized span.
+
+A phrase match, intent classifier, UI flag, session id, account preference, or handoff id cannot acquire this authority merely because the implementation consults it. A bounded handoff identifier may become authoritative only if its member gesture is explicitly adjudicated to grant that crossing and the binding is attested.
+
+Similarity, salience, recency, and relevance may participate only **after** crossing authority is established and only within whatever SELECTIVE authority has separately been granted. They may never manufacture REOPEN.
 ## 3. What counts as a REOPEN act
 
 A REOPEN act must be attributable to the member and must deliberately request prior material into the present interaction.
