@@ -55,6 +55,9 @@ import {
 } from '@/lib/writersStudio/developPreparationClient';
 import { beginDraft } from '../../press/manuscript/workingDraftClient';
 import ObservationDialogue from './ObservationDialogue';
+import GoldLine from '../insight/GoldLine';
+import CanvasWorkspace from '../insight/CanvasWorkspace';
+import InsightReadings from '../insight/InsightReadings';
 import { dialogueSurfaceKey } from '@/lib/writersStudio/observationDialogueResume';
 import {
   LABEL as STANDING_LABEL, adoptInto, beginLookup, beginRefresh, expectationFor, settleLookup,
@@ -228,6 +231,8 @@ export default function DevelopRoom({
   requestedReadingId: string | null;
   requestedSectionId: string | null;
 }) {
+  const [canvasObservation, setCanvasObservation] = useState<{ readingId: string; key: string } | null>(null);
+  const [insightOpen, setInsightOpen] = useState(false);
   const [title, setTitle] = useState<string | null | undefined>(undefined);
   const [listPhase, setListPhase] = useState<ListPhase>('loading');
   const [summaries, setSummaries] = useState<ReadingSummary[]>([]);
@@ -665,6 +670,7 @@ export default function DevelopRoom({
         aria-label="Developmental reading"
         data-develop-intelligence
       >
+        <GoldLine manuscriptId={manuscriptId} />
         <div className="grid grid-cols-3 gap-1 p-1 mb-4 rounded-full border" style={{ borderColor: PRESS.ruleSoft }} data-develop-scope-tabs>
           <button type="button" onClick={() => setDevelopScope('work')} aria-pressed={effectiveScope === 'work'}
             className="rounded-full px-2 py-2 text-[11.5px]"
@@ -996,6 +1002,7 @@ export default function DevelopRoom({
               onRefresh={() => loadStandings(view.id)}
               evidenceSectionByObservation={evidenceSectionByObservation}
               passageEvidenceByObservation={passageEvidenceByObservation}
+              onOpenCanvas={(key) => { setCanvasObservation({ readingId: view.id, key }); setInsightOpen(true); }}
               activeEvidenceKey={activeEvidence?.observationKey ?? null}
               currentSectionId={placeId}
               onNavigate={(sectionId) => { setActiveEvidence(null); showPlace(sectionId, true); }}
@@ -1008,6 +1015,10 @@ export default function DevelopRoom({
         </div>
       </aside>
     </div>
+      <CanvasWorkspace open={insightOpen} title="Explore this observation" onClose={() => setInsightOpen(false)}>
+        {canvasObservation && <InsightReadings key={manuscriptId}
+          manuscriptId={manuscriptId} readingId={canvasObservation.readingId} observationKey={canvasObservation.key} />}
+      </CanvasWorkspace>
     </WriterStudioShell>
   );
 }
@@ -1016,7 +1027,7 @@ export default function DevelopRoom({
 
 function Reading({
   view, manuscriptId, standings, onStanding, onRefresh,
-  evidenceSectionByObservation, passageEvidenceByObservation, activeEvidenceKey, currentSectionId, onNavigate, onNavigateEvidence,
+  evidenceSectionByObservation, passageEvidenceByObservation, activeEvidenceKey, currentSectionId, onNavigate, onNavigateEvidence, onOpenCanvas,
 }: {
   view: ReadingView; manuscriptId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
@@ -1024,6 +1035,7 @@ function Reading({
   passageEvidenceByObservation: ReadonlyMap<string, { sectionId: string; range: CodePointRange }>;
   activeEvidenceKey: string | null;
   currentSectionId: string | null;
+  onOpenCanvas: (key: string) => void;
   onNavigate: (sectionId: string) => void;
   onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
@@ -1068,6 +1080,7 @@ function Reading({
               onRefresh={onRefresh}
               evidenceSectionId={evidenceSectionByObservation.get(o.key) ?? null}
               passageEvidence={passageEvidenceByObservation.get(o.key) ?? null}
+              onOpenCanvas={onOpenCanvas}
               evidenceHighlighted={activeEvidenceKey === o.key}
               activeForPlace={evidenceSectionByObservation.get(o.key) === currentSectionId}
               onNavigate={onNavigate}
@@ -1094,13 +1107,14 @@ function Reading({
  */
 function Observation({
   o, manuscriptId, readingId, standings, onStanding, onRefresh,
-  evidenceSectionId, passageEvidence, evidenceHighlighted, activeForPlace, onNavigate, onNavigateEvidence,
+  evidenceSectionId, passageEvidence, evidenceHighlighted, activeForPlace, onNavigate, onNavigateEvidence, onOpenCanvas,
 }: {
   o: ObservationView; manuscriptId: string; readingId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
   evidenceSectionId: string | null;
   passageEvidence: { sectionId: string; range: CodePointRange } | null;
   evidenceHighlighted: boolean; activeForPlace: boolean;
+  onOpenCanvas: (key: string) => void;
   onNavigate: (sectionId: string) => void;
   onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
@@ -1127,6 +1141,10 @@ function Observation({
       >
         {o.observation}
       </p>
+
+      <button type="button" onClick={() => onOpenCanvas(o.key)} data-observation-work-on-canvas={o.key}
+        className="mt-3 rounded-md border px-3 py-2 text-[13px]"
+        style={{ borderColor: PRESS.rule, background: 'var(--ws-ground-active)' }}>Work on canvas</button>
 
       {evidenceSectionId && (
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">

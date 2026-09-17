@@ -4,6 +4,7 @@ human_activity: inhabiting a creative work with MAIA present at the same visible
 surfaces:
   - app/writers-studio/rebuild/**
   - app/writers-studio/develop/**
+  - app/writers-studio/insight/**
   # Shared by Write and Develop: one continuous manuscript surface. D5 adds an
   # optional read-only evidence highlight; editing behavior remains unchanged.
   - app/writers-studio/canvas/WholeManuscriptSurface.tsx
@@ -113,3 +114,13 @@ MAIA’s purpose here is not to make the writer sound more like MAIA or more sta
 “Better writing” is therefore evaluated in relation to the creator’s own voice, intention, form, audience, desired effect, and the Work’s established character. Guidance may sharpen craft, clarity, structure, rhythm, dramatic movement, imagery, coherence, accessibility, or reader experience, but it must not silently homogenize style.
 
 The Studio should preserve the conditions in which a person can feel witnessed by their own Work: deep attention, privacy, continuity, authorship, and enough quiet that the act of creating remains human.
+
+## Expanded editorial canvas — 2026-09-17
+
+Work on canvas expands the existing Write/Develop relationship temporarily, preserving the underlying manuscript and place. It is not a second editorial authority. All cited passages may be compared, but only current digest-verified evidence can select a revision. Develop remains manuscript-read-only; Write uses the existing member-version and explicit adoption contracts.
+
+Intention, reader experience, alternatives, proportion, rhythm, examples, and voice guide the exploration. Inspiration uses the declared Work purpose. Gold lines are explicitly chosen owned Keeps with visible provenance. No inference or manuscript write occurs merely by opening the workspace.
+
+Chromium and WebKit controlled-component witnesses cover desktop and 390px mobile, keyboard return, preserved drafts/scroll, exact member-version adoption, stale-predecessor rejection, and multi-passage handoff. These use controlled API fixtures, not production manuscript mutations. The earlier screenshots above remain evidence of the underlying room; the new reproducible witness is scripts/witness/insight-canvas, and its acceptance/evidence record is docs/programme/WS-INSIGHT-CANVAS-01_2026-09-17.md.
+
+Evaluate support through the writer clarifying intention, comparing alternatives, preserving voice, completing a chosen revision, and testing intended effects with readers. Time spent, interaction volume, and accepting MAIA suggestions are not measures of creative success.
