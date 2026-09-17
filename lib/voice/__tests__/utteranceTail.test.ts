@@ -2,6 +2,7 @@ import {
   readTailSnapshot,
   shouldEmitThrottled,
   HIGH_FREQUENCY_TELEMETRY_MIN_INTERVAL_MS,
+  selectSilenceBoundaryTranscript,
 } from '../utteranceTail';
 
 const T0 = 1_000_000;
@@ -141,6 +142,62 @@ describe('shouldEmitThrottled — throttle guards the log, not the data', () => 
   it('honours an explicit interval override', () => {
     expect(shouldEmitThrottled(T0 + 100, T0, 50)).toBe(true);
     expect(shouldEmitThrottled(T0 + 10, T0, 50)).toBe(false);
+  });
+});
+
+
+describe('selectSilenceBoundaryTranscript — Safari interim-only finalization', () => {
+  it('promotes an outstanding Safari interim when no browser final ever arrived', () => {
+    expect(selectSilenceBoundaryTranscript({
+      isSafari: true,
+      finalText: '',
+      interimText: 'Hi Maya can you hear me',
+      lastInterimAt: T0,
+      lastFinalAt: 0,
+    })).toEqual({
+      text: 'Hi Maya can you hear me',
+      source: 'safari_interim_promotion',
+    });
+  });
+
+  it('does not change Chrome final-only behavior', () => {
+    expect(selectSilenceBoundaryTranscript({
+      isSafari: false,
+      finalText: '',
+      interimText: 'Hi Maya can you hear me',
+      lastInterimAt: T0,
+      lastFinalAt: 0,
+    })).toEqual({ text: '', source: 'none' });
+  });
+
+  it('always prefers a real browser final, including on Safari', () => {
+    expect(selectSilenceBoundaryTranscript({
+      isSafari: true,
+      finalText: 'browser final',
+      interimText: 'newer interim tail',
+      lastInterimAt: T0 + 100,
+      lastFinalAt: T0,
+    })).toEqual({ text: 'browser final', source: 'browser_final' });
+  });
+
+  it('does not promote a stale interim that was already followed by a final', () => {
+    expect(selectSilenceBoundaryTranscript({
+      isSafari: true,
+      finalText: '',
+      interimText: 'stale preview',
+      lastInterimAt: T0,
+      lastFinalAt: T0 + 100,
+    })).toEqual({ text: '', source: 'none' });
+  });
+
+  it('does not promote blank interim material', () => {
+    expect(selectSilenceBoundaryTranscript({
+      isSafari: true,
+      finalText: '',
+      interimText: '   ',
+      lastInterimAt: T0,
+      lastFinalAt: 0,
+    })).toEqual({ text: '', source: 'none' });
   });
 });
 
