@@ -1,7 +1,7 @@
 # CORPUS-CLASSIFICATION-EA-01 · Elemental Alchemy
 
 **Date:** 2026-09-16  
-**Base:** `bfdc06f71176841f62b3805806dc52f6433e08cd`  
+**Base:** `b0164a439abe531300a8b91108a22e2bd0f36a7e`  
 **State:** single-item classification candidate; rebuild/embed remains separately held
 
 ## Subject
