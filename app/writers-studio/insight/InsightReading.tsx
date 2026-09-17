@@ -14,6 +14,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const [context, setContext] = useState(1);
   const [markers, setMarkers] = useState(true);
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [selected, setSelected] = useState<string | null>(null);
   const [question, setQuestion] = useState<string>(EDITORIAL_QUESTIONS[0].question);
   const [intention, setIntention] = useState('');
@@ -39,55 +40,23 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
   if (phase === 'loading' || loadedKey !== refreshKey) return <p role="status">Opening the observation and its passages…</p>;
   if (!insight) return <p role="status">This observation could not be opened. Your manuscript has not changed.</p>;
   const o = insight.observation;
+  const exactCount = insight.passages.filter(p => p.verified && p.range).length;
   return <section data-insight-reading={readingId}>
     <WorkInspiration manuscriptId={manuscriptId} onBringToQuestion={text => setIntention(previous => [previous, 'Work inspiration and intention:\n' + text].filter(Boolean).join('\n\n'))} />
-    <span className="wsi-eyebrow">{o.key} · {o.phenomenonLabel} · {o.stateLabel}</span>
+    <span className="wsi-eyebrow">{o.key} · {o.phenomenonLabel} · Reading: {o.stateLabel}</span>
     <p className="wsi-observation">{o.observation}</p>
     <p className="wsi-muted">{insight.coverage}</p>
     {o.state !== 'current' && <p role="status">{o.stateSentence}</p>}
-    <div className="wsi-bar">
-      <label><input type="checkbox" checked={markers} onChange={e => setMarkers(e.target.checked)} /> Evidence markers</label>
-      <label>Surrounding paragraphs · {context}<br />
-        <input type="range" min="0" max="3" value={context} onChange={e => setContext(Number(e.target.value))} />
-      </label>
-    </div>
-    <nav className="wsi-bar" aria-label="Related passages">
-      {insight.passages.map((p, i) => <button key={p.key} type="button" aria-pressed={selected === p.key}
-        onClick={() => { setSelected(p.key); places.current.get(p.key)?.scrollIntoView({ block: 'nearest' }); }}>
-        {i + 1} · {p.heading}
-      </button>)}
-    </nav>
-    {insight.passages.length === 0 && <p>This observation names structure rather than a textual passage. Its evidence is listed below.</p>}
-    {insight.passages.map((p, i) => {
-      const window = passageWindow(p.body, p.range, context);
-      return <article key={p.key} ref={el => { if (el) places.current.set(p.key, el); else places.current.delete(p.key); }}
-        className="wsi-passage" data-selected={selected === p.key}>
-        <span className="wsi-eyebrow">Related place {i + 1} · manuscript snapshot</span>
-        <h3>{p.heading}</h3>
-        <div className="wsi-prose">
-          {window.clippedBefore && <span aria-label="Earlier context omitted">… </span>}
-          {window.before}
-          {markers && p.verified && p.range ? <mark>{window.selected}</mark> : window.selected}
-          {window.after}
-          {window.clippedAfter && <span aria-label="Later context omitted"> …</span>}
-        </div>
-        <p className="wsi-muted">{p.note}</p>
-        {p.verified && p.editable && (onRevise
-          ? <button type="button" disabled={busy} onClick={() => onRevise(p)}>Revise this passage</button>
-          : <a className="wsi-link" href={insightWriteHref(manuscriptId, readingId, observationKey, p.sectionId)}>Revise this passage in Write</a>)}
-      </article>;
-    })}
-    <details><summary>Evidence and limits of this observation</summary>
-      <ul>{o.evidence.map((e, i) => <li key={i}>{e}</li>)}</ul>
-      <ul>{o.limits.map(l => <li key={l.name}>{l.name} — {l.meaning}</li>)}</ul>
-    </details>
+    <p className="wsi-muted" role="status">{exactCount} of {insight.passages.length} related places have verified exact passage markers. Each card explains its evidence status.</p>
+    <div className="wsi-exploration">
+      <aside className="wsi-intention">
     <section className="wsi-current">
       <h3>What should these passages do?</h3>
-      <p>Repeated stories can serve different purposes. Bring your intention into the conversation before deciding how to revise.</p>
+      <p>Related passages can serve different purposes. Bring your intention into the conversation before deciding how to revise.</p>
       <div className="wsi-grid">
         <label>Your intention
           <textarea value={intention} onChange={e => setIntention(e.target.value)}
-            placeholder="Why does the story return? What should each appearance contribute? What must remain?" />
+            placeholder="What should each passage contribute? What must remain?" />
         </label>
         <label>The reader’s experience
           <textarea value={reader} onChange={e => setReader(e.target.value)}
@@ -112,5 +81,55 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
           initialQuestion={conversation} onClose={() => setTalking(false)} />
       </div>}
     </section>
+      </aside>
+      <div className="wsi-comparison-main">
+    <div className="wsi-bar">
+      <label><input type="checkbox" disabled={exactCount === 0} checked={markers && exactCount > 0} onChange={e => setMarkers(e.target.checked)} /> Evidence markers</label>
+      <label>Surrounding paragraphs · {context}<br />
+        <input type="range" disabled={exactCount === 0} aria-label="Surrounding paragraphs" min="0" max="3" value={context} onChange={e => setContext(Number(e.target.value))} />
+      </label>
+    </div>
+    <nav className="wsi-bar" aria-label="Related passages">
+      {insight.passages.map((p, i) => <button key={p.key} type="button" aria-pressed={selected === p.key}
+        onClick={() => { setSelected(p.key); places.current.get(p.key)?.scrollIntoView({ block: 'nearest' }); }}>
+        {i + 1} · {p.heading}
+      </button>)}
+    </nav>
+    {insight.passages.length === 0 && <p>This observation names structure rather than a textual passage. Its evidence is listed below.</p>}
+    <div className="wsi-passage-grid">{insight.passages.map((p, i) => {
+      const full = expanded.has(p.key);
+      const points = Array.from(p.body);
+      const window = full
+        ? { before: p.range ? points.slice(0, p.range.start).join('') : '', selected: p.range ? points.slice(p.range.start, p.range.end).join('') : p.body, after: p.range ? points.slice(p.range.end).join('') : '', clippedBefore: false, clippedAfter: false }
+        : p.range ? passageWindow(p.body, p.range, context)
+        : { before: '', selected: points.slice(0, 500).join(''), after: '', clippedBefore: false, clippedAfter: points.length > 500 };
+      return <article key={p.key} ref={el => { if (el) places.current.set(p.key, el); else places.current.delete(p.key); }}
+        className="wsi-passage" data-selected={selected === p.key}>
+        <span className="wsi-eyebrow">Related place {i + 1} · {p.range ? 'verified excerpt' : 'section reference'}</span>
+        <h3>{p.heading}</h3>
+        {!p.range && <p className="wsi-muted">{full ? 'Full section' : 'Section opening'} · no narrower evidence is highlighted.</p>}
+        <div className="wsi-prose" tabIndex={0} role="region" aria-label={p.heading + ' passage text'}>
+          {window.clippedBefore && <span aria-label="Earlier context omitted">… </span>}
+          {window.before}
+          {markers && p.verified && p.range ? <mark>{window.selected}</mark> : window.selected}
+          {window.after}
+          {window.clippedAfter && <span aria-label="Later context omitted"> …</span>}
+        </div>
+        <p className="wsi-muted">{p.note}</p>
+        <button type="button" aria-expanded={full} onClick={() => setExpanded(previous => {
+          const next = new Set(previous); if (next.has(p.key)) next.delete(p.key); else next.add(p.key); return next;
+        })}>{full ? 'Return to excerpt' : 'Show full section'}</button>
+        {p.verified && p.editable && (onRevise
+          ? <button type="button" disabled={busy} onClick={() => onRevise(p)}>Revise this passage</button>
+          : <a className="wsi-link" href={insightWriteHref(manuscriptId, readingId, observationKey, p.sectionId)}>Revise this passage in Write</a>)}
+      </article>;
+    })}</div>
+    <details><summary>Evidence and limits of this observation</summary>
+      <ul>{o.evidence.map((e, i) => <li key={i}>{e}</li>)}</ul>
+      <ul>{o.limits.map(l => <li key={l.name}>{l.name} — {l.meaning}</li>)}</ul>
+    </details>
+
+      </div>
+    </div>
   </section>;
 }
