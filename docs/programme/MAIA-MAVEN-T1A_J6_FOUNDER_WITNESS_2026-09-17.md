@@ -206,3 +206,35 @@ deploy .................................... ⛔ NOT AUTHORIZED
 **J6 DOES NOT PASS.** The candidate remains unmerged.
 
 The next lawful act is a separate founder adjudication of the W2 duplicate-persistence finding. J6 itself confers no repair authority.
+
+---
+
+## 9. Post-stop collateral finding — Keep identity collision
+
+This finding occurred after the founder witness had already stopped at W2. It is therefore
+**not scored as W3 or W4** and does not reopen J6. It is recorded because the founder's
+continued observation exposed a separate member-facing ambiguity on the same capability family.
+
+The frozen candidate still presents at least two different persistence objects under the word
+**Keep**:
+
+1. Inline **Keep this moment** on a member-authored message calls
+   `/api/sovereign/episodes/mark`, persists verbatim material in
+   `episodic_memories`, and links the member to `/maia/moments`.
+2. The top-level mobile/desktop **Keep** control in `app/maia/page.tsx` dispatches
+   `labAction: capture-spirit`, which enters the Reflection Capsule distillation flow.
+   The arrival-state Keep affordance also dispatches `capture-spirit`.
+
+These are not aliases for one object. They have different referents, persistence schemas,
+review surfaces, and interpretation rights. The member is presently required to infer the
+difference from placement rather than from qualified naming.
+
+The Moments page also states:
+
+> A kept moment may return in conversation with MAIA — as you said it, dated, yours.
+
+That sentence is in tension with ratified R10: KEEP does not itself grant REOPEN. The copy
+does not establish that return actually occurs, but it communicates a permission relationship
+the repaired authority model explicitly separates.
+
+Standing: **COLLATERAL HUMAN FINDING · UNADJUDICATED · NO REPAIR AUTHORIZED.**
