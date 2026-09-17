@@ -16,7 +16,17 @@ export interface GovernedKnowledgeSource {
   readonly authorityKind: 'rights_holder_authorized';
   readonly authorityRef: string;
   readonly ingestAct: string;
+  /** Frozen J7 row/text identity used by downstream runtime attestation. */
+  readonly chunkCount: number;
+  readonly chunkSetSha256: string;
+  /** Frozen exact vector-set identity for J8 SELECTIVE ranking attestation. */
+  readonly embeddingSetSha256: string;
 }
+
+export const GOVERNED_KNOWLEDGE_VECTOR_CONTRACT = Object.freeze({
+  model: 'nomic-embed-text',
+  dimensions: 768,
+} as const);
 
 export const ELEMENTAL_ALCHEMY_GOVERNED_SOURCE = Object.freeze({
   subjectId: 'elemental-alchemy',
@@ -29,6 +39,9 @@ export const ELEMENTAL_ALCHEMY_GOVERNED_SOURCE = Object.freeze({
   authorityKind: 'rights_holder_authorized',
   authorityRef: 'docs/corpus-authority/elemental-alchemy.md',
   ingestAct: 'CORPUS-INGEST-EA-01',
+  chunkCount: 1238,
+  chunkSetSha256: '87b0cbaa076cdb6d374597b75fb652ac87313b1eda1ad87fce4a8490cf61d852',
+  embeddingSetSha256: '4ec0eb4d2fdc6e56fccd14927fcb9e4cf5df51ade15cd75ce25c3966ce2bee93',
 } satisfies GovernedKnowledgeSource);
 
 export const GOVERNED_KNOWLEDGE_SOURCES = Object.freeze([

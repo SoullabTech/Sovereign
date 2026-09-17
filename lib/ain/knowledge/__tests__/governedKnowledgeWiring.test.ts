@@ -9,7 +9,9 @@ const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'u
 test('the live /maia/list route retrieves governed knowledge and server-binds it after client meta', () => {
   const route = read('app/api/sovereign/app/maia/list/route.ts');
   expect(route).toContain('retrieveGovernedKnowledge(message');
-  expect(route).toContain('minSimilarity: 0.55');
+  // The route may invoke governed retrieval but may not own SELECTIVE policy.
+  expect(route).not.toContain('minSimilarity: 0.55');
+  expect(route).not.toContain('limit: 3');
   expect(route).toContain('governedKnowledge: governedKnowledgeAddendum || undefined');
   expect(route).toContain('governedKnowledgeAddendum, // 📚 Exact-source governed retrieval');
 
@@ -30,7 +32,8 @@ test('the live route refuses governed retrieval in Sanctuary and treats the roll
   expect(block).toContain('retrieveGovernedKnowledge(message');
   expect(block.indexOf('!isSanctuary')).toBeLessThan(block.indexOf('retrieveGovernedKnowledge(message'));
   expect(block).toContain('operational rollout kill-switch only');
-  expect(block).toContain('source authority comes from the closed');
+  expect(block).toContain('source authority is consumed at runtime');
+  expect(block).toContain('SELECTIVE effects and require their own exact grant + attestation');
 });
 
 test('FAST, CORE and DEEP carry one governed evidence participation through their native cognition seam', () => {

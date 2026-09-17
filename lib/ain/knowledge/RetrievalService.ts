@@ -30,6 +30,8 @@ export interface RetrievalOptions {
   categories?: string[];
   /** Exact source-file allowlist. Undefined = no filter; explicit empty = no authorized sources. */
   sourceFiles?: string[];
+  /** Optional precomputed query vector so governed callers can reuse one embedding. */
+  queryEmbedding?: readonly number[];
   /** User ID for tracking */
   userId?: string;
   /** Session mode for tracking */
@@ -97,6 +99,7 @@ export async function retrieveKnowledge(
     domains,
     categories,
     sourceFiles,
+    queryEmbedding: providedQueryEmbedding,
     userId,
     sessionMode,
   } = options;
@@ -108,11 +111,20 @@ export async function retrieveKnowledge(
       return [];
     }
 
-    // Generate embedding for query
-    const queryEmbedding = await generateLocalEmbedding(queryText);
+    // Generate once unless a governed caller already produced and validated the
+    // query vector for an upstream applicability decision. Reuse prevents one
+    // member turn from being interpreted through two independently embedded queries.
+    const queryEmbedding = providedQueryEmbedding !== undefined
+      ? [...providedQueryEmbedding]
+      : await generateLocalEmbedding(queryText);
 
-    if (!queryEmbedding || queryEmbedding.length === 0) {
-      console.warn('[AIN Retrieval] No embedding generated, falling back to empty');
+    if (
+      !queryEmbedding ||
+      queryEmbedding.length === 0 ||
+      !queryEmbedding.every(Number.isFinite) ||
+      !queryEmbedding.some((value) => value !== 0)
+    ) {
+      console.warn('[AIN Retrieval] No valid embedding generated, falling back to empty');
       return [];
     }
 
