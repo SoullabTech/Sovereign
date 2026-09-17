@@ -1,29 +1,15 @@
 'use client';
 
-import FieldToneIndicator from './FieldToneIndicator';
-
 export interface RelationshipSummary {
   id: string;
   name: string;
   realm: 'outer' | 'inner' | 'transpersonal';
   bondType: string | null;
+  note: string | null;
   fieldTone: string | null;
   activeSignals: string[] | null;
   lastCheckinAt: string | null;
   createdAt: string;
-}
-
-function formatRelativeTime(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = now - then;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return mins <= 1 ? 'just now' : `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString();
 }
 
 export default function RelationshipCard({
@@ -33,40 +19,41 @@ export default function RelationshipCard({
   relationship: RelationshipSummary;
   onClick: () => void;
 }) {
-  const realmIcon = {
+  const realmLabel = {
     outer: null,
-    inner: <span className="text-xs text-jade-copper">inner</span>,
-    transpersonal: <span className="text-xs text-jade-copper">transpersonal</span>,
-  };
+    inner: 'inner figure',
+    transpersonal: 'larger field',
+  }[relationship.realm];
+
+  const descriptor = relationship.bondType
+    ? relationship.bondType.replace(/_/g, ' ')
+    : realmLabel;
 
   return (
     <button
       onClick={onClick}
-      className="w-full text-left px-5 py-4 rounded-lg border border-jade-sage/20 bg-jade-forest/10 hover:bg-jade-forest/20 hover:border-jade-sage/30 transition-all duration-200 group"
+      className="group w-full text-left rounded-2xl border border-jade-sage/12 bg-jade-forest/[0.05] px-5 py-5 transition-all duration-300 hover:border-jade-sage/25 hover:bg-jade-forest/[0.10]"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-jade-jade font-light truncate">{relationship.name}</span>
-            {realmIcon[relationship.realm]}
+      <div className="flex items-start justify-between gap-6">
+        <div className="min-w-0 flex-1">
+          <div className="text-lg font-light tracking-wide text-jade-jade transition-colors group-hover:text-jade-sage">
+            {relationship.name}
           </div>
-          <div className="flex items-center gap-3 text-xs text-jade-mineral">
-            {relationship.bondType && (
-              <span className="capitalize">{relationship.bondType.replace(/_/g, ' ')}</span>
-            )}
-            {relationship.lastCheckinAt && (
-              <span>checked in {formatRelativeTime(relationship.lastCheckinAt)}</span>
-            )}
-          </div>
-        </div>
-        <div className="flex-shrink-0 pt-1 text-right">
-          <FieldToneIndicator tone={relationship.fieldTone} />
-          {relationship.activeSignals && relationship.activeSignals.length > 0 && (
-            <div className="mt-1 text-[10px] text-jade-mineral/60">
-              {relationship.activeSignals.slice(0, 3).join(' + ')}
+          {descriptor && (
+            <div className="mt-1 text-xs capitalize tracking-wide text-jade-mineral/70">
+              {descriptor}
             </div>
           )}
+          {relationship.note && (
+            <p className="mt-3 max-w-xl text-sm font-light leading-relaxed text-jade-mineral/75">
+              {relationship.note}
+            </p>
+          )}
         </div>
+
+        <span className="mt-1 text-jade-mineral/30 transition-all duration-300 group-hover:translate-x-1 group-hover:text-jade-sage/70">
+          →
+        </span>
       </div>
     </button>
   );

@@ -8,10 +8,19 @@ import CreateRelationshipModal from '@/components/relationships/CreateRelationsh
 
 type Realm = 'outer' | 'inner' | 'transpersonal';
 
-const REALM_HEADERS: Record<Realm, string> = {
-  outer: 'People in your life',
-  inner: 'Inner figures',
-  transpersonal: 'The larger field',
+const REALM_HEADERS: Record<Realm, { title: string; subtitle: string }> = {
+  outer: {
+    title: 'People in your life',
+    subtitle: 'Relationships you have chosen to bring into view.',
+  },
+  inner: {
+    title: 'Inner figures',
+    subtitle: 'Parts, archetypes, and inner presences you are in relationship with.',
+  },
+  transpersonal: {
+    title: 'The larger field',
+    subtitle: 'Vocation, nature, ancestors, the sacred, and what exceeds the personal.',
+  },
 };
 
 export default function RelationshipFieldPage() {
@@ -50,7 +59,6 @@ export default function RelationshipFieldPage() {
     setShowCreate(true);
   };
 
-  // Group by realm
   const grouped = relationships.reduce<Record<Realm, RelationshipSummary[]>>((acc, r) => {
     const realm = (r.realm || 'outer') as Realm;
     if (!acc[realm]) acc[realm] = [];
@@ -65,7 +73,7 @@ export default function RelationshipFieldPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border border-jade-sage/30 rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: 'var(--jade-jade, #a8c7a0)' }} />
-          <p className="text-sm text-jade-mineral font-light tracking-wide">Loading relational field...</p>
+          <p className="text-sm text-jade-mineral font-light tracking-wide">Opening your relationships...</p>
         </div>
       </div>
     );
@@ -73,34 +81,24 @@ export default function RelationshipFieldPage() {
 
   return (
     <div className="min-h-screen relative">
-      <div className="max-w-3xl mx-auto px-6 py-10">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-10">
-          <div>
-            <button
-              onClick={() => router.push('/maia')}
-              className="text-xs text-stone-500 hover:text-amber-400/80 transition-colors mb-3 flex items-center gap-1"
-            >
-              <span className="text-[10px]">&#8592;</span> Back to MAIA
-            </button>
-            <h1 className="text-3xl font-extralight text-jade-jade tracking-wide mb-2">
-              Relational Field
-            </h1>
-            <p className="text-sm text-jade-mineral font-light max-w-md">
-              The living patterns of your relationships — outer and inner — made visible.
-            </p>
-          </div>
-          {hasAny && (
-            <button
-              onClick={() => { setCreateRealm(undefined); setShowCreate(true); }}
-              className="px-4 py-2 rounded-lg bg-jade-forest/30 border border-jade-sage/25 text-jade-jade text-sm font-light hover:bg-jade-forest/45 transition-all flex-shrink-0"
-            >
-              + Add
-            </button>
-          )}
-        </div>
+      <div className="mx-auto max-w-4xl px-6 py-12 md:py-16">
+        <button
+          onClick={() => router.push('/maia')}
+          className="mb-10 flex items-center gap-1 text-xs text-stone-500 transition-colors hover:text-amber-400/80"
+        >
+          <span className="text-[10px]">←</span> Back to MAIA
+        </button>
 
-        {/* Empty state */}
+        <header className="mb-14 max-w-2xl">
+          <p className="mb-3 text-xs uppercase tracking-[0.22em] text-jade-mineral/55">Relationships</p>
+          <h1 className="mb-4 text-4xl font-extralight tracking-wide text-jade-jade md:text-5xl">
+            Who is present for you?
+          </h1>
+          <p className="max-w-xl text-base font-light leading-relaxed text-jade-mineral/80">
+            Bring a relationship into view. You do not need to know what it means yet.
+          </p>
+        </header>
+
         {!hasAny && (
           <EmptyRelationalField
             onAddPerson={() => openCreateForRealm('outer')}
@@ -109,18 +107,20 @@ export default function RelationshipFieldPage() {
           />
         )}
 
-        {/* Grouped list */}
         {hasAny && (
-          <div className="space-y-8">
+          <div className="space-y-14">
             {(Object.keys(REALM_HEADERS) as Realm[]).map((realm) => {
               const items = grouped[realm];
               if (!items || items.length === 0) return null;
+              const header = REALM_HEADERS[realm];
+
               return (
-                <div key={realm}>
-                  <h2 className="text-xs text-jade-sage uppercase tracking-wider mb-3">
-                    {REALM_HEADERS[realm]}
-                  </h2>
-                  <div className="space-y-2">
+                <section key={realm}>
+                  <div className="mb-5">
+                    <h2 className="text-sm font-light tracking-wide text-jade-sage">{header.title}</h2>
+                    <p className="mt-1 text-xs font-light leading-relaxed text-jade-mineral/55">{header.subtitle}</p>
+                  </div>
+                  <div className="space-y-3">
                     {items.map((r) => (
                       <RelationshipCard
                         key={r.id}
@@ -129,9 +129,18 @@ export default function RelationshipFieldPage() {
                       />
                     ))}
                   </div>
-                </div>
+                </section>
               );
             })}
+
+            <div className="border-t border-jade-sage/10 pt-8">
+              <button
+                onClick={() => { setCreateRealm(undefined); setShowCreate(true); }}
+                className="text-sm font-light text-jade-sage transition-colors hover:text-jade-jade"
+              >
+                + Bring someone or something else into view
+              </button>
+            </div>
           </div>
         )}
       </div>

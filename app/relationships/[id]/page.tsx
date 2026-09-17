@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import FieldToneIndicator from '@/components/relationships/FieldToneIndicator';
 import CheckInFlow from '@/components/relationships/CheckInFlow';
 import RelationshipTimeline, { type TimelineEntry } from '@/components/relationships/RelationshipTimeline';
+import RelationshipModeNav, { type RelationshipMode } from '@/components/relationships/RelationshipModeNav';
 import { seedFromSource } from '@/lib/maia/seedPrompt';
 
 interface RelationshipDetail {
@@ -24,15 +25,15 @@ interface FieldState {
   lastCheckinAt: string | null;
 }
 
+interface UnresolvedThread {
+  type: string;
+  description: string;
+}
+
 export default function RelationshipDetailPage() {
   const params = useParams() ?? {};
   const router = useRouter();
   const id = params.id as string;
-
-  interface UnresolvedThread {
-    type: string;
-    description: string;
-  }
 
   const [relationship, setRelationship] = useState<RelationshipDetail | null>(null);
   const [fieldState, setFieldState] = useState<FieldState | null>(null);
@@ -40,6 +41,7 @@ export default function RelationshipDetailPage() {
   const [unresolvedThreads, setUnresolvedThreads] = useState<UnresolvedThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [mode, setMode] = useState<RelationshipMode>('now');
   const [showCheckin, setShowCheckin] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
   const [noteContent, setNoteContent] = useState('');
@@ -73,7 +75,7 @@ export default function RelationshipDetailPage() {
 
   const handleCheckinComplete = () => {
     setShowCheckin(false);
-    fetchDetail(); // Refresh to show new entry + updated field state
+    fetchDetail();
   };
 
   const handleSaveNote = async () => {
@@ -92,7 +94,7 @@ export default function RelationshipDetailPage() {
         fetchDetail();
       }
     } catch {
-      // silent
+      // The relationship remains usable if a note save fails.
     } finally {
       setSavingNote(false);
     }
@@ -110,13 +112,20 @@ export default function RelationshipDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: trimmed }),
       });
-      if (res.ok) {
-        fetchDetail();
-      }
+      if (res.ok) fetchDetail();
     } catch {
-      // silent
+      // Renaming is non-load-bearing; leave the current label intact on failure.
     }
     setEditingName(false);
+  };
+
+  const openWithMAIA = () => {
+    seedFromSource(
+      'relationships:thread',
+      `I want to explore what is alive in my relationship with ${relationship?.name ?? 'this relationship'}.`,
+      { contextId: id, tone: 'supportive' }
+    );
+    router.push('/maia');
   };
 
   if (loading) {
@@ -133,248 +142,300 @@ export default function RelationshipDetailPage() {
         <div className="text-center">
           <p className="text-jade-mineral mb-4">{error || 'Not found'}</p>
           <button onClick={() => router.push('/relationships')} className="text-sm text-jade-sage hover:text-jade-jade transition-colors">
-            Back to field
+            Back to relationships
           </button>
         </div>
       </div>
     );
   }
 
-  const latestMovement = entries.find(e => e.suggestedMovement)?.suggestedMovement;
+  const latestMovement = entries.find((entry) => entry.suggestedMovement)?.suggestedMovement;
+  const latestMemberWords = entries.find((entry) => entry.freeText)?.freeText;
+  const hasFieldMaterial = Boolean(
+    fieldState || unresolvedThreads.length > 0 || entries.some((entry) => entry.patternHint && entry.patternHint !== 'Not enough history yet.')
+  );
 
   return (
     <div className="min-h-screen relative">
-      <div className="max-w-3xl mx-auto px-6 py-10">
-        {/* Back link */}
+      <div className="mx-auto max-w-4xl px-6 py-10 md:py-14">
         <button
           onClick={() => router.push('/relationships')}
-          className="text-xs text-jade-mineral hover:text-jade-sage transition-colors mb-6 block"
+          className="mb-8 block text-xs text-jade-mineral transition-colors hover:text-jade-sage"
         >
-          &larr; Relational Field
+          ← Relationships
         </button>
 
-        {/* Header */}
-        <div className="mb-10">
-          <div className="flex items-center gap-3 mb-2">
+        <header className="mb-7 max-w-2xl">
+          <div className="mb-2 flex items-center gap-3">
             {editingName ? (
               <input
                 autoFocus
                 value={editName}
-                onChange={e => setEditName(e.target.value)}
+                onChange={(event) => setEditName(event.target.value)}
                 onBlur={saveName}
-                onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false); }}
-                className="text-3xl font-extralight text-jade-jade tracking-wide bg-transparent border-b border-jade-sage/30 outline-none w-full"
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') saveName();
+                  if (event.key === 'Escape') setEditingName(false);
+                }}
+                className="w-full border-b border-jade-sage/30 bg-transparent text-4xl font-extralight tracking-wide text-jade-jade outline-none"
               />
             ) : (
               <h1
-                onClick={() => { setEditName(relationship.name); setEditingName(true); }}
-                className="text-3xl font-extralight text-jade-jade tracking-wide cursor-pointer hover:text-jade-sage transition-colors"
+                onClick={() => {
+                  setEditName(relationship.name);
+                  setEditingName(true);
+                }}
+                className="cursor-pointer text-4xl font-extralight tracking-wide text-jade-jade transition-colors hover:text-jade-sage"
                 title="Click to rename"
               >
                 {relationship.name}
               </h1>
             )}
             {relationship.realm !== 'outer' && (
-              <span className="text-xs text-jade-copper capitalize">{relationship.realm}</span>
+              <span className="text-xs capitalize text-jade-copper/80">{relationship.realm}</span>
             )}
           </div>
-          <div className="flex items-center gap-3 text-sm text-jade-mineral">
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-light text-jade-mineral/70">
             {relationship.bondType && (
               <span className="capitalize">{relationship.bondType.replace(/_/g, ' ')}</span>
             )}
-            <FieldToneIndicator tone={fieldState?.fieldTone} size="md" />
+            {relationship.note && <span className="text-jade-mineral/55">{relationship.note}</span>}
           </div>
-          {relationship.note && (
-            <p className="text-sm text-jade-mineral/80 font-light mt-3 italic">{relationship.note}</p>
-          )}
+        </header>
 
-          {/* Take this to MAIA — explicit handoff to relational context bridge */}
-          <button
-            onClick={() => {
-              seedFromSource(
-                'relationships:thread',
-                'I want to bring this into our conversation.',
-                { contextId: id, tone: 'supportive' }
-              );
-              router.push('/maia');
-            }}
-            className="mt-6 px-4 py-2 rounded-lg bg-jade-forest/30 border border-jade-sage/25 text-jade-jade text-sm font-light hover:bg-jade-forest/45 transition-all"
-          >
-            Take this to MAIA
-          </button>
-        </div>
+        <RelationshipModeNav value={mode} onChange={setMode} />
 
-        {/* Section 1: Current Field */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs text-jade-sage uppercase tracking-wider">Current Field</h2>
-          </div>
-
-          {fieldState ? (
-            <div className="p-4 rounded-lg border border-jade-sage/15 bg-jade-forest/8">
-              <div className="flex items-center gap-4 mb-3">
-                <FieldToneIndicator tone={fieldState.fieldTone} size="md" />
-                {fieldState.dominantPattern && (
-                  <span className="text-xs text-jade-mineral">Pattern: {fieldState.dominantPattern}</span>
-                )}
+        <main className="pt-8 md:pt-10">
+          {mode === 'now' && (
+            <section className="mx-auto max-w-2xl">
+              <div className="mb-10">
+                <p className="mb-2 text-xs uppercase tracking-[0.2em] text-jade-mineral/45">Now</p>
+                <h2 className="text-2xl font-extralight leading-relaxed text-jade-jade md:text-3xl">
+                  What is alive between you now?
+                </h2>
               </div>
-              {fieldState.activeSignals && fieldState.activeSignals.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {fieldState.activeSignals.map((s, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-jade-forest/20 border border-jade-sage/15 text-jade-mineral">
-                      {s}
-                    </span>
-                  ))}
-                </div>
+
+              {latestMemberWords && !showCheckin && (
+                <blockquote className="mb-9 border-l border-jade-sage/20 pl-5 text-base font-light italic leading-relaxed text-jade-mineral/80">
+                  “{latestMemberWords}”
+                </blockquote>
               )}
-              {fieldState.developmentalTheme && (
-                <p className="text-xs text-jade-copper font-light">{fieldState.developmentalTheme}</p>
-              )}
-            </div>
-          ) : (
-            <div className="p-4 rounded-lg border border-jade-forest/20 bg-jade-shadow/20">
-              <p className="text-sm text-jade-mineral font-light">
-                No field state yet. Check in to begin sensing the field.
-              </p>
-            </div>
-          )}
 
-          <button
-            onClick={() => setShowCheckin(!showCheckin)}
-            className="mt-3 px-4 py-2 rounded-lg bg-jade-forest/30 border border-jade-sage/25 text-jade-jade text-sm font-light hover:bg-jade-forest/45 transition-all"
-          >
-            {showCheckin ? 'Close' : 'Check in'}
-          </button>
-
-          {showCheckin && (
-            <div className="mt-4 p-4 rounded-lg border border-jade-sage/15 bg-jade-forest/5">
-              <CheckInFlow
-                relationshipId={id}
-                relationshipName={relationship.name}
-                onComplete={handleCheckinComplete}
-              />
-            </div>
-          )}
-        </section>
-
-        {/* Unresolved threads — subtle, between field and timeline */}
-        {unresolvedThreads.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-xs text-jade-copper uppercase tracking-wider mb-3">Something remains open</h2>
-            <div className="space-y-2">
-              {unresolvedThreads.map((thread, i) => (
-                <div key={i} className="px-4 py-3 rounded-lg border border-jade-copper/20 bg-jade-forest/5">
-                  <p className="text-sm text-jade-mineral font-light">{thread.description}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Section 2: Timeline */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs text-jade-sage uppercase tracking-wider">Timeline</h2>
-            <button
-              onClick={() => setShowAddNote(!showAddNote)}
-              className="text-xs text-jade-mineral hover:text-jade-sage transition-colors"
-            >
-              {showAddNote ? 'Cancel' : '+ Add entry'}
-            </button>
-          </div>
-
-          {showAddNote && (
-            <div className="mb-6 p-4 rounded-lg border border-jade-sage/15 bg-jade-forest/5">
-              <div className="flex gap-2 mb-3">
-                {(['note', 'reflection', 'threshold'] as const).map((k) => (
+              {!showCheckin ? (
+                <div className="space-y-3">
                   <button
-                    key={k}
-                    onClick={() => setNoteKind(k)}
-                    className={`px-2.5 py-1 rounded-full text-xs transition-all ${
-                      noteKind === k
-                        ? 'bg-jade-forest/40 text-jade-jade border border-jade-sage/40'
-                        : 'bg-jade-shadow/40 text-jade-mineral border border-jade-forest/30'
-                    }`}
+                    onClick={() => setShowCheckin(true)}
+                    className="w-full rounded-xl border border-jade-sage/20 bg-jade-forest/10 px-5 py-4 text-left transition-colors hover:border-jade-sage/35 hover:bg-jade-forest/20"
                   >
-                    {k}
+                    <div className="text-sm font-light text-jade-jade">Begin with what you are sensing</div>
+                    <div className="mt-1 text-xs font-light leading-relaxed text-jade-mineral/60">
+                      A brief check-in can help the field come into view without deciding what it means.
+                    </div>
                   </button>
-                ))}
+
+                  <button
+                    onClick={openWithMAIA}
+                    className="w-full rounded-xl border border-jade-sage/10 px-5 py-4 text-left transition-colors hover:border-jade-sage/25 hover:bg-jade-forest/10"
+                  >
+                    <div className="text-sm font-light text-jade-jade">Explore this with MAIA</div>
+                    <div className="mt-1 text-xs font-light leading-relaxed text-jade-mineral/60">
+                      Bring this relationship into conversation with its context held quietly in the background.
+                    </div>
+                  </button>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-jade-sage/15 bg-jade-forest/5 p-5 md:p-6">
+                  <CheckInFlow
+                    relationshipId={id}
+                    relationshipName={relationship.name}
+                    onComplete={handleCheckinComplete}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCheckin(false)}
+                    className="mt-5 text-xs text-jade-mineral/55 transition-colors hover:text-jade-sage"
+                  >
+                    Return to now
+                  </button>
+                </div>
+              )}
+
+              {latestMovement && !showCheckin && (
+                <div className="mt-10 border-t border-jade-sage/10 pt-6">
+                  <p className="mb-2 text-xs uppercase tracking-[0.18em] text-jade-mineral/40">Something to carry</p>
+                  <p className="text-sm font-light italic leading-relaxed text-jade-mineral/75">{latestMovement}</p>
+                </div>
+              )}
+            </section>
+          )}
+
+          {mode === 'story' && (
+            <section className="mx-auto max-w-2xl">
+              <div className="mb-8 flex items-end justify-between gap-4">
+                <div>
+                  <p className="mb-2 text-xs uppercase tracking-[0.2em] text-jade-mineral/45">Story</p>
+                  <h2 className="text-2xl font-extralight text-jade-jade">How did you get here?</h2>
+                  <p className="mt-2 max-w-lg text-sm font-light leading-relaxed text-jade-mineral/60">
+                    What has been meaningful enough to keep. Not a complete history, and it does not need to be.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddNote((value) => !value)}
+                  className="shrink-0 text-xs text-jade-sage transition-colors hover:text-jade-jade"
+                >
+                  {showAddNote ? 'Cancel' : '+ Keep a moment'}
+                </button>
               </div>
-              <textarea
-                value={noteContent}
-                onChange={(e) => setNoteContent(e.target.value)}
-                rows={3}
-                placeholder={noteKind === 'threshold' ? 'What shifted?' : noteKind === 'reflection' ? 'What are you noticing?' : 'What happened?'}
-                className="w-full px-3 py-2 rounded-lg bg-jade-shadow border border-jade-sage/20 text-jade-jade placeholder:text-jade-mineral/40 focus:outline-none focus:border-jade-sage/50 text-sm resize-none mb-3"
-              />
-              <button
-                onClick={handleSaveNote}
-                disabled={savingNote || !noteContent.trim()}
-                className="px-4 py-1.5 rounded-lg bg-jade-forest/30 border border-jade-sage/25 text-jade-jade text-xs font-light hover:bg-jade-forest/45 transition-all disabled:opacity-40"
-              >
-                {savingNote ? 'Saving...' : 'Save'}
-              </button>
-            </div>
+
+              {showAddNote && (
+                <div className="mb-8 rounded-xl border border-jade-sage/15 bg-jade-forest/5 p-5">
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {(['note', 'reflection', 'threshold'] as const).map((kind) => (
+                      <button
+                        key={kind}
+                        onClick={() => setNoteKind(kind)}
+                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                          noteKind === kind
+                            ? 'border-jade-sage/35 bg-jade-forest/30 text-jade-jade'
+                            : 'border-jade-forest/25 text-jade-mineral/65 hover:border-jade-sage/25'
+                        }`}
+                      >
+                        {kind === 'note' ? 'Moment' : kind === 'threshold' ? 'Something shifted' : 'Reflection'}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={noteContent}
+                    onChange={(event) => setNoteContent(event.target.value)}
+                    rows={4}
+                    placeholder={
+                      noteKind === 'threshold'
+                        ? 'What shifted?'
+                        : noteKind === 'reflection'
+                          ? 'What are you noticing?'
+                          : 'What happened, or what do you want to remember?'
+                    }
+                    className="mb-3 w-full resize-none rounded-lg border border-jade-sage/15 bg-jade-shadow/40 px-3 py-3 text-sm text-jade-jade outline-none placeholder:text-jade-mineral/35 focus:border-jade-sage/40"
+                  />
+                  <button
+                    onClick={handleSaveNote}
+                    disabled={savingNote || !noteContent.trim()}
+                    className="rounded-lg border border-jade-sage/25 bg-jade-forest/25 px-4 py-2 text-xs font-light text-jade-jade transition-colors hover:bg-jade-forest/40 disabled:opacity-40"
+                  >
+                    {savingNote ? 'Keeping...' : 'Keep this'}
+                  </button>
+                </div>
+              )}
+
+              <RelationshipTimeline entries={entries} />
+            </section>
           )}
 
-          <RelationshipTimeline entries={entries} />
-        </section>
+          {mode === 'field' && (
+            <section className="mx-auto max-w-2xl">
+              <div className="mb-9">
+                <p className="mb-2 text-xs uppercase tracking-[0.2em] text-jade-mineral/45">Field</p>
+                <h2 className="text-2xl font-extralight text-jade-jade">What seems to happen between you?</h2>
+                <p className="mt-2 max-w-lg text-sm font-light leading-relaxed text-jade-mineral/60">
+                  Patterns here are working perceptions, not verdicts. Fresh experience can revise them at any time.
+                </p>
+              </div>
 
-        {/* Section 3: Next Movement */}
-        <section className="mb-10">
-          <h2 className="text-xs text-jade-sage uppercase tracking-wider mb-4">Next Movement</h2>
-          {latestMovement ? (
-            <div className="p-4 rounded-lg border border-jade-sage/15 bg-jade-forest/8">
-              <p className="text-sm text-jade-jade font-light italic">{latestMovement}</p>
-            </div>
-          ) : (
-            <div className="p-4 rounded-lg border border-jade-forest/20 bg-jade-shadow/20">
-              <p className="text-sm text-jade-mineral font-light">
-                Check in to receive a grounded next step.
-              </p>
-            </div>
+              {!hasFieldMaterial ? (
+                <div className="rounded-xl border border-jade-sage/10 px-5 py-7">
+                  <p className="text-sm font-light leading-relaxed text-jade-mineral/65">
+                    There is not enough history yet to say much about the field. That is not a gap to fill. Let it emerge from lived moments.
+                  </p>
+                  <button
+                    onClick={() => setMode('now')}
+                    className="mt-5 text-xs text-jade-sage transition-colors hover:text-jade-jade"
+                  >
+                    Return to what is alive now
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {fieldState && (
+                    <div className="rounded-xl border border-jade-sage/15 bg-jade-forest/5 p-5">
+                      <div className="mb-4 flex flex-wrap items-center gap-4">
+                        <span className="text-xs uppercase tracking-[0.16em] text-jade-mineral/45">Recent atmosphere</span>
+                        <FieldToneIndicator tone={fieldState.fieldTone} size="md" />
+                      </div>
+
+                      {fieldState.dominantPattern && (
+                        <div className="mb-4">
+                          <p className="mb-1 text-xs text-jade-mineral/45">Something MAIA is noticing</p>
+                          <p className="text-sm font-light leading-relaxed text-jade-jade/85">{fieldState.dominantPattern}</p>
+                        </div>
+                      )}
+
+                      {fieldState.activeSignals && fieldState.activeSignals.length > 0 && (
+                        <div>
+                          <p className="mb-2 text-xs text-jade-mineral/45">Present in recent check-ins</p>
+                          <div className="flex flex-wrap gap-2">
+                            {fieldState.activeSignals.map((signal) => (
+                              <span key={signal} className="rounded-full border border-jade-sage/12 px-2.5 py-1 text-xs text-jade-mineral/65">
+                                {signal}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {unresolvedThreads.length > 0 && (
+                    <div>
+                      <p className="mb-3 text-xs uppercase tracking-[0.16em] text-jade-mineral/45">Still open</p>
+                      <div className="space-y-3">
+                        {unresolvedThreads.map((thread, index) => (
+                          <div key={`${thread.type}-${index}`} className="border-l border-jade-copper/25 pl-4">
+                            <p className="text-sm font-light leading-relaxed text-jade-mineral/75">{thread.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="border-t border-jade-sage/10 pt-7">
+                    <p className="mb-4 text-xs uppercase tracking-[0.16em] text-jade-mineral/45">Look more closely</p>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => router.push(`/labtools/relational-field?relationshipId=${id}`)}
+                        className="w-full rounded-lg px-3 py-3 text-left transition-colors hover:bg-jade-forest/10"
+                      >
+                        <div className="text-sm font-light text-jade-jade">Sense the movement</div>
+                        <p className="mt-1 text-xs font-light text-jade-mineral/55">Stay close to tone, movement, and what remains unresolved.</p>
+                      </button>
+                      <button
+                        onClick={() => router.push(`/labtools/dynamics-map?relationshipId=${id}`)}
+                        className="w-full rounded-lg px-3 py-3 text-left transition-colors hover:bg-jade-forest/10"
+                      >
+                        <div className="text-sm font-light text-jade-jade">Look at recurrence</div>
+                        <p className="mt-1 text-xs font-light text-jade-mineral/55">Explore a possible pattern without turning it into an identity.</p>
+                      </button>
+                      <button
+                        onClick={() => router.push(`/labtools/repair-path?relationshipId=${id}`)}
+                        className="w-full rounded-lg px-3 py-3 text-left transition-colors hover:bg-jade-forest/10"
+                      >
+                        <div className="text-sm font-light text-jade-jade">When something has broken</div>
+                        <p className="mt-1 text-xs font-light text-jade-mineral/55">Consider repair, distance, boundary, or ending without presuming which is right.</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setMode('now')}
+                    className="text-xs text-jade-sage transition-colors hover:text-jade-jade"
+                  >
+                    Return to now
+                  </button>
+                </div>
+              )}
+            </section>
           )}
-        </section>
-
-        {/* Section 4: Open with a tool */}
-        <section className="mb-10">
-          <h2 className="text-xs text-jade-sage uppercase tracking-wider mb-4">
-            Open with a tool
-          </h2>
-          <p className="text-xs text-jade-mineral/70 font-light mb-3">
-            Each tool draws from a different lineage — polyvagal, Bowen, IFS, Gottman, NVC, EFT — and
-            is a scaffold you control, not a script.
-          </p>
-          <div className="grid gap-2 md:grid-cols-3">
-            <button
-              onClick={() => router.push(`/labtools/relational-field?relationshipId=${id}`)}
-              className="rounded-lg border border-jade-sage/20 bg-jade-forest/10 hover:bg-jade-forest/20 hover:border-jade-sage/30 transition-all text-left p-4"
-            >
-              <div className="text-sm text-jade-jade font-light mb-1">Relational Field</div>
-              <p className="text-[11px] text-jade-mineral/70 font-light leading-relaxed">
-                Sense the tone and movement right now.
-              </p>
-            </button>
-            <button
-              onClick={() => router.push(`/labtools/dynamics-map?relationshipId=${id}`)}
-              className="rounded-lg border border-jade-sage/20 bg-jade-forest/10 hover:bg-jade-forest/20 hover:border-jade-sage/30 transition-all text-left p-4"
-            >
-              <div className="text-sm text-jade-jade font-light mb-1">Dynamics Map</div>
-              <p className="text-[11px] text-jade-mineral/70 font-light leading-relaxed">
-                Notice the recurring pattern between you.
-              </p>
-            </button>
-            <button
-              onClick={() => router.push(`/labtools/repair-path?relationshipId=${id}`)}
-              className="rounded-lg border border-jade-sage/20 bg-jade-forest/10 hover:bg-jade-forest/20 hover:border-jade-sage/30 transition-all text-left p-4"
-            >
-              <div className="text-sm text-jade-jade font-light mb-1">Repair Path</div>
-              <p className="text-[11px] text-jade-mineral/70 font-light leading-relaxed">
-                Possible moves when something has broken.
-              </p>
-            </button>
-          </div>
-        </section>
+        </main>
       </div>
     </div>
   );
