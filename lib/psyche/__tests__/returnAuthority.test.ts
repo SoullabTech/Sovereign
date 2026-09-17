@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { applyAtomGesture, keepSource } from '../portfolio';
 
@@ -6,6 +6,19 @@ jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));
 const { query } = jest.requireMock('@/lib/db/postgres');
 
 const MEMBER = '11111111-1111-4111-8111-111111111111';
+
+function runtimeTsFiles(root: string): string[] {
+  const out: string[] = [];
+  for (const name of readdirSync(root)) {
+    if (name === '__tests__') continue;
+    const path = join(root, name);
+    const stat = statSync(path);
+    if (stat.isDirectory()) out.push(...runtimeTsFiles(path));
+    else if (/\.tsx?$/.test(name)) out.push(path);
+  }
+  return out;
+}
+
 
 const atomRow = (over: Record<string, unknown> = {}) => ({
   rows: [{
@@ -58,5 +71,33 @@ describe('R10 KEEP does not grant REOPEN', () => {
     expect(migration).toContain("DEFAULT 'legacy_ambiguous'");
     expect(migration).toContain("ALTER COLUMN return_authority SET DEFAULT 'default_private'");
     expect(migration).toContain("ALTER COLUMN return_preference SET DEFAULT 'member_pulled'");
+  });
+
+
+  it('only the governed member gesture may mint member_explicit return authority', () => {
+    const roots = ['app', 'lib'];
+    const files = roots.flatMap((root) => runtimeTsFiles(join(process.cwd(), root)));
+
+    const explicitMutators = files
+      .filter((file) => /SET\s+return_preference\s*=\s*\$\d+[\s\S]{0,160}return_authority\s*=\s*['"]member_explicit['"]/i.test(readFileSync(file, 'utf8')))
+      .map((file) => file.replace(process.cwd() + '/', ''))
+      .sort();
+    expect(explicitMutators).toEqual(['lib/psyche/portfolio.ts']);
+
+    const inserts = files.flatMap((file) => {
+      const source = readFileSync(file, 'utf8');
+      return [...source.matchAll(/`INSERT INTO member_memory_atoms[\s\S]*?`/g)].map((match) => ({
+        file: file.replace(process.cwd() + '/', ''),
+        sql: match[0],
+      }));
+    });
+    expect(inserts.map((insert) => insert.file).sort()).toEqual([
+      'app/api/studio/with-me/sessions/[sessionId]/route.ts',
+      'lib/psyche/portfolio.ts',
+    ]);
+    for (const insert of inserts) {
+      expect(insert.sql).toContain("'default_private'");
+      expect(insert.sql).not.toContain("'member_explicit'");
+    }
   });
 });
