@@ -1,0 +1,547 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H4A_HIGHER_ORDER_V1",
+  "authority": "offline research only",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "local Claude CLI restricted/no-tools",
+    "effort": "low"
+  },
+  "hypothesis": "Some 3+ node configurations carry group-level information that collides under identical pairwise graph representations.",
+  "collisionTest": {
+    "groups": [
+      {
+        "group": "A",
+        "fixtureIds": [
+          "K1_ALIGN_GROUP_CONSTRAINT",
+          "K2_ALIGN_GROUP_SYNERGY"
+        ],
+        "samePairwiseSignature": true,
+        "higherKinds": [
+          "COLLECTIVE_CONSTRAINT",
+          "COLLECTIVE_SYNERGY"
+        ],
+        "pairwiseCanDiscriminate": false
+      },
+      {
+        "group": "B",
+        "fixtureIds": [
+          "K3_TENSION_GROUP_CONSTRAINT",
+          "K4_TENSION_GROUP_SYNERGY"
+        ],
+        "samePairwiseSignature": true,
+        "higherKinds": [
+          "COLLECTIVE_CONSTRAINT",
+          "COLLECTIVE_SYNERGY"
+        ],
+        "pairwiseCanDiscriminate": false
+      }
+    ],
+    "distinctHigherOrderCases": 4,
+    "pairwiseDistinguishable": 0,
+    "higherOrderDistinguishable": 4
+  },
+  "acquisition": {
+    "summary": {
+      "runs": 12,
+      "correct": 12,
+      "truePositive": 8,
+      "truePositiveTotal": 8,
+      "trueNegative": 4,
+      "trueNegativeTotal": 4,
+      "falsePositive": 0
+    },
+    "byFixture": {
+      "K1_ALIGN_GROUP_CONSTRAINT": {
+        "runs": 2,
+        "correct": 2,
+        "predictions": [
+          {
+            "kind": "COLLECTIVE_CONSTRAINT",
+            "memberIds": [
+              "QUALITY",
+              "REST",
+              "SPEED"
+            ],
+            "admitted": true,
+            "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+          },
+          {
+            "kind": "COLLECTIVE_CONSTRAINT",
+            "memberIds": [
+              "QUALITY",
+              "REST",
+              "SPEED"
+            ],
+            "admitted": true,
+            "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+          }
+        ]
+      },
+      "K2_ALIGN_GROUP_SYNERGY": {
+        "runs": 2,
+        "correct": 2,
+        "predictions": [
+          {
+            "kind": "COLLECTIVE_SYNERGY",
+            "memberIds": [
+              "QUALITY",
+              "REST",
+              "SPEED"
+            ],
+            "admitted": true,
+            "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+          },
+          {
+            "kind": "COLLECTIVE_SYNERGY",
+            "memberIds": [
+              "QUALITY",
+              "REST",
+              "SPEED"
+            ],
+            "admitted": true,
+            "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+          }
+        ]
+      },
+      "K3_TENSION_GROUP_CONSTRAINT": {
+        "runs": 2,
+        "correct": 2,
+        "predictions": [
+          {
+            "kind": "COLLECTIVE_CONSTRAINT",
+            "memberIds": [
+              "AMBITION",
+              "LOYALTY",
+              "REST"
+            ],
+            "admitted": true,
+            "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+          },
+          {
+            "kind": "COLLECTIVE_CONSTRAINT",
+            "memberIds": [
+              "AMBITION",
+              "LOYALTY",
+              "REST"
+            ],
+            "admitted": true,
+            "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+          }
+        ]
+      },
+      "K4_TENSION_GROUP_SYNERGY": {
+        "runs": 2,
+        "correct": 2,
+        "predictions": [
+          {
+            "kind": "COLLECTIVE_SYNERGY",
+            "memberIds": [
+              "AMBITION",
+              "LOYALTY",
+              "REST"
+            ],
+            "admitted": true,
+            "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+          },
+          {
+            "kind": "COLLECTIVE_SYNERGY",
+            "memberIds": [
+              "AMBITION",
+              "LOYALTY",
+              "REST"
+            ],
+            "admitted": true,
+            "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+          }
+        ]
+      },
+      "K5_PAIRWISE_ONLY": {
+        "runs": 2,
+        "correct": 2,
+        "predictions": [
+          {
+            "kind": "NONE",
+            "memberIds": [],
+            "admitted": false,
+            "reason": "MODEL_NONE"
+          },
+          {
+            "kind": "NONE",
+            "memberIds": [],
+            "admitted": false,
+            "reason": "MODEL_NONE"
+          }
+        ]
+      },
+      "K6_COOCCURRENCE_ONLY": {
+        "runs": 2,
+        "correct": 2,
+        "predictions": [
+          {
+            "kind": "NONE",
+            "memberIds": [],
+            "admitted": false,
+            "reason": "MODEL_NONE"
+          },
+          {
+            "kind": "NONE",
+            "memberIds": [],
+            "admitted": false,
+            "reason": "MODEL_NONE"
+          }
+        ]
+      }
+    },
+    "rows": [
+      {
+        "fixture": "K1_ALIGN_GROUP_CONSTRAINT",
+        "run": 1,
+        "rawHash": "2bede7f6995f72f8c8452c42e5fadea7f34bc9580770d32816c257fb72030cf3",
+        "proposal": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "memberIds": [
+            "SPEED",
+            "QUALITY",
+            "REST"
+          ]
+        },
+        "gated": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "memberIds": [
+            "QUALITY",
+            "REST",
+            "SPEED"
+          ],
+          "admitted": true,
+          "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+        },
+        "expected": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "members": [
+            "SPEED",
+            "QUALITY",
+            "REST"
+          ]
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K1_ALIGN_GROUP_CONSTRAINT",
+        "run": 2,
+        "rawHash": "2bede7f6995f72f8c8452c42e5fadea7f34bc9580770d32816c257fb72030cf3",
+        "proposal": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "memberIds": [
+            "SPEED",
+            "QUALITY",
+            "REST"
+          ]
+        },
+        "gated": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "memberIds": [
+            "QUALITY",
+            "REST",
+            "SPEED"
+          ],
+          "admitted": true,
+          "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+        },
+        "expected": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "members": [
+            "SPEED",
+            "QUALITY",
+            "REST"
+          ]
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K2_ALIGN_GROUP_SYNERGY",
+        "run": 1,
+        "rawHash": "7bb729f68416ba123304d82918506af43f7ae0e232e78bb15174f101e93970fb",
+        "proposal": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "memberIds": [
+            "SPEED",
+            "QUALITY",
+            "REST"
+          ]
+        },
+        "gated": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "memberIds": [
+            "QUALITY",
+            "REST",
+            "SPEED"
+          ],
+          "admitted": true,
+          "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+        },
+        "expected": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "members": [
+            "SPEED",
+            "QUALITY",
+            "REST"
+          ]
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K2_ALIGN_GROUP_SYNERGY",
+        "run": 2,
+        "rawHash": "7bb729f68416ba123304d82918506af43f7ae0e232e78bb15174f101e93970fb",
+        "proposal": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "memberIds": [
+            "SPEED",
+            "QUALITY",
+            "REST"
+          ]
+        },
+        "gated": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "memberIds": [
+            "QUALITY",
+            "REST",
+            "SPEED"
+          ],
+          "admitted": true,
+          "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+        },
+        "expected": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "members": [
+            "SPEED",
+            "QUALITY",
+            "REST"
+          ]
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K3_TENSION_GROUP_CONSTRAINT",
+        "run": 1,
+        "rawHash": "8eff857ba512f7eee1d888f946ccb917d345c408058ea286c1d39a7a6340d117",
+        "proposal": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "memberIds": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ]
+        },
+        "gated": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "memberIds": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ],
+          "admitted": true,
+          "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+        },
+        "expected": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "members": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ]
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K3_TENSION_GROUP_CONSTRAINT",
+        "run": 2,
+        "rawHash": "8eff857ba512f7eee1d888f946ccb917d345c408058ea286c1d39a7a6340d117",
+        "proposal": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "memberIds": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ]
+        },
+        "gated": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "memberIds": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ],
+          "admitted": true,
+          "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+        },
+        "expected": {
+          "kind": "COLLECTIVE_CONSTRAINT",
+          "members": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ]
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K4_TENSION_GROUP_SYNERGY",
+        "run": 1,
+        "rawHash": "b02f13f08630f506bf3b9415a556029337c58b613e015733afc29a034212b93d",
+        "proposal": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "memberIds": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ]
+        },
+        "gated": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "memberIds": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ],
+          "admitted": true,
+          "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+        },
+        "expected": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "members": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ]
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K4_TENSION_GROUP_SYNERGY",
+        "run": 2,
+        "rawHash": "b02f13f08630f506bf3b9415a556029337c58b613e015733afc29a034212b93d",
+        "proposal": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "memberIds": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ]
+        },
+        "gated": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "memberIds": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ],
+          "admitted": true,
+          "reason": "EXACT_HIGHER_ORDER_EVIDENCE"
+        },
+        "expected": {
+          "kind": "COLLECTIVE_SYNERGY",
+          "members": [
+            "AMBITION",
+            "LOYALTY",
+            "REST"
+          ]
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K5_PAIRWISE_ONLY",
+        "run": 1,
+        "rawHash": "249705549ffc6fedbb081477208cc263fa8082d467c0a685e53088becfedd498",
+        "proposal": {
+          "kind": "NONE",
+          "memberIds": []
+        },
+        "gated": {
+          "kind": "NONE",
+          "memberIds": [],
+          "admitted": false,
+          "reason": "MODEL_NONE"
+        },
+        "expected": {
+          "kind": "NONE",
+          "members": []
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K5_PAIRWISE_ONLY",
+        "run": 2,
+        "rawHash": "249705549ffc6fedbb081477208cc263fa8082d467c0a685e53088becfedd498",
+        "proposal": {
+          "kind": "NONE",
+          "memberIds": []
+        },
+        "gated": {
+          "kind": "NONE",
+          "memberIds": [],
+          "admitted": false,
+          "reason": "MODEL_NONE"
+        },
+        "expected": {
+          "kind": "NONE",
+          "members": []
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K6_COOCCURRENCE_ONLY",
+        "run": 1,
+        "rawHash": "249705549ffc6fedbb081477208cc263fa8082d467c0a685e53088becfedd498",
+        "proposal": {
+          "kind": "NONE",
+          "memberIds": []
+        },
+        "gated": {
+          "kind": "NONE",
+          "memberIds": [],
+          "admitted": false,
+          "reason": "MODEL_NONE"
+        },
+        "expected": {
+          "kind": "NONE",
+          "members": []
+        },
+        "correct": true,
+        "parseError": null
+      },
+      {
+        "fixture": "K6_COOCCURRENCE_ONLY",
+        "run": 2,
+        "rawHash": "249705549ffc6fedbb081477208cc263fa8082d467c0a685e53088becfedd498",
+        "proposal": {
+          "kind": "NONE",
+          "memberIds": []
+        },
+        "gated": {
+          "kind": "NONE",
+          "memberIds": [],
+          "admitted": false,
+          "reason": "MODEL_NONE"
+        },
+        "expected": {
+          "kind": "NONE",
+          "members": []
+        },
+        "correct": true,
+        "parseError": null
+      }
+    ]
+  }
+}
