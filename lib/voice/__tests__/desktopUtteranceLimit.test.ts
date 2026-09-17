@@ -222,7 +222,7 @@ describe('4 — Android-Chrome and Firefox/Zen keep the 8s bound', () => {
     expect(uses.length).toBe(2);
     const call = src.indexOf('recordAndTranscribe(stream, {');
     const args = src.slice(call, src.indexOf('});', call));
-    expect(args).toContain('info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true }');
+    expect(args).toMatch(/info\.isDesktop \? \{\s*maxMs: DESKTOP_MAX_UTTERANCE_MS,\s*waitForSpeech: true/);
   });
 });
 
@@ -317,6 +317,107 @@ describe('Desktop quiet arrival', () => {
     const pending = recordAndTranscribe(fakeStream());
     await advance(2_000);
     expect(recorders[0].state).toBe('inactive');
+    await pending;
+  });
+});
+
+
+describe('Desktop member-owned turn completion', () => {
+  it.each([1800, 3500, 6000, 10000])('honors a selected %ims pause', async (holdoff) => {
+    jest.useFakeTimers();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      getSilenceHoldoffMs: () => holdoff,
+    });
+    await advance(1_000);
+    level = 0;
+    await advance(holdoff - 200);
+    expect(recorders[0].state).toBe('recording');
+    await advance(300);
+    expect((await pending).stopReason).toBe('silence');
+    expect(transcribeCalls()).toHaveLength(1);
+  });
+
+  it('holds across long pauses until Done and sends the final transcript once', async () => {
+    jest.useFakeTimers();
+    const finish = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      explicitYield: true, finishSignal: finish.signal,
+    });
+    await advance(1_000);
+    level = 0;
+    await advance(20_000, 500);
+    expect(recorders[0].state).toBe('recording');
+    expect(transcribeCalls()).toHaveLength(0);
+    level = 0.2;
+    await advance(1_000);
+    finish.abort();
+    finish.abort();
+    const result = await pending;
+    expect(result.stopReason).toBe('member_done');
+    expect(result.transcript).toBe('hello there');
+    expect(transcribeCalls()).toHaveLength(1);
+  });
+
+  it('Stop cancels a held turn and a late Done cannot submit it', async () => {
+    jest.useFakeTimers();
+    const cancel = new AbortController();
+    const finish = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      explicitYield: true, signal: cancel.signal, finishSignal: finish.signal,
+    });
+    await advance(1_000);
+    cancel.abort();
+    finish.abort();
+    expect((await pending).reason).toBe('aborted');
+    expect(transcribeCalls()).toHaveLength(0);
+  });
+
+  it('returns the safety ceiling as max, never as member completion', async () => {
+    jest.useFakeTimers();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: 3_000, waitForSpeech: true, explicitYield: true,
+    });
+    await advance(3_500);
+    expect((await pending).stopReason).toBe('max');
+    const src = fs.readFileSync(path.resolve(__dirname, '../../../components/voice/ContinuousConversation.tsx'), 'utf8');
+    expect(src).toContain("explicitYield && result.stopReason !== 'member_done'");
+    expect(src).toContain("onTranscriptSalvage?.({ text: result.transcript, cause: 'desktop_capture_limit' })");
+  });
+
+  it('does not transcribe silence when Done is pressed before speaking', async () => {
+    jest.useFakeTimers();
+    level = 0;
+    const finish = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      explicitYield: true, finishSignal: finish.signal,
+    });
+    await advance(1_000);
+    finish.abort();
+    expect((await pending).reason).toBe('no_speech');
+    expect(transcribeCalls()).toHaveLength(0);
+  });
+
+  it('learns only from a pause followed by resumed speech', async () => {
+    jest.useFakeTimers();
+    const pauses: number[] = [];
+    const finish = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      explicitYield: true, finishSignal: finish.signal,
+      onContinuedPause: (ms) => pauses.push(ms),
+    });
+    await advance(1_000);
+    level = 0;
+    await advance(4_000);
+    expect(pauses).toHaveLength(0);
+    level = 0.2;
+    await advance(500);
+    expect(pauses).toEqual([4_000]);
+    finish.abort();
     await pending;
   });
 });

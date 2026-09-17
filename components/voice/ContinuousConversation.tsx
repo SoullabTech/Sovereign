@@ -513,6 +513,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     generation: number;
     stream: MediaStream | null;
     controller: AbortController;
+    finishController?: AbortController;
   } | null>(null);
   const sovereignGenerationRef = useRef(0);
 
@@ -3537,10 +3538,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         revokeSovereignCapture('superseded');
         const captureGeneration = sovereignGenerationRef.current;
         const captureController = new AbortController();
+        const finishController = new AbortController();
+        const explicitYield = info.isDesktop && !automaticTurnCommitAllowed();
         sovereignCaptureRef.current = {
           generation: captureGeneration,
           stream,
           controller: captureController,
+          finishController,
         };
 
         isProcessingRef.current = false;
@@ -3605,6 +3609,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             }
           : undefined;
 
+        const observeDesktopPause = (pauseMs: number) => {
+          if (sovereignGenerationRef.current !== captureGeneration || !turnTakingPreferencesRef.current.learnRhythm) return;
+          turnRhythmRef.current = observeContinuedPause(turnRhythmRef.current, pauseMs);
+        };
+
         try {
           const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
           const result = await recordAndTranscribe(stream, {
@@ -3619,7 +3628,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             //
             // ⛔ Desktop ONLY. Firefox/Zen reach this same branch by absence of
             // Web Speech and keep the module's own 8 s bound, unchanged.
-            ...(info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true } : {}),
+            ...(info.isDesktop ? {
+              maxMs: DESKTOP_MAX_UTTERANCE_MS,
+              waitForSpeech: true,
+              explicitYield,
+              finishSignal: finishController.signal,
+              getSilenceHoldoffMs: effectiveSilenceMs,
+              onContinuedPause: observeDesktopPause,
+            } : {}),
           });
 
           // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve
@@ -3629,6 +3645,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // witnessDispatch, onTranscript, or the member's conversation.
           if (sovereignGenerationRef.current !== captureGeneration) {
             console.log('🛡️ [sovereign capture] stale result discarded');
+            return;
+          }
+
+          if (result.ok && result.transcript && explicitYield && result.stopReason !== 'member_done') {
+            // A safety ceiling releases capture; it never yields the member's floor.
+            onTranscriptSalvage?.({ text: result.transcript, cause: 'desktop_capture_limit' });
+            onVoiceUnavailable?.({ reason: 'desktop_capture_limit', userMessage: 'Recording paused at its safety limit. Your words are in the text box for you to review and send.' });
             return;
           }
 
@@ -3644,7 +3667,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             onVoiceUnavailable?.({
               reason: `web_whisper_${result.reason ?? 'unknown'}`,
               userMessage:
-                result.reason === 'transcribe_disabled'
+                result.reason === 'no_speech'
+                  ? 'Listening paused without a spoken turn. Tap Speak when you are ready.'
+                  : result.reason === 'transcribe_disabled'
                   ? 'Voice transcription is not enabled on the server right now. You can type to MAIA instead.'
                   // ⛔ PLATFORM-D02A-01. The apparatus never heard. Saying "I
                   // could not hear that clearly" here blames the member for
@@ -4054,6 +4079,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
    * provenance and parent dispatch remain identical to automatic turns.
    */
   const commitTurn = useCallback(() => {
+    const capture = sovereignCaptureRef.current;
+    if (capture?.finishController) {
+      // Finish the real recording, not the display-only provisional words.
+      // The final Whisper response still passes the generation/revocation gate.
+      capture.finishController.abort();
+      return;
+    }
     const chars = accumulatedTranscript.current.trim().length;
     if (!chars || isProcessingRef.current) {
       logVoiceEvent('voice_explicit_yield_ignored', { chars, processing: isProcessingRef.current });
