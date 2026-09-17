@@ -1,7 +1,7 @@
 # CORPUS-CLASSIFICATION-EA-01 · Elemental Alchemy
 
 **Date:** 2026-09-16  
-**Base:** `b0164a439abe531300a8b91108a22e2bd0f36a7e`  
+**Base:** `445a4d1a6f9a673231d12b9d5ab02519100e4fff`  
 **State:** single-item classification candidate; rebuild/embed remains separately held
 
 ## Subject
@@ -36,7 +36,7 @@ The sole admitted path is the Elemental Alchemy subject above. Every other legac
 
 ## Production state before this tranche
 
-Production is already running the authority-evidence repair at `GIT_COMMIT=bfdc06f71`.
+Production is running `GIT_COMMIT=924845107c70a574c1ae2d4167ca201cbe6453d5`, which mechanically contains the authority-evidence repair merge `bfdc06f71176841f62b3805806dc52f6433e08cd`.
 
 The runtime image does **not** contain `data/ain/source`; corpus source material is not available to the running application for accidental runtime ingestion.
 Production corpus stores were witnessed immediately before this tranche:
@@ -46,9 +46,13 @@ Production corpus stores were witnessed immediately before this tranche:
 
 Therefore this classification changes only future eligibility. It does not expose, retrieve, or reactivate any existing production corpus row.
 
+## Reconciliation to current canonical
+
+While EA-01 was under review, `clean-main-no-secrets` advanced from `bfdc06f71176841f62b3805806dc52f6433e08cd` to `445a4d1a6f9a673231d12b9d5ab02519100e4fff`. The intervening canonical range changed **102 paths** and had **zero path overlap** with EA-01's five governed files. The branch was merged forward without conflict, then the admission suite, digest witness, full 736-file verdict, root TypeScript gate, scripts identity comparison, provider governance, no-Supabase, design canon, and `git diff --check` were rerun on the reconciled tree.
+
 ## Local evidence
 
-- admission/composition suite: **24/24 PASS**
+- admission/composition suite: **29/29 PASS**
 - real 736-file verdict: **1 admitted / 735 excluded / 0 refused**
 - root TypeScript: **229 vs baseline 239 · 0 regressions**
 - `typecheck:scripts`: **40 base / 40 head**, head-only **0**, base-only **0**, identity sets identical
