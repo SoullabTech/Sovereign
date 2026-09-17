@@ -867,6 +867,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           inputSuppressed: inputSuppressedRef.current,
           maiaSpeaking: isSpeakingRef.current,
         });
+        // A turn already crossed the send boundary. Safari commonly emits the
+        // real final ~100ms after our silence-boundary interim promotion; that
+        // result belongs to the committed turn and must never seed a second one.
+        return;
       }
 
       // 🛡️ GUARD: If transcript is suppressed (MAIA speaking on web), ignore for processing
