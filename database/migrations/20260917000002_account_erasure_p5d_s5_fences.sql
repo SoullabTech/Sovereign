@@ -192,23 +192,69 @@ DO $$
 DECLARE
   r record;
   args text;
+  unsupported text;
 BEGIN
+  -- P5-D-R1 · S5 FENCE TARGET AUTHORITY
+  --
+  -- `information_schema.columns` includes views, which caused the first P5-E
+  -- disposable migration witness to attempt a row trigger on `active_patterns`.
+  -- The generic member fence is authorized only on durable base/partitioned
+  -- tables. Views/materialized views are projections and are not row-trigger
+  -- targets. Indexes, partitioned indexes, sequences, composite types and TOAST
+  -- relations are catalog metadata/storage internals rather than member row
+  -- custody surfaces. Any remaining identity-bearing relation kind is unknown authority and
+  -- therefore fails the migration loudly rather than being silently skipped.
+  SELECT string_agg(format('%I(relkind=%s)', q.relname, q.relkind), ', ' ORDER BY q.relname)
+    INTO unsupported
+    FROM (
+      SELECT DISTINCT c.relname, c.relkind
+        FROM pg_catalog.pg_class c
+        JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+        JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid
+       WHERE n.nspname = 'public'
+         AND a.attnum > 0
+         AND NOT a.attisdropped
+         AND a.attname = ANY(ARRAY[
+           'user_id','member_id','owner_id','author_id','created_by','subject_member_id',
+           'participant_id','actor_id','from_member_id','to_member_id',
+           'client_member_id','practitioner_member_id'
+         ])
+         AND c.relname NOT IN (
+           'account_erasure_acts',
+           'circle_memberships',
+           'circle_inquiry_responses',
+           'deletion_manifest_scopes'
+         )
+         AND c.relkind NOT IN ('r', 'p', 'v', 'm', 'i', 'I', 'S', 'c', 't')
+    ) q;
+
+  IF unsupported IS NOT NULL THEN
+    RAISE EXCEPTION
+      '[F5 P5-D-R1] unsupported identity-bearing relation kind(s) in generic member fence population: %',
+      unsupported;
+  END IF;
+
   FOR r IN
-    SELECT table_name, array_agg(column_name ORDER BY column_name) AS cols
-      FROM information_schema.columns
-     WHERE table_schema = 'public'
-       AND column_name = ANY(ARRAY[
+    SELECT c.relname AS table_name, array_agg(a.attname ORDER BY a.attname) AS cols
+      FROM pg_catalog.pg_class c
+      JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid
+     WHERE n.nspname = 'public'
+       AND c.relkind IN ('r', 'p')
+       AND a.attnum > 0
+       AND NOT a.attisdropped
+       AND a.attname = ANY(ARRAY[
          'user_id','member_id','owner_id','author_id','created_by','subject_member_id',
          'participant_id','actor_id','from_member_id','to_member_id',
          'client_member_id','practitioner_member_id'
        ])
-       AND table_name NOT IN (
+       AND c.relname NOT IN (
          'account_erasure_acts',
          'circle_memberships',
          'circle_inquiry_responses',
          'deletion_manifest_scopes'
        )
-     GROUP BY table_name
+     GROUP BY c.oid, c.relname
   LOOP
     SELECT string_agg(quote_literal(c), ', ') INTO args FROM unnest(r.cols) c;
     EXECUTE format('DROP TRIGGER IF EXISTS account_erasure_member_fence ON %I', r.table_name);

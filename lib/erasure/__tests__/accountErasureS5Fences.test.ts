@@ -23,6 +23,14 @@ describe('F5 P5-D S5 successor', () => {
     expect(migration).toMatch(/current_setting\('s5\.restore_lane'/);
   });
 
+  it('R1 binds the generic fence only to durable table relkinds and fails unknown kinds loudly', () => {
+    expect(migration).toMatch(/pg_catalog\.pg_class/);
+    expect(migration).toMatch(/c\.relkind IN \('r', 'p'\)/);
+    expect(migration).toMatch(/c\.relkind NOT IN \('r', 'p', 'v', 'm', 'i', 'I', 'S', 'c', 't'\)/);
+    expect(migration).toMatch(/unsupported identity-bearing relation kind\(s\)/);
+    expect(migration).not.toMatch(/FROM information_schema\.columns[\s\S]*CREATE TRIGGER account_erasure_member_fence/);
+  });
+
   it('does not physically delete Circle history during governed restore', () => {
     expect(migration).toMatch(/NEW\.status := 'left'/);
     expect(migration).toMatch(/NEW\.response_text := NULL/);
