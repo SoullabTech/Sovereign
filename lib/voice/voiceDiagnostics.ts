@@ -84,6 +84,9 @@ export type VoiceDiagEvent =
   | 'voice_fallback_transcribe_sent'
   | 'voice_fallback_transcribe_result'
   | 'voice_fallback_failed'
+  // DESKTOP-SOVEREIGN-STT-INTERIM-01 — one summary per capture, counts only.
+  // Provisional text itself is never written to diagnostics.
+  | 'voice_partial_summary'
 
   // ── V5 utterance-tail witness ───────────────────────────────────────────
   // The question: why do the ENDS of Jondi's utterances go missing?
