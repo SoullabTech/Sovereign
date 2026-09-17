@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
+import { livingFieldAtomGuards } from '@/lib/maia/living-field/atomEligibility'
 
 function getMemberId(request: NextRequest): string | null {
   return probeAuthPosture(request)
@@ -47,9 +48,7 @@ export async function GET(
        JOIN member_memory_atoms a ON a.id = lfa.atom_id
        WHERE lfa.member_id = $1
          AND lfa.field_key = $2
-         AND a.status NOT IN ('protected', 'archived')
-         AND a.primary_register IS DISTINCT FROM 'sacred_protected'
-         AND NOT ('sacred_protected' = ANY(a.registers))
+         AND ${livingFieldAtomGuards('a')}
        ORDER BY lfa.affinity_score DESC, a.kept_at DESC`,
       [memberId, fieldKey]
     )
@@ -59,9 +58,7 @@ export async function GET(
       `SELECT COUNT(*)::int AS n
        FROM member_memory_atoms
        WHERE member_id = $1
-         AND status NOT IN ('protected', 'archived')
-         AND primary_register IS DISTINCT FROM 'sacred_protected'
-         AND NOT ('sacred_protected' = ANY(registers))`,
+         AND ${livingFieldAtomGuards()}`,
       [memberId]
     )
     const denominator = (denomResult.rows[0]?.n as number) ?? 0
