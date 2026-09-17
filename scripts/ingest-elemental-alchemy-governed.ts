@@ -6,7 +6,8 @@
  * Alchemy corpus revision authorized and dry-built in the predecessor acts.
  *
  * Default invocation is WITNESS ONLY: no Ollama call and no database connection.
- * Production write requires BOTH:
+ * Production write requires all THREE explicit gates:
+ *   --runtime-custody
  *   --execute=CORPUS-INGEST-EA-01
  *   CORPUS_INGEST_EA_01_AUTHORIZED=YES
  *
@@ -27,6 +28,7 @@ import { commitPreparedEaChunks } from '../lib/corpus/eaIngestTransaction';
 
 const EXECUTE_ARG = '--execute=CORPUS-INGEST-EA-01';
 const AUTH_ENV = 'CORPUS_INGEST_EA_01_AUTHORIZED';
+const RUNTIME_CUSTODY_ARG = '--runtime-custody';
 
 function printWitness(summary: {
   candidateCount: number;
@@ -36,8 +38,10 @@ function printWitness(summary: {
   sourceSha256: string;
   chunkCount: number;
   chunkSetSha256: string;
+  custody: 'canonical' | 'runtime';
 }): void {
   console.log('CORPUS-INGEST-EA-01 witness');
+  console.log(`  custody:          ${summary.custody}`);
   console.log(`  candidates:       ${summary.candidateCount}`);
   console.log(`  verdict:          ${summary.admitted} admitted / ${summary.excluded} excluded / ${summary.refused} refused`);
   console.log(`  source SHA-256:   ${summary.sourceSha256}`);
@@ -47,7 +51,11 @@ function printWitness(summary: {
 
 async function main(): Promise<void> {
   const execute = process.argv.includes(EXECUTE_ARG);
-  const witness = await witnessEaBuild(process.cwd());
+  const runtimeCustody = process.argv.includes(RUNTIME_CUSTODY_ARG);
+  if (execute && !runtimeCustody) {
+    throw new Error(`${EA_INGEST_CONTRACT.act} refused: write mode requires ${RUNTIME_CUSTODY_ARG}`);
+  }
+  const witness = await witnessEaBuild(process.cwd(), { custody: runtimeCustody ? 'runtime' : 'canonical' });
 
   printWitness({
     candidateCount: witness.candidateCount,
@@ -57,11 +65,14 @@ async function main(): Promise<void> {
     sourceSha256: witness.sourceSha256,
     chunkCount: witness.chunks.length,
     chunkSetSha256: witness.chunkSetSha256,
+    custody: witness.custody,
   });
 
   if (!execute) {
     console.log('\nWITNESS ONLY — no embeddings generated and no database connection opened.');
-    console.log(`Write mode requires ${EXECUTE_ARG} and ${AUTH_ENV}=YES.`);
+    if (runtimeCustody) console.log('Runtime custody bundle verified.');
+    else console.log(`Production custody witness: add ${RUNTIME_CUSTODY_ARG}.`);
+    console.log(`Write mode requires ${RUNTIME_CUSTODY_ARG}, ${EXECUTE_ARG}, and ${AUTH_ENV}=YES.`);
     return;
   }
 
@@ -108,7 +119,7 @@ async function main(): Promise<void> {
   }
 
   // Re-prove source and chunk identity after the potentially long embedding phase.
-  const recheck = await witnessEaBuild(process.cwd());
+  const recheck = await witnessEaBuild(process.cwd(), { custody: 'runtime' });
   if (
     recheck.sourceSha256 !== witness.sourceSha256 ||
     recheck.chunkSetSha256 !== witness.chunkSetSha256 ||

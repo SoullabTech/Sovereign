@@ -72,6 +72,15 @@ COPY . .
 # Prisma client + engines for THIS build platform (no arch pinning)
 RUN npx prisma generate
 
+# J6A · production knowledge custody. The Docker build context contains only the
+# governed declaration, its exact authority record, and the one admitted EA
+# subject. Refuse any accidental widening before reproducing the frozen witness.
+RUN test "$(find data/ain/source -type f | wc -l | tr -d ' ')" = "1" \
+  && test -f data/ain/corpus-admission.json \
+  && test "$(find docs/corpus-authority -type f | wc -l | tr -d ' ')" = "1"
+# No Ollama or DB access occurs in witness-only mode.
+RUN npx tsx scripts/ingest-elemental-alchemy-governed.ts --runtime-custody
+
 # Next build (standalone output) — increase heap to avoid OOM on large codebase
 RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
@@ -136,6 +145,12 @@ COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 # Lib dependencies for worker scripts
 COPY --from=builder --chown=node:node /app/lib ./lib
 COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
+
+# J6A · carry only the mechanically governed corpus bundle into production.
+# .dockerignore excludes every neighboring historical source.
+COPY --from=builder --chown=node:node /app/data/ain/corpus-admission.json ./data/ain/corpus-admission.json
+COPY --from=builder --chown=node:node /app/data/ain/source ./data/ain/source
+COPY --from=builder --chown=node:node /app/docs/corpus-authority ./docs/corpus-authority
 
 # Create media storage directory owned by node (volume mounts inherit this)
 RUN mkdir -p /app/data/media /app/data/workbench && chown -R node:node /app/data/media /app/data/workbench

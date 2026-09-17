@@ -3,6 +3,7 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 
 import {
   EA_INGEST_CONTRACT,
@@ -48,6 +49,35 @@ describe('CORPUS-INGEST-EA-01 contract', () => {
     expect(witness.chunkSetSha256).toBe(EA_INGEST_CONTRACT.chunkSetSha256);
   });
 
+  test('a minimal production custody bundle reproduces the same authorized EA chunks', async () => {
+    const repoRoot = path.resolve(__dirname, '../../..');
+    const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ea-runtime-custody-'));
+    try {
+      const files = [
+        EA_INGEST_CONTRACT.sourcePath,
+        'data/ain/corpus-admission.json',
+        'docs/corpus-authority/elemental-alchemy.md',
+      ];
+      for (const rel of files) {
+        const dest = path.join(runtimeRoot, rel);
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.copyFileSync(path.join(repoRoot, rel), dest);
+      }
+
+      const witness = await witnessEaBuild(runtimeRoot, { custody: 'runtime' });
+      expect(witness.custody).toBe('runtime');
+      expect(witness.candidateCount).toBe(EA_INGEST_CONTRACT.runtimeCandidateCount);
+      expect(witness.verdict.admitted).toEqual([EA_INGEST_CONTRACT.sourcePath]);
+      expect(witness.verdict.excluded).toHaveLength(0);
+      expect(witness.verdict.refused).toHaveLength(0);
+      expect(witness.sourceSha256).toBe(EA_INGEST_CONTRACT.sourceSha256);
+      expect(witness.chunks).toHaveLength(EA_INGEST_CONTRACT.chunkCount);
+      expect(witness.chunkSetSha256).toBe(EA_INGEST_CONTRACT.chunkSetSha256);
+    } finally {
+      fs.rmSync(runtimeRoot, { recursive: true, force: true });
+    }
+  });
+
   test('the chunk-set digest changes when chunk text changes', () => {
     const a = sampleChunk();
     const b = sampleChunk({ chunkText: 'Fire is a different movement.' });
@@ -85,6 +115,8 @@ describe('CORPUS-INGEST-EA-01 executable boundary', () => {
   test('write mode requires two independent explicit authorizations', () => {
     expect(script).toContain("const EXECUTE_ARG = '--execute=CORPUS-INGEST-EA-01'");
     expect(script).toContain("const AUTH_ENV = 'CORPUS_INGEST_EA_01_AUTHORIZED'");
+    expect(script).toContain("const RUNTIME_CUSTODY_ARG = '--runtime-custody'");
+    expect(script).toContain('if (execute && !runtimeCustody)');
     expect(script.indexOf('if (!execute)')).toBeLessThan(script.indexOf('new pg.Pool'));
     expect(script.indexOf("process.env[AUTH_ENV] !== 'YES'")).toBeLessThan(script.indexOf('new pg.Pool'));
   });
