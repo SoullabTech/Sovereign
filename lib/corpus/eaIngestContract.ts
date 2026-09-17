@@ -11,6 +11,10 @@ export const EA_INGEST_CONTRACT = Object.freeze({
   sourceFile: 'Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md',
   sourceSha256: 'f57f17e6ab82f911a4932c1f2d5fa0149e8fe499c7461f60bd87f86d0f657af0',
   candidateCount: 736,
+  runtimeCandidateCount: 1,
+  runtimeAdmittedCount: 1,
+  runtimeExcludedCount: 0,
+  runtimeRefusedCount: 0,
   admittedCount: 1,
   excludedCount: 735,
   refusedCount: 0,
@@ -22,7 +26,10 @@ export const EA_INGEST_CONTRACT = Object.freeze({
 
 export type ChunkDigestInput = Pick<KnowledgeChunk, 'sourceFile' | 'chunkIndex' | 'chunkText'>;
 
+export type EaCustodyMode = 'canonical' | 'runtime';
+
 export interface EaBuildWitness {
+  custody: EaCustodyMode;
   chunks: KnowledgeChunk[];
   verdict: AdmissionVerdict;
   candidateCount: number;
@@ -66,25 +73,42 @@ function listCorpusCandidates(dir: string): string[] {
   return files.sort((a, b) => a.localeCompare(b));
 }
 
-function assertExactAdmission(verdict: AdmissionVerdict, candidateCount: number): void {
+function assertExactAdmission(
+  verdict: AdmissionVerdict,
+  candidateCount: number,
+  custody: EaCustodyMode,
+): void {
   const expected = EA_INGEST_CONTRACT;
   const admitted = verdict.admitted.map((p) => p.split(path.sep).join('/')).sort();
+  const counts = custody === 'canonical'
+    ? {
+        candidates: expected.candidateCount,
+        admitted: expected.admittedCount,
+        excluded: expected.excludedCount,
+        refused: expected.refusedCount,
+      }
+    : {
+        candidates: expected.runtimeCandidateCount,
+        admitted: expected.runtimeAdmittedCount,
+        excluded: expected.runtimeExcludedCount,
+        refused: expected.runtimeRefusedCount,
+      };
 
-  if (candidateCount !== expected.candidateCount) {
+  if (candidateCount !== counts.candidates) {
     throw new Error(
-      `${expected.act} refused: candidate corpus count changed ` +
-      `(${candidateCount} != ${expected.candidateCount}); reconcile before ingestion`,
+      `${expected.act} refused: ${custody} candidate corpus count changed ` +
+      `(${candidateCount} != ${counts.candidates}); reconcile before ingestion`,
     );
   }
   if (
-    verdict.admitted.length !== expected.admittedCount ||
-    verdict.excluded.length !== expected.excludedCount ||
-    verdict.refused.length !== expected.refusedCount
+    verdict.admitted.length !== counts.admitted ||
+    verdict.excluded.length !== counts.excluded ||
+    verdict.refused.length !== counts.refused
   ) {
     throw new Error(
-      `${expected.act} refused: corpus verdict changed ` +
+      `${expected.act} refused: ${custody} corpus verdict changed ` +
       `(${verdict.admitted.length}/${verdict.excluded.length}/${verdict.refused.length} != ` +
-      `${expected.admittedCount}/${expected.excludedCount}/${expected.refusedCount})`,
+      `${counts.admitted}/${counts.excluded}/${counts.refused})`,
     );
   }
   if (admitted.length !== 1 || admitted[0] !== expected.sourcePath) {
@@ -120,8 +144,12 @@ function assertExactChunks(chunks: readonly KnowledgeChunk[]): void {
   }
 }
 
-export async function witnessEaBuild(repoRoot: string = process.cwd()): Promise<EaBuildWitness> {
+export async function witnessEaBuild(
+  repoRoot: string = process.cwd(),
+  options: { custody?: EaCustodyMode } = {},
+): Promise<EaBuildWitness> {
   const expected = EA_INGEST_CONTRACT;
+  const custody = options.custody ?? 'canonical';
   const sourceAbs = path.join(repoRoot, expected.sourcePath);
   const sourceText = fs.readFileSync(sourceAbs, 'utf8');
   const sourceSha256 = sha256Text(sourceText);
@@ -134,12 +162,13 @@ export async function witnessEaBuild(repoRoot: string = process.cwd()): Promise<
   const sourceRoot = path.join(repoRoot, 'data/ain/source');
   const candidates = listCorpusCandidates(sourceRoot);
   const verdict = decideAdmission(repoRoot, candidates, loadDeclaration(repoRoot));
-  assertExactAdmission(verdict, candidates.length);
+  assertExactAdmission(verdict, candidates.length, custody);
 
-  const chunks = await processAllSources(sourceRoot);
+  const chunks = await processAllSources(sourceRoot, repoRoot);
   assertExactChunks(chunks);
 
   return {
+    custody,
     chunks,
     verdict,
     candidateCount: candidates.length,

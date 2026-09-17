@@ -223,7 +223,10 @@ export function processSourceFile(filePath: string): KnowledgeChunk[] {
 /**
  * Process all source files in directory
  */
-export async function processAllSources(sourceDir: string): Promise<KnowledgeChunk[]> {
+export async function processAllSources(
+  sourceDir: string,
+  repoRoot: string = process.cwd(),
+): Promise<KnowledgeChunk[]> {
   const candidates = fs.readdirSync(sourceDir)
     .filter(f => f.endsWith('.txt') || f.endsWith('.md'));
 
@@ -234,7 +237,6 @@ export async function processAllSources(sourceDir: string): Promise<KnowledgeChu
    * MAIA can retrieve and speak. Reading a directory answers what is present;
    * it must never answer what MAIA may know.
    */
-  const repoRoot = process.cwd();
   const verdict = decideAdmission(
     repoRoot,
     candidates.map(f => path.join(sourceDir, f)),

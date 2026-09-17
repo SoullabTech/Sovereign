@@ -76,6 +76,10 @@ Thumbs.db
 *.md
 docs/
 
+# Governed corpus authority record required by the production custody witness.
+!docs/corpus-authority/
+!docs/corpus-authority/elemental-alchemy.md
+
 # Book Studio surfaces (app/book-studio/*) read these markdown files at runtime.
 # Allow only the specific folder; rest of docs/ stays excluded.
 !docs/book-studio/
@@ -113,7 +117,13 @@ books/
 artifacts/
 beta-deployment/
 data/qdrant/
-data/ain/
+# Governed production corpus custody: expose no historical AIN directory by default.
+# Re-include only the declaration and the one currently admitted exact subject.
+data/ain/*
+!data/ain/corpus-admission.json
+!data/ain/source/
+data/ain/source/*
+!data/ain/source/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md
 tmp/
 .DS_Store
 

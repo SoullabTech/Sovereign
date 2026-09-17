@@ -16,6 +16,7 @@ import { generateLocalEmbedding } from '@/lib/memory/embeddings';
 import { generateWithKimi, isKimiAvailable } from '@/lib/ai/kimiClient';
 import { randomUUID } from 'crypto';
 import type { SpiralContext } from './dynamicRange';
+import { buildGlobalLibraryAuthoritySql } from './globalRetrievalAuthority';
 
 // =============================================================================
 // TYPES
@@ -292,9 +293,12 @@ export class LibraryService {
       `;
 
       const params: any[] = [JSON.stringify(embedding)];
+      const authority = buildGlobalLibraryAuthoritySql('s', params.length + 1);
+      sql += authority.clause;
+      params.push(...authority.params);
 
       if (sourceTypes && sourceTypes.length > 0) {
-        sql += ` AND s.type = ANY($2)`;
+        sql += ` AND s.type = ANY($${params.length + 1})`;
         params.push(sourceTypes);
       }
 
@@ -360,9 +364,12 @@ export class LibraryService {
       `;
 
       const params: any[] = [tsQuery];
+      const authority = buildGlobalLibraryAuthoritySql('s', params.length + 1);
+      sql += authority.clause;
+      params.push(...authority.params);
 
       if (sourceTypes && sourceTypes.length > 0) {
-        sql += ` AND s.type = ANY($2)`;
+        sql += ` AND s.type = ANY($${params.length + 1})`;
         params.push(sourceTypes);
       }
 
