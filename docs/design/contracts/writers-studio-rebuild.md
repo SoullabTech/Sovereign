@@ -12,6 +12,7 @@ surfaces:
   - app/writers-studio/canvas/MaterialsDrawer.tsx
   - app/writers-studio/sources/**
   - app/writers-studio/studioMap.ts
+  - app/writers-studio/studio/StudioModeBar.tsx
   - app/writers-studio/workContext.ts
   # The mode bar was already named in shared_with_house and was covered by no
   # surface glob, so the room shared a component no contract governed. D1 makes

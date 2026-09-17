@@ -11,10 +11,13 @@ const css = readFileSync(
 );
 
 describe('Writer workbench usability repair', () => {
-  it('Pure Canvas always renders an explicit return to the Workbench', () => {
+  it('Pure Canvas always renders explicit exits to the workspace and Workbench', () => {
+    expect(room).toContain('aria-label="Return to Writer’s Studio workspace"');
+    expect(room).toContain('<span aria-hidden="true">←</span> Workspace');
     expect(room).toContain('aria-label="Return to Writer’s Studio workbench"');
-    expect(room).toContain('<span aria-hidden="true">←</span> Workbench');
+    expect(room).toContain('className="wsr-return-workbench" href="/writers-studio"');
     expect(css).toContain('.wsr-return-workspace');
+    expect(css).toContain('.wsr-return-workbench');
     expect(css).toContain('min-height: 40px');
   });
 
