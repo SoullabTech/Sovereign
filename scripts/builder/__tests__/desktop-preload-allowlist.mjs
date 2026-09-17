@@ -42,6 +42,14 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'separately proven not to reference runCapability, so discovery can never become execution.',
   },
   {
+    channel: 'jarvis:continuity-search',
+    ratified_in: 'JARVIS-CONTINUITY-BRIDGE-01 founder direction 2026-09-17',
+    purpose:
+      'Read-only founder recall over the LOCAL_ONLY continuity projection. The renderer supplies ' +
+      'query text and a bounded result count only; MAIN selects the fixed local script/database, ' +
+      'and no audience, path, shell command, mutation, or model invocation crosses this channel.',
+  },
+  {
     channel: 'jarvis:choose-repo',
     ratified_in: 'Preferences binding surface',
     purpose:
@@ -88,6 +96,15 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'shell at all; (4) it uses shell.showItemInFolder, which SELECTS an item in the file manager — ' +
       'main.js is separately proven to call neither shell.openPath nor shell.openExternal, so no ' +
       'open-or-execute authority is introduced. It returns no file contents.',
+  },
+  {
+    channel: 'jarvis:run-external-reasoning',
+    ratified_in: 'JARVIS-NEMOTRON-C3 founder direction 2026-09-17',
+    purpose:
+      'A separate explicit founder act after C3 routing. Carries only task text plus external_ok. ' +
+      'MAIN invokes a fixed OpenCode binary through frontier-worker in empty temporary custody with ' +
+      'read/edit/list/bash/task/external-directory/web permissions denied. It cannot receive the ' +
+      'bound repository path or JARVIS continuity, and C3 routing itself remains non-executing.',
   },
   {
     channel: 'jarvis:run-work-unit',

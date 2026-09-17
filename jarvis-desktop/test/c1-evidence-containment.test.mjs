@@ -155,9 +155,11 @@ t('G. C0 lane unchanged — still kind:\'result\', unchanged check', () => {
   assert.ok(mainSrc.includes("kind: 'result'"));
   assert.ok(mainSrc.includes('capability registered + exit_code present'));
 });
-t("H. C3 lane unchanged — routed, never auto-invoked", () => {
+t("H. C3 routing unchanged — routed, never auto-invoked", () => {
   assert.ok(mainSrc.includes("response.status = 'routed_not_executed'"));
-  assert.ok(mainSrc.includes('does not auto-invoke Claude'));
+  assert.ok(mainSrc.includes('Routing does not execute a frontier model'));
+  assert.ok(mainSrc.includes("ipcMain.handle('jarvis:run-external-reasoning'"),
+    'external reasoning must remain a second explicit IPC act');
 });
 t('I. C1 block introduces no repository mutation', () => {
   assert.doesNotMatch(c1Block, /writeFileSync|mkdirSync|unlinkSync|rmSync|appendFileSync|git (add|commit)/);

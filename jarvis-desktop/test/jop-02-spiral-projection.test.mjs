@@ -28,7 +28,8 @@ const UNBOUND = {
   builder_os: { state: 'UNKNOWN', detail: null },
   route_a: { state: 'UNKNOWN', detail: null },
   local_worker: { state: 'UNKNOWN', detail: null },
-  claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; Desktop does not auto-execute it.' },
+  claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; routing alone never executes a frontier model.' },
+  frontier_reasoner: { state: 'AVAILABLE', detail: 'Nemotron external reasoning connected; explicit act required.' },
   builder_mechanism: { state: 'UNAVAILABLE', detail: 'no execution substrate is bound — bind a repository before submitting work units' },
   governance_holds: [], desktop_runtime: { state: 'AVAILABLE', detail: 'Electron 32' },
 };

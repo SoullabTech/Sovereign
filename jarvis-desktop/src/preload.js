@@ -13,7 +13,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('jarvis', {
   getStatus: () => ipcRenderer.invoke('jarvis:status'),
   getCapabilities: () => ipcRenderer.invoke('jarvis:capabilities'),
+  searchContinuity: (query, limit = 8) => ipcRenderer.invoke('jarvis:continuity-search', { query, limit }),
   submitTask: (task) => ipcRenderer.invoke('jarvis:submit-task', task),
+  runExternalReasoning: (req) => ipcRenderer.invoke('jarvis:run-external-reasoning', req),
   governanceAction: (req) => ipcRenderer.invoke('jarvis:governance-action', req),
 
   // Governed Builder work-unit mechanism. `runWorkUnit` carries a packet only —

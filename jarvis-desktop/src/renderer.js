@@ -2,6 +2,15 @@ const $main = document.getElementById('main');
 let currentView = 'home';
 let lastStatus = null;
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 document.querySelectorAll('nav button').forEach(btn => {
   btn.addEventListener('click', () => setView(btn.dataset.view));
 });
@@ -315,7 +324,7 @@ const PROV = window.JarvisProvenance;
 const LANE_HELP = {
   c0: '<strong>Deterministic capability.</strong> Choose a registered operation and provide its arguments. No model runs; the result is produced by the same registry the terminal uses.',
   c1: '<strong>Small local task.</strong> Give JARVIS a bounded read-only reasoning task. It runs on the local worker (qwen2.5:7b) and is capped at 4000 input characters — oversized packets are refused, not escalated. Execution is verified; the answer’s correctness is not.',
-  c3: '<strong>Needs real reasoning.</strong> The router will select C3 and explain why, but Desktop Alpha does not invoke Claude — doing so would exercise founder identity without an active founder-driven session. The task is routed and shown to you; execution means opening a Claude Code session.',
+  c3: '<strong>Needs frontier reasoning.</strong> Routing still does not execute C3. After routing, you may explicitly send only the approved task text to Nemotron 3 Ultra. The free endpoint is external/trial-scoped: do not include member data, private transcripts, secrets, credentials, or confidential material.',
 };
 
 let capManifest = [];
@@ -332,6 +341,18 @@ async function loadCapabilities() {
 function renderWork() {
   $main.innerHTML = `
     <div class="card">
+      <h3>Recall prior work</h3>
+      <div class="hint" style="margin:0 0 8px">
+        Searches the local JARVIS continuity index built from your Claude project archive.
+        Results stay on this Mac and are not sent to a model by this search.
+      </div>
+      <div class="convo-input">
+        <input id="continuity-query" type="text" placeholder="e.g. TURN-03 acoustic projection, Writer's Studio succession…">
+        <button class="primary" id="continuity-search" style="margin-top:0">Recall</button>
+      </div>
+      <div id="continuity-results"></div>
+    </div>
+    <div class="card">
       <h3>Submit a bounded task</h3>
       <label class="hint">Lane</label><br>
       <select id="lane-hint" style="margin:8px 0 8px">
@@ -346,6 +367,10 @@ function renderWork() {
       </div>
       <div id="c3-fields" style="display:none">
         <textarea id="description" rows="3" placeholder="Describe the task — router will select C3."></textarea>
+        <label class="hint" style="display:block;margin-top:8px">
+          <input id="external-ok" type="checkbox">
+          This task text contains no personal/confidential data and may be sent to the external Nemotron trial endpoint.
+        </label>
       </div>
       <button class="primary" id="submit">Submit</button>
       <div id="local-errors"></div>
@@ -361,7 +386,54 @@ function renderWork() {
     document.getElementById('local-errors').innerHTML = '';
   });
   document.getElementById('submit').addEventListener('click', submitTask);
+  document.getElementById('continuity-search').addEventListener('click', searchContinuity);
+  document.getElementById('continuity-query').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchContinuity();
+  });
   renderC0Fields();
+}
+
+async function searchContinuity() {
+  const input = document.getElementById('continuity-query');
+  const out = document.getElementById('continuity-results');
+  const button = document.getElementById('continuity-search');
+  const query = input ? input.value.trim() : '';
+  if (!query) {
+    out.innerHTML = '<div class="hint">Enter a specific lane, decision, feature, or phrase to recall.</div>';
+    return;
+  }
+  button.disabled = true;
+  button.textContent = 'Recalling…';
+  const res = await window.jarvis.searchContinuity(query, 8);
+  button.disabled = false;
+  button.textContent = 'Recall';
+  if (!res.ok) {
+    out.innerHTML = `<div class="errors">${(res.errors || ['Recall failed']).map(e => `<div>${escapeHtml(e)}</div>`).join('')}</div>`;
+    return;
+  }
+  const summary = res.summary
+    ? `<div class="precedence">
+        <b>Branch standing — noncanonical</b>
+        Highest retrieved stage: <span class="kv">${escapeHtml(res.summary.highest_stage || 'not established')}</span><br>
+        ${(res.summary.highest_stage_states || []).map(s => `<span class="kv">${escapeHtml(s)}</span>`).join('<br>')}
+        ${res.summary.charter_state ? `<br>Charter state: <span class="kv">${escapeHtml(res.summary.charter_state)}</span>` : ''}
+        ${res.summary.ref ? `<br>Source branch: <span class="kv">${escapeHtml(res.summary.ref)}@${escapeHtml(String(res.summary.git_sha || '').slice(0, 12))}</span>` : ''}
+      </div>`
+    : '';
+  out.innerHTML = summary + (res.results.length
+    ? res.results.map(item => `<div class="claim">
+        <div class="label">${escapeHtml(item.title || item.session_id || item.path || item.kind)}</div>
+        <div class="src">
+          ${escapeHtml(item.authority || 'HISTORICAL_ORIENTATION')} ·
+          ${item.stage ? escapeHtml(item.stage) + ' · ' : ''}
+          ${item.declared_state ? escapeHtml(item.declared_state) + ' · ' : ''}
+          ${item.ref ? escapeHtml(item.ref + '@' + String(item.git_sha || '').slice(0, 12)) + ' · ' : ''}
+          ${escapeHtml(item.path)}:${escapeHtml(item.line_no || 1)} ·
+          ${escapeHtml(item.timestamp || 'undated')} · ${escapeHtml(item.sensitivity)}
+        </div>
+        <div class="why" style="white-space:pre-wrap">${escapeHtml(item.text)}</div>
+      </div>`).join('')
+    : '<div class="hint">No matching continuity found. Absence from this search is not proof the work never happened.</div>');
 }
 
 function renderC0Fields() {
@@ -484,7 +556,10 @@ async function submitTask() {
     const p = document.getElementById('prompt').value;
     task = { bounded_for_local: true, input_chars: p.length, prompt: p };
   } else {
-    task = { description: document.getElementById('description').value };
+    task = {
+      description: document.getElementById('description').value,
+      external_ok: !!document.getElementById('external-ok')?.checked,
+    };
   }
 
   const btn = document.getElementById('submit');
@@ -518,8 +593,26 @@ function renderResult(res) {
       </div>`
     : '';
 
+  const reasoner = res.result && res.result.frontier_reasoner;
+  const c3Action = res.execution_lane === 'C3' && res.status === 'routed_not_executed'
+    ? `<div class="card">
+        <h3>Explicit frontier act</h3>
+        <div class="row"><span class="label">Nemotron 3 Ultra</span><span class="state ${reasoner?.ready ? 'AVAILABLE' : 'NEEDS_SETUP'}">${escapeHtml(reasoner?.state || 'UNVERIFIED')}</span></div>
+        <div class="hint">
+          Routing did not send anything externally.
+          ${t.external_ok
+            ? 'You marked this task text external-safe. No repository or continuity context will be attached.'
+            : 'External execution is held because this task was not marked external-safe.'}
+        </div>
+        ${t.external_ok && reasoner?.ready ? '<button class="primary" id="run-frontier">Run with Nemotron 3 Ultra</button>' : ''}
+        ${t.external_ok && !reasoner?.ready ? `<div class="why">${escapeHtml(reasoner?.detail || 'Nemotron provider setup is incomplete.')}</div>` : ''}
+        <div id="frontier-result"></div>
+      </div>`
+    : '';
+
   document.getElementById('result').innerHTML = `
     ${invocation}
+    ${c3Action}
     <div class="card">
       <h3>Result</h3>
       <div class="row"><span class="label">Selected lane</span><span class="lane-badge ${laneClass}">${res.execution_lane || 'REJECTED'}</span></div>
@@ -533,6 +626,23 @@ function renderResult(res) {
       <pre>${JSON.stringify(res.result, null, 2)}</pre>
     </div>
   `;
+
+  const runFrontier = document.getElementById('run-frontier');
+  if (runFrontier) {
+    runFrontier.addEventListener('click', async () => {
+      const out = document.getElementById('frontier-result');
+      runFrontier.disabled = true;
+      runFrontier.textContent = 'Running…';
+      out.innerHTML = '<div class="hint">External reasoning in progress…</div>';
+      const result = await window.jarvis.runExternalReasoning({
+        prompt: t.description || '',
+        external_ok: true,
+      });
+      runFrontier.disabled = false;
+      runFrontier.textContent = 'Run with Nemotron 3 Ultra';
+      out.innerHTML = `<pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+    });
+  }
 }
 
 function renderSystem() {
@@ -544,7 +654,9 @@ function renderSystem() {
       ${stateRow('Builder OS', s.builder_os)}
       ${stateRow('Route A', s.route_a)}
       ${stateRow('Local worker', s.local_worker)}
-      ${stateRow('Claude lane', s.claude_lane)}
+      ${stateRow('Frontier reasoning lane', s.claude_lane)}
+      ${stateRow('Nemotron external reasoner', s.frontier_reasoner || { state: 'UNVERIFIED', detail: 'frontier reasoner status not reported by this build' })}
+      ${stateRow('JARVIS continuity', s.continuity || { state: 'UNVERIFIED', detail: 'continuity status not reported by this build' })}
       ${stateRow('Builder work-unit mechanism', s.builder_mechanism)}
       ${stateRow('Desktop runtime', s.desktop_runtime)}
       ${/* These two used to be literals written into the view, which is why
@@ -693,7 +805,7 @@ function renderSpiral() {
             // keeps the exact wording underneath rather than replacing it.
             const plain = {
               'motion': { t: 'Whether things are getting better or worse',
-                          w: 'JARVIS does not keep a history yet, so it cannot compare this moment to any earlier one.' },
+                          w: 'JARVIS now keeps project continuity, but this operational view does not yet compare repeated state observations. Trend is therefore still unestablished.' },
               'custody layer (radial axis)': { t: 'How far along something is (local &rarr; canonical)',
                           w: 'JARVIS can see how each thing is doing, but not where it sits in the pipeline. So that is written in words, never drawn as distance.' },
               'active work': { t: 'What work is running right now',
@@ -719,7 +831,7 @@ function renderSpiral() {
             <b>amber</b> — something observable is in the way.<br>
             <b>hollow dashed</b> — not checked. Not missing, not broken: unlooked-at.<br>
             <b>dashed line</b> — a link with evidence behind it. Click for the exact words.<br>
-            <b>no movement shown</b> — no history kept, so trend is not answerable.<br>
+            <b>no movement shown</b> — project continuity exists, but repeated operational-state evidence is not yet wired into this projection.<br>
             <b>click anything</b> — what it is, how JARVIS knows, how current, whether it needs you.
           </div>
         </div>

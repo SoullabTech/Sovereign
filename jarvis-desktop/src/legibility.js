@@ -66,6 +66,12 @@ const NON_OPERATIONAL = Object.freeze([
 /** Raw mechanism vocabulary → founder vocabulary. The ONLY such mapping. */
 function mapState(raw, { remediable = true } = {}) {
   switch (raw) {
+    case 'READY': return READY;
+    case 'WORKING': return WORKING;
+    case 'NEEDS_SETUP': return NEEDS_SETUP;
+    case 'NEEDS_AUTHORITY': return NEEDS_AUTHORITY;
+    case 'BLOCKED': return BLOCKED;
+    case 'FAILED': return FAILED;
     case 'AVAILABLE': return READY;
     case 'DEGRADED': return DEGRADED;
     case 'UNAVAILABLE': return remediable ? NEEDS_SETUP : NEEDS_AUTHORITY;
@@ -131,8 +137,8 @@ const DESCRIPTIONS = Object.freeze({
   'Builder OS': 'Tracks who is working on what, and stops two lanes claiming the same unit.',
   'Deterministic registry': 'The fixed set of actions JARVIS can take without a language model.',
   'Local model worker': 'A model running on this machine, used for work that stays local.',
-  'Claude reasoning': 'Claude is available to think through work with you.',
-  'Automatic C3 execution': 'Letting JARVIS run Claude work on its own, unattended.',
+  'External frontier reasoning': 'The configured external frontier model is available for an explicit, bounded reasoning act.',
+  'Automatic C3 execution': 'Letting JARVIS run frontier-model work on its own, unattended.',
   'Desktop runtime': 'This application itself.',
   'Artifact identity': 'Which build of JARVIS this window is.',
   'Execution substrate': 'The checkout this window is actually operating on.',
@@ -228,24 +234,20 @@ function deriveOperatorView(status) {
     }));
   }
 
-  // ── Claude: two facts, never one ──────────────────────────────────────────
-  // The old row said "Claude lane AVAILABLE", which conflated a reasoning
-  // capability that exists with an execution authority that deliberately does
-  // not. Absent-by-design must not read as broken, and a live session must not
-  // read as executable.
-  const claudeReasoning = {
-    name: 'Claude reasoning',
-    describes: DESCRIPTIONS['Claude reasoning'],
-    state: mapState(s.claude_lane?.state),
-    reason: null,
-    remediation: null,
-    evidence: null,
-  };
+  // ── Frontier reasoning: capability and automatic authority stay separate ──
+  // The router's ability to classify C3 is not proof that an external provider
+  // is connected. The reasoner row therefore reads the actual provider status,
+  // while automatic C3 execution remains independently unauthorized.
+  const frontierReasoning = organ(
+    'External frontier reasoning',
+    s.frontier_reasoner,
+    { evidence: 'jarvis:status.frontier_reasoner' },
+  );
   const claudeExecution = {
     name: 'Automatic C3 execution',
     describes: DESCRIPTIONS['Automatic C3 execution'],
     state: NEEDS_AUTHORITY,
-    reason: 'Not authorized. The router may select C3; this Desktop does not execute it.',
+    reason: 'Not authorized. C3 routing cannot execute a frontier model; external execution requires a separate explicit founder act.',
     remediation: null, // deliberate: no operator act grants this
     by_design: true,
     evidence: null,
@@ -254,7 +256,7 @@ function deriveOperatorView(status) {
   const runtime = organ('Desktop runtime', s.desktop_runtime, { evidence: 'jarvis:status.desktop_runtime' });
 
   // ── can do now ────────────────────────────────────────────────────────────
-  const all = [mech, ...organs, claudeReasoning, claudeExecution, runtime];
+  const all = [mech, ...organs, frontierReasoning, claudeExecution, runtime];
   const capabilities = {
     available: all.filter(o => o.state === READY || o.state === WORKING),
     unverified: all.filter(o => o.state === UNVERIFIED || o.state === DEGRADED
@@ -288,7 +290,7 @@ function deriveOperatorView(status) {
   };
 
   // ── operational sentence — derived, never hard-coded optimism ─────────────
-  const sentence = operationalSentence({ unbound, mech, claudeReasoning, claudeExecution });
+  const sentence = operationalSentence({ unbound, mech, frontierReasoning, claudeExecution });
 
   return {
     observed_at: s.observed_at || null,
@@ -364,7 +366,7 @@ function describeProvenanceRow(name, row) {
   };
 }
 
-function operationalSentence({ unbound, mech, claudeReasoning, claudeExecution }) {
+function operationalSentence({ unbound, mech, frontierReasoning, claudeExecution }) {
   const parts = [];
   let headline;
 
@@ -379,10 +381,12 @@ function operationalSentence({ unbound, mech, claudeReasoning, claudeExecution }
     parts.push('A Sovereign repository is bound and the governed read-only execution lane is available.');
   }
 
-  if (claudeReasoning.state === READY) {
-    parts.push('Claude reasoning is available; automatic C3 execution is not authorized.');
+  if (frontierReasoning.state === READY) {
+    parts.push('External frontier reasoning is available by explicit act; automatic C3 execution is not authorized.');
+  } else if (frontierReasoning.state === NEEDS_SETUP) {
+    parts.push('External frontier reasoning is configured but still needs provider setup.');
   } else {
-    parts.push('Claude reasoning is not currently observed.');
+    parts.push('External frontier reasoning is not currently observed.');
   }
 
   return { headline, body: parts.join(' ') };
