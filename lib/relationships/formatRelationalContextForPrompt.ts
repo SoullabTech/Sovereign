@@ -2,23 +2,23 @@
  * Relational Context → prompt block
  *
  * Formats an ActiveRelationalContext for injection into MAIA's prompt when a
- * member has explicitly handed a relationship off from /relationships/[id]
- * ("Take this to MAIA").
+ * member has explicitly handed a relationship off from /relationships/[id].
  *
- * Provenance discipline (why this file is mostly caveats):
+ * Provenance discipline:
  *
  *   - Entry KINDS (note / reflection / threshold / rupture / repair) are
  *     member-authored — the member chose them.
- *   - Themes and tension signals are SYSTEM-OBSERVED inference produced by
- *     lib/consciousness/relationalObserver.ts. They are not the member's words
- *     and they can be wrong.
+ *   - Themes and tension signals are SYSTEM INFERENCE. Some themes may come
+ *     from structural observation; others may be prior MAIA hypotheses stored
+ *     during relational check-ins. They are not the member's words and they
+ *     can be wrong.
  *   - None of it carries a recency stamp. The service returns the most recent
  *     five entry kinds with no timestamps, so this block must never assert that
  *     any of it is currently true. Presenting a stale record as present fact is
  *     the epistemic defect this wording exists to prevent.
  *
- * The block therefore states what was recorded, marks who recorded it, and
- * subordinates all of it to what the member is saying right now.
+ * The block therefore states what was recorded, marks who authored/inferred it,
+ * and subordinates all of it to what the member is saying right now.
  *
  * Mirrors the conventions of formatAtomsForPrompt / formatMemberWebForPrompt.
  */
@@ -61,7 +61,7 @@ export function formatRelationalContextForPrompt(
 
   const themes = list(ctx.salientThemes);
   if (themes) {
-    lines.push(`- Themes the system observed across those entries: ${themes}`);
+    lines.push(`- Themes the system has previously inferred or observed: ${themes}`);
   }
 
   const tensions = list(ctx.currentTensions);
@@ -74,6 +74,8 @@ export function formatRelationalContextForPrompt(
     'HOW TO HOLD THIS:',
     '- Entry kinds are the member\'s own. Themes and tension signals are system',
     '  inference, not their words, and may be wrong.',
+    '- A prior MAIA hypothesis is continuity of attention, not new evidence.',
+    '  Never treat repeated access to the same hypothesis as repeated confirmation.',
     '- This is a record of what was written down before, with no timestamp. It is',
     '  not a statement about how things stand today. Never present it as current',
     '  fact, and never imply you know the present state of this relationship.',
@@ -82,6 +84,8 @@ export function formatRelationalContextForPrompt(
     '- Do not recite this list back, do not diagnose the relationship, and do not',
     '  characterise the other person. Let it inform what you already hear; it is',
     '  background, not an agenda.',
+    '- You may notice a possible pattern before the member does. If it becomes',
+    '  useful to surface, offer it tentatively and let the member revise or reject it.',
     '- If the member has moved on to something else, follow them.'
   );
 

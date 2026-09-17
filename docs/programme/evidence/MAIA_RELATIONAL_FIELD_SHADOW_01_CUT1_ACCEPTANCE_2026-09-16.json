@@ -1,0 +1,73 @@
+{
+  "programme": "MAIA-RELATIONAL-FIELD-SHADOW-01",
+  "cut": "CUT 1",
+  "date": "2026-09-16",
+  "implementationBase": "fb391f20f",
+  "researchArchitecture": "d899b3df6",
+  "replicationEvidence": "ef7d1b2bb",
+  "branch": "feature/maia-relational-field-shadow-01-20260916",
+  "memberFacingAuthority": "NONE",
+  "deploymentAuthority": "NONE",
+  "architectureFrozen": true,
+  "frozenHashes": {
+    "standing-envelope.ts": "62dcc0306997eeef86236ed8f8053cb70900c2def0e72ebae2df1c4c47e81f78",
+    "claim-standing.ts": "ae46a42bcc9622d987677a3c270dd447e06137908088efd8cb415f0f3826c053",
+    "structural-recovery.ts": "b8931cdc8c7ca66bbb63b52b0ff4cb60fe364879b3b9d3ce9b0c42689dd7142e",
+    "recovery-taxonomy.ts": "c6faacfeeaa15dba813f8857bf33eef1aca08ccede7e4197a86ae559d3ebf9a5",
+    "support-derived-ground.ts": "343bf4b7a10db899054245c65cde234a68ad98fe4332c6dd79546ef9bca55d41",
+    "interpretive-basis-envelope.ts": "23b6f840113dd5c39da7051cc815d1a5440d185b76a596463a5986b4ac73da6e",
+    "current-turn-basis-envelope.ts": "20494d96a070d015c0dcee36807864d258179faa7d77b067db386d46c2226670"
+  },
+  "tests": {
+    "suites": 7,
+    "assertions": 30,
+    "status": "PASS"
+  },
+  "migrationProof": {
+    "transactionalCreate": "PASS",
+    "rollbackVerifiedTableAbsent": true
+  },
+  "typecheckNoRegression": {
+    "baseDiagnosticLines": 28,
+    "headDiagnosticLines": 28,
+    "newDiagnostics": 0,
+    "note": "route diagnostics shift +1 line due one import; messages identical; MemberLiveContext diagnostics identical"
+  },
+  "runtimeSmoke": {
+    "model": "llama3.1:8b",
+    "status": "rendered",
+    "seed": 1151566783,
+    "generationMs": 7902,
+    "promptSha256": "4abe223065d6262609087277977df54987c8a376fbc48cbd3e1dfa2e83949181",
+    "basisEvidenceIds": [
+      "E3"
+    ],
+    "renderedDigest": "fa2119f236b8778aefe6689444e158d59af474f414400b0344beb3345699e7cc"
+  },
+  "populationGate": {
+    "flag": "MAIA_RELATIONAL_FIELD_SHADOW",
+    "models": "MAIA_RELATIONAL_FIELD_SHADOW_MODELS",
+    "memberAllowlist": "MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS",
+    "defaultsToNoExecution": true
+  },
+  "falsifiers": {
+    "SH-F1": "PASS \u2014 launch occurs after response object construction; shadow text has no response mutation path",
+    "SH-F2": "PASS \u2014 only dedicated research table is writable by shadow store",
+    "SH-F3": "PASS \u2014 no standing/consent/authorization write path",
+    "SH-F4": "PASS \u2014 maiaService has zero lane diff; /list adds post-response scheduling only",
+    "SH-F5": "PASS \u2014 turn/exchange/model/seed/architecture/source digests/packet/prompt/plan/basis/status/timing captured",
+    "SH-F6": "PASS \u2014 frozen admission refusal persisted; no regeneration or structural recovery in Cut 1",
+    "SH-F7": "PASS mechanically \u2014 launch schedules with setImmediate and returns before read/generation/write; production network-latency witness not spent",
+    "SH-F8": "PASS \u2014 deterministic packet digest + deterministic seed + frozen architecture + offline exporter",
+    "SH-F9": "PASS \u2014 seven copied research files byte-identical to d899b3df6",
+    "SH-F10": "PASS \u2014 explicit models only, dedicated table has no ranking/reviewer/preference fields, no runtime reader, offline exporter has no adjudication writeback"
+  },
+  "notDone": [
+    "migration not applied",
+    "shadow flag not enabled",
+    "member allowlist not configured",
+    "no deployment",
+    "no PR merge",
+    "no member-facing exposure"
+  ]
+}

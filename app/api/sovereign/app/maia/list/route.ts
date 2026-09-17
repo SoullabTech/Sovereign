@@ -87,6 +87,7 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/runner';
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
 // become durable — not the browser, later, once a pair exists.
@@ -1895,6 +1896,31 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       emitSignal({ signal_type: 'conversation_started', context_type: 'member', context_id: userId, surface: 'maia/list' });
     }
     const response = jsonWithCors(req, responseData, 200, canonHeaders);
+
+    // 🕸️ MAIA-RELATIONAL-FIELD-SHADOW-01 — shadow-only, member-invisible.
+    // The exact route response object already exists. `launchRelationalFieldShadow`
+    // only schedules background work with setImmediate and returns synchronously.
+    // It cannot mutate responseData/sovereignText, and an explicit member allowlist
+    // inside the runner defaults empty. Sanctuary has no learning turn id and is
+    // therefore structurally excluded.
+    const relationalShadowTurnId = orchestratorResult.metadata?.turnId;
+    if (
+      !isSanctuary &&
+      typeof relationalShadowTurnId === 'number' &&
+      Number.isFinite(relationalShadowTurnId) &&
+      relationalShadowTurnId > 0
+    ) {
+      launchRelationalFieldShadow({
+        turnId: relationalShadowTurnId,
+        exchangeId,
+        sessionId: session.id,
+        userInput: message,
+        primaryResponse: sovereignText,
+        processingProfile: orchestratorResult.processingProfile,
+        originRoute: '/api/sovereign/app/maia/list',
+        memberId: effectiveUserId ?? null,
+      });
+    }
     return response;
   } catch (err: any) {
     const duration = Date.now() - start;

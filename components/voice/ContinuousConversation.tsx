@@ -53,6 +53,7 @@ import {
   readTailSnapshot,
   measureTailOverlap,
   shouldEmitThrottled,
+  selectSilenceBoundaryTranscript,
   type UtteranceSendTrigger,
 } from '@/lib/voice/utteranceTail';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
@@ -1109,34 +1110,60 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             timerArmedAtRef.current = 0;
             return;
           }
-          // 👁️ Witness FIRST — the state that PRODUCED the decision, before the
-          // decision consumes or clears anything. tailAtRisk=true here is
-          // ordering D in mechanical form.
-          {
-            const firedAt = Date.now();
-            const committable = accumulatedTranscript.current.trim();
-            logVoiceEvent('voice_silence_timer_fired', {
-              turnCommitId: turnCommitIdRef.current,
-              timerAgeMs: timerArmedAtRef.current ? firedAt - timerArmedAtRef.current : -1,
-              timerDeadlineMs: turnSilenceMs,
-              committableCharCount: committable.length,
-              willCommit: !isProcessingRef.current && committable.length > 0,
-              ...readTailSnapshot({
-                now: firedAt,
-                lastInterimAt: lastInterimAtRef.current,
-                lastFinalAt: lastFinalAtRef.current,
-                lastInterimChars: lastInterimCharsRef.current,
-                finalChars: committable.length,
-              }),
-            });
-            sendTriggerRef.current = 'silence_timer';
+          // 👁️ Witness FIRST — preserve the browser's actual state before any
+          // Safari-only promotion. A promoted interim is NOT relabelled as a
+          // Web Speech final; telemetry names the repair explicitly.
+          const firedAt = Date.now();
+          const browserFinal = accumulatedTranscript.current.trim();
+          const tailBeforePromotion = readTailSnapshot({
+            now: firedAt,
+            lastInterimAt: lastInterimAtRef.current,
+            lastFinalAt: lastFinalAtRef.current,
+            lastInterimChars: lastInterimCharsRef.current,
+            finalChars: browserFinal.length,
+          });
+          const selection = selectSilenceBoundaryTranscript({
+            isSafari: isSafari(),
+            finalText: browserFinal,
+            interimText: lastInterimTextRef.current,
+            lastInterimAt: lastInterimAtRef.current,
+            lastFinalAt: lastFinalAtRef.current,
+          });
+          const promotedSafariInterim = selection.source === 'safari_interim_promotion';
+
+          logVoiceEvent('voice_silence_timer_fired', {
+            turnCommitId: turnCommitIdRef.current,
+            timerAgeMs: timerArmedAtRef.current ? firedAt - timerArmedAtRef.current : -1,
+            timerDeadlineMs: turnSilenceMs,
+            // Browser-final chars stay separate from the effective commit chars
+            // so a future trace can prove Safari never finalized this utterance.
+            committableCharCount: browserFinal.length,
+            effectiveCommitCharCount: selection.text.length,
+            safariInterimPromoted: promotedSafariInterim,
+            willCommit: !isProcessingRef.current && selection.text.length > 0,
+            ...tailBeforePromotion,
+          });
+          sendTriggerRef.current = 'silence_timer';
+
+          if (promotedSafariInterim) {
+            console.log(
+              `🍎 [Safari] Promoting interim-only utterance at silence boundary (${selection.text.length} chars)`
+            );
+            accumulatedTranscript.current = selection.text;
+            // The interim has now been consumed by an explicit client-side
+            // promotion. Clear only the outstanding-tail refs; do not pretend a
+            // browser final occurred by mutating lastFinalAtRef.
+            lastInterimCharsRef.current = 0;
+            lastInterimTextRef.current = '';
+            try { getContinuityBuffer().recordPending(selection.text); } catch { /* best-effort */ }
           }
+
           console.log('🔕 Silence detected - processing transcript');
           console.log('   isProcessingRef:', isProcessingRef.current);
           console.log('   accumulatedTranscript:', accumulatedTranscript.current);
-          // CRITICAL FIX: Don't check isRecording - onend fires before this timer
-          // Just check if we have a transcript to send
-          if (!isProcessingRef.current && accumulatedTranscript.current.trim()) {
+          // Don't check isRecording — onend can fire before this timer. The
+          // selector above is the one authority over what may cross this boundary.
+          if (!isProcessingRef.current && selection.text) {
             processAccumulatedTranscript();
           } else {
             console.log('⚠️ Silence timer fired but conditions not met to process');
@@ -4085,6 +4112,21 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // The final Whisper response still passes the generation/revocation gate.
       capture.finishController.abort();
       return;
+    }
+    if (isProcessingRef.current) return;
+    // Safari can retain a whole spoken turn as interim-only. An explicit Done
+    // is also a completion boundary; Desktop returned above and never uses this.
+    const selection = selectSilenceBoundaryTranscript({
+      isSafari: !useNativeSpeechRef.current && isSafari(),
+      finalText: accumulatedTranscript.current.trim(),
+      interimText: lastInterimTextRef.current,
+      lastInterimAt: lastInterimAtRef.current,
+      lastFinalAt: lastFinalAtRef.current,
+    });
+    if (selection.source === 'safari_interim_promotion') {
+      accumulatedTranscript.current = selection.text;
+      lastInterimCharsRef.current = 0;
+      lastInterimTextRef.current = '';
     }
     const chars = accumulatedTranscript.current.trim().length;
     if (!chars || isProcessingRef.current) {
