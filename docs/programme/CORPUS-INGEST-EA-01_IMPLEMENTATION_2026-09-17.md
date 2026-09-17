@@ -120,7 +120,7 @@ The pre-state check occurs after the write-excluding lock. Therefore a concurren
 
 ## 6. Rollback law
 
-Any exception after `BEGIN` and before successful `COMMIT` executes `ROLLBACK` on the same acquired client.
+Any exception after `BEGIN` and before successful `COMMIT` executes `ROLLBACK` on the same acquired client. A failed `ROLLBACK` is **not** treated as restoration: it raises `UNKNOWN WRITE OUTCOME` and requires direct production inspection before any retry.
 
 The script contains no `TRUNCATE` path and no force mode.
 
@@ -163,7 +163,7 @@ Current local result:
 - `lib/corpus/__tests__/eaIngestContract.test.ts`
 - `lib/corpus/__tests__/eaIngestTransaction.test.ts`
 - 3 suites PASS
-- 40 / 40 tests PASS
+- 41 / 41 tests PASS
 
 The tests establish, among other things:
 
@@ -178,6 +178,7 @@ The tests establish, among other things:
 - a synthetic insert failure triggers `ROLLBACK` and never `COMMIT`;
 - staged row tampering after all 1,238 inserts triggers `ROLLBACK` and never `COMMIT`;
 - a prepared-set mismatch refuses before `BEGIN`;
+- a synthetic rollback failure is surfaced as `UNKNOWN WRITE OUTCOME`, never misreported as restored, and never followed by `COMMIT`;
 - the successful behavioral path issues exactly 1,238 inserts and commits only after exact staged verification;
 - the one-shot runner contains no `TRUNCATE ain_knowledge_chunks`.
 

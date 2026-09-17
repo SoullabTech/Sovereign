@@ -135,6 +135,19 @@ describe('CORPUS-INGEST-EA-01 transactional behavior', () => {
     expect(client.calls.some((call) => call.sql === 'COMMIT')).toBe(false);
   });
 
+  test('rollback failure becomes an explicit unknown write outcome and never commits', async () => {
+    const client = new FakeClient(async (sql) => {
+      if (sql === 'BEGIN' || sql.startsWith('LOCK TABLE')) return [];
+      if (sql.includes('count(DISTINCT source_file)::int AS sources')) return [{ rows: 1, sources: 1 }];
+      if (sql === 'ROLLBACK') throw new Error('synthetic rollback failure');
+      throw new Error(`unexpected SQL after rollback failure: ${sql}`);
+    });
+
+    await expect(commitPreparedEaChunks(client, prepared, chunks)).rejects.toThrow(/UNKNOWN WRITE OUTCOME/);
+    expect(client.calls.some((call) => call.sql === 'ROLLBACK')).toBe(true);
+    expect(client.calls.some((call) => call.sql === 'COMMIT')).toBe(false);
+  });
+
   test('prepared-set drift refuses before BEGIN', async () => {
     const client = new FakeClient(async () => {
       throw new Error('database should not be touched');

@@ -128,7 +128,12 @@ async function main(): Promise<void> {
     console.log(`  embedded:         ${result.embedded}`);
     console.log(`  chunk-set SHA-256:${result.chunkSetSha256}`);
   } catch (error) {
-    console.error('\nROLLED BACK OR REFUSED — no partial CORPUS-INGEST-EA-01 commit accepted.');
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('UNKNOWN WRITE OUTCOME')) {
+      console.error('\nUNKNOWN WRITE OUTCOME — stop. Inspect production before any retry.');
+    } else {
+      console.error('\nROLLED BACK OR REFUSED — no partial CORPUS-INGEST-EA-01 commit accepted.');
+    }
     throw error;
   } finally {
     client.release();

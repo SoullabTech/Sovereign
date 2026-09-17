@@ -138,8 +138,18 @@ export async function commitPreparedEaChunks(
     };
   } catch (error) {
     if (transactionOpen) {
-      await client.query('ROLLBACK').catch(() => undefined);
-      transactionOpen = false;
+      try {
+        await client.query('ROLLBACK');
+        transactionOpen = false;
+      } catch (rollbackError) {
+        const original = error instanceof Error ? error.message : String(error);
+        const rollback = rollbackError instanceof Error ? rollbackError.message : String(rollbackError);
+        throw new Error(
+          `${EA_INGEST_CONTRACT.act} UNKNOWN WRITE OUTCOME: operation failed (${original}) ` +
+          `and ROLLBACK could not be confirmed (${rollback}); inspect production before any retry`,
+          { cause: rollbackError },
+        );
+      }
     }
     throw error;
   }
