@@ -56,7 +56,7 @@ Therefore: **J10 for Elemental Alchemy may not close while an alternate ungovern
 ## 6 · Current position — Elemental Alchemy
 
 ```
-J0 ✅  J1 ✅  J2 ✅  J3 ✅  J4 ✅  J5 ✅  J6 ✅  J7 ✅  ▶ J8  ·  J9  ·  J10
+J0 ✅  J1 ✅  J2 ✅  J3 ✅*  J4 ✅*  J5 ✅  J6 ✅  J7 ✅  J8 ⛔ STOP  ·  J9  ·  J10
 ```
 
 - Canonical reviewed mechanism: `78a85f652` (merge of PR #1337).
@@ -66,7 +66,9 @@ J0 ✅  J1 ✅  J2 ✅  J3 ✅  J4 ✅  J5 ✅  J6 ✅  J7 ✅  ▶ J8  ·  J9  
 - J6 evidence: `docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J6_PRODUCTION_WITNESS_2026-09-17.md`.
 - **J7 governed ingestion: PASS.** The final transaction committed `1,238 rows / 1 source / 1,238 embeddings`; an independent post-commit read proved contiguous chunk indexes `0–1237`, exactly 768-dimensional vectors, the single authorized source, and chunk-set SHA-256 `87b0cbaa…`.
 - J7 evidence, including both fail-closed precursor attempts: `docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J7_GOVERNED_INGESTION_EVIDENCE_2026-09-17.md`.
-- J8 controlled production retrieval is next.
+- **J8 retrieval witness: STOP.** The governed vectors are searchable and eligible-mode retrieval returns only Elemental Alchemy, but the canonical `/api/sovereign/app/maia/list` member route does not produce or pass `ainKnowledgeContext` / `ainKnowledge`; its enabled Knowledge Gate supplies source-weighting instructions only. A secondary finding shows all rows auto-classified `domain=somatic`, causing `talk`-mode retrieval to return zero, and the frozen chunk-set digest does not bind retrieval metadata.
+- J8 STOP evidence: `docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_RETRIEVAL_WITNESS_STOP_2026-09-17.md`.
+- J9 is not open. `*` J8 exposed an attestation question affecting J3/J4 retrieval semantics; their historical evidence remains valid for the contract they proved, but a repaired crossing must reconcile what retrieval-relevant metadata is governed and frozen.
 - The packaging finding is dispositioned host-side: `data/ain/source` is build-and-authority material, not runtime serving material. J6/J7 execute on `minisforum` from a clean governed worktree against production services; the 736-file source population is not shipped into the runtime image merely to prove exclusion.
 - Law 8 execution bind and the live host-side evidence are recorded in `docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J5-J6_HOST-SIDE_DISPOSITION_2026-09-17.md`.
 
