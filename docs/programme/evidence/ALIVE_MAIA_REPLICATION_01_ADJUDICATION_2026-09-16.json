@@ -1,0 +1,62 @@
+{
+  "programme": "ALIVE-MAIA-REPLICATION-01",
+  "status": "COMPLETE",
+  "architectureParent": "d899b3df6",
+  "architectureChanged": false,
+  "cases": {
+    "R1": {
+      "name": "Relational field / Mercurial third",
+      "presented": 8,
+      "refused": 0,
+      "founderJudgments": {
+        "H01": "alive",
+        "H02": "promising",
+        "H03": "alive",
+        "H04": "alive",
+        "H05": "promising",
+        "H06": "adrift",
+        "H07": "almost perfect",
+        "H08": "alive"
+      }
+    },
+    "R2": {
+      "name": "Temporal convergence / past selves",
+      "presented": 5,
+      "refused": 1,
+      "founderJudgments": {
+        "T01": "promising",
+        "T02": "ideal",
+        "T03": "promising/flat",
+        "T04": "ideal/perfect",
+        "T05": "ideal/perfect"
+      }
+    },
+    "R3": {
+      "name": "Relational wound / misunderstanding",
+      "presented": 6,
+      "refused": 0,
+      "founderJudgments": {
+        "W01": "promising",
+        "W02": "promising/alive",
+        "W03": "alive/ideal",
+        "W04": "ideal/alive",
+        "W05": "alive/ideal",
+        "W06": "alive"
+      }
+    }
+  },
+  "totals": {
+    "generated": 20,
+    "presentedToFounder": 19,
+    "constitutionallyRefusedBeforeWitness": 1
+  },
+  "adjudication": {
+    "architectureReplication": "SUPPORTED in this bounded founder-owned three-case corpus",
+    "modelFamilyEffect": "CASE-DEPENDENT; strong separation in R1, non-monotonic in R2, weak/mixed in R3",
+    "basisBreadth": "NOT SUFFICIENT as explanation of aliveness; strongest labels occur at both narrow and broader basis sets",
+    "constitutionalCompatibility": "SUPPORTED; human-observed alive/ideal responses occurred without relaxing standing/authorship boundaries, while one attractive generation was refused for borrowed first-person voice",
+    "populationClaim": "NONE",
+    "productionAuthority": "NONE"
+  },
+  "successor": "MAIA-RELATIONAL-FIELD-SHADOW-01 is proposable but NOT OPENED"
+}

@@ -1,0 +1,73 @@
+{
+  "programme": "ALIVE-MAIA-REPLICATION-01",
+  "case": "R2 temporal convergence / past selves",
+  "founderWitnessVerbatim": {
+    "T01": "promising",
+    "T02": "ideal",
+    "T03": "promising/flat",
+    "T04": "ideal/perfect",
+    "T05": "ideal/perfect"
+  },
+  "revealedRows": [
+    {
+      "id": "T01",
+      "witness": "promising",
+      "model": "qwen3:32b",
+      "seed": 211,
+      "basisIds": [
+        "E3",
+        "E2"
+      ]
+    },
+    {
+      "id": "T02",
+      "witness": "ideal",
+      "model": "qwen3:32b",
+      "seed": 509,
+      "basisIds": [
+        "E3"
+      ]
+    },
+    {
+      "id": "T03",
+      "witness": "promising/flat",
+      "model": "llama3.1:8b",
+      "seed": 42,
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    {
+      "id": "T04",
+      "witness": "ideal/perfect",
+      "model": "llama3.1:8b",
+      "seed": 509,
+      "basisIds": [
+        "E3"
+      ]
+    },
+    {
+      "id": "T05",
+      "witness": "ideal/perfect",
+      "model": "llama3.1:8b",
+      "seed": 211,
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    }
+  ],
+  "refusedBeforeWitness": [
+    {
+      "caseId": "R2",
+      "model": "qwen3:32b",
+      "seed": 42,
+      "refusal": "borrowed_first_person",
+      "rawPlanSha256": "988844df65b1f45b0850e3666556f7b9641bd59c2728765187f5cf5e9d712168"
+    }
+  ],
+  "note": "Founder/human judgments are preserved verbatim and are not converted to scores."
+}
