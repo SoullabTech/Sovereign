@@ -28,6 +28,15 @@ describe('Safari interim-only silence-boundary finalization', () => {
     expect(source).toContain('}, turnSilenceMs); // TURN-01 member space + learned patience');
   });
 
+
+  it('drops late Safari results after the turn has already committed', () => {
+    const committed = source.indexOf('if (committedRef.current) {');
+    const ret = source.indexOf('return;', committed);
+    const suppressedGuard = source.indexOf('// 🛡️ GUARD: If transcript is suppressed', committed);
+    expect(committed).toBeGreaterThan(-1);
+    expect(ret).toBeGreaterThan(committed);
+    expect(ret).toBeLessThan(suppressedGuard);
+  });
   it('does not relabel promoted interim speech as a browser final', () => {
     const promotion = source.indexOf("selection.source === 'safari_interim_promotion'");
     const window = source.slice(promotion, promotion + 1800);

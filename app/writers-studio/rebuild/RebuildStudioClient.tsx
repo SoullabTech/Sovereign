@@ -15,6 +15,11 @@ import { currentWork, resolveWorkContext } from '../workContext';
 import { fetchStructure, refusalCopy as structureRefusalCopy, type StructureNodeDTO, type StructureTreeDTO } from '@/lib/writersStudio/structureClient';
 import RebuildWritingBoundary from './RebuildWritingBoundary';
 import RebuildAuthoredBody from './RebuildAuthoredBody';
+import GoldLine from '../insight/GoldLine';
+import CanvasWorkspace from '../insight/CanvasWorkspace';
+import InsightReadings from '../insight/InsightReadings';
+import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
+import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { OutlineNode } from '@/lib/writersStudio/focus/outlineTree';
@@ -172,6 +177,16 @@ export default function RebuildStudioClient() {
   const [maiaMode, setMaiaMode] = useState<MaiaMode>('chapter');
   const [canvasExpanded, setCanvasExpanded] = useState(false);
   const [writingEpoch, setWritingEpoch] = useState(0);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
+  const [memberVersionBusy, setMemberVersionBusy] = useState(false);
+  const workspaceIncoming = useRef<string | null>(null);
+  const workspaceReturn = useRef<{
+    focusId: string | null; selectedPassage: PassageSelection | null;
+    thread: RebuildEditorialThread | null; versionId: string | null;
+    tab: PassageTab; mode: MaiaMode; address: string;
+    scrollTop: number; scrollLeft: number;
+  } | null>(null);
   const [writingMessage, setWritingMessage] = useState<string | null>(null);
   const [selectedPassage, setSelectedPassage] = useState<PassageSelection | null>(null);
   const [passageTab, setPassageTab] = useState<PassageTab>('ask');
@@ -805,6 +820,86 @@ export default function RebuildStudioClient() {
     setEditorialFailure(null);
   }, []);
 
+  const openWorkspace = useCallback((insight?: { readingId: string; key: string }) => {
+    if (!workspaceOpen) {
+      const scroll = document.querySelector<HTMLElement>('[data-manuscript-scroll]');
+      workspaceReturn.current = { focusId, selectedPassage, thread: editorialThread,
+        versionId: suggestedVersionId, tab: passageTab, mode: maiaMode,
+        address: window.location.pathname + window.location.search,
+        scrollTop: scroll?.scrollTop ?? 0, scrollLeft: scroll?.scrollLeft ?? 0 };
+    }
+    if (insight) setWorkspaceInsight(insight);
+    setWorkspaceOpen(true);
+  }, [workspaceOpen, focusId, selectedPassage, editorialThread, suggestedVersionId, passageTab, maiaMode]);
+
+  const closeWorkspace = useCallback(() => {
+    if (editorialBusy || adoptionBusy || memberVersionBusy) return;
+    const previous = workspaceReturn.current;
+    if (previous) {
+      if (previous.focusId !== focusId) {
+        setFocusId(previous.focusId); setSelectedPassage(previous.selectedPassage);
+        setEditorialThread(previous.thread); setSuggestedVersionId(previous.versionId);
+        setPassageTab(previous.tab); setMaiaMode(previous.mode);
+        replacePlaceAddress(previous.address);
+      }
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const scroll = document.querySelector<HTMLElement>('[data-manuscript-scroll]');
+        if (scroll) { scroll.scrollTop = previous.scrollTop; scroll.scrollLeft = previous.scrollLeft; }
+      }));
+    }
+    setWorkspaceOpen(false);
+  }, [editorialBusy, adoptionBusy, memberVersionBusy, focusId]);
+
+  const incomingReading = params?.get(INSIGHT_READING) ?? null;
+  const incomingObservation = params?.get(INSIGHT_OBSERVATION) ?? null;
+  useEffect(() => {
+    if (phase !== 'ready' || !context || !incomingReading || !incomingObservation) return;
+    const key = context.manuscriptId + ':' + incomingReading + ':' + incomingObservation;
+    if (workspaceIncoming.current === key) return;
+    workspaceIncoming.current = key;
+    openWorkspace({ readingId: incomingReading, key: incomingObservation });
+  }, [phase, context, incomingReading, incomingObservation, openWorkspace]);
+
+  const reviseInsightPassage = useCallback((passage: InsightPassage) => {
+    if (!context || editorialBusy || adoptionBusy || memberVersionBusy || !passage.verified) return;
+    const section = context.sections.find(s => s.draftSectionId === passage.sectionId);
+    const live = writingRef.current?.bodyOf(passage.sectionId) ?? section?.body;
+    if (!section || !section.editable || live !== passage.body) {
+      setEditorialFailure('This passage changed after the comparison opened. Reopen the observation before selecting its evidence.');
+      return;
+    }
+    const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
+    holdPassage(section, range.start, range.end, Array.from(passage.body).slice(range.start, range.end).join(''));
+    setPassageTab('suggest');
+    requestAnimationFrame(() => document.querySelector('[data-revision-desk]')?.scrollIntoView({ block: 'start' }));
+  }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage]);
+
+  const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
+    if (memberVersionBusy || !editorialThread || draft.threadId !== editorialThread.threadId || draft.sectionId !== focusId) return false;
+    setMemberVersionBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
+    try {
+      const res = await apiFetch('/api/writers-studio/editorial/version', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ threadId: draft.threadId, supersedes: draft.supersedes, replacementText: draft.text }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || typeof body?.versionId !== 'string') {
+        setEditorialFailure(res.status === 409
+          ? 'This conversation gained another version. Your wording and the version you answered are retained; nothing was applied.'
+          : 'Your revision could not be saved. Its wording is still held here; nothing was applied.');
+        return false;
+      }
+      setSuggestedVersionId(body.versionId);
+      const reread = await readBoundEditorialThread(draft.threadId, draft.sectionId);
+      if (reread.ok) { setEditorialThread(reread.thread); setSuggestedVersionId(body.versionId); }
+      else setEditorialFailure('Your version was saved, but the conversation could not be refreshed. Reopen it before applying. Nothing was applied.');
+      return true;
+    } catch {
+      setEditorialFailure('The save could not be confirmed. Your wording is held here. Reopen the conversation to check before submitting again.');
+      return false;
+    } finally { setMemberVersionBusy(false); }
+  }, [memberVersionBusy, editorialThread, focusId]);
+
   /* The PAGE's variables. The ROOM's arrive from the Studio layout's
      provider and are simply inherited — this room states none of its own.
      Applied to the writing field alone, per the law at their definition:
@@ -826,6 +921,7 @@ export default function RebuildStudioClient() {
   }
 
   return (
+    <>
     <RebuildWritingBoundary
       key={`${context.manuscriptId}:${writingEpoch}`}
       manuscriptId={context.manuscriptId}
@@ -1115,6 +1211,9 @@ export default function RebuildStudioClient() {
               </div>
               <span style={{ color: C.quiet }}>•••</span>
             </div>
+            <GoldLine manuscriptId={context.manuscriptId} />
+            <button type="button" data-write-work-on-canvas onClick={() => openWorkspace()}
+              style={{ width: '100%', marginBottom: 12, padding: '10px 12px', borderRadius: 9, border: `1px solid ${C.rule}`, color: C.ink, background: C.active, cursor: 'pointer' }}>Work on canvas</button>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: C.field, border: `1px solid ${C.soft}`, borderRadius: 999, padding: 3 }}>
               <button type="button" disabled={!chapter} title={chapter ? 'Review the confirmed chapter' : 'Chapter Review needs a confirmed chapter boundary.'}
                 onClick={() => chapter && setMaiaMode('chapter')} style={{ border: 0, borderRadius: 999, padding: '8px 10px', cursor: chapter ? 'pointer' : 'default', opacity: chapter ? 1 : .45, background: maiaMode === 'chapter' ? C.goldFill : 'transparent', color: C.ink, fontWeight: maiaMode === 'chapter' ? 700 : 450, fontSize: 11.5 }}>Chapter Review</button>
@@ -1215,6 +1314,9 @@ export default function RebuildStudioClient() {
                                   <span style={{ fontSize: 9.5, color: C.quiet }}>{finding.state}</span>
                                 </div>
                                 <p style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, margin: '4px 0 0' }}>{finding.observation}</p>
+                                <button type="button" onClick={() => openWorkspace({ readingId: finding.readingId, key: finding.id.slice(finding.readingId.length + 1) })}
+                                  data-review-work-on-canvas={finding.id}
+                                  style={{ border: `1px solid ${C.soft}`, borderRadius: 7, padding: '7px 9px', marginTop: 8, color: C.ink, background: C.panel, cursor: 'pointer' }}>Work on canvas</button>
                                 {target && (
                                   <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
                                     style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0 0', fontSize: 10.5, cursor: 'pointer' }}>
@@ -1398,9 +1500,33 @@ export default function RebuildStudioClient() {
         <button type="button" onClick={() => setMobilePane('maia')} data-active={mobilePane === 'maia'}>MAIA</button>
       </div>)}
       {writingMessage && <div className="wsr-writing-alert" role="status">{writingMessage}</div>}
+
     </main>
         );
       }}
     </RebuildWritingBoundary>
+      <CanvasWorkspace style={canvasSurfaceVars} open={workspaceOpen} title={workspaceInsight ? 'Observation and revision' : focusName}
+        busy={editorialBusy || adoptionBusy || memberVersionBusy} onClose={closeWorkspace}>
+        {workspaceInsight && <InsightReadings key={context.manuscriptId} refreshKey={context.version}
+          manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
+          onRevise={reviseInsightPassage} busy={editorialBusy || adoptionBusy || memberVersionBusy} />}
+        <RevisionDesk showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
+          currentText={selectedPassage?.draftSectionId === focusId
+            ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
+            : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
+          thread={editorialThread} version={suggestedVersion} instruction={editorialDraft}
+          onInstruction={setEditorialDraft} onSend={() => void sendEditorial()}
+          onSelectVersion={setSuggestedVersionId} onApply={() => void applySuggested()}
+          onSaveMember={saveMemberRevision} busy={editorialBusy || adoptionBusy || memberVersionBusy}
+          response={lastMaiaEditorialTurn?.body ?? null}
+          message={editorialFailure ?? (adoptionOutcome ? adoptionOutcome.kind === 'applied'
+            ? 'Applied to this exact place in the Work.' : 'The Work could not accept this revision. Nothing was changed.' : null)}
+          onKeep={() => { setSuggestedVersionId(null); setAdoptionOutcome(null); setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.'); }} />
+        {relationshipChoices.length > 1 && <div className="wsi-bar" aria-label="Choose revision conversation">
+          {relationshipChoices.map((choice, i) => <button key={choice.threadId} type="button" disabled={editorialBusy}
+            onClick={() => void chooseRelationship(choice.threadId)}>Conversation {i + 1} · {choice.turnCount} turns</button>)}
+        </div>}
+      </CanvasWorkspace>
+    </>
   );
 }

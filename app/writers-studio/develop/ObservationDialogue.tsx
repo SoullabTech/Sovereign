@@ -98,7 +98,7 @@ function locationLine(l: CurrentLocation | null): string | null {
 }
 
 export default function ObservationDialogue({
-  manuscriptId, readingId, observationKey, about, superseded, onClose,
+  manuscriptId, readingId, observationKey, about, superseded, onClose, initialQuestion = '',
 }: {
   manuscriptId: string;
   readingId: string;
@@ -108,6 +108,7 @@ export default function ObservationDialogue({
   /** From the reading the room already rendered, so the warning precedes the first turn. */
   superseded: boolean;
   onClose: () => void;
+  initialQuestion?: string;
 }) {
   const [thread, setThread] = useState<AskThreadView | null>(null);
   /* HELD SEPARATELY FROM `thread`. A failed answer still has a threadId — the
@@ -115,7 +116,7 @@ export default function ObservationDialogue({
      forgot it would open a SECOND thread holding the same question. */
   const [threadId, setThreadId] = useState<string | null>(null);
   const [location, setLocation] = useState<CurrentLocation | null>(null);
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(initialQuestion);
   const [busy, setBusy] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
   /** `null` until the store has answered. Sending is refused until then. */
