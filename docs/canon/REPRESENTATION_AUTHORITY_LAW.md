@@ -29,6 +29,34 @@
 Both conditions. A grant without an attestation is an authority nobody can audit; an attestation without a
 grant is instrumentation around an authority nobody conferred.
 
+### Canonical corollary — Grant–Effect Boundary
+
+**RATIFIED by founder act 2026-09-17** (`docs/programme/J11_FOUNDER_TAKE_AS_CANONICAL_COROLLARY_RULING_2026-09-17.md`).
+
+> **Authority existence ≠ authority consumption ≠ authority sufficiency.**
+>
+> **A governed effect may exercise only authority it actually consumes from a governed grant sufficient for
+> that effect, and it may not exceed the scope of that grant.**
+
+This corollary sharpens, and does not replace, **SUBSTITUTION → GRANT → ATTESTATION**.
+
+For an authority-bearing effect:
+
+- **Existence** asks whether an exact governed grant can be named.
+- **Consumption** asks whether the specific effect actually uses the authority conferred by that grant; a grant
+  elsewhere in the system is not enough.
+- **Sufficiency** asks whether the consumed grant together with the law's required attestation is enough for
+  that exact effect rather than a nearby, weaker, or differently scoped effect.
+- **Scope** asks whether the effect remains inside the authority actually granted instead of silently widening
+  selection into validity, orientation into person-truth, declaration into availability, or one actor's
+  authorship into another's.
+
+A shared constitutional boundary does **not** imply a shared implementation. Domain-specific enforcement and
+independently authoritative doctrines remain in force.
+
+The corollary remains falsifiable: if a future seam fits only by changing what **grant**, **effect**,
+**consumption**, **sufficiency**, or **scope** mean, the corollary must narrow or fail.
+
 ### What does not grant authority
 
 ```text
