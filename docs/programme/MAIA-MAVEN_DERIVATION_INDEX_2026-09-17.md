@@ -3,6 +3,8 @@
 **Status:** Index record. Establishes conceptual lineage, ⛔ not repository provenance.
 **Lane:** `MAIA-MAVEN-CANON-01` — documentation only.
 **Date:** 2026-09-17
+**⭐ AMENDED 2026-09-17 by founder adjudication R4** — NODE-15 renamed; "four-layer" is
+permanently reserved to `docs/canon/FOUR_LAYER_SUBSTITUTION.md`.
 
 ---
 
@@ -58,7 +60,7 @@ stops for a ruling.
 | **12** | Intent Resolution | ⛔ not authored | none — ⚠️ NEW SYNTHESIS |
 | **13** | Maven Evidence Gates | ⛔ not authored | `lib/navigation/houseDispositions.ts`; `CLAIM_STATE_AUTHORITY.md`; `MARKETING_CLAIM_DISCIPLINE.md` |
 | **14** | Conversational Continuity Without Memory Capture | ⛔ not authored | `lib/maia/memorySelectionPolicy.ts` (`OPERATIONAL_CONTINUITY_DECLARATION`) |
-| **15** | Four-Layer Memory Model | ✅ `MAIA-NODE-15_FOUR_LAYER_MEMORY_MODEL_2026-09-17.md` | `MAIA_MEMORY_CANON_v1.0.md` §II (12-layer stack) |
+| **15** | The Standing Model *(renamed under R4; was "four-layer memory model")* | ✅ `MAIA-NODE-15_STANDING_MODEL_2026-09-17.md` | `MAIA_MEMORY_CANON_v1.0.md` §II (12-layer stack) |
 | **16** | Context Memory Policy Matrix | ✅ `MAIA-NODE-16_CONTEXT_MEMORY_POLICY_MATRIX_2026-09-17.md` | `LONGITUDINAL_MEMORY_CATEGORY_GRADIENT.md`; `turnPosture.ts` |
 
 ⚠️ **Only NODE-15 and NODE-16 were authored by this lane**, because only those two were handed

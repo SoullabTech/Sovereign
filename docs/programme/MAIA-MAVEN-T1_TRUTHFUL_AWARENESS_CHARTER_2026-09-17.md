@@ -4,6 +4,8 @@
 **Lane:** `MAIA-MAVEN-CANON-01` — documentation only.
 **Date:** 2026-09-17
 **Opens on:** an explicit founder act, after adjudication of the canonicalization report.
+**⭐ AMENDED 2026-09-17 by founder adjudication** — §1.2 resolved by **R8**. T1-A is now OPEN as
+its own narrowly chartered lane: `MAIA-MAVEN-T1A_KEEP_INVOCATION_CHARTER_2026-09-17.md`.
 
 ---
 
@@ -43,7 +45,16 @@ seam** (see §1.2 and report finding F-1). The charter is amended accordingly be
 | **Portfolio keep gesture** | `app/api/psyche/portfolio/keep/route.ts` | a *formation event* recording the act of keeping material into the psyche portfolio, typed to `MemoryAtomSourceType` |
 | **House "Keeps" room** | destination `keeps` → `/maia/keep-capture`, tooltip *"Moments you have held onto"* | a member-facing surface whose backing store is not established by this census |
 
-⛔⛔ **T1-A may not open until it is ruled WHICH Keep object "Personal Keeps READ" means.**
+⭐ **RESOLVED BY R8 — solved ontologically, not by arbitrary renaming.**
+
+> **Keep is the family concept / member gesture. Each implementation must carry a qualified
+> identity.**
+
+The organism keeps the deeper idea of *keeping* without pretending three different objects are
+one object. **The naming portion of T1-A is unblocked; ⛔ its invocation seam is NOT authorized.**
+
+**Original text, kept verbatim:** ⛔⛔ T1-A may not open until it is ruled WHICH Keep object
+"Personal Keeps READ" means.
 
 ⭐ This is the same defect class the `JARVIS-CIRCLES-01` I0 census already found and named:
 *"'Commons' denotes THREE different existing things and NONE matches ratified FR-02."* The
@@ -55,7 +66,8 @@ vocabulary ambiguity rather than through a governed act.
 
 ## 2. T1-A — Personal Keeps READ
 
-**Status:** ⛔ BLOCKED on the object ruling (§1.2). Eventual build.
+**Status:** ⭐ **OPEN at J4** under `MAIA-MAVEN-T1A_KEEP_INVOCATION_CHARTER_2026-09-17.md`.
+⛔ J5 build NOT authorized. *(Original status: BLOCKED on the object ruling — resolved by R8.)*
 
 **Purpose:**
 
@@ -158,8 +170,8 @@ that seam becomes visible.
 
 | Item | Standing |
 |---|---|
-| T1 as a whole | CHARTERED, ⛔ NOT OPENED |
-| T1-A Keeps READ | ⛔ BLOCKED on the Keep-object ruling; route + doctrine already exist |
+| T1 as a whole | CHARTERED · T1-A OPEN at J4 · T1-B/C/D ⛔ NOT OPENED |
+| T1-A Keeps READ | ⭐ **OPEN at J4** as `MAIA-MAVEN-T1A` — naming unblocked by R8; ⛔ invocation seam NOT authorized |
 | T1-B Journal READ | ⛔ NOT AUTHORIZED; CAPTURE WITHHELD |
 | T1-C Studio continuity census | ⛔ NOT OPENED (census only when opened) |
 | T1-D Presence Frame census | ⛔ NOT OPENED (census only when opened) |

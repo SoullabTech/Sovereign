@@ -6,6 +6,10 @@
 **Date:** 2026-09-17
 **Origin:** Architecture developed and founder-ratified in founder deliberation outside the
 repository, handed to this lane for reconciliation with existing repository law.
+**⭐ AMENDED 2026-09-17 by founder adjudication R1–R8** — see
+`MAIA-MAVEN-CANON-01_FOUNDER_ADJUDICATION_2026-09-17.md`, which is authoritative over this
+record. Sections below that stated a TENSION are resolved there; their original text is kept
+verbatim as the position at the time of reconciliation, ⛔ never edited to read otherwise.
 
 ---
 
@@ -57,6 +61,12 @@ Every capability, surface, and crossing answers these seven:
 
 `CONVERSE` · `ORIENT` · `NAVIGATE` · `READ` · `CONTINUE` · `CAPTURE` · `REMIND` · `MODIFY` ·
 `CROSS` · `SHARE` · `EXTERNAL_ACT` · `DELETE` · `START_FRESH`
+
+⭐ **RESOLVED BY R3.** *A capability declaration does not establish capability availability.*
+For a capability to become `Live`, the whole chain must be evidenced:
+`declaration → live consumer → execution path → outcome → observable evidence → test/witness`.
+Reconciling these classes with the existing registry is a separate founder decision, ⛔ not
+authorized. **Original text follows.**
 
 ⚠️ **These classes are a classification vocabulary, not an implemented type.** The repository's
 present capability surface is `lib/maia/capabilities.ts` (`MaiaCapability`, 13 ids), which is a
@@ -136,7 +146,19 @@ inherits C1 and C2 rather than restating them.
 
 **Ancestor:** partial — `lib/anchor/surfacePreference.ts` (member governs whether an anchor may
 surface); `return_preference` on memory atoms.
-**Classification:** ⚠️ **TENSION — founder decision required.** `docs/canon/MAIA_MEMORY_CANON_v1.0.md`
+**Classification:** ⭐ **RESOLVED BY R1 — START_FRESH MEANS NO CONTINUITY CROSSING.**
+
+> **Continuity may remain available without becoming present.**
+
+The base chain may be **queried** (satisfying `MAIA_MEMORY_CANON_v1.0.md` §II) while the
+retrieved material is **held outside generative context**, so no memory content crosses. The
+member may later reopen continuity deliberately.
+⭐⭐ Memory → generative context **is a crossing**, so START_FRESH falls under the existing
+disclosure discipline (§4.2) rather than a parallel mechanism: *availability is not permission.*
+⛔ The reading R1 forecloses: MAIA claiming to start fresh while retrieved history silently
+shapes the response.
+
+**Original text, kept verbatim:** ⚠️ **TENSION — founder decision required.** `docs/canon/MAIA_MEMORY_CANON_v1.0.md`
 §II declares a **non-negotiable base chain** (recent turns + episodic + semantic + relational +
 developmental) that *"must be available and queried every time a recognized member speaks."*
 A member instruction to start fresh appears to countermand a non-negotiable.
@@ -144,6 +166,9 @@ The proposed resolving distinction — **recorded as a proposal, not a ruling** 
 chain governs *retrieval availability* while START_FRESH governs *foregrounding*, so nothing is
 un-queried and nothing is forced into the present. See report finding T-1. ⛔ No implementation
 may rely on either reading until ruled.
+
+⭐ *R1 adopted this distinction and made it mechanically stronger: not merely de-foregrounded,
+but refused as a crossing.*
 
 ### 4.7 Evidence sovereignty
 
@@ -200,6 +225,14 @@ Capability maturity:
 
 with `WITHHELD`, and `DEFERRED` where appropriate.
 
+⭐ **RESOLVED BY R2 — TWO INDEPENDENT AXES, PERMANENTLY SEPARATE.** ⛔ Do NOT merge them.
+**Maven standing** asks *how strongly is this warranted internally*; **platform maturity**
+(`Live / Designed / Vision`) asks *how materially instantiated is it in the product*. Both
+`strongly warranted + Designed` and `provisional + Live` are legitimate and must stay
+expressible. **Neither axis confers the other**, and decisively:
+⛔⛔ **Maven standing cannot authorize a member-facing claim of capability.**
+**Original text follows.**
+
 ⚠️ **This is a second maturity vocabulary.** The repository already ratifies **Live / Designed /
 Vision** (`MARKETING_CLAIM_DISCIPLINE.md`, `CLAIM_STATE_AUTHORITY.md`) for outward claims, and
 the founder's own six-category artifact typology (CLAUDE.md) for internal state. Maven's
@@ -239,7 +272,9 @@ repository has most often needed and most often skipped. A green test suite is J
 
 - **MAIA-MAVEN-01:** CANDIDATE canonical authority. No CONTRADICTION found against existing
   repository law, so it may stand as candidate.
-- **Open founder decisions:** T-1 (fresh-start vs non-negotiable base chain) · T-2 (two maturity
-  vocabularies) · T-3 (capability registry reconciliation) — see the report.
+- **Founder decisions: ✅ ALL RESOLVED 2026-09-17** — T-1 by **R1** · T-2 by **R2** · T-3 by
+  **R3** · T-4 by **R4** · T-5 by **R5**. See the adjudication record.
+- ⛔⛔ **Standing instruction (adjudication §0): do not edit this record again merely to make it
+  sound more complete.** Removing a *not yet* without new evidence is a regression.
 - **Implementation:** ⛔ NOT AUTHORIZED.
 - **Production:** UNTOUCHED.

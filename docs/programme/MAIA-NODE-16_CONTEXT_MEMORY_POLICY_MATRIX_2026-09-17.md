@@ -3,7 +3,11 @@
 **Status:** CANDIDATE matrix, subject to repository reconciliation.
 **Lane:** `MAIA-MAVEN-CANON-01` — documentation only. ⛔ Implementation NOT AUTHORIZED.
 **Date:** 2026-09-17
-**Depends on:** `MAIA-NODE-15_FOUR_LAYER_MEMORY_MODEL_2026-09-17.md` (read §0 naming hazard first)
+**Depends on:** `MAIA-NODE-15_STANDING_MODEL_2026-09-17.md` (renamed under **R4**)
+**⭐ AMENDED 2026-09-17 by founder adjudication** — see
+`MAIA-MAVEN-CANON-01_FOUNDER_ADJUDICATION_2026-09-17.md`, authoritative over this record.
+§II amended by **R5** · §III by **R1** · §XVI by **R7** · §XIX by **R5**. Prior text kept
+verbatim as the position at reconciliation, ⛔ never edited to read otherwise.
 
 ---
 
@@ -79,7 +83,23 @@ capability results and temporary context remain available *during* the encounter
 **Continuation: NO by default.** A Sanctuary conversation does not become an open loop merely
 because it mattered.
 
-**Explicit crossing may be allowed** — *"Keep that sentence."* / *"Leave just this question
+### ⛔⛔ THE EXPLICIT-CROSSING CARVE-OUT IS WITHDRAWN BY R5
+
+> **Sanctuary state may govern the boundary.**
+> **Sanctuary content may not cross the boundary.**
+
+Invariant 6 wins. Sanctuary may emit only the **minimum control state required to preserve
+Sanctuary** (e.g. `sanctuary_active = true`). The prohibition covers raw content · quotations ·
+summaries · embeddings · inferred memories · derived psychological characterization ·
+personalization derived from Sanctuary content.
+
+⭐ The fail-closed store guard in `lib/sanctuary/turnPosture.ts` is therefore **constitutionally
+correct**, ⛔ not an unimplemented gap. Any future exception requires an explicit constitutional
+amendment, ⛔ never an implementation convenience.
+
+**ORIGINAL TEXT, SUPERSEDED, kept verbatim:**
+
+> **Explicit crossing may be allowed** — *"Keep that sentence."* / *"Leave just this question
 open."* MAIA should name the boundary:
 
 > This conversation is in Sanctuary. I can persist just that item separately if you want.
@@ -95,10 +115,10 @@ Constitutional ancestor (Kelly ruling 2026-07-17): *the privacy posture governin
 posture in force when that turn occurred* — established after incident `SANC-20260614-01`, in
 which a session recorded as `standard` had persisted five sanctuary exchanges.
 
-⚠️ **The explicit-crossing carve-out is NOT implemented and must not be assumed safe.** A
-"Keep that sentence" path out of Sanctuary would be a write on a sanctuary-posture turn, which
-the present store guard refuses by design. Building it is a governed act requiring its own
-falsifiers. ⛔ Not authorized here.
+⚠️ **Original caution, kept verbatim:** the carve-out is NOT implemented and must not be assumed
+safe — a "Keep that sentence" path out of Sanctuary would be a write on a sanctuary-posture
+turn, which the present store guard refuses by design. ⭐ **R5 went further: the carve-out is not
+merely unbuilt, it is forbidden.**
 
 ---
 
@@ -123,9 +143,16 @@ this tomorrow."* / an active Change. ⛔ No inferred unfinishedness.
 version-governed (*"only atoms the member has consented to surface (`return_preference`), never
 sacred_protected registers, never member-rejected atoms"*).
 
-⚠️ **TENSION T-1 lands on this row.** `MAIA_MEMORY_CANON_v1.0.md` §II declares a non-negotiable
-base chain that *must be queried every time a recognized member speaks*. See the
-canonicalization report. ⛔ Unresolved.
+⭐ **T-1 RESOLVED BY R1.** The base chain may be **queried** — satisfying
+`MAIA_MEMORY_CANON_v1.0.md` §II — while under `START_FRESH` the retrieved material is **held
+outside generative context** and no memory content crosses.
+
+> **Continuity may remain available without becoming present.**
+
+⭐⭐ Memory → generative context is a **crossing**, so START_FRESH is a crossing refusal, not a
+ranking adjustment.
+
+**Original text, kept verbatim:** ⚠️ TENSION T-1 lands on this row… ⛔ Unresolved.
 
 ---
 
@@ -338,7 +365,10 @@ policy permits. **Memory: NOT AUTOMATIC** — ⛔ a symbolic reading must not si
 factual personal memory; member-adopted reflection may become memory separately.
 Continuation: none automatic.
 
-⚠️ **Precision correction.** Astrology execution is *not* withheld by a gate. Eleven routes
+⭐ **RULED BY R7 — astrology is `declared / unwired`, ⛔ NOT `withheld`.** *Withheld* implies a
+working capability deliberately denied; repository truth supports only the former.
+
+⚠️ **Precision correction (original text).** Astrology execution is *not* withheld by a gate. Eleven routes
 exist under `app/api/astrology/`, and `lib/maia/capabilities.ts` declares `astrology.reading`
 and `astrology.transit`. What is absent is the **invocation seam** — the registry has no
 consumers (report finding F-1). ⛔ Do not record astrology as "withheld by ruling"; it is
@@ -360,7 +390,7 @@ manuscript editing, sharing private content.
 
 ---
 
-## XIX. Cross-layer transition rules
+## XIX. Cross-standing transition rules
 
 | Transition | Requires |
 |---|---|
@@ -369,7 +399,7 @@ manuscript editing, sharing private content.
 | Memory → Continuation | explicit or canonical return-state |
 | Encounter → Memory | explicit act (e.g. Keep) |
 | Encounter → Continuation | explicit *"leave this open"* |
-| Sanctuary → any persistent layer | ⛔ explicit crossing (⚠️ unimplemented — see §II) |
+| Sanctuary → any persistent standing | ⛔⛔ **FORBIDDEN by R5.** No crossing, explicit or otherwise. Sanctuary state may govern the boundary; Sanctuary content may not cross it. *(Original row read: "⛔ explicit crossing (⚠️ unimplemented)" — superseded.)* |
 
 ### Context crossings require layer decisions
 
@@ -478,7 +508,8 @@ ephemerality, forgetting, ambiguity, completion, transformation, release, and fr
 
 ## Standing
 
-CANDIDATE matrix · derivation record beneath `MAIA-MAVEN-01` · Sanctuary row ⭐ already
-structurally enforced · Sanctuary explicit-crossing ⚠️ UNIMPLEMENTED · Calendar / Reminder /
-Ambient ⛔ ABSENT substrate · Practice scope law ⚠️ NEW SYNTHESIS, uncensused · T-1 unresolved
+CANDIDATE matrix · derivation record beneath `MAIA-MAVEN-01` · **amended by R1 · R5 · R7** ·
+Sanctuary row ⭐ already structurally enforced · Sanctuary explicit-crossing ⛔ **WITHDRAWN /
+FORBIDDEN (R5)** · Calendar / Reminder /
+Ambient ⛔ ABSENT substrate · Practice scope law ⚠️ NEW SYNTHESIS, uncensused · T-1 ✅ RESOLVED by R1
 on the Personal `/maia` row · ⛔ no implementation authorized · production UNTOUCHED.

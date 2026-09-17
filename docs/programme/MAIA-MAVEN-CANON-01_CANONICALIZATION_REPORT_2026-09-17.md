@@ -4,6 +4,11 @@
 **Date:** 2026-09-17
 **Base:** `clean-main-no-secrets` @ `97c7d946` · branch `claude/determined-bell-olsuy7`
 **Implementation:** ⛔ NOT AUTHORIZED, and none performed.
+**⭐ ADJUDICATED AND CLOSED 2026-09-17** — see
+`MAIA-MAVEN-CANON-01_FOUNDER_ADJUDICATION_2026-09-17.md`. Rulings **R1–R8** resolve every
+tension below (T-1→R1 · T-2→R2 · T-3→R3 · T-4→R4 · T-5→R5) and ratify findings F-1…F-7.
+The text below is kept verbatim as the reconciliation stood before adjudication.
+
 **Verdict:** ⭐ **NO CONTRADICTION FOUND. `MAIA-MAVEN-01` MAY STAND AS CANDIDATE CANONICAL
 AUTHORITY.** Three TENSIONS require founder ruling before any implementation.
 
@@ -14,7 +19,7 @@ AUTHORITY.** Three TENSIONS require founder ruling before any implementation.
 | File | Role |
 |---|---|
 | `docs/programme/MAIA-MAVEN-01_GOVERNING_ARCHITECTURE_2026-09-17.md` | CANDIDATE canonical authority |
-| `docs/programme/MAIA-NODE-15_FOUR_LAYER_MEMORY_MODEL_2026-09-17.md` | Derivation record |
+| `docs/programme/MAIA-NODE-15_FOUR_LAYER_MEMORY_MODEL_2026-09-17.md` → **renamed under R4 to `…_STANDING_MODEL_…`** | Derivation record |
 | `docs/programme/MAIA-NODE-16_CONTEXT_MEMORY_POLICY_MATRIX_2026-09-17.md` | Derivation record |
 | `docs/programme/MAIA-MAVEN-T1_TRUTHFUL_AWARENESS_CHARTER_2026-09-17.md` | Future programme charter |
 | `docs/programme/MAIA-MAVEN_DERIVATION_INDEX_2026-09-17.md` | Lineage index |
@@ -74,7 +79,9 @@ AUTHORITY.** Three TENSIONS require founder ruling before any implementation.
 
 ---
 
-## 4. ⚠️ Open founder decisions
+## 4. ⚠️ Open founder decisions — ✅ ALL RESOLVED BY R1–R5
+
+*(Kept verbatim as posed. Each is answered in the adjudication record.)*
 
 ### T-1 — Fresh-start vs the non-negotiable base chain
 
@@ -267,7 +274,8 @@ T1-C / T1-D censuses ⛔ not opened.
 ⛔ **NO IMPLEMENTATION CHANGED.** No source, test, schema, migration, route, prompt, capability
 registry or `/maia` file was modified. Production untouched.
 
-**STOPPING HERE** for founder adjudication, per §XIII of the handoff. ⛔ T1 not begun.
+**STOPPED** for founder adjudication, per §XIII of the handoff. ⭐ Adjudication entered
+2026-09-17 (R1–R8); lane **CLOSED**; `MAIA-MAVEN-T1A` opened at J4. ⛔ No J5 build begun.
 
 > **First make the architecture durable enough that future code cannot forget what MAIA is
 > becoming. Then resume implementation.**
