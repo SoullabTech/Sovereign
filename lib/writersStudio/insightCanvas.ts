@@ -57,21 +57,33 @@ export async function buildCanvasInsight(
       seen.add(key);
       const section = sections.find(s => s.draftSectionId === sectionId);
       const frozen = reading.readState.sections[sectionId];
+      const prefix = section?.headingPrefix ?? '';
+      const stored = prefix + (section?.body ?? '');
+      const bodyStart = Array.from(prefix).length;
       let matches = false;
+      let hashUnavailable = false;
       if (section && frozen && observation.state === 'current') {
-        try { matches = await digest(section.body) === frozen.digest; } catch { /* Unverified, never guessed. */ }
+        try { matches = await digest(stored) === frozen.digest; }
+        catch { hashUnavailable = true; }
       }
       const validRange = !range || (Number.isInteger(range.start) && Number.isInteger(range.end)
-        && range.start >= 0 && range.end > range.start && range.end <= Array.from(section?.body ?? '').length);
+        && range.start >= bodyStart && range.end > range.start && range.end <= Array.from(stored).length);
       const verified = matches && validRange && reading.coverage.sections[sectionId] === 'body';
+      const bodyRange = verified && range ? { start: range.start - bodyStart, end: range.end - bodyStart } : null;
+      const note = !section ? 'This section is no longer available.'
+        : observation.state !== 'current' ? 'The reading has not been confirmed against this draft. Current text is shown for reference.'
+        : !frozen ? 'The reading has no recorded text fingerprint for this section.'
+        : reading.coverage.sections[sectionId] !== 'body' ? 'MAIA knew this section’s position but did not read its text. No exact evidence is marked.'
+        : hashUnavailable ? 'Text verification is unavailable in this browser. No exact evidence is marked.'
+        : !matches ? 'This section differs from the text recorded in the reading. Current text is shown without old evidence markers.'
+        : !validRange ? 'The cited range cannot be placed wholly in this section’s editable body. No passage is selected.'
+        : range ? 'Exact passage · matches the text MAIA read.'
+        : 'Whole section verified · the observation names no narrower passage.';
       passages.push({
         key, sectionId, heading: section?.heading || 'Untitled section',
-        body: section?.body ?? '', range: verified ? range : null,
+        body: section?.body ?? '', range: bodyRange,
         verified, editable: Boolean(section?.editable),
-        note: !section ? 'This section is no longer available.'
-          : !verified ? 'Current section for reference. The earlier evidence is not marked or selected in changed or unverified text.'
-          : range ? 'Exact passage · checked against the text MAIA read.'
-          : 'Whole section · the observation names no narrower passage.',
+        note,
       });
     }
   }
