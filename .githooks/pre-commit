@@ -32,6 +32,10 @@ if [ ! -x node_modules/.bin/tsx ]; then
   exit 1
 fi
 
+# Account-erasure coverage guard — every declared member-bound locus and members(id) FK
+# must carry an explicit disposition classification before schema drift can land.
+npm run check:erasure-registry
+
 # Supabase ban (docs/canon — local PostgreSQL only)
 npm run check:no-supabase
 
