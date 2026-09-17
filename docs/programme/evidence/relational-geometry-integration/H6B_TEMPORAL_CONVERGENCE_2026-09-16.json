@@ -1,0 +1,207 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H6B_TEMPORAL_CONVERGENCE_V1",
+  "authority": "offline research only",
+  "abstraction": "distance to independently defined relation prototype; no standing or causal authority implied",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "local Claude CLI restricted/no-tools",
+    "effort": "low"
+  },
+  "summary": {
+    "runs": 12,
+    "modelCorrect": 12,
+    "deterministicCorrect": 12,
+    "unorderedAbstention": 2
+  },
+  "byFixture": {
+    "T1_CONVERGING": {
+      "runs": 2,
+      "modelCorrect": 2,
+      "deterministicMotion": "CONVERGING",
+      "predictions": [
+        "CONVERGING",
+        "CONVERGING"
+      ]
+    },
+    "T2_DIVERGING": {
+      "runs": 2,
+      "modelCorrect": 2,
+      "deterministicMotion": "DIVERGING",
+      "predictions": [
+        "DIVERGING",
+        "DIVERGING"
+      ]
+    },
+    "T3_EXACT": {
+      "runs": 2,
+      "modelCorrect": 2,
+      "deterministicMotion": "EXACT",
+      "predictions": [
+        "EXACT",
+        "EXACT"
+      ]
+    },
+    "T4_STABLE": {
+      "runs": 2,
+      "modelCorrect": 2,
+      "deterministicMotion": "STABLE",
+      "predictions": [
+        "STABLE",
+        "STABLE"
+      ]
+    },
+    "T5_PASSED_EXACT": {
+      "runs": 2,
+      "modelCorrect": 2,
+      "deterministicMotion": "PASSED_EXACT",
+      "predictions": [
+        "PASSED_EXACT",
+        "PASSED_EXACT"
+      ]
+    },
+    "T6_UNORDERED": {
+      "runs": 2,
+      "modelCorrect": 2,
+      "deterministicMotion": "INDETERMINATE",
+      "predictions": [
+        "INDETERMINATE",
+        "INDETERMINATE"
+      ]
+    }
+  },
+  "rows": [
+    {
+      "fixture": "T1_CONVERGING",
+      "run": 1,
+      "rawHash": "87c52c3e39bcd697ecbe40ba4ff1f3fae43dcf17a9a4c6c33599aba4c38d1ee0",
+      "modelMotion": "CONVERGING",
+      "deterministicMotion": "CONVERGING",
+      "expected": "CONVERGING",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T1_CONVERGING",
+      "run": 2,
+      "rawHash": "87c52c3e39bcd697ecbe40ba4ff1f3fae43dcf17a9a4c6c33599aba4c38d1ee0",
+      "modelMotion": "CONVERGING",
+      "deterministicMotion": "CONVERGING",
+      "expected": "CONVERGING",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T2_DIVERGING",
+      "run": 1,
+      "rawHash": "5662371090405d932754e7307007ba5d0c0a7fcca3f7e54d24f271aa246cbaeb",
+      "modelMotion": "DIVERGING",
+      "deterministicMotion": "DIVERGING",
+      "expected": "DIVERGING",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T2_DIVERGING",
+      "run": 2,
+      "rawHash": "5662371090405d932754e7307007ba5d0c0a7fcca3f7e54d24f271aa246cbaeb",
+      "modelMotion": "DIVERGING",
+      "deterministicMotion": "DIVERGING",
+      "expected": "DIVERGING",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T3_EXACT",
+      "run": 1,
+      "rawHash": "670c357e107fb38c507f0d0e1f4c8edfdb8d1de6321022cc97506ed8c8cc2b21",
+      "modelMotion": "EXACT",
+      "deterministicMotion": "EXACT",
+      "expected": "EXACT",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T3_EXACT",
+      "run": 2,
+      "rawHash": "670c357e107fb38c507f0d0e1f4c8edfdb8d1de6321022cc97506ed8c8cc2b21",
+      "modelMotion": "EXACT",
+      "deterministicMotion": "EXACT",
+      "expected": "EXACT",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T4_STABLE",
+      "run": 1,
+      "rawHash": "99612fa706a1a4ac6ef2e8b6bb9dea11071a678aba4690ae310cd0f133139906",
+      "modelMotion": "STABLE",
+      "deterministicMotion": "STABLE",
+      "expected": "STABLE",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T4_STABLE",
+      "run": 2,
+      "rawHash": "99612fa706a1a4ac6ef2e8b6bb9dea11071a678aba4690ae310cd0f133139906",
+      "modelMotion": "STABLE",
+      "deterministicMotion": "STABLE",
+      "expected": "STABLE",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T5_PASSED_EXACT",
+      "run": 1,
+      "rawHash": "bb6f0fdc46214462f3d4a14ba69f5c3bfff971c5ff48f86976f02fc33736bfdc",
+      "modelMotion": "PASSED_EXACT",
+      "deterministicMotion": "PASSED_EXACT",
+      "expected": "PASSED_EXACT",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T5_PASSED_EXACT",
+      "run": 2,
+      "rawHash": "bb6f0fdc46214462f3d4a14ba69f5c3bfff971c5ff48f86976f02fc33736bfdc",
+      "modelMotion": "PASSED_EXACT",
+      "deterministicMotion": "PASSED_EXACT",
+      "expected": "PASSED_EXACT",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T6_UNORDERED",
+      "run": 1,
+      "rawHash": "731ea0ba4794a55dc0db90ba894f48008fbdefea5e901e66ac187f378eab6969",
+      "modelMotion": "INDETERMINATE",
+      "deterministicMotion": "INDETERMINATE",
+      "expected": "INDETERMINATE",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "T6_UNORDERED",
+      "run": 2,
+      "rawHash": "731ea0ba4794a55dc0db90ba894f48008fbdefea5e901e66ac187f378eab6969",
+      "modelMotion": "INDETERMINATE",
+      "deterministicMotion": "INDETERMINATE",
+      "expected": "INDETERMINATE",
+      "modelCorrect": true,
+      "deterministicCorrect": true,
+      "parseError": null
+    }
+  ]
+}

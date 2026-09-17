@@ -1,0 +1,120 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H6C_OPERATOR_TOLERANCE_V1",
+  "authority": "offline deterministic architecture test only",
+  "cases": [
+    {
+      "id": "P_TRUE",
+      "operator": "POLARITY",
+      "distance": 0.18,
+      "shouldAdmit": true
+    },
+    {
+      "id": "P_FALSE",
+      "operator": "POLARITY",
+      "distance": 0.24,
+      "shouldAdmit": false
+    },
+    {
+      "id": "O_TRUE",
+      "operator": "OPTIONAL_COUPLING",
+      "distance": 0.31,
+      "shouldAdmit": true
+    },
+    {
+      "id": "O_FALSE",
+      "operator": "OPTIONAL_COUPLING",
+      "distance": 0.37,
+      "shouldAdmit": false
+    }
+  ],
+  "operatorTolerance": {
+    "POLARITY": 0.21,
+    "OPTIONAL_COUPLING": 0.34
+  },
+  "bestGlobal": {
+    "threshold": 0.18,
+    "correct": 3,
+    "total": 4,
+    "rows": [
+      {
+        "id": "P_TRUE",
+        "operator": "POLARITY",
+        "distance": 0.18,
+        "shouldAdmit": true,
+        "threshold": 0.18,
+        "admitted": true,
+        "correct": true
+      },
+      {
+        "id": "P_FALSE",
+        "operator": "POLARITY",
+        "distance": 0.24,
+        "shouldAdmit": false,
+        "threshold": 0.18,
+        "admitted": false,
+        "correct": true
+      },
+      {
+        "id": "O_TRUE",
+        "operator": "OPTIONAL_COUPLING",
+        "distance": 0.31,
+        "shouldAdmit": true,
+        "threshold": 0.18,
+        "admitted": false,
+        "correct": false
+      },
+      {
+        "id": "O_FALSE",
+        "operator": "OPTIONAL_COUPLING",
+        "distance": 0.37,
+        "shouldAdmit": false,
+        "threshold": 0.18,
+        "admitted": false,
+        "correct": true
+      }
+    ]
+  },
+  "operatorSpecific": {
+    "correct": 4,
+    "total": 4,
+    "rows": [
+      {
+        "id": "P_TRUE",
+        "operator": "POLARITY",
+        "distance": 0.18,
+        "shouldAdmit": true,
+        "threshold": 0.21,
+        "admitted": true,
+        "correct": true
+      },
+      {
+        "id": "P_FALSE",
+        "operator": "POLARITY",
+        "distance": 0.24,
+        "shouldAdmit": false,
+        "threshold": 0.21,
+        "admitted": false,
+        "correct": true
+      },
+      {
+        "id": "O_TRUE",
+        "operator": "OPTIONAL_COUPLING",
+        "distance": 0.31,
+        "shouldAdmit": true,
+        "threshold": 0.34,
+        "admitted": true,
+        "correct": true
+      },
+      {
+        "id": "O_FALSE",
+        "operator": "OPTIONAL_COUPLING",
+        "distance": 0.37,
+        "shouldAdmit": false,
+        "threshold": 0.34,
+        "admitted": false,
+        "correct": true
+      }
+    ]
+  },
+  "law": "Tolerance belongs to the relation prototype; no universal threshold is assumed."
+}
