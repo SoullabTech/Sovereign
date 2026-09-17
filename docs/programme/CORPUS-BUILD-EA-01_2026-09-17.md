@@ -167,3 +167,13 @@ That shortcut is removed. `buildEa01Plan` now requires both:
 - `validateAuthor('Kelly Nezat')` to pass.
 
 Only after those established integrity checks succeed may the controlled Library row be marked identity-valid. The build-law suite witnesses the exact governed title and Kelly attribution.
+
+## Schema rollback boundary
+
+Migration rollback is separate from corpus-row rollback. Companion file:
+
+`database/rollbacks/20260917160000_ain_knowledge_provenance_ROLLBACK.sql`
+
+removes only the `ain_knowledge_new_rows_require_provenance` enforcement gate so legacy code can write again after a code rollback. It deliberately retains the additive provenance columns, checksum-shape constraint, and indexes.
+
+This follows the repository's evidence-preserving rollback rule: a rollback may relax a new writer gate, but it must not erase custody evidence already recorded in the database. B9 binds that the rollback contains no `DROP COLUMN`, `DROP TABLE`, or `DROP INDEX` operation.

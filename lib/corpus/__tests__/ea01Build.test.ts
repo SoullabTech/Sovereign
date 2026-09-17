@@ -166,3 +166,17 @@ describe('CORPUS-BUILD-EA-01 composition boundaries', () => {
     expect(script).toContain("CORPUS_BUILD_EA01_ROLLBACK");
   });
 });
+
+describe('CORPUS-BUILD-EA-01 schema rollback', () => {
+  test('B9 — schema rollback removes only the legacy-writer gate and preserves provenance evidence', () => {
+    const sql = fs.readFileSync(
+      path.join(ROOT, 'database/rollbacks/20260917160000_ain_knowledge_provenance_ROLLBACK.sql'),
+      'utf8',
+    );
+    expect(sql).toMatch(/DROP CONSTRAINT IF EXISTS ain_knowledge_new_rows_require_provenance/);
+    expect(sql).not.toMatch(/DROP COLUMN/i);
+    expect(sql).not.toMatch(/DROP TABLE/i);
+    expect(sql).not.toMatch(/DROP INDEX/i);
+    expect(sql).toContain('Provenance columns/indexes retained intentionally');
+  });
+});
