@@ -119,31 +119,64 @@ function normalize(message: string): string {
 }
 
 /**
- * Does `phrase` occur at `index` only as part of a false-friend construction?
- * A message can contain the same phrase twice; one guarded occurrence does not
- * disqualify an unguarded one.
+ * Speech-act scope guards.
+ *
+ * The recognizer is allowed to identify an unambiguous Keep request. It is not
+ * allowed to turn a different act into Keep merely because the same verb occurs
+ * inside it. In particular:
+ *   - REFUSE:   "don't keep this" / "don't open Keep"
+ *   - CONTINUE: "keep this question open" / "keep this conversation going"
+ *
+ * Those remain ordinary conversation. We deliberately do NOT add a `continue`
+ * result kind here: that would grant this Keep recognizer a second selective
+ * authority it does not have. Uncertain or different acts fail closed to NONE.
  */
-function everyOccurrenceIsFalseFriend(text: string, phrase: string): boolean {
-  const occurrences: number[] = [];
-  let at = text.indexOf(phrase);
-  while (at !== -1) {
-    occurrences.push(at);
-    at = text.indexOf(phrase, at + 1);
-  }
-  if (occurrences.length === 0) return true;
+const NEGATION = /\b(?:don't|do not|never|not|cannot|can't|won't|wouldn't|shouldn't)\b/;
+const CONTINUE_FROM_KEEP =
+  /^(?:keep|keeping)\s+(?:this|that)\b(?:\s+[a-z0-9'-]+){0,4}\s+(?:open|going|alive|active|moving|unresolved)\b/;
+const CONTINUE_IDIOM =
+  /^(?:keep|keeping)\s+(?:this|that)\s+(?:in\s+play|on\s+the\s+table)\b/;
 
-  return occurrences.every((start) =>
-    FALSE_FRIENDS.some((ff) => {
-      const ffAt = text.indexOf(ff);
-      if (ffAt === -1) return false;
-      // The occurrence sits inside a false-friend span.
-      let cursor = ffAt;
-      while (cursor !== -1) {
-        if (start >= cursor && start < cursor + ff.length) return true;
-        cursor = text.indexOf(ff, cursor + 1);
-      }
-      return false;
-    }),
+function clauseStart(text: string, start: number): number {
+  const before = text.slice(0, start);
+  let boundary = -1;
+  for (const punctuation of [',', ';', '.', '?', '!', '—']) {
+    boundary = Math.max(boundary, before.lastIndexOf(punctuation));
+  }
+  let result = boundary + 1;
+  for (const marker of [' but ', ' actually ', ' however ', ' instead ']) {
+    const at = before.lastIndexOf(marker);
+    if (at !== -1) result = Math.max(result, at + marker.length);
+  }
+  return result;
+}
+
+function occurrenceIsNegated(text: string, start: number): boolean {
+  const localBefore = text.slice(clauseStart(text, start), start);
+  return NEGATION.test(localBefore);
+}
+
+function occurrenceIsContinuation(text: string, start: number): boolean {
+  const localAfter = text.slice(start);
+  return CONTINUE_FROM_KEEP.test(localAfter) || CONTINUE_IDIOM.test(localAfter);
+}
+
+function occurrenceIsFalseFriend(text: string, start: number): boolean {
+  return FALSE_FRIENDS.some((ff) => {
+    let cursor = text.indexOf(ff);
+    while (cursor !== -1) {
+      if (start >= cursor && start < cursor + ff.length) return true;
+      cursor = text.indexOf(ff, cursor + 1);
+    }
+    return false;
+  });
+}
+
+function occurrenceIsBlocked(text: string, start: number): boolean {
+  return (
+    occurrenceIsFalseFriend(text, start) ||
+    occurrenceIsNegated(text, start) ||
+    occurrenceIsContinuation(text, start)
   );
 }
 
@@ -151,9 +184,13 @@ function findPhrase(text: string, phrases: string[]): string | null {
   // Longest first, so "keep this moment" reports itself rather than "keep this".
   const ordered = [...phrases].sort((a, b) => b.length - a.length);
   for (const phrase of ordered) {
-    if (!text.includes(phrase)) continue;
-    if (everyOccurrenceIsFalseFriend(text, phrase)) continue;
-    return phrase;
+    let at = text.indexOf(phrase);
+    while (at !== -1) {
+      if (!occurrenceIsBlocked(text, at)) return phrase;
+      // A blocked occurrence does not poison a later real request in the same
+      // member turn ("don't keep this — actually, keep this").
+      at = text.indexOf(phrase, at + 1);
+    }
   }
   return null;
 }
