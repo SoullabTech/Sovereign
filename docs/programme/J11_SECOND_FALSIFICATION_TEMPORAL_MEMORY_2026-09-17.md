@@ -1,0 +1,322 @@
+# J11 SECOND FALSIFICATION — CELL 2: TEMPORAL MEMORY
+
+**Date:** 2026-09-17  
+**Status:** ✅ CANDIDATE SURVIVES TEMPORAL-MEMORY CELL · STRONG POSITIVE CONTROL  
+**Class:** Class C — documentary falsification only  
+**Governing authority:** `FOUNDER RULING — TAKE BOUNDED` + ratified Temporal Law  
+**Current gate:** falsify the bounded grant/effect candidate against current canonical temporal-memory decay selection  
+**Evidence subject:** current canonical Cut-1 scorer/trace mechanism plus ratified temporal-memory rulings and production closure  
+**Stop boundary:** no scorer repair, coefficient change, Cut-2 opening, schema change, deployment, production mutation, or universality claim
+
+---
+
+## 1. Candidate under test
+
+> **Authority existence ≠ authority consumption ≠ authority sufficiency. A governed effect must consume sufficient authority for that effect and remain inside the scope of the grant.**
+
+Temporal memory is a hard falsifier because decay is explicitly a **representation** of temporal salience and production evidence proves it can change which otherwise-valid memories cross a bounded retrieval cut.
+
+If the candidate survives here without changing the meanings of grant, effect, consumption, sufficiency, or scope, it earns stronger standing.
+
+---
+
+## 2. Ratified temporal grant
+
+The Temporal Law separates three powers:
+
+| Power | Ratified standing |
+|---|---|
+| **Validity** | decay may **never** determine validity |
+| **Availability** | decay may affect availability through ranking **only if exclusion remains traceable and recoverable** |
+| **Salience** | decay may influence salience as a bounded signal; its coefficient confers no epistemic or member authority |
+
+The law explicitly rejected the simpler rule "decay may order but never exclude."
+
+A bounded retrieval cut may lawfully exclude an otherwise-valid memory **from this result**, provided the exclusion is accountable and the memory remains recoverable.
+
+This is an explicit grant of **SELECTIVE authority over a bounded availability result**, not identity or validity authority.
+
+---
+
+## 3. Governed effect
+
+Current canonical Cut 1 ranks otherwise-valid developmental memories with a score containing:
+
+```text
+0.40 * calculate_decayed_confidence(...)
++ 0.35 * recency
++ 0.15 * confirmed_by_user contribution
++ 0.10 * recall contribution
+```
+
+and then applies:
+
+`LIMIT 12`
+
+The governed effect is:
+
+> **membership in the current bounded top-12 developmental-memory selection.**
+
+It is not:
+
+- memory existence;
+- memory validity;
+- supersession;
+- deletion;
+- historical truth.
+
+---
+
+## 4. Substitution — neutralize decay only
+
+The existing governed witness defines the precise substitution:
+
+### Hold constant
+
+- member;
+- eligible memory pool;
+- memory validity;
+- content;
+- significance;
+- recency term;
+- confirmation term;
+- recall term;
+- cutoff = 12;
+- database statement snapshot.
+
+### Substitute
+
+Only the decay factor:
+
+`calculate_decayed_confidence(...)` → neutral factor `1`
+
+while preserving the `0.40 * significance` term and every other coefficient.
+
+### Observed production result
+
+The adjudicated ACT 2 witness established:
+
+- **4 / 37** members with candidates had a changed top-12 set;
+- **4 / 14** members where top-12 was actually a cutoff had a changed set;
+- **18 membership flips**;
+- 9 memories admitted when decay was neutralized;
+- 9 memories displaced by the live decay-bearing ranking.
+
+Therefore:
+
+> ✅ **Substitution changes the governed availability result.**
+
+Decay is not merely descriptive on this path.
+
+---
+
+## 5. Exact grant
+
+The representation's authority is not inferred from implementation.
+
+The founder-ratified Temporal Law explicitly grants:
+
+> **Decay may affect availability through ranking, but any exclusion it causes must remain traceable and recoverable.**
+
+This answers the candidate's **GRANT** question directly.
+
+The grant is bounded:
+
+- availability only;
+- bounded retrieval only;
+- no validity authority;
+- no destructive pruning;
+- traceability required;
+- recoverability required.
+
+---
+
+## 6. Authority consumption
+
+Current canonical still consumes decay in the Cut-1 selection query.
+
+Direct inspection at canonical `12f136634ac848e320b7ed04f36cf2790fcc68ae` shows:
+
+- `lib/memory/cut1Trace.ts` computes the live decay-bearing score;
+- the same statement computes the decay-neutral counterfactual;
+- both bounded sets use cutoff 12;
+- the live set is the selection effect;
+- the neutral set is observational evidence only.
+
+The current canonical focused suites were re-run independently on exact head:
+
+```text
+PASS __tests__/temporal-cut1-traceability.test.ts
+PASS __tests__/temporal-cut1-memorybundle-failsoft.test.ts
+PASS __tests__/temporal-cut1-callsite-binding.test.ts
+
+Test Suites: 3 passed, 3 total
+Tests:       18 passed, 18 total
+```
+
+**Consumption is mechanically present.**
+
+---
+
+## 7. Attestation / sufficiency
+
+The original Temporal Law found Cut-1 exclusion recoverable but not historically traceable.
+
+That specific insufficiency was later repaired by the Cut-1 traceability lane.
+
+Current canonical contains:
+
+- `memory_cut1_trace_runs`;
+- closed `policy_key = developmental_nonvector_decay_v1`;
+- fixed cutoff = 12;
+- bounded `live_top` and `neutral_top`;
+- retrieval/session/message/member bindings;
+- fail-soft observer behavior with explicit failure instrumentation.
+
+The production closure witnessed:
+
+- 14 durable trace rows;
+- 14 distinct retrieval IDs;
+- 14 / 14 valid member-turn bindings;
+- historical exclusion derivable from the stored trace without reconstructing from current ranking state;
+- excluded memory still present, valid, and content-recoverable;
+- no ranking/coefficient/LIMIT mutation by the trace observer.
+
+Therefore the authority-bearing condition has a durable attestation that can fail:
+
+> the system can record exactly which valid memories the live decay representation selected differently from the decay-neutral counterfactual for that invocation.
+
+### Sufficiency result
+
+✅ **For the bounded Cut-1 availability effect, authority is sufficiently consumed and attested.**
+
+The memory remains legitimately present upstream even when it is not selected here.
+
+That is exactly the Representation Authority Law's SELECTIVE boundary:
+
+> **Not selected here does not mean not legitimately here.**
+
+---
+
+## 8. Validity boundary
+
+The candidate would fail this cell if decay's selection authority silently widened into validity authority.
+
+It does not.
+
+The ratified Temporal Law explicitly refuses:
+
+> **Decay may never determine validity.**
+
+Current decay ranking:
+
+- writes no validity state;
+- does not prune the memory;
+- does not supersede it;
+- does not delete it;
+- leaves the row recoverable.
+
+The selection effect therefore remains inside the grant.
+
+✅ **No scope overrun observed.**
+
+---
+
+## 9. The 0.40 coefficient — what it does and does not mean
+
+The live coefficient has real operational consequence because it participates in a score that can change top-12 membership.
+
+But the Temporal Law already ruled:
+
+> the coefficient has **no special standing merely because it is deployed** and confers no epistemic or member authority.
+
+The measured ~17.8:1 maximum time-vs-confirmation contribution ratio remains:
+
+- mathematically observed;
+- not adjudicated as the correct salience policy;
+- not shown by ACT 2 to have defeated any confirmed memory in the observed flips.
+
+This distinction does not defeat the grant/effect candidate.
+
+The coefficient may participate in the **authorized selection mechanism** without becoming evidence that:
+
+- an old memory is false;
+- the member withdrew it;
+- the memory lost validity;
+- elapsed time outranks member authority as truth.
+
+### Policy-quality ceiling
+
+⚠️ Whether `0.40` is the right salience/availability policy remains **UNADJUDICATED**.
+
+That is a later policy question, not evidence that the current bounded selection effect lacks all authority.
+
+---
+
+## 10. Candidate adjudication for Temporal Memory
+
+The same terms survive unchanged:
+
+| Term | Temporal-memory meaning |
+|---|---|
+| grant | decay may affect bounded availability through ranking if exclusion is traceable + recoverable |
+| effect | membership in the current top-12 developmental-memory selection |
+| consumption | decay-bearing score is used by the live Cut-1 query |
+| sufficiency | durable live-vs-neutral trace + recoverable upstream memory |
+| scope | bounded availability only; validity and existence remain upstream |
+
+No semantic stretching is required.
+
+### Cell verdict
+
+> ✅ **J11 TAKE-BOUNDED CANDIDATE SURVIVES TEMPORAL MEMORY.**
+
+This is a **strong positive control** because:
+
+1. substitution demonstrably changes an authoritative selection result;
+2. an exact governed grant can be named;
+3. a durable attestation can fail;
+4. the upstream object remains valid and recoverable;
+5. the effect remains inside the grant.
+
+---
+
+## 11. Explicit non-effects
+
+This record authorizes none of the following:
+
+- ⛔ changing `0.40`;
+- ⛔ changing half-lives;
+- ⛔ changing `LIMIT 12`;
+- ⛔ replacing the scorer;
+- ⛔ opening Cut 2;
+- ⛔ changing memory validity or supersession;
+- ⛔ schema/migration/deployment/production mutation;
+- ⛔ claiming member-visible continuity improvement;
+- ⛔ promoting the J11 candidate to universal law.
+
+---
+
+## Standing
+
+```text
+J11 founder ruling                 TAKE BOUNDED
+second falsification               OPEN
+
+Temporal-memory cell               ✅ COMPLETE
+candidate                          ✅ SURVIVES THIS CELL
+selection authority grant          ✅ EXPLICIT
+selection effect                   ✅ OBSERVED
+authority consumption              ✅ PRESENT
+Cut-1 traceability                 ✅ REPAIRED + PRODUCTION WITNESSED
+recoverability                     ✅ WITNESSED
+validity authority                 ⛔ REFUSED
+coefficient policy correctness     ⚠️ UNADJUDICATED
+
+universality                       ⛔ NOT ESTABLISHED
+repair / scorer change             ⛔ CLOSED
+implementation change              ⛔ CLOSED
+runtime / deployment / production  ⛔ CLOSED
+```
+
+**Next authorized cell:** Interface Humility — person-signal representation.
