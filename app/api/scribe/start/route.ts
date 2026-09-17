@@ -117,12 +117,17 @@ export async function POST(request: NextRequest) {
       ...(clientLink ? { client_id: clientLink } : {}),
     });
 
-    console.log(`[Scribe] Started ${container} session: ${session.id} for member ${memberId}${bookingLink ? ` (booking: ${bookingLink})` : ''}`);
+    console.log('[Scribe] Session started', {
+      container,
+      bookingLinked: Boolean(bookingLink),
+    });
     // Phase 1 observability — see spec §6/§10. linkStored=false when solo, skipped,
     // stricter-sanctuary, or ownership-rejected.
-    console.log(
-      `[RelMem] attach { sessionId: ${String(session.id).slice(0, 8)}, clientIdPrefix: ${clientLink ? clientLink.slice(0, 8) : 'none'}, memoryPolicy: ${memoryPolicy}, keepLinkPrivate: ${Boolean(keepLinkPrivate)}, linkStored: ${Boolean(clientLink)} }`
-    );
+    console.log('[RelMem] attach', {
+      memoryPolicy,
+      keepLinkPrivate: Boolean(keepLinkPrivate),
+      linkStored: Boolean(clientLink),
+    });
 
     return NextResponse.json({
       success: true,
