@@ -55,6 +55,20 @@ describe('TURN-01 · conversational sovereignty', () => {
     expect(src).toContain('explicitTurnPrefixRef.current = finalTranscript');
   });
 
+  it('gates audio-level VAD commit behind explicit floor authority', () => {
+    const src = W('components/voice/ContinuousConversation.tsx');
+    const vadStart = src.indexOf('if (silenceDuration >= adaptiveSilenceThreshold');
+    expect(vadStart).toBeGreaterThan(-1);
+    const vadEnd = src.indexOf('// 🔥 PWA DUPLEX:', vadStart);
+    const vad = src.slice(vadStart, vadEnd);
+    const guard = vad.indexOf('if (!automaticTurnCommitAllowed())');
+    const commit = vad.indexOf('processAccumulatedTranscript()');
+    expect(guard).toBeGreaterThan(-1);
+    expect(commit).toBeGreaterThan(guard);
+    expect(vad.slice(guard, commit)).toContain("source: 'vad'");
+    expect(vad.slice(guard, commit)).toContain('return;');
+  });
+
   it('I’m Done commits through the canonical accumulated-transcript path', () => {
     const src = W('components/voice/ContinuousConversation.tsx');
     const start = src.indexOf('const commitTurn = useCallback');
