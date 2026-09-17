@@ -6672,6 +6672,29 @@ I'm not sure what I'm feeling yet.`;
         if (isInVoiceMode) {
           setMaiaResponseText(responseText);
           commitOracleTurn('voice_no_tts');
+
+          // A silent MAIA response is still a completed VOICE turn. Audio output
+          // preference must not decide whether the capture session gets handed
+          // back to the member. Clear every response latch and, when the member
+          // entered through voice, restore the same listening policy used after
+          // spoken output.
+          setIsProcessing(false);
+          setIsResponding(false);
+          setIsAudioPlaying(false);
+          setIsMicrophonePaused(false);
+          isProcessingRef.current = false;
+          isRespondingRef.current = false;
+          isAudioPlayingRef.current = false;
+          isMicrophonePausedRef.current = false;
+
+          requestAnimationFrame(() => {
+            if (!lastSendWasVoiceRef.current) return;
+            const isHandsFree = voiceMicRef.current?.isHandsFree ?? false;
+            if (isHandsFree) {
+              setIsMuted(false);
+              voiceSession.methods.startListening('voice_silent_response_restart');
+            }
+          });
         }
       }
 
