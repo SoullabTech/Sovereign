@@ -15,6 +15,8 @@ import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
 
 export interface SessionData {
   sessionId: string;
+  clientId: string | null;
+  practitionerRecordId: string;
   container: string;
   title: string | null;
   startedAt: Date;
@@ -32,15 +34,22 @@ export interface SessionData {
 
 export async function loadSessionData(opts: {
   sessionId: string;
-  caseId: string | null;
+  clientId: string | null;
+  memberId: string;
+  practitionerRecordId: string;
 }): Promise<SessionData | null> {
-  const { sessionId } = opts;
+  const { sessionId, clientId, memberId, practitionerRecordId } = opts;
 
   // 1. Load scribe session
   const sessionResult = await query(
-    `SELECT id, container, title, started_at, ended_at, is_active
-     FROM scribe_sessions WHERE id = $1`,
-    [sessionId],
+    `SELECT id, client_id, practitioner_record_id, container, title,
+            started_at, ended_at, is_active
+       FROM scribe_sessions
+      WHERE id = $1
+        AND member_id = $2
+        AND practitioner_record_id = $3
+        AND ($4::uuid IS NULL OR client_id = $4)`,
+    [sessionId, memberId, practitionerRecordId, clientId],
   );
 
   if (sessionResult.rows.length === 0) return null;
@@ -157,6 +166,8 @@ export async function loadSessionData(opts: {
 
   return {
     sessionId,
+    clientId: session.client_id ?? null,
+    practitionerRecordId: session.practitioner_record_id,
     container: session.container || 'solo',
     title: session.title,
     startedAt,

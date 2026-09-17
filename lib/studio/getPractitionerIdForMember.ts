@@ -17,7 +17,8 @@ import type { NextRequest } from 'next/server';
 
 /**
  * Look up the active practitioner for a given member_id.
- * Returns null if the member is not a practitioner or no active row exists.
+ * Returns null if the member has zero or multiple active practice rows. Practice
+ * selection is not modelled yet, so an ambiguous identity must fail closed.
  */
 export async function getPractitionerIdForMember(
   memberId: string | null | undefined,
@@ -25,15 +26,22 @@ export async function getPractitionerIdForMember(
   if (!memberId) return null;
 
   try {
-    const result = await query(
+    const result = await query<{ id: string }>(
       `SELECT id FROM practitioners
-       WHERE member_id = $1 AND status = 'active'
-       LIMIT 1`,
+       WHERE member_id = $1 AND status = 'active'`,
       [memberId],
     );
-    return result.rows[0]?.id ?? null;
+    if (result.rows.length !== 1) {
+      if (result.rows.length > 1) {
+        console.error('[getPractitionerIdForMember] ambiguous active practice identity', {
+          practiceCount: result.rows.length,
+        });
+      }
+      return null;
+    }
+    return result.rows[0].id;
   } catch (error) {
-    console.error('[getPractitionerIdForMember] lookup failed', { memberId, error });
+    console.error('[getPractitionerIdForMember] lookup failed', { error });
     return null;
   }
 }

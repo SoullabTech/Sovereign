@@ -17,6 +17,7 @@ import {
 } from '@/lib/stellium/sessions';
 import { getPersona, generatePersonaPrompt } from '@/lib/stellium/personas';
 import { getTierPricing } from '@/lib/practitioner/tierPricing';
+import { requirePractitioner } from '@/lib/auth/getCurrentPractitioner';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -176,15 +177,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
+    const auth = await requirePractitioner(request);
+    if ('error' in auth) return auth.error;
+    const practitionerId = auth.identity.practitionerId;
+    const scope = {
+      memberId: auth.identity.memberId,
+      practitionerRecordId: practitionerId,
+    };
     const searchParams = request.nextUrl.searchParams;
-    const practitionerId = searchParams.get('practitionerId');
-
-    if (!practitionerId) {
-      return NextResponse.json(
-        { error: 'Practitioner ID required' },
-        { status: 400 }
-      );
-    }
 
     const upcomingDays = parseInt(searchParams.get('upcomingDays') || '7', 10);
 
@@ -197,10 +197,10 @@ export async function GET(request: NextRequest) {
       persona,
     ] = await Promise.all([
       getClientStats(practitionerId),
-      getSessionStats(practitionerId),
-      getUpcomingSessions(practitionerId, upcomingDays),
-      getSessionsNeedingFollowUp(practitionerId),
-      getPersona(practitionerId),
+      getSessionStats(scope),
+      getUpcomingSessions(scope, upcomingDays),
+      getSessionsNeedingFollowUp(scope),
+      getPersona(scope.memberId),
     ]);
 
     // Build actionable items

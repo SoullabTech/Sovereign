@@ -154,7 +154,7 @@ export async function getSessionPrep(
   const sessionsResult = await query(
     `SELECT id, session_type, scheduled_at, session_notes, themes, insights, status
      FROM practitioner_sessions
-     WHERE client_id = $1 AND practitioner_id = $2
+     WHERE client_id = $1 AND practitioner_record_id = $2
        AND status = 'completed'
      ORDER BY scheduled_at DESC NULLS LAST
      LIMIT 3`,
@@ -168,7 +168,7 @@ export async function getSessionPrep(
   const themesResult = await query(
     `SELECT unnest(themes) as theme, COUNT(*) as count
      FROM practitioner_sessions
-     WHERE client_id = $1 AND practitioner_id = $2 AND themes IS NOT NULL
+     WHERE client_id = $1 AND practitioner_record_id = $2 AND themes IS NOT NULL
      GROUP BY theme
      ORDER BY count DESC
      LIMIT 8`,
@@ -192,7 +192,7 @@ export async function getSessionPrep(
     `SELECT COUNT(*) as total_sessions,
             MIN(scheduled_at) as first_session_date
      FROM practitioner_sessions
-     WHERE client_id = $1 AND practitioner_id = $2
+     WHERE client_id = $1 AND practitioner_record_id = $2
        AND status = 'completed'`,
     [clientId, practitionerId]
   );
@@ -535,9 +535,11 @@ export async function getUpcomingSessionsWithPrep(
       e.has_safety_plan,
       e.has_risk_factors
     FROM practitioner_sessions s
-    LEFT JOIN practitioner_clients c ON s.client_id = c.id
+    LEFT JOIN practitioner_clients c
+      ON s.client_id = c.id
+     AND c.practitioner_id = s.practitioner_record_id
     LEFT JOIN client_emergency_info e ON c.id = e.client_id
-    WHERE s.practitioner_id = $1
+    WHERE s.practitioner_record_id = $1
       AND s.status IN ('scheduled', 'confirmed')
       AND s.scheduled_at >= NOW()
       AND s.scheduled_at <= NOW() + INTERVAL '${days} days'

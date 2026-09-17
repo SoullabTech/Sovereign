@@ -291,7 +291,10 @@ describe('PHI Leak Prevention', () => {
         .mockResolvedValueOnce({ rows: [MOCK_SESSION_ROW_WITH_ENC] });
 
       const { getSessions } = await import('@/lib/stellium/sessions');
-      const result = await getSessions('practitioner-456');
+      const result = await getSessions({
+        memberId: 'member-456',
+        practitionerRecordId: 'practitioner-456',
+      });
 
       assertNoEncryptedColumns(result, 'getSessions');
     });
@@ -300,7 +303,10 @@ describe('PHI Leak Prevention', () => {
       mockQuery.mockResolvedValueOnce({ rows: [MOCK_SESSION_ROW_WITH_ENC] });
 
       const { getUpcomingSessions } = await import('@/lib/stellium/sessions');
-      const result = await getUpcomingSessions('practitioner-456');
+      const result = await getUpcomingSessions({
+        memberId: 'member-456',
+        practitionerRecordId: 'practitioner-456',
+      });
 
       assertNoEncryptedColumns(result, 'getUpcomingSessions');
     });

@@ -21,6 +21,7 @@ import { validateFollowupContent, hasMinimumFollowupContent } from '@/lib/studio
 import { parseDraftJsonWithRepair } from '@/lib/studio/followups/parseDraftJsonWithRepair';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { checkAccess } from '@/lib/trust/checkAccess';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 
 export const runtime = 'nodejs';
 
@@ -34,6 +35,10 @@ export async function POST(req: NextRequest) {
     if (!memberId) {
       return json(401, { error: 'Not authenticated' });
     }
+    const practitionerRecordId = await getPractitionerIdForMember(memberId);
+    if (!practitionerRecordId) {
+      return json(404, { error: 'Practitioner not found' });
+    }
 
     const raw = await req.json();
     const input: GenerateFollowupRequest = GenerateFollowupRequestSchema.parse(raw);
@@ -41,7 +46,9 @@ export async function POST(req: NextRequest) {
     // Load session data
     const sessionData = await loadSessionData({
       sessionId: input.sessionId,
-      caseId: input.clientId ?? null,
+      clientId: input.clientId ?? null,
+      memberId,
+      practitionerRecordId,
     });
 
     if (!sessionData) {
@@ -147,10 +154,19 @@ export async function POST(req: NextRequest) {
     // Save draft to session_artifacts
     const artifactResult = await query(
       `INSERT INTO session_artifacts (
-        session_id, client_id, practitioner_id, artifact_type, draft_content, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6)
+        session_id, client_id, practitioner_id, practitioner_record_id,
+        artifact_type, draft_content, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id, created_at`,
-      [input.sessionId, input.clientId ?? null, memberId, input.artifactType, JSON.stringify(draft), memberId],
+      [
+        sessionData.sessionId,
+        sessionData.clientId,
+        memberId,
+        practitionerRecordId,
+        input.artifactType,
+        JSON.stringify(draft),
+        memberId,
+      ],
     );
 
     const artifact = artifactResult.rows[0];

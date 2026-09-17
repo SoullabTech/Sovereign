@@ -39,7 +39,9 @@ export async function GET(req: NextRequest) {
          JOIN supervision_assembled_turns sat ON sat.session_id = sv.id
          GROUP BY sv.metadata->>'scribeSessionId'
        ) sat_counts ON sat_counts.scribe_id = s.id::text
-       LEFT JOIN practitioner_clients pc ON pc.id = s.client_id AND pc.practitioner_id = s.member_id
+       LEFT JOIN practitioner_clients pc
+         ON pc.id = s.client_id
+        AND pc.practitioner_id = s.practitioner_record_id
        WHERE s.member_id = $1 AND s.is_active = false
        GROUP BY s.id, pc.name, sat_counts.assembled_turns
        ORDER BY s.started_at DESC

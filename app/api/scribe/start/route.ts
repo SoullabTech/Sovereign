@@ -12,6 +12,7 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { insertOne, queryOne } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,26 +44,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Relationship Memory v1 — Phase 1: attach the session to an existing person.
-    // Sealed sessions MAY carry the client link (operational provenance, spec §4);
-    // only the stricter-sanctuary "keep even the client link private" opt-out blocks it.
-    // Fail closed on ownership: the link is stored only when the client belongs to this
-    // practitioner (practitioner_clients.practitioner_id references members(id)), so a
-    // foreign or bogus clientId can never attach (cross-practitioner safeguard).
+    const practitionerRecordId = await getPractitionerIdForMember(memberId);
+    if (container === 'practitioner' && !practitionerRecordId) {
+      return NextResponse.json(
+        { error: 'Practitioner identity is required', code: 'PRACTITIONER_REQUIRED' },
+        { status: 403 }
+      );
+    }
+
+    if (bookingId && keepLinkPrivate) {
+      return NextResponse.json(
+        { error: 'A booking cannot be attached while the client link is private', code: 'BOOKING_REQUIRES_CLIENT' },
+        { status: 409 }
+      );
+    }
+
+    // A request-supplied client or booking only narrows the authenticated practice.
+    // Invalid/foreign IDs are refused rather than silently discarded.
     let clientLink: string | null = null;
     if (clientId && !keepLinkPrivate) {
+      if (!practitionerRecordId) {
+        return NextResponse.json({ error: 'Client not found', code: 'CLIENT_NOT_FOUND' }, { status: 404 });
+      }
       const owned = await queryOne<{ id: string }>(
         'SELECT id FROM practitioner_clients WHERE id = $1 AND practitioner_id = $2',
-        [clientId, memberId]
+        [clientId, practitionerRecordId]
       );
-      if (owned) {
-        clientLink = owned.id;
-      } else {
-        console.warn(
-          `[RelMem] attach rejected: client ${String(clientId).slice(0, 8)} not owned by member ${memberId.slice(0, 8)}`
-        );
+      if (!owned) {
+        return NextResponse.json({ error: 'Client not found', code: 'CLIENT_NOT_FOUND' }, { status: 404 });
       }
+      clientLink = owned.id;
     }
+
+    let bookingLink: string | null = null;
+    if (bookingId) {
+      if (!practitionerRecordId) {
+        return NextResponse.json({ error: 'Booking not found', code: 'BOOKING_NOT_FOUND' }, { status: 404 });
+      }
+      const booking = await queryOne<{ id: string; client_id: string | null }>(
+        `SELECT id, client_id
+           FROM sessions
+          WHERE id = $1 AND practitioner_id = $2`,
+        [bookingId, practitionerRecordId]
+      );
+      if (!booking || !booking.client_id || (clientLink && booking.client_id !== clientLink)) {
+        return NextResponse.json({ error: 'Booking not found', code: 'BOOKING_NOT_FOUND' }, { status: 404 });
+      }
+      bookingLink = booking.id;
+      clientLink = booking.client_id;
+    }
+
+    // Only attach a practice identity when the session is actually bound to the
+    // practitioner container or one of that practice's relationship records.
+    // A member who also happens to own a practice may still start an ordinary
+    // solo session without silently moving it into the practice boundary.
+    const boundPractitionerRecordId =
+      container === 'practitioner' || clientLink || bookingLink
+        ? practitionerRecordId
+        : null;
 
     // Create session
     const session = await insertOne('scribe_sessions', {
@@ -73,11 +112,12 @@ export async function POST(request: NextRequest) {
       consent_status: 'pending',
       is_active: true,
       transcript_enabled: false,
-      ...(bookingId ? { booking_id: bookingId } : {}),
+      ...(boundPractitionerRecordId ? { practitioner_record_id: boundPractitionerRecordId } : {}),
+      ...(bookingLink ? { booking_id: bookingLink } : {}),
       ...(clientLink ? { client_id: clientLink } : {}),
     });
 
-    console.log(`[Scribe] Started ${container} session: ${session.id} for member ${memberId}${bookingId ? ` (booking: ${bookingId})` : ''}`);
+    console.log(`[Scribe] Started ${container} session: ${session.id} for member ${memberId}${bookingLink ? ` (booking: ${bookingLink})` : ''}`);
     // Phase 1 observability — see spec §6/§10. linkStored=false when solo, skipped,
     // stricter-sanctuary, or ownership-rejected.
     console.log(

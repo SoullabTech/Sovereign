@@ -136,7 +136,7 @@ export const BOOKING_TOOLS = [
 export interface ToolContext {
   portalSlug: string;
   practitionerId: string;
-  memberId?: string; // member UUID — needed for client_invites FK (references members.id)
+  memberId: string; // members.id; practitionerId is practitioners.id
 }
 
 export interface ToolResult {
@@ -442,9 +442,15 @@ async function sendPortalInviteIfNeeded(
 ): Promise<void> {
   // Check claimed status directly on practitioner_clients (view omits this column)
   const claimedResult = await db.query(
-    `SELECT portal_claimed_at FROM practitioner_clients WHERE id = $1`,
-    [clientId]
+    `SELECT portal_claimed_at
+       FROM practitioner_clients
+      WHERE id = $1 AND practitioner_id = $2`,
+    [clientId, ctx.practitionerId]
   );
+
+  if (claimedResult.rows.length === 0) {
+    throw new Error('Client relationship is outside the portal practice');
+  }
 
   const claimed = claimedResult.rows[0]?.portal_claimed_at;
   if (claimed) {
@@ -456,8 +462,12 @@ async function sendPortalInviteIfNeeded(
   await db.query(
     `UPDATE client_invites
      SET status = 'revoked'
-     WHERE client_id = $1 AND status = 'unused' AND expires_at > NOW()`,
-    [clientId]
+     WHERE client_id = $1
+       AND practitioner_id = $2
+       AND practitioner_record_id = $3
+       AND status = 'unused'
+       AND expires_at > NOW()`,
+    [clientId, ctx.memberId, ctx.practitionerId]
   );
 
   // Generate new invite
@@ -466,20 +476,19 @@ async function sendPortalInviteIfNeeded(
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 90); // 90 days
 
   // client_invites.practitioner_id references members(id), not practitioners(id)
-  const inviteOwnerId = ctx.memberId || ctx.practitionerId;
   await db.query(
-    `INSERT INTO client_invites (practitioner_id, client_id, code_hash, status, expires_at)
-     VALUES ($1, $2, $3, 'unused', $4)`,
-    [inviteOwnerId, clientId, codeHash, expiresAt]
+    `INSERT INTO client_invites
+       (practitioner_id, practitioner_record_id, client_id, code_hash, status, expires_at)
+     VALUES ($1, $2, $3, $4, 'unused', $5)`,
+    [ctx.memberId, ctx.practitionerId, clientId, codeHash, expiresAt]
   );
 
   // Fetch practitioner info for the email
   const practitionerResult = await db.query(
     `SELECT name, email, business_name, slug
      FROM practitioners
-     WHERE id = $1 OR member_id = $1
-     LIMIT 1`,
-    [ctx.practitionerId]
+     WHERE id = $1 AND member_id = $2`,
+    [ctx.practitionerId, ctx.memberId]
   );
 
   const p = practitionerResult.rows[0];

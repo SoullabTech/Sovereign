@@ -10,11 +10,13 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import type { MemberId, PractitionerRecordId, RelationshipId } from '@/lib/coachField/identity';
 
 interface WritebackInput {
   studioSessionId: string;
-  practitionerId: string;
-  clientId: string;
+  practitionerMemberId: MemberId;
+  practitionerRecordId: PractitionerRecordId;
+  clientId: RelationshipId;
   scheduledStart: string;
   scheduledEnd: string;
   locationType: string;
@@ -64,7 +66,8 @@ export function extractThemesFromNote(draftedNote: string): string[] {
 export async function writebackStudioSession(input: WritebackInput): Promise<string> {
   const {
     studioSessionId,
-    practitionerId,
+    practitionerMemberId,
+    practitionerRecordId,
     clientId,
     scheduledStart,
     scheduledEnd,
@@ -85,6 +88,7 @@ export async function writebackStudioSession(input: WritebackInput): Promise<str
   const result = await query(
     `INSERT INTO practitioner_sessions (
       practitioner_id,
+      practitioner_record_id,
       client_id,
       studio_session_id,
       session_type,
@@ -96,16 +100,20 @@ export async function writebackStudioSession(input: WritebackInput): Promise<str
       themes,
       completed_at,
       updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, 'completed', $7, $8, $9, NOW(), NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'completed', $8, $9, $10, NOW(), NOW())
     ON CONFLICT (studio_session_id) DO UPDATE SET
       session_notes = EXCLUDED.session_notes,
       themes = EXCLUDED.themes,
       status = 'completed',
       completed_at = COALESCE(practitioner_sessions.completed_at, NOW()),
       updated_at = NOW()
+    WHERE practitioner_sessions.practitioner_id = EXCLUDED.practitioner_id
+      AND practitioner_sessions.practitioner_record_id = EXCLUDED.practitioner_record_id
+      AND practitioner_sessions.client_id = EXCLUDED.client_id
     RETURNING id`,
     [
-      practitionerId,
+      practitionerMemberId,
+      practitionerRecordId,
       clientId,
       studioSessionId,
       sessionType,
@@ -118,6 +126,9 @@ export async function writebackStudioSession(input: WritebackInput): Promise<str
   );
 
   const id = result.rows[0]?.id;
+  if (!id) {
+    throw new Error('Studio session write-back relationship tuple does not match the existing history row');
+  }
   console.log('[studio-writeback] Upserted practitioner_session:', id, 'for studio session:', studioSessionId);
 
   // Update client stats
@@ -126,12 +137,14 @@ export async function writebackStudioSession(input: WritebackInput): Promise<str
       `UPDATE practitioner_clients SET
         total_sessions = (
           SELECT COUNT(*) FROM practitioner_sessions
-          WHERE client_id = $1 AND status = 'completed'
+          WHERE client_id = $1
+            AND practitioner_record_id = $2
+            AND status = 'completed'
         ),
         last_session = NOW(),
         updated_at = NOW()
-      WHERE id = $1`,
-      [clientId]
+      WHERE id = $1 AND practitioner_id = $2`,
+      [clientId, practitionerRecordId]
     );
   } catch (err) {
     // Non-fatal — don't break the write-back over stats

@@ -81,19 +81,19 @@ BEGIN
   -- NOTE: client_invites.practitioner_id references MEMBERS(id), while
   -- practitioner_clients.practitioner_id references PRACTITIONERS(id). Same column
   -- name, different referent — see the migration's §JOIN KEY note.
-  INSERT INTO client_invites (practitioner_id, client_id, code_hash, status, claimed_at, claimed_by_member_id)
-    VALUES (prac_member,r_invite, 'h1', 'claimed', NOW(), m_invite);
+  INSERT INTO client_invites (practitioner_id, practitioner_record_id, client_id, code_hash, status, claimed_at, claimed_by_member_id)
+    VALUES (prac_member,prac,r_invite, 'h1', 'claimed', NOW(), m_invite);
   -- two different members claimed invitations issued from the same relationship
   -- NOTE: client_invites.practitioner_id references MEMBERS(id), while
   -- practitioner_clients.practitioner_id references PRACTITIONERS(id). Same column
   -- name, different referent — see the migration's §JOIN KEY note.
-  INSERT INTO client_invites (practitioner_id, client_id, code_hash, status, claimed_at, claimed_by_member_id)
-    VALUES (prac_member,r_conflict, 'h2', 'claimed', NOW(), m_conflict);
+  INSERT INTO client_invites (practitioner_id, practitioner_record_id, client_id, code_hash, status, claimed_at, claimed_by_member_id)
+    VALUES (prac_member,prac,r_conflict, 'h2', 'claimed', NOW(), m_conflict);
   -- NOTE: client_invites.practitioner_id references MEMBERS(id), while
   -- practitioner_clients.practitioner_id references PRACTITIONERS(id). Same column
   -- name, different referent — see the migration's §JOIN KEY note.
-  INSERT INTO client_invites (practitioner_id, client_id, code_hash, status, claimed_at, claimed_by_member_id)
-    VALUES (prac_member,r_conflict, 'h3', 'claimed', NOW(), m_dupe_a);
+  INSERT INTO client_invites (practitioner_id, practitioner_record_id, client_id, code_hash, status, claimed_at, claimed_by_member_id)
+    VALUES (prac_member,prac,r_conflict, 'h3', 'claimed', NOW(), m_dupe_a);
 
   -- ── run the reconciliation mechanism ──────────────────────────────────────
   SELECT queued, auto_linked INTO n_queued, n_linked FROM practitioner_client_reconcile();

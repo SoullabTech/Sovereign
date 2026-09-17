@@ -28,7 +28,9 @@ async function loadThresholdContext(token: string) {
     `SELECT e.id AS encounter_id, e.title, e.status,
             ep.id AS participant_id, ep.display_name, ep.role
      FROM encounters e
-     JOIN encounter_participants ep ON ep.encounter_id = e.id
+     JOIN encounter_participants ep
+       ON ep.encounter_id = e.id
+      AND ep.team_id = e.team_id
      WHERE e.id = $1 AND ep.id = $2`,
     [claims.encounterId, claims.participantId]
   );

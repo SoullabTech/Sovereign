@@ -17,6 +17,7 @@ import {
   markFollowUpSent,
   getClientJourney,
 } from '@/lib/stellium/sessions';
+import { requirePractitioner } from '@/lib/auth/getCurrentPractitioner';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -37,32 +38,30 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ stub: true });
   }
   try {
+    const auth = await requirePractitioner(request);
+    if ('error' in auth) return auth.error;
+    const scope = {
+      memberId: auth.identity.memberId,
+      practitionerRecordId: auth.identity.practitionerId,
+    };
     const { id: sessionId } = await params;
     const searchParams = request.nextUrl.searchParams;
-    const practitionerId = searchParams.get('practitionerId');
-
-    if (!practitionerId) {
-      return NextResponse.json(
-        { error: 'Practitioner ID required' },
-        { status: 400 }
-      );
-    }
 
     // Get base session first
-    const session = await getSession(practitionerId, sessionId);
+    const session = await getSession(scope, sessionId);
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
     // Return full MAIA context if requested
     if (searchParams.get('context') === 'true') {
-      const context = await getSessionContext(practitionerId, sessionId);
+      const context = await getSessionContext(scope, sessionId);
       return NextResponse.json(context);
     }
 
     // Return full client journey if requested
     if (searchParams.get('journey') === 'true' && session.client_id) {
-      const journey = await getClientJourney(practitionerId, session.client_id);
+      const journey = await getClientJourney(scope, session.client_id);
       return NextResponse.json({
         session,
         journey,
@@ -91,33 +90,37 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const auth = await requirePractitioner(request);
+    if ('error' in auth) return auth.error;
+    const scope = {
+      memberId: auth.identity.memberId,
+      practitionerRecordId: auth.identity.practitionerId,
+    };
     const { id: sessionId } = await params;
     const body = await request.json();
-    const { practitionerId, maiaPrep, markFollowUpSent: sendFollowUp, ...updateData } = body;
-
-    if (!practitionerId) {
-      return NextResponse.json(
-        { error: 'Practitioner ID required' },
-        { status: 400 }
-      );
-    }
+    const {
+      practitionerId: _ignoredPractitionerId,
+      maiaPrep,
+      markFollowUpSent: sendFollowUp,
+      ...updateData
+    } = body;
 
     // Store MAIA's session prep
     if (maiaPrep) {
-      await storeMaiaPrep(practitionerId, sessionId, maiaPrep);
-      const session = await getSession(practitionerId, sessionId);
+      await storeMaiaPrep(scope, sessionId, maiaPrep);
+      const session = await getSession(scope, sessionId);
       return NextResponse.json({ success: true, session });
     }
 
     // Mark follow-up as sent
     if (sendFollowUp) {
-      await markFollowUpSent(practitionerId, sessionId);
-      const session = await getSession(practitionerId, sessionId);
+      await markFollowUpSent(scope, sessionId);
+      const session = await getSession(scope, sessionId);
       return NextResponse.json({ success: true, session });
     }
 
     // Regular update
-    const session = await updateSession(practitionerId, sessionId, updateData);
+    const session = await updateSession(scope, sessionId, updateData);
 
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
@@ -143,19 +146,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    const auth = await requirePractitioner(request);
+    if ('error' in auth) return auth.error;
+    const scope = {
+      memberId: auth.identity.memberId,
+      practitionerRecordId: auth.identity.practitionerId,
+    };
     const { id: sessionId } = await params;
     const searchParams = request.nextUrl.searchParams;
-    const practitionerId = searchParams.get('practitionerId');
     const reason = searchParams.get('reason') || undefined;
 
-    if (!practitionerId) {
-      return NextResponse.json(
-        { error: 'Practitioner ID required' },
-        { status: 400 }
-      );
-    }
-
-    const success = await cancelSession(practitionerId, sessionId, reason);
+    const success = await cancelSession(scope, sessionId, reason);
 
     if (!success) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });

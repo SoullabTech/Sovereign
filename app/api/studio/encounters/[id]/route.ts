@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
+import { transaction } from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { randomUUID } from 'crypto';
 import {
@@ -36,7 +37,12 @@ export async function GET(request: NextRequest, { params }: Params) {
     }
 
     const [participantsRes, transcriptRes, momentsRes, reflectionsRes] = await Promise.all([
-      db.query(`SELECT * FROM encounter_participants WHERE encounter_id = $1 ORDER BY created_at`, [id]),
+      db.query(
+        `SELECT * FROM encounter_participants
+          WHERE encounter_id = $1 AND team_id = $2
+          ORDER BY created_at`,
+        [id, encounter.team_id]
+      ),
       db.query(`SELECT * FROM encounter_transcripts WHERE encounter_id = $1`, [id]),
       db.query(`SELECT * FROM encounter_moments WHERE encounter_id = $1 ORDER BY start_ms, created_at`, [id]),
       db.query(`SELECT * FROM encounter_reflections WHERE encounter_id = $1 ORDER BY created_at`, [id]),
@@ -96,26 +102,63 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       updates.push(`status = $${values.length}`);
     }
 
-    if (updates.length > 0) {
-      values.push(id);
-      await db.query(
-        `UPDATE encounters SET ${updates.join(', ')}, updated_at = NOW() WHERE id = $${values.length}`,
-        values
-      );
-    }
+    const participantRows = Array.isArray(participants) ? participants : null;
+    const personIds = participantRows
+      ? [...new Set(
+          participantRows.map((p: any) => p?.person_id)
+            .filter((personId: unknown): personId is string => typeof personId === 'string')
+        )]
+      : [];
 
-    if (Array.isArray(participants)) {
-      await db.query(`DELETE FROM encounter_participants WHERE encounter_id = $1`, [id]);
-      for (const p of participants) {
-        await db.query(
-          `INSERT INTO encounter_participants (id, encounter_id, person_id, display_name, role, member_id)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [randomUUID(), id, p.person_id ?? null, p.display_name ?? 'Unknown', p.role ?? 'client', p.member_id ?? null]
+    const mutation = await transaction(async (client) => {
+      if (personIds.length > 0) {
+        const people = await client.query(
+          `SELECT id FROM studio_people WHERE id = ANY($1::uuid[]) AND team_id = $2`,
+          [personIds, encounter.team_id]
+        );
+        if (people.rows.length !== personIds.length) return { error: 'Participant not found' as const };
+      }
+
+      if (updates.length > 0) {
+        const scopedValues = [...values, id, practitionerId, encounter.team_id];
+        await client.query(
+          `UPDATE encounters
+              SET ${updates.join(', ')}, updated_at = NOW()
+            WHERE id = $${values.length + 1}
+              AND practitioner_id = $${values.length + 2}
+              AND team_id = $${values.length + 3}`,
+          scopedValues
         );
       }
+
+      if (participantRows) {
+        await client.query(
+          `DELETE FROM encounter_participants WHERE encounter_id = $1 AND team_id = $2`,
+          [id, encounter.team_id]
+        );
+        for (const p of participantRows) {
+          await client.query(
+            `INSERT INTO encounter_participants
+               (id, encounter_id, team_id, person_id, display_name, role, member_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [
+              randomUUID(), id, encounter.team_id, p.person_id ?? null,
+              p.display_name ?? 'Unknown', p.role ?? 'client', p.member_id ?? null,
+            ]
+          );
+        }
+      }
+      return { ok: true as const };
+    });
+
+    if ('error' in mutation) {
+      return NextResponse.json({ error: mutation.error }, { status: 404 });
     }
 
-    const updated = await db.query(`SELECT * FROM encounters WHERE id = $1`, [id]);
+    const updated = await db.query(
+      `SELECT * FROM encounters WHERE id = $1 AND practitioner_id = $2 AND team_id = $3`,
+      [id, practitionerId, encounter.team_id]
+    );
     return NextResponse.json({ encounter: updated.rows[0] });
   } catch (error) {
     console.error('[Encounter] PATCH error:', error);

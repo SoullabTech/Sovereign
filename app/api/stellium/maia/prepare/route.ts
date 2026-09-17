@@ -16,6 +16,7 @@ import { getPersonaContext, generatePersonaPrompt } from '@/lib/stellium/persona
 import { MaiaSessionPrep } from '@/lib/stellium/types';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { resolveClientDisplayName } from '@/lib/stellium/clients';
+import { requirePractitioner } from '@/lib/auth/getCurrentPractitioner';
 
 /**
  * POST /api/stellium/maia/prepare
@@ -28,24 +29,30 @@ import { resolveClientDisplayName } from '@/lib/stellium/clients';
  */
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requirePractitioner(request);
+    if ('error' in auth) return auth.error;
+    const scope = {
+      memberId: auth.identity.memberId,
+      practitionerRecordId: auth.identity.practitionerId,
+    };
     const body = await request.json();
-    const { practitionerId, sessionId, prepType = 'full' } = body;
+    const { practitionerId: _ignoredPractitionerId, sessionId, prepType = 'full' } = body;
 
-    if (!practitionerId || !sessionId) {
+    if (!sessionId) {
       return NextResponse.json(
-        { error: 'Practitioner ID and Session ID required' },
+        { error: 'Session ID required' },
         { status: 400 }
       );
     }
 
     // Get session context (includes client history, themes, previous notes)
-    const sessionContext = await getSessionContext(practitionerId, sessionId);
+    const sessionContext = await getSessionContext(scope, sessionId);
     if (!sessionContext.session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
     // Get persona context
-    const personaContext = await getPersonaContext(practitionerId);
+    const personaContext = await getPersonaContext(scope.memberId);
 
     // Build the preparation request for Claude
     const systemPrompt = personaContext.systemPrompt || getDefaultPrepPrompt();
@@ -125,7 +132,7 @@ Keep the tone aligned with the practitioner's voice. Be concise but thorough.`;
     };
 
     // Store the preparation
-    await storeMaiaPrep(practitionerId, sessionId, prep);
+    await storeMaiaPrep(scope, sessionId, prep);
 
     return NextResponse.json({
       success: true,

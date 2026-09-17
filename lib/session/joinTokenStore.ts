@@ -41,7 +41,9 @@ export async function loadJoinTokenContext(rawToken: string): Promise<JoinTokenC
             s.agreement_text_snapshot, s.external_provider_notice_snapshot,
             s.agreement_mode, s.consent_flags
        FROM session_join_tokens t
-       JOIN scribe_sessions s ON s.id = t.session_id
+       JOIN scribe_sessions s
+         ON s.id = t.session_id
+        AND s.client_id = t.client_id
       WHERE t.token_hash = $1`,
     [tokenHash]
   );
@@ -104,12 +106,24 @@ export async function recordClientDecision(args: {
       `UPDATE scribe_sessions
           SET consent_client_at = ${accepted ? 'NOW()' : 'NULL'},
               video_link_reveal_allowed = ${accepted ? 'true' : 'false'}
-        WHERE id = $1`,
-      [args.sessionId]
+        WHERE id = $1 AND client_id = $2`,
+      [args.sessionId, args.clientId]
     );
     await client.query(
-      `UPDATE session_join_tokens SET status = $2, decided_at = NOW() WHERE token_hash = $1`,
-      [tokenHash, accepted ? 'used' : 'refused']
+      `UPDATE session_join_tokens
+          SET status = $4, decided_at = NOW()
+        WHERE token_hash = $1
+          AND session_id = $2
+          AND client_id = $3
+          AND agreement_version = $5
+          AND status = 'active'`,
+      [
+        tokenHash,
+        args.sessionId,
+        args.clientId,
+        accepted ? 'used' : 'refused',
+        args.agreementVersion,
+      ]
     );
   });
 }

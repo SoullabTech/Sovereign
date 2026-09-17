@@ -45,13 +45,13 @@ export async function getCurrentPractitioner(
      FROM practitioners p
      JOIN members m ON m.id = p.member_id
      WHERE p.member_id = $1
-       AND p.status = 'active'
-     LIMIT 1`,
+       AND p.status = 'active'`,
     [memberId]
   );
 
-  if (result.rows.length === 0) {
-    // Member exists but is not a practitioner
+  if (result.rows.length !== 1) {
+    // A member with several active practices needs an explicit practice selector.
+    // Until that exists, choosing by row order would cross a tenancy boundary.
     return null;
   }
 

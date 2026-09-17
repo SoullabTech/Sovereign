@@ -55,9 +55,16 @@ export async function acceptInvitation(input: {
   return transaction(async (client) => {
     // 1 — validate the invitation
     const { rows: invites } = await client.query(
-      `SELECT id, client_id, status, expires_at, claimed_at, claimed_by_member_id
-         FROM client_invites
-        WHERE code_hash = $1`,
+      `SELECT i.id, i.client_id, i.practitioner_id, i.practitioner_record_id,
+              i.status, i.expires_at, i.claimed_at, i.claimed_by_member_id
+         FROM client_invites i
+         JOIN practitioners p
+           ON p.id = i.practitioner_record_id
+          AND p.member_id = i.practitioner_id
+         JOIN practitioner_clients pc
+           ON pc.id = i.client_id
+          AND pc.practitioner_id = i.practitioner_record_id
+        WHERE i.code_hash = $1`,
       [input.codeHash]
     );
     if (invites.length === 0) throw new InvitationError('not_found', 'This invitation is not valid.');
@@ -78,8 +85,9 @@ export async function acceptInvitation(input: {
       `SELECT id, member_id, relationship_status
          FROM practitioner_clients
         WHERE id = $1
+          AND practitioner_id = $2
           FOR UPDATE`,
-      [invite.client_id]
+      [invite.client_id, invite.practitioner_record_id]
     );
     if (locked.length === 0) {
       throw new InvitationError('relationship_missing', 'This invitation no longer refers to a relationship.');
@@ -155,8 +163,17 @@ export async function acceptInvitation(input: {
           SET status = 'claimed',
               claimed_at = COALESCE(claimed_at, NOW()),
               claimed_by_member_id = COALESCE(claimed_by_member_id, $2)
-        WHERE id = $1`,
-      [invite.id, input.acceptingMemberId]
+        WHERE id = $1
+          AND practitioner_id = $3
+          AND practitioner_record_id = $4
+          AND client_id = $5`,
+      [
+        invite.id,
+        input.acceptingMemberId,
+        invite.practitioner_id,
+        invite.practitioner_record_id,
+        invite.client_id,
+      ]
     );
 
     return {

@@ -247,9 +247,10 @@ async function main() {
   // ── 5  claiming an invitation binds the correct member ────────────────────
   console.log('\n5  invitation acceptance');
   await query(
-    `INSERT INTO client_invites (practitioner_id, client_id, code_hash, status)
-     VALUES ($1,$2,$3,'unused')`,
-    [practMember, pending.relationshipId, `${TAG}-code-1`]
+    `INSERT INTO client_invites
+       (practitioner_id, practitioner_record_id, client_id, code_hash, status)
+     VALUES ($1,$2,$3,$4,'unused')`,
+    [practMember, practRecord, pending.relationshipId, `${TAG}-code-1`]
   );
 
   const accepted = await acceptInvitation({

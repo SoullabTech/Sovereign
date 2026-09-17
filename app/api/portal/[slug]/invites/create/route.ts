@@ -41,18 +41,14 @@ export async function POST(
       [slug]
     );
 
-    let practitionerId: string;
-
     if (practitionerResult.rows.length === 0) {
-      // Fallback: use member_id directly (development mode)
-      practitionerId = memberId;
-    } else {
-      const practitioner = practitionerResult.rows[0];
-      if (practitioner.member_id !== memberId) {
-        return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
-      }
-      practitionerId = practitioner.id;
+      return NextResponse.json({ error: 'Practice not found' }, { status: 404 });
     }
+    const practitioner = practitionerResult.rows[0];
+    if (practitioner.member_id !== memberId) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+    const practitionerId = practitioner.id;
 
     // Verify client belongs to this practitioner
     const clientResult = await query(
@@ -79,8 +75,11 @@ export async function POST(
     await query(
       `UPDATE client_invites
        SET status = 'revoked'
-       WHERE client_id = $1 AND status = 'unused'`,
-      [clientId]
+       WHERE client_id = $1
+         AND practitioner_id = $2
+         AND practitioner_record_id = $3
+         AND status = 'unused'`,
+      [clientId, memberId, practitionerId]
     );
 
     // Generate new invite
@@ -90,9 +89,10 @@ export async function POST(
 
     // client_invites.practitioner_id references members(id), not practitioners(id)
     await query(
-      `INSERT INTO client_invites (practitioner_id, client_id, code_hash, status, expires_at)
-       VALUES ($1, $2, $3, 'unused', $4)`,
-      [memberId, clientId, codeHash, expiresAt]
+      `INSERT INTO client_invites
+         (practitioner_id, practitioner_record_id, client_id, code_hash, status, expires_at)
+       VALUES ($1, $2, $3, $4, 'unused', $5)`,
+      [memberId, practitionerId, clientId, codeHash, expiresAt]
     );
 
     // Return code ONCE - practitioner must copy it now

@@ -53,8 +53,12 @@ export async function GET(
         c.email as client_email,
         svc.name as service_name
       FROM sessions s
-      LEFT JOIN practitioner_clients c ON s.client_id = c.id
-      LEFT JOIN services svc ON s.service_id = svc.id
+      LEFT JOIN practitioner_clients c
+        ON s.client_id = c.id
+       AND c.practitioner_id = s.practitioner_id
+      LEFT JOIN services svc
+        ON s.service_id = svc.id
+       AND svc.practitioner_id = s.practitioner_id
       WHERE s.id = $1 AND s.practitioner_id = $2`,
       [sessionId, practitionerId]
     );

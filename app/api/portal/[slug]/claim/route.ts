@@ -64,10 +64,16 @@ export async function POST(
 
     // Find the invite
     const inviteResult = await query(
-      `SELECT i.id, i.client_id, i.practitioner_id, i.status, i.expires_at,
+      `SELECT i.id, i.client_id, i.practitioner_id, i.practitioner_record_id,
+              i.status, i.expires_at,
               p.slug as practitioner_slug
        FROM client_invites i
-       LEFT JOIN practitioners p ON i.practitioner_id = p.id OR i.practitioner_id = p.member_id
+       JOIN practitioners p
+         ON p.id = i.practitioner_record_id
+        AND p.member_id = i.practitioner_id
+       JOIN practitioner_clients pc
+         ON pc.id = i.client_id
+        AND pc.practitioner_id = i.practitioner_record_id
        WHERE i.code_hash = $1
        LIMIT 1`,
       [codeHash]
@@ -118,7 +124,7 @@ export async function POST(
     const existingResult = await query(
       `SELECT id FROM practitioner_clients
        WHERE practitioner_id = $1 AND portal_email = $2 AND id != $3`,
-      [invite.practitioner_id, email, invite.client_id]
+      [invite.practitioner_record_id, email, invite.client_id]
     );
 
     if (existingResult.rows.length > 0) {
@@ -139,8 +145,8 @@ export async function POST(
            SET portal_email = $1,
                portal_password_hash = $2,
                portal_claimed_at = NOW()
-           WHERE id = $3`,
-          [email, pwHash, invite.client_id]
+           WHERE id = $3 AND practitioner_id = $4`,
+          [email, pwHash, invite.client_id, invite.practitioner_record_id]
         );
 
         // Mark invite as claimed
@@ -148,8 +154,11 @@ export async function POST(
           `UPDATE client_invites
            SET status = 'claimed',
                claimed_at = NOW()
-           WHERE id = $1`,
-          [invite.id]
+           WHERE id = $1
+             AND practitioner_id = $2
+             AND practitioner_record_id = $3
+             AND client_id = $4`,
+          [invite.id, invite.practitioner_id, invite.practitioner_record_id, invite.client_id]
         );
       });
     } catch (txError: any) {
@@ -172,7 +181,7 @@ export async function POST(
     await createClientSession(res, {
       portalSlug: slug,
       clientId: invite.client_id,
-      practitionerId: invite.practitioner_id,
+      practitionerId: invite.practitioner_record_id,
     });
 
     return res;

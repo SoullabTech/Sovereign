@@ -18,6 +18,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { writebackStudioSession, extractThemesFromNote } from '@/lib/practitioner/studioWriteback';
+import { asMemberId, asPractitionerRecordId, asRelationshipId } from '@/lib/coachField/identity';
 
 export async function POST(
   request: NextRequest,
@@ -67,8 +68,12 @@ export async function POST(
               c.name AS client_name,
               svc.name AS service_name
        FROM sessions s
-       LEFT JOIN practitioner_clients c ON c.id = s.client_id
-       LEFT JOIN services svc ON svc.id = s.service_id
+       LEFT JOIN practitioner_clients c
+         ON c.id = s.client_id
+        AND c.practitioner_id = s.practitioner_id
+       LEFT JOIN services svc
+         ON svc.id = s.service_id
+        AND svc.practitioner_id = s.practitioner_id
        WHERE s.id = $1 AND s.practitioner_id = $2`,
       [sessionId, practitionerId]
     );
@@ -136,8 +141,9 @@ ${voiceNote.transcript}
         const themes = extractThemesFromNote(draftedNote);
         await writebackStudioSession({
           studioSessionId: sessionId,
-          practitionerId,
-          clientId: session.client_id,
+          practitionerMemberId: asMemberId(memberId),
+          practitionerRecordId: asPractitionerRecordId(practitionerId),
+          clientId: asRelationshipId(session.client_id),
           scheduledStart: session.scheduled_start,
           scheduledEnd: session.scheduled_end,
           locationType: session.location_type || 'video',

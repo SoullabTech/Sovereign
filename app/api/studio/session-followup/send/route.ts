@@ -17,6 +17,7 @@ import { loadSessionData } from '@/lib/studio/followups/sessionDataLoader';
 import { generateParentUpdateHtml } from '@/lib/studio/followups/emailTemplate';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { sendEmail } from '@/lib/email/sendEmail';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 
 export const runtime = 'nodejs';
 
@@ -30,15 +31,23 @@ export async function POST(req: NextRequest) {
     if (!memberId) {
       return json(401, { error: 'Not authenticated' });
     }
+    const practitionerRecordId = await getPractitionerIdForMember(memberId);
+    if (!practitionerRecordId) {
+      return json(404, { error: 'Practitioner not found' });
+    }
 
     const raw = await req.json();
     const input: SendFollowupRequest = SendFollowupRequestSchema.parse(raw);
 
     // Verify artifact exists and belongs to this practitioner
     const artifactResult = await query(
-      `SELECT id, session_id, draft_content, sent_at
-       FROM session_artifacts WHERE id = $1 AND created_by = $2`,
-      [input.artifactId, memberId],
+      `SELECT id, session_id, client_id, practitioner_record_id, draft_content, sent_at
+         FROM session_artifacts
+        WHERE id = $1
+          AND created_by = $2
+          AND practitioner_id = $2
+          AND practitioner_record_id = $3`,
+      [input.artifactId, memberId, practitionerRecordId],
     );
 
     if (artifactResult.rows.length === 0) {
@@ -49,11 +58,19 @@ export async function POST(req: NextRequest) {
     if (artifact.sent_at) {
       return json(400, { error: 'This update has already been sent' });
     }
+    if (
+      artifact.session_id !== input.sessionId ||
+      (input.clientId != null && artifact.client_id !== input.clientId)
+    ) {
+      return json(404, { error: 'Artifact not found' });
+    }
 
     // Verify session still exists and has content
     const sessionData = await loadSessionData({
-      sessionId: input.sessionId,
-      caseId: input.clientId ?? null,
+      sessionId: artifact.session_id,
+      clientId: artifact.client_id ?? null,
+      memberId,
+      practitionerRecordId,
     });
 
     if (!sessionData || !sessionData.reviewableContentExists) {
@@ -69,11 +86,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify recipient has consent in client_contacts (if contact exists)
-    if (input.clientId) {
+    if (artifact.client_id) {
       const contactResult = await query(
-        `SELECT consent_given FROM client_contacts
-         WHERE client_id = $1 AND email = $2 AND is_active = true`,
-        [input.clientId, input.recipientEmail],
+        `SELECT cc.consent_given
+           FROM client_contacts cc
+           JOIN practitioner_clients pc
+             ON pc.id = cc.client_id
+            AND pc.practitioner_id = $3
+          WHERE cc.client_id = $1
+            AND cc.email = $2
+            AND cc.is_active = true`,
+        [artifact.client_id, input.recipientEmail, practitionerRecordId],
       );
       if (contactResult.rows.length > 0 && !contactResult.rows[0].consent_given) {
         return json(400, { error: 'Recipient has not given consent for communications' });
@@ -137,7 +160,11 @@ export async function POST(req: NextRequest) {
         human_edited = true,
         consent_confirmed = true,
         updated_at = NOW()
-       WHERE id = $4`,
+       WHERE id = $4
+         AND created_by = $5
+         AND practitioner_record_id = $6
+         AND session_id = $7
+         AND client_id IS NOT DISTINCT FROM $8`,
       [
         JSON.stringify(input.draft),
         JSON.stringify([{
@@ -147,6 +174,10 @@ export async function POST(req: NextRequest) {
         }]),
         input.sendVia,
         input.artifactId,
+        memberId,
+        practitionerRecordId,
+        artifact.session_id,
+        artifact.client_id,
       ],
     );
 

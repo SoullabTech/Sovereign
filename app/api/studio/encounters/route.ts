@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import db from '@/lib/db/postgres';
+import { transaction } from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { randomUUID } from 'crypto';
@@ -77,29 +78,62 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'title is required' }, { status: 400 });
     }
 
-    const encounterId = randomUUID();
     const resolvedType = typeof encounter_type === 'string' && encounter_type.trim()
       ? encounter_type.trim()
       : 'therapy_session';
+    const participantRows = Array.isArray(participants) ? participants : [];
+    const personIds = [...new Set(
+      participantRows.map((p: any) => p?.person_id).filter((id: unknown): id is string => typeof id === 'string')
+    )];
 
-    await db.query(
-      `INSERT INTO encounters (id, practitioner_id, team_id, session_id, title, encounter_type)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [encounterId, practitionerId, teamId, session_id ?? null, title.trim(), resolvedType]
-    );
+    const result = await transaction(async (client) => {
+      if (session_id) {
+        const meeting = await client.query(
+          `SELECT id FROM studio_meetings WHERE id = $1 AND practitioner_id = $2`,
+          [session_id, practitionerId]
+        );
+        if (meeting.rows.length === 0) return { error: 'Meeting not found' as const };
+      }
 
-    if (Array.isArray(participants) && participants.length > 0) {
-      for (const p of participants) {
-        await db.query(
-          `INSERT INTO encounter_participants (id, encounter_id, person_id, display_name, role, member_id)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [randomUUID(), encounterId, p.person_id ?? null, p.display_name ?? 'Unknown', p.role ?? 'client', p.member_id ?? null]
+      if (personIds.length > 0) {
+        const people = await client.query(
+          `SELECT id FROM studio_people WHERE id = ANY($1::uuid[]) AND team_id = $2`,
+          [personIds, teamId]
+        );
+        if (people.rows.length !== personIds.length) return { error: 'Participant not found' as const };
+      }
+
+      const encounterId = randomUUID();
+      await client.query(
+        `INSERT INTO encounters (id, practitioner_id, team_id, session_id, title, encounter_type)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [encounterId, practitionerId, teamId, session_id ?? null, title.trim(), resolvedType]
+      );
+
+      for (const p of participantRows) {
+        await client.query(
+          `INSERT INTO encounter_participants
+             (id, encounter_id, team_id, person_id, display_name, role, member_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            randomUUID(), encounterId, teamId, p.person_id ?? null,
+            p.display_name ?? 'Unknown', p.role ?? 'client', p.member_id ?? null,
+          ]
         );
       }
-    }
 
-    const row = await db.query(`SELECT * FROM encounters WHERE id = $1`, [encounterId]);
-    return NextResponse.json({ encounter: row.rows[0] }, { status: 201 });
+      const row = await client.query(
+        `SELECT * FROM encounters
+          WHERE id = $1 AND practitioner_id = $2 AND team_id = $3`,
+        [encounterId, practitionerId, teamId]
+      );
+      return { encounter: row.rows[0] };
+    });
+
+    if ('error' in result) {
+      return NextResponse.json({ error: result.error }, { status: 404 });
+    }
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error('[Encounters] POST error:', error);
     return NextResponse.json({ error: 'Failed to create encounter' }, { status: 500 });

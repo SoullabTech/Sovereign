@@ -51,11 +51,17 @@ export async function POST(
   if (!practitionerId) return NextResponse.json({ error: 'not a practitioner' }, { status: 403 });
 
   const session = await queryOne<SessionOwnerRow>(
-    'SELECT member_id, room_state, client_id FROM scribe_sessions WHERE id = $1',
-    [sessionId]
+    `SELECT ss.member_id, ss.room_state, ss.client_id
+       FROM scribe_sessions ss
+       JOIN practitioner_clients pc
+         ON pc.id = ss.client_id
+        AND pc.practitioner_id = $3
+      WHERE ss.id = $1
+        AND ss.member_id = $2
+        AND ss.practitioner_record_id = $3`,
+    [sessionId, memberId, practitionerId]
   );
   if (!session) return NextResponse.json({ error: 'session not found' }, { status: 404 });
-  if (session.member_id !== memberId) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   if (session.room_state !== 'pre') {
     return NextResponse.json(
       { error: 'agreement can only be set before the session begins; use the change flow' },
@@ -186,15 +192,20 @@ export async function GET(
   if (!practitionerId) return NextResponse.json({ error: 'not a practitioner' }, { status: 403 });
 
   const row = await queryOne<any>(
-    `SELECT member_id, agreement_mode, agreement_version, agreement_text_snapshot,
+    `SELECT ss.member_id, ss.agreement_mode, ss.agreement_version, ss.agreement_text_snapshot,
             external_provider_notice_snapshot, video_provider, video_link,
             consent_practitioner_at, consent_client_at, consent_revoked_at,
             video_link_reveal_allowed, room_state
-       FROM scribe_sessions WHERE id = $1`,
-    [sessionId]
+       FROM scribe_sessions ss
+       JOIN practitioner_clients pc
+         ON pc.id = ss.client_id
+        AND pc.practitioner_id = $3
+      WHERE ss.id = $1
+        AND ss.member_id = $2
+        AND ss.practitioner_record_id = $3`,
+    [sessionId, memberId, practitionerId]
   );
   if (!row) return NextResponse.json({ error: 'session not found' }, { status: 404 });
-  if (row.member_id !== memberId) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   return NextResponse.json({
     ok: true,

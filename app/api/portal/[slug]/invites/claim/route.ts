@@ -49,10 +49,16 @@ export async function POST(
     const codeHash = hashInviteCode(code);
 
     const inviteResult = await query(
-      `SELECT i.id, i.client_id, i.practitioner_id, i.status, i.expires_at,
+      `SELECT i.id, i.client_id, i.practitioner_id, i.practitioner_record_id,
+              i.status, i.expires_at,
               c.portal_claimed_at, c.email as booking_email
        FROM client_invites i
-       JOIN practitioner_clients c ON c.id = i.client_id
+       JOIN practitioners p
+         ON p.id = i.practitioner_record_id
+        AND p.member_id = i.practitioner_id
+       JOIN practitioner_clients c
+         ON c.id = i.client_id
+        AND c.practitioner_id = i.practitioner_record_id
        WHERE i.code_hash = $1
        LIMIT 1`,
       [codeHash]
@@ -107,15 +113,18 @@ export async function POST(
        SET portal_email = $1,
            portal_password_hash = $2,
            portal_claimed_at = NOW()
-       WHERE id = $3`,
-      [email, passwordHash, invite.client_id]
+       WHERE id = $3 AND practitioner_id = $4`,
+      [email, passwordHash, invite.client_id, invite.practitioner_record_id]
     );
 
     await query(
-      `UPDATE client_invites
+       `UPDATE client_invites
        SET status = 'claimed', claimed_at = NOW()
-       WHERE id = $1`,
-      [invite.id]
+       WHERE id = $1
+         AND practitioner_id = $2
+         AND practitioner_record_id = $3
+         AND client_id = $4`,
+      [invite.id, invite.practitioner_id, invite.practitioner_record_id, invite.client_id]
     );
 
     return NextResponse.json({ ok: true });

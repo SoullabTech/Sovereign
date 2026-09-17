@@ -28,6 +28,13 @@ const CLIENT_NAME_COLUMNS = `
   c.preferred_name_enc_meta as client_preferred_name_enc_meta
 `;
 
+export interface PractitionerSessionScope {
+  /** members.id from the authenticated credential. */
+  memberId: string;
+  /** practitioners.id selected by the authenticated member relationship. */
+  practitionerRecordId: string;
+}
+
 /**
  * Transform a joined row with client info, decrypting name fields
  * SECURITY: Strips encrypted columns from output to prevent PHI leakage
@@ -76,7 +83,7 @@ function transformSessionWithClient(row: any, practitionerId: string): any {
  * Get all sessions for a practitioner
  */
 export async function getSessions(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   options?: {
     clientId?: string;
     status?: SessionStatus | SessionStatus[];
@@ -88,9 +95,9 @@ export async function getSessions(
 ): Promise<{ sessions: PractitionerSession[]; total: number }> {
   const { clientId, status, fromDate, toDate, limit = 50, offset = 0 } = options || {};
 
-  let whereClause = 'WHERE s.practitioner_id = $1';
-  const params: any[] = [practitionerId];
-  let paramIndex = 2;
+  let whereClause = 'WHERE s.practitioner_id = $1 AND s.practitioner_record_id = $2';
+  const params: any[] = [scope.memberId, scope.practitionerRecordId];
+  let paramIndex = 3;
 
   if (clientId) {
     whereClause += ` AND s.client_id = $${paramIndex}`;
@@ -136,7 +143,9 @@ export async function getSessions(
       c.email as client_email,
       c.has_chart as client_has_chart
     FROM practitioner_sessions s
-    LEFT JOIN practitioner_clients c ON s.client_id = c.id
+    LEFT JOIN practitioner_clients c
+      ON s.client_id = c.id
+     AND c.practitioner_id = s.practitioner_record_id
     ${whereClause}
     ORDER BY s.scheduled_at DESC NULLS LAST
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
@@ -144,7 +153,7 @@ export async function getSessions(
   );
 
   // Transform with decryption
-  const sessions = result.rows.map(row => transformSessionWithClient(row, practitionerId));
+  const sessions = result.rows.map(row => transformSessionWithClient(row, scope.practitionerRecordId));
 
   return { sessions: sessions as PractitionerSession[], total };
 }
@@ -153,7 +162,7 @@ export async function getSessions(
  * Get upcoming sessions (next 7 days by default)
  */
 export async function getUpcomingSessions(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   days: number = 7
 ): Promise<PractitionerSession[]> {
   const result = await query(
@@ -162,23 +171,26 @@ export async function getUpcomingSessions(
       ${CLIENT_NAME_COLUMNS},
       c.has_chart as client_has_chart
     FROM practitioner_sessions s
-    LEFT JOIN practitioner_clients c ON s.client_id = c.id
+    LEFT JOIN practitioner_clients c
+      ON s.client_id = c.id
+     AND c.practitioner_id = s.practitioner_record_id
     WHERE s.practitioner_id = $1
+      AND s.practitioner_record_id = $2
       AND s.status IN ('scheduled', 'confirmed')
       AND s.scheduled_at >= NOW()
       AND s.scheduled_at <= NOW() + INTERVAL '${days} days'
     ORDER BY s.scheduled_at ASC`,
-    [practitionerId]
+    [scope.memberId, scope.practitionerRecordId]
   );
 
-  return result.rows.map(row => transformSessionWithClient(row, practitionerId)) as PractitionerSession[];
+  return result.rows.map(row => transformSessionWithClient(row, scope.practitionerRecordId)) as PractitionerSession[];
 }
 
 /**
  * Get a single session
  */
 export async function getSession(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   sessionId: string
 ): Promise<PractitionerSession | null> {
   const result = await query(
@@ -191,23 +203,27 @@ export async function getSession(
       c.themes as client_themes,
       c.private_notes as client_notes
     FROM practitioner_sessions s
-    LEFT JOIN practitioner_clients c ON s.client_id = c.id
-    WHERE s.id = $1 AND s.practitioner_id = $2`,
-    [sessionId, practitionerId]
+    LEFT JOIN practitioner_clients c
+      ON s.client_id = c.id
+     AND c.practitioner_id = s.practitioner_record_id
+    WHERE s.id = $1
+      AND s.practitioner_id = $2
+      AND s.practitioner_record_id = $3`,
+    [sessionId, scope.memberId, scope.practitionerRecordId]
   );
 
   if (!result.rows[0]) return null;
 
-  return transformSessionWithClient(result.rows[0], practitionerId) as PractitionerSession;
+  return transformSessionWithClient(result.rows[0], scope.practitionerRecordId) as PractitionerSession;
 }
 
 /**
  * Create a new session
  */
 export async function createSession(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   input: CreateSessionInput
-): Promise<PractitionerSession> {
+): Promise<PractitionerSession | null> {
   const {
     client_id,
     session_type,
@@ -219,14 +235,21 @@ export async function createSession(
     fee,
   } = input;
 
+  const ownedClient = await query(
+    `SELECT id FROM practitioner_clients WHERE id = $1 AND practitioner_id = $2`,
+    [client_id, scope.practitionerRecordId]
+  );
+  if (ownedClient.rows.length === 0) return null;
+
   const result = await query(
     `INSERT INTO practitioner_sessions (
-      practitioner_id, client_id, session_type, modality,
+      practitioner_id, practitioner_record_id, client_id, session_type, modality,
       scheduled_at, duration_minutes, location_type, location_details, fee
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING *`,
     [
-      practitionerId,
+      scope.memberId,
+      scope.practitionerRecordId,
       client_id,
       session_type,
       modality || null,
@@ -245,7 +268,7 @@ export async function createSession(
  * Update a session
  */
 export async function updateSession(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   sessionId: string,
   input: UpdateSessionInput
 ): Promise<PractitionerSession | null> {
@@ -273,15 +296,17 @@ export async function updateSession(
   }
 
   if (updates.length === 0) {
-    return getSession(practitionerId, sessionId);
+    return getSession(scope, sessionId);
   }
 
-  params.push(sessionId, practitionerId);
+  params.push(sessionId, scope.memberId, scope.practitionerRecordId);
 
   const result = await query(
     `UPDATE practitioner_sessions
      SET ${updates.join(', ')}
-     WHERE id = $${paramIndex} AND practitioner_id = $${paramIndex + 1}
+     WHERE id = $${paramIndex}
+       AND practitioner_id = $${paramIndex + 1}
+       AND practitioner_record_id = $${paramIndex + 2}
      RETURNING *`,
     params
   );
@@ -294,7 +319,7 @@ export async function updateSession(
            total_sessions = total_sessions + 1,
            first_session = COALESCE(first_session, NOW())
        WHERE id = $1 AND practitioner_id = $2`,
-      [result.rows[0].client_id, practitionerId]
+      [result.rows[0].client_id, scope.practitionerRecordId]
     );
   }
 
@@ -305,17 +330,19 @@ export async function updateSession(
  * Cancel a session
  */
 export async function cancelSession(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   sessionId: string,
   reason?: string
 ): Promise<boolean> {
   const result = await query(
     `UPDATE practitioner_sessions
      SET status = 'cancelled',
-         follow_up_notes = COALESCE(follow_up_notes, '') || $3
-     WHERE id = $1 AND practitioner_id = $2
+         follow_up_notes = COALESCE(follow_up_notes, '') || $4
+     WHERE id = $1
+       AND practitioner_id = $2
+       AND practitioner_record_id = $3
      RETURNING id`,
-    [sessionId, practitionerId, reason ? `\n\nCancellation reason: ${reason}` : '']
+    [sessionId, scope.memberId, scope.practitionerRecordId, reason ? `\n\nCancellation reason: ${reason}` : '']
   );
 
   return (result.rowCount ?? 0) > 0;
@@ -329,15 +356,17 @@ export async function cancelSession(
  * Store MAIA's session preparation
  */
 export async function storeMaiaPrep(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   sessionId: string,
   prep: MaiaSessionPrep
 ): Promise<void> {
   await query(
     `UPDATE practitioner_sessions
      SET maia_prep = $1, prep_generated_at = NOW()
-     WHERE id = $2 AND practitioner_id = $3`,
-    [JSON.stringify(prep), sessionId, practitionerId]
+     WHERE id = $2
+       AND practitioner_id = $3
+       AND practitioner_record_id = $4`,
+    [JSON.stringify(prep), sessionId, scope.memberId, scope.practitionerRecordId]
   );
 }
 
@@ -346,7 +375,7 @@ export async function storeMaiaPrep(
  * Returns rich context about the client and their journey
  */
 export async function getSessionContext(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   sessionId: string
 ): Promise<{
   session: PractitionerSession | null;
@@ -358,7 +387,7 @@ export async function getSessionContext(
     open_threads?: string[];
   };
 }> {
-  const session = await getSession(practitionerId, sessionId);
+  const session = await getSession(scope, sessionId);
   if (!session) {
     return { session: null, client_history: { total_sessions: 0, recent_sessions: [], recurring_themes: [] } };
   }
@@ -366,21 +395,27 @@ export async function getSessionContext(
   // Get recent sessions for this client
   const recentResult = await query(
     `SELECT * FROM practitioner_sessions
-     WHERE client_id = $1 AND practitioner_id = $2 AND id != $3
+     WHERE client_id = $1
+       AND practitioner_id = $2
+       AND practitioner_record_id = $3
+       AND id != $4
      ORDER BY scheduled_at DESC
      LIMIT 5`,
-    [session.client_id, practitionerId, sessionId]
+    [session.client_id, scope.memberId, scope.practitionerRecordId, sessionId]
   );
 
   // Get all themes across sessions
   const themesResult = await query(
     `SELECT unnest(themes) as theme, COUNT(*) as count
      FROM practitioner_sessions
-     WHERE client_id = $1 AND practitioner_id = $2 AND themes IS NOT NULL
+     WHERE client_id = $1
+       AND practitioner_id = $2
+       AND practitioner_record_id = $3
+       AND themes IS NOT NULL
      GROUP BY theme
      ORDER BY count DESC
      LIMIT 10`,
-    [session.client_id, practitionerId]
+    [session.client_id, scope.memberId, scope.practitionerRecordId]
   );
 
   const lastSession = recentResult.rows[0];
@@ -405,14 +440,16 @@ export async function getSessionContext(
  * Mark follow-up as sent
  */
 export async function markFollowUpSent(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   sessionId: string
 ): Promise<void> {
   await query(
     `UPDATE practitioner_sessions
      SET follow_up_sent = true, follow_up_sent_at = NOW()
-     WHERE id = $1 AND practitioner_id = $2`,
-    [sessionId, practitionerId]
+     WHERE id = $1
+       AND practitioner_id = $2
+       AND practitioner_record_id = $3`,
+    [sessionId, scope.memberId, scope.practitionerRecordId]
   );
 }
 
@@ -420,7 +457,7 @@ export async function markFollowUpSent(
  * Get sessions needing follow-up
  */
 export async function getSessionsNeedingFollowUp(
-  practitionerId: string
+  scope: PractitionerSessionScope
 ): Promise<PractitionerSession[]> {
   const result = await query(
     `SELECT
@@ -428,16 +465,19 @@ export async function getSessionsNeedingFollowUp(
       ${CLIENT_NAME_COLUMNS},
       c.email as client_email
     FROM practitioner_sessions s
-    LEFT JOIN practitioner_clients c ON s.client_id = c.id
+    LEFT JOIN practitioner_clients c
+      ON s.client_id = c.id
+     AND c.practitioner_id = s.practitioner_record_id
     WHERE s.practitioner_id = $1
+      AND s.practitioner_record_id = $2
       AND s.status = 'completed'
       AND s.follow_up_sent = false
       AND s.completed_at <= NOW() - INTERVAL '1 day'
     ORDER BY s.completed_at ASC`,
-    [practitionerId]
+    [scope.memberId, scope.practitionerRecordId]
   );
 
-  return result.rows.map(row => transformSessionWithClient(row, practitionerId)) as PractitionerSession[];
+  return result.rows.map(row => transformSessionWithClient(row, scope.practitionerRecordId)) as PractitionerSession[];
 }
 
 // ============================================
@@ -447,7 +487,7 @@ export async function getSessionsNeedingFollowUp(
 /**
  * Get session statistics
  */
-export async function getSessionStats(practitionerId: string): Promise<{
+export async function getSessionStats(scope: PractitionerSessionScope): Promise<{
   total: number;
   this_week: number;
   this_month: number;
@@ -472,8 +512,8 @@ export async function getSessionStats(practitionerId: string): Promise<{
         ELSE 0
       END as completion_rate
     FROM practitioner_sessions
-    WHERE practitioner_id = $1`,
-    [practitionerId]
+    WHERE practitioner_id = $1 AND practitioner_record_id = $2`,
+    [scope.memberId, scope.practitionerRecordId]
   );
 
   const row = result.rows[0] || {};
@@ -498,7 +538,7 @@ export async function getSessionStats(practitionerId: string): Promise<{
  * This is the relational timeline — the story of working together
  */
 export async function getClientJourney(
-  practitionerId: string,
+  scope: PractitionerSessionScope,
   clientId: string
 ): Promise<{
   timeline: Array<{
@@ -521,9 +561,11 @@ export async function getClientJourney(
   // Get all sessions
   const sessionsResult = await query(
     `SELECT * FROM practitioner_sessions
-     WHERE client_id = $1 AND practitioner_id = $2
+     WHERE client_id = $1
+       AND practitioner_id = $2
+       AND practitioner_record_id = $3
      ORDER BY scheduled_at ASC`,
-    [clientId, practitionerId]
+    [clientId, scope.memberId, scope.practitionerRecordId]
   );
 
   const sessions = sessionsResult.rows;

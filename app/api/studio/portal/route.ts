@@ -33,14 +33,23 @@ export async function GET(req: NextRequest) {
         ci.created_at as invite_sent_at,
         p.slug as portal_slug
        FROM practitioner_clients c
-       JOIN practitioners p ON p.id = c.practitioner_id
-       LEFT JOIN client_invites ci ON ci.client_id = c.id
+       JOIN practitioners p
+         ON p.id = c.practitioner_id
+        AND p.member_id = $2
+       LEFT JOIN client_invites ci
+         ON ci.client_id = c.id
+        AND ci.practitioner_record_id = c.practitioner_id
+        AND ci.practitioner_id = p.member_id
          AND ci.created_at = (
-           SELECT MAX(ci2.created_at) FROM client_invites ci2 WHERE ci2.client_id = c.id
+           SELECT MAX(ci2.created_at)
+             FROM client_invites ci2
+            WHERE ci2.client_id = c.id
+              AND ci2.practitioner_record_id = c.practitioner_id
+              AND ci2.practitioner_id = p.member_id
          )
-       WHERE p.id = $1 OR p.member_id = $1
+       WHERE c.practitioner_id = $1
        ORDER BY c.name ASC`,
-      [identity.practitionerId]
+      [identity.practitionerId, identity.memberId]
     );
 
     return NextResponse.json({ clients: result.rows });
@@ -68,9 +77,12 @@ export async function POST(req: NextRequest) {
       `SELECT c.id, c.name, c.email, c.portal_claimed_at,
               p.slug, p.name as prac_name, p.email as prac_email, p.business_name
        FROM practitioner_clients c
-       JOIN practitioners p ON p.id = c.practitioner_id
-       WHERE c.id = $1 AND (p.id = $2 OR p.member_id = $2)`,
-      [clientId, identity.practitionerId]
+       JOIN practitioners p
+         ON p.id = c.practitioner_id
+        AND p.member_id = $3
+       WHERE c.id = $1
+         AND c.practitioner_id = $2`,
+      [clientId, identity.practitionerId, identity.memberId]
     );
 
     if (!clientResult.rows.length) {
@@ -88,8 +100,13 @@ export async function POST(req: NextRequest) {
 
     // Revoke any existing unused invites
     await query(
-      `UPDATE client_invites SET status = 'revoked' WHERE client_id = $1 AND status = 'unused'`,
-      [clientId]
+      `UPDATE client_invites
+          SET status = 'revoked'
+        WHERE client_id = $1
+          AND practitioner_record_id = $2
+          AND practitioner_id = $3
+          AND status = 'unused'`,
+      [clientId, identity.practitionerId, identity.memberId]
     );
 
     // Generate fresh invite
@@ -99,9 +116,10 @@ export async function POST(req: NextRequest) {
 
     // client_invites.practitioner_id references members(id), not practitioners(id)
     await query(
-      `INSERT INTO client_invites (id, client_id, practitioner_id, code_hash, status, expires_at, created_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, 'unused', $4, NOW())`,
-      [clientId, identity.memberId, codeHash, expiresAt]
+      `INSERT INTO client_invites
+         (id, client_id, practitioner_id, practitioner_record_id, code_hash, status, expires_at, created_at)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, 'unused', $5, NOW())`,
+      [clientId, identity.memberId, identity.practitionerId, codeHash, expiresAt]
     );
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://soullab.life';

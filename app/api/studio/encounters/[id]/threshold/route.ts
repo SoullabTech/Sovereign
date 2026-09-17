@@ -19,7 +19,9 @@ import { mintThresholdToken } from '@/lib/encounters/threshold';
 
 async function loadOwnedEncounter(encounterId: string, practitionerId: string) {
   const result = await db.query(
-    `SELECT id, title, status FROM encounters WHERE id = $1 AND practitioner_id = $2`,
+    `SELECT id, title, status, team_id
+       FROM encounters
+      WHERE id = $1 AND practitioner_id = $2`,
     [encounterId, practitionerId]
   );
   return result.rows[0] ?? null;
@@ -35,8 +37,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (!encounter) return NextResponse.json({ error: 'Encounter not found' }, { status: 404 });
 
     const participants = await db.query(
-      `SELECT id, display_name, role FROM encounter_participants WHERE encounter_id = $1 ORDER BY created_at`,
-      [id]
+      `SELECT id, display_name, role
+         FROM encounter_participants
+        WHERE encounter_id = $1 AND team_id = $2
+        ORDER BY created_at`,
+      [id, encounter.team_id]
     );
     if (participants.rows.length === 0) {
       return NextResponse.json(
@@ -73,11 +78,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               BOOL_OR(ce.kind = 'join')   AS joined,
               BOOL_OR(ce.kind = 'record') AS record_consented
        FROM encounter_participants ep
-       LEFT JOIN encounter_consent_events ce ON ce.participant_id = ep.id
-       WHERE ep.encounter_id = $1
+       LEFT JOIN encounter_consent_events ce
+         ON ce.participant_id = ep.id
+        AND ce.encounter_id = ep.encounter_id
+       WHERE ep.encounter_id = $1 AND ep.team_id = $2
        GROUP BY ep.id, ep.display_name, ep.role
        ORDER BY MIN(ep.created_at)`,
-      [id]
+      [id, encounter.team_id]
     );
 
     const rows = result.rows.map((r) => ({

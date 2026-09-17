@@ -70,8 +70,12 @@ export async function GET(request: NextRequest) {
         c.email as client_email,
         svc.name as service_name
       FROM sessions s
-      LEFT JOIN practitioner_clients c ON s.client_id = c.id
-      LEFT JOIN services svc ON s.service_id = svc.id
+      LEFT JOIN practitioner_clients c
+        ON s.client_id = c.id
+       AND c.practitioner_id = s.practitioner_id
+      LEFT JOIN services svc
+        ON s.service_id = svc.id
+       AND svc.practitioner_id = s.practitioner_id
       WHERE s.practitioner_id = $1
     `;
     const params: (string | number)[] = [practitionerId];
@@ -175,6 +179,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Request IDs may narrow the selected relationship, but may never establish
+    // ownership. Refuse before calculating side effects or inserting anything.
+    const clientResult = await db.query(
+      `SELECT id, name, email, phone
+         FROM practitioner_clients
+        WHERE id = $1 AND practitioner_id = $2`,
+      [client_id, practitionerId]
+    );
+    if (clientResult.rows.length === 0) {
+      return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
+    }
+
+    if (service_id) {
+      const serviceResult = await db.query(
+        `SELECT id FROM services WHERE id = $1 AND practitioner_id = $2`,
+        [service_id, practitionerId]
+      );
+      if (serviceResult.rows.length === 0) {
+        return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 });
+      }
+    }
+
     // Calculate scheduled_end from scheduled_at + duration_minutes
     const scheduledStart = new Date(scheduled_at);
     const scheduledEnd = new Date(scheduledStart.getTime() + duration_minutes * 60 * 1000);
@@ -224,22 +250,11 @@ export async function POST(request: NextRequest) {
 
     const session = result.rows[0];
 
-    // Get client details (used for both notification and calendar sync)
-    let clientName: string | undefined;
-    let clientPhone: string | undefined;
-    let clientEmail: string | undefined;
-    try {
-      const clientResult = await db.query(
-        'SELECT name, email, phone FROM practitioner_clients WHERE id = $1',
-        [client_id]
-      );
-      const client = clientResult.rows[0];
-      clientName = client?.name;
-      clientPhone = client?.phone;
-      clientEmail = client?.email;
-    } catch (err) {
-      console.error('[Studio Sessions] Failed to fetch client details:', err);
-    }
+    // Reuse the already-authorized relationship row for notification/calendar data.
+    const client = clientResult.rows[0];
+    const clientName: string | undefined = client?.name;
+    const clientPhone: string | undefined = client?.phone;
+    const clientEmail: string | undefined = client?.email;
 
     // Send WhatsApp/SMS confirmation to client (async, non-blocking)
     try {

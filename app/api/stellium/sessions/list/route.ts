@@ -16,6 +16,7 @@ import {
   getSessionsNeedingFollowUp,
 } from '@/lib/stellium/sessions';
 import { SessionStatus } from '@/lib/stellium/types';
+import { requirePractitioner } from '@/lib/auth/getCurrentPractitioner';
 
 /**
  * GET /api/stellium/sessions
@@ -38,32 +39,30 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
+    const auth = await requirePractitioner(request);
+    if ('error' in auth) return auth.error;
+    const scope = {
+      memberId: auth.identity.memberId,
+      practitionerRecordId: auth.identity.practitionerId,
+    };
     const searchParams = request.nextUrl.searchParams;
-    const practitionerId = searchParams.get('practitionerId');
-
-    if (!practitionerId) {
-      return NextResponse.json(
-        { error: 'Practitioner ID required' },
-        { status: 400 }
-      );
-    }
 
     // Return stats if requested
     if (searchParams.get('stats') === 'true') {
-      const stats = await getSessionStats(practitionerId);
+      const stats = await getSessionStats(scope);
       return NextResponse.json({ stats });
     }
 
     // Return sessions needing follow-up
     if (searchParams.get('needsFollowUp') === 'true') {
-      const sessions = await getSessionsNeedingFollowUp(practitionerId);
+      const sessions = await getSessionsNeedingFollowUp(scope);
       return NextResponse.json({ sessions, total: sessions.length });
     }
 
     // Return upcoming sessions
     if (searchParams.get('upcoming') === 'true') {
       const days = parseInt(searchParams.get('upcomingDays') || '7', 10);
-      const sessions = await getUpcomingSessions(practitionerId, days);
+      const sessions = await getUpcomingSessions(scope, days);
       return NextResponse.json({ sessions, total: sessions.length });
     }
 
@@ -79,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get session list with filters
-    const result = await getSessions(practitionerId, {
+    const result = await getSessions(scope, {
       clientId: searchParams.get('clientId') || undefined,
       status,
       fromDate: searchParams.get('fromDate') || undefined,
@@ -104,15 +103,14 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requirePractitioner(request);
+    if ('error' in auth) return auth.error;
+    const scope = {
+      memberId: auth.identity.memberId,
+      practitionerRecordId: auth.identity.practitionerId,
+    };
     const body = await request.json();
-    const { practitionerId, ...sessionData } = body;
-
-    if (!practitionerId) {
-      return NextResponse.json(
-        { error: 'Practitioner ID required' },
-        { status: 400 }
-      );
-    }
+    const { practitionerId: _ignoredPractitionerId, ...sessionData } = body;
 
     if (!sessionData.client_id) {
       return NextResponse.json(
@@ -128,7 +126,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = await createSession(practitionerId, sessionData);
+    const session = await createSession(scope, sessionData);
+    if (!session) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    }
 
     return NextResponse.json({
       success: true,

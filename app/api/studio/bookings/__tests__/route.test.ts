@@ -74,7 +74,21 @@ describe('PATCH /api/studio/bookings authorization', () => {
 
     expect(response.status).toBe(404);
     expect(mockQuery).toHaveBeenCalledTimes(1);
-    expect(mockQuery.mock.calls[0][1]).toEqual(['scribe-2', 'member-1']);
+    expect(mockQuery.mock.calls[0][1]).toEqual(['scribe-2', 'booking-1', 'practice-1', 'member-1']);
+  });
+
+  it('RB-06 refuses a Session Room record bound to a different booking client', async () => {
+    mockGetMemberIdFromRequest.mockResolvedValue('member-1');
+    mockGetPractitionerIdForMember.mockResolvedValue('practice-1');
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+
+    const response = await PATCH(request({ id: 'booking-1', scribeSessionId: 'scribe-other-client' }));
+
+    expect(response.status).toBe(404);
+    const sql = String(mockQuery.mock.calls[0][0]);
+    expect(sql).toContain('booking.client_id = ss.client_id');
+    expect(sql).toContain('ss.practitioner_record_id = $3');
+    expect(mockQuery).toHaveBeenCalledTimes(1);
   });
 
   it('updates only an owned booking with an owned practitioner Session Room record', async () => {

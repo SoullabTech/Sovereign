@@ -317,10 +317,21 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Service ID is required' }, { status: 400 });
     }
 
-    // Check if service has any sessions
+    // Establish ownership before revealing whether the service has any sessions.
+    const ownedService = await db.query(
+      `SELECT id FROM services WHERE id = $1 AND practitioner_id = $2`,
+      [id, practitionerId]
+    );
+    if (ownedService.rows.length === 0) {
+      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+    }
+
+    // Check if this owned service has any sessions.
     const sessionsCheck = await db.query(
-      `SELECT COUNT(*) as count FROM sessions WHERE service_id = $1`,
-      [id]
+      `SELECT COUNT(*) as count
+         FROM sessions
+        WHERE service_id = $1 AND practitioner_id = $2`,
+      [id, practitionerId]
     );
 
     if (parseInt(sessionsCheck.rows[0].count) > 0) {

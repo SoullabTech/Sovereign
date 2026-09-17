@@ -66,8 +66,12 @@ export async function GET(request: NextRequest) {
         c.email as client_email,
         c.phone as client_phone
       FROM sessions s
-      LEFT JOIN services sv ON s.service_id = sv.id
-      LEFT JOIN practitioner_clients c ON s.client_id = c.id
+      LEFT JOIN services sv
+        ON s.service_id = sv.id
+       AND sv.practitioner_id = s.practitioner_id
+      LEFT JOIN practitioner_clients c
+        ON s.client_id = c.id
+       AND c.practitioner_id = s.practitioner_id
       WHERE s.practitioner_id = $1
     `;
     const params: (string | number)[] = [practitionerId];
@@ -170,13 +174,18 @@ export async function PATCH(request: NextRequest) {
 
     if (scribeSessionId) {
       const scribeSession = await db.query(
-        `SELECT id
-           FROM scribe_sessions
-          WHERE id = $1
-            AND member_id = $2
-            AND container = 'practitioner'
+        `SELECT ss.id
+           FROM scribe_sessions ss
+           JOIN sessions booking
+             ON booking.id = $2
+            AND booking.practitioner_id = $3
+            AND booking.client_id = ss.client_id
+          WHERE ss.id = $1
+            AND ss.member_id = $4
+            AND ss.practitioner_record_id = $3
+            AND ss.container = 'practitioner'
           LIMIT 1`,
-        [scribeSessionId, memberId]
+        [scribeSessionId, id, practitionerId, memberId]
       );
 
       if (scribeSession.rows.length === 0) {
