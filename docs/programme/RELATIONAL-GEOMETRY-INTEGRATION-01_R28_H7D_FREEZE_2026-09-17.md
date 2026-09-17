@@ -55,3 +55,14 @@ Raw transcript bytes remain outside Git. Committed evidence may contain only pse
 A blind decoder receives one representation plus feature descriptions, never later raw turns. A feature counts only if the representation contains explicit support and the decoder supplies an exact quote from that representation.
 
 H7d is confirmatory only for the frozen distinction above. No selector changes are permitted after generation begins.
+
+## Frozen acceptance criterion
+
+H7d supports a distinct whole-field representation class only if, across W1–W3:
+1. `E_GESTALT` aggregate later-validated feature recall is strictly greater than `B_PAIRWISE`;
+2. `E_GESTALT` aggregate recall is strictly greater than `D_TEMPORAL`; and
+3. `E_GESTALT` is best or tied-best in at least two of the three whole-field events.
+
+Word efficiency is reported but is not an adjudication gate. L1/L2 are descriptive negative controls; H7d does not require Gestalt to lose on them, only that all scored support pass the same exact-quote decoder gate.
+
+Failure of any of the three whole-field criteria means **NOT CONFIRMED**. No post-run selector or prompt change may repair the same evidence set.
