@@ -629,22 +629,22 @@ SPM CLOSED · REPAIR NOT AUTHORIZED.**
 ## 5 · STANDING
 
 ```
-SPM-FC-01        DELIVERED — ⛔ NOT ADJUDICATED, ⛔ NOT RATIFIED
-Invariants       33 across 13 domains
-Earned by D9 alone       I-4 · I-5 · I-6 · I-7(part) · I-8 · I-9 · I-14 · I-15 · I-16 · I-17 · I-18 · I-27
-Earned by F5 alone       I-1 · I-2 · I-3 · I-10(part) · I-11 · I-20 · I-21 · I-22 · I-23 · I-25 · I-26 · I-28 · I-29 · I-30 · I-31 · I-32
-Requires BOTH, join named I-24
-Convergent (each lane independently) I-7 · I-10 · I-12 · I-13
+SPM-FC-01        ADJUDICATED — ⛔ NOT RATIFIED
+Numbered sections                            33 across 13 domains
+Locally earned D9/F5 invariant laws          31
+  Earned by D9 alone                         11   I-4 · I-5 · I-6 · I-8 · I-9 · I-14 · I-15 · I-16 · I-17 · I-18 · I-27
+  Earned by F5 alone                         15   I-1 · I-2 · I-3 · I-11 · I-20 · I-21 · I-22 · I-23 · I-25 · I-26 · I-28 · I-29 · I-30 · I-31 · I-32
+  Convergent (each lane independently)        4   I-7 · I-10 · I-12 · I-13
+  Requires BOTH, join named                   1   I-24
+Declared gap — not an invariant                   I-19
+Imported prior ratified law — retained, excluded from the local count   I-33
 Quantitative substrate   governed by F5-R1 98d42f4e
-Out-of-lane, strikable   I-33
 Declared gaps            9
 Laws stated without evidence   0
 Domains left deliberately unfilled   1 (I-19)
 
 Mutation NONE · Schema UNTOUCHED · Production UNTOUCHED
 Implementation NOT AUTHORIZED
-NEXT — adversarial adjudication: provenance audit · constitutional review ·
-       falsification against each I-n's adversarial case · PASS / FAIL
 ```
 
 
