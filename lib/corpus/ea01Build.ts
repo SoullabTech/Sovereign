@@ -18,6 +18,7 @@ import {
   classifyChunkSpiralogic,
   mergeTagsIntoMeta,
 } from '../library/spiralogicTagger';
+import { validateAuthor, validateTitle } from '../library/ingestIntegrity';
 
 export const EA01_BUILD_ID = 'CORPUS-BUILD-EA-01';
 export const EA01_SUBJECT_REL =
@@ -168,6 +169,13 @@ export function buildEa01Plan(repoRoot: string): Ea01BuildPlan {
   }
 
   const sourceTitle = extractTitle(subjectFile);
+  const titleValidation = validateTitle(sourceTitle);
+  const authorValidation = validateAuthor(authority.rightsHolder.trim());
+  if (!titleValidation.valid || !authorValidation.valid) {
+    throw new Error(
+      `EA01 source identity is invalid: ${[...titleValidation.reasons, ...authorValidation.reasons].join(', ')}`,
+    );
+  }
   const { categories, domain } = classifySource(subjectFile, content);
   const ainTexts = chunkText(content);
   const ainChunks: KnowledgeChunk[] = ainTexts.map((chunkText, chunkIndex) => ({

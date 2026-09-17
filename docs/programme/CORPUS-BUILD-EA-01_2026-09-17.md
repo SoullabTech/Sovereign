@@ -156,3 +156,14 @@ On the exact implementation tree before commit:
 - `npm run db:verify-bootstrap`: **PASS** — blank PostgreSQL reconstructed and all migrations applied cleanly.
 
 The scripts compiler remains repository-red on the same 40 pre-existing diagnostic identities; this act introduced zero script diagnostics.
+
+## Independent review amendment
+
+Review found that the first executor version set `library_sources.identity_valid = true` from governed knowledge without actually invoking the repository's existing identity validators.
+
+That shortcut is removed. `buildEa01Plan` now requires both:
+
+- `validateTitle('Elemental Alchemy The Ancient Art of Living a Phenomenal Life')` to pass; and
+- `validateAuthor('Kelly Nezat')` to pass.
+
+Only after those established integrity checks succeed may the controlled Library row be marked identity-valid. The build-law suite witnesses the exact governed title and Kelly attribution.

@@ -89,6 +89,8 @@ describe('CORPUS-BUILD-EA-01', () => {
     expect(plan.contentSha256).toBe(EA01_CONTENT_SHA256);
     expect(plan.normalizationId).toBe(EA01_NORMALIZATION_ID);
     expect(plan.rightsHolder).toBe('Kelly Nezat');
+    expect(plan.sourceTitle).toBe('Elemental Alchemy The Ancient Art of Living a Phenomenal Life');
+    expect(plan.ainChunks.every((c) => c.author === 'Kelly Nezat')).toBe(true);
     expect(plan.ainChunks).toHaveLength(EA01_EXPECTED_AIN_CHUNKS);
     expect(plan.libraryChunks).toHaveLength(EA01_EXPECTED_LIBRARY_CHUNKS);
     expect(plan.ainChunks.every((c) => !/data:image\/|!\[\]\[[^\]]+\]/.test(c.chunkText))).toBe(true);
