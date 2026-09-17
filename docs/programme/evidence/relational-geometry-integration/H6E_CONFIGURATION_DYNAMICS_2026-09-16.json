@@ -1,0 +1,87 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H6E_CONFIGURATION_DYNAMICS_V1",
+  "authority": "offline deterministic formal-system test only",
+  "hypothesis": "With identical nodes, operator inventory, operator weights, and initial state, changing only incidence topology can change system trajectory.",
+  "model": {
+    "update": "x[t+1] = tanh(0.72*x[t] + 0.32*weighted-neighbor-influence)",
+    "steps": 6,
+    "trialsPerCollisionPair": 500,
+    "weightRanges": {
+      "POLARITY": "[-1.00,-0.55]",
+      "CROSS_CONSTRAINT": "[-0.85,-0.35]",
+      "FACILITATIVE_RESONANCE": "[0.35,0.85]",
+      "OPTIONAL_COUPLING": "[0.10,0.40]"
+    },
+    "note": "Weights are synthetic structural probes, not psychological estimates or astrological values."
+  },
+  "results": [
+    {
+      "id": "PCC",
+      "sameEdgeBag": true,
+      "trials": 500,
+      "finalDistinctRate": 0.99,
+      "meanFinalL2": 0.34477630501080875,
+      "medianFinalL2": 0.3162337707697656,
+      "meanTrajectoryL2": 0.2423586665736022,
+      "bagOnlyMinimumMeanFinalError": 0.17238815250540437,
+      "dominantNodeDifferentRate": 0.454,
+      "signPatternDifferentRate": 0.644
+    },
+    {
+      "id": "FFF",
+      "sameEdgeBag": true,
+      "trials": 500,
+      "finalDistinctRate": 0.988,
+      "meanFinalL2": 0.31040128460387667,
+      "medianFinalL2": 0.2936850826523297,
+      "meanTrajectoryL2": 0.2240974363304914,
+      "bagOnlyMinimumMeanFinalError": 0.15520064230193834,
+      "dominantNodeDifferentRate": 0.53,
+      "signPatternDifferentRate": 0.51
+    },
+    {
+      "id": "COO",
+      "sameEdgeBag": true,
+      "trials": 500,
+      "finalDistinctRate": 0.846,
+      "meanFinalL2": 0.11711323387197618,
+      "medianFinalL2": 0.10545657127453997,
+      "meanTrajectoryL2": 0.09280732010420913,
+      "bagOnlyMinimumMeanFinalError": 0.05855661693598809,
+      "dominantNodeDifferentRate": 0.334,
+      "signPatternDifferentRate": 0.412
+    },
+    {
+      "id": "PFF",
+      "sameEdgeBag": true,
+      "trials": 500,
+      "finalDistinctRate": 0.99,
+      "meanFinalL2": 0.34585118014263727,
+      "medianFinalL2": 0.33106756277694055,
+      "meanTrajectoryL2": 0.24353660108712424,
+      "bagOnlyMinimumMeanFinalError": 0.17292559007131864,
+      "dominantNodeDifferentRate": 0.432,
+      "signPatternDifferentRate": 0.742
+    },
+    {
+      "id": "PPCCCC",
+      "sameEdgeBag": true,
+      "trials": 500,
+      "finalDistinctRate": 0.752,
+      "meanFinalL2": 0.14965082398390386,
+      "medianFinalL2": 0.12800445493880838,
+      "meanTrajectoryL2": 0.0970347662976479,
+      "bagOnlyMinimumMeanFinalError": 0.07482541199195193,
+      "dominantNodeDifferentRate": 0.182,
+      "signPatternDifferentRate": 0.242
+    }
+  ],
+  "summary": {
+    "pairs": 5,
+    "allSameEdgeBag": true,
+    "allMeanFinalDistancesPositive": true,
+    "meanDistinctRate": 0.9132,
+    "meanBagOnlyMinimumError": 0.12677928276132028
+  },
+  "law": "Under a fixed local interaction law, incidence topology can alter global trajectory even when relation types and strengths are unchanged. This is a formal systems result, not evidence that any symbolic motif predicts human outcomes."
+}
