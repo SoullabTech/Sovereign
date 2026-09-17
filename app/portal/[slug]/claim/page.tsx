@@ -39,7 +39,11 @@ function ClaimContent() {
 
     try {
       setSubmitting(true);
-      const res = await fetch(`/api/portal/${slug}/invites/claim`, {
+      // PRACTITIONER-OFFER-01 · A3-R3-R1 — the canonical claim authority.
+      // `/invites/claim` is retired: it never read the route slug, so submitting an
+      // invite at another practice's URL succeeded. This endpoint binds the slug in its
+      // resolving query and returns the same `error` codes this form already handles.
+      const res = await fetch(`/api/portal/${slug}/claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, email: email.trim().toLowerCase(), password }),

@@ -30,17 +30,37 @@ export async function POST(
       );
     }
 
-    // Find client by portal email
-    // Join with practitioners to verify slug matches
+    if (!slug) {
+      return NextResponse.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      );
+    }
+
+    // PRACTITIONER-OFFER-01 · A3-R3-R1 — slug is a locator, never an authenticator.
+    //
+    // The practice is the anchor. Previously this query searched globally by
+    // `portal_email` through a LEFT JOIN, selected the practitioner's real slug, and
+    // never compared it to the route — so valid credentials minted a cookie under any
+    // portal slug. Binding `p.slug` as a predicate means a client of another practice
+    // produces NO ROW, and the generic 401 below is reached by the same path as a wrong
+    // password or an unknown address. All three remain indistinguishable to the caller.
+    //
+    // The legacy `p.id OR p.member_id` linkage is preserved deliberately: this repair
+    // narrows which rows are reachable and must never widen it, so no client who can
+    // sign in today loses access. Resolving that ambiguity belongs to a later unit.
     const clientResult = await query(
       `SELECT c.id, c.practitioner_id, c.portal_password_hash, c.name,
-              p.slug as practitioner_slug
-       FROM practitioner_clients c
-       LEFT JOIN practitioners p ON c.practitioner_id = p.id OR c.practitioner_id = p.member_id
-       WHERE c.portal_email = $1
+              p.id AS practitioner_record_id,
+              p.slug AS practitioner_slug
+       FROM practitioners p
+       JOIN practitioner_clients c
+         ON (c.practitioner_id = p.id OR c.practitioner_id = p.member_id)
+       WHERE p.slug = $1
+         AND c.portal_email = $2
          AND c.portal_claimed_at IS NOT NULL
        LIMIT 1`,
-      [email]
+      [slug, email]
     );
 
     const client = clientResult.rows[0];
