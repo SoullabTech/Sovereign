@@ -36,6 +36,9 @@ fi
 # must carry an explicit disposition classification before schema drift can land.
 npm run check:erasure-registry
 
+# F5 P5-C — the retired legacy erasure surface may never return as a second/fallback engine.
+npm run check:legacy-erasure-retired
+
 # Supabase ban (docs/canon — local PostgreSQL only)
 npm run check:no-supabase
 

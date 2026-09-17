@@ -568,6 +568,13 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/commons/contributions/review-queue', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
   { regex: /^\/api\/commons\/contributions\/[^/]+\/review$/, minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review action' },
 
+  /* F5-CONFORMANCE-REPAIR-01 · P5-C — the legacy /api/sovereignty/
+     namespace used to inherit this policy accidentally because `sovereignty`
+     starts with `sovereign`. Make its EDGE authentication explicit before the
+     live /api/sovereign namespace. This is containment only: it confers no
+     erasure authority, and the retired deletion/summary handlers return 410. */
+  { prefix: '/api/sovereignty/', minTier: 'free', notes: 'Legacy sovereignty namespace — explicit authenticated edge containment; erasure authority retired (F5 P5-C)' },
+
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
 
