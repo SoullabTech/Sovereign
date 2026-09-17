@@ -14,6 +14,7 @@ jest.mock('@/lib/db/postgres', () => ({
 import {
   searchPersonalKeeps,
   resolvePersonalKeep,
+  selectPersonalKeepRefs,
 } from '../personalKeepsRead';
 import { query } from '@/lib/db/postgres';
 
@@ -119,5 +120,40 @@ describe('selector is read-only', () => {
       expect(String(sql)).toMatch(/^\s*SELECT/);
       expect(String(sql)).not.toMatch(/\b(INSERT|UPDATE|DELETE|TRUNCATE|ALTER|DROP)\b/i);
     }
+  });
+});
+
+
+describe('J5-3 identity-only Personal Keep selection', () => {
+  it('returns only identity + cursor material in deterministic Keep chronology', async () => {
+    mockQuery.mockResolvedValue({
+      rows: [
+        { id: 'k-2', kept_at: new Date('2026-09-02T00:00:00Z') },
+        { id: 'k-1', kept_at: new Date('2026-09-01T00:00:00Z') },
+      ],
+      rowCount: 2,
+    } as never);
+    const refs = await selectPersonalKeepRefs({ memberId: MEMBER, limit: 5 });
+    expect(refs).toEqual([
+      { id: 'k-2', kept_at: new Date('2026-09-02T00:00:00Z') },
+      { id: 'k-1', kept_at: new Date('2026-09-01T00:00:00Z') },
+    ]);
+    expect(lastSql()).toMatch(/SELECT\s+id,\s*kept_at/i);
+    expect(lastSql().split(/FROM/i)[0]).not.toMatch(/title|body|source_type|status/i);
+    expect(lastSql()).toMatch(/ORDER BY\s+kept_at\s+DESC\s*,\s*id\s+DESC/i);
+    expect(lastSql()).toMatch(/LIMIT\s+\$2/);
+    expect(lastParams()).toEqual([MEMBER, 5]);
+  });
+
+  it('may filter on stored title/body without returning either field', async () => {
+    await selectPersonalKeepRefs({ memberId: MEMBER, text: 'grief', limit: 5 });
+    expect(lastSql()).toMatch(/title ILIKE \$2 OR body ILIKE \$2/);
+    expect(lastSql()).toMatch(/LIMIT\s+\$3/);
+    expect(lastParams()).toEqual([MEMBER, '%grief%', 5]);
+  });
+
+  it('caps identity selection at six so later hasMore probing cannot widen retrieval', async () => {
+    await selectPersonalKeepRefs({ memberId: MEMBER, limit: 99 });
+    expect(lastParams()[lastParams().length - 1]).toBe(6);
   });
 });

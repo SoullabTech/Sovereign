@@ -101,3 +101,50 @@ export async function resolvePersonalKeep(
 
   return result.rows[0] ?? null;
 }
+
+
+export interface PersonalKeepRef {
+  id: string;
+  kept_at: Date;
+}
+
+export interface SelectPersonalKeepRefsInput {
+  memberId: string;
+  text?: string;
+  /** J5 bounds identity discovery at six; cognition may admit fewer. */
+  limit?: number;
+}
+
+/**
+ * Identity-only selection for governed Personal Keeps disclosure.
+ *
+ * Unlike searchPersonalKeeps(), this deliberately does not return title/body or
+ * other projection fields. Authority can therefore be established per object
+ * before any Keep projection is assembled for cognition.
+ */
+export async function selectPersonalKeepRefs(
+  input: SelectPersonalKeepRefsInput,
+): Promise<PersonalKeepRef[]> {
+  const clauses: string[] = [PERSONAL_KEEP_GUARDS];
+  const params: unknown[] = [input.memberId];
+
+  if (input.text && input.text.trim()) {
+    params.push(`%${input.text.trim()}%`);
+    clauses.push(`(title ILIKE $${params.length} OR body ILIKE $${params.length})`);
+  }
+
+  const rawLimit = Number.isFinite(input.limit) ? Math.trunc(input.limit as number) : 5;
+  const limit = Math.min(6, Math.max(1, rawLimit));
+  params.push(limit);
+
+  const result = await query<PersonalKeepRef>(
+    `SELECT id, kept_at
+     FROM member_memory_atoms
+     WHERE ${clauses.join(' AND ')}
+     ORDER BY kept_at DESC, id DESC
+     LIMIT $${params.length}`,
+    params,
+  );
+
+  return result.rows;
+}
