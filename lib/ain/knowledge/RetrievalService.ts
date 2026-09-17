@@ -28,6 +28,8 @@ export interface RetrievalOptions {
   domains?: string[];
   /** Filter to specific categories */
   categories?: string[];
+  /** Exact governed source-file allowlist. Empty/undefined means no source-file filter. */
+  sourceFiles?: string[];
   /** User ID for tracking */
   userId?: string;
   /** Session mode for tracking */
@@ -94,6 +96,7 @@ export async function retrieveKnowledge(
     minSimilarity = 0.3,
     domains,
     categories,
+    sourceFiles,
     userId,
     sessionMode,
   } = options;
@@ -123,6 +126,14 @@ export async function retrieveKnowledge(
 
     const params: (string | number | string[])[] = [toPgVectorLiteral(queryEmbedding)];
     let paramIndex = 2;
+
+    // Exact source-file allowlist. Canonical governed retrieval uses this
+    // boundary so legacy domain/category heuristics cannot widen authority.
+    if (sourceFiles && sourceFiles.length > 0) {
+      sql += ` AND source_file = ANY($${paramIndex})`;
+      params.push(sourceFiles);
+      paramIndex++;
+    }
 
     // Domain filter
     if (domains && domains.length > 0) {

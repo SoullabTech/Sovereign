@@ -191,6 +191,15 @@ export const PRODUCER_REGISTRY = {
     requires: { identity: 'any', notSanctuary: false }, rooms: ['sovereign_chat', 'between'], mandatory: false, scope: 'route',
     ...CMT, reason: 'AIN source-well weighting',
   },
+  'retrieved.governed_knowledge': {
+    // `authoredBy: system` names the RETRIEVAL ACT, not the underlying work's authorship.
+    // Source authorship + rights remain explicit in governedKnowledgeRegistry and the rendered block.
+    authoredBy: 'system', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'lib/ain/knowledge/GovernedRetrievalService ← lib/corpus/governedKnowledgeRegistry', consentBasis: null,
+    requires: { identity: 'any', notSanctuary: true }, rooms: ['sovereign_chat'], mandatory: false, scope: 'route',
+    registeredAt: '2026-09-17', registeredBy: 'JARVIS-GKF-J8-REPAIR-01',
+    reason: 'system-retrieved excerpts from exact governed source identities; source authorship/rights are preserved separately',
+  },
 
   // ── ROUTE-SUPPLIED — Pass 1 divination (three producers, one table) ───────
   // divination_iching_readings carries three authorships in separable columns; the
