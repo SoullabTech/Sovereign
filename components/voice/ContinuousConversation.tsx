@@ -4113,6 +4113,21 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       capture.finishController.abort();
       return;
     }
+    if (isProcessingRef.current) return;
+    // Safari can retain a whole spoken turn as interim-only. An explicit Done
+    // is also a completion boundary; Desktop returned above and never uses this.
+    const selection = selectSilenceBoundaryTranscript({
+      isSafari: !useNativeSpeechRef.current && isSafari(),
+      finalText: accumulatedTranscript.current.trim(),
+      interimText: lastInterimTextRef.current,
+      lastInterimAt: lastInterimAtRef.current,
+      lastFinalAt: lastFinalAtRef.current,
+    });
+    if (selection.source === 'safari_interim_promotion') {
+      accumulatedTranscript.current = selection.text;
+      lastInterimCharsRef.current = 0;
+      lastInterimTextRef.current = '';
+    }
     const chars = accumulatedTranscript.current.trim().length;
     if (!chars || isProcessingRef.current) {
       logVoiceEvent('voice_explicit_yield_ignored', { chars, processing: isProcessingRef.current });
