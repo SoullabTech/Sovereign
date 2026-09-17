@@ -151,3 +151,16 @@ describe('keep adapter is read-only — placement must never change meaning', ()
     }
   });
 });
+
+describe('keep adapter delegates Keep truth to the canonical domain selector', () => {
+  it('does not own database access or duplicate the Personal Keep guard law', () => {
+    const src = require('fs').readFileSync(
+      require('path').join(__dirname, '..', 'sources', 'keep.ts'),
+      'utf8',
+    );
+    expect(src).toMatch(/@\/lib\/psyche\/personalKeepsRead/);
+    expect(src).not.toMatch(/@\/lib\/db\/postgres/);
+    expect(src).not.toMatch(/const\s+(ATOM_GUARDS|PERSONAL_KEEP_GUARDS)/);
+    expect(src).not.toMatch(/FROM\s+member_memory_atoms/);
+  });
+});

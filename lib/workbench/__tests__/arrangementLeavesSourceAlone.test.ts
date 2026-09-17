@@ -33,6 +33,7 @@ const code = (p: string) =>
 const ARRANGEMENT_SURFACE = [
   'lib/workbench/arrange.ts',
   'lib/workbench/sources/keep.ts',
+  'lib/psyche/personalKeepsRead.ts',
   'app/api/book-studio/workbench/shelf/route.ts',
   'app/api/book-studio/workbench/tables/route.ts',
   'app/api/book-studio/workbench/tables/[id]/route.ts',
@@ -65,10 +66,13 @@ describe('criteria 10 & 11 — no arrangement path writes a source row', () => {
     }
   }
 
-  it('the Keep adapter reads and does nothing else', () => {
-    const src = code('lib/workbench/sources/keep.ts');
-    expect(src).toMatch(/SELECT/i);
-    expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE)\b/i);
+  it('the Keep adapter delegates to the canonical read-only selector', () => {
+    const adapter = code('lib/workbench/sources/keep.ts');
+    const selector = code('lib/psyche/personalKeepsRead.ts');
+    expect(adapter).toMatch(/personalKeepsRead/);
+    expect(adapter).not.toMatch(/SELECT/i);
+    expect(selector).toMatch(/SELECT/i);
+    expect(selector).not.toMatch(/\b(INSERT|UPDATE|DELETE)\b/i);
   });
 
   it('the only table the arrangement routes write is workbench_tables', () => {
