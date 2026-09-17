@@ -39,6 +39,7 @@ The evidence requires at least these conceptually separable questions:
 
 | Distinction | Question |
 |---|---|
+| **Identity / subject authority** | Who is the sovereign subject, and who is authorized to exercise a member-significant act such as account erasure? |
 | **Provenance / authorship** | What produced this material or claim? |
 | **Epistemic standing** | How strongly may MAIA presently hold or claim it? |
 | **Temporal / present standing** | Is it current, superseded, withdrawn, historical, provisional or inactive? |
@@ -92,7 +93,7 @@ This law does **not** prohibit recurrence from affecting retrieval salience. D9-
 
 **Positive control P2:** repeated retrieval may increase salience while the claim remains explicitly MAIA-derived/inferred.
 
-**PASS:** recurrence changes salience at most; member standing remains dependent on a lawful member act or other independently governed basis.
+**PASS:** recurrence may change machine salience or machine epistemic confidence; it does not create member standing without a member-originating or member-ratifying act.
 
 **STOP:** machine repetition alone creates member standing.
 
@@ -116,7 +117,9 @@ MAIA may draft first-person language when explicitly invited. Grammar is not aut
 
 # 5 · C4 — VALID INPUTS DO NOT LAUNDER A SYNTHESIS INTO MEMBER TRUTH
 
-A lawful synthesis may be useful, well-supported and repeatedly retrieved. It remains a synthesis unless a separate lawful act changes its standing.
+A lawful synthesis may be useful, well-supported and repeatedly retrieved. It remains a synthesis unless a lawful member act changes its member participation or member standing.
+
+System-side epistemic standing may change under its own governed rules; that does not by itself make the synthesis member-authored, member-confirmed or member-adopted.
 
 Derivation from member material does not itself make the derived claim member-authored, member-confirmed or member-adopted.
 
@@ -350,13 +353,47 @@ This does not require exposing private chain-of-thought. It requires sufficient 
 
 ---
 
-## 17 · CONTROL INVENTORY
+# 17 · C16 — ERASURE AUTHORITY MUST BE BOUND TO THE CORRECT SOVEREIGN SUBJECT
+
+F5 requires the erasure contract to preserve **identity — who holds deletion authority**. A member-facing erasure act must be bound to the authenticated sovereign subject whose account and member-linked state are being acted upon.
+
+A separately governed administrative, legal or custodial erasure path may exist, but it must not masquerade as the member's own act and must carry its own authority and audit meaning.
+
+**Negative control N16:** attempt to exercise the member-facing erasure act against a different member/subject, or through an identifier not bound to the authenticated sovereign actor.
+
+**Positive control P16:** the authenticated member may exercise the member-facing erasure act over their own account when all other governed preconditions are satisfied.
+
+**PASS:** the erasure actor and erasure subject are governably bound, and any non-member authority is separately represented rather than impersonating member authority.
+
+**STOP:** a member-facing erasure action can operate on the wrong subject, or the system cannot establish whose authority caused the erasure act.
+
+---
+
+# 18 · C17 — REFUSAL, SILENCE AND ATTEMPT MUST NOT BE CONVERTED INTO CLAIMS THEY DO NOT EVIDENCE
+
+D9-A established that refusal/withdrawal and the unprovable middle are first-class. A refusal of X is not automatically an assertion of not-X. Silence or absence of an act is not consent, adoption, confirmation or rejection. An attempted or unresolved crossing is not automatically proof that a crossing did or did not occur.
+
+This law preserves epistemic neutrality where the organism cannot know more.
+
+**Negative control N17:** reject X, omit a response, or leave an attempted crossing unresolved, then test whether the system manufactures an opposite member claim, a consent/adoption state, or a confident positive/negative crossing fact not evidenced by the event.
+
+**Positive control P17:** rejection can make X rejected/non-current without creating not-X as a member claim; silence remains no act; an attempted/unknown crossing remains represented as attempted/unknown until evidence resolves it.
+
+**Canonical specimen:** D9-A's `BoundaryOutcome` / `MintOutcome` distinction, including `attempted` as an unprovable middle that does not mean “nothing crossed.”
+
+**PASS:** refusal, non-action and uncertainty retain their actual evidentiary meaning.
+
+**STOP:** the system turns refusal into an opposite claim, absence into authority, or uncertainty into a confident crossing conclusion.
+
+---
+
+## 19 · CONTROL INVENTORY
 
 This contract registers exactly:
 
-- **15 laws** — C1 through C15;
-- **15 negative controls** — N1 through N15;
-- **15 positive controls** — P1 through P15.
+- **17 laws** — C1 through C17;
+- **17 negative controls** — N1 through N17;
+- **17 positive controls** — P1 through P17.
 
 Canonical attack specimens carried from frozen evidence:
 
@@ -371,13 +408,14 @@ Canonical attack specimens carried from frozen evidence:
 9. F5 242-table erasure-graph completeness gap;
 10. F5 SET NULL lineage-loss class;
 11. F5 orphaned Circles authority after account deletion;
-12. F5 server-truth / UI-silence erasure refusal.
+12. F5 server-truth / UI-silence erasure refusal;
+13. D9-A refusal/attempt/unknown-state semantics.
 
 The Cut-1, T-6 and `shared_text` findings retain their frozen qualifications. They are attack specimens, not automatically confirmed production failures beyond what the source evidence earned.
 
 ---
 
-## 18 · RESULT SEMANTICS
+## 20 · RESULT SEMANTICS
 
 Every future contract test must resolve to one of:
 
@@ -409,7 +447,7 @@ Structural possibility is evidence to preserve and attack later; it is not silen
 
 ---
 
-## 19 · PASS STANDARD FOR ANY FUTURE CANONICAL SPM SLICE
+## 21 · PASS STANDARD FOR ANY FUTURE CANONICAL SPM SLICE
 
 A future canonical implementation slice may claim conformance only when the laws in its declared scope demonstrate:
 
@@ -419,14 +457,30 @@ A future canonical implementation slice may claim conformance only when the laws
 - **0 silent standing resurrection**;
 - **0 silent authority travel** across tested seams;
 - **0 orphan operative authority** across tested erasure paths;
-- **complete governed disposition** for every erasure class declared in that slice;
-- **member-visible truthful erasure outcomes** for every erasure result declared in that slice.
+- **complete governed disposition** for every erasure class implicated by that slice;
+- **member-visible truthful erasure outcomes** for every erasure result implicated by that slice;
+- **correct subject-binding** for every member-significant erasure act implicated by that slice;
+- **0 manufactured claims from refusal, silence or unresolved attempts** across tested seams.
+
+### Scope may narrow implementation; it may not launder a known STOP
+
+A declared slice scope may limit which capabilities are being built or tested. It may **not** exclude:
+
+1. a contract law materially implicated by state the slice creates, reads, writes, crosses, retains, withdraws or erases; or
+2. an already-declared programme-wide STOP that remains a prerequisite to the claimed conformance/release state.
+
+In particular:
+
+- a slice that creates or persists member-linked SPM state must declare and test the erasure disposition and erasure-authority binding for that state;
+- declaring account erasure “out of scope” does not convert the frozen **F5 ERASURE CONFORMANCE — FAIL / STOP** into PASS or NOT APPLICABLE;
+- no full SPM conformance or release may be claimed while that programme-wide F5 STOP remains unresolved;
+- bounded research/prototyping may be classified separately, but must not be represented as conformance.
 
 A field name, enum, policy document or schema shape is never sufficient evidence of PASS by itself.
 
 ---
 
-## 20 · UNRESOLVED QUESTIONS OUTSIDE THIS CONTRACT
+## 22 · UNRESOLVED QUESTIONS OUTSIDE THIS CONTRACT
 
 The following remain deliberately unresolved and may not be answered by implication:
 
@@ -442,7 +496,7 @@ The following remain deliberately unresolved and may not be answered by implicat
 
 ---
 
-## 21 · WHAT THIS CONTRACT DOES NOT REQUIRE
+## 23 · WHAT THIS CONTRACT DOES NOT REQUIRE
 
 This contract does **not** require:
 
@@ -462,13 +516,13 @@ The implementation shape remains closed.
 
 ---
 
-## 22 · STANDING
+## 24 · STANDING
 
 ```
 D9                        ✅ CLOSED — frozen
 F5 TRACE                  ✅ COMPLETE — frozen
 F5 ERASURE CONFORMANCE    ⛔ FAIL / STOP
-COMBINED D9+F5 CONTRACT   ✅ RECORDED — 15 falsifiable laws
+COMBINED D9+F5 CONTRACT   ✅ RECORDED — 17 falsifiable laws
 SPM IMPLEMENTATION        ⛔ CLOSED
 REPAIR                    ⛔ NOT AUTHORIZED
 NEXT GATE                 contract adjudication / freeze before any implementation census
