@@ -169,6 +169,10 @@ test('the evidence sink is OUTSIDE the capture path', () => {
   // VAD, epoch transitions, or the bridge — "additive" has to be checkable.
   const frameHandler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
   assert.ok(!frameHandler.includes('witness'), 'the evidence sink entered frame handling');
+  // ⭐ DSC-04. The frame path moved; the handler now passes the line above
+  // trivially, so the real capture path has to be asserted where it now lives.
+  assert.ok(!strip('voice-lifecycle.js').includes('witness'),
+    'the evidence sink entered the voice lifecycle');
   assert.ok(!preload.includes('witness'), 'the evidence sink reached the bridge');
   for (const f of ['epoch.js', 'vad.js', 'diagnostics.js', 'transcription.js']) {
     assert.ok(!strip(path.join('voice', f)).includes('witness'),

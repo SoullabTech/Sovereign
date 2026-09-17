@@ -11,6 +11,15 @@ const css = readFileSync(
 );
 
 describe('Writer workbench usability repair', () => {
+  it('keeps explicit exits to MAIA and the Studio workbench', () => {
+    expect(room).toContain('href="/maia"');
+    expect(room).toContain('aria-label="Return to MAIA"');
+    expect(room).toContain('<span aria-hidden="true">←</span> MAIA');
+    expect(room).toContain('href="/writers-studio"');
+    expect(room).toContain('aria-label="Return to all Writer’s Studio works"');
+    expect(room).not.toContain('<button type="button" style={{ border: 0, background: \'transparent\', color: C.muted, fontSize: 12, padding: \'3px 2px 15px\', cursor: \'pointer\' }}>‹ All Works</button>');
+  });
+
   it('Pure Canvas always renders explicit exits to the workspace and Workbench', () => {
     expect(room).toContain('aria-label="Return to Writer’s Studio workspace"');
     expect(room).toContain('<span aria-hidden="true">←</span> Workspace');

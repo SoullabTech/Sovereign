@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>MAIA</title>
+<title>MAIA Desktop</title>
 <style>
   /* ══════════════════════════════════════════════════════════════════════
      SOULLAB CORE tokens — values copied verbatim from app/globals.css
@@ -67,10 +67,18 @@
   .dot.live { background:var(--sl-accent-soft); animation:pulse 1.7s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:1} }
 
-  form { display:flex; flex-direction:column; gap:11px; width:290px; }
+  #signin { display:flex; flex-direction:column; gap:12px; width:min(390px, 100%);
+              padding:30px; border:1px solid var(--sl-border-subtle); border-radius:18px;
+              background:linear-gradient(180deg, rgba(26,34,53,.8), rgba(18,26,43,.72));
+              box-shadow:0 24px 80px rgba(0,0,0,.22); }
+  #signin .beta { color:var(--sl-accent-soft); font-size:11px; letter-spacing:.18em;
+                  text-transform:uppercase; }
+  #signin h1 { margin:0; font-size:28px; line-height:1.2; font-weight:500; }
+  #signin p { margin:0 0 8px; color:var(--sl-text-secondary); font-size:14px; line-height:1.55; }
   input { background:var(--sl-bg-surface); border:1px solid var(--sl-border-strong); border-radius:7px;
           padding:10px 12px; color:var(--sl-text-primary); font:inherit; }
   input:focus { outline:none; border-color:var(--sl-accent-primary); }
+  button:disabled { opacity:.55; cursor:wait; }
   .hint { font-size:12.5px; color:var(--sl-text-muted); text-align:center; max-width:300px; }
 
   #log { display:none; border-top:1px solid var(--sl-border-subtle); max-height:180px; overflow-y:auto;
@@ -79,19 +87,39 @@
   #log.on { display:block; }
   .link { background:none; border:none; color:var(--sl-text-muted); font-size:12px;
           padding:4px 6px; cursor:pointer; }
+
+  /* DESKTOP-TEXT-01 — the composer. Sits above the voice bar because writing
+     and speaking are peers: neither is the "real" way to reach her. */
+  #composer { display:none; gap:10px; padding:14px 28px 0; align-items:center; }
+  #composer input {
+    flex:1; margin:0; padding:13px 16px; border-radius:11px; font-size:15px;
+    background:var(--sl-bg-surface); border:1px solid var(--sl-border-subtle);
+    color:var(--sl-text-primary);
+  }
+  #composer input::placeholder { color:var(--sl-text-muted); }
+  #composer input:focus { border-color:var(--sl-accent-primary); }
+  #composer button { padding:12px 20px; }
   .link:hover { color:var(--sl-accent-soft); }
 </style>
 
-<header><div class="mark">MAIA</div></header>
+<header><div class="mark">MAIA DESKTOP</div></header>
 
 <main id="main" class="center">
   <form id="signin">
+    <div class="beta">Private beta</div>
+    <h1>Welcome back.</h1>
+    <p>Your MAIA—memory, voice, continuity, and Writer’s Studio—through the current Soullab platform.</p>
     <input id="u" placeholder="username" autocomplete="username" autofocus>
     <input id="p" type="password" placeholder="password" autocomplete="current-password">
     <button class="primary" type="submit">Sign in</button>
     <div class="hint" id="autherr"></div>
   </form>
 </main>
+
+<form id="composer">
+  <input id="msg" placeholder="Message MAIA…" autocomplete="off" spellcheck="true">
+  <button class="primary" id="send" type="submit">Send</button>
+</form>
 
 <footer id="bar" style="display:none">
   <div class="dot" id="dot"></div>

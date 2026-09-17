@@ -26,6 +26,7 @@
 import { readTranscript } from './transcribeResponse';
 import { logVoiceEvent } from './voiceDiagnostics';
 import { apiFetch } from '@/lib/http/apiBase';
+import { createRollingPartialTranscriber } from './rollingPartialTranscription';
 
 const PREFERRED_MIME_TYPES = [
   'audio/webm;codecs=opus', // Android Chrome default
@@ -149,7 +150,13 @@ interface RunOptions {
    * constant, so the bound cannot drift per call site.
    */
   admissionDeadlineMs?: number;
+  /** Desktop-only provisional text for display; never a committed turn. */
+  onPartial?: (text: string) => void;
+  /** Minimum wall-clock between provisional Whisper requests. */
+  partialIntervalMs?: number;
 }
+
+const PARTIAL_TIMESLICE_MS = 400;
 
 function pickMimeType(): string | null {
   if (typeof MediaRecorder === 'undefined') return null;
@@ -198,6 +205,15 @@ export async function recordAndTranscribe(
   const startedAt = Date.now();
   logVoiceEvent('voice_fallback_recording_started', { mimeType, maxMs });
 
+  const partial = options.onPartial
+    ? createRollingPartialTranscriber({
+        mimeType,
+        onPartial: options.onPartial,
+        ...(options.partialIntervalMs === undefined ? {} : { intervalMs: options.partialIntervalMs }),
+        ...(signal ? { signal } : {}),
+      })
+    : null;
+
   // ── Record ────────────────────────────────────────────────────────────
   let outcome: CaptureOutcome;
   try {
@@ -208,8 +224,13 @@ export async function recordAndTranscribe(
       signal,
       ...(options.onMilestone ? { onMilestone: options.onMilestone } : {}),
       admissionDeadlineMs: options.admissionDeadlineMs ?? ADMISSION_DEADLINE_MS,
+      ...(partial ? {
+        timesliceMs: PARTIAL_TIMESLICE_MS,
+        onPrefix: (prefix: Blob) => partial.offerPrefix(prefix),
+      } : {}),
     });
   } catch (err: unknown) {
+    partial?.close();
     const name = err instanceof Error ? err.name : 'unknown';
     logVoiceEvent('voice_fallback_failed', {
       reason: 'recording_error',
@@ -217,6 +238,9 @@ export async function recordAndTranscribe(
     });
     return { ok: false, reason: 'recording_error' };
   }
+  // From here the final transcript is the only authority. A late provisional
+  // response must not overwrite or outlive it.
+  partial?.close();
 
   const { blob } = outcome;
   const durationMs = Date.now() - startedAt;
@@ -367,6 +391,9 @@ async function recordWithSilenceDetection(
     onMilestone?: (stage: CaptureMilestone, detail?: Record<string, unknown>) => void;
     /** PLATFORM-D02A-01 — how long admission may fail to occur before it is named. */
     admissionDeadlineMs: number;
+    /** Flush cadence and growing-prefix observer for provisional display. */
+    timesliceMs?: number;
+    onPrefix?: (prefix: Blob) => void;
   },
 ): Promise<CaptureOutcome> {
   return new Promise<CaptureOutcome>((resolve, reject) => {
@@ -424,6 +451,12 @@ async function recordWithSilenceDetection(
 
     recorder.ondataavailable = (e: BlobEvent) => {
       if (e.data && e.data.size > 0) chunks.push(e.data);
+      // Never start a provisional request from the final flush. That request
+      // could race the authoritative full transcription after capture stops.
+      if (!stopped && recorder.state === 'recording' && opts.onPrefix && chunks.length > 0) {
+        try { opts.onPrefix(new Blob(chunks, { type: mimeType })); }
+        catch { /* provisional display cannot break capture */ }
+      }
     };
     recorder.onerror = () => stop('error');
     recorder.onstop = () => {
@@ -524,7 +557,9 @@ async function recordWithSilenceDetection(
     };
 
     try {
-      recorder.start();
+      // A timeslice changes only when bytes are delivered, not what is captured.
+      if (opts.timesliceMs) recorder.start(opts.timesliceMs);
+      else recorder.start();
     } catch (err) {
       cleanup();
       reject(err);
