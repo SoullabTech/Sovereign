@@ -95,13 +95,12 @@ dependency rather than silently retaining an obsolete copy.
 ## 3 · Final accounting after these dispositions
 
 ```text
-17 unchanged locally earned laws
+16 unchanged locally earned laws
 10 R2-corrected locally earned laws
  4 R4-corrected locally earned laws
+ 1 R5-corrected locally earned law — I-8
 ---
 31 locally earned D9/F5 laws
-
-I-8 is INCLUDED in the 17 unchanged-numbered class only at this R5 replacement scope.
 
 1 declared gap                  I-19
 1 imported binding dependency  I-33
