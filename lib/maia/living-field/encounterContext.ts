@@ -8,6 +8,7 @@
 // protected, and archived Keeps never surface here, in either surface.
 
 import { query } from '@/lib/db/postgres'
+import { livingFieldAtomGuards } from '@/lib/maia/living-field/atomEligibility'
 import { loadSpiralState } from '@/lib/consciousness/spiralStatePersistence'
 import type { SpiralState } from '@/lib/consciousness/spiralStatePersistence'
 
@@ -111,9 +112,7 @@ export async function buildEncounterContext(
      JOIN member_memory_atoms a ON a.id = lfa.atom_id
      WHERE lfa.member_id = $1
        AND lfa.field_key = $2
-       AND a.status NOT IN ('protected', 'archived')
-       AND a.primary_register IS DISTINCT FROM 'sacred_protected'
-       AND NOT ('sacred_protected' = ANY(a.registers))
+       AND ${livingFieldAtomGuards('a')}
      ORDER BY lfa.affinity_score DESC
      LIMIT 10`,
     [memberId, fieldKey]

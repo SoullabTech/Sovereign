@@ -81,3 +81,23 @@ test.each([['A 😀 story', 'A 🔥 story'], ['abc', ''], ['', 'abc'], ['same', 
   expect(d.before + d.removed + d.after).toBe(a);
   expect(d.before + d.added + d.after).toBe(b);
 });
+
+test('verifies stored heading bytes and translates exact Unicode offsets to the editable body', async () => {
+  const p = payload();
+  const headingPrefix = '🔥 A heading\n\n';
+  const body = 'Before.\n\nA 😀 lived story.\n\nAfter.';
+  const start = Array.from(headingPrefix + 'Before.\n\n').length;
+  const end = start + Array.from('A 😀 lived story.').length;
+  p.reading.readState.sections.s0.digest = await digest(headingPrefix + body);
+  p.reading.observations[0].evidenceRefs = [{ kind: 'passage', sectionId: 's0', range: { start, end } }];
+  const row = { ...sections[0], heading: '🔥 A heading', headingPrefix, body };
+  const out = await buildCanvasInsight('m1', p, [row], 'o1', digest);
+  expect(out?.passages[0].verified).toBe(true);
+  expect(passageWindow(body, out!.passages[0].range, 0).selected).toBe('A 😀 lived story.');
+  const changedHeading = await buildCanvasInsight('m1', p, [{ ...row, headingPrefix: 'Other heading\n\n' }], 'o1', digest);
+  expect(changedHeading?.passages[0]).toMatchObject({ verified: false, range: null });
+  const missingPrefix = await buildCanvasInsight('m1', p, [{ ...row, headingPrefix: undefined }], 'o1', digest);
+  expect(missingPrefix?.passages[0].verified).toBe(false);
+  p.reading.observations[0].evidenceRefs = [{ kind: 'passage', sectionId: 's0', range: { start: 0, end } }];
+  expect((await buildCanvasInsight('m1', p, [row], 'o1', digest))?.passages[0]).toMatchObject({ verified: false, range: null });
+});

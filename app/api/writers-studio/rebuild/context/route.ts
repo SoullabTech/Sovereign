@@ -90,6 +90,7 @@ export async function GET(req: NextRequest) {
       headingDepth: row.heading_depth,
       headingSignal: row.heading_signal,
       body: split ? split.body : row.text,
+      headingPrefix: split ? split.headingPrefix : '',
       editable: split !== null,
     };
   });
