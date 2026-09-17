@@ -177,11 +177,16 @@ describe('ACT 4 §C · corpus admission', () => {
     const embed = readCode('scripts/embed-ain-knowledge.ts');
     const chunker = readCode('lib/ain/knowledge/ChunkingService.ts');
     const library = readCode('scripts/ingest-library.ts');
+    const governedEa = readCode('scripts/ingest-elemental-alchemy-governed.ts');
+    const governedEaContract = readCode('lib/corpus/eaIngestContract.ts');
 
     expect(builder).toMatch(/decideAdmission\(/);
     expect(embed).toMatch(/processAllSources\(/);
     expect(chunker).toMatch(/decideAdmission\(/);
     expect(library).toMatch(/decideAdmission\(/);
+    expect(governedEa).toMatch(/witnessEaBuild\(/);
+    expect(governedEaContract).toMatch(/decideAdmission\(/);
+    expect(governedEaContract).toMatch(/processAllSources\(/);
   });
 
   test('T11 — Living Library zero-admission force refusal precedes destructive deletes', () => {
