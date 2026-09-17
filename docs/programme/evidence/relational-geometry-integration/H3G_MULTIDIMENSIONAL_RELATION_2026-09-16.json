@@ -1,0 +1,600 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H3G_MULTIDIMENSIONAL_RELATION_V1",
+  "authority": "offline research only",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "local Claude CLI restricted/no-tools",
+    "temperature": "CLI-managed; not production-equivalent temperature"
+  },
+  "hypothesis": "Binding, directionality, dynamic operator, and configuration are separable relation dimensions; dynamic and configuration properties may coexist on one bound pair.",
+  "summary": {
+    "runs": 12,
+    "allCorrect": 8,
+    "axisTotals": {
+      "binding": {
+        "correct": 8,
+        "total": 12
+      },
+      "form": {
+        "correct": 8,
+        "total": 12
+      },
+      "direction": {
+        "correct": 8,
+        "total": 12
+      },
+      "endpoints": {
+        "correct": 8,
+        "total": 12
+      },
+      "dynamic": {
+        "correct": 10,
+        "total": 12
+      },
+      "configuration": {
+        "correct": 10,
+        "total": 12
+      }
+    },
+    "multiDimensionCases": 6,
+    "multiDimensionAllCorrect": 6,
+    "falseBoundOnUnbound": 0
+  },
+  "byFixture": {
+    "G1_EVOKES_ALIGNMENT": {
+      "runs": 2,
+      "allCorrect": 2,
+      "predictions": [
+        {
+          "bound": true,
+          "bindingForm": "CONDITIONAL_LINK",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "dynamicOperator": "EVOKES",
+          "configuration": "ALIGNMENT"
+        },
+        {
+          "bound": true,
+          "bindingForm": "CONDITIONAL_LINK",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_LEAVE",
+          "targetId": "EARTH_SETTLE",
+          "dynamicOperator": "EVOKES",
+          "configuration": "ALIGNMENT"
+        }
+      ]
+    },
+    "G2_SYMMETRIC_TENSION": {
+      "runs": 2,
+      "allCorrect": 0,
+      "predictions": [
+        {
+          "bound": false,
+          "bindingForm": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "dynamicOperator": "NONE",
+          "configuration": "NONE"
+        },
+        {
+          "bound": false,
+          "bindingForm": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "dynamicOperator": "NONE",
+          "configuration": "NONE"
+        }
+      ]
+    },
+    "G3_INHIBITS_TENSION": {
+      "runs": 2,
+      "allCorrect": 2,
+      "predictions": [
+        {
+          "bound": true,
+          "bindingForm": "INHIBITORY_LINK",
+          "directionality": "DIRECTED",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "dynamicOperator": "INHIBITS",
+          "configuration": "TENSION"
+        },
+        {
+          "bound": true,
+          "bindingForm": "INHIBITORY_LINK",
+          "directionality": "DIRECTED",
+          "sourceId": "EARTH_EXHAUST",
+          "targetId": "FIRE_LAUNCH",
+          "dynamicOperator": "INHIBITS",
+          "configuration": "TENSION"
+        }
+      ]
+    },
+    "G4_EVOKES_ONLY": {
+      "runs": 2,
+      "allCorrect": 0,
+      "predictions": [
+        {
+          "bound": false,
+          "bindingForm": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "dynamicOperator": "NONE",
+          "configuration": "NONE"
+        },
+        {
+          "bound": false,
+          "bindingForm": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "dynamicOperator": "NONE",
+          "configuration": "NONE"
+        }
+      ]
+    },
+    "G5_EVOKES_ALIGNMENT": {
+      "runs": 2,
+      "allCorrect": 2,
+      "predictions": [
+        {
+          "bound": true,
+          "bindingForm": "CONDITIONAL_LINK",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_NEWPATH",
+          "targetId": "WATER_HOPE",
+          "dynamicOperator": "EVOKES",
+          "configuration": "ALIGNMENT"
+        },
+        {
+          "bound": true,
+          "bindingForm": "CONDITIONAL_LINK",
+          "directionality": "DIRECTED",
+          "sourceId": "AIR_NEWPATH",
+          "targetId": "WATER_HOPE",
+          "dynamicOperator": "EVOKES",
+          "configuration": "ALIGNMENT"
+        }
+      ]
+    },
+    "G6_UNBOUND": {
+      "runs": 2,
+      "allCorrect": 2,
+      "predictions": [
+        {
+          "bound": false,
+          "bindingForm": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "dynamicOperator": "NONE",
+          "configuration": "NONE"
+        },
+        {
+          "bound": false,
+          "bindingForm": "NONE",
+          "directionality": "NONE",
+          "sourceId": null,
+          "targetId": null,
+          "dynamicOperator": "NONE",
+          "configuration": "NONE"
+        }
+      ]
+    }
+  },
+  "rows": [
+    {
+      "fixture": "G1_EVOKES_ALIGNMENT",
+      "run": 1,
+      "rawHash": "f1a7cb125f3c59966cb010a12df64ef1411b8990be074f0083c10dc75d467ff2",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_LEAVE",
+        "targetId": "EARTH_SETTLE",
+        "dynamicOperator": "EVOKES",
+        "configuration": "ALIGNMENT"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_LEAVE",
+        "targetId": "EARTH_SETTLE",
+        "dynamicOperator": "EVOKES",
+        "configuration": "ALIGNMENT"
+      },
+      "axes": {
+        "binding": true,
+        "form": true,
+        "direction": true,
+        "endpoints": true,
+        "dynamic": true,
+        "configuration": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "G1_EVOKES_ALIGNMENT",
+      "run": 2,
+      "rawHash": "f1a7cb125f3c59966cb010a12df64ef1411b8990be074f0083c10dc75d467ff2",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_LEAVE",
+        "targetId": "EARTH_SETTLE",
+        "dynamicOperator": "EVOKES",
+        "configuration": "ALIGNMENT"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_LEAVE",
+        "targetId": "EARTH_SETTLE",
+        "dynamicOperator": "EVOKES",
+        "configuration": "ALIGNMENT"
+      },
+      "axes": {
+        "binding": true,
+        "form": true,
+        "direction": true,
+        "endpoints": true,
+        "dynamic": true,
+        "configuration": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "G2_SYMMETRIC_TENSION",
+      "run": 1,
+      "rawHash": "4834aaa1477c06be2a27c1854a59ff2d9662a638b766c408cb1700ded72c74f0",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": false,
+        "bindingForm": "NONE",
+        "directionality": "NONE",
+        "sourceId": null,
+        "targetId": null,
+        "dynamicOperator": "NONE",
+        "configuration": "NONE"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "CONTRASTIVE_LINK",
+        "directionality": "SYMMETRIC",
+        "sourceId": "WATER_LOVE",
+        "targetId": "FIRE_LEAVE",
+        "dynamicOperator": "NONE",
+        "configuration": "TENSION"
+      },
+      "axes": {
+        "binding": false,
+        "form": false,
+        "direction": false,
+        "endpoints": false,
+        "dynamic": true,
+        "configuration": false
+      },
+      "allCorrect": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 209 (line 10 column 1)"
+    },
+    {
+      "fixture": "G2_SYMMETRIC_TENSION",
+      "run": 2,
+      "rawHash": "05d1d5fb66bc4e02a34c05158ac9ac8fdde0c57c40461b42f0bd0eefeed6f661",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": false,
+        "bindingForm": "NONE",
+        "directionality": "NONE",
+        "sourceId": null,
+        "targetId": null,
+        "dynamicOperator": "NONE",
+        "configuration": "NONE"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "CONTRASTIVE_LINK",
+        "directionality": "SYMMETRIC",
+        "sourceId": "WATER_LOVE",
+        "targetId": "FIRE_LEAVE",
+        "dynamicOperator": "NONE",
+        "configuration": "TENSION"
+      },
+      "axes": {
+        "binding": false,
+        "form": false,
+        "direction": false,
+        "endpoints": false,
+        "dynamic": true,
+        "configuration": false
+      },
+      "allCorrect": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 205 (line 10 column 1)"
+    },
+    {
+      "fixture": "G3_INHIBITS_TENSION",
+      "run": 1,
+      "rawHash": "9f59bd27504f327da761b5f6db8889faa84ced1a84c4e8d8d40e61834ebcb41f",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": true,
+        "bindingForm": "INHIBITORY_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "EARTH_EXHAUST",
+        "targetId": "FIRE_LAUNCH",
+        "dynamicOperator": "INHIBITS",
+        "configuration": "TENSION"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "INHIBITORY_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "EARTH_EXHAUST",
+        "targetId": "FIRE_LAUNCH",
+        "dynamicOperator": "INHIBITS",
+        "configuration": "TENSION"
+      },
+      "axes": {
+        "binding": true,
+        "form": true,
+        "direction": true,
+        "endpoints": true,
+        "dynamic": true,
+        "configuration": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "G3_INHIBITS_TENSION",
+      "run": 2,
+      "rawHash": "9f59bd27504f327da761b5f6db8889faa84ced1a84c4e8d8d40e61834ebcb41f",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": true,
+        "bindingForm": "INHIBITORY_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "EARTH_EXHAUST",
+        "targetId": "FIRE_LAUNCH",
+        "dynamicOperator": "INHIBITS",
+        "configuration": "TENSION"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "INHIBITORY_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "EARTH_EXHAUST",
+        "targetId": "FIRE_LAUNCH",
+        "dynamicOperator": "INHIBITS",
+        "configuration": "TENSION"
+      },
+      "axes": {
+        "binding": true,
+        "form": true,
+        "direction": true,
+        "endpoints": true,
+        "dynamic": true,
+        "configuration": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "G4_EVOKES_ONLY",
+      "run": 1,
+      "rawHash": "f4d8cb0d3330fc170a7b951ce4d6e9764c8a1f0c2f38d539206f5b01c59696fb",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": false,
+        "bindingForm": "NONE",
+        "directionality": "NONE",
+        "sourceId": null,
+        "targetId": null,
+        "dynamicOperator": "NONE",
+        "configuration": "NONE"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_RISK",
+        "targetId": "EARTH_TIGHTEN",
+        "dynamicOperator": "EVOKES",
+        "configuration": "NONE"
+      },
+      "axes": {
+        "binding": false,
+        "form": false,
+        "direction": false,
+        "endpoints": false,
+        "dynamic": false,
+        "configuration": true
+      },
+      "allCorrect": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 204 (line 10 column 1)"
+    },
+    {
+      "fixture": "G4_EVOKES_ONLY",
+      "run": 2,
+      "rawHash": "77669705ac8bf9393f11b973b0ce0efcc7b0655dd557c4c7a9934e4f19a43359",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": false,
+        "bindingForm": "NONE",
+        "directionality": "NONE",
+        "sourceId": null,
+        "targetId": null,
+        "dynamicOperator": "NONE",
+        "configuration": "NONE"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_RISK",
+        "targetId": "EARTH_TIGHTEN",
+        "dynamicOperator": "EVOKES",
+        "configuration": "NONE"
+      },
+      "axes": {
+        "binding": false,
+        "form": false,
+        "direction": false,
+        "endpoints": false,
+        "dynamic": false,
+        "configuration": true
+      },
+      "allCorrect": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 204 (line 10 column 1)"
+    },
+    {
+      "fixture": "G5_EVOKES_ALIGNMENT",
+      "run": 1,
+      "rawHash": "e6a1ec737a6c9bd8fa792276292354e736218a3a8c4a858277c46b1384111d59",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_NEWPATH",
+        "targetId": "WATER_HOPE",
+        "dynamicOperator": "EVOKES",
+        "configuration": "ALIGNMENT"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_NEWPATH",
+        "targetId": "WATER_HOPE",
+        "dynamicOperator": "EVOKES",
+        "configuration": "ALIGNMENT"
+      },
+      "axes": {
+        "binding": true,
+        "form": true,
+        "direction": true,
+        "endpoints": true,
+        "dynamic": true,
+        "configuration": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "G5_EVOKES_ALIGNMENT",
+      "run": 2,
+      "rawHash": "e6a1ec737a6c9bd8fa792276292354e736218a3a8c4a858277c46b1384111d59",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_NEWPATH",
+        "targetId": "WATER_HOPE",
+        "dynamicOperator": "EVOKES",
+        "configuration": "ALIGNMENT"
+      },
+      "expected": {
+        "bound": true,
+        "bindingForm": "CONDITIONAL_LINK",
+        "directionality": "DIRECTED",
+        "sourceId": "AIR_NEWPATH",
+        "targetId": "WATER_HOPE",
+        "dynamicOperator": "EVOKES",
+        "configuration": "ALIGNMENT"
+      },
+      "axes": {
+        "binding": true,
+        "form": true,
+        "direction": true,
+        "endpoints": true,
+        "dynamic": true,
+        "configuration": true
+      },
+      "allCorrect": true,
+      "parseError": null
+    },
+    {
+      "fixture": "G6_UNBOUND",
+      "run": 1,
+      "rawHash": "b67fb830add7e920bb3ecf2019e359ab5b86e702a2f3e6a76e854e36d77ecf76",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": false,
+        "bindingForm": "NONE",
+        "directionality": "NONE",
+        "sourceId": null,
+        "targetId": null,
+        "dynamicOperator": "NONE",
+        "configuration": "NONE"
+      },
+      "expected": {
+        "bound": false,
+        "bindingForm": "NONE",
+        "directionality": "NONE",
+        "sourceId": null,
+        "targetId": null,
+        "dynamicOperator": "NONE",
+        "configuration": "NONE"
+      },
+      "axes": {
+        "binding": true,
+        "form": true,
+        "direction": true,
+        "endpoints": true,
+        "dynamic": true,
+        "configuration": true
+      },
+      "allCorrect": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 170 (line 10 column 1)"
+    },
+    {
+      "fixture": "G6_UNBOUND",
+      "run": 2,
+      "rawHash": "55ef7f20fe67d380068452a6a1b92b9058356a94ccf1040669a8590f7f25f2b7",
+      "model": "claude-sonnet-4-6",
+      "prediction": {
+        "bound": false,
+        "bindingForm": "NONE",
+        "directionality": "NONE",
+        "sourceId": null,
+        "targetId": null,
+        "dynamicOperator": "NONE",
+        "configuration": "NONE"
+      },
+      "expected": {
+        "bound": false,
+        "bindingForm": "NONE",
+        "directionality": "NONE",
+        "sourceId": null,
+        "targetId": null,
+        "dynamicOperator": "NONE",
+        "configuration": "NONE"
+      },
+      "axes": {
+        "binding": true,
+        "form": true,
+        "direction": true,
+        "endpoints": true,
+        "dynamic": true,
+        "configuration": true
+      },
+      "allCorrect": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 170 (line 10 column 1)"
+    }
+  ]
+}
