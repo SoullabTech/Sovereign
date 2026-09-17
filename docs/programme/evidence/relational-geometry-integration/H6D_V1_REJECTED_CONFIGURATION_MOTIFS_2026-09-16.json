@@ -1,0 +1,376 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H6D_CONFIGURATION_MOTIFS_V1",
+  "authority": "offline research only",
+  "hypothesis": "Incidence geometry of neutral relation operators carries motif information unavailable from the multiset of component relation types alone.",
+  "inference": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "path": "local Claude CLI restricted/no-tools",
+    "effort": "low",
+    "astrologicalLabelsExposed": false
+  },
+  "collisionTest": {
+    "pairs": [
+      {
+        "group": "PCC",
+        "fixtureIds": [
+          "M1_CROSS_TRIAD",
+          "M1_CONTROL"
+        ],
+        "sameBag": true,
+        "expected": [
+          "CROSS_CONSTRAINT_TRIAD",
+          "NONE"
+        ]
+      },
+      {
+        "group": "FFF",
+        "fixtureIds": [
+          "M2_RESONANT_TRIAD",
+          "M2_CONTROL"
+        ],
+        "sameBag": true,
+        "expected": [
+          "RESONANT_TRIAD",
+          "NONE"
+        ]
+      },
+      {
+        "group": "COO",
+        "fixtureIds": [
+          "M3_FOCAL",
+          "M3_CONTROL"
+        ],
+        "sameBag": true,
+        "expected": [
+          "ASYMMETRIC_FOCAL_CONFIGURATION",
+          "NONE"
+        ]
+      },
+      {
+        "group": "PFF",
+        "fixtureIds": [
+          "M4_POLAR_MEDIATION",
+          "M4_CONTROL"
+        ],
+        "sameBag": true,
+        "expected": [
+          "POLAR_MEDIATION_TRIAD",
+          "NONE"
+        ]
+      },
+      {
+        "group": "PPCCCC",
+        "fixtureIds": [
+          "M5_BALANCED_CROSS",
+          "M5_CONTROL"
+        ],
+        "sameBag": true,
+        "expected": [
+          "BALANCED_CROSS_CONSTRAINT",
+          "NONE"
+        ]
+      }
+    ],
+    "bagOnlyMaximumCorrect": 5,
+    "total": 10
+  },
+  "fullTopology": {
+    "modelRuns": 20,
+    "modelCorrect": 13,
+    "deterministicCorrect": 8,
+    "deterministicTotal": 10
+  },
+  "byFixture": {
+    "M1_CROSS_TRIAD": {
+      "runs": 2,
+      "correct": 0,
+      "predictions": [
+        "NONE",
+        "NONE"
+      ],
+      "bag": "CROSS_CONSTRAINT|CROSS_CONSTRAINT|POLARITY",
+      "deterministic": "CROSS_CONSTRAINT_TRIAD"
+    },
+    "M1_CONTROL": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        "NONE",
+        "NONE"
+      ],
+      "bag": "CROSS_CONSTRAINT|CROSS_CONSTRAINT|POLARITY",
+      "deterministic": "NONE"
+    },
+    "M2_RESONANT_TRIAD": {
+      "runs": 2,
+      "correct": 1,
+      "predictions": [
+        "NONE",
+        "RESONANT_TRIAD"
+      ],
+      "bag": "FACILITATIVE_RESONANCE|FACILITATIVE_RESONANCE|FACILITATIVE_RESONANCE",
+      "deterministic": "RESONANT_TRIAD"
+    },
+    "M2_CONTROL": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        "NONE",
+        "NONE"
+      ],
+      "bag": "FACILITATIVE_RESONANCE|FACILITATIVE_RESONANCE|FACILITATIVE_RESONANCE",
+      "deterministic": "NONE"
+    },
+    "M3_FOCAL": {
+      "runs": 2,
+      "correct": 0,
+      "predictions": [
+        "NONE",
+        "NONE"
+      ],
+      "bag": "CROSS_CONSTRAINT|OPTIONAL_COUPLING|OPTIONAL_COUPLING",
+      "deterministic": "ASYMMETRIC_FOCAL_CONFIGURATION"
+    },
+    "M3_CONTROL": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        "NONE",
+        "NONE"
+      ],
+      "bag": "CROSS_CONSTRAINT|OPTIONAL_COUPLING|OPTIONAL_COUPLING",
+      "deterministic": "NONE"
+    },
+    "M4_POLAR_MEDIATION": {
+      "runs": 2,
+      "correct": 0,
+      "predictions": [
+        "NONE",
+        "NONE"
+      ],
+      "bag": "FACILITATIVE_RESONANCE|FACILITATIVE_RESONANCE|POLARITY",
+      "deterministic": "POLAR_MEDIATION_TRIAD"
+    },
+    "M4_CONTROL": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        "NONE",
+        "NONE"
+      ],
+      "bag": "FACILITATIVE_RESONANCE|FACILITATIVE_RESONANCE|POLARITY",
+      "deterministic": "NONE"
+    },
+    "M5_BALANCED_CROSS": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        "BALANCED_CROSS_CONSTRAINT",
+        "BALANCED_CROSS_CONSTRAINT"
+      ],
+      "bag": "CROSS_CONSTRAINT|CROSS_CONSTRAINT|CROSS_CONSTRAINT|CROSS_CONSTRAINT|POLARITY|POLARITY",
+      "deterministic": "CROSS_CONSTRAINT_TRIAD"
+    },
+    "M5_CONTROL": {
+      "runs": 2,
+      "correct": 2,
+      "predictions": [
+        "NONE",
+        "NONE"
+      ],
+      "bag": "CROSS_CONSTRAINT|CROSS_CONSTRAINT|CROSS_CONSTRAINT|CROSS_CONSTRAINT|POLARITY|POLARITY",
+      "deterministic": "CROSS_CONSTRAINT_TRIAD"
+    }
+  },
+  "rows": [
+    {
+      "fixture": "M1_CROSS_TRIAD",
+      "run": 1,
+      "rawHash": "2f5f90476ce9b2a5f053e7d10e971d30bec6afeb912a72345aa1cb5747fe9cb1",
+      "prediction": "NONE",
+      "expected": "CROSS_CONSTRAINT_TRIAD",
+      "correct": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M1_CROSS_TRIAD",
+      "run": 2,
+      "rawHash": "44529fdd789234d9eba5a618d3df2a259d822da841d2616a77d33245707d139a",
+      "prediction": "NONE",
+      "expected": "CROSS_CONSTRAINT_TRIAD",
+      "correct": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 35 (line 2 column 1)"
+    },
+    {
+      "fixture": "M1_CONTROL",
+      "run": 1,
+      "rawHash": "1b2faddc9bd62c0477d7a0cc83cc0e542e0d8dec00117ca10261dd50e84402b0",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M1_CONTROL",
+      "run": 2,
+      "rawHash": "b1eeed2350be7863dcf949b8bfc01460eace22ebd85de22db4003ba07185881a",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M2_RESONANT_TRIAD",
+      "run": 1,
+      "rawHash": "8263f4567cbbeca2362eecf56a62385292d151224dbfe61b62eb43adbad295ab",
+      "prediction": "NONE",
+      "expected": "RESONANT_TRIAD",
+      "correct": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M2_RESONANT_TRIAD",
+      "run": 2,
+      "rawHash": "92a52a38075aed473a466c739d1d4c7e9c8b933436d23100730ed05976ef3644",
+      "prediction": "RESONANT_TRIAD",
+      "expected": "RESONANT_TRIAD",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "M2_CONTROL",
+      "run": 1,
+      "rawHash": "143a8c143fdd6ab6211d7554e0493bc5a366db375064557cb162fea3b933cd99",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "M2_CONTROL",
+      "run": 2,
+      "rawHash": "61925211208de747cd6015b4c512188b0207399a220daf948d017ceb28a9b260",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M3_FOCAL",
+      "run": 1,
+      "rawHash": "7e86e7f9f3791929fce615db92059e3500e0c058bb98c4527c32c4160c9e7ec1",
+      "prediction": "NONE",
+      "expected": "ASYMMETRIC_FOCAL_CONFIGURATION",
+      "correct": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 43 (line 2 column 1)"
+    },
+    {
+      "fixture": "M3_FOCAL",
+      "run": 2,
+      "rawHash": "2d198b60c1a35c8f5dd3e8e6dd7b4ee634cc715038cd80266c1a544c2a9bb30c",
+      "prediction": "NONE",
+      "expected": "ASYMMETRIC_FOCAL_CONFIGURATION",
+      "correct": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M3_CONTROL",
+      "run": 1,
+      "rawHash": "bd5a617392fd53a5ff09cd75704a4e0e0faefadb827ca01b8c344f7fa4adeb09",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M3_CONTROL",
+      "run": 2,
+      "rawHash": "7f003b05631e1368a24bd00e06f9d29aea0239653f669d2313350d73c63d6dc2",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M4_POLAR_MEDIATION",
+      "run": 1,
+      "rawHash": "a5e44214edaadd590683a6918af63ecd633fc9a61cc3bb2226b53d233783ff60",
+      "prediction": "NONE",
+      "expected": "POLAR_MEDIATION_TRIAD",
+      "correct": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M4_POLAR_MEDIATION",
+      "run": 2,
+      "rawHash": "c61649e739033d3633f5c71ac5ad11a12bde395bf4b2de8eef76cb0e4beed23e",
+      "prediction": "NONE",
+      "expected": "POLAR_MEDIATION_TRIAD",
+      "correct": false,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M4_CONTROL",
+      "run": 1,
+      "rawHash": "4f405398f45212ab448edd4a2f9afcdc852965f3a721d03c27a1134e6db7a4bd",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "M4_CONTROL",
+      "run": 2,
+      "rawHash": "7c08249beac72c43976161e39bbf597bac95f1546989f8ed6fac2d2af57343f3",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M5_BALANCED_CROSS",
+      "run": 1,
+      "rawHash": "5877c24c12e3adbc2684fda3a887d1e750ea2b1e3cc09e1aba8bc975e9b84809",
+      "prediction": "BALANCED_CROSS_CONSTRAINT",
+      "expected": "BALANCED_CROSS_CONSTRAINT",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "M5_BALANCED_CROSS",
+      "run": 2,
+      "rawHash": "5877c24c12e3adbc2684fda3a887d1e750ea2b1e3cc09e1aba8bc975e9b84809",
+      "prediction": "BALANCED_CROSS_CONSTRAINT",
+      "expected": "BALANCED_CROSS_CONSTRAINT",
+      "correct": true,
+      "parseError": null
+    },
+    {
+      "fixture": "M5_CONTROL",
+      "run": 1,
+      "rawHash": "723905d139abb16f321829d05dbbec335cd124e63e9e49330a28dbe8ee9d823f",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    },
+    {
+      "fixture": "M5_CONTROL",
+      "run": 2,
+      "rawHash": "26d1d91183a33d2ac62a0a18ad07453aea0dbf0e6a74c2c1ac256af02e1c721b",
+      "prediction": "NONE",
+      "expected": "NONE",
+      "correct": true,
+      "parseError": "Unexpected non-whitespace character after JSON at position 17 (line 2 column 1)"
+    }
+  ],
+  "researchOnlyAnalogueMap": {
+    "CROSS_CONSTRAINT_TRIAD": "T-square-like hypothesis source",
+    "RESONANT_TRIAD": "grand-trine-like hypothesis source",
+    "ASYMMETRIC_FOCAL_CONFIGURATION": "yod-like focal hypothesis source",
+    "BALANCED_CROSS_CONSTRAINT": "grand-cross-like hypothesis source",
+    "POLAR_MEDIATION_TRIAD": "neutral polarity-mediation family; no one-to-one traditional claim"
+  },
+  "law": "Configuration is a property of relation incidence topology, not merely the inventory of edge types. Symbolic names remain downstream analogies only."
+}
