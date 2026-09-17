@@ -25,7 +25,44 @@ export type MaiaCapability =
   | 'relationship.reflect'
   | 'depth.shadow'
   | 'studio.transition'
-  | 'schedule.create';
+  | 'schedule.create'
+  // ── MAIA-NODE-03 · NAVIGATE slice ──────────────────────────────────────
+  // Going to a place is its own capability, distinct from doing something
+  // there. These carry a House destination and no domain authority at all.
+  | 'journal.open'
+  | 'relationships.open'
+  | 'livingField.open'
+  | 'keeps.open'
+  | 'writersStudio.open';
+
+// --- Operation classes (MAIA-NODE-01 §XIII) ---
+
+/**
+ * What KIND of thing a capability does. Only the two lowest-consequence classes
+ * are implemented in MAIA-NODE-03; the rest are declared so that a capability
+ * can be described truthfully before it is executable.
+ */
+export type CapabilityClass =
+  | 'ORIENT' | 'NAVIGATE' | 'READ' | 'CAPTURE'
+  | 'CONTINUE' | 'TRANSFORM' | 'ACT' | 'SHARE' | 'CROSS';
+
+/**
+ * Whether MAIA may actually invoke this, which is a DIFFERENT fact from whether
+ * the capability exists.
+ *
+ *   executable — traced to a canonical authority and safe to invoke now
+ *   withheld   — exists in Soullab, deliberately not exposed through MAIA
+ *   unknown    — repository truth has not established the authority yet
+ *
+ * ⭐ `unknown` is the default for anything unproven, and it is not a synonym for
+ * permitted. A capability with no `availability` is NOT executable: the
+ * resolver treats absence as unknown, so a field left unfilled can never
+ * become an accidental grant.
+ */
+export type CapabilityAvailability =
+  | { state: 'executable' }
+  | { state: 'withheld'; reason: string }
+  | { state: 'unknown'; reason: string };
 
 // --- Capability Definition ---
 
@@ -39,6 +76,26 @@ export interface CapabilityDefinition {
   modalId?: string;
   /** Voice phrases that invoke this capability */
   voicePhrases: string[];
+
+  // ── MAIA-NODE-03 additions. Every field is OPTIONAL, so the thirteen
+  //    capabilities that predate this slice remain valid unchanged, and the
+  //    registry grows by evidence rather than by speculation.
+
+  /**
+   * What this helps a member accomplish, in the member's terms. AUTHORED, never
+   * model-generated: ORIENT answers are composed from this string, so an
+   * unauthored capability simply has no orientation rather than an invented one.
+   */
+  purpose?: string;
+  /** ORIENT / NAVIGATE / … — see CapabilityClass. */
+  operationClass?: CapabilityClass;
+  /**
+   * A `HOUSE_DESTINATIONS` id. ⛔ Never a route literal: the House owns paths,
+   * native policy and the web bridge, and this layer must not restate any of it.
+   */
+  destinationId?: string;
+  /** Absent means `unknown` — see CapabilityAvailability. */
+  availability?: CapabilityAvailability;
 }
 
 // --- Registry ---
@@ -68,17 +125,25 @@ export const CAPABILITY_REGISTRY: CapabilityDefinition[] = [
   },
 
   // Astrology
+  // ⛔ WITHHELD — MAIA-NODE-03 §12. `/api/astrology/reading` accepts birth data
+  // with no authentication and binds no member identity, so MAIA may know that
+  // Astrology exists in Soullab and may not execute it. The bounded repair is
+  // specified in MAIA-NODE-02 §8 and is NOT authorized. Astrology remains
+  // reachable by ordinary House navigation; only the MAIA-executable capability
+  // is withheld.
   {
     id: 'astrology.reading',
     label: 'Astrology reading',
     worldId: 'patterns',
     voicePhrases: ['show me my chart', 'astrology reading', 'what do the stars say'],
+    availability: { state: 'withheld', reason: 'unauthenticated reading route — MAIA-NODE-03 §12' },
   },
   {
     id: 'astrology.transit',
     label: 'Current transits',
     worldId: 'patterns',
     voicePhrases: ['current transits', 'what transits are active', 'planetary influences'],
+    availability: { state: 'withheld', reason: 'unauthenticated reading route — MAIA-NODE-03 §12' },
   },
 
   // Patterns
@@ -137,6 +202,79 @@ export const CAPABILITY_REGISTRY: CapabilityDefinition[] = [
     id: 'schedule.create',
     label: 'Schedule session',
     voicePhrases: ['schedule a session', 'book a session', 'set up a time'],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // MAIA-NODE-03 · NAVIGATE slice
+  //
+  // Five places, each already canonical in HOUSE_DESTINATIONS with
+  // `audience: 'all'`. These capabilities carry NO domain authority: going to a
+  // room is not doing anything in it, which is why this is the first slice.
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: 'journal.open',
+    label: 'Journal',
+    purpose: 'Expressive writing — a place to put down what you are thinking, in your own words.',
+    operationClass: 'NAVIGATE',
+    destinationId: 'journal',
+    availability: { state: 'executable' },
+    voicePhrases: [
+      'take me to my journal', 'take me to journal', 'open my journal', 'open journal',
+      'go to my journal', 'go to journal', 'show me my journal',
+    ],
+  },
+  {
+    id: 'relationships.open',
+    label: 'Relational Field',
+    purpose: 'Outer and inner relationships, made visible — a place to look at a relationship more fully.',
+    operationClass: 'NAVIGATE',
+    destinationId: 'relationships',
+    availability: { state: 'executable' },
+    voicePhrases: [
+      'open relationships', 'take me to relationships', 'go to relationships',
+      'show me my relationships', 'open the relational field', 'take me to the relational field',
+    ],
+  },
+  {
+    id: 'livingField.open',
+    label: 'Living Field',
+    purpose: 'A place to gather and reflect on lived experience, drawn from what you have kept.',
+    operationClass: 'NAVIGATE',
+    destinationId: 'living-field',
+    availability: { state: 'executable' },
+    voicePhrases: [
+      'open living field', 'take me to living field', 'go to living field',
+      'show me my living field', 'open my living field',
+    ],
+  },
+  {
+    // ⚠️ "Keeps" here means the CANONICAL personal Keep gesture — the
+    // member-memory-atom formation act at /maia/keep-capture (MAIA-NODE-02 §2).
+    // It is NOT the Writer's Studio manuscript object, which is called a Saved
+    // Passage at this layer and has no House destination.
+    id: 'keeps.open',
+    label: 'Keeps',
+    purpose: 'What you have chosen to keep — the things you decided should remain available to you.',
+    operationClass: 'NAVIGATE',
+    destinationId: 'keeps',
+    availability: { state: 'executable' },
+    voicePhrases: [
+      'show me my keeps', 'open my keeps', 'open keeps', 'take me to my keeps',
+      'go to my keeps',
+    ],
+  },
+  {
+    id: 'writersStudio.open',
+    label: "Writer's Studio",
+    purpose: 'Where your work takes form — the environment your writing lives in.',
+    operationClass: 'NAVIGATE',
+    destinationId: 'studio',
+    availability: { state: 'executable' },
+    voicePhrases: [
+      "take me to writer's studio", 'take me to writers studio', "open writer's studio",
+      'open writers studio', "go to writer's studio", 'go to writers studio',
+      'take me back to my writing',
+    ],
   },
 ];
 

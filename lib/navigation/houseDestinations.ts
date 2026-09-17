@@ -469,6 +469,25 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
 // --- Selection & classification helpers ---------------------------------
 
 /** Audience filter. Founder-only destinations are hidden from non-founders. */
+/**
+ * Resolve one registered destination by id.
+ *
+ * The accessor exists so that callers outside the House — the MAIA capability
+ * layer above all — can reach a canonical place WITHOUT carrying a route
+ * literal of their own. It is the one-directional dependency MAIA-NODE-02 §5
+ * asks for: capability → destination, never capability → path.
+ *
+ * ⛔ It never synthesizes. An unknown id returns `undefined`, and an arbitrary
+ * string is not a destination just because it looks like one. `HouseDestination.id`
+ * is typed `string`, so TypeScript cannot enforce membership here — the
+ * mechanical enforcement is the drift guard in
+ * `lib/maia/__tests__/capabilityRegistry.test.ts`, which fails the build when a
+ * capability references an id this function cannot resolve.
+ */
+export function getDestination(id: string): HouseDestination | undefined {
+  return HOUSE_DESTINATIONS.find((d) => d.id === id);
+}
+
 export function getHouseDestinations(isFounder: boolean): HouseDestination[] {
   return HOUSE_DESTINATIONS.filter((d) => d.audience !== 'founder' || isFounder);
 }

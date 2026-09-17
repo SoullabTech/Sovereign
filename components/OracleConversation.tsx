@@ -3,6 +3,8 @@
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
 // 🔖 BUILD_STAMP: 2026-06-02_ios_playback_watchdog
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { resolveDestination } from '@/lib/maia/capabilityResolution';
+import { dispatchHouseDestination } from '@/lib/navigation/houseDestinations';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, VolumeX, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users, Bookmark } from 'lucide-react';
@@ -4766,9 +4768,23 @@ I'm not sure what I'm feeling yet.`;
     setLastDoorwayTimestamp(Date.now());
     setDoorwayDismissedAt(Date.now());
     switch (action.type) {
-      case 'open_journal':
-        router.push('/journal');
+      case 'open_journal': {
+        // MAIA-NODE-03 §8 — the one bounded literal this slice converts. The
+        // path, the native policy and the web bridge now come from the House
+        // registry through the capability layer, so this doorway and The House
+        // can no longer disagree about where Journal is. Every other literal in
+        // this switch is recorded as residual and deliberately left alone.
+        const dest = resolveDestination('journal.open');
+        if (dest) {
+          const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+          dispatchHouseDestination(dest, {
+            isNative: !!cap?.isNativePlatform?.(),
+            push: (path) => router.push(path),
+            openSheet: () => { /* no sheet destination on this path */ },
+          });
+        }
         break;
+      }
       case 'open_reflection':
         // Use existing capture spirit flow
         if (handleCaptureSpiritRef.current) {
