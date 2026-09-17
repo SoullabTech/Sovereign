@@ -48,6 +48,17 @@ describe('F5 P5-D governed executor structure', () => {
     expect(verify).toMatch(/Circle representation remained active/);
   });
 
+  it('R4 separates UUID act identity from text evidence references', () => {
+    const completion = body('recordCompletionEvidence');
+    expect(completion).toMatch(/SELECT \$1::uuid[\s\S]*CASE WHEN x\.requires_s5 THEN \$3::text ELSE 'p5d-poststate-census'::text END/);
+    expect(completion).toMatch(/\[actId, JSON\.stringify\(all\), actId\]/);
+    expect(completion).toMatch(/verification_succeeded[\s\S]*CASE WHEN x\.requires_s5 THEN \$3::text ELSE 'p5d-poststate-census'::text END/);
+    expect(completion).toMatch(/\[actId, JSON\.stringify\(verified\), actId\]/);
+    expect(completion).toMatch(/VALUES \(\$1::uuid, 'act_completed', 'governed_account_erasure_completed', \$2::text\)/);
+    expect(completion).toMatch(/\[actId, actId\]/);
+    expect(completion).not.toMatch(/THEN \$1 ELSE 'p5d-poststate-census'/);
+  });
+
   it('does not reference the retired sovereignty engine', () => {
     expect(source).not.toMatch(/UserDataSovereignty|delete-memory-api|\/api\/sovereignty\/delete-my-memory/);
   });

@@ -281,11 +281,11 @@ async function recordCompletionEvidence(
                  WHEN x.planned_disposition = 'no_op' THEN 'observed_absent'
                  WHEN x.planned_disposition = 'retain' THEN 'retained'
                  ELSE 'executed' END,
-            CASE WHEN x.requires_s5 THEN $1 ELSE 'p5d-poststate-census' END
+            CASE WHEN x.requires_s5 THEN $3::text ELSE 'p5d-poststate-census'::text END
        FROM jsonb_to_recordset($2::jsonb) AS x(
          id text, domain_key text, planned_disposition text, requires_s5 boolean
        )`,
-    [actId, JSON.stringify(all)],
+    [actId, JSON.stringify(all), actId],
   );
 
   const verified = all.filter((row) => row.verification_rule !== 'none');
@@ -295,16 +295,16 @@ async function recordCompletionEvidence(
          act_id, disposition_id, event_type, result_code, evidence_ref
        )
        SELECT $1::uuid, x.id::uuid, 'verification_succeeded', 'p5d_poststate_verified',
-              CASE WHEN x.requires_s5 THEN $1 ELSE 'p5d-poststate-census' END
+              CASE WHEN x.requires_s5 THEN $3::text ELSE 'p5d-poststate-census'::text END
          FROM jsonb_to_recordset($2::jsonb) AS x(id text, requires_s5 boolean)`,
-      [actId, JSON.stringify(verified)],
+      [actId, JSON.stringify(verified), actId],
     );
   }
 
   await tx.query(
     `INSERT INTO account_erasure_execution_events (act_id, event_type, result_code, evidence_ref)
-     VALUES ($1, 'act_completed', 'governed_account_erasure_completed', $1)`,
-    [actId],
+     VALUES ($1::uuid, 'act_completed', 'governed_account_erasure_completed', $2::text)`,
+    [actId, actId],
   );
 }
 
