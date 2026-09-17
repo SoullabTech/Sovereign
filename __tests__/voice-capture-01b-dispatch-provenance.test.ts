@@ -98,8 +98,10 @@ describe('VOICE-CAPTURE-01B-OBS — every send boundary is witnessed', () => {
 
   it('finds the send boundaries non-trivially', () => {
     // Guards the test itself: a regex that matched nothing would make the
-    // contract below vacuously true. The 64c2b7c07 census found 8.
-    expect(invocationLineNumbers().length).toBeGreaterThanOrEqual(8);
+    // contract below vacuously true. The 64c2b7c07 census found 8; TURN-01
+    // deliberately removes two direct native silence sends by routing them through
+    // processAccumulatedTranscript, leaving 6 direct boundaries to witness.
+    expect(invocationLineNumbers().length).toBeGreaterThanOrEqual(6);
   });
 
   it('precedes EVERY onTranscript invocation with its OWN witnessDispatch', () => {

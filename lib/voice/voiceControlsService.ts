@@ -6,6 +6,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { DEFAULT_TURN_TAKING_PREFERENCES } from '@/lib/voice/turnTaking';
 import type {
   MemberVoicePreferences,
   SystemVoiceProfile,
@@ -34,6 +35,7 @@ const DEFAULT_MEMBER_PREFS: MemberVoicePreferences = {
   voiceIdOverride: null,
   voiceArchetype: null,
   ttsProvider: null,
+  turnTaking: { ...DEFAULT_TURN_TAKING_PREFERENCES },
   offset: { ...DEFAULT_OFFSETS },
 };
 
@@ -105,7 +107,7 @@ export async function getMemberVoicePreferences(
 ): Promise<MemberVoicePreferences> {
   try {
     const result = await query(
-      `SELECT voice_id_override, voice_archetype, tts_provider, pace_offset, warmth_offset, poetry_offset, directiveness_offset, energy_offset
+      `SELECT voice_id_override, voice_archetype, tts_provider, conversational_space, floor_control_mode, learn_turn_rhythm, pace_offset, warmth_offset, poetry_offset, directiveness_offset, energy_offset
        FROM member_voice_preferences
        WHERE member_id = $1`,
       [memberId],
@@ -120,6 +122,11 @@ export async function getMemberVoicePreferences(
       voiceIdOverride: row.voice_id_override,
       voiceArchetype: row.voice_archetype ?? null,
       ttsProvider: (row.tts_provider as TTSProviderPref) ?? null,
+      turnTaking: {
+        conversationalSpace: row.conversational_space ?? DEFAULT_TURN_TAKING_PREFERENCES.conversationalSpace,
+        floorControlMode: row.floor_control_mode ?? DEFAULT_TURN_TAKING_PREFERENCES.floorControlMode,
+        learnRhythm: row.learn_turn_rhythm ?? DEFAULT_TURN_TAKING_PREFERENCES.learnRhythm,
+      },
       offset: {
         pace: row.pace_offset,
         warmth: row.warmth_offset,
@@ -140,22 +147,28 @@ export async function upsertMemberVoicePreferences(
 ): Promise<void> {
   await query(
     `INSERT INTO member_voice_preferences
-       (member_id, voice_id_override, voice_archetype, tts_provider, pace_offset, warmth_offset, poetry_offset, directiveness_offset, energy_offset)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       (member_id, voice_id_override, voice_archetype, tts_provider, conversational_space, floor_control_mode, learn_turn_rhythm, pace_offset, warmth_offset, poetry_offset, directiveness_offset, energy_offset)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      ON CONFLICT (member_id) DO UPDATE SET
        voice_id_override = $2,
        voice_archetype = $3,
        tts_provider = $4,
-       pace_offset = $5,
-       warmth_offset = $6,
-       poetry_offset = $7,
-       directiveness_offset = $8,
-       energy_offset = $9`,
+       conversational_space = $5,
+       floor_control_mode = $6,
+       learn_turn_rhythm = $7,
+       pace_offset = $8,
+       warmth_offset = $9,
+       poetry_offset = $10,
+       directiveness_offset = $11,
+       energy_offset = $12`,
     [
       memberId,
       prefs.voiceIdOverride ?? null,
       prefs.voiceArchetype ?? null,
       prefs.ttsProvider ?? null,
+      prefs.turnTaking.conversationalSpace,
+      prefs.turnTaking.floorControlMode,
+      prefs.turnTaking.learnRhythm,
       prefs.offset.pace,
       prefs.offset.warmth,
       prefs.offset.poetry,
