@@ -222,7 +222,7 @@ describe('4 — Android-Chrome and Firefox/Zen keep the 8s bound', () => {
     expect(uses.length).toBe(2);
     const call = src.indexOf('recordAndTranscribe(stream, {');
     const args = src.slice(call, src.indexOf('});', call));
-    expect(args).toContain('info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS }');
+    expect(args).toContain('info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true }');
   });
 });
 
@@ -262,5 +262,61 @@ describe('7 — route exit still aborts immediately', () => {
     const result = await p;
     expect(result.reason).toBe('aborted');
     expect(transcribeCalls()).toHaveLength(0);
+  });
+});
+
+
+describe('Desktop quiet arrival', () => {
+  it('waits through a pause before speech on each of three consecutive turns', async () => {
+    jest.useFakeTimers();
+    for (let turn = 0; turn < 3; turn++) {
+      level = 0;
+      const pending = recordAndTranscribe(fakeStream(), {
+        maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true,
+      });
+      await advance(5_000);
+      expect(recorders[turn].state).toBe('recording');
+      expect(transcribeCalls()).toHaveLength(turn);
+      level = 0.2;
+      await advance(1_000);
+      level = 0;
+      await advance(2_000);
+      expect((await pending).ok).toBe(true);
+      expect(transcribeCalls()).toHaveLength(turn + 1);
+    }
+  });
+
+  it('revokes during the initial pause without sending audio', async () => {
+    jest.useFakeTimers();
+    level = 0;
+    const controller = new AbortController();
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true, signal: controller.signal,
+    });
+    await advance(4_000);
+    controller.abort();
+    expect((await pending).reason).toBe('aborted');
+    expect(recorders[0].state).toBe('inactive');
+    expect(transcribeCalls()).toHaveLength(0);
+  });
+
+  it('retains the hard ceiling even when speech never arrives', async () => {
+    jest.useFakeTimers();
+    level = 0;
+    const pending = recordAndTranscribe(fakeStream(), {
+      maxMs: 5_000, waitForSpeech: true,
+    });
+    await advance(5_500);
+    expect(recorders[0].state).toBe('inactive');
+    await pending;
+  });
+
+  it('keeps the ordinary fallback initial-silence behavior', async () => {
+    jest.useFakeTimers();
+    level = 0;
+    const pending = recordAndTranscribe(fakeStream());
+    await advance(2_000);
+    expect(recorders[0].state).toBe('inactive');
+    await pending;
   });
 });

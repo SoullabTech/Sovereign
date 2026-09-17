@@ -3524,7 +3524,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             //
             // ⛔ Desktop ONLY. Firefox/Zen reach this same branch by absence of
             // Web Speech and keep the module's own 8 s bound, unchanged.
-            ...(info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS } : {}),
+            ...(info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS, waitForSpeech: true } : {}),
           });
 
           // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve
