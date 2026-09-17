@@ -164,7 +164,7 @@ No unrelated baseline line-number metadata was refreshed or re-blessed.
 | `package.json` | `df00714e7f9487cb943853a56432ec442f9a5fc8` |
 | `.githooks/pre-commit` | `244f35b8c6665f0463b6c1af9667f9c55eec65b0` |
 | `.github/workflows/sovereignty-gate.yml` | `87153fa21fd0af9942fb7ed03e7dd3d4bcfc4474` |
-| `F5-CONFORMANCE-REPAIR-01_P5C_FOUNDER_AUTHORIZATION_2026-09-17.md` | `e281f4f1db495c727051d32ada65b61580992cd1` |
+| `docs/programme/F5-CONFORMANCE-REPAIR-01_P5C_FOUNDER_AUTHORIZATION_2026-09-17.md` | `e281f4f1db495c727051d32ada65b61580992cd1` |
 
 `services/user-sovereignty/delete-memory-api.js` is intentionally absent at the candidate state.
 
