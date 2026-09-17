@@ -9,9 +9,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { v4 as uuid } from 'uuid';
 import { validateModuleSlugs } from '@/lib/studio/moduleDefinitions';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 interface CreatePractitionerInput {
-  memberId: string;
+  // Compatibility claim only. The authenticated session is authoritative.
+  memberId?: string;
   practiceName: string;
   slug: string;
   email: string;
@@ -43,9 +46,14 @@ function isValidPortalType(t: string): t is PortalType {
  */
 export async function POST(request: NextRequest) {
   try {
+    const authenticatedMemberId = await getMemberIdFromRequest(request);
+    if (!authenticatedMemberId) {
+      return unauthenticatedResponse();
+    }
+
     const body: CreatePractitionerInput = await request.json();
     const {
-      memberId,
+      memberId: claimedMemberId,
       practiceName,
       slug,
       email,
@@ -54,10 +62,21 @@ export async function POST(request: NextRequest) {
       consultantProfile,
     } = body;
 
-    // Validate required fields
-    if (!memberId || !practiceName || !slug || !email) {
+    // A caller may still send the legacy memberId field, but it can never select
+    // the identity being elevated to practitioner. Refuse stale or forged claims.
+    if (claimedMemberId && claimedMemberId !== authenticatedMemberId) {
       return NextResponse.json(
-        { error: 'Missing required fields: memberId, practiceName, slug, email' },
+        { error: 'Authenticated member does not match requested practitioner account' },
+        { status: 403 }
+      );
+    }
+
+    const memberId = authenticatedMemberId;
+
+    // Validate required fields
+    if (!practiceName || !slug || !email) {
+      return NextResponse.json(
+        { error: 'Missing required fields: practiceName, slug, email' },
         { status: 400 }
       );
     }

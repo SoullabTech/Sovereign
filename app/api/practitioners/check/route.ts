@@ -7,9 +7,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 interface CheckPractitionerInput {
-  memberId: string;
+  // Compatibility claim only. The authenticated session is authoritative.
+  memberId?: string;
 }
 
 interface PractitionerResult {
@@ -28,15 +31,22 @@ interface PractitionerResult {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: CheckPractitionerInput = await request.json();
-    const { memberId } = body;
+    const authenticatedMemberId = await getMemberIdFromRequest(request);
+    if (!authenticatedMemberId) {
+      return unauthenticatedResponse();
+    }
 
-    if (!memberId) {
+    const body: CheckPractitionerInput = await request.json();
+    const { memberId: claimedMemberId } = body;
+
+    if (claimedMemberId && claimedMemberId !== authenticatedMemberId) {
       return NextResponse.json(
-        { error: 'memberId is required' },
-        { status: 400 }
+        { error: 'Authenticated member does not match requested practitioner account' },
+        { status: 403 }
       );
     }
+
+    const memberId = authenticatedMemberId;
 
     // Check for existing practitioner
     const result = await query<PractitionerResult>(
