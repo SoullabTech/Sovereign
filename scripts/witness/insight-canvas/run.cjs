@@ -14,6 +14,7 @@ const makeState = () => {
     headingDepth: i === 0 ? 1 : 2, headingSignal: 'explicit', editable: true,
     body: text + '\n\n' + ('A reader brings their own experience to this image.\n\n').repeat(8),
   }));
+  sections.forEach(s => { s.headingPrefix = s.heading + '\n\n'; });
   const context = { state: 'section_aware', manuscriptId: 'm1', title: 'Fire Stories', version: 1, sections, updatedAt: '2026-09-17T00:00:00Z' };
   const thread = { threadId: 't1', chainId: 'c1', locusText: sections[0].body, targetSectionId: 's0', sectionLabel: sections[0].heading,
     legacyLocus: false, turns: [{ turnIndex: 0, speaker: 'maia', body: 'One possibility is to make the invitation more concrete.', at: '2026-09-17T00:00:00Z' }],
@@ -21,11 +22,11 @@ const makeState = () => {
   const reading = { id: 'r1', manuscriptId: 'm1', outcome: 'reading',
     scope: { commissionedLens: 'development', bodyScope: ['s0','s1','s2'], withStructure: false },
     readState: { draftId: 'd1', revisionNumber: 1, revisionDigest: 'fixture', inputFingerprint: 'fixture', sectionTopology: ['s0','s1','s2'],
-      sections: Object.fromEntries(sections.map(s => [s.draftSectionId, { revisionNumber: 1, range: { start: 0, end: Array.from(s.body).length }, digest: hash(s.body) }])) },
+      sections: Object.fromEntries(sections.map(s => [s.draftSectionId, { revisionNumber: 1, range: { start: 0, end: Array.from(s.body).length }, digest: hash(s.headingPrefix + s.body) }])) },
     coverage: { sections: { s0: 'body', s1: 'body', s2: 'body' } },
     provenance: { frozenAt: '2026-09-17T00:00:00Z', reader: { model: 'controlled', readerVersion: 'test' } },
     observations: [{ key: 'o1', lens: 'development', phenomenon: 'recurrence', observation: 'The fire story returns in three sections.',
-      evidenceRefs: sections.map(s => ({ kind: 'passage', sectionId: s.draftSectionId, range: { start: 0, end: Array.from(s.body.split('\n')[0]).length } })),
+      evidenceRefs: sections.map(s => ({ kind: 'passage', sectionId: s.draftSectionId, range: { start: Array.from(s.headingPrefix).length, end: Array.from(s.headingPrefix + s.body.split('\n')[0]).length } })),
       doesNotEstablish: ['across-unread-span'], structureDependency: { kind: 'independent' } }],
   };
   return { context, thread, reading, writes: [], conflict: false, purpose: 'Keep the lived fire and the depth of its meaning.' };
@@ -157,11 +158,25 @@ async function run(browserType, name, base) {
     assert.equal(await layer.locator('mark').first().innerText(), 'The fire as encounter.');
     await layer.getByLabel('Evidence markers').uncheck();
     assert.equal(await layer.locator('mark').count(), 0);
+    const cards = await layer.locator('.wsi-passage').evaluateAll(nodes => nodes.map(n => ({ x: n.getBoundingClientRect().x, y: n.getBoundingClientRect().y })));
+    assert.equal(new Set(cards.map(c => Math.round(c.y))).size, 1);
+    assert.ok(cards[0].x < cards[1].x && cards[1].x < cards[2].x);
+    await layer.getByLabel('Evidence markers').check();
+    await layer.getByRole('button', {name:'Show full section'}).first().click();
+    assert.equal(await layer.locator('mark').first().innerText(), 'The fire as encounter.');
+    await layer.getByRole('button', {name:'Return to excerpt'}).first().click();
+    await layer.getByLabel('Your intention', {exact:true}).fill('Each return should deepen the encounter.');
     await develop.screenshot({ path: path.join(out, name + '-develop.png') });
+    await develop.setViewportSize({width:390,height:844});
+    assert.equal(await layer.evaluate(el => el.scrollWidth <= el.clientWidth + 1), true);
+    await develop.screenshot({ path: path.join(out, name + '-comparison-mobile.png') });
+    await develop.setViewportSize({width:1440,height:1000});
+
     const href = await layer.getByRole('link', { name: 'Revise this passage in Write' }).first().getAttribute('href');
     assert.equal(new URL(href, base).searchParams.get('s'), 's0');
     assert.deepEqual(errors, []);
     console.log('Completed checkpoint', name, state.writes.length); results.push(name + ': actual DevelopRoom opens three exact passages; context/markers/identity handoff PASS');
+    await layer.locator('.wsi-intention textarea').first().fill('');
     await layer.getByRole('link', { name: 'Revise this passage in Write' }).nth(1).click();
     const continued = develop.locator('dialog[open]');
     await continued.locator('.wsi-passage').nth(2).waitFor();
@@ -172,6 +187,18 @@ async function run(browserType, name, base) {
     assert.equal(new URL(develop.url()).searchParams.get('s'), 's1');
     assert.equal(clean.writes.length, 0);
     results.push(name + ': Develop-to-Write handoff, different related passage, and original-place restoration PASS');
+    clean.context.sections.forEach(s => { s.body += '\nChanged after the reading.'; });
+    await develop.goto(base + '/?mode=develop&m=m1&s=s0&r=r1');
+    await develop.locator('[data-observation-work-on-canvas="o1"]').click();
+    const stale = develop.locator('dialog[open]');
+    await stale.locator('.wsi-passage').first().waitFor();
+    assert.equal(await stale.locator('mark').count(), 0);
+    assert.equal(await stale.getByRole('slider').isDisabled(), true);
+    assert.equal(await stale.getByLabel('Evidence markers').isDisabled(), true);
+    assert.equal(await stale.getByRole('link', {name:'Revise this passage in Write'}).count(), 0);
+    assert.ok((await stale.locator('.wsi-passage').first().innerText()).includes('differs from the text recorded'));
+    assert.equal(clean.writes.length, 0);
+    results.push(name + ': headed evidence, comparison columns, mobile, full-context toggle, and stale controls PASS');
     await develop.close();
   } finally { await browser.close(); }
 }

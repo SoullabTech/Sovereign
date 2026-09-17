@@ -8,6 +8,8 @@ export interface RebuildSection {
   headingDepth: number | null;
   headingSignal: string | null;
   body: string;
+  /** Exact stored prefix removed for display; never reconstructed from the heading label. */
+  headingPrefix?: string;
   editable: boolean;
 }
 

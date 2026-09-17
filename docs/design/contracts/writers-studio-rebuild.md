@@ -124,3 +124,7 @@ Intention, reader experience, alternatives, proportion, rhythm, examples, and vo
 Chromium and WebKit controlled-component witnesses cover desktop and 390px mobile, keyboard return, preserved drafts/scroll, exact member-version adoption, stale-predecessor rejection, and multi-passage handoff. These use controlled API fixtures, not production manuscript mutations. The earlier screenshots above remain evidence of the underlying room; the new reproducible witness is scripts/witness/insight-canvas, and its acceptance/evidence record is docs/programme/WS-INSIGHT-CANVAS-01_2026-09-17.md.
 
 Evaluate support through the writer clarifying intention, comparing alternatives, preserving voice, completing a chosen revision, and testing intended effects with readers. Time spent, interaction volume, and accepting MAIA suggestions are not measures of creative success.
+
+## Related-passage comparison repair — 2026-09-17
+
+Comparison cards keep verified excerpts together with the writer’s intention and reader experience. Full sections are explicitly expandable. Unverified references have their own evidence explanation; a current reading label alone never authorizes markers or revision. Exact stored heading prefixes are preserved for verification and removed from evidence coordinates only after verification. Desktop comparison and stacked mobile behavior are covered by the controlled Chromium/WebKit witness. See docs/programme/WS-INSIGHT-COMPARISON-REPAIR-01_2026-09-17.md; production acceptance remains pending.
