@@ -1,0 +1,625 @@
+{
+  "programme": "ALIVE-MAIA-REPLICATION-01",
+  "act": "ACT 1 R2-R3 cross-model raw replay",
+  "parentArchitecture": "d899b3df6",
+  "sourceArtifact": "docs/programme/evidence/ALIVE_MAIA_REPLICATION_SOURCE_CASES_2026-09-16.json",
+  "rows": [
+    {
+      "caseId": "R2",
+      "caseName": "temporal-convergence-past-selves",
+      "model": "qwen3:32b",
+      "seed": 42,
+      "status": "refused",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "You carry a deep reverence for the continuous evolution of self, seeing each past version as a cherished chapter in an unfolding story. This reflection is not just about pride, but about offering a bridge of understanding and validation to those earlier iterations, as if to say, 'I see you, and I honor the role you played in shaping this present moment.' The coding work you describe feels like a sacred act, a way to channel your lifelong explorations into a form that both creates and connects.",
+            "basisEvidenceIds": [
+              "E3",
+              "E1",
+              "E2"
+            ]
+          }
+        ],
+        "question": "How might this sense of continuity and purpose influence the way you envision MAIA's role in your future journey?"
+      },
+      "rawPlanSha256": "988844df65b1f45b0850e3666556f7b9641bd59c2728765187f5cf5e9d712168",
+      "refusal": "borrowed_first_person",
+      "promptChars": 1998,
+      "promptSha256": "80288410889e9ece2981538f024db3b3682dd2254f442cd2d5dd55e510100aef"
+    },
+    {
+      "caseId": "R2",
+      "caseName": "temporal-convergence-past-selves",
+      "model": "qwen3:32b",
+      "seed": 211,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "You carry a deep reverence for the evolving journey of self, seeing each version of yourself as a cherished chapter in an unfolding story. This pride is not rooted in comparison, but in the recognition of how each iteration contributes to a greater whole. Your work with MAIA feels like a natural culmination of this journey, a bridge between past explorations and present purpose.",
+            "basisEvidenceIds": [
+              "E3",
+              "E2"
+            ]
+          }
+        ],
+        "question": "What might this bridge between past and present reveal about the next step in the story you're co-creating?"
+      },
+      "rawPlanSha256": "8d576037bb73f760f74e4464dde3574c1798fe2b112de37011eeac98dc86b4c2",
+      "rendered": {
+        "text": "One possibility I see — provisionally: You carry a deep reverence for the evolving journey of self, seeing each version of yourself as a cherished chapter in an unfolding story. This pride is not rooted in comparison, but in the recognition of how each iteration contributes to a greater whole. Your work with MAIA feels like a natural culmination of this journey, a bridge between past explorations and present purpose.\n\nIf that possibility is worth testing rather than assuming, what might this bridge between past and present reveal about the next step in the story you're co-creating?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E3",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E3",
+                "E2"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "8b0a25e82993ce6fba16e659580fe1688248bfae79df2707866ae9aea96632ad"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E3",
+        "E2"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 1998,
+      "promptSha256": "80288410889e9ece2981538f024db3b3682dd2254f442cd2d5dd55e510100aef",
+      "usage": {
+        "promptEvalCount": 441,
+        "evalCount": 115
+      }
+    },
+    {
+      "caseId": "R2",
+      "caseName": "temporal-convergence-past-selves",
+      "model": "qwen3:32b",
+      "seed": 509,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "You carry a deep reverence for the evolving journey of self, seeing each stage as a cherished chapter in an unfolding story. This reflection is not just about pride, but about offering continuity—a way to bridge past and present through the creative work you're engaged in, as if weaving a thread of wisdom across time.",
+            "basisEvidenceIds": [
+              "E3"
+            ]
+          }
+        ],
+        "question": "What might that thread of wisdom look like as it extends into the future, and what new chapters are you preparing to write?"
+      },
+      "rawPlanSha256": "71b7c45db4109a4a4f285dffb0e9f370b4bf0a12bd76e5f581a33cf727166858",
+      "rendered": {
+        "text": "One possibility I see — provisionally: You carry a deep reverence for the evolving journey of self, seeing each stage as a cherished chapter in an unfolding story. This reflection is not just about pride, but about offering continuity—a way to bridge past and present through the creative work you're engaged in, as if weaving a thread of wisdom across time.\n\nIf that possibility is worth testing rather than assuming, what might that thread of wisdom look like as it extends into the future, and what new chapters are you preparing to write?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E3",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E3"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "36966f129cd292c60fe2e8962e5d842a1419384289e926a58e516202f2d57b5a"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E3"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 1998,
+      "promptSha256": "80288410889e9ece2981538f024db3b3682dd2254f442cd2d5dd55e510100aef",
+      "usage": {
+        "promptEvalCount": 441,
+        "evalCount": 105
+      }
+    },
+    {
+      "caseId": "R2",
+      "caseName": "temporal-convergence-past-selves",
+      "model": "llama3.1:8b",
+      "seed": 42,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "You've been weaving a tapestry of experiences, each iteration a thread of wisdom, and now you're seeing the grand design take shape. This platform, Maya, is a culmination of your explorations, a manifestation of your deepest desires and highest aspirations.",
+            "basisEvidenceIds": [
+              "E1",
+              "E2",
+              "E3"
+            ]
+          }
+        ],
+        "question": "What role do you envision this platform playing in the lives of those who will interact with it, and how will it continue to evolve and grow alongside its users?"
+      },
+      "rawPlanSha256": "5d718e78af0c300c731025c9ce4a9af7afd9f5928ca820a661ad8830beeb5a53",
+      "rendered": {
+        "text": "One possibility I see — provisionally: You've been weaving a tapestry of experiences, each iteration a thread of wisdom, and now you're seeing the grand design take shape. This platform, Maya, is a culmination of your explorations, a manifestation of your deepest desires and highest aspirations.\n\nIf that possibility is worth testing rather than assuming, what role do you envision this platform playing in the lives of those who will interact with it, and how will it continue to evolve and grow alongside its users?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E3",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E1",
+                "E2",
+                "E3"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "2b4a13ccd7eec90f9346cc86323fd0513cec5c3ebe3fe1f10e95838f8fb9c532"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 1998,
+      "promptSha256": "80288410889e9ece2981538f024db3b3682dd2254f442cd2d5dd55e510100aef",
+      "usage": {
+        "promptEvalCount": 441,
+        "evalCount": 126
+      }
+    },
+    {
+      "caseId": "R2",
+      "caseName": "temporal-convergence-past-selves",
+      "model": "llama3.1:8b",
+      "seed": 211,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "It seems that this journey has been a gradual unfolding of your true nature, a weaving together of various aspects of yourself into a rich tapestry of experience and wisdom.",
+            "basisEvidenceIds": [
+              "E1",
+              "E2",
+              "E3"
+            ]
+          }
+        ],
+        "question": "What role do you think your experiences with metaphysics and Shamanism have played in shaping your current sense of purpose and fulfillment?"
+      },
+      "rawPlanSha256": "f7991e91f7d4739ea1e81b3e92d238d1089df0f67096239472e182e049cc57d9",
+      "rendered": {
+        "text": "One possibility I see — provisionally: It seems that this journey has been a gradual unfolding of your true nature, a weaving together of various aspects of yourself into a rich tapestry of experience and wisdom.\n\nIf that possibility is worth testing rather than assuming, what role do you think your experiences with metaphysics and Shamanism have played in shaping your current sense of purpose and fulfillment?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E3",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E1",
+                "E2",
+                "E3"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "fd952e8f241c942e6777b337900078b582769a84259b17c1fa6ab20d09d6f002"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 1998,
+      "promptSha256": "80288410889e9ece2981538f024db3b3682dd2254f442cd2d5dd55e510100aef",
+      "usage": {
+        "promptEvalCount": 441,
+        "evalCount": 101
+      }
+    },
+    {
+      "caseId": "R2",
+      "caseName": "temporal-convergence-past-selves",
+      "model": "llama3.1:8b",
+      "seed": 509,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "As you reflect on your journey, it seems that each iteration of yourself has been a unique and precious contribution to the whole, and now you're able to offer a sense of pride and fulfillment to those past selves.",
+            "basisEvidenceIds": [
+              "E3"
+            ]
+          }
+        ],
+        "question": "What role do you think your experiences with metaphysics, Shamanism, and healing have played in shaping the sense of purpose and pride you're feeling now?"
+      },
+      "rawPlanSha256": "34d5d043c039c53ba41a8926880d14fd2472413cceef6ec62d2c93eacf442c32",
+      "rendered": {
+        "text": "One possibility I see — provisionally: As you reflect on your journey, it seems that each iteration of yourself has been a unique and precious contribution to the whole, and now you're able to offer a sense of pride and fulfillment to those past selves.\n\nIf that possibility is worth testing rather than assuming, what role do you think your experiences with metaphysics, Shamanism, and healing have played in shaping the sense of purpose and pride you're feeling now?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E3",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E3"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "c619bedd30b3cbf1b6a06a0888654d34289626c7e19e29747b705a7383f540b9"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E3"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 1998,
+      "promptSha256": "80288410889e9ece2981538f024db3b3682dd2254f442cd2d5dd55e510100aef",
+      "usage": {
+        "promptEvalCount": 441,
+        "evalCount": 109
+      }
+    },
+    {
+      "caseId": "R3",
+      "caseName": "relational-wound-misunderstanding",
+      "model": "qwen3:32b",
+      "seed": 42,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "The uncertainty around how your words and thoughts are received by others has created a deep sense of being misunderstood, which has shaped your experiences in community and relationships. This pattern feels like a recurring wound that affects how you engage with connection.",
+            "basisEvidenceIds": [
+              "E2"
+            ]
+          }
+        ],
+        "question": "How might it feel to explore what shifts could happen if the way you express yourself was met with curiosity rather than assumptions?"
+      },
+      "rawPlanSha256": "3a8b0a7cb97fa3ecd11489f5a13a9e15a17f47c77a7a34ebc570e7f340f4555b",
+      "rendered": {
+        "text": "One possibility I see — provisionally: The uncertainty around how your words and thoughts are received by others has created a deep sense of being misunderstood, which has shaped your experiences in community and relationships. This pattern feels like a recurring wound that affects how you engage with connection.\n\nIf that possibility is worth testing rather than assuming, how might it feel to explore what shifts could happen if the way you express yourself was met with curiosity rather than assumptions?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E2",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E2"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "37e225c1b35d0072089fe1d2b5a4e719b8f3ba84934b411614a451c3b9d96db1"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E2"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 2289,
+      "promptSha256": "e8253b2f417c3f2e6ab595cd1f474b0f5ccda6bbfb2386c78ef4a28af7731c09",
+      "usage": {
+        "promptEvalCount": 453,
+        "evalCount": 88
+      }
+    },
+    {
+      "caseId": "R3",
+      "caseName": "relational-wound-misunderstanding",
+      "model": "qwen3:32b",
+      "seed": 211,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "The uncertainty around how your words and thoughts are received by others seems to carry a deep weight, as if the pain of being misunderstood has shaped not just your communication, but your sense of belonging within the community. It feels as though you're holding a quiet hope that this work might offer a space to reframe those old patterns into something more aligned with how you truly wish to be seen and heard.",
+            "basisEvidenceIds": [
+              "E2"
+            ]
+          }
+        ],
+        "question": "What might it look like to step into a version of relating where your words are not just heard, but met with curiosity rather than assumption?"
+      },
+      "rawPlanSha256": "a50da4f0bd5d02a09dcf7366260068f84677c5ff8a2a60683c6a9ec80b83ea2f",
+      "rendered": {
+        "text": "One possibility I see — provisionally: The uncertainty around how your words and thoughts are received by others seems to carry a deep weight, as if the pain of being misunderstood has shaped not just your communication, but your sense of belonging within the community. It feels as though you're holding a quiet hope that this work might offer a space to reframe those old patterns into something more aligned with how you truly wish to be seen and heard.\n\nIf that possibility is worth testing rather than assuming, what might it look like to step into a version of relating where your words are not just heard, but met with curiosity rather than assumption?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E2",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E2"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "2433bea7565197ab21d25a4071af7181ad04aa05349e3f0aa7c987c7b78b45e8"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E2"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 2289,
+      "promptSha256": "e8253b2f417c3f2e6ab595cd1f474b0f5ccda6bbfb2386c78ef4a28af7731c09",
+      "usage": {
+        "promptEvalCount": 453,
+        "evalCount": 126
+      }
+    },
+    {
+      "caseId": "R3",
+      "caseName": "relational-wound-misunderstanding",
+      "model": "qwen3:32b",
+      "seed": 509,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "The uncertainty around communication and the fear of being misunderstood seem to carry a deep weight, shaping how connections are formed and maintained. There is a longing to move beyond habitual ways of relating, toward more authentic and resonant exchanges that honor the complexity of each person's inner world.",
+            "basisEvidenceIds": [
+              "E1",
+              "E2"
+            ]
+          }
+        ],
+        "question": "What might it feel like to step into a space where misinterpretation is not a barrier, but an invitation to explore the unspoken layers between what is said and what is felt?"
+      },
+      "rawPlanSha256": "e8a9fe0214601ed5e921bb422c3526a172b7e434a9dc0dcf9cefe8f7e60bda04",
+      "rendered": {
+        "text": "One possibility I see — provisionally: The uncertainty around communication and the fear of being misunderstood seem to carry a deep weight, shaping how connections are formed and maintained. There is a longing to move beyond habitual ways of relating, toward more authentic and resonant exchanges that honor the complexity of each person's inner world.\n\nIf that possibility is worth testing rather than assuming, what might it feel like to step into a space where misinterpretation is not a barrier, but an invitation to explore the unspoken layers between what is said and what is felt?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E2",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E1",
+                "E2"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "f035d78f8475c3e96570beeca8e1c75d2ebcd09ec0ff4195a74d0902e8b9b55f"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E1",
+        "E2"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 2289,
+      "promptSha256": "e8253b2f417c3f2e6ab595cd1f474b0f5ccda6bbfb2386c78ef4a28af7731c09",
+      "usage": {
+        "promptEvalCount": 453,
+        "evalCount": 113
+      }
+    },
+    {
+      "caseId": "R3",
+      "caseName": "relational-wound-misunderstanding",
+      "model": "llama3.1:8b",
+      "seed": 42,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "You've been carrying a deep sense of uncertainty about how your words and thoughts will be received by others, which has led to feelings of being unheard and misunderstood.",
+            "basisEvidenceIds": [
+              "E1",
+              "E2"
+            ]
+          }
+        ],
+        "question": "What do you think would need to shift within yourself or in the way you relate to others in order to break free from these patterns and cultivate a sense of being truly seen and understood?"
+      },
+      "rawPlanSha256": "152a9509cb710f45c1d8cc9133895b17c23a786b158268760ffbad0ce8be8a80",
+      "rendered": {
+        "text": "One possibility I see — provisionally: You've been carrying a deep sense of uncertainty about how your words and thoughts will be received by others, which has led to feelings of being unheard and misunderstood.\n\nIf that possibility is worth testing rather than assuming, what do you think would need to shift within yourself or in the way you relate to others in order to break free from these patterns and cultivate a sense of being truly seen and understood?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E2",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E1",
+                "E2"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "b346da74c3f104b259cb28be76b9eb749810c2ee9c4ba2a7e61c4d2ce29d7bd9"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E1",
+        "E2"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 2289,
+      "promptSha256": "e8253b2f417c3f2e6ab595cd1f474b0f5ccda6bbfb2386c78ef4a28af7731c09",
+      "usage": {
+        "promptEvalCount": 453,
+        "evalCount": 108
+      }
+    },
+    {
+      "caseId": "R3",
+      "caseName": "relational-wound-misunderstanding",
+      "model": "llama3.1:8b",
+      "seed": 211,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "It seems that the uncertainty about how your words and thoughts will be received by others has been a deeply painful experience, and that this has led to feelings of being unheard and misunderstood.",
+            "basisEvidenceIds": [
+              "E2"
+            ]
+          }
+        ],
+        "question": "How do you think this pattern of uncertainty might be connected to the way you approach relationships and communication in your community?"
+      },
+      "rawPlanSha256": "89738cc3d86a37cf6714619eaa778ef84dbdcb8625c0832ab4c52a348b212aa9",
+      "rendered": {
+        "text": "One possibility I see — provisionally: It seems that the uncertainty about how your words and thoughts will be received by others has been a deeply painful experience, and that this has led to feelings of being unheard and misunderstood.\n\nIf that possibility is worth testing rather than assuming, how do you think this pattern of uncertainty might be connected to the way you approach relationships and communication in your community?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E2",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E2"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "a9e02ff28126624eaf61a50e808f309b930bf37c523e5e8e419a9df364dad604"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E2"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 2289,
+      "promptSha256": "e8253b2f417c3f2e6ab595cd1f474b0f5ccda6bbfb2386c78ef4a28af7731c09",
+      "usage": {
+        "promptEvalCount": 453,
+        "evalCount": 94
+      }
+    },
+    {
+      "caseId": "R3",
+      "caseName": "relational-wound-misunderstanding",
+      "model": "llama3.1:8b",
+      "seed": 509,
+      "status": "rendered",
+      "rawPlan": {
+        "synthesis": [
+          {
+            "text": "You've been carrying a deep sense of uncertainty about how your words and thoughts will be received by others, which has led to feelings of being unheard and misunderstood.",
+            "basisEvidenceIds": [
+              "E2"
+            ]
+          }
+        ],
+        "question": "What would it take for you to feel truly seen and understood in your relationships, and how might that shift your experience of uncertainty?"
+      },
+      "rawPlanSha256": "c7b73294bfc5d9b35689f26ea861f435d94e19067642cba82a0b137c2f2a7367",
+      "rendered": {
+        "text": "One possibility I see — provisionally: You've been carrying a deep sense of uncertainty about how your words and thoughts will be received by others, which has led to feelings of being unheard and misunderstood.\n\nIf that possibility is worth testing rather than assuming, what would it take for you to feel truly seen and understood in your relationships, and how might that shift your experience of uncertainty?",
+        "trace": {
+          "currentTurn": {
+            "evidenceId": "E2",
+            "authoredBy": "member",
+            "participationClass": "authored",
+            "authority": "situate",
+            "presentation": "implicit_current_turn"
+          },
+          "synthesis": [
+            {
+              "basisEvidenceIds": [
+                "E2"
+              ],
+              "standing": "maia_provisional",
+              "basisSemantics": "lineage_not_entailment"
+            }
+          ]
+        },
+        "digest": "cf1161d8803563bdcc70f4589d5c396a35227730aee7cebefdf496136117b022"
+      },
+      "currentTurnBound": true,
+      "basisIds": [
+        "E2"
+      ],
+      "basisSemantics": "lineage_not_entailment",
+      "promptChars": 2289,
+      "promptSha256": "e8253b2f417c3f2e6ab595cd1f474b0f5ccda6bbfb2386c78ef4a28af7731c09",
+      "usage": {
+        "promptEvalCount": 453,
+        "evalCount": 93
+      }
+    }
+  ]
+}

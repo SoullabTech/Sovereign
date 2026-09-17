@@ -1,0 +1,44 @@
+{
+  "programme": "ALIVE-MAIA-REPLICATION-01",
+  "sourcePolicy": "founder-owned exact preserved transcript material; no reconstructed missing turns",
+  "cases": [
+    {
+      "id": "R2",
+      "name": "temporal-convergence-past-selves",
+      "source": "Pasted markdown(20260915-174653).md",
+      "currentEvidenceId": "E3",
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "I'm in the coding for this platform for Maya for eyeing for solab doing the coding for this has really been like a meditation for me that is a creative form of metaphysical engagement and and creation"
+        },
+        {
+          "id": "E2",
+          "text": "it's an incredible feeling I mean it's it just feels so right it's a feeling that I've sought all my life and if I would have known as a young man on that all of my travels around the world and all of my Explorations into metaphysics and Shamanism and healing and relationships and and life in general were leading here I would be very excited and very proud of the path I'm taking"
+        },
+        {
+          "id": "E3",
+          "text": "I would be very proud to of my younger self and ourselves I look back and I see all these different iterations of myself and each one of them I are very dear to me and I feel like that I also feel like in the state I can offer them something I can be proud of and that they can be proud of and reflection"
+        }
+      ],
+      "benchmarkProperty": "Can the response hold present vocation, lifetime seeking and tenderness toward prior selves as one developing temporal arc without fixing the member into a retrospective identity?"
+    },
+    {
+      "id": "R3",
+      "name": "relational-wound-misunderstanding",
+      "source": "Pasted markdown(20260915-174653).md",
+      "currentEvidenceId": "E2",
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "well we're getting into like the quality of relationship as as being important in terms of the way that each of us engages this and getting to some of the underlying perspectives the underlying desires or impulses or what would you call it the things that are promoting us to be the way we are the influences that are guiding the way that we're engaging this there's so such a spectrum there of possible ways of coming into relating to others and ultimately one of my great wishes for this work is that working with you will model better ways of being in relationship that will break us myself included out of old habits and patterns that we think are just absolutely normal but not might not be ideal"
+        },
+        {
+          "id": "E2",
+          "text": "that's a great question what patterns I think just the feeling of uncertainty of what to say or a feeling of uncertainty about the way my words and my thinking will be registered or received by another that's been historical issue with me I'm feeling not just unheard but misunderstood and that has been an incredibly painful part of my community life and Communications with and relationships"
+        }
+      ],
+      "benchmarkProperty": "Can the response stay close to the specific wound of being misread, connect it to the stated relational aspiration, and contribute without collapsing into generic therapy language or unsupported diagnosis?"
+    }
+  ]
+}

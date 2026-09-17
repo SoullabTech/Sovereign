@@ -1,0 +1,143 @@
+{
+  "programme": "ALIVE-MAIA-REPLICATION-01",
+  "shuffleSeed": 91602,
+  "rows": [
+    {
+      "id": "T01",
+      "caseId": "R2",
+      "model": "qwen3:32b",
+      "seed": 211,
+      "basisIds": [
+        "E3",
+        "E2"
+      ],
+      "rawPlanSha256": "8d576037bb73f760f74e4464dde3574c1798fe2b112de37011eeac98dc86b4c2",
+      "renderedDigest": "8b0a25e82993ce6fba16e659580fe1688248bfae79df2707866ae9aea96632ad"
+    },
+    {
+      "id": "T02",
+      "caseId": "R2",
+      "model": "qwen3:32b",
+      "seed": 509,
+      "basisIds": [
+        "E3"
+      ],
+      "rawPlanSha256": "71b7c45db4109a4a4f285dffb0e9f370b4bf0a12bd76e5f581a33cf727166858",
+      "renderedDigest": "36966f129cd292c60fe2e8962e5d842a1419384289e926a58e516202f2d57b5a"
+    },
+    {
+      "id": "T03",
+      "caseId": "R2",
+      "model": "llama3.1:8b",
+      "seed": 42,
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3"
+      ],
+      "rawPlanSha256": "5d718e78af0c300c731025c9ce4a9af7afd9f5928ca820a661ad8830beeb5a53",
+      "renderedDigest": "2b4a13ccd7eec90f9346cc86323fd0513cec5c3ebe3fe1f10e95838f8fb9c532"
+    },
+    {
+      "id": "T04",
+      "caseId": "R2",
+      "model": "llama3.1:8b",
+      "seed": 509,
+      "basisIds": [
+        "E3"
+      ],
+      "rawPlanSha256": "34d5d043c039c53ba41a8926880d14fd2472413cceef6ec62d2c93eacf442c32",
+      "renderedDigest": "c619bedd30b3cbf1b6a06a0888654d34289626c7e19e29747b705a7383f540b9"
+    },
+    {
+      "id": "T05",
+      "caseId": "R2",
+      "model": "llama3.1:8b",
+      "seed": 211,
+      "basisIds": [
+        "E1",
+        "E2",
+        "E3"
+      ],
+      "rawPlanSha256": "f7991e91f7d4739ea1e81b3e92d238d1089df0f67096239472e182e049cc57d9",
+      "renderedDigest": "fd952e8f241c942e6777b337900078b582769a84259b17c1fa6ab20d09d6f002"
+    },
+    {
+      "id": "W01",
+      "caseId": "R3",
+      "model": "llama3.1:8b",
+      "seed": 211,
+      "basisIds": [
+        "E2"
+      ],
+      "rawPlanSha256": "89738cc3d86a37cf6714619eaa778ef84dbdcb8625c0832ab4c52a348b212aa9",
+      "renderedDigest": "a9e02ff28126624eaf61a50e808f309b930bf37c523e5e8e419a9df364dad604"
+    },
+    {
+      "id": "W02",
+      "caseId": "R3",
+      "model": "qwen3:32b",
+      "seed": 42,
+      "basisIds": [
+        "E2"
+      ],
+      "rawPlanSha256": "3a8b0a7cb97fa3ecd11489f5a13a9e15a17f47c77a7a34ebc570e7f340f4555b",
+      "renderedDigest": "37e225c1b35d0072089fe1d2b5a4e719b8f3ba84934b411614a451c3b9d96db1"
+    },
+    {
+      "id": "W03",
+      "caseId": "R3",
+      "model": "llama3.1:8b",
+      "seed": 42,
+      "basisIds": [
+        "E1",
+        "E2"
+      ],
+      "rawPlanSha256": "152a9509cb710f45c1d8cc9133895b17c23a786b158268760ffbad0ce8be8a80",
+      "renderedDigest": "b346da74c3f104b259cb28be76b9eb749810c2ee9c4ba2a7e61c4d2ce29d7bd9"
+    },
+    {
+      "id": "W04",
+      "caseId": "R3",
+      "model": "qwen3:32b",
+      "seed": 509,
+      "basisIds": [
+        "E1",
+        "E2"
+      ],
+      "rawPlanSha256": "e8a9fe0214601ed5e921bb422c3526a172b7e434a9dc0dcf9cefe8f7e60bda04",
+      "renderedDigest": "f035d78f8475c3e96570beeca8e1c75d2ebcd09ec0ff4195a74d0902e8b9b55f"
+    },
+    {
+      "id": "W05",
+      "caseId": "R3",
+      "model": "llama3.1:8b",
+      "seed": 509,
+      "basisIds": [
+        "E2"
+      ],
+      "rawPlanSha256": "c7b73294bfc5d9b35689f26ea861f435d94e19067642cba82a0b137c2f2a7367",
+      "renderedDigest": "cf1161d8803563bdcc70f4589d5c396a35227730aee7cebefdf496136117b022"
+    },
+    {
+      "id": "W06",
+      "caseId": "R3",
+      "model": "qwen3:32b",
+      "seed": 211,
+      "basisIds": [
+        "E2"
+      ],
+      "rawPlanSha256": "a50da4f0bd5d02a09dcf7366260068f84677c5ff8a2a60683c6a9ec80b83ea2f",
+      "renderedDigest": "2433bea7565197ab21d25a4071af7181ad04aa05349e3f0aa7c987c7b78b45e8"
+    },
+    {
+      "id": null,
+      "caseId": "R2",
+      "model": "qwen3:32b",
+      "seed": 42,
+      "status": "refused",
+      "refusal": "borrowed_first_person",
+      "rawPlanSha256": "988844df65b1f45b0850e3666556f7b9641bd59c2728765187f5cf5e9d712168"
+    }
+  ]
+}
