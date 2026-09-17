@@ -28,7 +28,8 @@ const UNBOUND = {
   builder_os: { state: 'UNKNOWN', detail: null },
   route_a: { state: 'UNKNOWN', detail: null },
   local_worker: { state: 'UNKNOWN', detail: null },
-  claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; Desktop Alpha does not auto-execute it.' },
+  claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; routing alone never executes a frontier model.' },
+  frontier_reasoner: { state: 'AVAILABLE', detail: 'Nemotron external reasoning connected; explicit act required.' },
   builder_mechanism: { state: 'UNAVAILABLE', detail: 'no execution substrate is bound — bind a repository before submitting work units' },
   governance_holds: [],
   desktop_runtime: { state: 'AVAILABLE', detail: 'Electron 32, node 20' },
@@ -141,9 +142,9 @@ describe('the JOP-00 distinctions survive presentation', () => {
 });
 
 describe('C3 — available reasoning is not executable authority', () => {
-  test('Claude reasoning and automatic C3 are TWO facts, not one row', () => {
+  test('frontier reasoning and automatic C3 are TWO facts, not one row', () => {
     const v = L.deriveOperatorView(READY_STATE);
-    const r = v.organs.find(o => o.name === 'Claude reasoning');
+    const r = v.organs.find(o => o.name === 'External frontier reasoning');
     const x = v.organs.find(o => o.name === 'Automatic C3 execution');
     assert.ok(r && x, 'both must exist independently');
     assert.equal(r.state, L.READY);

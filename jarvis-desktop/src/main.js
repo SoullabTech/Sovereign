@@ -14,6 +14,8 @@ const GOV = require('./governance.js');
 const RepoConfig = require('./repo-config.js');
 const { childEnv, resolveNodeBinary } = require('./child-env.js');
 const MECH = require('./builder-mechanism.js');
+const CONTINUITY = require('./continuity.js');
+const FRONTIER = require('./frontier-worker.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
@@ -511,7 +513,9 @@ ipcMain.handle('jarvis:status', async () => {
     // production. UNCONFIGURED and NOT PROBED are the honest answers.
     memory_postgres: { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one. Memory/Postgres state is read from the host, not from this console.' },
     production: { state: 'NOT PROBED', detail: 'requires explicit production/SSH authority, which Desktop does not hold and does not request. Not probed by design.' },
-    claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; Desktop Alpha does not auto-execute it (see §8 security stance) — this console itself runs the Claude Code session that built it.' },
+    claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; routing alone never executes a frontier model.' },
+    frontier_reasoner: FRONTIER.status(),
+    continuity: CONTINUITY.status(currentRoot()),
     builder_mechanism: { state: 'UNKNOWN', detail: null },
     governance_holds: [],
     desktop_runtime: { state: 'AVAILABLE', detail: `Electron ${process.versions.electron}, node ${process.versions.node}` },
@@ -640,6 +644,17 @@ ipcMain.handle('jarvis:status', async () => {
   }
 
   return result;
+});
+
+// ---------------------------------------------------------------------------
+// jarvis:continuity-search — read-only search of the local JARVIS continuity
+// projection. The renderer may provide only query text + a bounded result count.
+// The main process chooses the fixed local script and database path; no arbitrary
+// command, path, audience, or disclosure class crosses IPC.
+ipcMain.handle('jarvis:continuity-search', async (_evt, req) => {
+  const query = req && typeof req === 'object' ? req.query : '';
+  const limit = req && typeof req === 'object' ? req.limit : undefined;
+  return CONTINUITY.search(currentRoot(), query, limit);
 });
 
 // ---------------------------------------------------------------------------
@@ -852,10 +867,21 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
     }
   } else if (decision.execution_lane === 'C3') {
     response.status = 'routed_not_executed';
-    response.result = { note: 'C3 selected. Desktop Alpha does not auto-invoke Claude — that would exercise founder identity / widen permissions without an active founder-driven session (§8). Open a Claude Code session to execute this task.' };
+    response.result = {
+      note: 'C3 selected. Routing does not execute a frontier model. A separate explicit founder act may send only approved external-safe task text to Nemotron.',
+      frontier_reasoner: FRONTIER.status(),
+    };
   }
 
   return response;
+});
+
+// Explicit C3 frontier act. This is intentionally a separate IPC action from
+// routing: selecting C3 never causes external execution. The worker admits only
+// task text + an explicit external_ok boolean and runs in empty temporary
+// custody with all filesystem/tool permissions denied.
+ipcMain.handle('jarvis:run-external-reasoning', async (_evt, req) => {
+  return FRONTIER.run(req || {});
 });
 
 // ---------------------------------------------------------------------------
