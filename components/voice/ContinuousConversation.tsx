@@ -2507,6 +2507,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Check if pause has lasted long enough AND we have real content
         const silenceDuration = now - silenceStartTimeRef.current;
         if (silenceDuration >= adaptiveSilenceThreshold && accumulatedTranscript.current.trim()) {
+          // TURN-01-RUNTIME-CONFORMANCE-01: audio-level VAD is an automatic
+          // endpoint authority too. Explicit floor ownership disables ALL
+          // automatic endpoint authorities, not only Web Speech/native timers.
+          // Keep observing the pause, but never convert silence into member
+          // completion while the member owns the floor.
+          if (!automaticTurnCommitAllowed()) {
+            logVoiceEvent('voice_floor_held', {
+              source: 'vad',
+              turnCommitId: turnCommitIdRef.current,
+              floorControlMode: turnTakingPreferencesRef.current.floorControlMode,
+            });
+            return;
+          }
           console.log('✅ [VAD] Natural completion detected after', silenceDuration, 'ms - sending to MAIA');
           silenceStartTimeRef.current = 0; // Reset to prevent duplicate triggers
           hasSpokenRef.current = false; // Reset for next turn
