@@ -201,6 +201,12 @@ export function AccountSettings() {
   // Delete account state
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [deleteOutcome, setDeleteOutcome] = useState<{
+    state: string;
+    message: string;
+    blocked: string[];
+    actRef?: string;
+  } | null>(null);
 
   // Settings applied confirmation
   const [settingsApplied, setSettingsApplied] = useState(false);
@@ -822,6 +828,7 @@ export function AccountSettings() {
   const deleteAccount = useCallback(async () => {
     if (!userId || !profile || deleteConfirm !== profile.username) return;
     setDeleting(true);
+    setDeleteOutcome(null);
 
     try {
       const res = await apiFetch('/api/members/delete-account', {
@@ -836,14 +843,35 @@ export function AccountSettings() {
         }),
       });
 
-      if (res.ok) {
+      const result = await res.json().catch(() => ({
+        state: 'failed',
+        message: 'Account deletion could not be completed safely. Nothing was changed by this request.',
+        blocked: [],
+      }));
+
+      if (res.ok && result.state === 'completed' && result.accountChanged === true) {
         localStorage.removeItem('beta_user');
         localStorage.removeItem('maia_settings');
         localStorage.removeItem('maia_account_settings');
         window.location.href = '/';
+        return;
       }
+
+      setDeleteOutcome({
+        state: result.state || 'failed',
+        message: result.message || 'Account deletion did not complete. Nothing was changed by this request.',
+        blocked: Array.isArray(result.blocked) ? result.blocked : [],
+        actRef: typeof result.actRef === 'string' ? result.actRef : undefined,
+      });
     } catch (err) {
-      console.error('[AccountSettings] Delete error:', err);
+      console.error('[AccountSettings] Delete request failed', {
+        errorType: err instanceof Error ? err.name : typeof err,
+      });
+      setDeleteOutcome({
+        state: 'failed',
+        message: 'Account deletion could not be reached. Nothing was changed by this request.',
+        blocked: [],
+      });
     } finally {
       setDeleting(false);
     }
@@ -2725,7 +2753,9 @@ export function AccountSettings() {
           <div className="flex-1">
             <h4 className="text-sm font-medium text-red-300">Delete Account</h4>
             <p className="text-xs text-stone-400 mt-1 mb-3">
-              Permanently delete your account and all associated data. This cannot be undone.
+              Request permanent account deletion. MAIA will only complete it when every governed
+              data relationship can be handled and verified safely. If it cannot complete, your
+              account remains unchanged and the reason is shown here.
             </p>
             <input
               type="text"
@@ -2740,8 +2770,27 @@ export function AccountSettings() {
               className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               whileTap={{ scale: 0.98 }}
             >
-              {deleting ? 'Deleting...' : 'Delete My Account'}
+              {deleting ? 'Checking deletion…' : 'Request Account Deletion'}
             </motion.button>
+            {deleteOutcome && (
+              <div
+                className="mt-3 rounded-lg border border-red-500/20 bg-black/20 p-3 text-xs text-stone-300"
+                role="status"
+                aria-live="polite"
+              >
+                <p>{deleteOutcome.message}</p>
+                {deleteOutcome.blocked.length > 0 && (
+                  <p className="mt-2 text-stone-400">
+                    Still governed: {deleteOutcome.blocked.join(', ')}
+                  </p>
+                )}
+                {deleteOutcome.actRef && (
+                  <p className="mt-2 font-mono text-[10px] text-stone-500">
+                    Request reference: {deleteOutcome.actRef}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

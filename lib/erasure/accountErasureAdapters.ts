@@ -127,7 +127,7 @@ export function planRegistryLocus(
         adapterKey: 'evidence_missing',
         phase: 'pre_identity',
         verificationRule: 'circle_live_state_required',
-        requiresS5: false,
+        requiresS5: locus.requiresS5,
         dependsOn,
         refusalReason: 'missing_circle_fact',
       };
@@ -144,7 +144,7 @@ export function planRegistryLocus(
       adapterKey: locus.adapterKey,
       phase: 'pre_identity',
       verificationRule: locus.verificationRule,
-      requiresS5: false,
+      requiresS5: locus.requiresS5,
       dependsOn,
     };
   }

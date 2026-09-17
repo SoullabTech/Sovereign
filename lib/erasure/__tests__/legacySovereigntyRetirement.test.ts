@@ -77,9 +77,13 @@ describe('F5 P5-C legacy sovereignty retirement', () => {
     expect(existsSync(join(ROOT, 'app/api/sovereignty/tts-monitor/route.ts'))).toBe(true);
   });
 
-  it('keeps canonical account deletion and Account Settings byte-identical to P5-B', () => {
-    expect(gitBlob('app/api/members/delete-account/route.ts')).toBe('256c8e2bfcd390308ba53458ca30581f109fb7af');
-    expect(gitBlob('components/account/AccountSettings.tsx')).toBe('c3d82a4463d24dd7e588dcaabf383af9beabea58');
+  it('allows P5-D canonical succession without reopening the retired legacy surface', () => {
+    const canonical = source('app/api/members/delete-account/route.ts');
+    const client = source('components/account/AccountSettings.tsx');
+    expect(canonical).toMatch(/executeAccountErasure/);
+    expect(client).toMatch(/deleteOutcome/);
+    expect(canonical).not.toMatch(/\/api\/sovereignty|UserDataSovereignty|delete-memory-api/);
+    expect(client).not.toMatch(/\/api\/sovereignty|UserDataSovereignty|delete-memory-api/);
   });
 
   it('kills the legacy-fallback mutant at the canonical route', () => {

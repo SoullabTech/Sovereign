@@ -31,8 +31,8 @@ interface RegistryLocus {
 
 interface ShadowRegistry {
   version: string;
-  coverageOnly: true;
-  activationProhibited: true;
+  coverageOnly: boolean;
+  activationProhibited: boolean;
   memberBoundLoci: RegistryLocus[];
   memberForeignKeyDeclarations: RegistryFk[];
 }

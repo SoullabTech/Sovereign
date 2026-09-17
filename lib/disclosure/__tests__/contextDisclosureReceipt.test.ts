@@ -236,9 +236,15 @@ describe('F5 · custody is stated, not inherited', () => {
     expect(MIGRATION_CODE_ONLY()).not.toMatch(/pg_cron|TTL|expires_at/i);
   });
 
-  it('is named in GOVERNED_CONTENT so it cannot survive account deletion by omission', () => {
-    const route = fs.readFileSync(path.join(process.cwd(), 'app/api/members/delete-account/route.ts'), 'utf8');
-    expect(route).toMatch(/table: 'context_disclosure_receipts', column: 'member_id'/);
+  it('is classified in the governed erasure registry so it cannot survive account deletion by omission', () => {
+    const registry = JSON.parse(fs.readFileSync(
+      path.join(process.cwd(), 'config/governance/account-erasure-registry.v3.json'),
+      'utf8',
+    ));
+    expect(registry.memberBoundLoci.find((x: any) => x.table === 'context_disclosure_receipts')).toMatchObject({
+      identityColumns: ['member_id'],
+      disposition: 'refuse',
+    });
   });
 
   it('anchors on the serving request, never on a prunable turn row', () => {

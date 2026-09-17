@@ -5,7 +5,7 @@ name: Sovereignty Gate
 # supplies the missing reachability; it deliberately does NOT rewrite the checks.
 #
 # Legs (existing set verified 2026-08-09; erasure-registry added + proved 2026-09-17):
-#   check:erasure-registry · check:legacy-erasure-retired · check:no-supabase · check:no-vendor-voices · check:voice-provenance
+#   check:erasure-registry · check:erasure-activation · check:legacy-erasure-retired · check:no-supabase · check:no-vendor-voices · check:voice-provenance
 #   check:no-openai   · lib/tts/__tests__/voiceIdentityContract.test.ts (29 tests)
 #
 # PHI / sensitive logging gate (added 2026-08-10, docs/ops/PHI_GATE_REPAIR_2026-08-09.md

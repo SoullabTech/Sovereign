@@ -17,10 +17,11 @@
 #      if the incoming dump predates them).
 #   2. Restores the dump.
 #   3. RE-APPLIES the preserved manifests/scopes/tombstones.
-#   4. SWEEPS: deletes any restored row that is tombstoned or falls inside a
-#      deletion-manifest scope — the restore-side half of R20. (The DB-side
-#      half is the s5_refuse_tombstoned BEFORE INSERT trigger, which covers
-#      data-only restores into a live schema.)
+#   4. SWEEPS: applies deletion tombstones/scopes and P5-D account-erasure
+#      fences. Ordinary member-bound rows stay absent; Circle membership/share/
+#      response rows are restored only in their lawful left/revoked/withdrawn
+#      tombstone state. (The DB-side triggers cover data-only restores into a
+#      live schema.)
 #   5. Reports counts only — never content.
 #
 # Usage:
@@ -90,17 +91,22 @@ if [ -s "$PRESERVE_FILE" ]; then
 fi
 
 # ── 4. Sweep — the restore may not keep what sovereignty deleted ─────────────
-echo "🧹 Sweeping tombstoned and manifest-scoped rows..."
+echo "🧹 Sweeping tombstoned, member-erased and manifest-scoped rows..."
 "${PSQL[@]}" <<'SQL'
 DO $$
 DECLARE
   scope RECORD;
   ts RECORD;
+  col RECORD;
   n BIGINT;
   total BIGINT := 0;
 BEGIN
-  -- Per-object tombstones
-  FOR ts IN SELECT DISTINCT object_kind FROM provenance_tombstones LOOP
+  -- Per-object tombstones. The members subject tombstone is deliberately last:
+  -- dependent member-bound rows and Circle state must become inert first.
+  FOR ts IN
+    SELECT DISTINCT object_kind FROM provenance_tombstones
+     WHERE object_kind <> 'members'
+  LOOP
     IF to_regclass('public.' || ts.object_kind) IS NULL THEN CONTINUE; END IF;
     EXECUTE format(
       'DELETE FROM %I t USING provenance_tombstones p
@@ -113,13 +119,89 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- P5-D Circle fences preserve historical FACTS while ending representation.
+  IF to_regclass('public.shared_artifacts') IS NOT NULL THEN
+    UPDATE shared_artifacts s
+       SET revoked_at = COALESCE(s.revoked_at, p.tombstoned_at)
+      FROM provenance_tombstones p
+     WHERE p.object_kind = 'shared_artifacts:revoked'
+       AND p.object_id = s.id::text;
+
+    UPDATE shared_artifacts s
+       SET revoked_at = COALESCE(s.revoked_at, p.tombstoned_at)
+      FROM provenance_tombstones p
+     WHERE p.object_kind = 'members'
+       AND p.object_id = s.shared_by::text
+       AND s.revoked_at IS NULL;
+  END IF;
+
+  IF to_regclass('public.circle_inquiry_responses') IS NOT NULL THEN
+    UPDATE circle_inquiry_responses r
+       SET withdrawn_at = COALESCE(r.withdrawn_at, p.tombstoned_at),
+           response_text = NULL,
+           response_type = NULL
+      FROM provenance_tombstones p
+     WHERE p.object_kind = 'circle_inquiry_responses:withdrawn'
+       AND p.object_id = r.id::text;
+
+    UPDATE circle_inquiry_responses r
+       SET withdrawn_at = COALESCE(r.withdrawn_at, p.tombstoned_at),
+           response_text = NULL,
+           response_type = NULL
+      FROM provenance_tombstones p
+     WHERE p.object_kind = 'members'
+       AND p.object_id = r.member_id::text
+       AND (r.withdrawn_at IS NULL OR r.response_text IS NOT NULL OR r.response_type IS NOT NULL);
+  END IF;
+
+  IF to_regclass('public.circle_memberships') IS NOT NULL THEN
+    UPDATE circle_memberships m
+       SET status = 'left', updated_at = GREATEST(m.updated_at, p.tombstoned_at)
+      FROM provenance_tombstones p
+     WHERE p.object_kind = 'circle_memberships:left'
+       AND p.object_id = m.id::text;
+
+    UPDATE circle_memberships m
+       SET status = 'left', updated_at = GREATEST(m.updated_at, p.tombstoned_at)
+      FROM provenance_tombstones p
+     WHERE p.object_kind = 'members'
+       AND p.object_id = m.member_id::text
+       AND m.status = 'active';
+  END IF;
+
+  -- A member tombstone is also a broad subject fence. Any direct member-bound
+  -- row restored from an older dump is removed even if that exact object did not
+  -- exist at deletion time. Circle rows and the erasure accountability act are
+  -- excluded because their lawful post-erasure state is retention, not erasure.
+  FOR col IN
+    SELECT table_name, column_name
+      FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND column_name = ANY(ARRAY[
+         'user_id','member_id','owner_id','author_id','created_by','subject_member_id',
+         'participant_id','actor_id','from_member_id','to_member_id',
+         'client_member_id','practitioner_member_id'
+       ])
+       AND table_name NOT IN (
+         'account_erasure_acts',
+         'circle_memberships',
+         'circle_inquiry_responses',
+         'deletion_manifest_scopes'
+       )
+  LOOP
+    EXECUTE format(
+      'DELETE FROM %I t USING provenance_tombstones p
+        WHERE p.object_kind = ''members'' AND t.%I::text = p.object_id',
+      col.table_name, col.column_name);
+    GET DIAGNOSTICS n = ROW_COUNT;
+    total := total + n;
+  END LOOP;
+
   -- Predicate scopes (table + session + window)
   FOR scope IN SELECT * FROM deletion_manifest_scopes LOOP
     IF to_regclass('public.' || scope.table_name) IS NULL THEN CONTINUE; END IF;
     IF scope.session_id IS NULL AND scope.window_start IS NULL THEN
-      -- member-only scope: column naming varies per table (user_id/member_id);
-      -- those deletions must tombstone per-object ids instead. LOUD, not silent.
-      RAISE WARNING '[PROVENANCE] restore sweep: member-only scope on % NOT swept — use per-object tombstones for member deletions (manifest %)',
+      RAISE WARNING '[PROVENANCE] restore sweep: member-only scope on % NOT swept — P5-D member erasure uses subject/object tombstones instead (manifest %)',
         scope.table_name, scope.manifest_id;
       CONTINUE;
     END IF;
@@ -132,13 +214,19 @@ BEGIN
       USING scope.session_id, scope.window_start, scope.window_end;
     GET DIAGNOSTICS n = ROW_COUNT;
     total := total + n;
-    IF n > 0 THEN
-      RAISE NOTICE '[PROVENANCE] restore sweep: % scoped row(s) removed from % (manifest %)',
-        n, scope.table_name, scope.manifest_id;
-    END IF;
   END LOOP;
 
-  RAISE NOTICE '[PROVENANCE] restore sweep complete — % row(s) refused resurrection', total;
+  -- Identity ends last. Any old RESTRICT/NO ACTION relationship that was absent
+  -- at erasure time but reappears from an older backup makes this DELETE fail
+  -- loudly. The restore must never silently resurrect the erased member.
+  IF to_regclass('public.members') IS NOT NULL THEN
+    DELETE FROM members m USING provenance_tombstones p
+     WHERE p.object_kind = 'members' AND p.object_id = m.id::text;
+    GET DIAGNOSTICS n = ROW_COUNT;
+    total := total + n;
+  END IF;
+
+  RAISE NOTICE '[PROVENANCE] governed restore sweep complete — % ordinary row(s) refused resurrection; Circle tombstone updates are retained history', total;
 END $$;
 SQL
 

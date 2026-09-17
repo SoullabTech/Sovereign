@@ -129,12 +129,12 @@ describe('F5 P5-B shadow account-erasure plan', () => {
     });
   });
 
-  it('does not import the shadow planner into the live route or Account Settings', () => {
+  it('P5-D succeeds the shadow boundary without letting route/client bypass the governed executor', () => {
     const route = readFileSync(path.join(process.cwd(), 'app/api/members/delete-account/route.ts'), 'utf8');
     const client = readFileSync(path.join(process.cwd(), 'components/account/AccountSettings.tsx'), 'utf8');
     expect(route).not.toMatch(/accountErasureShadowPlan|accountErasureAdapters/);
-    expect(client).not.toMatch(/accountErasureShadowPlan|accountErasureAdapters/);
-    expect(route).toMatch(/CONTAINMENT_POSTURE:\s*'refuse'\s*\|\s*'proceed'\s*=\s*'refuse'/);
+    expect(client).not.toMatch(/accountErasureShadowPlan|accountErasureAdapters|accountErasureExecutor/);
+    expect(route).toMatch(/executeAccountErasure/);
   });
 
 
@@ -170,8 +170,12 @@ describe('F5 P5-B shadow account-erasure plan', () => {
     expect(plan.blockers).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'missing_circle_fact' })]));
   });
 
-  it('preserves the P4 positive-control files byte-for-byte from the P5-A tip', () => {
-    expect(sha1('lib/circles/membershipService.ts')).toBe('3e9613473cef185268a5597235e40c9b0d14275c');
+  it('P5-D changes only the authorized Circles helper while unrelated positive controls stay byte-identical', () => {
+    const membership = readFileSync(path.join(process.cwd(), 'lib/circles/membershipService.ts'), 'utf8');
+    expect(membership).toMatch(/leaveCircleWithClient/);
+    const helper = membership.slice(membership.indexOf('export async function leaveCircleWithClient'));
+    expect(helper.indexOf('UPDATE shared_artifacts')).toBeLessThan(helper.indexOf('tombstoneMemberResponsesInCircle'));
+    expect(helper.indexOf('tombstoneMemberResponsesInCircle')).toBeLessThan(helper.indexOf("status = 'left'"));
     expect(sha1('lib/circles/consentService.ts')).toBe('441588620a038816e05f9dd8163d0777f1856def');
     expect(sha1('lib/manuscript/source/eraseManuscript.ts')).toBe('ac5b9fb3707e68e55a4e14b8bf79858ef725bcf3');
     expect(sha1('lib/storage/fileVault.ts')).toBe('d21092f331caa119a14f493b586ee9b0ad6e4892');
