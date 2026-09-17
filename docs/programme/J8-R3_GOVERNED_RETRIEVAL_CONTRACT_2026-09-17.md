@@ -7,6 +7,15 @@
 
 ---
 
+> ⚠️ **ADJUDICATED 2026-09-17** — see `J9_REPRESENTATION_AUTHORITY_ADJUDICATION_2026-09-17.md`.
+> The §2 non-conformance findings are **preserved as evidence of record** and are unchanged.
+> ⚠️ **One open collision:** §VII of the contract carries a **four**-class representation taxonomy
+> (AUTHORITATIVE / DERIVED-GOVERNED / DESCRIPTIVE / EXPERIMENTAL). The ratified law carries **three**
+> (DESCRIPTIVE / SELECTIVE / AUTHORITATIVE). `DERIVED-GOVERNED` ≠ `SELECTIVE` on its face and `EXPERIMENTAL`
+> has no ratified counterpart. Reconciliation is **OWED** before either reaches implementation; ⛔ not merged
+> silently here.
+> ⛔ **No claim of J8 reconciliation is permitted** — J8-R1 and J8-R2 remain out of custody.
+
 ## §0 — Custody note
 
 ⚠️ **J8-R1 and J8-R2 are NOT in this repository.** R3 names them as parents; neither is present. This is the
