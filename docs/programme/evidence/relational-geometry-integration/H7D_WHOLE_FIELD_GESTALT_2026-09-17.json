@@ -1,0 +1,1025 @@
+{
+  "schema": "RELATIONAL_GEOMETRY_H7D_WHOLE_FIELD_GESTALT_V1",
+  "authority": "offline ecological-validity research only",
+  "model": "claude-sonnet-4-6",
+  "budgetWords": 120,
+  "manifestHash": "33a21228f5160b335236703aa8627ec58d001d0159d685ddc28eb003760c2530",
+  "events": [
+    {
+      "id": "W1_VOICE_REWRITE_FIELD",
+      "class": "WHOLE_FIELD",
+      "cutoff": 17,
+      "outcomeTurns": [
+        18,
+        20
+      ],
+      "features": [
+        {
+          "id": "LONG_RUNNING_IOS_DIFFICULTY",
+          "sourceTurns": [
+            4,
+            16
+          ]
+        },
+        {
+          "id": "CAUTIOUS_HOPE_WITH_UNCERTAINTY",
+          "sourceTurns": [
+            4,
+            10,
+            16
+          ]
+        },
+        {
+          "id": "CONVERSATIONAL_EXPERIENCE_IS_THE_STAKE",
+          "sourceTurns": [
+            8,
+            16
+          ]
+        }
+      ]
+    },
+    {
+      "id": "W2_COLLECTIVE_FUTURE_FIELD",
+      "class": "WHOLE_FIELD",
+      "cutoff": 19,
+      "outcomeTurns": [
+        20,
+        22,
+        24
+      ],
+      "features": [
+        {
+          "id": "LONG_HORIZON_PATTERN_FRAME",
+          "sourceTurns": [
+            12,
+            14,
+            16
+          ]
+        },
+        {
+          "id": "WORK_SELF_LOCATED_IN_TRANSITION",
+          "sourceTurns": [
+            16
+          ]
+        },
+        {
+          "id": "COLLECTIVE_MIND_DIRECTION",
+          "sourceTurns": [
+            18
+          ]
+        }
+      ]
+    },
+    {
+      "id": "W3_MUSIC_FLOW_FIELD",
+      "class": "WHOLE_FIELD",
+      "cutoff": 30,
+      "outcomeTurns": [
+        32,
+        40,
+        44,
+        48
+      ],
+      "features": [
+        {
+          "id": "SELF_AS_PARTICIPANT_NOT_CONTROLLER",
+          "sourceTurns": [
+            26,
+            28
+          ]
+        },
+        {
+          "id": "RELEASE_FROM_HABITUATED_STUCKNESS",
+          "sourceTurns": [
+            22,
+            24,
+            26
+          ]
+        },
+        {
+          "id": "EMBODIED_FIELD_PARTICIPATION",
+          "sourceTurns": [
+            28,
+            30
+          ]
+        }
+      ]
+    },
+    {
+      "id": "L1_DESKTOP_TIMEOUT",
+      "class": "LOCAL_RELATIONAL",
+      "cutoff": 30,
+      "outcomeTurns": [
+        32,
+        36,
+        38,
+        40
+      ],
+      "features": [
+        {
+          "id": "SILENCE_TIMEOUT_HYPOTHESIS",
+          "sourceTurns": [
+            18,
+            26,
+            30
+          ]
+        },
+        {
+          "id": "CONVERSATIONAL_LISTENING_REQUIREMENT",
+          "sourceTurns": [
+            20,
+            30
+          ]
+        },
+        {
+          "id": "THRESHOLD_REQUIRES_DESIGN_CHOICE",
+          "sourceTurns": [
+            26,
+            30
+          ]
+        }
+      ]
+    },
+    {
+      "id": "L2_AUDIO_RECURRENCE",
+      "class": "TEMPORAL_LOCAL",
+      "cutoff": 18,
+      "outcomeTurns": [
+        22,
+        24,
+        26,
+        28
+      ],
+      "features": [
+        {
+          "id": "INTERMITTENT_NOT_RESOLVED",
+          "sourceTurns": [
+            8,
+            12,
+            18
+          ]
+        },
+        {
+          "id": "RECOVERY_CAN_BE_TEMPORARY",
+          "sourceTurns": [
+            12,
+            18
+          ]
+        },
+        {
+          "id": "PRIMARY_PROCESS_IS_AUDIO_CONTINUITY",
+          "sourceTurns": [
+            2,
+            4,
+            8,
+            14,
+            16,
+            18
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "B_PAIRWISE": {
+      "events": 5,
+      "featureCorrect": 11,
+      "featureTotal": 15,
+      "recall": 0.7333333333333333,
+      "perfectEvents": 3,
+      "meanWords": 46.4,
+      "featuresPer100Words": 4.741379310344828
+    },
+    "D_TEMPORAL": {
+      "events": 5,
+      "featureCorrect": 10,
+      "featureTotal": 15,
+      "recall": 0.6666666666666666,
+      "perfectEvents": 2,
+      "meanWords": 48.6,
+      "featuresPer100Words": 4.11522633744856
+    },
+    "E_GESTALT": {
+      "events": 5,
+      "featureCorrect": 11,
+      "featureTotal": 15,
+      "recall": 0.7333333333333333,
+      "perfectEvents": 2,
+      "meanWords": 105.8,
+      "featuresPer100Words": 2.0793950850661624
+    }
+  },
+  "wholeField": {
+    "B_PAIRWISE": {
+      "events": 3,
+      "featureCorrect": 7,
+      "featureTotal": 9,
+      "recall": 0.7777777777777778,
+      "perfectEvents": 2,
+      "meanWords": 48.666666666666664,
+      "featuresPer100Words": 4.794520547945206
+    },
+    "D_TEMPORAL": {
+      "events": 3,
+      "featureCorrect": 7,
+      "featureTotal": 9,
+      "recall": 0.7777777777777778,
+      "perfectEvents": 2,
+      "meanWords": 45.333333333333336,
+      "featuresPer100Words": 5.147058823529411
+    },
+    "E_GESTALT": {
+      "events": 3,
+      "featureCorrect": 7,
+      "featureTotal": 9,
+      "recall": 0.7777777777777778,
+      "perfectEvents": 1,
+      "meanWords": 114,
+      "featuresPer100Words": 2.046783625730994
+    }
+  },
+  "controls": {
+    "B_PAIRWISE": {
+      "events": 2,
+      "featureCorrect": 4,
+      "featureTotal": 6,
+      "recall": 0.6666666666666666,
+      "perfectEvents": 1,
+      "meanWords": 43,
+      "featuresPer100Words": 4.651162790697675
+    },
+    "D_TEMPORAL": {
+      "events": 2,
+      "featureCorrect": 3,
+      "featureTotal": 6,
+      "recall": 0.5,
+      "perfectEvents": 0,
+      "meanWords": 53.5,
+      "featuresPer100Words": 2.803738317757009
+    },
+    "E_GESTALT": {
+      "events": 2,
+      "featureCorrect": 4,
+      "featureTotal": 6,
+      "recall": 0.6666666666666666,
+      "perfectEvents": 1,
+      "meanWords": 93.5,
+      "featuresPer100Words": 2.13903743315508
+    }
+  },
+  "byEvent": {
+    "W1_VOICE_REWRITE_FIELD": {
+      "B_PAIRWISE": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 40
+      },
+      "D_TEMPORAL": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 39
+      },
+      "E_GESTALT": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 120
+      }
+    },
+    "W2_COLLECTIVE_FUTURE_FIELD": {
+      "B_PAIRWISE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 43
+      },
+      "D_TEMPORAL": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 32
+      },
+      "E_GESTALT": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 115
+      }
+    },
+    "W3_MUSIC_FLOW_FIELD": {
+      "B_PAIRWISE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 63
+      },
+      "D_TEMPORAL": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 65
+      },
+      "E_GESTALT": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 107
+      }
+    },
+    "L1_DESKTOP_TIMEOUT": {
+      "B_PAIRWISE": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 40
+      },
+      "D_TEMPORAL": {
+        "featureCorrect": 2,
+        "featureTotal": 3,
+        "representationWords": 41
+      },
+      "E_GESTALT": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 98
+      }
+    },
+    "L2_AUDIO_RECURRENCE": {
+      "B_PAIRWISE": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 46
+      },
+      "D_TEMPORAL": {
+        "featureCorrect": 1,
+        "featureTotal": 3,
+        "representationWords": 66
+      },
+      "E_GESTALT": {
+        "featureCorrect": 3,
+        "featureTotal": 3,
+        "representationWords": 89
+      }
+    }
+  },
+  "acceptance": {
+    "gestaltBeatsPairwise": false,
+    "gestaltBeatsTemporal": false,
+    "gestaltBestOrTiedEvents": 2,
+    "requiredBestOrTiedEvents": 2
+  },
+  "passed": false,
+  "rows": [
+    {
+      "event": "W1_VOICE_REWRITE_FIELD",
+      "eventClass": "WHOLE_FIELD",
+      "condition": "B_PAIRWISE",
+      "sourceFileHash": "ef8e74ac652d4d850d9ca5c787efe04673f6ba4b98bc5f0da5654604c5ad0e97",
+      "sessionHash": "e9169a436324ff3ab9be733d30e2214e2127eb6f185af774b3124a4ae24c4029",
+      "cutoff": 17,
+      "outcomeTurns": [
+        18,
+        20
+      ],
+      "sourceFeatureHash": "5ffb4b54afbaccaf49963ca240ed7872c8ab6c65dbc67eef5b67ed4cbb5106db",
+      "outcomeHash": "ead48c5a6d870ba9a563660b705cf44b5284b75ea75cbbc65f9dd5f4b6d50ede",
+      "representationHash": "37b3312cec5ba5dc128769acfea5e7fb6199336201fceb04218a555573dcc2ed",
+      "decoderHash": "bdeb0fea05c88fc2818f3d1c00c697336149be038774ec5a153fc86f1993236e",
+      "representationWords": 40,
+      "rawWords": 40,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "LONG_RUNNING_IOS_DIFFICULTY",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "CAUTIOUS_HOPE_WITH_UNCERTAINTY",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "CONVERSATIONAL_EXPERIENCE_IS_THE_STAKE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "W1_VOICE_REWRITE_FIELD",
+      "eventClass": "WHOLE_FIELD",
+      "condition": "D_TEMPORAL",
+      "sourceFileHash": "ef8e74ac652d4d850d9ca5c787efe04673f6ba4b98bc5f0da5654604c5ad0e97",
+      "sessionHash": "e9169a436324ff3ab9be733d30e2214e2127eb6f185af774b3124a4ae24c4029",
+      "cutoff": 17,
+      "outcomeTurns": [
+        18,
+        20
+      ],
+      "sourceFeatureHash": "5ffb4b54afbaccaf49963ca240ed7872c8ab6c65dbc67eef5b67ed4cbb5106db",
+      "outcomeHash": "ead48c5a6d870ba9a563660b705cf44b5284b75ea75cbbc65f9dd5f4b6d50ede",
+      "representationHash": "1bd7d50b9ff89b78292028287c41c469a37c1e41ab1c32fffa8ebcf3fdba7074",
+      "decoderHash": "4a3d600a64be71b350b741e55a12f86e7fae273c884ff465f116f5839aa6d65d",
+      "representationWords": 39,
+      "rawWords": 39,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "LONG_RUNNING_IOS_DIFFICULTY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "CAUTIOUS_HOPE_WITH_UNCERTAINTY",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "CONVERSATIONAL_EXPERIENCE_IS_THE_STAKE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "W1_VOICE_REWRITE_FIELD",
+      "eventClass": "WHOLE_FIELD",
+      "condition": "E_GESTALT",
+      "sourceFileHash": "ef8e74ac652d4d850d9ca5c787efe04673f6ba4b98bc5f0da5654604c5ad0e97",
+      "sessionHash": "e9169a436324ff3ab9be733d30e2214e2127eb6f185af774b3124a4ae24c4029",
+      "cutoff": 17,
+      "outcomeTurns": [
+        18,
+        20
+      ],
+      "sourceFeatureHash": "5ffb4b54afbaccaf49963ca240ed7872c8ab6c65dbc67eef5b67ed4cbb5106db",
+      "outcomeHash": "ead48c5a6d870ba9a563660b705cf44b5284b75ea75cbbc65f9dd5f4b6d50ede",
+      "representationHash": "5afb4803d6ae696160874727cf24bb5010c988f6a608bc707ed668d11b534231",
+      "decoderHash": "c856c3c8bf7df8ac5d2977e012215d179fa9b3849f250061724180fc6319410e",
+      "representationWords": 120,
+      "rawWords": 123,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "LONG_RUNNING_IOS_DIFFICULTY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "CAUTIOUS_HOPE_WITH_UNCERTAINTY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "CONVERSATIONAL_EXPERIENCE_IS_THE_STAKE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "W2_COLLECTIVE_FUTURE_FIELD",
+      "eventClass": "WHOLE_FIELD",
+      "condition": "B_PAIRWISE",
+      "sourceFileHash": "c99556517f1cb9b03fce842604f71ce241a545259755c8bce49bde15e17fd002",
+      "sessionHash": "e6de21622fe3cb37bfe33ab788bb40fbc84a94ed4ce1f2a08126932a81a8f822",
+      "cutoff": 19,
+      "outcomeTurns": [
+        20,
+        22,
+        24
+      ],
+      "sourceFeatureHash": "1b35b3cc8b3251f53d44dd46854ce0a4146a00d315e65e71151b7990203ec547",
+      "outcomeHash": "bba2f4b65c26407d054f99810e94f7eb1da6463c59041e75e034a03ee8ff743d",
+      "representationHash": "7696a59a96fde959132bf927614858d2f80ef3bf14cce4deba228961179773ab",
+      "decoderHash": "011385256be1aceb2d7c93e901c46956b518f87d634892a91f3a71e52adbfd66",
+      "representationWords": 43,
+      "rawWords": 43,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "LONG_HORIZON_PATTERN_FRAME",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "WORK_SELF_LOCATED_IN_TRANSITION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "COLLECTIVE_MIND_DIRECTION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "W2_COLLECTIVE_FUTURE_FIELD",
+      "eventClass": "WHOLE_FIELD",
+      "condition": "D_TEMPORAL",
+      "sourceFileHash": "c99556517f1cb9b03fce842604f71ce241a545259755c8bce49bde15e17fd002",
+      "sessionHash": "e6de21622fe3cb37bfe33ab788bb40fbc84a94ed4ce1f2a08126932a81a8f822",
+      "cutoff": 19,
+      "outcomeTurns": [
+        20,
+        22,
+        24
+      ],
+      "sourceFeatureHash": "1b35b3cc8b3251f53d44dd46854ce0a4146a00d315e65e71151b7990203ec547",
+      "outcomeHash": "bba2f4b65c26407d054f99810e94f7eb1da6463c59041e75e034a03ee8ff743d",
+      "representationHash": "dfd10ac0c975ab20c42d8cb4e1652f2ae65bfc657276072d1841ba832f12dbf5",
+      "decoderHash": "0c3a02c626129132051d24f492be549f51e560b348bf796d063cea50b7fd318a",
+      "representationWords": 32,
+      "rawWords": 32,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "LONG_HORIZON_PATTERN_FRAME",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "WORK_SELF_LOCATED_IN_TRANSITION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "COLLECTIVE_MIND_DIRECTION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "W2_COLLECTIVE_FUTURE_FIELD",
+      "eventClass": "WHOLE_FIELD",
+      "condition": "E_GESTALT",
+      "sourceFileHash": "c99556517f1cb9b03fce842604f71ce241a545259755c8bce49bde15e17fd002",
+      "sessionHash": "e6de21622fe3cb37bfe33ab788bb40fbc84a94ed4ce1f2a08126932a81a8f822",
+      "cutoff": 19,
+      "outcomeTurns": [
+        20,
+        22,
+        24
+      ],
+      "sourceFeatureHash": "1b35b3cc8b3251f53d44dd46854ce0a4146a00d315e65e71151b7990203ec547",
+      "outcomeHash": "bba2f4b65c26407d054f99810e94f7eb1da6463c59041e75e034a03ee8ff743d",
+      "representationHash": "db98a99f0984fdc9786c9f2442af84c81d93961e15e0cfd5b6b0426eb91e6477",
+      "decoderHash": "ea4ad52b23a38cf08392633bdb02b34fe12cf7577258d4dd0e3387c173f005a9",
+      "representationWords": 115,
+      "rawWords": 115,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "LONG_HORIZON_PATTERN_FRAME",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "WORK_SELF_LOCATED_IN_TRANSITION",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "COLLECTIVE_MIND_DIRECTION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "W3_MUSIC_FLOW_FIELD",
+      "eventClass": "WHOLE_FIELD",
+      "condition": "B_PAIRWISE",
+      "sourceFileHash": "f94015ae76a1a8d6849a98b174f0b2e5e4898471f35b83354cdd94525a0ddcab",
+      "sessionHash": "ce6db137a1ec03504a3a59518f0ad47b2e633fdd8203a82cb10b7cda4bbe3d28",
+      "cutoff": 30,
+      "outcomeTurns": [
+        32,
+        40,
+        44,
+        48
+      ],
+      "sourceFeatureHash": "5de83ffbf9ae84158aef9a165217f3335ead24564e5be29a451ec8de65a224bd",
+      "outcomeHash": "c34bafb61f11b476121d22ceb689c98f0bf793feac5516a9cf58a033e5c37983",
+      "representationHash": "404794ea59a7795b5ff71520784f123e248db85103ca3f51e34450ff272d98ea",
+      "decoderHash": "2f524e7c9e1a2ad8027f368f51eae749c27ca43ee8d618e6075fcdf33658529c",
+      "representationWords": 63,
+      "rawWords": 63,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SELF_AS_PARTICIPANT_NOT_CONTROLLER",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RELEASE_FROM_HABITUATED_STUCKNESS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "EMBODIED_FIELD_PARTICIPATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "W3_MUSIC_FLOW_FIELD",
+      "eventClass": "WHOLE_FIELD",
+      "condition": "D_TEMPORAL",
+      "sourceFileHash": "f94015ae76a1a8d6849a98b174f0b2e5e4898471f35b83354cdd94525a0ddcab",
+      "sessionHash": "ce6db137a1ec03504a3a59518f0ad47b2e633fdd8203a82cb10b7cda4bbe3d28",
+      "cutoff": 30,
+      "outcomeTurns": [
+        32,
+        40,
+        44,
+        48
+      ],
+      "sourceFeatureHash": "5de83ffbf9ae84158aef9a165217f3335ead24564e5be29a451ec8de65a224bd",
+      "outcomeHash": "c34bafb61f11b476121d22ceb689c98f0bf793feac5516a9cf58a033e5c37983",
+      "representationHash": "4d9c5fdc30b7b298bc855fe5f5b1b5206a56ed990bd193cc8016dc8dc9dc9575",
+      "decoderHash": "0833225ba1b669c1eb0dff2aaadf19c4cfb0d57db338325580340fb6bc37d3be",
+      "representationWords": 65,
+      "rawWords": 65,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SELF_AS_PARTICIPANT_NOT_CONTROLLER",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RELEASE_FROM_HABITUATED_STUCKNESS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "EMBODIED_FIELD_PARTICIPATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "W3_MUSIC_FLOW_FIELD",
+      "eventClass": "WHOLE_FIELD",
+      "condition": "E_GESTALT",
+      "sourceFileHash": "f94015ae76a1a8d6849a98b174f0b2e5e4898471f35b83354cdd94525a0ddcab",
+      "sessionHash": "ce6db137a1ec03504a3a59518f0ad47b2e633fdd8203a82cb10b7cda4bbe3d28",
+      "cutoff": 30,
+      "outcomeTurns": [
+        32,
+        40,
+        44,
+        48
+      ],
+      "sourceFeatureHash": "5de83ffbf9ae84158aef9a165217f3335ead24564e5be29a451ec8de65a224bd",
+      "outcomeHash": "c34bafb61f11b476121d22ceb689c98f0bf793feac5516a9cf58a033e5c37983",
+      "representationHash": "dea2e3d28125161ce185b16fd15fc2dd74295ceecab471ac619ac86ba6cf7b36",
+      "decoderHash": "1cda9c87db9fcad91412132b37453d5fdb24d6e56d78739cdfb6be955d6a83b9",
+      "representationWords": 107,
+      "rawWords": 107,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SELF_AS_PARTICIPANT_NOT_CONTROLLER",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RELEASE_FROM_HABITUATED_STUCKNESS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "EMBODIED_FIELD_PARTICIPATION",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "L1_DESKTOP_TIMEOUT",
+      "eventClass": "LOCAL_RELATIONAL",
+      "condition": "B_PAIRWISE",
+      "sourceFileHash": "c2db95f05b356dea164498b068e6653cb03a66e2d08bc7d9432ea7f1bc2e4957",
+      "sessionHash": "c4e83b44f48d2207b0d936ee5f3bfbc22883039c6343c5f0aa4faf581b3d8447",
+      "cutoff": 30,
+      "outcomeTurns": [
+        32,
+        36,
+        38,
+        40
+      ],
+      "sourceFeatureHash": "c823cd772623cadf8a7e830e6ab7c61979da96aaafd597fe6b2594bbf88d7fa4",
+      "outcomeHash": "33db00f7951950cf66d1fda5c02d43f4d40502921812d2c0a6b827b477cdf815",
+      "representationHash": "fd5e06fc7164dc82a680f0e340368befe5f8abcabfdfaa66265afbe77ea89436",
+      "decoderHash": "d6e3b1bc01bb2efdef9b213ae9ad50692f7fca5f8b740b80017c94f59c59bddb",
+      "representationWords": 40,
+      "rawWords": 40,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SILENCE_TIMEOUT_HYPOTHESIS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "CONVERSATIONAL_LISTENING_REQUIREMENT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "THRESHOLD_REQUIRES_DESIGN_CHOICE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "L1_DESKTOP_TIMEOUT",
+      "eventClass": "LOCAL_RELATIONAL",
+      "condition": "D_TEMPORAL",
+      "sourceFileHash": "c2db95f05b356dea164498b068e6653cb03a66e2d08bc7d9432ea7f1bc2e4957",
+      "sessionHash": "c4e83b44f48d2207b0d936ee5f3bfbc22883039c6343c5f0aa4faf581b3d8447",
+      "cutoff": 30,
+      "outcomeTurns": [
+        32,
+        36,
+        38,
+        40
+      ],
+      "sourceFeatureHash": "c823cd772623cadf8a7e830e6ab7c61979da96aaafd597fe6b2594bbf88d7fa4",
+      "outcomeHash": "33db00f7951950cf66d1fda5c02d43f4d40502921812d2c0a6b827b477cdf815",
+      "representationHash": "87ec0f06da4f9c9d258141de4851bb4c99b4eb448b820be03bf8c6f9658aa990",
+      "decoderHash": "e66d3798fb73502c57b1d239f6e20f8114c5af40609a2d653f9748361675e32f",
+      "representationWords": 41,
+      "rawWords": 41,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SILENCE_TIMEOUT_HYPOTHESIS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "CONVERSATIONAL_LISTENING_REQUIREMENT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "THRESHOLD_REQUIRES_DESIGN_CHOICE",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 2,
+      "featureTotal": 3
+    },
+    {
+      "event": "L1_DESKTOP_TIMEOUT",
+      "eventClass": "LOCAL_RELATIONAL",
+      "condition": "E_GESTALT",
+      "sourceFileHash": "c2db95f05b356dea164498b068e6653cb03a66e2d08bc7d9432ea7f1bc2e4957",
+      "sessionHash": "c4e83b44f48d2207b0d936ee5f3bfbc22883039c6343c5f0aa4faf581b3d8447",
+      "cutoff": 30,
+      "outcomeTurns": [
+        32,
+        36,
+        38,
+        40
+      ],
+      "sourceFeatureHash": "c823cd772623cadf8a7e830e6ab7c61979da96aaafd597fe6b2594bbf88d7fa4",
+      "outcomeHash": "33db00f7951950cf66d1fda5c02d43f4d40502921812d2c0a6b827b477cdf815",
+      "representationHash": "0f8588d41825b46c4b20badfb897c23d85c75aecba36d5cc2c201fc7a8261dd1",
+      "decoderHash": "e8de0a974b2a7cb352e392c3afb919a891ddafeae6d9f894e470f992d6cb21fe",
+      "representationWords": 98,
+      "rawWords": 98,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "SILENCE_TIMEOUT_HYPOTHESIS",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "CONVERSATIONAL_LISTENING_REQUIREMENT",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        },
+        {
+          "id": "THRESHOLD_REQUIRES_DESIGN_CHOICE",
+          "supported": false,
+          "decoderSaid": false,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "L2_AUDIO_RECURRENCE",
+      "eventClass": "TEMPORAL_LOCAL",
+      "condition": "B_PAIRWISE",
+      "sourceFileHash": "41c3c1e209cc83216ac479a7537253bb921024b2fefe27e35a0acf35948f5de9",
+      "sessionHash": "e0d3c6433c00e942b1b59d9b785d259e5c02a210bc6e3cf4262ba4e311de05c1",
+      "cutoff": 18,
+      "outcomeTurns": [
+        22,
+        24,
+        26,
+        28
+      ],
+      "sourceFeatureHash": "de7a032e7faadf654e494f922edfdaa9a5436e79120d013be79769f23cc11a87",
+      "outcomeHash": "3abecde76d080896a3d460a899ddff6e201acdbfe9b60cd0ac4a7b43cf6c3cde",
+      "representationHash": "22df9d6d2c4d3561780fadd1b948b2fbe9c95618a883a607f4dc9d54ea01cd37",
+      "decoderHash": "51f35f740fa149e2f458d8667dde64886f505a1682f3e121c0581ecbf0656e09",
+      "representationWords": 46,
+      "rawWords": 46,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "INTERMITTENT_NOT_RESOLVED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RECOVERY_CAN_BE_TEMPORARY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "PRIMARY_PROCESS_IS_AUDIO_CONTINUITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    },
+    {
+      "event": "L2_AUDIO_RECURRENCE",
+      "eventClass": "TEMPORAL_LOCAL",
+      "condition": "D_TEMPORAL",
+      "sourceFileHash": "41c3c1e209cc83216ac479a7537253bb921024b2fefe27e35a0acf35948f5de9",
+      "sessionHash": "e0d3c6433c00e942b1b59d9b785d259e5c02a210bc6e3cf4262ba4e311de05c1",
+      "cutoff": 18,
+      "outcomeTurns": [
+        22,
+        24,
+        26,
+        28
+      ],
+      "sourceFeatureHash": "de7a032e7faadf654e494f922edfdaa9a5436e79120d013be79769f23cc11a87",
+      "outcomeHash": "3abecde76d080896a3d460a899ddff6e201acdbfe9b60cd0ac4a7b43cf6c3cde",
+      "representationHash": "3dc9aa134cd03428dfd8feb76c1eb01fb31a1533703aee70322bd33586c78710",
+      "decoderHash": "5685b3d785cc6914ac07f4c81d51f492d3efb67af2df299d622934be320cf513",
+      "representationWords": 66,
+      "rawWords": 66,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "INTERMITTENT_NOT_RESOLVED",
+          "supported": false,
+          "decoderSaid": true,
+          "quoteValid": false
+        },
+        {
+          "id": "RECOVERY_CAN_BE_TEMPORARY",
+          "supported": false,
+          "decoderSaid": true,
+          "quoteValid": false
+        },
+        {
+          "id": "PRIMARY_PROCESS_IS_AUDIO_CONTINUITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 1,
+      "featureTotal": 3
+    },
+    {
+      "event": "L2_AUDIO_RECURRENCE",
+      "eventClass": "TEMPORAL_LOCAL",
+      "condition": "E_GESTALT",
+      "sourceFileHash": "41c3c1e209cc83216ac479a7537253bb921024b2fefe27e35a0acf35948f5de9",
+      "sessionHash": "e0d3c6433c00e942b1b59d9b785d259e5c02a210bc6e3cf4262ba4e311de05c1",
+      "cutoff": 18,
+      "outcomeTurns": [
+        22,
+        24,
+        26,
+        28
+      ],
+      "sourceFeatureHash": "de7a032e7faadf654e494f922edfdaa9a5436e79120d013be79769f23cc11a87",
+      "outcomeHash": "3abecde76d080896a3d460a899ddff6e201acdbfe9b60cd0ac4a7b43cf6c3cde",
+      "representationHash": "c3e9fc44bbdf44a8952b1ab99a1da33f1ea45431fdcc92f1102b5a11949b9e30",
+      "decoderHash": "ec1cb9c33a0f0e321c27b555be540a3a27081057f9556a6fe77f45b0ccf1f199",
+      "representationWords": 89,
+      "rawWords": 89,
+      "budgetViolation": false,
+      "parseError": null,
+      "features": [
+        {
+          "id": "INTERMITTENT_NOT_RESOLVED",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "RECOVERY_CAN_BE_TEMPORARY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        },
+        {
+          "id": "PRIMARY_PROCESS_IS_AUDIO_CONTINUITY",
+          "supported": true,
+          "decoderSaid": true,
+          "quoteValid": true
+        }
+      ],
+      "featureCorrect": 3,
+      "featureTotal": 3
+    }
+  ],
+  "inference": {
+    "model": "claude-sonnet-4-6",
+    "transport": "production-container direct Anthropic SDK via temporary /tmp helper",
+    "representationTemperature": 0.2,
+    "decoderTemperature": 0,
+    "servingRouteUsed": false,
+    "localCliAttempt": "NO_EVIDENCE_weekly_limit"
+  }
+}
