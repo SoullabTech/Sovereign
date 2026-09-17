@@ -75,6 +75,11 @@ generic capability envelope (`repo_write_scope`, `execute_checks`, `integration_
 `--permission-mode`) is an **adapter's** job, deliberately kept out of this file and out
 of the canonical Work Unit itself.
 
+**Execution engine is likewise not Work Unit authority.** OpenCode and Backboard R-CLI
+may consume the same canonical Work Unit through a JARVIS adapter, but choosing either
+engine does not alter `execution_lane`, authorized acts, prohibited acts, autonomy ceiling,
+or integration actor. Engine identity is invocation/result provenance, not a new grant.
+
 ## Authority firewall (always appended to every packet's prompt, not author-editable)
 
 A delegate may execute settled decisions. It may **not** silently establish: constitutional architecture, member authority, consent semantics, confidentiality semantics, provenance semantics, epistemic authority, destructive migration policy, security boundaries, founder rulings, ontology, or deprecation of important capability.

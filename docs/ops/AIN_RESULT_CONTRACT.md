@@ -21,7 +21,8 @@ backfilling required for history predating this file.
 {
   "work_unit_id": "must match the packet",
   "lane": "local | kimi",
-  "model": "e.g. maia-coder:latest | kimi-k2.7-code | kimi-k3",
+  "engine": "optional provenance: native | opencode | rcli",
+  "model": "e.g. maia-coder:latest | kimi-k2.7-code | kimi-k3 | opencode/nemotron-3-ultra-free",
   "starting_sha": "sha the worktree started from",
   "ending_sha": "sha after commit, or null if nothing was committed",
   "files_changed": ["paths from git diff --stat"],

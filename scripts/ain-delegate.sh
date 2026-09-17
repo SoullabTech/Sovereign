@@ -25,6 +25,8 @@
 #   ain-delegate.sh local    <work_unit_id>
 #   ain-delegate.sh kimi     <work_unit_id>
 #   ain-delegate.sh claude   <work_unit_id> [model]   # model default: sonnet, explicit not implicit
+#   ain-delegate.sh opencode <work_unit_id> [model]   # engine adapter; packet authority/lane unchanged
+#   ain-delegate.sh rcli     <work_unit_id> [model]   # engine adapter; packet authority/lane unchanged
 #   ain-delegate.sh result   <work_unit_id>
 #   ain-delegate.sh review   <work_unit_id>
 #   ain-delegate.sh escalate <work_unit_id> "<reason>"
@@ -41,6 +43,7 @@ LEDGER="$AIN_HOME/episodes.jsonl"
 CLAIM_SCRIPT="$PROJECT_DIR/scripts/ain-worktree-claim.sh"
 SESSION_SCRIPT="$PROJECT_DIR/scripts/builder/session.mjs"
 WORK_UNIT_SCRIPT="$PROJECT_DIR/scripts/builder/work-unit.mjs"
+ENGINE_ADAPTER="$PROJECT_DIR/scripts/builder/jarvis-execution-engine.mjs"
 
 mkdir -p "$PACKETS_DIR" "$RESULTS_DIR" "$LOGS_DIR"
 
@@ -130,6 +133,17 @@ _claude_permission_mode() {
     fi
 }
 
+_repo_write_scope() {
+    local work_unit_id="$1" envelope scope
+    envelope="$(node "$WORK_UNIT_SCRIPT" permission-envelope "$work_unit_id" 2>/dev/null)" \
+        || { echo "🛑 could not derive a permission envelope for '$work_unit_id' — refusing engine execution." >&2; return 1; }
+    scope="$(echo "$envelope" | jq -r '.repo_write_scope')"
+    case "$scope" in
+        none|worktree) echo "$scope" ;;
+        *) echo "🛑 unrecognized repo_write_scope '$scope' — refusing engine execution." >&2; return 1 ;;
+    esac
+}
+
 _build_prompt() {
     local f="$1"
     jq -r '
@@ -155,7 +169,7 @@ _build_prompt() {
 }
 
 _run_lane() {
-    local lane="$1" work_unit_id="$2" model_override="${3:-}"
+    local lane="$1" work_unit_id="$2" model_override="${3:-}" engine_override="${4:-}"
     local f wt starting_sha exit_code log ending_sha prompt cmd branch model
     f="$(_require_packet "$work_unit_id")"
     wt="$(jq -r '.worktree // empty' "$f")"
@@ -163,7 +177,9 @@ _run_lane() {
         wt="$(cmd_claim "$work_unit_id")"
     fi
     branch="$(jq -r '.branch' "$f")"
-    if [ "$lane" = "local" ]; then model="maia-coder:latest"
+    if [ "$engine_override" = "opencode" ]; then model="${model_override:-ollama/qwen2.5:7b}"
+    elif [ "$engine_override" = "rcli" ]; then model="${model_override:-jarvis-local/qwen2.5:7b}"
+    elif [ "$lane" = "local" ]; then model="maia-coder:latest"
     elif [ "$lane" = "kimi" ]; then model="kimi-k2.7-code"
     elif [ "$lane" = "claude" ]; then
         # Unit 6 (2026-08-09): EXPLICIT default, never an implicit Opus-because-Claude
@@ -241,7 +257,15 @@ _run_lane() {
     # interactive prompt: the worker runs inside an isolated git worktree (Unit 3) it
     # cannot escape, and every claim is independently re-verified afterward regardless of
     # what the worker did (never trust self-report — AIN_RESULT_CONTRACT.md).
-    if [ "$lane" = "local" ]; then
+    if [ -n "$engine_override" ]; then
+        local scope
+        scope="$(_repo_write_scope "$work_unit_id")" || exit 1
+        local engine_args
+        engine_args=(run --engine "$engine_override" --cwd "$wt" --write-scope "$scope" --prompt "$prompt")
+        engine_args+=(--model "$model")
+        ( cd "$wt" && node "$ENGINE_ADAPTER" "${engine_args[@]}" ) > "$log" 2>&1
+        exit_code=$?
+    elif [ "$lane" = "local" ]; then
         ( cd "$wt" && maia-code -p "$prompt" --permission-mode bypassPermissions ) > "$log" 2>&1
         exit_code=$?
     elif [ "$lane" = "kimi" ]; then
@@ -317,6 +341,7 @@ _run_lane() {
     jq -n \
         --arg wid "$work_unit_id" \
         --arg lane "$lane" \
+        --arg engine "${engine_override:-native}" \
         --arg model "$model" \
         --arg starting_sha "$starting_sha" \
         --arg ending_sha "$ending_sha" \
@@ -332,6 +357,7 @@ _run_lane() {
         '{
             work_unit_id: $wid,
             lane: $lane,
+            engine: $engine,
             model: $model,
             starting_sha: $starting_sha,
             ending_sha: (if $ending_sha == "" then null else $ending_sha end),
@@ -357,11 +383,12 @@ _run_lane() {
         --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
         --arg wid "$work_unit_id" \
         --arg lane "$lane" \
+        --arg engine "${engine_override:-native}" \
         --argjson escalation_required "$escalation_required" \
         --arg test_results "$test_results" \
         --argjson exit_code "$exit_code" \
         --argjson duration_s "$((t1 - t0))" \
-        '{ts: $ts, work_unit_id: $wid, lane: $lane, escalation_required: $escalation_required, test_results: $test_results, exit_code: $exit_code, duration_s: $duration_s}' \
+        '{ts: $ts, work_unit_id: $wid, lane: $lane, engine: $engine, escalation_required: $escalation_required, test_results: $test_results, exit_code: $exit_code, duration_s: $duration_s}' \
         >> "$LEDGER"
 
     echo "[ain-delegate] $lane run complete for '$work_unit_id' — exit=$exit_code tests=$test_results escalate=$escalation_required" >&2
@@ -371,6 +398,18 @@ _run_lane() {
 cmd_local()  { _run_lane "local" "$1"; }
 cmd_kimi()   { _run_lane "kimi" "$1"; }
 cmd_claude() { _run_lane "claude" "$1" "${2:-}"; }   # optional model, e.g. `claude <id> opus`
+
+_run_engine() {
+    local engine="$1" work_unit_id="$2" model_override="${3:-}" f lane
+    f="$(_require_packet "$work_unit_id")"
+    lane="$(jq -r '.execution_lane' "$f")"
+    [ -n "$lane" ] && [ "$lane" != "null" ] \
+        || { echo "🛑 packet has no execution_lane — engine choice cannot invent one." >&2; return 1; }
+    _run_lane "$lane" "$work_unit_id" "$model_override" "$engine"
+}
+
+cmd_opencode() { _run_engine "opencode" "$1" "${2:-}"; }
+cmd_rcli()     { _run_engine "rcli" "$1" "${2:-}"; }
 
 cmd_result() {
     local f
@@ -434,12 +473,14 @@ case "${1:-}" in
     local)    shift; cmd_local "$@" ;;
     kimi)     shift; cmd_kimi "$@" ;;
     claude)   shift; cmd_claude "$@" ;;
+    opencode) shift; cmd_opencode "$@" ;;
+    rcli)     shift; cmd_rcli "$@" ;;
     result)   shift; cmd_result "$@" ;;
     review)   shift; cmd_review "$@" ;;
     escalate) shift; cmd_escalate "$@" ;;
     release)  shift; cmd_release "$@" ;;
     *)
-        echo "usage: $0 {new|claim|local|kimi|claude|result|review|escalate|release} <work_unit_id> [args...]" >&2
+        echo "usage: $0 {new|claim|local|kimi|claude|opencode|rcli|result|review|escalate|release} <work_unit_id> [args...]" >&2
         exit 2
         ;;
 esac
