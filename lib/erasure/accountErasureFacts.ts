@@ -1,11 +1,13 @@
 import type { TransactionClient } from '@/lib/db/postgres';
+import type { DeleteAction } from './accountErasureActivationRegistry';
 import {
-  ACCOUNT_ERASURE_ACTIVATION_REGISTRY,
-  type AccountErasureActivationRegistry,
-  type DeleteAction,
-  fkEffectKey,
-  groupedActivationForeignKeys,
-} from './accountErasureActivationRegistry';
+  ACCOUNT_ERASURE_RUNTIME_AUTHORITY,
+  ACCOUNT_ERASURE_RUNTIME_PLANNING_REGISTRY,
+  groupedRuntimeForeignKeys,
+  runtimeFkEffectKey,
+  runtimeSchemaFingerprint,
+  type AccountErasureRuntimeAuthority,
+} from './accountErasureRuntimeAuthority';
 import {
   SOURCE_DEPENDENT_LINEAGE_LOCI,
   type AccountErasureShadowFacts,
@@ -43,6 +45,7 @@ export interface CollectedAccountErasureFacts {
   shadowFacts: AccountErasureShadowFacts;
   fkEffects: RuntimeFkEffectFact[];
   activeCircleIds: string[] | 'unknown';
+  runtimeSchemaProblems: string[];
 }
 
 function deleteAction(code: string): DeleteAction | null {
@@ -63,7 +66,7 @@ async function runtimeMemberForeignKeys(tx: TransactionClient): Promise<RuntimeF
     SELECT
       c.conname AS constraint_name,
       rel.relname AS table_name,
-      array_agg(att.attname ORDER BY ord.ordinality) AS local_columns,
+      array_agg(att.attname::text ORDER BY ord.ordinality)::text[] AS local_columns,
       c.confdeltype::text AS delete_code
     FROM pg_constraint c
     JOIN pg_class rel ON rel.oid = c.conrelid
@@ -81,6 +84,9 @@ async function runtimeMemberForeignKeys(tx: TransactionClient): Promise<RuntimeF
   for (const row of result.rows) {
     const action = deleteAction(row.delete_code);
     if (!action) continue;
+    if (!Array.isArray(row.local_columns) || row.local_columns.some((column) => typeof column !== 'string')) {
+      throw new Error(`runtime FK columns are not text[] for ${row.constraint_name}`);
+    }
     out.push({
       constraintName: row.constraint_name,
       table: row.table_name,
@@ -91,6 +97,66 @@ async function runtimeMemberForeignKeys(tx: TransactionClient): Promise<RuntimeF
   return out;
 }
 
+async function runtimeDirectLoci(
+  tx: TransactionClient,
+  identityColumns: string[],
+): Promise<Array<{ table: string; identityColumns: string[] }>> {
+  const result = await tx.query<{ table_name: string; column_name: string }>(`
+    SELECT c.relname AS table_name, a.attname::text AS column_name
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+     WHERE n.nspname = 'public'
+       AND c.relkind IN ('r', 'p')
+       AND a.attname::text = ANY($1::text[])
+     ORDER BY c.relname, a.attname
+  `, [identityColumns]);
+  const byTable = new Map<string, string[]>();
+  for (const row of result.rows) {
+    const current = byTable.get(row.table_name) ?? [];
+    current.push(row.column_name);
+    byTable.set(row.table_name, current);
+  }
+  return [...byTable.entries()]
+    .map(([table, columns]) => ({ table, identityColumns: columns.sort() }))
+    .sort((a, b) => a.table.localeCompare(b.table));
+}
+
+function sameStrings(a: string[], b: string[]): boolean {
+  return JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+}
+
+function schemaProblems(
+  authority: AccountErasureRuntimeAuthority,
+  loci: Array<{ table: string; identityColumns: string[] }>,
+  fks: RuntimeFkConstraint[],
+): string[] {
+  const problems: string[] = [];
+  const expectedLoci = new Map(authority.memberBoundLoci.map((x) => [x.table, x.identityColumns]));
+  const actualLoci = new Map(loci.map((x) => [x.table, x.identityColumns]));
+  for (const [table, columns] of expectedLoci) {
+    const actual = actualLoci.get(table);
+    if (!actual) problems.push(`missing runtime direct locus: ${table}`);
+    else if (!sameStrings(actual, columns)) problems.push(`runtime direct-locus identity drift: ${table}`);
+  }
+  for (const table of actualLoci.keys()) if (!expectedLoci.has(table)) problems.push(`undeclared runtime direct locus: ${table}`);
+
+  const expectedFks = new Map(authority.runtimeMemberForeignKeys.map((x) => [x.constraintName, x]));
+  const actualFks = new Map(fks.map((x) => [x.constraintName, x]));
+  for (const [name, expected] of expectedFks) {
+    const actual = actualFks.get(name);
+    if (!actual) { problems.push(`missing runtime member FK: ${name}`); continue; }
+    if (actual.table !== expected.table || actual.onDelete !== expected.onDelete || !sameStrings(actual.localColumns, expected.localColumns)) {
+      problems.push(`runtime member FK shape drift: ${name}`);
+    }
+  }
+  for (const name of actualFks.keys()) if (!expectedFks.has(name)) problems.push(`undeclared runtime member FK: ${name}`);
+
+  const fingerprint = runtimeSchemaFingerprint(loci, fks);
+  if (fingerprint !== authority.schemaFingerprintSha256) problems.push('runtime schema fingerprint differs from R3 authority');
+  return problems;
+}
+
 async function occupied(
   tx: TransactionClient,
   table: string,
@@ -98,6 +164,7 @@ async function occupied(
   memberId: string,
 ): Promise<boolean> {
   const predicate = columns.map((column) => `${qi(column)}::text = $1`).join(' OR ');
+  if (!predicate) throw new Error(`no identity columns for ${table}`);
   const result = await tx.query<{ present: boolean }>(
     `SELECT EXISTS (SELECT 1 FROM ${qi(table)} WHERE ${predicate}) AS present`,
     [memberId],
@@ -108,7 +175,7 @@ async function occupied(
 export async function collectAccountErasureFacts(
   tx: TransactionClient,
   memberId: string,
-  registry: AccountErasureActivationRegistry = ACCOUNT_ERASURE_ACTIVATION_REGISTRY,
+  authority: AccountErasureRuntimeAuthority = ACCOUNT_ERASURE_RUNTIME_AUTHORITY,
 ): Promise<CollectedAccountErasureFacts> {
   const locusRows: Record<string, ObservedCount> = {};
   const memberFkRows: Record<string, ObservedCount> = {};
@@ -116,27 +183,23 @@ export async function collectAccountErasureFacts(
     [...SOURCE_DEPENDENT_LINEAGE_LOCI].map((table) => [table, 'unknown' as const]),
   );
 
-  // One catalog read establishes table + identity-column availability. A missing
-  // declaration is UNKNOWN, never an empty table.
-  const expectedTables = registry.memberBoundLoci.map((locus) => locus.table);
-  const columnsResult = await tx.query<{ table_name: string; column_name: string }>(
-    `SELECT table_name, column_name
-       FROM information_schema.columns
-      WHERE table_schema = 'public'
-        AND table_name = ANY($1::text[])`,
-    [expectedTables],
-  );
-  const columnsByTable = new Map<string, Set<string>>();
-  for (const row of columnsResult.rows) {
-    const current = columnsByTable.get(row.table_name) ?? new Set<string>();
-    current.add(row.column_name);
-    columnsByTable.set(row.table_name, current);
+  let liveLoci: Array<{ table: string; identityColumns: string[] }> = [];
+  let liveFks: RuntimeFkConstraint[] = [];
+  let runtimeSchemaProblems: string[] = [];
+  try {
+    [liveLoci, liveFks] = await Promise.all([
+      runtimeDirectLoci(tx, authority.identityColumns),
+      runtimeMemberForeignKeys(tx),
+    ]);
+    runtimeSchemaProblems = schemaProblems(authority, liveLoci, liveFks);
+  } catch (error) {
+    runtimeSchemaProblems = [`runtime schema census failed: ${error instanceof Error ? error.message : typeof error}`];
   }
 
-  for (const locus of registry.memberBoundLoci) {
-    const actual = columnsByTable.get(locus.table);
-    const shapeKnown = actual && locus.identityColumns.every((column) => actual.has(column));
-    if (!shapeKnown) {
+  const liveLocusMap = new Map(liveLoci.map((x) => [x.table, x.identityColumns]));
+  for (const locus of authority.memberBoundLoci) {
+    const actual = liveLocusMap.get(locus.table);
+    if (!actual || !sameStrings(actual, locus.identityColumns)) {
       locusRows[locus.table] = 'unknown';
       continue;
     }
@@ -147,74 +210,39 @@ export async function collectAccountErasureFacts(
     }
   }
 
-  // Migration declarations are provenance. Runtime constraints are execution
-  // truth. Bind them at the table/action effect class; duplicate declarations
-  // are lawful only because P5-D's activation gate proves disposition unanimity.
-  let runtimeFks: RuntimeFkConstraint[] = [];
-  try {
-    runtimeFks = await runtimeMemberForeignKeys(tx);
-  } catch {
-    runtimeFks = [];
-  }
-  const expectedGroups = groupedActivationForeignKeys(registry);
-  const actualGroups = new Map<string, RuntimeFkConstraint[]>();
-  for (const constraint of runtimeFks) {
-    const key = fkEffectKey(constraint.table, constraint.onDelete);
-    const current = actualGroups.get(key) ?? [];
-    current.push(constraint);
-    actualGroups.set(key, current);
-  }
-
+  const actualByName = new Map(liveFks.map((x) => [x.constraintName, x]));
+  const authorityGroups = groupedRuntimeForeignKeys(authority);
   const fkEffects: RuntimeFkEffectFact[] = [];
-  for (const [key, declarations] of expectedGroups) {
-    const actual = actualGroups.get(key) ?? [];
-    const disposition = declarations[0].disposition;
+  for (const [key, governed] of authorityGroups) {
+    const actual = governed.map((x) => actualByName.get(x.constraintName)).filter((x): x is RuntimeFkConstraint => Boolean(x));
+    const disposition = governed[0].disposition;
     let rows: ObservedCount = 'unknown';
     let evidenceProblem: string | undefined;
-
-    if (actual.length !== declarations.length) {
-      evidenceProblem = `runtime constraint count ${actual.length} does not match declaration count ${declarations.length}`;
+    if (actual.length !== governed.length || governed.some((expected) => {
+      const found = actualByName.get(expected.constraintName);
+      return !found || found.table !== expected.table || found.onDelete !== expected.onDelete || !sameStrings(found.localColumns, expected.localColumns);
+    })) {
+      evidenceProblem = 'runtime FK constraint set does not match R3 authority';
     } else {
       try {
         let any = false;
-        for (const constraint of actual) {
-          if (await occupied(tx, constraint.table, constraint.localColumns, memberId)) any = true;
-        }
+        for (const constraint of actual) if (await occupied(tx, constraint.table, constraint.localColumns, memberId)) any = true;
         rows = any ? 1 : 0;
       } catch {
         evidenceProblem = 'runtime FK occupancy query failed';
       }
     }
-
-    for (const declaration of declarations) memberFkRows[declaration.declarationKey] = rows;
     fkEffects.push({
       key,
-      table: declarations[0].table,
-      onDelete: declarations[0].onDelete,
-      declarationKeys: declarations.map((x) => x.declarationKey),
-      constraintNames: actual.map((x) => x.constraintName),
-      localColumns: [...new Set(actual.flatMap((x) => x.localColumns))].sort(),
+      table: governed[0].table,
+      onDelete: governed[0].onDelete,
+      declarationKeys: [...new Set(governed.flatMap((x) => x.sourceDeclarationKeys))].sort(),
+      constraintNames: governed.map((x) => x.constraintName).sort(),
+      localColumns: [...new Set(governed.flatMap((x) => x.localColumns))].sort(),
       rows,
       disposition,
-      authorityReason: declarations[0].authorityReason,
+      authorityReason: governed[0].authorityReason,
       evidenceProblem,
-    });
-  }
-
-  // A live constraint the governed declaration set does not know about is drift.
-  for (const [key, actual] of actualGroups) {
-    if (expectedGroups.has(key)) continue;
-    fkEffects.push({
-      key,
-      table: actual[0].table,
-      onDelete: actual[0].onDelete,
-      declarationKeys: [],
-      constraintNames: actual.map((x) => x.constraintName),
-      localColumns: [...new Set(actual.flatMap((x) => x.localColumns))].sort(),
-      rows: 'unknown',
-      disposition: 'refuse',
-      authorityReason: 'Runtime FK effect is absent from the governed activation registry.',
-      evidenceProblem: 'undeclared runtime member FK effect',
     });
   }
 
@@ -263,5 +291,8 @@ export async function collectAccountErasureFacts(
     },
     fkEffects,
     activeCircleIds,
+    runtimeSchemaProblems,
   };
 }
+
+export const ACCOUNT_ERASURE_RUNTIME_FACT_REGISTRY = ACCOUNT_ERASURE_RUNTIME_PLANNING_REGISTRY;

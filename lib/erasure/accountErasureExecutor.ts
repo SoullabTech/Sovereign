@@ -1,6 +1,6 @@
 import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 import { leaveCircleWithClient } from '@/lib/circles/membershipService';
-import { ACCOUNT_ERASURE_ACTIVATION_REGISTRY } from './accountErasureActivationRegistry';
+import { ACCOUNT_ERASURE_RUNTIME_AUTHORITY } from './accountErasureRuntimeAuthority';
 import { collectAccountErasureFacts } from './accountErasureFacts';
 import {
   buildAccountErasureActivationPlan,
@@ -53,7 +53,7 @@ async function mintAct(memberId: string, requestRef: string): Promise<string> {
        subject_member_id, policy_version, registry_version, request_ref
      ) VALUES ($1, $2, $3, $4)
      RETURNING id::text AS id`,
-    [memberId, POLICY_VERSION, ACCOUNT_ERASURE_ACTIVATION_REGISTRY.version, requestRef],
+    [memberId, POLICY_VERSION, ACCOUNT_ERASURE_RUNTIME_AUTHORITY.version, requestRef],
   );
   if (!result.rows[0]?.id) throw new Error('account erasure act was not minted');
   return result.rows[0].id;
@@ -366,7 +366,7 @@ async function recordRolledBackFailure(actId: string): Promise<AccountErasureExe
     await query(
       `INSERT INTO account_erasure_execution_events (act_id, event_type, result_code, evidence_ref)
        VALUES ($1, 'act_failed', 'execution_transaction_rolled_back', $2)`,
-      [actId, ACCOUNT_ERASURE_ACTIVATION_REGISTRY.version],
+      [actId, ACCOUNT_ERASURE_RUNTIME_AUTHORITY.version],
     );
   } catch {
     // A terminal event may already exist if the database committed but the caller
@@ -379,7 +379,7 @@ export async function executeAccountErasure(
   memberId: string,
   requestRef: string,
 ): Promise<AccountErasureExecutionResult> {
-  if (!ACCOUNT_ERASURE_ACTIVATION_REGISTRY.activationAuthority.includes('P5-D')) {
+  if (!ACCOUNT_ERASURE_RUNTIME_AUTHORITY.activationAuthority.includes('P5-D-R3')) {
     return {
       state: 'unavailable', httpStatus: 503, accountChanged: false,
       message: 'Governed account deletion is not activated.', blocked: [],

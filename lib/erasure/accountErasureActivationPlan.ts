@@ -1,7 +1,5 @@
-import {
-  ACCOUNT_ERASURE_ACTIVATION_REGISTRY,
-  type AccountErasureActivationRegistry,
-} from './accountErasureActivationRegistry';
+import type { AccountErasureActivationRegistry } from './accountErasureActivationRegistry';
+import { ACCOUNT_ERASURE_RUNTIME_PLANNING_REGISTRY } from './accountErasureRuntimeAuthority';
 import { buildAccountErasureShadowPlan } from './accountErasureShadowPlan';
 import type { CollectedAccountErasureFacts, RuntimeFkEffectFact } from './accountErasureFacts';
 import type { AdapterPlanEntry, ErasureDisposition } from './accountErasureAdapters';
@@ -40,7 +38,7 @@ const SUPPORTED_ACTIVE_ADAPTERS = new Set([
 
 function directDisposition(
   entry: AdapterPlanEntry,
-  registry: AccountErasureActivationRegistry,
+  registry: Pick<AccountErasureActivationRegistry, 'version' | 'activationProhibited' | 'memberBoundLoci'>,
 ): DurableErasureDispositionPlan {
   const locus = registry.memberBoundLoci.find((x) => x.table === entry.locusKey);
   const shared = entry.key === 'domain:circles:shared_artifacts';
@@ -66,7 +64,7 @@ function directDisposition(
 
 function fkDisposition(
   effect: RuntimeFkEffectFact,
-  registry: AccountErasureActivationRegistry,
+  registry: Pick<AccountErasureActivationRegistry, 'version' | 'activationProhibited' | 'memberBoundLoci'>,
 ): DurableErasureDispositionPlan {
   const direct = registry.memberBoundLoci.find((x) => x.table === effect.table);
   const plannedDisposition: ErasureDisposition =
@@ -93,16 +91,21 @@ function fkDisposition(
 
 export function buildAccountErasureActivationPlan(
   collected: CollectedAccountErasureFacts,
-  registry: AccountErasureActivationRegistry = ACCOUNT_ERASURE_ACTIVATION_REGISTRY,
+  registry: typeof ACCOUNT_ERASURE_RUNTIME_PLANNING_REGISTRY = ACCOUNT_ERASURE_RUNTIME_PLANNING_REGISTRY,
 ): AccountErasureActivationPlan {
   const shadow = buildAccountErasureShadowPlan(collected.shadowFacts, registry);
   const blockers: Array<{ code: string; key: string; detail: string }> = shadow.blockers.map((x) => ({ ...x }));
+  for (const problem of collected.runtimeSchemaProblems) {
+    blockers.push({ code: 'runtime_schema_drift', key: 'runtime-schema', detail: problem });
+  }
   const direct = shadow.entries.map((entry) => directDisposition(entry, registry));
   const fk = collected.fkEffects.map((effect) => fkDisposition(effect, registry));
 
   for (const effect of collected.fkEffects) {
     if (effect.evidenceProblem) {
       blockers.push({ code: 'runtime_fk_evidence', key: `fk:${effect.key}`, detail: effect.evidenceProblem });
+    } else if (effect.rows !== 'unknown' && effect.rows > 0 && effect.disposition === 'refuse') {
+      blockers.push({ code: 'unadjudicated_runtime_fk', key: `fk:${effect.key}`, detail: `occupied runtime FK remains refuse-by-default: ${effect.key}` });
     }
   }
   if (collected.activeCircleIds === 'unknown') {
@@ -125,10 +128,10 @@ export function buildAccountErasureActivationPlan(
 
   const evidenceIncomplete =
     shadow.outcome === 'evidence_incomplete' ||
-    blockers.some((b) => b.code === 'runtime_fk_evidence' || b.code === 'missing_circle_fact');
+    blockers.some((b) => b.code === 'runtime_fk_evidence' || b.code === 'runtime_schema_drift' || b.code === 'missing_circle_fact');
   const governedRefusal =
     shadow.outcome === 'governed_refusal' ||
-    blockers.some((b) => b.code === 'unsupported_adapter');
+    blockers.some((b) => b.code === 'unsupported_adapter' || b.code === 'unadjudicated_runtime_fk');
   const outcome: ActivationOutcome = evidenceIncomplete
     ? 'evidence_incomplete'
     : governedRefusal

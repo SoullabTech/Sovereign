@@ -39,6 +39,9 @@ npm run check:erasure-registry
 # F5 P5-D — activation may use only the explicit v3 succession; v2 remains shadow history.
 npm run check:erasure-activation
 
+# P5-D-R3 — execution authority must remain bound to the witnessed migrated PostgreSQL graph.
+npm run check:erasure-runtime-authority
+
 # F5 P5-C — the retired legacy erasure surface may never return as a second/fallback engine.
 npm run check:legacy-erasure-retired
 
