@@ -4,7 +4,37 @@
 
 **Status:** instructional synthesis derived from existing Soullab JARVIS programmes, governance records, evidence discipline, deployment law, epistemic guardrails, and founder rulings. It explains the working method; it does not independently ratify new doctrine or lift any existing stop.
 
+> *Status at publication, retained verbatim for provenance. Superseded as current standing by the Canonical Designation below (17 September 2026).*
+
 **Canonical base used for this synthesis:** `97c7d94634b8ce1cebfbd8c9f7e6b934d016f472`.
+
+---
+
+## Canonical Designation — 17 September 2026
+
+**FOUNDER RULING — TAKE.**
+
+> `JARVIS_INSTRUCTIONAL_MANUAL_v1.md` is designated the canonical operating manual for JARVIS-governed work across Soullab / MAIA / AIN. It governs orchestration method, evidence discipline, gate sequencing, custody, stop conditions, and founder handoffs. It does not supersede programme-specific ratified law, constitutional contracts, or explicit founder rulings; where a more specific authority conflicts with the manual, the more specific authority governs. Canonical status does not itself authorize implementation, migration, deployment, repair, merge, or production change.
+
+**Precedence:**
+
+```text
+FOUNDER AUTHORITY
+        ↓
+RATIFIED PROGRAMME / CONSTITUTIONAL LAW
+        ↓
+CANONICAL JARVIS OPERATING MANUAL
+        ↓
+LANE-SPECIFIC CHARTERS / PLANS
+        ↓
+IMPLEMENTATION
+```
+
+**Standing:** Canonical design authority for the MAIA Maven architecture as of 17 September 2026. This designation governs future design and implementation interpretation subject to higher constitutional law and does not upgrade unimplemented or unwitnessed capabilities to LIVE status.
+
+**Canonical for architecture and design intent; runtime truth still governs what is actually implemented, available, or witnessed.** Repository and runtime evidence continue to govern implementation standing. Nothing in this manual may be cited as evidence that a described capability is built, wired, surfacing, deployed, or exercised by a member.
+
+**Provenance of this designation:** the reviewed artifact landed unchanged as merge `7f1b55287` (PR #1341, head `6c6ec46b3`, base `97c7d9463`). This designation is a separate documentary act recorded after that merge. It adds standing; it does not revise the document's history.
 
 ### Navigation
 
@@ -1258,6 +1288,8 @@ The manual is intentionally a synthesis layer. It should remain easier to read t
 ---
 
 ## 47 · How to adopt this manual without making it another authority problem
+
+> **Supersession note — 17 September 2026:** This section records the document's original standing at publication. Its self-description as an instructional synthesis was superseded by the later founder Canonical Designation above. Original language is retained for provenance.
 
 Use this manual first as an **instructional reference**. Do not automatically convert every historical JARVIS lane to its vocabulary or rename existing programme stages for consistency.
 
