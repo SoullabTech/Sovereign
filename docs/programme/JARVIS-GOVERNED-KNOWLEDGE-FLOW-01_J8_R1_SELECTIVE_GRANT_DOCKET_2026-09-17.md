@@ -2,11 +2,11 @@
 
 > **Class:** Founder decision docket — no authority is granted by this document
 > **Governing authority:** `docs/canon/REPRESENTATION_AUTHORITY_LAW.md` · canonical JARVIS instructional manual · J8-R1 charter
-> **Current gate:** exact bounded SELECTIVE authority decision
+> **Current gate:** founder SELECTIVE grant recorded → exact-head Class A evidence
 > **Evidence subject:** `J8-R1-EA-SELECTIVE-v1` / SHA-256 `cb616d711e62b40f8042065c3d8a072c25f5ee6da1050c376e0246a4d1e39928`
-> **Stop boundary:** no grant may be inferred from calibration, tests, CI, PR approval, mergeability, or prior corpus authority
+> **Stop boundary:** grant is exact-contract-only; no merge/deploy/J8 PASS may be inferred from the grant, tests, CI, approval, or mergeability
 
-**Status:** ⛔ **PENDING FOUNDER DECISION**
+**Status:** ✅ **RULED — GRANT SELECTIVE**
 
 ## D-01 · May the exact J8-R1 SELECTIVE contract determine current-turn retrieved-evidence membership?
 
@@ -97,6 +97,12 @@ Name the field or effect that must change. The current grant remains absent and 
 
 The SELECTIVE representation is not granted. Governed retrieval remains off and J8 remains STOP.
 
+## Founder ruling — 2026-09-17
+
+**Option A selected: GRANT SELECTIVE.**
+
+The founder supplied the canonical wording above verbatim, bound to contract SHA-256 `cb616d711e62b40f8042065c3d8a072c25f5ee6da1050c376e0246a4d1e39928`. Durable ruling custody is recorded in `docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_R1_SELECTIVE_FOUNDER_RULING_2026-09-17.md`.
+
 ## Standing
 
-No option is selected by this docket. **Only the founder may supply the grant.**
+The SELECTIVE grant is now explicit and exact-contract-bound. **Merge and deploy remain separate founder acts. J8 remains STOP.**

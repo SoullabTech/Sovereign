@@ -1,13 +1,13 @@
 # JARVIS-GOVERNED-KNOWLEDGE-FLOW-01 — J8-R1 SELECTIVE retrieval build evidence
 
-> **Class:** A candidate evidence — no grant, merge, deploy, or J8 PASS is created here
+> **Class:** A candidate evidence — founder SELECTIVE grant is recorded; merge, deploy, and J8 PASS remain separate
 > **Governing authority:** `docs/canon/REPRESENTATION_AUTHORITY_LAW.md` · current founder rulings · canonical JARVIS manual · J6 authority boundary
-> **Current gate:** bounded candidate evidence → founder SELECTIVE grant docket
-> **Evidence subject:** isolated J8-R1 candidate over canonical `9c72c9c5a08e087a2b9900069cf629ad915c95e7`
-> **Stop boundary:** `PENDING_FOUNDER_GRANT`; no merge/deploy/J8 PASS by test or CI inference
+> **Current gate:** founder SELECTIVE grant recorded → exact-head Class A evidence
+> **Evidence subject:** post-grant isolated J8-R1 candidate over canonical `12f136634ac848e320b7ed04f36cf2790fcc68ae`
+> **Stop boundary:** exact-contract SELECTIVE grant does not authorize merge/deploy/J8 PASS; exact-head evidence and separate founder merge ruling remain required
 
 **Date:** 2026-09-17
-**Standing:** **candidate build evidence PASS; SELECTIVE authority NOT GRANTED; J8 remains STOP.**
+**Standing:** **post-grant local evidence PASS; exact SELECTIVE authority GRANTED; merge/deploy NOT AUTHORIZED; J8 remains STOP.**
 
 ## 1 · Why the earlier green candidate was reopened
 
@@ -114,20 +114,20 @@ embedding-set SHA256     4ec0eb4d2fdc6e56fccd14927fcb9e4cf5df51ade15cd75ce25c396
 
 `governedSelectionContractDigest()` recomputes the contract; substitution of an authority-bearing predicate turns the contract attestation red.
 
-## 6 · Founder grant remains absent by construction
+## 6 · Founder grant — exact contract recorded
 
-Runtime grant record:
+Runtime grant record after the founder act:
 
 ```text
-status             PENDING_FOUNDER_GRANT
+status             GRANTED
 contract id        J8-R1-EA-SELECTIVE-v1
 contract SHA256    cb616d711e62b40f8042065c3d8a072c25f5ee6da1050c376e0246a4d1e39928
-founder ruling ref null
+founder ruling ref docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_R1_SELECTIVE_FOUNDER_RULING_2026-09-17.md
 ```
 
-The service consumes and validates the grant **before member-query embedding**. A missing/pending/invalid grant therefore prevents applicability computation, corpus attestation, chunk ranking, and prompt injection.
+The service consumes and validates the grant **before member-query embedding**. A missing, pending, stale, substituted, or wrong-digest grant still prevents applicability computation, corpus attestation, chunk ranking, and prompt injection.
 
-A simulated exact grant is used only inside unit tests to falsify downstream behavior. No simulated grant exists in production code.
+Unit tests retain explicit pending/wrong-digest negative fixtures so the granted production record does not erase the refusal path.
 
 ## 7 · Runtime J6 authority consumption
 
@@ -273,7 +273,7 @@ Result:
 Important falsifiers include:
 
 - no/mismatched J6 authority → no representation computation;
-- pending founder grant → no member-query embedding;
+- absent/stale/substituted founder grant → no member-query embedding;
 - SELECTIVE contract predicate substitution → red digest;
 - same model name / altered model digest → red;
 - applicability failure → no corpus attestation/chunk query;
@@ -318,13 +318,12 @@ This repair lane has made **no production write**.
 
 ## 16 · Build adjudication
 
-**J8-R1 dormant candidate: PASS for bounded local build/falsification evidence.**
+**J8-R1 post-grant candidate: PASS for bounded local build/falsification evidence.**
 
-This establishes only that the candidate is coherent enough to present to the founder for the explicit SELECTIVE grant required by canonical law.
+The founder supplied the exact SELECTIVE grant on 2026-09-17. The same 13-suite / 94-test population was then rerun on the granted candidate and passed in full; ship TypeScript remained 229 vs baseline 239 with zero regressions, and scripts remained at 40 existing diagnostics with zero J8-related diagnostics.
 
 It does **not** establish:
 
-- SELECTIVE authority granted;
 - merge authorized;
 - deploy authorized;
 - J8 PASS;
@@ -332,10 +331,10 @@ It does **not** establish:
 
 ## 17 · Next exact act
 
-Founder decision docket:
+Founder ruling custody:
 
-`docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_R1_SELECTIVE_GRANT_DOCKET_2026-09-17.md`
+`docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_R1_SELECTIVE_FOUNDER_RULING_2026-09-17.md`
 
-Until that docket receives an explicit founder act, `GovernedSelectionGrant.ts` remains `PENDING_FOUNDER_GRANT` and the candidate is runtime-dormant.
+The founder supplied **GRANT SELECTIVE** on 2026-09-17 for exact contract SHA-256 `cb616d711e62b40f8042065c3d8a072c25f5ee6da1050c376e0246a4d1e39928`. `GovernedSelectionGrant.ts` is `GRANTED` and bound to that record. The post-grant 13-suite / 94-test population and TypeScript no-regression gate pass locally on the granted candidate.
 
-If the founder grants the exact contract, the next bounded implementation act may change only the grant status/ruling reference needed to activate **that same digest-bound contract**, then rerun exact-head Class A evidence. Merge and deploy remain separate founder gates.
+**Next gate: exact-head Class A review/CI, then a separate founder merge ruling.** No merge or deployment is authorized by this evidence record.

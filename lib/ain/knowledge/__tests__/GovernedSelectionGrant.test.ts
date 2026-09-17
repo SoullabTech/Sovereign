@@ -10,25 +10,25 @@ import {
   ELEMENTAL_ALCHEMY_SELECTION_CONTRACT_SHA256,
 } from '../GovernedSelectionContract';
 
-test('candidate remains runtime-dormant while founder grant is pending', () => {
+test('the recorded founder grant authorizes only the exact attested contract', () => {
   expect(ELEMENTAL_ALCHEMY_SELECTION_GRANT).toEqual(expect.objectContaining({
-    status: 'PENDING_FOUNDER_GRANT',
+    status: 'GRANTED',
     contractId: ELEMENTAL_ALCHEMY_SELECTION_CONTRACT.contractId,
     contractSha256: ELEMENTAL_ALCHEMY_SELECTION_CONTRACT_SHA256,
     authorityClass: 'SELECTIVE',
     effectScope: 'current_turn_retrieved_evidence_membership',
-    founderRulingRef: null,
+    founderRulingRef: 'docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_R1_SELECTIVE_FOUNDER_RULING_2026-09-17.md',
   }));
-  expect(() => assertGovernedSelectionGrant(ELEMENTAL_ALCHEMY_SELECTION_CONTRACT)).toThrow(/grant absent or invalid/);
+  expect(assertGovernedSelectionGrant(ELEMENTAL_ALCHEMY_SELECTION_CONTRACT)).toBe(ELEMENTAL_ALCHEMY_SELECTION_GRANT);
 });
 
-test('an exact simulated founder grant can authorize only the exact attested contract', () => {
-  const simulatedGrant: GovernedSelectionGrant = {
+test('a pending record still refuses before SELECTIVE effect', () => {
+  const pendingGrant: GovernedSelectionGrant = {
     ...ELEMENTAL_ALCHEMY_SELECTION_GRANT,
-    status: 'GRANTED',
-    founderRulingRef: 'docs/programme/SIMULATED_ONLY.md',
+    status: 'PENDING_FOUNDER_GRANT',
+    founderRulingRef: null,
   };
-  expect(assertGovernedSelectionGrant(ELEMENTAL_ALCHEMY_SELECTION_CONTRACT, simulatedGrant)).toBe(simulatedGrant);
+  expect(() => assertGovernedSelectionGrant(ELEMENTAL_ALCHEMY_SELECTION_CONTRACT, pendingGrant)).toThrow(/grant absent or invalid/);
 });
 
 test('a granted record bound to a different contract digest is refused', () => {

@@ -2,12 +2,12 @@
 
 > **Class:** A — canonical cognition / knowledge-retrieval boundary
 > **Governing authority:** current founder rulings · ratified programme law · `docs/canon/REPRESENTATION_AUTHORITY_LAW.md` · canonical JARVIS instructional manual · J6 Production Knowledge Boundary
-> **Current gate:** J8-R1 candidate repair → explicit founder SELECTIVE grant → exact-head Class A review; **J8 remains STOP**
-> **Evidence subject:** this isolated J8-R1 candidate over canonical `9c72c9c5a08e087a2b9900069cf629ad915c95e7`; production runtime `97c7d9463` only where explicitly labeled read-only witness
-> **Stop boundary:** no SELECTIVE effect without exact founder grant; no merge/deploy by green CI inference; no corpus/Library/schema write; no J8 PASS before J8-R2 production witness
+> **Current gate:** founder SELECTIVE grant recorded → exact-head Class A evidence/review → separate founder merge ruling; **J8 remains STOP**
+> **Evidence subject:** this isolated J8-R1 candidate over canonical `12f136634ac848e320b7ed04f36cf2790fcc68ae`; production runtime `97c7d9463` only where explicitly labeled read-only witness
+> **Stop boundary:** SELECTIVE grant applies only to the exact contract digest; no merge/deploy by grant or green-CI inference; no corpus/Library/schema write; no J8 PASS before J8-R2 production witness
 
 **Date:** 2026-09-17
-**Current standing:** **J8 STOP. SELECTIVE grant pending. Runtime candidate deliberately dormant.**
+**Current standing:** **J8 STOP. SELECTIVE grant GRANTED for the exact contract. Merge and deploy remain closed.**
 
 ## 1 · Gate being repaired
 
@@ -129,20 +129,20 @@ The contract digest binds:
 
 The route does not own or override these values. A contract substitution makes its SHA attestation red.
 
-## 6 · Founder grant — currently absent
+## 6 · Founder grant — GRANTED for the exact contract
 
-`GovernedSelectionGrant.ts` is intentionally:
+Founder act recorded at `docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_R1_SELECTIVE_FOUNDER_RULING_2026-09-17.md`:
 
 ```text
-status             PENDING_FOUNDER_GRANT
+status             GRANTED
 contract           J8-R1-EA-SELECTIVE-v1
 contract SHA256    cb616d711e62b40f8042065c3d8a072c25f5ee6da1050c376e0246a4d1e39928
-founder ruling ref null
+founder ruling ref docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_R1_SELECTIVE_FOUNDER_RULING_2026-09-17.md
 ```
 
-Runtime order requires the exact grant **before the member query is embedded**. Therefore an accidental merge/deploy before the founder act cannot silently create the SELECTIVE effect.
+Runtime order requires this exact grant **before the member query is embedded**. A missing, stale, substituted, or wrong-digest grant therefore still fails before the SELECTIVE effect begins.
 
-The grant, if given, may authorize only current-turn retrieved-evidence membership. It may not alter source rights, source identity, corpus admission, row validity, continuing corpus standing, or member identity.
+The grant authorizes only current-turn retrieved-evidence membership after upstream authority and attestations pass. It does not alter source rights, source identity, corpus admission, row validity, continuing corpus standing, member identity, or the descriptive standing of domain/categories. Merge and deploy remain separate founder acts.
 
 ## 7 · Source applicability — SELECTIVE, not AUTHORITATIVE
 

@@ -17,21 +17,18 @@ export interface GovernedSelectionGrant {
 }
 
 /**
- * Candidate is deliberately dormant until an explicit founder act grants the
- * exact SELECTIVE contract. A merge/deploy mistake before that act therefore
- * cannot silently create retrieval-selection authority.
- *
- * After the founder grant, a bounded documentary/code follow-up may change only
- * status + founderRulingRef while preserving the exact contract id/digest/scope.
+ * Founder grant recorded 2026-09-17 for the exact SELECTIVE contract below.
+ * The grant remains valid only while contract id/digest/scope and all upstream
+ * authority/attestation conditions remain exact. Merge/deploy are separate acts.
  */
 export const ELEMENTAL_ALCHEMY_SELECTION_GRANT: GovernedSelectionGrant = Object.freeze({
-  status: 'PENDING_FOUNDER_GRANT',
+  status: 'GRANTED',
   subjectId: 'elemental-alchemy',
   contractId: 'J8-R1-EA-SELECTIVE-v1',
   contractSha256: ELEMENTAL_ALCHEMY_SELECTION_CONTRACT_SHA256,
   authorityClass: 'SELECTIVE',
   effectScope: 'current_turn_retrieved_evidence_membership',
-  founderRulingRef: null,
+  founderRulingRef: 'docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_R1_SELECTIVE_FOUNDER_RULING_2026-09-17.md',
 });
 
 export function assertGovernedSelectionGrant(
