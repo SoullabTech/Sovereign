@@ -566,7 +566,7 @@ export function validateRegistry(registry: AccountErasureRegistry, census: Censu
   }
 
   if (!registry.coverageOnly || !registry.activationProhibited) {
-    failures.push('registry must remain coverageOnly=true and activationProhibited=true during P5-A');
+    failures.push('registry must remain coverageOnly=true and activationProhibited=true before route activation');
   }
 
   const discoveredLoci = new Map(census.memberBoundLoci.map((l) => [l.table, l]));
@@ -651,7 +651,7 @@ export function sha256Utf8(value: string): string {
 }
 
 export function registryPath(root: string): string {
-  return join(root, 'config/governance/account-erasure-registry.v1.json');
+  return join(root, 'config/governance/account-erasure-registry.v2.json');
 }
 
 export function loadRegistry(root: string): AccountErasureRegistry {

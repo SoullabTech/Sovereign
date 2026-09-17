@@ -24,7 +24,7 @@ console.log(`   registry               ${registry.version} · ${registry.memberB
 
 if (failures.length === 0) {
   console.log('✅ Every declared member-bound locus and member FK is explicitly classified.');
-  console.log('   P5-A remains coverage-only; activation is prohibited.\n');
+  console.log('   Registry remains coverage-only; activation is prohibited.\n');
   process.exit(0);
 }
 
