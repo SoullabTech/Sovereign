@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import { CANONICAL_FIELD_KEYS } from '@/lib/maia/living-field/canonicalFieldKeys'
 import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
+import { livingFieldAtomGuards } from '@/lib/maia/living-field/atomEligibility'
 
 function getMemberId(request: NextRequest): string | null {
   return (
@@ -50,11 +51,18 @@ export async function GET(request: NextRequest) {
     // 1b. Gathered affinities per field — the Keeps that have gathered into each
     // dimension. This is what makes a field's gathering VISIBLE before the member
     // has authored anything. A field with gathered Keeps is not empty.
+    // LF-SCOPE-01: the count now JOINs the atoms it counts and applies the same
+    // eligibility predicate the gathering list applies. Before this it counted
+    // affinity rows alone, so a count could exceed — and disagree with — the
+    // material the member could actually open, and could include non-personal,
+    // practitioner-authored, member-rejected or since-protected rows.
     const gatheredResult = await query(
-      `SELECT field_key, COUNT(*)::int AS gathered_count
-       FROM living_field_affinities
-       WHERE member_id = $1
-       GROUP BY field_key`,
+      `SELECT lfa.field_key, COUNT(*)::int AS gathered_count
+       FROM living_field_affinities lfa
+       JOIN member_memory_atoms a ON a.id = lfa.atom_id
+       WHERE lfa.member_id = $1
+         AND ${livingFieldAtomGuards('a')}
+       GROUP BY lfa.field_key`,
       [memberId]
     )
     const gatheredByKey = new Map(
@@ -67,9 +75,7 @@ export async function GET(request: NextRequest) {
       `SELECT COUNT(*)::int AS n
        FROM member_memory_atoms
        WHERE member_id = $1
-         AND status NOT IN ('protected', 'archived')
-         AND primary_register IS DISTINCT FROM 'sacred_protected'
-         AND NOT ('sacred_protected' = ANY(registers))`,
+         AND ${livingFieldAtomGuards()}`,
       [memberId]
     )
     const keepDenominator = (denomResult.rows[0]?.n as number) ?? 0
