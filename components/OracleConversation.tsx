@@ -6305,35 +6305,51 @@ I'm not sure what I'm feeling yet.`;
       // Opening Keep is now a zero-persistence act (KEEP-OPEN-NONPERSISTENT-01),
       // which is what makes the explicit-command branch below safe to wire.
       const keepIntent = detectKeepIntent(cleanedText);
-      if (keepIntent.kind) {
+      if (keepIntent.resolution === 'resolved') {
+        const hasKeep = keepIntent.acts.some((match) => match.act === 'keep');
+        const hasContinue = keepIntent.acts.some((match) => match.act === 'continue');
+        const hasOpenKeep = keepIntent.acts.some((match) => match.act === 'open_keep');
+
         if (isSanctuary) {
-          // No doorway, no panel, no capsule. MAIA answers in words — the
-          // platform map tells her Keep is unavailable in Sanctuary and that
-          // this absence is the boundary working, not a fault.
-          console.log('🛡️ [Keep] intent recognized but refused · Sanctuary', {
-            kind: keepIntent.kind,
+          // Sanctuary is ENCOUNTER ONLY. Recognition may still understand the
+          // member's words, but no persistence/continuity affordance crosses.
+          console.log('🛡️ [MemberAct] recognized but refused · Sanctuary', {
+            acts: keepIntent.acts.map((match) => match.act),
           });
-        } else if (keepIntent.kind === 'open_keep') {
-          // Explicit House command. MAIA operates the interface; she does not
-          // exercise the member's consent authority by doing so — the panel
-          // opens holding an unsaved preview and nothing is written until the
-          // member confirms.
-          console.log('🔖 [Keep] explicit open command', { matched: keepIntent.matched });
-          handleCaptureSpiritRef.current?.();
-        } else if (!oracleMessage.uiAction || oracleMessage.uiAction.type === 'none') {
-          // The member wants to hold onto this material. Surface the existing
-          // member-controlled doorway rather than opening anything: they decide.
-          const action = buildUiAction(getIntentRoute('reflection_mark'), 1);
-          if (action.type !== 'none') {
-            oracleMessage.intent = 'reflection_mark';
-            // Override the ambient lead-in. The pooled ones ("Something
-            // important just happened.") are MAIA asserting significance she
-            // detected; here the member said it themselves, and echoing their
-            // ask back as her own observation would misreport who noticed.
-            oracleMessage.uiAction = { ...action, leadIn: 'You asked to keep this.' };
-            console.log('🔖 [Keep] doorway attached', { matched: keepIntent.matched });
+        } else {
+          // OPEN_KEEP execution — opening is zero-persistence and therefore safe.
+          if (hasOpenKeep) {
+            console.log('🔖 [Keep] explicit open command', { matches: keepIntent.acts });
+            handleCaptureSpiritRef.current?.();
+          }
+
+          // KEEP execution — surface only the member-controlled doorway. A
+          // co-authored CONTINUE act does not disappear merely because KEEP can
+          // execute; it is separately preserved below.
+          if (hasKeep && (!oracleMessage.uiAction || oracleMessage.uiAction.type === 'none')) {
+            const action = buildUiAction(getIntentRoute('reflection_mark'), 1);
+            if (action.type !== 'none') {
+              oracleMessage.intent = 'reflection_mark';
+              // The member authored the persistence request. Do not recast it as
+              // MAIA noticing significance on their behalf.
+              oracleMessage.uiAction = { ...action, leadIn: 'You asked to keep this.' };
+              console.log('🔖 [Keep] doorway attached', { matches: keepIntent.acts });
+            }
+          }
+
+          // CONTINUE execution intentionally absent in this tranche. Preserve
+          // the recognized act and withhold execution truthfully: never surface
+          // Keep as a fallback, never fabricate a continuation commit.
+          if (hasContinue) {
+            console.log('↩️ [Continue] recognized · execution unavailable · no Keep fallback', {
+              matches: keepIntent.acts.filter((match) => match.act === 'continue'),
+            });
           }
         }
+      } else if (keepIntent.resolution === 'ambiguous') {
+        // Ambiguity carries no selector authority. MAIA's reply remains intact;
+        // no persistence or continuation affordance is chosen by the client.
+        console.log('❓ [MemberAct] ambiguous · no action selected');
       }
 
       // 🚪 CLIENT-SIDE INTENT DETECTION (fallback when server doesn't provide uiAction)

@@ -1,44 +1,43 @@
 // lib/consciousness/keepIntent.ts
-// KEEP-INTENT-01 — Keep intent recognition. Deterministic phrase matching.
+// KEEP-INTENT-01 / T1A-J5 — deterministic recognition of Keep-adjacent member acts.
 // No model calls. No side effects. No persistence.
 //
 // ═══════════════════════════════════════════════════════════════════════════
-// KEEP AUTHORITY CONTRACT (Kelly ruling 2026-08-28)
+// MEMBER-ACT AUTHORITY CONTRACT
 //
-//   UNDERSTAND   MAIA understands the member is expressing Keep intent.
-//   FACILITATE   The House may surface / open the member-controlled Keep gesture.
-//   COMMIT       Only the member's own confirmation may persist the material.
+//   UNDERSTAND   Recognition names what the member expressed.
+//   FACILITATE   The House may offer only the affordance belonging to that act.
+//   COMMIT       Only a separately authorized substrate may persist/resume it.
 //
-// Recognition must never silently collapse into commitment. This module only
-// answers "did the member express Keep intent, and of what kind" — it opens
-// nothing, writes nothing, and knows nothing about Sanctuary. Callers own that.
+// Recognition must never silently collapse one governed act into another.
+// KEEP and CONTINUE are distinct. Availability may affect execution; it may not
+// redefine member meaning. The recognizer deliberately remains non-consuming so
+// relational speech still reaches MAIA and receives a reply.
 // ═══════════════════════════════════════════════════════════════════════════
-//
-// WHY THIS EXISTS SEPARATELY FROM detectJournalCommand():
-// That detector CONSUMES the member's utterance — when it matches, the message
-// never reaches MAIA and she goes silent. "Can we keep this?" is relational
-// speech addressed to her. The interface must not turn her mute because it
-// recognized an affordance. So Keep intent is recognized on a path that leaves
-// the conversational turn intact, and the affordance is surfaced alongside the
-// reply rather than in place of it.
 
-export type KeepIntentKind =
-  /** "keep this", "mark this moment" — the member wants to hold onto material. */
-  | 'keep_material'
-  /** "open Keep", "MAIA, open the Keep function" — an explicit House command. */
-  | 'open_keep';
+export type RecognizedMemberAct = 'keep' | 'continue' | 'open_keep';
+export type IntentResolution = 'resolved' | 'ambiguous' | 'ordinary';
 
-export interface KeepIntentResult {
-  kind: KeepIntentKind | null;
-  /** The phrase that matched, for logging and for explaining the recognition. */
-  matched: string | null;
+export interface RecognizedActMatch {
+  act: RecognizedMemberAct;
+  /** The exact normalized phrase that supported this recognition. */
+  matched: string;
 }
 
-const NONE: KeepIntentResult = { kind: null, matched: null };
+export interface KeepIntentResult {
+  resolution: IntentResolution;
+  /** Ordered by the member's utterance; one entry per distinct governed act. */
+  acts: readonly RecognizedActMatch[];
+}
+
+const ORDINARY: KeepIntentResult = { resolution: 'ordinary', acts: [] };
+
+type Span = { phrase: string; start: number; end: number };
+type ActSpan = Span & { act: RecognizedMemberAct };
 
 /**
  * Explicit commands to open the Keep surface. These name Keep as a thing to be
- * opened, so they are unambiguous in a way "keep this" is not.
+ * opened; they are interface requests, not persistence acts.
  */
 const OPEN_KEEP_PHRASES = [
   'open keep',
@@ -55,17 +54,7 @@ const OPEN_KEEP_PHRASES = [
   "i'd like to keep something",
 ];
 
-/**
- * The member wants to hold onto what just passed. Every phrase here anchors the
- * keep-verb to a deictic object ("this", "that moment") — that anchoring is what
- * separates "keep this" from "keep going".
- *
- * Deliberately NOT included: 'capture this', 'record this', 'save this
- * conversation', 'journal this'. Those already trigger detectJournalCommand(),
- * which returns before MAIA responds — listing them here would be a lie, since
- * this recognizer never runs for them. Unifying those paths is KEEP-INTENT-02
- * work, not this cut's.
- */
+/** The member deliberately asks to persist selected present material. */
 const KEEP_MATERIAL_PHRASES = [
   'keep this',
   'keep that moment',
@@ -84,14 +73,9 @@ const KEEP_MATERIAL_PHRASES = [
 ];
 
 /**
- * Constructions that contain a positive phrase but are not Keep intent. These
- * are checked against the MATCHED REGION, not the whole message: a member who
- * says "keep going — actually, can we keep this?" means both things, and the
- * second one is a real request.
- *
- * Ordinary uses of "keep" that contain no deictic object ("keep going", "keep
- * talking", "keep the door open", "what keeps happening") never match a positive
- * phrase in the first place and need no guard here.
+ * Ordinary constructions that happen to contain a positive Keep substring.
+ * These remain lexical guards for KEEP only. CONTINUE is positively recognized
+ * as its own act; it is never implemented by expanding this blacklist.
  */
 const FALSE_FRIENDS = [
   'keep this up',
@@ -109,6 +93,18 @@ const FALSE_FRIENDS = [
   'mark this as read',
 ];
 
+/**
+ * CONTINUE means leave / return to a conversational thread across a boundary.
+ * It does NOT mean every request to keep talking in the present encounter.
+ * Positive patterns are intentionally bounded to deictic thread-like language.
+ */
+const CONTINUE_PATTERNS: readonly RegExp[] = [
+  /\bkeep (?:this|that)(?: (?:question|thread|conversation|topic|issue|thought))? open\b/g,
+  /\bleave (?:this|that)(?: (?:question|thread|conversation|topic|issue|thought))? open\b/g,
+  /\bcome back to (?:this|that)(?: (?:question|thread|conversation|topic|issue|thought))?\b/g,
+  /\breturn to (?:this|that)(?: (?:question|thread|conversation|topic|issue|thought))?\b/g,
+];
+
 /** Normalize for matching: lowercase, collapse whitespace, strip curly quotes. */
 function normalize(message: string): string {
   return message
@@ -118,69 +114,117 @@ function normalize(message: string): string {
     .trim();
 }
 
-/**
- * Does `phrase` occur at `index` only as part of a false-friend construction?
- * A message can contain the same phrase twice; one guarded occurrence does not
- * disqualify an unguarded one.
- */
-function everyOccurrenceIsFalseFriend(text: string, phrase: string): boolean {
-  const occurrences: number[] = [];
+function phraseOccurrences(text: string, phrase: string): Span[] {
+  const spans: Span[] = [];
   let at = text.indexOf(phrase);
   while (at !== -1) {
-    occurrences.push(at);
+    spans.push({ phrase, start: at, end: at + phrase.length });
     at = text.indexOf(phrase, at + 1);
   }
-  if (occurrences.length === 0) return true;
+  return spans;
+}
 
-  return occurrences.every((start) =>
-    FALSE_FRIENDS.some((ff) => {
-      const ffAt = text.indexOf(ff);
-      if (ffAt === -1) return false;
-      // The occurrence sits inside a false-friend span.
-      let cursor = ffAt;
-      while (cursor !== -1) {
-        if (start >= cursor && start < cursor + ff.length) return true;
-        cursor = text.indexOf(ff, cursor + 1);
-      }
-      return false;
-    }),
+function spanOverlaps(a: Pick<Span, 'start' | 'end'>, b: Pick<Span, 'start' | 'end'>): boolean {
+  return a.start < b.end && b.start < a.end;
+}
+
+function occurrenceIsInsideFalseFriend(text: string, span: Span): boolean {
+  return FALSE_FRIENDS.some((ff) =>
+    phraseOccurrences(text, ff).some((guard) => span.start >= guard.start && span.end <= guard.end),
   );
 }
 
-function findPhrase(text: string, phrases: string[]): string | null {
-  // Longest first, so "keep this moment" reports itself rather than "keep this".
+function findPhraseSpan(text: string, phrases: readonly string[]): Span | null {
+  // Preserve KEEP-INTENT-01 reporting behavior: prefer the longest supported
+  // phrase, then its earliest usable occurrence.
   const ordered = [...phrases].sort((a, b) => b.length - a.length);
   for (const phrase of ordered) {
-    if (!text.includes(phrase)) continue;
-    if (everyOccurrenceIsFalseFriend(text, phrase)) continue;
-    return phrase;
+    const hit = phraseOccurrences(text, phrase)[0];
+    if (hit) return hit;
   }
   return null;
 }
 
+function findContinueSpans(text: string): Span[] {
+  const spans: Span[] = [];
+  for (const pattern of CONTINUE_PATTERNS) {
+    pattern.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(text)) !== null) {
+      spans.push({ phrase: match[0], start: match.index, end: match.index + match[0].length });
+      if (match[0].length === 0) pattern.lastIndex += 1;
+    }
+  }
+  return spans.sort((a, b) => a.start - b.start || b.end - b.start - (a.end - a.start));
+}
+
+function findKeepSpan(text: string, continueSpans: readonly Span[]): Span | null {
+  const ordered = [...KEEP_MATERIAL_PHRASES].sort((a, b) => b.length - a.length);
+  for (const phrase of ordered) {
+    for (const span of phraseOccurrences(text, phrase)) {
+      if (occurrenceIsInsideFalseFriend(text, span)) continue;
+      // A CONTINUE phrase such as "keep this question open" contains the bytes
+      // "keep this". The larger governed act owns that occurrence.
+      if (continueSpans.some((continuation) => spanOverlaps(span, continuation))) continue;
+      return span;
+    }
+  }
+  return null;
+}
+
+function firstSpan(text: string, pattern: RegExp): Span | null {
+  pattern.lastIndex = 0;
+  const match = pattern.exec(text);
+  if (!match) return null;
+  return { phrase: match[0], start: match.index, end: match.index + match[0].length };
+}
+
+function toResult(spans: ActSpan[]): KeepIntentResult {
+  if (spans.length === 0) return ORDINARY;
+
+  const ordered = [...spans].sort((a, b) => a.start - b.start);
+  const seen = new Set<RecognizedMemberAct>();
+  const acts: RecognizedActMatch[] = [];
+  for (const span of ordered) {
+    if (seen.has(span.act)) continue;
+    seen.add(span.act);
+    acts.push({ act: span.act, matched: span.phrase });
+  }
+  return { resolution: 'resolved', acts };
+}
+
 /**
- * Recognize Keep intent in a member utterance.
+ * Recognize Keep-adjacent governed member acts in an utterance.
  *
- * Returns what the member expressed, nothing more. It does not open Keep, does
- * not decide whether Keep is available (Sanctuary is the caller's to enforce),
- * and does not imply anything was kept.
- *
- * Unlike detectIntent() in intentRouter.ts, there is no minimum length and no
- * question-mark suppression: "Can we keep this?" is an explicit request, not
- * ambient signal to be read off the field, and a question mark is how members
- * politely ask for things.
+ * The historical function name is retained to keep this repair bounded. Its
+ * result is now multi-act because a member may author both KEEP and CONTINUE in
+ * one sentence. The recognizer opens nothing, writes nothing, and knows nothing
+ * about Sanctuary; callers own execution boundaries.
  */
 export function detectKeepIntent(message: string): KeepIntentResult {
-  if (!message) return NONE;
+  if (!message) return ORDINARY;
   const text = normalize(message);
 
-  // Explicit House command wins — it is the less ambiguous reading, and it asks
-  // for the surface rather than for this particular material.
-  const open = findPhrase(text, OPEN_KEEP_PHRASES);
-  if (open) return { kind: 'open_keep', matched: open };
+  // An explicit request to open the House surface remains the operational
+  // reading of phrases such as "open Keep so I can keep this". Opening the
+  // surface itself persists nothing.
+  const open = findPhraseSpan(text, OPEN_KEEP_PHRASES);
+  if (open) return toResult([{ ...open, act: 'open_keep' }]);
 
-  const material = findPhrase(text, KEEP_MATERIAL_PHRASES);
-  if (material) return { kind: 'keep_material', matched: material };
+  const continueSpans = findContinueSpans(text);
+  const keepSpan = findKeepSpan(text, continueSpans);
 
-  return NONE;
+  // "Keep this and leave it open" authors two acts. "Leave it open" alone is
+  // context-dependent and therefore not promoted into CONTINUE by this bounded
+  // recognizer; paired with an explicit Keep referent, its referent is clear.
+  if (keepSpan && continueSpans.length === 0) {
+    const compoundContinue = firstSpan(text, /\bleave it open\b/g);
+    if (compoundContinue) continueSpans.push(compoundContinue);
+  }
+
+  const spans: ActSpan[] = [];
+  if (keepSpan) spans.push({ ...keepSpan, act: 'keep' });
+  if (continueSpans[0]) spans.push({ ...continueSpans[0], act: 'continue' });
+
+  return toResult(spans);
 }
