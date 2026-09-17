@@ -43,7 +43,10 @@ import { establishDisclosureBoundary, mayCrossBoundary, type BoundaryOutcome } f
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
 import { presentBoundaryOutcome, presentCrossing, type FocusDisclosurePresentation } from './focusDisclosureSurface';
 import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
-import type { DisclosureScopeKind, DisclosureGesture } from '@/lib/disclosure/contextDisclosureReceipt';
+// This lane keeps its pre-existing closed vocabulary locally. Shared disclosure
+// vocabulary may widen for other lanes without silently widening Writer Focus.
+type FocusDisclosureScopeKind = 'whole_work' | 'section' | 'passage';
+type FocusDisclosureGesture = 'ask_maia' | 'work_with_this' | 'widen_focus' | 'authorize_sections';
 import type { CognitionPrepareInput, PreparedHandoff } from './writersStudioCognition';
 import type { MemberIdentity } from '@/lib/maia/canonical-turn';
 
@@ -51,7 +54,7 @@ import type { MemberIdentity } from '@/lib/maia/canonical-turn';
 export interface FocusAssembler {
   (ref: {
     memberId: string; workRef: string;
-    scopeKind: DisclosureScopeKind; sectionRef?: string;
+    scopeKind: FocusDisclosureScopeKind; sectionRef?: string;
     /** The writer's selection. Carried in the REQUEST; never in the receipt. */
     range?: { start: number; end: number };
   }): Promise<string | null>;
@@ -82,10 +85,10 @@ export interface FocusCrossingRequest {
   sessionId: string;
   disclosureId: string;
   workRef: string;
-  scopeKind: DisclosureScopeKind;
+  scopeKind: FocusDisclosureScopeKind;
   sectionRef?: string;
   range?: { start: number; end: number };
-  gesture: DisclosureGesture;
+  gesture: FocusDisclosureGesture;
   ask: string;
 }
 

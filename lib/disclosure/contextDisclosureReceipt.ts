@@ -45,10 +45,10 @@ export const DISCLOSURE_POLICY_VERSION = 'context-disclosure-v1';
 /**
  * WHAT kind of context crossed. Intended axis: work · memory · journal · keep ·
  * decision · change · session · symbolic_system.
- * ⛔ v1 admits `work` only — a future capability is not a present data field, and
- * widening the axis is a migration.
+ * J5-2 additionally admits `keep` as vocabulary only; no Personal Keeps crossing
+ * is live merely because the receipt can now name it.
  */
-export type DisclosureSourceClass = 'work';
+export type DisclosureSourceClass = 'work' | 'keep';
 
 /**
  * WHY it was entitled to participate — not merely that it was available.
@@ -67,7 +67,7 @@ export type DisclosureSourceClass = 'work';
  */
 export type DisclosureParticipationBasis = 'member_invoked';
 
-/** The only boundary constituted in v1. */
+/** Closed vocabulary of constituted disclosure boundaries. */
 export type DisclosureBoundary =
   | 'writers_studio.focus->maia_cognition'
   /**
@@ -77,13 +77,15 @@ export type DisclosureBoundary =
    * boundary its disclosure actually crossed. Mirrors migration
    * `20260913000002`, one value and nothing else.
    */
-  | 'writers_studio.developmental_ask->maia_cognition';
+  | 'writers_studio.developmental_ask->maia_cognition'
+  /** J5-2. Explicit Personal Keeps inventory crossing; wiring remains a later cut. */
+  | 'maia.personal_keeps_read->maia_cognition';
 
-/** The SHAPE of the selection — never its location. */
-export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';
+/** The SHAPE of the selection — never its content or location. */
+export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage' | 'object';
 
 /**
- * The writer gesture that authorized the crossing. Closed vocabulary: the kind
+ * The member gesture that authorized the crossing. Closed vocabulary: the kind
  * of gesture, never its content.
  */
 export type DisclosureGesture =
@@ -96,7 +98,9 @@ export type DisclosureGesture =
    * member's act, never the count of boundaries it caused. Mirrors migration
    * `20260913000003`.
    */
-  | 'authorize_sections';
+  | 'authorize_sections'
+  /** J5-2. One explicit, response-scoped request to read qualifying Personal Keeps. */
+  | 'read_personal_keeps';
 
 export interface ContextDisclosureAttempt {
   /** Unique per attempt; a retry MUST reuse it so evidence cannot be duplicated. */
