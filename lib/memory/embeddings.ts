@@ -7,18 +7,22 @@
  * Model: nomic-embed-text (efficient, fast, local)
  */
 
-export async function generateLocalEmbedding(text: string): Promise<number[]> {
+export async function generateLocalEmbedding(
+  text: string,
+  options: { model?: string; timeoutMs?: number } = {},
+): Promise<number[]> {
   const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+  const model = options.model || 'nomic-embed-text';
   // Short timeout: if Ollama is unreachable (e.g. container→host networking), fail fast
   // rather than blocking every request for 30s. Set OLLAMA_EMBED_TIMEOUT_MS to increase.
-  const timeoutMs = Number(process.env.OLLAMA_EMBED_TIMEOUT_MS || 2000);
+  const timeoutMs = options.timeoutMs ?? Number(process.env.OLLAMA_EMBED_TIMEOUT_MS || 2000);
 
   try {
     const response = await fetch(`${ollamaUrl}/api/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'nomic-embed-text',  // Efficient local embedding model
+        model,
         prompt: text.substring(0, 8000),  // Limit context length
       }),
       signal: AbortSignal.timeout(timeoutMs),
