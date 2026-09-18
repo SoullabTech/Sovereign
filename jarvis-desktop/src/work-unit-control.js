@@ -165,6 +165,7 @@ async function status(root, workUnitId) {
     ok: workUnit.exists === true,
     work_unit: workUnit,
     provider_strategy: raw?.provider_strategy ?? [],
+    routing_intelligence: raw?.routing_intelligence ?? null,
     disclosure: raw?.disclosure ?? null,
     attempts,
     reconciliation: reconcileAttempts(attempts),

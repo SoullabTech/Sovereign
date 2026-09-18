@@ -13,15 +13,18 @@ const main = src('main.js');
 const operatorWU = src('operator-work-unit.js');
 const controller = src('work-unit-control.js');
 
-test('cockpit makes governed Work Unit and intelligence strategy visible', () => {
+test('cockpit makes Routing Intelligence preview distinct from manual provider execution', () => {
   assert.match(renderer, /Governed Work Unit/);
-  assert.match(renderer, /Intelligence strategy/);
+  assert.match(renderer, /Routing Intelligence/);
+  assert.match(renderer, /Task shape/);
+  assert.match(renderer, /Review pressure/);
+  assert.match(renderer, /Challenge mode/);
+  assert.match(renderer, /execution disconnected in R3/i);
+  assert.match(renderer, /Use the existing manual provider strategy instead/);
+  assert.match(renderer, /Manual provider strategy/);
   assert.match(renderer, /Qwen3 Coder 30B · local coding review/);
   assert.match(renderer, /GPT-OSS 20B · local reasoning review/);
-  assert.match(renderer, /Nemotron · external review/);
   assert.match(renderer, /Inkling · external adversarial review/);
-  assert.match(renderer, /Run remaining strategy/);
-  assert.match(renderer, /Needs Kelly/);
 });
 
 test('Home ordinary prose hands off to Work as intent rather than requiring a command phrase', () => {
@@ -29,17 +32,18 @@ test('Home ordinary prose hands off to Work as intent rather than requiring a co
   assert.match(renderer, /setView\('work'\); return/);
 });
 
-test('local review is the default and external repository disclosure / Inkling spend remain explicit founder gestures', () => {
+test('routed mode is default; manual provider authority remains an explicit separate path', () => {
+  assert.match(renderer, /id="wu-manual-mode" type="checkbox"/);
+  assert.match(renderer, /id="wu-manual-provider-wrap" style="display:none"/);
   assert.match(renderer, /id="wu-qwen" type="checkbox" checked/);
   assert.match(renderer, /id="wu-gpt-oss" type="checkbox" checked/);
-  assert.match(renderer, /id="wu-nemotron" type="checkbox">/);
-  assert.match(renderer, /id="wu-inkling" type="checkbox">/);
   assert.match(renderer, /wu-repo-ok/);
-  assert.match(renderer, /authorize the selected external provider\(s\) to inspect this isolated repository worktree read-only/i);
+  assert.match(renderer, /exact bounded Evidence focus bundle/i);
   assert.match(renderer, /wu-spend-ok/);
   assert.match(renderer, /authorize provider spend for the Inkling review/i);
-  assert.match(operatorWU, /externalRepoOk !== true/);
-  assert.match(operatorWU, /providerSpendOk !== true/);
+  assert.match(operatorWU, /network_external: false/);
+  assert.match(operatorWU, /provider_spend: false/);
+  assert.match(operatorWU, /repository_external_disclosure: false/);
 });
 
 test('packet authoring structurally denies write, production, deploy and authority change', () => {
@@ -52,17 +56,22 @@ test('packet authoring structurally denies write, production, deploy and authori
 test('exactly one new privileged channel carries a bounded action enum', () => {
   assert.match(preload, /workUnitAction: \(req\) => ipcRenderer\.invoke\('jarvis:work-unit-action', req\)/);
   assert.match(main, /ipcMain\.handle\('jarvis:work-unit-action'/);
-  for (const action of ['providers', 'create', 'status', 'run-provider']) {
+  for (const action of ['providers', 'preview-route', 'create', 'status', 'run-provider']) {
     assert.ok(main.includes(`action === '${action}'`), `missing action ${action}`);
   }
   assert.doesNotMatch(main, /action === 'deploy'/);
   assert.doesNotMatch(main, /action === 'merge'/);
 });
 
-test('MAIN, not renderer, binds canonical SHA and Work Unit identity', () => {
+test('MAIN, not renderer, binds canonical SHA, route record, and Work Unit identity', () => {
   assert.match(main, /execFileSync\('git', \['rev-parse', 'HEAD'\]/);
-  assert.match(main, /OPWU\.buildPacket\(req\?\.spec/);
+  assert.match(main, /computeRoutingPreview/);
+  assert.match(main, /routing-intelligence\.mjs/);
+  assert.match(main, /OPWU\.buildRoutingInput/);
+  assert.match(main, /routeIntelligence\(routingInput\)/);
+  assert.match(main, /OPWU\.buildPacket\(spec/);
   assert.doesNotMatch(renderer, /canonical_sha\s*:/);
+  assert.doesNotMatch(renderer, /route_record\s*:/);
   assert.doesNotMatch(renderer, /branch:\s*`chore\/ain-delegate/);
 });
 
@@ -84,4 +93,21 @@ test('structured reconciliation never silently chooses between disagreeing provi
   assert.match(controller, /JARVIS will not pick a winner automatically/);
   assert.match(controller, /EVIDENCE_PRESENTED/);
   assert.match(controller, /founder review, not an automated verdict/);
+});
+
+test('R3 route-bound Work Units persist preview evidence while provider execution remains disconnected', () => {
+  assert.match(operatorWU, /provider_strategy: routed \? \[\] : checked\.providers/);
+  assert.match(operatorWU, /execution_connected: false/);
+  assert.match(controller, /routing_intelligence: raw\?\.routing_intelligence \?\? null/);
+  assert.match(main, /ROUTING_EXECUTION_DISCONNECTED/);
+  assert.match(main, /route-bound Work Units are preview\/persistence only/i);
+  assert.match(renderer, /Provider execution disconnected in R3/);
+  assert.match(renderer, /if \(!routeBound\) document\.getElementById\('wu-run-strategy'/);
+});
+
+test('Routing Intelligence preview ignores stale asynchronous responses', () => {
+  assert.match(renderer, /let routePreviewGeneration = 0/);
+  assert.match(renderer, /const generation = \+\+routePreviewGeneration/);
+  assert.match(renderer, /generation !== routePreviewGeneration/);
+  assert.match(renderer, /routePreviewGeneration \+= 1/);
 });
