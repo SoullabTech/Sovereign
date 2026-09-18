@@ -23,6 +23,7 @@ DYNAMIC_PAGES_MANIFEST="$PROJECT_ROOT/.capacitor-dynamic-pages.manifest"
 PATCHED_PAGES_FILE="$PROJECT_ROOT/.capacitor-patched-pages.txt"
 MOBILE_BACKUP_DIR="$PROJECT_ROOT/.capacitor-mobile-backup"
 MOBILE_BACKUP_MANIFEST="$PROJECT_ROOT/.capacitor-mobile.manifest"
+STATIC_PARAMS_EXPORTS_FILE="$PROJECT_ROOT/.capacitor-static-params-exports.tmp"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -275,6 +276,39 @@ restore_pages_dir() {
 # Two-phase exclusion of incompatible dynamic pages
 # Phase 1: Scan all pages and collect directories to exclude
 # Phase 2: Move all collected directories
+# ── generateStaticParams: an EXPORT, not a substring ─────────────────────────
+#
+# Until 2026-09-10 the scanner below decided "this page already has
+# generateStaticParams" with `grep -q generateStaticParams "$file"`. A comment
+# satisfies that test. app/reflections/[id]/page.tsx is a client component
+# whose doc comment explains that it CANNOT supply generateStaticParams — and
+# that sentence made the scan classify it as compatible, so `next build`
+# failed the whole iOS export on exactly that page (ios:build and ios:bundle
+# alike). Rewording the comment would only have hidden the defect.
+#
+# Capability is a property of the module's export surface, so the question is
+# now put to the TypeScript parser once per patch run
+# (scripts/capacitor/staticParamsExport.ts): the set of page.tsx files whose
+# top-level exports actually include a binding named generateStaticParams is
+# written to $STATIC_PARAMS_EXPORTS_FILE, and both consumers below look up
+# membership in that set. Fail-closed: if the classifier cannot run or cannot
+# read a file it exits non-zero and, under `set -e`, the patch aborts rather
+# than proceeding on an incomplete classification.
+compute_static_params_exports() {
+    log_info "Classifying generateStaticParams exports (parser, not substring)..."
+    find "$PROJECT_ROOT/app" -name "page.tsx" -type f 2>/dev/null \
+        | (cd "$PROJECT_ROOT" && npx tsx scripts/capacitor/list-static-params-exports.ts) \
+        > "$STATIC_PARAMS_EXPORTS_FILE"
+    local n
+    n=$(wc -l < "$STATIC_PARAMS_EXPORTS_FILE" | tr -d ' ')
+    log_info "  $n page(s) export generateStaticParams"
+}
+
+# has_static_params_export <absolute page path>
+has_static_params_export() {
+    grep -Fxq "$1" "$STATIC_PARAMS_EXPORTS_FILE" 2>/dev/null
+}
+
 hide_incompatible_pages() {
     log_info "Scanning for pages incompatible with static export..."
 
@@ -285,6 +319,8 @@ hide_incompatible_pages() {
         exit 1
     fi
     mkdir -p "$DYNAMIC_PAGES_BACKUP"
+
+    compute_static_params_exports
 
     # Temp file for collecting exclusions (format: page_dir|page_rel_dir)
     local exclusion_file="$PROJECT_ROOT/.capacitor-exclusions.tmp"
@@ -320,8 +356,9 @@ hide_incompatible_pages() {
         # pre-render) or must be excluded. Flat routes don't need this.
         case "$rel_path" in
             *\[*\]*)
-                # Already has generateStaticParams (and no force-dynamic)? Compatible.
-                if grep -q "generateStaticParams" "$file" 2>/dev/null; then
+                # Actually EXPORTS generateStaticParams (and no force-dynamic)? Compatible.
+                # (Parser-backed set — a comment mentioning the name does not count.)
+                if has_static_params_export "$file"; then
                     continue
                 fi
 
@@ -413,8 +450,8 @@ patch_remaining_dynamic_pages() {
         # Only care about dynamic routes
         case "$rel_path" in
             *\[*\]*)
-                # Already has generateStaticParams? Skip
-                if grep -q "generateStaticParams" "$file" 2>/dev/null; then
+                # Actually exports generateStaticParams? Skip (same parser-backed set).
+                if has_static_params_export "$file"; then
                     continue
                 fi
 
@@ -439,6 +476,9 @@ patch_remaining_dynamic_pages() {
 
     local count=$(wc -l < "$PATCHED_PAGES_FILE" 2>/dev/null | tr -d ' ' || echo "0")
     log_info "Patched $count dynamic pages with generateStaticParams"
+
+    # The classification set is consumed; it must not outlive the patch step.
+    rm -f "$STATIC_PARAMS_EXPORTS_FILE"
 }
 
 # Revert generateStaticParams patches
@@ -687,6 +727,8 @@ case "${1:-}" in
         restore_incompatible_pages
         revert_patched_pages
         restore_non_mobile_routes
+        # Left behind only if a patch aborted between classification and patching.
+        rm -f "$STATIC_PARAMS_EXPORTS_FILE"
         ;;
     *)
         echo "Usage: $0 {patch|revert}"
