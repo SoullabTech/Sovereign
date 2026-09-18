@@ -474,15 +474,15 @@
         "timestamps": []
       },
       "state": {
-        "lifecycle_state": "EVIDENCE_READY",
-        "disposition": "open",
+        "lifecycle_state": "CLOSED",
+        "disposition": "closed",
         "supersedes": null
       }
     },
     "guard": {
       "lifecycle_version": "W2.v2",
       "work_unit_id": "rgr-04-synthetic-relational-benchmark-constitution-20260918",
-      "current_state": "EVIDENCE_READY",
+      "current_state": "CLOSED",
       "authorized_core_snapshot": "{\"identity\":{\"id\":\"rgr-04-synthetic-relational-benchmark-constitution-20260918\",\"programme\":\"RELATIONAL-GEOMETRY-REASONING\",\"parent_work_unit\":\"rgr-03-minimal-relational-transfer-hypothesis-20260918\",\"objective\":\"Freeze a synthetic benchmark constitution capable of supporting, rejecting, or invalidating H-RT1 without generating data or executing any model.\",\"work_class\":\"RESEARCH\",\"task_shape\":\"ARCHITECTURE_REASONING\",\"capability\":null},\"custody\":{\"evidence_class\":\"E1_REPOSITORY_LOCAL\"},\"routing_request\":{\"requested_posture\":\"independent_review\",\"review_pressure\":\"high_value_uncertain\"},\"scope\":{\"repository\":\"SoullabTech/Sovereign\",\"base_ref\":\"b040d3bcaafe30df83e35a2fe534f5d0ea85e118\",\"allowed_paths\":[\"docs/programme/RGR-04_SYNTHETIC_RELATIONAL_BENCHMARK_CONSTITUTION_2026-09-18.md\",\"docs/programme/RGR-04_PREREGISTRATION_LOCK_2026-09-18.md\",\"docs/programme/RGR-04_WORK_UNIT_2026-09-18.json\"],\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\",\"scripts\"]},\"authority\":{\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"network_external\":false,\"provider_spend\":false,\"external_disclosure\":\"none\",\"merge\":false,\"deploy\":false,\"production_read\":false,\"production_write\":false},\"evaluation\":{\"acceptance_conditions\":[\"Freeze one primary relation family q_* and one surface specification Σ_* before any generator or dataset is created.\",\"Define generator constraints for positive, negative, relation-preserving, and relation-breaking instances while generating no data.\",\"Freeze split sizes and held-out surface-domain law.\",\"Freeze F_S, F_G, and F_R model-class contracts without implementing them.\",\"Freeze M, δ_min, C_break, κ_min, leakage thresholds, uncertainty procedure, model-selection policy, compute/search budget policy, stopping law, and replication law.\",\"Preserve BENCHMARK_INVALID and UNDERDETERMINED as genuine outcomes.\",\"Keep RGR-05, benchmark generation, model implementation, empirical execution, Elemental hypothesis, MAIA change, and deployment closed.\"],\"falsification_conditions\":[\"Surface variables can predict q_* beyond the frozen leakage tolerance by construction.\",\"Positive and relation-breaking counterfactuals cannot be paired while preserving the frozen surface realization.\",\"A comparator receives privileged information unavailable under the information-access contract.\",\"The benchmark encodes one candidate geometry as ground truth rather than testing the formalism-neutral H-RT1 claim.\",\"Any metric, threshold, split, or model-selection criterion remains open to post-result adjustment.\"],\"stop_conditions\":[\"Dataset generation or benchmark materialization becomes necessary.\",\"Model implementation or training becomes necessary.\",\"Empirical execution becomes necessary.\",\"Any private/member/PHI data becomes necessary.\",\"Any Elemental, MAIA, schema, migration, deployment, or production action becomes necessary.\"]}}"
     }
   },
@@ -549,7 +549,7 @@
     ],
     "interpretation": "Preserved as routing evidence; no override attempted."
   },
-  "standing": "EVIDENCE_READY_AWAITING_FOUNDER_ADJUDICATION",
+  "standing": "CLOSED_BY_FOUNDER_ADJUDICATION",
   "successor_authority": {
     "rgr_05": "CLOSED",
     "benchmark_generation": "NOT_AUTHORIZED",
@@ -611,7 +611,7 @@
       }
     }
   },
-  "execution_note": "RGR-04 synthetic benchmark constitution and preregistration lock complete; two-pass independent challenge preserved; final deterministic contract audit PASS. No generator, dataset, model implementation, training, empirical execution, RGR-05, Elemental formalization, MAIA change, deployment, or production action performed.",
+  "execution_note": "RGR-04 closed by Founder adjudication. Exact benchmark-design candidate preserved as parent evidence; closure changes only lifecycle standing and adjudication record. No RGR-05, generator implementation, dataset materialization, model implementation/training, TEST/REPLICATION, Elemental hypothesis, MAIA alteration, push/merge/deploy, or production action authorized.",
   "review_evidence": {
     "gpt_oss_api_00": {
       "attempt_id": "rgr04-gptoss-api-00",
@@ -653,6 +653,90 @@
       "only three authorized RGR-04 paths changed",
       "RGR-05 and all implementation/execution authorities remain closed",
       "no generator, dataset, model implementation, training, or empirical execution created"
+    ]
+  },
+  "founder_adjudication": {
+    "accepted_candidate_sha": "a401722485a1d07a157086c0d4e030a407f06061",
+    "date": "2026-09-18",
+    "benchmark_id": "RGR-RT1-D2C-01",
+    "benchmark_name": "Relational Transfer 1 — Directed Two-Step Composition",
+    "primary_relation_family": "DIRECTED_TWO_STEP_COMPOSITION",
+    "surface_specification": "BALANCED_16BIT_NODE_CODE",
+    "interpretation": "Relational-transfer capability benchmark only; the target is relational by construction and cannot establish relational metaphysics, geometry of meaning, consciousness geometry, or graph ontology.",
+    "quantitative_lock": {
+      "tau_min": 0.8,
+      "delta_min": 0.1,
+      "kappa_min": 0.75,
+      "permutation_control_ceiling": 0.52,
+      "surface_control_ba": 0.5,
+      "bootstrap_replicates": 10000
+    },
+    "review_evidence": {
+      "gpt_oss_api_00": {
+        "standing": "INSUFFICIENT",
+        "preserved": true
+      },
+      "gpt_oss_api_01": {
+        "standing": "INSUFFICIENT",
+        "preserved": true
+      },
+      "gpt_oss_review_01": {
+        "verdict": "RETURN",
+        "preserved": true
+      },
+      "qwen_review_01": {
+        "verdict": "RETURN",
+        "preserved": true
+      },
+      "gpt_oss_review_02": {
+        "verdict": "RETURN",
+        "preserved": true
+      },
+      "qwen_review_02": {
+        "verdict": "RETURN",
+        "preserved": true
+      },
+      "deterministic_final_contract_audit": {
+        "standing": "PASS",
+        "preserved": true
+      }
+    },
+    "canonical_freshness_at_adjudication": {
+      "current_canonical": "78ba888aa074b9685ce810ace13d9228bdce469f",
+      "overlap_with_rgr04_paths": "NONE"
+    },
+    "successor_authority": {
+      "rgr_05": "CLOSED",
+      "benchmark_generation": "NOT_AUTHORIZED",
+      "model_implementation": "NOT_AUTHORIZED",
+      "empirical_execution": "NOT_AUTHORIZED",
+      "elemental_operator_hypothesis": "CLOSED",
+      "maia_change": "NOT_AUTHORIZED",
+      "deployment": "NOT_AUTHORIZED"
+    },
+    "lifecycle_transitions": [
+      {
+        "lifecycle_version": "W2.v2",
+        "work_unit_id": "rgr-04-synthetic-relational-benchmark-constitution-20260918",
+        "from": "EVIDENCE_READY",
+        "to": "ADJUDICATED",
+        "evidence_ref": "founder:rgr04-adjudication-20260918",
+        "reason_code": "RGR04_FOUNDER_ADJUDICATED",
+        "authorization_ref": null,
+        "adjudication": "accepted",
+        "superseded_by": null
+      },
+      {
+        "lifecycle_version": "W2.v2",
+        "work_unit_id": "rgr-04-synthetic-relational-benchmark-constitution-20260918",
+        "from": "ADJUDICATED",
+        "to": "CLOSED",
+        "evidence_ref": "founder:rgr04-closure-20260918",
+        "reason_code": "RGR04_FOUNDER_CLOSED",
+        "authorization_ref": null,
+        "adjudication": null,
+        "superseded_by": null
+      }
     ]
   }
 }

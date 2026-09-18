@@ -3,7 +3,7 @@
 **Programme:** RELATIONAL-GEOMETRY-REASONING
 **Gate:** RGR-04 — SYNTHETIC RELATIONAL BENCHMARK CONSTITUTION
 **Date:** 2026-09-18
-**Status:** EVIDENCE_READY · BENCHMARK DESIGN ONLY · NO DATA GENERATED · NO MODEL IMPLEMENTED · NO EMPIRICAL EXECUTION
+**Status:** CLOSED · FOUNDER ADJUDICATED · BENCHMARK CONSTITUTION PRESERVED · NOT EXECUTED
 **Canonical base:** b040d3bcaafe30df83e35a2fe534f5d0ea85e118
 **Upstream:** RGR-00 through RGR-03 canonical + CLOSED
 **Primary hypothesis:** H-RT1 — RELATIONAL TRANSFER
@@ -1489,3 +1489,366 @@ NONE
 The next legitimate act is Founder adjudication of RGR-04 itself.
 
 No implementation or execution gate is opened by this candidate.
+
+
+---
+
+# XL · Founder adjudication — RGR-04 closure
+
+**Founder act:** 2026-09-18
+**Accepted RGR-04 candidate:** a401722485a1d07a157086c0d4e030a407f06061
+
+The Founder accepts the RGR-04 Synthetic Relational Benchmark Constitution package and the recorded evidence.
+
+Accepted standing:
+
+- RGR-00 is canonical and CLOSED;
+- RGR-01 is canonical and CLOSED;
+- RGR-02 is canonical and CLOSED;
+- RGR-03 is canonical and CLOSED;
+- RGR-04 was opened from exact canonical b040d3bcaafe30df83e35a2fe534f5d0ea85e118;
+- RGR-04 uses the canonical Work Unit V2 substrate:
+  - W0.v2 Work Unit;
+  - W2.v2 lifecycle;
+  - J5 / W3.v2 routing;
+  - W3T governed transport bindings;
+  - W4.v2 append-only evidence ledger;
+- the initial ADVERSARIAL_FALSIFICATION routing request was refused and preserved rather than overridden;
+- RGR-04 was subsequently governed as ARCHITECTURE_REASONING with high-value independent review;
+- the governed Work Unit reached EVIDENCE_READY with its authorized core and route digest unchanged;
+- only the three authorized RGR-04 documentary/research artifacts were created;
+- no generator was implemented;
+- no benchmark example was generated;
+- no dataset was materialized;
+- no model was implemented or trained;
+- no empirical TEST or REPLICATION was executed;
+- no private/member/client/PHI/Sanctuary/production-memory or other private human data was used;
+- no schema, migration, MAIA runtime change, deployment, or production action occurred.
+
+The Founder accepts the first benchmark identity:
+
+~~~text
+RGR-RT1-D2C-01
+Relational Transfer 1 — Directed Two-Step Composition
+~~~
+
+and the frozen relation family:
+
+~~~text
+q_* = DIRECTED_TWO_STEP_COMPOSITION
+~~~
+
+using a six-node, eight-edge directed graph with ordered source and target query.
+
+The Founder accepts the interpretive boundary:
+
+> RGR-RT1-D2C-01 is a relational-transfer capability benchmark. Its target is relational by construction. A future positive result cannot establish relational metaphysics, geometry of meaning, consciousness geometry, or graph ontology for RGR.
+
+The Founder accepts the frozen surface specification:
+
+~~~text
+Σ_* = BALANCED_16BIT_NODE_CODE
+~~~
+
+and the split master seeds:
+
+~~~text
+TRAIN       41041
+VALIDATION  41042
+TEST        41043
+REPLICATION 41044
+~~~
+
+with deterministic named streams:
+
+~~~text
+CODEBOOK
+GRAPH
+SURFACE_ASSIGNMENT
+ROW_ORDER
+SWITCH
+~~~
+
+under the recorded SHA-256 derivation law.
+
+The paired counterfactual law remains frozen.
+
+Each positive / relation-broken negative pair must preserve:
+
+- U;
+- row order;
+- source query;
+- target query;
+- edge count;
+- each node's in-degree;
+- each node's out-degree;
+- reciprocal-edge count.
+
+The directed degree-preserving relation-break construction must introduce no self-loop, duplicate edge, direct source-target edge, alternative two-step path, or reciprocal-edge-count change.
+
+Future materialization sizes remain frozen:
+
+~~~text
+TRAIN:
+12,000 pairs / 24,000 examples
+
+VALIDATION:
+3,000 pairs / 6,000 examples
+
+TEST:
+6,000 pairs / 12,000 examples
+
+REPLICATION:
+6,000 pairs / 12,000 examples
+
+TOTAL:
+27,000 pairs / 54,000 examples
+~~~
+
+RGR-04 itself materializes none of them.
+
+The Founder ratifies the information-access contract:
+
+~~~text
+F_S:
+surface-only negative-control suite
+input = U, q_s, q_t only
+
+F_G:
+same-information generic comparator
+input = U, A, q_s, q_t
+
+F_R:
+minimal relation-aware comparator
+input = U, A, q_s, q_t
+~~~
+
+No comparator receives target labels, oracle relation identity, latent intermediate identity, or a precomputed path feature.
+
+The exact surface-control theorem remains:
+
+\[
+BA(F_S)=0.50
+\]
+
+under valid paired deterministic evaluation.
+
+The frozen comparator/search law remains:
+
+~~~text
+F_S1:
+regularized logistic classifier
+
+F_S2:
+256 → 128 → 64 MLP
+4 confirmatory optimizer configurations
+
+F_G:
+G1 = 512 → 256
+G2 = 512 → 256 → 128
+G3 = 512 → 256 → 128 → 64
+12 confirmatory architecture/optimizer configurations
+
+F_R:
+node hidden width 64
+directed message passing
+sum aggregation
+shared node weights
+query-conditioned readout
+candidate depths = 1 / 2 / 3 rounds
+12 confirmatory depth/optimizer configurations
+~~~
+
+The primary and replication model seeds remain frozen:
+
+~~~text
+PRIMARY:
+51001
+51002
+51003
+51004
+51005
+
+REPLICATION:
+61001
+61002
+61003
+61004
+61005
+~~~
+
+The primary metric and thresholds remain frozen:
+
+~~~text
+M = balanced accuracy
+
+τ_min = 0.80
+δ_min = 0.10
+κ_min = 0.75
+
+permutation-control ceiling = 0.52
+bootstrap replicates = 10,000
+~~~
+
+The three quantitative roles remain distinct:
+
+~~~text
+τ_min:
+absolute held-out competence
+
+δ_min:
+inherited RGR-03 relative-advantage requirement
+
+κ_min:
+paired relation-break sensitivity
+~~~
+
+A future SUPPORT disposition requires all nine frozen support conditions recorded in the preregistration lock, including independent replication under the same frozen selected configuration.
+
+The accepted future dispositions remain:
+
+~~~text
+SUPPORTED
+NOT_SUPPORTED
+UNDERDETERMINED
+BENCHMARK_INVALID
+REPLICATION_FAILED
+~~~
+
+The pre-materialization feasibility gate is mandatory.
+
+Before any full benchmark dataset may be created, a separately authorized implementation gate must prove:
+
+- enough admissible unique counterfactual pairs exist for every frozen split;
+- positive validation enforces exactly one source→intermediate→target path;
+- negative validation enforces zero such paths;
+- all frozen pair invariants are preserved;
+- reciprocal-edge count is preserved;
+- no self-loop, duplicate, direct shortcut, or alternative two-step path appears;
+- at least one admissible relation-breaking switch exists for every retained positive;
+- split allocation satisfies duplicate exclusions and disjoint codebooks.
+
+Failure means:
+
+~~~text
+RETURN RGR-04 DESIGN
+DO NOT MATERIALIZE DATA
+~~~
+
+The RGR-03 no-rescue law remains in force.
+
+After materialization, a confirmatory result may not be rescued by changing the relation family, surface specification, graph size, edge count, split sizes, thresholds, metric, bootstrap law, competence floor, comparator classes, relation-break construction, valid seeds, or frozen model/training implementation.
+
+Any such change requires a new benchmark version and a new governed Work Unit.
+
+## Review evidence
+
+The accepted review record remains:
+
+~~~text
+GPT-OSS API attempt 1:
+INSUFFICIENT
+
+GPT-OSS API attempt 2:
+INSUFFICIENT
+
+GPT-OSS bounded review 1:
+RETURN
+
+Qwen independent review 1:
+RETURN
+
+GPT-OSS bounded review 2:
+RETURN
+
+Qwen independent review 2:
+RETURN
+
+deterministic final contract audit:
+PASS
+~~~
+
+The model reviewers did not approve RGR-04.
+
+Their disagreement remains evidence.
+
+Grounded corrections were incorporated.
+
+Reviewer prescriptions contradicted by the exact H-RT1 comparison law or frozen benchmark contract remain preserved but rejected with explicit rationale.
+
+The final deterministic contract audit remains PASS:
+
+- shared constants match the constitution and preregistration lock;
+- surface-control theorem present;
+- counterfactual contract present;
+- threshold roles explicit;
+- W0.v2 authorized core unchanged;
+- W3.v2 route digest unchanged;
+- review provenance append-only and complete;
+- only the three authorized RGR-04 files changed;
+- no generator, dataset, model implementation, training, or empirical execution exists;
+- RGR-05 and every implementation/execution authority remain closed.
+
+## Canonical freshness standing at adjudication
+
+Current canonical had advanced to:
+
+78ba888aa074b9685ce810ace13d9228bdce469f
+
+through MAIA Teaching Intelligence T4.
+
+The Founder accepts zero true path overlap between that intervening canonical work and the three RGR-04 artifacts.
+
+## Lifecycle closure
+
+By Founder act, the governed RGR-04 Work Unit has advanced:
+
+~~~text
+EVIDENCE_READY
+→ ADJUDICATED
+→ CLOSED
+~~~
+
+with:
+
+~~~text
+authorized core: unchanged
+route digest: unchanged
+review attempts: preserved
+verifier evidence: preserved
+transport/model provenance: preserved
+~~~
+
+## Successor boundary
+
+This closure explicitly preserves:
+
+~~~text
+RGR-05: CLOSED
+
+benchmark generation: NOT AUTHORIZED
+
+generator implementation: NOT AUTHORIZED
+
+model implementation / training: NOT AUTHORIZED
+
+empirical TEST / REPLICATION: NOT AUTHORIZED
+
+Elemental Operator hypothesis: CLOSED
+
+MAIA alteration: NOT AUTHORIZED
+
+deployment: NOT AUTHORIZED
+~~~
+
+No successor gate is opened by this closure.
+
+## Preservation law
+
+The exact accepted RGR-04 candidate remains identified by:
+
+a401722485a1d07a157086c0d4e030a407f06061
+
+This closure act is a later documentary/lifecycle record layered on top of that accepted candidate. It does not rewrite the accepted benchmark-design evidence.
+
+**RGR-04 standing: CLOSED.**
