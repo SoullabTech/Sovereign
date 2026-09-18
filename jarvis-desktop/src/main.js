@@ -735,19 +735,19 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 
 async function computeRoutingPreview(root, spec) {
   const routePath = path.join(root, 'scripts', 'builder', 'routing-intelligence.mjs');
-  const admissionPath = path.join(root, 'scripts', 'builder', 'routing-execution-admission.mjs');
-  if (!fs.existsSync(routePath) || !fs.existsSync(admissionPath)) {
+  const integrityPath = path.join(root, 'scripts', 'builder', 'routing-route-integrity.mjs');
+  if (!fs.existsSync(routePath) || !fs.existsSync(integrityPath)) {
     return {
       ok: false,
       status: 'ROUTER_UNAVAILABLE',
-      reason: 'Routing Intelligence or the canonical R4 digest law is not present in the bound checkout.',
+      reason: 'Routing Intelligence or the canonical R5A route-integrity law is not present in the bound checkout.',
     };
   }
   const routingInput = OPWU.buildRoutingInput(spec || {});
   const routeMod = await import(`${pathToFileURL(routePath).href}?t=${Date.now()}`);
-  const admissionMod = await import(`${pathToFileURL(admissionPath).href}?t=${Date.now()}`);
+  const integrityMod = await import(`${pathToFileURL(integrityPath).href}?t=${Date.now()}`);
   const routeRecord = routeMod.routeIntelligence(routingInput);
-  const routeDigest = admissionMod.routeDigest(routeRecord);
+  const routeDigest = integrityMod.routeDigest(routeRecord);
   return {
     ok: true,
     status: 'PREVIEWED',

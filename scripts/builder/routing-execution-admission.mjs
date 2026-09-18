@@ -6,11 +6,12 @@
  * This module performs no filesystem, network, credential, provider, Desktop,
  * Work Unit, merge, deploy, or production action.
  */
-import { createHash } from 'node:crypto';
+import { ROUTE_SOURCE, routeDigest } from './routing-route-integrity.mjs';
+export { routeDigest } from './routing-route-integrity.mjs';
 
 export const ADMISSION_VERSION = 'R4.v1';
 export const EXPECTED_ROUTE_VERSION = 'R1.v1';
-export const EXPECTED_ROUTE_SOURCE = 'R2-pure-router';
+export const EXPECTED_ROUTE_SOURCE = ROUTE_SOURCE;
 
 export const ADMISSION_DISPOSITIONS = Object.freeze([
   'ADMITTED',
@@ -47,19 +48,6 @@ function deepFreeze(value) {
   Object.freeze(value);
   for (const child of Object.values(value)) deepFreeze(child);
   return value;
-}
-
-function canonicalize(value) {
-  if (Array.isArray(value)) return value.map(canonicalize);
-  if (!value || typeof value !== 'object') return value;
-  return Object.fromEntries(
-    Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]),
-  );
-}
-
-export function routeDigest(routeRecord) {
-  const canonical = JSON.stringify(canonicalize(routeRecord));
-  return 'sha256:' + createHash('sha256').update(canonical).digest('hex');
 }
 
 function typedBlocker(code, detail, field = null) {

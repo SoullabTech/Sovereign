@@ -11,7 +11,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { routeIntelligence } from '../routing-intelligence.mjs';
-import { routeDigest } from '../routing-execution-admission.mjs';
+import { routeDigest } from '../routing-route-integrity.mjs';
 import { createWorkUnit } from '../work-unit-create.mjs';
 import {
   loadWorkUnit,

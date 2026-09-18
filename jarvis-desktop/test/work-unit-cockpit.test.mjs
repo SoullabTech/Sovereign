@@ -113,8 +113,8 @@ test('Routing Intelligence preview ignores stale asynchronous responses', () => 
 });
 
 test('R5A digest is computed in MAIN from the exact route record, never supplied by renderer', () => {
-  assert.match(main, /routing-execution-admission\.mjs/);
-  assert.match(main, /const routeDigest = admissionMod\.routeDigest\(routeRecord\)/);
+  assert.match(main, /routing-route-integrity\.mjs/);
+  assert.match(main, /const routeDigest = integrityMod\.routeDigest\(routeRecord\)/);
   assert.match(main, /routeDigest = preview\.route_digest/);
   assert.match(main, /routeDigest,/);
   assert.match(operatorWU, /route_digest: routeDigest/);

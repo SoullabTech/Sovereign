@@ -14,6 +14,7 @@
  */
 
 import { ROUTE_VERSION, routeIntelligence } from './routing-intelligence.mjs';
+import { ROUTE_SOURCE, routeDigest } from './routing-route-integrity.mjs';
 import {
   authorizedCoreSnapshotV1,
   transitionLifecycleV1,
@@ -325,6 +326,10 @@ function preBindBlockers(envelope) {
 
   if (workUnit.routing?.route_record != null
     || workUnit.routing?.router_version != null
+    || workUnit.routing?.route_version != null
+    || workUnit.routing?.route_digest != null
+    || workUnit.routing?.route_source != null
+    || workUnit.routing?.bound_at_sha != null
     || workUnit.routing?.primary != null
     || (Array.isArray(workUnit.routing?.challengers)
       && workUnit.routing.challengers.length > 0)) {
@@ -332,6 +337,14 @@ function preBindBlockers(envelope) {
       'ROUTING_DOMAIN_NOT_EMPTY',
       'W3 binds only an unbound AUTHORIZED Work Unit.',
       'routing',
+    ));
+  }
+
+  if (workUnit.routing?.execution_connected !== false) {
+    blocks.push(blocker(
+      'ROUTING_EXECUTION_CONNECTION_INVALID',
+      'W3 requires execution_connected=false before and after pure route binding.',
+      'routing.execution_connected',
     ));
   }
 
@@ -469,7 +482,12 @@ export function bindAuthorizedRouteV1(envelope) {
 
   const bound = clone(envelope);
   bound.work_unit.routing.router_version = route.route_version;
+  bound.work_unit.routing.route_version = route.route_version;
   bound.work_unit.routing.route_record = route;
+  bound.work_unit.routing.route_digest = routeDigest(route);
+  bound.work_unit.routing.route_source = ROUTE_SOURCE;
+  bound.work_unit.routing.bound_at_sha = workUnit.scope.base_ref;
+  bound.work_unit.routing.execution_connected = false;
   bound.work_unit.routing.primary = route.primary;
   bound.work_unit.routing.challengers = route.challengers;
 

@@ -125,19 +125,28 @@ function actFor(result, providerId) {
 
 console.log('=== structural purity and integrity binding ===');
 
-check('R4-PURE — admission imports only deterministic node:crypto and no execution/I/O seams', () => {
+check('R4-PURE — admission imports only canonical route integrity and no execution/I/O seams', () => {
   const source = readFileSync(
     new URL('../routing-execution-admission.mjs', import.meta.url),
     'utf8',
   );
+  const integrity = readFileSync(
+    new URL('../routing-route-integrity.mjs', import.meta.url),
+    'utf8',
+  );
   const imports = source.split('\n').filter((line) => line.trimStart().startsWith('import '));
+  const integrityImports = integrity.split('\n').filter((line) => line.trimStart().startsWith('import '));
   assert.equal(imports.length, 1);
-  assert.match(imports[0], /node:crypto/);
-  assert.doesNotMatch(source, /node:(fs|net|http|https|child_process)/);
-  assert.equal(source.includes('fetch('), false);
-  assert.equal(source.includes('process.env'), false);
-  assert.equal(source.includes('runProvider'), false);
-  assert.equal(source.includes('find-generic-password'), false);
+  assert.match(imports[0], /routing-route-integrity\.mjs/);
+  assert.equal(integrityImports.length, 1);
+  assert.match(integrityImports[0], /node:crypto/);
+  for (const text of [source, integrity]) {
+    assert.doesNotMatch(text, /node:(fs|net|http|https|child_process)/);
+    assert.equal(text.includes('fetch('), false);
+    assert.equal(text.includes('process.env'), false);
+    assert.equal(text.includes('runProvider'), false);
+    assert.equal(text.includes('find-generic-password'), false);
+  }
 });
 check('F-A1 — canonical R3 binding without immutable digest fails closed', () => {
   const route = makeRoute();

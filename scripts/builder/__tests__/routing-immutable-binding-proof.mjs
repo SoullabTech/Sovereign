@@ -17,10 +17,14 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 import { routeIntelligence } from '../routing-intelligence.mjs';
+import { evaluateExecutionAdmission } from '../routing-execution-admission.mjs';
+import { routeDigest } from '../routing-route-integrity.mjs';
+import { createWorkUnitDraftV1 } from '../work-unit-v1.mjs';
 import {
-  evaluateExecutionAdmission,
-  routeDigest,
-} from '../routing-execution-admission.mjs';
+  createLifecycleEnvelopeV1,
+  transitionLifecycleV1,
+} from '../work-unit-lifecycle-v1.mjs';
+import { bindAuthorizedRouteV1 } from '../work-unit-routing-v1.mjs';
 import {
   createWorkUnit,
 } from '../work-unit-create.mjs';
@@ -48,6 +52,87 @@ function check(name, fn) {
     console.log('      ' + error.message);
   }
 }
+
+function canonicalWorkUnitInput() {
+  return {
+    identity: {
+      id: 'synthetic-r5a-canonical-work-unit',
+      programme: 'JARVIS-ROUTING-INTELLIGENCE-01-R5A',
+      parent_work_unit: null,
+      objective: 'Prove immutable route binding in canonical Work Unit V1.',
+      work_class: 'VERIFICATION',
+      task_shape: 'deep_reasoning',
+    },
+    context: {
+      context_refs: ['synthetic:r5a'],
+      evidence_refs: [
+        'local-worktree:' + SHA,
+        'synthetic:r5a-evidence',
+      ],
+      assumptions: [],
+      unknowns: [],
+    },
+    scope: {
+      repository: 'synthetic/R5A',
+      base_ref: SHA,
+      allowed_paths: ['scripts/builder/routing-intelligence.mjs'],
+      forbidden_paths: ['production'],
+    },
+    authority: {
+      repository_read: true,
+      repository_write: 'none',
+      shell: 'read_only',
+      network_external: false,
+      provider_spend: false,
+      external_disclosure: 'none',
+      merge: false,
+      deploy: false,
+      production_read: false,
+      production_write: false,
+    },
+    routing: {
+      requested_posture: 'default',
+    },
+    evaluation: {
+      acceptance_conditions: ['Immutable route binding is exact.'],
+      falsification_conditions: ['Route binding can be rewritten or widened.'],
+      stop_conditions: ['Any provider execution or authority widening occurs.'],
+    },
+    provenance: {
+      creator: 'R5A-SYNTHETIC-WITNESS',
+      authorizing_act: null,
+      source_commits: [SHA],
+    },
+    state: {
+      supersedes: null,
+    },
+  };
+}
+
+function canonicalAuthorizedEnvelope() {
+  const draft = createWorkUnitDraftV1(canonicalWorkUnitInput());
+  assert.equal(draft.ok, true, JSON.stringify(draft.blockers));
+
+  const lifecycle = createLifecycleEnvelopeV1(draft.work_unit);
+  assert.equal(lifecycle.ok, true, JSON.stringify(lifecycle.blockers));
+
+  const bounded = transitionLifecycleV1(lifecycle.envelope, {
+    to: 'BOUNDED',
+    evidence_ref: 'synthetic:r5a-bounds',
+    reason_code: 'R5A_BOUNDED',
+  });
+  assert.equal(bounded.ok, true, JSON.stringify(bounded.blockers));
+
+  const authorized = transitionLifecycleV1(bounded.envelope, {
+    to: 'AUTHORIZED',
+    evidence_ref: 'synthetic:r5a-authority',
+    reason_code: 'R5A_AUTHORIZED',
+    authorization_ref: 'founder:r5a-synthetic-authority',
+  });
+  assert.equal(authorized.ok, true, JSON.stringify(authorized.blockers));
+  return authorized.envelope;
+}
+
 const home = mkdtempSync(path.join(os.tmpdir(), 'jarvis-r5a-'));
 process.env.AIN_DELEGATION_HOME = home;
 
@@ -249,6 +334,109 @@ check('R5A-15 — binding still cannot become an execution connector', () => {
     raw.authorized_acts.some((act) => String(act).startsWith('provider.execute:')),
     false,
   );
+});
+
+console.log();
+console.log('=== canonical Work Unit V1 route binding ===');
+
+const canonicalRouted = bindAuthorizedRouteV1(canonicalAuthorizedEnvelope());
+
+check('R5A-16 — canonical W3 persists exact digest/version/source/SHA binding', () => {
+  assert.equal(canonicalRouted.ok, true, JSON.stringify(canonicalRouted.blockers));
+  const routing = canonicalRouted.envelope.work_unit.routing;
+  assert.equal(routing.route_digest, routeDigest(canonicalRouted.route));
+  assert.equal(routing.route_version, canonicalRouted.route.route_version);
+  assert.equal(routing.router_version, canonicalRouted.route.route_version);
+  assert.equal(routing.route_source, 'R2-pure-router');
+  assert.equal(routing.bound_at_sha, SHA);
+  assert.equal(routing.execution_connected, false);
+});
+
+check('R5A-17 — canonical W3 refuses pre-bound integrity material instead of rebinding', () => {
+  const tampered = structuredClone(canonicalAuthorizedEnvelope());
+  tampered.work_unit.routing.route_digest = 'sha256:' + '0'.repeat(64);
+  const result = bindAuthorizedRouteV1(tampered);
+  assert.equal(result.ok, false);
+  assert.ok(result.blockers.some((b) => b.code === 'ROUTING_DOMAIN_NOT_EMPTY'));
+});
+
+check('R5A-18 — canonical W3 refuses an execution-connected route before binding', () => {
+  const tampered = structuredClone(canonicalAuthorizedEnvelope());
+  tampered.work_unit.routing.execution_connected = true;
+  const result = bindAuthorizedRouteV1(tampered);
+  assert.equal(result.ok, false);
+  assert.ok(
+    result.blockers.some((b) => b.code === 'ROUTING_EXECUTION_CONNECTION_INVALID'),
+  );
+});
+
+check('R5A-19 — Desktop compatibility and canonical W3 use the same digest law', () => {
+  const route = canonicalRouted.route;
+  const compatSpec = {
+    objective: 'Synthetic canonical/Desktop digest parity',
+    evidenceFocus: 'scripts/builder/routing-intelligence.mjs',
+    providers: [],
+    routing: {
+      taskShape: 'deep_reasoning',
+      reviewPressure: 'ordinary',
+      challengeMode: 'none',
+    },
+  };
+  const compatibility = OPWU.buildPacket(compatSpec, {
+    canonicalSha: SHA,
+    nowMs: 456791,
+    routeRecord: route,
+    routeDigest: routeDigest(route),
+  });
+  assert.equal(compatibility.ok, true, JSON.stringify(compatibility.errors));
+  assert.equal(
+    compatibility.packet.routing_intelligence.route_digest,
+    canonicalRouted.envelope.work_unit.routing.route_digest,
+  );
+});
+
+check('R5A-20 — canonical W3 binding clears R4 integrity and still holds for provider authority', () => {
+  const canonicalWorkUnit = canonicalRouted.envelope.work_unit;
+  const routing = canonicalWorkUnit.routing;
+  const admission = evaluateExecutionAdmission({
+    binding: {
+      route_record: routing.route_record,
+      route_digest: routing.route_digest,
+      route_version: routing.route_version,
+      source: routing.route_source,
+      bound_at_sha: routing.bound_at_sha,
+      execution_connected: routing.execution_connected,
+    },
+    work_unit: {
+      canonical_sha: canonicalWorkUnit.scope.base_ref,
+      authority: {
+        authorized_acts: ['repo.read'],
+        not_authorized_acts: [
+          'repo.write:worktree',
+          'production.read',
+          'production.write',
+          'deploy',
+          'authority.change',
+        ],
+      },
+      disclosure: { repository_read_only_external: false },
+      evidence: {
+        local_worktree_available: true,
+        external_bundle_refs: [],
+        task_text_available: false,
+      },
+      attempts: [],
+    },
+  });
+  assert.equal(admission.status, 'EVALUATED');
+  const primary = admission.provider_acts.find(
+    (act) => act.provider_id === 'gpt-oss-local',
+  );
+  assert.equal(primary.disposition, 'HELD_FOR_AUTHORITY');
+  assert.ok(
+    primary.missing_authority.includes('provider.execute:gpt-oss-local'),
+  );
+  assert.deepEqual(admission.granted_authority, []);
 });
 
 rmSync(home, { recursive: true, force: true });

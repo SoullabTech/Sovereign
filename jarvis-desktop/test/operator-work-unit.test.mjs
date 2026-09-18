@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { routeIntelligence } from '../../scripts/builder/routing-intelligence.mjs';
-import { routeDigest } from '../../scripts/builder/routing-execution-admission.mjs';
+import { routeDigest } from '../../scripts/builder/routing-route-integrity.mjs';
 const require = createRequire(import.meta.url);
 const W = require('../src/operator-work-unit.js');
 const SHA = '0123456789abcdef0123456789abcdef01234567';
