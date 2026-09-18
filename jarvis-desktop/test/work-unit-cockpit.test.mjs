@@ -16,8 +16,10 @@ const controller = src('work-unit-control.js');
 test('cockpit makes governed Work Unit and intelligence strategy visible', () => {
   assert.match(renderer, /Governed Work Unit/);
   assert.match(renderer, /Intelligence strategy/);
-  assert.match(renderer, /Nemotron 3 Ultra · primary review/);
-  assert.match(renderer, /Inkling · adversarial review/);
+  assert.match(renderer, /Qwen3 Coder 30B · local coding review/);
+  assert.match(renderer, /GPT-OSS 20B · local reasoning review/);
+  assert.match(renderer, /Nemotron · external review/);
+  assert.match(renderer, /Inkling · external adversarial review/);
   assert.match(renderer, /Run remaining strategy/);
   assert.match(renderer, /Needs Kelly/);
 });
@@ -27,7 +29,11 @@ test('Home ordinary prose hands off to Work as intent rather than requiring a co
   assert.match(renderer, /setView\('work'\); return/);
 });
 
-test('external repository disclosure and Inkling spend are explicit founder gestures', () => {
+test('local review is the default and external repository disclosure / Inkling spend remain explicit founder gestures', () => {
+  assert.match(renderer, /id="wu-qwen" type="checkbox" checked/);
+  assert.match(renderer, /id="wu-gpt-oss" type="checkbox" checked/);
+  assert.match(renderer, /id="wu-nemotron" type="checkbox">/);
+  assert.match(renderer, /id="wu-inkling" type="checkbox">/);
   assert.match(renderer, /wu-repo-ok/);
   assert.match(renderer, /authorize the selected external provider\(s\) to inspect this isolated repository worktree read-only/i);
   assert.match(renderer, /wu-spend-ok/);

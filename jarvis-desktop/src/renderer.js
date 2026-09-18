@@ -386,6 +386,8 @@ function renderProviderState(id, targetId) {
 async function loadProviderCatalog() {
   const out = await window.jarvis.workUnitAction({ action: 'providers' });
   providerCatalog = out?.ok ? (out.providers || []) : [];
+  renderProviderState('qwen-local', 'wu-qwen-status');
+  renderProviderState('gpt-oss-local', 'wu-gpt-oss-status');
   renderProviderState('nemotron-zen', 'wu-nemotron-status');
   renderProviderState('inkling-tinker', 'wu-inkling-status');
   const err = document.getElementById('wu-provider-error');
@@ -394,6 +396,8 @@ async function loadProviderCatalog() {
 
 function currentWorkUnitProviders() {
   const out = [];
+  if (document.getElementById('wu-qwen')?.checked) out.push('qwen-local');
+  if (document.getElementById('wu-gpt-oss')?.checked) out.push('gpt-oss-local');
   if (document.getElementById('wu-nemotron')?.checked) out.push('nemotron-zen');
   if (document.getElementById('wu-inkling')?.checked) out.push('inkling-tinker');
   return out;
@@ -402,7 +406,11 @@ function currentWorkUnitProviders() {
 function syncWorkUnitComposer() {
   const providers = currentWorkUnitProviders();
   const inkling = providers.includes('inkling-tinker');
+  const external = providers.includes('nemotron-zen') || inkling;
+  const local = providers.includes('qwen-local') || providers.includes('gpt-oss-local');
+  const repoWrap = document.getElementById('wu-repo-wrap');
   const spendWrap = document.getElementById('wu-spend-wrap');
+  if (repoWrap) repoWrap.style.display = external ? 'block' : 'none';
   if (spendWrap) spendWrap.style.display = inkling ? 'block' : 'none';
   const authority = document.getElementById('wu-authority-preview');
   if (authority) {
@@ -410,7 +418,8 @@ function syncWorkUnitComposer() {
     const spendOk = !!document.getElementById('wu-spend-ok')?.checked;
     authority.innerHTML = `<div class="authority-box">
       <div class="a-title">Authority preview</div>
-      <div class="a-line">Repository: <b>${repoOk ? 'read-only external review authorized' : 'external repository disclosure held'}</b></div>
+      <div class="a-line">Local review: <b>${local ? 'read-only; stays on this Mac' : 'not selected'}</b></div>
+      <div class="a-line">External repository disclosure: <b>${external ? (repoOk ? 'authorized' : 'held') : 'not requested'}</b></div>
       <div class="a-line">Provider spend: <b>${inkling ? (spendOk ? 'authorized for Inkling' : 'held') : 'not requested'}</b></div>
       <div class="a-line">Write / production / deploy / authority change: <b>denied</b></div>
       <div class="a-line">Integration actor: <b>Kelly / founder</b></div>
@@ -443,8 +452,10 @@ function stageClass(done, running, held = false) {
 
 function attemptMatchesProvider(attempt, providerId) {
   const model = String(attempt?.model || '');
+  if (providerId === 'qwen-local') return model === 'ollama/qwen3-coder:30b';
+  if (providerId === 'gpt-oss-local') return model === 'ollama/gpt-oss:20b';
   if (providerId === 'nemotron-zen') return model === 'opencode/nemotron-3-ultra-free' || model === 'opencode/nemotron-3.5-lightning-free';
-  if (providerId === 'inkling-tinker') return model === 'tinker/thinkingmachines/Inkling';
+  if (providerId === 'inkling-tinker') return model === 'tinker/thinkingmachines/Inkling-Small' || model === 'tinker/thinkingmachines/Inkling';
   return false;
 }
 
@@ -471,6 +482,8 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
   activeWorkUnitStrategy = strategy;
   const attempts = snapshot.reconciliation?.attempts || [];
   const rec = snapshot.reconciliation || { standing: 'NOT_RUN', summary: 'No attempts yet.', attempts: [] };
+  const qwenDone = attempts.some(a => attemptMatchesProvider(a, 'qwen-local'));
+  const ossDone = attempts.some(a => attemptMatchesProvider(a, 'gpt-oss-local'));
   const nemDone = attempts.some(a => attemptMatchesProvider(a, 'nemotron-zen'));
   const inkDone = attempts.some(a => attemptMatchesProvider(a, 'inkling-tinker'));
   const allSelectedDone = strategy.every(p => attempts.some(a => attemptMatchesProvider(a, p)));
@@ -495,8 +508,10 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
     <div class="stage-list">
       <span class="stage-pill done">Authority bound</span>
       <span class="stage-pill done">Work Unit created</span>
-      ${strategy.includes('nemotron-zen') ? `<span class="stage-pill ${stageClass(nemDone, runningProvider === 'nemotron-zen')}">Nemotron review</span>` : ''}
-      ${strategy.includes('inkling-tinker') ? `<span class="stage-pill ${stageClass(inkDone, runningProvider === 'inkling-tinker', providerById('inkling-tinker')?.state === 'NEEDS_SETUP' && !inkDone)}">Inkling review</span>` : ''}
+      ${strategy.includes('qwen-local') ? `<span class="stage-pill ${stageClass(qwenDone, runningProvider === 'qwen-local')}">Qwen coding review</span>` : ''}
+      ${strategy.includes('gpt-oss-local') ? `<span class="stage-pill ${stageClass(ossDone, runningProvider === 'gpt-oss-local')}">GPT-OSS reasoning review</span>` : ''}
+      ${strategy.includes('nemotron-zen') ? `<span class="stage-pill ${stageClass(nemDone, runningProvider === 'nemotron-zen')}">Nemotron external review</span>` : ''}
+      ${strategy.includes('inkling-tinker') ? `<span class="stage-pill ${stageClass(inkDone, runningProvider === 'inkling-tinker', providerById('inkling-tinker')?.state === 'NEEDS_SETUP' && !inkDone)}">Inkling external review</span>` : ''}
       <span class="stage-pill ${stageClass(allSelectedDone, false, !allSelectedDone && attempts.length > 0)}">Reconciliation</span>
       <span class="stage-pill ${rec.needs_kelly || rec.standing === 'EVIDENCE_PRESENTED' ? 'held' : ''}">Founder gate</span>
     </div>
@@ -660,17 +675,27 @@ function renderWork() {
         </div>
       </div>
       <h3 style="margin-top:14px">Intelligence strategy</h3>
+      <div class="hint" style="margin:0 0 8px">Local open-weight review is the default. External providers are optional escalation lanes and require separate authority.</div>
       <label class="provider-row">
-        <div><input id="wu-nemotron" type="checkbox" checked> <span class="provider-name">Nemotron 3 Ultra · primary review</span><div class="provider-detail">OpenCode Zen. Read-only provider evaluation.</div></div>
+        <div><input id="wu-qwen" type="checkbox" checked> <span class="provider-name">Qwen3 Coder 30B · local coding review</span><div class="provider-detail">Open-weight model via Ollama. Repository review stays on this Mac.</div></div>
+        <span id="wu-qwen-status" class="state UNKNOWN">CHECKING</span>
+      </label>
+      <label class="provider-row">
+        <div><input id="wu-gpt-oss" type="checkbox" checked> <span class="provider-name">GPT-OSS 20B · local reasoning review</span><div class="provider-detail">Open-weight reasoning model via Ollama. Independent second local read.</div></div>
+        <span id="wu-gpt-oss-status" class="state UNKNOWN">CHECKING</span>
+      </label>
+      <div class="hint" style="margin:10px 0 5px">Optional external escalation</div>
+      <label class="provider-row">
+        <div><input id="wu-nemotron" type="checkbox"> <span class="provider-name">Nemotron · external review</span><div class="provider-detail">External provider lane. Explicit network and repository-disclosure authority required.</div></div>
         <span id="wu-nemotron-status" class="state UNKNOWN">CHECKING</span>
       </label>
       <label class="provider-row">
-        <div><input id="wu-inkling" type="checkbox" checked> <span class="provider-name">Inkling · adversarial review</span><div class="provider-detail">Independent second read through Thinking Machines Tinker.</div></div>
+        <div><input id="wu-inkling" type="checkbox"> <span class="provider-name">Inkling · external adversarial review</span><div class="provider-detail">Thinking Machines Tinker. Explicit network, repository disclosure, and spend authority required.</div></div>
         <span id="wu-inkling-status" class="state UNKNOWN">CHECKING</span>
       </label>
       <div id="wu-provider-error" class="hint"></div>
-      <label class="inline-check"><input id="wu-repo-ok" type="checkbox">I authorize the selected external provider(s) to inspect this isolated repository worktree read-only. This is broader than the Evidence focus list.</label>
-      <label id="wu-spend-wrap" class="inline-check"><input id="wu-spend-ok" type="checkbox">I authorize provider spend for the Inkling review. No amount is inferred or approved beyond this provider attempt.</label>
+      <label id="wu-repo-wrap" class="inline-check" style="display:none"><input id="wu-repo-ok" type="checkbox">I authorize the selected external provider(s) to inspect this isolated repository worktree read-only. This is broader than the Evidence focus list.</label>
+      <label id="wu-spend-wrap" class="inline-check" style="display:none"><input id="wu-spend-ok" type="checkbox">I authorize provider spend for the Inkling review. No amount is inferred or approved beyond this provider attempt.</label>
       <div id="wu-authority-preview"></div>
       <button class="primary" id="wu-create">Create governed Work Unit</button>
       <div id="wu-errors"></div>
@@ -722,7 +747,7 @@ function renderWork() {
   document.querySelectorAll('input[name="operator-posture"]').forEach(el => el.addEventListener('change', syncOperatorPosture));
   document.getElementById('operator-external-ok').addEventListener('change', syncOperatorPosture);
   document.getElementById('operator-run').addEventListener('click', submitOperatorIntent);
-  for (const id of ['wu-nemotron', 'wu-inkling', 'wu-repo-ok', 'wu-spend-ok']) document.getElementById(id)?.addEventListener('change', syncWorkUnitComposer);
+  for (const id of ['wu-qwen', 'wu-gpt-oss', 'wu-nemotron', 'wu-inkling', 'wu-repo-ok', 'wu-spend-ok']) document.getElementById(id)?.addEventListener('change', syncWorkUnitComposer);
   document.getElementById('wu-create').addEventListener('click', createGovernedWorkUnit);
 
   const laneHint = document.getElementById('lane-hint');
