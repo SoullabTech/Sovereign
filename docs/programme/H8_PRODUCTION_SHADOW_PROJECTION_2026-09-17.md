@@ -84,7 +84,7 @@ MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS=<explicit allowlist>
 
 Its row identity is:
 
-- architecture version: `h8-current-act-shadow-01@h7j-r1`
+- architecture version: `h8-current-act-shadow-01@proposal-v1+h7j-155d759a+r1-469b67a7`
 - model name: `deterministic-h7j-r1`
 - deterministic seed: `0`
 
