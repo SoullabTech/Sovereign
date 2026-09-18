@@ -1,0 +1,61 @@
+JARVIS-ROUTING-INTELLIGENCE-01 / J6-WORK-UNIT-INTEGRATION-04 — I3
+Pre-commit proof summary — 2026-09-18
+
+Canonical base:
+  8c8525eae316f21eeb844ba7af4af7ab1476f461
+
+Proven I2 donor:
+  fdcff64ec0252cb4ec6fdcff160f30607760d2eb
+
+New I3:
+  W5.v2 composition assertions: 12 / 12
+  Required I3 falsifiers:       24 / 24
+
+I2 regression:
+  DR1.v1:        10 / 10
+  W4.v2:         23 / 23
+  I2 falsifiers: 20 / 20
+
+I1 regression:
+  W0.v2:         12 / 12
+  W2.v2:         13 / 13
+  J5.v1 routing: 14 / 14
+  W3.v2:         11 / 11
+  W3T.v1:        11 / 11
+  I1 falsifiers: 18 / 18
+
+Historical v1 regression:
+  W1/W0.v1: 22 / 22
+  W2.v1:    27 / 27
+  W3.v1:    28 / 28
+  W4.v1:    31 / 31
+  W5.v1:    22 / 22
+
+Current routing/admission/integrity:
+  R1:  20 / 20
+  R4:  24 / 24
+  R5A: 20 / 20
+
+Full JARVIS:
+  253 assertions / 0 failures
+
+TypeScript no-regression:
+  program files: 4379
+  diagnostics: 229
+  baseline: 239
+  regressions: 0
+
+Scripts TypeScript:
+  exact I2 diagnostic identities: 40
+  I3 diagnostic identities: 40
+  identity diff: none
+  diagnostics on I3 paths: 0
+
+No provider/model call, credential access by I3, network execution, provider spend,
+repository execution, Desktop convergence, compatibility-adapter migration,
+schema/database change, PR mutation, merge, deployment, production access, or
+member-facing MAIA change occurred.
+
+The pre-existing full JARVIS regression suite includes its governed synthetic
+Keychain-to-stub credential-isolation test. That is not I3 runtime behavior and
+makes no live provider request.

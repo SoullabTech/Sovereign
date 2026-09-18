@@ -1,0 +1,40 @@
+PASS  COMPOSITION — W5.v2 closes the exact canonical lifecycle spine
+PASS  COMPOSITION — W4 evidence appends leave lifecycle in EXECUTING until W2 advances it
+PASS  COMPOSITION — failed primary survives byte-for-byte through CLOSED
+PASS  COMPOSITION — attempt history retains failed primary, successful retry, and independent review
+PASS  COMPOSITION — verifier evidence remains bound to retry + independent review
+PASS  COMPOSITION — route integrity remains valid at CLOSED
+PASS  COMPOSITION — transport/model identity provenance remains present at CLOSED
+PASS  COMPOSITION — explicit adjudication is distinct, human-representing, and non-model-authored
+PASS  COMPOSITION — closure explicitly cites the adjudication reference
+PASS  COMPOSITION — authorized core remains identical at CLOSED
+PASS  COMPOSITION — W5.v2 structural composition delegates to canonical seams
+PASS  COMPOSITION — W5.v2 has no execution/credential/network/shell/deploy capability
+PASS  F1 — DRAFT → AUTHORIZED shortcut is refused
+PASS  F2 — AUTHORIZED → EXECUTING shortcut is refused
+PASS  F3 — ROUTED → EXECUTING without required transport bindings is refused
+PASS  F4 — failed primary cannot disappear before retry
+PASS  F5 — retry with changed governed model identity is refused
+PASS  F6 — retry cannot be treated as independent verification
+PASS  F7 — same-family different-provider review is not independent
+PASS  F8 — independent review without challenger participant is refused
+PASS  F9 — builder cannot verify itself
+PASS  F10 — verifier evidence alone cannot create ADJUDICATED
+PASS  F11 — model consensus cannot create ADJUDICATED
+PASS  F12 — model prose ADJUDICATED/CLOSED cannot change lifecycle
+PASS  F13 — EXECUTING → CLOSED shortcut is refused
+PASS  F14 — EVIDENCE_READY without required execution evidence is refused
+PASS  F15 — ADJUDICATED without explicit adjudication reference is refused
+PASS  F16 — CLOSED without prior ADJUDICATED is refused
+PASS  F17 — earlier failed attempt cannot disappear after successful retry
+PASS  F18 — route digest mutation after ROUTED is refused
+PASS  F19 — transport binding cannot be mutated after execution evidence begins
+PASS  F20 — authorized-core mutation after AUTHORIZED is refused
+PASS  F21 — W4 cannot directly transition lifecycle
+PASS  F22 — W5 composition helper cannot directly write lifecycle state
+PASS  F23 — legacy deriveLifecycle cannot override W2.v2
+PASS  F24 — unknown evidence fields cannot widen authority or lifecycle
+
+Composition assertions: 12 passed
+Required I3 falsifiers: 24 passed
+Failures: 0

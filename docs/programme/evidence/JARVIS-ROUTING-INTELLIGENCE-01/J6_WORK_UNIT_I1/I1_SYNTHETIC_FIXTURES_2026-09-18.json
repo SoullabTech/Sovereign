@@ -1,0 +1,88 @@
+{
+  "draft": {
+    "ok": true,
+    "version": "W0.v2",
+    "state": "DRAFT"
+  },
+  "routed": {
+    "ok": true,
+    "state": "ROUTED",
+    "route_version": "J5.v1",
+    "route_digest": "sha256:ed4ac025545a49086157d5e37d9014df354ef09d009dd58cb5d5866fee5e85eb",
+    "route_source": "J5.v1-pure-router",
+    "primary": {
+      "participant_id": "primary",
+      "model_family": "QWEN",
+      "role": "code_primary",
+      "review_dimension": "primary",
+      "required_for_completion": true,
+      "response_budget_profile_id": "LOCAL_QWEN_EXISTING_ADAPTER"
+    },
+    "challengers": [
+      {
+        "participant_id": "local-review-1",
+        "model_family": "GPT_OSS",
+        "role": "independent_local_challenger",
+        "review_dimension": "distinct_model_family",
+        "required_for_completion": true,
+        "response_budget_profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER"
+      }
+    ]
+  },
+  "transport_bindings": [
+    {
+      "transport_binding_version": "W3T.v1",
+      "transport_binding_id": "qwen-ready",
+      "supersedes_binding_id": null,
+      "route_participant_id": "primary",
+      "model_family": "QWEN",
+      "role": "code_primary",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "opencode",
+      "transport_posture": "local",
+      "execution_mode": "automatic",
+      "response_budget_profile_id": "LOCAL_QWEN_EXISTING_ADAPTER",
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "authority_projection": {
+        "repository_read": true,
+        "network_external": false,
+        "provider_spend": false,
+        "external_disclosure": "none"
+      },
+      "readiness": {
+        "status": "READY",
+        "evidence_ref": "fixture:qwen-ready"
+      }
+    },
+    {
+      "transport_binding_version": "W3T.v1",
+      "transport_binding_id": "gpt-ready",
+      "supersedes_binding_id": null,
+      "route_participant_id": "local-review-1",
+      "model_family": "GPT_OSS",
+      "role": "independent_local_challenger",
+      "provider_id": "gpt-oss-local",
+      "model_id": "gpt-oss:20b",
+      "adapter_id": "opencode",
+      "transport_posture": "local",
+      "execution_mode": "automatic",
+      "response_budget_profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER",
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "authority_projection": {
+        "repository_read": true,
+        "network_external": false,
+        "provider_spend": false,
+        "external_disclosure": "none"
+      },
+      "readiness": {
+        "status": "READY",
+        "evidence_ref": "fixture:gpt-ready"
+      }
+    }
+  ],
+  "execution_admission": {
+    "ok": true,
+    "state": "EXECUTING"
+  }
+}

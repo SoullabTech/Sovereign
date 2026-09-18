@@ -1,0 +1,6 @@
+I1 scripts TypeScript diagnostic summary
+
+Global repository scripts diagnostics: 40
+Diagnostics mentioning any I1 module or I1 proof path: 0
+
+This is a no-new-path-diagnostic claim, not a claim that tsconfig.scripts is globally green.
