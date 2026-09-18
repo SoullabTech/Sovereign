@@ -29,8 +29,9 @@ describe('H8 production shadow static containment', () => {
 
   test('cross-session shadow is fail-closed and cannot widen the frozen generative packet', () => {
     const assembler = read('lib/maia/relational-field-shadow/fieldAssembler.ts');
-    expect(assembler).toContain('m.conversational_recall_enabled IS TRUE');
-    expect(assembler).toContain("t.role = 'user'");
+    expect(assembler).toContain('SELECT conversational_recall_enabled');
+    expect(assembler).toContain('conversational_recall_enabled !== true');
+    expect(assembler).toContain("role = 'user'");
     expect(assembler).toContain("sourceKind: 'cross_session_turn'");
     expect(assembler).toContain('cross-session read failed closed');
     expect(runner).toContain('const packet = assembleRelationalFieldPacket');
