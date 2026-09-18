@@ -274,6 +274,7 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
   const id = uid('qwen');
   sh(['new', id]);
   authorizeReadOnly(id);
+  writePacket(id, { verification_commands: ['printf VERIFIER_ONLY_SENTINEL_9F4D >/dev/null'] });
   const run = sh(['opencode', id, 'qwen-local']);
   assert('read-only local OpenCode attempt completes against the stub',
     run.code === 0, `exit=${run.code} err=${run.err.slice(0, 160)}`);
@@ -298,6 +299,10 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
     !args.split('\n').includes('--auto'), args.slice(0, 220));
   assert('the read-only prompt contains no commit instruction',
     !args.includes('commit your changes') && args.includes('READ-ONLY PROVIDER EVALUATION'));
+  assert('verifier-only verification command is absent from the worker prompt',
+    !args.includes('VERIFIER_ONLY_SENTINEL_9F4D'));
+  assert('verifier-only command still executes after the worker returns',
+    result.test_results === 'pass' && result.evidence.includes('VERIFIER_ONLY_SENTINEL_9F4D'));
   sh(['release', id]);
 }
 

@@ -37,7 +37,8 @@
  *   existing packet with none of these fields is a completely valid canonical Work Unit):
  *     project, capability, task_class, risk_class, priority, dependencies[], blockers[],
  *     authorized_acts[], not_authorized_acts[], integration_actor, autonomy_ceiling,
- *     routing_profile, review_policy, data_class, external_review, external_tiebreaker
+ *     routing_profile, review_policy, data_class, external_review, external_tiebreaker,
+ *     model_stage_budget, external_call_budget
  *
  * AUTHORITY VS CAPABILITY (preserved, not re-litigated)
  *   authorized_acts / not_authorized_acts / integration_actor express what this Work Unit
@@ -99,6 +100,8 @@ export const DEFAULT_AUTONOMY_CEILING = 'LEVEL_2_IMPLEMENT';
 export const DEFAULT_ROUTING_PROFILE = 'local-first';
 export const DEFAULT_REVIEW_POLICY = 'auto';
 export const DEFAULT_DATA_CLASS = 'unspecified';
+export const DEFAULT_MODEL_STAGE_BUDGET = 1;
+export const DEFAULT_EXTERNAL_CALL_BUDGET = 0;
 
 export const LIFECYCLE_VOCABULARY = [
   'proposed', 'ready', 'blocked', 'needs_founder', 'claimed', 'running', 'verifying',
@@ -131,11 +134,13 @@ export function loadWorkUnit(id) {
     data_class: raw.data_class ?? DEFAULT_DATA_CLASS,
     external_review: raw.external_review ?? false,
     external_tiebreaker: raw.external_tiebreaker ?? false,
+    model_stage_budget: raw.model_stage_budget ?? DEFAULT_MODEL_STAGE_BUDGET,
+    external_call_budget: raw.external_call_budget ?? DEFAULT_EXTERNAL_CALL_BUDGET,
     _defaults_applied: Object.keys({
       project: 1, capability: 1, task_class: 1, risk_class: 1, priority: 1, dependencies: 1,
       blockers: 1, authorized_acts: 1, not_authorized_acts: 1, integration_actor: 1,
       autonomy_ceiling: 1, routing_profile: 1, review_policy: 1, data_class: 1,
-      external_review: 1, external_tiebreaker: 1,
+      external_review: 1, external_tiebreaker: 1, model_stage_budget: 1, external_call_budget: 1,
     }).filter((k) => raw[k] === undefined),
   };
 }
@@ -282,6 +287,8 @@ export function workUnitStatus(id) {
       data_class: workUnit.data_class,
       external_review: workUnit.external_review,
       external_tiebreaker: workUnit.external_tiebreaker,
+      model_stage_budget: workUnit.model_stage_budget,
+      external_call_budget: workUnit.external_call_budget,
     },
     authority: {
       governing_authority: workUnit.governing_authority,
