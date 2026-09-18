@@ -88,8 +88,8 @@ const uid = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(36).sl
 console.log('\n=== P1: registry is explicit and bounded ===');
 {
   const ids = listProviderIds();
-  assert('exactly the three intended provider classes are registered',
-    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'nemotron-nvidia', 'inkling-tinker']),
+  assert('exactly the four intended provider classes are registered',
+    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'nemotron-nvidia', 'nemotron-zen', 'inkling-tinker']),
     JSON.stringify(ids));
 
   const local = resolveOpenCodeProvider({
@@ -121,6 +121,21 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
   });
   assert('Nemotron refuses before credential lookup when network is not authorized',
     noNetwork.code === 'EXTERNAL_NETWORK_NOT_AUTHORIZED', JSON.stringify(noNetwork));
+
+  const zenNoNetwork = resolveOpenCodeProvider({
+    providerId: 'nemotron-zen', permissionEnvelope: base, env: {},
+  });
+  assert('Zen Nemotron still requires explicit external-network authority',
+    zenNoNetwork.code === 'EXTERNAL_NETWORK_NOT_AUTHORIZED', JSON.stringify(zenNoNetwork));
+
+  const zen = resolveOpenCodeProvider({
+    providerId: 'nemotron-zen',
+    permissionEnvelope: { ...base, external_network: true },
+    env: {},
+  });
+  assert('Zen Nemotron resolves with network authority and no spend grant',
+    zen.ok && zen.model_ref === 'opencode/nemotron-3-ultra-free' && zen.metered_provider === false,
+    JSON.stringify(zen));
 
   const noSpend = resolveOpenCodeProvider({
     providerId: 'nemotron-nvidia',
