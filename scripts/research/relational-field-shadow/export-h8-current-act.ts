@@ -85,8 +85,19 @@ async function main() {
     const sourceText = await sourceTextByRowId(sourceIds);
     const textByEvidenceId = new Map<string, string>();
     for (const item of row.evidenceManifest) {
-      if (item.current) textByEvidenceId.set(item.evidenceId, row.memberInput);
-      else if (item.sourceRowId) textByEvidenceId.set(item.evidenceId, sourceText.get(item.sourceRowId) ?? '[source unavailable]');
+      if (item.current) {
+        if (sha256(row.memberInput) !== item.contentSha256) {
+          throw new Error(`current_evidence_digest_mismatch:${row.runId}:${item.evidenceId}`);
+        }
+        textByEvidenceId.set(item.evidenceId, row.memberInput);
+      } else if (item.sourceRowId) {
+        const source = sourceText.get(item.sourceRowId);
+        if (!source) throw new Error(`source_unavailable:${row.runId}:${item.evidenceId}`);
+        if (sha256(source) !== item.contentSha256) {
+          throw new Error(`source_digest_mismatch:${row.runId}:${item.evidenceId}`);
+        }
+        textByEvidenceId.set(item.evidenceId, source);
+      }
     }
 
     const witnessId = `H8-${String(index + 1).padStart(3, '0')}`;
