@@ -1,0 +1,330 @@
+{
+  "work_unit_envelope": {
+    "work_unit": {
+      "work_unit_version": "W0.v1",
+      "identity": {
+        "id": "rgr-02-formal-vocabulary-candidate-structures-20260918",
+        "programme": "RELATIONAL-GEOMETRY-REASONING",
+        "parent_work_unit": "rgr-01-literature-mathematical-landscape-20260918",
+        "objective": "Define the smallest mathematically disciplined RGR vocabulary and compare four candidate structures without selecting a winner or implementing a model.",
+        "work_class": "RESEARCH",
+        "task_shape": "deep_reasoning"
+      },
+      "context": {
+        "context_refs": [
+          "RGR-00 canonical research constitution",
+          "RGR-01 canonical closed literature and mathematical landscape",
+          "Founder direction opening RGR-02 only"
+        ],
+        "evidence_refs": [
+          "local-worktree:8c8525eae316f21eeb844ba7af4af7ab1476f461",
+          "public-mathematical-sources-only"
+        ],
+        "assumptions": [
+          "Meaning is not an RGR primitive.",
+          "No candidate formalism is privileged in advance.",
+          "Equivalence and invariant are distinct roles under one primitive heading.",
+          "Positive geometry and Elemental operators remain deferred."
+        ],
+        "unknowns": [
+          "Which mathematical objects best instantiate the ten RGR primitives?",
+          "Which primitives are native versus externally imposed in each candidate formalism?",
+          "Whether a common abstract skeleton exists without collapsing the four formalisms."
+        ]
+      },
+      "scope": {
+        "repository": "SoullabTech/Sovereign",
+        "base_ref": "8c8525eae316f21eeb844ba7af4af7ab1476f461",
+        "allowed_paths": [
+          "docs/programme/RGR-02_FORMAL_VOCABULARY_CANDIDATE_STRUCTURES_2026-09-18.md",
+          "docs/programme/RGR-02_FORMAL_COMPARISON_MATRIX_2026-09-18.md",
+          "docs/programme/RGR-02_WORK_UNIT_2026-09-18.json"
+        ],
+        "forbidden_paths": [
+          "app",
+          "lib",
+          "database",
+          "components",
+          "jarvis-desktop",
+          "scripts"
+        ]
+      },
+      "authority": {
+        "repository_read": true,
+        "repository_write": "worktree",
+        "shell": "bounded_write",
+        "network_external": true,
+        "provider_spend": false,
+        "external_disclosure": "task_text_only",
+        "merge": false,
+        "deploy": false,
+        "production_read": false,
+        "production_write": false
+      },
+      "routing": {
+        "requested_posture": "independent_review",
+        "router_version": "R1.v1",
+        "route_version": "R1.v1",
+        "route_record": {
+          "route_version": "R1.v1",
+          "task_shape": "deep_reasoning",
+          "review_pressure": "ordinary",
+          "challenge_mode": "none",
+          "primary": {
+            "provider_id": "gpt-oss-local",
+            "role": "deep_reasoning_primary",
+            "execution_disposition": "admitted_local"
+          },
+          "challengers": [
+            {
+              "provider_id": "qwen-local",
+              "role": "independent_local_challenger",
+              "execution_disposition": "admitted_local"
+            }
+          ],
+          "review_policy": {
+            "local": "independent_local_second",
+            "external": "none"
+          },
+          "evidence_policy": {
+            "primary": {
+              "provider_id": "gpt-oss-local",
+              "kind": "local_worktree_read_only"
+            },
+            "challengers": [
+              {
+                "provider_id": "qwen-local",
+                "kind": "local_worktree_read_only"
+              }
+            ]
+          },
+          "required_authority": {
+            "acts": [],
+            "disclosures": []
+          },
+          "granted_authority": [],
+          "execution_disposition": "admitted_local",
+          "blockers": [],
+          "routing_reason_codes": [
+            "DEEP_REASONING_GPT_OSS_PRIMARY",
+            "INDEPENDENT_LOCAL_REVIEW_REQUIRED"
+          ]
+        },
+        "route_digest": "sha256:0e48f79bb4c4e29664c5384865e60c02e9260c393fffc3099cc79a8783e2e30c",
+        "route_source": "R2-pure-router",
+        "bound_at_sha": "8c8525eae316f21eeb844ba7af4af7ab1476f461",
+        "execution_connected": false,
+        "primary": {
+          "provider_id": "gpt-oss-local",
+          "role": "deep_reasoning_primary",
+          "execution_disposition": "admitted_local"
+        },
+        "challengers": [
+          {
+            "provider_id": "qwen-local",
+            "role": "independent_local_challenger",
+            "execution_disposition": "admitted_local"
+          }
+        ]
+      },
+      "execution": {
+        "attempts": [
+          {
+            "attempt_id": "rgr02-review-gptoss-01",
+            "model_identity_id": "rgr02-gptoss-math-reviewer",
+            "provider_id": "gpt-oss-local",
+            "model_id": "gpt-oss:20b",
+            "role": "deep_reasoning_primary",
+            "attempt_kind": "initial",
+            "parent_attempt_id": null,
+            "status": "completed",
+            "evidence_refs": [
+              "local-review:/tmp/rgr02-gptoss-review.txt",
+              "review-verdict:ACCEPT",
+              "grounded-corrections:6"
+            ]
+          },
+          {
+            "attempt_id": "rgr02-review-qwen-01",
+            "model_identity_id": "rgr02-qwen-math-challenger",
+            "provider_id": "qwen-local",
+            "model_id": "qwen3-coder:30b",
+            "role": "independent_local_challenger",
+            "attempt_kind": "independent_review",
+            "parent_attempt_id": "rgr02-review-gptoss-01",
+            "status": "completed",
+            "evidence_refs": [
+              "local-review:/tmp/rgr02-qwen-review.txt",
+              "review-verdict:RETURN",
+              "grounded-corrections:3"
+            ]
+          }
+        ],
+        "artifacts": [],
+        "diffs": [],
+        "test_results": []
+      },
+      "evaluation": {
+        "acceptance_conditions": [
+          "Define all ten primitives with explicit mathematical typing and non-collapse rules.",
+          "Compare vector/relational, graph/structural, subspace/Grassmann, and local-to-global/sheaf formalisms against the same primitive set.",
+          "Identify where each formalism requires extra structure rather than pretending every primitive is native.",
+          "Preserve RGR-03, Elemental formalization, MAIA integration, implementation, benchmark, and deployment as closed."
+        ],
+        "falsification_conditions": [
+          "A metaphor is presented as a mathematical identification.",
+          "Equivalence is conflated with similarity or invariant.",
+          "Grassmannian boundary is asserted as intrinsic without defining a constrained subset.",
+          "Sheaf compatibility is generalized into psychology without an operational mapping.",
+          "One candidate formalism is selected without comparative evidence."
+        ],
+        "stop_conditions": [
+          "Any model implementation or benchmark becomes necessary.",
+          "Any private/member/PHI data becomes necessary.",
+          "Any MAIA runtime, schema, migration, deployment, or production change becomes necessary."
+        ],
+        "verifier_results": [
+          {
+            "verifier_id": "rgr02-grounding-gptoss",
+            "target_attempt_id": "rgr02-review-gptoss-01",
+            "verifier_kind": "deterministic",
+            "provider_id": null,
+            "model_id": null,
+            "role": "mathematical_source_grounding",
+            "disposition": "mechanical_pass",
+            "evidence_refs": [
+              "grounding:perspective-carrier-typing",
+              "grounding:context-changing-transformations",
+              "grounding:context-perspective-separation",
+              "grounding:approximate-invariance-metric",
+              "grounding:ambient-boundary-operator",
+              "grounding:valued-relation-codomain"
+            ]
+          },
+          {
+            "verifier_id": "rgr02-grounding-qwen",
+            "target_attempt_id": "rgr02-review-qwen-01",
+            "verifier_kind": "deterministic",
+            "provider_id": null,
+            "model_id": null,
+            "role": "mathematical_source_grounding",
+            "disposition": "mechanical_pass",
+            "evidence_refs": [
+              "grounding:obstruction-constraint-map",
+              "grounding:graph-morphism-terminology",
+              "grounding:trajectory-derived-composition",
+              "rejected:no-default-metric-objection",
+              "rejected:boundary-equals-distance-objection",
+              "rejected:grassmann-boundary-objection"
+            ]
+          }
+        ]
+      },
+      "provenance": {
+        "creator": "JARVIS/RGR-02",
+        "authorizing_act": "founder:rgr02-formal-vocabulary-candidate-structures-20260918",
+        "source_commits": [
+          "8c8525eae316f21eeb844ba7af4af7ab1476f461"
+        ],
+        "model_identity": [
+          {
+            "model_identity_id": "rgr02-gptoss-math-reviewer",
+            "provider_id": "gpt-oss-local",
+            "model_id": "gpt-oss:20b",
+            "role": "deep_reasoning_primary"
+          },
+          {
+            "model_identity_id": "rgr02-qwen-math-challenger",
+            "provider_id": "qwen-local",
+            "model_id": "qwen3-coder:30b",
+            "role": "independent_local_challenger"
+          }
+        ],
+        "resulting_commits": [],
+        "timestamps": []
+      },
+      "state": {
+        "lifecycle_state": "EVIDENCE_READY",
+        "disposition": "open",
+        "supersedes": null
+      }
+    },
+    "guard": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-02-formal-vocabulary-candidate-structures-20260918",
+      "current_state": "EVIDENCE_READY",
+      "authorized_core_snapshot": "{\"identity\":{\"id\":\"rgr-02-formal-vocabulary-candidate-structures-20260918\",\"programme\":\"RELATIONAL-GEOMETRY-REASONING\",\"parent_work_unit\":\"rgr-01-literature-mathematical-landscape-20260918\",\"objective\":\"Define the smallest mathematically disciplined RGR vocabulary and compare four candidate structures without selecting a winner or implementing a model.\",\"work_class\":\"RESEARCH\",\"task_shape\":\"deep_reasoning\"},\"scope\":{\"repository\":\"SoullabTech/Sovereign\",\"base_ref\":\"8c8525eae316f21eeb844ba7af4af7ab1476f461\",\"allowed_paths\":[\"docs/programme/RGR-02_FORMAL_VOCABULARY_CANDIDATE_STRUCTURES_2026-09-18.md\",\"docs/programme/RGR-02_FORMAL_COMPARISON_MATRIX_2026-09-18.md\",\"docs/programme/RGR-02_WORK_UNIT_2026-09-18.json\"],\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\",\"scripts\"]},\"authority\":{\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"network_external\":true,\"provider_spend\":false,\"external_disclosure\":\"task_text_only\",\"merge\":false,\"deploy\":false,\"production_read\":false,\"production_write\":false},\"evaluation\":{\"acceptance_conditions\":[\"Define all ten primitives with explicit mathematical typing and non-collapse rules.\",\"Compare vector/relational, graph/structural, subspace/Grassmann, and local-to-global/sheaf formalisms against the same primitive set.\",\"Identify where each formalism requires extra structure rather than pretending every primitive is native.\",\"Preserve RGR-03, Elemental formalization, MAIA integration, implementation, benchmark, and deployment as closed.\"],\"falsification_conditions\":[\"A metaphor is presented as a mathematical identification.\",\"Equivalence is conflated with similarity or invariant.\",\"Grassmannian boundary is asserted as intrinsic without defining a constrained subset.\",\"Sheaf compatibility is generalized into psychology without an operational mapping.\",\"One candidate formalism is selected without comparative evidence.\"],\"stop_conditions\":[\"Any model implementation or benchmark becomes necessary.\",\"Any private/member/PHI data becomes necessary.\",\"Any MAIA runtime, schema, migration, deployment, or production change becomes necessary.\"]}}"
+    }
+  },
+  "routing_evidence": {
+    "derived_input": {
+      "task_shape": "deep_reasoning",
+      "review_pressure": "ordinary",
+      "challenge_mode": "none",
+      "frontier_posture": "none",
+      "authority": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "network_external": true,
+        "provider_spend": false,
+        "repository_external_disclosure": false
+      },
+      "evidence": {
+        "local_worktree_available": true,
+        "task_text_available": false,
+        "external_bundle_refs": []
+      },
+      "work_unit": {
+        "explicit_independent_review": true
+      }
+    },
+    "authority_proof": {
+      "subset": true,
+      "missing": [],
+      "checks": [
+        {
+          "authority": "repo.read",
+          "present": true
+        },
+        {
+          "authority": "route.granted_authority=[]",
+          "present": true
+        }
+      ]
+    },
+    "transition": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-02-formal-vocabulary-candidate-structures-20260918",
+      "from": "AUTHORIZED",
+      "to": "ROUTED",
+      "evidence_ref": "w3-route:R1.v1:rgr-02-formal-vocabulary-candidate-structures-20260918",
+      "reason_code": "W3_PURE_ROUTE_BOUND",
+      "authorization_ref": null,
+      "adjudication": null,
+      "superseded_by": null
+    }
+  },
+  "standing": "EVIDENCE_READY_AWAITING_FOUNDER_ADJUDICATION",
+  "successor_authority": {
+    "rgr_03": "CLOSED",
+    "elemental_operator_hypothesis": "CLOSED",
+    "maia_change": "NOT_AUTHORIZED",
+    "implementation": "NOT_AUTHORIZED",
+    "benchmark": "NOT_AUTHORIZED",
+    "deployment": "NOT_AUTHORIZED"
+  },
+  "execution_note": "RGR-02 formal vocabulary and four-formalism comparison complete; independent local mathematical challenge complete; grounded corrections applied. No RGR-03, Elemental formalization, MAIA change, implementation, benchmark, deployment, or production action performed.",
+  "review_evidence": {
+    "gpt_oss": {
+      "attempt_id": "rgr02-review-gptoss-01",
+      "verdict": "ACCEPT",
+      "grounded_corrections_applied": 6
+    },
+    "qwen": {
+      "attempt_id": "rgr02-review-qwen-01",
+      "verdict": "RETURN",
+      "grounded_corrections_applied": 3,
+      "invalid_or_already_satisfied_objections_preserved": true
+    }
+  }
+}
