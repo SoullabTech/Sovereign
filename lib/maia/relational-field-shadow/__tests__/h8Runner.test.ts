@@ -86,6 +86,7 @@ describe('H8 production shadow projection runner', () => {
       status: 'rendered',
     });
     expect(row).not.toHaveProperty('shadowResponseText');
+    expect(row.rawPlan.researchLineage.evidenceScope).toBe('current_session');
     expect(row.rawPlan.anchorEvidenceId).toBe('E1');
     expect(row.basisEvidenceIds[0]).toBe('E1');
   });
@@ -111,6 +112,7 @@ describe('H8 production shadow projection runner', () => {
 
     const h8Row = persist.mock.calls[0][0];
     expect(h8Row.architectureVersion).toBe(H8_CURRENT_ACT_ARCHITECTURE_VERSION);
+    expect(h8Row.rawPlan.researchLineage.evidenceScope).toBe('consented_cross_session');
     expect(h8Row.evidenceManifest.some((item: any) => item.sourceKind === 'cross_session_turn')).toBe(true);
 
     // The inherited generative Cut-1 packet must remain current-session-only.
