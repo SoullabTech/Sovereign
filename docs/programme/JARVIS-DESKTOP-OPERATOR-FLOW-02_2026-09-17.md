@@ -44,3 +44,95 @@ The old technical controls remain available under **Advanced tools and lane cont
 ## Next gate
 
 Founder walk of the Work screen. If the new intent-first flow is legible, the next functional cut may add a genuine governed Work Unit composer with explicit evidence selection and live run-stage projection. Provider orchestration/multi-model reconciliation remains a separate authority-bearing seam.
+
+## Functional cockpit cut
+
+The successor now adds a real governed Work Unit cockpit over the canonical Builder/provider substrate.
+
+### Founder flow
+
+```text
+Home intent
+  -> Work draft
+  -> quick local/text-only act OR governed Work Unit
+  -> explicit provider strategy
+  -> explicit external repository disclosure
+  -> explicit Inkling spend grant when selected
+  -> canonical Work Unit packet
+  -> provider attempt(s)
+  -> append-only attempt history
+  -> structured reconciliation
+  -> Needs Kelly / second review owed / repair before witness / evidence presented
+```
+
+### Provider strategy
+
+The Work Unit identity belongs to the work, never the worker. `nemotron-zen` and
+`inkling-tinker` are attempts under one packet. Provider changes do not widen the Work Unit
+authority envelope.
+
+`nemotron-zen` uses `opencode/nemotron-3-ultra-free` through OpenCode Zen. `inkling-tinker`
+uses `tinker/thinkingmachines/Inkling` and remains fail-closed when `TINKER_API_KEY` is not
+present in JARVIS's launch environment.
+
+### New canonical seam
+
+`scripts/builder/work-unit-create.mjs` is the single packet-creation seam used by Desktop.
+It runs the canonical packet validator plus answer-leakage lint, refuses collisions, writes
+mode `0600`, and does not claim a worktree or launch a worker.
+
+### New Desktop privileged seam
+
+One reviewed invoke channel was added:
+
+`jarvis:work-unit-action`
+
+Its MAIN-owned action enum is exactly:
+
+- `providers`
+- `create`
+- `status`
+- `run-provider`
+
+The renderer cannot supply a repository path, shell command, canonical SHA, branch name, or
+raw authority envelope at creation. MAIN derives the SHA from the bound repository and builds
+the packet through `operator-work-unit.js`. Provider runs go through the canonical
+`opencode-provider.mjs` resolution and `ain-delegate.sh opencode` execution seam.
+
+### Reconciliation law
+
+JARVIS may reconcile structured execution evidence; it does not adjudicate semantic model
+disagreement automatically.
+
+- no attempts -> `NOT_RUN`
+- one clean attempt -> `SECOND_REVIEW_OWED`
+- nonzero/rejected/failing attempt -> `REPAIR_BEFORE_WITNESS`
+- explicit escalation -> `NEEDS_KELLY`
+- structured disagreement -> `REVIEW_DISAGREEMENT`
+- multiple clean attempts -> `EVIDENCE_PRESENTED`, with semantic judgment still founder-owned
+
+### Still not authorized
+
+This cut does not add provider implementation authority, repository writes by external models,
+automatic merge, automatic deployment, production access, or automatic founder rulings.
+
+## Evidence added in this cut
+
+- intent-first focused suite: `86/86 PASS`
+- full pre-cockpit Jarvis Desktop + alpha-floor suite: `97/97 PASS`
+- Work Unit packet authoring: `5/5 PASS`
+- Work Unit controller reconciliation: `7/7 PASS`
+- cockpit/authority acceptance: `21/21 PASS`
+- canonical Work Unit creation proof: `4/4 PASS`
+
+## Post-cockpit gate
+
+- Jarvis Desktop full suite: `155/155 PASS`
+- Alpha Floor / preload proof: `97/97 PASS`
+- exact preload invoke channels: `13/13`
+- Work Unit identity/attempt invariants: `37/37 PASS`
+- governed OpenCode provider proof: `23/23 PASS`
+- canonical Work Unit creation proof: `4/4 PASS`
+- delegate syntax, JS syntax, JSON parse, `git diff --check`: PASS
+
+**Standing:** candidate is qualified for a founder Desktop walk. It is not installed over the existing packaged app yet.

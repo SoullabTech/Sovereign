@@ -1,0 +1,79 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.join(HERE, '..');
+const src = (name) => fs.readFileSync(path.join(ROOT, 'src', name), 'utf8');
+const renderer = src('renderer.js');
+const preload = src('preload.js');
+const main = src('main.js');
+const operatorWU = src('operator-work-unit.js');
+const controller = src('work-unit-control.js');
+
+test('cockpit makes governed Work Unit and intelligence strategy visible', () => {
+  assert.match(renderer, /Governed Work Unit/);
+  assert.match(renderer, /Intelligence strategy/);
+  assert.match(renderer, /Nemotron 3 Ultra · primary review/);
+  assert.match(renderer, /Inkling · adversarial review/);
+  assert.match(renderer, /Run remaining strategy/);
+  assert.match(renderer, /Needs Kelly/);
+});
+
+test('Home ordinary prose hands off to Work as intent rather than requiring a command phrase', () => {
+  assert.match(renderer, /sessionStorage\.setItem\('jarvis:draft-intent'/);
+  assert.match(renderer, /setView\('work'\); return/);
+});
+
+test('external repository disclosure and Inkling spend are explicit founder gestures', () => {
+  assert.match(renderer, /wu-repo-ok/);
+  assert.match(renderer, /authorize the selected external provider\(s\) to inspect this isolated repository worktree read-only/i);
+  assert.match(renderer, /wu-spend-ok/);
+  assert.match(renderer, /authorize provider spend for the Inkling review/i);
+  assert.match(operatorWU, /externalRepoOk !== true/);
+  assert.match(operatorWU, /providerSpendOk !== true/);
+});
+
+test('packet authoring structurally denies write, production, deploy and authority change', () => {
+  for (const denied of ['repo.write:worktree', 'production.read', 'production.write', 'deploy', 'authority.change']) {
+    assert.ok(operatorWU.includes(`'${denied}'`), `missing denial ${denied}`);
+  }
+  assert.match(operatorWU, /integration_actor: 'founder'/);
+});
+
+test('exactly one new privileged channel carries a bounded action enum', () => {
+  assert.match(preload, /workUnitAction: \(req\) => ipcRenderer\.invoke\('jarvis:work-unit-action', req\)/);
+  assert.match(main, /ipcMain\.handle\('jarvis:work-unit-action'/);
+  for (const action of ['providers', 'create', 'status', 'run-provider']) {
+    assert.ok(main.includes(`action === '${action}'`), `missing action ${action}`);
+  }
+  assert.doesNotMatch(main, /action === 'deploy'/);
+  assert.doesNotMatch(main, /action === 'merge'/);
+});
+
+test('MAIN, not renderer, binds canonical SHA and Work Unit identity', () => {
+  assert.match(main, /execFileSync\('git', \['rev-parse', 'HEAD'\]/);
+  assert.match(main, /OPWU\.buildPacket\(req\?\.spec/);
+  assert.doesNotMatch(renderer, /canonical_sha\s*:/);
+  assert.doesNotMatch(renderer, /branch:\s*`chore\/ain-delegate/);
+});
+
+test('provider execution goes through canonical provider registry and ain-delegate seam', () => {
+  assert.match(controller, /resolveWorkUnitProvider/);
+  assert.match(controller, /scripts', 'ain-delegate\.sh/);
+  assert.match(controller, /'opencode', id, providerId/);
+  assert.match(controller, /recordAttempt\(id\)/);
+});
+
+test('strategy fails closed on first provider failure and does not cascade', () => {
+  assert.match(renderer, /if \(!result\?\.ok\) return; \/\/ fail closed/);
+});
+
+test('structured reconciliation never silently chooses between disagreeing providers', () => {
+  assert.match(controller, /REVIEW_DISAGREEMENT/);
+  assert.match(controller, /JARVIS will not pick a winner automatically/);
+  assert.match(controller, /EVIDENCE_PRESENTED/);
+  assert.match(controller, /founder review, not an automated verdict/);
+});

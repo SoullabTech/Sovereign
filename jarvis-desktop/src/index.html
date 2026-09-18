@@ -143,6 +143,24 @@
   .run-plan .plan-line { color:#6f7078; font-size:11px; line-height:1.55; }
   details.advanced-tools { margin-top:14px; }
   details.advanced-tools > summary { cursor:pointer; color:#6ea8df; font-size:12px; margin-bottom:10px; }
+  .work-unit-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .provider-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; border:1px solid #202126; background:#0e0f11; border-radius:8px; padding:10px 12px; margin-top:8px; }
+  .provider-row .provider-name { color:#d0d0d8; font-size:12px; font-weight:600; }
+  .provider-row .provider-detail { color:#686870; font-size:11px; line-height:1.45; margin-top:3px; }
+  .authority-box { background:#0d1420; border:1px solid #1e3554; border-radius:8px; padding:10px 12px; margin-top:10px; }
+  .authority-box .a-title { color:#8fb9e8; font-size:11px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
+  .authority-box .a-line { color:#777f89; font-size:11px; line-height:1.55; }
+  .stage-list { display:flex; gap:5px; flex-wrap:wrap; margin:10px 0; }
+  .stage-pill { border:1px solid #2a2b31; border-radius:999px; padding:4px 9px; font-size:10px; color:#777983; background:#111216; }
+  .stage-pill.done { border-color:#1f5f66; color:#6ed7df; }
+  .stage-pill.running { border-color:#315b8e; color:#8abdf3; }
+  .stage-pill.held { border-color:#6d5622; color:#e7c66f; }
+  .attempt-card { border-left:2px solid #2f5e82; background:#0e0f11; padding:9px 11px; margin:8px 0; border-radius:4px; }
+  .attempt-card .attempt-head { display:flex; justify-content:space-between; gap:8px; font-size:11px; color:#a8abb4; }
+  .needs-kelly { border:1px solid #624d1e; background:#1a160d; border-radius:8px; padding:11px 12px; margin-top:10px; }
+  .needs-kelly b { color:#e4c56e; }
+  .inline-check { display:block; color:#888b94; font-size:11px; margin:8px 0; line-height:1.45; }
+  .inline-check input { margin-right:7px; }
 </style>
 </head>
 <body>
@@ -162,6 +180,7 @@
   <script src="governance.js"></script>
   <script src="provenance.js"></script>
   <script src="operator-flow.js"></script>
+  <script src="operator-work-unit.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

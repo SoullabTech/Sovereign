@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('jarvis', {
   // renderer cannot name a lane at all. Admission remains the mechanism's.
   getMechanismStatus: () => ipcRenderer.invoke('jarvis:mechanism-status'),
   runWorkUnit: (packet) => ipcRenderer.invoke('jarvis:run-work-unit', { packet }),
+  workUnitAction: (req) => ipcRenderer.invoke('jarvis:work-unit-action', req),
 
   getRepoConfig: () => ipcRenderer.invoke('jarvis:repo-config'),
   chooseRepo: () => ipcRenderer.invoke('jarvis:choose-repo'),
