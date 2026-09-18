@@ -19,6 +19,7 @@ import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { MirrorFieldAssist } from './MirrorFieldAssist';
 import type { PracticeField, PracticeFieldStatus, OrientationStyle } from '@/lib/types/practiceField';
+import { LivingConstellationPanel } from '@/components/maia/living-constellation/LivingConstellationPanel';
 
 type EditorSection = 'identity' | 'relationship' | 'practice' | 'invite';
 
@@ -172,6 +173,9 @@ export function PracticeFieldEditor() {
           {saved && <p className="text-emerald-600 text-xs">Saved</p>}
         </div>
       </div>
+
+      {/* LC-02: same read-only constellation, Practice Field foregrounded. */}
+      <LivingConstellationPanel focus="practice" />
 
       {/* Nav */}
       <div className="flex gap-4 border-b border-stone-800 pb-0">
