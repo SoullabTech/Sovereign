@@ -138,10 +138,12 @@ export interface CrisisOverride {
 
 // Crisis patterns - no "MAIA" prefix required, these override any mode
 const CRISIS_PATTERNS: Record<CrisisLevel, RegExp[]> = {
-  // Soft flag: ambiguous distress language
+  // Soft flag: ambiguous distress language.
+  // Deliberately exclude bare "I'm done": it is ordinary completion language
+  // and was also the member-facing explicit-yield phrase in TURN-01. Treating
+  // those two words as crisis evidence creates deterministic false positives.
   soft: [
     /i\s+can'?t\s+do\s+this\s+anymore/i,
-    /i'?m\s+done/i,
     /i\s+wish\s+i\s+could\s+disappear/i,
     /what'?s\s+the\s+point/i,
     /i\s+don'?t\s+want\s+to\s+be\s+here/i,
