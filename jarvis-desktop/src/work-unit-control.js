@@ -6,16 +6,42 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { execFile } = require('node:child_process');
+const { execFile, execFileSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 const { childEnv, resolveNodeBinary } = require('./child-env.js');
 const FRONTIER = require('./frontier-worker.js');
 
 const MAX_LOG_CHARS = 12000;
 const RUN_TIMEOUT_MS = 10 * 60 * 1000;
+const KEYCHAIN_CREDENTIALS = Object.freeze({
+  TINKER_API_KEY: Object.freeze({ service: 'soullab.tinker.api' }),
+});
 
 const homeOf = (env = process.env) => env.AIN_DELEGATION_HOME || path.join(os.homedir(), '.claude', 'ain-delegation');
 const resultPath = (id, env = process.env) => path.join(homeOf(env), 'results', `${id}.json`);
+
+function defaultKeychainProbe(service, account) {
+  if (process.platform !== 'darwin') return false;
+  try {
+    execFileSync('/usr/bin/security', [
+      'find-generic-password', '-a', account, '-s', service,
+    ], { stdio: 'ignore' });
+    return true;
+  } catch { return false; }
+}
+
+function credentialAvailability(credentialEnv, opts = {}) {
+  const env = opts.env || process.env;
+  if (!credentialEnv) return { ready: true, source: null };
+  if (env[credentialEnv]) return { ready: true, source: 'environment' };
+  const keychain = KEYCHAIN_CREDENTIALS[credentialEnv];
+  if (!keychain) return { ready: false, source: null };
+  const account = env.USER || os.userInfo().username;
+  const probe = opts.keychainProbe || defaultKeychainProbe;
+  return probe(keychain.service, account)
+    ? { ready: true, source: 'keychain' }
+    : { ready: false, source: null };
+}
 
 async function importBound(root, rel) {
   const file = path.join(root, rel);
@@ -48,7 +74,7 @@ function reconcileAttempts(attempts = []) {
     test_results: a.test_results ?? 'not_run',
     escalation_required: a.escalation_required === true,
     recommended_next_action: a.recommended_next_action ?? null,
-    exit_code: exitCodeFromSummary(a.summary),
+    exit_code: Number.isInteger(a.exit_code) ? a.exit_code : exitCodeFromSummary(a.summary),
     duration_s: a.duration_s ?? null,
     log_path: a.log_path ?? null,
     output_excerpt: readLogExcerpt(a.log_path),
@@ -103,10 +129,15 @@ async function providers(root, opts = {}) {
   return Object.entries(specs).map(([id, spec]) => {
     let state = 'AVAILABLE';
     let detail = 'Provider is registered and locally resolvable; Work Unit authority is still required per run.';
+    const credential = credentialAvailability(spec.credential_env, {
+      env, keychainProbe: opts.keychainProbe,
+    });
     if (id === 'nemotron-zen' && !frontier.ready) {
       state = 'NEEDS_SETUP'; detail = frontier.detail;
-    } else if (spec.credential_env && !env[spec.credential_env]) {
-      state = 'NEEDS_SETUP'; detail = `${spec.credential_env} is not present in the JARVIS launch environment.`;
+    } else if (!credential.ready) {
+      state = 'NEEDS_SETUP'; detail = `${spec.credential_env} is not available through an approved credential source.`;
+    } else if (credential.source === 'keychain') {
+      detail = 'Credential is present in macOS Keychain; its value is not loaded into JARVIS. Work Unit authority is still required per run.';
     }
     return {
       id, state, detail,
@@ -115,6 +146,7 @@ async function providers(root, opts = {}) {
       external_network: spec.external_network,
       metered_provider: spec.metered_provider,
       credential_required: spec.credential_env || null,
+      credential_source: credential.source,
     };
   });
 }
@@ -139,21 +171,43 @@ async function status(root, workUnitId) {
   };
 }
 
+function delegateLaneForProvider(resolved) {
+  if (resolved?.execution_adapter === 'opencode') return 'opencode';
+  if (resolved?.execution_adapter === 'tinker-direct') return 'tinker';
+  return null;
+}
+
 async function runProvider(root, req, opts = {}) {
   const id = String(req?.work_unit_id || '');
   const providerId = String(req?.provider_id || '');
   const model = req?.model ? String(req.model) : '';
   if (!id || !providerId) return { ok: false, status: 'REFUSED', reason: 'work_unit_id and provider_id are required' };
 
-  // Ask the canonical registry FIRST. A refusal occurs before process launch.
+  // Prove Work Unit/provider authority FIRST, deliberately without touching a
+  // credential source. Only after authority passes may discovery check whether
+  // the approved credential source is ready. The secret value remains the
+  // delegate's concern and is never loaded into the Desktop process.
+  const sourceEnv = opts.env || process.env;
   const providerMod = await importBound(root, 'scripts/builder/opencode-provider.mjs');
-  const resolved = providerMod.resolveWorkUnitProvider(id, providerId, model, opts.env || process.env);
+  const resolved = providerMod.resolveWorkUnitProvider(
+    id, providerId, model, sourceEnv, { skipCredentialCheck: true },
+  );
   if (!resolved.ok) return { ok: false, status: 'REFUSED', reason: resolved.code, provider: providerId };
 
+  const credential = credentialAvailability(resolved.credential_env, {
+    env: sourceEnv, keychainProbe: opts.keychainProbe,
+  });
+  if (!credential.ready) {
+    return { ok: false, status: 'REFUSED', reason: 'PROVIDER_CREDENTIAL_MISSING', provider: providerId };
+  }
+
+  const lane = delegateLaneForProvider(resolved);
+  if (!lane) return { ok: false, status: 'REFUSED', reason: 'PROVIDER_AUTOMATION_UNSUPPORTED', provider: providerId };
+
   const delegate = path.join(root, 'scripts', 'ain-delegate.sh');
-  const args = [delegate, 'opencode', id, providerId];
+  const args = [delegate, lane, id, providerId];
   if (model) args.push(model);
-  const env = providerChildEnv(opts.env || process.env);
+  const env = providerChildEnv(sourceEnv);
   const resultBefore = resultPath(id, env);
   const beforeMtime = fs.existsSync(resultBefore) ? fs.statSync(resultBefore).mtimeMs : 0;
 
@@ -196,7 +250,8 @@ async function runProvider(root, req, opts = {}) {
 }
 
 module.exports = {
-  MAX_LOG_CHARS, RUN_TIMEOUT_MS,
+  MAX_LOG_CHARS, RUN_TIMEOUT_MS, KEYCHAIN_CREDENTIALS,
   homeOf, resultPath, readLogExcerpt, exitCodeFromSummary,
+  credentialAvailability, delegateLaneForProvider,
   reconcileAttempts, providerChildEnv, providers, create, status, runProvider,
 };

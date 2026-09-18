@@ -66,10 +66,12 @@ test('MAIN, not renderer, binds canonical SHA and Work Unit identity', () => {
   assert.doesNotMatch(renderer, /branch:\s*`chore\/ain-delegate/);
 });
 
-test('provider execution goes through canonical provider registry and ain-delegate seam', () => {
+test('provider execution goes through canonical registry, credential readiness, and the registered delegate adapter', () => {
   assert.match(controller, /resolveWorkUnitProvider/);
-  assert.match(controller, /scripts', 'ain-delegate\.sh/);
-  assert.match(controller, /'opencode', id, providerId/);
+  assert.match(controller, /skipCredentialCheck: true/);
+  assert.match(controller, /credentialAvailability/);
+  assert.match(controller, /execution_adapter === 'tinker-direct'/);
+  assert.match(controller, /const args = \[delegate, lane, id, providerId\]/);
   assert.match(controller, /recordAttempt\(id\)/);
 });
 

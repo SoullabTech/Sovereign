@@ -58,8 +58,9 @@ both acts explicitly authorized on the Work Unit plus the provider credential.
 |---|---|---:|---:|---|
 | `qwen-local` | `ollama/qwen3-coder:30b` (plus allowlisted local variants) | no | no | local-established |
 | `nemotron-nvidia` | `nvidia/nemotron-3-ultra-550b-a55b` | yes | yes | external-candidate |
-| `nemotron-zen` | `opencode/nemotron-3-ultra-free` (plus allowlisted free Zen variant) | yes | no | external-free-candidate |
-| `inkling-tinker` | `tinker/thinkingmachines/Inkling` | yes | yes | **evaluation-only** |
+| `nemotron-zen` | `opencode/nemotron-3-ultra-free` (plus allowlisted free Zen variant) | yes | no | **interactive-only · delegated automation blocked** |
+| `nemotron-tinker` | `tinker/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16` (Ultra allowlisted) | yes | yes | external-candidate |
+| `inkling-tinker` | `tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4` (full Inkling allowlisted) | yes | yes | **evaluation-only** |
 
 Registration is not activation. No external provider is a default model.
 
@@ -67,7 +68,8 @@ Registration is not activation. No external provider is a default model.
 
 V1 deliberately supports **read-only provider evaluation only**.
 
-The project-scoped `jarvis-readonly` OpenCode agent:
+For providers that admit governed automation (`qwen-local`, direct NVIDIA Nemotron, Tinker
+Nemotron, and Tinker/Inkling), the project-scoped `jarvis-readonly` OpenCode agent:
 
 - allows repository read / glob / grep / list / LSP;
 - denies edit;
@@ -81,18 +83,74 @@ The delegate records OpenCode attempts through the same result contract used by 
 including the exact `provider/model` identity. A later founder act may open a separate proof for
 write-capable OpenCode execution; this lane does not smuggle that authority in.
 
+### OpenCode Zen Free live restriction — 2026-09-17
+
+The Zen credential and model are real and usable **inside native OpenCode**:
+
+```text
+opencode -m opencode/nemotron-3-ultra-free
+→ NEMOTRON CONNECTED
+```
+
+A minimal unmodified headless native `build` run also returned successfully. But the live Zen Free
+gateway rejects every tested form of the JARVIS read-only boundary with:
+
+```text
+Error from provider (Console): OpenCode's free tier can only be used from within OpenCode
+```
+
+The restriction reproduced with:
+
+- `--agent jarvis-readonly`;
+- runtime `OPENCODE_CONFIG_CONTENT` permission denial;
+- a custom `OPENCODE_CONFIG` permission file; and
+- a normal `.opencode/opencode.json` override of the native `build` agent.
+
+The unmodified native `build` agent is not an acceptable substitute: its default tool surface is
+broader than the JARVIS V1 permission contract. Therefore **JARVIS does not weaken its boundary to
+obtain free-provider access**. `nemotron-zen` remains registered for truthful capability discovery
+and manual OpenCode use, but automated JARVIS delegation fails closed with
+`PROVIDER_AUTOMATION_UNSUPPORTED` after `network.external` authority is checked and before worktree
+acquisition.
+
+Direct NVIDIA Nemotron remains one governed automated Nemotron candidate once a direct provider
+credential and `provider.spend` authority are both present. Tinker now provides a second governed
+Nemotron candidate behind the same `TINKER_API_KEY` planned for Inkling: Nemotron 3.5 Lightning is
+the cost-conscious default and Nemotron 3 Ultra is an explicit allowlisted override. Both remain
+metered and require `network.external` + `provider.spend`. If Zen later admits the same read-only
+permission envelope, its delegated standing may be re-evaluated from new evidence.
+
 ## Provider configuration
 
 `opencode.json` registers:
 
 - the existing local Ollama models;
-- OpenCode Zen's built-in `opencode/nemotron-3-ultra-free` / `opencode/nemotron-3.5-lightning-free` models;
-- NVIDIA NIM at `https://integrate.api.nvidia.com/v1`, credential by `NVIDIA_API_KEY`;
+- NVIDIA NIM at `https://integrate.api.nvidia.com/v1`, credential by `NVIDIA_API_KEY`; and
 - Thinking Machines Tinker at
   `https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1`, credential by
-  `TINKER_API_KEY`.
+  `TINKER_API_KEY`, with an exact bounded model set: Inkling-Small serverless, full Inkling
+  serverless, Nemotron 3.5 Lightning, and Nemotron 3 Ultra.
 
-OpenCode Zen authentication remains in the user-level OpenCode credential store; no credential is committed. No external model is selected as the repository default.
+OpenCode Zen is a built-in OpenCode provider discovered from the user-level Zen credential/model
+catalog; it is not registered by repository `opencode.json`. No credential is committed and no
+external model is selected as the repository default.
+
+### Tinker credential handling
+
+Tinker credentials are resolved locally in this order:
+
+1. an already-populated `TINKER_API_KEY` environment variable;
+2. on macOS, Keychain generic-password service `soullab.tinker.api` for the current user.
+
+The adapter performs a credential-free `authorize` pass first. `repo.read`, `network.external`,
+read-only scope, and (for metered providers) `provider.spend` must all pass **before** JARVIS reads
+Keychain. Only then may the secret be read into a local, non-exported shell variable. It is injected only
+into the final credential-bearing provider-resolution child and the OpenCode worker child. The
+post-worker verification commands do **not** inherit it. The secret is not written to the Work Unit,
+OpenCode arguments, result contract, logs, or repository.
+
+If neither environment nor Keychain yields a credential, the final provider resolution remains
+`PROVIDER_CREDENTIAL_MISSING`. Non-macOS hosts continue to use the environment-variable path.
 
 ## Evidence
 
@@ -100,12 +158,20 @@ Targeted provider proof:
 
 ```text
 node scripts/builder/__tests__/opencode-adapter-governance-proof.mjs
-23 passed · 0 failed
+40 assertions defined on current Keychain head
+execution: PENDING
+prior witnessed provider proof before Keychain plumbing: 30 passed · 0 failed
 ```
 
-It proves registration, local Qwen resolution, Zen Nemotron external-network gating without a spend grant, V1 read-only refusal, conjunctive external-network
-and provider-spend authority for metered providers, missing-credential refusal, Inkling evaluation-only standing,
-deny-before-worktree behavior, exact model provenance, no `--auto`, and secret-free configuration.
+The current 40-assertion proof is not yet claimed PASS. Once executed successfully on the exact
+Keychain head, it is designed to prove registration, local Qwen resolution, Zen external-network gating, fail-closed Zen
+automation refusal before worktree acquisition, V1 read-only refusal, conjunctive external-network
+and provider-spend authority for metered providers, missing-credential refusal, Tinker Nemotron
+Lightning default + Ultra override, Inkling-Small default + full Inkling override, Inkling
+evaluation-only standing, authority-before-Keychain ordering, zero Keychain access on denied spend,
+secret non-leakage from Keychain-hydrated attempts, worker-only credential scoping, post-worker
+verification isolation, deny-before-worktree behavior, exact model provenance, no `--auto`, and
+secret-free configuration.
 
 Syntax/config gates also passed locally:
 
@@ -122,20 +188,58 @@ pre-existing Claude adapter proof with filesystem `ENOSPC` while another active 
 using a large temporary worktree. This is recorded as **ENVIRONMENTALLY BLOCKED**, not PASS and not
 a code assertion failure. The other lane was not killed or deleted.
 
-## What did not happen
+## Live-evaluation accounting
 
-- no NVIDIA API request;
-- no Tinker/Inkling API request;
+What **did** happen:
+
+- an OpenCode Zen credential was installed in the user-level credential store;
+- the Tinker API key was stored locally in macOS Keychain under `soullab.tinker.api`;
+- manual/synthetic Zen Nemotron requests were made;
+- one bounded voice-review delegation attempt reached the Zen path but could not execute under the
+  required JARVIS read-only boundary; it was terminated and recorded as `reject` with zero files
+  changed;
+- the synthetic governed attempt was likewise terminated/rejected with zero files changed.
+
+What did **not** happen:
+
+- no direct NVIDIA API request;
+- no Tinker/Inkling/Nemotron-Tinker inference request;
 - no provider spend;
-- no real external credential was created or committed;
+- no credential was committed;
 - no production member data was read or transmitted;
 - no production mutation;
 - no merge;
 - no deployment;
-- no change to JARVIS truth/provenance authority.
+- no weakening of JARVIS truth/provenance or permission authority.
 
 ## Next gate
 
-After independent review of this read-only seam, the next distinct question is whether OpenCode may
-become a governed **write-capable** worker. That requires a separate proof of permission mapping and
-must not be inferred from provider registration.
+Two provider questions remain distinct:
+
+1. **Tinker live witnesses** — the credential is now stored in macOS Keychain and the adapter can
+   hydrate it only after authority passes. No live inference occurs until the founder explicitly
+   opens `provider.spend` for a bounded synthetic witness; then prove `inkling-tinker` and
+   `nemotron-tinker` independently against the real provider.
+2. **Optional direct NVIDIA witness** — remains available for `nemotron-nvidia`, but is no longer
+   required to prove governed Nemotron if the Tinker lane succeeds. Zen Free remains manual-only
+   unless its upstream restriction changes.
+
+Write-capable OpenCode remains a separate later question and is not authorized by any provider
+registration or live-model success.
+
+## 2026-09-17 amendment — Tinker transport superseded
+
+The Tinker-through-OpenCode execution path described earlier in this record is superseded by
+`JARVIS-PROVIDER-02_DIRECT_TINKER_2026-09-17.md`.
+
+Current standing:
+
+- Qwen local remains a governed OpenCode worker;
+- OpenCode Zen Nemotron remains manual/interactive under the observed Zen Free restriction;
+- project `opencode.json` no longer carries a Tinker custom-provider block;
+- `inkling-tinker` and `nemotron-tinker` now resolve to the JARVIS-native `tinker-direct`
+  transport;
+- Tinker models receive only a locally constructed bounded evidence bundle and no model-side tools.
+
+This amendment does not erase the failed OpenCode/Tinker live witness; that failure remains the
+evidence that caused the transport change.

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * JARVIS-PROVIDER-01 — governed OpenCode provider registry.
+ * JARVIS-PROVIDER — governed model-provider registry.
  *
  * Provider/model choice is execution-attempt capability. It never expands the
  * canonical Work Unit permission envelope and never creates epistemic standing.
- * V1 is intentionally read-only: OpenCode may inspect a governed worktree, but
- * it may not mutate it until a later adapter act proves a write-safe mapping.
+ * V1 is intentionally read-only. Execution transport is explicit per provider;
+ * provider registration never grants repository mutation or external authority.
  */
 import { loadWorkUnit, derivePermissionEnvelope } from './work-unit.mjs';
 
@@ -18,6 +18,7 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     metered_provider: false,
     credential_env: null,
     standing: 'local-established',
+    execution_adapter: 'opencode',
   }),
   'gpt-oss-local': Object.freeze({
     opencode_provider: 'ollama',
@@ -37,6 +38,7 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     metered_provider: true,
     credential_env: 'NVIDIA_API_KEY',
     standing: 'external-candidate',
+    execution_adapter: 'opencode',
   }),
   'nemotron-zen': Object.freeze({
     opencode_provider: 'opencode',
@@ -45,16 +47,35 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     external_network: true,
     metered_provider: false,
     credential_env: null,
-    standing: 'external-free-candidate',
+    standing: 'interactive-only',
+    delegation_supported: false,
+    execution_adapter: 'opencode-interactive',
+  }),
+  'nemotron-tinker': Object.freeze({
+    opencode_provider: 'tinker',
+    default_model: 'nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
+    models: Object.freeze([
+      'nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
+      'nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16',
+    ]),
+    external_network: true,
+    metered_provider: true,
+    credential_env: 'TINKER_API_KEY',
+    standing: 'external-candidate',
+    execution_adapter: 'tinker-direct',
   }),
   'inkling-tinker': Object.freeze({
     opencode_provider: 'tinker',
-    default_model: 'thinkingmachines/Inkling',
-    models: Object.freeze(['thinkingmachines/Inkling']),
+    default_model: 'thinkingmachines/Inkling-Small',
+    models: Object.freeze([
+      'thinkingmachines/Inkling-Small',
+      'thinkingmachines/Inkling',
+    ]),
     external_network: true,
     metered_provider: true,
     credential_env: 'TINKER_API_KEY',
     standing: 'evaluation-only',
+    execution_adapter: 'tinker-direct',
   }),
 });
 
@@ -72,7 +93,9 @@ function normalizeModel(spec, requested) {
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
 }
 
-export function resolveOpenCodeProvider({ providerId, model, permissionEnvelope, env = process.env }) {
+export function resolveOpenCodeProvider({
+  providerId, model, permissionEnvelope, env = process.env, skipCredentialCheck = false,
+}) {
   const spec = OPENCODE_PROVIDERS[providerId];
   if (!spec) return refused('UNKNOWN_PROVIDER');
 
@@ -88,10 +111,18 @@ export function resolveOpenCodeProvider({ providerId, model, permissionEnvelope,
   if (spec.external_network && permissionEnvelope.external_network !== true) {
     return refused('EXTERNAL_NETWORK_NOT_AUTHORIZED');
   }
+  // OpenCode Zen Free currently rejects JARVIS's custom read-only agent and any
+  // equivalent permission override with FreeTierError. Keep it registered for
+  // truthful capability discovery/manual OpenCode use, but fail closed before
+  // workspace acquisition for governed delegation. Do not weaken permissions to
+  // satisfy a provider gate.
+  if (spec.delegation_supported === false) {
+    return refused('PROVIDER_AUTOMATION_UNSUPPORTED');
+  }
   if (spec.metered_provider && permissionEnvelope.provider_spend !== true) {
     return refused('PROVIDER_SPEND_NOT_AUTHORIZED');
   }
-  if (spec.credential_env && !env[spec.credential_env]) {
+  if (!skipCredentialCheck && spec.credential_env && !env[spec.credential_env]) {
     return refused('PROVIDER_CREDENTIAL_MISSING');
   }
 
@@ -101,13 +132,17 @@ export function resolveOpenCodeProvider({ providerId, model, permissionEnvelope,
     provider_standing: spec.standing,
     model_id: selectedModel,
     model_ref: `${spec.opencode_provider}/${selectedModel}`,
-    agent: 'jarvis-readonly',
+    agent: spec.execution_adapter === 'opencode' ? 'jarvis-readonly' : null,
     external_network: spec.external_network,
     metered_provider: spec.metered_provider,
+    credential_env: spec.credential_env ?? null,
+    execution_adapter: spec.execution_adapter,
   });
 }
 
-export function resolveWorkUnitProvider(workUnitId, providerId, model, env = process.env) {
+export function resolveWorkUnitProvider(
+  workUnitId, providerId, model, env = process.env, { skipCredentialCheck = false } = {},
+) {
   const workUnit = loadWorkUnit(workUnitId);
   if (!workUnit) return refused('WORK_UNIT_NOT_FOUND');
   return resolveOpenCodeProvider({
@@ -115,6 +150,7 @@ export function resolveWorkUnitProvider(workUnitId, providerId, model, env = pro
     model,
     permissionEnvelope: derivePermissionEnvelope(workUnit),
     env,
+    skipCredentialCheck,
   });
 }
 
@@ -122,15 +158,21 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const [command, workUnitId, providerId, model] = process.argv.slice(2);
   if (command === 'list') {
     process.stdout.write(JSON.stringify(listProviderIds()) + '\n');
-  } else if (command === 'resolve' && workUnitId && providerId) {
-    const result = resolveWorkUnitProvider(workUnitId, providerId, model);
+  } else if ((command === 'authorize' || command === 'resolve') && workUnitId && providerId) {
+    const result = resolveWorkUnitProvider(
+      workUnitId,
+      providerId,
+      model,
+      process.env,
+      { skipCredentialCheck: command === 'authorize' },
+    );
     if (!result.ok) {
       process.stderr.write(`[opencode-provider] REFUSED ${result.code}\n`);
       process.exit(3);
     }
     process.stdout.write(JSON.stringify(result) + '\n');
   } else {
-    process.stderr.write('usage: opencode-provider.mjs {list|resolve <work_unit_id> <provider_id> [model]}\n');
+    process.stderr.write('usage: opencode-provider.mjs {list|authorize|resolve} <work_unit_id> <provider_id> [model]\n');
     process.exit(2);
   }
 }
