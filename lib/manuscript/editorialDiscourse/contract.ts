@@ -715,8 +715,8 @@ export const editorialToolSchema: Record<string, unknown> = {
       type: 'object',
       additionalProperties: false,
       required: ['replacementText'],
-      description: 'Required only when kind is reply_with_proposal. '
-        + 'AT MOST ONE. There are no alternatives and no options.',
+      description: 'Required only when kind is reply_with_proposal. This must be an OBJECT containing replacementText and optional rationale, never a string. '
+        + 'Do not put replacementText or rationale at the top level. AT MOST ONE candidate per turn; later alternatives come through subsequent turns. Omit this property for other kinds.',
       properties: {
         replacementText: {
           type: 'string',
