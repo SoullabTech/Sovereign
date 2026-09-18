@@ -134,6 +134,8 @@ const RATIFIED_CALLS = [
   'console.error',
   'console.log',
   'console.warn',
+  'crisisCheck.responseScript.join',
+  'crisisCheck.responseScript.join(…).trim',
   'data.actionItems.map',
   'data.actionItems.map(…).join',
   'detectCrisis',
