@@ -37,11 +37,29 @@
         "apiKey": "{env:TINKER_API_KEY}"
       },
       "models": {
-        "thinkingmachines/Inkling": {
-          "name": "thinkingmachines/Inkling",
-          "attachment": false,
+        "thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4": {
+          "name": "Inkling Small 256K (serverless eval)",
           "reasoning": true,
-          "tool_call": true
+          "tool_call": true,
+          "limit": { "context": 262144 }
+        },
+        "thinkingmachines/Inkling:peft:262144:sampling-nvfp4": {
+          "name": "Inkling 256K (serverless eval)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 262144 }
+        },
+        "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16": {
+          "name": "Nemotron 3.5 Lightning 30B-A3B (Tinker)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 65536 }
+        },
+        "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16": {
+          "name": "Nemotron 3 Ultra 550B-A55B (Tinker)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 65536 }
         }
       }
     }

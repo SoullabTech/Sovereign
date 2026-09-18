@@ -88,8 +88,8 @@ const uid = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(36).sl
 console.log('\n=== P1: registry is explicit and bounded ===');
 {
   const ids = listProviderIds();
-  assert('exactly the four intended provider classes are registered',
-    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'nemotron-nvidia', 'nemotron-zen', 'inkling-tinker']),
+  assert('exactly the five intended provider classes are registered',
+    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'nemotron-nvidia', 'nemotron-zen', 'nemotron-tinker', 'inkling-tinker']),
     JSON.stringify(ids));
 
   const local = resolveOpenCodeProvider({
@@ -153,13 +153,43 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
   assert('network + spend still refuse when the provider credential is absent',
     noKey.code === 'PROVIDER_CREDENTIAL_MISSING', JSON.stringify(noKey));
 
+  const tinkerNoSpend = resolveOpenCodeProvider({
+    providerId: 'nemotron-tinker',
+    permissionEnvelope: { ...base, external_network: true },
+    env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('Tinker Nemotron remains metered and refuses without spend authority',
+    tinkerNoSpend.code === 'PROVIDER_SPEND_NOT_AUTHORIZED', JSON.stringify(tinkerNoSpend));
+
+  const tinkerNemotron = resolveOpenCodeProvider({
+    providerId: 'nemotron-tinker',
+    permissionEnvelope: { ...base, external_network: true, provider_spend: true },
+    env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('Tinker Nemotron resolves after network + spend + credential',
+    tinkerNemotron.ok
+      && tinkerNemotron.model_ref === 'tinker/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
+    JSON.stringify(tinkerNemotron));
+
+  const tinkerUltra = resolveOpenCodeProvider({
+    providerId: 'nemotron-tinker',
+    model: 'nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16',
+    permissionEnvelope: { ...base, external_network: true, provider_spend: true },
+    env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('Tinker Nemotron Ultra is an explicit allowlisted override',
+    tinkerUltra.ok
+      && tinkerUltra.model_ref === 'tinker/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16',
+    JSON.stringify(tinkerUltra));
+
   const inkling = resolveOpenCodeProvider({
     providerId: 'inkling-tinker',
     permissionEnvelope: { ...base, external_network: true, provider_spend: true },
     env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
   });
   assert('Inkling resolves only after both grants and a credential are present',
-    inkling.ok && inkling.model_ref === 'tinker/thinkingmachines/Inkling',
+    inkling.ok
+      && inkling.model_ref === 'tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
     JSON.stringify(inkling));
   assert('Inkling remains explicitly evaluation-only in the registry',
     inkling.provider_standing === 'evaluation-only', inkling.provider_standing);
@@ -235,7 +265,7 @@ console.log('\n=== P5: authorized external selection remains testable without a 
     run.code === 0, `exit=${run.code} err=${run.err.slice(0, 160)}`);
   const result = JSON.parse(readFileSync(resultPath(id), 'utf8'));
   assert('Inkling model identity is durable in the result contract',
-    result.model === 'tinker/thinkingmachines/Inkling', result.model);
+    result.model === 'tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4', result.model);
   sh(['release', id], { TINKER_API_KEY: 'proof-only-not-a-real-key' });
 }
 
@@ -246,6 +276,14 @@ console.log('\n=== P6: project OpenCode config carries no credential or default 
   assert('project config registers Ollama, NVIDIA, and Tinker without selecting a default model',
     !!config.provider?.ollama && !!config.provider?.nvidia && !!config.provider?.tinker
       && config.model === undefined);
+  const tinkerModels = Object.keys(config.provider?.tinker?.models ?? {});
+  assert('Tinker config carries the exact bounded Inkling + Nemotron model set',
+    JSON.stringify(tinkerModels) === JSON.stringify([
+      'thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
+      'thinkingmachines/Inkling:peft:262144:sampling-nvfp4',
+      'nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
+      'nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16',
+    ]), JSON.stringify(tinkerModels));
   const secretLikePrefixes = ['nv' + 'api-', 's' + 'k-'];
   assert('project config references environment variables instead of embedding credentials',
     configText.includes('{env:NVIDIA_API_KEY}')

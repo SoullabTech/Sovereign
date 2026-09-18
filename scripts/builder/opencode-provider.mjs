@@ -38,10 +38,25 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     standing: 'interactive-only',
     delegation_supported: false,
   }),
+  'nemotron-tinker': Object.freeze({
+    opencode_provider: 'tinker',
+    default_model: 'nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
+    models: Object.freeze([
+      'nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
+      'nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16',
+    ]),
+    external_network: true,
+    metered_provider: true,
+    credential_env: 'TINKER_API_KEY',
+    standing: 'external-candidate',
+  }),
   'inkling-tinker': Object.freeze({
     opencode_provider: 'tinker',
-    default_model: 'thinkingmachines/Inkling',
-    models: Object.freeze(['thinkingmachines/Inkling']),
+    default_model: 'thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
+    models: Object.freeze([
+      'thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
+      'thinkingmachines/Inkling:peft:262144:sampling-nvfp4',
+    ]),
     external_network: true,
     metered_provider: true,
     credential_env: 'TINKER_API_KEY',

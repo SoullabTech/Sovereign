@@ -59,7 +59,8 @@ both acts explicitly authorized on the Work Unit plus the provider credential.
 | `qwen-local` | `ollama/qwen3-coder:30b` (plus allowlisted local variants) | no | no | local-established |
 | `nemotron-nvidia` | `nvidia/nemotron-3-ultra-550b-a55b` | yes | yes | external-candidate |
 | `nemotron-zen` | `opencode/nemotron-3-ultra-free` (plus allowlisted free Zen variant) | yes | no | **interactive-only · delegated automation blocked** |
-| `inkling-tinker` | `tinker/thinkingmachines/Inkling` | yes | yes | **evaluation-only** |
+| `nemotron-tinker` | `tinker/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16` (Ultra allowlisted) | yes | yes | external-candidate |
+| `inkling-tinker` | `tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4` (full Inkling allowlisted) | yes | yes | **evaluation-only** |
 
 Registration is not activation. No external provider is a default model.
 
@@ -67,8 +68,8 @@ Registration is not activation. No external provider is a default model.
 
 V1 deliberately supports **read-only provider evaluation only**.
 
-For providers that admit governed automation (`qwen-local`, direct NVIDIA Nemotron, and
-Tinker/Inkling), the project-scoped `jarvis-readonly` OpenCode agent:
+For providers that admit governed automation (`qwen-local`, direct NVIDIA Nemotron, Tinker
+Nemotron, and Tinker/Inkling), the project-scoped `jarvis-readonly` OpenCode agent:
 
 - allows repository read / glob / grep / list / LSP;
 - denies edit;
@@ -112,8 +113,11 @@ and manual OpenCode use, but automated JARVIS delegation fails closed with
 `PROVIDER_AUTOMATION_UNSUPPORTED` after `network.external` authority is checked and before worktree
 acquisition.
 
-Direct NVIDIA Nemotron remains the governed automated Nemotron candidate once a direct provider
-credential and `provider.spend` authority are both present. If Zen later admits the same read-only
+Direct NVIDIA Nemotron remains one governed automated Nemotron candidate once a direct provider
+credential and `provider.spend` authority are both present. Tinker now provides a second governed
+Nemotron candidate behind the same `TINKER_API_KEY` planned for Inkling: Nemotron 3.5 Lightning is
+the cost-conscious default and Nemotron 3 Ultra is an explicit allowlisted override. Both remain
+metered and require `network.external` + `provider.spend`. If Zen later admits the same read-only
 permission envelope, its delegated standing may be re-evaluated from new evidence.
 
 ## Provider configuration
@@ -124,7 +128,8 @@ permission envelope, its delegated standing may be re-evaluated from new evidenc
 - NVIDIA NIM at `https://integrate.api.nvidia.com/v1`, credential by `NVIDIA_API_KEY`; and
 - Thinking Machines Tinker at
   `https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1`, credential by
-  `TINKER_API_KEY`.
+  `TINKER_API_KEY`, with an exact bounded model set: Inkling-Small serverless, full Inkling
+  serverless, Nemotron 3.5 Lightning, and Nemotron 3 Ultra.
 
 OpenCode Zen is a built-in OpenCode provider discovered from the user-level Zen credential/model
 catalog; it is not registered by repository `opencode.json`. No credential is committed and no
@@ -136,13 +141,15 @@ Targeted provider proof:
 
 ```text
 node scripts/builder/__tests__/opencode-adapter-governance-proof.mjs
-26 passed · 0 failed
+30 passed · 0 failed
 ```
 
 It proves registration, local Qwen resolution, Zen external-network gating, fail-closed Zen
 automation refusal before worktree acquisition, V1 read-only refusal, conjunctive external-network
-and provider-spend authority for metered providers, missing-credential refusal, Inkling evaluation-only
-standing, deny-before-worktree behavior, exact model provenance, no `--auto`, and secret-free configuration.
+and provider-spend authority for metered providers, missing-credential refusal, Tinker Nemotron
+Lightning default + Ultra override, Inkling-Small default + full Inkling override, Inkling
+evaluation-only standing, deny-before-worktree behavior, exact model provenance, no `--auto`, and
+secret-free configuration.
 
 Syntax/config gates also passed locally:
 
@@ -186,10 +193,12 @@ What did **not** happen:
 
 Two provider questions remain distinct:
 
-1. **Inkling/Tinker live witness** — obtain/configure a Tinker credential, then prove the existing
-   evaluation-only read-only seam against the real provider.
-2. **Governed automated Nemotron** — either provide a direct NVIDIA credential for the existing
-   `nemotron-nvidia` lane, or wait for Zen Free to admit JARVIS's read-only permission boundary.
+1. **Tinker credential + live witnesses** — finish Tinker browser authentication, then separately
+   prove `inkling-tinker` and `nemotron-tinker` against the real provider. No live call occurs until
+   the founder explicitly opens `provider.spend` for the bounded witness.
+2. **Optional direct NVIDIA witness** — remains available for `nemotron-nvidia`, but is no longer
+   required to prove governed Nemotron if the Tinker lane succeeds. Zen Free remains manual-only
+   unless its upstream restriction changes.
 
 Write-capable OpenCode remains a separate later question and is not authorized by any provider
 registration or live-model success.
