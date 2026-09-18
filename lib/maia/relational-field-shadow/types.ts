@@ -55,6 +55,11 @@ export interface CurrentActProjectionCandidate {
 
 export interface CurrentActProjection {
   readonly architectureVersion: string;
+  readonly researchLineage: {
+    readonly h7jAcquisitionRuleSha256: string;
+    readonly h7iR1SpecSha256: string;
+    readonly ordinaryRelationProposalVersion: string;
+  };
   readonly projectionStatus: 'projected' | 'no_direct_anchor' | 'no_prior_evidence';
   readonly currentEvidenceId: string;
   readonly anchorEvidenceId: string | null;
