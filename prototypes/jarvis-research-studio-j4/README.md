@@ -28,13 +28,21 @@ This prototype contains:
 
 Refresh intentionally resets the prototype.
 
-## Open locally
+## Founder witness: native macOS app
 
-From the repository root:
+Build the standalone native prototype:
 
-    open prototypes/jarvis-research-studio-j4/index.html
+    prototypes/jarvis-research-studio-j4/build-native.command
 
-Or open index.html directly in a browser.
+Then open:
+
+    /private/tmp/JARVIS Research Studio Prototype.app
+
+The app is a one-window AppKit/WKWebView wrapper around the static prototype. It uses a non-persistent web data store and permits only file:// navigation to its own bundled prototype resources.
+
+No Electron IPC, browser URL, network service, filesystem chooser, model/provider connection, persistence layer, or production JARVIS runtime is involved.
+
+The raw index.html may still be opened in a browser for development inspection, but the Founder witness should use the native .app.
 
 ## Founder witness
 

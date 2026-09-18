@@ -22,7 +22,20 @@ Files:
 - verify.mjs
 - visual-check.mjs
 
-The prototype is standalone static HTML/CSS/JavaScript.
+The experience itself is static HTML/CSS/JavaScript wrapped for Founder witness in a standalone native macOS AppKit/WKWebView application.
+
+Native witness bundle:
+
+/private/tmp/JARVIS Research Studio Prototype.app
+
+The native wrapper:
+- uses one AppKit NSWindow;
+- uses a non-persistent WKWebView data store;
+- loads only the prototype resources bundled inside the .app;
+- refuses non-file navigation;
+- creates no IPC bridge;
+- exposes no filesystem chooser or arbitrary local path;
+- performs no network request, model/provider call, credential access, or persistence.
 
 It does not modify JARVIS Desktop runtime source.
 
@@ -213,9 +226,15 @@ This remains an unresolved research question in the prototype.
 
 ## 8 · Founder witness instructions
 
+Build:
+
+prototypes/jarvis-research-studio-j4/build-native.command
+
 Open:
 
-prototypes/jarvis-research-studio-j4/index.html
+/private/tmp/JARVIS Research Studio Prototype.app
+
+The browser-hosted index.html remains a development inspection path only. Founder experience witness is performed in the native app.
 
 Founder posture:
 
