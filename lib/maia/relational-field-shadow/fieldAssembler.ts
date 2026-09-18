@@ -7,6 +7,8 @@ import type {
 
 const sha256 = (value: string): string => createHash('sha256').update(value).digest('hex');
 const HISTORY_LIMIT = 8;
+export const H8_CURRENT_SESSION_LIMIT = 4;
+export const H8_CROSS_SESSION_LIMIT = 4;
 
 export async function loadPriorMemberTurns(
   sessionId: string,
@@ -31,7 +33,72 @@ export async function loadPriorMemberTurns(
       LIMIT $3`,
     [sessionId, currentExchangeId, limit],
   );
-  return [...(result.rows ?? [])].reverse();
+  return [...(result.rows ?? [])].reverse().map((row) => ({
+    ...row,
+    sourceKind: 'conversation_turn' as const,
+  }));
+}
+
+/**
+ * H8 cross-session continuity read.
+ *
+ * This is intentionally NOT loadConversationalRecallPref(): the live helper
+ * defaults true on lookup failure. Invisible research must be stricter.
+ *
+ * Consent fails closed before the history query:
+ * - no member row -> no evidence
+ * - NULL/FALSE preference -> no evidence
+ * - preference/history query failure -> []
+ *
+ * Only member-authored turns are eligible. Assistant turns never become member
+ * evidence merely because they appeared in a prior conversation.
+ */
+export async function loadH8CrossSessionMemberTurns(
+  memberId: string,
+  currentSessionId: string,
+  limit = H8_CROSS_SESSION_LIMIT,
+): Promise<HistoricalMemberRow[]> {
+  if (!memberId || !currentSessionId || limit <= 0) return [];
+  try {
+    const preference = await query<{ conversational_recall_enabled: boolean | null }>(
+      `SELECT conversational_recall_enabled
+         FROM members
+        WHERE id = $1
+        LIMIT 1`,
+      [memberId],
+    );
+    if (preference.rows?.[0]?.conversational_recall_enabled !== true) return [];
+
+    const result = await query<{
+      id: string;
+      exchangeId: string | null;
+      content: string;
+      createdAt: string;
+    }>(
+      `SELECT id::text AS id,
+              exchange_id::text AS "exchangeId",
+              content,
+              created_at::text AS "createdAt"
+         FROM conversation_turns
+        WHERE user_id = $1
+          AND role = 'user'
+          AND session_id IS NOT NULL
+          AND session_id <> $2
+        ORDER BY created_at DESC, seq DESC
+        LIMIT $3`,
+      [memberId, currentSessionId, limit],
+    );
+    return [...(result.rows ?? [])].reverse().map((row) => ({
+      ...row,
+      sourceKind: 'cross_session_turn' as const,
+    }));
+  } catch (err) {
+    console.warn(
+      '[RELATIONAL-FIELD-SHADOW][H8] cross-session read failed closed',
+      err instanceof Error ? err.name : typeof err,
+    );
+    return [];
+  }
 }
 
 export function assembleRelationalFieldPacket(input: {
@@ -54,7 +121,7 @@ export function assembleRelationalFieldPacket(input: {
     });
     manifest.push({
       evidenceId,
-      sourceKind: 'conversation_turn',
+      sourceKind: row.sourceKind ?? 'conversation_turn',
       sourceRowId: row.id,
       exchangeId: row.exchangeId,
       contentSha256: sha256(row.content),
@@ -91,4 +158,24 @@ export function assembleRelationalFieldPacket(input: {
   }))));
 
   return { evidence, currentEvidenceId, manifest, packetDigest };
+}
+
+export function assembleH8RelationalFieldPacket(input: {
+  readonly exchangeId: string;
+  readonly userInput: string;
+  readonly currentSessionMemberTurns: readonly HistoricalMemberRow[];
+  readonly crossSessionMemberTurns: readonly HistoricalMemberRow[];
+}): RelationalFieldPacket {
+  const currentLimit = input.crossSessionMemberTurns.length > 0
+    ? H8_CURRENT_SESSION_LIMIT
+    : HISTORY_LIMIT;
+  const priorMemberTurns = [
+    ...input.crossSessionMemberTurns.slice(-H8_CROSS_SESSION_LIMIT),
+    ...input.currentSessionMemberTurns.slice(-currentLimit),
+  ];
+  return assembleRelationalFieldPacket({
+    exchangeId: input.exchangeId,
+    userInput: input.userInput,
+    priorMemberTurns,
+  });
 }

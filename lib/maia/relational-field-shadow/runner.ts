@@ -1,7 +1,17 @@
 import { createHash } from 'node:crypto';
 import { renderCurrentTurnBasisEnvelope } from '../../../scripts/research/structural-standing/current-turn-basis-envelope';
 import { StandingEnvelopeRefused } from '../../../scripts/research/structural-standing/standing-envelope';
-import { assembleRelationalFieldPacket, loadPriorMemberTurns } from './fieldAssembler';
+import {
+  buildCurrentActProjection,
+  H8_CURRENT_ACT_ARCHITECTURE_VERSION,
+  H8_CURRENT_ACT_MODEL_NAME,
+} from './currentActProjection';
+import {
+  assembleH8RelationalFieldPacket,
+  assembleRelationalFieldPacket,
+  loadH8CrossSessionMemberTurns,
+  loadPriorMemberTurns,
+} from './fieldAssembler';
 import { persistRelationalFieldShadowEvidence } from './evidenceStore';
 import { deterministicShadowSeed, generateRelationalFieldPlan } from './ollamaProvider';
 import {
@@ -25,11 +35,22 @@ export function configuredRelationalFieldShadowModels(): string[] {
     .split(',').map((s) => s.trim()).filter(Boolean);
 }
 
+export function configuredH8CurrentActShadow(): boolean {
+  return process.env.MAIA_RELATIONAL_FIELD_SHADOW === '1'
+    && process.env.MAIA_RELATIONAL_FIELD_H8 === '1';
+}
+
+export function configuredH8CrossSessionShadow(): boolean {
+  return configuredH8CurrentActShadow()
+    && process.env.MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION === '1';
+}
+
 export function launchRelationalFieldShadow(input: RelationalFieldShadowLaunch): void {
   const models = configuredRelationalFieldShadowModels();
+  const h8Enabled = configuredH8CurrentActShadow();
   const allowedMembers = configuredRelationalFieldShadowMemberIds();
-  if (models.length === 0 || !input.memberId || !allowedMembers.includes(input.memberId)) return;
-  // SH-F7: launch after the live response exists, never await from the serving path.
+  if ((!h8Enabled && models.length === 0) || !input.memberId || !allowedMembers.includes(input.memberId)) return;
+  // SH-F7 / H8-F1: launch after the live response exists, never await from the serving path.
   setImmediate(() => {
     void runRelationalFieldShadow(input, models).catch((err) => {
       console.warn('[RELATIONAL-FIELD-SHADOW] background run failed', err instanceof Error ? err.name : typeof err);
@@ -37,19 +58,109 @@ export function launchRelationalFieldShadow(input: RelationalFieldShadowLaunch):
   });
 }
 
+async function persistH8Projection(
+  input: RelationalFieldShadowLaunch,
+  packet: ReturnType<typeof assembleRelationalFieldPacket>,
+  primaryDigest: string,
+  evidenceScope: 'current_session' | 'consented_cross_session',
+): Promise<void> {
+  const started = Date.now();
+  try {
+    const projection = buildCurrentActProjection(packet, evidenceScope);
+    const row: ShadowEvidenceRow = {
+      turnId: input.turnId,
+      exchangeId: input.exchangeId,
+      architectureVersion: H8_CURRENT_ACT_ARCHITECTURE_VERSION,
+      modelName: H8_CURRENT_ACT_MODEL_NAME,
+      deterministicSeed: 0,
+      status: 'rendered',
+      processingProfile: input.processingProfile,
+      originRoute: input.originRoute,
+      primaryStage: PRIMARY_CAPTURE_STAGE,
+      primaryResponseSha256: primaryDigest,
+      primaryResponseText: input.primaryResponse,
+      currentEvidenceId: packet.currentEvidenceId,
+      evidenceManifest: packet.manifest,
+      packetDigest: packet.packetDigest,
+      basisEvidenceIds: [...projection.selectedEvidenceIds],
+      rawPlan: projection,
+      rawPlanSha256: projection.projectionDigest,
+      renderedDigest: projection.projectionDigest,
+      generationMs: 0,
+      totalMs: Date.now() - started,
+    };
+    await persistRelationalFieldShadowEvidence(row);
+  } catch (err) {
+    const errorRow: ShadowEvidenceRow = {
+      turnId: input.turnId,
+      exchangeId: input.exchangeId,
+      architectureVersion: H8_CURRENT_ACT_ARCHITECTURE_VERSION,
+      modelName: H8_CURRENT_ACT_MODEL_NAME,
+      deterministicSeed: 0,
+      status: 'error',
+      processingProfile: input.processingProfile,
+      originRoute: input.originRoute,
+      primaryStage: PRIMARY_CAPTURE_STAGE,
+      primaryResponseSha256: primaryDigest,
+      primaryResponseText: input.primaryResponse,
+      currentEvidenceId: packet.currentEvidenceId,
+      evidenceManifest: packet.manifest,
+      packetDigest: packet.packetDigest,
+      basisEvidenceIds: [],
+      errorCode: err instanceof Error ? err.name : 'unknown_error',
+      totalMs: Date.now() - started,
+    };
+    try {
+      await persistRelationalFieldShadowEvidence(errorRow);
+    } catch (storeErr) {
+      console.warn('[RELATIONAL-FIELD-SHADOW][H8] evidence persist failed', storeErr instanceof Error ? storeErr.name : typeof storeErr);
+    }
+  }
+}
+
 export async function runRelationalFieldShadow(
   input: RelationalFieldShadowLaunch,
   models = configuredRelationalFieldShadowModels(),
 ): Promise<void> {
   const allowedMembers = configuredRelationalFieldShadowMemberIds();
-  if (input.turnId <= 0 || models.length === 0 || !input.memberId || !allowedMembers.includes(input.memberId)) return;
+  if (input.turnId <= 0 || !input.memberId || !allowedMembers.includes(input.memberId)) return;
+
+  const h8Enabled = configuredH8CurrentActShadow();
+  if (!h8Enabled && models.length === 0) return;
+
   const priorMemberTurns = await loadPriorMemberTurns(input.sessionId, input.exchangeId);
+  // Preserve the frozen Cut-1/generative shadow packet exactly: current-session
+  // member-authored evidence only. H8 may assemble a richer packet separately.
   const packet = assembleRelationalFieldPacket({
     exchangeId: input.exchangeId,
     userInput: input.userInput,
     priorMemberTurns,
   });
   const primaryDigest = sha256(input.primaryResponse);
+
+  // H8 is deterministic, model-independent and observation-only. Cross-session
+  // evidence is optional, separately gated, member-authored only and fail-closed
+  // at the SQL boundary. It never changes the older generative shadow packet.
+  if (h8Enabled) {
+    const crossSessionEnabled = configuredH8CrossSessionShadow();
+    const crossSessionMemberTurns = crossSessionEnabled
+      ? await loadH8CrossSessionMemberTurns(input.memberId, input.sessionId)
+      : [];
+    const h8Packet = assembleH8RelationalFieldPacket({
+      exchangeId: input.exchangeId,
+      userInput: input.userInput,
+      currentSessionMemberTurns: priorMemberTurns,
+      crossSessionMemberTurns,
+    });
+    await persistH8Projection(
+      input,
+      h8Packet,
+      primaryDigest,
+      crossSessionEnabled ? 'consented_cross_session' : 'current_session',
+    );
+  }
+
+  if (models.length === 0) return;
 
   // Sequential on purpose: background inference must not create avoidable local-model
   // contention with the live serving path. Model set is explicit; there is no winner.
