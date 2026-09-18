@@ -62,6 +62,8 @@ Primary and negative-control calls were fresh, separate requests.
 
 The scored run tests the **canonical jarvis-local instruction + declared local model epistemic envelope** under a direct local transport.
 
+The exact source-packet bytes supplied to the scored model are preserved as base64 at `docs/programme/evidence/JARVIS-KP-01/ACT9/SOURCE_PACKET_EXACT.b64`; `SOURCE_PACKET_EXACT_SHA256` records the SHA-256 of the decoded bytes. The top-level source-packet copy is semantically identical with Markdown trailing whitespace normalized for repository hygiene.
+
 It does **not** establish behavior of every JARVIS provider, every model, the full Desktop runtime, or OpenCode as a transport.
 
 ## Authorized scoring

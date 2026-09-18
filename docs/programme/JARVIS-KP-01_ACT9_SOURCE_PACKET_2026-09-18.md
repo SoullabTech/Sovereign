@@ -1,8 +1,8 @@
 # JARVIS-KP-01 / ACT 9 — Evidence Reuse Source Packet
 
-**Date:** 2026-09-18  
-**Experiment class:** synthetic / non-confidential  
-**Canonical basis:** `b0cc9e5a3a3d65ebd52ac1a578e46a5e45848320`  
+**Date:** 2026-09-18
+**Experiment class:** synthetic / non-confidential
+**Canonical basis:** `b0cc9e5a3a3d65ebd52ac1a578e46a5e45848320`
 **Purpose:** bounded evidence packet for the already-authorized ACT 9 agent evidence-reuse witness.
 
 This packet contains four source records. The first three are synthetic LC-02 examples shaped exactly like the canonical read-only projection domains. The fourth is repository governance evidence about LC-02 itself.
@@ -13,10 +13,10 @@ Nothing in this packet is member, client, PHI, practitioner-confidential, or pro
 
 ## Source A — Living Field
 
-**Source domain:** Living Field  
-**Source object:** synthetic `personal_living_fields` projection fixture  
-**Authorship:** member-authored  
-**Standing:** active current expression  
+**Source domain:** Living Field
+**Source object:** synthetic `personal_living_fields` projection fixture
+**Authorship:** member-authored
+**Standing:** active current expression
 **Synthetic content:**
 
 > I am reconsidering the shape of my work.
@@ -38,10 +38,10 @@ Nothing in this packet is member, client, PHI, practitioner-confidential, or pro
 
 ## Source B — Vision Studio
 
-**Source domain:** Vision Studio  
-**Source object:** synthetic confirmed `member_field_note_threads` fixture  
-**Authorship:** member-confirmed  
-**Standing:** carried / kept  
+**Source domain:** Vision Studio
+**Source object:** synthetic confirmed `member_field_note_threads` fixture
+**Authorship:** member-confirmed
+**Standing:** carried / kept
 **Synthetic title:**
 
 > A slower way of working
@@ -67,11 +67,11 @@ Nothing in this packet is member, client, PHI, practitioner-confidential, or pro
 
 ## Source C — Practice Field
 
-**Source domain:** Practice Field  
-**Source object:** synthetic `practice_fields` projection fixture  
-**Authorship:** practitioner-authored  
-**Readiness:** live  
-**Containment:** contained  
+**Source domain:** Practice Field
+**Source object:** synthetic `practice_fields` projection fixture
+**Authorship:** practitioner-authored
+**Readiness:** live
+**Containment:** contained
 **Synthetic active-field content:**
 
 > Rest is alive in the practice right now.
