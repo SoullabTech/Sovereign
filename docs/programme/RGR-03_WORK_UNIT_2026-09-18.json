@@ -1,0 +1,462 @@
+{
+  "work_unit_envelope": {
+    "work_unit": {
+      "work_unit_version": "W0.v1",
+      "identity": {
+        "id": "rgr-03-minimal-relational-transfer-hypothesis-20260918",
+        "programme": "RELATIONAL-GEOMETRY-REASONING",
+        "parent_work_unit": "rgr-02-formal-vocabulary-candidate-structures-20260918",
+        "objective": "Define one minimal falsifiable relational-transfer hypothesis, its null, controls, discrimination law, and failure conditions without constructing a benchmark or selecting a formalism.",
+        "work_class": "RESEARCH",
+        "task_shape": "deep_reasoning"
+      },
+      "context": {
+        "context_refs": [
+          "RGR-00 canonical research constitution",
+          "RGR-01 canonical closed literature landscape",
+          "RGR-02 canonical closed formal vocabulary",
+          "Founder direction to open RGR-03 hypothesis-only"
+        ],
+        "evidence_refs": [
+          "local-worktree:b0cc9e5a3a3d65ebd52ac1a578e46a5e45848320",
+          "canonical-rgr-00-rgr-02-only"
+        ],
+        "assumptions": [
+          "The hypothesis must be formalism-neutral.",
+          "Relational structure and surface features must be distinguishable by construction in any later empirical gate.",
+          "No effect-size threshold may be chosen after seeing data.",
+          "No candidate formalism may be selected in RGR-03."
+        ],
+        "unknowns": [
+          "Whether relational structure carries transferable information beyond surface similarity.",
+          "What future benchmark construction can separate relational information from surface leakage.",
+          "Whether any candidate formalism will outperform simpler baselines after the minimal hypothesis survives."
+        ]
+      },
+      "scope": {
+        "repository": "SoullabTech/Sovereign",
+        "base_ref": "b0cc9e5a3a3d65ebd52ac1a578e46a5e45848320",
+        "allowed_paths": [
+          "docs/programme/RGR-03_MINIMAL_RELATIONAL_TRANSFER_HYPOTHESIS_2026-09-18.md",
+          "docs/programme/RGR-03_FALSIFICATION_CONTRACT_2026-09-18.md",
+          "docs/programme/RGR-03_WORK_UNIT_2026-09-18.json"
+        ],
+        "forbidden_paths": [
+          "app",
+          "lib",
+          "database",
+          "components",
+          "jarvis-desktop",
+          "scripts"
+        ]
+      },
+      "authority": {
+        "repository_read": true,
+        "repository_write": "worktree",
+        "shell": "bounded_write",
+        "network_external": false,
+        "provider_spend": false,
+        "external_disclosure": "none",
+        "merge": false,
+        "deploy": false,
+        "production_read": false,
+        "production_write": false
+      },
+      "routing": {
+        "requested_posture": "independent_review",
+        "router_version": "R1.v1",
+        "route_version": "R1.v1",
+        "route_record": {
+          "route_version": "R1.v1",
+          "task_shape": "deep_reasoning",
+          "review_pressure": "ordinary",
+          "challenge_mode": "none",
+          "primary": {
+            "provider_id": "gpt-oss-local",
+            "role": "deep_reasoning_primary",
+            "execution_disposition": "admitted_local"
+          },
+          "challengers": [
+            {
+              "provider_id": "qwen-local",
+              "role": "independent_local_challenger",
+              "execution_disposition": "admitted_local"
+            }
+          ],
+          "review_policy": {
+            "local": "independent_local_second",
+            "external": "none"
+          },
+          "evidence_policy": {
+            "primary": {
+              "provider_id": "gpt-oss-local",
+              "kind": "local_worktree_read_only"
+            },
+            "challengers": [
+              {
+                "provider_id": "qwen-local",
+                "kind": "local_worktree_read_only"
+              }
+            ]
+          },
+          "required_authority": {
+            "acts": [],
+            "disclosures": []
+          },
+          "granted_authority": [],
+          "execution_disposition": "admitted_local",
+          "blockers": [],
+          "routing_reason_codes": [
+            "DEEP_REASONING_GPT_OSS_PRIMARY",
+            "INDEPENDENT_LOCAL_REVIEW_REQUIRED"
+          ]
+        },
+        "route_digest": "sha256:0e48f79bb4c4e29664c5384865e60c02e9260c393fffc3099cc79a8783e2e30c",
+        "route_source": "R2-pure-router",
+        "bound_at_sha": "b0cc9e5a3a3d65ebd52ac1a578e46a5e45848320",
+        "execution_connected": false,
+        "primary": {
+          "provider_id": "gpt-oss-local",
+          "role": "deep_reasoning_primary",
+          "execution_disposition": "admitted_local"
+        },
+        "challengers": [
+          {
+            "provider_id": "qwen-local",
+            "role": "independent_local_challenger",
+            "execution_disposition": "admitted_local"
+          }
+        ]
+      },
+      "execution": {
+        "attempts": [
+          {
+            "attempt_id": "rgr03-gptoss-review-00",
+            "model_identity_id": "rgr03-gptoss-hypothesis-reviewer",
+            "provider_id": "gpt-oss-local",
+            "model_id": "gpt-oss:20b",
+            "role": "deep_reasoning_primary",
+            "attempt_kind": "initial",
+            "parent_attempt_id": null,
+            "status": "insufficient",
+            "evidence_refs": [
+              "execution:parallel-local-resource-contention",
+              "output:none",
+              "cancelled-before-semantic-verdict"
+            ]
+          },
+          {
+            "attempt_id": "rgr03-qwen-review-00",
+            "model_identity_id": "rgr03-qwen-hypothesis-challenger",
+            "provider_id": "qwen-local",
+            "model_id": "qwen3-coder:30b",
+            "role": "independent_local_challenger",
+            "attempt_kind": "independent_review",
+            "parent_attempt_id": "rgr03-gptoss-review-00",
+            "status": "insufficient",
+            "evidence_refs": [
+              "execution:runaway-repetitive-output",
+              "output-bytes:60352",
+              "cancelled-without-bounded-final-verdict"
+            ]
+          },
+          {
+            "attempt_id": "rgr03-gptoss-review-01",
+            "model_identity_id": "rgr03-gptoss-hypothesis-reviewer",
+            "provider_id": "gpt-oss-local",
+            "model_id": "gpt-oss:20b",
+            "role": "deep_reasoning_primary",
+            "attempt_kind": "retry",
+            "parent_attempt_id": "rgr03-gptoss-review-00",
+            "status": "completed",
+            "evidence_refs": [
+              "local-review:/tmp/rgr03-gptoss-review2.txt",
+              "review-verdict:RETURN",
+              "bounded-output:true"
+            ]
+          },
+          {
+            "attempt_id": "rgr03-qwen-review-01",
+            "model_identity_id": "rgr03-qwen-hypothesis-challenger",
+            "provider_id": "qwen-local",
+            "model_id": "qwen3-coder:30b",
+            "role": "independent_local_challenger",
+            "attempt_kind": "independent_review",
+            "parent_attempt_id": "rgr03-gptoss-review-01",
+            "status": "completed",
+            "evidence_refs": [
+              "local-review:/tmp/rgr03-qwen-api-response.json",
+              "review-verdict:RETURN",
+              "bounded-output:true"
+            ]
+          }
+        ],
+        "artifacts": [],
+        "diffs": [],
+        "test_results": []
+      },
+      "evaluation": {
+        "acceptance_conditions": [
+          "State one formalism-neutral primary hypothesis and one explicit null.",
+          "Define relational-preserving transfer and relation-breaking controls without constructing a benchmark.",
+          "Define support, falsification, underdetermination, and leakage conditions before any data exist.",
+          "Keep vector, graph, Grassmann, and sheaf candidates unselected.",
+          "Keep RGR-04, Elemental formalization, MAIA change, implementation, benchmark creation, and deployment closed."
+        ],
+        "falsification_conditions": [
+          "The hypothesis can be satisfied by surface similarity leakage alone.",
+          "The hypothesis privileges a candidate formalism by definition.",
+          "Support can be declared from one positive result without relation-breaking controls.",
+          "Failure of a geometric candidate is allowed to be reinterpreted as support for RGR.",
+          "Effect thresholds or evaluation rules are deferred until after observing results."
+        ],
+        "stop_conditions": [
+          "Any dataset or benchmark construction becomes necessary.",
+          "Any RGR model implementation becomes necessary.",
+          "Any private/member/PHI data becomes necessary.",
+          "Any Elemental, MAIA, schema, migration, deployment, or production action becomes necessary."
+        ],
+        "verifier_results": [
+          {
+            "verifier_id": "rgr03-grounding-gptoss",
+            "target_attempt_id": "rgr03-gptoss-review-01",
+            "verifier_kind": "deterministic",
+            "provider_id": null,
+            "model_id": null,
+            "role": "hypothesis_contract_grounding",
+            "disposition": "mechanical_pass",
+            "evidence_refs": [
+              "grounding:relation-family-scope",
+              "grounding:no-oracle-access",
+              "grounding:leakage-audit",
+              "grounding:surface-baseline-suite",
+              "grounding:resource-fairness",
+              "grounding:formalism-bias-rejection"
+            ]
+          },
+          {
+            "verifier_id": "rgr03-grounding-qwen",
+            "target_attempt_id": "rgr03-qwen-review-01",
+            "verifier_kind": "deterministic",
+            "provider_id": null,
+            "model_id": null,
+            "role": "hypothesis_contract_grounding",
+            "disposition": "mechanical_pass",
+            "evidence_refs": [
+              "grounding:task-family-bounded-scope",
+              "grounding:intervention-validity",
+              "grounding:counterfactual-break-metric",
+              "grounding:outcome-separation",
+              "grounding:operational-transfer",
+              "grounding:elemental-audit"
+            ]
+          }
+        ]
+      },
+      "provenance": {
+        "creator": "JARVIS/RGR-03",
+        "authorizing_act": "founder:rgr03-minimal-relational-transfer-hypothesis-20260918",
+        "source_commits": [
+          "b0cc9e5a3a3d65ebd52ac1a578e46a5e45848320"
+        ],
+        "model_identity": [
+          {
+            "model_identity_id": "rgr03-gptoss-hypothesis-reviewer",
+            "provider_id": "gpt-oss-local",
+            "model_id": "gpt-oss:20b",
+            "role": "deep_reasoning_primary"
+          },
+          {
+            "model_identity_id": "rgr03-qwen-hypothesis-challenger",
+            "provider_id": "qwen-local",
+            "model_id": "qwen3-coder:30b",
+            "role": "independent_local_challenger"
+          }
+        ],
+        "resulting_commits": [],
+        "timestamps": []
+      },
+      "state": {
+        "lifecycle_state": "CLOSED",
+        "disposition": "closed",
+        "supersedes": null
+      }
+    },
+    "guard": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-03-minimal-relational-transfer-hypothesis-20260918",
+      "current_state": "CLOSED",
+      "authorized_core_snapshot": "{\"identity\":{\"id\":\"rgr-03-minimal-relational-transfer-hypothesis-20260918\",\"programme\":\"RELATIONAL-GEOMETRY-REASONING\",\"parent_work_unit\":\"rgr-02-formal-vocabulary-candidate-structures-20260918\",\"objective\":\"Define one minimal falsifiable relational-transfer hypothesis, its null, controls, discrimination law, and failure conditions without constructing a benchmark or selecting a formalism.\",\"work_class\":\"RESEARCH\",\"task_shape\":\"deep_reasoning\"},\"scope\":{\"repository\":\"SoullabTech/Sovereign\",\"base_ref\":\"b0cc9e5a3a3d65ebd52ac1a578e46a5e45848320\",\"allowed_paths\":[\"docs/programme/RGR-03_MINIMAL_RELATIONAL_TRANSFER_HYPOTHESIS_2026-09-18.md\",\"docs/programme/RGR-03_FALSIFICATION_CONTRACT_2026-09-18.md\",\"docs/programme/RGR-03_WORK_UNIT_2026-09-18.json\"],\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\",\"scripts\"]},\"authority\":{\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"network_external\":false,\"provider_spend\":false,\"external_disclosure\":\"none\",\"merge\":false,\"deploy\":false,\"production_read\":false,\"production_write\":false},\"evaluation\":{\"acceptance_conditions\":[\"State one formalism-neutral primary hypothesis and one explicit null.\",\"Define relational-preserving transfer and relation-breaking controls without constructing a benchmark.\",\"Define support, falsification, underdetermination, and leakage conditions before any data exist.\",\"Keep vector, graph, Grassmann, and sheaf candidates unselected.\",\"Keep RGR-04, Elemental formalization, MAIA change, implementation, benchmark creation, and deployment closed.\"],\"falsification_conditions\":[\"The hypothesis can be satisfied by surface similarity leakage alone.\",\"The hypothesis privileges a candidate formalism by definition.\",\"Support can be declared from one positive result without relation-breaking controls.\",\"Failure of a geometric candidate is allowed to be reinterpreted as support for RGR.\",\"Effect thresholds or evaluation rules are deferred until after observing results.\"],\"stop_conditions\":[\"Any dataset or benchmark construction becomes necessary.\",\"Any RGR model implementation becomes necessary.\",\"Any private/member/PHI data becomes necessary.\",\"Any Elemental, MAIA, schema, migration, deployment, or production action becomes necessary.\"]}}"
+    }
+  },
+  "routing_evidence": {
+    "derived_input": {
+      "task_shape": "deep_reasoning",
+      "review_pressure": "ordinary",
+      "challenge_mode": "none",
+      "frontier_posture": "none",
+      "authority": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "network_external": false,
+        "provider_spend": false,
+        "repository_external_disclosure": false
+      },
+      "evidence": {
+        "local_worktree_available": true,
+        "task_text_available": false,
+        "external_bundle_refs": []
+      },
+      "work_unit": {
+        "explicit_independent_review": true
+      }
+    },
+    "authority_proof": {
+      "subset": true,
+      "missing": [],
+      "checks": [
+        {
+          "authority": "repo.read",
+          "present": true
+        },
+        {
+          "authority": "route.granted_authority=[]",
+          "present": true
+        }
+      ]
+    },
+    "transition": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-03-minimal-relational-transfer-hypothesis-20260918",
+      "from": "AUTHORIZED",
+      "to": "ROUTED",
+      "evidence_ref": "w3-route:R1.v1:rgr-03-minimal-relational-transfer-hypothesis-20260918",
+      "reason_code": "W3_PURE_ROUTE_BOUND",
+      "authorization_ref": null,
+      "adjudication": null,
+      "superseded_by": null
+    }
+  },
+  "standing": "CLOSED_BY_FOUNDER_ADJUDICATION",
+  "successor_authority": {
+    "rgr_04": "CLOSED",
+    "elemental_operator_hypothesis": "CLOSED",
+    "maia_change": "NOT_AUTHORIZED",
+    "implementation": "NOT_AUTHORIZED",
+    "benchmark_creation": "NOT_AUTHORIZED",
+    "empirical_execution": "NOT_AUTHORIZED",
+    "deployment": "NOT_AUTHORIZED"
+  },
+  "execution_note": "RGR-03 closed by Founder adjudication. Exact hypothesis candidate preserved as parent evidence; closure changes only lifecycle standing and adjudication record. No RGR-04, benchmark construction, empirical execution, Elemental hypothesis, MAIA alteration, implementation, deployment, or production action authorized.",
+  "review_evidence": {
+    "initial_execution_failures": [
+      {
+        "attempt_id": "rgr03-gptoss-review-00",
+        "standing": "INSUFFICIENT",
+        "reason": "parallel local resource contention; no semantic output"
+      },
+      {
+        "attempt_id": "rgr03-qwen-review-00",
+        "standing": "INSUFFICIENT",
+        "reason": "runaway repetitive output; no bounded final verdict"
+      }
+    ],
+    "gpt_oss": {
+      "attempt_id": "rgr03-gptoss-review-01",
+      "verdict": "RETURN",
+      "grounded_corrections_applied": true
+    },
+    "qwen": {
+      "attempt_id": "rgr03-qwen-review-01",
+      "verdict": "RETURN",
+      "grounded_corrections_applied": true
+    }
+  },
+  "founder_adjudication": {
+    "accepted_candidate_sha": "1d1fe516e4868892bd755cf2592812cceecd9154",
+    "date": "2026-09-18",
+    "primary_hypothesis": "H-RT1 — RELATIONAL TRANSFER",
+    "central_result": "For one preregistered relation family and surface/relation decomposition, relational structure should support held-out transfer beyond the strongest valid surface-only baseline and should respond specifically to relation-breaking counterfactuals under matched relevant surface conditions.",
+    "task_family_bounded": true,
+    "required_future_freeze": [
+      "relation family q_* and admissible relation values",
+      "surface specification Σ_*",
+      "train / validation / held-out test domains",
+      "primary metric M",
+      "minimum practically meaningful effect threshold δ_min",
+      "uncertainty procedure",
+      "relation-preserving intervention",
+      "relation-breaking intervention",
+      "counterfactual metric C_break",
+      "minimum acceptable counterfactual threshold κ_min",
+      "leakage diagnostics and thresholds",
+      "baseline suite",
+      "model-selection procedure",
+      "compute/search-budget policy",
+      "stopping rule",
+      "replication rule"
+    ],
+    "allowed_future_dispositions": [
+      "SUPPORTED",
+      "NOT_SUPPORTED",
+      "UNDERDETERMINED",
+      "BENCHMARK_INVALID",
+      "REPLICATION_FAILED"
+    ],
+    "review_evidence": {
+      "initial_gpt_oss_execution": {
+        "standing": "INSUFFICIENT",
+        "preserved": true
+      },
+      "initial_qwen_execution": {
+        "standing": "INSUFFICIENT",
+        "preserved": true
+      },
+      "gpt_oss_bounded_review": {
+        "verdict": "RETURN",
+        "preserved": true
+      },
+      "qwen_bounded_review": {
+        "verdict": "RETURN",
+        "preserved": true
+      }
+    },
+    "canonical_freshness_at_adjudication": {
+      "current_canonical": "d39e0421c5ea7de854cfd1e19204cee40a9ec8cb",
+      "overlap_with_rgr03_paths": "NONE"
+    },
+    "successor_authority": {
+      "rgr_04": "CLOSED",
+      "elemental_operator_hypothesis": "CLOSED",
+      "maia_change": "NOT_AUTHORIZED",
+      "implementation": "NOT_AUTHORIZED",
+      "benchmark_creation": "NOT_AUTHORIZED",
+      "empirical_execution": "NOT_AUTHORIZED",
+      "deployment": "NOT_AUTHORIZED"
+    },
+    "lifecycle_transitions": [
+      {
+        "lifecycle_version": "W2.v1",
+        "work_unit_id": "rgr-03-minimal-relational-transfer-hypothesis-20260918",
+        "from": "EVIDENCE_READY",
+        "to": "ADJUDICATED",
+        "evidence_ref": "founder:rgr03-adjudication-20260918",
+        "reason_code": "RGR03_FOUNDER_ADJUDICATED",
+        "authorization_ref": null,
+        "adjudication": "accepted",
+        "superseded_by": null
+      },
+      {
+        "lifecycle_version": "W2.v1",
+        "work_unit_id": "rgr-03-minimal-relational-transfer-hypothesis-20260918",
+        "from": "ADJUDICATED",
+        "to": "CLOSED",
+        "evidence_ref": "founder:rgr03-closure-20260918",
+        "reason_code": "RGR03_FOUNDER_CLOSED",
+        "authorization_ref": null,
+        "adjudication": null,
+        "superseded_by": null
+      }
+    ]
+  }
+}
