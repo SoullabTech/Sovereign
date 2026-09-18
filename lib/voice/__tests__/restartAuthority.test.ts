@@ -70,6 +70,13 @@ describe('restartPolicy — HANDS_FREE re-arms, PUSH_TO_TALK honours the tap', (
     expect(d.reason).toBe('push_to_talk_awaits_tap');
   });
 
+  it('capture_recovery is a typed automatic source governed by HANDS_FREE policy', () => {
+    expect(restartPolicy({ ...base, source: 'capture_recovery', handsFree: true }))
+      .toEqual({ allowed: true });
+    expect(restartPolicy({ ...base, source: 'capture_recovery', handsFree: false }).reason)
+      .toBe('push_to_talk_awaits_tap');
+  });
+
   it('PUSH_TO_TALK: the next user tap IS honoured — turn 2 is reachable', () => {
     // "Push-to-talk" is not a licence for the button to stop working.
     expect(restartPolicy({ ...base, source: 'user_tap', handsFree: false }))
