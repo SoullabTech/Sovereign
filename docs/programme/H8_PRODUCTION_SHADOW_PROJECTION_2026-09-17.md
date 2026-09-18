@@ -52,6 +52,8 @@ This proposal layer has no standing authority. It exists only inside shadow comp
 CURRENT MEMBER ACT
         ×
 PRIOR CURRENT-SESSION MEMBER EVIDENCE
+        +
+CONSENT-ADMITTED PRIOR-SESSION MEMBER EVIDENCE (optional)
         ↓
 CONSERVATIVE ORDINARY-RELATION PROPOSAL
         ↓
@@ -78,9 +80,16 @@ H8 requires all of:
 MAIA_RELATIONAL_FIELD_SHADOW=1
 MAIA_RELATIONAL_FIELD_H8=1
 MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS=<explicit allowlist>
+
+# Separate opt-in for cross-session H8 evidence:
+MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION=1
 ```
 
 `MAIA_RELATIONAL_FIELD_SHADOW_MODELS` may be empty. H8 is deterministic and model-independent.
+
+Cross-session H8 evidence is **fail-closed** and separately gated. It reads only member-authored prior-session turns and only when the member row satisfies `conversational_recall_enabled IS TRUE`. A missing member row, FALSE/NULL preference, or query failure yields no cross-session shadow evidence. H8 deliberately does not reuse a recall helper that defaults on after lookup failure.
+
+When cross-session evidence is admitted, the H8 packet is bounded to at most four prior-session member turns plus four current-session prior member turns. When none is admitted, H8 retains the existing eight-turn current-session aperture. The older generative Cut-1 packet remains current-session-only in either case.
 
 Its row identity is:
 
@@ -111,8 +120,8 @@ No prior evidence yields `no_prior_evidence`. No defensible direct anchor yields
 **H8-F7 — RECOMPUTABLE**  
 Same packet produces the same relation proposals, scores, selected IDs, ordering, and SHA-256 projection digest.
 
-**H8-F8 — EVIDENCE MINIMISATION**  
-The table stores source refs/digests, classes, scores, and selected IDs. It does not duplicate historical transcript text into the H8 projection JSON.
+**H8-F8 — EVIDENCE MINIMISATION / CONSENT**  
+The table stores source refs/digests, classes, scores, and selected IDs. It does not duplicate historical transcript text into the H8 projection JSON. Cross-session evidence is eligible only through the separate H8 flag plus a fail-closed `conversational_recall_enabled IS TRUE` database predicate; only member-authored turns may enter.
 
 **H8-F9 — OLD SHADOW WITNESS REMAINS VALID**  
 The generative blind A/B exporter excludes H8 rows because H8 has no shadow response text.
@@ -139,6 +148,8 @@ All are mandatory:
 7. 20/20 selected evidence IDs belong to the recorded manifest and exclude `currentEvidenceId`.
 8. Historical source text is absent from `raw_plan`; it is reconstructed only by the offline exporter.
 9. Existing generative A/B export still contains only rows with non-null shadow response text.
+10. If cross-session H8 is enabled, every `cross_session_turn` manifest row belongs to the founder/member and the consent predicate resolved TRUE; a simulated consent/read failure produces zero cross-session evidence.
+11. Generative Cut-1 rows remain current-session-only even while H8 cross-session is enabled.
 
 ### Human adjudication PASS
 
