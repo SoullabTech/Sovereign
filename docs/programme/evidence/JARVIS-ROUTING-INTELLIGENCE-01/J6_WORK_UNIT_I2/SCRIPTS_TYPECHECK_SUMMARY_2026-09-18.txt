@@ -1,0 +1,8 @@
+I2 scripts TypeScript diagnostic comparison
+
+Exact I1 baseline diagnostic identities: 40
+I2 diagnostic identities: 40
+Identity diff: none
+Diagnostics mentioning I2 modules/proofs: 0
+
+This is a no-regression claim, not a claim that tsconfig.scripts is globally green.

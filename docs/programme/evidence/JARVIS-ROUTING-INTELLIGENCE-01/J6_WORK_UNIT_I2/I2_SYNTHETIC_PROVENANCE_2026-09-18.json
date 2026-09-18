@@ -1,0 +1,131 @@
+{
+  "lifecycle_state": "EXECUTING",
+  "attempts": [
+    {
+      "attempt_id": "a1",
+      "model_identity_id": "mi-q",
+      "route_participant_id": "primary",
+      "transport_binding_id": "tb-q",
+      "model_family": "QWEN",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "opencode",
+      "role": "code_primary",
+      "actor_id": null,
+      "attempt_kind": "primary",
+      "parent_attempt_id": null,
+      "status": "failed",
+      "evidence_refs": [
+        "durable:a1"
+      ]
+    },
+    {
+      "attempt_id": "a2",
+      "model_identity_id": "mi-q",
+      "route_participant_id": "primary",
+      "transport_binding_id": "tb-q",
+      "model_family": "QWEN",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "opencode",
+      "role": "code_primary",
+      "actor_id": null,
+      "attempt_kind": "retry",
+      "parent_attempt_id": "a1",
+      "status": "completed",
+      "evidence_refs": [
+        "durable:a2"
+      ]
+    },
+    {
+      "attempt_id": "review1",
+      "model_identity_id": "mi-g",
+      "route_participant_id": "local-review-1",
+      "transport_binding_id": "tb-g",
+      "model_family": "GPT_OSS",
+      "provider_id": "gpt-oss-local",
+      "model_id": "gpt-oss:20b",
+      "adapter_id": "opencode",
+      "role": "independent_local_challenger",
+      "actor_id": null,
+      "attempt_kind": "independent_model_review",
+      "parent_attempt_id": "a2",
+      "status": "completed",
+      "evidence_refs": [
+        "durable:review1"
+      ]
+    }
+  ],
+  "mappings": {
+    "primary": {
+      "mapper_version": "DR1.v1",
+      "status": "failed",
+      "precedence": 2,
+      "reason_codes": [
+        "DURABLE_NONZERO_EXIT"
+      ],
+      "wrapper_exit_code_observed": 0,
+      "durable_exit_code": 4,
+      "durable_result_precedence": true,
+      "authority_effect": "none",
+      "lifecycle_effect": "none"
+    },
+    "retry": {
+      "mapper_version": "DR1.v1",
+      "status": "completed",
+      "precedence": 6,
+      "reason_codes": [
+        "DURABLE_COMPLETED"
+      ],
+      "wrapper_exit_code_observed": 0,
+      "durable_exit_code": 0,
+      "durable_result_precedence": true,
+      "authority_effect": "none",
+      "lifecycle_effect": "none"
+    },
+    "review": {
+      "mapper_version": "DR1.v1",
+      "status": "completed",
+      "precedence": 6,
+      "reason_codes": [
+        "DURABLE_COMPLETED"
+      ],
+      "wrapper_exit_code_observed": 0,
+      "durable_exit_code": 0,
+      "durable_result_precedence": true,
+      "authority_effect": "none",
+      "lifecycle_effect": "none"
+    }
+  },
+  "verifier_results": [
+    {
+      "verifier_result_id": "vr1",
+      "target_attempt_id": "a2",
+      "verifier_attempt_id": "review1",
+      "disposition": "supports",
+      "evidence_refs": [
+        "verifier:review1"
+      ]
+    }
+  ],
+  "preservation": {
+    "first_attempt_status": "failed",
+    "retry_status": "completed",
+    "independent_review_family": "GPT_OSS",
+    "route_participant_chain": [
+      "primary",
+      "primary",
+      "local-review-1"
+    ],
+    "transport_binding_chain": [
+      "tb-q",
+      "tb-q",
+      "tb-g"
+    ],
+    "model_identity_chain": [
+      "mi-q",
+      "mi-q",
+      "mi-g"
+    ]
+  }
+}
