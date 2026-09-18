@@ -118,13 +118,14 @@ export const RATIFIED_INVOKE_CHANNELS = [
     channel: 'jarvis:work-unit-action',
     ratified_in: 'JARVIS-DESKTOP-OPERATOR-FLOW-02 + JARVIS-ROUTING-INTELLIGENCE-01/J5 founder rulings',
     purpose:
-      'Founder-facing control of one canonical provider-review Work Unit through six fixed actions: ' +
-      'providers/preview-route/create/status/route-plan/run-provider. preview-route preserves the canonical ' +
-      'R3 pre-create pure-router preview; route-plan is the J6 post-create non-executing plan derived from the ' +
-      'stored Work Unit. The renderer cannot supply raw authority, filesystem paths, shell commands, Work Unit ' +
-      'ids, branches, or canonical SHA during creation. Provider execution remains a separate explicit action ' +
-      'through the canonical registry, which re-checks repo/network/external-disclosure/spend authority before ' +
-      'a model may run. No production/deploy act is exposed.',
+      'Founder-facing control of one canonical provider-review Work Unit through ten fixed actions: ' +
+      'providers/preview-route/create/status/route-plan/execution-auth-preview/authorize-execution-once/' +
+      'confirm-execute/revoke-execution-grant/run-provider. R3 preview and J6 route-plan remain non-executing. ' +
+      'R5B adds a one-shot human grant and a separate Confirm Execute gesture inside this same channel; MAIN ' +
+      'derives the exact provider/model/route/evidence facts and re-runs R4 immediately before execution. ' +
+      'The renderer cannot supply raw authority, route records, filesystem paths, shell commands, branches, ' +
+      'canonical SHA, provider credentials, or execution grants. The legacy run-provider verb remains blocked ' +
+      'for route-bound Work Units. No production/deploy/merge act is exposed.',
   },
   {
     channel: 'jarvis:status',
