@@ -1,0 +1,357 @@
+{
+  "work_unit_envelope": {
+    "work_unit": {
+      "work_unit_version": "W0.v1",
+      "identity": {
+        "id": "rgr-01-literature-mathematical-landscape-20260918",
+        "programme": "RELATIONAL-GEOMETRY-REASONING",
+        "parent_work_unit": null,
+        "objective": "Construct the bounded interdisciplinary literature and mathematical landscape for Relational Geometry Reasoning under RGR-00.",
+        "work_class": "RESEARCH",
+        "task_shape": "deep_reasoning"
+      },
+      "context": {
+        "context_refs": [
+          "RGR-00 canonical constitution",
+          "Founder adjudication opening RGR-01"
+        ],
+        "evidence_refs": [
+          "local-worktree:c6ed841f8ebc378031b5c3fa0262e367a42dc3e8",
+          "public-scholarly-sources-only"
+        ],
+        "assumptions": [
+          "Geometry is a candidate language, not a predetermined answer.",
+          "Spiralogic and Elemental Alchemy are not ground-truth labels in RGR-01."
+        ],
+        "unknowns": [
+          "Which formalism best supports relational transfer?",
+          "Whether any geometric formalism adds value beyond simpler baselines."
+        ]
+      },
+      "scope": {
+        "repository": "SoullabTech/Sovereign",
+        "base_ref": "c6ed841f8ebc378031b5c3fa0262e367a42dc3e8",
+        "allowed_paths": [
+          "docs/programme/RGR-01_LITERATURE_MATHEMATICAL_LANDSCAPE_2026-09-18.md",
+          "docs/programme/RGR-01_SOURCE_CORPUS_2026-09-18.md",
+          "docs/programme/RGR-01_CLAIM_LEDGER_2026-09-18.md",
+          "docs/programme/RGR-01_WORK_UNIT_2026-09-18.json"
+        ],
+        "forbidden_paths": [
+          "app",
+          "lib",
+          "database",
+          "components",
+          "jarvis-desktop"
+        ]
+      },
+      "authority": {
+        "repository_read": true,
+        "repository_write": "worktree",
+        "shell": "bounded_write",
+        "network_external": true,
+        "provider_spend": false,
+        "external_disclosure": "task_text_only",
+        "merge": false,
+        "deploy": false,
+        "production_read": false,
+        "production_write": false
+      },
+      "routing": {
+        "requested_posture": "independent_review",
+        "router_version": "R1.v1",
+        "route_record": {
+          "route_version": "R1.v1",
+          "task_shape": "deep_reasoning",
+          "review_pressure": "ordinary",
+          "challenge_mode": "none",
+          "primary": {
+            "provider_id": "gpt-oss-local",
+            "role": "deep_reasoning_primary",
+            "execution_disposition": "admitted_local"
+          },
+          "challengers": [
+            {
+              "provider_id": "qwen-local",
+              "role": "independent_local_challenger",
+              "execution_disposition": "admitted_local"
+            }
+          ],
+          "review_policy": {
+            "local": "independent_local_second",
+            "external": "none"
+          },
+          "evidence_policy": {
+            "primary": {
+              "provider_id": "gpt-oss-local",
+              "kind": "local_worktree_read_only"
+            },
+            "challengers": [
+              {
+                "provider_id": "qwen-local",
+                "kind": "local_worktree_read_only"
+              }
+            ]
+          },
+          "required_authority": {
+            "acts": [],
+            "disclosures": []
+          },
+          "granted_authority": [],
+          "execution_disposition": "admitted_local",
+          "blockers": [],
+          "routing_reason_codes": [
+            "DEEP_REASONING_GPT_OSS_PRIMARY",
+            "INDEPENDENT_LOCAL_REVIEW_REQUIRED"
+          ]
+        },
+        "primary": {
+          "provider_id": "gpt-oss-local",
+          "role": "deep_reasoning_primary",
+          "execution_disposition": "admitted_local"
+        },
+        "challengers": [
+          {
+            "provider_id": "qwen-local",
+            "role": "independent_local_challenger",
+            "execution_disposition": "admitted_local"
+          }
+        ]
+      },
+      "execution": {
+        "attempts": [
+          {
+            "attempt_id": "rgr01-review-gptoss-01",
+            "model_identity_id": "rgr01-gptoss-reviewer",
+            "provider_id": "gpt-oss-local",
+            "model_id": "gpt-oss:20b",
+            "role": "deep_reasoning_primary",
+            "attempt_kind": "initial",
+            "parent_attempt_id": null,
+            "status": "completed",
+            "evidence_refs": [
+              "local-review:/tmp/rgr01-gptoss-review.txt",
+              "review-verdict:RETURN"
+            ]
+          },
+          {
+            "attempt_id": "rgr01-review-qwen-01",
+            "model_identity_id": "rgr01-qwen-challenger",
+            "provider_id": "qwen-local",
+            "model_id": "qwen3-coder:30b",
+            "role": "independent_local_challenger",
+            "attempt_kind": "independent_review",
+            "parent_attempt_id": "rgr01-review-gptoss-01",
+            "status": "completed",
+            "evidence_refs": [
+              "local-review:/tmp/rgr01-qwen-review.txt",
+              "review-verdict:ACCEPT"
+            ]
+          }
+        ],
+        "artifacts": [],
+        "diffs": [],
+        "test_results": []
+      },
+      "evaluation": {
+        "acceptance_conditions": [
+          "Deliver the 16 Founder-specified RGR-01 research outputs.",
+          "Classify substantive claims under RGR-00.",
+          "Include strong skeptical and alternative literature.",
+          "Keep RGR-02, Elemental validation, MAIA changes, and experiments closed."
+        ],
+        "falsification_conditions": [
+          "The package treats analogy as evidence.",
+          "The package treats Spiralogic as ground truth.",
+          "The package overstates quantum/positive geometry implications.",
+          "The package omits serious simpler or non-geometric alternatives."
+        ],
+        "stop_conditions": [
+          "Any member/private/PHI data is required.",
+          "Any RGR model implementation or benchmark is required.",
+          "Any MAIA runtime, schema, deployment, or production change is required."
+        ],
+        "verifier_results": [
+          {
+            "verifier_id": "rgr01-source-grounding-gptoss",
+            "target_attempt_id": "rgr01-review-gptoss-01",
+            "verifier_kind": "deterministic",
+            "provider_id": null,
+            "model_id": null,
+            "role": "source_grounding_verifier",
+            "disposition": "mechanical_pass",
+            "evidence_refs": [
+              "source-grounding:four-gptoss-findings-evidence-invalid",
+              "public-source-verification:2026-09-18"
+            ]
+          },
+          {
+            "verifier_id": "rgr01-source-grounding-qwen",
+            "target_attempt_id": "rgr01-review-qwen-01",
+            "verifier_kind": "deterministic",
+            "provider_id": null,
+            "model_id": null,
+            "role": "source_grounding_verifier",
+            "disposition": "mechanical_pass",
+            "evidence_refs": [
+              "source-grounding:four-qwen-required-corrections-evidence-invalid",
+              "public-source-verification:2026-09-18"
+            ]
+          }
+        ]
+      },
+      "provenance": {
+        "creator": "JARVIS/RGR-01",
+        "authorizing_act": "founder:rgr01-literature-mathematical-landscape-20260918",
+        "source_commits": [
+          "c6ed841f8ebc378031b5c3fa0262e367a42dc3e8"
+        ],
+        "model_identity": [
+          {
+            "model_identity_id": "rgr01-gptoss-reviewer",
+            "provider_id": "gpt-oss-local",
+            "model_id": "gpt-oss:20b",
+            "role": "deep_reasoning_primary"
+          },
+          {
+            "model_identity_id": "rgr01-qwen-challenger",
+            "provider_id": "qwen-local",
+            "model_id": "qwen3-coder:30b",
+            "role": "independent_local_challenger"
+          }
+        ],
+        "resulting_commits": [],
+        "timestamps": []
+      },
+      "state": {
+        "lifecycle_state": "CLOSED",
+        "disposition": "closed",
+        "supersedes": null
+      }
+    },
+    "guard": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-01-literature-mathematical-landscape-20260918",
+      "current_state": "CLOSED",
+      "authorized_core_snapshot": "{\"identity\":{\"id\":\"rgr-01-literature-mathematical-landscape-20260918\",\"programme\":\"RELATIONAL-GEOMETRY-REASONING\",\"parent_work_unit\":null,\"objective\":\"Construct the bounded interdisciplinary literature and mathematical landscape for Relational Geometry Reasoning under RGR-00.\",\"work_class\":\"RESEARCH\",\"task_shape\":\"deep_reasoning\"},\"scope\":{\"repository\":\"SoullabTech/Sovereign\",\"base_ref\":\"c6ed841f8ebc378031b5c3fa0262e367a42dc3e8\",\"allowed_paths\":[\"docs/programme/RGR-01_LITERATURE_MATHEMATICAL_LANDSCAPE_2026-09-18.md\",\"docs/programme/RGR-01_SOURCE_CORPUS_2026-09-18.md\",\"docs/programme/RGR-01_CLAIM_LEDGER_2026-09-18.md\",\"docs/programme/RGR-01_WORK_UNIT_2026-09-18.json\"],\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\"]},\"authority\":{\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"network_external\":true,\"provider_spend\":false,\"external_disclosure\":\"task_text_only\",\"merge\":false,\"deploy\":false,\"production_read\":false,\"production_write\":false},\"evaluation\":{\"acceptance_conditions\":[\"Deliver the 16 Founder-specified RGR-01 research outputs.\",\"Classify substantive claims under RGR-00.\",\"Include strong skeptical and alternative literature.\",\"Keep RGR-02, Elemental validation, MAIA changes, and experiments closed.\"],\"falsification_conditions\":[\"The package treats analogy as evidence.\",\"The package treats Spiralogic as ground truth.\",\"The package overstates quantum/positive geometry implications.\",\"The package omits serious simpler or non-geometric alternatives.\"],\"stop_conditions\":[\"Any member/private/PHI data is required.\",\"Any RGR model implementation or benchmark is required.\",\"Any MAIA runtime, schema, deployment, or production change is required.\"]}}"
+    }
+  },
+  "routing_evidence": {
+    "derived_input": {
+      "task_shape": "deep_reasoning",
+      "review_pressure": "ordinary",
+      "challenge_mode": "none",
+      "frontier_posture": "none",
+      "authority": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "network_external": true,
+        "provider_spend": false,
+        "repository_external_disclosure": false
+      },
+      "evidence": {
+        "local_worktree_available": true,
+        "task_text_available": false,
+        "external_bundle_refs": []
+      },
+      "work_unit": {
+        "explicit_independent_review": true
+      }
+    },
+    "authority_proof": {
+      "subset": true,
+      "missing": [],
+      "checks": [
+        {
+          "authority": "repo.read",
+          "present": true
+        },
+        {
+          "authority": "route.granted_authority=[]",
+          "present": true
+        }
+      ]
+    },
+    "transition": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-01-literature-mathematical-landscape-20260918",
+      "from": "AUTHORIZED",
+      "to": "ROUTED",
+      "evidence_ref": "w3-route:R1.v1:rgr-01-literature-mathematical-landscape-20260918",
+      "reason_code": "W3_PURE_ROUTE_BOUND",
+      "authorization_ref": null,
+      "adjudication": null,
+      "superseded_by": null
+    }
+  },
+  "standing": "CLOSED_BY_FOUNDER_ADJUDICATION",
+  "execution_note": "RGR-01 closed by Founder adjudication. Research package preserved exactly from accepted candidate; closure changes only lifecycle standing and adjudication record. No RGR-02, Elemental hypothesis, MAIA alteration, deployment, or production action authorized.",
+  "review_evidence": {
+    "gpt_oss": {
+      "attempt_id": "rgr01-review-gptoss-01",
+      "verdict": "RETURN",
+      "source_grounded_required_corrections": 0,
+      "findings_disposition": "EVIDENCE_INVALID"
+    },
+    "qwen": {
+      "attempt_id": "rgr01-review-qwen-01",
+      "verdict": "ACCEPT",
+      "source_grounded_required_corrections": 0,
+      "findings_disposition": "EVIDENCE_INVALID"
+    }
+  },
+  "founder_adjudication": {
+    "accepted_candidate_sha": "774d44a23eb43e471c8a8b972aa0f3d3ce7b6402",
+    "date": "2026-09-18",
+    "central_conclusion": "The current literature substantially justifies a disciplined Relational Geometry Reasoning research programme, including bounded evidence that representation geometry can predict relational generalization, but does not establish a unique or universal geometry of human meaning.",
+    "preserved_families": [
+      "vector / relational baseline",
+      "graph / structural representation",
+      "subspace / Grassmann representation",
+      "local-to-global / sheaf representation"
+    ],
+    "cross_cutting_axis": "trajectory / predictive structure",
+    "minimum_formal_vocabulary": [
+      "ENTITY / STATE",
+      "RELATION",
+      "TRANSFORMATION",
+      "EQUIVALENCE / INVARIANT",
+      "CONTEXT",
+      "PERSPECTIVE",
+      "TRAJECTORY",
+      "BOUNDARY",
+      "COMPATIBILITY",
+      "OBSTRUCTION"
+    ],
+    "successor_authority": {
+      "rgr_02": "CLOSED",
+      "elemental_operator_hypothesis": "CLOSED",
+      "maia_change": "NOT_AUTHORIZED",
+      "deployment": "NOT_AUTHORIZED"
+    },
+    "lifecycle_transitions": [
+      {
+        "lifecycle_version": "W2.v1",
+        "work_unit_id": "rgr-01-literature-mathematical-landscape-20260918",
+        "from": "EVIDENCE_READY",
+        "to": "ADJUDICATED",
+        "evidence_ref": "founder:rgr01-adjudication-20260918",
+        "reason_code": "RGR01_FOUNDER_ADJUDICATED",
+        "authorization_ref": null,
+        "adjudication": "accepted",
+        "superseded_by": null
+      },
+      {
+        "lifecycle_version": "W2.v1",
+        "work_unit_id": "rgr-01-literature-mathematical-landscape-20260918",
+        "from": "ADJUDICATED",
+        "to": "CLOSED",
+        "evidence_ref": "founder:rgr01-closure-20260918",
+        "reason_code": "RGR01_FOUNDER_CLOSED",
+        "authorization_ref": null,
+        "adjudication": null,
+        "superseded_by": null
+      }
+    ]
+  }
+}
