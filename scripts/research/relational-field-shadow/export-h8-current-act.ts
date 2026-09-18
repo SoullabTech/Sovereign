@@ -78,7 +78,9 @@ async function main() {
     }
 
     const sourceIds = row.evidenceManifest
-      .filter((item) => item.sourceKind === 'conversation_turn' && item.sourceRowId)
+      .filter((item) =>
+        (item.sourceKind === 'conversation_turn' || item.sourceKind === 'cross_session_turn')
+        && item.sourceRowId)
       .map((item) => item.sourceRowId!) as string[];
     const sourceText = await sourceTextByRowId(sourceIds);
     const textByEvidenceId = new Map<string, string>();
