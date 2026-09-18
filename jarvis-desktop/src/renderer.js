@@ -297,9 +297,14 @@ function onConvoKey(e) {
     const holds = lastStatus.governance_holds || [];
     out.innerHTML = `<div class="card"><h3>Needs your decision</h3>${holds.length ? holds.map(h => `<div class="row"><span>${h.unit}</span><span class="state HELD">HELD</span></div>`).join('') : '<div class="hint">Nothing held right now.</div>'}</div>`;
   } else if (q.includes('take this') || q.includes('task')) {
+    const draft = e.target.value.trim();
+    if (draft && !/^take this( bounded)? task[.!]?$/i.test(draft)) sessionStorage.setItem('jarvis:draft-intent', draft);
     setView('work'); return;
   } else {
-    out.innerHTML = `<div class="hint">Try: "What's happening?" · "What's broken?" · "What needs my decision?" · "Take this bounded task."</div>`;
+    // Ordinary founder prose is an intent, not an error message. Carry it into
+    // Work rather than forcing the founder to learn command phrases first.
+    sessionStorage.setItem('jarvis:draft-intent', e.target.value.trim());
+    setView('work'); return;
   }
   e.target.value = '';
 }
@@ -319,6 +324,11 @@ const CF = window.JarvisCapabilityForm;
 const GOV = window.JarvisGovernance;
 const PROV = window.JarvisProvenance;
 const OF = window.JarvisOperatorFlow;
+const OWU = window.JarvisOperatorWorkUnit;
+let providerCatalog = [];
+let activeWorkUnitId = sessionStorage.getItem('jarvis:active-work-unit') || null;
+let activeWorkUnitStrategy = [];
+let workUnitPollTimer = null;
 
 // Wording is derived from what each lane ACTUALLY does in this build — see
 // jarvis:submit-task in main.js. C3 promises nothing it does not perform.
@@ -348,13 +358,273 @@ function renderOperatorPlan(plan) {
   </div>`;
 }
 
+function providerById(id) {
+  return providerCatalog.find(p => p.id === id) || null;
+}
+
+function providerStateClass(state) {
+  if (state === 'AVAILABLE') return 'AVAILABLE';
+  if (state === 'NEEDS_SETUP') return 'NEEDS_SETUP';
+  if (state === 'FAILED') return 'UNAVAILABLE';
+  return 'UNKNOWN';
+}
+
+function renderProviderState(id, targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  const p = providerById(id);
+  if (!p) {
+    el.className = 'state UNKNOWN';
+    el.textContent = 'UNVERIFIED';
+    return;
+  }
+  el.className = `state ${providerStateClass(p.state)}`;
+  el.textContent = p.state.replace('_', ' ');
+  el.title = p.detail || '';
+}
+
+async function loadProviderCatalog() {
+  const out = await window.jarvis.workUnitAction({ action: 'providers' });
+  providerCatalog = out?.ok ? (out.providers || []) : [];
+  renderProviderState('nemotron-zen', 'wu-nemotron-status');
+  renderProviderState('inkling-tinker', 'wu-inkling-status');
+  const err = document.getElementById('wu-provider-error');
+  if (err) err.textContent = out?.ok ? '' : (out?.reason || 'Provider status unavailable.');
+}
+
+function currentWorkUnitProviders() {
+  const out = [];
+  if (document.getElementById('wu-nemotron')?.checked) out.push('nemotron-zen');
+  if (document.getElementById('wu-inkling')?.checked) out.push('inkling-tinker');
+  return out;
+}
+
+function syncWorkUnitComposer() {
+  const providers = currentWorkUnitProviders();
+  const inkling = providers.includes('inkling-tinker');
+  const spendWrap = document.getElementById('wu-spend-wrap');
+  if (spendWrap) spendWrap.style.display = inkling ? 'block' : 'none';
+  const authority = document.getElementById('wu-authority-preview');
+  if (authority) {
+    const repoOk = !!document.getElementById('wu-repo-ok')?.checked;
+    const spendOk = !!document.getElementById('wu-spend-ok')?.checked;
+    authority.innerHTML = `<div class="authority-box">
+      <div class="a-title">Authority preview</div>
+      <div class="a-line">Repository: <b>${repoOk ? 'read-only external review authorized' : 'external repository disclosure held'}</b></div>
+      <div class="a-line">Provider spend: <b>${inkling ? (spendOk ? 'authorized for Inkling' : 'held') : 'not requested'}</b></div>
+      <div class="a-line">Write / production / deploy / authority change: <b>denied</b></div>
+      <div class="a-line">Integration actor: <b>Kelly / founder</b></div>
+    </div>`;
+  }
+}
+
+function workUnitSpecFromForm() {
+  return {
+    objective: document.getElementById('wu-objective')?.value || '',
+    acceptanceCriteria: document.getElementById('wu-acceptance')?.value || '',
+    evidenceFocus: document.getElementById('wu-evidence')?.value || '',
+    providers: currentWorkUnitProviders(),
+    externalRepoOk: !!document.getElementById('wu-repo-ok')?.checked,
+    providerSpendOk: !!document.getElementById('wu-spend-ok')?.checked,
+  };
+}
+
+function showWorkUnitErrors(errors) {
+  const host = document.getElementById('wu-errors');
+  if (!host) return;
+  host.innerHTML = errors?.length
+    ? `<div class="errors">${errors.map(e => `<div>${escapeHtml(e)}</div>`).join('')}</div>`
+    : '';
+}
+
+function stageClass(done, running, held = false) {
+  return held ? 'held' : running ? 'running' : done ? 'done' : '';
+}
+
+function attemptMatchesProvider(attempt, providerId) {
+  const model = String(attempt?.model || '');
+  if (providerId === 'nemotron-zen') return model === 'opencode/nemotron-3-ultra-free' || model === 'opencode/nemotron-3.5-lightning-free';
+  if (providerId === 'inkling-tinker') return model === 'tinker/thinkingmachines/Inkling';
+  return false;
+}
+
+function nextActionForReconciliation(r) {
+  switch (r?.standing) {
+    case 'REPAIR_BEFORE_WITNESS': return 'Repair the failed/rejected attempt before a founder witness.';
+    case 'NEEDS_KELLY': return 'A founder ruling is required before this Work Unit can continue.';
+    case 'REVIEW_DISAGREEMENT': return 'Read both provider outputs. JARVIS will not choose between conflicting recommendations automatically.';
+    case 'EVIDENCE_PRESENTED': return 'Evidence is presented. Kelly may adjudicate the next gate or proceed to a human witness if the programme requires one.';
+    case 'SECOND_REVIEW_OWED': return 'Run the independent second provider review.';
+    default: return 'Run the first provider attempt.';
+  }
+}
+
+function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientError = null } = {}) {
+  const host = document.getElementById('work-unit-live');
+  if (!host) return;
+  if (!snapshot?.ok || !snapshot.work_unit) {
+    host.innerHTML = transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : '';
+    return;
+  }
+  const wu = snapshot.work_unit;
+  const strategy = snapshot.provider_strategy || activeWorkUnitStrategy || [];
+  activeWorkUnitStrategy = strategy;
+  const attempts = snapshot.reconciliation?.attempts || [];
+  const rec = snapshot.reconciliation || { standing: 'NOT_RUN', summary: 'No attempts yet.', attempts: [] };
+  const nemDone = attempts.some(a => attemptMatchesProvider(a, 'nemotron-zen'));
+  const inkDone = attempts.some(a => attemptMatchesProvider(a, 'inkling-tinker'));
+  const allSelectedDone = strategy.every(p => attempts.some(a => attemptMatchesProvider(a, p)));
+  const active = wu.active_execution;
+
+  const attemptHtml = attempts.length ? attempts.map(a => `<div class="attempt-card">
+    <div class="attempt-head"><span>#${escapeHtml(a.attempt_number || '?')} · ${escapeHtml(a.model || a.lane || 'unknown worker')}</span><span>${escapeHtml(a.test_results || 'not_run')}</span></div>
+    <div class="why">exit ${a.exit_code ?? '?'} · next ${escapeHtml(a.recommended_next_action || 'unreported')} · ${escapeHtml(String(a.duration_s ?? '?'))}s</div>
+    ${a.unresolved_questions?.length ? `<div class="why">Unresolved: ${a.unresolved_questions.map(escapeHtml).join(' · ')}</div>` : ''}
+    ${a.output_excerpt ? `<details><summary class="toggle-adv">Review output</summary><pre>${escapeHtml(a.output_excerpt)}</pre></details>` : ''}
+  </div>`).join('') : '<div class="hint">No provider attempt has run yet.</div>';
+
+  const disagreements = rec.disagreements?.length
+    ? `<div class="errors">${rec.disagreements.map(d => `<div>${escapeHtml(d)}</div>`).join('')}</div>` : '';
+  const needsKelly = rec.needs_kelly
+    ? `<div class="needs-kelly"><b>Needs Kelly</b><div class="why">${escapeHtml(rec.summary)}</div><div class="fix">→ ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`
+    : `<div class="run-plan"><div class="plan-title">Reconciliation · ${escapeHtml(rec.standing)}</div><div class="plan-line">${escapeHtml(rec.summary)}</div><div class="plan-line">Next: ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`;
+
+  host.innerHTML = `<div class="card">
+    <h3>JARVIS Run</h3>
+    <div class="row"><div><div class="label">${escapeHtml(wu.identity?.title || activeWorkUnitId)}</div><div class="src">${escapeHtml(activeWorkUnitId)} · @${escapeHtml(String(wu.workspace?.canonical_sha || '').slice(0, 12))}</div></div><span class="state AVAILABLE">${escapeHtml(wu.lifecycle_state || 'ready')}</span></div>
+    <div class="stage-list">
+      <span class="stage-pill done">Authority bound</span>
+      <span class="stage-pill done">Work Unit created</span>
+      ${strategy.includes('nemotron-zen') ? `<span class="stage-pill ${stageClass(nemDone, runningProvider === 'nemotron-zen')}">Nemotron review</span>` : ''}
+      ${strategy.includes('inkling-tinker') ? `<span class="stage-pill ${stageClass(inkDone, runningProvider === 'inkling-tinker', providerById('inkling-tinker')?.state === 'NEEDS_SETUP' && !inkDone)}">Inkling review</span>` : ''}
+      <span class="stage-pill ${stageClass(allSelectedDone, false, !allSelectedDone && attempts.length > 0)}">Reconciliation</span>
+      <span class="stage-pill ${rec.needs_kelly || rec.standing === 'EVIDENCE_PRESENTED' ? 'held' : ''}">Founder gate</span>
+    </div>
+    <div class="authority-box">
+      <div class="a-title">Authority actually held</div>
+      <div class="a-line">Allowed: ${escapeHtml((wu.authority?.authorized_acts || []).join(' · '))}</div>
+      <div class="a-line">Denied: ${escapeHtml((wu.authority?.not_authorized_acts || []).join(' · '))}</div>
+      <div class="a-line">Integration actor: ${escapeHtml(wu.authority?.integration_actor || 'founder')}</div>
+    </div>
+    ${active ? `<div class="why">Active Builder claim: ${escapeHtml(active.session_id)} · ${escapeHtml(active.model || '')}</div>` : ''}
+    ${transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : ''}
+    <div style="margin-top:10px">
+      <button class="primary" id="wu-run-strategy" ${runningProvider ? 'disabled' : ''}>${runningProvider ? `Running ${escapeHtml(runningProvider)}…` : 'Run remaining strategy'}</button>
+      <button class="act" id="wu-refresh">Refresh evidence</button>
+      ${active ? '<button class="act" id="wu-release">Release execution claim</button>' : ''}
+    </div>
+    <h3 style="margin-top:16px">Provider attempts</h3>
+    ${attemptHtml}
+    ${disagreements}
+    ${needsKelly}
+  </div>`;
+
+  document.getElementById('wu-refresh')?.addEventListener('click', refreshActiveWorkUnit);
+  document.getElementById('wu-run-strategy')?.addEventListener('click', runRemainingStrategy);
+  document.getElementById('wu-release')?.addEventListener('click', releaseActiveWorkUnitClaim);
+}
+
+async function refreshActiveWorkUnit() {
+  if (!activeWorkUnitId) return;
+  const snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+  if (snapshot?.ok) {
+    activeWorkUnitStrategy = snapshot.provider_strategy || activeWorkUnitStrategy;
+    renderWorkUnitSnapshot(snapshot);
+  } else {
+    renderWorkUnitSnapshot(null, { transientError: snapshot?.reason || 'Could not read Work Unit state.' });
+  }
+}
+
+function startWorkUnitPolling(providerId) {
+  stopWorkUnitPolling();
+  workUnitPollTimer = setInterval(async () => {
+    if (!activeWorkUnitId || currentView !== 'work') return;
+    const snap = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+    if (snap?.ok) renderWorkUnitSnapshot(snap, { runningProvider: providerId });
+  }, 2000);
+}
+
+function stopWorkUnitPolling() {
+  if (workUnitPollTimer) clearInterval(workUnitPollTimer);
+  workUnitPollTimer = null;
+}
+
+async function runProviderAttempt(providerId) {
+  startWorkUnitPolling(providerId);
+  const result = await window.jarvis.workUnitAction({
+    action: 'run-provider', work_unit_id: activeWorkUnitId, provider_id: providerId,
+  });
+  stopWorkUnitPolling();
+  if (result?.work_unit) {
+    renderWorkUnitSnapshot(result, { transientError: result.ok ? null : (result.reason || result.run?.stderr || `${providerId} failed`) });
+    return result;
+  }
+  await refreshActiveWorkUnit();
+  const host = document.getElementById('work-unit-live');
+  if (!result?.ok && host) host.insertAdjacentHTML('afterbegin', `<div class="errors"><div>${escapeHtml(result?.reason || `${providerId} failed`)}</div></div>`);
+  return result;
+}
+
+async function runRemainingStrategy() {
+  if (!activeWorkUnitId) return;
+  let snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+  const attempts = snapshot?.reconciliation?.attempts || [];
+  const strategy = snapshot?.provider_strategy || activeWorkUnitStrategy;
+  for (const providerId of strategy) {
+    if (attempts.some(a => attemptMatchesProvider(a, providerId))) continue;
+    const p = providerById(providerId);
+    if (p?.state === 'NEEDS_SETUP') {
+      renderWorkUnitSnapshot(snapshot, { transientError: `${providerId}: ${p.detail}` });
+      return;
+    }
+    const result = await runProviderAttempt(providerId);
+    if (!result?.ok) return; // fail closed — do not cascade into the next provider
+    snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+  }
+  renderWorkUnitSnapshot(snapshot);
+}
+
+async function releaseActiveWorkUnitClaim() {
+  if (!activeWorkUnitId) return;
+  const snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+  const sid = snapshot?.work_unit?.active_execution?.session_id;
+  if (!sid) return;
+  const res = await window.jarvis.governanceAction({ action: 'close', sessionId: sid, state: 'completed', reason: '' });
+  if (!res?.ok) {
+    renderWorkUnitSnapshot(snapshot, { transientError: res?.detail || res?.label || 'Governor refused claim release.' });
+    return;
+  }
+  await refreshStatus();
+  await refreshActiveWorkUnit();
+}
+
+async function createGovernedWorkUnit() {
+  const spec = workUnitSpecFromForm();
+  const pre = OWU.validateSpec(spec);
+  if (!pre.ok) { showWorkUnitErrors(pre.errors); return; }
+  showWorkUnitErrors([]);
+  const btn = document.getElementById('wu-create');
+  btn.disabled = true; btn.textContent = 'Binding Work Unit…';
+  const result = await window.jarvis.workUnitAction({ action: 'create', spec });
+  btn.disabled = false; btn.textContent = 'Create governed Work Unit';
+  if (!result?.ok) {
+    showWorkUnitErrors(result?.errors || [result?.reason || 'Work Unit creation failed.']);
+    return;
+  }
+  activeWorkUnitId = result.work_unit_id;
+  activeWorkUnitStrategy = result.provider_strategy || spec.providers;
+  sessionStorage.setItem('jarvis:active-work-unit', activeWorkUnitId);
+  renderWorkUnitSnapshot(result.snapshot);
+}
+
 function renderWork() {
   const localPlan = OF.plan({ posture: OF.LOCAL });
+  const draftIntent = sessionStorage.getItem('jarvis:draft-intent') || '';
   $main.innerHTML = `
     <div class="card">
       <h3>Run through JARVIS</h3>
       <div class="hint" style="margin:0 0 10px">Tell JARVIS the outcome you want. You only choose the consequential posture; lane names and model plumbing stay underneath.</div>
-      <textarea id="operator-intent" class="operator-intent" rows="4" placeholder="What do you want to happen?"></textarea>
+      <textarea id="operator-intent" class="operator-intent" rows="4" placeholder="What do you want to happen?">${escapeHtml(draftIntent)}</textarea>
       <div class="posture-grid">
         <label class="posture-choice">
           <div><input type="radio" name="operator-posture" value="local" checked><b>Keep this local</b></div>
@@ -374,6 +644,38 @@ function renderWork() {
       <div id="operator-errors"></div>
     </div>
     <div id="result"></div>
+
+    <div class="card">
+      <h3>Governed Work Unit</h3>
+      <div class="hint" style="margin:0 0 10px">Use this for repository-grounded work that should survive model changes, retries, and transcript loss. One Work Unit; multiple governed review attempts.</div>
+      <textarea id="wu-objective" rows="3" placeholder="Outcome this Work Unit should produce…">${escapeHtml(draftIntent)}</textarea>
+      <div class="work-unit-grid" style="margin-top:8px">
+        <div>
+          <label class="hint">What counts as done? One criterion per line.</label>
+          <textarea id="wu-acceptance" rows="4" placeholder="Evidence is complete\nRisks are named\nNext act is bounded"></textarea>
+        </div>
+        <div>
+          <label class="hint">Evidence focus — optional paths, one per line. Use path:10-40 for a SHA-bound range.</label>
+          <textarea id="wu-evidence" rows="4" placeholder="components/voice/ContinuousConversation.tsx\nlib/voice/safariSilentDeathRecovery.ts"></textarea>
+        </div>
+      </div>
+      <h3 style="margin-top:14px">Intelligence strategy</h3>
+      <label class="provider-row">
+        <div><input id="wu-nemotron" type="checkbox" checked> <span class="provider-name">Nemotron 3 Ultra · primary review</span><div class="provider-detail">OpenCode Zen. Read-only provider evaluation.</div></div>
+        <span id="wu-nemotron-status" class="state UNKNOWN">CHECKING</span>
+      </label>
+      <label class="provider-row">
+        <div><input id="wu-inkling" type="checkbox" checked> <span class="provider-name">Inkling · adversarial review</span><div class="provider-detail">Independent second read through Thinking Machines Tinker.</div></div>
+        <span id="wu-inkling-status" class="state UNKNOWN">CHECKING</span>
+      </label>
+      <div id="wu-provider-error" class="hint"></div>
+      <label class="inline-check"><input id="wu-repo-ok" type="checkbox">I authorize the selected external provider(s) to inspect this isolated repository worktree read-only. This is broader than the Evidence focus list.</label>
+      <label id="wu-spend-wrap" class="inline-check"><input id="wu-spend-ok" type="checkbox">I authorize provider spend for the Inkling review. No amount is inferred or approved beyond this provider attempt.</label>
+      <div id="wu-authority-preview"></div>
+      <button class="primary" id="wu-create">Create governed Work Unit</button>
+      <div id="wu-errors"></div>
+    </div>
+    <div id="work-unit-live"></div>
 
     <div class="card">
       <h3>Recall prior work</h3>
@@ -417,11 +719,11 @@ function renderWork() {
     </details>
   `;
 
-  document.querySelectorAll('input[name="operator-posture"]').forEach(el => {
-    el.addEventListener('change', syncOperatorPosture);
-  });
+  document.querySelectorAll('input[name="operator-posture"]').forEach(el => el.addEventListener('change', syncOperatorPosture));
   document.getElementById('operator-external-ok').addEventListener('change', syncOperatorPosture);
   document.getElementById('operator-run').addEventListener('click', submitOperatorIntent);
+  for (const id of ['wu-nemotron', 'wu-inkling', 'wu-repo-ok', 'wu-spend-ok']) document.getElementById(id)?.addEventListener('change', syncWorkUnitComposer);
+  document.getElementById('wu-create').addEventListener('click', createGovernedWorkUnit);
 
   const laneHint = document.getElementById('lane-hint');
   laneHint.addEventListener('change', () => {
@@ -433,11 +735,12 @@ function renderWork() {
   });
   document.getElementById('submit').addEventListener('click', submitTask);
   document.getElementById('continuity-search').addEventListener('click', searchContinuity);
-  document.getElementById('continuity-query').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') searchContinuity();
-  });
+  document.getElementById('continuity-query').addEventListener('keydown', (e) => { if (e.key === 'Enter') searchContinuity(); });
   renderC0Fields();
   syncOperatorPosture();
+  syncWorkUnitComposer();
+  void loadProviderCatalog();
+  if (activeWorkUnitId) void refreshActiveWorkUnit();
 }
 
 function currentOperatorPosture() {

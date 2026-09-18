@@ -115,6 +115,17 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'all. Admission remains the mechanism\'s.',
   },
   {
+    channel: 'jarvis:work-unit-action',
+    ratified_in: 'JARVIS-DESKTOP-OPERATOR-FLOW-02 founder act 2026-09-17',
+    purpose:
+      'Founder-facing control of one canonical provider-review Work Unit through four fixed actions: ' +
+      'providers/create/status/run-provider. The renderer cannot supply a filesystem path, shell ' +
+      'command, Work Unit id, branch, canonical SHA, or raw authority envelope at creation: MAIN ' +
+      'derives those from the bound repository and operator-work-unit. Provider execution calls the ' +
+      'existing ain-delegate.sh opencode seam, whose canonical provider registry re-checks repo/network/' +
+      'spend authority before acquiring a worktree or launching a model. No production/deploy act is exposed.',
+  },
+  {
     channel: 'jarvis:status',
     ratified_in: 'original surface',
     purpose:
