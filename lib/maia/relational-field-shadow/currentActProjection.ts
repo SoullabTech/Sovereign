@@ -144,7 +144,10 @@ function stableSort(rows: readonly CurrentActProjectionCandidate[], field: 'base
   return [...rows].sort((a, b) => b[field] - a[field] || a.evidenceId.localeCompare(b.evidenceId));
 }
 
-export function buildCurrentActProjection(packet: RelationalFieldPacket): CurrentActProjection {
+export function buildCurrentActProjection(
+  packet: RelationalFieldPacket,
+  evidenceScope: 'current_session' | 'consented_cross_session' = 'current_session',
+): CurrentActProjection {
   const current = packet.evidence.find((e) => e.id === packet.currentEvidenceId);
   if (!current) throw new Error('h8_current_evidence_missing');
 
@@ -156,6 +159,7 @@ export function buildCurrentActProjection(packet: RelationalFieldPacket): Curren
         h7jAcquisitionRuleSha256: H7J_ACQUISITION_RULE_SHA256,
         h7iR1SpecSha256: H7I_R1_SPEC_SHA256,
         ordinaryRelationProposalVersion: H8_ORDINARY_RELATION_PROPOSAL_VERSION,
+        evidenceScope,
       },
       projectionStatus: 'no_prior_evidence' as const,
       currentEvidenceId: packet.currentEvidenceId,
@@ -215,6 +219,7 @@ export function buildCurrentActProjection(packet: RelationalFieldPacket): Curren
       h7jAcquisitionRuleSha256: H7J_ACQUISITION_RULE_SHA256,
       h7iR1SpecSha256: H7I_R1_SPEC_SHA256,
       ordinaryRelationProposalVersion: H8_ORDINARY_RELATION_PROPOSAL_VERSION,
+      evidenceScope,
     },
     projectionStatus: anchor ? 'projected' as const : 'no_direct_anchor' as const,
     currentEvidenceId: packet.currentEvidenceId,
