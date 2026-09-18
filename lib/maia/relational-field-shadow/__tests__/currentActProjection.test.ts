@@ -23,6 +23,7 @@ describe('H8 current-act shadow projection', () => {
     expect(projection.projectionStatus).toBe('projected');
     expect(projection.researchLineage).toMatchObject({
       ordinaryRelationProposalVersion: 'ordinary-relation-proposal-v1',
+      semanticRelevanceVersion: 'sklearn-tfidf-english-stop-v1',
     });
     expect(projection.anchorEvidenceId).toBe('E1');
     expect(projection.selectedEvidenceIds[0]).toBe('E1');
@@ -32,6 +33,23 @@ describe('H8 current-act shadow projection', () => {
       materialityClass: 'REQUIRED_FOR_VALIDITY',
     });
     expect(projection.selectedEvidenceIds).not.toContain(packet.currentEvidenceId);
+  });
+
+  test('semantic relevance uses the frozen sklearn English stop vocabulary', () => {
+    const packet = assembleRelationalFieldPacket({
+      exchangeId: 'x2',
+      userInput: 'fire',
+      priorMemberTurns: [
+        { id: '1', exchangeId: 'x1', content: 'fire means transformation', createdAt: '2026-09-17T12:00:00Z' },
+      ],
+    });
+    const projection = buildCurrentActProjection(packet);
+    expect(projection.projectionStatus).toBe('no_direct_anchor');
+    expect(projection.candidates[0]).toMatchObject({
+      relevant: false,
+      currentActRelation: 'BACKGROUND',
+      materialityClass: 'NON_MATERIAL',
+    });
   });
 
   test('same packet produces byte-stable projection digest', () => {
