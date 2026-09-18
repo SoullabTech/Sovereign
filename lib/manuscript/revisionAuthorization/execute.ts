@@ -171,6 +171,9 @@ export async function executeAuthorization(
     if (done.rows.length === 0) {
       throw new Error('authorization receipt could not be recorded');
     }
+    await tx.query(
+      'INSERT INTO manuscript_application_recovery (authorization_id, before_body, after_body) VALUES ($1, $2, $3)',
+      [authorizationId, split.body, applied.applied]);
     return {
       outcome: 'executed' as const,
       authorization: hydrateAuthorizationRow(done.rows[0] as never),

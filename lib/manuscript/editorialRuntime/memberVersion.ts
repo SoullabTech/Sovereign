@@ -54,6 +54,7 @@ export interface MemberVersionInput {
    * adoption, which is closed.
    */
   readonly replacementText: string;
+  readonly purpose?: string;
 }
 
 export type MemberVersionRefusal =
@@ -80,13 +81,12 @@ export async function appendMemberEditorialVersion(
   const chainId = t.rows[0]!.proposal_chain_id;
   if (chainId === null) return { ok: false, reason: 'not_editorial' };
 
-  /* ⛔ `author` IS FIXED HERE, not carried. ⛔ No `rationale`: this cut gives
-     the writer no field for one, and an absent field must not become an empty
-     string that reads as a stated-and-empty reason. */
+  /* The writer may state an editorial purpose. Absent intent stays absent. */
   const appended = await appendAuthoredVersion(memberId, chainId, {
     author: 'member',
     supersedes: input.supersedes,
     replacementText: input.replacementText,
+    ...(input.purpose?.trim() ? { rationale: 'Editorial purpose: ' + input.purpose.trim() } : {}),
   });
 
   return appended.outcome === 'appended'

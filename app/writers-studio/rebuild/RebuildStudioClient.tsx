@@ -18,6 +18,7 @@ import RebuildAuthoredBody from './RebuildAuthoredBody';
 import GoldLine from '../insight/GoldLine';
 import CanvasWorkspace from '../insight/CanvasWorkspace';
 import InsightReadings from '../insight/InsightReadings';
+import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
 import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -204,10 +205,22 @@ export default function RebuildStudioClient() {
   const [maiaBusy, setMaiaBusy] = useState(false);
   const [editorialThread, setEditorialThread] = useState<RebuildEditorialThread | null>(null);
   const [editorialDraft, setEditorialDraft] = useState('');
+  const editorialDrafts = useRef(new Map<string, string>());
+  const editorialScope = JSON.stringify([context?.manuscriptId, focusId,
+    selectedPassage?.draftSectionId === focusId ? selectedPassage.text : null]);
+  const previousEditorialScope = useRef(editorialScope);
+  useEffect(() => {
+    if (previousEditorialScope.current === editorialScope) return;
+    editorialDrafts.current.set(previousEditorialScope.current, editorialDraft);
+    previousEditorialScope.current = editorialScope;
+    setEditorialDraft(editorialDrafts.current.get(editorialScope) ?? '');
+  }, [editorialScope, editorialDraft]);
   const [editorialBusy, setEditorialBusy] = useState(false);
   const [editorialFailure, setEditorialFailure] = useState<string | null>(null);
   const [suggestedVersionId, setSuggestedVersionId] = useState<string | null>(null);
   const [showChanges, setShowChanges] = useState(false);
+  const [appliedVersionId, setAppliedVersionId] = useState<string | null>(null);
+  const [undoMessage, setUndoMessage] = useState<string | null>(null);
   const [adoptionOutcome, setAdoptionOutcome] = useState<AdoptionWireOutcome | null>(null);
   const [lastEditorialInstruction, setLastEditorialInstruction] = useState('');
   const [relationshipChoices, setRelationshipChoices] = useState<readonly RebuildEditorialRelationship[]>([]);
@@ -731,10 +744,10 @@ export default function RebuildStudioClient() {
     return null;
   }, [focusId, focusSection, selectedPassage, editorialThread, startNewEditorial, bindEditorialThread]);
 
-  const sendEditorial = useCallback(async () => {
-    if (!focusId || !editorialDraft.trim() || editorialBusy) return;
+  const sendEditorial = useCallback(async (requestText?: string) => {
+    if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
-    const exactWords = editorialDraft;
+    const exactWords = requestText ?? editorialDraft;
     try {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
@@ -748,7 +761,7 @@ export default function RebuildStudioClient() {
       }
       if (!bindEditorialThread(out.thread)) return;
       setLastEditorialInstruction(exactWords);
-      setSuggestedVersionId(out.producedVersionId);
+      if (out.producedVersionId) setSuggestedVersionId(out.producedVersionId);
       setShowChanges(false);
       setEditorialDraft('');
     } finally {
@@ -784,6 +797,9 @@ export default function RebuildStudioClient() {
         return;
       }
       setAdoptionOutcome(out.outcome);
+      setAppliedVersionId(suggestedVersion.id);
+      const reread = await readBoundEditorialThread(editorialThread.threadId, focusId);
+      if (reread.ok) setEditorialThread(reread.thread);
       if (out.outcome.kind === 'applied' || out.outcome.kind === 'work_moved') {
         if (review) setReviewNeedsRefresh(true);
         const fresh = await refreshContext();
@@ -804,6 +820,37 @@ export default function RebuildStudioClient() {
       setAdoptionBusy(false);
     }
   }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting]);
+
+  const undoSuggested = useCallback(async () => {
+    const application = editorialThread?.application;
+    if (!application || adoptionBusy) return;
+    setAdoptionBusy(true); setUndoMessage(null);
+    try {
+      if (!(await settleWriting())) return;
+      const res = await apiFetch('/api/writers-studio/editorial/undo', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ authorizationId: application.authorizationId }),
+      });
+      const out = await res.json();
+      if (out.kind === 'undone') {
+        setUndoMessage('That application was undone. The original passage is restored.');
+        setAppliedVersionId(null); setAdoptionOutcome(null);
+        const fresh = await refreshContext();
+        if (fresh) {
+          setWritingEpoch(n => n + 1);
+          const section = fresh.sections.find(s => s.draftSectionId === focusId);
+          const located = section && editorialThread ? locateUniquePassage(section.body, editorialThread.locusText) : null;
+          setSelectedPassage(section && located ? { draftSectionId: section.draftSectionId, ...located,
+            text: editorialThread!.locusText, revisionNumber: fresh.version } : null);
+        }
+      } else setUndoMessage('Undo was not performed: the manuscript has changed or this application is no longer reversible. Your current writing is retained.');
+      if (editorialThread && focusId) {
+        const reread = await readBoundEditorialThread(editorialThread.threadId, focusId);
+        if (reread.ok) setEditorialThread(reread.thread);
+      }
+    } catch { setUndoMessage('Undo could not be confirmed. Reload the manuscript before trying again.'); }
+    finally { setAdoptionBusy(false); }
+  }, [editorialThread, adoptionBusy, settleWriting, refreshContext, focusId]);
 
   const tryAnother = useCallback(() => {
     setPassageTab('suggest');
@@ -860,7 +907,7 @@ export default function RebuildStudioClient() {
     openWorkspace({ readingId: incomingReading, key: incomingObservation });
   }, [phase, context, incomingReading, incomingObservation, openWorkspace]);
 
-  const reviseInsightPassage = useCallback((passage: InsightPassage) => {
+  const reviseInsightPassage = useCallback((passage: InsightPassage, authorNotes = '') => {
     if (!context || editorialBusy || adoptionBusy || memberVersionBusy || !passage.verified) return;
     const section = context.sections.find(s => s.draftSectionId === passage.sectionId);
     const live = writingRef.current?.bodyOf(passage.sectionId) ?? section?.body;
@@ -869,10 +916,18 @@ export default function RebuildStudioClient() {
       return;
     }
     const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
-    holdPassage(section, range.start, range.end, Array.from(passage.body).slice(range.start, range.end).join(''));
+    const exact = Array.from(passage.body).slice(range.start, range.end).join('');
+    const nextScope = JSON.stringify([context.manuscriptId, passage.sectionId, exact]);
+    if (authorNotes.trim()) {
+      const prior = nextScope === editorialScope ? editorialDraft : editorialDrafts.current.get(nextScope) ?? '';
+      const combined = prior.includes(authorNotes) ? prior : appendEditorialNote(prior, authorNotes);
+      editorialDrafts.current.set(nextScope, combined);
+      if (nextScope === editorialScope) setEditorialDraft(combined);
+    }
+    holdPassage(section, range.start, range.end, exact);
     setPassageTab('suggest');
     requestAnimationFrame(() => document.querySelector('[data-revision-desk]')?.scrollIntoView({ block: 'start' }));
-  }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage]);
+  }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage, editorialScope, editorialDraft]);
 
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || draft.threadId !== editorialThread.threadId || draft.sectionId !== focusId) return false;
@@ -880,7 +935,7 @@ export default function RebuildStudioClient() {
     try {
       const res = await apiFetch('/api/writers-studio/editorial/version', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ threadId: draft.threadId, supersedes: draft.supersedes, replacementText: draft.text }),
+        body: JSON.stringify({ threadId: draft.threadId, supersedes: draft.supersedes, replacementText: draft.text, ...(draft.purpose ? { purpose: draft.purpose } : {}) }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok || typeof body?.versionId !== 'string') {
@@ -1432,15 +1487,15 @@ export default function RebuildStudioClient() {
                               <div style={{ fontSize: 10.5, color: C.muted, marginTop: 10 }}>This older revision conversation can be read and discussed, but it cannot be safely applied to the Work.</div>
                             ) : (
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 12 }}>
-                                <button type="button" onClick={() => void applySuggested()} disabled={adoptionBusy}
+                                <button type="button" onClick={() => openWorkspace()} disabled={adoptionBusy}
                                   style={{ border: 0, borderRadius: 9, background: C.goldFill, color: C.ink, padding: '9px 11px', fontWeight: 750, fontSize: 10.5, cursor: adoptionBusy ? 'wait' : 'pointer' }}>
-                                  {adoptionBusy ? 'Applying...' : 'Apply revision'}
+                                  {adoptionBusy ? 'Working...' : 'Review in context'}
                                 </button>
                                 <button type="button" onClick={tryAnother} style={{ border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel, color: C.secondary, padding: '9px 11px', fontSize: 10.5, cursor: 'pointer' }}>Try another</button>
                                 <button type="button" onClick={discussSuggestion} style={{ border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel, color: C.secondary, padding: '9px 11px', fontSize: 10.5, cursor: 'pointer' }}>Discuss this</button>
                               </div>
                             )}
-                            {adoptionOutcome && <div role="status" style={{ fontSize: 10.5, lineHeight: 1.45, color: C.gold, marginTop: 9 }}>
+                            {adoptionOutcome && appliedVersionId === suggestedVersion?.id && <div role="status" style={{ fontSize: 10.5, lineHeight: 1.45, color: C.gold, marginTop: 9 }}>
                               {adoptionOutcome.kind === 'applied' ? 'Applied to this exact place in the Work.'
                                 : adoptionOutcome.kind === 'work_moved' ? 'You have written here since this suggestion was made. Nothing was changed.'
                                   : adoptionOutcome.kind === 'legacy_locus' ? 'This older suggestion cannot be safely applied. Nothing was changed.'
@@ -1510,17 +1565,21 @@ export default function RebuildStudioClient() {
         {workspaceInsight && <InsightReadings key={context.manuscriptId} refreshKey={context.version}
           manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
           onRevise={reviseInsightPassage} busy={editorialBusy || adoptionBusy || memberVersionBusy} />}
-        <RevisionDesk showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
+        <RevisionDesk scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
           currentText={selectedPassage?.draftSectionId === focusId
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
             : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
+          sectionBody={focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
+          appliedVersionId={editorialThread?.application && !editorialThread.application.undone ? editorialThread.application.versionId : null}
+          onUndo={editorialThread?.application?.canUndo ? () => void undoSuggested() : undefined}
+          undoMessage={undoMessage}
           thread={editorialThread} version={suggestedVersion} instruction={editorialDraft}
-          onInstruction={setEditorialDraft} onSend={() => void sendEditorial()}
-          onSelectVersion={setSuggestedVersionId} onApply={() => void applySuggested()}
+          onInstruction={setEditorialDraft} onSend={text => void sendEditorial(text)}
+          onSelectVersion={id => { setSuggestedVersionId(id); setAdoptionOutcome(null); setEditorialFailure(null); }} onApply={() => void applySuggested()}
           onSaveMember={saveMemberRevision} busy={editorialBusy || adoptionBusy || memberVersionBusy}
           response={lastMaiaEditorialTurn?.body ?? null}
-          message={editorialFailure ?? (adoptionOutcome ? adoptionOutcome.kind === 'applied'
-            ? 'Applied to this exact place in the Work.' : 'The Work could not accept this revision. Nothing was changed.' : null)}
+          message={editorialFailure ?? (adoptionOutcome && appliedVersionId === suggestedVersion?.id ? adoptionOutcome.kind === 'applied'
+            ? null : 'The Work could not accept this revision. Nothing was changed.' : null)}
           onKeep={() => { setSuggestedVersionId(null); setAdoptionOutcome(null); setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.'); }} />
         {relationshipChoices.length > 1 && <div className="wsi-bar" aria-label="Choose revision conversation">
           {relationshipChoices.map((choice, i) => <button key={choice.threadId} type="button" disabled={editorialBusy}

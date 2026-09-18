@@ -26,7 +26,7 @@ export const dynamic = 'force-dynamic';
 const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
 
 /** ⛔ CLOSED. Everything else is a server fact, a closed capability, or both. */
-const BODY_KEYS = ['threadId', 'supersedes', 'replacementText'] as const;
+const BODY_KEYS = ['threadId', 'supersedes', 'replacementText', 'purpose'] as const;
 
 /**
  * ⭐ Which refusals are the writer's exchange having moved (409) and which are
@@ -93,11 +93,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'replacementText is required' }, { status: 400 });
   }
 
+  if (b.purpose !== undefined && (typeof b.purpose !== 'string' || !b.purpose.trim() || b.purpose.length > 80)) {
+    return NextResponse.json({ error: 'purpose must be 1–80 characters' }, { status: 400 });
+  }
   const appended = await appendMemberEditorialVersion({
     identity,
     threadId: b.threadId,
     supersedes: b.supersedes,
     replacementText: b.replacementText,
+    ...(typeof b.purpose === 'string' ? { purpose: b.purpose.trim() } : {}),
   });
 
   if (!appended.ok) {
