@@ -3,7 +3,7 @@
 **Programme:** RELATIONAL-GEOMETRY-REASONING
 **Gate:** RGR-01 — LITERATURE + MATHEMATICAL LANDSCAPE ONLY
 **Date:** 2026-09-18
-**Status:** EVIDENCE_READY · INDEPENDENT CHALLENGE COMPLETE · AWAITING FOUNDER ADJUDICATION
+**Status:** CLOSED · FOUNDER ADJUDICATED · RESEARCH PACKAGE PRESERVED
 **Canonical base:** `c6ed841f8ebc378031b5c3fa0262e367a42dc3e8`
 **Governing constitution:** RGR-00
 **Data posture:** public scholarly/public technical sources only; no member/private/PHI/production data
@@ -1643,3 +1643,113 @@ deployment:
 The package is ready to be sealed as an RGR-01 closure candidate for Founder adjudication.
 
 No successor gate is opened by this standing.
+
+---
+
+# 21 · Founder adjudication — RGR-01 closure
+
+**Founder act:** 2026-09-18
+**Accepted research candidate:** `774d44a23eb43e471c8a8b972aa0f3d3ce7b6402`
+
+The Founder accepts the RGR-01 Literature + Mathematical Landscape package and the recorded evidence, including:
+
+- RGR-00 canonical and intact;
+- governed Work Unit used;
+- authorized core unchanged;
+- public scholarly/public technical sources only;
+- 16 / 16 required deliverables complete;
+- strong non-geometric and differently-geometric competitors retained;
+- Grassmannian/subspace standing remains HYPOTHESIS;
+- sheaf/perspective standing remains HYPOTHESIS;
+- positive geometry/amplituhedron remains SOURCE_OF_INSPIRATION / SPECULATIVE_CORRESPONDENCE only;
+- Spiralogic and Elemental Alchemy remain later falsifiable hypotheses rather than ground truth;
+- Weather remains an unestablished contextual-field hypothesis;
+- GPT-OSS review preserved as RETURN;
+- Qwen independent challenge preserved as ACCEPT;
+- zero substantive required corrections survived source-grounding;
+- reviewer findings contradicted by the inspected packet or verified public sources remain recorded as EVIDENCE-INVALID;
+- bibliographic provenance was independently tightened;
+- WHAT THE CURRENT LITERATURE DOES NOT ESTABLISH is present;
+- no RGR model, benchmark, empirical experiment, fine-tuning, MAIA change, schema, migration, deployment, or production action occurred;
+- current canonical advanced through unrelated JARVIS work with zero true overlap with the RGR-01 artifacts.
+
+The Founder accepts the central conclusion:
+
+> The current literature provides substantial justification for a disciplined Relational Geometry Reasoning research programme, including direct evidence that representation geometry can predict relational generalization in bounded tasks, but it does not establish a unique or universal geometry of human meaning.
+
+The Founder accepts that any separately authorized future formal stage should preserve at least these competing families:
+
+```text
+1. vector / relational baseline
+2. graph / structural representation
+3. subspace / Grassmann representation
+4. local-to-global / sheaf representation
+```
+
+with:
+
+```text
+trajectory / predictive structure
+```
+
+as a cross-cutting axis.
+
+The accepted minimum candidate formal vocabulary remains:
+
+```text
+ENTITY / STATE
+RELATION
+TRANSFORMATION
+EQUIVALENCE / INVARIANT
+CONTEXT
+PERSPECTIVE
+TRAJECTORY
+BOUNDARY
+COMPATIBILITY
+OBSTRUCTION
+```
+
+## Lifecycle closure
+
+The canonical RGR-01 Work Unit has been advanced by Founder act:
+
+```text
+EVIDENCE_READY
+→ ADJUDICATED
+→ CLOSED
+```
+
+with:
+
+```text
+authorized core: unchanged
+review attempts: preserved
+verifier evidence: preserved
+routing provenance: preserved
+```
+
+## Successor boundary
+
+This Founder adjudication explicitly preserves:
+
+```text
+RGR-02: CLOSED
+
+Elemental Operator hypothesis: CLOSED
+
+MAIA alteration: NOT AUTHORIZED
+
+deployment: NOT AUTHORIZED
+```
+
+No successor research gate is opened by this closure record.
+
+## Preservation law
+
+The exact accepted RGR-01 research package remains permanently identified by:
+
+`774d44a23eb43e471c8a8b972aa0f3d3ce7b6402`
+
+This closure act is a later documentary/lifecycle record layered on top of that accepted candidate. It does not rewrite the accepted research evidence.
+
+**RGR-01 standing: CLOSED.**

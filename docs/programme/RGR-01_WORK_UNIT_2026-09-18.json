@@ -224,15 +224,15 @@
         "timestamps": []
       },
       "state": {
-        "lifecycle_state": "EVIDENCE_READY",
-        "disposition": "open",
+        "lifecycle_state": "CLOSED",
+        "disposition": "closed",
         "supersedes": null
       }
     },
     "guard": {
       "lifecycle_version": "W2.v1",
       "work_unit_id": "rgr-01-literature-mathematical-landscape-20260918",
-      "current_state": "EVIDENCE_READY",
+      "current_state": "CLOSED",
       "authorized_core_snapshot": "{\"identity\":{\"id\":\"rgr-01-literature-mathematical-landscape-20260918\",\"programme\":\"RELATIONAL-GEOMETRY-REASONING\",\"parent_work_unit\":null,\"objective\":\"Construct the bounded interdisciplinary literature and mathematical landscape for Relational Geometry Reasoning under RGR-00.\",\"work_class\":\"RESEARCH\",\"task_shape\":\"deep_reasoning\"},\"scope\":{\"repository\":\"SoullabTech/Sovereign\",\"base_ref\":\"c6ed841f8ebc378031b5c3fa0262e367a42dc3e8\",\"allowed_paths\":[\"docs/programme/RGR-01_LITERATURE_MATHEMATICAL_LANDSCAPE_2026-09-18.md\",\"docs/programme/RGR-01_SOURCE_CORPUS_2026-09-18.md\",\"docs/programme/RGR-01_CLAIM_LEDGER_2026-09-18.md\",\"docs/programme/RGR-01_WORK_UNIT_2026-09-18.json\"],\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\"]},\"authority\":{\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"network_external\":true,\"provider_spend\":false,\"external_disclosure\":\"task_text_only\",\"merge\":false,\"deploy\":false,\"production_read\":false,\"production_write\":false},\"evaluation\":{\"acceptance_conditions\":[\"Deliver the 16 Founder-specified RGR-01 research outputs.\",\"Classify substantive claims under RGR-00.\",\"Include strong skeptical and alternative literature.\",\"Keep RGR-02, Elemental validation, MAIA changes, and experiments closed.\"],\"falsification_conditions\":[\"The package treats analogy as evidence.\",\"The package treats Spiralogic as ground truth.\",\"The package overstates quantum/positive geometry implications.\",\"The package omits serious simpler or non-geometric alternatives.\"],\"stop_conditions\":[\"Any member/private/PHI data is required.\",\"Any RGR model implementation or benchmark is required.\",\"Any MAIA runtime, schema, deployment, or production change is required.\"]}}"
     }
   },
@@ -284,8 +284,8 @@
       "superseded_by": null
     }
   },
-  "standing": "EVIDENCE_READY_AWAITING_FOUNDER_ADJUDICATION",
-  "execution_note": "Public scholarly landscape complete; local independent challenge complete; no RGR model, benchmark, Elemental validation, MAIA change, deployment, or production action performed.",
+  "standing": "CLOSED_BY_FOUNDER_ADJUDICATION",
+  "execution_note": "RGR-01 closed by Founder adjudication. Research package preserved exactly from accepted candidate; closure changes only lifecycle standing and adjudication record. No RGR-02, Elemental hypothesis, MAIA alteration, deployment, or production action authorized.",
   "review_evidence": {
     "gpt_oss": {
       "attempt_id": "rgr01-review-gptoss-01",
@@ -299,5 +299,59 @@
       "source_grounded_required_corrections": 0,
       "findings_disposition": "EVIDENCE_INVALID"
     }
+  },
+  "founder_adjudication": {
+    "accepted_candidate_sha": "774d44a23eb43e471c8a8b972aa0f3d3ce7b6402",
+    "date": "2026-09-18",
+    "central_conclusion": "The current literature substantially justifies a disciplined Relational Geometry Reasoning research programme, including bounded evidence that representation geometry can predict relational generalization, but does not establish a unique or universal geometry of human meaning.",
+    "preserved_families": [
+      "vector / relational baseline",
+      "graph / structural representation",
+      "subspace / Grassmann representation",
+      "local-to-global / sheaf representation"
+    ],
+    "cross_cutting_axis": "trajectory / predictive structure",
+    "minimum_formal_vocabulary": [
+      "ENTITY / STATE",
+      "RELATION",
+      "TRANSFORMATION",
+      "EQUIVALENCE / INVARIANT",
+      "CONTEXT",
+      "PERSPECTIVE",
+      "TRAJECTORY",
+      "BOUNDARY",
+      "COMPATIBILITY",
+      "OBSTRUCTION"
+    ],
+    "successor_authority": {
+      "rgr_02": "CLOSED",
+      "elemental_operator_hypothesis": "CLOSED",
+      "maia_change": "NOT_AUTHORIZED",
+      "deployment": "NOT_AUTHORIZED"
+    },
+    "lifecycle_transitions": [
+      {
+        "lifecycle_version": "W2.v1",
+        "work_unit_id": "rgr-01-literature-mathematical-landscape-20260918",
+        "from": "EVIDENCE_READY",
+        "to": "ADJUDICATED",
+        "evidence_ref": "founder:rgr01-adjudication-20260918",
+        "reason_code": "RGR01_FOUNDER_ADJUDICATED",
+        "authorization_ref": null,
+        "adjudication": "accepted",
+        "superseded_by": null
+      },
+      {
+        "lifecycle_version": "W2.v1",
+        "work_unit_id": "rgr-01-literature-mathematical-landscape-20260918",
+        "from": "ADJUDICATED",
+        "to": "CLOSED",
+        "evidence_ref": "founder:rgr01-closure-20260918",
+        "reason_code": "RGR01_FOUNDER_CLOSED",
+        "authorization_ref": null,
+        "adjudication": null,
+        "superseded_by": null
+      }
+    ]
   }
 }
