@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RATIFIED_INVOKE_CHANNELS, INVOKE_CHANNEL_NAMES } from './desktop-preload-allowlist.mjs';
@@ -8,6 +8,7 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const preload = readFileSync(path.join(REPO, 'jarvis-desktop/src/preload.js'), 'utf8');
 const main = readFileSync(path.join(REPO, 'jarvis-desktop/src/main.js'), 'utf8');
 const renderer = readFileSync(path.join(REPO, 'jarvis-desktop/src/renderer.js'), 'utf8');
+const successorPath = path.join(REPO, 'docs/programme/JARVIS-ROUTER-03B_FOUNDER_DESKTOP_GESTURE_2026-09-18.md');
 
 let passed=0, failed=0;
 const assert=(name,condition,detail='')=>{
@@ -61,8 +62,21 @@ console.log('\n=== A5: status remains the only routing-readiness surface ===');
 assert('status reports model_routing',main.includes('model_routing:')&&main.includes('MECH.modelRoutingState(currentRoot())'));
 assert('no separate model-routing status invoke channel exists',!preload.includes('jarvis:model-routing-status'));
 
-console.log('\n=== A6: bridge only — no UI/ambient execution ===');
-assert('renderer does not call modelWorkUnit yet',!renderer.includes('modelWorkUnit'));
+console.log('\n=== A6: bridge succession is explicit; no ambient execution bridge ===');
+const rendererUsesBridge = renderer.includes('modelWorkUnit');
+if (rendererUsesBridge) {
+  assert('renderer caller requires an explicit ROUTER-03B successor record',existsSync(successorPath));
+  const successor = existsSync(successorPath) ? readFileSync(successorPath, 'utf8') : '';
+  assert('successor record names the founder grant and bounded visible acts',
+    successor.includes('founder explicitly authorized')
+      && successor.includes('Plan')
+      && successor.includes('Confirm Execute'));
+  assert('successor record preserves no-auto-execution boundary',
+    successor.includes('No provider call occurs merely by opening Work')
+      && successor.includes('No merge or deployment authority is created by ROUTER-03B'));
+} else {
+  assert('without successor authority, renderer does not call modelWorkUnit',true);
+}
 assert('preload imports no child_process',!preload.includes('child_process'));
 assert('preload exposes no exec/execFile call',!/\bexec(?:File|FileSync|Sync)?\s*\(/.test(preload));
 assert('preload exposes no ipcRenderer.send bridge',!preload.includes('ipcRenderer.send('));

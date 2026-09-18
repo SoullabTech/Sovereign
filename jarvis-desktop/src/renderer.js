@@ -309,6 +309,11 @@ function onConvoKey(e) {
 const CF = window.JarvisCapabilityForm;
 const GOV = window.JarvisGovernance;
 const PROV = window.JarvisProvenance;
+const MWU = window.JarvisModelWorkUnitUI;
+
+let lastModelWorkUnitId = null;
+let lastModelPlan = null;
+let lastModelPlanGuard = null;
 
 // Wording is derived from what each lane ACTUALLY does in this build — see
 // jarvis:submit-task in main.js. C3 promises nothing it does not perform.
@@ -331,6 +336,21 @@ async function loadCapabilities() {
 
 function renderWork() {
   $main.innerHTML = `
+    <div class="card" id="model-work-unit-card">
+      <h3>Canonical multi-model Work Unit</h3>
+      <div class="lane-help">
+        <strong>Plan first.</strong> Enter an existing Work Unit ID. Routing, provider choice,
+        evidence classification, authority, and budgets are read-only here and come from the canonical Work Unit.
+      </div>
+      <input id="model-work-unit-id" type="text" autocomplete="off" placeholder="existing-work-unit-id">
+      <div class="acts" style="margin-top:10px">
+        <button class="primary" id="model-plan" style="margin-top:0">Plan</button>
+      </div>
+      <div class="hint">Plan makes no model call. Execute is offered only when canonical runtime admission returns READY.</div>
+      <div id="model-work-unit-result"></div>
+      <div id="model-execute-gate"></div>
+    </div>
+
     <div class="card">
       <h3>Submit a bounded task</h3>
       <label class="hint">Lane</label><br>
@@ -361,7 +381,249 @@ function renderWork() {
     document.getElementById('local-errors').innerHTML = '';
   });
   document.getElementById('submit').addEventListener('click', submitTask);
+  wireModelWorkUnitGesture();
   renderC0Fields();
+}
+
+
+function escapeModelText(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function modelRoleRow(label, role) {
+  if (!role) return `<div class="row"><span class="label">${label}</span><span class="kv">—</span></div>`;
+  const localityClass = role.locality === 'EXTERNAL' ? 'C3' : 'C1';
+  return `<div class="row">
+    <div>
+      <div class="label">${label}</div>
+      <div class="why">${escapeModelText(role.role)} · <span class="kv">${escapeModelText(role.provider_id)}</span></div>
+      <div class="src">provider standing: ${escapeModelText(role.provider_standing)}</div>
+    </div>
+    <span class="lane-badge ${localityClass}">${escapeModelText(role.locality)}</span>
+  </div>`;
+}
+
+function modelBudgetValue(planned, budget) {
+  const p = Number.isInteger(planned) ? planned : '—';
+  const b = Number.isInteger(budget) ? budget : '—';
+  return `${p} planned / ${b} budgeted`;
+}
+
+function renderModelWorkUnitSummary(summary) {
+  const host = document.getElementById('model-work-unit-result');
+  const gate = document.getElementById('model-execute-gate');
+  if (!host || !gate) return;
+
+  const challengerRows = summary.challengers.length
+    ? summary.challengers.map((c, i) => modelRoleRow(
+        summary.challengers.length === 1 ? 'Challenger' : `Challenger ${i + 1}`, c)).join('')
+    : '<div class="row"><span class="label">Challengers</span><span class="kv">none planned</span></div>';
+
+  const statusClass = summary.status === 'READY' || summary.status === 'COMPLETE'
+    ? 'READY'
+    : (summary.status === 'STOPPED' ? 'NEEDS_AUTHORITY' : 'BLOCKED');
+
+  host.innerHTML = `
+    <div class="act-box" style="margin-top:12px">
+      <div class="row">
+        <div>
+          <div class="label">Work Unit</div>
+          <div class="kv">${escapeModelText(summary.work_unit_id)}</div>
+        </div>
+        <span class="state ${statusClass}">${escapeModelText(summary.status.replaceAll('_', ' '))}</span>
+      </div>
+      ${modelRoleRow('Primary', summary.primary)}
+      ${challengerRows}
+      <div class="row">
+        <span class="label">Model stages</span>
+        <span class="kv">${escapeModelText(modelBudgetValue(
+          summary.budget.stages_planned, summary.budget.stage_budget))}</span>
+      </div>
+      <div class="row">
+        <span class="label">External calls</span>
+        <span class="kv">${escapeModelText(modelBudgetValue(
+          summary.budget.external_calls_planned, summary.budget.external_call_budget))}</span>
+      </div>
+      ${summary.blocker ? `<div class="row">
+        <div>
+          <div class="label">Routing blocker</div>
+          <div class="why">${escapeModelText(summary.blocker.status.replaceAll('_', ' '))}</div>
+          <div class="detail" style="text-align:left;max-width:none">${escapeModelText(summary.blocker.detail)}</div>
+        </div>
+        <span class="state BLOCKED">BLOCKED</span>
+      </div>` : ''}
+      ${summary.disposition ? `<div class="row">
+        <span class="label">Orchestration disposition</span>
+        <span class="kv">${escapeModelText(summary.disposition.replaceAll('_', ' '))}</span>
+      </div>` : ''}
+      ${summary.ready_to_execute
+        ? '<button class="primary" id="model-execute-open">Execute…</button>'
+        : ''}
+    </div>`;
+
+  gate.innerHTML = '';
+  const execute = document.getElementById('model-execute-open');
+  if (execute) execute.addEventListener('click', openModelExecuteConfirmation);
+}
+
+function clearModelWorkUnitPlan() {
+  lastModelWorkUnitId = null;
+  lastModelPlan = null;
+  lastModelPlanGuard = null;
+  const result = document.getElementById('model-work-unit-result');
+  const gate = document.getElementById('model-execute-gate');
+  if (result) result.innerHTML = '';
+  if (gate) gate.innerHTML = '';
+}
+
+function showModelWorkUnitError(message) {
+  const host = document.getElementById('model-work-unit-result');
+  const gate = document.getElementById('model-execute-gate');
+  if (host) host.innerHTML = `<div class="errors"><div>${escapeModelText(message)}</div></div>`;
+  if (gate) gate.innerHTML = '';
+}
+
+function wireModelWorkUnitGesture() {
+  const input = document.getElementById('model-work-unit-id');
+  const plan = document.getElementById('model-plan');
+  if (!input || !plan || !MWU) return;
+
+  if (lastModelWorkUnitId) input.value = lastModelWorkUnitId;
+  if (lastModelPlan) renderModelWorkUnitSummary(lastModelPlan);
+
+  input.addEventListener('input', () => {
+    if (input.value.trim() !== lastModelWorkUnitId) clearModelWorkUnitPlan();
+  });
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') planModelWorkUnit();
+  });
+  plan.addEventListener('click', planModelWorkUnit);
+}
+
+async function requestCanonicalModelPlan(workUnitId) {
+  return window.jarvis.modelWorkUnit('plan', workUnitId, false);
+}
+
+async function planModelWorkUnit() {
+  const input = document.getElementById('model-work-unit-id');
+  const button = document.getElementById('model-plan');
+  if (!input || !button || !MWU) return;
+
+  const validation = MWU.validateWorkUnitId(input.value);
+  if (!validation.ok) {
+    clearModelWorkUnitPlan();
+    showModelWorkUnitError(validation.error);
+    return;
+  }
+
+  clearModelWorkUnitPlan();
+  input.value = validation.id;
+  button.disabled = true;
+  button.textContent = 'Planning…';
+
+  try {
+    const response = await requestCanonicalModelPlan(validation.id);
+    lastModelWorkUnitId = validation.id;
+    lastModelPlan = MWU.summarizePlan(response, validation.id);
+    lastModelPlanGuard = MWU.executionGuard(response, lastModelPlan);
+    renderModelWorkUnitSummary(lastModelPlan);
+  } catch (error) {
+    showModelWorkUnitError(`Plan failed before admission: ${error.message || error}`);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Plan';
+  }
+}
+
+function openModelExecuteConfirmation() {
+  const input = document.getElementById('model-work-unit-id');
+  const gate = document.getElementById('model-execute-gate');
+  if (!input || !gate || !lastModelPlan || !lastModelPlan.ready_to_execute) return;
+  if (input.value.trim() !== lastModelWorkUnitId) {
+    clearModelWorkUnitPlan();
+    showModelWorkUnitError('Work Unit ID changed. Plan the current Work Unit before executing it.');
+    return;
+  }
+
+  const external = lastModelPlan.budget.external_calls_planned;
+  const externalNote = Number.isInteger(external) && external > 0
+    ? ` This canonical plan includes ${external} external provider call${external === 1 ? '' : 's'}.`
+    : ' This canonical plan uses no external provider calls.';
+
+  gate.innerHTML = `
+    <div class="act-box">
+      <div class="label">Confirm execution</div>
+      <div class="why">Execute the already-canonical plan for
+        <span class="kv">${escapeModelText(lastModelWorkUnitId)}</span>?${escapeModelText(externalNote)}
+      </div>
+      <div class="hint">This confirmation cannot edit routing, providers, authority, evidence classification, or budgets.</div>
+      <div>
+        <button class="primary" id="model-execute-confirm">Confirm Execute</button>
+        <button class="toggle-adv" id="model-execute-cancel">Cancel</button>
+      </div>
+    </div>`;
+
+  document.getElementById('model-execute-cancel').addEventListener('click', () => { gate.innerHTML = ''; });
+  document.getElementById('model-execute-confirm').addEventListener('click', executeModelWorkUnit);
+}
+
+async function executeModelWorkUnit() {
+  const input = document.getElementById('model-work-unit-id');
+  const button = document.getElementById('model-execute-confirm');
+  if (!input || !button || !lastModelPlan || !lastModelPlan.ready_to_execute || !lastModelPlanGuard) return;
+
+  if (input.value.trim() !== lastModelWorkUnitId) {
+    clearModelWorkUnitPlan();
+    showModelWorkUnitError('Work Unit ID changed. Plan the current Work Unit before executing it.');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Revalidating…';
+  try {
+    const freshResponse = await requestCanonicalModelPlan(lastModelWorkUnitId);
+    const freshPlan = MWU.summarizePlan(freshResponse, lastModelWorkUnitId);
+    const freshGuard = MWU.executionGuard(freshResponse, freshPlan);
+
+    if (freshGuard !== lastModelPlanGuard) {
+      lastModelPlan = freshPlan;
+      lastModelPlanGuard = freshGuard;
+      renderModelWorkUnitSummary(lastModelPlan);
+      const gate = document.getElementById('model-execute-gate');
+      if (gate) {
+        gate.innerHTML = '<div class="errors"><div>The canonical plan changed after you reviewed it. Review the updated plan and choose Execute again.</div></div>';
+      }
+      return;
+    }
+
+    if (!freshPlan.ready_to_execute) {
+      lastModelPlan = freshPlan;
+      lastModelPlanGuard = freshGuard;
+      renderModelWorkUnitSummary(lastModelPlan);
+      return;
+    }
+
+    button.textContent = 'Executing…';
+    const response = await window.jarvis.modelWorkUnit('execute', lastModelWorkUnitId, true);
+    lastModelPlan = MWU.summarizeExecution(response, freshPlan);
+    lastModelPlanGuard = null;
+    renderModelWorkUnitSummary(lastModelPlan);
+  } catch (error) {
+    showModelWorkUnitError(`Execution request failed before completion: ${error.message || error}`);
+    lastModelPlan = null;
+    lastModelPlanGuard = null;
+    lastModelWorkUnitId = null;
+  } finally {
+    if (button.isConnected) {
+      button.disabled = false;
+      button.textContent = 'Confirm Execute';
+    }
+  }
 }
 
 function renderC0Fields() {
