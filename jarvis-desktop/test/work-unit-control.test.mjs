@@ -20,6 +20,12 @@ test('provider rejection is not upgraded into evidence-presented', () => {
   assert.equal(r.needs_kelly, true);
 });
 
+test('explicit numeric exit_code is canonical over legacy summary parsing', () => {
+  const r = C.reconcileAttempts([{ attempt_number: 1, exit_code: 7, test_results: 'pass', summary: 'delegate exited 0', recommended_next_action: 'review-diff' }]);
+  assert.equal(r.attempts[0].exit_code, 7);
+  assert.equal(r.standing, 'REPAIR_BEFORE_WITNESS');
+});
+
 test('explicit escalation becomes Needs Kelly', () => {
   const r = C.reconcileAttempts([{ attempt_number: 1, test_results: 'pass', summary: 'delegate exited 0', escalation_required: true }]);
   assert.equal(r.standing, 'NEEDS_KELLY');
@@ -48,4 +54,41 @@ test('provider child environment preserves credentials but strips Node startup c
   assert.equal(env.NODE_OPTIONS, undefined);
   assert.equal(env.TINKER_API_KEY, 'present');
   assert.match(env.PATH, /\.opencode\/bin|\/bin/);
+});
+
+test('Tinker readiness may come from presence-only Keychain discovery', () => {
+  const calls = [];
+  const r = C.credentialAvailability('TINKER_API_KEY', {
+    env: { USER: 'soullab' },
+    keychainProbe: (service, account) => { calls.push({ service, account }); return true; },
+  });
+  assert.deepEqual(r, { ready: true, source: 'keychain' });
+  assert.deepEqual(calls, [{ service: 'soullab.tinker.api', account: 'soullab' }]);
+});
+
+test('environment credential wins without probing Keychain', () => {
+  let probed = false;
+  const r = C.credentialAvailability('TINKER_API_KEY', {
+    env: { TINKER_API_KEY: 'present' },
+    keychainProbe: () => { probed = true; return true; },
+  });
+  assert.deepEqual(r, { ready: true, source: 'environment' });
+  assert.equal(probed, false);
+});
+
+test('registered execution adapter selects the matching delegate lane', () => {
+  assert.equal(C.delegateLaneForProvider({ execution_adapter: 'opencode' }), 'opencode');
+  assert.equal(C.delegateLaneForProvider({ execution_adapter: 'tinker-direct' }), 'tinker');
+  assert.equal(C.delegateLaneForProvider({ execution_adapter: 'opencode-interactive' }), null);
+});
+
+test('Desktop reports Keychain-backed Tinker AVAILABLE without a launch-environment secret', async () => {
+  const catalog = await C.providers(process.cwd(), {
+    env: { PATH: process.env.PATH, USER: 'soullab' },
+    keychainProbe: (service) => service === 'soullab.tinker.api',
+  });
+  const inkling = catalog.find(p => p.id === 'inkling-tinker');
+  assert.equal(inkling?.state, 'AVAILABLE');
+  assert.equal(inkling?.credential_source, 'keychain');
+  assert.match(inkling?.detail || '', /not loaded into JARVIS/i);
 });
