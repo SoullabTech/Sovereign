@@ -68,3 +68,14 @@
 }
 
 .ws-insight select { color:var(--wsi-ink); background:var(--wsi-paper); border:1px solid var(--ws-rule); border-radius:6px; padding:8px; font:inherit; }
+
+/* Optional directions stay readable and never outrank the author's current text. */
+.ws-insight .wsi-approaches { margin:24px 0; }
+.ws-insight .wsi-direction-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.ws-insight .wsi-direction-grid h4 { margin:0 0 10px; font-size:16px; }
+.ws-insight .wsi-direction-grid p { margin:8px 0 14px; }
+.ws-insight [data-revision-desk] .wsi-prose { max-width:70ch; }
+@media(max-width:1000px) { .ws-insight .wsi-direction-grid { grid-template-columns:1fr; } }
+
+.ws-insight [data-revision-desk] > label { display:block; margin:16px 0 8px; }
+.ws-insight [data-revision-desk] > label > select { margin:0 8px; max-width:100%; }

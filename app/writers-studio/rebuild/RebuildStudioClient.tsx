@@ -18,6 +18,7 @@ import RebuildAuthoredBody from './RebuildAuthoredBody';
 import GoldLine from '../insight/GoldLine';
 import CanvasWorkspace from '../insight/CanvasWorkspace';
 import InsightReadings from '../insight/InsightReadings';
+import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
 import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -204,6 +205,16 @@ export default function RebuildStudioClient() {
   const [maiaBusy, setMaiaBusy] = useState(false);
   const [editorialThread, setEditorialThread] = useState<RebuildEditorialThread | null>(null);
   const [editorialDraft, setEditorialDraft] = useState('');
+  const editorialDrafts = useRef(new Map<string, string>());
+  const editorialScope = JSON.stringify([context?.manuscriptId, focusId,
+    selectedPassage?.draftSectionId === focusId ? selectedPassage.text : null]);
+  const previousEditorialScope = useRef(editorialScope);
+  useEffect(() => {
+    if (previousEditorialScope.current === editorialScope) return;
+    editorialDrafts.current.set(previousEditorialScope.current, editorialDraft);
+    previousEditorialScope.current = editorialScope;
+    setEditorialDraft(editorialDrafts.current.get(editorialScope) ?? '');
+  }, [editorialScope, editorialDraft]);
   const [editorialBusy, setEditorialBusy] = useState(false);
   const [editorialFailure, setEditorialFailure] = useState<string | null>(null);
   const [suggestedVersionId, setSuggestedVersionId] = useState<string | null>(null);
@@ -860,7 +871,7 @@ export default function RebuildStudioClient() {
     openWorkspace({ readingId: incomingReading, key: incomingObservation });
   }, [phase, context, incomingReading, incomingObservation, openWorkspace]);
 
-  const reviseInsightPassage = useCallback((passage: InsightPassage) => {
+  const reviseInsightPassage = useCallback((passage: InsightPassage, authorNotes = '') => {
     if (!context || editorialBusy || adoptionBusy || memberVersionBusy || !passage.verified) return;
     const section = context.sections.find(s => s.draftSectionId === passage.sectionId);
     const live = writingRef.current?.bodyOf(passage.sectionId) ?? section?.body;
@@ -869,10 +880,18 @@ export default function RebuildStudioClient() {
       return;
     }
     const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
-    holdPassage(section, range.start, range.end, Array.from(passage.body).slice(range.start, range.end).join(''));
+    const exact = Array.from(passage.body).slice(range.start, range.end).join('');
+    const nextScope = JSON.stringify([context.manuscriptId, passage.sectionId, exact]);
+    if (authorNotes.trim()) {
+      const prior = nextScope === editorialScope ? editorialDraft : editorialDrafts.current.get(nextScope) ?? '';
+      const combined = prior.includes(authorNotes) ? prior : appendEditorialNote(prior, authorNotes);
+      editorialDrafts.current.set(nextScope, combined);
+      if (nextScope === editorialScope) setEditorialDraft(combined);
+    }
+    holdPassage(section, range.start, range.end, exact);
     setPassageTab('suggest');
     requestAnimationFrame(() => document.querySelector('[data-revision-desk]')?.scrollIntoView({ block: 'start' }));
-  }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage]);
+  }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage, editorialScope, editorialDraft]);
 
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || draft.threadId !== editorialThread.threadId || draft.sectionId !== focusId) return false;
@@ -1510,7 +1529,7 @@ export default function RebuildStudioClient() {
         {workspaceInsight && <InsightReadings key={context.manuscriptId} refreshKey={context.version}
           manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
           onRevise={reviseInsightPassage} busy={editorialBusy || adoptionBusy || memberVersionBusy} />}
-        <RevisionDesk showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
+        <RevisionDesk scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
           currentText={selectedPassage?.draftSectionId === focusId
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
             : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}

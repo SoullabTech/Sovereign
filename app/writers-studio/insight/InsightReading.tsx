@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { loadCanvasInsight, passageWindow, insightWriteHref, type CanvasInsight, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
+import { intentionNote } from '@/lib/writersStudio/editorialApproaches';
 import WorkInspiration from './WorkInspiration';
 import { EDITORIAL_QUESTIONS } from '@/lib/writersStudio/editorialQuestions';
 import ObservationDialogue from '../develop/ObservationDialogue';
 
 export default function InsightReading({ manuscriptId, readingId, observationKey, onRevise, busy = false, refreshKey = 0 }: {
   manuscriptId: string; readingId: string; observationKey: string;
-  onRevise?: (passage: InsightPassage) => void; busy?: boolean; refreshKey?: number;
+  onRevise?: (passage: InsightPassage, authorNotes?: string) => void; busy?: boolean; refreshKey?: number;
 }) {
   const [loadedKey, setLoadedKey] = useState(refreshKey);
   const [insight, setInsight] = useState<CanvasInsight | null>(null);
@@ -120,7 +121,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
           const next = new Set(previous); if (next.has(p.key)) next.delete(p.key); else next.add(p.key); return next;
         })}>{full ? 'Return to excerpt' : 'Show full section'}</button>
         {p.verified && p.editable && (onRevise
-          ? <button type="button" disabled={busy} onClick={() => onRevise(p)}>Revise this passage</button>
+          ? <button type="button" disabled={busy} onClick={() => onRevise(p, intentionNote(intention, reader))}>Revise this passage</button>
           : <a className="wsi-link" href={insightWriteHref(manuscriptId, readingId, observationKey, p.sectionId)}>Revise this passage in Write</a>)}
       </article>;
     })}</div>
