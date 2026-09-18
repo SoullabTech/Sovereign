@@ -78,7 +78,9 @@ function normalizeModel(spec, requested) {
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
 }
 
-export function resolveOpenCodeProvider({ providerId, model, permissionEnvelope, env = process.env }) {
+export function resolveOpenCodeProvider({
+  providerId, model, permissionEnvelope, env = process.env, skipCredentialCheck = false,
+}) {
   const spec = OPENCODE_PROVIDERS[providerId];
   if (!spec) return refused('UNKNOWN_PROVIDER');
 
@@ -105,7 +107,7 @@ export function resolveOpenCodeProvider({ providerId, model, permissionEnvelope,
   if (spec.metered_provider && permissionEnvelope.provider_spend !== true) {
     return refused('PROVIDER_SPEND_NOT_AUTHORIZED');
   }
-  if (spec.credential_env && !env[spec.credential_env]) {
+  if (!skipCredentialCheck && spec.credential_env && !env[spec.credential_env]) {
     return refused('PROVIDER_CREDENTIAL_MISSING');
   }
 
@@ -118,10 +120,13 @@ export function resolveOpenCodeProvider({ providerId, model, permissionEnvelope,
     agent: 'jarvis-readonly',
     external_network: spec.external_network,
     metered_provider: spec.metered_provider,
+    credential_env: spec.credential_env ?? null,
   });
 }
 
-export function resolveWorkUnitProvider(workUnitId, providerId, model, env = process.env) {
+export function resolveWorkUnitProvider(
+  workUnitId, providerId, model, env = process.env, { skipCredentialCheck = false } = {},
+) {
   const workUnit = loadWorkUnit(workUnitId);
   if (!workUnit) return refused('WORK_UNIT_NOT_FOUND');
   return resolveOpenCodeProvider({
@@ -129,6 +134,7 @@ export function resolveWorkUnitProvider(workUnitId, providerId, model, env = pro
     model,
     permissionEnvelope: derivePermissionEnvelope(workUnit),
     env,
+    skipCredentialCheck,
   });
 }
 
@@ -136,15 +142,21 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const [command, workUnitId, providerId, model] = process.argv.slice(2);
   if (command === 'list') {
     process.stdout.write(JSON.stringify(listProviderIds()) + '\n');
-  } else if (command === 'resolve' && workUnitId && providerId) {
-    const result = resolveWorkUnitProvider(workUnitId, providerId, model);
+  } else if ((command === 'authorize' || command === 'resolve') && workUnitId && providerId) {
+    const result = resolveWorkUnitProvider(
+      workUnitId,
+      providerId,
+      model,
+      process.env,
+      { skipCredentialCheck: command === 'authorize' },
+    );
     if (!result.ok) {
       process.stderr.write(`[opencode-provider] REFUSED ${result.code}\n`);
       process.exit(3);
     }
     process.stdout.write(JSON.stringify(result) + '\n');
   } else {
-    process.stderr.write('usage: opencode-provider.mjs {list|resolve <work_unit_id> <provider_id> [model]}\n');
+    process.stderr.write('usage: opencode-provider.mjs {list|authorize|resolve} <work_unit_id> <provider_id> [model]\n');
     process.exit(2);
   }
 }

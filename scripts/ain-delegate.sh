@@ -157,6 +157,36 @@ _build_prompt() {
     ' "$f"
 }
 
+_hydrate_opencode_credential() {
+    local credential_env="$1"
+
+    [ -n "$credential_env" ] || return 0
+
+    case "$credential_env" in
+        TINKER_API_KEY)
+            [ -n "${TINKER_API_KEY:-}" ] && return 0
+            command -v security >/dev/null 2>&1 || return 1
+
+            # macOS-only local credential bridge. Never print the secret. This runs
+            # only AFTER provider authority (including provider.spend) has passed.
+            local keychain_value
+            if keychain_value="$(security find-generic-password                 -a "${USER:-$(id -un)}"                 -s "soullab.tinker.api"                 -w 2>/dev/null)" && [ -n "$keychain_value" ]; then
+                export TINKER_API_KEY="$keychain_value"
+                keychain_value=""
+                return 0
+            fi
+            return 1
+            ;;
+        NVIDIA_API_KEY)
+            [ -n "${NVIDIA_API_KEY:-}" ]
+            return $?
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 _run_lane() {
     local lane="$1" work_unit_id="$2" model_override="${3:-}" provider_override="${4:-}"
     local f wt starting_sha exit_code log ending_sha prompt cmd branch model
@@ -167,7 +197,24 @@ _run_lane() {
     # is not permission to send repository material to a provider or incur spend.
     if [ "$lane" = "opencode" ]; then
         [ -n "$provider_override" ] || { echo "🛑 opencode provider id required" >&2; exit 2; }
-        local provider_code
+        local provider_code provider_authorization credential_env
+
+        # Phase 1: prove Work Unit/provider authority BEFORE touching any credential
+        # store. Registration is not authority, and denied spend must not even read
+        # Keychain.
+        set +e
+        provider_authorization="$(node "$OPENCODE_PROVIDER_SCRIPT" authorize "$work_unit_id" "$provider_override" "$model_override")"
+        provider_code=$?
+        set -e
+        [ "$provider_code" -eq 0 ] || exit "$provider_code"
+
+        credential_env="$(echo "$provider_authorization" | jq -r '.credential_env // empty')"
+        if [ -n "$credential_env" ]; then
+            _hydrate_opencode_credential "$credential_env" || true
+        fi
+
+        # Phase 2: require the actual credential (if any) only after authority has
+        # passed. Failure remains fail-closed before workspace acquisition.
         set +e
         opencode_resolution="$(node "$OPENCODE_PROVIDER_SCRIPT" resolve "$work_unit_id" "$provider_override" "$model_override")"
         provider_code=$?

@@ -27,6 +27,7 @@ const AIN_HOME = path.join(TMP, 'ain');
 const WORKTREES_ROOT = path.join(TMP, 'worktrees');
 const FAKE_BIN = path.join(TMP, 'bin');
 const ARGS_FILE = path.join(TMP, 'opencode-args.txt');
+const SECURITY_ARGS_FILE = path.join(TMP, 'security-args.txt');
 mkdirSync(AIN_HOME, { recursive: true });
 mkdirSync(WORKTREES_ROOT, { recursive: true });
 mkdirSync(FAKE_BIN, { recursive: true });
@@ -38,6 +39,17 @@ exit 0
 `);
 chmodSync(path.join(FAKE_BIN, 'opencode'), 0o755);
 
+writeFileSync(path.join(FAKE_BIN, 'security'), `#!/bin/sh
+printf '%s\\n' "$@" >> "$STUB_SECURITY_ARGS"
+[ -n "${STUB_SECURITY_SECRET:-}" ] || exit 44
+printf '%s\\n' "$STUB_SECURITY_SECRET"
+`);
+chmodSync(path.join(FAKE_BIN, 'security'), 0o755);
+
+const securityLog = () => existsSync(SECURITY_ARGS_FILE)
+  ? readFileSync(SECURITY_ARGS_FILE, 'utf8')
+  : '';
+
 const baseEnv = (extra = {}) => ({
   ...process.env,
   ...extra,
@@ -45,6 +57,7 @@ const baseEnv = (extra = {}) => ({
   AIN_WORKTREES_ROOT: WORKTREES_ROOT,
   PATH: `${FAKE_BIN}:${process.env.PATH}`,
   STUB_OPENCODE_ARGS: ARGS_FILE,
+  STUB_SECURITY_ARGS: SECURITY_ARGS_FILE,
 });
 
 const sh = (args, extra = {}) => {
@@ -253,6 +266,25 @@ console.log('\n=== P4b: Zen Free interactive capability cannot silently become J
     afterArgs === beforeArgs);
 }
 
+console.log('\n=== P4c: denied Tinker spend never reads Keychain ===');
+{
+  const id = uid('tinker-spend-denied');
+  sh(['new', id]);
+  authorizeReadOnly(id, ['network.external']);
+  const beforeSecurity = securityLog();
+  const run = sh(['opencode', id, 'inkling-tinker'], {
+    TINKER_API_KEY: '',
+    STUB_SECURITY_SECRET: 'credential-from-keychain-stub',
+  });
+  assert('Tinker refuses missing spend authority before credential hydration',
+    run.code === 3 && /PROVIDER_SPEND_NOT_AUTHORIZED/.test(run.err),
+    `exit=${run.code} err=${run.err.slice(0, 180)}`);
+  assert('denied spend does not read macOS Keychain',
+    securityLog() === beforeSecurity, securityLog().slice(-200));
+  assert('denied Tinker attempt still has no worktree',
+    readPacket(id).worktree === null, JSON.stringify(readPacket(id).worktree));
+}
+
 console.log('\n=== P5: authorized external selection remains testable without a real API call ===');
 {
   const id = uid('inkling-stub');
@@ -267,6 +299,40 @@ console.log('\n=== P5: authorized external selection remains testable without a 
   assert('Inkling model identity is durable in the result contract',
     result.model === 'tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4', result.model);
   sh(['release', id], { TINKER_API_KEY: 'proof-only-not-a-real-key' });
+}
+
+console.log('\n=== P5b: authorized Tinker may hydrate from macOS Keychain without secret leakage ===');
+{
+  const id = uid('inkling-keychain');
+  const proofSecret = 'credential-from-keychain-stub';
+  sh(['new', id]);
+  authorizeReadOnly(id, ['network.external', 'provider.spend']);
+  const beforeSecurity = securityLog();
+  const run = sh(['opencode', id, 'inkling-tinker'], {
+    TINKER_API_KEY: '',
+    STUB_SECURITY_SECRET: proofSecret,
+  });
+  assert('authorized Tinker run reaches the stub after Keychain hydration',
+    run.code === 0, `exit=${run.code} err=${run.err.slice(0, 180)}`);
+
+  const afterSecurity = securityLog();
+  assert('Keychain lookup uses the bounded Soullab Tinker service name',
+    afterSecurity.length > beforeSecurity.length
+      && afterSecurity.includes('find-generic-password')
+      && afterSecurity.includes('soullab.tinker.api')
+      && afterSecurity.includes('-w'),
+    afterSecurity.slice(-320));
+
+  const args = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
+  const resultText = readFileSync(resultPath(id), 'utf8');
+  assert('Keychain secret never enters OpenCode args or result contract',
+    !args.includes(proofSecret) && !resultText.includes(proofSecret));
+
+  const result = JSON.parse(resultText);
+  assert('Keychain-hydrated attempt preserves exact Inkling model provenance',
+    result.model === 'tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
+    result.model);
+  sh(['release', id], { TINKER_API_KEY: '', STUB_SECURITY_SECRET: proofSecret });
 }
 
 console.log('\n=== P6: project OpenCode config carries no credential or default external model ===');
