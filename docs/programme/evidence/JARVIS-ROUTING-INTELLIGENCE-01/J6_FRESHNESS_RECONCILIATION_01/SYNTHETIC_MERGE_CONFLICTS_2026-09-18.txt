@@ -1,0 +1,15 @@
+Exact three-way subject:
+  base      98dda3bed79d2052fa86afb17882a387187d3d2d
+  canonical 7937fc7cf1b0aede76b4e5302e36800c85f997da
+  reviewed  b42dc0d4c0d47c37f60a66bc06c52b4927118b84
+
+git merge-tree reports direct overlap/conflict in exactly:
+  jarvis-desktop/src/main.js
+  jarvis-desktop/src/operator-work-unit.js
+  jarvis-desktop/src/work-unit-control.js
+  jarvis-desktop/test/operator-work-unit.test.mjs
+  jarvis-desktop/test/work-unit-cockpit.test.mjs
+  scripts/builder/__tests__/routing-intelligence-proof.mjs
+  scripts/builder/routing-intelligence.mjs
+
+No merge was performed.

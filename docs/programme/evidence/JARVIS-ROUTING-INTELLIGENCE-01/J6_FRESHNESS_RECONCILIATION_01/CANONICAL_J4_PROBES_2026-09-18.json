@@ -1,0 +1,151 @@
+{
+  "M1_deterministic": {
+    "result": {
+      "route_version": "R1.v1",
+      "task_shape": "mechanical_code",
+      "review_pressure": "ordinary",
+      "challenge_mode": "none",
+      "primary": {
+        "provider_id": "qwen-local",
+        "role": "mechanical_primary",
+        "execution_disposition": "admitted_local"
+      },
+      "challengers": [],
+      "review_policy": {
+        "local": "single_mechanical",
+        "external": "none"
+      },
+      "evidence_policy": {
+        "primary": {
+          "provider_id": "qwen-local",
+          "kind": "local_worktree_read_only"
+        },
+        "challengers": []
+      },
+      "required_authority": {
+        "acts": [],
+        "disclosures": []
+      },
+      "granted_authority": [],
+      "execution_disposition": "admitted_local",
+      "blockers": [],
+      "routing_reason_codes": [
+        "MECHANICAL_QWEN_PRIMARY",
+        "SINGLE_MECHANICAL_FAST_PATH"
+      ]
+    },
+    "verdict": "FAIL"
+  },
+  "M2_local_only": {
+    "result": {
+      "route_version": "R1.v1",
+      "task_shape": "deep_reasoning",
+      "review_pressure": "ordinary",
+      "challenge_mode": "none",
+      "primary": {
+        "provider_id": "gpt-oss-local",
+        "role": "deep_reasoning_primary",
+        "execution_disposition": "admitted_local"
+      },
+      "challengers": [
+        {
+          "provider_id": "qwen-local",
+          "role": "independent_local_challenger",
+          "execution_disposition": "admitted_local"
+        }
+      ],
+      "review_policy": {
+        "local": "independent_local_second",
+        "external": "none"
+      },
+      "evidence_policy": {
+        "primary": {
+          "provider_id": "gpt-oss-local",
+          "kind": "local_worktree_read_only"
+        },
+        "challengers": [
+          {
+            "provider_id": "qwen-local",
+            "kind": "local_worktree_read_only"
+          }
+        ]
+      },
+      "required_authority": {
+        "acts": [],
+        "disclosures": []
+      },
+      "granted_authority": [],
+      "execution_disposition": "admitted_local",
+      "blockers": [],
+      "routing_reason_codes": [
+        "DEEP_REASONING_GPT_OSS_PRIMARY",
+        "INDEPENDENT_LOCAL_REVIEW_REQUIRED"
+      ]
+    },
+    "verdict": "FAIL"
+  },
+  "M3_nemotron_code": {
+    "providers": [
+      "qwen-local",
+      "nemotron-tinker"
+    ],
+    "verdict": "FAIL"
+  },
+  "M4_same_model": {
+    "standing": "EVIDENCE_PRESENTED",
+    "verdict": "FAIL"
+  },
+  "M5_unavailable_transport": {
+    "providers": [
+      "gpt-oss-local",
+      "qwen-local",
+      "nemotron-tinker"
+    ],
+    "disposition": "admitted_local",
+    "verdict": "FAIL"
+  },
+  "M6_disclosure": {
+    "envelope": {
+      "repo_read": true,
+      "repo_write_scope": "none",
+      "execute_checks": false,
+      "integration_actor": "founder",
+      "production_read": false,
+      "production_write": false,
+      "deploy": false,
+      "authority_change": false,
+      "external_network": true,
+      "provider_spend": true
+    },
+    "resolver": {
+      "ok": true,
+      "provider_id": "inkling-tinker",
+      "provider_standing": "evaluation-only",
+      "model_id": "thinkingmachines/Inkling-Small",
+      "model_ref": "tinker/thinkingmachines/Inkling-Small",
+      "agent": null,
+      "external_network": true,
+      "metered_provider": true,
+      "credential_env": "TINKER_API_KEY",
+      "execution_adapter": "tinker-direct"
+    },
+    "verdict": "FAIL"
+  },
+  "M7_consensus": {
+    "standing": "EVIDENCE_PRESENTED",
+    "needs_kelly": true,
+    "verdict": "PASS"
+  },
+  "M8_durable_status": {
+    "lifecycle": "ready_to_integrate",
+    "verdict": "FAIL"
+  },
+  "M9_budget": {
+    "has_response_budget": false,
+    "verdict": "FAIL"
+  },
+  "M10_model_state": {
+    "standing": "EVIDENCE_PRESENTED",
+    "verdict": "PASS"
+  }
+}
