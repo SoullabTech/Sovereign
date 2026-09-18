@@ -44,6 +44,8 @@ Proposal classes are intentionally small:
 
 Strong lexical evidence is required. Unclassified material becomes `HISTORY`; it does not acquire materiality merely because it is semantically similar.
 
+The relevance calculation ports the frozen H7j TF-IDF rule using the scikit-learn 318-word English stop vocabulary, smooth IDF, cosine similarity, and the frozen `0.035` cosine / `0.08` token-set overlap thresholds. Each projection records `semanticRelevanceVersion: sklearn-tfidf-english-stop-v1`.
+
 This proposal layer has no standing authority. It exists only inside shadow computation.
 
 ## H8 computation
@@ -93,7 +95,7 @@ When cross-session evidence is admitted, the H8 packet is bounded to at most fou
 
 Its row identity is:
 
-- architecture version: `h8-current-act-shadow-01@proposal-v1+h7j-155d759a+r1-469b67a7`
+- architecture version: `h8-current-act-shadow-01@proposal-v1+sklearn-stop-v1+h7j-155d759a+r1-469b67a7`
 - model name: `deterministic-h7j-r1`
 - deterministic seed: `0`
 
