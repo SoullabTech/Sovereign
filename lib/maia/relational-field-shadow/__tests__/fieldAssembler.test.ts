@@ -67,26 +67,38 @@ describe('SH-F2/3/5/8 relational field assembly', () => {
   });
 
 
-  test('H8 cross-session loader is member-only and consent-fail-closed in SQL', async () => {
-    mockQuery.mockResolvedValueOnce({ rows: [
-      { id: '7', exchangeId: 'old-x', content: 'older member turn', createdAt: '2026-09-15T18:01:00Z' },
-    ] });
+  test('H8 cross-session loader requires explicit true preference before member-only read', async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ conversational_recall_enabled: true }] })
+      .mockResolvedValueOnce({ rows: [
+        { id: '7', exchangeId: 'old-x', content: 'older member turn', createdAt: '2026-09-15T18:01:00Z' },
+      ] });
     const rows = await loadH8CrossSessionMemberTurns('member-1', 'current-session', 4);
-    const [sql, params] = mockQuery.mock.calls[0];
-    expect(sql).toMatch(/JOIN members m ON m\.id = t\.user_id/);
-    expect(sql).toMatch(/m\.conversational_recall_enabled IS TRUE/);
-    expect(sql).toMatch(/t\.role = 'user'/);
-    expect(sql).toMatch(/t\.session_id <> \$2/);
-    expect(sql).not.toMatch(/INSERT|UPDATE|DELETE/i);
-    expect(params).toEqual(['member-1', 'current-session', 4]);
+    const [prefSql, prefParams] = mockQuery.mock.calls[0];
+    const [turnSql, turnParams] = mockQuery.mock.calls[1];
+    expect(prefSql).toMatch(/SELECT conversational_recall_enabled/);
+    expect(prefSql).toMatch(/FROM members/);
+    expect(prefParams).toEqual(['member-1']);
+    expect(turnSql).toMatch(/FROM conversation_turns/);
+    expect(turnSql).toMatch(/role = 'user'/);
+    expect(turnSql).toMatch(/session_id <> \$2/);
+    expect(turnSql).not.toMatch(/INSERT|UPDATE|DELETE/i);
+    expect(turnParams).toEqual(['member-1', 'current-session', 4]);
     expect(rows).toEqual([
       expect.objectContaining({ id: '7', sourceKind: 'cross_session_turn' }),
     ]);
   });
 
+  test('H8 cross-session loader makes no turn read when recall is false', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [{ conversational_recall_enabled: false }] });
+    await expect(loadH8CrossSessionMemberTurns('member-1', 'current-session', 4)).resolves.toEqual([]);
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+  });
+
   test('H8 cross-session loader returns no evidence when its consent/read query fails', async () => {
     mockQuery.mockRejectedValueOnce(new Error('preference-read-failed'));
     await expect(loadH8CrossSessionMemberTurns('member-1', 'current-session', 4)).resolves.toEqual([]);
+    expect(mockQuery).toHaveBeenCalledTimes(1);
   });
 
   test('H8 packet reserves bounded room for cross-session evidence without contaminating source kind', () => {
