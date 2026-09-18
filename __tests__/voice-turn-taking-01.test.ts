@@ -80,7 +80,8 @@ describe('TURN-01 · conversational sovereignty', () => {
     expect(tick).toContain('const explicitFloorOwned = !automaticTurnCommitAllowed()');
     expect(tick).toContain('shouldActOnCaptureLiveness');
     expect(tick).toContain('analyserVoiceAfterRecognition');
-    expect(tick).toContain('voice_floor_liveness_held');
+    expect(tick).toContain("source: 'liveness_watchdog'");
+    expect(tick).toContain("logVoiceEvent('voice_floor_held'");
 
     const decision = tick.indexOf('const mayEndCapture = shouldActOnCaptureLiveness');
     const teardown = tick.indexOf('handleCaptureLossFnRef.current?.(verdict.cause)');
