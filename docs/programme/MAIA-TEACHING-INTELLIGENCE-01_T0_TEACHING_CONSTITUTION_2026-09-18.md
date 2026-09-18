@@ -1,14 +1,14 @@
 # MAIA-TEACHING-INTELLIGENCE-01 / T0 — Teaching Constitution Candidate
 
-> **Class:** C — documentary constitutional candidate only  
-> **Governing authority:** founder T0 authorization · `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` · `RIGHT_TO_REMAIN_UNPOSSESSED.md` · `INTERFACE_HUMILITY.md` · `RECOGNITION_INTEGRITY.md` · `REPRESENTATION_AUTHORITY_LAW.md` · `DISCIPLINED_NON_COLLAPSE.md` · `SOULLAB_VOICE_DOCTRINE_DAOIST.md` · J8 governed-knowledge closure  
-> **Current gate:** constitutional contract + falsification criteria ready for founder adjudication  
-> **Evidence subject:** the authority, posture, initiation, restraint, provenance, and learner-sovereignty boundaries of future MAIA teaching behavior  
+> **Class:** C — documentary constitutional candidate only
+> **Governing authority:** founder T0 authorization · `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` · `RIGHT_TO_REMAIN_UNPOSSESSED.md` · `INTERFACE_HUMILITY.md` · `RECOGNITION_INTEGRITY.md` · `REPRESENTATION_AUTHORITY_LAW.md` · `DISCIPLINED_NON_COLLAPSE.md` · `SOULLAB_VOICE_DOCTRINE_DAOIST.md` · J8 governed-knowledge closure
+> **Current gate:** constitutional contract + falsification criteria ready for founder adjudication
+> **Evidence subject:** the authority, posture, initiation, restraint, provenance, and learner-sovereignty boundaries of future MAIA teaching behavior
 > **Stop boundary:** no runtime code, learner profiling, prompt change, production behavior, model routing, memory write, schema, migration, deployment, or member-facing teaching behavior is authorized by T0
 
-**Date:** 2026-09-18  
-**Status:** ⚠️ **CANDIDATE — NOT CANON UNTIL FOUNDER ADJUDICATION**  
-**Programme:** `MAIA-TEACHING-INTELLIGENCE-01`  
+**Date:** 2026-09-18
+**Status:** ⚠️ **CANDIDATE — NOT CANON UNTIL FOUNDER ADJUDICATION**
+**Programme:** `MAIA-TEACHING-INTELLIGENCE-01`
 **Gate:** `T0 — TEACHING CONSTITUTION`
 
 ---
