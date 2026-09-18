@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JARVIS Research Studio — J4 Experience Prototype</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="prototype-banner" class="prototype-banner">
+    <span>J4 EXPERIENCE PROTOTYPE</span>
+    <span>Synthetic/static state · no files · no network · no provider execution</span>
+    <button id="witness-menu-button" class="ghost tiny">Witness states</button>
+  </div>
+
+  <main id="app" class="app-shell" aria-live="polite"></main>
+
+  <aside id="witness-menu" class="witness-menu" aria-hidden="true">
+    <div class="witness-head">
+      <div>
+        <div class="eyebrow">Founder witness</div>
+        <h2>Experience states</h2>
+      </div>
+      <button id="witness-close" class="icon-button" aria-label="Close witness states">×</button>
+    </div>
+    <p class="witness-note">Use only to jump between required prototype states. This menu is not proposed product UI.</p>
+    <div id="witness-state-list" class="witness-state-list"></div>
+  </aside>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="./prototype.js"></script>
+</body>
+</html>
