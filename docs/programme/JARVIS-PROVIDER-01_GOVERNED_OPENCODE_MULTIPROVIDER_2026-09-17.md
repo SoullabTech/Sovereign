@@ -158,10 +158,13 @@ Targeted provider proof:
 
 ```text
 node scripts/builder/__tests__/opencode-adapter-governance-proof.mjs
-39 passed · 0 failed
+40 assertions defined on current Keychain head
+execution: PENDING
+prior witnessed provider proof before Keychain plumbing: 30 passed · 0 failed
 ```
 
-It proves registration, local Qwen resolution, Zen external-network gating, fail-closed Zen
+The current 40-assertion proof is not yet claimed PASS. Once executed successfully on the exact
+Keychain head, it is designed to prove registration, local Qwen resolution, Zen external-network gating, fail-closed Zen
 automation refusal before worktree acquisition, V1 read-only refusal, conjunctive external-network
 and provider-spend authority for metered providers, missing-credential refusal, Tinker Nemotron
 Lightning default + Ultra override, Inkling-Small default + full Inkling override, Inkling
