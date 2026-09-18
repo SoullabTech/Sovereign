@@ -361,3 +361,28 @@ Evidence:
 - canonical freshness at seal time: exact current base
 
 No model call, provider call, Keychain lookup, network access, Work Unit mutation, provider spend, production access, merge, or deployment occurred in the R4 witness.
+
+
+## 14. Founder adjudication
+
+**Issued:** 2026-09-18
+
+**Accepted exact R4 candidate:**
+
+6a2d0acd0f5ba935a8c1ab1b83ff82e11da90752
+
+The Founder accepts:
+
+- the R4 pure execution-admission contract;
+- the 24 / 24 R4 falsification witness;
+- route selection never constitutes execution authority;
+- provider execution authority is provider-specific;
+- external execution additionally requires network, spend, disclosure, and exact evidence-membrane authority;
+- Nemotron Zen remains manual-only;
+- stale, tampered, wrong-version, wrong-source, or pre-connected routes fail closed;
+- model evidence can never create merge, deploy, production, constitutional, or Founder authority;
+- current canonical R3 Work Units remain non-admissible because they lack an immutable route digest and provider-specific execution authority.
+
+This adjudication authorizes no provider execution, authority mutation, credential lookup, external call, provider spend, merge, deploy, or production action.
+
+The execution connector remains closed.
