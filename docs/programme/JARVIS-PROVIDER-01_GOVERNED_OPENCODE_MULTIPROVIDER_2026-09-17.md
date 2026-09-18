@@ -1,8 +1,8 @@
 # JARVIS-PROVIDER-01 — Governed OpenCode Multi-Provider Execution
 
-**Date:** 2026-09-17  
-**State:** IMPLEMENTED ON BOUNDED BRANCH · NOT MERGED · NOT DEPLOYED  
-**Base:** `d1d735e1186ed19defef235d91d4e896631de493`  
+**Date:** 2026-09-17
+**State:** IMPLEMENTED ON BOUNDED BRANCH · NOT MERGED · NOT DEPLOYED
+**Base:** `d1d735e1186ed19defef235d91d4e896631de493`
 **Branch:** `feature/jarvis-provider-01-opencode-multiprovider-20260917`
 
 ## Founder grant
