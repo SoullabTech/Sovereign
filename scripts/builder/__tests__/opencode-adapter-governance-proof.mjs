@@ -29,6 +29,7 @@ const FAKE_BIN = path.join(TMP, 'bin');
 const ARGS_FILE = path.join(TMP, 'opencode-args.txt');
 const SECURITY_ARGS_FILE = path.join(TMP, 'security-args.txt');
 const OPENCODE_ENV_STATUS_FILE = path.join(TMP, 'opencode-env-status.txt');
+const OPENCODE_STDIN_STATUS_FILE = path.join(TMP, 'opencode-stdin-status.txt');
 const TINKER_ARGS_FILE = path.join(TMP, 'tinker-args.txt');
 const TINKER_ENV_STATUS_FILE = path.join(TMP, 'tinker-env-status.txt');
 const TINKER_PROMPT_FILE = path.join(TMP, 'tinker-prompt.txt');
@@ -48,6 +49,11 @@ if [ -n "$TINKER_API_KEY" ]; then
   printf 'TINKER_API_KEY_PRESENT\\n' >> "$STUB_OPENCODE_ENV_STATUS"
 else
   printf 'TINKER_API_KEY_ABSENT\\n' >> "$STUB_OPENCODE_ENV_STATUS"
+fi
+if IFS= read -r stdin_line; then
+  printf 'DATA:%s\\n' "$stdin_line" > "$STUB_OPENCODE_STDIN_STATUS"
+else
+  printf 'EOF\\n' > "$STUB_OPENCODE_STDIN_STATUS"
 fi
 printf 'stub-opencode-ok\\n'
 exit 0
@@ -91,6 +97,7 @@ const baseEnv = (extra = {}) => ({
   STUB_OPENCODE_ARGS: ARGS_FILE,
   STUB_SECURITY_ARGS: SECURITY_ARGS_FILE,
   STUB_OPENCODE_ENV_STATUS: OPENCODE_ENV_STATUS_FILE,
+  STUB_OPENCODE_STDIN_STATUS: OPENCODE_STDIN_STATUS_FILE,
   STUB_TINKER_ARGS: TINKER_ARGS_FILE,
   STUB_TINKER_ENV_STATUS: TINKER_ENV_STATUS_FILE,
   STUB_TINKER_PROMPT: TINKER_PROMPT_FILE,
@@ -104,6 +111,24 @@ const sh = (args, extra = {}) => {
       code: 0,
       out: execFileSync('bash', [DELEGATE, ...args], {
         encoding: 'utf8', env: baseEnv(extra), stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+      err: '',
+    };
+  } catch (e) {
+    return {
+      code: e.status ?? 1,
+      out: (e.stdout ?? '').toString(),
+      err: (e.stderr ?? '').toString(),
+    };
+  }
+};
+
+const shWithInput = (args, input, extra = {}) => {
+  try {
+    return {
+      code: 0,
+      out: execFileSync('bash', [DELEGATE, ...args], {
+        encoding: 'utf8', env: baseEnv(extra), input,
       }),
       err: '',
     };
@@ -305,6 +330,22 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
     args.includes('--title') && args.includes(id), args.slice(0, 280));
   assert('the read-only prompt contains no commit instruction',
     !args.includes('commit your changes') && args.includes('READ-ONLY PROVIDER EVALUATION'));
+  sh(['release', id]);
+}
+
+console.log('\n=== P3b: governed OpenCode child receives EOF instead of inherited live stdin ===');
+{
+  const id = uid('stdin-eof');
+  sh(['new', id]);
+  authorizeReadOnly(id);
+  const run = shWithInput(['opencode', id, 'qwen-local'], 'PARENT_STDIN_SENTINEL\n');
+  assert('OpenCode attempt still completes when the delegate parent has readable stdin',
+    run.code === 0, `exit=${run.code} err=${run.err.slice(0, 160)}`);
+  const stdinStatus = existsSync(OPENCODE_STDIN_STATUS_FILE)
+    ? readFileSync(OPENCODE_STDIN_STATUS_FILE, 'utf8').trim()
+    : 'MISSING';
+  assert('governed OpenCode child receives immediate EOF and cannot inherit parent stdin',
+    stdinStatus === 'EOF', stdinStatus);
   sh(['release', id]);
 }
 
