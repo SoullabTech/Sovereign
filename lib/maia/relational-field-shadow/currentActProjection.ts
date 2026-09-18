@@ -9,24 +9,20 @@ import type {
   StandingEvidence,
 } from './types';
 
-export const H8_CURRENT_ACT_ARCHITECTURE_VERSION = 'h8-current-act-shadow-01@proposal-v1+h7j-155d759a+r1-469b67a7' as const;
+export const H8_CURRENT_ACT_ARCHITECTURE_VERSION = 'h8-current-act-shadow-01@proposal-v1+sklearn-stop-v1+h7j-155d759a+r1-469b67a7' as const;
 export const H8_CURRENT_ACT_MODEL_NAME = 'deterministic-h7j-r1' as const;
 export const H7J_ACQUISITION_RULE_SHA256 = '155d759a7a8a25dba337cd151812700da95f8e1064c3def8a14a78e478fa24c8' as const;
 export const H7I_R1_SPEC_SHA256 = '469b67a7400e15572b2d2731963961876fd32950ae490ed464910212f5d0b47c' as const;
 export const H8_ORDINARY_RELATION_PROPOSAL_VERSION = 'ordinary-relation-proposal-v1' as const;
+export const H8_SEMANTIC_RELEVANCE_VERSION = 'sklearn-tfidf-english-stop-v1' as const;
 
-const STOP = new Set([
-  'a','an','and','are','as','at','be','been','being','but','by','can','could','did','do','does','for','from',
-  'had','has','have','he','her','here','hers','him','his','how','i','if','in','into','is','it','its','me','my',
-  'of','on','or','our','ours','she','should','so','that','the','their','theirs','them','there','they','this',
-  'to','us','was','we','were','what','when','where','which','who','why','will','with','would','you','your','yours',
-]);
+const STOP = new Set(`a about above across after afterwards again against all almost alone along already also although always am among amongst amoungst amount an and another any anyhow anyone anything anyway anywhere are around as at back be became because become becomes becoming been before beforehand behind being below beside besides between beyond bill both bottom but by call can cannot cant co con could couldnt cry de describe detail do done down due during each eg eight either eleven else elsewhere empty enough etc even ever every everyone everything everywhere except few fifteen fifty fill find fire first five for former formerly forty found four from front full further get give go had has hasnt have he hence her here hereafter hereby herein hereupon hers herself him himself his how however hundred i ie if in inc indeed interest into is it its itself keep last latter latterly least less ltd made many may me meanwhile might mill mine more moreover most mostly move much must my myself name namely neither never nevertheless next nine no nobody none noone nor not nothing now nowhere of off often on once one only onto or other others otherwise our ours ourselves out over own part per perhaps please put rather re same see seem seemed seeming seems serious several she should show side since sincere six sixty so some somehow someone something sometime sometimes somewhere still such system take ten than that the their them themselves then thence there thereafter thereby therefore therein thereupon these they thick thin third this those though three through throughout thru thus to together too top toward towards twelve twenty two un under until up upon us very via was we well were what whatever when whence whenever where whereafter whereas whereby wherein whereupon wherever whether which while whither who whoever whole whom whose why will with within without would yet you your yours yourself yourselves`.split(' '));
 
 const sha256 = (value: string): string => createHash('sha256').update(value).digest('hex');
 const round = (value: number): number => Number(value.toFixed(6));
 
 function tokens(text: string): string[] {
-  return (text.toLowerCase().match(/[a-z0-9]+/g) ?? [])
+  return (text.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? [])
     .filter((token) => token.length > 1 && !STOP.has(token));
 }
 
@@ -159,6 +155,7 @@ export function buildCurrentActProjection(
         h7jAcquisitionRuleSha256: H7J_ACQUISITION_RULE_SHA256,
         h7iR1SpecSha256: H7I_R1_SPEC_SHA256,
         ordinaryRelationProposalVersion: H8_ORDINARY_RELATION_PROPOSAL_VERSION,
+        semanticRelevanceVersion: H8_SEMANTIC_RELEVANCE_VERSION,
         evidenceScope,
       },
       projectionStatus: 'no_prior_evidence' as const,
@@ -219,6 +216,7 @@ export function buildCurrentActProjection(
       h7jAcquisitionRuleSha256: H7J_ACQUISITION_RULE_SHA256,
       h7iR1SpecSha256: H7I_R1_SPEC_SHA256,
       ordinaryRelationProposalVersion: H8_ORDINARY_RELATION_PROPOSAL_VERSION,
+      semanticRelevanceVersion: H8_SEMANTIC_RELEVANCE_VERSION,
       evidenceScope,
     },
     projectionStatus: anchor ? 'projected' as const : 'no_direct_anchor' as const,
