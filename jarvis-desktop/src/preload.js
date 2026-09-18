@@ -23,6 +23,15 @@ contextBridge.exposeInMainWorld('jarvis', {
   getMechanismStatus: () => ipcRenderer.invoke('jarvis:mechanism-status'),
   runWorkUnit: (packet) => ipcRenderer.invoke('jarvis:run-work-unit', { packet }),
 
+  // ROUTER-03A founder grant, 2026-09-18. One channel only. The renderer may
+  // name an existing Work Unit and choose plan vs explicitly-confirmed execute;
+  // it cannot supply provider/model/routing/authority/budget/evidence fields.
+  modelWorkUnit: (action, workUnitId, confirmExecute = false) => ipcRenderer.invoke('jarvis:model-work-unit',
+    action === 'execute'
+      ? { action, work_unit_id: workUnitId, confirm_execute: confirmExecute === true }
+      : { action, work_unit_id: workUnitId },
+  ),
+
   getRepoConfig: () => ipcRenderer.invoke('jarvis:repo-config'),
   chooseRepo: () => ipcRenderer.invoke('jarvis:choose-repo'),
   clearRepo: () => ipcRenderer.invoke('jarvis:clear-repo'),
@@ -42,7 +51,7 @@ contextBridge.exposeInMainWorld('jarvis', {
   // reveals only (showItemInFolder), never openPath/openExternal. The reviewed
   // allow-list for the whole bridge lives in
   // scripts/builder/__tests__/desktop-preload-allowlist.mjs — the one place to
-  // come and argue for an eleventh channel.
+  // come and argue for a twelfth channel.
   revealWorkspace: () => ipcRenderer.invoke('jarvis:reveal-workspace'),
   onRepoChanged: (fn) => {
     if (typeof fn !== 'function') return () => {};
