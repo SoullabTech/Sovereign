@@ -153,6 +153,76 @@ export interface CaptureLivenessVerdict {
 }
 
 /**
+ * Explicit-floor liveness needs a different authority rule from automatic
+ * turn-taking. Silence is expected while the member owns the floor, so a
+ * silent-death verdict based only on missing recognition events must not end
+ * capture. A genuinely dead recognizer is still detectable once local analyser
+ * evidence proves the member resumed speaking but recognition stayed silent.
+ */
+export const EXPLICIT_FLOOR_RECOGNITION_PROBE_MS = 2_000;
+
+export interface CaptureLivenessAuthorityInput {
+  verdict: CaptureLivenessVerdict;
+  explicitFloorOwned: boolean;
+  /** Local analyser crossed the voice threshold after recognition's last proof of life. */
+  analyserVoiceAfterRecognition: boolean;
+  /** Age of that analyser voice evidence; -1 means no such evidence exists. */
+  analyserVoiceAgeMs: number;
+}
+
+/**
+ * Decide whether a liveness verdict is allowed to tear capture down.
+ *
+ * - Automatic floor: preserve historical liveness behaviour.
+ * - Explicit floor + pure silence: member may be thinking indefinitely.
+ * - Explicit floor + local voice after recognition went quiet: give recognition
+ *   a short grace window; if it still emits nothing, treat that as a real zombie.
+ * - Non-silent-death failures (e.g. never-armed) remain actionable.
+ */
+export function shouldActOnCaptureLiveness(input: CaptureLivenessAuthorityInput): boolean {
+  const {
+    verdict,
+    explicitFloorOwned,
+    analyserVoiceAfterRecognition,
+    analyserVoiceAgeMs,
+  } = input;
+
+  if (!verdict.dead || !verdict.cause) return false;
+  if (verdict.cause !== 'silent_death') return true;
+  if (!explicitFloorOwned) return true;
+  if (!analyserVoiceAfterRecognition) return false;
+  return analyserVoiceAgeMs >= EXPLICIT_FLOOR_RECOGNITION_PROBE_MS;
+}
+
+/**
+ * TURN-02 automatic recovery is intentionally narrower than liveness detection.
+ * Only a silent recognition death may self-heal, only while HANDS_FREE
+ * conversational authority is still active, and only once until a real
+ * recognition result proves the replacement generation can transcribe.
+ */
+export interface AutomaticCaptureRecoveryInput {
+  cause: CaptureLossCause;
+  handsFree: boolean;
+  continuousConversation: boolean;
+  automaticEndpointing: boolean;
+  restartRequestInFlight: boolean;
+  recoveryAlreadyAttempted: boolean;
+}
+
+export function shouldAttemptAutomaticCaptureRecovery(
+  input: AutomaticCaptureRecoveryInput,
+): boolean {
+  return (
+    input.cause === 'silent_death' &&
+    input.handsFree &&
+    input.continuousConversation &&
+    input.automaticEndpointing &&
+    !input.restartRequestInFlight &&
+    !input.recoveryAlreadyAttempted
+  );
+}
+
+/**
  * Decide whether the capture path has silently died.
  *
  * Total and side-effect free: given the same input it always returns the same

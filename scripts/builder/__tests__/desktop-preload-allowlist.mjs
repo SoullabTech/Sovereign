@@ -116,14 +116,19 @@ export const RATIFIED_INVOKE_CHANNELS = [
   },
   {
     channel: 'jarvis:work-unit-action',
-    ratified_in: 'JARVIS-DESKTOP-OPERATOR-FLOW-02 founder act 2026-09-17',
+    ratified_in: 'JARVIS-DESKTOP-OPERATOR-FLOW-02 + JARVIS-ROUTING-INTELLIGENCE-01/J5 founder rulings',
     purpose:
-      'Founder-facing control of one canonical provider-review Work Unit through four fixed actions: ' +
-      'providers/create/status/run-provider. The renderer cannot supply a filesystem path, shell ' +
-      'command, Work Unit id, branch, canonical SHA, or raw authority envelope at creation: MAIN ' +
-      'derives those from the bound repository and operator-work-unit. Provider execution calls the ' +
-      'existing ain-delegate.sh opencode seam, whose canonical provider registry re-checks repo/network/' +
-      'spend authority before acquiring a worktree or launching a model. No production/deploy act is exposed.',
+      'Founder-facing control of canonical W0.v2 plus the explicitly LEGACY / COMPATIBILITY Work Unit lane ' +
+      'through one bounded action channel. Canonical actions are providers/preview-route/create/status/' +
+      'canonical-bound/canonical-authorize/canonical-route/canonical-bind-transport/canonical-adjudicate/' +
+      'canonical-close. Preview is prospective/noncanonical/nonexecuting; MAIN derives canonical SHA and Work ' +
+      'Unit identity, W2.v2 owns lifecycle, W3.v2 owns route binding, W3T owns provider/model realization, and ' +
+      'W4.v2 is read as append-only provenance. Canonical v2 exposes no provider execution authority in I4. ' +
+      'Legacy compatibility actions remain route-plan/execution-auth-preview/authorize-execution-once/' +
+      'confirm-execute/revoke-execution-grant/run-provider under the existing R5B/R4/R5A law. MAIN and the ' +
+      'lower controller refuse those execution verbs for W0.v2. The renderer cannot supply lifecycle state, ' +
+      'route records/digests, canonical SHA, raw authority, provider/model identity for canonical transport, ' +
+      'credentials, or execution grants. No production/deploy/merge act is exposed.',
   },
   {
     channel: 'jarvis:status',

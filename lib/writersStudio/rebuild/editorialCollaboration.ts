@@ -10,6 +10,7 @@ export interface RebuildEditorialVersion {
 }
 
 export interface RebuildEditorialThread {
+  application?: { authorizationId: string; versionId: string; resultingVersion: number; undone: boolean; canUndo: boolean } | null;
   threadId: string;
   chainId: string;
   locusText: string;

@@ -156,6 +156,7 @@ const authorizeReadOnly = (id, extraActs = []) => writePacket(id, {
     'deploy', 'authority.change',
     ...(extraActs.includes('network.external') ? [] : ['network.external']),
     ...(extraActs.includes('provider.spend') ? [] : ['provider.spend']),
+    ...(extraActs.includes('repo.disclose:external-readonly') ? [] : ['repo.disclose:external-readonly']),
   ],
 });
 
@@ -303,6 +304,26 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
     JSON.stringify(inkling));
   assert('Inkling remains explicitly evaluation-only in the registry',
     inkling.provider_standing === 'evaluation-only', inkling.provider_standing);
+
+  const e3WithoutDisclosure = resolveOpenCodeProvider({
+    providerId: 'inkling-tinker',
+    evidenceClass: 'E3_EXTERNAL_REPO_BUNDLE',
+    permissionEnvelope: { ...base, external_network: true, provider_spend: true, external_repo_disclosure: false },
+    env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('E3 external repository evidence refuses without a separate disclosure grant',
+    !e3WithoutDisclosure.ok && e3WithoutDisclosure.code === 'EXTERNAL_REPOSITORY_DISCLOSURE_NOT_AUTHORIZED',
+    JSON.stringify(e3WithoutDisclosure));
+
+  const e3WithDisclosure = resolveOpenCodeProvider({
+    providerId: 'inkling-tinker',
+    evidenceClass: 'E3_EXTERNAL_REPO_BUNDLE',
+    permissionEnvelope: { ...base, external_network: true, provider_spend: true, external_repo_disclosure: true },
+    env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('E3 resolves only after network + spend + disclosure + credential',
+    e3WithDisclosure.ok && e3WithDisclosure.evidence_class === 'E3_EXTERNAL_REPO_BUNDLE',
+    JSON.stringify(e3WithDisclosure));
 }
 
 console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ===');
@@ -425,7 +446,7 @@ console.log('\n=== P5: authorized external selection remains testable without a 
 {
   const id = uid('inkling-stub');
   sh(['new', id]);
-  authorizeReadOnly(id, ['network.external', 'provider.spend']);
+  authorizeReadOnly(id, ['network.external', 'provider.spend', 'repo.disclose:external-readonly']);
   writePacket(id, { allowed_files: ['opencode.json'] });
   const run = sh(['tinker', id, 'inkling-tinker'], {
     TINKER_API_KEY: 'proof-only-not-a-real-key',
@@ -450,7 +471,7 @@ console.log('\n=== P5b: authorized Tinker may hydrate from macOS Keychain withou
   const id = uid('inkling-keychain');
   const proofSecret = 'credential-from-keychain-stub';
   sh(['new', id]);
-  authorizeReadOnly(id, ['network.external', 'provider.spend']);
+  authorizeReadOnly(id, ['network.external', 'provider.spend', 'repo.disclose:external-readonly']);
   writePacket(id, { verification_commands: ['test -z "${TINKER_API_KEY:-}"'] });
   const beforeSecurity = securityLog();
   const run = sh(['tinker', id, 'inkling-tinker'], {

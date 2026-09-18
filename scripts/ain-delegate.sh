@@ -533,6 +533,10 @@ _run_lane() {
 
     echo "[ain-delegate] $lane run complete for '$work_unit_id' — exit=$exit_code tests=$test_results escalate=$escalation_required" >&2
     cat "$(_result_file "$work_unit_id")"
+    # J6 routing law: wrapper/process success may not contradict the durable
+    # provider-attempt result. Preserve the worker/provider exit after writing
+    # the result contract so immediate callers and durable evidence agree.
+    return "$exit_code"
 }
 
 cmd_local()  { _run_lane "local" "$1"; }

@@ -14,6 +14,8 @@ import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 import {
   assessCaptureLiveness,
+  shouldActOnCaptureLiveness,
+  shouldAttemptAutomaticCaptureRecovery,
   describeCaptureLoss,
   isCaptureLossUnexpected,
   TRACK_MUTE_GRACE_MS,
@@ -62,8 +64,8 @@ import {
 // 🎙️ VOICE STATE MACHINE — Single authority for mic lifecycle
 // =============================================================================
 // Rule: ONLY requestRestart() may INITIATE a new listening cycle. Every re-arm
-// path — user tap, maia_stopped_speaking, recognition_stopped, interruption_end,
-// foreground_resume — routes through it; it normalizes stale turn-complete state,
+// path — user tap, maia_stopped_speaking, recognition_stopped, capture_recovery,
+// interruption_end, foreground_resume — routes through it; it normalizes stale turn-complete state,
 // applies the HANDS_FREE/PUSH_TO_TALK policy once, and delegates to the
 // startListening lifecycle. Direct NativeSpeechRecognition.start() /
 // recognition.start() calls are permitted ONLY inside that lifecycle
@@ -425,6 +427,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   /** Has `onaudiostart` fired for the currently armed instance? */
   const captureAudioOpenedRef = useRef<boolean>(false);
   const livenessTimerRef = useRef<NodeJS.Timeout | null>(null);
+  /** Throttle explicit-floor liveness-hold telemetry while a member is thinking. */
+  const explicitFloorLivenessHoldLoggedAtRef = useRef<number>(0);
   /** Pending confirmation that a track `mute` is sustained, not transient. */
   const trackMuteTimerRef = useRef<NodeJS.Timeout | null>(null);
   /** Audio track listeners, kept so they can be detached with the stream. */
@@ -432,9 +436,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   /**
    * One silent self-heal per loss, then we stop and tell the member.
    * Retrying forever is how a dead mic keeps looking alive — the opposite of
-   * what this whole path is for. Reset on any successful capture activity.
+   * what this whole path is for. Reset only by an actual recognition onresult.
    */
   const selfHealAttemptedRef = useRef<boolean>(false);
+  const requestRestartFnRef = useRef<(s: RestartSource, o?: { forceOverride?: boolean }) => void>();
   const handleCaptureLossFnRef = useRef<(cause: CaptureLossCause) => void>();
   const attachTrackLossListenersFnRef = useRef<(stream: MediaStream) => void>();
   const reportVoiceStatusFnRef = useRef<(info: {
@@ -446,7 +451,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const markCaptureActivity = useCallback((audioOpened?: boolean) => {
     lastCaptureActivityAtRef.current = Date.now();
     if (audioOpened) captureAudioOpenedRef.current = true;
-    selfHealAttemptedRef.current = false;
+    // TURN-02: lifecycle activity alone does not prove the replacement
+    // recognition generation can transcribe. Only onresult replenishes the
+    // bounded self-heal budget.
+    explicitFloorLivenessHoldLoggedAtRef.current = 0;
   }, []);
 
   // ==========================================================================
@@ -898,6 +906,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     recognition.onresult = session.guard(gen, (event: any) => {
       markCaptureActivity(true); // 🩺 results are arriving — capture is unambiguously alive
+      // TURN-02: a real recognition result is the only proof strong enough to
+      // replenish the one-shot silent-death recovery budget.
+      selfHealAttemptedRef.current = false;
       logVoiceEvent('voice_transcribe_result', {
         resultCount: event.results?.length ?? 0,
         isFinal: event.results?.[event.results.length - 1]?.isFinal === true,
@@ -1721,6 +1732,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
 
     const reasonCode = CAPTURE_REASON_CODES[cause] ?? 'UNKNOWN_VOICE_STALL';
+    const attemptAutomaticRecovery = shouldAttemptAutomaticCaptureRecovery({
+      cause,
+      handsFree: handsFreeActiveRef.current && listeningModeRef.current === 'HANDS_FREE',
+      continuousConversation: wantsContinuousConversationRef.current,
+      automaticEndpointing: automaticTurnCommitAllowed(),
+      restartRequestInFlight: restartRequestInFlightRef.current,
+      recoveryAlreadyAttempted: selfHealAttemptedRef.current,
+    });
     console.warn(`🩺 [liveness] Capture loss detected: ${cause} (${reasonCode})`);
     // 🔬 VOICE-CAPTURE-NO-AUDIO-01A — snapshot BEFORE the teardown below zeroes
     // the liveness refs. Attached to the existing event rather than emitted as
@@ -1757,20 +1776,32 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isListeningRef.current = false;
     setIsRecording(false);
     isRecordingRef.current = false;
-    wantsContinuousConversationRef.current = false;
     onRecordingStateChange?.(false);
     setAudioLevel(0);
-    // ERROR (not IDLE) so authorityGuard still admits an explicit user tap,
-    // while no automatic path can quietly re-arm behind the member's back.
+    // ERROR is a recoverable turn-complete state. requestRestart() normalizes it
+    // through the canonical authority before a fresh recognition generation starts.
     setMicState('ERROR', `capture_loss_${cause}`);
 
+    if (attemptAutomaticRecovery) {
+      // TURN-02: preserve HANDS_FREE conversational intent for exactly one
+      // silent-death recovery. The budget is spent BEFORE re-arm and stays spent
+      // through onstart / audio start / speech start. Only onresult clears it.
+      selfHealAttemptedRef.current = true;
+      console.warn('🩺 [liveness] One-shot HANDS_FREE capture recovery requested');
+      void requestRestartFnRef.current?.('capture_recovery');
+      return;
+    }
+
+    // Every non-authorized loss — including a second silent_death before any
+    // result from the replacement generation — fails closed exactly as before.
+    wantsContinuousConversationRef.current = false;
     reportVoiceStatus({
       level: isCaptureLossUnexpected(cause) ? 'error' : 'info',
       cause: reasonCode,
       userMessage: describeCaptureLoss(cause, { transcriptPreserved: preserved }),
       recoverable: true,
     });
-  }, [salvageTranscript, reportVoiceStatus, onRecordingStateChange, setMicState, snapshotCaptureForensics]);
+  }, [salvageTranscript, reportVoiceStatus, onRecordingStateChange, setMicState, snapshotCaptureForensics, automaticTurnCommitAllowed]);
 
   /**
    * Attach loss listeners to the live microphone track.
@@ -1849,6 +1880,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (!isListening) return;
 
     const tick = () => {
+      const now = Date.now();
       const applicable =
         isListeningRef.current &&
         !isSpeakingRef.current &&
@@ -1858,7 +1890,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         recognitionActiveRef.current;
 
       const verdict = assessCaptureLiveness({
-        now: Date.now(),
+        now,
         lastActivityAt: lastCaptureActivityAtRef.current,
         armedAt: captureArmedAtRef.current,
         audioOpened: captureAudioOpenedRef.current,
@@ -1866,6 +1898,46 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       });
 
       if (!verdict.dead || !verdict.cause) return;
+
+      const explicitFloorOwned = !automaticTurnCommitAllowed();
+      const recognitionProofAt = Math.max(
+        lastCaptureActivityAtRef.current,
+        captureArmedAtRef.current,
+      );
+      const analyserVoiceAfterRecognition =
+        analyserLastVoiceAtRef.current > recognitionProofAt;
+      const analyserVoiceAgeMs = analyserLastVoiceAtRef.current > 0
+        ? Math.max(0, now - analyserLastVoiceAtRef.current)
+        : -1;
+
+      const mayEndCapture = shouldActOnCaptureLiveness({
+        verdict,
+        explicitFloorOwned,
+        analyserVoiceAfterRecognition,
+        analyserVoiceAgeMs,
+      });
+
+      if (!mayEndCapture) {
+        // TURN-01-RUNTIME-CONFORMANCE-02: intentional silence is not evidence
+        // that capture died while the member explicitly owns the floor. A real
+        // recognition zombie remains detectable once the local analyser hears
+        // resumed speech and recognition stays silent past the probe grace.
+        if (
+          verdict.cause === 'silent_death' &&
+          explicitFloorOwned &&
+          shouldEmitThrottled(now, explicitFloorLivenessHoldLoggedAtRef.current, 5_000)
+        ) {
+          explicitFloorLivenessHoldLoggedAtRef.current = now;
+          logVoiceEvent('voice_floor_held', {
+            source: 'liveness_watchdog',
+            silentForMs: verdict.silentForMs,
+            analyserVoiceAfterRecognition,
+            analyserVoiceAgeMs,
+            floorControlMode: 'explicit',
+          });
+        }
+        return;
+      }
 
       console.warn(
         `🩺 [liveness] Capture silent for ${Math.round(verdict.silentForMs / 1000)}s ` +
@@ -1917,7 +1989,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         livenessTimerRef.current = null;
       }
     };
-  }, [isListening]);
+  }, [isListening, automaticTurnCommitAllowed]);
 
   /**
    * The ONE web-path start gate. Consults the lifecycle session:
@@ -3918,7 +3990,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
   }, [normalizeTurnCompleteState]);
 
-  const requestRestartFnRef = useRef<(s: RestartSource, o?: { forceOverride?: boolean }) => void>();
   requestRestartFnRef.current = requestRestart;
   normalizeTurnCompleteStateFnRef.current = normalizeTurnCompleteState;
 

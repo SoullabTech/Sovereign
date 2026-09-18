@@ -90,7 +90,7 @@ const attemptsPath = (id) => path.join(RESULTS_DIR(), `${id}.attempts.jsonl`);
 export const DEFAULT_AUTHORIZED_ACTS = ['repo.read', 'repo.write:worktree', 'tests.run'];
 export const DEFAULT_NOT_AUTHORIZED_ACTS = [
   'production.read', 'production.write', 'deploy', 'authority.change',
-  'network.external', 'provider.spend',
+  'network.external', 'provider.spend', 'repo.disclose:external-readonly',
 ];
 export const DEFAULT_INTEGRATION_ACTOR = 'jarvis';
 export const DEFAULT_RISK_CLASS = 'mechanical';
@@ -216,8 +216,12 @@ export function deriveLifecycle({ workUnit, session, result }) {
   if (session && session.state === 'active' && (session.collisions ?? []).length > 0) return 'contended';
   if (session && session.state === 'active' && !result) return 'claimed'; // folds claimed+running
   if (result && result.escalation_required) return 'needs_founder';
+  if (result && (
+    result.test_results === 'fail'
+    || (Number.isInteger(result.exit_code) && result.exit_code !== 0)
+    || result.recommended_next_action === 'reject'
+  )) return 'failed';
   if (result && result.integration && result.integration.commit_sha) return 'integrated';
-  if (result && result.test_results === 'fail') return 'failed';
   if (result && result.test_results === 'pass' && !(result.integration && result.integration.commit_sha)) {
     return 'ready_to_integrate'; // folds verifying+review_required+ready_to_integrate
   }
@@ -247,6 +251,7 @@ export function derivePermissionEnvelope(workUnit) {
     // External provider use is capability, never implicit permission.
     // Existing Work Units default both acts to denied for backward-compatible safety.
     external_network: allow('network.external'),
+    external_repo_disclosure: allow('repo.disclose:external-readonly'),
     provider_spend: allow('provider.spend'),
   };
 }
@@ -286,6 +291,8 @@ export function workUnitStatus(id) {
     } : null,
     latest_result: result ? {
       lane: result.lane, model: result.model, test_results: result.test_results,
+      exit_code: Number.isInteger(result.exit_code) ? result.exit_code : null,
+      recommended_next_action: result.recommended_next_action ?? null,
       files_changed: result.files_changed,
       integration: result.integration ?? null,
       release: result.release ?? null,

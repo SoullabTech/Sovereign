@@ -1,0 +1,16 @@
+
+> spiralogic-oracle-system@1.2.0 typecheck
+> node scripts/check-typehealth-baseline.js
+
+TypeScript no-regression gate — tsconfig.ship.json
+  program files : 4383 (baseline 3965)
+  errors        : 229 (baseline 239)
+
+✨  10 error(s) fixed since the baseline (8 identities gone, 0 reduced).
+    Lock it in with: npm run typecheck:baseline
+
+📈  424 new file(s) entered the program.
+
+🗑   6 baselined file(s) were deleted from disk (not a regression).
+
+✅  No TypeScript regressions.

@@ -35,6 +35,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
 import { RoomHoloflower, type RoomMotionState, type SpiralElement } from './RoomHoloflower';
+import { LivingConstellationPanel } from '@/components/maia/living-constellation/LivingConstellationPanel';
 
 type Role = 'user' | 'assistant';
 interface Turn { role: Role; content: string; }
@@ -485,6 +486,9 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
           <p className="text-xs uppercase tracking-widest text-stone-400">Vision Studio</p>
           <h1 className="text-lg font-light text-stone-200">{phaseLabel}</h1>
         </div>
+
+        {/* LC-02: same read-only constellation, Vision Studio foregrounded. */}
+        <LivingConstellationPanel focus="vision" />
 
         <div className="space-y-1">
           <p className="text-stone-300 text-base font-light leading-relaxed">Every practitioner begins differently.</p>

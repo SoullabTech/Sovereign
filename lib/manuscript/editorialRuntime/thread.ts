@@ -1,3 +1,4 @@
+import { readApplicationRecovery, type ApplicationRecovery } from './recovery';
 /**
  * WS-EDITORIAL-UI-01 · THE EDITORIAL RELATIONSHIP DOOR — open, and read.
  *
@@ -249,6 +250,7 @@ export interface EditorialThreadView {
    * own validated succession, read through `readProposalWork`, which already
    * owns read → validateChain → lineage. ⛔ No second ordering algorithm.
    */
+  readonly application?: ApplicationRecovery | null;
   readonly versions: readonly EditorialThreadVersion[];
   /** ⭐ The head of that succession, or `null` when nothing is authored yet. */
   readonly headVersionId: string | null;
@@ -335,6 +337,7 @@ export async function readEditorialThread(
   return {
     ok: true,
     view: {
+      application: await readApplicationRecovery(memberId, threadId),
       threadId, chainId,
       locusText: t.rows[0]!.expected_text ?? '',
       targetSectionId: t.rows[0]!.target_section_id,

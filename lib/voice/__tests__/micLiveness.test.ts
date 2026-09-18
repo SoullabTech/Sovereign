@@ -17,11 +17,14 @@
 
 import {
   assessCaptureLiveness,
+  shouldActOnCaptureLiveness,
+  shouldAttemptAutomaticCaptureRecovery,
   describeCaptureLoss,
   isCaptureLossUnexpected,
   CAPTURE_REASON_CODES,
   CAPTURE_SILENT_DEATH_MS,
   CAPTURE_ARMING_SILENT_MS,
+  EXPLICIT_FLOOR_RECOGNITION_PROBE_MS,
   type CaptureLossCause,
 } from '../micLiveness';
 
@@ -113,6 +116,121 @@ describe('assessCaptureLiveness', () => {
     const v = assessCaptureLiveness({ ...base, now: T0 - 5_000 });
     expect(v.dead).toBe(false);
     expect(v.silentForMs).toBe(0);
+  });
+});
+
+describe('explicit-floor liveness authority', () => {
+  const silentDeath = {
+    dead: true as const,
+    cause: 'silent_death' as const,
+    silentForMs: CAPTURE_SILENT_DEATH_MS,
+  };
+
+  it('does not convert intentional explicit-floor silence into capture death', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: silentDeath,
+      explicitFloorOwned: true,
+      analyserVoiceAfterRecognition: false,
+      analyserVoiceAgeMs: -1,
+    })).toBe(false);
+  });
+
+  it('preserves historical silent-death authority in automatic mode', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: silentDeath,
+      explicitFloorOwned: false,
+      analyserVoiceAfterRecognition: false,
+      analyserVoiceAgeMs: -1,
+    })).toBe(true);
+  });
+
+  it('preserves non-silence failures while the member owns the floor', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: {
+        dead: true,
+        cause: 'never_armed',
+        silentForMs: CAPTURE_ARMING_SILENT_MS,
+      },
+      explicitFloorOwned: true,
+      analyserVoiceAfterRecognition: false,
+      analyserVoiceAgeMs: -1,
+    })).toBe(true);
+  });
+
+  it('gives resumed speech a grace window before declaring recognition dead', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: silentDeath,
+      explicitFloorOwned: true,
+      analyserVoiceAfterRecognition: true,
+      analyserVoiceAgeMs: EXPLICIT_FLOOR_RECOGNITION_PROBE_MS - 1,
+    })).toBe(false);
+  });
+
+  it('still detects a recognition zombie after resumed local voice gets no recognition event', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: silentDeath,
+      explicitFloorOwned: true,
+      analyserVoiceAfterRecognition: true,
+      analyserVoiceAgeMs: EXPLICIT_FLOOR_RECOGNITION_PROBE_MS,
+    })).toBe(true);
+  });
+});
+
+describe('TURN-02 bounded automatic capture recovery', () => {
+  const baseRecovery = {
+    cause: 'silent_death' as const,
+    handsFree: true,
+    continuousConversation: true,
+    automaticEndpointing: true,
+    restartRequestInFlight: false,
+    recoveryAlreadyAttempted: false,
+  };
+
+  it('admits exactly the first silent_death in active HANDS_FREE automatic mode', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery(baseRecovery)).toBe(true);
+  });
+
+  it('fails closed on a second silent_death before any result replenishes the budget', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery({
+      ...baseRecovery,
+      recoveryAlreadyAttempted: true,
+    })).toBe(false);
+  });
+
+  it('never self-heals explicit-floor capture', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery({
+      ...baseRecovery,
+      automaticEndpointing: false,
+    })).toBe(false);
+  });
+
+  it('never self-heals when hands-free or conversational authority is gone', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery({ ...baseRecovery, handsFree: false })).toBe(false);
+    expect(shouldAttemptAutomaticCaptureRecovery({
+      ...baseRecovery,
+      continuousConversation: false,
+    })).toBe(false);
+  });
+
+  it('never overlaps an already in-flight restart request', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery({
+      ...baseRecovery,
+      restartRequestInFlight: true,
+    })).toBe(false);
+  });
+
+  it.each([
+    'never_armed',
+    'track_ended',
+    'track_muted',
+    'restart_loop',
+    'abort_loop',
+    'inactivity',
+    'audio_context_interrupted',
+    'device_changed',
+    'permission_lost',
+  ] as const)('never self-heals %s', (cause) => {
+    expect(shouldAttemptAutomaticCaptureRecovery({ ...baseRecovery, cause })).toBe(false);
   });
 });
 

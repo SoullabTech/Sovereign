@@ -1,0 +1,12 @@
+{"event":"start","call_index":1,"work_unit_id":"j3b-r1-nemotron-b1","provider":"nemotron-tinker","model":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16","ts":"2026-09-18T12:03:54Z","retry":false}
+{"event":"finish","call_index":1,"work_unit_id":"j3b-r1-nemotron-b1","exit_code":0,"ts":"2026-09-18T12:04:23Z"}
+{"event":"start","call_index":2,"work_unit_id":"j3b-r1-nemotron-b2","provider":"nemotron-tinker","model":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16","ts":"2026-09-18T12:04:23Z","retry":false}
+{"event":"finish","call_index":2,"work_unit_id":"j3b-r1-nemotron-b2","exit_code":0,"ts":"2026-09-18T12:04:36Z"}
+{"event":"start","call_index":3,"work_unit_id":"j3b-r1-nemotron-b3","provider":"nemotron-tinker","model":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16","ts":"2026-09-18T12:04:37Z","retry":false}
+{"event":"finish","call_index":3,"work_unit_id":"j3b-r1-nemotron-b3","exit_code":0,"ts":"2026-09-18T12:04:56Z"}
+{"event":"start","call_index":4,"work_unit_id":"j3b-r1-nemotron-b4","provider":"nemotron-tinker","model":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16","ts":"2026-09-18T12:04:56Z","retry":false}
+{"event":"finish","call_index":4,"work_unit_id":"j3b-r1-nemotron-b4","exit_code":0,"ts":"2026-09-18T12:05:15Z"}
+{"event":"start","call_index":5,"work_unit_id":"j3b-r1-nemotron-b5","provider":"nemotron-tinker","model":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16","ts":"2026-09-18T12:05:15Z","retry":false}
+{"event":"finish","call_index":5,"work_unit_id":"j3b-r1-nemotron-b5","exit_code":0,"ts":"2026-09-18T12:05:40Z"}
+{"event":"start","call_index":6,"work_unit_id":"j3b-r1-inkling-b4","provider":"inkling-tinker","model":"thinkingmachines/Inkling-Small","ts":"2026-09-18T12:05:40Z","retry":false}
+{"event":"finish","call_index":6,"work_unit_id":"j3b-r1-inkling-b4","exit_code":0,"ts":"2026-09-18T12:05:54Z"}

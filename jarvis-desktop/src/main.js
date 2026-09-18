@@ -6,6 +6,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const fs = require('node:fs');
 const os = require('node:os');
 const { buildManifest } = require('./capability-form.js');
@@ -18,6 +19,7 @@ const CONTINUITY = require('./continuity.js');
 const FRONTIER = require('./frontier-worker.js');
 const WUC = require('./work-unit-control.js');
 const OPWU = require('./operator-work-unit.js');
+const CWUV2 = require('./canonical-work-unit-v2.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
@@ -732,10 +734,49 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 });
 
 
-// Governed provider-review Work Unit control. ONE narrow channel, four named
-// actions. MAIN owns the repository binding, canonical SHA, Work Unit id/branch,
-// and canonical scripts; the renderer cannot supply a path, shell command, or
-// authority envelope directly.
+async function computeLegacyRoutingPreview(root, spec) {
+  const routePath = path.join(root, 'scripts', 'builder', 'routing-intelligence.mjs');
+  const integrityPath = path.join(root, 'scripts', 'builder', 'routing-route-integrity.mjs');
+  if (!fs.existsSync(routePath) || !fs.existsSync(integrityPath)) {
+    return {
+      ok: false,
+      status: 'ROUTER_UNAVAILABLE',
+      reason: 'Routing Intelligence or the canonical R5A route-integrity law is not present in the bound checkout.',
+    };
+  }
+  const routingInput = OPWU.buildRoutingInput(spec || {});
+  const routeMod = await import(`${pathToFileURL(routePath).href}?t=${Date.now()}`);
+  const integrityMod = await import(`${pathToFileURL(integrityPath).href}?t=${Date.now()}`);
+  const routeRecord = routeMod.routeIntelligence(routingInput);
+  const routeDigest = integrityMod.routeDigest(routeRecord);
+  return {
+    ok: true,
+    status: 'PREVIEWED',
+    routing_input: routingInput,
+    route_record: routeRecord,
+    route_digest: routeDigest,
+  };
+}
+
+function currentCanonicalSha(root) {
+  return execFileSync('git', ['rev-parse', 'HEAD'], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: childEnv(process.env).env,
+  }).trim();
+}
+
+function desktopHumanActorId() {
+  const username = String(os.userInfo().username || 'operator').replace(/[^a-zA-Z0-9._-]/g, '-');
+  return 'human:jarvis-desktop:' + username;
+}
+
+// Governed provider-review Work Unit control. ONE narrow channel with bounded
+// actions. R3 preview remains pre-create and non-executing; J6 route-plan remains
+// post-create and derives authority from the stored Work Unit. MAIN owns repository
+// binding, canonical SHA, Work Unit identity, and canonical scripts; the renderer
+// cannot supply a path, shell command, route record, or authority envelope directly.
 ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
   const root = currentRoot();
   if (!root) return { ok: false, status: 'NO_SUBSTRATE', reason: 'No execution substrate is bound.' };
@@ -745,11 +786,45 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
     if (action === 'providers') {
       return { ok: true, status: 'COMPLETED', providers: await WUC.providers(root, { env: childEnv(process.env).env, home: os.homedir() }) };
     }
+    if (action === 'preview-route') {
+      if (req?.mode === 'canonical-v2') {
+        return await CWUV2.prospectivePreview(root, req?.spec || {}, {
+          canonicalSha: currentCanonicalSha(root),
+          nowMs: Date.now(),
+          env: process.env,
+        });
+      }
+      return await computeLegacyRoutingPreview(root, req?.spec || {});
+    }
     if (action === 'create') {
-      const canonicalSha = execFileSync('git', ['rev-parse', 'HEAD'], {
-        cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env,
-      }).trim();
-      const built = OPWU.buildPacket(req?.spec || {}, { canonicalSha, nowMs: Date.now() });
+      const canonicalSha = currentCanonicalSha(root);
+      const spec = req?.spec || {};
+      if (req?.mode === 'canonical-v2') {
+        return await CWUV2.createCanonicalV2(root, spec, {
+          canonicalSha,
+          nowMs: Date.now(),
+          env: process.env,
+          actorId: desktopHumanActorId(),
+        });
+      }
+      let routeRecord = null;
+      let routeDigest = null;
+      if (spec.routing && typeof spec.routing === 'object') {
+        const preview = await computeLegacyRoutingPreview(root, spec);
+        if (!preview.ok) return preview;
+        routeRecord = preview.route_record;
+        routeDigest = preview.route_digest;
+        if (routeRecord.execution_disposition === 'refused') {
+          const errors = (routeRecord.blockers || []).map((block) => `${block.code}: ${block.detail}`);
+          return { ok: false, status: 'ROUTE_REFUSED', reason: errors.join('; '), errors, route_record: routeRecord };
+        }
+      }
+      const built = OPWU.buildPacket(spec, {
+        canonicalSha,
+        nowMs: Date.now(),
+        routeRecord,
+        routeDigest,
+      });
       if (!built.ok) return { ok: false, status: 'REFUSED', reason: built.errors.join('; '), errors: built.errors };
       const created = await WUC.create(root, built.packet);
       if (!created.ok) return { ...created, status: 'REFUSED' };
@@ -764,17 +839,178 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
           disclosure: built.packet.disclosure,
         },
         provider_strategy: built.packet.provider_strategy,
+        routing_intelligence: built.packet.routing_intelligence,
         snapshot,
       };
     }
     if (action === 'status') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return await CWUV2.statusCanonicalV2(root, req.work_unit_id, {
+          env: process.env,
+          actorId: desktopHumanActorId(),
+        });
+      }
       return await WUC.status(root, req.work_unit_id);
     }
-    if (action === 'run-provider') {
+    if (action === 'canonical-bound') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.transitionCanonicalV2(root, req.work_unit_id, 'BOUNDED', {
+        env: process.env,
+        actorId: desktopHumanActorId(),
+      });
+    }
+    if (action === 'canonical-authorize') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.transitionCanonicalV2(root, req.work_unit_id, 'AUTHORIZED', {
+        env: process.env,
+        actorId: desktopHumanActorId(),
+      });
+    }
+    if (action === 'canonical-route') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.bindCanonicalRouteV2(root, req.work_unit_id, {
+        env: process.env,
+        actorId: desktopHumanActorId(),
+      });
+    }
+    if (action === 'canonical-bind-transport') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.route_participant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid route_participant_id.' };
+      }
+      return await CWUV2.bindCanonicalTransportV2(
+        root,
+        req.work_unit_id,
+        req.route_participant_id,
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-adjudicate') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.adjudicateCanonicalV2(
+        root,
+        req.work_unit_id,
+        {
+          decision: req?.decision,
+          basis_refs: Array.isArray(req?.basis_refs) ? req.basis_refs : [],
+        },
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-close') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.closeCanonicalV2(root, req.work_unit_id, {
+        env: process.env,
+        actorId: desktopHumanActorId(),
+      });
+    }
+    if (action === 'route-plan') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      const requested = req?.requested_external_family ? String(req.requested_external_family) : null;
+      if (requested && !/^[A-Z][A-Z0-9_]{2,31}$/.test(requested)) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid requested_external_family.' };
+      }
+      return await WUC.planWorkUnitRouting(root, req.work_unit_id, {
+        requested_external_family: requested,
+      }, { env: childEnv(process.env).env, home: os.homedir() });
+    }
+    if (action === 'execution-auth-preview') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
         return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
+      }
+      return await WUC.executionAuthorizationPreview(
+        root,
+        req.work_unit_id,
+        req.provider_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'authorize-execution-once') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
+      }
+      return await WUC.authorizeExecutionOnce(
+        root,
+        req.work_unit_id,
+        req.provider_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'confirm-execute') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^r5b-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid grant_id.' };
+      }
+      return await WUC.confirmAuthorizedExecution(
+        root,
+        req.work_unit_id,
+        req.grant_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'revoke-execution-grant') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^r5b-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid grant_id.' };
+      }
+      return await WUC.revokeExecutionGrant(
+        root,
+        req.work_unit_id,
+        req.grant_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'run-provider') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
+      }
+      const snapshot = await WUC.status(root, req.work_unit_id);
+      if (snapshot?.routing_intelligence?.execution_connected === false) {
+        return {
+          ok: false,
+          status: 'ROUTING_EXECUTION_DISCONNECTED',
+          reason: 'R3 route-bound Work Units are preview/persistence only; provider execution is not connected.',
+          routing_intelligence: snapshot.routing_intelligence,
+        };
       }
       return await WUC.runProvider(root, {
         work_unit_id: req.work_unit_id,
