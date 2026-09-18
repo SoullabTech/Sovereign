@@ -39,10 +39,15 @@ mkdirSync(FAKE_BIN, { recursive: true });
 
 writeFileSync(path.join(FAKE_BIN, 'opencode'), `#!/bin/sh
 printf '%s\\n' "$@" > "$STUB_OPENCODE_ARGS"
-if [ -n "$TINKER_API_KEY" ]; then
-  printf 'TINKER_API_KEY_PRESENT\\n' > "$STUB_OPENCODE_ENV_STATUS"
+if [ -n "$NVIDIA_API_KEY" ]; then
+  printf 'NVIDIA_API_KEY_PRESENT\\n' > "$STUB_OPENCODE_ENV_STATUS"
 else
-  printf 'TINKER_API_KEY_ABSENT\\n' > "$STUB_OPENCODE_ENV_STATUS"
+  printf 'NVIDIA_API_KEY_ABSENT\\n' > "$STUB_OPENCODE_ENV_STATUS"
+fi
+if [ -n "$TINKER_API_KEY" ]; then
+  printf 'TINKER_API_KEY_PRESENT\\n' >> "$STUB_OPENCODE_ENV_STATUS"
+else
+  printf 'TINKER_API_KEY_ABSENT\\n' >> "$STUB_OPENCODE_ENV_STATUS"
 fi
 printf 'stub-opencode-ok\\n'
 exit 0
@@ -209,6 +214,29 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
   assert('network + spend still refuse when the provider credential is absent',
     noKey.code === 'PROVIDER_CREDENTIAL_MISSING', JSON.stringify(noKey));
 
+  const directNvidia = resolveOpenCodeProvider({
+    providerId: 'nemotron-nvidia',
+    permissionEnvelope: { ...base, external_network: true, provider_spend: true },
+    env: { NVIDIA_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('direct NVIDIA preserves the upstream namespaced NIM id and renders the doubled OpenCode ref',
+    directNvidia.ok
+      && directNvidia.model_id === 'nvidia/nemotron-3-ultra-550b-a55b'
+      && directNvidia.model_ref === 'nvidia/nvidia/nemotron-3-ultra-550b-a55b',
+    JSON.stringify(directNvidia));
+
+  const directNvidiaFullRef = resolveOpenCodeProvider({
+    providerId: 'nemotron-nvidia',
+    model: 'nvidia/nvidia/nemotron-3-ultra-550b-a55b',
+    permissionEnvelope: { ...base, external_network: true, provider_spend: true },
+    env: { NVIDIA_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('complete OpenCode NVIDIA ref normalizes by removing exactly one provider prefix',
+    directNvidiaFullRef.ok
+      && directNvidiaFullRef.model_id === 'nvidia/nemotron-3-ultra-550b-a55b'
+      && directNvidiaFullRef.model_ref === 'nvidia/nvidia/nemotron-3-ultra-550b-a55b',
+    JSON.stringify(directNvidiaFullRef));
+
   const tinkerNoSpend = resolveOpenCodeProvider({
     providerId: 'nemotron-tinker',
     permissionEnvelope: { ...base, external_network: true },
@@ -273,6 +301,8 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
     args.includes('--agent') && args.includes('jarvis-readonly'));
   assert('OpenCode never receives --auto from JARVIS',
     !args.split('\n').includes('--auto'), args.slice(0, 220));
+  assert('OpenCode receives the Work Unit id as a deterministic title instead of generating one',
+    args.includes('--title') && args.includes(id), args.slice(0, 280));
   assert('the read-only prompt contains no commit instruction',
     !args.includes('commit your changes') && args.includes('READ-ONLY PROVIDER EVALUATION'));
   sh(['release', id]);
@@ -328,6 +358,25 @@ console.log('\n=== P4c: denied Tinker spend never reads Keychain ===');
   assert('denied spend does not read macOS Keychain',
     securityLog() === beforeSecurity, securityLog().slice(-200));
   assert('denied Tinker attempt still has no worktree',
+    readPacket(id).worktree === null, JSON.stringify(readPacket(id).worktree));
+}
+
+console.log('\n=== P4d: denied NVIDIA spend never reads Keychain ===');
+{
+  const id = uid('nvidia-spend-denied');
+  sh(['new', id]);
+  authorizeReadOnly(id, ['network.external']);
+  const beforeSecurity = securityLog();
+  const run = sh(['opencode', id, 'nemotron-nvidia'], {
+    NVIDIA_API_KEY: '',
+    STUB_SECURITY_SECRET: 'credential-from-keychain-stub',
+  });
+  assert('NVIDIA refuses missing spend authority before credential hydration',
+    run.code === 3 && /PROVIDER_SPEND_NOT_AUTHORIZED/.test(run.err),
+    `exit=${run.code} err=${run.err.slice(0, 180)}`);
+  assert('denied NVIDIA spend does not read macOS Keychain',
+    securityLog() === beforeSecurity, securityLog().slice(-200));
+  assert('denied NVIDIA attempt still has no worktree',
     readPacket(id).worktree === null, JSON.stringify(readPacket(id).worktree));
 }
 
@@ -398,16 +447,65 @@ console.log('\n=== P5b: authorized Tinker may hydrate from macOS Keychain withou
   sh(['release', id], { TINKER_API_KEY: '', STUB_SECURITY_SECRET: proofSecret });
 }
 
+console.log('\n=== P5c: authorized NVIDIA may hydrate from macOS Keychain without secret leakage ===');
+{
+  const id = uid('nvidia-keychain');
+  const proofSecret = 'credential-from-keychain-stub';
+  sh(['new', id]);
+  authorizeReadOnly(id, ['network.external', 'provider.spend']);
+  writePacket(id, { verification_commands: ['test -z "${NVIDIA_API_KEY:-}"'] });
+  const beforeSecurity = securityLog();
+  const run = sh(['opencode', id, 'nemotron-nvidia'], {
+    NVIDIA_API_KEY: '',
+    STUB_SECURITY_SECRET: proofSecret,
+  });
+  assert('authorized NVIDIA run reaches the OpenCode stub after Keychain hydration',
+    run.code === 0, `exit=${run.code} err=${run.err.slice(0, 180)}`);
+
+  const afterSecurity = securityLog();
+  assert('NVIDIA Keychain lookup uses the bounded JARVIS service name',
+    afterSecurity.length > beforeSecurity.length
+      && afterSecurity.includes('find-generic-password')
+      && afterSecurity.includes('ai.soullab.jarvis.nvidia-api-key')
+      && afterSecurity.includes('-w'),
+    afterSecurity.slice(-320));
+
+  const args = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
+  const resultText = readFileSync(resultPath(id), 'utf8');
+  assert('NVIDIA Keychain secret never enters OpenCode args or result contract',
+    !args.includes(proofSecret) && !resultText.includes(proofSecret));
+
+  const envStatus = existsSync(OPENCODE_ENV_STATUS_FILE)
+    ? readFileSync(OPENCODE_ENV_STATUS_FILE, 'utf8')
+    : '';
+  assert('NVIDIA Keychain credential is present only in the OpenCode worker environment',
+    /NVIDIA_API_KEY_PRESENT/.test(envStatus), envStatus.trim());
+
+  const result = JSON.parse(resultText);
+  assert('post-worker verification cannot see the NVIDIA Keychain credential',
+    result.test_results === 'pass',
+    JSON.stringify({ test_results: result.test_results, evidence: result.evidence }));
+  assert('Keychain-hydrated NVIDIA attempt preserves exact doubled OpenCode model provenance',
+    result.lane === 'opencode'
+      && result.model === 'nvidia/nvidia/nemotron-3-ultra-550b-a55b',
+    result.model);
+  assert('Keychain-hydrated NVIDIA attempt uses deterministic Work Unit title',
+    args.includes('--title') && args.includes(id), args.slice(0, 300));
+  sh(['release', id], { NVIDIA_API_KEY: '', STUB_SECURITY_SECRET: proofSecret });
+}
+
 console.log('\n=== P6: project OpenCode config carries no credential or default external model ===');
 {
   const configText = readFileSync(path.join(REPO, 'opencode.json'), 'utf8');
   const config = JSON.parse(configText);
-  assert('project OpenCode config contains only Ollama + NVIDIA and no Tinker transport',
-    !!config.provider?.ollama && !!config.provider?.nvidia && !config.provider?.tinker
+  assert('project OpenCode config activates native NVIDIA with an empty override and no Tinker transport',
+    !!config.provider?.ollama
+      && JSON.stringify(config.provider?.nvidia) === '{}'
+      && !config.provider?.tinker
       && config.model === undefined);
   const secretLikePrefixes = ['nv' + 'api-', 's' + 'k-'];
-  assert('project config references environment variables instead of embedding credentials',
-    configText.includes('{env:NVIDIA_API_KEY}')
+  assert('project config carries no NVIDIA credential seam or embedded provider secret',
+    !configText.includes('NVIDIA_API_KEY')
       && !configText.includes('TINKER_API_KEY')
       && secretLikePrefixes.every((prefix) => !configText.includes(prefix)));
 

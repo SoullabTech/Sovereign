@@ -32,8 +32,10 @@ export const OPENCODE_PROVIDERS = Object.freeze({
   }),
   'nemotron-nvidia': Object.freeze({
     opencode_provider: 'nvidia',
-    default_model: 'nemotron-3-ultra-550b-a55b',
-    models: Object.freeze(['nemotron-3-ultra-550b-a55b']),
+    // Upstream NVIDIA API model id. OpenCode prepends its native provider id,
+    // yielding nvidia/nvidia/nemotron-3-ultra-550b-a55b at execution time.
+    default_model: 'nvidia/nemotron-3-ultra-550b-a55b',
+    models: Object.freeze(['nvidia/nemotron-3-ultra-550b-a55b']),
     external_network: true,
     metered_provider: true,
     credential_env: 'NVIDIA_API_KEY',
@@ -89,6 +91,11 @@ function refused(code) {
 
 function normalizeModel(spec, requested) {
   const value = requested || spec.default_model;
+  // Preserve an exact registered upstream id first. NVIDIA's upstream model id
+  // itself begins with "nvidia/", while OpenCode also uses "nvidia" as provider id.
+  if (spec.models.includes(value)) return value;
+
+  // Also accept a complete OpenCode ref by removing exactly one provider prefix.
   const prefix = `${spec.opencode_provider}/`;
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
 }
