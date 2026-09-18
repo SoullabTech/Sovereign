@@ -152,6 +152,29 @@ export interface CaptureLivenessVerdict {
   silentForMs: number;
 }
 
+export interface HeldFloorSelfHealInput {
+  cause?: CaptureLossCause;
+  explicitFloor: boolean;
+  hasPendingTranscript: boolean;
+  selfHealAttempted: boolean;
+}
+
+/**
+ * TURN-01 × liveness boundary. A member who explicitly owns the floor may be
+ * silent for longer than the recognition watchdog window by design. If Web
+ * Speech goes zombie during that held silence, recover capture once without
+ * yielding or salvaging the member's words. Any second failure before fresh
+ * capture activity falls through to the ordinary capture-loss path.
+ */
+export function shouldSelfHealHeldFloorCapture(input: HeldFloorSelfHealInput): boolean {
+  return (
+    input.cause === 'silent_death' &&
+    input.explicitFloor &&
+    input.hasPendingTranscript &&
+    !input.selfHealAttempted
+  );
+}
+
 /**
  * Decide whether the capture path has silently died.
  *

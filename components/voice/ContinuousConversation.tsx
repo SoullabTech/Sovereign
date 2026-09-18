@@ -19,6 +19,7 @@ import {
   TRACK_MUTE_GRACE_MS,
   CAPTURE_HEARTBEAT_MS,
   CAPTURE_REASON_CODES,
+  shouldSelfHealHeldFloorCapture,
   type CaptureLossCause,
 } from '@/lib/voice/micLiveness';
 import {
@@ -1866,6 +1867,36 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       });
 
       if (!verdict.dead || !verdict.cause) return;
+
+      // TURN-01 × liveness: explicit floor ownership makes long silence lawful.
+      // A zombie recognizer is still real, so do not merely disable the watchdog.
+      // Recover capture ONCE while preserving the held transcript; successful
+      // recognition activity resets `selfHealAttemptedRef` via markCaptureActivity.
+      const heldText = accumulatedTranscript.current.trim() || lastInterimTextRef.current.trim();
+      if (shouldSelfHealHeldFloorCapture({
+        cause: verdict.cause,
+        explicitFloor: !automaticTurnCommitAllowed(),
+        hasPendingTranscript: heldText.length > 0,
+        selfHealAttempted: selfHealAttemptedRef.current,
+      })) {
+        selfHealAttemptedRef.current = true;
+        continuationRestartRef.current = true;
+        logVoiceEvent('voice_floor_held', {
+          source: 'liveness_self_heal',
+          floorControlMode: turnTakingPreferencesRef.current.floorControlMode,
+          pendingCharCount: heldText.length,
+          silentForMs: verdict.silentForMs,
+        });
+        console.warn(
+          `🤲 [TURN-01] Held-floor capture went quiet for ${Math.round(verdict.silentForMs / 1000)}s; ` +
+          'recreating recognition without yielding the member turn'
+        );
+        getWebSession().markForRecreate('explicit_floor_silent_death');
+        const recovered = ensureFreshAndStartFnRef.current?.('explicit_floor_silent_death') ?? false;
+        if (recovered) return;
+        continuationRestartRef.current = false;
+        console.warn('⚠️ [TURN-01] Held-floor capture self-heal failed; falling through to capture loss');
+      }
 
       console.warn(
         `🩺 [liveness] Capture silent for ${Math.round(verdict.silentForMs / 1000)}s ` +

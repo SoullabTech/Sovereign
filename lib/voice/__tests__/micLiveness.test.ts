@@ -22,6 +22,7 @@ import {
   CAPTURE_REASON_CODES,
   CAPTURE_SILENT_DEATH_MS,
   CAPTURE_ARMING_SILENT_MS,
+  shouldSelfHealHeldFloorCapture,
   type CaptureLossCause,
 } from '../micLiveness';
 
@@ -113,6 +114,27 @@ describe('assessCaptureLiveness', () => {
     const v = assessCaptureLiveness({ ...base, now: T0 - 5_000 });
     expect(v.dead).toBe(false);
     expect(v.silentForMs).toBe(0);
+  });
+});
+
+
+describe('shouldSelfHealHeldFloorCapture — TURN-01 × liveness', () => {
+  it('allows one silent-death recovery while an explicit floor holds unsent speech', () => {
+    expect(shouldSelfHealHeldFloorCapture({
+      cause: 'silent_death',
+      explicitFloor: true,
+      hasPendingTranscript: true,
+      selfHealAttempted: false,
+    })).toBe(true);
+  });
+
+  it.each([
+    ['automatic floor', { cause: 'silent_death' as const, explicitFloor: false, hasPendingTranscript: true, selfHealAttempted: false }],
+    ['empty turn', { cause: 'silent_death' as const, explicitFloor: true, hasPendingTranscript: false, selfHealAttempted: false }],
+    ['second failure', { cause: 'silent_death' as const, explicitFloor: true, hasPendingTranscript: true, selfHealAttempted: true }],
+    ['hard track loss', { cause: 'track_ended' as const, explicitFloor: true, hasPendingTranscript: true, selfHealAttempted: false }],
+  ])('refuses self-heal for %s', (_label, input) => {
+    expect(shouldSelfHealHeldFloorCapture(input)).toBe(false);
   });
 });
 
