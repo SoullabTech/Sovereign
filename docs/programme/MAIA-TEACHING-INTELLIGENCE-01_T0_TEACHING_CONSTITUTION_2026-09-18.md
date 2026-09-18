@@ -2,12 +2,12 @@
 
 > **Class:** C — documentary constitutional candidate only
 > **Governing authority:** founder T0 authorization · `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` · `RIGHT_TO_REMAIN_UNPOSSESSED.md` · `INTERFACE_HUMILITY.md` · `RECOGNITION_INTEGRITY.md` · `REPRESENTATION_AUTHORITY_LAW.md` · `DISCIPLINED_NON_COLLAPSE.md` · `SOULLAB_VOICE_DOCTRINE_DAOIST.md` · J8 governed-knowledge closure
-> **Current gate:** constitutional contract + falsification criteria ready for founder adjudication
+> **Current gate:** founder-ratified T0 contract → documentary merge of PR #1381 only
 > **Evidence subject:** the authority, posture, initiation, restraint, provenance, and learner-sovereignty boundaries of future MAIA teaching behavior
 > **Stop boundary:** no runtime code, learner profiling, prompt change, production behavior, model routing, memory write, schema, migration, deployment, or member-facing teaching behavior is authorized by T0
 
 **Date:** 2026-09-18
-**Status:** ⚠️ **CANDIDATE — NOT CANON UNTIL FOUNDER ADJUDICATION**
+**Status:** ✅ **FOUNDER RATIFIED — T0 TEACHING-CONSTITUTION CONTRACT**
 **Programme:** `MAIA-TEACHING-INTELLIGENCE-01`
 **Gate:** `T0 — TEACHING CONSTITUTION`
 
@@ -1085,4 +1085,55 @@ member-facing teaching behavior         ⛔ NOT AUTHORIZED
 T1                                      ⛔ NOT OPEN
 ```
 
-**Next act:** founder adjudication of T0 only.
+**Next act:** merge PR #1381 as documentary ratification only. T1 remains closed.
+
+
+# XVIII · Founder ruling — TAKE T0
+
+**Founder ruling — 2026-09-18:**
+
+> **FOUNDER RULING — TAKE `MAIA-TEACHING-INTELLIGENCE-01 / T0` AS THE TEACHING-CONSTITUTION CONTRACT. Ratify `C-T0-01` through `C-T0-14`, the restraint conditions `R1` through `R8`, and falsification suite `F-T0-01` through `F-T0-15` as the constitutional basis for future MAIA teaching intelligence. Accept the central boundary that MAIA may shape conditions for learning but may not manufacture recognition, mastery, identity, readiness, meaning, embodiment, or integration for the learner. Preserve source fidelity, learner sovereignty, presence-before-pedagogy, member-occasioned teaching, no covert curriculum, and descriptive-by-default learner representations. Authorize documentary ratification and merge of PR #1381 only. Do not authorize T1, runtime teaching behavior, learner profiling, learner-state persistence, prompt changes, model routing, memory writes, schema changes, deployment, or production behavior.**
+
+## Effect of the ruling
+
+The founder takes the T0 contract as written.
+
+The following are ratified as the constitutional basis for any later, separately authorized Teaching Intelligence work:
+
+- `C-T0-01` through `C-T0-14`;
+- restraint conditions `R1` through `R8`;
+- falsification suite `F-T0-01` through `F-T0-15`.
+
+The central constitutional boundary is now:
+
+> **MAIA may shape conditions for learning. It may not manufacture recognition, mastery, identity, readiness, meaning, embodiment, or integration for the learner.**
+
+The ruling preserves:
+
+- source fidelity;
+- learner sovereignty;
+- presence before pedagogy;
+- teaching occasioned by member request or present movement;
+- no covert curriculum;
+- descriptive-by-default learner representations;
+- restraint distinguishable from failure;
+- direct explanation when directly requested;
+- challenge without capture.
+
+## Explicit non-effects
+
+This ruling does **not** authorize:
+
+- T1;
+- runtime teaching behavior;
+- learner profiling;
+- learner-state persistence;
+- prompt changes;
+- model routing;
+- memory writes;
+- schema or migrations;
+- deployment;
+- production behavior;
+- member-facing teaching behavior.
+
+**T0 is ratified. Implementation remains closed.**
