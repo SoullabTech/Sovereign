@@ -6923,7 +6923,23 @@ I'm not sure what I'm feeling yet.`;
         careSubMode: 'presence', // Crisis uses presence as base
       }));
 
-      // Speak the crisis response script line by line
+      // Crisis speech is consequential member-facing output. Record it in the
+      // visible conversation before TTS so safety language never exists only as
+      // an alarmed audio aside that disappears from the transcript.
+      const crisisInterventionText = crisisCheck.responseScript?.join(' ').trim();
+      if (crisisInterventionText) {
+        const crisisInterventionMessage: ConversationMessage = {
+          id: `crisis-intervention-${Date.now()}`,
+          role: 'oracle',
+          text: crisisInterventionText,
+          timestamp: new Date(),
+          source: 'system',
+        };
+        setMessages(prev => appendMessageCapped(prev, crisisInterventionMessage));
+        onMessageAddedRef.current?.(crisisInterventionMessage);
+      }
+
+      // Speak the same recorded crisis response script line by line.
       if (crisisCheck.responseScript && maiaReady && maiaSpeak && !isMuted) {
         for (const line of crisisCheck.responseScript) {
           await maiaSpeak(line);
