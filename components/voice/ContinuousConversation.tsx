@@ -1901,7 +1901,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           shouldEmitThrottled(now, explicitFloorLivenessHoldLoggedAtRef.current, 5_000)
         ) {
           explicitFloorLivenessHoldLoggedAtRef.current = now;
-          logVoiceEvent('voice_floor_liveness_held', {
+          logVoiceEvent('voice_floor_held', {
+            source: 'liveness_watchdog',
             silentForMs: verdict.silentForMs,
             analyserVoiceAfterRecognition,
             analyserVoiceAgeMs,
