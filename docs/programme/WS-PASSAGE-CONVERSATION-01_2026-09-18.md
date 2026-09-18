@@ -26,19 +26,23 @@ Kelly authorized selected direction + editable intention; discussion while draft
 - Sovereignty and design gates pass.
 - Broad targeted population: 1203 pass / 4 fail. Two unchanged shellProjection assertions already fail on canonical. Two seamIsolation byte pins correctly flag the proposed shared-interface amendment below. No tests were skipped or weakened.
 
-## Live-response defect and proposed amendment
+## Live-response defect and ratified amendment
 Several non-strict provider calls returned malformed envelopes (including a string `proposal` with root-level `replacementText`). Runtime admission refused them; no malformed proposal entered the manuscript. Prompt clarification alone did not resolve this.
 
-Proposed additive shared capability: `StructuredTool.schemaEnforcement?: 'required'`; the existing Anthropic adapter maps it to `strict: true`. Other callers omit it and retain identical wire parameters. No provider, model selection, fallback, validation or consent bypass is added. Editorial kind/adjunct and nonblank-content admission remain runtime obligations.
+Ratified additive shared capability: `StructuredTool.schemaEnforcement?: 'required'`; the existing Anthropic adapter maps it to `strict: true`. Other callers omit it and retain identical wire parameters. No provider, model selection, fallback, validation or consent bypass is added. Editorial kind/adjunct and nonblank-content admission remain runtime obligations.
 
 A top-level anyOf experiment was rejected by the provider; it was removed. The final request uses the existing object schema plus strict enforcement and passed the complete 23-check witness. This is bounded integration evidence, not a claim that every future model response is valid or editorially good.
 
 Official source: https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use
 
-## Explicit review gate
-`lib/ai/structured/__tests__/seamIsolation.test.ts` states that caller work cannot move the governed seam baseline automatically; an explicitly authorized amendment is required. Its baseline remains **35d0f81d167dca73431ae7640d7fabf4bae86cff**. The proposed files are `lib/ai/structured/types.ts` and `lib/ai/structured/anthropicStructuredAdapter.ts`.
+## Shared-inference ratification — 2026-09-18
+Kelly explicitly answered “yes” to approval of the specific shared-inference amendment in PR #1402 and its governed baseline update. The reviewed commit is **c4f96c853ba9246546383a93875b4ae5519e8c1b**. The scope is the optional `StructuredTool.schemaEnforcement` field in `types.ts` and its `strict: true` mapping in `anthropicStructuredAdapter.ts`. Policy and router are unchanged.
 
-Do not merge until Kelly ratifies this concrete additive amendment and the baseline is moved to its reviewed commit. The byte-comparison tests must remain unconditional afterward.
+The governed baseline in `seamIsolation.test.ts` moves from `35d0f81d167dca73431ae7640d7fabf4bae86cff` to that reviewed commit. All four path comparisons remain unconditional, and the original seam merge remains preserved. No caller exemption, routing change, or validation relaxation is authorized. Other files in the reviewed commit do not acquire shared-seam baseline status.
+
+Post-ratification regression run: **1205 passed / 2 failed**, 74 suites passed / 1 failed. All shared-inference checks, including the four byte pins, pass. The two remaining failures are the unchanged canonical shellProjection assertions described above. No additional model call or database migration was needed for this baseline-only update.
+
+The earlier 1203/4 result above records the pre-ratification run; the two pin failures correctly enforced the approval boundary. This approval authorizes recording the amendment and updating PR evidence, not merging or deploying.
 
 ## Preview boundary and remaining acceptance
 New loopback preview: http://127.0.0.1:4180. The existing 4178 preview was not replaced. The new preview is deliberately synthetic, uses fixed responses and memory-only application/undo; the live-MAIA and durable recovery evidence comes from the separate real API witness.
