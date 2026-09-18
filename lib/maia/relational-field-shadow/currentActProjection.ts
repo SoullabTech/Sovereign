@@ -22,8 +22,8 @@ const sha256 = (value: string): string => createHash('sha256').update(value).dig
 const round = (value: number): number => Number(value.toFixed(6));
 
 function tokens(text: string): string[] {
-  return (text.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? [])
-    .filter((token) => token.length > 1 && !STOP.has(token));
+  const matches: string[] = text.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? [];
+  return matches.filter((token) => token.length > 1 && !STOP.has(token));
 }
 
 function tokenSet(text: string): Set<string> {
