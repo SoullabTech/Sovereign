@@ -28,12 +28,18 @@ const WORKTREES_ROOT = path.join(TMP, 'worktrees');
 const FAKE_BIN = path.join(TMP, 'bin');
 const ARGS_FILE = path.join(TMP, 'opencode-args.txt');
 const SECURITY_ARGS_FILE = path.join(TMP, 'security-args.txt');
+const OPENCODE_ENV_STATUS_FILE = path.join(TMP, 'opencode-env-status.txt');
 mkdirSync(AIN_HOME, { recursive: true });
 mkdirSync(WORKTREES_ROOT, { recursive: true });
 mkdirSync(FAKE_BIN, { recursive: true });
 
 writeFileSync(path.join(FAKE_BIN, 'opencode'), `#!/bin/sh
 printf '%s\\n' "$@" > "$STUB_OPENCODE_ARGS"
+if [ -n "$TINKER_API_KEY" ]; then
+  printf 'TINKER_API_KEY_PRESENT\\n' > "$STUB_OPENCODE_ENV_STATUS"
+else
+  printf 'TINKER_API_KEY_ABSENT\\n' > "$STUB_OPENCODE_ENV_STATUS"
+fi
 printf 'stub-opencode-ok\\n'
 exit 0
 `);
@@ -41,7 +47,7 @@ chmodSync(path.join(FAKE_BIN, 'opencode'), 0o755);
 
 writeFileSync(path.join(FAKE_BIN, 'security'), `#!/bin/sh
 printf '%s\\n' "$@" >> "$STUB_SECURITY_ARGS"
-[ -n "${STUB_SECURITY_SECRET:-}" ] || exit 44
+[ -n "$STUB_SECURITY_SECRET" ] || exit 44
 printf '%s\\n' "$STUB_SECURITY_SECRET"
 `);
 chmodSync(path.join(FAKE_BIN, 'security'), 0o755);
@@ -58,6 +64,7 @@ const baseEnv = (extra = {}) => ({
   PATH: `${FAKE_BIN}:${process.env.PATH}`,
   STUB_OPENCODE_ARGS: ARGS_FILE,
   STUB_SECURITY_ARGS: SECURITY_ARGS_FILE,
+  STUB_OPENCODE_ENV_STATUS: OPENCODE_ENV_STATUS_FILE,
 });
 
 const sh = (args, extra = {}) => {
@@ -307,6 +314,7 @@ console.log('\n=== P5b: authorized Tinker may hydrate from macOS Keychain withou
   const proofSecret = 'credential-from-keychain-stub';
   sh(['new', id]);
   authorizeReadOnly(id, ['network.external', 'provider.spend']);
+  writePacket(id, { verification_commands: ['test -z "${TINKER_API_KEY:-}"'] });
   const beforeSecurity = securityLog();
   const run = sh(['opencode', id, 'inkling-tinker'], {
     TINKER_API_KEY: '',
@@ -328,7 +336,15 @@ console.log('\n=== P5b: authorized Tinker may hydrate from macOS Keychain withou
   assert('Keychain secret never enters OpenCode args or result contract',
     !args.includes(proofSecret) && !resultText.includes(proofSecret));
 
+  const envStatus = existsSync(OPENCODE_ENV_STATUS_FILE)
+    ? readFileSync(OPENCODE_ENV_STATUS_FILE, 'utf8')
+    : '';
+  assert('Keychain credential is present in the OpenCode worker environment',
+    /TINKER_API_KEY_PRESENT/.test(envStatus), envStatus.trim());
+
   const result = JSON.parse(resultText);
+  assert('post-worker verification cannot see the Keychain credential',
+    result.test_results === 'pass', JSON.stringify({ test_results: result.test_results, evidence: result.evidence }));
   assert('Keychain-hydrated attempt preserves exact Inkling model provenance',
     result.model === 'tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
     result.model);

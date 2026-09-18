@@ -157,29 +157,29 @@ _build_prompt() {
     ' "$f"
 }
 
-_hydrate_opencode_credential() {
+_read_opencode_credential() {
     local credential_env="$1"
 
-    [ -n "$credential_env" ] || return 0
+    [ -n "$credential_env" ] || return 1
 
     case "$credential_env" in
         TINKER_API_KEY)
-            [ -n "${TINKER_API_KEY:-}" ] && return 0
-            command -v security >/dev/null 2>&1 || return 1
-
-            # macOS-only local credential bridge. Never print the secret. This runs
-            # only AFTER provider authority (including provider.spend) has passed.
-            local keychain_value
-            if keychain_value="$(security find-generic-password                 -a "${USER:-$(id -un)}"                 -s "soullab.tinker.api"                 -w 2>/dev/null)" && [ -n "$keychain_value" ]; then
-                export TINKER_API_KEY="$keychain_value"
-                keychain_value=""
+            if [ -n "${TINKER_API_KEY:-}" ]; then
+                printf '%s' "$TINKER_API_KEY"
                 return 0
             fi
-            return 1
+            command -v security >/dev/null 2>&1 || return 1
+
+            # macOS-only local credential bridge. The caller captures stdout into a
+            # local, non-exported variable. Never log or persist this value.
+            security find-generic-password \
+                -a "${USER:-$(id -un)}" \
+                -s "soullab.tinker.api" \
+                -w 2>/dev/null
             ;;
         NVIDIA_API_KEY)
-            [ -n "${NVIDIA_API_KEY:-}" ]
-            return $?
+            [ -n "${NVIDIA_API_KEY:-}" ] || return 1
+            printf '%s' "$NVIDIA_API_KEY"
             ;;
         *)
             return 1
@@ -191,6 +191,7 @@ _run_lane() {
     local lane="$1" work_unit_id="$2" model_override="${3:-}" provider_override="${4:-}"
     local f wt starting_sha exit_code log ending_sha prompt cmd branch model
     local opencode_resolution="" opencode_agent=""
+    local opencode_credential_env="" opencode_credential_value=""
     f="$(_require_packet "$work_unit_id")"
 
     # JARVIS-PROVIDER-01: authorization precedes workspace acquisition. Registration
@@ -209,14 +210,20 @@ _run_lane() {
         [ "$provider_code" -eq 0 ] || exit "$provider_code"
 
         credential_env="$(echo "$provider_authorization" | jq -r '.credential_env // empty')"
+        opencode_credential_env="$credential_env"
         if [ -n "$credential_env" ]; then
-            _hydrate_opencode_credential "$credential_env" || true
+            opencode_credential_value="$(_read_opencode_credential "$credential_env")" || opencode_credential_value=""
         fi
 
         # Phase 2: require the actual credential (if any) only after authority has
-        # passed. Failure remains fail-closed before workspace acquisition.
+        # passed. The Keychain value is injected only into this child process.
         set +e
-        opencode_resolution="$(node "$OPENCODE_PROVIDER_SCRIPT" resolve "$work_unit_id" "$provider_override" "$model_override")"
+        if [ -n "$opencode_credential_env" ] && [ -n "$opencode_credential_value" ]; then
+            opencode_resolution="$(env "$opencode_credential_env=$opencode_credential_value" \
+                node "$OPENCODE_PROVIDER_SCRIPT" resolve "$work_unit_id" "$provider_override" "$model_override")"
+        else
+            opencode_resolution="$(node "$OPENCODE_PROVIDER_SCRIPT" resolve "$work_unit_id" "$provider_override" "$model_override")"
+        fi
         provider_code=$?
         set -e
         [ "$provider_code" -eq 0 ] || exit "$provider_code"
@@ -337,8 +344,16 @@ _run_lane() {
     elif [ "$lane" = "opencode" ]; then
         # V1 is intentionally read-only. The project-scoped jarvis-readonly agent
         # denies edit/bash/web/task/external_directory, and we never pass --auto.
-        ( cd "$wt" && opencode run --pure --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+        # A Keychain-hydrated credential is scoped to the worker child only; later
+        # verification commands do not inherit it.
+        if [ -n "$opencode_credential_env" ] && [ -n "$opencode_credential_value" ]; then
+            ( cd "$wt" && env "$opencode_credential_env=$opencode_credential_value" \
+                opencode run --pure --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+        else
+            ( cd "$wt" && opencode run --pure --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+        fi
         exit_code=$?
+        opencode_credential_value=""
     else
         echo "🛑 unknown lane: $lane" >&2
         exit 2

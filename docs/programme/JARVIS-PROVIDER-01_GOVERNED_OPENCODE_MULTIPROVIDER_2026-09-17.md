@@ -144,9 +144,10 @@ Tinker credentials are resolved locally in this order:
 
 The adapter performs a credential-free `authorize` pass first. `repo.read`, `network.external`,
 read-only scope, and (for metered providers) `provider.spend` must all pass **before** JARVIS reads
-Keychain. Only then may the secret be loaded into the worker subprocess environment for the final
-credential-bearing `resolve` pass. The secret is not written to the Work Unit, OpenCode arguments,
-result contract, logs, or repository.
+Keychain. Only then may the secret be read into a local, non-exported shell variable. It is injected only
+into the final credential-bearing provider-resolution child and the OpenCode worker child. The
+post-worker verification commands do **not** inherit it. The secret is not written to the Work Unit,
+OpenCode arguments, result contract, logs, or repository.
 
 If neither environment nor Keychain yields a credential, the final provider resolution remains
 `PROVIDER_CREDENTIAL_MISSING`. Non-macOS hosts continue to use the environment-variable path.
@@ -157,7 +158,7 @@ Targeted provider proof:
 
 ```text
 node scripts/builder/__tests__/opencode-adapter-governance-proof.mjs
-37 passed · 0 failed
+39 passed · 0 failed
 ```
 
 It proves registration, local Qwen resolution, Zen external-network gating, fail-closed Zen
@@ -165,8 +166,9 @@ automation refusal before worktree acquisition, V1 read-only refusal, conjunctiv
 and provider-spend authority for metered providers, missing-credential refusal, Tinker Nemotron
 Lightning default + Ultra override, Inkling-Small default + full Inkling override, Inkling
 evaluation-only standing, authority-before-Keychain ordering, zero Keychain access on denied spend,
-secret non-leakage from Keychain-hydrated attempts, deny-before-worktree behavior, exact model
-provenance, no `--auto`, and secret-free configuration.
+secret non-leakage from Keychain-hydrated attempts, worker-only credential scoping, post-worker
+verification isolation, deny-before-worktree behavior, exact model provenance, no `--auto`, and
+secret-free configuration.
 
 Syntax/config gates also passed locally:
 
@@ -188,6 +190,7 @@ a code assertion failure. The other lane was not killed or deleted.
 What **did** happen:
 
 - an OpenCode Zen credential was installed in the user-level credential store;
+- the Tinker API key was stored locally in macOS Keychain under `soullab.tinker.api`;
 - manual/synthetic Zen Nemotron requests were made;
 - one bounded voice-review delegation attempt reached the Zen path but could not execute under the
   required JARVIS read-only boundary; it was terminated and recorded as `reject` with zero files
@@ -197,7 +200,6 @@ What **did** happen:
 What did **not** happen:
 
 - no direct NVIDIA API request;
-- the Tinker API key was stored locally in macOS Keychain under `soullab.tinker.api`;
 - no Tinker/Inkling/Nemotron-Tinker inference request;
 - no provider spend;
 - no credential was committed;
