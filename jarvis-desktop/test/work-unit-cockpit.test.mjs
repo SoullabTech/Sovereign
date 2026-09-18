@@ -111,3 +111,19 @@ test('Routing Intelligence preview ignores stale asynchronous responses', () => 
   assert.match(renderer, /generation !== routePreviewGeneration/);
   assert.match(renderer, /routePreviewGeneration \+= 1/);
 });
+
+test('R5A digest is computed in MAIN from the exact route record, never supplied by renderer', () => {
+  assert.match(main, /routing-execution-admission\.mjs/);
+  assert.match(main, /const routeDigest = admissionMod\.routeDigest\(routeRecord\)/);
+  assert.match(main, /routeDigest = preview\.route_digest/);
+  assert.match(main, /routeDigest,/);
+  assert.match(operatorWU, /route_digest: routeDigest/);
+  assert.match(operatorWU, /route_version: routeRecord\.route_version/);
+  assert.doesNotMatch(renderer, /route_digest\s*:/);
+});
+
+test('R5A binding preserves execution disconnection and does not add provider authority', () => {
+  assert.match(operatorWU, /execution_connected: false/);
+  assert.doesNotMatch(operatorWU, /authorized_acts:.*provider\.execute/s);
+  assert.match(main, /ROUTING_EXECUTION_DISCONNECTED/);
+});

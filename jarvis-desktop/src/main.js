@@ -735,13 +735,26 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 
 async function computeRoutingPreview(root, spec) {
   const routePath = path.join(root, 'scripts', 'builder', 'routing-intelligence.mjs');
-  if (!fs.existsSync(routePath)) {
-    return { ok: false, status: 'ROUTER_UNAVAILABLE', reason: 'Routing Intelligence module is not present in the bound checkout.' };
+  const admissionPath = path.join(root, 'scripts', 'builder', 'routing-execution-admission.mjs');
+  if (!fs.existsSync(routePath) || !fs.existsSync(admissionPath)) {
+    return {
+      ok: false,
+      status: 'ROUTER_UNAVAILABLE',
+      reason: 'Routing Intelligence or the canonical R4 digest law is not present in the bound checkout.',
+    };
   }
   const routingInput = OPWU.buildRoutingInput(spec || {});
-  const mod = await import(`${pathToFileURL(routePath).href}?t=${Date.now()}`);
-  const routeRecord = mod.routeIntelligence(routingInput);
-  return { ok: true, status: 'PREVIEWED', routing_input: routingInput, route_record: routeRecord };
+  const routeMod = await import(`${pathToFileURL(routePath).href}?t=${Date.now()}`);
+  const admissionMod = await import(`${pathToFileURL(admissionPath).href}?t=${Date.now()}`);
+  const routeRecord = routeMod.routeIntelligence(routingInput);
+  const routeDigest = admissionMod.routeDigest(routeRecord);
+  return {
+    ok: true,
+    status: 'PREVIEWED',
+    routing_input: routingInput,
+    route_record: routeRecord,
+    route_digest: routeDigest,
+  };
 }
 
 // Governed provider-review Work Unit control. ONE narrow channel with bounded
@@ -766,16 +779,23 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       }).trim();
       const spec = req?.spec || {};
       let routeRecord = null;
+      let routeDigest = null;
       if (spec.routing && typeof spec.routing === 'object') {
         const preview = await computeRoutingPreview(root, spec);
         if (!preview.ok) return preview;
         routeRecord = preview.route_record;
+        routeDigest = preview.route_digest;
         if (routeRecord.execution_disposition === 'refused') {
           const errors = (routeRecord.blockers || []).map((block) => `${block.code}: ${block.detail}`);
           return { ok: false, status: 'ROUTE_REFUSED', reason: errors.join('; '), errors, route_record: routeRecord };
         }
       }
-      const built = OPWU.buildPacket(spec, { canonicalSha, nowMs: Date.now(), routeRecord });
+      const built = OPWU.buildPacket(spec, {
+        canonicalSha,
+        nowMs: Date.now(),
+        routeRecord,
+        routeDigest,
+      });
       if (!built.ok) return { ok: false, status: 'REFUSED', reason: built.errors.join('; '), errors: built.errors };
       const created = await WUC.create(root, built.packet);
       if (!created.ok) return { ...created, status: 'REFUSED' };

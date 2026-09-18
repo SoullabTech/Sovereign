@@ -71,6 +71,7 @@ function binding(route, patch = {}) {
   return {
     route_record: route,
     route_digest: routeDigest(route),
+    route_version: route.route_version,
     execution_connected: false,
     source: 'R2-pure-router',
     bound_at_sha: SHA,

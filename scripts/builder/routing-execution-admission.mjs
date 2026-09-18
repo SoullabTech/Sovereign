@@ -161,6 +161,13 @@ function bindingBlockers(binding, workUnit) {
       'route_version',
     ));
   }
+  if (binding.route_version !== route.route_version) {
+    blockers.push(typedBlocker(
+      'ROUTE_BINDING_VERSION_MISMATCH',
+      'Persisted route binding version does not match the exact route record version.',
+      'route_version',
+    ));
+  }
   if (typeof binding.bound_at_sha !== 'string' || binding.bound_at_sha.length < 7) {
     blockers.push(typedBlocker('ROUTE_SHA_BINDING_REQUIRED', 'Route binding SHA is required.'));
   }

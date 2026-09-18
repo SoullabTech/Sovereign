@@ -11,6 +11,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { routeIntelligence } from '../routing-intelligence.mjs';
+import { routeDigest } from '../routing-execution-admission.mjs';
 import { createWorkUnit } from '../work-unit-create.mjs';
 import {
   loadWorkUnit,
@@ -58,6 +59,7 @@ const built = OPWU.buildPacket(spec, {
   canonicalSha: '0123456789abcdef0123456789abcdef01234567',
   nowMs: 123456,
   routeRecord: route,
+  routeDigest: routeDigest(route),
 });
 
 console.log('=== packet boundary ===');
@@ -65,6 +67,8 @@ console.log('=== packet boundary ===');
 check('R3-1 — route-bound packet builds without provider execution strategy', () => {
   assert.equal(built.ok, true, JSON.stringify(built.errors));
   assert.deepEqual(built.packet.provider_strategy, []);
+  assert.equal(built.packet.routing_intelligence.route_digest, routeDigest(route));
+  assert.equal(built.packet.routing_intelligence.route_version, route.route_version);
   assert.equal(built.packet.routing_intelligence.execution_connected, false);
 });
 
@@ -91,6 +95,8 @@ const status = workUnitStatus(built.packet.work_unit_id);
 
 check('R3-4 — exact route record survives persistence round trip', () => {
   assert.deepEqual(raw.routing_intelligence.route_record, route);
+  assert.equal(raw.routing_intelligence.route_digest, routeDigest(route));
+  assert.equal(raw.routing_intelligence.route_version, route.route_version);
   assert.equal(raw.routing_intelligence.execution_connected, false);
   assert.equal(raw.routing_intelligence.bound_at_sha, built.packet.canonical_sha);
 });
