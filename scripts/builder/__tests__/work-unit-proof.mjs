@@ -73,7 +73,8 @@ console.log('\n=== U1: creation / deterministic load ===');
     wu.risk_class === 'mechanical' && wu.integration_actor === 'jarvis'
       && wu.routing_profile === 'local-first' && wu.review_policy === 'auto'
       && wu.data_class === 'unspecified' && wu.external_review === false
-      && wu.external_tiebreaker === false);
+      && wu.external_tiebreaker === false && wu.model_stage_budget === 1
+      && wu.external_call_budget === 0);
   const wu2 = loadWorkUnit(WORK_UNIT_ID);
   assert('loading twice yields the same result (deterministic, not stateful)',
     JSON.stringify(wu) === JSON.stringify(wu2));
