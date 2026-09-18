@@ -67,6 +67,16 @@ describe('KEEP-LEGACY-SURFACE-01-R1 — canonical Keep authority remains elsewhe
     expect(ui).not.toContain('/api/psyche/conversational-keep/respond');
   });
 
+  it('current OracleConversation carries no legacy KeepAffordance runtime residue', () => {
+    const ui = read(ORACLE_UI);
+
+    expect(ui).not.toContain("from '@/components/psyche/KeepAffordance'");
+    expect(ui).not.toContain('NEXT_PUBLIC_CONVERSATIONAL_KEEP_ENABLED');
+    expect(ui).not.toContain('sessionOfferCountRef');
+    expect(ui).not.toContain('lastOfferTurnRef');
+    expect(ui).not.toContain('conversationTurnRef');
+  });
+
   it('legacy Oracle conversation route remains hard-refused before dormant Keep machinery', () => {
     const src = read(RETIRED_ORACLE);
     const refusal = src.indexOf("reason: 'Legacy route retired pending Sanctuary-governed persistence");
