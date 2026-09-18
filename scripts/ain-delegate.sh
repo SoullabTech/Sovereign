@@ -9,11 +9,11 @@
 # This wraps the EXISTING lanes — it does not replace or redesign them:
 #   local  -> ~/bin/maia-code        (Ollama maia-coder:latest / qwen3-coder)
 #   kimi   -> ~/.local/bin/kimi-cc   (Moonshot Kimi K2.7-code / K3)
-#   claude -> plain `claude`         (Unit 6, 2026-08-09 — Claude as a governed worker,
-#                                     not the orchestrator; no wrapper binary needed —
-#                                     the governance is in the flags + the worktree)
-# local/kimi are thin wrappers that exec `claude "$@"` with a lane-specific env; the
-# claude lane invokes the real binary directly. All three share one path: claim an
+#   claude -> plain `claude`         (Unit 6, 2026-08-09 — governed worker)
+#   opencode -> plain `opencode`      (JARVIS-PROVIDER-01 — governed read-only provider
+#                                     evaluation across Qwen/Nemotron/Inkling)
+# local/kimi are thin wrappers that exec `claude "$@"` with a lane-specific env; Claude
+# and OpenCode invoke their real binaries directly. All lanes share one path: claim an
 # isolated worktree, build a bounded prompt from a work packet, run the worker inside
 # that worktree, then independently verify (never trust the delegate's self-report) and
 # write a compact result contract. The founder's *interactive* `claude` session is never
@@ -25,6 +25,8 @@
 #   ain-delegate.sh local    <work_unit_id>
 #   ain-delegate.sh kimi     <work_unit_id>
 #   ain-delegate.sh claude   <work_unit_id> [model]   # model default: sonnet, explicit not implicit
+#   ain-delegate.sh opencode <work_unit_id> <provider_id> [model]
+#   ain-delegate.sh tinker   <work_unit_id> <provider_id> [model]
 #   ain-delegate.sh result   <work_unit_id>
 #   ain-delegate.sh review   <work_unit_id>
 #   ain-delegate.sh escalate <work_unit_id> "<reason>"
@@ -41,6 +43,9 @@ LEDGER="$AIN_HOME/episodes.jsonl"
 CLAIM_SCRIPT="$PROJECT_DIR/scripts/ain-worktree-claim.sh"
 SESSION_SCRIPT="$PROJECT_DIR/scripts/builder/session.mjs"
 WORK_UNIT_SCRIPT="$PROJECT_DIR/scripts/builder/work-unit.mjs"
+OPENCODE_PROVIDER_SCRIPT="$PROJECT_DIR/scripts/builder/opencode-provider.mjs"
+TINKER_DIRECT_SCRIPT="$PROJECT_DIR/scripts/builder/tinker-direct.mjs"
+EXTERNAL_CONTEXT_SCRIPT="$PROJECT_DIR/scripts/builder/external-context.mjs"
 
 mkdir -p "$PACKETS_DIR" "$RESULTS_DIR" "$LOGS_DIR"
 
@@ -132,7 +137,8 @@ _claude_permission_mode() {
 
 _build_prompt() {
     local f="$1"
-    jq -r '
+    local closing="${2:-When done, commit your changes with git add -A and git commit in this worktree. Keep the diff minimal and inside ALLOWED FILES.}"
+    jq -r --arg closing "$closing" '
         "You are executing ONE bounded AIN Builder OS work unit. Do not exceed its scope.\n\n" +
         "OBJECTIVE:\n" + .objective + "\n\n" +
         "GOVERNING AUTHORITY: " + .governing_authority + "\n\n" +
@@ -150,14 +156,122 @@ _build_prompt() {
         (if (.escalation_conditions | length) > 0 then ([.escalation_conditions[] | ("- " + .)] | join("\n")) else "(none declared beyond the standing authority firewall)" end) + "\n\n" +
         "STANDING AUTHORITY FIREWALL (always in force): you may execute settled decisions. You may NOT silently establish constitutional architecture, member authority, consent semantics, confidentiality semantics, provenance semantics, epistemic authority, destructive migration policy, security boundaries, founder rulings, ontology, or deprecation of important capability. Hitting one of these is an ESCALATE_TO_CLAUDE, not a judgment call.\n\n" +
         "EXPECTED OUTPUT: " + .expected_output + "\n\n" +
-        "When done, commit your changes with `git add -A && git commit -m \"...\"` in this worktree. Keep the diff minimal and inside ALLOWED FILES."
+        $closing
     ' "$f"
 }
 
+_read_opencode_credential() {
+    local credential_env="$1"
+
+    [ -n "$credential_env" ] || return 1
+
+    case "$credential_env" in
+        TINKER_API_KEY)
+            if [ -n "${TINKER_API_KEY:-}" ]; then
+                printf '%s' "$TINKER_API_KEY"
+                return 0
+            fi
+            command -v security >/dev/null 2>&1 || return 1
+
+            # macOS-only local credential bridge. The caller captures stdout into a
+            # local, non-exported variable. Never log or persist this value.
+            security find-generic-password \
+                -a "${USER:-$(id -un)}" \
+                -s "soullab.tinker.api" \
+                -w 2>/dev/null
+            ;;
+        NVIDIA_API_KEY)
+            [ -n "${NVIDIA_API_KEY:-}" ] || return 1
+            printf '%s' "$NVIDIA_API_KEY"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 _run_lane() {
-    local lane="$1" work_unit_id="$2" model_override="${3:-}"
+    local lane="$1" work_unit_id="$2" model_override="${3:-}" provider_override="${4:-}"
     local f wt starting_sha exit_code log ending_sha prompt cmd branch model
+    local opencode_resolution="" opencode_agent=""
+    local opencode_credential_env="" opencode_credential_value=""
+    local tinker_resolution="" tinker_model_id=""
     f="$(_require_packet "$work_unit_id")"
+
+    # JARVIS-PROVIDER-01: authorization precedes workspace acquisition. Registration
+    # is not permission to send repository material to a provider or incur spend.
+    if [ "$lane" = "opencode" ]; then
+        [ -n "$provider_override" ] || { echo "🛑 opencode provider id required" >&2; exit 2; }
+        local provider_code provider_authorization credential_env
+
+        # Phase 1: prove Work Unit/provider authority BEFORE touching any credential
+        # store. Registration is not authority, and denied spend must not even read
+        # Keychain.
+        set +e
+        provider_authorization="$(node "$OPENCODE_PROVIDER_SCRIPT" authorize "$work_unit_id" "$provider_override" "$model_override")"
+        provider_code=$?
+        set -e
+        [ "$provider_code" -eq 0 ] || exit "$provider_code"
+
+        [ "$(echo "$provider_authorization" | jq -r '.execution_adapter')" = "opencode" ] || {
+            echo "🛑 provider '$provider_override' is not a governed OpenCode adapter" >&2
+            exit 3
+        }
+
+        credential_env="$(echo "$provider_authorization" | jq -r '.credential_env // empty')"
+        opencode_credential_env="$credential_env"
+        if [ -n "$credential_env" ]; then
+            opencode_credential_value="$(_read_opencode_credential "$credential_env")" || opencode_credential_value=""
+        fi
+
+        # Phase 2: require the actual credential (if any) only after authority has
+        # passed. The Keychain value is injected only into this child process.
+        set +e
+        if [ -n "$opencode_credential_env" ] && [ -n "$opencode_credential_value" ]; then
+            opencode_resolution="$(env "$opencode_credential_env=$opencode_credential_value" \
+                node "$OPENCODE_PROVIDER_SCRIPT" resolve "$work_unit_id" "$provider_override" "$model_override")"
+        else
+            opencode_resolution="$(node "$OPENCODE_PROVIDER_SCRIPT" resolve "$work_unit_id" "$provider_override" "$model_override")"
+        fi
+        provider_code=$?
+        set -e
+        [ "$provider_code" -eq 0 ] || exit "$provider_code"
+        opencode_agent="$(echo "$opencode_resolution" | jq -r '.agent')"
+    fi
+
+    if [ "$lane" = "tinker" ]; then
+        [ -n "$provider_override" ] || { echo "🛑 tinker provider id required" >&2; exit 2; }
+        local provider_code provider_authorization credential_env
+
+        set +e
+        provider_authorization="$(node "$OPENCODE_PROVIDER_SCRIPT" authorize "$work_unit_id" "$provider_override" "$model_override")"
+        provider_code=$?
+        set -e
+        [ "$provider_code" -eq 0 ] || exit "$provider_code"
+
+        [ "$(echo "$provider_authorization" | jq -r '.execution_adapter')" = "tinker-direct" ] || {
+            echo "🛑 provider '$provider_override' is not a direct Tinker adapter" >&2
+            exit 3
+        }
+
+        credential_env="$(echo "$provider_authorization" | jq -r '.credential_env // empty')"
+        opencode_credential_env="$credential_env"
+        if [ -n "$credential_env" ]; then
+            opencode_credential_value="$(_read_opencode_credential "$credential_env")" || opencode_credential_value=""
+        fi
+
+        set +e
+        if [ -n "$opencode_credential_env" ] && [ -n "$opencode_credential_value" ]; then
+            tinker_resolution="$(env "$opencode_credential_env=$opencode_credential_value"                 node "$OPENCODE_PROVIDER_SCRIPT" resolve "$work_unit_id" "$provider_override" "$model_override")"
+        else
+            tinker_resolution="$(node "$OPENCODE_PROVIDER_SCRIPT" resolve "$work_unit_id" "$provider_override" "$model_override")"
+        fi
+        provider_code=$?
+        set -e
+        [ "$provider_code" -eq 0 ] || exit "$provider_code"
+        tinker_model_id="$(echo "$tinker_resolution" | jq -r '.model_id')"
+    fi
+
     wt="$(jq -r '.worktree // empty' "$f")"
     if [ -z "$wt" ] || [ ! -d "$wt" ]; then
         wt="$(cmd_claim "$work_unit_id")"
@@ -171,6 +285,10 @@ _run_lane() {
         # discovered Builder policy (none existed to discover; recorded as this unit's
         # own choice in docs/architecture/BUILDER_OS_CLAUDE_ADAPTER_2026-08-09.md).
         model="${model_override:-sonnet}"
+    elif [ "$lane" = "opencode" ]; then
+        model="$(echo "$opencode_resolution" | jq -r '.model_ref')"
+    elif [ "$lane" = "tinker" ]; then
+        model="$(echo "$tinker_resolution" | jq -r '.model_ref')"
     else model="UNKNOWN"; fi
 
     # ─── Unit 3 convergence (2026-08-09): physical worktree existing is not the
@@ -202,12 +320,17 @@ _run_lane() {
     if [ -z "$sid" ]; then
         local open_out open_code
         set +e
-        open_out="$(node "$SESSION_SCRIPT" open --unit "$work_unit_id" --branch "$branch" \
-            --worktree "$wt" --model "$model" 2>&1)"
+        if [ "$lane" = "opencode" ] || [ "$lane" = "tinker" ]; then
+            open_out="$(node "$SESSION_SCRIPT" open --unit "$work_unit_id" --branch "$branch" \
+                --worktree "$wt" --model "$model" --read-only 2>&1)"
+        else
+            open_out="$(node "$SESSION_SCRIPT" open --unit "$work_unit_id" --branch "$branch" \
+                --worktree "$wt" --model "$model" 2>&1)"
+        fi
         open_code=$?
         set -e
         if [ "$open_code" -ne 0 ]; then
-            echo "🛑 [ain-delegate] Builder WRITE ownership REFUSED for '$work_unit_id':" >&2
+            echo "🛑 [ain-delegate] Builder ownership REFUSED for '$work_unit_id':" >&2
             echo "$open_out" >&2
             echo "   Delegation stopped before invoking any worker — an unowned worktree is not a governed workspace." >&2
             exit 1
@@ -217,14 +340,25 @@ _run_lane() {
         # is exactly the final line, not the whole diagnostic blob.
         sid="$(printf '%s\n' "$open_out" | tail -1)"
         jq --arg sid "$sid" '.builder_session_id = $sid' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
-        echo "[ain-delegate] Builder WRITE ownership registered: $sid" >&2
+        echo "[ain-delegate] Builder claim registered: $sid" >&2
     else
-        echo "[ain-delegate] reusing existing Builder WRITE claim: $sid" >&2
+        echo "[ain-delegate] reusing existing Builder claim: $sid" >&2
     fi
 
     log="$(_log_file "$work_unit_id")"
     starting_sha="$(git -C "$wt" rev-parse --short HEAD)"
-    prompt="$(_build_prompt "$f")"
+    if [ "$lane" = "opencode" ]; then
+        prompt="$(_build_prompt "$f" "READ-ONLY PROVIDER EVALUATION: inspect the authorized repository evidence and return the requested analysis. Do not edit, run shell commands, browse, commit, or access outside this worktree.")"
+    elif [ "$lane" = "tinker" ]; then
+        prompt="$(_build_prompt "$f" "DIRECT EXTERNAL PROVIDER EVALUATION: JARVIS has bounded the evidence. You have no tools or filesystem access. Analyze only the prompt and the AUTHORIZED REPOSITORY EVIDENCE below.")"
+        local external_context
+        external_context="$(node "$EXTERNAL_CONTEXT_SCRIPT" bundle "$f" "$wt")" || exit 3
+        if [ -n "$external_context" ]; then
+            prompt="$prompt"$'\n\n'"$external_context"
+        fi
+    else
+        prompt="$(_build_prompt "$f")"
+    fi
 
     local t0 t1
     t0="$(date +%s)"
@@ -258,6 +392,28 @@ _run_lane() {
         perm_mode="$(_claude_permission_mode "$work_unit_id")" || exit 1
         ( cd "$wt" && claude -p "$prompt" --model "$model" --permission-mode "$perm_mode" ) > "$log" 2>&1
         exit_code=$?
+    elif [ "$lane" = "opencode" ]; then
+        # V1 is intentionally read-only. The project-scoped jarvis-readonly agent
+        # denies edit/bash/web/task/external_directory, and we never pass --auto.
+        # A Keychain-hydrated credential is scoped to the worker child only; later
+        # verification commands do not inherit it.
+        if [ -n "$opencode_credential_env" ] && [ -n "$opencode_credential_value" ]; then
+            ( cd "$wt" && env "$opencode_credential_env=$opencode_credential_value" \
+                opencode run --pure --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+        else
+            ( cd "$wt" && opencode run --pure --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+        fi
+        exit_code=$?
+        opencode_credential_value=""
+    elif [ "$lane" = "tinker" ]; then
+        if [ -z "$opencode_credential_env" ] || [ -z "$opencode_credential_value" ]; then
+            echo "🛑 Tinker credential missing after governed resolution" >&2
+            exit_code=3
+        else
+            ( cd "$wt" && printf '%s' "$prompt" |                 env "$opencode_credential_env=$opencode_credential_value"                 node "$TINKER_DIRECT_SCRIPT" "$tinker_model_id" ) > "$log" 2>&1
+            exit_code=$?
+        fi
+        opencode_credential_value=""
     else
         echo "🛑 unknown lane: $lane" >&2
         exit 2
@@ -337,6 +493,7 @@ _run_lane() {
             ending_sha: (if $ending_sha == "" then null else $ending_sha end),
             files_changed: $files_changed,
             summary: ("delegate exited " + ($exit_code|tostring) + "; see log_path for transcript"),
+            exit_code: $exit_code,
             tests_run: [],
             test_results: $test_results,
             typecheck_result: "not_run",
@@ -371,6 +528,19 @@ _run_lane() {
 cmd_local()  { _run_lane "local" "$1"; }
 cmd_kimi()   { _run_lane "kimi" "$1"; }
 cmd_claude() { _run_lane "claude" "$1" "${2:-}"; }   # optional model, e.g. `claude <id> opus`
+cmd_opencode() {
+    local work_unit_id="${1:?work_unit_id required}"
+    local provider_id="${2:?provider_id required}"
+    local model_override="${3:-}"
+    _run_lane "opencode" "$work_unit_id" "$model_override" "$provider_id"
+}
+
+cmd_tinker() {
+    local work_unit_id="${1:?work_unit_id required}"
+    local provider_id="${2:?provider_id required}"
+    local model_override="${3:-}"
+    _run_lane "tinker" "$work_unit_id" "$model_override" "$provider_id"
+}
 
 cmd_result() {
     local f
@@ -434,12 +604,14 @@ case "${1:-}" in
     local)    shift; cmd_local "$@" ;;
     kimi)     shift; cmd_kimi "$@" ;;
     claude)   shift; cmd_claude "$@" ;;
+    opencode) shift; cmd_opencode "$@" ;;
+    tinker)   shift; cmd_tinker "$@" ;;
     result)   shift; cmd_result "$@" ;;
     review)   shift; cmd_review "$@" ;;
     escalate) shift; cmd_escalate "$@" ;;
     release)  shift; cmd_release "$@" ;;
     *)
-        echo "usage: $0 {new|claim|local|kimi|claude|result|review|escalate|release} <work_unit_id> [args...]" >&2
+        echo "usage: $0 {new|claim|local|kimi|claude|opencode|tinker|result|review|escalate|release} <work_unit_id> [args...]" >&2
         exit 2
         ;;
 esac

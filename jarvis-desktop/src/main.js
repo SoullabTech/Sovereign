@@ -14,6 +14,10 @@ const GOV = require('./governance.js');
 const RepoConfig = require('./repo-config.js');
 const { childEnv, resolveNodeBinary } = require('./child-env.js');
 const MECH = require('./builder-mechanism.js');
+const CONTINUITY = require('./continuity.js');
+const FRONTIER = require('./frontier-worker.js');
+const WUC = require('./work-unit-control.js');
+const OPWU = require('./operator-work-unit.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
@@ -511,7 +515,9 @@ ipcMain.handle('jarvis:status', async () => {
     // production. UNCONFIGURED and NOT PROBED are the honest answers.
     memory_postgres: { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one. Memory/Postgres state is read from the host, not from this console.' },
     production: { state: 'NOT PROBED', detail: 'requires explicit production/SSH authority, which Desktop does not hold and does not request. Not probed by design.' },
-    claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; Desktop Alpha does not auto-execute it (see §8 security stance) — this console itself runs the Claude Code session that built it.' },
+    claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; routing alone never executes a frontier model.' },
+    frontier_reasoner: FRONTIER.status(),
+    continuity: CONTINUITY.status(currentRoot()),
     builder_mechanism: { state: 'UNKNOWN', detail: null },
     governance_holds: [],
     desktop_runtime: { state: 'AVAILABLE', detail: `Electron ${process.versions.electron}, node ${process.versions.node}` },
@@ -643,6 +649,17 @@ ipcMain.handle('jarvis:status', async () => {
 });
 
 // ---------------------------------------------------------------------------
+// jarvis:continuity-search — read-only search of the local JARVIS continuity
+// projection. The renderer may provide only query text + a bounded result count.
+// The main process chooses the fixed local script and database path; no arbitrary
+// command, path, audience, or disclosure class crosses IPC.
+ipcMain.handle('jarvis:continuity-search', async (_evt, req) => {
+  const query = req && typeof req === 'object' ? req.query : '';
+  const limit = req && typeof req === 'object' ? req.limit : undefined;
+  return CONTINUITY.search(currentRoot(), query, limit);
+});
+
+// ---------------------------------------------------------------------------
 // jarvis:capabilities — the C0 capability manifest, read from the SAME
 // deterministic.mjs the executor imports. Deliberately not a curated list:
 // if a capability is added, removed, or has its schema changed in the
@@ -711,6 +728,63 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
     // An unexpected throw is a Desktop-side fault and is labelled as one, so it
     // is never mistaken for a governed refusal by the mechanism.
     return { submitted: false, outcome: 'DESKTOP_FAULT', reason: String(e.message).slice(0, 300), mechanism: MECH.mechanismState(root), run: null, events: [] };
+  }
+});
+
+
+// Governed provider-review Work Unit control. ONE narrow channel, four named
+// actions. MAIN owns the repository binding, canonical SHA, Work Unit id/branch,
+// and canonical scripts; the renderer cannot supply a path, shell command, or
+// authority envelope directly.
+ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
+  const root = currentRoot();
+  if (!root) return { ok: false, status: 'NO_SUBSTRATE', reason: 'No execution substrate is bound.' };
+  const action = String(req?.action || '');
+  const safeId = (value) => /^[a-z0-9][a-z0-9-]{2,63}$/.test(String(value || ''));
+  try {
+    if (action === 'providers') {
+      return { ok: true, status: 'COMPLETED', providers: await WUC.providers(root, { env: childEnv(process.env).env, home: os.homedir() }) };
+    }
+    if (action === 'create') {
+      const canonicalSha = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env,
+      }).trim();
+      const built = OPWU.buildPacket(req?.spec || {}, { canonicalSha, nowMs: Date.now() });
+      if (!built.ok) return { ok: false, status: 'REFUSED', reason: built.errors.join('; '), errors: built.errors };
+      const created = await WUC.create(root, built.packet);
+      if (!created.ok) return { ...created, status: 'REFUSED' };
+      const snapshot = await WUC.status(root, built.packet.work_unit_id);
+      return {
+        ok: true, status: 'CREATED', work_unit_id: built.packet.work_unit_id,
+        canonical_sha: canonicalSha, branch: built.packet.branch,
+        authority: {
+          authorized_acts: built.packet.authorized_acts,
+          not_authorized_acts: built.packet.not_authorized_acts,
+          integration_actor: built.packet.integration_actor,
+          disclosure: built.packet.disclosure,
+        },
+        provider_strategy: built.packet.provider_strategy,
+        snapshot,
+      };
+    }
+    if (action === 'status') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await WUC.status(root, req.work_unit_id);
+    }
+    if (action === 'run-provider') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
+      }
+      return await WUC.runProvider(root, {
+        work_unit_id: req.work_unit_id,
+        provider_id: req.provider_id,
+        model: req.model || '',
+      }, { env: childEnv(process.env).env });
+    }
+    return { ok: false, status: 'REFUSED', reason: `Unknown Work Unit action '${action}'.` };
+  } catch (e) {
+    return { ok: false, status: 'DESKTOP_FAULT', reason: String(e.message || e).slice(0, 500) };
   }
 });
 
@@ -852,10 +926,21 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
     }
   } else if (decision.execution_lane === 'C3') {
     response.status = 'routed_not_executed';
-    response.result = { note: 'C3 selected. Desktop Alpha does not auto-invoke Claude — that would exercise founder identity / widen permissions without an active founder-driven session (§8). Open a Claude Code session to execute this task.' };
+    response.result = {
+      note: 'C3 selected. Routing does not execute a frontier model. A separate explicit founder act may send only approved external-safe task text to Nemotron.',
+      frontier_reasoner: FRONTIER.status(),
+    };
   }
 
   return response;
+});
+
+// Explicit C3 frontier act. This is intentionally a separate IPC action from
+// routing: selecting C3 never causes external execution. The worker admits only
+// task text + an explicit external_ok boolean and runs in empty temporary
+// custody with all filesystem/tool permissions denied.
+ipcMain.handle('jarvis:run-external-reasoning', async (_evt, req) => {
+  return FRONTIER.run(req || {});
 });
 
 // ---------------------------------------------------------------------------

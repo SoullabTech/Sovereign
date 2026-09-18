@@ -13,7 +13,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('jarvis', {
   getStatus: () => ipcRenderer.invoke('jarvis:status'),
   getCapabilities: () => ipcRenderer.invoke('jarvis:capabilities'),
+  searchContinuity: (query, limit = 8) => ipcRenderer.invoke('jarvis:continuity-search', { query, limit }),
   submitTask: (task) => ipcRenderer.invoke('jarvis:submit-task', task),
+  runExternalReasoning: (req) => ipcRenderer.invoke('jarvis:run-external-reasoning', req),
   governanceAction: (req) => ipcRenderer.invoke('jarvis:governance-action', req),
 
   // Governed Builder work-unit mechanism. `runWorkUnit` carries a packet only —
@@ -22,6 +24,7 @@ contextBridge.exposeInMainWorld('jarvis', {
   // renderer cannot name a lane at all. Admission remains the mechanism's.
   getMechanismStatus: () => ipcRenderer.invoke('jarvis:mechanism-status'),
   runWorkUnit: (packet) => ipcRenderer.invoke('jarvis:run-work-unit', { packet }),
+  workUnitAction: (req) => ipcRenderer.invoke('jarvis:work-unit-action', req),
 
   getRepoConfig: () => ipcRenderer.invoke('jarvis:repo-config'),
   chooseRepo: () => ipcRenderer.invoke('jarvis:choose-repo'),

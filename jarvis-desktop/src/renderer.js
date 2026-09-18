@@ -2,6 +2,15 @@ const $main = document.getElementById('main');
 let currentView = 'home';
 let lastStatus = null;
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 document.querySelectorAll('nav button').forEach(btn => {
   btn.addEventListener('click', () => setView(btn.dataset.view));
 });
@@ -288,9 +297,14 @@ function onConvoKey(e) {
     const holds = lastStatus.governance_holds || [];
     out.innerHTML = `<div class="card"><h3>Needs your decision</h3>${holds.length ? holds.map(h => `<div class="row"><span>${h.unit}</span><span class="state HELD">HELD</span></div>`).join('') : '<div class="hint">Nothing held right now.</div>'}</div>`;
   } else if (q.includes('take this') || q.includes('task')) {
+    const draft = e.target.value.trim();
+    if (draft && !/^take this( bounded)? task[.!]?$/i.test(draft)) sessionStorage.setItem('jarvis:draft-intent', draft);
     setView('work'); return;
   } else {
-    out.innerHTML = `<div class="hint">Try: "What's happening?" · "What's broken?" · "What needs my decision?" · "Take this bounded task."</div>`;
+    // Ordinary founder prose is an intent, not an error message. Carry it into
+    // Work rather than forcing the founder to learn command phrases first.
+    sessionStorage.setItem('jarvis:draft-intent', e.target.value.trim());
+    setView('work'); return;
   }
   e.target.value = '';
 }
@@ -309,13 +323,19 @@ function onConvoKey(e) {
 const CF = window.JarvisCapabilityForm;
 const GOV = window.JarvisGovernance;
 const PROV = window.JarvisProvenance;
+const OF = window.JarvisOperatorFlow;
+const OWU = window.JarvisOperatorWorkUnit;
+let providerCatalog = [];
+let activeWorkUnitId = sessionStorage.getItem('jarvis:active-work-unit') || null;
+let activeWorkUnitStrategy = [];
+let workUnitPollTimer = null;
 
 // Wording is derived from what each lane ACTUALLY does in this build — see
 // jarvis:submit-task in main.js. C3 promises nothing it does not perform.
 const LANE_HELP = {
   c0: '<strong>Deterministic capability.</strong> Choose a registered operation and provide its arguments. No model runs; the result is produced by the same registry the terminal uses.',
   c1: '<strong>Small local task.</strong> Give JARVIS a bounded read-only reasoning task. It runs on the local worker (qwen2.5:7b) and is capped at 4000 input characters — oversized packets are refused, not escalated. Execution is verified; the answer’s correctness is not.',
-  c3: '<strong>Needs real reasoning.</strong> The router will select C3 and explain why, but Desktop Alpha does not invoke Claude — doing so would exercise founder identity without an active founder-driven session. The task is routed and shown to you; execution means opening a Claude Code session.',
+  c3: '<strong>Needs frontier reasoning.</strong> Routing still does not execute C3. After routing, you may explicitly send only the approved task text to Nemotron 3 Ultra. The free endpoint is external/trial-scoped: do not include member data, private transcripts, secrets, credentials, or confidential material.',
 };
 
 let capManifest = [];
@@ -329,29 +349,407 @@ async function loadCapabilities() {
   return info;
 }
 
+function renderOperatorPlan(plan) {
+  return `<div class="run-plan">
+    <div class="plan-title">${escapeHtml(plan.title)}</div>
+    <div class="plan-line"><b>Execution:</b> ${escapeHtml(plan.execution)}</div>
+    <div class="plan-line"><b>Privacy:</b> ${escapeHtml(plan.privacy)}</div>
+    <div class="plan-line"><b>Intelligence:</b> ${escapeHtml(plan.model)}</div>
+  </div>`;
+}
+
+function providerById(id) {
+  return providerCatalog.find(p => p.id === id) || null;
+}
+
+function providerStateClass(state) {
+  if (state === 'AVAILABLE') return 'AVAILABLE';
+  if (state === 'NEEDS_SETUP') return 'NEEDS_SETUP';
+  if (state === 'FAILED') return 'UNAVAILABLE';
+  return 'UNKNOWN';
+}
+
+function renderProviderState(id, targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  const p = providerById(id);
+  if (!p) {
+    el.className = 'state UNKNOWN';
+    el.textContent = 'UNVERIFIED';
+    return;
+  }
+  el.className = `state ${providerStateClass(p.state)}`;
+  el.textContent = p.state.replace('_', ' ');
+  el.title = p.detail || '';
+}
+
+async function loadProviderCatalog() {
+  const out = await window.jarvis.workUnitAction({ action: 'providers' });
+  providerCatalog = out?.ok ? (out.providers || []) : [];
+  renderProviderState('qwen-local', 'wu-qwen-status');
+  renderProviderState('gpt-oss-local', 'wu-gpt-oss-status');
+  renderProviderState('nemotron-zen', 'wu-nemotron-status');
+  renderProviderState('inkling-tinker', 'wu-inkling-status');
+  const err = document.getElementById('wu-provider-error');
+  if (err) err.textContent = out?.ok ? '' : (out?.reason || 'Provider status unavailable.');
+}
+
+function currentWorkUnitProviders() {
+  const out = [];
+  if (document.getElementById('wu-qwen')?.checked) out.push('qwen-local');
+  if (document.getElementById('wu-gpt-oss')?.checked) out.push('gpt-oss-local');
+  if (document.getElementById('wu-nemotron')?.checked) out.push('nemotron-zen');
+  if (document.getElementById('wu-inkling')?.checked) out.push('inkling-tinker');
+  return out;
+}
+
+function syncWorkUnitComposer() {
+  const providers = currentWorkUnitProviders();
+  const inkling = providers.includes('inkling-tinker');
+  const external = providers.includes('nemotron-zen') || inkling;
+  const local = providers.includes('qwen-local') || providers.includes('gpt-oss-local');
+  const repoWrap = document.getElementById('wu-repo-wrap');
+  const spendWrap = document.getElementById('wu-spend-wrap');
+  if (repoWrap) repoWrap.style.display = external ? 'block' : 'none';
+  if (spendWrap) spendWrap.style.display = inkling ? 'block' : 'none';
+  const authority = document.getElementById('wu-authority-preview');
+  if (authority) {
+    const repoOk = !!document.getElementById('wu-repo-ok')?.checked;
+    const spendOk = !!document.getElementById('wu-spend-ok')?.checked;
+    authority.innerHTML = `<div class="authority-box">
+      <div class="a-title">Authority preview</div>
+      <div class="a-line">Local review: <b>${local ? 'read-only; stays on this Mac' : 'not selected'}</b></div>
+      <div class="a-line">External repository disclosure: <b>${external ? (repoOk ? 'authorized' : 'held') : 'not requested'}</b></div>
+      <div class="a-line">Provider spend: <b>${inkling ? (spendOk ? 'authorized for Inkling' : 'held') : 'not requested'}</b></div>
+      <div class="a-line">Write / production / deploy / authority change: <b>denied</b></div>
+      <div class="a-line">Integration actor: <b>Kelly / founder</b></div>
+    </div>`;
+  }
+}
+
+function workUnitSpecFromForm() {
+  return {
+    objective: document.getElementById('wu-objective')?.value || '',
+    acceptanceCriteria: document.getElementById('wu-acceptance')?.value || '',
+    evidenceFocus: document.getElementById('wu-evidence')?.value || '',
+    providers: currentWorkUnitProviders(),
+    externalRepoOk: !!document.getElementById('wu-repo-ok')?.checked,
+    providerSpendOk: !!document.getElementById('wu-spend-ok')?.checked,
+  };
+}
+
+function showWorkUnitErrors(errors) {
+  const host = document.getElementById('wu-errors');
+  if (!host) return;
+  host.innerHTML = errors?.length
+    ? `<div class="errors">${errors.map(e => `<div>${escapeHtml(e)}</div>`).join('')}</div>`
+    : '';
+}
+
+function stageClass(done, running, held = false) {
+  return held ? 'held' : running ? 'running' : done ? 'done' : '';
+}
+
+function attemptMatchesProvider(attempt, providerId) {
+  const model = String(attempt?.model || '');
+  if (providerId === 'qwen-local') return model === 'ollama/qwen3-coder:30b';
+  if (providerId === 'gpt-oss-local') return model === 'ollama/gpt-oss:20b';
+  if (providerId === 'nemotron-zen') return model === 'opencode/nemotron-3-ultra-free' || model === 'opencode/nemotron-3.5-lightning-free';
+  if (providerId === 'inkling-tinker') return model === 'tinker/thinkingmachines/Inkling-Small' || model === 'tinker/thinkingmachines/Inkling';
+  return false;
+}
+
+function nextActionForReconciliation(r) {
+  switch (r?.standing) {
+    case 'REPAIR_BEFORE_WITNESS': return 'Repair the failed/rejected attempt before a founder witness.';
+    case 'NEEDS_KELLY': return 'A founder ruling is required before this Work Unit can continue.';
+    case 'REVIEW_DISAGREEMENT': return 'Read both provider outputs. JARVIS will not choose between conflicting recommendations automatically.';
+    case 'EVIDENCE_PRESENTED': return 'Evidence is presented. Kelly may adjudicate the next gate or proceed to a human witness if the programme requires one.';
+    case 'SECOND_REVIEW_OWED': return 'Run the independent second provider review.';
+    default: return 'Run the first provider attempt.';
+  }
+}
+
+function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientError = null } = {}) {
+  const host = document.getElementById('work-unit-live');
+  if (!host) return;
+  if (!snapshot?.ok || !snapshot.work_unit) {
+    host.innerHTML = transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : '';
+    return;
+  }
+  const wu = snapshot.work_unit;
+  const strategy = snapshot.provider_strategy || activeWorkUnitStrategy || [];
+  activeWorkUnitStrategy = strategy;
+  const attempts = snapshot.reconciliation?.attempts || [];
+  const rec = snapshot.reconciliation || { standing: 'NOT_RUN', summary: 'No attempts yet.', attempts: [] };
+  const qwenDone = attempts.some(a => attemptMatchesProvider(a, 'qwen-local'));
+  const ossDone = attempts.some(a => attemptMatchesProvider(a, 'gpt-oss-local'));
+  const nemDone = attempts.some(a => attemptMatchesProvider(a, 'nemotron-zen'));
+  const inkDone = attempts.some(a => attemptMatchesProvider(a, 'inkling-tinker'));
+  const allSelectedDone = strategy.every(p => attempts.some(a => attemptMatchesProvider(a, p)));
+  const active = wu.active_execution;
+
+  const attemptHtml = attempts.length ? attempts.map(a => `<div class="attempt-card">
+    <div class="attempt-head"><span>#${escapeHtml(a.attempt_number || '?')} · ${escapeHtml(a.model || a.lane || 'unknown worker')}</span><span>${escapeHtml(a.test_results || 'not_run')}</span></div>
+    <div class="why">exit ${a.exit_code ?? '?'} · next ${escapeHtml(a.recommended_next_action || 'unreported')} · ${escapeHtml(String(a.duration_s ?? '?'))}s</div>
+    ${a.unresolved_questions?.length ? `<div class="why">Unresolved: ${a.unresolved_questions.map(escapeHtml).join(' · ')}</div>` : ''}
+    ${a.output_excerpt ? `<details><summary class="toggle-adv">Review output</summary><pre>${escapeHtml(a.output_excerpt)}</pre></details>` : ''}
+  </div>`).join('') : '<div class="hint">No provider attempt has run yet.</div>';
+
+  const disagreements = rec.disagreements?.length
+    ? `<div class="errors">${rec.disagreements.map(d => `<div>${escapeHtml(d)}</div>`).join('')}</div>` : '';
+  const needsKelly = rec.needs_kelly
+    ? `<div class="needs-kelly"><b>Needs Kelly</b><div class="why">${escapeHtml(rec.summary)}</div><div class="fix">→ ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`
+    : `<div class="run-plan"><div class="plan-title">Reconciliation · ${escapeHtml(rec.standing)}</div><div class="plan-line">${escapeHtml(rec.summary)}</div><div class="plan-line">Next: ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`;
+
+  host.innerHTML = `<div class="card">
+    <h3>JARVIS Run</h3>
+    <div class="row"><div><div class="label">${escapeHtml(wu.identity?.title || activeWorkUnitId)}</div><div class="src">${escapeHtml(activeWorkUnitId)} · @${escapeHtml(String(wu.workspace?.canonical_sha || '').slice(0, 12))}</div></div><span class="state AVAILABLE">${escapeHtml(wu.lifecycle_state || 'ready')}</span></div>
+    <div class="stage-list">
+      <span class="stage-pill done">Authority bound</span>
+      <span class="stage-pill done">Work Unit created</span>
+      ${strategy.includes('qwen-local') ? `<span class="stage-pill ${stageClass(qwenDone, runningProvider === 'qwen-local')}">Qwen coding review</span>` : ''}
+      ${strategy.includes('gpt-oss-local') ? `<span class="stage-pill ${stageClass(ossDone, runningProvider === 'gpt-oss-local')}">GPT-OSS reasoning review</span>` : ''}
+      ${strategy.includes('nemotron-zen') ? `<span class="stage-pill ${stageClass(nemDone, runningProvider === 'nemotron-zen')}">Nemotron external review</span>` : ''}
+      ${strategy.includes('inkling-tinker') ? `<span class="stage-pill ${stageClass(inkDone, runningProvider === 'inkling-tinker', providerById('inkling-tinker')?.state === 'NEEDS_SETUP' && !inkDone)}">Inkling external review</span>` : ''}
+      <span class="stage-pill ${stageClass(allSelectedDone, false, !allSelectedDone && attempts.length > 0)}">Reconciliation</span>
+      <span class="stage-pill ${rec.needs_kelly || rec.standing === 'EVIDENCE_PRESENTED' ? 'held' : ''}">Founder gate</span>
+    </div>
+    <div class="authority-box">
+      <div class="a-title">Authority actually held</div>
+      <div class="a-line">Allowed: ${escapeHtml((wu.authority?.authorized_acts || []).join(' · '))}</div>
+      <div class="a-line">Denied: ${escapeHtml((wu.authority?.not_authorized_acts || []).join(' · '))}</div>
+      <div class="a-line">Integration actor: ${escapeHtml(wu.authority?.integration_actor || 'founder')}</div>
+    </div>
+    ${active ? `<div class="why">Active Builder claim: ${escapeHtml(active.session_id)} · ${escapeHtml(active.model || '')}</div>` : ''}
+    ${transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : ''}
+    <div style="margin-top:10px">
+      <button class="primary" id="wu-run-strategy" ${runningProvider ? 'disabled' : ''}>${runningProvider ? `Running ${escapeHtml(runningProvider)}…` : 'Run remaining strategy'}</button>
+      <button class="act" id="wu-refresh">Refresh evidence</button>
+      ${active ? '<button class="act" id="wu-release">Release execution claim</button>' : ''}
+    </div>
+    <h3 style="margin-top:16px">Provider attempts</h3>
+    ${attemptHtml}
+    ${disagreements}
+    ${needsKelly}
+  </div>`;
+
+  document.getElementById('wu-refresh')?.addEventListener('click', refreshActiveWorkUnit);
+  document.getElementById('wu-run-strategy')?.addEventListener('click', runRemainingStrategy);
+  document.getElementById('wu-release')?.addEventListener('click', releaseActiveWorkUnitClaim);
+}
+
+async function refreshActiveWorkUnit() {
+  if (!activeWorkUnitId) return;
+  const snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+  if (snapshot?.ok) {
+    activeWorkUnitStrategy = snapshot.provider_strategy || activeWorkUnitStrategy;
+    renderWorkUnitSnapshot(snapshot);
+  } else {
+    renderWorkUnitSnapshot(null, { transientError: snapshot?.reason || 'Could not read Work Unit state.' });
+  }
+}
+
+function startWorkUnitPolling(providerId) {
+  stopWorkUnitPolling();
+  workUnitPollTimer = setInterval(async () => {
+    if (!activeWorkUnitId || currentView !== 'work') return;
+    const snap = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+    if (snap?.ok) renderWorkUnitSnapshot(snap, { runningProvider: providerId });
+  }, 2000);
+}
+
+function stopWorkUnitPolling() {
+  if (workUnitPollTimer) clearInterval(workUnitPollTimer);
+  workUnitPollTimer = null;
+}
+
+async function runProviderAttempt(providerId) {
+  startWorkUnitPolling(providerId);
+  const result = await window.jarvis.workUnitAction({
+    action: 'run-provider', work_unit_id: activeWorkUnitId, provider_id: providerId,
+  });
+  stopWorkUnitPolling();
+  if (result?.work_unit) {
+    renderWorkUnitSnapshot(result, { transientError: result.ok ? null : (result.reason || result.run?.stderr || `${providerId} failed`) });
+    return result;
+  }
+  await refreshActiveWorkUnit();
+  const host = document.getElementById('work-unit-live');
+  if (!result?.ok && host) host.insertAdjacentHTML('afterbegin', `<div class="errors"><div>${escapeHtml(result?.reason || `${providerId} failed`)}</div></div>`);
+  return result;
+}
+
+async function runRemainingStrategy() {
+  if (!activeWorkUnitId) return;
+  let snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+  const attempts = snapshot?.reconciliation?.attempts || [];
+  const strategy = snapshot?.provider_strategy || activeWorkUnitStrategy;
+  for (const providerId of strategy) {
+    if (attempts.some(a => attemptMatchesProvider(a, providerId))) continue;
+    const p = providerById(providerId);
+    if (p?.state === 'NEEDS_SETUP') {
+      renderWorkUnitSnapshot(snapshot, { transientError: `${providerId}: ${p.detail}` });
+      return;
+    }
+    const result = await runProviderAttempt(providerId);
+    if (!result?.ok) return; // fail closed — do not cascade into the next provider
+    snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+  }
+  renderWorkUnitSnapshot(snapshot);
+}
+
+async function releaseActiveWorkUnitClaim() {
+  if (!activeWorkUnitId) return;
+  const snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+  const sid = snapshot?.work_unit?.active_execution?.session_id;
+  if (!sid) return;
+  const res = await window.jarvis.governanceAction({ action: 'close', sessionId: sid, state: 'completed', reason: '' });
+  if (!res?.ok) {
+    renderWorkUnitSnapshot(snapshot, { transientError: res?.detail || res?.label || 'Governor refused claim release.' });
+    return;
+  }
+  await refreshStatus();
+  await refreshActiveWorkUnit();
+}
+
+async function createGovernedWorkUnit() {
+  const spec = workUnitSpecFromForm();
+  const pre = OWU.validateSpec(spec);
+  if (!pre.ok) { showWorkUnitErrors(pre.errors); return; }
+  showWorkUnitErrors([]);
+  const btn = document.getElementById('wu-create');
+  btn.disabled = true; btn.textContent = 'Binding Work Unit…';
+  const result = await window.jarvis.workUnitAction({ action: 'create', spec });
+  btn.disabled = false; btn.textContent = 'Create governed Work Unit';
+  if (!result?.ok) {
+    showWorkUnitErrors(result?.errors || [result?.reason || 'Work Unit creation failed.']);
+    return;
+  }
+  activeWorkUnitId = result.work_unit_id;
+  activeWorkUnitStrategy = result.provider_strategy || spec.providers;
+  sessionStorage.setItem('jarvis:active-work-unit', activeWorkUnitId);
+  renderWorkUnitSnapshot(result.snapshot);
+}
+
 function renderWork() {
+  const localPlan = OF.plan({ posture: OF.LOCAL });
+  const draftIntent = sessionStorage.getItem('jarvis:draft-intent') || '';
   $main.innerHTML = `
     <div class="card">
-      <h3>Submit a bounded task</h3>
-      <label class="hint">Lane</label><br>
-      <select id="lane-hint" style="margin:8px 0 8px">
-        <option value="c0">C0 — deterministic capability</option>
-        <option value="c1">C1 — small local task</option>
-        <option value="c3">C3 — needs real reasoning</option>
-      </select>
-      <div class="lane-help" id="lane-help">${LANE_HELP.c0}</div>
-      <div id="c0-fields"></div>
-      <div id="c1-fields" style="display:none">
-        <textarea id="prompt" rows="3" placeholder="Small, bounded prompt for the local model…"></textarea>
+      <h3>Run through JARVIS</h3>
+      <div class="hint" style="margin:0 0 10px">Tell JARVIS the outcome you want. You only choose the consequential posture; lane names and model plumbing stay underneath.</div>
+      <textarea id="operator-intent" class="operator-intent" rows="4" placeholder="What do you want to happen?">${escapeHtml(draftIntent)}</textarea>
+      <div class="posture-grid">
+        <label class="posture-choice">
+          <div><input type="radio" name="operator-posture" value="local" checked><b>Keep this local</b></div>
+          <span>Bounded reasoning on this Mac. No external model call.</span>
+        </label>
+        <label class="posture-choice">
+          <div><input type="radio" name="operator-posture" value="frontier"><b>Frontier reasoning</b></div>
+          <span>Route for Nemotron. External execution remains a separate explicit act.</span>
+        </label>
       </div>
-      <div id="c3-fields" style="display:none">
-        <textarea id="description" rows="3" placeholder="Describe the task — router will select C3."></textarea>
-      </div>
-      <button class="primary" id="submit">Submit</button>
-      <div id="local-errors"></div>
+      <label id="operator-external-wrap" class="hint" style="display:none;margin:4px 0 8px">
+        <input id="operator-external-ok" type="checkbox">
+        This task text contains no personal/confidential data and may be sent to the external Nemotron trial endpoint if I later press Run with Nemotron.
+      </label>
+      <div id="operator-plan">${renderOperatorPlan(localPlan)}</div>
+      <button class="primary" id="operator-run">Run locally with JARVIS</button>
+      <div id="operator-errors"></div>
     </div>
     <div id="result"></div>
+
+    <div class="card">
+      <h3>Governed Work Unit</h3>
+      <div class="hint" style="margin:0 0 10px">Use this for repository-grounded work that should survive model changes, retries, and transcript loss. One Work Unit; multiple governed review attempts.</div>
+      <textarea id="wu-objective" rows="3" placeholder="Outcome this Work Unit should produce…">${escapeHtml(draftIntent)}</textarea>
+      <div class="work-unit-grid" style="margin-top:8px">
+        <div>
+          <label class="hint">What counts as done? One criterion per line.</label>
+          <textarea id="wu-acceptance" rows="4" placeholder="Evidence is complete\nRisks are named\nNext act is bounded"></textarea>
+        </div>
+        <div>
+          <label class="hint">Evidence focus — optional paths, one per line. Use path:10-40 for a SHA-bound range.</label>
+          <textarea id="wu-evidence" rows="4" placeholder="components/voice/ContinuousConversation.tsx\nlib/voice/safariSilentDeathRecovery.ts"></textarea>
+        </div>
+      </div>
+      <h3 style="margin-top:14px">Intelligence strategy</h3>
+      <div class="hint" style="margin:0 0 8px">Local open-weight review is the default. External providers are optional escalation lanes and require separate authority.</div>
+      <label class="provider-row">
+        <div><input id="wu-qwen" type="checkbox" checked> <span class="provider-name">Qwen3 Coder 30B · local coding review</span><div class="provider-detail">Open-weight model via Ollama. Repository review stays on this Mac.</div></div>
+        <span id="wu-qwen-status" class="state UNKNOWN">CHECKING</span>
+      </label>
+      <label class="provider-row">
+        <div><input id="wu-gpt-oss" type="checkbox" checked> <span class="provider-name">GPT-OSS 20B · local reasoning review</span><div class="provider-detail">Open-weight reasoning model via Ollama. Independent second local read.</div></div>
+        <span id="wu-gpt-oss-status" class="state UNKNOWN">CHECKING</span>
+      </label>
+      <div class="hint" style="margin:10px 0 5px">Optional external escalation</div>
+      <label class="provider-row">
+        <div><input id="wu-nemotron" type="checkbox"> <span class="provider-name">Nemotron · external review</span><div class="provider-detail">External provider lane. Explicit network and repository-disclosure authority required.</div></div>
+        <span id="wu-nemotron-status" class="state UNKNOWN">CHECKING</span>
+      </label>
+      <label class="provider-row">
+        <div><input id="wu-inkling" type="checkbox"> <span class="provider-name">Inkling · external adversarial review</span><div class="provider-detail">Thinking Machines Tinker. Explicit network, repository disclosure, and spend authority required.</div></div>
+        <span id="wu-inkling-status" class="state UNKNOWN">CHECKING</span>
+      </label>
+      <div id="wu-provider-error" class="hint"></div>
+      <label id="wu-repo-wrap" class="inline-check" style="display:none"><input id="wu-repo-ok" type="checkbox">I authorize the selected external provider(s) to inspect this isolated repository worktree read-only. This is broader than the Evidence focus list.</label>
+      <label id="wu-spend-wrap" class="inline-check" style="display:none"><input id="wu-spend-ok" type="checkbox">I authorize provider spend for the Inkling review. No amount is inferred or approved beyond this provider attempt.</label>
+      <div id="wu-authority-preview"></div>
+      <button class="primary" id="wu-create">Create governed Work Unit</button>
+      <div id="wu-errors"></div>
+    </div>
+    <div id="work-unit-live"></div>
+
+    <div class="card">
+      <h3>Recall prior work</h3>
+      <div class="hint" style="margin:0 0 8px">
+        Searches the local JARVIS continuity index built from your Claude project archive.
+        Results stay on this Mac and are not sent to a model by this search.
+      </div>
+      <div class="convo-input">
+        <input id="continuity-query" type="text" placeholder="e.g. TURN-03 acoustic projection, Writer's Studio succession…">
+        <button class="primary" id="continuity-search" style="margin-top:0">Recall</button>
+      </div>
+      <div id="continuity-results"></div>
+    </div>
+
+    <details class="advanced-tools">
+      <summary>Advanced tools and lane controls</summary>
+      <div class="card">
+        <h3>Submit a bounded task manually</h3>
+        <div class="hint" style="margin-bottom:8px">Use this only when you intentionally want direct access to the underlying C0 / C1 / C3 router.</div>
+        <label class="hint">Lane</label><br>
+        <select id="lane-hint" style="margin:8px 0 8px">
+          <option value="c0">C0 — deterministic capability</option>
+          <option value="c1">C1 — small local task</option>
+          <option value="c3">C3 — needs frontier reasoning</option>
+        </select>
+        <div class="lane-help" id="lane-help">${LANE_HELP.c0}</div>
+        <div id="c0-fields"></div>
+        <div id="c1-fields" style="display:none">
+          <textarea id="prompt" rows="3" placeholder="Small, bounded prompt for the local model…"></textarea>
+        </div>
+        <div id="c3-fields" style="display:none">
+          <textarea id="description" rows="3" placeholder="Describe the task — router will select C3."></textarea>
+          <label class="hint" style="display:block;margin-top:8px">
+            <input id="external-ok" type="checkbox">
+            This task text contains no personal/confidential data and may be sent to the external Nemotron trial endpoint.
+          </label>
+        </div>
+        <button class="primary" id="submit">Submit manually</button>
+        <div id="local-errors"></div>
+      </div>
+    </details>
   `;
+
+  document.querySelectorAll('input[name="operator-posture"]').forEach(el => el.addEventListener('change', syncOperatorPosture));
+  document.getElementById('operator-external-ok').addEventListener('change', syncOperatorPosture);
+  document.getElementById('operator-run').addEventListener('click', submitOperatorIntent);
+  for (const id of ['wu-qwen', 'wu-gpt-oss', 'wu-nemotron', 'wu-inkling', 'wu-repo-ok', 'wu-spend-ok']) document.getElementById(id)?.addEventListener('change', syncWorkUnitComposer);
+  document.getElementById('wu-create').addEventListener('click', createGovernedWorkUnit);
+
   const laneHint = document.getElementById('lane-hint');
   laneHint.addEventListener('change', () => {
     document.getElementById('c0-fields').style.display = laneHint.value === 'c0' ? '' : 'none';
@@ -361,7 +759,96 @@ function renderWork() {
     document.getElementById('local-errors').innerHTML = '';
   });
   document.getElementById('submit').addEventListener('click', submitTask);
+  document.getElementById('continuity-search').addEventListener('click', searchContinuity);
+  document.getElementById('continuity-query').addEventListener('keydown', (e) => { if (e.key === 'Enter') searchContinuity(); });
   renderC0Fields();
+  syncOperatorPosture();
+  syncWorkUnitComposer();
+  void loadProviderCatalog();
+  if (activeWorkUnitId) void refreshActiveWorkUnit();
+}
+
+function currentOperatorPosture() {
+  return document.querySelector('input[name="operator-posture"]:checked')?.value || OF.LOCAL;
+}
+
+function syncOperatorPosture() {
+  const posture = currentOperatorPosture();
+  const externalOk = !!document.getElementById('operator-external-ok')?.checked;
+  const wrap = document.getElementById('operator-external-wrap');
+  if (wrap) wrap.style.display = posture === OF.FRONTIER ? 'block' : 'none';
+  const planHost = document.getElementById('operator-plan');
+  if (planHost) planHost.innerHTML = renderOperatorPlan(OF.plan({ posture, externalOk }));
+  const button = document.getElementById('operator-run');
+  if (button) button.textContent = posture === OF.FRONTIER ? 'Prepare frontier run' : 'Run locally with JARVIS';
+}
+
+function showOperatorErrors(errors) {
+  const host = document.getElementById('operator-errors');
+  if (!host) return;
+  host.innerHTML = errors.length
+    ? `<div class="errors">${errors.map(e => `<div>${escapeHtml(e)}</div>`).join('')}</div>`
+    : '';
+}
+
+async function submitOperatorIntent() {
+  const posture = currentOperatorPosture();
+  const externalOk = !!document.getElementById('operator-external-ok')?.checked;
+  const intent = document.getElementById('operator-intent')?.value || '';
+  const built = OF.buildTask({ intent, posture, externalOk });
+  if (!built.ok) { showOperatorErrors(built.errors); return; }
+  showOperatorErrors([]);
+
+  const button = document.getElementById('operator-run');
+  button.disabled = true;
+  button.textContent = posture === OF.FRONTIER ? 'Routing…' : 'Working locally…';
+  const res = await window.jarvis.submitTask(built.task);
+  button.disabled = false;
+  syncOperatorPosture();
+  renderResult(res);
+}
+
+async function searchContinuity() {
+  const input = document.getElementById('continuity-query');
+  const out = document.getElementById('continuity-results');
+  const button = document.getElementById('continuity-search');
+  const query = input ? input.value.trim() : '';
+  if (!query) {
+    out.innerHTML = '<div class="hint">Enter a specific lane, decision, feature, or phrase to recall.</div>';
+    return;
+  }
+  button.disabled = true;
+  button.textContent = 'Recalling…';
+  const res = await window.jarvis.searchContinuity(query, 8);
+  button.disabled = false;
+  button.textContent = 'Recall';
+  if (!res.ok) {
+    out.innerHTML = `<div class="errors">${(res.errors || ['Recall failed']).map(e => `<div>${escapeHtml(e)}</div>`).join('')}</div>`;
+    return;
+  }
+  const summary = res.summary
+    ? `<div class="precedence">
+        <b>Branch standing — noncanonical</b>
+        Highest retrieved stage: <span class="kv">${escapeHtml(res.summary.highest_stage || 'not established')}</span><br>
+        ${(res.summary.highest_stage_states || []).map(s => `<span class="kv">${escapeHtml(s)}</span>`).join('<br>')}
+        ${res.summary.charter_state ? `<br>Charter state: <span class="kv">${escapeHtml(res.summary.charter_state)}</span>` : ''}
+        ${res.summary.ref ? `<br>Source branch: <span class="kv">${escapeHtml(res.summary.ref)}@${escapeHtml(String(res.summary.git_sha || '').slice(0, 12))}</span>` : ''}
+      </div>`
+    : '';
+  out.innerHTML = summary + (res.results.length
+    ? res.results.map(item => `<div class="claim">
+        <div class="label">${escapeHtml(item.title || item.session_id || item.path || item.kind)}</div>
+        <div class="src">
+          ${escapeHtml(item.authority || 'HISTORICAL_ORIENTATION')} ·
+          ${item.stage ? escapeHtml(item.stage) + ' · ' : ''}
+          ${item.declared_state ? escapeHtml(item.declared_state) + ' · ' : ''}
+          ${item.ref ? escapeHtml(item.ref + '@' + String(item.git_sha || '').slice(0, 12)) + ' · ' : ''}
+          ${escapeHtml(item.path)}:${escapeHtml(item.line_no || 1)} ·
+          ${escapeHtml(item.timestamp || 'undated')} · ${escapeHtml(item.sensitivity)}
+        </div>
+        <div class="why" style="white-space:pre-wrap">${escapeHtml(item.text)}</div>
+      </div>`).join('')
+    : '<div class="hint">No matching continuity found. Absence from this search is not proof the work never happened.</div>');
 }
 
 function renderC0Fields() {
@@ -484,7 +971,10 @@ async function submitTask() {
     const p = document.getElementById('prompt').value;
     task = { bounded_for_local: true, input_chars: p.length, prompt: p };
   } else {
-    task = { description: document.getElementById('description').value };
+    task = {
+      description: document.getElementById('description').value,
+      external_ok: !!document.getElementById('external-ok')?.checked,
+    };
   }
 
   const btn = document.getElementById('submit');
@@ -518,8 +1008,26 @@ function renderResult(res) {
       </div>`
     : '';
 
+  const reasoner = res.result && res.result.frontier_reasoner;
+  const c3Action = res.execution_lane === 'C3' && res.status === 'routed_not_executed'
+    ? `<div class="card">
+        <h3>Explicit frontier act</h3>
+        <div class="row"><span class="label">Nemotron 3 Ultra</span><span class="state ${reasoner?.ready ? 'AVAILABLE' : 'NEEDS_SETUP'}">${escapeHtml(reasoner?.state || 'UNVERIFIED')}</span></div>
+        <div class="hint">
+          Routing did not send anything externally.
+          ${t.external_ok
+            ? 'You marked this task text external-safe. No repository or continuity context will be attached.'
+            : 'External execution is held because this task was not marked external-safe.'}
+        </div>
+        ${t.external_ok && reasoner?.ready ? '<button class="primary" id="run-frontier">Run with Nemotron 3 Ultra</button>' : ''}
+        ${t.external_ok && !reasoner?.ready ? `<div class="why">${escapeHtml(reasoner?.detail || 'Nemotron provider setup is incomplete.')}</div>` : ''}
+        <div id="frontier-result"></div>
+      </div>`
+    : '';
+
   document.getElementById('result').innerHTML = `
     ${invocation}
+    ${c3Action}
     <div class="card">
       <h3>Result</h3>
       <div class="row"><span class="label">Selected lane</span><span class="lane-badge ${laneClass}">${res.execution_lane || 'REJECTED'}</span></div>
@@ -533,6 +1041,23 @@ function renderResult(res) {
       <pre>${JSON.stringify(res.result, null, 2)}</pre>
     </div>
   `;
+
+  const runFrontier = document.getElementById('run-frontier');
+  if (runFrontier) {
+    runFrontier.addEventListener('click', async () => {
+      const out = document.getElementById('frontier-result');
+      runFrontier.disabled = true;
+      runFrontier.textContent = 'Running…';
+      out.innerHTML = '<div class="hint">External reasoning in progress…</div>';
+      const result = await window.jarvis.runExternalReasoning({
+        prompt: t.description || '',
+        external_ok: true,
+      });
+      runFrontier.disabled = false;
+      runFrontier.textContent = 'Run with Nemotron 3 Ultra';
+      out.innerHTML = `<pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+    });
+  }
 }
 
 function renderSystem() {
@@ -544,7 +1069,9 @@ function renderSystem() {
       ${stateRow('Builder OS', s.builder_os)}
       ${stateRow('Route A', s.route_a)}
       ${stateRow('Local worker', s.local_worker)}
-      ${stateRow('Claude lane', s.claude_lane)}
+      ${stateRow('Frontier reasoning lane', s.claude_lane)}
+      ${stateRow('Nemotron external reasoner', s.frontier_reasoner || { state: 'UNVERIFIED', detail: 'frontier reasoner status not reported by this build' })}
+      ${stateRow('JARVIS continuity', s.continuity || { state: 'UNVERIFIED', detail: 'continuity status not reported by this build' })}
       ${stateRow('Builder work-unit mechanism', s.builder_mechanism)}
       ${stateRow('Desktop runtime', s.desktop_runtime)}
       ${/* These two used to be literals written into the view, which is why
@@ -693,7 +1220,7 @@ function renderSpiral() {
             // keeps the exact wording underneath rather than replacing it.
             const plain = {
               'motion': { t: 'Whether things are getting better or worse',
-                          w: 'JARVIS does not keep a history yet, so it cannot compare this moment to any earlier one.' },
+                          w: 'JARVIS now keeps project continuity, but this operational view does not yet compare repeated state observations. Trend is therefore still unestablished.' },
               'custody layer (radial axis)': { t: 'How far along something is (local &rarr; canonical)',
                           w: 'JARVIS can see how each thing is doing, but not where it sits in the pipeline. So that is written in words, never drawn as distance.' },
               'active work': { t: 'What work is running right now',
@@ -719,7 +1246,7 @@ function renderSpiral() {
             <b>amber</b> — something observable is in the way.<br>
             <b>hollow dashed</b> — not checked. Not missing, not broken: unlooked-at.<br>
             <b>dashed line</b> — a link with evidence behind it. Click for the exact words.<br>
-            <b>no movement shown</b> — no history kept, so trend is not answerable.<br>
+            <b>no movement shown</b> — project continuity exists, but repeated operational-state evidence is not yet wired into this projection.<br>
             <b>click anything</b> — what it is, how JARVIS knows, how current, whether it needs you.
           </div>
         </div>

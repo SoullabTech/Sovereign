@@ -42,6 +42,14 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'separately proven not to reference runCapability, so discovery can never become execution.',
   },
   {
+    channel: 'jarvis:continuity-search',
+    ratified_in: 'JARVIS-CONTINUITY-BRIDGE-01 founder direction 2026-09-17',
+    purpose:
+      'Read-only founder recall over the LOCAL_ONLY continuity projection. The renderer supplies ' +
+      'query text and a bounded result count only; MAIN selects the fixed local script/database, ' +
+      'and no audience, path, shell command, mutation, or model invocation crosses this channel.',
+  },
+  {
     channel: 'jarvis:choose-repo',
     ratified_in: 'Preferences binding surface',
     purpose:
@@ -90,12 +98,32 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'open-or-execute authority is introduced. It returns no file contents.',
   },
   {
+    channel: 'jarvis:run-external-reasoning',
+    ratified_in: 'JARVIS-NEMOTRON-C3 founder direction 2026-09-17',
+    purpose:
+      'A separate explicit founder act after C3 routing. Carries only task text plus external_ok. ' +
+      'MAIN invokes a fixed OpenCode binary through frontier-worker in empty temporary custody with ' +
+      'read/edit/list/bash/task/external-directory/web permissions denied. It cannot receive the ' +
+      'bound repository path or JARVIS continuity, and C3 routing itself remains non-executing.',
+  },
+  {
     channel: 'jarvis:run-work-unit',
     ratified_in: 'Alpha Floor C0→Builder wire',
     purpose:
       'The governed local-native wire. Carries a PACKET only — the lane is pinned in main and is ' +
       'deliberately not a renderer-supplied value, so a compromised renderer cannot name a lane at ' +
       'all. Admission remains the mechanism\'s.',
+  },
+  {
+    channel: 'jarvis:work-unit-action',
+    ratified_in: 'JARVIS-DESKTOP-OPERATOR-FLOW-02 founder act 2026-09-17',
+    purpose:
+      'Founder-facing control of one canonical provider-review Work Unit through four fixed actions: ' +
+      'providers/create/status/run-provider. The renderer cannot supply a filesystem path, shell ' +
+      'command, Work Unit id, branch, canonical SHA, or raw authority envelope at creation: MAIN ' +
+      'derives those from the bound repository and operator-work-unit. Provider execution calls the ' +
+      'existing ain-delegate.sh opencode seam, whose canonical provider registry re-checks repo/network/' +
+      'spend authority before acquiring a worktree or launching a model. No production/deploy act is exposed.',
   },
   {
     channel: 'jarvis:status',
