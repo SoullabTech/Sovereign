@@ -12,19 +12,22 @@ const preload = src('preload.js');
 const main = src('main.js');
 const operatorWU = src('operator-work-unit.js');
 const controller = src('work-unit-control.js');
+const canonicalAdapter = fs.readFileSync(
+  path.join(ROOT, '..', 'scripts', 'builder', 'desktop-canonical-work-unit-v1.mjs'),
+  'utf8',
+);
 
-test('cockpit makes Routing Intelligence preview distinct from manual provider execution', () => {
+test('cockpit makes canonical Routing Intelligence creation distinct from provider execution', () => {
   assert.match(renderer, /Governed Work Unit/);
   assert.match(renderer, /Routing Intelligence/);
   assert.match(renderer, /Task shape/);
   assert.match(renderer, /Review pressure/);
   assert.match(renderer, /Challenge mode/);
-  assert.match(renderer, /execution disconnected in R3/i);
-  assert.match(renderer, /Use the existing manual provider strategy instead/);
-  assert.match(renderer, /Manual provider strategy/);
-  assert.match(renderer, /Qwen3 Coder 30B · local coding review/);
-  assert.match(renderer, /GPT-OSS 20B · local reasoning review/);
-  assert.match(renderer, /Inkling · external adversarial review/);
+  assert.match(renderer, /W1 defines the canonical Work Unit/);
+  assert.match(renderer, /W3 computes and persists the exact route/);
+  assert.match(renderer, /R5B Authorize Once \+ Confirm Execute/);
+  assert.doesNotMatch(renderer, /id="wu-manual-mode"/);
+  assert.doesNotMatch(renderer, /Manual provider strategy/);
 });
 
 test('Home ordinary prose hands off to Work as intent rather than requiring a command phrase', () => {
@@ -32,18 +35,16 @@ test('Home ordinary prose hands off to Work as intent rather than requiring a co
   assert.match(renderer, /setView\('work'\); return/);
 });
 
-test('routed mode is default; manual provider authority remains an explicit separate path', () => {
-  assert.match(renderer, /id="wu-manual-mode" type="checkbox"/);
-  assert.match(renderer, /id="wu-manual-provider-wrap" style="display:none"/);
-  assert.match(renderer, /id="wu-qwen" type="checkbox" checked/);
-  assert.match(renderer, /id="wu-gpt-oss" type="checkbox" checked/);
-  assert.match(renderer, /wu-repo-ok/);
-  assert.match(renderer, /exact bounded Evidence focus bundle/i);
-  assert.match(renderer, /wu-spend-ok/);
-  assert.match(renderer, /authorize provider spend for the Inkling review/i);
+test('D1 new Desktop Work Units are canonical-only and do not widen external authority', () => {
+  assert.match(renderer, /Create & authorize canonical Work Unit/);
+  assert.match(renderer, /required bounded repository paths/);
+  assert.match(renderer, /D1 does not widen network, repository-disclosure, or provider-spend authority/);
+  assert.doesNotMatch(renderer, /id="wu-manual-mode"/);
+  assert.doesNotMatch(renderer, /id="wu-manual-provider-wrap"/);
+  assert.match(operatorWU, /buildCanonicalInput/);
   assert.match(operatorWU, /network_external: false/);
   assert.match(operatorWU, /provider_spend: false/);
-  assert.match(operatorWU, /repository_external_disclosure: false/);
+  assert.match(operatorWU, /external_disclosure: 'none'/);
 });
 
 test('packet authoring structurally denies write, production, deploy and authority change', () => {
@@ -66,6 +67,9 @@ test('exactly one new privileged channel carries a bounded action enum', () => {
     'authorize-execution-once',
     'confirm-execute',
     'revoke-execution-grant',
+    'record-verifier',
+    'human-adjudication',
+    'close-work-unit',
     'run-provider',
   ]) {
     assert.ok(main.includes(`action === '${action}'`), `missing action ${action}`);
@@ -78,13 +82,14 @@ test('exactly one new privileged channel carries a bounded action enum', () => {
   assert.match(controller, /deriveWorkUnitEvidenceClass\(workUnit\)/);
 });
 
-test('MAIN, not renderer, binds canonical SHA, route record, and Work Unit identity', () => {
+test('MAIN creates canonical W1 input and W3, not renderer, binds the exact route', () => {
   assert.match(main, /execFileSync\('git', \['rev-parse', 'HEAD'\]/);
-  assert.match(main, /computeRoutingPreview/);
-  assert.match(main, /routing-intelligence\.mjs/);
-  assert.match(main, /OPWU\.buildRoutingInput/);
-  assert.match(main, /routeIntelligence\(routingInput\)/);
-  assert.match(main, /OPWU\.buildPacket\(spec/);
+  assert.match(main, /OPWU\.buildCanonicalInput\(spec/);
+  assert.match(main, /WUC\.createCanonical\(root, built\.input/);
+  assert.match(canonicalAdapter, /createWorkUnitDraftV1\(input\)/);
+  assert.match(canonicalAdapter, /transitionLifecycleV1/);
+  assert.match(canonicalAdapter, /bindAuthorizedRouteV1\(envelope\)/);
+  assert.match(canonicalAdapter, /projectCompatibilityPacketV1/);
   assert.doesNotMatch(renderer, /canonical_sha\s*:/);
   assert.doesNotMatch(renderer, /route_record\s*:/);
   assert.doesNotMatch(renderer, /branch:\s*`chore\/ain-delegate/);
@@ -124,16 +129,13 @@ test('Routing Intelligence preview ignores stale asynchronous responses', () => 
   assert.match(renderer, /let routePreviewGeneration = 0/);
   assert.match(renderer, /const generation = \+\+routePreviewGeneration/);
   assert.match(renderer, /generation !== routePreviewGeneration/);
-  assert.match(renderer, /routePreviewGeneration \+= 1/);
 });
 
-test('R5A digest is computed in MAIN from the exact route record, never supplied by renderer', () => {
-  assert.match(main, /routing-route-integrity\.mjs/);
-  assert.match(main, /const routeDigest = integrityMod\.routeDigest\(routeRecord\)/);
-  assert.match(main, /routeDigest = preview\.route_digest/);
-  assert.match(main, /routeDigest,/);
-  assert.match(operatorWU, /route_digest: routeDigest/);
-  assert.match(operatorWU, /route_version: routeRecord\.route_version/);
+test('R5A digest is persisted by canonical W3, never supplied by renderer', () => {
+  assert.match(canonicalAdapter, /bindAuthorizedRouteV1\(envelope\)/);
+  assert.match(canonicalAdapter, /route_digest: workUnit\.routing\.route_digest/);
+  assert.match(canonicalAdapter, /route_version: workUnit\.routing\.route_version/);
+  assert.match(canonicalAdapter, /bound_at_sha: workUnit\.routing\.bound_at_sha/);
   assert.doesNotMatch(renderer, /route_digest\s*:/);
 });
 
@@ -182,4 +184,39 @@ test('R5B uses the existing preload channel; no new privileged IPC channel is ad
   assert.doesNotMatch(preload, /r5b/i);
   assert.doesNotMatch(preload, /confirm-execute/);
   assert.doesNotMatch(preload, /authorize-execution-once/);
+});
+
+
+test('D1 exposes canonical W4 verification and explicit human adjudication without a new IPC channel', () => {
+  assert.match(renderer, /Canonical Work Unit truth · W1–W5/);
+  assert.match(renderer, /W4 provider evidence/);
+  assert.match(renderer, /W4 verifier evidence/);
+  assert.match(renderer, /Record verifier evidence/);
+  assert.match(renderer, /Human adjudication required/);
+  assert.match(renderer, /Accept evidence/);
+  assert.match(renderer, /Return/);
+  assert.match(renderer, /Stop/);
+  assert.match(renderer, /Supersede/);
+  assert.match(renderer, /action: 'record-verifier'/);
+  assert.match(renderer, /action: 'human-adjudication'/);
+  assert.match(renderer, /action: 'close-work-unit'/);
+  assert.match(main, /WUC\.recordCanonicalVerifier/);
+  assert.match(main, /WUC\.humanAdjudicate/);
+  assert.match(main, /WUC\.closeCanonical/);
+});
+
+test('D1 compatibility packet/result/session surfaces are explicitly adapter-only', () => {
+  assert.match(canonicalAdapter, /canonical_truth: 'W1-W5'/);
+  assert.match(canonicalAdapter, /authority: 'adapter-only'/);
+  assert.match(canonicalAdapter, /Compatibility execution packet only; canonical truth lives in W1-W5/);
+  assert.match(controller, /readCanonicalWorkUnitV1/);
+  assert.match(controller, /projectDesktopCanonicalStatusV1/);
+  assert.match(controller, /canonical: false/);
+});
+
+test('D1 does not create a second privileged renderer bridge', () => {
+  assert.match(preload, /workUnitAction: \(req\) => ipcRenderer\.invoke\('jarvis:work-unit-action', req\)/);
+  assert.doesNotMatch(preload, /record-verifier/);
+  assert.doesNotMatch(preload, /human-adjudication/);
+  assert.doesNotMatch(preload, /close-work-unit/);
 });

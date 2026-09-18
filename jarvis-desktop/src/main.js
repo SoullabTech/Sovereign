@@ -779,39 +779,49 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
         cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env,
       }).trim();
       const spec = req?.spec || {};
-      let routeRecord = null;
-      let routeDigest = null;
-      if (spec.routing && typeof spec.routing === 'object') {
-        const preview = await computeRoutingPreview(root, spec);
-        if (!preview.ok) return preview;
-        routeRecord = preview.route_record;
-        routeDigest = preview.route_digest;
-        if (routeRecord.execution_disposition === 'refused') {
-          const errors = (routeRecord.blockers || []).map((block) => `${block.code}: ${block.detail}`);
-          return { ok: false, status: 'ROUTE_REFUSED', reason: errors.join('; '), errors, route_record: routeRecord };
-        }
+      if (!(spec.routing && typeof spec.routing === 'object')) {
+        return {
+          ok: false,
+          status: 'D1_CANONICAL_ROUTING_REQUIRED',
+          reason: 'D1 no longer creates new manual compatibility Work Units. New Desktop Work Units must originate in canonical W1-W5.',
+        };
       }
-      const built = OPWU.buildPacket(spec, {
+      const built = OPWU.buildCanonicalInput(spec, {
         canonicalSha,
+        repository: 'SoullabTech/Sovereign',
         nowMs: Date.now(),
-        routeRecord,
-        routeDigest,
       });
-      if (!built.ok) return { ok: false, status: 'REFUSED', reason: built.errors.join('; '), errors: built.errors };
-      const created = await WUC.create(root, built.packet);
-      if (!created.ok) return { ...created, status: 'REFUSED' };
-      const snapshot = await WUC.status(root, built.packet.work_unit_id);
+      if (!built.ok) {
+        return {
+          ok: false,
+          status: 'REFUSED',
+          reason: built.errors.join('; '),
+          errors: built.errors,
+        };
+      }
+      const created = await WUC.createCanonical(root, built.input, {
+        home: WUC.homeOf(process.env),
+        env: process.env,
+      });
+      if (!created.ok) {
+        const errors = (created.blockers || []).map((block) => block.detail || block.code);
+        return {
+          ...created,
+          ok: false,
+          reason: created.reason || errors.join('; ') || created.status,
+          errors,
+        };
+      }
+      const snapshot = await WUC.status(root, created.work_unit_id, { env: process.env });
       return {
-        ok: true, status: 'CREATED', work_unit_id: built.packet.work_unit_id,
-        canonical_sha: canonicalSha, branch: built.packet.branch,
-        authority: {
-          authorized_acts: built.packet.authorized_acts,
-          not_authorized_acts: built.packet.not_authorized_acts,
-          integration_actor: built.packet.integration_actor,
-          disclosure: built.packet.disclosure,
-        },
-        provider_strategy: built.packet.provider_strategy,
-        routing_intelligence: built.packet.routing_intelligence,
+        ok: true,
+        status: 'ROUTED',
+        canonical: true,
+        work_unit_id: created.work_unit_id,
+        canonical_sha: canonicalSha,
+        authority: snapshot.work_unit?.authority || null,
+        provider_strategy: [],
+        routing_intelligence: snapshot.routing_intelligence,
         snapshot,
       };
     }
@@ -876,6 +886,45 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
         req.grant_id,
         { env: process.env },
       );
+    }
+    if (action === 'record-verifier') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      const disposition = String(req?.disposition || '');
+      if (!['mechanical_pass', 'mechanical_fail', 'supports', 'challenges', 'disagrees', 'insufficient'].includes(disposition)) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid verifier disposition.' };
+      }
+      const reviewAttemptId = req?.review_attempt_id ? String(req.review_attempt_id) : null;
+      const targetAttemptId = req?.target_attempt_id ? String(req.target_attempt_id) : null;
+      if (reviewAttemptId && !/^[a-z0-9][a-z0-9-]{2,127}$/i.test(reviewAttemptId)) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid review_attempt_id.' };
+      }
+      if (targetAttemptId && !/^[a-z0-9][a-z0-9-]{2,127}$/i.test(targetAttemptId)) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid target_attempt_id.' };
+      }
+      return await WUC.recordCanonicalVerifier(root, req.work_unit_id, {
+        review_attempt_id: reviewAttemptId,
+        target_attempt_id: targetAttemptId,
+        disposition,
+      }, { env: process.env });
+    }
+    if (action === 'human-adjudication') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      const outcome = String(req?.outcome || '');
+      if (!['accepted', 'returned', 'stopped', 'superseded'].includes(outcome)) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid human adjudication outcome.' };
+      }
+      const supersededBy = req?.superseded_by ? String(req.superseded_by) : null;
+      if (outcome === 'superseded' && !safeId(supersededBy)) {
+        return { ok: false, status: 'REFUSED', reason: 'Valid superseded_by Work Unit id required.' };
+      }
+      return await WUC.humanAdjudicate(root, req.work_unit_id, {
+        outcome,
+        superseded_by: supersededBy,
+      }, { env: process.env });
+    }
+    if (action === 'close-work-unit') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await WUC.closeCanonical(root, req.work_unit_id, { env: process.env });
     }
     if (action === 'run-provider') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };

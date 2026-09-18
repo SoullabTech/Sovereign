@@ -212,6 +212,55 @@ async function create(root, packet, opts = {}) {
   return mod.createWorkUnit(packet, { home: opts.home });
 }
 
+async function createCanonical(root, input, opts = {}) {
+  const [canonicalMod, compatMod] = await Promise.all([
+    importBound(root, 'scripts/builder/desktop-canonical-work-unit-v1.mjs'),
+    importBound(root, 'scripts/builder/work-unit-create.mjs'),
+  ]);
+  const built = canonicalMod.buildCanonicalDesktopWorkUnitV1(input, {
+    authorization_ref: 'founder:jarvis-desktop:create-and-authorize',
+  });
+  if (!built.ok) return built;
+
+  const packet = canonicalMod.projectCompatibilityPacketV1(built.record);
+  const checked = compatMod.validateWorkUnitCreation(packet);
+  if (!checked.ok) {
+    return {
+      ok: false,
+      status: 'REFUSED',
+      reason: 'COMPATIBILITY_PACKET_INVALID',
+      errors: checked.errors,
+      blockers: checked.errors.map((detail) => ({ code: 'COMPATIBILITY_PACKET_INVALID', detail })),
+    };
+  }
+
+  const canonical = canonicalMod.createCanonicalDesktopWorkUnitV1(input, {
+    home: opts.home,
+    authorization_ref: 'founder:jarvis-desktop:create-and-authorize',
+  });
+  if (!canonical.ok) return canonical;
+
+  const compatibility = compatMod.createWorkUnit(packet, { home: opts.home });
+  if (!compatibility.ok) {
+    return {
+      ok: false,
+      status: 'COMPATIBILITY_PERSISTENCE_FAILED',
+      reason: compatibility.code,
+      canonical_work_unit_id: canonical.work_unit_id,
+      errors: compatibility.errors || [],
+    };
+  }
+
+  return {
+    ok: true,
+    status: 'ROUTED',
+    work_unit_id: canonical.work_unit_id,
+    canonical_record: canonical.record,
+    compatibility_packet: packet,
+    compatibility_path: compatibility.path,
+  };
+}
+
 async function planRouting(root, input = {}) {
   const mod = await importBound(root, 'scripts/builder/routing-intelligence-j6.mjs');
   return mod.planRouting(input);
@@ -244,17 +293,53 @@ async function planWorkUnitRouting(root, workUnitId, req = {}, opts = {}) {
 }
 
 async function r5bContext(root, workUnitId, providerId, opts = {}) {
-  const [workUnitMod, providerMod, grantMod] = await Promise.all([
+  const [workUnitMod, providerMod, grantMod, canonicalMod] = await Promise.all([
     importBound(root, 'scripts/builder/work-unit.mjs'),
     importBound(root, 'scripts/builder/opencode-provider.mjs'),
     importBound(root, 'scripts/builder/human-provider-execution-grant.mjs'),
+    importBound(root, 'scripts/builder/desktop-canonical-work-unit-v1.mjs'),
   ]);
-  const workUnit = workUnitMod.loadWorkUnit(workUnitId);
+  const home = homeOf(opts.env || process.env);
+  const canonicalRecord = canonicalMod.readCanonicalWorkUnitV1(workUnitId, { home });
+  const legacyWorkUnit = workUnitMod.loadWorkUnit(workUnitId);
+  const workUnit = canonicalRecord
+    ? canonicalMod.projectR5BWorkUnitV1(canonicalRecord)
+    : legacyWorkUnit;
   if (!workUnit) return { ok: false, status: 'REFUSED', reason: 'WORK_UNIT_NOT_FOUND' };
+
   const spec = providerMod.OPENCODE_PROVIDERS?.[providerId];
   if (!spec) return { ok: false, status: 'REFUSED', reason: 'UNKNOWN_PROVIDER' };
-  const modelRef = `${spec.opencode_provider}/${spec.default_model}`;
-  const attempts = workUnitMod.loadAttempts(workUnitId);
+  const modelRef = spec.opencode_provider + '/' + spec.default_model;
+  const attempts = canonicalRecord
+    ? canonicalRecord.envelope.work_unit.execution.attempts
+    : workUnitMod.loadAttempts(workUnitId);
+
+  if (canonicalRecord) {
+    const canonicalWorkUnit = canonicalRecord.envelope.work_unit;
+    const state = canonicalWorkUnit.state.lifecycle_state;
+    if (!['ROUTED', 'EXECUTING'].includes(state)) {
+      return {
+        ok: false,
+        status: 'REFUSED',
+        reason: 'CANONICAL_STATE_' + state + '_NOT_EXECUTABLE',
+      };
+    }
+    const route = canonicalWorkUnit.routing.route_record;
+    const challenger = (route?.challengers || []).find((entry) => entry?.provider_id === providerId);
+    if (challenger) {
+      const primaryAttempt = attempts.find(
+        (entry) => !String(entry.role || '').includes('challenger'),
+      );
+      if (!primaryAttempt) {
+        return {
+          ok: false,
+          status: 'REFUSED',
+          reason: 'PRIMARY_ATTEMPT_REQUIRED_BEFORE_INDEPENDENT_REVIEW',
+        };
+      }
+    }
+  }
+
   const localSubstrate = fs.existsSync(root)
     && fs.existsSync(path.join(root, 'scripts', 'ain-delegate.sh'));
   const preview = grantMod.prepareHumanExecutionAuthorization({
@@ -270,6 +355,8 @@ async function r5bContext(root, workUnitId, providerId, opts = {}) {
     status: preview.status,
     reason: preview.blockers?.[0]?.code || null,
     work_unit: workUnit,
+    canonical_record: canonicalRecord,
+    canonicalMod,
     attempts,
     providerMod,
     grantMod,
@@ -350,27 +437,86 @@ async function revokeExecutionGrant(root, workUnitId, grantId, opts = {}) {
   });
 }
 
+async function recordCanonicalVerifier(root, workUnitId, req = {}, opts = {}) {
+  const canonicalMod = await importBound(
+    root,
+    'scripts/builder/desktop-canonical-work-unit-v1.mjs',
+  );
+  const result = canonicalMod.recordCanonicalVerifierAndReadyV1(
+    workUnitId,
+    {
+      review_attempt_id: req.review_attempt_id || null,
+      target_attempt_id: req.target_attempt_id || null,
+      disposition: req.disposition,
+    },
+    { home: homeOf(opts.env || process.env) },
+  );
+  if (!result.ok) return result;
+  return status(root, workUnitId, opts);
+}
+
+async function humanAdjudicate(root, workUnitId, req = {}, opts = {}) {
+  const canonicalMod = await importBound(
+    root,
+    'scripts/builder/desktop-canonical-work-unit-v1.mjs',
+  );
+  const result = canonicalMod.humanAdjudicateCanonicalWorkUnitV1(
+    workUnitId,
+    {
+      outcome: req.outcome,
+      superseded_by: req.superseded_by || null,
+    },
+    { home: homeOf(opts.env || process.env) },
+  );
+  if (!result.ok) return result;
+  return status(root, workUnitId, opts);
+}
+
+async function closeCanonical(root, workUnitId, opts = {}) {
+  const canonicalMod = await importBound(
+    root,
+    'scripts/builder/desktop-canonical-work-unit-v1.mjs',
+  );
+  const result = canonicalMod.closeCanonicalWorkUnitV1(
+    workUnitId,
+    { home: homeOf(opts.env || process.env) },
+  );
+  if (!result.ok) return result;
+  return status(root, workUnitId, opts);
+}
+
 async function status(root, workUnitId, opts = {}) {
-  const [mod, grantStore] = await Promise.all([
+  const [mod, grantStore, canonicalMod] = await Promise.all([
     importBound(root, 'scripts/builder/work-unit.mjs'),
     importBound(root, 'scripts/builder/human-provider-execution-grant-store.mjs'),
+    importBound(root, 'scripts/builder/desktop-canonical-work-unit-v1.mjs'),
   ]);
+  const home = homeOf(opts.env || process.env);
+  const canonicalRecord = canonicalMod.readCanonicalWorkUnitV1(workUnitId, { home });
+  const executionGrants = grantStore.listGrantStandings(workUnitId, { home });
+
+  if (canonicalRecord) {
+    const projected = canonicalMod.projectDesktopCanonicalStatusV1(canonicalRecord);
+    const legacyStatus = mod.workUnitStatus(workUnitId);
+    projected.work_unit.active_execution = legacyStatus?.active_execution ?? null;
+    projected.work_unit.latest_result = legacyStatus?.latest_result ?? null;
+    projected.execution_grants = executionGrants;
+    projected.reconciliation = reconcileAttempts(projected.attempts);
+    return projected;
+  }
+
   const workUnit = mod.workUnitStatus(workUnitId);
   const raw = mod.loadWorkUnit(workUnitId);
   const attempts = mod.loadAttempts(workUnitId);
-  const executionGrants = raw
-    ? grantStore.listGrantStandings(workUnitId, {
-      home: homeOf(opts.env || process.env),
-    })
-    : [];
   return {
     ok: workUnit.exists === true,
+    canonical: false,
     work_unit: workUnit,
     provider_strategy: raw?.provider_strategy ?? [],
     routing_intelligence: raw?.routing_intelligence ?? null,
     disclosure: raw?.disclosure ?? null,
     attempts,
-    execution_grants: executionGrants,
+    execution_grants: raw ? executionGrants : [],
     reconciliation: reconcileAttempts(attempts),
   };
 }
@@ -611,10 +757,48 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
     };
   }
 
+  // Canonical D1 registers the exact route participant in W4 before execution.
+  if (ctx.canonical_record) {
+    const identity = ctx.canonicalMod.ensureCanonicalModelIdentityV1(
+      workUnitId,
+      grant.provider_id,
+      grant.model_ref,
+      { home },
+    );
+    if (!identity.ok) {
+      store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+        home,
+        reason: identity.reason || identity.blockers?.[0]?.code || 'CANONICAL_MODEL_IDENTITY_REFUSED',
+      });
+      return {
+        ok: false,
+        status: 'CANONICAL_EVIDENCE_REFUSED',
+        reason: identity.reason || identity.blockers?.[0]?.code || 'CANONICAL_MODEL_IDENTITY_REFUSED',
+        blockers: identity.blockers || [],
+      };
+    }
+  }
+
   // Claim before provider execution so double-clicks, crashes, or retries can
-  // never reuse the one-shot authority. CONSUMED is appended after the attempt.
+  // never reuse the one-shot authority.
   const claimed = store.claimHumanExecutionGrant(workUnitId, grantId, { home });
   if (!claimed.ok) return claimed;
+
+  if (ctx.canonical_record) {
+    const begun = ctx.canonicalMod.beginCanonicalExecutionV1(workUnitId, { home });
+    if (!begun.ok) {
+      store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+        home,
+        reason: begun.reason || begun.blockers?.[0]?.code || 'CANONICAL_EXECUTION_TRANSITION_REFUSED',
+      });
+      return {
+        ok: false,
+        status: 'CANONICAL_EXECUTION_TRANSITION_REFUSED',
+        reason: begun.reason || begun.blockers?.[0]?.code || 'CANONICAL_EXECUTION_TRANSITION_REFUSED',
+        blockers: begun.blockers || [],
+      };
+    }
+  }
 
   let executionResult;
   try {
@@ -641,9 +825,67 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
       : String(executionResult?.status || 'execution_attempted'),
   });
 
+  let canonicalAttempt = null;
+  let canonicalTest = null;
+  if (ctx.canonical_record) {
+    canonicalAttempt = ctx.canonicalMod.recordCanonicalProviderAttemptV1(
+      workUnitId,
+      {
+        provider_id: grant.provider_id,
+        model_ref: grant.model_ref,
+        outcome: executionResult,
+      },
+      { home },
+    );
+    if (!canonicalAttempt.ok) {
+      return {
+        ...executionResult,
+        ok: false,
+        status: 'CANONICAL_ATTEMPT_RECORD_FAILED',
+        reason: canonicalAttempt.reason || canonicalAttempt.blockers?.[0]?.code,
+        blockers: canonicalAttempt.blockers || [],
+        execution_grant: {
+          grant_id: grantId,
+          standing: consumed.ok ? 'CONSUMED' : 'CLAIMED',
+          consume_status: consumed.status,
+        },
+      };
+    }
+
+    const legacyTest = executionResult?.recorded_attempt?.test_results;
+    canonicalTest = ctx.canonicalMod.recordCanonicalTestResultV1(
+      workUnitId,
+      {
+        attempt_id: canonicalAttempt.attempt.attempt_id,
+        result: ['pass', 'fail', 'not_run'].includes(legacyTest) ? legacyTest : 'not_run',
+      },
+      { home },
+    );
+    if (!canonicalTest.ok) {
+      return {
+        ...executionResult,
+        ok: false,
+        status: 'CANONICAL_TEST_RECORD_FAILED',
+        reason: canonicalTest.reason || canonicalTest.blockers?.[0]?.code,
+        blockers: canonicalTest.blockers || [],
+      };
+    }
+  }
+
+  const fresh = ctx.canonical_record
+    ? await status(root, workUnitId, { env: sourceEnv })
+    : null;
+
   return {
-    ...executionResult,
+    ...(fresh || {}),
+    ok: executionResult?.ok === true,
+    status: executionResult?.status || (executionResult?.ok ? 'COMPLETED' : 'FAILED'),
+    reason: executionResult?.reason || null,
+    provider: executionResult?.provider || resolved,
+    run: executionResult?.run || null,
+    recorded_attempt: executionResult?.recorded_attempt || null,
     final_admission: finalAdmission.admission,
+    canonical_attempt: canonicalAttempt?.attempt || null,
     execution_grant: {
       grant_id: grantId,
       standing: consumed.ok ? 'CONSUMED' : 'CLAIMED',
@@ -657,7 +899,8 @@ module.exports = {
   homeOf, resultPath, readLogExcerpt, exitCodeFromSummary,
   credentialAvailability, delegateLaneForProvider,
   modelFamilyFromAttempt, durableProviderOutcome,
-  reconcileAttempts, providerChildEnv, providers, create, planRouting, planWorkUnitRouting,
+  reconcileAttempts, providerChildEnv, providers, create, createCanonical, planRouting, planWorkUnitRouting,
   executionAuthorizationPreview, authorizeExecutionOnce, revokeExecutionGrant,
+  recordCanonicalVerifier, humanAdjudicate, closeCanonical,
   confirmAuthorizedExecution, executeResolvedProvider, status, runProvider,
 };

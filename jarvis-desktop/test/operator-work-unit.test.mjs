@@ -144,3 +144,50 @@ test('routed Work Unit refuses an executable provider strategy in the same packe
   assert.equal(r.ok, false);
   assert.match(r.errors.join(' '), /cannot carry an executable provider strategy/i);
 });
+
+
+test('D1 canonical input is W1-shaped, exact-SHA bound, read-only, and does not widen external authority', () => {
+  const r = W.buildCanonicalInput({
+    objective: 'Review canonical convergence',
+    acceptanceCriteria: 'Evidence is complete',
+    evidenceFocus: 'scripts/builder/work-unit-v1.mjs:1-40',
+    providers: [],
+    routing: {
+      taskShape: 'deep_reasoning',
+      reviewPressure: 'ordinary',
+      challengeMode: 'none',
+    },
+  }, { canonicalSha: SHA, repository: 'SoullabTech/Sovereign', nowMs: 1 });
+
+  assert.equal(r.ok, true, JSON.stringify(r.errors));
+  assert.equal(r.input.identity.programme, 'JARVIS-WORK-UNIT-DESKTOP-CONVERGENCE-01');
+  assert.equal(r.input.identity.work_class, 'VERIFICATION');
+  assert.equal(r.input.scope.base_ref, SHA);
+  assert.deepEqual(r.input.scope.allowed_paths, ['scripts/builder/work-unit-v1.mjs']);
+  assert.equal(r.input.authority.repository_read, true);
+  assert.equal(r.input.authority.repository_write, 'none');
+  assert.equal(r.input.authority.network_external, false);
+  assert.equal(r.input.authority.provider_spend, false);
+  assert.equal(r.input.authority.external_disclosure, 'none');
+  assert.equal(r.input.authority.deploy, false);
+  assert.equal(r.input.authority.production_write, false);
+});
+
+test('D1 canonical creation refuses manual provider authoring and unbounded read scope', () => {
+  const manual = W.buildCanonicalInput({
+    objective: 'Review',
+    evidenceFocus: 'scripts/builder/work-unit-v1.mjs',
+    providers: ['qwen-local'],
+  }, { canonicalSha: SHA });
+  assert.equal(manual.ok, false);
+  assert.match(manual.errors.join(' '), /canonical creation requires Routing Intelligence/i);
+
+  const unbounded = W.buildCanonicalInput({
+    objective: 'Review',
+    evidenceFocus: '',
+    providers: [],
+    routing: { taskShape: 'mechanical_code' },
+  }, { canonicalSha: SHA });
+  assert.equal(unbounded.ok, false);
+  assert.match(unbounded.errors.join(' '), /at least one bounded repository evidence path/i);
+});

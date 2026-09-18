@@ -406,7 +406,10 @@ function currentWorkUnitProviders() {
 }
 
 function routedWorkUnitMode() {
-  return !document.getElementById('wu-manual-mode')?.checked;
+  // D1: all newly created Desktop Work Units originate in canonical W1-W5.
+  // Legacy manual packet execution remains compatibility-only for previously
+  // persisted Work Units and is no longer an authoring mode.
+  return true;
 }
 
 function routingSpecFromForm() {
@@ -441,7 +444,8 @@ function renderRoutePreview(route) {
     <div class="a-line">Disposition: <b>${escapeHtml(route.execution_disposition || 'unknown')}</b></div>
     <div class="a-line">Required authority: <b>${escapeHtml(required.join(' · ') || 'none')}</b></div>
     <div class="a-line">Blockers: <b>${escapeHtml(blockers)}</b></div>
-    <div class="a-line">Execution: <b>disconnected in R3</b></div>
+    <div class="a-line">Creation: <b>W1 draft → W2 authorization → W3 exact route binding</b></div>
+    <div class="a-line">Execution: <b>still requires R5B Authorize Once + Confirm Execute</b></div>
   </div>`;
 }
 
@@ -461,74 +465,37 @@ async function previewRoutingIntelligence() {
 }
 
 function syncWorkUnitComposer() {
-  const routed = routedWorkUnitMode();
-  const manualWrap = document.getElementById('wu-manual-provider-wrap');
   const frontierWrap = document.getElementById('wu-frontier-posture-wrap');
-  if (manualWrap) manualWrap.style.display = routed ? 'none' : 'block';
   if (frontierWrap) {
-    frontierWrap.style.display = routed && document.getElementById('wu-challenge-mode')?.value === 'frontier'
+    frontierWrap.style.display = document.getElementById('wu-challenge-mode')?.value === 'frontier'
       ? 'block' : 'none';
   }
 
   const authority = document.getElementById('wu-authority-preview');
   const createButton = document.getElementById('wu-create');
-  if (createButton) createButton.textContent = routed ? 'Create routed Work Unit' : 'Create manual Work Unit';
-  if (routed) {
-    if (authority) authority.innerHTML = `<div class="authority-box">
-      <div class="a-title">Authority preview</div>
-      <div class="a-line">Work Unit authority: <b>repo.read only</b></div>
-      <div class="a-line">External network / disclosure / spend: <b>not granted by routing</b></div>
-      <div class="a-line">Provider execution: <b>disconnected in R3</b></div>
-      <div class="a-line">Write / production / deploy / authority change: <b>denied</b></div>
-      <div class="a-line">Integration actor: <b>Kelly / founder</b></div>
-    </div>`;
-    void previewRoutingIntelligence();
-    return;
-  }
+  if (createButton) createButton.textContent = 'Create & authorize canonical Work Unit';
 
-  // Invalidate any in-flight routed preview before exposing the manual path.
-  // An older async response must never repaint a route after the mode changed.
-  routePreviewGeneration += 1;
-  const routeHost = document.getElementById('wu-route-preview');
-  if (routeHost) routeHost.innerHTML = '<div class="hint">Routing Intelligence preview is paused in manual mode.</div>';
+  if (authority) authority.innerHTML = `<div class="authority-box">
+    <div class="a-title">Canonical authority preview · D1</div>
+    <div class="a-line">Canonical truth: <b>W1 → W2 → W3</b></div>
+    <div class="a-line">Repository authority: <b>read-only, bounded to the evidence paths below</b></div>
+    <div class="a-line">External network / disclosure / spend: <b>not widened by D1</b></div>
+    <div class="a-line">Provider execution: <b>requires separate R5B Authorize Once + Confirm Execute</b></div>
+    <div class="a-line">Evidence: <b>W4 append-only while EXECUTING</b></div>
+    <div class="a-line">Adjudication: <b>explicit human gesture only</b></div>
+    <div class="a-line">Write / production / deploy / merge / authority change: <b>denied</b></div>
+  </div>`;
 
-  const providers = currentWorkUnitProviders();
-  const inkling = providers.includes('inkling-tinker');
-  const external = providers.includes('nemotron-zen') || inkling;
-  const local = providers.includes('qwen-local') || providers.includes('gpt-oss-local');
-  const repoWrap = document.getElementById('wu-repo-wrap');
-  const spendWrap = document.getElementById('wu-spend-wrap');
-  if (repoWrap) repoWrap.style.display = external ? 'block' : 'none';
-  if (spendWrap) spendWrap.style.display = inkling ? 'block' : 'none';
-  if (!providerCatalog.length) void loadProviderCatalog();
-  if (authority) {
-    const repoOk = !!document.getElementById('wu-repo-ok')?.checked;
-    const spendOk = !!document.getElementById('wu-spend-ok')?.checked;
-    authority.innerHTML = `<div class="authority-box">
-      <div class="a-title">Manual authority preview</div>
-      <div class="a-line">Local review: <b>${local ? 'read-only; stays on this Mac' : 'not selected'}</b></div>
-      <div class="a-line">External repository disclosure: <b>${external ? (repoOk ? 'authorized' : 'held') : 'not requested'}</b></div>
-      <div class="a-line">Provider spend: <b>${inkling ? (spendOk ? 'authorized for Inkling' : 'held') : 'not requested'}</b></div>
-      <div class="a-line">Write / production / deploy / authority change: <b>denied</b></div>
-      <div class="a-line">Integration actor: <b>Kelly / founder</b></div>
-    </div>`;
-  }
+  void previewRoutingIntelligence();
 }
 
 function workUnitSpecFromForm() {
-  const base = {
+  return {
     objective: document.getElementById('wu-objective')?.value || '',
     acceptanceCriteria: document.getElementById('wu-acceptance')?.value || '',
     evidenceFocus: document.getElementById('wu-evidence')?.value || '',
-  };
-  if (routedWorkUnitMode()) {
-    return { ...base, routing: routingSpecFromForm(), providers: [] };
-  }
-  return {
-    ...base,
-    providers: currentWorkUnitProviders(),
-    externalRepoOk: !!document.getElementById('wu-repo-ok')?.checked,
-    providerSpendOk: !!document.getElementById('wu-spend-ok')?.checked,
+    routing: routingSpecFromForm(),
+    providers: [],
   };
 }
 
@@ -750,6 +717,149 @@ async function revokeReviewedExecution() {
   await refreshActiveWorkUnit();
 }
 
+function renderCanonicalEvidencePanel(snapshot) {
+  if (!snapshot?.canonical || !snapshot?.canonical_work_unit) return '';
+
+  const canonical = snapshot.canonical_work_unit;
+  const state = canonical.state?.lifecycle_state || snapshot.work_unit?.lifecycle_state || 'UNKNOWN';
+  const evidence = snapshot.canonical_evidence || {};
+  const attempts = evidence.attempts || [];
+  const verifiers = evidence.verifier_results || [];
+  const tests = evidence.test_results || [];
+  const transitions = snapshot.transition_history || [];
+  const independentReview = attempts.find((attempt) => attempt?.attempt_kind === 'independent_review');
+  const primaryAttempt = attempts.find((attempt) => attempt?.attempt_kind !== 'independent_review');
+
+  const transitionHtml = transitions.length
+    ? transitions.map((item) => `<span class="stage-pill done">${escapeHtml(item.from)}→${escapeHtml(item.to)}</span>`).join('')
+    : '<span class="hint">No canonical transitions recorded.</span>';
+
+  const evidenceHtml = attempts.length
+    ? attempts.map((attempt) => {
+      const test = tests.find((item) => item.attempt_id === attempt.attempt_id);
+      return `<div class="attempt-card">
+        <div class="attempt-head"><span>${escapeHtml(attempt.attempt_id)} · ${escapeHtml(attempt.provider_id)}</span><span>${escapeHtml(attempt.status)}</span></div>
+        <div class="why">${escapeHtml(attempt.attempt_kind)} · ${escapeHtml(attempt.role)} · ${escapeHtml(attempt.model_id)}</div>
+        <div class="why">W4 evidence: ${escapeHtml((attempt.evidence_refs || []).join(' · ') || 'none')} · test ${escapeHtml(test?.result || 'not_run')}</div>
+      </div>`;
+    }).join('')
+    : '<div class="hint">W4 has no provider attempt evidence yet.</div>';
+
+  const verifierHtml = verifiers.length
+    ? verifiers.map((verifier) => `<div class="attempt-card">
+        <div class="attempt-head"><span>${escapeHtml(verifier.verifier_id)}</span><span>${escapeHtml(verifier.disposition)}</span></div>
+        <div class="why">${escapeHtml(verifier.verifier_kind)} verifier · target ${escapeHtml(verifier.target_attempt_id)}</div>
+        <div class="why">${escapeHtml((verifier.evidence_refs || []).join(' · ') || 'no refs')}</div>
+      </div>`).join('')
+    : '<div class="hint">No W4 verifier result has been recorded.</div>';
+
+  let actionHtml = '';
+  if (state === 'EXECUTING' && primaryAttempt && verifiers.length === 0) {
+    const dispositions = independentReview
+      ? ['supports', 'challenges', 'disagrees', 'insufficient']
+      : ['mechanical_pass', 'mechanical_fail', 'supports', 'challenges', 'insufficient'];
+    actionHtml = `<div class="authority-box" style="margin-top:12px">
+      <div class="a-title">Independent verification</div>
+      <div class="a-line">${independentReview
+        ? 'Use the completed challenger attempt as independent verifier evidence.'
+        : 'This route has no independent model challenger. A human verifier record is required before EVIDENCE_READY.'}</div>
+      <label class="hint">Verifier disposition<br>
+        <select id="d1-verifier-disposition">
+          ${dispositions.map((value) => `<option value="${value}">${value}</option>`).join('')}
+        </select>
+      </label>
+      <button class="primary" id="d1-record-verifier">Record verifier evidence</button>
+      <div class="hint">This appends through W4 while EXECUTING, then asks W2 to move to EVIDENCE_READY. It does not adjudicate the work.</div>
+    </div>`;
+  } else if (state === 'EVIDENCE_READY') {
+    actionHtml = `<div class="needs-kelly" style="margin-top:12px">
+      <b>Human adjudication required</b>
+      <div class="why">Evidence and verifier history are ready. No model or renderer may decide the semantic outcome.</div>
+      <div style="margin-top:10px">
+        <button class="primary" id="d1-adjudicate-accept">Accept evidence</button>
+        <button class="act" id="d1-adjudicate-return">Return</button>
+        <button class="act" id="d1-adjudicate-stop">Stop</button>
+      </div>
+      <div class="convo-input" style="margin-top:8px">
+        <input id="d1-supersede-id" type="text" placeholder="Successor Work Unit id">
+        <button class="act" id="d1-adjudicate-supersede">Supersede</button>
+      </div>
+    </div>`;
+  } else if (state === 'ADJUDICATED') {
+    actionHtml = `<div class="needs-kelly" style="margin-top:12px">
+      <b>Accepted by human adjudication</b>
+      <div class="why">W2 may now perform the distinct ADJUDICATED → CLOSED transition.</div>
+      <button class="primary" id="d1-close-work-unit">Close Work Unit</button>
+    </div>`;
+  } else if (['CLOSED', 'RETURNED', 'STOPPED', 'SUPERSEDED'].includes(state)) {
+    actionHtml = `<div class="run-plan" style="margin-top:12px">
+      <div class="plan-title">Terminal canonical state · ${escapeHtml(state)}</div>
+      <div class="plan-line">The W2 lifecycle is sealed. Compatibility packet/result/session surfaces cannot reopen it.</div>
+    </div>`;
+  }
+
+  return `<div class="run-plan">
+    <div class="plan-title">Canonical Work Unit truth · W1–W5</div>
+    <div class="plan-line">Lifecycle: <b>${escapeHtml(state)}</b> · compatibility packet/session/result surfaces are adapter-only.</div>
+    <div class="stage-list">${transitionHtml}</div>
+    <h3 style="margin-top:12px">W4 provider evidence</h3>
+    ${evidenceHtml}
+    <h3 style="margin-top:12px">W4 verifier evidence</h3>
+    ${verifierHtml}
+    ${actionHtml}
+  </div>`;
+}
+
+async function recordCanonicalVerifierEvidence() {
+  if (!activeWorkUnitId) return;
+  const snapshot = await window.jarvis.workUnitAction({
+    action: 'status',
+    work_unit_id: activeWorkUnitId,
+  });
+  const attempts = snapshot?.canonical_evidence?.attempts || [];
+  const independent = attempts.find((attempt) => attempt?.attempt_kind === 'independent_review');
+  const disposition = document.getElementById('d1-verifier-disposition')?.value || '';
+  const out = await window.jarvis.workUnitAction({
+    action: 'record-verifier',
+    work_unit_id: activeWorkUnitId,
+    review_attempt_id: independent?.attempt_id || null,
+    disposition,
+  });
+  if (out?.ok) renderWorkUnitSnapshot(out);
+  else renderWorkUnitSnapshot(snapshot, { transientError: out?.reason || out?.blockers?.[0]?.code || 'Verifier record refused.' });
+}
+
+async function humanAdjudicateCanonicalWorkUnit(outcome) {
+  if (!activeWorkUnitId) return;
+  const req = {
+    action: 'human-adjudication',
+    work_unit_id: activeWorkUnitId,
+    outcome,
+  };
+  if (outcome === 'superseded') {
+    req.superseded_by = document.getElementById('d1-supersede-id')?.value || '';
+  }
+  const out = await window.jarvis.workUnitAction(req);
+  if (out?.ok) renderWorkUnitSnapshot(out);
+  else {
+    const snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+    renderWorkUnitSnapshot(snapshot, { transientError: out?.reason || out?.blockers?.[0]?.code || 'Human adjudication refused.' });
+  }
+}
+
+async function closeCanonicalWorkUnitFromDesktop() {
+  if (!activeWorkUnitId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'close-work-unit',
+    work_unit_id: activeWorkUnitId,
+  });
+  if (out?.ok) renderWorkUnitSnapshot(out);
+  else {
+    const snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+    renderWorkUnitSnapshot(snapshot, { transientError: out?.reason || out?.blockers?.[0]?.code || 'Canonical closure refused.' });
+  }
+}
+
 function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientError = null } = {}) {
   const host = document.getElementById('work-unit-live');
   if (!host) return;
@@ -786,11 +896,13 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
 
   const disagreements = rec.disagreements?.length
     ? `<div class="errors">${rec.disagreements.map(d => `<div>${escapeHtml(d)}</div>`).join('')}</div>` : '';
-  const needsKelly = routeBound && attempts.length === 0
-    ? '<div class="run-plan"><div class="plan-title">HELD_FOR_AUTHORITY</div><div class="plan-line">The route is bound, but routing is not execution authority.</div><div class="plan-line">Next: review one exact provider act, authorize it once, then separately Confirm Execute.</div></div>'
-    : (rec.needs_kelly
-      ? `<div class="needs-kelly"><b>Needs Kelly</b><div class="why">${escapeHtml(rec.summary)}</div><div class="fix">→ ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`
-      : `<div class="run-plan"><div class="plan-title">Reconciliation · ${escapeHtml(rec.standing)}</div><div class="plan-line">${escapeHtml(rec.summary)}</div><div class="plan-line">Next: ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`);
+  const needsKelly = snapshot.canonical
+    ? ''
+    : (routeBound && attempts.length === 0
+      ? '<div class="run-plan"><div class="plan-title">HELD_FOR_AUTHORITY</div><div class="plan-line">The route is bound, but routing is not execution authority.</div><div class="plan-line">Next: review one exact provider act, authorize it once, then separately Confirm Execute.</div></div>'
+      : (rec.needs_kelly
+        ? `<div class="needs-kelly"><b>Needs Kelly</b><div class="why">${escapeHtml(rec.summary)}</div><div class="fix">→ ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`
+        : `<div class="run-plan"><div class="plan-title">Reconciliation · ${escapeHtml(rec.standing)}</div><div class="plan-line">${escapeHtml(rec.summary)}</div><div class="plan-line">Next: ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`));
 
   const route = routing?.route_record || null;
   const routeHtml = routeBound && route ? `<div class="authority-box">
@@ -803,6 +915,13 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
     <div class="a-line">Provider execution: <b>disconnected in R3; R5B human authorization is a separate authority layer</b></div>
   </div>` : '';
   const r5bHtml = routeBound && route ? renderR5BExecutionPanel(snapshot, route) : '';
+  const canonicalHtml = renderCanonicalEvidencePanel(snapshot);
+  const legacyEvidenceHtml = snapshot.canonical
+    ? ''
+    : `<h3 style="margin-top:16px">Provider attempts</h3>
+       ${attemptHtml}
+       ${disagreements}
+       ${needsKelly}`;
 
   host.innerHTML = `<div class="card">
     <h3>JARVIS Run</h3>
@@ -826,6 +945,7 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
     </div>
     ${routeHtml}
     ${r5bHtml}
+    ${canonicalHtml}
     <div class="authority-box">
       <div class="a-title">Authority actually held</div>
       <div class="a-line">Allowed: ${escapeHtml((wu.authority?.authorized_acts || []).join(' · '))}</div>
@@ -841,10 +961,7 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
       <button class="act" id="wu-refresh">Refresh evidence</button>
       ${active ? '<button class="act" id="wu-release">Release execution claim</button>' : ''}
     </div>
-    <h3 style="margin-top:16px">Provider attempts</h3>
-    ${attemptHtml}
-    ${disagreements}
-    ${needsKelly}
+    ${legacyEvidenceHtml}
   </div>`;
 
   document.getElementById('wu-refresh')?.addEventListener('click', refreshActiveWorkUnit);
@@ -855,6 +972,12 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
   document.getElementById('r5b-authorize-once')?.addEventListener('click', authorizeReviewedExecution);
   document.getElementById('r5b-confirm-execute')?.addEventListener('click', confirmReviewedExecution);
   document.getElementById('r5b-revoke-grant')?.addEventListener('click', revokeReviewedExecution);
+  document.getElementById('d1-record-verifier')?.addEventListener('click', recordCanonicalVerifierEvidence);
+  document.getElementById('d1-adjudicate-accept')?.addEventListener('click', () => humanAdjudicateCanonicalWorkUnit('accepted'));
+  document.getElementById('d1-adjudicate-return')?.addEventListener('click', () => humanAdjudicateCanonicalWorkUnit('returned'));
+  document.getElementById('d1-adjudicate-stop')?.addEventListener('click', () => humanAdjudicateCanonicalWorkUnit('stopped'));
+  document.getElementById('d1-adjudicate-supersede')?.addEventListener('click', () => humanAdjudicateCanonicalWorkUnit('superseded'));
+  document.getElementById('d1-close-work-unit')?.addEventListener('click', closeCanonicalWorkUnitFromDesktop);
   document.getElementById('wu-release')?.addEventListener('click', releaseActiveWorkUnitClaim);
 }
 
@@ -995,49 +1118,26 @@ function renderWork() {
           <textarea id="wu-acceptance" rows="4" placeholder="Evidence is complete\nRisks are named\nNext act is bounded"></textarea>
         </div>
         <div>
-          <label class="hint">Evidence focus — optional paths, one per line. Use path:10-40 for a SHA-bound range.</label>
+          <label class="hint">Evidence focus — required bounded repository paths, one per line. Use path:10-40 for a SHA-bound range.</label>
           <textarea id="wu-evidence" rows="4" placeholder="components/voice/ContinuousConversation.tsx\nlib/voice/safariSilentDeathRecovery.ts"></textarea>
         </div>
       </div>
       <h3 style="margin-top:14px">Routing Intelligence</h3>
-      <div class="hint" style="margin:0 0 8px">R3 previews and stores a deterministic route. It does not execute the selected models.</div>
+      <div class="hint" style="margin:0 0 8px">This preview is prospective. On creation, W1 defines the canonical Work Unit, W2 binds human authorization, and W3 computes and persists the exact route. Routing never executes a provider.</div>
       <div class="work-unit-grid">
         <label class="hint">Task shape<br><select id="wu-task-shape"><option value="mechanical_code">Mechanical code / test / diff</option><option value="deep_reasoning">Deep reasoning / architecture</option></select></label>
         <label class="hint">Review pressure<br><select id="wu-review-pressure"><option value="ordinary">Ordinary</option><option value="high_value_uncertain">High-value / uncertain</option></select></label>
       </div>
       <label class="inline-check"><input id="wu-independent-review" type="checkbox">Require an independent local second review even if the route would otherwise be single-mechanical.</label>
       <div class="work-unit-grid">
-        <label class="hint">Challenge mode<br><select id="wu-challenge-mode"><option value="none">None</option><option value="adversarial">Adversarial challenge · Inkling proposed</option><option value="frontier">Frontier challenge · Nemotron proposed</option></select></label>
+        <label class="hint">Challenge mode<br><select id="wu-challenge-mode"><option value="none">None</option><option value="adversarial">Adversarial challenge · requires separately authorized external authority</option><option value="frontier">Frontier challenge · requires separately authorized external authority</option></select></label>
         <label id="wu-frontier-posture-wrap" class="hint" style="display:none">Frontier posture<br><select id="wu-frontier-posture"><option value="repository_grounded">Repository-grounded · Tinker Nemotron</option><option value="text_only_manual">Text-only / manual · Zen</option></select></label>
       </div>
       <button class="act" id="wu-preview-route">Refresh route preview</button>
       <div id="wu-route-preview"></div>
-      <label class="inline-check"><input id="wu-manual-mode" type="checkbox">Use the existing manual provider strategy instead of Routing Intelligence.</label>
-      <div id="wu-manual-provider-wrap" style="display:none">
-        <h3 style="margin-top:14px">Manual provider strategy</h3>
-        <div class="hint" style="margin:0 0 8px">This is the pre-R3 execution path. It is separate from the route record above.</div>
-        <label class="provider-row">
-          <div><input id="wu-qwen" type="checkbox" checked> <span class="provider-name">Qwen3 Coder 30B · local coding review</span></div>
-          <span id="wu-qwen-status" class="state UNKNOWN">CHECKING</span>
-        </label>
-        <label class="provider-row">
-          <div><input id="wu-gpt-oss" type="checkbox" checked> <span class="provider-name">GPT-OSS 20B · local reasoning review</span></div>
-          <span id="wu-gpt-oss-status" class="state UNKNOWN">CHECKING</span>
-        </label>
-        <label class="provider-row">
-          <div><input id="wu-nemotron" type="checkbox"> <span class="provider-name">Nemotron Zen · manual external review</span></div>
-          <span id="wu-nemotron-status" class="state UNKNOWN">CHECKING</span>
-        </label>
-        <label class="provider-row">
-          <div><input id="wu-inkling" type="checkbox"> <span class="provider-name">Inkling · external adversarial review</span></div>
-          <span id="wu-inkling-status" class="state UNKNOWN">CHECKING</span>
-        </label>
-        <div id="wu-provider-error" class="hint"></div>
-        <label id="wu-repo-wrap" class="inline-check" style="display:none"><input id="wu-repo-ok" type="checkbox">I authorize the selected external provider(s) to receive the exact bounded Evidence focus bundle.</label>
-        <label id="wu-spend-wrap" class="inline-check" style="display:none"><input id="wu-spend-ok" type="checkbox">I authorize provider spend for the Inkling review. No amount is inferred beyond this provider attempt.</label>
-      </div>
+      <div class="hint" style="margin:8px 0">D1 does not widen network, repository-disclosure, or provider-spend authority. External challenge routes therefore remain held/refused until a separately governed authority lane exists.</div>
       <div id="wu-authority-preview"></div>
-      <button class="primary" id="wu-create">Create governed Work Unit</button>
+      <button class="primary" id="wu-create">Create & authorize canonical Work Unit</button>
       <div id="wu-errors"></div>
     </div>
     <div id="work-unit-live"></div>

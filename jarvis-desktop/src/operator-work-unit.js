@@ -106,6 +106,122 @@
     return { ok: errors.length === 0, objective, providers, routed, errors };
   }
 
+  function requestedPosture(spec) {
+    const routing = spec?.routing && typeof spec.routing === 'object' ? spec.routing : {};
+    if (routing.challengeMode === 'adversarial') return 'adversarial_challenge';
+    if (routing.challengeMode === 'frontier') {
+      return routing.frontierPosture === 'text_only_manual'
+        ? 'frontier_text'
+        : 'frontier_repository';
+    }
+    if (routing.explicitIndependentReview === true) return 'independent_review';
+    return 'default';
+  }
+
+  function buildCanonicalInput(
+    spec,
+    {
+      canonicalSha,
+      repository = 'SoullabTech/Sovereign',
+      nowMs = Date.now(),
+    } = {},
+  ) {
+    const checked = validateSpec(spec);
+    if (!checked.ok) return { ok: false, errors: checked.errors, input: null };
+    if (!checked.routed) {
+      return {
+        ok: false,
+        errors: ['D1 canonical creation requires Routing Intelligence; manual packet creation is compatibility-only.'],
+        input: null,
+      };
+    }
+    if (!/^[0-9a-f]{40}$/i.test(String(canonicalSha || ''))) {
+      return { ok: false, errors: ['Exact canonical repository SHA is unavailable.'], input: null };
+    }
+
+    const allowedPaths = lines(spec.evidenceFocus).map((row) => row.replace(/:\d+-\d+$/, ''));
+    if (!allowedPaths.length) {
+      return {
+        ok: false,
+        errors: ['Canonical Work Units require at least one bounded repository evidence path.'],
+        input: null,
+      };
+    }
+
+    const acceptance = lines(spec.acceptanceCriteria);
+    const taskShape = String(spec?.routing?.taskShape || 'mechanical_code');
+    const objective = checked.objective;
+    const id = makeId(objective, nowMs);
+
+    return {
+      ok: true,
+      errors: [],
+      input: {
+        identity: {
+          id,
+          programme: 'JARVIS-WORK-UNIT-DESKTOP-CONVERGENCE-01',
+          parent_work_unit: null,
+          objective,
+          work_class: 'VERIFICATION',
+          task_shape: taskShape,
+        },
+        context: {
+          context_refs: [],
+          evidence_refs: [
+            `local-worktree:${canonicalSha}`,
+            ...allowedPaths.map((path) => `external-bundle:${path}`),
+            `approved-task-text:${objective}`,
+          ],
+          assumptions: [],
+          unknowns: [],
+        },
+        scope: {
+          repository,
+          base_ref: canonicalSha,
+          allowed_paths: allowedPaths,
+          forbidden_paths: [],
+        },
+        authority: {
+          repository_read: true,
+          repository_write: 'none',
+          shell: 'none',
+          network_external: false,
+          provider_spend: false,
+          external_disclosure: 'none',
+          merge: false,
+          deploy: false,
+          production_read: false,
+          production_write: false,
+        },
+        routing: {
+          requested_posture: requestedPosture(spec),
+        },
+        evaluation: {
+          acceptance_conditions: acceptance.length ? acceptance : [
+            'Return evidence-grounded findings and unresolved risks.',
+            'Preserve uncertainty rather than guessing.',
+          ],
+          falsification_conditions: [
+            'Any route, execution, evidence, or renderer act widens the authorized core.',
+            'Any model/provider output is treated as authority rather than evidence.',
+          ],
+          stop_conditions: [
+            'Required evidence is unavailable or outside the bounded repository scope.',
+            'A production, deployment, consent, privacy, or authority decision is required.',
+          ],
+        },
+        provenance: {
+          creator: 'founder:jarvis-desktop',
+          authorizing_act: null,
+          source_commits: [canonicalSha],
+        },
+        state: {
+          supersedes: null,
+        },
+      },
+    };
+  }
+
   function buildPacket(
     spec,
     {
@@ -227,6 +343,8 @@
     parseEvidence,
     buildRoutingInput,
     validateSpec,
+    requestedPosture,
+    buildCanonicalInput,
     buildPacket,
   };
 });
