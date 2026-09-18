@@ -94,36 +94,36 @@ export default function CheckInFlow({ relationshipId, relationshipName, onComple
           className="space-y-7 py-1"
         >
           <div>
-            <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-jade-mineral/42">
+            <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-[#716d64]/42">
               MAIA reflects
             </p>
-            <p className="text-lg font-light leading-relaxed text-jade-jade/90">
+            <p className="text-lg font-light leading-relaxed text-[#3f5544]/90">
               {result.maiaReflection}
             </p>
           </div>
 
           {possiblePattern && (
-            <div className="border-l border-jade-sage/20 pl-4">
-              <p className="mb-1.5 text-xs text-jade-mineral/45">Something MAIA is wondering</p>
-              <p className="text-sm font-light leading-relaxed text-jade-mineral/76">
+            <div className="border-l border-[#9aaa8a]/20 pl-4">
+              <p className="mb-1.5 text-xs text-[#716d64]/45">Something MAIA is wondering</p>
+              <p className="text-sm font-light leading-relaxed text-[#716d64]/76">
                 {possiblePattern}
               </p>
             </div>
           )}
 
           {result.fieldToneSnapshot && result.fieldToneSnapshot !== 'unknown' && (
-            <p className="text-sm font-light text-jade-mineral/58">
+            <p className="text-sm font-light text-[#716d64]/58">
               The field feels{' '}
-              <span className="text-jade-jade/78">
+              <span className="text-[#3f5544]/78">
                 {result.fieldToneSnapshot.replace(/_/g, ' ')}
               </span>
               {' '}right now.
             </p>
           )}
 
-          <div className="border-t border-jade-sage/10 pt-5">
-            <p className="mb-2 text-xs text-jade-mineral/42">Something to carry</p>
-            <p className="text-sm font-light italic leading-relaxed text-jade-jade/82">
+          <div className="border-t border-[#9aaa8a]/10 pt-5">
+            <p className="mb-2 text-xs text-[#716d64]/42">Something to carry</p>
+            <p className="text-sm font-light italic leading-relaxed text-[#3f5544]/82">
               {result.suggestedMovement}
             </p>
           </div>
@@ -136,7 +136,7 @@ export default function CheckInFlow({ relationshipId, relationshipName, onComple
               setFreeText('');
               onComplete();
             }}
-            className="text-xs text-jade-sage transition-colors hover:text-jade-jade"
+            className="text-xs text-[#5e745d] transition-colors hover:text-[#3f5544]"
           >
             Let this settle
           </button>
@@ -151,10 +151,10 @@ export default function CheckInFlow({ relationshipId, relationshipName, onComple
           className="space-y-7 py-1"
         >
           <div>
-            <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-jade-mineral/42">
+            <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-[#716d64]/42">
               Sense before explaining
             </p>
-            <h3 className="text-xl font-extralight leading-relaxed text-jade-jade">
+            <h3 className="text-xl font-extralight leading-relaxed text-[#3f5544]">
               What qualities feel present with {relationshipName}?
             </h3>
             <div className="mt-5 flex flex-wrap gap-2">
@@ -171,8 +171,8 @@ export default function CheckInFlow({ relationshipId, relationshipName, onComple
                     whileTap={reduceMotion ? undefined : { scale: 0.96 }}
                     className={`rounded-full border px-3.5 py-1.5 text-xs font-light transition-colors ${
                       active
-                        ? 'border-jade-sage/45 bg-jade-forest/35 text-jade-jade'
-                        : 'border-jade-sage/12 text-jade-mineral/60 hover:border-jade-sage/28 hover:text-jade-jade'
+                        ? 'border-[#9aaa8a]/45 bg-[#e4eadf]/35 text-[#3f5544]'
+                        : 'border-[#9aaa8a]/12 text-[#716d64]/60 hover:border-[#9aaa8a]/28 hover:text-[#3f5544]'
                     }`}
                   >
                     {signal}
@@ -183,7 +183,7 @@ export default function CheckInFlow({ relationshipId, relationshipName, onComple
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-light text-jade-jade/82">
+            <label className="mb-2 block text-sm font-light text-[#3f5544]/82">
               What are you sensing but not fully saying?
             </label>
             <textarea
@@ -191,7 +191,7 @@ export default function CheckInFlow({ relationshipId, relationshipName, onComple
               onChange={(event) => setFreeText(event.target.value)}
               rows={4}
               placeholder="Whatever comes..."
-              className="w-full resize-none border-0 border-b border-jade-sage/18 bg-transparent px-0 py-3 text-base font-light leading-relaxed text-jade-jade outline-none placeholder:text-jade-mineral/28 focus:border-jade-sage/45"
+              className="w-full resize-none border-0 border-b border-[#9aaa8a]/18 bg-transparent px-0 py-3 text-base font-light leading-relaxed text-[#3f5544] outline-none placeholder:text-[#716d64]/28 focus:border-[#9aaa8a]/45"
             />
           </div>
 
@@ -202,7 +202,7 @@ export default function CheckInFlow({ relationshipId, relationshipName, onComple
             onClick={handleSubmit}
             disabled={submitting || selectedSignals.length === 0}
             whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-            className="rounded-full border border-jade-sage/25 bg-jade-forest/24 px-5 py-2.5 text-sm font-light text-jade-jade transition-colors hover:bg-jade-forest/38 disabled:cursor-not-allowed disabled:opacity-35"
+            className="rounded-full border border-[#95a687]/55 bg-[#e8efe2] px-5 py-2.5 text-sm font-light text-[#405642] transition-colors hover:bg-[#dce7d5] disabled:cursor-not-allowed disabled:opacity-35"
           >
             {submitting ? 'Listening for the shape of this…' : 'Reflect this with MAIA'}
           </motion.button>
