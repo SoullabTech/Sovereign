@@ -7,6 +7,7 @@ import { SpiralSummaryCard } from './SpiralSummaryCard'
 import { PhaseStatePanel } from './PhaseStatePanel'
 import { LivingEncounterView } from './LivingEncounterView'
 import { ReturnToMaia } from '@/components/navigation/ReturnToMaia'
+import { LivingConstellationPanel } from '@/components/maia/living-constellation/LivingConstellationPanel'
 
 const RELATIONAL_PHASE_LABELS: Record<number, string> = {
   1: 'Orientation',
@@ -87,6 +88,9 @@ export function PersonalLivingFieldDashboard({
             </p>
           )}
         </div>
+
+        {/* LC-02: same read-only constellation used across all three rooms. */}
+        <LivingConstellationPanel focus="living" />
 
         {/* Active spirals */}
         {activeSpirals.length > 0 && (

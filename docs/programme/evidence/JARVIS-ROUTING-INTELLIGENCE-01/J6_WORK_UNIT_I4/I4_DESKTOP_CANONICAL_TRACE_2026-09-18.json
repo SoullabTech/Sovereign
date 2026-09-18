@@ -1,0 +1,404 @@
+{
+  "preview": {
+    "ok": true,
+    "status": "PREVIEWED",
+    "classification": "PROSPECTIVE_NONCANONICAL_NONEXECUTING",
+    "intent_key": "sha256:0ab29cec9f18de59f731427cc8f2e18d5a76a55a10592418061be64b53c3a863",
+    "work_unit_version": "W0.v2",
+    "route_record": {
+      "route_version": "J5.v1",
+      "governing_law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+      "deterministic": {
+        "selected": false,
+        "capability": null
+      },
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "task_shape": "CODE_GROUNDED",
+      "review_pressure": "ordinary",
+      "challenge_mode": "none",
+      "frontier_posture": "none",
+      "primary": {
+        "participant_id": "primary",
+        "model_family": "QWEN",
+        "role": "code_primary",
+        "review_dimension": "primary",
+        "required_for_completion": true,
+        "response_budget_profile_id": "LOCAL_QWEN_EXISTING_ADAPTER"
+      },
+      "challengers": [
+        {
+          "participant_id": "local-review-1",
+          "model_family": "GPT_OSS",
+          "role": "independent_local_challenger",
+          "review_dimension": "distinct_model_family",
+          "required_for_completion": true,
+          "response_budget_profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER"
+        }
+      ],
+      "review_policy": {
+        "local": "independent_local_second",
+        "external": "none"
+      },
+      "evidence_policy": {
+        "primary": {
+          "participant_id": "primary",
+          "model_family": "QWEN",
+          "evidence_class": "E1_REPOSITORY_LOCAL",
+          "kind": "local_worktree_read_only"
+        },
+        "challengers": [
+          {
+            "participant_id": "local-review-1",
+            "model_family": "GPT_OSS",
+            "evidence_class": "E1_REPOSITORY_LOCAL",
+            "kind": "local_worktree_read_only"
+          }
+        ]
+      },
+      "required_authority": {
+        "acts": [],
+        "disclosures": []
+      },
+      "granted_authority": [],
+      "response_budget_profiles": [
+        "LOCAL_QWEN_EXISTING_ADAPTER",
+        "LOCAL_GPT_OSS_EXISTING_ADAPTER"
+      ],
+      "execution_disposition": "planned_local",
+      "execution_authorized": false,
+      "blockers": [],
+      "routing_reason_codes": [
+        "QWEN_CODE_PRIMARY",
+        "INDEPENDENT_LOCAL_REVIEW_REQUIRED"
+      ]
+    },
+    "route_digest": "sha256:ed4ac025545a49086157d5e37d9014df354ef09d009dd58cb5d5866fee5e85eb",
+    "blockers": [],
+    "canonical_effect": "none",
+    "execution_connected": false
+  },
+  "draft": {
+    "state": "DRAFT",
+    "next_actions": [
+      {
+        "action": "canonical-bound",
+        "label": "Bound scope"
+      }
+    ],
+    "provider_execution": {
+      "connected": false,
+      "authority_created": false,
+      "r4_r5a_required_later": true,
+      "legacy_r5b_actions_available": false
+    }
+  },
+  "bounded": {
+    "state": "BOUNDED",
+    "next_actions": [
+      {
+        "action": "canonical-authorize",
+        "label": "Authorize Work Unit"
+      }
+    ],
+    "transition": {
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "v2-demonstrate-the-canonical-native-d-2bc",
+      "from": "DRAFT",
+      "to": "BOUNDED",
+      "evidence_ref": "desktop:i4:v2-demonstrate-the-canonical-native-d-2bc:bounded",
+      "reason_code": "JARVIS_DESKTOP_I4_BOUNDED",
+      "authorization_ref": null,
+      "adjudication": null,
+      "superseded_by": null
+    }
+  },
+  "authorized": {
+    "state": "AUTHORIZED",
+    "next_actions": [
+      {
+        "action": "canonical-route",
+        "label": "Bind canonical route"
+      }
+    ],
+    "transition": {
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "v2-demonstrate-the-canonical-native-d-2bc",
+      "from": "BOUNDED",
+      "to": "AUTHORIZED",
+      "evidence_ref": "desktop:i4:v2-demonstrate-the-canonical-native-d-2bc:authorized",
+      "reason_code": "JARVIS_DESKTOP_I4_AUTHORIZED",
+      "authorization_ref": "desktop:i4:authorize:human:desktop-trace:v2-demonstrate-the-canonical-native-d-2bc",
+      "adjudication": null,
+      "superseded_by": null
+    }
+  },
+  "routed": {
+    "state": "ROUTED",
+    "preview_comparison": {
+      "standing": "MATCH",
+      "prospective_route_digest": "sha256:ed4ac025545a49086157d5e37d9014df354ef09d009dd58cb5d5866fee5e85eb",
+      "canonical_route_digest": "sha256:ed4ac025545a49086157d5e37d9014df354ef09d009dd58cb5d5866fee5e85eb"
+    },
+    "route": {
+      "route_version": "J5.v1",
+      "route_source": "J5.v1-pure-router",
+      "route_digest": "sha256:ed4ac025545a49086157d5e37d9014df354ef09d009dd58cb5d5866fee5e85eb",
+      "bound_at_sha": "f0063747979b8104282e3f482dcd91ec6c208ad0",
+      "execution_connected": false,
+      "task_shape": "CODE_GROUNDED",
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "required_authority": {
+        "acts": [],
+        "disclosures": []
+      },
+      "blockers": [],
+      "execution_disposition": "planned_local",
+      "participants": [
+        {
+          "participant_id": "primary",
+          "model_family": "QWEN",
+          "role": "code_primary",
+          "review_dimension": "primary",
+          "required_for_completion": true,
+          "response_budget_profile_id": "LOCAL_QWEN_EXISTING_ADAPTER",
+          "transport_bindings": []
+        },
+        {
+          "participant_id": "local-review-1",
+          "model_family": "GPT_OSS",
+          "role": "independent_local_challenger",
+          "review_dimension": "distinct_model_family",
+          "required_for_completion": true,
+          "response_budget_profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER",
+          "transport_bindings": []
+        }
+      ]
+    },
+    "next_actions": [
+      {
+        "action": "canonical-bind-transport",
+        "label": "Bind transport (non-executing)",
+        "route_participant_id": "primary"
+      },
+      {
+        "action": "canonical-bind-transport",
+        "label": "Bind transport (non-executing)",
+        "route_participant_id": "local-review-1"
+      }
+    ],
+    "provider_execution": {
+      "connected": false,
+      "authority_created": false,
+      "r4_r5a_required_later": true,
+      "legacy_r5b_actions_available": false
+    }
+  },
+  "transport_bound": {
+    "state": "ROUTED",
+    "transport_bindings": [
+      {
+        "transport_binding_version": "W3T.v1",
+        "transport_binding_id": "i4-primary-3244258f03f9",
+        "supersedes_binding_id": null,
+        "route_participant_id": "primary",
+        "model_family": "QWEN",
+        "role": "code_primary",
+        "provider_id": "qwen-local",
+        "model_id": "qwen3-coder:30b",
+        "adapter_id": "opencode",
+        "transport_posture": "local",
+        "execution_mode": "automatic",
+        "response_budget_profile_id": "LOCAL_QWEN_EXISTING_ADAPTER",
+        "evidence_class": "E1_REPOSITORY_LOCAL",
+        "authority_projection": {
+          "repository_read": true,
+          "network_external": false,
+          "provider_spend": false,
+          "external_disclosure": "none"
+        },
+        "readiness": {
+          "status": "HOLD",
+          "evidence_ref": "desktop:i4:nonexecuting-binding:primary"
+        }
+      },
+      {
+        "transport_binding_version": "W3T.v1",
+        "transport_binding_id": "i4-local-review-1-fcec328cb45d",
+        "supersedes_binding_id": null,
+        "route_participant_id": "local-review-1",
+        "model_family": "GPT_OSS",
+        "role": "independent_local_challenger",
+        "provider_id": "gpt-oss-local",
+        "model_id": "gpt-oss:20b",
+        "adapter_id": "opencode",
+        "transport_posture": "local",
+        "execution_mode": "automatic",
+        "response_budget_profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER",
+        "evidence_class": "E1_REPOSITORY_LOCAL",
+        "authority_projection": {
+          "repository_read": true,
+          "network_external": false,
+          "provider_spend": false,
+          "external_disclosure": "none"
+        },
+        "readiness": {
+          "status": "HOLD",
+          "evidence_ref": "desktop:i4:nonexecuting-binding:local-review-1"
+        }
+      }
+    ],
+    "next_actions": [],
+    "provider_execution": {
+      "connected": false,
+      "authority_created": false,
+      "r4_r5a_required_later": true,
+      "legacy_r5b_actions_available": false
+    }
+  },
+  "evidence_ready": {
+    "state": "EVIDENCE_READY",
+    "attempts": [
+      {
+        "attempt_id": "primary-1",
+        "route_participant_id": "primary",
+        "transport_binding_id": "tb-qwen",
+        "model_identity_id": "mi-qwen",
+        "model_family": "QWEN",
+        "provider_id": "qwen-local",
+        "model_id": "qwen3-coder:30b",
+        "adapter_id": "opencode",
+        "role": "code_primary",
+        "actor_id": null,
+        "attempt_kind": "primary",
+        "parent_attempt_id": null,
+        "status": "failed",
+        "evidence_refs": [
+          "result:primary-1"
+        ]
+      },
+      {
+        "attempt_id": "retry-1",
+        "route_participant_id": "primary",
+        "transport_binding_id": "tb-qwen",
+        "model_identity_id": "mi-qwen",
+        "model_family": "QWEN",
+        "provider_id": "qwen-local",
+        "model_id": "qwen3-coder:30b",
+        "adapter_id": "opencode",
+        "role": "code_primary",
+        "actor_id": null,
+        "attempt_kind": "retry",
+        "parent_attempt_id": "primary-1",
+        "status": "completed",
+        "evidence_refs": [
+          "result:retry-1"
+        ]
+      },
+      {
+        "attempt_id": "independent-review-1",
+        "route_participant_id": "local-review-1",
+        "transport_binding_id": "tb-gpt",
+        "model_identity_id": "mi-gpt",
+        "model_family": "GPT_OSS",
+        "provider_id": "gpt-oss-local",
+        "model_id": "gpt-oss:20b",
+        "adapter_id": "opencode",
+        "role": "independent_local_challenger",
+        "actor_id": null,
+        "attempt_kind": "independent_model_review",
+        "parent_attempt_id": "retry-1",
+        "status": "completed",
+        "evidence_refs": [
+          "result:independent-review-1"
+        ]
+      }
+    ],
+    "verifiers": [
+      {
+        "verifier_result_id": "vr-independent-review",
+        "target_attempt_id": "retry-1",
+        "verifier_attempt_id": "independent-review-1",
+        "verifier_kind": "independent_model_review",
+        "verifier_model_family": "GPT_OSS",
+        "verifier_actor_id": null,
+        "disposition": "supports",
+        "evidence_refs": [
+          "verifier:independent-review-1"
+        ]
+      }
+    ],
+    "next_actions": [
+      {
+        "action": "canonical-adjudicate",
+        "label": "Adjudicate evidence"
+      }
+    ],
+    "provider_execution": {
+      "connected": false,
+      "authority_created": false,
+      "r4_r5a_required_later": true,
+      "legacy_r5b_actions_available": false
+    }
+  },
+  "adjudicated": {
+    "state": "ADJUDICATED",
+    "adjudication": {
+      "adjudication_id": "desktop-i4-adjudication-w5-v2-synthetic-canonical",
+      "actor_kind": "human",
+      "actor_id": "human:desktop-trace",
+      "decision": "accepted",
+      "evidence_ref": "adjudication:desktop:i4:w5-v2-synthetic-canonical",
+      "model_authored": false,
+      "basis_refs": [
+        "verifier:independent-review-1"
+      ]
+    },
+    "next_actions": [
+      {
+        "action": "canonical-close",
+        "label": "Close Work Unit"
+      }
+    ],
+    "provider_execution": {
+      "connected": false,
+      "authority_created": false,
+      "r4_r5a_required_later": true,
+      "legacy_r5b_actions_available": false
+    }
+  },
+  "closed": {
+    "state": "CLOSED",
+    "closure": {
+      "closure_id": "desktop-i4-closure-w5-v2-synthetic-canonical",
+      "evidence_ref": "closure:desktop:i4:w5-v2-synthetic-canonical",
+      "adjudication_ref": "adjudication:desktop:i4:w5-v2-synthetic-canonical",
+      "actor_kind": "human",
+      "actor_id": "human:desktop-trace"
+    },
+    "failed_primary": {
+      "attempt_id": "primary-1",
+      "route_participant_id": "primary",
+      "transport_binding_id": "tb-qwen",
+      "model_identity_id": "mi-qwen",
+      "model_family": "QWEN",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "opencode",
+      "role": "code_primary",
+      "actor_id": null,
+      "attempt_kind": "primary",
+      "parent_attempt_id": null,
+      "status": "failed",
+      "evidence_refs": [
+        "result:primary-1"
+      ]
+    },
+    "next_actions": [],
+    "provider_execution": {
+      "connected": false,
+      "authority_created": false,
+      "r4_r5a_required_later": true,
+      "legacy_r5b_actions_available": false
+    }
+  }
+}

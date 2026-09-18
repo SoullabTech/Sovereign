@@ -1,0 +1,142 @@
+{
+  "M1_deterministic_first": {
+    "execution_lane": "C0",
+    "cost_class": "deterministic",
+    "reason": "Deterministic capability 'git.rev_parse' is registered; no model required.",
+    "task": {
+      "capability": "git.rev_parse",
+      "bounded_for_local": true,
+      "input_chars": 100
+    },
+    "status": "routed",
+    "verification_required": true
+  },
+  "M4_same_model_retry": {
+    "standing": "EVIDENCE_PRESENTED",
+    "needs_kelly": true,
+    "summary": "Multiple attempts completed without structured disagreement. Semantic findings remain evidence for founder review, not an automated verdict.",
+    "disagreements": [],
+    "attempts": [
+      {
+        "attempt_number": null,
+        "lane": "opencode",
+        "model": "ollama/qwen3-coder:30b",
+        "test_results": "pass",
+        "escalation_required": false,
+        "recommended_next_action": "review-diff",
+        "exit_code": 0,
+        "duration_s": null,
+        "log_path": null,
+        "output_excerpt": null,
+        "unresolved_questions": []
+      },
+      {
+        "attempt_number": null,
+        "lane": "opencode",
+        "model": "ollama/qwen3-coder:30b",
+        "test_results": "pass",
+        "escalation_required": false,
+        "recommended_next_action": "review-diff",
+        "exit_code": 0,
+        "duration_s": null,
+        "log_path": null,
+        "output_excerpt": null,
+        "unresolved_questions": []
+      }
+    ]
+  },
+  "M5_unavailable_transport": {
+    "ok": false,
+    "code": "PROVIDER_AUTOMATION_UNSUPPORTED"
+  },
+  "M6_composer_without_disclosure": {
+    "ok": false,
+    "objective": "synthetic external review",
+    "providers": [
+      "inkling-tinker"
+    ],
+    "errors": [
+      "Repository-grounded external review requires explicit read-only repository disclosure authorization."
+    ]
+  },
+  "M6_lower_resolver_without_disclosure_dimension": {
+    "ok": true,
+    "provider_id": "inkling-tinker",
+    "provider_standing": "evaluation-only",
+    "model_id": "thinkingmachines/Inkling-Small",
+    "model_ref": "tinker/thinkingmachines/Inkling-Small",
+    "agent": null,
+    "external_network": true,
+    "metered_provider": true,
+    "credential_env": "TINKER_API_KEY",
+    "execution_adapter": "tinker-direct"
+  },
+  "M7_two_model_consensus": {
+    "standing": "EVIDENCE_PRESENTED",
+    "needs_kelly": true,
+    "summary": "Multiple attempts completed without structured disagreement. Semantic findings remain evidence for founder review, not an automated verdict.",
+    "disagreements": [],
+    "attempts": [
+      {
+        "attempt_number": null,
+        "lane": "opencode",
+        "model": "ollama/qwen3-coder:30b",
+        "test_results": "pass",
+        "escalation_required": false,
+        "recommended_next_action": "review-diff",
+        "exit_code": 0,
+        "duration_s": null,
+        "log_path": null,
+        "output_excerpt": null,
+        "unresolved_questions": []
+      },
+      {
+        "attempt_number": null,
+        "lane": "opencode",
+        "model": "ollama/gpt-oss:20b",
+        "test_results": "pass",
+        "escalation_required": false,
+        "recommended_next_action": "review-diff",
+        "exit_code": 0,
+        "duration_s": null,
+        "log_path": null,
+        "output_excerpt": null,
+        "unresolved_questions": []
+      }
+    ]
+  },
+  "M10_model_authored_state": {
+    "standing": "EVIDENCE_PRESENTED",
+    "needs_kelly": true,
+    "summary": "Multiple attempts completed without structured disagreement. Semantic findings remain evidence for founder review, not an automated verdict.",
+    "disagreements": [],
+    "attempts": [
+      {
+        "attempt_number": null,
+        "lane": "opencode",
+        "model": "ollama/qwen3-coder:30b",
+        "test_results": "pass",
+        "escalation_required": false,
+        "recommended_next_action": "review-diff",
+        "exit_code": 0,
+        "duration_s": null,
+        "log_path": "/private/tmp/j4-model-state-1.log",
+        "output_excerpt": "{\"next_state\":\"MERGED\",\"claim\":\"model says advance\"}\n",
+        "unresolved_questions": []
+      },
+      {
+        "attempt_number": null,
+        "lane": "opencode",
+        "model": "ollama/gpt-oss:20b",
+        "test_results": "pass",
+        "escalation_required": false,
+        "recommended_next_action": "review-diff",
+        "exit_code": 0,
+        "duration_s": null,
+        "log_path": "/private/tmp/j4-model-state-2.log",
+        "output_excerpt": "{\"next_state\":\"DEPLOYED\",\"claim\":\"second model agrees\"}\n",
+        "unresolved_questions": []
+      }
+    ]
+  }
+}

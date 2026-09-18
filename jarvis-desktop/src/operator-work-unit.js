@@ -108,7 +108,12 @@
 
   function buildPacket(
     spec,
-    { canonicalSha, nowMs = Date.now(), routeRecord = null } = {},
+    {
+      canonicalSha,
+      nowMs = Date.now(),
+      routeRecord = null,
+      routeDigest = null,
+    } = {},
   ) {
     const checked = validateSpec(spec);
     if (!checked.ok) return { ok: false, errors: checked.errors, packet: null };
@@ -117,6 +122,13 @@
     }
     if (checked.routed && !routeRecord) {
       return { ok: false, errors: ['A routed Work Unit requires a MAIN-computed route record.'], packet: null };
+    }
+    if (checked.routed && !/^sha256:[0-9a-f]{64}$/i.test(String(routeDigest || ''))) {
+      return {
+        ok: false,
+        errors: ['A routed Work Unit requires a MAIN-computed immutable SHA-256 route digest.'],
+        packet: null,
+      };
     }
 
     const id = makeId(checked.objective, nowMs);
@@ -130,7 +142,10 @@
       && checked.providers.includes('inkling-tinker')
       && spec.providerSpendOk === true;
     const acts = ['repo.read'];
-    if (externalReview) acts.push('network.external');
+    if (externalReview) {
+      acts.push('network.external');
+      acts.push('repo.disclose:external-readonly');
+    }
     if (providerSpend) acts.push('provider.spend');
 
     const packet = {
@@ -178,12 +193,20 @@
         'production.write',
         'deploy',
         'authority.change',
+        ...(routed || externalReview ? [] : ['network.external', 'repo.disclose:external-readonly']),
+        ...(routed || providerSpend ? [] : ['provider.spend']),
       ],
       integration_actor: 'founder',
       autonomy_ceiling: 'LEVEL_1_REVIEW',
       provider_strategy: routed ? [] : checked.providers,
+      routing: {
+        evidence_class: externalReview ? 'E3_EXTERNAL_REPO_BUNDLE' : 'E1_REPOSITORY_LOCAL',
+        task_shape: String(spec?.taskShape || spec?.routing?.taskShape || 'FRONTIER_UNKNOWN'),
+      },
       routing_intelligence: routed ? {
         route_record: routeRecord,
+        route_digest: routeDigest,
+        route_version: routeRecord.route_version,
         execution_connected: false,
         source: 'R2-pure-router',
         bound_at_sha: canonicalSha,

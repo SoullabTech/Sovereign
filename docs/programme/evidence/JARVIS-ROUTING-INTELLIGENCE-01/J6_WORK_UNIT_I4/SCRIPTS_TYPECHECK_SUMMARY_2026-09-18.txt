@@ -1,0 +1,8 @@
+I4 scripts TypeScript diagnostic comparison
+
+Exact I3 baseline diagnostic identities: 40
+I4 diagnostic identities: 40
+Identity diff: none
+Diagnostics mentioning I4 Desktop/helper paths: 0
+
+This is a no-regression claim, not a claim that tsconfig.scripts is globally green.

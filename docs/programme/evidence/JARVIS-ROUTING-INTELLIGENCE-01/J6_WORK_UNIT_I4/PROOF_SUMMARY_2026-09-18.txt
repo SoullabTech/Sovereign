@@ -1,0 +1,66 @@
+JARVIS-ROUTING-INTELLIGENCE-01 / J6-WORK-UNIT-INTEGRATION-05 — I4
+Pre-commit proof summary — 2026-09-18
+
+Authorized canonical base:
+  f0063747979b8104282e3f482dcd91ec6c208ad0
+
+Proven I3 donor:
+  8ff0e1889b9eb5b619079063c29123338548bc34
+
+I4:
+  Canonical Desktop runtime: 5 / 5
+  Required I4 falsifiers:    30 / 30
+  Desktop tests:             182 total / 173 pass / 0 fail / 9 intentional skip
+  Alpha Floor:               97 / 97
+  Preload/channel allowlist: PASS — existing jarvis:work-unit-action channel reused
+
+I3 regression:
+  W5.v2 composition: 12 / 12
+  I3 falsifiers:     24 / 24
+
+I2 regression:
+  DR1.v1:            10 / 10
+  W4.v2:             23 / 23
+  I2 falsifiers:     20 / 20
+
+I1 regression:
+  W0.v2:             12 / 12
+  W2.v2:             13 / 13
+  J5.v1:             14 / 14
+  W3.v2:             11 / 11
+  W3T.v1:            11 / 11
+  I1 falsifiers:     18 / 18
+
+Historical v1 regression:
+  W1/W0.v1:          22 / 22
+  W2.v1:             27 / 27
+  W3.v1:             28 / 28
+  W4.v1:             31 / 31
+  W5.v1:             22 / 22
+
+Current routing/admission/integrity:
+  R1:                20 / 20
+  R4:                24 / 24
+  R5A:               20 / 20
+
+Full JARVIS:
+  253 assertions / 0 failures
+
+TypeScript no-regression:
+  program files: 4383
+  diagnostics: 229
+  baseline: 239
+  regressions: 0
+
+Scripts TypeScript:
+  exact I3 diagnostic identities: 40
+  I4 diagnostic identities: 40
+  identity diff: none
+  diagnostics on I4 paths: 0
+
+No live provider/model call was introduced or authorized by I4.
+Canonical W0.v2 provider execution remains disconnected.
+
+The pre-existing full JARVIS regression suite includes its bounded Keychain-to-stub
+credential-isolation test. That is legacy/provider-regression behavior and does not
+make a live provider request.

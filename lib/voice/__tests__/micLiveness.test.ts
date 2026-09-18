@@ -18,6 +18,7 @@
 import {
   assessCaptureLiveness,
   shouldActOnCaptureLiveness,
+  shouldAttemptAutomaticCaptureRecovery,
   describeCaptureLoss,
   isCaptureLossUnexpected,
   CAPTURE_REASON_CODES,
@@ -172,6 +173,64 @@ describe('explicit-floor liveness authority', () => {
       analyserVoiceAfterRecognition: true,
       analyserVoiceAgeMs: EXPLICIT_FLOOR_RECOGNITION_PROBE_MS,
     })).toBe(true);
+  });
+});
+
+describe('TURN-02 bounded automatic capture recovery', () => {
+  const baseRecovery = {
+    cause: 'silent_death' as const,
+    handsFree: true,
+    continuousConversation: true,
+    automaticEndpointing: true,
+    restartRequestInFlight: false,
+    recoveryAlreadyAttempted: false,
+  };
+
+  it('admits exactly the first silent_death in active HANDS_FREE automatic mode', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery(baseRecovery)).toBe(true);
+  });
+
+  it('fails closed on a second silent_death before any result replenishes the budget', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery({
+      ...baseRecovery,
+      recoveryAlreadyAttempted: true,
+    })).toBe(false);
+  });
+
+  it('never self-heals explicit-floor capture', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery({
+      ...baseRecovery,
+      automaticEndpointing: false,
+    })).toBe(false);
+  });
+
+  it('never self-heals when hands-free or conversational authority is gone', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery({ ...baseRecovery, handsFree: false })).toBe(false);
+    expect(shouldAttemptAutomaticCaptureRecovery({
+      ...baseRecovery,
+      continuousConversation: false,
+    })).toBe(false);
+  });
+
+  it('never overlaps an already in-flight restart request', () => {
+    expect(shouldAttemptAutomaticCaptureRecovery({
+      ...baseRecovery,
+      restartRequestInFlight: true,
+    })).toBe(false);
+  });
+
+  it.each([
+    'never_armed',
+    'track_ended',
+    'track_muted',
+    'restart_loop',
+    'abort_loop',
+    'inactivity',
+    'audio_context_interrupted',
+    'device_changed',
+    'permission_lost',
+  ] as const)('never self-heals %s', (cause) => {
+    expect(shouldAttemptAutomaticCaptureRecovery({ ...baseRecovery, cause })).toBe(false);
   });
 });
 

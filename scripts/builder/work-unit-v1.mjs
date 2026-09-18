@@ -429,7 +429,12 @@ export function createWorkUnitDraftV1(input) {
     routing: {
       requested_posture: input.routing?.requested_posture ?? 'default',
       router_version: null,
+      route_version: null,
       route_record: null,
+      route_digest: null,
+      route_source: null,
+      bound_at_sha: null,
+      execution_connected: false,
       primary: null,
       challengers: [],
     },

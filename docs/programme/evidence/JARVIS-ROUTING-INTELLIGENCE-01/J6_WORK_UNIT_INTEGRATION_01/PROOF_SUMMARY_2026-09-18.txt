@@ -1,0 +1,19 @@
+J6-WORK-UNIT-INTEGRATION-01 contract evidence
+Canonical subject: c6ed841f8ebc378031b5c3fa0262e367a42dc3e8
+
+Untouched canonical substrate proofs:
+  W1 schema:      22 / 22
+  W2 lifecycle:   27 / 27
+  W3 route bind:  28 / 28
+  W4 ledger:      31 / 31
+  W5 synthetic:   22 / 22
+
+Current J5 compatibility router proof:
+  15 / 15
+
+Total observed assertions:
+  145 / 145
+
+No source files were modified by this contract gate.
+No provider/model call, network execution, spend, disclosure, schema migration,
+production access, deployment, or member-facing MAIA change occurred.

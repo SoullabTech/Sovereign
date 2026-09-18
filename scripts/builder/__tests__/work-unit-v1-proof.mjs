@@ -160,7 +160,13 @@ check('W-F3 — valid input produces exact W0.v1 DRAFT state and empty future-ow
   assert.equal(result.work_unit.work_unit_version, WORK_UNIT_VERSION);
   assert.equal(result.work_unit.state.lifecycle_state, 'DRAFT');
   assert.equal(result.work_unit.state.disposition, 'open');
+  assert.equal(result.work_unit.routing.router_version, null);
+  assert.equal(result.work_unit.routing.route_version, null);
   assert.equal(result.work_unit.routing.route_record, null);
+  assert.equal(result.work_unit.routing.route_digest, null);
+  assert.equal(result.work_unit.routing.route_source, null);
+  assert.equal(result.work_unit.routing.bound_at_sha, null);
+  assert.equal(result.work_unit.routing.execution_connected, false);
   assert.deepEqual(result.work_unit.execution.attempts, []);
   assert.deepEqual(result.work_unit.execution.artifacts, []);
   assert.deepEqual(result.work_unit.evaluation.verifier_results, []);

@@ -1,0 +1,32 @@
+PASS  F1 — canonical routed Desktop creation produces W0.v2, never a legacy packet
+PASS  F2 — renderer cannot supply lifecycle state
+PASS  F3 — renderer cannot supply route record
+PASS  F4 — renderer cannot supply route digest
+PASS  F5 — renderer cannot supply canonical SHA
+PASS  F6 — renderer cannot supply raw authority envelope
+PASS  F7 — renderer cannot supply arbitrary provider/model for canonical transport binding
+PASS  F8 — prospective preview is not canonical route truth
+PASS  F9 — W3.v2 recomputes canonical route after AUTHORIZED
+PASS  F10 — legacy task shapes are refused by W0.v2 Desktop creation
+PASS  F11 — CODE_GROUNDED independent GPT_OSS review is route law, not optional UI preference
+PASS  F12 — provider id is never cognitive route identity in canonical v2
+PASS  F13 — transport HOLD remains the selected family and cannot silently substitute
+PASS  F14 — canonical read surface exposes no Run Provider / Run Strategy / R5B execute control
+PASS  F15 — MAIN refuses canonical Work Units before legacy run-provider/R5B execution path
+PASS  F16 — lower controller refuses provider execution for canonical W0.v2
+PASS  F17 — provider_strategy is absent from canonical routing authority/read model
+PASS  F18 — failed primary remains visible after retry success in canonical read model
+PASS  F19 — retry is rendered distinctly from independent model review
+PASS  F20 — verifier support is displayed separately from adjudication
+PASS  F21 — model consensus cannot enable adjudication
+PASS  F22 — model-authored adjudication is refused; helper always derives model_authored:false
+PASS  F23 — adjudication gesture is unavailable before EVIDENCE_READY
+PASS  F24 — Desktop never directly writes ADJUDICATED lifecycle state
+PASS  F25 — adjudication never auto-closes; closure is a separate human gesture
+PASS  F26 — legacy deriveLifecycle cannot override canonical W2.v2
+PASS  F27 — stale prospective preview cannot overwrite newer intent or canonical route
+PASS  F28 — canonical read model is presentation-only and cannot widen authority/lifecycle
+PASS  F29 — canonical v2 and legacy compatibility do not share lifecycle authority
+PASS  F30 — no I4 canonical action creates provider execution authority
+
+30 passed · 0 failed

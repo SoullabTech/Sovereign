@@ -15,6 +15,7 @@ import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voi
 import {
   assessCaptureLiveness,
   shouldActOnCaptureLiveness,
+  shouldAttemptAutomaticCaptureRecovery,
   describeCaptureLoss,
   isCaptureLossUnexpected,
   TRACK_MUTE_GRACE_MS,
@@ -63,8 +64,8 @@ import {
 // 🎙️ VOICE STATE MACHINE — Single authority for mic lifecycle
 // =============================================================================
 // Rule: ONLY requestRestart() may INITIATE a new listening cycle. Every re-arm
-// path — user tap, maia_stopped_speaking, recognition_stopped, interruption_end,
-// foreground_resume — routes through it; it normalizes stale turn-complete state,
+// path — user tap, maia_stopped_speaking, recognition_stopped, capture_recovery,
+// interruption_end, foreground_resume — routes through it; it normalizes stale turn-complete state,
 // applies the HANDS_FREE/PUSH_TO_TALK policy once, and delegates to the
 // startListening lifecycle. Direct NativeSpeechRecognition.start() /
 // recognition.start() calls are permitted ONLY inside that lifecycle
@@ -435,9 +436,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   /**
    * One silent self-heal per loss, then we stop and tell the member.
    * Retrying forever is how a dead mic keeps looking alive — the opposite of
-   * what this whole path is for. Reset on any successful capture activity.
+   * what this whole path is for. Reset only by an actual recognition onresult.
    */
   const selfHealAttemptedRef = useRef<boolean>(false);
+  const requestRestartFnRef = useRef<(s: RestartSource, o?: { forceOverride?: boolean }) => void>();
   const handleCaptureLossFnRef = useRef<(cause: CaptureLossCause) => void>();
   const attachTrackLossListenersFnRef = useRef<(stream: MediaStream) => void>();
   const reportVoiceStatusFnRef = useRef<(info: {
@@ -449,7 +451,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const markCaptureActivity = useCallback((audioOpened?: boolean) => {
     lastCaptureActivityAtRef.current = Date.now();
     if (audioOpened) captureAudioOpenedRef.current = true;
-    selfHealAttemptedRef.current = false;
+    // TURN-02: lifecycle activity alone does not prove the replacement
+    // recognition generation can transcribe. Only onresult replenishes the
+    // bounded self-heal budget.
     explicitFloorLivenessHoldLoggedAtRef.current = 0;
   }, []);
 
@@ -902,6 +906,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     recognition.onresult = session.guard(gen, (event: any) => {
       markCaptureActivity(true); // 🩺 results are arriving — capture is unambiguously alive
+      // TURN-02: a real recognition result is the only proof strong enough to
+      // replenish the one-shot silent-death recovery budget.
+      selfHealAttemptedRef.current = false;
       logVoiceEvent('voice_transcribe_result', {
         resultCount: event.results?.length ?? 0,
         isFinal: event.results?.[event.results.length - 1]?.isFinal === true,
@@ -1725,6 +1732,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
 
     const reasonCode = CAPTURE_REASON_CODES[cause] ?? 'UNKNOWN_VOICE_STALL';
+    const attemptAutomaticRecovery = shouldAttemptAutomaticCaptureRecovery({
+      cause,
+      handsFree: handsFreeActiveRef.current && listeningModeRef.current === 'HANDS_FREE',
+      continuousConversation: wantsContinuousConversationRef.current,
+      automaticEndpointing: automaticTurnCommitAllowed(),
+      restartRequestInFlight: restartRequestInFlightRef.current,
+      recoveryAlreadyAttempted: selfHealAttemptedRef.current,
+    });
     console.warn(`🩺 [liveness] Capture loss detected: ${cause} (${reasonCode})`);
     // 🔬 VOICE-CAPTURE-NO-AUDIO-01A — snapshot BEFORE the teardown below zeroes
     // the liveness refs. Attached to the existing event rather than emitted as
@@ -1761,20 +1776,32 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isListeningRef.current = false;
     setIsRecording(false);
     isRecordingRef.current = false;
-    wantsContinuousConversationRef.current = false;
     onRecordingStateChange?.(false);
     setAudioLevel(0);
-    // ERROR (not IDLE) so authorityGuard still admits an explicit user tap,
-    // while no automatic path can quietly re-arm behind the member's back.
+    // ERROR is a recoverable turn-complete state. requestRestart() normalizes it
+    // through the canonical authority before a fresh recognition generation starts.
     setMicState('ERROR', `capture_loss_${cause}`);
 
+    if (attemptAutomaticRecovery) {
+      // TURN-02: preserve HANDS_FREE conversational intent for exactly one
+      // silent-death recovery. The budget is spent BEFORE re-arm and stays spent
+      // through onstart / audio start / speech start. Only onresult clears it.
+      selfHealAttemptedRef.current = true;
+      console.warn('🩺 [liveness] One-shot HANDS_FREE capture recovery requested');
+      void requestRestartFnRef.current?.('capture_recovery');
+      return;
+    }
+
+    // Every non-authorized loss — including a second silent_death before any
+    // result from the replacement generation — fails closed exactly as before.
+    wantsContinuousConversationRef.current = false;
     reportVoiceStatus({
       level: isCaptureLossUnexpected(cause) ? 'error' : 'info',
       cause: reasonCode,
       userMessage: describeCaptureLoss(cause, { transcriptPreserved: preserved }),
       recoverable: true,
     });
-  }, [salvageTranscript, reportVoiceStatus, onRecordingStateChange, setMicState, snapshotCaptureForensics]);
+  }, [salvageTranscript, reportVoiceStatus, onRecordingStateChange, setMicState, snapshotCaptureForensics, automaticTurnCommitAllowed]);
 
   /**
    * Attach loss listeners to the live microphone track.
@@ -3963,7 +3990,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
   }, [normalizeTurnCompleteState]);
 
-  const requestRestartFnRef = useRef<(s: RestartSource, o?: { forceOverride?: boolean }) => void>();
   requestRestartFnRef.current = requestRestart;
   normalizeTurnCompleteStateFnRef.current = normalizeTurnCompleteState;
 

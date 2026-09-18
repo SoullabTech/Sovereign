@@ -1,0 +1,8 @@
+I3 scripts TypeScript diagnostic comparison
+
+Exact I2 baseline diagnostic identities: 40
+I3 diagnostic identities: 40
+Identity diff: none
+Diagnostics mentioning work-unit-e2e-v2: 0
+
+This is a no-regression claim, not a claim that tsconfig.scripts is globally green.

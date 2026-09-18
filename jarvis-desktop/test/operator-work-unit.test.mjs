@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { routeIntelligence } from '../../scripts/builder/routing-intelligence.mjs';
+import { routeDigest } from '../../scripts/builder/routing-route-integrity.mjs';
 const require = createRequire(import.meta.url);
 const W = require('../src/operator-work-unit.js');
 const SHA = '0123456789abcdef0123456789abcdef01234567';
@@ -38,12 +39,13 @@ test('Nemotron packet is read-only external and never gains write/deploy authori
     evidenceFocus: 'components/voice/ContinuousConversation.tsx:1700-1900\nlib/voice/safariSilentDeathRecovery.ts',
   }, { canonicalSha: SHA, nowMs: 12345 });
   assert.equal(r.ok, true, JSON.stringify(r.errors));
-  assert.deepEqual(r.packet.authorized_acts, ['repo.read', 'network.external']);
+  assert.deepEqual(r.packet.authorized_acts, ['repo.read', 'network.external', 'repo.disclose:external-readonly']);
   assert.ok(r.packet.not_authorized_acts.includes('repo.write:worktree'));
   assert.ok(r.packet.not_authorized_acts.includes('deploy'));
   assert.equal(r.packet.context_selectors[0].source_sha, SHA);
   assert.deepEqual(r.packet.context_selectors[0].selector, { type: 'lines', start: 1700, end: 1900 });
   assert.equal(r.packet.integration_actor, 'founder');
+  assert.equal(r.packet.routing.evidence_class, 'E3_EXTERNAL_REPO_BUNDLE');
 });
 
 test('Nemotron + Inkling is one Work Unit with provider strategy, not per-provider packets', () => {
@@ -111,10 +113,21 @@ test('route-bound Work Unit stores route evidence but carries no executable prov
   };
   const route = routeIntelligence(W.buildRoutingInput(spec));
   assert.equal(route.execution_disposition, 'held_for_external_authority');
-  const r = W.buildPacket(spec, { canonicalSha: SHA, nowMs: 321, routeRecord: route });
+  const r = W.buildPacket(spec, {
+    canonicalSha: SHA,
+    nowMs: 321,
+    routeRecord: route,
+    routeDigest: routeDigest(route),
+  });
   assert.equal(r.ok, true, JSON.stringify(r.errors));
   assert.deepEqual(r.packet.provider_strategy, []);
   assert.deepEqual(r.packet.authorized_acts, ['repo.read']);
+  assert.equal(r.packet.authorized_acts.some((act) => act.startsWith('provider.execute:')), false);
+  assert.equal(r.packet.not_authorized_acts.includes('network.external'), false);
+  assert.equal(r.packet.not_authorized_acts.includes('provider.spend'), false);
+  assert.equal(r.packet.not_authorized_acts.includes('repo.disclose:external-readonly'), false);
+  assert.ok(r.packet.not_authorized_acts.includes('repo.write:worktree'));
+  assert.ok(r.packet.not_authorized_acts.includes('deploy'));
   assert.equal(r.packet.disclosure.repository_read_only_external, false);
   assert.equal(r.packet.disclosure.provider_spend_authorized, false);
   assert.equal(r.packet.routing_intelligence.execution_connected, false);
