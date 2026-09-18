@@ -282,6 +282,8 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
   assert('attempt provenance records OpenCode and the exact provider/model reference',
     result.lane === 'opencode' && result.model === 'ollama/qwen3-coder:30b',
     `lane=${result.lane} model=${result.model}`);
+  assert('successful delegate result persists numeric exit_code 0',
+    result.exit_code === 0, `exit_code=${result.exit_code}`);
 
   const args = readFileSync(ARGS_FILE, 'utf8');
   assert('OpenCode uses the project-scoped read-only agent',
@@ -385,6 +387,8 @@ console.log('\n=== P5: authorized external selection remains testable without a 
   const result = JSON.parse(readFileSync(resultPath(id), 'utf8'));
   assert('Inkling model identity is durable in the result contract',
     result.lane === 'tinker' && result.model === 'tinker/thinkingmachines/Inkling-Small', result.model);
+  assert('successful direct-Tinker result persists numeric exit_code 0',
+    result.exit_code === 0, `exit_code=${result.exit_code}`);
   const directPrompt = readFileSync(TINKER_PROMPT_FILE, 'utf8');
   assert('direct Tinker receives only JARVIS-bundled authorized repository evidence',
     directPrompt.includes('=== BEGIN AUTHORIZED FILE: opencode.json ===')

@@ -500,6 +500,7 @@ _run_lane() {
             ending_sha: (if $ending_sha == "" then null else $ending_sha end),
             files_changed: $files_changed,
             summary: ("delegate exited " + ($exit_code|tostring) + "; see log_path for transcript"),
+            exit_code: $exit_code,
             tests_run: [],
             test_results: $test_results,
             typecheck_result: "not_run",
