@@ -11,9 +11,15 @@
 
 ## 1. Canonical context
 
-Current canonical at lane open:
+Initial canonical at lane open:
 
 `ee7999c244a981ab2305dec6f4f2fd86bad1f9c9`
+
+Merge-ready reconciliation base after intervening canonical work:
+
+`5b2f4d55698c977cba004ff732c8b8419b0b9c6f`
+
+The four commits added after the prior R1 witness are J8 documentation-only changes. Their changed-file set has zero overlap with this R1 patch; R1 was therefore cleanly rebased onto `5b2f4d556...` before the final witness.
 
 The legacy respond route and `KeepAffordance` blobs were unchanged across the 91 commits since KEEP-SERVER-AUTHORITY-01-R1 closed.
 
@@ -83,7 +89,7 @@ The test was committed before the repair. Against the pre-repair route it is exp
 
 ## 5. Dead UI residue
 
-After the executable endpoint was retired, exact-SHA repository-wide `git grep` completed successfully on canonical `ee7999c2...`.
+After the executable endpoint was retired, repository-wide `git grep` was repeated against merge-ready canonical `5b2f4d556...`.
 
 It established:
 
@@ -121,7 +127,7 @@ This repair does **not**:
 
 ## 7. Exact-head evidence
 
-On candidate `4ab86fa4e612ac14d5b2b472630515b47fb5ff17` before this evidence-only record update:
+On rebased candidate `177af17a777f2c29aef17cdf31384e6dac881bd1` before this evidence-only record update:
 
 - bounded Keep population: **5 suites / 96 tests PASS**;
 - legacy respond retirement guard: PASS;
@@ -129,12 +135,12 @@ On candidate `4ab86fa4e612ac14d5b2b472630515b47fb5ff17` before this evidence-onl
 - canonical capsule Keep non-persistent preparation: PASS;
 - canonical client Keep matcher/wiring: PASS;
 - `npm run check:no-supabase`: PASS;
-- first-parent `git diff --check`: PASS;
+- `git diff --check origin/clean-main-no-secrets...HEAD`: PASS;
 - TypeScript: **229 vs baseline 239 · 0 regressions**.
 
-Falsifier control: the retirement guard was copied unchanged onto untouched canonical `ee7999c2...` and failed on all three retirement assertions because the pre-repair route still authenticated, parsed command bodies, and exposed the legacy persistence/governor paths.
+Falsifier control: the retirement guard was copied unchanged onto untouched merge-ready canonical `5b2f4d556...` and failed **3 / 3** assertions. The canonical pre-repair route still authenticated, parsed command bodies, exposed the legacy persistence/governor path, and did not name the canonical capsule successor.
 
-Repository-wide exact-SHA `git grep` also proved the removed UI residue had no remaining consumer beyond the dead wiring documented above.
+Repository-wide exact-SHA `git grep` on `5b2f4d556...` also proved the removed UI residue had no remaining consumer beyond the dead wiring documented above. `lib/psyche/portfolio.ts`, `lib/psyche/sources/capsule.ts`, the retired Oracle conversation route, and all schema/migration paths are unchanged by the candidate.
 
 ---
 
