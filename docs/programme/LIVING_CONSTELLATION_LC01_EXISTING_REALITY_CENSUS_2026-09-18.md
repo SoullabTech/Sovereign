@@ -1,12 +1,12 @@
 # LC-01 — Living Constellation Existing Reality Census
 
-**Date:** 2026-09-18  
-**Class:** read-only architecture / UX census  
-**Status:** Candidate evidence record — no implementation authority  
-**Evidence subject:** `clean-main-no-secrets` @ `bfab0c3c7cb02a924fe517a98471d95a895f01e4`  
+**Date:** 2026-09-18
+**Class:** read-only architecture / UX census
+**Status:** Candidate evidence record — no implementation authority
+**Evidence subject:** `clean-main-no-secrets` @ `bfab0c3c7cb02a924fe517a98471d95a895f01e4`
 **Companion:** `docs/design/contracts/LIVING_CONSTELLATION_CONTRACT_V0_1_2026-09-18.md`
 
-> **Purpose:** determine what already exists beneath Living Field, Vision Studio, and Practice Field before any redesign or shared-map implementation.  
+> **Purpose:** determine what already exists beneath Living Field, Vision Studio, and Practice Field before any redesign or shared-map implementation.
 > **Boundary:** no runtime changes · no schema · no migration · no graph writes · no production reads/writes · no deployment · no authority change.
 
 ---

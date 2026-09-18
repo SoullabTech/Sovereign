@@ -1,9 +1,9 @@
 # Living Constellation Contract v0.1 — CANDIDATE
 
-**Date:** 2026-09-18  
-**Status:** Candidate UX constitution — not ratified  
-**Evidence base:** repository census at `bfab0c3c7cb02a924fe517a98471d95a895f01e4`  
-**Scope:** Living Field · Vision Studio · Practice Field · shared visual/relational experience  
+**Date:** 2026-09-18
+**Status:** Candidate UX constitution — not ratified
+**Evidence base:** repository census at `bfab0c3c7cb02a924fe517a98471d95a895f01e4`
+**Scope:** Living Field · Vision Studio · Practice Field · shared visual/relational experience
 **Effect:** design constraint only. This document grants no runtime, schema, migration, AI, persistence, sharing, deployment, or production authority.
 
 ---

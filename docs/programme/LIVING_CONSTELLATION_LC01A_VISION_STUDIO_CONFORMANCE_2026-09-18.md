@@ -1,11 +1,11 @@
 # LC-01A — Vision Studio Crossing + Center Conformance Investigation
 
-**Date:** 2026-09-18  
-**Class:** read-only conformance investigation  
-**Status:** Candidate evidence record — no repair authority  
-**Candidate branch:** `design/living-constellation-lc00-lc01-20260918`  
-**Original census evidence base:** `bfab0c3c7cb02a924fe517a98471d95a895f01e4`  
-**Freshness check:** current canonical `c6ed841f8ebc378031b5c3fa0262e367a42dc3e8`  
+**Date:** 2026-09-18
+**Class:** read-only conformance investigation
+**Status:** Candidate evidence record — no repair authority
+**Candidate branch:** `design/living-constellation-lc00-lc01-20260918`
+**Original census evidence base:** `bfab0c3c7cb02a924fe517a98471d95a895f01e4`
+**Freshness check:** current canonical `c6ed841f8ebc378031b5c3fa0262e367a42dc3e8`
 **Boundary:** no runtime change · no schema · no migration · no data read/write · no copy change · no deployment
 
 > Purpose: resolve the two ambiguities exposed by LC-01 before any Living Constellation read model trusts Vision Studio provenance or claims that a saved Vision Studio thread has crossed into Personal Living Field.

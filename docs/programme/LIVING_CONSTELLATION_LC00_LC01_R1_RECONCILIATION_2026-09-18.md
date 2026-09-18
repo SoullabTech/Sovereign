@@ -1,8 +1,8 @@
 # LC-00 / LC-01 / LC-01A — Current-Canonical Reconciliation
 
-**Date:** 2026-09-18  
-**Branch:** `design/living-constellation-lc00-lc01-r1-20260918`  
-**Base:** `c6ed841f8ebc378031b5c3fa0262e367a42dc3e8`  
+**Date:** 2026-09-18
+**Branch:** `design/living-constellation-lc00-lc01-r1-20260918`
+**Base:** `c6ed841f8ebc378031b5c3fa0262e367a42dc3e8`
 **Purpose:** carry the Living Constellation candidate constitution and read-only evidence records onto current canonical without changing their substantive content.
 
 ## Freshness finding
