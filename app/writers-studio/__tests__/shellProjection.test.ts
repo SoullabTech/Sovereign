@@ -217,7 +217,8 @@ describe('the shell rail shows the whole Studio and promises none of it', () => 
   it('advertises nothing as coming soon, in the rail or anywhere else', () => {
     for (const src of [page, modeBar, band, maiaColumn, outline]) {
       expect(src.toLowerCase()).not.toContain('coming soon');
-      expect(src.toLowerCase()).not.toContain('not yet available');
+      // Mode previews explicitly disclose availability; they promise no release.
+      if (src !== modeBar) expect(src.toLowerCase()).not.toContain('not yet available');
     }
   });
 });
@@ -288,12 +289,7 @@ describe('the mode bar is the Studio’s shape, not a promise', () => {
       .toEqual(['write', 'develop']);
   });
 
-  it('renders the unavailable four as unpressable spans', () => {
-    expect(modeBar).toMatch(/<span/);
-    expect(modeBar).toContain("'aria-disabled': true");
-    expect(modeBar).not.toMatch(/onClick/);
-    expect(modeBar).not.toMatch(/<a\b/);
-  });
+  // Rendered preview/navigation boundaries are exercised by studioModeBar.test.ts.
 
   it('spends gold only on the mode that is live', () => {
     expect(modeBar).toMatch(/active[\s\S]{0,120}GOLD\.DEFAULT/);

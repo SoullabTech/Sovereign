@@ -48,3 +48,8 @@ The earlier 1203/4 result above records the pre-ratification run; the two pin fa
 New loopback preview: http://127.0.0.1:4180. The existing 4178 preview was not replaced. The new preview is deliberately synthetic, uses fixed responses and memory-only application/undo; the live-MAIA and durable recovery evidence comes from the separate real API witness.
 
 Kelly must still assess voice, rhythm, meaning and usefulness with real writing after review/admission. Two successful live turns do not validate creativity across genres. Production migration, release checks and deployment remain separate.
+
+## Release-review repair — 2026-09-18
+The two remaining shell failures were stale source-string assertions from before canonical creative-navigation previews (0ecab51b1). Replaced the blanket handler prohibition with rendered interaction coverage: future modes disclose availability, open only dismissible informational previews, contain no navigation/capability actions, and leave location unchanged. Built-room links preserve manuscript/section; missing manuscript identity remains non-navigable. The no-coming-soon assertion remains. No runtime behavior changed.
+
+Final targeted population: **1209/1209 tests, 76/76 suites pass**. Earlier failing totals above remain historical evidence. Covenant metadata was corrected to the expected classification/rollback checkbox syntax; application rollback retains the additive recovery table and history. No additional inference calls or database mutations were needed. Merge and deployment remain separate.
