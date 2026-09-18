@@ -9,8 +9,11 @@ import type {
   StandingEvidence,
 } from './types';
 
-export const H8_CURRENT_ACT_ARCHITECTURE_VERSION = 'h8-current-act-shadow-01@h7j-r1' as const;
+export const H8_CURRENT_ACT_ARCHITECTURE_VERSION = 'h8-current-act-shadow-01@proposal-v1+h7j-155d759a+r1-469b67a7' as const;
 export const H8_CURRENT_ACT_MODEL_NAME = 'deterministic-h7j-r1' as const;
+export const H7J_ACQUISITION_RULE_SHA256 = '155d759a7a8a25dba337cd151812700da95f8e1064c3def8a14a78e478fa24c8' as const;
+export const H7I_R1_SPEC_SHA256 = '469b67a7400e15572b2d2731963961876fd32950ae490ed464910212f5d0b47c' as const;
+export const H8_ORDINARY_RELATION_PROPOSAL_VERSION = 'ordinary-relation-proposal-v1' as const;
 
 const STOP = new Set([
   'a','an','and','are','as','at','be','been','being','but','by','can','could','did','do','does','for','from',
@@ -149,6 +152,11 @@ export function buildCurrentActProjection(packet: RelationalFieldPacket): Curren
   if (candidates.length === 0) {
     const core = {
       architectureVersion: H8_CURRENT_ACT_ARCHITECTURE_VERSION,
+      researchLineage: {
+        h7jAcquisitionRuleSha256: H7J_ACQUISITION_RULE_SHA256,
+        h7iR1SpecSha256: H7I_R1_SPEC_SHA256,
+        ordinaryRelationProposalVersion: H8_ORDINARY_RELATION_PROPOSAL_VERSION,
+      },
       projectionStatus: 'no_prior_evidence' as const,
       currentEvidenceId: packet.currentEvidenceId,
       anchorEvidenceId: null,
@@ -203,6 +211,11 @@ export function buildCurrentActProjection(packet: RelationalFieldPacket): Curren
 
   const core = {
     architectureVersion: H8_CURRENT_ACT_ARCHITECTURE_VERSION,
+    researchLineage: {
+      h7jAcquisitionRuleSha256: H7J_ACQUISITION_RULE_SHA256,
+      h7iR1SpecSha256: H7I_R1_SPEC_SHA256,
+      ordinaryRelationProposalVersion: H8_ORDINARY_RELATION_PROPOSAL_VERSION,
+    },
     projectionStatus: anchor ? 'projected' as const : 'no_direct_anchor' as const,
     currentEvidenceId: packet.currentEvidenceId,
     anchorEvidenceId: anchor?.evidenceId ?? null,
