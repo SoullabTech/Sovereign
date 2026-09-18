@@ -226,3 +226,20 @@ Two provider questions remain distinct:
 
 Write-capable OpenCode remains a separate later question and is not authorized by any provider
 registration or live-model success.
+
+## 2026-09-17 amendment — Tinker transport superseded
+
+The Tinker-through-OpenCode execution path described earlier in this record is superseded by
+`JARVIS-PROVIDER-02_DIRECT_TINKER_2026-09-17.md`.
+
+Current standing:
+
+- Qwen local remains a governed OpenCode worker;
+- OpenCode Zen Nemotron remains manual/interactive under the observed Zen Free restriction;
+- project `opencode.json` no longer carries a Tinker custom-provider block;
+- `inkling-tinker` and `nemotron-tinker` now resolve to the JARVIS-native `tinker-direct`
+  transport;
+- Tinker models receive only a locally constructed bounded evidence bundle and no model-side tools.
+
+This amendment does not erase the failed OpenCode/Tinker live witness; that failure remains the
+evidence that caused the transport change.

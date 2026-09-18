@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * JARVIS-PROVIDER-01 — governed OpenCode provider registry.
+ * JARVIS-PROVIDER — governed model-provider registry.
  *
  * Provider/model choice is execution-attempt capability. It never expands the
  * canonical Work Unit permission envelope and never creates epistemic standing.
- * V1 is intentionally read-only: OpenCode may inspect a governed worktree, but
- * it may not mutate it until a later adapter act proves a write-safe mapping.
+ * V1 is intentionally read-only. Execution transport is explicit per provider;
+ * provider registration never grants repository mutation or external authority.
  */
 import { loadWorkUnit, derivePermissionEnvelope } from './work-unit.mjs';
 
@@ -18,6 +18,7 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     metered_provider: false,
     credential_env: null,
     standing: 'local-established',
+    execution_adapter: 'opencode',
   }),
   'nemotron-nvidia': Object.freeze({
     opencode_provider: 'nvidia',
@@ -27,6 +28,7 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     metered_provider: true,
     credential_env: 'NVIDIA_API_KEY',
     standing: 'external-candidate',
+    execution_adapter: 'opencode',
   }),
   'nemotron-zen': Object.freeze({
     opencode_provider: 'opencode',
@@ -37,6 +39,7 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     credential_env: null,
     standing: 'interactive-only',
     delegation_supported: false,
+    execution_adapter: 'opencode-interactive',
   }),
   'nemotron-tinker': Object.freeze({
     opencode_provider: 'tinker',
@@ -49,18 +52,20 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     metered_provider: true,
     credential_env: 'TINKER_API_KEY',
     standing: 'external-candidate',
+    execution_adapter: 'tinker-direct',
   }),
   'inkling-tinker': Object.freeze({
     opencode_provider: 'tinker',
-    default_model: 'thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
+    default_model: 'thinkingmachines/Inkling-Small',
     models: Object.freeze([
-      'thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
-      'thinkingmachines/Inkling:peft:262144:sampling-nvfp4',
+      'thinkingmachines/Inkling-Small',
+      'thinkingmachines/Inkling',
     ]),
     external_network: true,
     metered_provider: true,
     credential_env: 'TINKER_API_KEY',
     standing: 'evaluation-only',
+    execution_adapter: 'tinker-direct',
   }),
 });
 
@@ -117,10 +122,11 @@ export function resolveOpenCodeProvider({
     provider_standing: spec.standing,
     model_id: selectedModel,
     model_ref: `${spec.opencode_provider}/${selectedModel}`,
-    agent: 'jarvis-readonly',
+    agent: spec.execution_adapter === 'opencode' ? 'jarvis-readonly' : null,
     external_network: spec.external_network,
     metered_provider: spec.metered_provider,
     credential_env: spec.credential_env ?? null,
+    execution_adapter: spec.execution_adapter,
   });
 }
 

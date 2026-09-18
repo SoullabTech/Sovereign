@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * JARVIS-PROVIDER-01 proof.
- * Exercises the real ain-delegate.sh OpenCode lane against a stub opencode binary.
+ * Exercises the real ain-delegate.sh OpenCode + direct-Tinker lanes against local stubs.
  * No NVIDIA/Tinker request is made; fake keys only prove the local authorization seam.
  */
 import {
@@ -29,6 +29,10 @@ const FAKE_BIN = path.join(TMP, 'bin');
 const ARGS_FILE = path.join(TMP, 'opencode-args.txt');
 const SECURITY_ARGS_FILE = path.join(TMP, 'security-args.txt');
 const OPENCODE_ENV_STATUS_FILE = path.join(TMP, 'opencode-env-status.txt');
+const TINKER_ARGS_FILE = path.join(TMP, 'tinker-args.txt');
+const TINKER_ENV_STATUS_FILE = path.join(TMP, 'tinker-env-status.txt');
+const TINKER_PROMPT_FILE = path.join(TMP, 'tinker-prompt.txt');
+const REAL_NODE = process.execPath;
 mkdirSync(AIN_HOME, { recursive: true });
 mkdirSync(WORKTREES_ROOT, { recursive: true });
 mkdirSync(FAKE_BIN, { recursive: true });
@@ -44,6 +48,23 @@ printf 'stub-opencode-ok\\n'
 exit 0
 `);
 chmodSync(path.join(FAKE_BIN, 'opencode'), 0o755);
+
+writeFileSync(path.join(FAKE_BIN, 'node'), `#!/bin/sh
+if [ "$1" = "$STUB_TINKER_DIRECT_SCRIPT" ]; then
+  shift
+  printf '%s\n' "$@" > "$STUB_TINKER_ARGS"
+  if [ -n "$TINKER_API_KEY" ]; then
+    printf 'TINKER_API_KEY_PRESENT\n' > "$STUB_TINKER_ENV_STATUS"
+  else
+    printf 'TINKER_API_KEY_ABSENT\n' > "$STUB_TINKER_ENV_STATUS"
+  fi
+  cat > "$STUB_TINKER_PROMPT"
+  printf '{"provider":"tinker","transport":"anthropic-compatible","model":"%s","text":"stub-direct-ok","usage":null,"stop_reason":"end_turn"}\n' "$1"
+  exit 0
+fi
+exec "$REAL_NODE" "$@"
+`);
+chmodSync(path.join(FAKE_BIN, 'node'), 0o755);
 
 writeFileSync(path.join(FAKE_BIN, 'security'), `#!/bin/sh
 printf '%s\\n' "$@" >> "$STUB_SECURITY_ARGS"
@@ -65,6 +86,11 @@ const baseEnv = (extra = {}) => ({
   STUB_OPENCODE_ARGS: ARGS_FILE,
   STUB_SECURITY_ARGS: SECURITY_ARGS_FILE,
   STUB_OPENCODE_ENV_STATUS: OPENCODE_ENV_STATUS_FILE,
+  STUB_TINKER_ARGS: TINKER_ARGS_FILE,
+  STUB_TINKER_ENV_STATUS: TINKER_ENV_STATUS_FILE,
+  STUB_TINKER_PROMPT: TINKER_PROMPT_FILE,
+  STUB_TINKER_DIRECT_SCRIPT: path.join(REPO, 'scripts', 'builder', 'tinker-direct.mjs'),
+  REAL_NODE,
 });
 
 const sh = (args, extra = {}) => {
@@ -209,7 +235,8 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
   });
   assert('Inkling resolves only after both grants and a credential are present',
     inkling.ok
-      && inkling.model_ref === 'tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
+      && inkling.model_ref === 'tinker/thinkingmachines/Inkling-Small'
+      && inkling.execution_adapter === 'tinker-direct',
     JSON.stringify(inkling));
   assert('Inkling remains explicitly evaluation-only in the registry',
     inkling.provider_standing === 'evaluation-only', inkling.provider_standing);
@@ -279,7 +306,7 @@ console.log('\n=== P4c: denied Tinker spend never reads Keychain ===');
   sh(['new', id]);
   authorizeReadOnly(id, ['network.external']);
   const beforeSecurity = securityLog();
-  const run = sh(['opencode', id, 'inkling-tinker'], {
+  const run = sh(['tinker', id, 'inkling-tinker'], {
     TINKER_API_KEY: '',
     STUB_SECURITY_SECRET: 'credential-from-keychain-stub',
   });
@@ -297,14 +324,20 @@ console.log('\n=== P5: authorized external selection remains testable without a 
   const id = uid('inkling-stub');
   sh(['new', id]);
   authorizeReadOnly(id, ['network.external', 'provider.spend']);
-  const run = sh(['opencode', id, 'inkling-tinker'], {
+  writePacket(id, { allowed_files: ['opencode.json'] });
+  const run = sh(['tinker', id, 'inkling-tinker'], {
     TINKER_API_KEY: 'proof-only-not-a-real-key',
   });
-  assert('authorized Inkling selection reaches only the stub OpenCode process',
+  assert('authorized Inkling selection reaches only the stub direct-Tinker process',
     run.code === 0, `exit=${run.code} err=${run.err.slice(0, 160)}`);
   const result = JSON.parse(readFileSync(resultPath(id), 'utf8'));
   assert('Inkling model identity is durable in the result contract',
-    result.model === 'tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4', result.model);
+    result.lane === 'tinker' && result.model === 'tinker/thinkingmachines/Inkling-Small', result.model);
+  const directPrompt = readFileSync(TINKER_PROMPT_FILE, 'utf8');
+  assert('direct Tinker receives only JARVIS-bundled authorized repository evidence',
+    directPrompt.includes('=== BEGIN AUTHORIZED FILE: opencode.json ===')
+      && directPrompt.includes('\"$schema\"')
+      && !directPrompt.includes('DO NOT SEND'));
   sh(['release', id], { TINKER_API_KEY: 'proof-only-not-a-real-key' });
 }
 
@@ -316,11 +349,11 @@ console.log('\n=== P5b: authorized Tinker may hydrate from macOS Keychain withou
   authorizeReadOnly(id, ['network.external', 'provider.spend']);
   writePacket(id, { verification_commands: ['test -z "${TINKER_API_KEY:-}"'] });
   const beforeSecurity = securityLog();
-  const run = sh(['opencode', id, 'inkling-tinker'], {
+  const run = sh(['tinker', id, 'inkling-tinker'], {
     TINKER_API_KEY: '',
     STUB_SECURITY_SECRET: proofSecret,
   });
-  assert('authorized Tinker run reaches the stub after Keychain hydration',
+  assert('authorized Tinker run reaches the direct stub after Keychain hydration',
     run.code === 0, `exit=${run.code} err=${run.err.slice(0, 180)}`);
 
   const afterSecurity = securityLog();
@@ -331,22 +364,22 @@ console.log('\n=== P5b: authorized Tinker may hydrate from macOS Keychain withou
       && afterSecurity.includes('-w'),
     afterSecurity.slice(-320));
 
-  const args = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
+  const args = existsSync(TINKER_ARGS_FILE) ? readFileSync(TINKER_ARGS_FILE, 'utf8') : '';
   const resultText = readFileSync(resultPath(id), 'utf8');
-  assert('Keychain secret never enters OpenCode args or result contract',
+  assert('Keychain secret never enters worker args or result contract',
     !args.includes(proofSecret) && !resultText.includes(proofSecret));
 
-  const envStatus = existsSync(OPENCODE_ENV_STATUS_FILE)
-    ? readFileSync(OPENCODE_ENV_STATUS_FILE, 'utf8')
+  const envStatus = existsSync(TINKER_ENV_STATUS_FILE)
+    ? readFileSync(TINKER_ENV_STATUS_FILE, 'utf8')
     : '';
-  assert('Keychain credential is present in the OpenCode worker environment',
+  assert('Keychain credential is present in the direct Tinker worker environment',
     /TINKER_API_KEY_PRESENT/.test(envStatus), envStatus.trim());
 
   const result = JSON.parse(resultText);
   assert('post-worker verification cannot see the Keychain credential',
     result.test_results === 'pass', JSON.stringify({ test_results: result.test_results, evidence: result.evidence }));
   assert('Keychain-hydrated attempt preserves exact Inkling model provenance',
-    result.model === 'tinker/thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
+    result.lane === 'tinker' && result.model === 'tinker/thinkingmachines/Inkling-Small',
     result.model);
   sh(['release', id], { TINKER_API_KEY: '', STUB_SECURITY_SECRET: proofSecret });
 }
@@ -355,27 +388,13 @@ console.log('\n=== P6: project OpenCode config carries no credential or default 
 {
   const configText = readFileSync(path.join(REPO, 'opencode.json'), 'utf8');
   const config = JSON.parse(configText);
-  assert('project config registers Ollama, NVIDIA, and Tinker without selecting a default model',
-    !!config.provider?.ollama && !!config.provider?.nvidia && !!config.provider?.tinker
+  assert('project OpenCode config contains only Ollama + NVIDIA and no Tinker transport',
+    !!config.provider?.ollama && !!config.provider?.nvidia && !config.provider?.tinker
       && config.model === undefined);
-  const tinkerModels = Object.keys(config.provider?.tinker?.models ?? {});
-  assert('Tinker config carries the exact bounded Inkling + Nemotron model set',
-    JSON.stringify(tinkerModels) === JSON.stringify([
-      'thinkingmachines/Inkling-Small:peft:262144:sampling-nvfp4',
-      'thinkingmachines/Inkling:peft:262144:sampling-nvfp4',
-      'nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
-      'nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16',
-    ]), JSON.stringify(tinkerModels));
-  assert('every custom Tinker model declares both context and output limits',
-    Object.values(config.provider.tinker.models).every((m) =>
-      Number.isInteger(m.limit?.context) && m.limit.context > 0
-      && Number.isInteger(m.limit?.output) && m.limit.output > 0),
-    JSON.stringify(Object.fromEntries(Object.entries(config.provider.tinker.models)
-      .map(([id, m]) => [id, m.limit]))));
   const secretLikePrefixes = ['nv' + 'api-', 's' + 'k-'];
   assert('project config references environment variables instead of embedding credentials',
     configText.includes('{env:NVIDIA_API_KEY}')
-      && configText.includes('{env:TINKER_API_KEY}')
+      && !configText.includes('TINKER_API_KEY')
       && secretLikePrefixes.every((prefix) => !configText.includes(prefix)));
 
   const agent = readFileSync(path.join(REPO, '.opencode', 'agents', 'jarvis-readonly.md'), 'utf8');
