@@ -3,7 +3,7 @@
 **Programme:** RELATIONAL-GEOMETRY-REASONING
 **Gate:** RGR-03 — MINIMAL FALSIFIABLE RELATIONAL-TRANSFER HYPOTHESIS
 **Date:** 2026-09-18
-**Status:** EVIDENCE_READY · ADVERSARIAL REVIEW COMPLETE · AWAITING FOUNDER ADJUDICATION
+**Status:** CLOSED · FOUNDER ADJUDICATED · HYPOTHESIS CONTRACT PRESERVED
 **Canonical base:** b0cc9e5a3a3d65ebd52ac1a578e46a5e45848320
 **Governing constitution:** RGR-00
 **Upstream:** RGR-01 canonical + CLOSED · RGR-02 canonical + CLOSED
@@ -949,3 +949,232 @@ NONE
 The next legitimate act is Founder adjudication of RGR-03 itself.
 
 No benchmark-design gate is opened by this standing.
+
+
+---
+
+# XXVI · Founder adjudication — RGR-03 closure
+
+**Founder act:** 2026-09-18
+**Accepted RGR-03 candidate:** 1d1fe516e4868892bd755cf2592812cceecd9154
+
+The Founder accepts the RGR-03 Minimal Relational-Transfer Hypothesis package and the recorded evidence.
+
+Accepted standing:
+
+- RGR-00 is canonical and CLOSED;
+- RGR-01 is canonical and CLOSED;
+- RGR-02 is canonical and CLOSED;
+- RGR-03 was opened from canonical b0cc9e5a3a3d65ebd52ac1a578e46a5e45848320;
+- the governed RGR-03 Work Unit reached EVIDENCE_READY with its authorized core unchanged;
+- only the three authorized RGR-03 hypothesis/research artifacts were created;
+- no benchmark was created;
+- no empirical experiment was executed;
+- no RGR model was implemented;
+- no member, client, PHI, Sanctuary, private-journal, production-memory, or other private human data was used;
+- no schema, migration, MAIA runtime change, deployment, or production action occurred;
+- all sovereignty pre-commit gates passed.
+
+The Founder accepts:
+
+> **H-RT1 — RELATIONAL TRANSFER**
+
+For one relation family and one surface/relation decomposition frozen before data generation, when the declared surface realization changes while the declared relational rule is preserved, a non-oracular system capable of representing or inferring relational structure should exhibit a preregistered held-out transfer advantage over the strongest valid preregistered surface-only baseline; and that transferable behavior must change in the preregistered direction when the relational rule is broken while relevant surface statistics are preserved.
+
+H-RT1 remains task-family bounded rather than universal.
+
+Any future empirical instantiation must freeze before generator/data creation:
+
+~~~text
+q_* relation family
+admissible relation values
+Σ_* surface specification
+train / validation / held-out test domains
+primary transfer metric M
+δ_min
+uncertainty procedure
+relation-preserving intervention
+relation-breaking intervention
+C_break
+κ_min
+leakage diagnostics and thresholds
+baseline suite
+model-selection procedure
+compute/search-budget policy
+stopping rule
+replication rule
+~~~
+
+## Accepted information-access law
+
+The Founder ratifies:
+
+- F_R may not receive q_*(r), oracle latent relation identity, or another direct target-revealing variable unavailable under the frozen information-access contract;
+- F_R must infer or represent relational structure from the same observable instance x, or from a preregistered label-blind transformation of x;
+- the strongest valid preregistered surface-only baseline suite F_S governs the surface comparison;
+- a same-information generic comparator F_G must be included or explicitly justified;
+- H-RT1 does not require F_R > F_G;
+- if F_G learns the relational rule and passes the relation-breaking controls, that may support transferable relational information but does not establish that a specialized relational architecture is necessary.
+
+## Accepted intervention law
+
+~~~text
+same relation + changed surface
+→ relational transfer test
+
+changed relation + matched surface
+→ relation-breaking sensitivity test
+~~~
+
+Where feasible, synthetic benchmark construction must use factorial/counterbalanced generation so designated surface variables do not identify the target relation by construction.
+
+A preregistered residual surface/relation leakage audit is required.
+
+If intervention separation or another preregistered design-validity condition fails:
+
+~~~text
+BENCHMARK_INVALID
+~~~
+
+If the benchmark remains valid but competing explanations cannot be resolved:
+
+~~~text
+UNDERDETERMINED
+~~~
+
+## Accepted future support requirements
+
+A future SUPPORT disposition requires all preregistered conditions, including:
+
+1. held-out relational-transfer advantage above δ_min;
+2. true held-out surface shift;
+3. preregistered counterfactual relation-breaking sensitivity;
+4. failure of serious surface-only baselines to reproduce the relational effect;
+5. failure of relation-label permutation / negative controls to preserve the claimed transferable signal;
+6. clean leakage and validity controls;
+7. successful replication under the preregistered rule.
+
+## No-rescue law
+
+A failed preregistered experiment may not be converted into SUPPORT by:
+
+- changing the primary metric after results;
+- reducing δ_min;
+- dropping a failed control;
+- redefining surface and relation after results;
+- changing held-out domains;
+- excluding failed seeds without preregistered grounds;
+- adding a new model after inspecting the test set and treating it as confirmatory;
+- treating benchmark invalidity as evidence for deeper relational complexity.
+
+Accepted future empirical dispositions remain:
+
+~~~text
+SUPPORTED
+NOT_SUPPORTED
+UNDERDETERMINED
+BENCHMARK_INVALID
+REPLICATION_FAILED
+~~~
+
+A clean NOT_SUPPORTED result removes that preregistered relation-family instantiation as evidence for escalation to richer relational geometry.
+
+Even a SUPPORTED result would establish only:
+
+> For the tested task family, relational structure contains transferable information not adequately captured by the tested surface-only baseline.
+
+It would not establish:
+
+- that meaning is geometry;
+- that human lived meaning follows the synthetic benchmark;
+- that Grassmann geometry is correct;
+- that sheaf theory describes psychology;
+- that consciousness is relational geometry;
+- that Spiralogic is validated;
+- that Elemental Alchemy is validated;
+- that MAIA should implement RGR.
+
+## Review evidence
+
+The accepted review record remains:
+
+~~~text
+GPT-OSS bounded review:
+VERDICT = RETURN
+
+Qwen bounded review:
+VERDICT = RETURN
+~~~
+
+The initial failed reviewer executions remain preserved as:
+
+~~~text
+INSUFFICIENT
+~~~
+
+They are not deleted or promoted into semantic verdicts.
+
+Grounded corrections from both bounded reviews remain part of the accepted hypothesis contract.
+
+Arbitrary or formalism-biased reviewer prescriptions—including universal numeric effect thresholds, mandatory identical compute budgets, or requiring a specific relational module—remain rejected with explicit rationale.
+
+## Canonical freshness standing at adjudication
+
+Current canonical had advanced to:
+
+d39e0421c5ea7de854cfd1e19204cee40a9ec8cb
+
+through MAIA Teaching Intelligence T2 work.
+
+The Founder accepts that there was zero true path overlap between that intervening canonical work and the three RGR-03 artifacts.
+
+## Lifecycle closure
+
+By Founder act, the governed RGR-03 Work Unit has advanced:
+
+~~~text
+EVIDENCE_READY
+→ ADJUDICATED
+→ CLOSED
+~~~
+
+with:
+
+~~~text
+authorized core: unchanged
+review attempts: preserved
+verifier evidence: preserved
+routing provenance: preserved
+~~~
+
+## Successor boundary
+
+This closure explicitly preserves:
+
+~~~text
+RGR-04: CLOSED
+
+benchmark creation: NOT AUTHORIZED
+
+empirical execution: NOT AUTHORIZED
+
+Elemental Operator hypothesis: CLOSED
+
+MAIA alteration: NOT AUTHORIZED
+
+RGR implementation: NOT AUTHORIZED
+
+deployment: NOT AUTHORIZED
+~~~
+
+No successor gate is opened by this closure.
+
+## Preservation law
+
+The exact accepted RGR-03 hypothesis candidate remains identified by:
+
+1d1fe516e4868892bd755cf2592812cceecd9154
+
+This closure act is a later documentary/lifecycle record layered on top of that accepted candidate. It does not rewrite the accepted hypothesis evidence.
+
+**RGR-03 standing: CLOSED.**
