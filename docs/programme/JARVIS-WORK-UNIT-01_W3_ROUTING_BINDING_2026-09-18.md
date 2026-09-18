@@ -358,3 +358,52 @@ W4 NOT OPEN
 ```
 
 No W4 attempt/evidence ledger work is authorized by this record.
+
+## 14. Founder adjudication — W3 closure and W4 opening
+
+**Founder act:** 2026-09-18
+
+The Founder accepts W3 candidate commit
+`25f4bc1bceebcaebbbac7df4b31eb945f09fd120` and the recorded evidence:
+
+- W1 regression: 22 / 22 passing;
+- W2 lifecycle: 27 / 27 passing;
+- ratified Routing Intelligence R2: 20 / 20 passing;
+- W3 pure routing binding: 28 / 28 passing;
+- exact ratified router provenance preserved at SHA-256
+  `2837520e2f4e27aed067a84a2f8148a8b1be2436f71a57aa21a4c06d72316b4f`;
+- sovereignty/pre-commit gates green;
+- routing narrows repository authority to read-only;
+- route authority is independently proven to be a subset of Work Unit authority;
+- `AUTHORIZED → ROUTED` remains under W2 lifecycle authority;
+- three deliberate W3 mutations made the suite red;
+- locally tracked canonical freshness had zero true file overlap with W1/W2/W3;
+- no provider/model call, credential access, external network action, repository
+  execution, merge, push, deployment, or production access occurred during W3.
+
+**W3 standing: CLOSED.**
+
+The Founder authorizes **W4 — PURE APPEND-ONLY ATTEMPT + EVIDENCE LEDGER ONLY**.
+
+W4 may implement pure deterministic immutable append operations for:
+
+- `execution.attempts`
+- `execution.artifacts`
+- `execution.diffs`
+- `execution.test_results`
+- `evaluation.verifier_results`
+- `provenance.model_identity`
+- `provenance.resulting_commits`
+
+W4 must preserve append-only history, stable attempt/verifier identity,
+retry ≠ independent review, builder ≠ verifier, evidence-without-authority,
+authorized-core immutability, no retrospective repair, deterministic duplicate
+refusal, lifecycle compatibility, and no semantic-winner authority.
+
+W4 may not call providers/models, inspect credentials, access external networks,
+execute OpenCode/Tinker/shell/repository work, mutate routing, mutate the
+authorized core, transition lifecycle state, merge, push, deploy, or access
+production.
+
+W4 stops after its pure-ledger implementation and red/green falsification
+witness. W5 is not opened by this adjudication.
