@@ -45,10 +45,10 @@ export async function loadPriorMemberTurns(
  * This is intentionally NOT loadConversationalRecallPref(): the live helper
  * defaults true on lookup failure. Invisible research must be stricter.
  *
- * The JOIN makes consent fail closed in the query itself:
+ * Consent fails closed before the history query:
  * - no member row -> no evidence
  * - NULL/FALSE preference -> no evidence
- * - query failure -> []
+ * - preference/history query failure -> []
  *
  * Only member-authored turns are eligible. Assistant turns never become member
  * evidence merely because they appeared in a prior conversation.
