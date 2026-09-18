@@ -34,6 +34,7 @@ import { consult } from '@/lib/ain/consultation';
 import type { ConsultationDecision, ConsultationResult } from '@/lib/ain/types';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { inferStateVector, getDefaultStateVector, getDefaultPracticeRecommendation } from '@/lib/maia/state-vector/stateDefaults';
+import { MAX_MAIA_TEXT_INPUT_CHARS, isMaiaTextInputWithinLimit } from '@/lib/maia/textInputLimits';
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
 import {
   loadMemberMemoryAtomsForPrompt,
@@ -892,6 +893,25 @@ export async function POST(req: NextRequest) {
     if (!message || typeof message !== 'string') {
       return withSessionCookie(
         NextResponse.json({ error: 'Message is required' }, { status: 400 }),
+        sessionCookie
+      );
+    }
+
+    // 📝 TEXT BANDWIDTH: keep the serving boundary aligned with the composer.
+    // Scribe mode retains its existing transcript-friendly unlimited intake.
+    // Conversational modes reject oversized payloads explicitly rather than
+    // silently truncating member-authored text.
+    if (!isMaiaTextInputWithinLimit(message, mode)) {
+      return withSessionCookie(
+        NextResponse.json(
+          {
+            error: `Message is too long (max ${MAX_MAIA_TEXT_INPUT_CHARS.toLocaleString()} characters)`,
+            errorCode: 'MESSAGE_TOO_LONG',
+            maxCharacters: MAX_MAIA_TEXT_INPUT_CHARS,
+            actualCharacters: message.length,
+          },
+          { status: 413 }
+        ),
         sessionCookie
       );
     }
