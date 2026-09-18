@@ -102,6 +102,7 @@ async function main() {
 
     const witnessId = `H8-${String(index + 1).padStart(3, '0')}`;
     markdown.push(`## ${witnessId}`, '', '**Current member act**', '', `> ${row.memberInput.replace(/\n/g, '\n> ')}`, '');
+    markdown.push(`**Evidence scope:** \`${row.rawPlan.researchLineage.evidenceScope}\``, '');
     markdown.push(`**Projection status:** \`${row.rawPlan.projectionStatus}\``, '');
     markdown.push(`**Direct anchor:** \`${row.rawPlan.anchorEvidenceId ?? 'none'}\``, '');
     markdown.push('**Selected relational field**', '');
