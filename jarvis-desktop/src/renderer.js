@@ -318,6 +318,7 @@ function onConvoKey(e) {
 const CF = window.JarvisCapabilityForm;
 const GOV = window.JarvisGovernance;
 const PROV = window.JarvisProvenance;
+const OF = window.JarvisOperatorFlow;
 
 // Wording is derived from what each lane ACTUALLY does in this build — see
 // jarvis:submit-task in main.js. C3 promises nothing it does not perform.
@@ -338,8 +339,42 @@ async function loadCapabilities() {
   return info;
 }
 
+function renderOperatorPlan(plan) {
+  return `<div class="run-plan">
+    <div class="plan-title">${escapeHtml(plan.title)}</div>
+    <div class="plan-line"><b>Execution:</b> ${escapeHtml(plan.execution)}</div>
+    <div class="plan-line"><b>Privacy:</b> ${escapeHtml(plan.privacy)}</div>
+    <div class="plan-line"><b>Intelligence:</b> ${escapeHtml(plan.model)}</div>
+  </div>`;
+}
+
 function renderWork() {
+  const localPlan = OF.plan({ posture: OF.LOCAL });
   $main.innerHTML = `
+    <div class="card">
+      <h3>Run through JARVIS</h3>
+      <div class="hint" style="margin:0 0 10px">Tell JARVIS the outcome you want. You only choose the consequential posture; lane names and model plumbing stay underneath.</div>
+      <textarea id="operator-intent" class="operator-intent" rows="4" placeholder="What do you want to happen?"></textarea>
+      <div class="posture-grid">
+        <label class="posture-choice">
+          <div><input type="radio" name="operator-posture" value="local" checked><b>Keep this local</b></div>
+          <span>Bounded reasoning on this Mac. No external model call.</span>
+        </label>
+        <label class="posture-choice">
+          <div><input type="radio" name="operator-posture" value="frontier"><b>Frontier reasoning</b></div>
+          <span>Route for Nemotron. External execution remains a separate explicit act.</span>
+        </label>
+      </div>
+      <label id="operator-external-wrap" class="hint" style="display:none;margin:4px 0 8px">
+        <input id="operator-external-ok" type="checkbox">
+        This task text contains no personal/confidential data and may be sent to the external Nemotron trial endpoint if I later press Run with Nemotron.
+      </label>
+      <div id="operator-plan">${renderOperatorPlan(localPlan)}</div>
+      <button class="primary" id="operator-run">Run locally with JARVIS</button>
+      <div id="operator-errors"></div>
+    </div>
+    <div id="result"></div>
+
     <div class="card">
       <h3>Recall prior work</h3>
       <div class="hint" style="margin:0 0 8px">
@@ -352,31 +387,42 @@ function renderWork() {
       </div>
       <div id="continuity-results"></div>
     </div>
-    <div class="card">
-      <h3>Submit a bounded task</h3>
-      <label class="hint">Lane</label><br>
-      <select id="lane-hint" style="margin:8px 0 8px">
-        <option value="c0">C0 — deterministic capability</option>
-        <option value="c1">C1 — small local task</option>
-        <option value="c3">C3 — needs real reasoning</option>
-      </select>
-      <div class="lane-help" id="lane-help">${LANE_HELP.c0}</div>
-      <div id="c0-fields"></div>
-      <div id="c1-fields" style="display:none">
-        <textarea id="prompt" rows="3" placeholder="Small, bounded prompt for the local model…"></textarea>
+
+    <details class="advanced-tools">
+      <summary>Advanced tools and lane controls</summary>
+      <div class="card">
+        <h3>Submit a bounded task manually</h3>
+        <div class="hint" style="margin-bottom:8px">Use this only when you intentionally want direct access to the underlying C0 / C1 / C3 router.</div>
+        <label class="hint">Lane</label><br>
+        <select id="lane-hint" style="margin:8px 0 8px">
+          <option value="c0">C0 — deterministic capability</option>
+          <option value="c1">C1 — small local task</option>
+          <option value="c3">C3 — needs frontier reasoning</option>
+        </select>
+        <div class="lane-help" id="lane-help">${LANE_HELP.c0}</div>
+        <div id="c0-fields"></div>
+        <div id="c1-fields" style="display:none">
+          <textarea id="prompt" rows="3" placeholder="Small, bounded prompt for the local model…"></textarea>
+        </div>
+        <div id="c3-fields" style="display:none">
+          <textarea id="description" rows="3" placeholder="Describe the task — router will select C3."></textarea>
+          <label class="hint" style="display:block;margin-top:8px">
+            <input id="external-ok" type="checkbox">
+            This task text contains no personal/confidential data and may be sent to the external Nemotron trial endpoint.
+          </label>
+        </div>
+        <button class="primary" id="submit">Submit manually</button>
+        <div id="local-errors"></div>
       </div>
-      <div id="c3-fields" style="display:none">
-        <textarea id="description" rows="3" placeholder="Describe the task — router will select C3."></textarea>
-        <label class="hint" style="display:block;margin-top:8px">
-          <input id="external-ok" type="checkbox">
-          This task text contains no personal/confidential data and may be sent to the external Nemotron trial endpoint.
-        </label>
-      </div>
-      <button class="primary" id="submit">Submit</button>
-      <div id="local-errors"></div>
-    </div>
-    <div id="result"></div>
+    </details>
   `;
+
+  document.querySelectorAll('input[name="operator-posture"]').forEach(el => {
+    el.addEventListener('change', syncOperatorPosture);
+  });
+  document.getElementById('operator-external-ok').addEventListener('change', syncOperatorPosture);
+  document.getElementById('operator-run').addEventListener('click', submitOperatorIntent);
+
   const laneHint = document.getElementById('lane-hint');
   laneHint.addEventListener('change', () => {
     document.getElementById('c0-fields').style.display = laneHint.value === 'c0' ? '' : 'none';
@@ -391,6 +437,47 @@ function renderWork() {
     if (e.key === 'Enter') searchContinuity();
   });
   renderC0Fields();
+  syncOperatorPosture();
+}
+
+function currentOperatorPosture() {
+  return document.querySelector('input[name="operator-posture"]:checked')?.value || OF.LOCAL;
+}
+
+function syncOperatorPosture() {
+  const posture = currentOperatorPosture();
+  const externalOk = !!document.getElementById('operator-external-ok')?.checked;
+  const wrap = document.getElementById('operator-external-wrap');
+  if (wrap) wrap.style.display = posture === OF.FRONTIER ? 'block' : 'none';
+  const planHost = document.getElementById('operator-plan');
+  if (planHost) planHost.innerHTML = renderOperatorPlan(OF.plan({ posture, externalOk }));
+  const button = document.getElementById('operator-run');
+  if (button) button.textContent = posture === OF.FRONTIER ? 'Prepare frontier run' : 'Run locally with JARVIS';
+}
+
+function showOperatorErrors(errors) {
+  const host = document.getElementById('operator-errors');
+  if (!host) return;
+  host.innerHTML = errors.length
+    ? `<div class="errors">${errors.map(e => `<div>${escapeHtml(e)}</div>`).join('')}</div>`
+    : '';
+}
+
+async function submitOperatorIntent() {
+  const posture = currentOperatorPosture();
+  const externalOk = !!document.getElementById('operator-external-ok')?.checked;
+  const intent = document.getElementById('operator-intent')?.value || '';
+  const built = OF.buildTask({ intent, posture, externalOk });
+  if (!built.ok) { showOperatorErrors(built.errors); return; }
+  showOperatorErrors([]);
+
+  const button = document.getElementById('operator-run');
+  button.disabled = true;
+  button.textContent = posture === OF.FRONTIER ? 'Routing…' : 'Working locally…';
+  const res = await window.jarvis.submitTask(built.task);
+  button.disabled = false;
+  syncOperatorPosture();
+  renderResult(res);
 }
 
 async function searchContinuity() {

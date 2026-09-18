@@ -131,6 +131,18 @@
   button.act:hover { background: #26272b; color: #fff; }
   .act-box { background: #0e0f11; border: 1px solid #26272b; border-radius: 8px; padding: 12px; margin-top: 8px; }
   .act-box input, .act-box select { margin-bottom: 8px; }
+  .operator-intent { min-height: 92px; font-size: 15px; line-height: 1.5; }
+  .posture-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0; }
+  .posture-choice { display:block; border:1px solid #26272b; background:#14161a; border-radius:8px; padding:10px 12px; cursor:pointer; }
+  .posture-choice:has(input:checked) { border-color:#3b82f6; background:#111b2d; }
+  .posture-choice input { margin-right:7px; }
+  .posture-choice b { color:#d8d8e0; font-size:12px; }
+  .posture-choice span { display:block; color:#707078; font-size:11px; margin:4px 0 0 22px; line-height:1.45; }
+  .run-plan { background:#0e0f11; border:1px solid #202126; border-radius:8px; padding:11px 12px; margin-top:10px; }
+  .run-plan .plan-title { color:#b8b8c0; font-size:12px; font-weight:600; margin-bottom:5px; }
+  .run-plan .plan-line { color:#6f7078; font-size:11px; line-height:1.55; }
+  details.advanced-tools { margin-top:14px; }
+  details.advanced-tools > summary { cursor:pointer; color:#6ea8df; font-size:12px; margin-bottom:10px; }
 </style>
 </head>
 <body>
@@ -149,6 +161,7 @@
   <script src="capability-form.js"></script>
   <script src="governance.js"></script>
   <script src="provenance.js"></script>
+  <script src="operator-flow.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>
