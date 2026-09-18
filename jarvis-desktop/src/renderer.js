@@ -329,6 +329,7 @@ let providerCatalog = [];
 let activeWorkUnitId = sessionStorage.getItem('jarvis:active-work-unit') || null;
 let activeWorkUnitStrategy = [];
 let workUnitPollTimer = null;
+let routePreviewGeneration = 0;
 
 // Wording is derived from what each lane ACTUALLY does in this build — see
 // jarvis:submit-task in main.js. C3 promises nothing it does not perform.
@@ -403,7 +404,93 @@ function currentWorkUnitProviders() {
   return out;
 }
 
+function routedWorkUnitMode() {
+  return !document.getElementById('wu-manual-mode')?.checked;
+}
+
+function routingSpecFromForm() {
+  return {
+    taskShape: document.getElementById('wu-task-shape')?.value || 'mechanical_code',
+    reviewPressure: document.getElementById('wu-review-pressure')?.value || 'ordinary',
+    challengeMode: document.getElementById('wu-challenge-mode')?.value || 'none',
+    frontierPosture: document.getElementById('wu-frontier-posture')?.value || 'repository_grounded',
+    explicitIndependentReview: !!document.getElementById('wu-independent-review')?.checked,
+  };
+}
+
+function renderRoutePreview(route) {
+  const host = document.getElementById('wu-route-preview');
+  if (!host) return;
+  if (!route) {
+    host.innerHTML = '<div class="hint">Route preview unavailable.</div>';
+    return;
+  }
+  const primary = route.primary?.provider_id || 'none';
+  const challengers = (route.challengers || []).map(c => `${c.provider_id} · ${c.execution_disposition}`).join(' · ') || 'none';
+  const required = [
+    ...(route.required_authority?.acts || []),
+    ...(route.required_authority?.disclosures || []),
+  ];
+  const blockers = (route.blockers || []).map(b => b.code).join(' · ') || 'none';
+  host.innerHTML = `<div class="authority-box">
+    <div class="a-title">Routing Intelligence preview · ${escapeHtml(route.route_version || 'unknown')}</div>
+    <div class="a-line">Primary: <b>${escapeHtml(primary)}</b></div>
+    <div class="a-line">Challengers: <b>${escapeHtml(challengers)}</b></div>
+    <div class="a-line">Review policy: <b>${escapeHtml(route.review_policy?.local || 'none')}</b></div>
+    <div class="a-line">Disposition: <b>${escapeHtml(route.execution_disposition || 'unknown')}</b></div>
+    <div class="a-line">Required authority: <b>${escapeHtml(required.join(' · ') || 'none')}</b></div>
+    <div class="a-line">Blockers: <b>${escapeHtml(blockers)}</b></div>
+    <div class="a-line">Execution: <b>disconnected in R3</b></div>
+  </div>`;
+}
+
+async function previewRoutingIntelligence() {
+  const generation = ++routePreviewGeneration;
+  if (!routedWorkUnitMode()) return;
+  const spec = workUnitSpecFromForm();
+  const out = await window.jarvis.workUnitAction({ action: 'preview-route', spec });
+  if (generation !== routePreviewGeneration || !routedWorkUnitMode()) return;
+  if (!out?.ok) {
+    renderRoutePreview(null);
+    showWorkUnitErrors([out?.reason || 'Routing preview failed.']);
+    return;
+  }
+  showWorkUnitErrors([]);
+  renderRoutePreview(out.route_record);
+}
+
 function syncWorkUnitComposer() {
+  const routed = routedWorkUnitMode();
+  const manualWrap = document.getElementById('wu-manual-provider-wrap');
+  const frontierWrap = document.getElementById('wu-frontier-posture-wrap');
+  if (manualWrap) manualWrap.style.display = routed ? 'none' : 'block';
+  if (frontierWrap) {
+    frontierWrap.style.display = routed && document.getElementById('wu-challenge-mode')?.value === 'frontier'
+      ? 'block' : 'none';
+  }
+
+  const authority = document.getElementById('wu-authority-preview');
+  const createButton = document.getElementById('wu-create');
+  if (createButton) createButton.textContent = routed ? 'Create routed Work Unit' : 'Create manual Work Unit';
+  if (routed) {
+    if (authority) authority.innerHTML = `<div class="authority-box">
+      <div class="a-title">Authority preview</div>
+      <div class="a-line">Work Unit authority: <b>repo.read only</b></div>
+      <div class="a-line">External network / disclosure / spend: <b>not granted by routing</b></div>
+      <div class="a-line">Provider execution: <b>disconnected in R3</b></div>
+      <div class="a-line">Write / production / deploy / authority change: <b>denied</b></div>
+      <div class="a-line">Integration actor: <b>Kelly / founder</b></div>
+    </div>`;
+    void previewRoutingIntelligence();
+    return;
+  }
+
+  // Invalidate any in-flight routed preview before exposing the manual path.
+  // An older async response must never repaint a route after the mode changed.
+  routePreviewGeneration += 1;
+  const routeHost = document.getElementById('wu-route-preview');
+  if (routeHost) routeHost.innerHTML = '<div class="hint">Routing Intelligence preview is paused in manual mode.</div>';
+
   const providers = currentWorkUnitProviders();
   const inkling = providers.includes('inkling-tinker');
   const external = providers.includes('nemotron-zen') || inkling;
@@ -412,12 +499,12 @@ function syncWorkUnitComposer() {
   const spendWrap = document.getElementById('wu-spend-wrap');
   if (repoWrap) repoWrap.style.display = external ? 'block' : 'none';
   if (spendWrap) spendWrap.style.display = inkling ? 'block' : 'none';
-  const authority = document.getElementById('wu-authority-preview');
+  if (!providerCatalog.length) void loadProviderCatalog();
   if (authority) {
     const repoOk = !!document.getElementById('wu-repo-ok')?.checked;
     const spendOk = !!document.getElementById('wu-spend-ok')?.checked;
     authority.innerHTML = `<div class="authority-box">
-      <div class="a-title">Authority preview</div>
+      <div class="a-title">Manual authority preview</div>
       <div class="a-line">Local review: <b>${local ? 'read-only; stays on this Mac' : 'not selected'}</b></div>
       <div class="a-line">External repository disclosure: <b>${external ? (repoOk ? 'authorized' : 'held') : 'not requested'}</b></div>
       <div class="a-line">Provider spend: <b>${inkling ? (spendOk ? 'authorized for Inkling' : 'held') : 'not requested'}</b></div>
@@ -428,10 +515,16 @@ function syncWorkUnitComposer() {
 }
 
 function workUnitSpecFromForm() {
-  return {
+  const base = {
     objective: document.getElementById('wu-objective')?.value || '',
     acceptanceCriteria: document.getElementById('wu-acceptance')?.value || '',
     evidenceFocus: document.getElementById('wu-evidence')?.value || '',
+  };
+  if (routedWorkUnitMode()) {
+    return { ...base, routing: routingSpecFromForm(), providers: [] };
+  }
+  return {
+    ...base,
     providers: currentWorkUnitProviders(),
     externalRepoOk: !!document.getElementById('wu-repo-ok')?.checked,
     providerSpendOk: !!document.getElementById('wu-spend-ok')?.checked,
@@ -478,7 +571,9 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
     return;
   }
   const wu = snapshot.work_unit;
-  const strategy = snapshot.provider_strategy || activeWorkUnitStrategy || [];
+  const routing = snapshot.routing_intelligence || null;
+  const routeBound = routing?.execution_connected === false;
+  const strategy = routeBound ? [] : (snapshot.provider_strategy || activeWorkUnitStrategy || []);
   activeWorkUnitStrategy = strategy;
   const attempts = snapshot.reconciliation?.attempts || [];
   const rec = snapshot.reconciliation || { standing: 'NOT_RUN', summary: 'No attempts yet.', attempts: [] };
@@ -486,21 +581,35 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
   const ossDone = attempts.some(a => attemptMatchesProvider(a, 'gpt-oss-local'));
   const nemDone = attempts.some(a => attemptMatchesProvider(a, 'nemotron-zen'));
   const inkDone = attempts.some(a => attemptMatchesProvider(a, 'inkling-tinker'));
-  const allSelectedDone = strategy.every(p => attempts.some(a => attemptMatchesProvider(a, p)));
+  const allSelectedDone = strategy.length > 0 && strategy.every(p => attempts.some(a => attemptMatchesProvider(a, p)));
   const active = wu.active_execution;
 
-  const attemptHtml = attempts.length ? attempts.map(a => `<div class="attempt-card">
-    <div class="attempt-head"><span>#${escapeHtml(a.attempt_number || '?')} · ${escapeHtml(a.model || a.lane || 'unknown worker')}</span><span>${escapeHtml(a.test_results || 'not_run')}</span></div>
-    <div class="why">exit ${a.exit_code ?? '?'} · next ${escapeHtml(a.recommended_next_action || 'unreported')} · ${escapeHtml(String(a.duration_s ?? '?'))}s</div>
-    ${a.unresolved_questions?.length ? `<div class="why">Unresolved: ${a.unresolved_questions.map(escapeHtml).join(' · ')}</div>` : ''}
-    ${a.output_excerpt ? `<details><summary class="toggle-adv">Review output</summary><pre>${escapeHtml(a.output_excerpt)}</pre></details>` : ''}
-  </div>`).join('') : '<div class="hint">No provider attempt has run yet.</div>';
+  const attemptHtml = routeBound
+    ? '<div class="hint">No provider attempt can run from this R3 route-bound Work Unit.</div>'
+    : (attempts.length ? attempts.map(a => `<div class="attempt-card">
+      <div class="attempt-head"><span>#${escapeHtml(a.attempt_number || '?')} · ${escapeHtml(a.model || a.lane || 'unknown worker')}</span><span>${escapeHtml(a.test_results || 'not_run')}</span></div>
+      <div class="why">exit ${a.exit_code ?? '?'} · next ${escapeHtml(a.recommended_next_action || 'unreported')} · ${escapeHtml(String(a.duration_s ?? '?'))}s</div>
+      ${a.unresolved_questions?.length ? `<div class="why">Unresolved: ${a.unresolved_questions.map(escapeHtml).join(' · ')}</div>` : ''}
+      ${a.output_excerpt ? `<details><summary class="toggle-adv">Review output</summary><pre>${escapeHtml(a.output_excerpt)}</pre></details>` : ''}
+    </div>`).join('') : '<div class="hint">No provider attempt has run yet.</div>');
 
   const disagreements = rec.disagreements?.length
     ? `<div class="errors">${rec.disagreements.map(d => `<div>${escapeHtml(d)}</div>`).join('')}</div>` : '';
-  const needsKelly = rec.needs_kelly
-    ? `<div class="needs-kelly"><b>Needs Kelly</b><div class="why">${escapeHtml(rec.summary)}</div><div class="fix">→ ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`
-    : `<div class="run-plan"><div class="plan-title">Reconciliation · ${escapeHtml(rec.standing)}</div><div class="plan-line">${escapeHtml(rec.summary)}</div><div class="plan-line">Next: ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`;
+  const needsKelly = routeBound
+    ? '<div class="run-plan"><div class="plan-title">R3 route stored</div><div class="plan-line">This Work Unit contains an inspectable Routing Intelligence record only.</div><div class="plan-line">Next: a later gate must explicitly connect execution.</div></div>'
+    : (rec.needs_kelly
+      ? `<div class="needs-kelly"><b>Needs Kelly</b><div class="why">${escapeHtml(rec.summary)}</div><div class="fix">→ ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`
+      : `<div class="run-plan"><div class="plan-title">Reconciliation · ${escapeHtml(rec.standing)}</div><div class="plan-line">${escapeHtml(rec.summary)}</div><div class="plan-line">Next: ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`);
+
+  const route = routing?.route_record || null;
+  const routeHtml = routeBound && route ? `<div class="authority-box">
+    <div class="a-title">Bound Routing Intelligence · ${escapeHtml(route.route_version || 'unknown')}</div>
+    <div class="a-line">Primary: <b>${escapeHtml(route.primary?.provider_id || 'none')}</b></div>
+    <div class="a-line">Challengers: <b>${escapeHtml((route.challengers || []).map(c => c.provider_id).join(' · ') || 'none')}</b></div>
+    <div class="a-line">Review policy: <b>${escapeHtml(route.review_policy?.local || 'none')}</b></div>
+    <div class="a-line">Disposition: <b>${escapeHtml(route.execution_disposition || 'unknown')}</b></div>
+    <div class="a-line">Provider execution: <b>disconnected in R3</b></div>
+  </div>` : '';
 
   host.innerHTML = `<div class="card">
     <h3>JARVIS Run</h3>
@@ -508,13 +617,16 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
     <div class="stage-list">
       <span class="stage-pill done">Authority bound</span>
       <span class="stage-pill done">Work Unit created</span>
-      ${strategy.includes('qwen-local') ? `<span class="stage-pill ${stageClass(qwenDone, runningProvider === 'qwen-local')}">Qwen coding review</span>` : ''}
-      ${strategy.includes('gpt-oss-local') ? `<span class="stage-pill ${stageClass(ossDone, runningProvider === 'gpt-oss-local')}">GPT-OSS reasoning review</span>` : ''}
-      ${strategy.includes('nemotron-zen') ? `<span class="stage-pill ${stageClass(nemDone, runningProvider === 'nemotron-zen')}">Nemotron external review</span>` : ''}
-      ${strategy.includes('inkling-tinker') ? `<span class="stage-pill ${stageClass(inkDone, runningProvider === 'inkling-tinker', providerById('inkling-tinker')?.state === 'NEEDS_SETUP' && !inkDone)}">Inkling external review</span>` : ''}
-      <span class="stage-pill ${stageClass(allSelectedDone, false, !allSelectedDone && attempts.length > 0)}">Reconciliation</span>
-      <span class="stage-pill ${rec.needs_kelly || rec.standing === 'EVIDENCE_PRESENTED' ? 'held' : ''}">Founder gate</span>
+      ${routeBound ? '<span class="stage-pill done">Route bound</span><span class="stage-pill held">Execution disconnected</span>' : `
+        ${strategy.includes('qwen-local') ? `<span class="stage-pill ${stageClass(qwenDone, runningProvider === 'qwen-local')}">Qwen coding review</span>` : ''}
+        ${strategy.includes('gpt-oss-local') ? `<span class="stage-pill ${stageClass(ossDone, runningProvider === 'gpt-oss-local')}">GPT-OSS reasoning review</span>` : ''}
+        ${strategy.includes('nemotron-zen') ? `<span class="stage-pill ${stageClass(nemDone, runningProvider === 'nemotron-zen')}">Nemotron external review</span>` : ''}
+        ${strategy.includes('inkling-tinker') ? `<span class="stage-pill ${stageClass(inkDone, runningProvider === 'inkling-tinker', providerById('inkling-tinker')?.state === 'NEEDS_SETUP' && !inkDone)}">Inkling external review</span>` : ''}
+        <span class="stage-pill ${stageClass(allSelectedDone, false, !allSelectedDone && attempts.length > 0)}">Reconciliation</span>
+        <span class="stage-pill ${rec.needs_kelly || rec.standing === 'EVIDENCE_PRESENTED' ? 'held' : ''}">Founder gate</span>
+      `}
     </div>
+    ${routeHtml}
     <div class="authority-box">
       <div class="a-title">Authority actually held</div>
       <div class="a-line">Allowed: ${escapeHtml((wu.authority?.authorized_acts || []).join(' · '))}</div>
@@ -524,18 +636,20 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
     ${active ? `<div class="why">Active Builder claim: ${escapeHtml(active.session_id)} · ${escapeHtml(active.model || '')}</div>` : ''}
     ${transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : ''}
     <div style="margin-top:10px">
-      <button class="primary" id="wu-run-strategy" ${runningProvider ? 'disabled' : ''}>${runningProvider ? `Running ${escapeHtml(runningProvider)}…` : 'Run remaining strategy'}</button>
+      ${routeBound
+        ? '<span class="stage-pill held">Provider execution disconnected in R3</span>'
+        : `<button class="primary" id="wu-run-strategy" ${runningProvider ? 'disabled' : ''}>${runningProvider ? `Running ${escapeHtml(runningProvider)}…` : 'Run remaining strategy'}</button>`}
       <button class="act" id="wu-refresh">Refresh evidence</button>
       ${active ? '<button class="act" id="wu-release">Release execution claim</button>' : ''}
     </div>
-    <h3 style="margin-top:16px">Provider attempts</h3>
+    <h3 style="margin-top:16px">${routeBound ? 'Execution boundary' : 'Provider attempts'}</h3>
     ${attemptHtml}
     ${disagreements}
     ${needsKelly}
   </div>`;
 
   document.getElementById('wu-refresh')?.addEventListener('click', refreshActiveWorkUnit);
-  document.getElementById('wu-run-strategy')?.addEventListener('click', runRemainingStrategy);
+  if (!routeBound) document.getElementById('wu-run-strategy')?.addEventListener('click', runRemainingStrategy);
   document.getElementById('wu-release')?.addEventListener('click', releaseActiveWorkUnitClaim);
 }
 
@@ -583,6 +697,10 @@ async function runProviderAttempt(providerId) {
 async function runRemainingStrategy() {
   if (!activeWorkUnitId) return;
   let snapshot = await window.jarvis.workUnitAction({ action: 'status', work_unit_id: activeWorkUnitId });
+  if (snapshot?.routing_intelligence?.execution_connected === false) {
+    renderWorkUnitSnapshot(snapshot, { transientError: 'R3 route-bound Work Units cannot execute providers.' });
+    return;
+  }
   const attempts = snapshot?.reconciliation?.attempts || [];
   const strategy = snapshot?.provider_strategy || activeWorkUnitStrategy;
   for (const providerId of strategy) {
@@ -621,7 +739,8 @@ async function createGovernedWorkUnit() {
   const btn = document.getElementById('wu-create');
   btn.disabled = true; btn.textContent = 'Binding Work Unit…';
   const result = await window.jarvis.workUnitAction({ action: 'create', spec });
-  btn.disabled = false; btn.textContent = 'Create governed Work Unit';
+  btn.disabled = false;
+  syncWorkUnitComposer();
   if (!result?.ok) {
     showWorkUnitErrors(result?.errors || [result?.reason || 'Work Unit creation failed.']);
     return;
@@ -674,28 +793,43 @@ function renderWork() {
           <textarea id="wu-evidence" rows="4" placeholder="components/voice/ContinuousConversation.tsx\nlib/voice/safariSilentDeathRecovery.ts"></textarea>
         </div>
       </div>
-      <h3 style="margin-top:14px">Intelligence strategy</h3>
-      <div class="hint" style="margin:0 0 8px">Local open-weight review is the default. External providers are optional escalation lanes and require separate authority.</div>
-      <label class="provider-row">
-        <div><input id="wu-qwen" type="checkbox" checked> <span class="provider-name">Qwen3 Coder 30B · local coding review</span><div class="provider-detail">Open-weight model via Ollama. Repository review stays on this Mac.</div></div>
-        <span id="wu-qwen-status" class="state UNKNOWN">CHECKING</span>
-      </label>
-      <label class="provider-row">
-        <div><input id="wu-gpt-oss" type="checkbox" checked> <span class="provider-name">GPT-OSS 20B · local reasoning review</span><div class="provider-detail">Open-weight reasoning model via Ollama. Independent second local read.</div></div>
-        <span id="wu-gpt-oss-status" class="state UNKNOWN">CHECKING</span>
-      </label>
-      <div class="hint" style="margin:10px 0 5px">Optional external escalation</div>
-      <label class="provider-row">
-        <div><input id="wu-nemotron" type="checkbox"> <span class="provider-name">Nemotron · external review</span><div class="provider-detail">External provider lane. Explicit network and repository-disclosure authority required.</div></div>
-        <span id="wu-nemotron-status" class="state UNKNOWN">CHECKING</span>
-      </label>
-      <label class="provider-row">
-        <div><input id="wu-inkling" type="checkbox"> <span class="provider-name">Inkling · external adversarial review</span><div class="provider-detail">Thinking Machines Tinker. Explicit network, repository disclosure, and spend authority required.</div></div>
-        <span id="wu-inkling-status" class="state UNKNOWN">CHECKING</span>
-      </label>
-      <div id="wu-provider-error" class="hint"></div>
-      <label id="wu-repo-wrap" class="inline-check" style="display:none"><input id="wu-repo-ok" type="checkbox">I authorize the selected external provider(s) to inspect this isolated repository worktree read-only. This is broader than the Evidence focus list.</label>
-      <label id="wu-spend-wrap" class="inline-check" style="display:none"><input id="wu-spend-ok" type="checkbox">I authorize provider spend for the Inkling review. No amount is inferred or approved beyond this provider attempt.</label>
+      <h3 style="margin-top:14px">Routing Intelligence</h3>
+      <div class="hint" style="margin:0 0 8px">R3 previews and stores a deterministic route. It does not execute the selected models.</div>
+      <div class="work-unit-grid">
+        <label class="hint">Task shape<br><select id="wu-task-shape"><option value="mechanical_code">Mechanical code / test / diff</option><option value="deep_reasoning">Deep reasoning / architecture</option></select></label>
+        <label class="hint">Review pressure<br><select id="wu-review-pressure"><option value="ordinary">Ordinary</option><option value="high_value_uncertain">High-value / uncertain</option></select></label>
+      </div>
+      <label class="inline-check"><input id="wu-independent-review" type="checkbox">Require an independent local second review even if the route would otherwise be single-mechanical.</label>
+      <div class="work-unit-grid">
+        <label class="hint">Challenge mode<br><select id="wu-challenge-mode"><option value="none">None</option><option value="adversarial">Adversarial challenge · Inkling proposed</option><option value="frontier">Frontier challenge · Nemotron proposed</option></select></label>
+        <label id="wu-frontier-posture-wrap" class="hint" style="display:none">Frontier posture<br><select id="wu-frontier-posture"><option value="repository_grounded">Repository-grounded · Tinker Nemotron</option><option value="text_only_manual">Text-only / manual · Zen</option></select></label>
+      </div>
+      <button class="act" id="wu-preview-route">Refresh route preview</button>
+      <div id="wu-route-preview"></div>
+      <label class="inline-check"><input id="wu-manual-mode" type="checkbox">Use the existing manual provider strategy instead of Routing Intelligence.</label>
+      <div id="wu-manual-provider-wrap" style="display:none">
+        <h3 style="margin-top:14px">Manual provider strategy</h3>
+        <div class="hint" style="margin:0 0 8px">This is the pre-R3 execution path. It is separate from the route record above.</div>
+        <label class="provider-row">
+          <div><input id="wu-qwen" type="checkbox" checked> <span class="provider-name">Qwen3 Coder 30B · local coding review</span></div>
+          <span id="wu-qwen-status" class="state UNKNOWN">CHECKING</span>
+        </label>
+        <label class="provider-row">
+          <div><input id="wu-gpt-oss" type="checkbox" checked> <span class="provider-name">GPT-OSS 20B · local reasoning review</span></div>
+          <span id="wu-gpt-oss-status" class="state UNKNOWN">CHECKING</span>
+        </label>
+        <label class="provider-row">
+          <div><input id="wu-nemotron" type="checkbox"> <span class="provider-name">Nemotron Zen · manual external review</span></div>
+          <span id="wu-nemotron-status" class="state UNKNOWN">CHECKING</span>
+        </label>
+        <label class="provider-row">
+          <div><input id="wu-inkling" type="checkbox"> <span class="provider-name">Inkling · external adversarial review</span></div>
+          <span id="wu-inkling-status" class="state UNKNOWN">CHECKING</span>
+        </label>
+        <div id="wu-provider-error" class="hint"></div>
+        <label id="wu-repo-wrap" class="inline-check" style="display:none"><input id="wu-repo-ok" type="checkbox">I authorize the selected external provider(s) to receive the exact bounded Evidence focus bundle.</label>
+        <label id="wu-spend-wrap" class="inline-check" style="display:none"><input id="wu-spend-ok" type="checkbox">I authorize provider spend for the Inkling review. No amount is inferred beyond this provider attempt.</label>
+      </div>
       <div id="wu-authority-preview"></div>
       <button class="primary" id="wu-create">Create governed Work Unit</button>
       <div id="wu-errors"></div>
@@ -747,7 +881,13 @@ function renderWork() {
   document.querySelectorAll('input[name="operator-posture"]').forEach(el => el.addEventListener('change', syncOperatorPosture));
   document.getElementById('operator-external-ok').addEventListener('change', syncOperatorPosture);
   document.getElementById('operator-run').addEventListener('click', submitOperatorIntent);
-  for (const id of ['wu-qwen', 'wu-gpt-oss', 'wu-nemotron', 'wu-inkling', 'wu-repo-ok', 'wu-spend-ok']) document.getElementById(id)?.addEventListener('change', syncWorkUnitComposer);
+  for (const id of ['wu-qwen', 'wu-gpt-oss', 'wu-nemotron', 'wu-inkling', 'wu-repo-ok', 'wu-spend-ok']) {
+    document.getElementById(id)?.addEventListener('change', syncWorkUnitComposer);
+  }
+  for (const id of ['wu-task-shape', 'wu-review-pressure', 'wu-independent-review', 'wu-challenge-mode', 'wu-frontier-posture', 'wu-manual-mode', 'wu-evidence', 'wu-objective']) {
+    document.getElementById(id)?.addEventListener('change', syncWorkUnitComposer);
+  }
+  document.getElementById('wu-preview-route')?.addEventListener('click', previewRoutingIntelligence);
   document.getElementById('wu-create').addEventListener('click', createGovernedWorkUnit);
 
   const laneHint = document.getElementById('lane-hint');
@@ -764,7 +904,6 @@ function renderWork() {
   renderC0Fields();
   syncOperatorPosture();
   syncWorkUnitComposer();
-  void loadProviderCatalog();
   if (activeWorkUnitId) void refreshActiveWorkUnit();
 }
 
