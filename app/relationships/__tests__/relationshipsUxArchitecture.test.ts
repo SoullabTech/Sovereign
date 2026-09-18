@@ -11,7 +11,7 @@ const checkinEngine = readFileSync(join(process.cwd(), 'lib/consciousness/relati
 
 describe('RELATIONSHIPS-UX-01 attentional architecture', () => {
   it('opens with relationship rather than analytics', () => {
-    expect(home).toContain('Who is present for you?');
+    expect(home).toMatch(/Who is (present for|here with) you\?/);
     expect(home).toContain('You do not need to know what it means yet.');
     expect(card).not.toContain('FieldToneIndicator');
     expect(card).not.toContain('checked in');
@@ -118,20 +118,19 @@ describe('RELATIONSHIPS-UX-02 presence and motion', () => {
 
 describe('RELATIONSHIPS-UX-02-R1 warm relational field', () => {
   it('makes welcome and readable human presence the first visual layer', () => {
-    expect(home).toContain('data-relational-warm-field');
+    expect(home).toMatch(/data-relational-(warm-field|environment)/);
     expect(home).toContain('Bring someone into view');
-    expect(home).toContain('bg-[#f4eee4]');
-    expect(card).toContain('data-relational-presence');
-    expect(card).toContain('bg-[#fffaf3]/92');
-    expect(card).toContain('text-[#4f4d47]');
+    expect(home).toMatch(/bg-\[#f(4eee4|6f1e8)\]/);
+    expect(home).toContain('data-relationship-presence');
+    expect(home).toContain("text-[#4c4d47]");
   });
 
   it('keeps system holding fields subordinate to actual relationships', () => {
     expect(home).toContain('isSystemHoldingField');
     expect(home).toContain('visibleRelationships');
     expect(home).toContain('systemHoldingFields');
-    expect(home).toContain('Unplaced relational threads');
-    expect(home).toContain('They can wait here quietly until they make sense.');
+    expect(home).toContain('Unplaced threads');
+    expect(home).toContain('They can remain here until something becomes clear.');
   });
 
   it('warms Relationship Space without changing Now Story Field or MAIA authority', () => {
@@ -147,5 +146,36 @@ describe('RELATIONSHIPS-UX-02-R1 warm relational field', () => {
     expect(modal).toContain('data-relational-warm-arrival');
     expect(modal).toContain('bg-[#fffaf3]/98');
     expect(modal).not.toContain('bg-black/72');
+  });
+});
+
+
+describe('RELATIONSHIPS-UX-03 relational environment rebuild', () => {
+  it('replaces the old stacked-record landing composition with a relational environment', () => {
+    expect(home).toContain('data-relational-environment');
+    expect(home).toContain('Who is here with you?');
+    expect(home).toContain('The relationships you have brought close');
+    expect(home).toContain('data-relationship-presence');
+    expect(home).not.toContain("import RelationshipCard");
+    expect(home).not.toContain('<RelationshipCard');
+  });
+
+  it('makes the invitation a first-class part of the environment', () => {
+    expect(home).toContain('data-bring-relationship-forward');
+    expect(home).toContain('Bring someone into view');
+    expect(home).toContain('Begin here →');
+  });
+
+  it('uses readable daylight typography rather than low-contrast dark-field copy', () => {
+    expect(home).toContain("bg-[#f6f1e8]");
+    expect(home).toContain("text-[#304239]");
+    expect(home).toContain("text-[#4c4d47]");
+    expect(home).toContain('font-medium');
+  });
+
+  it('keeps system-generated holding material peripheral to human relationships', () => {
+    expect(home).toContain('Unplaced threads');
+    expect(home).toContain('They can remain here until something becomes clear.');
+    expect(home).not.toContain('People in your life');
   });
 });
