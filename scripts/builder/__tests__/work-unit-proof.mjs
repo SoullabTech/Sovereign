@@ -69,7 +69,11 @@ console.log('\n=== U1: creation / deterministic load ===');
   const wu = loadWorkUnit(WORK_UNIT_ID);
   assert('a canonical Work Unit loads from an on-disk packet', wu !== null);
   assert('identity fields present', wu.work_unit_id === WORK_UNIT_ID && wu.title === 'Fixture Work Unit');
-  assert('WU-only fields default deterministically', wu.risk_class === 'mechanical' && wu.integration_actor === 'jarvis');
+  assert('WU-only fields default deterministically',
+    wu.risk_class === 'mechanical' && wu.integration_actor === 'jarvis'
+      && wu.routing_profile === 'local-first' && wu.review_policy === 'auto'
+      && wu.data_class === 'unspecified' && wu.external_review === false
+      && wu.external_tiebreaker === false);
   const wu2 = loadWorkUnit(WORK_UNIT_ID);
   assert('loading twice yields the same result (deterministic, not stateful)',
     JSON.stringify(wu) === JSON.stringify(wu2));
@@ -79,7 +83,9 @@ console.log('\n=== U2: packet projection ===');
 {
   const wu = loadWorkUnit(WORK_UNIT_ID);
   const projected = projectPacket(wu);
-  assert('projection excludes WU-only fields', !('risk_class' in projected) && !('authorized_acts' in projected));
+  assert('projection excludes WU-only fields',
+    !('risk_class' in projected) && !('authorized_acts' in projected)
+      && !('routing_profile' in projected) && !('data_class' in projected));
   assert('projection retains every original packet-contract field',
     ['work_unit_id', 'title', 'objective', 'execution_lane', 'canonical_sha', 'branch',
      'allowed_files', 'acceptance_criteria', 'verification_commands', 'max_attempts']

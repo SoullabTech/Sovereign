@@ -64,9 +64,21 @@ absent on every packet written before 2026-08-09, and defaulted deterministicall
   "authorized_acts": ["default: repo.read, repo.write:worktree, tests.run"],
   "not_authorized_acts": ["default: production.read, production.write, deploy, authority.change"],
   "integration_actor": "who may commit/merge the verified result — default 'jarvis', never a worker by default",
-  "autonomy_ceiling": "default 'LEVEL_2_IMPLEMENT' — see the Master Directive's autonomy ladder"
+  "autonomy_ceiling": "default 'LEVEL_2_IMPLEMENT' — see the Master Directive's autonomy ladder",
+  "routing_profile": "local-first (default) | external-deep",
+  "review_policy": "auto (default) | none | local | adversarial",
+  "data_class": "unspecified (default) | synthetic | public | repo_nonconfidential | member | client | phi | secret | production",
+  "external_review": "boolean, default false — explicit task-level external review intent",
+  "external_tiebreaker": "boolean, default false — nominate external disagreement analysis; never automatic"
 }
 ```
+
+**Routing intent is capability selection, not authority.** `provider.spend` and `network.external`
+may make an external provider *eligible*, but JARVIS does not schedule one unless the Work Unit also
+carries explicit external routing intent (`external_review: true` or `routing_profile: "external-deep"`).
+`data_class` is a declared evidence-boundary fact; external providers are eligible only for
+`synthetic`, `public`, or `repo_nonconfidential` under JARVIS-ROUTER-01. Model outputs never acquire
+integration, governance, or epistemic authority from the routing choice.
 
 **`authorized_acts` / `not_authorized_acts` are structured authority, never a provider
 flag.** `scripts/builder/work-unit.mjs`'s `derivePermissionEnvelope()` turns these into a
