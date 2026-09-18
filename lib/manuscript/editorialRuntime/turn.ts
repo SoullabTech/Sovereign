@@ -157,7 +157,12 @@ export async function runEditorialTurn(
     system: proof.systemPrompt,
     messages: [{ role: 'user', content: utterance }],
     maxTokens: MAX_TOKENS,
-    tools: [{ name: EDITORIAL_TOOL_NAME, inputSchema: editorialToolSchema }],
+    tools: [{ name: EDITORIAL_TOOL_NAME, inputSchema: editorialToolSchema, schemaEnforcement: 'required',
+      description: 'Return exactly one editorial outcome. For a proposal use this nested shape: '
+        + '{"kind":"reply_with_proposal","reply":"Your explanation","proposal":{"replacementText":"Exact candidate wording","rationale":"Editorial purpose: Short name. Reason"}}. '
+        + 'proposal is an OBJECT, never a string. replacementText and rationale belong INSIDE proposal, never at the top level. '
+        + 'For discussion without wording use {"kind":"reply_only","reply":"Your answer"}. '
+        + 'Omit unused proposal/direction fields entirely; do not send null or both adjuncts.' }],
     toolChoice: { type: 'tool', name: EDITORIAL_TOOL_NAME },
   };
   const structured = await runStructured(request);

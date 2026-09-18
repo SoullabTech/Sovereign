@@ -79,3 +79,18 @@
 
 .ws-insight [data-revision-desk] > label { display:block; margin:16px 0 8px; }
 .ws-insight [data-revision-desk] > label > select { margin:0 8px; max-width:100%; }
+
+.wsi-setup { margin-bottom: 20px; }
+.wsi-conversation-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr); gap: 24px; align-items: start; }
+.wsi-discussion { border-left: 1px solid var(--wsi-rule, #b5ae9b); padding-left: 20px; }
+.wsi-discussion [aria-label="Passage conversation"] { max-height: 52vh; overflow-y: auto; overscroll-behavior: contain; }
+.wsi-discussion article { margin-bottom: 16px; }
+.wsi-conversation-layout .wsi-grid { grid-template-columns: 1fr; }
+.wsi-conversation-layout mark { background: #b1a36755; color: inherit; }
+.wsi-approaches button[aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: 2px; }
+@media (max-width: 850px) {
+  .wsi-conversation-layout { grid-template-columns: 1fr; }
+  .wsi-discussion { border-left: 0; padding-left: 0; border-top: 1px solid var(--wsi-rule, #b5ae9b); padding-top: 20px; }
+}
+
+.wsi-discussion > label { display: block; margin: 16px 0; }

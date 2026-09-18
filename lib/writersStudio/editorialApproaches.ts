@@ -38,3 +38,15 @@ export function selectedProposalText(text: string, start: number, end: number): 
   const part = text.slice(start, end);
   return part.trim() ? part : null;
 }
+
+/** A purpose is editorial intent, not a quality score or author identity. */
+export function alternativeLabel(version: { author: string; rationale: string | null }, index: number): string {
+  const purpose = version.rationale?.match(/^Editorial purpose:\s*([^\n]+)/i)?.[1]?.trim();
+  return (purpose ? purpose.split(/[.\n—]/)[0].trim().slice(0, 80) : version.author === 'member' ? 'Your revision' : 'Alternative') + ' · v' + (index + 1);
+}
+export function passageContext(body: string, expected: string): { before: string; after: string } | null {
+  if (!expected) return null;
+  const at = body.indexOf(expected);
+  if (at < 0 || body.indexOf(expected, at + 1) >= 0) return null;
+  return { before: body.slice(0, at), after: body.slice(at + expected.length) };
+}

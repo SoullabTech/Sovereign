@@ -20,11 +20,14 @@ beforeEach(() => {
     busy: false, message: null, response: null, onKeep: jest.fn() };
 });
 afterEach(() => { act(() => root.unmount()); container.remove(); });
-test('directions add an editable question without generating or applying', () => {
-  render(); click('Explore preserve and deepen');
-  expect(props.onInstruction).toHaveBeenCalledWith(approachNote('deepen'));
-  expect(props.onSend).not.toHaveBeenCalled(); expect(props.onApply).not.toHaveBeenCalled();
-  expect(container.textContent).toContain('Consider:');
+test('directions select one context without accumulating prompt blocks', () => {
+  render(); click('Preserve and deepen'); click('One full telling, later echoes');
+  expect(props.onInstruction).not.toHaveBeenCalled();
+  click('Discuss this');
+  const sent = (props.onSend as jest.Mock).mock.calls[0][0];
+  expect(sent).toContain(approachNote('echo'));
+  expect(sent).not.toContain(approachNote('deepen'));
+  expect(props.onApply).not.toHaveBeenCalled();
 });
 test('keep remains available before proposals and does not save or apply', () => {
   props = { ...props, version: null, thread: null }; render(); click('Keep current wording');
@@ -66,4 +69,36 @@ test('selection rejects empty and invalid ranges; voice reference is explicitly 
   expect(selectedProposalText('abc', 1, 1)).toBeNull();
   expect(voiceNote('', '')).toBe('');
   expect(voiceNote('Keep my cadence', 'My own example')).toContain('reference only, not replacement text');
+});
+
+test('discussion preserves an open draft and sends it only on the explicit gesture', () => {
+  props = { ...props, instruction: 'Make the ending quieter.' }; render(); click('Adjust this wording');
+  expect(button('Discuss this').disabled).toBe(false); click('Discuss this');
+  expect(props.onSend).toHaveBeenCalledWith(expect.stringContaining('My unsaved working revision'));
+  expect(container.querySelector<HTMLTextAreaElement>('textarea.wsi-revision')!.value).toBe(version.wording);
+  expect(props.onApply).not.toHaveBeenCalled();
+});
+test('application requires context review of this exact version and invalidates on context change', () => {
+  props = { ...props, sectionBody: 'Before. My original story. After.' }; render();
+  expect(button('Apply this proposal').disabled).toBe(true); click('Read in context');
+  expect(container.querySelector('mark')?.textContent).toBe(version.wording);
+  expect(button('Apply this proposal').disabled).toBe(false);
+  props = { ...props, sectionBody: 'Changed. My original story. After.' }; render();
+  expect(button('Apply this proposal').disabled).toBe(true);
+});
+test('an applied receipt is separate from a new working draft', () => {
+  props = { ...props, message: 'Selected revision applied.', appliedVersionId: 'v1' }; render(); click('Adjust this wording');
+  expect(container.textContent).toContain('Working revision · not applied');
+  expect(container.textContent).toContain('Applied revision:');
+  expect(container.textContent).not.toContain('Selected revision applied.');
+});
+test('a returned alternative does not discard or silently reparent the working draft', () => {
+  render(); click('Adjust this wording');
+  const v2 = { ...version, id: 'v2', supersedes: 'v1', rationale: 'Editorial purpose: Quieter ending' };
+  props = { ...props, version: v2, thread: { ...thread, versions: [version, v2], headVersionId: 'v2' } }; render();
+  expect(container.querySelector<HTMLTextAreaElement>('textarea.wsi-revision')!.value).toBe(version.wording);
+  expect(button('Save your revision as a version').disabled).toBe(true);
+  click('Continue my draft after the latest alternative');
+  expect(button('Save your revision as a version').disabled).toBe(false);
+  expect(container.textContent).toContain('Quieter ending · v2');
 });
