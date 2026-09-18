@@ -374,7 +374,25 @@ changed in either freshness interval.
 The exact E1 candidate patch replayed onto `78ba888a…` with zero conflicts and
 the same 13 E1 paths.
 
-Freshness standing: **PASS — non-overlapping canonical reconciliation.**
+A second PR-level freshness check before the authorized merge found that canonical
+had advanced again to:
+
+`6ef0cbd0ee9be2601523a3d8de69dcbdfc5a8566`
+
+through Writer's Studio Author Agency / passage-conversation integration
+(PR #1402). The `78ba888a… → 6ef0cbd0…` interval changes only Writer's Studio,
+editorial-runtime, structured-inference, migration, programme, and witness paths.
+Its changed-path population has **zero intersection with the 13 E1 candidate
+paths**.
+
+PR #1404 was therefore not merged under the stale exact-canonical authorization.
+Instead, the accepted E1 head `8a9b7e26f69526b5eca2365f45157419a78f1b23`
+was merge-forward reconciled with exact canonical
+`6ef0cbd0ee9be2601523a3d8de69dcbdfc5a8566` with zero conflicts. The 12 E1
+implementation/test paths remain byte-identical to the accepted PR head; only
+this witness records the additional freshness reconciliation.
+
+Freshness standing: **PASS — second non-overlapping canonical reconciliation.**
 
 ## 16. Non-events
 

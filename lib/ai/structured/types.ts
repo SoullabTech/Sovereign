@@ -28,6 +28,8 @@ export interface StructuredTool {
   description?: string;
   /** JSON Schema, passed through verbatim. The seam does not rewrite contracts. */
   inputSchema: Record<string, unknown>;
+  /** Require provider-side schema conformance; an unsupported request must refuse, never downgrade. */
+  schemaEnforcement?: 'required';
 }
 
 export type StructuredToolChoice =
