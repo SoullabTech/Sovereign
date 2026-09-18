@@ -70,8 +70,8 @@ describe('H8 production shadow projection runner', () => {
       modelName: H8_CURRENT_ACT_MODEL_NAME,
       deterministicSeed: 0,
       status: 'rendered',
-      shadowResponseText: undefined,
     });
+    expect(row).not.toHaveProperty('shadowResponseText');
     expect(row.rawPlan.anchorEvidenceId).toBe('E1');
     expect(row.basisEvidenceIds[0]).toBe('E1');
   });
