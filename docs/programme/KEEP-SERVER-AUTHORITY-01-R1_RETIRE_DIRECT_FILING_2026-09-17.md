@@ -1,10 +1,10 @@
 # KEEP-SERVER-AUTHORITY-01-R1 — Retire Duplicate Direct-Filing Authority
 
-**Date:** 2026-09-17  
-**Class:** Class A — consent / Sanctuary / persistence authority boundary  
-**Governing authority:** canonical KEEP-SPEECH-ACT-01 closure; J11 Grant–Effect Boundary; Sanctuary non-retention doctrine  
-**Current gate:** bounded source repair + exact-head review  
-**Evidence subject:** live `/api/sovereign/app/maia/list` conversational-Keep sidecar and its persistence effect  
+**Date:** 2026-09-17
+**Class:** Class A — consent / Sanctuary / persistence authority boundary
+**Governing authority:** canonical KEEP-SPEECH-ACT-01 closure; J11 Grant–Effect Boundary; Sanctuary non-retention doctrine
+**Current gate:** bounded source repair + exact-head review
+**Evidence subject:** live `/api/sovereign/app/maia/list` conversational-Keep sidecar and its persistence effect
 **Stop boundary:** no client Keep redesign; no `keepSource` redesign; no schema/migration; no retired Oracle reactivation; no deployment; no production-state claim
 
 ---
