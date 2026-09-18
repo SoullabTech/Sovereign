@@ -345,14 +345,23 @@ Before a router is written:
    - Zen cannot be selected for governed delegation
    - no provider can expand evidence or authority
 
-## 7. Standing
+## 7. Founder adjudication — R1-NEMOTRON-01
 
-JARVIS-ROUTING-INTELLIGENCE-01 is **OPEN AT DISCOVERY**.
+**Issued:** 2026-09-18
 
-No routing implementation has been authorized or performed.
+For governed repository-grounded Nemotron review:
 
-The next gate is:
+- `nemotron-tinker` is the designated JARVIS Nemotron Work Unit lane.
+- `nemotron-zen` is preserved for text-only/manual frontier reasoning.
+- `nemotron-zen` is not an automated Work Unit delegation target while canonical provider law reports `delegation_supported: false`.
+- `nemotron-nvidia` remains registered but is not admitted to automatic routing V1 pending a separate disclosure/cost adjudication.
 
-**JARVIS-ROUTING-INTELLIGENCE-01 / R1 — Routing-Law Adjudication**
+This ruling resolves discovery finding F1. It does not itself authorize an external call, repository disclosure, provider spend, implementation, merge, deploy, or production access.
 
-Adjudicate R1–R12 and findings F1–F4 before writing a router.
+## 8. Standing
+
+JARVIS-ROUTING-INTELLIGENCE-01 is **OPEN AT R1 CONTRACT DESIGN**.
+
+No routing execution implementation has been authorized or performed.
+
+The next bounded artifact is the deterministic route contract plus its falsification matrix. The contract must remain inspectable before execution and must not read credentials, call providers, mutate a Work Unit, or enlarge authority.
