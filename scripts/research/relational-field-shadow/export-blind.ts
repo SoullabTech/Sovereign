@@ -47,6 +47,7 @@ async function main() {
        FROM maia_relational_field_shadow_runs s
        JOIN maia_turns t ON t.id = s.turn_id
       WHERE s.status = 'rendered'
+        AND s.shadow_response_text IS NOT NULL
       ORDER BY s.created_at DESC
       LIMIT $1`,
     [limit],
