@@ -62,10 +62,11 @@ async function persistH8Projection(
   input: RelationalFieldShadowLaunch,
   packet: ReturnType<typeof assembleRelationalFieldPacket>,
   primaryDigest: string,
+  evidenceScope: 'current_session' | 'consented_cross_session',
 ): Promise<void> {
   const started = Date.now();
   try {
-    const projection = buildCurrentActProjection(packet);
+    const projection = buildCurrentActProjection(packet, evidenceScope);
     const row: ShadowEvidenceRow = {
       turnId: input.turnId,
       exchangeId: input.exchangeId,
@@ -141,7 +142,8 @@ export async function runRelationalFieldShadow(
   // evidence is optional, separately gated, member-authored only and fail-closed
   // at the SQL boundary. It never changes the older generative shadow packet.
   if (h8Enabled) {
-    const crossSessionMemberTurns = configuredH8CrossSessionShadow()
+    const crossSessionEnabled = configuredH8CrossSessionShadow();
+    const crossSessionMemberTurns = crossSessionEnabled
       ? await loadH8CrossSessionMemberTurns(input.memberId, input.sessionId)
       : [];
     const h8Packet = assembleH8RelationalFieldPacket({
@@ -150,7 +152,12 @@ export async function runRelationalFieldShadow(
       currentSessionMemberTurns: priorMemberTurns,
       crossSessionMemberTurns,
     });
-    await persistH8Projection(input, h8Packet, primaryDigest);
+    await persistH8Projection(
+      input,
+      h8Packet,
+      primaryDigest,
+      crossSessionEnabled ? 'consented_cross_session' : 'current_session',
+    );
   }
 
   if (models.length === 0) return;
