@@ -16,6 +16,7 @@ describe('H8 production shadow static containment', () => {
     expect(route).not.toContain('MAIA_RELATIONAL_FIELD_H8');
     expect(route.match(/launchRelationalFieldShadow\(/g)).toHaveLength(1);
     expect(runner).toContain("process.env.MAIA_RELATIONAL_FIELD_H8 === '1'");
+    expect(runner).toContain("process.env.MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION === '1'");
     expect(runner).not.toMatch(/responseData|sovereignText\s*=/);
   });
 
@@ -24,6 +25,16 @@ describe('H8 production shadow static containment', () => {
     expect(projector).toContain('projectionDigest');
     expect(projector).toContain('no_direct_anchor');
     expect(projector).toContain('no_prior_evidence');
+  });
+
+  test('cross-session shadow is fail-closed and cannot widen the frozen generative packet', () => {
+    const assembler = read('lib/maia/relational-field-shadow/fieldAssembler.ts');
+    expect(assembler).toContain('m.conversational_recall_enabled IS TRUE');
+    expect(assembler).toContain("t.role = 'user'");
+    expect(assembler).toContain("sourceKind: 'cross_session_turn'");
+    expect(assembler).toContain('cross-session read failed closed');
+    expect(runner).toContain('const packet = assembleRelationalFieldPacket');
+    expect(runner).toContain('const h8Packet = assembleH8RelationalFieldPacket');
   });
 
   test('H8 persists through the existing dedicated research evidence store only', () => {
