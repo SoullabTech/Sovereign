@@ -114,3 +114,38 @@ describe('RELATIONSHIPS-UX-02 presence and motion', () => {
     expect(checkIn).not.toContain('>Next movement<');
   });
 });
+
+
+describe('RELATIONSHIPS-UX-02-R1 warm relational field', () => {
+  it('makes welcome and readable human presence the first visual layer', () => {
+    expect(home).toContain('data-relational-warm-field');
+    expect(home).toContain('Bring someone into view');
+    expect(home).toContain('bg-[#f4eee4]');
+    expect(card).toContain('data-relational-presence');
+    expect(card).toContain('bg-[#fffaf3]/92');
+    expect(card).toContain('text-[#4f4d47]');
+  });
+
+  it('keeps system holding fields subordinate to actual relationships', () => {
+    expect(home).toContain('isSystemHoldingField');
+    expect(home).toContain('visibleRelationships');
+    expect(home).toContain('systemHoldingFields');
+    expect(home).toContain('Unplaced relational threads');
+    expect(home).toContain('They can wait here quietly until they make sense.');
+  });
+
+  it('warms Relationship Space without changing Now Story Field or MAIA authority', () => {
+    expect(detail).toContain('data-relational-warm-field');
+    expect(detail).toContain('bg-[#f4eee4]');
+    expect(detail).toContain('bg-[#fffaf3]/95');
+    expect(detail).toContain('Stay with {relationship.name}. Speak naturally');
+    expect(detail).toContain('MAIA will stay with this relationship as you explore.');
+    expect(detail).toContain('presentationMode="contained"');
+  });
+
+  it('keeps progressive arrival warm rather than dropping back into a dark modal', () => {
+    expect(modal).toContain('data-relational-warm-arrival');
+    expect(modal).toContain('bg-[#fffaf3]/98');
+    expect(modal).not.toContain('bg-black/72');
+  });
+});
