@@ -545,6 +545,382 @@ async function bindCanonicalTransportV2(root, workUnitId, participantId, opts = 
   });
 }
 
+function readCanonicalExecutionEnvelopeV2(workUnitId, env = process.env) {
+  const envelope = readEnvelope(workUnitId, env);
+  return envelope ? clone(envelope) : null;
+}
+
+async function prepareCanonicalTransportForExecutionV2(root, workUnitId, participantId, opts = {}) {
+  const envelope = readEnvelope(workUnitId, opts.env);
+  if (!envelope) {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND',
+      blockers: [],
+    });
+  }
+  if (envelope.work_unit?.state?.lifecycle_state !== 'ROUTED') {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: 'ROUTED_STATE_REQUIRED_FOR_TRANSPORT_READINESS',
+      blockers: [],
+    });
+  }
+
+  const transportMod = await importBound(root, 'scripts/builder/work-unit-transport-v1.mjs');
+  const governed = transportMod.governedTransportForParticipantV1(
+    envelope.work_unit,
+    participantId,
+  );
+  if (!governed || governed.execution_mode !== 'automatic') {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: governed ? 'MANUAL_TRANSPORT_NOT_EXECUTABLE' : 'NO_GOVERNED_TRANSPORT',
+      blockers: [],
+    });
+  }
+
+  const active = transportMod.activeTransportBindingsV1(envelope.work_unit)
+    .filter((binding) => binding.route_participant_id === participantId);
+  if (active.length !== 1) {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: 'EXACT_ACTIVE_TRANSPORT_BINDING_REQUIRED',
+      blockers: [],
+    });
+  }
+  const current = active[0];
+  if (current.readiness?.status === 'READY') {
+    return deepFreeze({
+      ...(await statusCanonicalV2(root, workUnitId, opts)),
+      transport_binding: clone(current),
+      readiness_transition: 'ALREADY_READY',
+    });
+  }
+  if (current.readiness?.status !== 'HOLD') {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: 'HOLD_TRANSPORT_REQUIRED_FOR_E1_READINESS',
+      blockers: [],
+    });
+  }
+
+  const identityExact = current.model_family === governed.model_family
+    && current.role === governed.role
+    && current.provider_id === governed.provider_id
+    && current.model_id === governed.model_id
+    && current.adapter_id === governed.adapter_id
+    && current.execution_mode === governed.execution_mode
+    && current.response_budget_profile_id === governed.response_budget_profile_id
+    && current.evidence_class === governed.evidence_class;
+  if (!identityExact) {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: 'TRANSPORT_IDENTITY_DRIFT',
+      blockers: [],
+    });
+  }
+
+  const bindingId = 'e1-ready-' + slug(participantId) + '-'
+    + digestObject({
+      supersedes: current.transport_binding_id,
+      governed,
+      route_digest: envelope.work_unit.routing.route_digest,
+    }).slice(-12);
+
+  const appended = transportMod.appendTransportBindingV1(envelope, {
+    transport_binding_id: bindingId,
+    supersedes_binding_id: current.transport_binding_id,
+    route_participant_id: participantId,
+    provider_id: governed.provider_id,
+    model_id: governed.model_id,
+    adapter_id: governed.adapter_id,
+    readiness: {
+      status: 'READY',
+      evidence_ref: 'desktop:e1:registered-governed-adapter:' + participantId,
+    },
+  });
+  if (!appended.ok) {
+    return deepFreeze({
+      ok: false,
+      status: 'TRANSPORT_READINESS_REFUSED',
+      reason: 'W3T_V1_READY_BINDING_REFUSED',
+      blockers: appended.blockers,
+    });
+  }
+
+  writeEnvelope(workUnitId, appended.envelope, opts.env);
+  return deepFreeze({
+    ...(await statusCanonicalV2(root, workUnitId, opts)),
+    transport_binding: appended.binding,
+    readiness_transition: 'HOLD_TO_READY_BY_SUPERSESSION',
+  });
+}
+
+function activeBindingById(workUnit, bindingId) {
+  const bindings = Array.isArray(workUnit?.routing?.transport_bindings)
+    ? workUnit.routing.transport_bindings
+    : [];
+  const superseded = new Set(
+    bindings.map((binding) => binding?.supersedes_binding_id).filter(Boolean),
+  );
+  return bindings.find((binding) =>
+    binding?.transport_binding_id === bindingId
+    && !superseded.has(binding.transport_binding_id)) || null;
+}
+
+function routeParticipantById(workUnit, participantId) {
+  const route = workUnit?.routing?.route_record;
+  if (route?.primary?.participant_id === participantId) return route.primary;
+  return (Array.isArray(route?.challengers) ? route.challengers : [])
+    .find((participant) => participant?.participant_id === participantId) || null;
+}
+
+async function appendCanonicalExecutionResultV2(root, workUnitId, req = {}, opts = {}) {
+  let envelope = readEnvelope(workUnitId, opts.env);
+  if (!envelope) {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND', blockers: [] });
+  }
+  if (envelope.work_unit?.state?.lifecycle_state !== 'EXECUTING') {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'EXECUTING_STATE_REQUIRED', blockers: [] });
+  }
+
+  const participantId = text(req.route_participant_id);
+  const bindingId = text(req.transport_binding_id);
+  const participant = routeParticipantById(envelope.work_unit, participantId);
+  const binding = activeBindingById(envelope.work_unit, bindingId);
+  if (!participant || !binding
+      || binding.route_participant_id !== participantId
+      || binding.model_family !== participant.model_family
+      || binding.role !== participant.role
+      || binding.readiness?.status !== 'READY') {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: 'EXACT_ACTIVE_READY_TRANSPORT_REQUIRED',
+      blockers: [],
+    });
+  }
+
+  const ledgerMod = await importBound(root, 'scripts/builder/work-unit-ledger-v2.mjs');
+  const modelIdentityId = 'e1-mi-' + slug(participantId) + '-' + digestObject(binding).slice(-12);
+  const existingIdentity = (envelope.work_unit.provenance?.model_identity || [])
+    .find((identity) => identity.model_identity_id === modelIdentityId);
+
+  const identity = {
+    model_identity_id: modelIdentityId,
+    route_participant_id: participantId,
+    transport_binding_id: bindingId,
+    model_family: binding.model_family,
+    provider_id: binding.provider_id,
+    model_id: binding.model_id,
+    adapter_id: binding.adapter_id,
+    role: binding.role,
+  };
+
+  if (!existingIdentity) {
+    const appendedIdentity = ledgerMod.appendLedgerRecordV2(envelope, {
+      kind: 'model_identity',
+      entry: identity,
+    });
+    if (!appendedIdentity.ok) {
+      return deepFreeze({
+        ok: false,
+        status: 'W4_MODEL_IDENTITY_REFUSED',
+        reason: appendedIdentity.blockers?.[0]?.code || 'W4_MODEL_IDENTITY_REFUSED',
+        blockers: appendedIdentity.blockers,
+      });
+    }
+    envelope = appendedIdentity.envelope;
+  }
+
+  const attempts = envelope.work_unit.execution?.attempts || [];
+  const sameParticipant = attempts.filter((attempt) =>
+    attempt?.route_participant_id === participantId);
+  const primaryId = envelope.work_unit.routing?.route_record?.primary?.participant_id;
+  let attemptKind = 'primary';
+  let parentAttemptId = null;
+  if (sameParticipant.length) {
+    attemptKind = 'retry';
+    parentAttemptId = sameParticipant[sameParticipant.length - 1].attempt_id;
+  } else if (participantId !== primaryId) {
+    attemptKind = 'independent_model_review';
+    const parent = [...attempts].reverse().find((attempt) =>
+      ['primary', 'retry'].includes(attempt?.attempt_kind));
+    if (!parent) {
+      return deepFreeze({
+        ok: false,
+        status: 'REFUSED',
+        reason: 'PRIMARY_OR_RETRY_ATTEMPT_REQUIRED_BEFORE_INDEPENDENT_REVIEW',
+        blockers: [],
+      });
+    }
+    parentAttemptId = parent.attempt_id;
+  }
+
+  const attemptId = 'e1-attempt-' + String(attempts.length + 1).padStart(2, '0')
+    + '-' + slug(participantId);
+  const appendedAttempt = ledgerMod.appendDurableAttemptV2(envelope, {
+    attempt: {
+      attempt_id: attemptId,
+      ...identity,
+      actor_id: null,
+      attempt_kind: attemptKind,
+      parent_attempt_id: parentAttemptId,
+      evidence_refs: [text(req.result_ref) || ('canonical-result:' + workUnitId + ':' + attemptId)],
+    },
+    provider_admission: req.provider_admission || { ok: true },
+    wrapper_exit_code: Number.isInteger(req.wrapper_exit_code) ? req.wrapper_exit_code : null,
+    durable_result: req.durable_result || {},
+  });
+  if (!appendedAttempt.ok) {
+    return deepFreeze({
+      ok: false,
+      status: 'W4_DURABLE_ATTEMPT_REFUSED',
+      reason: appendedAttempt.blockers?.[0]?.code || 'W4_DURABLE_ATTEMPT_REFUSED',
+      blockers: appendedAttempt.blockers,
+      mapping: appendedAttempt.mapping,
+    });
+  }
+  envelope = appendedAttempt.envelope;
+
+  const resultRef = text(req.result_ref) || ('canonical-result:' + workUnitId + ':' + attemptId);
+  const resultDigest = text(req.result_digest) || digestObject(req.durable_result || {});
+  const artifact = ledgerMod.appendLedgerRecordV2(envelope, {
+    kind: 'artifact',
+    entry: {
+      artifact_id: 'e1-result-' + attemptId,
+      attempt_id: attemptId,
+      kind: 'provider_result_contract',
+      ref: resultRef,
+      digest: resultDigest,
+    },
+  });
+  if (!artifact.ok) {
+    return deepFreeze({
+      ok: false,
+      status: 'W4_RESULT_ARTIFACT_REFUSED',
+      reason: artifact.blockers?.[0]?.code || 'W4_RESULT_ARTIFACT_REFUSED',
+      blockers: artifact.blockers,
+    });
+  }
+  envelope = artifact.envelope;
+
+  const testResult = ['pass', 'fail', 'not_run'].includes(req.durable_result?.test_results)
+    ? req.durable_result.test_results
+    : 'not_run';
+  const test = ledgerMod.appendLedgerRecordV2(envelope, {
+    kind: 'test_result',
+    entry: {
+      test_result_id: 'e1-test-' + attemptId,
+      attempt_id: attemptId,
+      suite: 'canonical-provider-execution',
+      result: testResult,
+      evidence_ref: resultRef,
+    },
+  });
+  if (!test.ok) {
+    return deepFreeze({
+      ok: false,
+      status: 'W4_TEST_RESULT_REFUSED',
+      reason: test.blockers?.[0]?.code || 'W4_TEST_RESULT_REFUSED',
+      blockers: test.blockers,
+    });
+  }
+  envelope = test.envelope;
+
+  writeEnvelope(workUnitId, envelope, opts.env);
+  return deepFreeze({
+    ...(await statusCanonicalV2(root, workUnitId, opts)),
+    canonical_attempt: clone(appendedAttempt.record?.entry || null),
+    durable_mapping: clone(appendedAttempt.mapping),
+    result_artifact: clone(artifact.record?.entry || null),
+  });
+}
+
+async function appendCanonicalVerifierResultV2(root, workUnitId, req = {}, opts = {}) {
+  const envelope = readEnvelope(workUnitId, opts.env);
+  if (!envelope) {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND', blockers: [] });
+  }
+  if (envelope.work_unit?.state?.lifecycle_state !== 'EXECUTING') {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'EXECUTING_STATE_REQUIRED', blockers: [] });
+  }
+  const ledgerMod = await importBound(root, 'scripts/builder/work-unit-ledger-v2.mjs');
+  const targetAttemptId = text(req.target_attempt_id);
+  const verifierAttemptId = text(req.verifier_attempt_id);
+  const disposition = text(req.disposition);
+  const evidenceRefs = textList(req.evidence_refs);
+  const appended = ledgerMod.appendLedgerRecordV2(envelope, {
+    kind: 'verifier_result',
+    entry: {
+      verifier_result_id: 'e1-vr-' + slug(targetAttemptId) + '-' + slug(verifierAttemptId),
+      target_attempt_id: targetAttemptId,
+      verifier_attempt_id: verifierAttemptId,
+      disposition,
+      evidence_refs: evidenceRefs.length ? evidenceRefs : ['canonical-verifier:' + verifierAttemptId],
+    },
+  });
+  if (!appended.ok) {
+    return deepFreeze({
+      ok: false,
+      status: 'W4_VERIFIER_RESULT_REFUSED',
+      reason: appended.blockers?.[0]?.code || 'W4_VERIFIER_RESULT_REFUSED',
+      blockers: appended.blockers,
+    });
+  }
+  writeEnvelope(workUnitId, appended.envelope, opts.env);
+  return statusCanonicalV2(root, workUnitId, opts);
+}
+
+async function markCanonicalEvidenceReadyV2(root, workUnitId, opts = {}) {
+  const envelope = readEnvelope(workUnitId, opts.env);
+  if (!envelope) {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND', blockers: [] });
+  }
+  if (envelope.work_unit?.state?.lifecycle_state !== 'EXECUTING') {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'EXECUTING_STATE_REQUIRED', blockers: [] });
+  }
+
+  const wu = envelope.work_unit;
+  const participants = [];
+  if (wu.routing?.route_record?.primary) participants.push(wu.routing.route_record.primary);
+  for (const challenger of wu.routing?.route_record?.challengers || []) participants.push(challenger);
+  const required = participants.filter((participant) => participant.required_for_completion === true);
+  const attempts = wu.execution?.attempts || [];
+  const incomplete = required.filter((participant) =>
+    !attempts.some((attempt) =>
+      attempt.route_participant_id === participant.participant_id
+      && attempt.status === 'completed'));
+  if (incomplete.length) {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: 'REQUIRED_EXECUTION_EVIDENCE_INCOMPLETE',
+      blockers: incomplete.map((participant) => blocker(
+        'REQUIRED_PARTICIPANT_ATTEMPT_MISSING',
+        'Required participant lacks a completed durable attempt.',
+        participant.participant_id,
+      )),
+    });
+  }
+  if (!(wu.evaluation?.verifier_results || []).length) {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: 'VERIFIER_EVIDENCE_REQUIRED',
+      blockers: [blocker('VERIFIER_EVIDENCE_REQUIRED', 'Explicit verifier evidence is required before EVIDENCE_READY.')],
+    });
+  }
+  return transitionCanonicalV2(root, workUnitId, 'EVIDENCE_READY', opts);
+}
+
 function adjudicationRecord(workUnitId, actorId, decision, basisRefs) {
   return {
     adjudication_id: 'desktop-i4-adjudication-' + workUnitId,
@@ -881,6 +1257,11 @@ module.exports = {
   transitionCanonicalV2,
   bindCanonicalRouteV2,
   bindCanonicalTransportV2,
+  readCanonicalExecutionEnvelopeV2,
+  prepareCanonicalTransportForExecutionV2,
+  appendCanonicalExecutionResultV2,
+  appendCanonicalVerifierResultV2,
+  markCanonicalEvidenceReadyV2,
   adjudicateCanonicalV2,
   closeCanonicalV2,
   statusCanonicalV2,
