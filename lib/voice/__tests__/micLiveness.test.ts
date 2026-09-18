@@ -17,11 +17,13 @@
 
 import {
   assessCaptureLiveness,
+  shouldActOnCaptureLiveness,
   describeCaptureLoss,
   isCaptureLossUnexpected,
   CAPTURE_REASON_CODES,
   CAPTURE_SILENT_DEATH_MS,
   CAPTURE_ARMING_SILENT_MS,
+  EXPLICIT_FLOOR_RECOGNITION_PROBE_MS,
   type CaptureLossCause,
 } from '../micLiveness';
 
@@ -113,6 +115,63 @@ describe('assessCaptureLiveness', () => {
     const v = assessCaptureLiveness({ ...base, now: T0 - 5_000 });
     expect(v.dead).toBe(false);
     expect(v.silentForMs).toBe(0);
+  });
+});
+
+describe('explicit-floor liveness authority', () => {
+  const silentDeath = {
+    dead: true as const,
+    cause: 'silent_death' as const,
+    silentForMs: CAPTURE_SILENT_DEATH_MS,
+  };
+
+  it('does not convert intentional explicit-floor silence into capture death', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: silentDeath,
+      explicitFloorOwned: true,
+      analyserVoiceAfterRecognition: false,
+      analyserVoiceAgeMs: -1,
+    })).toBe(false);
+  });
+
+  it('preserves historical silent-death authority in automatic mode', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: silentDeath,
+      explicitFloorOwned: false,
+      analyserVoiceAfterRecognition: false,
+      analyserVoiceAgeMs: -1,
+    })).toBe(true);
+  });
+
+  it('preserves non-silence failures while the member owns the floor', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: {
+        dead: true,
+        cause: 'never_armed',
+        silentForMs: CAPTURE_ARMING_SILENT_MS,
+      },
+      explicitFloorOwned: true,
+      analyserVoiceAfterRecognition: false,
+      analyserVoiceAgeMs: -1,
+    })).toBe(true);
+  });
+
+  it('gives resumed speech a grace window before declaring recognition dead', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: silentDeath,
+      explicitFloorOwned: true,
+      analyserVoiceAfterRecognition: true,
+      analyserVoiceAgeMs: EXPLICIT_FLOOR_RECOGNITION_PROBE_MS - 1,
+    })).toBe(false);
+  });
+
+  it('still detects a recognition zombie after resumed local voice gets no recognition event', () => {
+    expect(shouldActOnCaptureLiveness({
+      verdict: silentDeath,
+      explicitFloorOwned: true,
+      analyserVoiceAfterRecognition: true,
+      analyserVoiceAgeMs: EXPLICIT_FLOOR_RECOGNITION_PROBE_MS,
+    })).toBe(true);
   });
 });
 
