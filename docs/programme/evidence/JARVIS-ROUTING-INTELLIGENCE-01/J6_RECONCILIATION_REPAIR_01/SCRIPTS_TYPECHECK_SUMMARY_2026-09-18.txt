@@ -1,0 +1,9 @@
+J6 reconciliation repair — scripts TypeScript diagnostic comparison
+Date: 2026-09-18
+
+Prior known repository-red diagnostic identities: 40
+Repair candidate diagnostic identities: 40
+Identity diff: none
+Diagnostics on repair paths: 0
+
+This is no-regression evidence, not a claim that tsconfig.scripts.json is globally green.

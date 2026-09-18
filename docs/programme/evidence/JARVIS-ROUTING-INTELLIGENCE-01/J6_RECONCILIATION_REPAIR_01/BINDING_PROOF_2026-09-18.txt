@@ -1,0 +1,16 @@
+=== packet boundary ===
+PASS  R3-1 — route-bound packet builds without provider execution strategy
+PASS  R3-2 — route requirements do not widen packet authority
+PASS  R3-3 — canonical Work Unit seam persists the packet only
+PASS  R3-4 — exact route record survives persistence round trip
+PASS  R3-5 — canonical Work Unit status remains review-only with no active execution
+
+=== Desktop execution-disconnect structure ===
+PASS  R3-6 — MAIN computes route record; renderer cannot submit one
+PASS  R3-7 — run-provider refuses route-bound Work Units before provider controller
+PASS  R3-8 — routed UI has no Run Strategy control after binding
+PASS  R3-9 — lower controller refuses route-bound provider execution before provider resolution
+PASS  R3-10 — MAIN derives deterministic-first truth from the canonical registry before pure routing
+PASS  R3-11 — MAIN resolves transport readiness only after cognitive route selection
+
+11 passed · 0 failed

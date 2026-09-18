@@ -1,0 +1,316 @@
+{
+  "deterministic_first": {
+    "route_version": "J5.v1",
+    "governing_law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "deterministic": {
+      "selected": true,
+      "capability": "git.rev_parse"
+    },
+    "evidence_class": "E1_REPOSITORY_LOCAL",
+    "task_shape": "CODE_GROUNDED",
+    "review_pressure": "ordinary",
+    "challenge_mode": "none",
+    "frontier_posture": "none",
+    "primary": null,
+    "challengers": [],
+    "review_policy": {
+      "local": "deterministic",
+      "external": "none"
+    },
+    "evidence_policy": {
+      "primary": null,
+      "challengers": []
+    },
+    "required_authority": {
+      "acts": [],
+      "disclosures": []
+    },
+    "granted_authority": [],
+    "transport_resolution": null,
+    "response_budget_profiles": [],
+    "execution_disposition": "deterministic",
+    "execution_authorized": false,
+    "blockers": [],
+    "routing_reason_codes": [
+      "DETERMINISTIC_CAPABILITY_FIRST"
+    ]
+  },
+  "code_local_topology": {
+    "route_version": "J5.v1",
+    "governing_law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "deterministic": {
+      "selected": false,
+      "capability": null
+    },
+    "evidence_class": "E1_REPOSITORY_LOCAL",
+    "task_shape": "CODE_GROUNDED",
+    "review_pressure": "ordinary",
+    "challenge_mode": "none",
+    "frontier_posture": "none",
+    "primary": {
+      "model_family": "QWEN",
+      "role": "code_primary",
+      "execution_disposition": "planned_local"
+    },
+    "challengers": [
+      {
+        "model_family": "GPT_OSS",
+        "role": "independent_local_challenger",
+        "review_dimension": "distinct_model_family",
+        "execution_disposition": "planned_local"
+      }
+    ],
+    "review_policy": {
+      "local": "independent_local_second",
+      "external": "none"
+    },
+    "evidence_policy": {
+      "primary": {
+        "model_family": "QWEN",
+        "evidence_class": "E1_REPOSITORY_LOCAL",
+        "kind": "local_worktree_read_only"
+      },
+      "challengers": [
+        {
+          "model_family": "GPT_OSS",
+          "evidence_class": "E1_REPOSITORY_LOCAL",
+          "kind": "local_worktree_read_only"
+        }
+      ]
+    },
+    "required_authority": {
+      "acts": [],
+      "disclosures": []
+    },
+    "granted_authority": [],
+    "transport_resolution": null,
+    "response_budget_profiles": [],
+    "execution_disposition": "planned_local",
+    "execution_authorized": false,
+    "blockers": [],
+    "routing_reason_codes": [
+      "QWEN_CODE_PRIMARY",
+      "INDEPENDENT_LOCAL_REVIEW_REQUIRED"
+    ]
+  },
+  "local_only_external_refusal": {
+    "route_version": "J5.v1",
+    "governing_law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "deterministic": {
+      "selected": false,
+      "capability": null
+    },
+    "evidence_class": "E2_CONTINUITY_LOCAL",
+    "task_shape": "EVIDENCE_SYNTHESIS",
+    "review_pressure": "ordinary",
+    "challenge_mode": "adversarial",
+    "frontier_posture": "none",
+    "primary": {
+      "model_family": "GPT_OSS",
+      "role": "evidence_synthesis_primary",
+      "execution_disposition": "planned_local"
+    },
+    "challengers": [
+      {
+        "model_family": "QWEN",
+        "role": "independent_local_challenger",
+        "review_dimension": "distinct_model_family",
+        "execution_disposition": "planned_local"
+      }
+    ],
+    "review_policy": {
+      "local": "independent_local_second",
+      "external": "external_challenge_proposed"
+    },
+    "evidence_policy": {
+      "primary": {
+        "model_family": "GPT_OSS",
+        "evidence_class": "E2_CONTINUITY_LOCAL",
+        "kind": "local_worktree_read_only"
+      },
+      "challengers": [
+        {
+          "model_family": "QWEN",
+          "evidence_class": "E2_CONTINUITY_LOCAL",
+          "kind": "local_worktree_read_only"
+        }
+      ]
+    },
+    "required_authority": {
+      "acts": [],
+      "disclosures": []
+    },
+    "granted_authority": [],
+    "transport_resolution": null,
+    "response_budget_profiles": [],
+    "execution_disposition": "held_for_external_authority",
+    "execution_authorized": false,
+    "blockers": [
+      {
+        "code": "LOCAL_ONLY_EVIDENCE",
+        "detail": "E2 continuity may not cross an external membrane."
+      }
+    ],
+    "routing_reason_codes": [
+      "GPT_OSS_REASONING_PRIMARY",
+      "INDEPENDENT_LOCAL_REVIEW_REQUIRED"
+    ]
+  },
+  "repository_external_crossing_held": {
+    "route_version": "J5.v1",
+    "governing_law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "deterministic": {
+      "selected": false,
+      "capability": null
+    },
+    "evidence_class": "E1_REPOSITORY_LOCAL",
+    "task_shape": "EVIDENCE_SYNTHESIS",
+    "review_pressure": "ordinary",
+    "challenge_mode": "adversarial",
+    "frontier_posture": "none",
+    "primary": {
+      "model_family": "GPT_OSS",
+      "role": "evidence_synthesis_primary",
+      "execution_disposition": "planned_local"
+    },
+    "challengers": [
+      {
+        "model_family": "QWEN",
+        "role": "independent_local_challenger",
+        "review_dimension": "distinct_model_family",
+        "execution_disposition": "planned_local"
+      },
+      {
+        "model_family": "INKLING",
+        "role": "adversarial_challenger",
+        "review_dimension": "external_model_family",
+        "transport_posture": "repository_grounded",
+        "execution_disposition": "held_for_external_authority"
+      }
+    ],
+    "review_policy": {
+      "local": "independent_local_second",
+      "external": "external_challenge_proposed"
+    },
+    "evidence_policy": {
+      "primary": {
+        "model_family": "GPT_OSS",
+        "evidence_class": "E1_REPOSITORY_LOCAL",
+        "kind": "local_worktree_read_only"
+      },
+      "challengers": [
+        {
+          "model_family": "QWEN",
+          "evidence_class": "E1_REPOSITORY_LOCAL",
+          "kind": "local_worktree_read_only"
+        },
+        {
+          "model_family": "INKLING",
+          "evidence_class": "E3_EXTERNAL_REPO_BUNDLE",
+          "kind": "exact_external_bundle"
+        }
+      ]
+    },
+    "required_authority": {
+      "acts": [
+        "network.external",
+        "provider.spend"
+      ],
+      "disclosures": [
+        "repository_external_disclosure"
+      ]
+    },
+    "granted_authority": [],
+    "transport_resolution": null,
+    "response_budget_profiles": [
+      "INKLING_TINKER_J3B_R1"
+    ],
+    "execution_disposition": "held_for_external_authority",
+    "execution_authorized": false,
+    "blockers": [
+      {
+        "code": "EXTERNAL_NETWORK_AUTHORITY_REQUIRED",
+        "detail": "network.external is not authorized."
+      },
+      {
+        "code": "PROVIDER_SPEND_AUTHORITY_REQUIRED",
+        "detail": "provider.spend is not authorized."
+      },
+      {
+        "code": "REPOSITORY_EXTERNAL_DISCLOSURE_REQUIRED",
+        "detail": "External repository evidence disclosure is not authorized."
+      }
+    ],
+    "routing_reason_codes": [
+      "GPT_OSS_REASONING_PRIMARY",
+      "INDEPENDENT_LOCAL_REVIEW_REQUIRED",
+      "INKLING_ADVERSARIAL_CHALLENGE"
+    ]
+  },
+  "unavailable_nemotron_transport_hold": {
+    "status": "HOLD",
+    "selections": [
+      {
+        "status": "READY_LOCAL",
+        "model_family": "GPT_OSS",
+        "provider_id": "gpt-oss-local",
+        "blocker": null,
+        "response_budget_profile": {
+          "profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER",
+          "enforcement": "adapter-managed",
+          "max_output_tokens": null,
+          "reasoning_posture": "low",
+          "auto_expand": false
+        }
+      },
+      {
+        "status": "READY_LOCAL",
+        "model_family": "QWEN",
+        "provider_id": "qwen-local",
+        "blocker": null,
+        "response_budget_profile": {
+          "profile_id": "LOCAL_QWEN_EXISTING_ADAPTER",
+          "enforcement": "adapter-managed",
+          "max_output_tokens": null,
+          "auto_expand": false
+        }
+      },
+      {
+        "status": "HOLD",
+        "model_family": "NEMOTRON",
+        "provider_id": null,
+        "blocker": "PREFERRED_TRANSPORT_UNAVAILABLE"
+      }
+    ],
+    "blockers": [
+      {
+        "code": "PREFERRED_TRANSPORT_UNAVAILABLE",
+        "detail": "NEMOTRON preferred transport is unavailable."
+      }
+    ],
+    "model_families": [
+      "GPT_OSS",
+      "QWEN",
+      "NEMOTRON"
+    ]
+  },
+  "same_family_retry": {
+    "standing": "SECOND_LOCAL_REVIEW_OWED",
+    "next_model_family": "GPT_OSS",
+    "founder_review_required": false,
+    "review_families": [
+      "QWEN"
+    ],
+    "reason": "A retry is not an independent second opinion."
+  },
+  "independent_local_pair": {
+    "standing": "LOCAL_EVIDENCE_PRESENTED",
+    "next_model_family": null,
+    "founder_review_required": true,
+    "review_families": [
+      "QWEN",
+      "GPT_OSS"
+    ],
+    "reason": "Required independent local review completed; semantic acceptance remains a founder act."
+  }
+}

@@ -38,7 +38,7 @@ test('Nemotron packet is read-only external and never gains write/deploy authori
     evidenceFocus: 'components/voice/ContinuousConversation.tsx:1700-1900\nlib/voice/safariSilentDeathRecovery.ts',
   }, { canonicalSha: SHA, nowMs: 12345 });
   assert.equal(r.ok, true, JSON.stringify(r.errors));
-  assert.deepEqual(r.packet.authorized_acts, ['repo.read', 'network.external']);
+  assert.deepEqual(r.packet.authorized_acts, ['repo.read', 'network.external', 'repo.disclose:external-readonly']);
   assert.ok(r.packet.not_authorized_acts.includes('repo.write:worktree'));
   assert.ok(r.packet.not_authorized_acts.includes('deploy'));
   assert.equal(r.packet.context_selectors[0].source_sha, SHA);
@@ -104,7 +104,7 @@ test('route-bound Work Unit stores route evidence but carries no executable prov
     evidenceFocus: 'scripts/builder/routing-intelligence.mjs',
     providers: [],
     routing: {
-      taskShape: 'deep_reasoning',
+      taskShape: 'EVIDENCE_SYNTHESIS',
       reviewPressure: 'high_value_uncertain',
       challengeMode: 'adversarial',
     },
@@ -118,7 +118,7 @@ test('route-bound Work Unit stores route evidence but carries no executable prov
   assert.equal(r.packet.disclosure.repository_read_only_external, false);
   assert.equal(r.packet.disclosure.provider_spend_authorized, false);
   assert.equal(r.packet.routing_intelligence.execution_connected, false);
-  assert.equal(r.packet.routing_intelligence.route_record.challengers.at(-1).provider_id, 'inkling-tinker');
+  assert.equal(r.packet.routing_intelligence.route_record.challengers.at(-1).model_family, 'INKLING');
   assert.equal(r.packet.max_attempts, 1);
 });
 

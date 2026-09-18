@@ -1,0 +1,28 @@
+Repair base: 7937fc7cf1b0aede76b4e5302e36800c85f997da
+Authorization: JARVIS-ROUTING-INTELLIGENCE-01 / J6-RECONCILIATION-REPAIR-01
+
+Runtime / proof paths changed from base:
+jarvis-desktop/src/main.js
+jarvis-desktop/src/operator-work-unit.js
+jarvis-desktop/src/renderer.js
+jarvis-desktop/src/work-unit-control.js
+jarvis-desktop/test/operator-work-unit.test.mjs
+jarvis-desktop/test/work-unit-cockpit.test.mjs
+jarvis-desktop/test/work-unit-control.test.mjs
+scripts/ain-delegate.sh
+scripts/builder/__tests__/delegate-workspace-convergence-proof.mjs
+scripts/builder/__tests__/desktop-preload-allowlist.mjs
+scripts/builder/__tests__/opencode-adapter-governance-proof.mjs
+scripts/builder/__tests__/routing-intelligence-binding-proof.mjs
+scripts/builder/__tests__/routing-intelligence-proof.mjs
+scripts/builder/__tests__/work-unit-proof.mjs
+scripts/builder/opencode-provider.mjs
+scripts/builder/routing-intelligence.mjs
+scripts/builder/work-unit.mjs
+
+Forbidden-surface result:
+- no app/maia
+- no components/maia
+- no app/api/maia
+- no database/migrations
+- no production/deploy configuration

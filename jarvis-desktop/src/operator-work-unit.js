@@ -49,7 +49,15 @@
     const routing = spec?.routing && typeof spec.routing === 'object' ? spec.routing : {};
     const challengeMode = String(routing.challengeMode || 'none');
     const refs = lines(spec?.evidenceFocus).map((row) => row.replace(/:\d+-\d+$/, ''));
+    const evidenceClass = String(
+      routing.evidenceClass || (refs.length ? 'E1_REPOSITORY_LOCAL' : 'E0_TASK_TEXT'),
+    );
     return {
+      deterministic: {
+        capability: String(spec?.capability || '').trim() || null,
+        registered: false,
+      },
+      evidence_class: evidenceClass,
       task_shape: String(routing.taskShape || 'mechanical_code'),
       review_pressure: String(routing.reviewPressure || 'ordinary'),
       challenge_mode: challengeMode,
@@ -70,7 +78,7 @@
       },
       work_unit: {
         risk_class: routing.reviewPressure === 'high_value_uncertain' ? 'high' : 'mechanical',
-        explicit_independent_review: routing.explicitIndependentReview === true,
+        explicit_independent_review: true,
       },
     };
   }
@@ -130,7 +138,10 @@
       && checked.providers.includes('inkling-tinker')
       && spec.providerSpendOk === true;
     const acts = ['repo.read'];
-    if (externalReview) acts.push('network.external');
+    if (externalReview) {
+      acts.push('network.external');
+      acts.push('repo.disclose:external-readonly');
+    }
     if (providerSpend) acts.push('provider.spend');
 
     const packet = {
@@ -178,6 +189,8 @@
         'production.write',
         'deploy',
         'authority.change',
+        ...(externalReview ? [] : ['network.external', 'repo.disclose:external-readonly']),
+        ...(providerSpend ? [] : ['provider.spend']),
       ],
       integration_actor: 'founder',
       autonomy_ceiling: 'LEVEL_1_REVIEW',
@@ -185,7 +198,7 @@
       routing_intelligence: routed ? {
         route_record: routeRecord,
         execution_connected: false,
-        source: 'R2-pure-router',
+        source: 'J5.v1-pure-router',
         bound_at_sha: canonicalSha,
       } : null,
       disclosure: {

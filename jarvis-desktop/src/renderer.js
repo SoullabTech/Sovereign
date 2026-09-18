@@ -425,8 +425,10 @@ function renderRoutePreview(route) {
     host.innerHTML = '<div class="hint">Route preview unavailable.</div>';
     return;
   }
-  const primary = route.primary?.provider_id || 'none';
-  const challengers = (route.challengers || []).map(c => `${c.provider_id} · ${c.execution_disposition}`).join(' · ') || 'none';
+  const primary = route.primary?.model_family || route.primary?.provider_id || 'none';
+  const challengers = (route.challengers || [])
+    .map(c => `${c.model_family || c.provider_id || 'unknown'} · ${c.execution_disposition}`)
+    .join(' · ') || 'none';
   const required = [
     ...(route.required_authority?.acts || []),
     ...(route.required_authority?.disclosures || []),
@@ -604,8 +606,8 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
   const route = routing?.route_record || null;
   const routeHtml = routeBound && route ? `<div class="authority-box">
     <div class="a-title">Bound Routing Intelligence · ${escapeHtml(route.route_version || 'unknown')}</div>
-    <div class="a-line">Primary: <b>${escapeHtml(route.primary?.provider_id || 'none')}</b></div>
-    <div class="a-line">Challengers: <b>${escapeHtml((route.challengers || []).map(c => c.provider_id).join(' · ') || 'none')}</b></div>
+    <div class="a-line">Primary: <b>${escapeHtml(route.primary?.model_family || route.primary?.provider_id || 'none')}</b></div>
+    <div class="a-line">Challengers: <b>${escapeHtml((route.challengers || []).map(c => c.model_family || c.provider_id).filter(Boolean).join(' · ') || 'none')}</b></div>
     <div class="a-line">Review policy: <b>${escapeHtml(route.review_policy?.local || 'none')}</b></div>
     <div class="a-line">Disposition: <b>${escapeHtml(route.execution_disposition || 'unknown')}</b></div>
     <div class="a-line">Provider execution: <b>disconnected in R3</b></div>
@@ -799,7 +801,7 @@ function renderWork() {
         <label class="hint">Task shape<br><select id="wu-task-shape"><option value="mechanical_code">Mechanical code / test / diff</option><option value="deep_reasoning">Deep reasoning / architecture</option></select></label>
         <label class="hint">Review pressure<br><select id="wu-review-pressure"><option value="ordinary">Ordinary</option><option value="high_value_uncertain">High-value / uncertain</option></select></label>
       </div>
-      <label class="inline-check"><input id="wu-independent-review" type="checkbox">Require an independent local second review even if the route would otherwise be single-mechanical.</label>
+      <label class="inline-check"><input id="wu-independent-review" type="checkbox" checked disabled>Independent local second review is required by J5 for routed local work.</label>
       <div class="work-unit-grid">
         <label class="hint">Challenge mode<br><select id="wu-challenge-mode"><option value="none">None</option><option value="adversarial">Adversarial challenge · Inkling proposed</option><option value="frontier">Frontier challenge · Nemotron proposed</option></select></label>
         <label id="wu-frontier-posture-wrap" class="hint" style="display:none">Frontier posture<br><select id="wu-frontier-posture"><option value="repository_grounded">Repository-grounded · Tinker Nemotron</option><option value="text_only_manual">Text-only / manual · Zen</option></select></label>

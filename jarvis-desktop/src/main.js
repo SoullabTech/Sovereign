@@ -735,12 +735,35 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 
 async function computeRoutingPreview(root, spec) {
   const routePath = path.join(root, 'scripts', 'builder', 'routing-intelligence.mjs');
+  const deterministicPath = path.join(root, 'scripts', 'builder', 'deterministic.mjs');
   if (!fs.existsSync(routePath)) {
     return { ok: false, status: 'ROUTER_UNAVAILABLE', reason: 'Routing Intelligence module is not present in the bound checkout.' };
   }
   const routingInput = OPWU.buildRoutingInput(spec || {});
+  const capability = String(spec?.capability || '').trim();
+  if (capability && fs.existsSync(deterministicPath)) {
+    const deterministic = await import(`${pathToFileURL(deterministicPath).href}?t=${Date.now()}`);
+    routingInput.deterministic = {
+      capability,
+      registered: Object.prototype.hasOwnProperty.call(deterministic.CAPABILITIES || {}, capability),
+    };
+  }
   const mod = await import(`${pathToFileURL(routePath).href}?t=${Date.now()}`);
-  const routeRecord = mod.routeIntelligence(routingInput);
+  const cognitiveRoute = mod.routeIntelligence(routingInput);
+
+  // Provider readiness is a later structured fact. It may HOLD the selected
+  // family but never rewrite the cognitive route or grant execution.
+  const catalog = await WUC.providers(root, { env: childEnv(process.env).env, home: os.homedir() });
+  const providerAvailability = Object.fromEntries(
+    catalog.map((provider) => [provider.id, provider.state === 'AVAILABLE']),
+  );
+  const transportResolution = mod.resolveRouteTransports(cognitiveRoute, {
+    provider_availability: providerAvailability,
+  });
+  const routeRecord = Object.freeze({
+    ...cognitiveRoute,
+    transport_resolution: transportResolution,
+  });
   return { ok: true, status: 'PREVIEWED', routing_input: routingInput, route_record: routeRecord };
 }
 

@@ -1,0 +1,49 @@
+JARVIS-ROUTING-INTELLIGENCE-01 / J6-RECONCILIATION-REPAIR-01
+Final pre-commit proof summary — 2026-09-18
+
+Full JARVIS proof:
+  9 suites green
+  assertions: 55 + 24 + 18 + 38 + 15 + 20 + 9 + 30 + 44 = 253
+  failures: 0
+
+JARVIS Desktop:
+  tests: 169
+  pass: 160
+  fail: 0
+  intentional skips: 9
+
+Reconciled J5.v1 pure routing:
+  23 passed / 0 failed
+
+Canonical R3 + J5.v1 binding:
+  11 passed / 0 failed
+
+Work Unit proof:
+  38 passed / 0 failed
+
+Provider governance:
+  44 passed / 0 failed
+
+Alpha Floor:
+  97 passed / 0 failed
+
+External context membrane:
+  9 passed / 0 failed
+
+Direct Tinker synthetic transport:
+  12 passed / 0 failed
+
+TypeScript no-regression:
+  program files: 4378
+  diagnostics: 229
+  baseline: 239
+  regressions: 0
+
+Scripts TypeScript:
+  prior diagnostic identities: 40
+  repair diagnostic identities: 40
+  identity diff: none
+  repair-path diagnostics: 0
+
+No paid/live provider call, provider spend, external disclosure, production access,
+schema change, deployment, production mutation, or member-facing MAIA change occurred.

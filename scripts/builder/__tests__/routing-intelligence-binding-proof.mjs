@@ -21,6 +21,7 @@ const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..', '..');
 const OPWU = require(path.join(REPO, 'jarvis-desktop', 'src', 'operator-work-unit.js'));
+const WUC = require(path.join(REPO, 'jarvis-desktop', 'src', 'work-unit-control.js'));
 
 let pass = 0;
 let fail = 0;
@@ -45,7 +46,7 @@ const spec = {
   evidenceFocus: 'scripts/builder/routing-intelligence.mjs:1-80',
   providers: [],
   routing: {
-    taskShape: 'deep_reasoning',
+    taskShape: 'EVIDENCE_SYNTHESIS',
     reviewPressure: 'high_value_uncertain',
     challengeMode: 'adversarial',
     explicitIndependentReview: true,
@@ -71,6 +72,8 @@ check('R3-1 — route-bound packet builds without provider execution strategy', 
 check('R3-2 — route requirements do not widen packet authority', () => {
   assert.ok(route.required_authority.acts.includes('network.external'));
   assert.ok(route.required_authority.acts.includes('provider.spend'));
+  assert.ok(route.required_authority.disclosures.includes('repository_external_disclosure'));
+  assert.deepEqual(route.granted_authority, []);
   assert.deepEqual(built.packet.authorized_acts, ['repo.read']);
   assert.equal(built.packet.disclosure.repository_read_only_external, false);
   assert.equal(built.packet.disclosure.provider_spend_authorized, false);
@@ -128,6 +131,30 @@ check('R3-7 — run-provider refuses route-bound Work Units before provider cont
 check('R3-8 — routed UI has no Run Strategy control after binding', () => {
   assert.ok(renderer.includes('Provider execution disconnected in R3'));
   assert.ok(renderer.includes("if (!routeBound) document.getElementById('wu-run-strategy')"));
+});
+
+const lowerGuard = await WUC.runProvider(REPO, {
+  work_unit_id: built.packet.work_unit_id,
+  provider_id: 'qwen-local',
+}, { home, env: { PATH: process.env.PATH } });
+
+check('R3-9 — lower controller refuses route-bound provider execution before provider resolution', () => {
+  assert.equal(lowerGuard.ok, false);
+  assert.equal(lowerGuard.status, 'ROUTING_EXECUTION_DISCONNECTED');
+});
+
+check('R3-10 — MAIN derives deterministic-first truth from the canonical registry before pure routing', () => {
+  assert.ok(main.includes("deterministic.mjs"));
+  assert.ok(main.includes('deterministic.CAPABILITIES'));
+  assert.ok(main.includes('registered: Object.prototype.hasOwnProperty.call'));
+  assert.equal(renderer.includes('deterministic.CAPABILITIES'), false);
+});
+
+check('R3-11 — MAIN resolves transport readiness only after cognitive route selection', () => {
+  const cognitive = main.indexOf('const cognitiveRoute = mod.routeIntelligence(routingInput)');
+  const transport = main.indexOf('mod.resolveRouteTransports(cognitiveRoute');
+  assert.ok(cognitive > 0);
+  assert.ok(transport > cognitive);
 });
 
 rmSync(home, { recursive: true, force: true });

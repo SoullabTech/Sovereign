@@ -1,0 +1,31 @@
+=== structural purity ===
+PASS  R2-PURE — module is disconnected from execution, network, credentials, and old router
+PASS  R2-PURE — route evidence is immutable
+
+=== F-R1 through F-R5 — local routing identity ===
+PASS  F-R1 — ordinary mechanical remains Qwen-local and single
+PASS  F-R2 — ordinary deep reasoning selects GPT-OSS then independent Qwen
+PASS  F-R3 — high-value mechanical gains GPT-OSS second read without externalization
+PASS  F-R4 — high-value deep reasoning keeps GPT-OSS primary and Qwen challenger
+PASS  F-R5 — Inkling can never appear without explicit adversarial challenge
+
+=== F-R6 through F-R10 — external membranes ===
+PASS  F-R6 — adversarial challenge missing authority is proposed but held
+PASS  F-R7 — authorized Inkling challenge is still exact-bundle only
+PASS  F-R8 — repository-grounded frontier Nemotron is Tinker, never Zen/NVIDIA
+PASS  F-R9 — Zen is surfaced only as text-only manual frontier
+PASS  F-R10 — repository-grounded external review with zero refs refuses to widen evidence
+
+=== F-R11 through F-R15 — authority, stopping, determinism ===
+PASS  F-R11 — route may name required authority but grants none
+PASS  F-R12 — failed/refused/rejected/insufficient attempts stop provider cascade
+PASS  F-R13 — structured disagreement has no automatic winner
+PASS  F-R14 — identical structured input is deterministic and ambient state is irrelevant
+PASS  F-R15 — invalid and contradictory input fails closed with typed blockers
+
+=== supplementary route-policy controls ===
+PASS  explicit independent review upgrades ordinary mechanical without externalizing
+PASS  single mechanical reconciliation may complete after one clean primary
+PASS  deep reasoning reconciliation owes Qwen after one clean GPT-OSS attempt
+
+20 passed · 0 failed

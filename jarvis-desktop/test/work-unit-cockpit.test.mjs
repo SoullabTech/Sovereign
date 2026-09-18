@@ -33,6 +33,8 @@ test('Home ordinary prose hands off to Work as intent rather than requiring a co
 });
 
 test('routed mode is default; manual provider authority remains an explicit separate path', () => {
+  assert.match(renderer, /id="wu-independent-review" type="checkbox" checked disabled/);
+  assert.match(renderer, /Independent local second review is required by J5/);
   assert.match(renderer, /id="wu-manual-mode" type="checkbox"/);
   assert.match(renderer, /id="wu-manual-provider-wrap" style="display:none"/);
   assert.match(renderer, /id="wu-qwen" type="checkbox" checked/);

@@ -1,0 +1,36 @@
+=== structural purity / canonical R3 strengths ===
+PASS  PURE — router has no imports, network, credentials, filesystem, or ambient env
+PASS  PURE — route record is versioned, J5-governed, immutable, and grants no authority
+PASS  DETERMINISTIC — registered exact capability wins before any model family
+
+=== J5 local topology / evidence-backed model eligibility ===
+PASS  CODE_GROUNDED — Qwen primary always owes independent GPT-OSS review
+PASS  ARCHITECTURE_REASONING — GPT-OSS primary plus independent Qwen
+PASS  EVIDENCE_SYNTHESIS — GPT-OSS primary plus independent Qwen
+PASS  Nemotron is not evidence-backed for CODE_GROUNDED
+PASS  Inkling adversarial challenge is family-first and exact-bundle only
+
+=== E0-E4 custody / external authority ===
+PASS  E2 LOCAL_ONLY continuity blocks external challenge
+PASS  E4 sensitive/production is refused by this routing programme
+PASS  E1 to external crossing becomes E3 and requires disclosure
+PASS  repository-grounded external route refuses zero evidence refs
+
+=== family-before-transport / no substitution / budgets ===
+PASS  transport resolution maps family after cognition and never rewrites family
+PASS  unavailable Nemotron transport HOLDs without substituting Inkling
+PASS  response budgets are bounded adapter/transport profiles and never auto-expand
+PASS  Zen remains model-family Nemotron but manual text-only transport posture
+
+=== true independence / host-owned standing ===
+PASS  same-family Qwen retry does not satisfy independent review
+PASS  Qwen + GPT-OSS independent local review reaches evidence, not authority
+PASS  failed/refused/rejected/nonzero attempts stop cascade
+PASS  structured disagreement requires founder; no automatic winner
+PASS  model-authored lifecycle labels have no state-changing effect
+
+=== determinism / typed refusal ===
+PASS  identical structured input is deterministic; ignored ambient noise cannot alter cognition
+PASS  invalid/contradictory route input fails closed with typed blockers
+
+23 passed · 0 failed
