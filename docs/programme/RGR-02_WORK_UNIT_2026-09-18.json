@@ -244,15 +244,15 @@
         "timestamps": []
       },
       "state": {
-        "lifecycle_state": "EVIDENCE_READY",
-        "disposition": "open",
+        "lifecycle_state": "CLOSED",
+        "disposition": "closed",
         "supersedes": null
       }
     },
     "guard": {
       "lifecycle_version": "W2.v1",
       "work_unit_id": "rgr-02-formal-vocabulary-candidate-structures-20260918",
-      "current_state": "EVIDENCE_READY",
+      "current_state": "CLOSED",
       "authorized_core_snapshot": "{\"identity\":{\"id\":\"rgr-02-formal-vocabulary-candidate-structures-20260918\",\"programme\":\"RELATIONAL-GEOMETRY-REASONING\",\"parent_work_unit\":\"rgr-01-literature-mathematical-landscape-20260918\",\"objective\":\"Define the smallest mathematically disciplined RGR vocabulary and compare four candidate structures without selecting a winner or implementing a model.\",\"work_class\":\"RESEARCH\",\"task_shape\":\"deep_reasoning\"},\"scope\":{\"repository\":\"SoullabTech/Sovereign\",\"base_ref\":\"8c8525eae316f21eeb844ba7af4af7ab1476f461\",\"allowed_paths\":[\"docs/programme/RGR-02_FORMAL_VOCABULARY_CANDIDATE_STRUCTURES_2026-09-18.md\",\"docs/programme/RGR-02_FORMAL_COMPARISON_MATRIX_2026-09-18.md\",\"docs/programme/RGR-02_WORK_UNIT_2026-09-18.json\"],\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\",\"scripts\"]},\"authority\":{\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"network_external\":true,\"provider_spend\":false,\"external_disclosure\":\"task_text_only\",\"merge\":false,\"deploy\":false,\"production_read\":false,\"production_write\":false},\"evaluation\":{\"acceptance_conditions\":[\"Define all ten primitives with explicit mathematical typing and non-collapse rules.\",\"Compare vector/relational, graph/structural, subspace/Grassmann, and local-to-global/sheaf formalisms against the same primitive set.\",\"Identify where each formalism requires extra structure rather than pretending every primitive is native.\",\"Preserve RGR-03, Elemental formalization, MAIA integration, implementation, benchmark, and deployment as closed.\"],\"falsification_conditions\":[\"A metaphor is presented as a mathematical identification.\",\"Equivalence is conflated with similarity or invariant.\",\"Grassmannian boundary is asserted as intrinsic without defining a constrained subset.\",\"Sheaf compatibility is generalized into psychology without an operational mapping.\",\"One candidate formalism is selected without comparative evidence.\"],\"stop_conditions\":[\"Any model implementation or benchmark becomes necessary.\",\"Any private/member/PHI data becomes necessary.\",\"Any MAIA runtime, schema, migration, deployment, or production change becomes necessary.\"]}}"
     }
   },
@@ -304,7 +304,7 @@
       "superseded_by": null
     }
   },
-  "standing": "EVIDENCE_READY_AWAITING_FOUNDER_ADJUDICATION",
+  "standing": "CLOSED_BY_FOUNDER_ADJUDICATION",
   "successor_authority": {
     "rgr_03": "CLOSED",
     "elemental_operator_hypothesis": "CLOSED",
@@ -313,7 +313,7 @@
     "benchmark": "NOT_AUTHORIZED",
     "deployment": "NOT_AUTHORIZED"
   },
-  "execution_note": "RGR-02 formal vocabulary and four-formalism comparison complete; independent local mathematical challenge complete; grounded corrections applied. No RGR-03, Elemental formalization, MAIA change, implementation, benchmark, deployment, or production action performed.",
+  "execution_note": "RGR-02 closed by Founder adjudication. Exact formalization candidate preserved as parent evidence; closure changes only lifecycle standing and adjudication record. No RGR-03, Elemental formalization, MAIA alteration, implementation, benchmark, deployment, or production action authorized.",
   "review_evidence": {
     "gpt_oss": {
       "attempt_id": "rgr02-review-gptoss-01",
@@ -326,5 +326,87 @@
       "grounded_corrections_applied": 3,
       "invalid_or_already_satisfied_objections_preserved": true
     }
+  },
+  "founder_adjudication": {
+    "accepted_candidate_sha": "f07286b026e5998eedebae27b057cc267afbe184",
+    "date": "2026-09-18",
+    "central_result": "The minimal common structure of Relational Geometry Reasoning is a typed contextual relational scaffold; geometry enters only through separately justified enrichment.",
+    "ten_primitive_headings": [
+      "ENTITY / STATE",
+      "RELATION",
+      "TRANSFORMATION",
+      "EQUIVALENCE / INVARIANT",
+      "CONTEXT",
+      "PERSPECTIVE",
+      "TRAJECTORY",
+      "BOUNDARY",
+      "COMPATIBILITY",
+      "OBSTRUCTION"
+    ],
+    "preserved_formal_families": [
+      "VECTOR / RELATIONAL",
+      "GRAPH / STRUCTURAL",
+      "SUBSPACE / GRASSMANN",
+      "LOCAL-TO-GLOBAL / SHEAF"
+    ],
+    "cross_cutting_axis": "trajectory / predictive structure",
+    "non_collapse_laws": [
+      "ENTITY ≠ STATE",
+      "RELATION ≠ DISTANCE",
+      "RELATION ≠ TRANSFORMATION",
+      "TRANSFORMATION ≠ SYMMETRY",
+      "SIMILARITY ≠ EQUIVALENCE",
+      "EQUIVALENCE ≠ INVARIANT",
+      "CONTEXT ≠ PERSPECTIVE",
+      "TRAJECTORY ≠ ENDPOINT",
+      "BOUNDARY ≠ LARGE DISTANCE",
+      "BOUNDARY ≠ OBSTRUCTION",
+      "COMPATIBILITY ≠ IDENTITY",
+      "COMPATIBILITY ≠ AGREEMENT",
+      "OBSTRUCTION ≠ ERROR",
+      "OBSTRUCTION ≠ PSYCHOLOGICAL CONTRADICTION"
+    ],
+    "reviewer_evidence": {
+      "gpt_oss": {
+        "verdict": "ACCEPT",
+        "preserved": true
+      },
+      "qwen": {
+        "verdict": "RETURN",
+        "preserved": true
+      }
+    },
+    "successor_authority": {
+      "rgr_03": "CLOSED",
+      "elemental_operator_hypothesis": "CLOSED",
+      "maia_change": "NOT_AUTHORIZED",
+      "implementation": "NOT_AUTHORIZED",
+      "benchmark": "NOT_AUTHORIZED",
+      "deployment": "NOT_AUTHORIZED"
+    },
+    "lifecycle_transitions": [
+      {
+        "lifecycle_version": "W2.v1",
+        "work_unit_id": "rgr-02-formal-vocabulary-candidate-structures-20260918",
+        "from": "EVIDENCE_READY",
+        "to": "ADJUDICATED",
+        "evidence_ref": "founder:rgr02-adjudication-20260918",
+        "reason_code": "RGR02_FOUNDER_ADJUDICATED",
+        "authorization_ref": null,
+        "adjudication": "accepted",
+        "superseded_by": null
+      },
+      {
+        "lifecycle_version": "W2.v1",
+        "work_unit_id": "rgr-02-formal-vocabulary-candidate-structures-20260918",
+        "from": "ADJUDICATED",
+        "to": "CLOSED",
+        "evidence_ref": "founder:rgr02-closure-20260918",
+        "reason_code": "RGR02_FOUNDER_CLOSED",
+        "authorization_ref": null,
+        "adjudication": null,
+        "superseded_by": null
+      }
+    ]
   }
 }

@@ -3,7 +3,7 @@
 **Programme:** RELATIONAL-GEOMETRY-REASONING
 **Gate:** RGR-02 — FORMAL VOCABULARY + CANDIDATE STRUCTURES
 **Date:** 2026-09-18
-**Status:** EVIDENCE_READY · INDEPENDENT MATHEMATICAL CHALLENGE COMPLETE · AWAITING FOUNDER ADJUDICATION
+**Status:** CLOSED · FOUNDER ADJUDICATED · FORMALIZATION PRESERVED
 **Canonical base:** 8c8525eae316f21eeb844ba7af4af7ab1476f461
 **Governing constitution:** RGR-00
 **Upstream evidence:** RGR-01 canonical + CLOSED
@@ -1865,3 +1865,164 @@ NONE
 The next legitimate act is Founder adjudication of RGR-02 itself.
 
 No successor gate is opened by this standing.
+
+
+---
+
+# XXXII · Founder adjudication — RGR-02 closure
+
+**Founder act:** 2026-09-18
+**Accepted formalization candidate:** f07286b026e5998eedebae27b057cc267afbe184
+
+The Founder accepts the RGR-02 Formal Vocabulary + Candidate Structures package and the recorded evidence.
+
+Accepted standing:
+
+- RGR-00 is canonical;
+- RGR-01 is canonical and CLOSED;
+- RGR-02 was opened from exact canonical 8c8525eae316f21eeb844ba7af4af7ab1476f461;
+- the governed RGR-02 Work Unit reached EVIDENCE_READY with its authorized core unchanged;
+- only the three authorized RGR-02 documentary/research artifacts were created;
+- no code, benchmark, model implementation, schema, migration, MAIA runtime change, deployment, or production action occurred;
+- all sovereignty pre-commit gates passed.
+
+The Founder accepts the central formal result:
+
+> The minimal common structure of Relational Geometry Reasoning is not itself required to be a geometry. It is a typed contextual relational scaffold. Geometry enters only through separately justified enrichment.
+
+The accepted primitive headings remain:
+
+~~~text
+ENTITY / STATE
+RELATION
+TRANSFORMATION
+EQUIVALENCE / INVARIANT
+CONTEXT
+PERSPECTIVE
+TRAJECTORY
+BOUNDARY
+COMPATIBILITY
+OBSTRUCTION
+~~~
+
+The accepted non-collapse laws remain:
+
+~~~text
+ENTITY ≠ STATE
+RELATION ≠ DISTANCE
+RELATION ≠ TRANSFORMATION
+TRANSFORMATION ≠ SYMMETRY
+SIMILARITY ≠ EQUIVALENCE
+EQUIVALENCE ≠ INVARIANT
+CONTEXT ≠ PERSPECTIVE
+TRAJECTORY ≠ ENDPOINT
+BOUNDARY ≠ LARGE DISTANCE
+BOUNDARY ≠ OBSTRUCTION
+COMPATIBILITY ≠ IDENTITY
+COMPATIBILITY ≠ AGREEMENT
+OBSTRUCTION ≠ ERROR
+OBSTRUCTION ≠ PSYCHOLOGICAL CONTRADICTION
+~~~
+
+EQUIVALENCE / INVARIANT remains one of the ten governing headings while its equivalence relation and invariant family remain mathematically distinct within the composite formal slot.
+
+Meaning remains outside the primitive set.
+
+Meaning is not made true by definition.
+
+The four candidate formal families remain preserved without a winner:
+
+~~~text
+1. VECTOR / RELATIONAL
+2. GRAPH / STRUCTURAL
+3. SUBSPACE / GRASSMANN
+4. LOCAL-TO-GLOBAL / SHEAF
+~~~
+
+Trajectory / predictive structure remains a cross-cutting axis rather than a fifth candidate formal family.
+
+The Founder accepts the formal constraints recorded in RGR-02, including:
+
+- typed relations and transformations;
+- declared transformation families for invariance;
+- declared metric/pseudometric and tolerance for approximate invariance;
+- no promotion of similarity into equivalence without a true equivalence law;
+- context/perspective separation;
+- explicit observation/representation rules for perspective;
+- trajectory as potentially information-bearing beyond endpoints;
+- explicit ambient structure, admissible region, boundary operator, and crossing rule for boundary claims;
+- no intrinsic psychological/relational boundary assigned to an ordinary fixed-dimensional Grassmannian;
+- no treatment of variable intrinsic subspace dimension as motion inside one fixed Grassmannian without a rank-varying construction;
+- typed compatibility predicates or maps;
+- explicit failed extension/constraint problem for obstruction;
+- no direct identification of sheaf stalks, restriction maps, global sections, or cohomology with human perspectives, relationships, agreement, or contradiction without a separately tested bridge;
+- no declaration of fundamentality merely because a formalism is elegant or resonates with Spiralogic.
+
+The independent mathematical review evidence remains preserved:
+
+~~~text
+GPT-OSS:
+VERDICT = ACCEPT
+
+Qwen:
+VERDICT = RETURN
+~~~
+
+Grounded corrections incorporated from the reviews remain part of the accepted candidate.
+
+Reviewer objections judged mathematically invalid, already satisfied, or inconsistent with the exact packet remain preserved as challenged-but-rejected evidence rather than being erased.
+
+No candidate formalism presently dominates all ten primitives.
+
+## Lifecycle closure
+
+By Founder act, the governed Work Unit has advanced:
+
+~~~text
+EVIDENCE_READY
+→ ADJUDICATED
+→ CLOSED
+~~~
+
+with:
+
+~~~text
+authorized core: unchanged
+review attempts: preserved
+verifier evidence: preserved
+routing provenance: preserved
+~~~
+
+## Successor boundary
+
+This closure explicitly preserves:
+
+~~~text
+RGR-03: CLOSED
+
+Elemental Operator hypothesis: CLOSED
+
+Fire / Water / Earth / Air formalization: NOT AUTHORIZED
+
+Weather formalization: NOT AUTHORIZED
+
+MAIA alteration: NOT AUTHORIZED
+
+RGR implementation: NOT AUTHORIZED
+
+RGR benchmark: NOT AUTHORIZED
+
+deployment: NOT AUTHORIZED
+~~~
+
+No successor gate is opened by this closure.
+
+## Preservation law
+
+The exact accepted RGR-02 formalization remains identified by:
+
+f07286b026e5998eedebae27b057cc267afbe184
+
+This closure act is a later documentary/lifecycle record layered on top of that accepted candidate. It does not rewrite the accepted formalization evidence.
+
+**RGR-02 standing: CLOSED.**
