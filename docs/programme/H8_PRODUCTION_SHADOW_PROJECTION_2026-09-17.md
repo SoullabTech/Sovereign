@@ -99,6 +99,14 @@ Its row identity is:
 - model name: `deterministic-h7j-r1`
 - deterministic seed: `0`
 
+## Retention standing
+
+H8 does not create a new retention policy. The inherited `maia_relational_field_shadow_runs` migration labels the table disposable but defines no automatic TTL or purge. H8 rows therefore persist under the table's existing retention behavior unless a later explicit production mutation removes them.
+
+The 20-turn witness must disable the H8 environment flags after capture and export the adjudication packet before any cleanup. A purge of H8 rows is **not** authorized by this lane; if desired, it must be a separately authorized bounded production mutation keyed to the exact H8 architecture version.
+
+H8 adds no historical transcript body to `raw_plan`; cross-session evidence remains source IDs + digests + derived classes/scores, with source text reconstructed read-only for adjudication.
+
 ## Constitutional falsifiers
 
 **H8-F1 — NO LIVE PATH CHANGE**  
@@ -180,6 +188,6 @@ H8 does **not** authorize:
 - automatic routing or provider changes;
 - exposure of H8 fields in member UI;
 - general-member research enrollment;
-- merge, deployment, migration application, environment activation, or production witness.
+- merge, deployment, migration application, environment activation, production witness, or research-row purge.
 
 If H8 passes, the successor must separately request authority for the smallest cognition/context exposure.
