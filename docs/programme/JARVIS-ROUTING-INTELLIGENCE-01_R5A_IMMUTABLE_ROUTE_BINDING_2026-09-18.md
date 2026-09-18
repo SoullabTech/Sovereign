@@ -262,3 +262,50 @@ Disposable live Desktop witness:
 - disposable AIN home contained 1 packet, 0 results, 0 locks, and 0 sessions.
 
 No provider call, credential lookup, network access, provider spend, repository write, merge, deploy, or production mutation occurred.
+
+
+## 11. Founder adjudication
+
+**Issued:** 2026-09-18
+
+**Accepted exact R5A implementation candidate:**
+
+d8b31c77f84d426351a6bec31b36e15d9ffc9a8d
+
+The Founder accepts:
+
+- W3 as the authoritative canonical Work Unit route-binding seam;
+- one shared deterministic SHA-256 route-integrity law across canonical W3, R4 execution admission, and Desktop MAIN compatibility authoring;
+- W1 22 / 22 PASS;
+- W2 27 / 27 PASS;
+- W3 28 / 28 PASS;
+- W4 31 / 31 PASS;
+- W5 22 / 22 PASS;
+- R2 20 / 20 PASS;
+- R3 8 / 8 PASS;
+- R4 24 / 24 PASS;
+- R5A 20 / 20 PASS;
+- the exact-head synthetic witness proving digest equality, exact SHA binding, no execution authority, and no provider execution.
+
+Immutable route binding establishes integrity only.
+
+It creates no:
+
+- provider execution authority;
+- network authority;
+- repository disclosure;
+- provider spend authority;
+- repository-write authority;
+- merge authority;
+- deploy authority;
+- production authority;
+- constitutional authority;
+- Founder authority.
+
+Historical route records are not migrated or backfilled.
+
+Provider execution remains disconnected.
+
+This adjudication authorizes no execution connection, merge, deploy, or production action.
+
+The next integration act is canonical integration of the already-adjudicated R4 and R5A lineage before R5B may open.
