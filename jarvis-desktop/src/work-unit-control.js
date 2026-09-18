@@ -63,6 +63,48 @@ function exitCodeFromSummary(summary) {
   return m ? Number(m[1]) : null;
 }
 
+function modelFamilyFromAttempt(attempt = {}) {
+  const declared = String(attempt.model_family || '').trim().toUpperCase();
+  if (['QWEN', 'GPT_OSS', 'INKLING', 'NEMOTRON'].includes(declared)) return declared;
+  if (String(attempt.lane || '').toLowerCase() === 'deterministic') {
+    const verifier = String(attempt.model || attempt.verifier_id || 'deterministic').trim();
+    return verifier ? 'DETERMINISTIC:' + verifier : 'DETERMINISTIC';
+  }
+  const value = (String(attempt.lane || '') + ' ' + String(attempt.model || '')).toLowerCase();
+  if (value.includes('qwen')) return 'QWEN';
+  if (value.includes('gpt-oss') || value.includes('gpt_oss')) return 'GPT_OSS';
+  if (value.includes('inkling')) return 'INKLING';
+  if (value.includes('nemotron')) return 'NEMOTRON';
+  return null;
+}
+
+function durableProviderOutcome(run = {}, recordedAttempt = null) {
+  if (!recordedAttempt) {
+    return {
+      ok: false,
+      status: 'FAILED',
+      reason: 'NO_DURABLE_PROVIDER_RESULT',
+      source: 'durable_result',
+      wrapper_exit_code: Number.isInteger(run.exit_code) ? run.exit_code : null,
+      durable_exit_code: null,
+    };
+  }
+  const exitCode = Number.isInteger(recordedAttempt.exit_code)
+    ? recordedAttempt.exit_code
+    : exitCodeFromSummary(recordedAttempt.summary);
+  const failed = recordedAttempt.test_results === 'fail'
+    || recordedAttempt.recommended_next_action === 'reject'
+    || (exitCode != null && exitCode !== 0);
+  return {
+    ok: !failed,
+    status: failed ? 'FAILED' : 'COMPLETED',
+    reason: failed ? 'DURABLE_PROVIDER_RESULT_FAILED' : null,
+    source: 'durable_result',
+    wrapper_exit_code: Number.isInteger(run.exit_code) ? run.exit_code : null,
+    durable_exit_code: exitCode,
+  };
+}
+
 function reconcileAttempts(attempts = []) {
   if (!attempts.length) {
     return { standing: 'NOT_RUN', needs_kelly: false, summary: 'No provider attempt has run yet.', disagreements: [], attempts: [] };
@@ -79,6 +121,7 @@ function reconcileAttempts(attempts = []) {
     log_path: a.log_path ?? null,
     output_excerpt: readLogExcerpt(a.log_path),
     unresolved_questions: a.unresolved_questions ?? [],
+    model_family: modelFamilyFromAttempt(a),
   }));
 
   const escalations = normalized.filter(a => a.escalation_required);
@@ -97,15 +140,28 @@ function reconcileAttempts(attempts = []) {
   if (disagreements.length) {
     return { standing: 'REVIEW_DISAGREEMENT', needs_kelly: true, summary: 'The structured provider evidence disagrees; JARVIS will not pick a winner automatically.', disagreements, attempts: normalized };
   }
-  if (normalized.length < 2) {
-    return { standing: 'SECOND_REVIEW_OWED', needs_kelly: false, summary: 'Primary review completed; an independent second review is still owed.', disagreements, attempts: normalized };
+  const independentFamilies = [...new Set(normalized.map(a => a.model_family).filter(Boolean))];
+  if (normalized.length < 2 || independentFamilies.length < 2) {
+    return {
+      standing: 'SECOND_REVIEW_OWED',
+      needs_kelly: false,
+      summary: normalized.length < 2
+        ? 'Primary review completed; an independent second review is still owed.'
+        : 'Additional attempts exist, but no independent model family or deterministic falsifier has reviewed the work.',
+      disagreements,
+      attempts: normalized,
+      independent_review_count: independentFamilies.length,
+      review_families: independentFamilies,
+    };
   }
   return {
     standing: 'EVIDENCE_PRESENTED',
     needs_kelly: true,
-    summary: 'Multiple attempts completed without structured disagreement. Semantic findings remain evidence for founder review, not an automated verdict.',
+    summary: 'Independent attempts completed without structured disagreement. Semantic findings remain evidence for founder review, not an automated verdict.',
     disagreements,
     attempts: normalized,
+    independent_review_count: independentFamilies.length,
+    review_families: independentFamilies,
   };
 }
 
@@ -154,6 +210,37 @@ async function providers(root, opts = {}) {
 async function create(root, packet, opts = {}) {
   const mod = await importBound(root, 'scripts/builder/work-unit-create.mjs');
   return mod.createWorkUnit(packet, { home: opts.home });
+}
+
+async function planRouting(root, input = {}) {
+  const mod = await importBound(root, 'scripts/builder/routing-intelligence-j6.mjs');
+  return mod.planRouting(input);
+}
+
+async function planWorkUnitRouting(root, workUnitId, req = {}, opts = {}) {
+  const workUnitMod = await importBound(root, 'scripts/builder/work-unit.mjs');
+  const providerMod = await importBound(root, 'scripts/builder/opencode-provider.mjs');
+  const workUnit = workUnitMod.loadWorkUnit(workUnitId);
+  if (!workUnit) return { ok: false, status: 'REFUSED', reason: 'WORK_UNIT_NOT_FOUND' };
+
+  const catalog = await providers(root, opts);
+  const providerAvailability = Object.fromEntries(
+    catalog.map((provider) => [provider.id, provider.state === 'AVAILABLE']),
+  );
+  const plan = await planRouting(root, {
+    capability: workUnit.capability,
+    task_shape: req.task_shape || workUnit.routing?.task_shape || workUnit.task_class,
+    evidence_class: providerMod.deriveWorkUnitEvidenceClass(workUnit),
+    permission_envelope: workUnitMod.derivePermissionEnvelope(workUnit),
+    provider_availability: providerAvailability,
+    requested_external_family: req.requested_external_family || null,
+  });
+  return {
+    ok: true,
+    status: 'PLANNED',
+    work_unit_id: workUnitId,
+    route_plan: plan,
+  };
 }
 
 async function status(root, workUnitId) {
@@ -240,9 +327,9 @@ async function runProvider(root, req, opts = {}) {
   }
 
   const snapshot = await status(root, id);
+  const outcome = durableProviderOutcome(run, recorded);
   return {
-    ok: run.exit_code === 0,
-    status: run.exit_code === 0 ? 'COMPLETED' : 'FAILED',
+    ...outcome,
     provider: resolved,
     run,
     recorded_attempt: recorded,
@@ -254,5 +341,6 @@ module.exports = {
   MAX_LOG_CHARS, RUN_TIMEOUT_MS, KEYCHAIN_CREDENTIALS,
   homeOf, resultPath, readLogExcerpt, exitCodeFromSummary,
   credentialAvailability, delegateLaneForProvider,
-  reconcileAttempts, providerChildEnv, providers, create, status, runProvider,
+  modelFamilyFromAttempt, durableProviderOutcome,
+  reconcileAttempts, providerChildEnv, providers, create, planRouting, planWorkUnitRouting, status, runProvider,
 };

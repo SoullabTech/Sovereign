@@ -1,0 +1,317 @@
+{
+  "deterministic_first": {
+    "law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "status": "DETERMINISTIC",
+    "execution_lane": "C0",
+    "deterministic_capability": "git.rev_parse",
+    "evidence_class": "E1_REPOSITORY_LOCAL",
+    "task_shape": "CODE_GROUNDED",
+    "eligible_model_families": [],
+    "primary_model_family": null,
+    "independent_review_model_family": null,
+    "external_candidates": [],
+    "selected_external_family": null,
+    "selected_transport": null,
+    "response_budget_profile": null,
+    "blockers": [],
+    "execution_authorized": false,
+    "provenance": {
+      "deterministic_capability_considered": true,
+      "deterministic_capability_selected": "git.rev_parse",
+      "task_shape_source": "declared",
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "held_reason": null
+    }
+  },
+  "code_local": {
+    "law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "status": "ROUTED_LOCAL",
+    "execution_lane": "LOCAL_REVIEW",
+    "deterministic_capability": null,
+    "evidence_class": "E1_REPOSITORY_LOCAL",
+    "task_shape": "CODE_GROUNDED",
+    "eligible_model_families": [
+      "QWEN",
+      "GPT_OSS",
+      "INKLING"
+    ],
+    "primary_model_family": "QWEN",
+    "independent_review_model_family": "GPT_OSS",
+    "primary_transport": "qwen-local",
+    "external_candidates": [
+      "INKLING"
+    ],
+    "selected_external_family": null,
+    "selected_transport": null,
+    "response_budget_profile": {
+      "profile_id": "LOCAL_QWEN_EXISTING_ADAPTER",
+      "enforcement": "adapter-managed",
+      "max_output_tokens": null,
+      "auto_expand": false,
+      "note": "J6 plans the local review but does not invent an unproven OpenCode output-token flag."
+    },
+    "blockers": [],
+    "execution_authorized": false,
+    "external_execution_ready": false,
+    "provenance": {
+      "deterministic_capability_considered": true,
+      "deterministic_capability_selected": null,
+      "task_shape_source": "declared",
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "eligible_model_families": [
+        "QWEN",
+        "GPT_OSS",
+        "INKLING"
+      ],
+      "selected_primary": "QWEN",
+      "required_independent_review": "GPT_OSS",
+      "external_candidates": [
+        "INKLING"
+      ],
+      "requested_external_family": null,
+      "external_evidence_class": null,
+      "selected_transport": null,
+      "authority": {
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      },
+      "response_budget_profile": "LOCAL_QWEN_EXISTING_ADAPTER",
+      "held_reason": null
+    }
+  },
+  "architecture_external_held_without_grants": {
+    "law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "status": "HOLD",
+    "execution_lane": "LOCAL_REVIEW",
+    "deterministic_capability": null,
+    "evidence_class": "E1_REPOSITORY_LOCAL",
+    "task_shape": "ARCHITECTURE_REASONING",
+    "eligible_model_families": [
+      "QWEN",
+      "GPT_OSS",
+      "NEMOTRON"
+    ],
+    "primary_model_family": "GPT_OSS",
+    "independent_review_model_family": "QWEN",
+    "primary_transport": "gpt-oss-local",
+    "external_candidates": [
+      "NEMOTRON"
+    ],
+    "selected_external_family": "NEMOTRON",
+    "selected_transport": null,
+    "response_budget_profile": {
+      "profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER",
+      "enforcement": "adapter-managed",
+      "max_output_tokens": null,
+      "reasoning_posture": "low",
+      "auto_expand": false,
+      "note": "GPT-OSS requires its proven local chat/reasoning semantics; J6 does not invent an OpenCode output-token flag."
+    },
+    "blockers": [
+      "EXTERNAL_NETWORK_NOT_AUTHORIZED",
+      "EXTERNAL_REPOSITORY_DISCLOSURE_NOT_AUTHORIZED",
+      "PROVIDER_SPEND_NOT_AUTHORIZED"
+    ],
+    "execution_authorized": false,
+    "external_execution_ready": false,
+    "provenance": {
+      "deterministic_capability_considered": true,
+      "deterministic_capability_selected": null,
+      "task_shape_source": "declared",
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "eligible_model_families": [
+        "QWEN",
+        "GPT_OSS",
+        "NEMOTRON"
+      ],
+      "selected_primary": "GPT_OSS",
+      "required_independent_review": "QWEN",
+      "external_candidates": [
+        "NEMOTRON"
+      ],
+      "requested_external_family": "NEMOTRON",
+      "external_evidence_class": "E3_EXTERNAL_REPO_BUNDLE",
+      "selected_transport": null,
+      "authority": {
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      },
+      "response_budget_profile": "LOCAL_GPT_OSS_EXISTING_ADAPTER",
+      "held_reason": "EXTERNAL_NETWORK_NOT_AUTHORIZED"
+    }
+  },
+  "architecture_external_ready_but_nonexecuting": {
+    "law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "status": "ROUTED_LOCAL",
+    "execution_lane": "LOCAL_REVIEW",
+    "deterministic_capability": null,
+    "evidence_class": "E1_REPOSITORY_LOCAL",
+    "task_shape": "ARCHITECTURE_REASONING",
+    "eligible_model_families": [
+      "QWEN",
+      "GPT_OSS",
+      "NEMOTRON"
+    ],
+    "primary_model_family": "GPT_OSS",
+    "independent_review_model_family": "QWEN",
+    "primary_transport": "gpt-oss-local",
+    "external_candidates": [
+      "NEMOTRON"
+    ],
+    "selected_external_family": "NEMOTRON",
+    "selected_transport": "nemotron-tinker",
+    "response_budget_profile": {
+      "profile_id": "NEMOTRON_TINKER_J3B_R1",
+      "enforcement": "transport",
+      "max_output_tokens": 4096,
+      "auto_expand": false,
+      "evidence": "J3-B-R1 Nemotron B2-B5 completed at 2209-2974 provider output tokens under a 4096 ceiling; CODE_GROUNDED remains ineligible."
+    },
+    "blockers": [],
+    "execution_authorized": false,
+    "external_execution_ready": true,
+    "provenance": {
+      "deterministic_capability_considered": true,
+      "deterministic_capability_selected": null,
+      "task_shape_source": "declared",
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "eligible_model_families": [
+        "QWEN",
+        "GPT_OSS",
+        "NEMOTRON"
+      ],
+      "selected_primary": "GPT_OSS",
+      "required_independent_review": "QWEN",
+      "external_candidates": [
+        "NEMOTRON"
+      ],
+      "requested_external_family": "NEMOTRON",
+      "external_evidence_class": "E3_EXTERNAL_REPO_BUNDLE",
+      "selected_transport": "nemotron-tinker",
+      "authority": {
+        "external_network": true,
+        "external_repo_disclosure": true,
+        "provider_spend": true
+      },
+      "response_budget_profile": "NEMOTRON_TINKER_J3B_R1",
+      "held_reason": null
+    }
+  },
+  "adversarial_external_only_ready_but_nonexecuting": {
+    "law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "status": "EXTERNAL_REVIEW_READY",
+    "execution_lane": "EXTERNAL_REVIEW",
+    "deterministic_capability": null,
+    "evidence_class": "E0_TASK_TEXT",
+    "task_shape": "ADVERSARIAL_FALSIFICATION",
+    "eligible_model_families": [
+      "INKLING",
+      "NEMOTRON"
+    ],
+    "primary_model_family": null,
+    "independent_review_model_family": null,
+    "primary_transport": null,
+    "external_candidates": [
+      "INKLING",
+      "NEMOTRON"
+    ],
+    "selected_external_family": "INKLING",
+    "selected_transport": "inkling-tinker",
+    "response_budget_profile": {
+      "profile_id": "INKLING_TINKER_J3B_R1",
+      "enforcement": "transport",
+      "max_output_tokens": 4096,
+      "auto_expand": false,
+      "evidence": "J3-B-R1 Inkling B4 completed at 2001 provider output tokens under a 4096 ceiling."
+    },
+    "blockers": [],
+    "execution_authorized": false,
+    "external_execution_ready": true,
+    "provenance": {
+      "deterministic_capability_considered": true,
+      "deterministic_capability_selected": null,
+      "task_shape_source": "declared",
+      "evidence_class": "E0_TASK_TEXT",
+      "eligible_model_families": [
+        "INKLING",
+        "NEMOTRON"
+      ],
+      "selected_primary": null,
+      "required_independent_review": null,
+      "external_candidates": [
+        "INKLING",
+        "NEMOTRON"
+      ],
+      "requested_external_family": "INKLING",
+      "external_evidence_class": "E0_TASK_TEXT",
+      "selected_transport": "inkling-tinker",
+      "authority": {
+        "external_network": true,
+        "external_repo_disclosure": false,
+        "provider_spend": true
+      },
+      "response_budget_profile": "INKLING_TINKER_J3B_R1",
+      "held_reason": null
+    }
+  },
+  "continuity_external_refused": {
+    "law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "status": "HOLD",
+    "execution_lane": "LOCAL_REVIEW",
+    "deterministic_capability": null,
+    "evidence_class": "E2_CONTINUITY_LOCAL",
+    "task_shape": "EVIDENCE_SYNTHESIS",
+    "eligible_model_families": [
+      "QWEN",
+      "GPT_OSS",
+      "INKLING",
+      "NEMOTRON"
+    ],
+    "primary_model_family": "GPT_OSS",
+    "independent_review_model_family": "QWEN",
+    "primary_transport": "gpt-oss-local",
+    "external_candidates": [],
+    "selected_external_family": "INKLING",
+    "selected_transport": null,
+    "response_budget_profile": {
+      "profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER",
+      "enforcement": "adapter-managed",
+      "max_output_tokens": null,
+      "reasoning_posture": "low",
+      "auto_expand": false,
+      "note": "GPT-OSS requires its proven local chat/reasoning semantics; J6 does not invent an OpenCode output-token flag."
+    },
+    "blockers": [
+      "LOCAL_ONLY_EVIDENCE"
+    ],
+    "execution_authorized": false,
+    "external_execution_ready": false,
+    "provenance": {
+      "deterministic_capability_considered": true,
+      "deterministic_capability_selected": null,
+      "task_shape_source": "declared",
+      "evidence_class": "E2_CONTINUITY_LOCAL",
+      "eligible_model_families": [
+        "QWEN",
+        "GPT_OSS",
+        "INKLING",
+        "NEMOTRON"
+      ],
+      "selected_primary": "GPT_OSS",
+      "required_independent_review": "QWEN",
+      "external_candidates": [],
+      "requested_external_family": "INKLING",
+      "external_evidence_class": "E2_CONTINUITY_LOCAL",
+      "selected_transport": null,
+      "authority": {
+        "external_network": true,
+        "external_repo_disclosure": true,
+        "provider_spend": true
+      },
+      "response_budget_profile": "LOCAL_GPT_OSS_EXISTING_ADAPTER",
+      "held_reason": "LOCAL_ONLY_EVIDENCE"
+    }
+  }
+}

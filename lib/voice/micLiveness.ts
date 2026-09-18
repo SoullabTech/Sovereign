@@ -195,6 +195,34 @@ export function shouldActOnCaptureLiveness(input: CaptureLivenessAuthorityInput)
 }
 
 /**
+ * TURN-02 automatic recovery is intentionally narrower than liveness detection.
+ * Only a silent recognition death may self-heal, only while HANDS_FREE
+ * conversational authority is still active, and only once until a real
+ * recognition result proves the replacement generation can transcribe.
+ */
+export interface AutomaticCaptureRecoveryInput {
+  cause: CaptureLossCause;
+  handsFree: boolean;
+  continuousConversation: boolean;
+  automaticEndpointing: boolean;
+  restartRequestInFlight: boolean;
+  recoveryAlreadyAttempted: boolean;
+}
+
+export function shouldAttemptAutomaticCaptureRecovery(
+  input: AutomaticCaptureRecoveryInput,
+): boolean {
+  return (
+    input.cause === 'silent_death' &&
+    input.handsFree &&
+    input.continuousConversation &&
+    input.automaticEndpointing &&
+    !input.restartRequestInFlight &&
+    !input.recoveryAlreadyAttempted
+  );
+}
+
+/**
  * Decide whether the capture path has silently died.
  *
  * Total and side-effect free: given the same input it always returns the same

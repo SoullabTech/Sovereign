@@ -1,0 +1,57 @@
+{
+  "work_unit_id": "j3b-r1-nemotron-b5",
+  "title": "Nemotron B5 response-budget normalization",
+  "objective": "Return ONLY one JSON object with keys current_truth, historical_truth, prohibited_claim, next_act.\nEvidence:\nA. canonical branch at SHA C does not contain feature X.\nB. a noncanonical branch at SHA B contains an implementation of feature X and passing branch-local tests.\nC. an older production witness at SHA P predates both B and C and says nothing about X.\nQuestion: State the strongest current claim. Preserve the noncanonical implementation as historical/branch evidence without calling it canonical or live. Do not infer deployment.",
+  "execution_lane": "provider-evaluation",
+  "canonical_sha": "5b2f4d55698c977cba004ff732c8b8419b0b9c6f",
+  "branch": "chore/ain-delegate-j3b-r1-nemotron-b5",
+  "worktree": "/Users/soullab/.claude/worktrees/ain-j3b-r1-nemotron-b5",
+  "governing_authority": "Founder grant: JARVIS-ROUTING-INTELLIGENCE-01 / J3-B-R1 — EXTERNAL RESPONSE-BUDGET NORMALIZATION ONLY, 2026-09-18",
+  "established_facts": [
+    "Synthetic non-confidential corrective benchmark only.",
+    "This is a new corrective call, not a retry under J3-B.",
+    "Direct Tinker CLI default maxTokens is 4096 for this witness."
+  ],
+  "allowed_files": [
+    "NO FILES — J3-B-R1 synthetic response-budget normalization only"
+  ],
+  "prohibited_files_actions": [
+    "Do not inspect repository files.",
+    "Do not use tools.",
+    "Do not run commands.",
+    "Do not access continuity, member, client, corpus, PHI, production, secret, credential, or confidential data.",
+    "Do not write files."
+  ],
+  "acceptance_criteria": [
+    "One provider attempt only; no retry.",
+    "Exact selected model identity is preserved.",
+    "No repository file changes.",
+    "No secret leakage."
+  ],
+  "verification_commands": [
+    "test -z \"${TINKER_API_KEY:-}\"",
+    "test -z \"$(git status --porcelain)\""
+  ],
+  "escalation_conditions": [
+    "Any authority, credential, routing, model identity, permission, provider, or response mismatch is recorded with no retry."
+  ],
+  "max_attempts": 1,
+  "expected_output": "Synthetic benchmark response only.",
+  "authorized_acts": [
+    "repo.read",
+    "network.external",
+    "provider.spend"
+  ],
+  "not_authorized_acts": [
+    "repo.write:worktree",
+    "tests.run",
+    "production.read",
+    "production.write",
+    "deploy",
+    "authority.change"
+  ],
+  "integration_actor": "founder",
+  "autonomy_ceiling": "LEVEL_1_REVIEW",
+  "risk_class": "high",
+  "task_class": "independent_evaluation"
+}
