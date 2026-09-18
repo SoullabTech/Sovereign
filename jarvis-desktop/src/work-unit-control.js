@@ -243,11 +243,126 @@ async function planWorkUnitRouting(root, workUnitId, req = {}, opts = {}) {
   };
 }
 
-async function status(root, workUnitId) {
-  const mod = await importBound(root, 'scripts/builder/work-unit.mjs');
+async function r5bContext(root, workUnitId, providerId, opts = {}) {
+  const [workUnitMod, providerMod, grantMod] = await Promise.all([
+    importBound(root, 'scripts/builder/work-unit.mjs'),
+    importBound(root, 'scripts/builder/opencode-provider.mjs'),
+    importBound(root, 'scripts/builder/human-provider-execution-grant.mjs'),
+  ]);
+  const workUnit = workUnitMod.loadWorkUnit(workUnitId);
+  if (!workUnit) return { ok: false, status: 'REFUSED', reason: 'WORK_UNIT_NOT_FOUND' };
+  const spec = providerMod.OPENCODE_PROVIDERS?.[providerId];
+  if (!spec) return { ok: false, status: 'REFUSED', reason: 'UNKNOWN_PROVIDER' };
+  const modelRef = `${spec.opencode_provider}/${spec.default_model}`;
+  const attempts = workUnitMod.loadAttempts(workUnitId);
+  const localSubstrate = fs.existsSync(root)
+    && fs.existsSync(path.join(root, 'scripts', 'ain-delegate.sh'));
+  const preview = grantMod.prepareHumanExecutionAuthorization({
+    work_unit: workUnit,
+    binding: workUnit.routing_intelligence ?? null,
+    attempts,
+    provider_id: providerId,
+    model_ref: modelRef,
+    local_worktree_available: localSubstrate,
+  });
+  return {
+    ok: preview.ok,
+    status: preview.status,
+    reason: preview.blockers?.[0]?.code || null,
+    work_unit: workUnit,
+    attempts,
+    providerMod,
+    grantMod,
+    provider_spec: spec,
+    provider: {
+      id: providerId,
+      model_ref: modelRef,
+      standing: spec.standing,
+      external_network: spec.external_network === true,
+      metered_provider: spec.metered_provider === true,
+    },
+    preview,
+  };
+}
+
+async function executionAuthorizationPreview(root, workUnitId, providerId, opts = {}) {
+  const ctx = await r5bContext(root, workUnitId, providerId, opts);
+  if (!ctx.ok) {
+    return {
+      ok: false,
+      status: ctx.status || 'REFUSED',
+      reason: ctx.reason || 'R5B_PREVIEW_REFUSED',
+      blockers: ctx.preview?.blockers || [],
+      provider: ctx.provider || null,
+    };
+  }
+  const store = await importBound(
+    root,
+    'scripts/builder/human-provider-execution-grant-store.mjs',
+  );
+  const grants = store.listGrantStandings(workUnitId, {
+    home: homeOf(opts.env || process.env),
+  });
+  return {
+    ...ctx.preview,
+    ok: true,
+    status: 'HELD_FOR_HUMAN_AUTHORIZATION',
+    r4_disposition: ctx.preview.admission_before,
+    provider: ctx.provider,
+    execution_grants: grants,
+  };
+}
+
+async function authorizeExecutionOnce(root, workUnitId, providerId, opts = {}) {
+  const ctx = await r5bContext(root, workUnitId, providerId, opts);
+  if (!ctx.ok) {
+    return {
+      ok: false,
+      status: ctx.status || 'REFUSED',
+      reason: ctx.reason || 'R5B_PREVIEW_REFUSED',
+      blockers: ctx.preview?.blockers || [],
+    };
+  }
+  const store = await importBound(
+    root,
+    'scripts/builder/human-provider-execution-grant-store.mjs',
+  );
+  const issued = store.issueHumanExecutionGrant(ctx.preview, {
+    home: homeOf(opts.env || process.env),
+    grantor: 'founder',
+    authorization_act: 'JARVIS_DESKTOP_R5B_AUTHORIZE_ONCE',
+  });
+  return {
+    ...issued,
+    provider: ctx.provider,
+    preview: ctx.preview,
+  };
+}
+
+async function revokeExecutionGrant(root, workUnitId, grantId, opts = {}) {
+  const store = await importBound(
+    root,
+    'scripts/builder/human-provider-execution-grant-store.mjs',
+  );
+  return store.revokeHumanExecutionGrant(workUnitId, grantId, {
+    home: homeOf(opts.env || process.env),
+    reason: 'HUMAN_REVOKED',
+  });
+}
+
+async function status(root, workUnitId, opts = {}) {
+  const [mod, grantStore] = await Promise.all([
+    importBound(root, 'scripts/builder/work-unit.mjs'),
+    importBound(root, 'scripts/builder/human-provider-execution-grant-store.mjs'),
+  ]);
   const workUnit = mod.workUnitStatus(workUnitId);
   const raw = mod.loadWorkUnit(workUnitId);
   const attempts = mod.loadAttempts(workUnitId);
+  const executionGrants = raw
+    ? grantStore.listGrantStandings(workUnitId, {
+      home: homeOf(opts.env || process.env),
+    })
+    : [];
   return {
     ok: workUnit.exists === true,
     work_unit: workUnit,
@@ -255,6 +370,7 @@ async function status(root, workUnitId) {
     routing_intelligence: raw?.routing_intelligence ?? null,
     disclosure: raw?.disclosure ?? null,
     attempts,
+    execution_grants: executionGrants,
     reconciliation: reconcileAttempts(attempts),
   };
 }
@@ -265,32 +381,26 @@ function delegateLaneForProvider(resolved) {
   return null;
 }
 
-async function runProvider(root, req, opts = {}) {
-  const id = String(req?.work_unit_id || '');
-  const providerId = String(req?.provider_id || '');
-  const model = req?.model ? String(req.model) : '';
-  if (!id || !providerId) return { ok: false, status: 'REFUSED', reason: 'work_unit_id and provider_id are required' };
-
-  // Prove Work Unit/provider authority FIRST, deliberately without touching a
-  // credential source. Only after authority passes may discovery check whether
-  // the approved credential source is ready. The secret value remains the
-  // delegate's concern and is never loaded into the Desktop process.
-  const sourceEnv = opts.env || process.env;
-  const providerMod = await importBound(root, 'scripts/builder/opencode-provider.mjs');
-  const resolved = providerMod.resolveWorkUnitProvider(
-    id, providerId, model, sourceEnv, { skipCredentialCheck: true },
-  );
-  if (!resolved.ok) return { ok: false, status: 'REFUSED', reason: resolved.code, provider: providerId };
-
-  const credential = credentialAvailability(resolved.credential_env, {
-    env: sourceEnv, keychainProbe: opts.keychainProbe,
-  });
-  if (!credential.ready) {
-    return { ok: false, status: 'REFUSED', reason: 'PROVIDER_CREDENTIAL_MISSING', provider: providerId };
-  }
-
+async function executeResolvedProvider(
+  root,
+  {
+    id,
+    providerId,
+    model,
+    resolved,
+    sourceEnv,
+  },
+  opts = {},
+) {
   const lane = delegateLaneForProvider(resolved);
-  if (!lane) return { ok: false, status: 'REFUSED', reason: 'PROVIDER_AUTOMATION_UNSUPPORTED', provider: providerId };
+  if (!lane) {
+    return {
+      ok: false,
+      status: 'REFUSED',
+      reason: 'PROVIDER_AUTOMATION_UNSUPPORTED',
+      provider: providerId,
+    };
+  }
 
   const delegate = path.join(root, 'scripts', 'ain-delegate.sh');
   const args = [delegate, lane, id, providerId];
@@ -313,8 +423,6 @@ async function runProvider(root, req, opts = {}) {
     });
   });
 
-  // Record only a result created/updated by this attempt; never duplicate a stale result
-  // when provider resolution or launch failed before the delegate could write one.
   let recorded = null;
   const rf = resultPath(id, env);
   if (fs.existsSync(rf) && fs.statSync(rf).mtimeMs > beforeMtime) {
@@ -322,11 +430,17 @@ async function runProvider(root, req, opts = {}) {
       const wu = await importBound(root, 'scripts/builder/work-unit.mjs');
       recorded = wu.recordAttempt(id);
     } catch (e) {
-      return { ok: false, status: 'ATTEMPT_RECORD_FAILED', reason: e.message, provider: resolved, run };
+      return {
+        ok: false,
+        status: 'ATTEMPT_RECORD_FAILED',
+        reason: e.message,
+        provider: resolved,
+        run,
+      };
     }
   }
 
-  const snapshot = await status(root, id);
+  const snapshot = await status(root, id, { env: sourceEnv });
   const outcome = durableProviderOutcome(run, recorded);
   return {
     ...outcome,
@@ -337,10 +451,213 @@ async function runProvider(root, req, opts = {}) {
   };
 }
 
+async function runProvider(root, req, opts = {}) {
+  const id = String(req?.work_unit_id || '');
+  const providerId = String(req?.provider_id || '');
+  const model = req?.model ? String(req.model) : '';
+  if (!id || !providerId) {
+    return {
+      ok: false,
+      status: 'REFUSED',
+      reason: 'work_unit_id and provider_id are required',
+    };
+  }
+
+  // Legacy/manual provider path. Route-bound Work Units remain blocked from this
+  // verb in MAIN; R5B uses confirmAuthorizedExecution instead.
+  const sourceEnv = opts.env || process.env;
+  const providerMod = await importBound(root, 'scripts/builder/opencode-provider.mjs');
+  const resolved = providerMod.resolveWorkUnitProvider(
+    id, providerId, model, sourceEnv, { skipCredentialCheck: true },
+  );
+  if (!resolved.ok) {
+    return {
+      ok: false,
+      status: 'REFUSED',
+      reason: resolved.code,
+      provider: providerId,
+    };
+  }
+
+  const credential = credentialAvailability(resolved.credential_env, {
+    env: sourceEnv,
+    keychainProbe: opts.keychainProbe,
+  });
+  if (!credential.ready) {
+    return {
+      ok: false,
+      status: 'REFUSED',
+      reason: 'PROVIDER_CREDENTIAL_MISSING',
+      provider: providerId,
+    };
+  }
+
+  return executeResolvedProvider(root, {
+    id,
+    providerId,
+    model,
+    resolved,
+    sourceEnv,
+  }, opts);
+}
+
+async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) {
+  const sourceEnv = opts.env || process.env;
+  const home = homeOf(sourceEnv);
+  const store = await importBound(
+    root,
+    'scripts/builder/human-provider-execution-grant-store.mjs',
+  );
+  const standing = store.grantStanding(workUnitId, grantId, { home });
+  if (!standing.exists) {
+    return { ok: false, status: 'REFUSED', reason: 'GRANT_NOT_FOUND' };
+  }
+  if (standing.standing !== 'ACTIVE') {
+    return {
+      ok: false,
+      status: 'REFUSED',
+      reason: 'GRANT_NOT_ACTIVE',
+      grant_standing: standing.standing,
+    };
+  }
+
+  const grant = standing.grant;
+  const ctx = await r5bContext(root, workUnitId, grant.provider_id, opts);
+  if (!ctx.ok) {
+    store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+      home,
+      reason: ctx.reason || 'CURRENT_FACTS_CHANGED',
+    });
+    return {
+      ok: false,
+      status: 'GRANT_INVALID',
+      reason: ctx.reason || 'CURRENT_FACTS_CHANGED',
+      blockers: ctx.preview?.blockers || [],
+    };
+  }
+
+  // Recompute exact R4 admission immediately before any credential lookup.
+  const finalAdmission = ctx.grantMod.evaluateHumanExecutionGrant({
+    grant,
+    work_unit: ctx.work_unit,
+    binding: ctx.work_unit.routing_intelligence ?? null,
+    attempts: ctx.attempts,
+    provider_id: grant.provider_id,
+    model_ref: ctx.provider.model_ref,
+    local_worktree_available: true,
+  });
+  if (!finalAdmission.ok) {
+    store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+      home,
+      reason: finalAdmission.status || 'FINAL_R4_ADMISSION_REFUSED',
+    });
+    return {
+      ok: false,
+      status: finalAdmission.status,
+      reason: finalAdmission.blockers?.[0]?.code || 'FINAL_R4_ADMISSION_REFUSED',
+      blockers: finalAdmission.blockers || [],
+    };
+  }
+
+  const resolved = ctx.providerMod.resolveOpenCodeProvider({
+    providerId: grant.provider_id,
+    model: grant.model_ref,
+    permissionEnvelope: finalAdmission.permission_envelope,
+    evidenceClass: ctx.providerMod.deriveWorkUnitEvidenceClass(
+      ctx.work_unit,
+      { external: ctx.provider_spec.external_network === true },
+    ),
+    env: sourceEnv,
+    skipCredentialCheck: true,
+  });
+  if (!resolved.ok) {
+    store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+      home,
+      reason: resolved.code,
+    });
+    return {
+      ok: false,
+      status: 'GRANT_INVALID',
+      reason: resolved.code,
+    };
+  }
+
+  // Credential presence is consulted only after human grant validation and a
+  // fresh R4 ADMITTED result. The credential value never enters this process.
+  const credential = credentialAvailability(resolved.credential_env, {
+    env: sourceEnv,
+    keychainProbe: opts.keychainProbe,
+  });
+  if (!credential.ready) {
+    return {
+      ok: false,
+      status: 'HELD_FOR_CREDENTIAL',
+      reason: 'PROVIDER_CREDENTIAL_MISSING',
+      provider: grant.provider_id,
+      grant_standing: 'ACTIVE',
+    };
+  }
+
+  const lane = delegateLaneForProvider(resolved);
+  if (!lane) {
+    store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+      home,
+      reason: 'PROVIDER_AUTOMATION_UNSUPPORTED',
+    });
+    return {
+      ok: false,
+      status: 'GRANT_INVALID',
+      reason: 'PROVIDER_AUTOMATION_UNSUPPORTED',
+    };
+  }
+
+  // Claim before provider execution so double-clicks, crashes, or retries can
+  // never reuse the one-shot authority. CONSUMED is appended after the attempt.
+  const claimed = store.claimHumanExecutionGrant(workUnitId, grantId, { home });
+  if (!claimed.ok) return claimed;
+
+  let executionResult;
+  try {
+    const runner = opts.executeResolvedProvider || executeResolvedProvider;
+    executionResult = await runner(root, {
+      id: workUnitId,
+      providerId: grant.provider_id,
+      model: grant.model_ref,
+      resolved,
+      sourceEnv,
+    }, opts);
+  } catch (error) {
+    executionResult = {
+      ok: false,
+      status: 'EXECUTION_ERROR',
+      reason: String(error?.message || error),
+    };
+  }
+
+  const consumed = store.consumeHumanExecutionGrant(workUnitId, grantId, {
+    home,
+    outcome: executionResult?.recorded_attempt
+      ? 'attempt_recorded'
+      : String(executionResult?.status || 'execution_attempted'),
+  });
+
+  return {
+    ...executionResult,
+    final_admission: finalAdmission.admission,
+    execution_grant: {
+      grant_id: grantId,
+      standing: consumed.ok ? 'CONSUMED' : 'CLAIMED',
+      consume_status: consumed.status,
+    },
+  };
+}
+
 module.exports = {
   MAX_LOG_CHARS, RUN_TIMEOUT_MS, KEYCHAIN_CREDENTIALS,
   homeOf, resultPath, readLogExcerpt, exitCodeFromSummary,
   credentialAvailability, delegateLaneForProvider,
   modelFamilyFromAttempt, durableProviderOutcome,
-  reconcileAttempts, providerChildEnv, providers, create, planRouting, planWorkUnitRouting, status, runProvider,
+  reconcileAttempts, providerChildEnv, providers, create, planRouting, planWorkUnitRouting,
+  executionAuthorizationPreview, authorizeExecutionOnce, revokeExecutionGrant,
+  confirmAuthorizedExecution, executeResolvedProvider, status, runProvider,
 };
