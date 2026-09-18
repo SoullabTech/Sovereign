@@ -12,19 +12,22 @@ const preload = src('preload.js');
 const main = src('main.js');
 const operatorWU = src('operator-work-unit.js');
 const controller = src('work-unit-control.js');
+const canonicalV2 = src('canonical-work-unit-v2.js');
 
-test('cockpit makes Routing Intelligence preview distinct from manual provider execution', () => {
-  assert.match(renderer, /Governed Work Unit/);
-  assert.match(renderer, /Routing Intelligence/);
-  assert.match(renderer, /Task shape/);
-  assert.match(renderer, /Review pressure/);
-  assert.match(renderer, /Challenge mode/);
-  assert.match(renderer, /execution disconnected in R3/i);
-  assert.match(renderer, /Use the existing manual provider strategy instead/);
-  assert.match(renderer, /Manual provider strategy/);
+test('Desktop distinguishes canonical W0.v2 substrate from LEGACY / COMPATIBILITY provider execution', () => {
+  assert.match(renderer, /Canonical Work Unit · Native substrate/);
+  assert.match(renderer, /J5 task shape/);
+  assert.match(renderer, /Evidence custody/);
+  assert.match(renderer, /Routing posture/);
+  assert.match(renderer, /Falsification conditions/);
+  assert.match(renderer, /Stop conditions/);
+  assert.match(renderer, /PROSPECTIVE \/ NONCANONICAL \/ NONEXECUTING/);
+  assert.match(renderer, /QWEN primary → GPT_OSS required independent local review/);
+  assert.match(renderer, /LEGACY \/ COMPATIBILITY/);
   assert.match(renderer, /Qwen3 Coder 30B · local coding review/);
   assert.match(renderer, /GPT-OSS 20B · local reasoning review/);
   assert.match(renderer, /Inkling · external adversarial review/);
+  assert.match(renderer, /Provider execution: <b>DISCONNECTED<\/b>/);
 });
 
 test('Home ordinary prose hands off to Work as intent rather than requiring a command phrase', () => {
@@ -61,6 +64,12 @@ test('exactly one new privileged channel carries a bounded action enum', () => {
     'preview-route',
     'create',
     'status',
+    'canonical-bound',
+    'canonical-authorize',
+    'canonical-route',
+    'canonical-bind-transport',
+    'canonical-adjudicate',
+    'canonical-close',
     'route-plan',
     'execution-auth-preview',
     'authorize-execution-once',
@@ -78,15 +87,18 @@ test('exactly one new privileged channel carries a bounded action enum', () => {
   assert.match(controller, /deriveWorkUnitEvidenceClass\(workUnit\)/);
 });
 
-test('MAIN, not renderer, binds canonical SHA, route record, and Work Unit identity', () => {
+test('MAIN/Builder, not renderer, derive W0.v2 identity, canonical SHA and W3.v2 route truth', () => {
+  assert.match(main, /function currentCanonicalSha/);
   assert.match(main, /execFileSync\('git', \['rev-parse', 'HEAD'\]/);
-  assert.match(main, /computeRoutingPreview/);
-  assert.match(main, /routing-intelligence\.mjs/);
-  assert.match(main, /OPWU\.buildRoutingInput/);
-  assert.match(main, /routeIntelligence\(routingInput\)/);
-  assert.match(main, /OPWU\.buildPacket\(spec/);
+  assert.match(main, /CWUV2\.createCanonicalV2/);
+  assert.match(main, /CWUV2\.bindCanonicalRouteV2/);
+  assert.match(canonicalV2, /createWorkUnitDraftV2/);
+  assert.match(canonicalV2, /bindAuthorizedRouteV2/);
+  assert.match(canonicalV2, /prospective_preview/);
+  assert.match(canonicalV2, /PROSPECTIVE_NONCANONICAL_NONEXECUTING/);
   assert.doesNotMatch(renderer, /canonical_sha\s*:/);
   assert.doesNotMatch(renderer, /route_record\s*:/);
+  assert.doesNotMatch(renderer, /route_digest\s*:/);
   assert.doesNotMatch(renderer, /branch:\s*`chore\/ain-delegate/);
 });
 

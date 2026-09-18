@@ -1,0 +1,20 @@
+PASS  F1 — W0.v1 is not silently treated as W0.v2
+PASS  F2 — task shape mutation after AUTHORIZED
+PASS  F3 — capability mutation after AUTHORIZED
+PASS  F4 — custody mutation after AUTHORIZED
+PASS  F5 — routing request mutation after AUTHORIZED
+PASS  F6 — registered deterministic capability does not route to a model
+PASS  F7 — E2 continuity cannot externalize
+PASS  F8 — E4 cannot externalize
+PASS  F9 — E1 external crossing is projected to E3
+PASS  F10 — Nemotron is not admitted for CODE_GROUNDED
+PASS  F11 — CODE_GROUNDED cannot omit required GPT_OSS local review
+PASS  F12 — route authority exceeding Work Unit authority is rejected
+PASS  F13 — transport binding to family absent from route is refused
+PASS  F14 — unavailable family cannot silently substitute another family
+PASS  F15 — HOLD binding cannot admit ROUTED → EXECUTING
+PASS  F16 — superseded binding is not treated as active
+PASS  F17 — W3.v2 cannot write ROUTED directly
+PASS  F18 — W2.v2 refuses ROUTED → EXECUTING without all required bindings
+
+18 passed · 0 failed

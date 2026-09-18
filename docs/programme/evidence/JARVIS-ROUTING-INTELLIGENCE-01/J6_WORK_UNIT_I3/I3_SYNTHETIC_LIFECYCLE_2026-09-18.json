@@ -1,0 +1,275 @@
+{
+  "e2e_version": "W5.v2",
+  "lifecycle_trace": [
+    "DRAFT",
+    "BOUNDED",
+    "AUTHORIZED",
+    "ROUTED",
+    "EXECUTING",
+    "EVIDENCE_READY",
+    "ADJUDICATED",
+    "CLOSED"
+  ],
+  "final_state": "CLOSED",
+  "final_disposition": "closed",
+  "state_after_w4_evidence": "EXECUTING",
+  "route_integrity": {
+    "route_version": "J5.v1",
+    "route_source": "J5.v1-pure-router",
+    "route_digest": "sha256:ed4ac025545a49086157d5e37d9014df354ef09d009dd58cb5d5866fee5e85eb",
+    "bound_at_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "execution_connected": false
+  },
+  "custody": {
+    "evidence_class": "E1_REPOSITORY_LOCAL"
+  },
+  "routing_request": {
+    "requested_posture": "default",
+    "review_pressure": "ordinary"
+  },
+  "attempts": [
+    {
+      "attempt_id": "primary-1",
+      "model_identity_id": "mi-qwen",
+      "route_participant_id": "primary",
+      "transport_binding_id": "tb-qwen",
+      "model_family": "QWEN",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "opencode",
+      "role": "code_primary",
+      "actor_id": null,
+      "attempt_kind": "primary",
+      "parent_attempt_id": null,
+      "status": "failed",
+      "evidence_refs": [
+        "result:primary-1"
+      ]
+    },
+    {
+      "attempt_id": "retry-1",
+      "model_identity_id": "mi-qwen",
+      "route_participant_id": "primary",
+      "transport_binding_id": "tb-qwen",
+      "model_family": "QWEN",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "opencode",
+      "role": "code_primary",
+      "actor_id": null,
+      "attempt_kind": "retry",
+      "parent_attempt_id": "primary-1",
+      "status": "completed",
+      "evidence_refs": [
+        "result:retry-1"
+      ]
+    },
+    {
+      "attempt_id": "independent-review-1",
+      "model_identity_id": "mi-gpt",
+      "route_participant_id": "local-review-1",
+      "transport_binding_id": "tb-gpt",
+      "model_family": "GPT_OSS",
+      "provider_id": "gpt-oss-local",
+      "model_id": "gpt-oss:20b",
+      "adapter_id": "opencode",
+      "role": "independent_local_challenger",
+      "actor_id": null,
+      "attempt_kind": "independent_model_review",
+      "parent_attempt_id": "retry-1",
+      "status": "completed",
+      "evidence_refs": [
+        "result:independent-review-1"
+      ]
+    }
+  ],
+  "verifier_results": [
+    {
+      "verifier_result_id": "vr-independent-review",
+      "target_attempt_id": "retry-1",
+      "verifier_attempt_id": "independent-review-1",
+      "disposition": "supports",
+      "evidence_refs": [
+        "verifier:independent-review-1"
+      ]
+    }
+  ],
+  "model_identities": [
+    {
+      "model_identity_id": "mi-qwen",
+      "route_participant_id": "primary",
+      "transport_binding_id": "tb-qwen",
+      "model_family": "QWEN",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "opencode",
+      "role": "code_primary"
+    },
+    {
+      "model_identity_id": "mi-gpt",
+      "route_participant_id": "local-review-1",
+      "transport_binding_id": "tb-gpt",
+      "model_family": "GPT_OSS",
+      "provider_id": "gpt-oss-local",
+      "model_id": "gpt-oss:20b",
+      "adapter_id": "opencode",
+      "role": "independent_local_challenger"
+    }
+  ],
+  "transport_bindings": [
+    {
+      "transport_binding_version": "W3T.v1",
+      "transport_binding_id": "tb-qwen",
+      "supersedes_binding_id": null,
+      "route_participant_id": "primary",
+      "model_family": "QWEN",
+      "role": "code_primary",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "opencode",
+      "transport_posture": "local",
+      "execution_mode": "automatic",
+      "response_budget_profile_id": "LOCAL_QWEN_EXISTING_ADAPTER",
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "authority_projection": {
+        "repository_read": true,
+        "network_external": false,
+        "provider_spend": false,
+        "external_disclosure": "none"
+      },
+      "readiness": {
+        "status": "READY",
+        "evidence_ref": "transport-ready:qwen"
+      }
+    },
+    {
+      "transport_binding_version": "W3T.v1",
+      "transport_binding_id": "tb-gpt",
+      "supersedes_binding_id": null,
+      "route_participant_id": "local-review-1",
+      "model_family": "GPT_OSS",
+      "role": "independent_local_challenger",
+      "provider_id": "gpt-oss-local",
+      "model_id": "gpt-oss:20b",
+      "adapter_id": "opencode",
+      "transport_posture": "local",
+      "execution_mode": "automatic",
+      "response_budget_profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER",
+      "evidence_class": "E1_REPOSITORY_LOCAL",
+      "authority_projection": {
+        "repository_read": true,
+        "network_external": false,
+        "provider_spend": false,
+        "external_disclosure": "none"
+      },
+      "readiness": {
+        "status": "READY",
+        "evidence_ref": "transport-ready:gpt-oss"
+      }
+    }
+  ],
+  "failed_primary_preserved": true,
+  "failed_primary_snapshot": "{\"attempt_id\":\"primary-1\",\"model_identity_id\":\"mi-qwen\",\"route_participant_id\":\"primary\",\"transport_binding_id\":\"tb-qwen\",\"model_family\":\"QWEN\",\"provider_id\":\"qwen-local\",\"model_id\":\"qwen3-coder:30b\",\"adapter_id\":\"opencode\",\"role\":\"code_primary\",\"actor_id\":null,\"attempt_kind\":\"primary\",\"parent_attempt_id\":null,\"status\":\"failed\",\"evidence_refs\":[\"result:primary-1\"]}",
+  "final_failed_primary_snapshot": "{\"attempt_id\":\"primary-1\",\"model_identity_id\":\"mi-qwen\",\"route_participant_id\":\"primary\",\"transport_binding_id\":\"tb-qwen\",\"model_family\":\"QWEN\",\"provider_id\":\"qwen-local\",\"model_id\":\"qwen3-coder:30b\",\"adapter_id\":\"opencode\",\"role\":\"code_primary\",\"actor_id\":null,\"attempt_kind\":\"primary\",\"parent_attempt_id\":null,\"status\":\"failed\",\"evidence_refs\":[\"result:primary-1\"]}",
+  "adjudication_record": {
+    "adjudication_id": "adj-w5-v2-accepted",
+    "actor_kind": "human",
+    "actor_id": "synthetic:governing-adjudicator",
+    "decision": "accepted",
+    "evidence_ref": "adjudication:w5-v2-accepted",
+    "model_authored": false,
+    "basis_refs": [
+      "verifier:independent-review-1",
+      "result:retry-1",
+      "result:independent-review-1"
+    ]
+  },
+  "closure_record": {
+    "closure_id": "closure-w5-v2",
+    "evidence_ref": "closure:w5-v2",
+    "adjudication_ref": "adjudication:w5-v2-accepted",
+    "basis_refs": [
+      "adjudication:w5-v2-accepted",
+      "w5-v2:evidence-ready"
+    ]
+  },
+  "transition_records": [
+    {
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "w5-v2-synthetic-canonical",
+      "from": "DRAFT",
+      "to": "BOUNDED",
+      "evidence_ref": "w5-v2:bounded",
+      "reason_code": "W5_V2_SYNTHETIC_BOUNDED",
+      "authorization_ref": null,
+      "adjudication": null,
+      "superseded_by": null
+    },
+    {
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "w5-v2-synthetic-canonical",
+      "from": "BOUNDED",
+      "to": "AUTHORIZED",
+      "evidence_ref": "w5-v2:authorized",
+      "reason_code": "W5_V2_SYNTHETIC_AUTHORIZED",
+      "authorization_ref": "founder:w5-v2-synthetic",
+      "adjudication": null,
+      "superseded_by": null
+    },
+    {
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "w5-v2-synthetic-canonical",
+      "from": "AUTHORIZED",
+      "to": "ROUTED",
+      "evidence_ref": "w3-route:J5.v1:w5-v2-synthetic-canonical",
+      "reason_code": "W3_PURE_ROUTE_BOUND",
+      "authorization_ref": null,
+      "adjudication": null,
+      "superseded_by": null
+    },
+    {
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "w5-v2-synthetic-canonical",
+      "from": "ROUTED",
+      "to": "EXECUTING",
+      "evidence_ref": "w5-v2:execution-admitted",
+      "reason_code": "W5_V2_TRANSPORT_BINDINGS_READY",
+      "authorization_ref": null,
+      "adjudication": null,
+      "superseded_by": null
+    },
+    {
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "w5-v2-synthetic-canonical",
+      "from": "EXECUTING",
+      "to": "EVIDENCE_READY",
+      "evidence_ref": "w5-v2:evidence-ready",
+      "reason_code": "W5_V2_EVIDENCE_COMPLETE",
+      "authorization_ref": null,
+      "adjudication": null,
+      "superseded_by": null
+    },
+    {
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "w5-v2-synthetic-canonical",
+      "from": "EVIDENCE_READY",
+      "to": "ADJUDICATED",
+      "evidence_ref": "adjudication:w5-v2-accepted",
+      "reason_code": "W5_V2_EXPLICIT_ADJUDICATION",
+      "authorization_ref": null,
+      "adjudication": "accepted",
+      "superseded_by": null
+    },
+    {
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "w5-v2-synthetic-canonical",
+      "from": "ADJUDICATED",
+      "to": "CLOSED",
+      "evidence_ref": "closure:w5-v2",
+      "reason_code": "W5_V2_CLOSE_AFTER_ADJUDICATION",
+      "authorization_ref": null,
+      "adjudication": null,
+      "superseded_by": null
+    }
+  ]
+}
