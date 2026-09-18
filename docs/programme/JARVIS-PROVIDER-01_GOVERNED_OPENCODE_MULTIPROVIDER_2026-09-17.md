@@ -163,10 +163,10 @@ Targeted provider proof:
 
 ```text
 node scripts/builder/__tests__/opencode-adapter-governance-proof.mjs
-51 passed · 0 failed
+52 passed · 0 failed
 ```
 
-The 51-assertion proof passes on the reconciled provider head. It proves registration, local Qwen
+The 52-assertion proof passes on the reconciled provider head. It proves registration, local Qwen
 resolution, Zen external-network gating, fail-closed Zen automation refusal before worktree
 acquisition, V1 read-only refusal, conjunctive external-network and provider-spend authority for
 metered providers, missing-credential refusal, exact namespaced NVIDIA NIM model identity,
@@ -174,7 +174,8 @@ Tinker Nemotron Lightning default + Ultra override, Inkling-Small default + full
 authority-before-Keychain ordering for both Tinker and NVIDIA, zero Keychain access on denied spend,
 secret non-leakage from Keychain-hydrated attempts, worker-only credential scoping, post-worker
 verification isolation, deny-before-worktree behavior, explicit `--title` injection on governed
-OpenCode runs, exact model provenance, no `--auto`, and secret-free configuration.
+OpenCode runs, closed stdin (`</dev/null`) on every headless OpenCode worker, exact model provenance,
+no `--auto`, and secret-free configuration.
 
 Syntax/config gates also passed locally:
 
@@ -212,7 +213,14 @@ What **did** happen:
   small `agent=title` NVIDIA call before the primary `jarvis-synthetic-witness` call;
 - JARVIS now supplies an explicit `--title "JARVIS <work-unit-id>"` for every governed OpenCode
   run. OpenCode creates the session with that title, so its title-generation path sees a non-default
-  title and returns without making the extra title-model call.
+  title and returns without making the extra title-model call;
+- the first closure attempt after the title repair exposed a separate headless-stdin defect: under
+  JARVIS/Remote Desktop, `opencode run` reached `init` and waited on an open non-interactive stdin
+  before creating a session. Two orchestration processes were briefly present during diagnosis, but
+  OpenCode's log showed **0 NVIDIA streams and 0 `agent=title` streams** before containment;
+- local runtime proof with Ollama showed that adding `</dev/null` lets the same pre-titled
+  `opencode run` immediately create the session and start the model stream. JARVIS now closes stdin
+  on both governed OpenCode launch branches, and the provider regression asserts this structurally.
 
 What did **not** happen:
 
@@ -229,8 +237,9 @@ What did **not** happen:
 Two provider questions remain distinct:
 
 1. **Direct NVIDIA single-call conformance witness** — transport, credential custody, and model
-   identity are proved, but the prior successful response exceeded the one-call constraint because
-   of OpenCode title generation. The explicit-title repair now needs one fresh founder-authorized
+   identity are proved. The prior successful response exceeded the one-call constraint because of
+   OpenCode title generation; the next attempted closure exposed headless stdin blocking before any
+   NVIDIA stream occurred. Explicit-title + closed-stdin repairs now need one fresh founder-authorized
    synthetic witness before `nemotron-nvidia` is called CLOSED.
 2. **Tinker live witnesses** — the credential is stored in macOS Keychain and the adapter hydrates
    it only after authority passes. Each real `inkling-tinker` / `nemotron-tinker` witness still

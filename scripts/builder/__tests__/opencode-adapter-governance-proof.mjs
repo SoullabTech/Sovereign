@@ -278,6 +278,10 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
     args.includes('--agent') && args.includes('jarvis-readonly'));
   assert('OpenCode receives an explicit session title so title generation needs no model call',
     args.includes('--title') && args.includes(`JARVIS ${id}`));
+  const delegateSource = readFileSync(DELEGATE, 'utf8');
+  const headlessRuns = delegateSource.split('\n').filter((line) => line.includes('opencode run --pure'));
+  assert('headless OpenCode closes stdin on every governed launch',
+    headlessRuns.length === 2 && headlessRuns.every((line) => line.includes('</dev/null')));
   assert('OpenCode never receives --auto from JARVIS',
     !args.split('\n').includes('--auto'), args.slice(0, 220));
   assert('the read-only prompt contains no commit instruction',

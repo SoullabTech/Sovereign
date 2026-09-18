@@ -406,9 +406,9 @@ _run_lane() {
         # verification commands do not inherit it.
         if [ -n "$opencode_credential_env" ] && [ -n "$opencode_credential_value" ]; then
             ( cd "$wt" && env "$opencode_credential_env=$opencode_credential_value" \
-                opencode run --pure --title "JARVIS $work_unit_id" --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+                opencode run --pure --title "JARVIS $work_unit_id" --agent "$opencode_agent" --model "$model" "$prompt" </dev/null ) > "$log" 2>&1
         else
-            ( cd "$wt" && opencode run --pure --title "JARVIS $work_unit_id" --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+            ( cd "$wt" && opencode run --pure --title "JARVIS $work_unit_id" --agent "$opencode_agent" --model "$model" "$prompt" </dev/null ) > "$log" 2>&1
         fi
         exit_code=$?
         opencode_credential_value=""
