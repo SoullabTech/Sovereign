@@ -5,7 +5,9 @@ const home = readFileSync(join(process.cwd(), 'app/relationships/page.tsx'), 'ut
 const detail = readFileSync(join(process.cwd(), 'app/relationships/[id]/page.tsx'), 'utf8');
 const card = readFileSync(join(process.cwd(), 'components/relationships/RelationshipCard.tsx'), 'utf8');
 const nav = readFileSync(join(process.cwd(), 'components/relationships/RelationshipModeNav.tsx'), 'utf8');
-const checkin = readFileSync(join(process.cwd(), 'lib/consciousness/relationalCheckin.ts'), 'utf8');
+const modal = readFileSync(join(process.cwd(), 'components/relationships/CreateRelationshipModal.tsx'), 'utf8');
+const checkIn = readFileSync(join(process.cwd(), 'components/relationships/CheckInFlow.tsx'), 'utf8');
+const checkinEngine = readFileSync(join(process.cwd(), 'lib/consciousness/relationalCheckin.ts'), 'utf8');
 
 describe('RELATIONSHIPS-UX-01 attentional architecture', () => {
   it('opens with relationship rather than analytics', () => {
@@ -17,9 +19,9 @@ describe('RELATIONSHIPS-UX-01 attentional architecture', () => {
   });
 
   it('organizes one relationship through Now, Story, and Field', () => {
-    expect(nav).toContain("now: 'Now'");
-    expect(nav).toContain("story: 'Story'");
-    expect(nav).toContain("field: 'Field'");
+    expect(nav).toContain("key: 'now', label: 'Now'");
+    expect(nav).toContain("key: 'story', label: 'Story'");
+    expect(nav).toContain("key: 'field', label: 'Field'");
     expect(detail).toContain("useState<RelationshipMode>('now')");
     expect(detail).toContain("mode === 'now'");
     expect(detail).toContain("mode === 'story'");
@@ -28,8 +30,9 @@ describe('RELATIONSHIPS-UX-01 attentional architecture', () => {
 
   it('keeps the living encounter primary and MAIA contextual', () => {
     expect(detail).toContain('What is alive between you now?');
-    expect(detail).toContain('Begin with what you are sensing');
-    expect(detail).toContain('Explore this with MAIA');
+    expect(detail).toContain('What feels alive about that now?');
+    expect(detail).toContain('Talk with MAIA here');
+    expect(detail).toContain('Write with MAIA');
     expect(detail).toContain("'relationships:thread'");
   });
 
@@ -52,9 +55,97 @@ describe('RELATIONSHIPS-UX-01 attentional architecture', () => {
   });
 
   it('allows longitudinal MAIA intelligence without self-confirming hypotheses', () => {
-    expect(checkin).toContain('Previous MAIA reflection (hypothesis)');
-    expect(checkin).toContain('They may tune your attention');
-    expect(checkin).toContain('Do not count a previous MAIA reflection as recurrence.');
-    expect(checkin).toContain('A present member report that contradicts prior inference outranks the inference.');
+    expect(checkinEngine).toContain('Previous MAIA reflection (hypothesis)');
+    expect(checkinEngine).toContain('They may tune your attention');
+    expect(checkinEngine).toContain('Do not count a previous MAIA reflection as recurrence.');
+    expect(checkinEngine).toContain('A present member report that contradicts prior inference outranks the inference.');
+  });
+});
+
+describe('RELATIONSHIPS-UX-02 presence and motion', () => {
+  it('turns relationship creation into progressive arrival rather than a single form', () => {
+    expect(modal).toContain("type ArrivalStep = 'realm' | 'name' | 'bond' | 'occasion'");
+    expect(modal).toContain('Who or what is here?');
+    expect(modal).toContain('Who is present?');
+    expect(modal).toContain('How do you know');
+    expect(modal).toContain('What brings {name} to mind now?');
+    expect(modal).toContain('Enter this relationship →');
+    expect(modal).toContain('data-arrival-step="name"');
+    expect(modal).toContain('data-arrival-step="occasion"');
+  });
+
+  it('makes the original occasion part of Now instead of passive metadata', () => {
+    expect(detail).toContain("const occasion = relationship.note?.trim() || null");
+    expect(detail).toContain('data-relationship-occasion');
+    expect(detail).toContain('What brought {relationship.name} into view');
+    expect(detail).toContain('What feels alive about that now?');
+  });
+
+  it('uses motion to express shifts of attention while honoring reduced-motion preference', () => {
+    expect(detail).toContain('AnimatePresence mode="wait"');
+    expect(detail).toContain('useReducedMotion');
+    expect(nav).toContain('layoutId="relationship-mode-focus"');
+    expect(nav).toContain('Ways of attending to this relationship');
+    expect(card).toContain('useReducedMotion');
+  });
+
+  it('keeps canonical MAIA inside Relationship Space instead of routing the member away', () => {
+    expect(detail).toContain("import { OracleConversation } from '@/components/OracleConversation'");
+    expect(detail).toContain('presentationMode="contained"');
+    expect(detail).toContain('data-relationship-maia');
+    expect(detail).toContain("initialShowChatInterface={maiaEntryMode === 'text'}");
+    expect(detail).toContain('voiceEnabled');
+    expect(detail).not.toContain("router.push('/maia')");
+  });
+
+  it('hands relational context to MAIA only after an explicit member gesture', () => {
+    expect(detail).toContain("const openMaiaInPlace = (entryMode: 'voice' | 'text')");
+    expect(detail).toContain("onClick={() => openMaiaInPlace('voice')}");
+    expect(detail).toContain("onClick={() => openMaiaInPlace('text')}");
+    expect(detail).toContain('contextId: id');
+    expect(detail).toContain('returnTo: `/relationships/${id}`');
+  });
+
+  it('keeps check-in experiential rather than rebuilding an analytic dashboard', () => {
+    expect(checkIn).toContain('Sense before explaining');
+    expect(checkIn).toContain('MAIA reflects');
+    expect(checkIn).toContain('Something MAIA is wondering');
+    expect(checkIn).toContain('Something to carry');
+    expect(checkIn).not.toContain('>Next movement<');
+  });
+});
+
+
+describe('RELATIONSHIPS-UX-02-R1 warm relational field', () => {
+  it('makes welcome and readable human presence the first visual layer', () => {
+    expect(home).toContain('data-relational-warm-field');
+    expect(home).toContain('Bring someone into view');
+    expect(home).toContain('bg-[#f4eee4]');
+    expect(card).toContain('data-relational-presence');
+    expect(card).toContain('bg-[#fffaf3]/92');
+    expect(card).toContain('text-[#4f4d47]');
+  });
+
+  it('keeps system holding fields subordinate to actual relationships', () => {
+    expect(home).toContain('isSystemHoldingField');
+    expect(home).toContain('visibleRelationships');
+    expect(home).toContain('systemHoldingFields');
+    expect(home).toContain('Unplaced relational threads');
+    expect(home).toContain('They can wait here quietly until they make sense.');
+  });
+
+  it('warms Relationship Space without changing Now Story Field or MAIA authority', () => {
+    expect(detail).toContain('data-relational-warm-field');
+    expect(detail).toContain('bg-[#f4eee4]');
+    expect(detail).toContain('bg-[#fffaf3]/95');
+    expect(detail).toContain('Stay with {relationship.name}. Speak naturally');
+    expect(detail).toContain('MAIA will stay with this relationship as you explore.');
+    expect(detail).toContain('presentationMode="contained"');
+  });
+
+  it('keeps progressive arrival warm rather than dropping back into a dark modal', () => {
+    expect(modal).toContain('data-relational-warm-arrival');
+    expect(modal).toContain('bg-[#fffaf3]/98');
+    expect(modal).not.toContain('bg-black/72');
   });
 });

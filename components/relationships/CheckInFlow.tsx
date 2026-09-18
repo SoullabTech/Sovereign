@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
 const SIGNALS = [
   'tension', 'closeness', 'distance', 'confusion', 'longing',
@@ -22,28 +23,35 @@ interface CheckInFlowProps {
 }
 
 export default function CheckInFlow({ relationshipId, relationshipName, onComplete }: CheckInFlowProps) {
+  const reduceMotion = useReducedMotion();
   const [selectedSignals, setSelectedSignals] = useState<string[]>([]);
   const [freeText, setFreeText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [error, setError] = useState('');
 
+  const transition = reduceMotion
+    ? { duration: 0 }
+    : { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const };
+
   const toggleSignal = (signal: string) => {
-    setSelectedSignals(prev =>
-      prev.includes(signal) ? prev.filter(s => s !== signal) : [...prev, signal]
+    setSelectedSignals((previous) =>
+      previous.includes(signal)
+        ? previous.filter((item) => item !== signal)
+        : [...previous, signal]
     );
   };
 
   const handleSubmit = async () => {
     if (selectedSignals.length === 0) {
-      setError('Select at least one signal.');
+      setError('Choose at least one quality that feels present.');
       return;
     }
     setSubmitting(true);
     setError('');
 
     try {
-      const res = await fetch(`/api/relationships/${relationshipId}/checkin`, {
+      const response = await fetch(`/api/relationships/${relationshipId}/checkin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -51,9 +59,9 @@ export default function CheckInFlow({ relationshipId, relationshipName, onComple
           freeText: freeText.trim() || undefined,
         }),
       });
-      const data = await res.json();
+      const data = await response.json();
       if (!data.success) {
-        setError(data.error || 'Check-in could not be completed.');
+        setError(data.error || 'This check-in could not be completed.');
         return;
       }
       setResult({
@@ -69,91 +77,137 @@ export default function CheckInFlow({ relationshipId, relationshipName, onComple
     }
   };
 
-  if (result) {
-    return (
-      <div className="space-y-5 py-2">
-        <div>
-          <div className="text-xs text-jade-sage uppercase tracking-wider mb-2">Reflection</div>
-          <p className="text-sm text-jade-jade font-light leading-relaxed">{result.maiaReflection}</p>
-        </div>
-
-        <div>
-          <div className="text-xs text-jade-sage uppercase tracking-wider mb-2">Pattern</div>
-          <p className="text-sm text-jade-mineral font-light">{result.patternHint}</p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-xs text-jade-sage uppercase tracking-wider">Field tone</div>
-          <span className="px-2.5 py-0.5 rounded-full text-xs bg-jade-forest/30 border border-jade-sage/20 text-jade-jade capitalize">
-            {result.fieldToneSnapshot?.replace(/_/g, ' ')}
-          </span>
-        </div>
-
-        <div className="border-t border-jade-sage/15 pt-4">
-          <div className="text-xs text-jade-sage uppercase tracking-wider mb-2">Next movement</div>
-          <p className="text-sm text-jade-jade font-light italic">{result.suggestedMovement}</p>
-        </div>
-
-        <button
-          onClick={() => {
-            setResult(null);
-            setSelectedSignals([]);
-            setFreeText('');
-            onComplete();
-          }}
-          className="text-xs text-jade-mineral hover:text-jade-sage transition-colors"
-        >
-          Close
-        </button>
-      </div>
-    );
-  }
+  const possiblePattern =
+    result?.patternHint && result.patternHint !== 'Not enough history yet.'
+      ? result.patternHint
+      : null;
 
   return (
-    <div className="space-y-5 py-2">
-      <div>
-        <div className="text-sm text-jade-jade font-light mb-3">
-          What is alive in your relationship with {relationshipName} right now?
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {SIGNALS.map((signal) => (
-            <button
-              key={signal}
-              onClick={() => toggleSignal(signal)}
-              className={`px-2.5 py-1 rounded-full text-xs transition-all ${
-                selectedSignals.includes(signal)
-                  ? 'bg-jade-forest/40 text-jade-jade border border-jade-sage/40'
-                  : 'bg-jade-shadow/40 text-jade-mineral border border-jade-forest/30 hover:border-jade-sage/30'
-              }`}
-            >
-              {signal}
-            </button>
-          ))}
-        </div>
-      </div>
+    <AnimatePresence mode="wait" initial={false}>
+      {result ? (
+        <motion.div
+          key="reflection"
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
+          transition={transition}
+          className="space-y-7 py-1"
+        >
+          <div>
+            <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-[#716d64]/42">
+              MAIA reflects
+            </p>
+            <p className="text-lg font-light leading-relaxed text-[#3f5544]/90">
+              {result.maiaReflection}
+            </p>
+          </div>
 
-      <div>
-        <label className="block text-sm text-jade-jade font-light mb-2">
-          What are you sensing but not fully saying?
-        </label>
-        <textarea
-          value={freeText}
-          onChange={(e) => setFreeText(e.target.value)}
-          rows={3}
-          placeholder="Optional — whatever comes..."
-          className="w-full px-3 py-2 rounded-lg bg-jade-shadow border border-jade-sage/20 text-jade-jade placeholder:text-jade-mineral/40 focus:outline-none focus:border-jade-sage/50 text-sm resize-none"
-        />
-      </div>
+          {possiblePattern && (
+            <div className="border-l border-[#9aaa8a]/20 pl-4">
+              <p className="mb-1.5 text-xs text-[#716d64]/45">Something MAIA is wondering</p>
+              <p className="text-sm font-light leading-relaxed text-[#716d64]/76">
+                {possiblePattern}
+              </p>
+            </div>
+          )}
 
-      {error && <p className="text-xs text-red-400">{error}</p>}
+          {result.fieldToneSnapshot && result.fieldToneSnapshot !== 'unknown' && (
+            <p className="text-sm font-light text-[#716d64]/58">
+              The field feels{' '}
+              <span className="text-[#3f5544]/78">
+                {result.fieldToneSnapshot.replace(/_/g, ' ')}
+              </span>
+              {' '}right now.
+            </p>
+          )}
 
-      <button
-        onClick={handleSubmit}
-        disabled={submitting || selectedSignals.length === 0}
-        className="px-5 py-2 rounded-lg bg-jade-forest/40 border border-jade-sage/30 text-jade-jade text-sm font-light hover:bg-jade-forest/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {submitting ? 'Reflecting...' : 'Check in'}
-      </button>
-    </div>
+          <div className="border-t border-[#9aaa8a]/10 pt-5">
+            <p className="mb-2 text-xs text-[#716d64]/42">Something to carry</p>
+            <p className="text-sm font-light italic leading-relaxed text-[#3f5544]/82">
+              {result.suggestedMovement}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setResult(null);
+              setSelectedSignals([]);
+              setFreeText('');
+              onComplete();
+            }}
+            className="text-xs text-[#5e745d] transition-colors hover:text-[#3f5544]"
+          >
+            Let this settle
+          </button>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="sensing"
+          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
+          transition={transition}
+          className="space-y-7 py-1"
+        >
+          <div>
+            <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-[#716d64]/42">
+              Sense before explaining
+            </p>
+            <h3 className="text-xl font-extralight leading-relaxed text-[#3f5544]">
+              What qualities feel present with {relationshipName}?
+            </h3>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {SIGNALS.map((signal) => {
+                const active = selectedSignals.includes(signal);
+                return (
+                  <motion.button
+                    key={signal}
+                    type="button"
+                    onClick={() => {
+                      toggleSignal(signal);
+                      if (error) setError('');
+                    }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+                    className={`rounded-full border px-3.5 py-1.5 text-xs font-light transition-colors ${
+                      active
+                        ? 'border-[#9aaa8a]/45 bg-[#e4eadf]/35 text-[#3f5544]'
+                        : 'border-[#9aaa8a]/12 text-[#716d64]/60 hover:border-[#9aaa8a]/28 hover:text-[#3f5544]'
+                    }`}
+                  >
+                    {signal}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-light text-[#3f5544]/82">
+              What are you sensing but not fully saying?
+            </label>
+            <textarea
+              value={freeText}
+              onChange={(event) => setFreeText(event.target.value)}
+              rows={4}
+              placeholder="Whatever comes..."
+              className="w-full resize-none border-0 border-b border-[#9aaa8a]/18 bg-transparent px-0 py-3 text-base font-light leading-relaxed text-[#3f5544] outline-none placeholder:text-[#716d64]/28 focus:border-[#9aaa8a]/45"
+            />
+          </div>
+
+          {error && <p className="text-xs text-red-300/80">{error}</p>}
+
+          <motion.button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitting || selectedSignals.length === 0}
+            whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+            className="rounded-full border border-[#95a687]/55 bg-[#e8efe2] px-5 py-2.5 text-sm font-light text-[#405642] transition-colors hover:bg-[#dce7d5] disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            {submitting ? 'Listening for the shape of this…' : 'Reflect this with MAIA'}
+          </motion.button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

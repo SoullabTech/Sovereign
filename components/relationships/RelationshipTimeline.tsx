@@ -24,12 +24,12 @@ const KIND_LABELS: Record<string, string> = {
 
 // Visual weight: border color + label styling per kind
 const KIND_STYLES: Record<string, { border: string; label: string }> = {
-  checkin:    { border: 'border-jade-sage/40',   label: 'text-jade-sage' },       // primary
-  threshold:  { border: 'border-jade-copper/50', label: 'text-jade-copper' },     // emphasized
+  checkin:    { border: 'border-[#9aaa8a]/40',   label: 'text-[#5e745d]' },       // primary
+  threshold:  { border: 'border-[#c48e67]/50', label: 'text-[#9a6b4a]' },     // emphasized
   rupture:    { border: 'border-red-400/40',     label: 'text-red-400/80' },      // accented
-  repair:     { border: 'border-jade-malachite/40', label: 'text-jade-malachite' }, // accented (positive)
-  reflection: { border: 'border-jade-jade/30',   label: 'text-jade-jade/70' },    // moderate
-  note:       { border: 'border-jade-forest/30', label: 'text-jade-mineral' },    // quiet
+  repair:     { border: 'border-[#6f9b7f]/40', label: 'text-[#4f7660]' }, // accented (positive)
+  reflection: { border: 'border-[#7c947e]/30',   label: 'text-[#3f5544]/70' },    // moderate
+  note:       { border: 'border-[#c8c0b2]/30', label: 'text-[#716d64]' },    // quiet
 };
 
 function formatDate(dateStr: string): string {
@@ -50,8 +50,8 @@ export default function RelationshipTimeline({ entries }: { entries: TimelineEnt
   if (entries.length === 0) {
     return (
       <div className="py-8 text-center">
-        <p className="text-sm text-jade-mineral font-light">No entries yet.</p>
-        <p className="text-xs text-jade-mineral/60 mt-1">Check in or add a note to begin the timeline.</p>
+        <p className="text-sm text-[#716d64] font-light">No entries yet.</p>
+        <p className="text-xs text-[#716d64]/60 mt-1">Check in or add a note to begin the timeline.</p>
       </div>
     );
   }
@@ -66,9 +66,9 @@ export default function RelationshipTimeline({ entries }: { entries: TimelineEnt
             <span className={`text-xs ${style.label} uppercase tracking-wider`}>
               {KIND_LABELS[entry.kind] || entry.kind}
             </span>
-            <span className="text-xs text-jade-mineral/60">{formatDate(entry.createdAt)}</span>
+            <span className="text-xs text-[#716d64]/60">{formatDate(entry.createdAt)}</span>
             {entry.fieldToneSnapshot && (
-              <span className="text-xs text-jade-mineral/60 capitalize">
+              <span className="text-xs text-[#716d64]/60 capitalize">
                 — {entry.fieldToneSnapshot.replace(/_/g, ' ')}
               </span>
             )}
@@ -79,26 +79,26 @@ export default function RelationshipTimeline({ entries }: { entries: TimelineEnt
               {entry.feltSignals && entry.feltSignals.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {entry.feltSignals.map((s, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-jade-forest/20 border border-jade-sage/15 text-jade-mineral">
+                    <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-[#e4eadf]/20 border border-[#9aaa8a]/15 text-[#716d64]">
                       {s}
                     </span>
                   ))}
                 </div>
               )}
               {entry.freeText && (
-                <p className="text-sm text-jade-jade/80 font-light italic">&ldquo;{entry.freeText}&rdquo;</p>
+                <p className="text-sm text-[#3f5544]/80 font-light italic">&ldquo;{entry.freeText}&rdquo;</p>
               )}
               {entry.maiaReflection && (
-                <p className="text-sm text-jade-mineral font-light">{entry.maiaReflection}</p>
+                <p className="text-sm text-[#716d64] font-light">{entry.maiaReflection}</p>
               )}
               {entry.suggestedMovement && (
-                <p className="text-xs text-jade-copper font-light mt-1">{entry.suggestedMovement}</p>
+                <p className="text-xs text-[#9a6b4a] font-light mt-1">{entry.suggestedMovement}</p>
               )}
             </div>
           )}
 
           {entry.kind !== 'checkin' && entry.content && (
-            <p className="text-sm text-jade-jade/80 font-light">{entry.content}</p>
+            <p className="text-sm text-[#3f5544]/80 font-light">{entry.content}</p>
           )}
         </div>
         );
