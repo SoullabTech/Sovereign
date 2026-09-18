@@ -15,7 +15,7 @@ describe('H8 current-act shadow projection', () => {
       userInput: 'Can this be saved during Sanctuary?',
       priorMemberTurns: [
         { id: '11', exchangeId: 'x1', content: 'Do not save Sanctuary material.', createdAt: '2026-09-17T12:00:00Z' },
-        { id: '12', exchangeId: 'x2', content: 'We need to fail closed before anything can persist.', createdAt: '2026-09-17T12:01:00Z' },
+        { id: '12', exchangeId: 'x2', content: 'During Sanctuary we need to fail closed before anything can persist.', createdAt: '2026-09-17T12:01:00Z' },
         { id: '13', exchangeId: 'x3', content: 'Yesterday I was thinking about the silver cedar.', createdAt: '2026-09-17T12:02:00Z' },
       ],
     });
@@ -24,6 +24,10 @@ describe('H8 current-act shadow projection', () => {
     expect(projection.anchorEvidenceId).toBe('E1');
     expect(projection.selectedEvidenceIds[0]).toBe('E1');
     expect(projection.selectedEvidenceIds).toContain('E2');
+    expect(projection.candidates.find((c) => c.evidenceId === 'E2')).toMatchObject({
+      currentActRelation: 'REQUIRES_FOR_CURRENT_ACT',
+      materialityClass: 'REQUIRED_FOR_VALIDITY',
+    });
     expect(projection.selectedEvidenceIds).not.toContain(packet.currentEvidenceId);
   });
 
