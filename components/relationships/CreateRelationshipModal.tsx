@@ -138,11 +138,11 @@ export default function CreateRelationshipModal({
   const stepPosition = Math.max(0, flow.indexOf(step));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden px-4 py-6" data-relational-arrival>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden px-4 py-6" data-relational-arrival data-relational-warm-arrival>
       <motion.button
         type="button"
         aria-label="Close relational arrival"
-        className="absolute inset-0 bg-black/72 backdrop-blur-md"
+        className="absolute inset-0 bg-[#3b382f]/30 backdrop-blur-md"
         onClick={resetAndClose}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -151,7 +151,7 @@ export default function CreateRelationshipModal({
 
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute h-[34rem] w-[34rem] rounded-full bg-jade-sage/[0.07] blur-[110px]"
+        className="pointer-events-none absolute h-[34rem] w-[34rem] rounded-full bg-[#d6e0cc]/55 blur-[110px]"
         initial={false}
         animate={{
           x: step === 'occasion' ? 90 : step === 'bond' ? 30 : -50,
@@ -162,7 +162,7 @@ export default function CreateRelationshipModal({
       />
 
       <motion.div
-        className="relative w-full max-w-2xl overflow-hidden rounded-[2rem] border border-jade-sage/20 bg-jade-night/95 shadow-2xl"
+        className="relative w-full max-w-2xl overflow-hidden rounded-[2rem] border border-[#bbb2a3]/65 bg-[#fffaf3]/98 shadow-[0_28px_90px_rgba(69,59,45,0.18)]"
         initial={reduceMotion ? false : { opacity: 0, y: 18, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={transition}
@@ -173,20 +173,20 @@ export default function CreateRelationshipModal({
               <button
                 type="button"
                 onClick={goBack}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-jade-sage/15 text-jade-mineral/65 transition-colors hover:border-jade-sage/30 hover:text-jade-jade"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#9aaa8a]/15 text-[#716d64]/65 transition-colors hover:border-[#9aaa8a]/30 hover:text-[#3f5544]"
                 aria-label="Go back"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
             )}
-            <div className="text-[11px] uppercase tracking-[0.22em] text-jade-mineral/45">
+            <div className="text-[11px] uppercase tracking-[0.22em] text-[#716d64]/45">
               Bringing a relationship into view
             </div>
           </div>
           <button
             type="button"
             onClick={resetAndClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-jade-mineral/50 transition-colors hover:bg-jade-forest/15 hover:text-jade-jade"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#716d64]/50 transition-colors hover:bg-[#e4eadf]/15 hover:text-[#3f5544]"
             aria-label="Cancel"
           >
             <X className="h-4 w-4" />
@@ -204,11 +204,11 @@ export default function CreateRelationshipModal({
                 exit={reduceMotion ? undefined : { opacity: 0, x: -18 }}
                 transition={transition}
               >
-                <p className="mb-3 text-xs uppercase tracking-[0.2em] text-jade-mineral/45">Begin anywhere</p>
-                <h2 className="max-w-xl text-3xl font-extralight leading-tight text-jade-jade md:text-4xl">
+                <p className="mb-3 text-xs uppercase tracking-[0.2em] text-[#716d64]/45">Begin anywhere</p>
+                <h2 className="max-w-xl text-3xl font-extralight leading-tight text-[#3f5544] md:text-4xl">
                   Who or what is here?
                 </h2>
-                <p className="mt-3 max-w-lg text-sm font-light leading-relaxed text-jade-mineral/65">
+                <p className="mt-3 max-w-lg text-sm font-light leading-relaxed text-[#716d64]/65">
                   You do not need to explain the relationship yet. Just bring the right presence forward.
                 </p>
 
@@ -219,10 +219,10 @@ export default function CreateRelationshipModal({
                       type="button"
                       onClick={() => chooseRealm(item)}
                       whileHover={reduceMotion ? undefined : { x: 5 }}
-                      className="group w-full rounded-2xl border border-jade-sage/12 bg-jade-forest/[0.045] px-5 py-5 text-left transition-colors hover:border-jade-sage/28 hover:bg-jade-forest/[0.10]"
+                      className="group w-full rounded-[1.3rem] border border-[#c7bfb1]/60 bg-[#fbf6ee]/90 px-5 py-5 text-left shadow-[0_8px_24px_rgba(76,66,51,0.04)] transition-all hover:translate-x-1 hover:border-[#9eae91]/65 hover:bg-[#fffdf8]"
                     >
-                      <div className="text-base font-light text-jade-jade">{REALM_LABELS[item].title}</div>
-                      <div className="mt-1 text-sm font-light leading-relaxed text-jade-mineral/58">
+                      <div className="text-base font-light text-[#3f5544]">{REALM_LABELS[item].title}</div>
+                      <div className="mt-1 text-sm font-light leading-relaxed text-[#716d64]/58">
                         {REALM_LABELS[item].subtitle}
                       </div>
                     </motion.button>
@@ -240,10 +240,10 @@ export default function CreateRelationshipModal({
                 exit={reduceMotion ? undefined : { opacity: 0, x: -18 }}
                 transition={transition}
               >
-                <p className="mb-3 text-xs uppercase tracking-[0.2em] text-jade-mineral/45">
+                <p className="mb-3 text-xs uppercase tracking-[0.2em] text-[#716d64]/45">
                   {REALM_LABELS[realm].title}
                 </p>
-                <h2 className="text-3xl font-extralight leading-tight text-jade-jade md:text-4xl">
+                <h2 className="text-3xl font-extralight leading-tight text-[#3f5544] md:text-4xl">
                   {REALM_LABELS[realm].namePrompt}
                 </h2>
 
@@ -265,7 +265,7 @@ export default function CreateRelationshipModal({
                           ? 'My calling'
                           : 'A name'
                     }
-                    className="w-full border-b border-jade-sage/25 bg-transparent pb-4 text-3xl font-extralight tracking-wide text-jade-jade outline-none placeholder:text-jade-mineral/22 focus:border-jade-sage/60 md:text-4xl"
+                    className="w-full border-b border-[#9aaa8a]/25 bg-transparent pb-4 text-3xl font-extralight tracking-wide text-[#3f5544] outline-none placeholder:text-[#716d64]/22 focus:border-[#9aaa8a]/60 md:text-4xl"
                     autoFocus
                   />
                   {error && <p className="mt-3 text-xs text-red-300/80">{error}</p>}
@@ -276,7 +276,7 @@ export default function CreateRelationshipModal({
                     type="button"
                     onClick={continueFromName}
                     disabled={!name.trim()}
-                    className="rounded-full border border-jade-sage/25 bg-jade-forest/20 px-5 py-2.5 text-sm font-light text-jade-jade transition-colors hover:bg-jade-forest/35 disabled:cursor-not-allowed disabled:opacity-35"
+                    className="rounded-full border border-[#99aa8c]/55 bg-[#e9efe3] px-5 py-2.5 text-sm font-light text-[#405642] transition-colors hover:bg-[#dfe8d8] disabled:cursor-not-allowed disabled:opacity-35"
                   >
                     Continue →
                   </button>
@@ -293,11 +293,11 @@ export default function CreateRelationshipModal({
                 exit={reduceMotion ? undefined : { opacity: 0, x: -18 }}
                 transition={transition}
               >
-                <p className="mb-3 text-xs uppercase tracking-[0.2em] text-jade-mineral/45">{name}</p>
-                <h2 className="text-3xl font-extralight leading-tight text-jade-jade md:text-4xl">
+                <p className="mb-3 text-xs uppercase tracking-[0.2em] text-[#716d64]/45">{name}</p>
+                <h2 className="text-3xl font-extralight leading-tight text-[#3f5544] md:text-4xl">
                   {realm === 'outer' ? `How do you know ${name}?` : `How do you relate to ${name}?`}
                 </h2>
-                <p className="mt-3 text-sm font-light text-jade-mineral/60">
+                <p className="mt-3 text-sm font-light text-[#716d64]/60">
                   This is orientation, not a definition. You can leave it unnamed.
                 </p>
 
@@ -312,8 +312,8 @@ export default function CreateRelationshipModal({
                         whileTap={reduceMotion ? undefined : { scale: 0.97 }}
                         className={`rounded-full border px-4 py-2 text-sm font-light transition-colors ${
                           active
-                            ? 'border-jade-sage/45 bg-jade-forest/35 text-jade-jade'
-                            : 'border-jade-sage/12 text-jade-mineral/65 hover:border-jade-sage/30 hover:text-jade-jade'
+                            ? 'border-[#9aaa8a]/45 bg-[#e4eadf]/35 text-[#3f5544]'
+                            : 'border-[#9aaa8a]/12 text-[#716d64]/65 hover:border-[#9aaa8a]/30 hover:text-[#3f5544]'
                         }`}
                       >
                         {type.replace(/_/g, ' ')}
@@ -329,14 +329,14 @@ export default function CreateRelationshipModal({
                       setBondType('');
                       setStep('occasion');
                     }}
-                    className="text-sm font-light text-jade-mineral/50 transition-colors hover:text-jade-sage"
+                    className="text-sm font-light text-[#716d64]/50 transition-colors hover:text-[#5e745d]"
                   >
                     Leave unnamed
                   </button>
                   <button
                     type="button"
                     onClick={() => setStep('occasion')}
-                    className="rounded-full border border-jade-sage/25 bg-jade-forest/20 px-5 py-2.5 text-sm font-light text-jade-jade transition-colors hover:bg-jade-forest/35"
+                    className="rounded-full border border-[#99aa8c]/55 bg-[#e9efe3] px-5 py-2.5 text-sm font-light text-[#405642] transition-colors hover:bg-[#dfe8d8]"
                   >
                     Continue →
                   </button>
@@ -353,13 +353,13 @@ export default function CreateRelationshipModal({
                 exit={reduceMotion ? undefined : { opacity: 0, x: -18 }}
                 transition={transition}
               >
-                <p className="mb-3 text-xs uppercase tracking-[0.2em] text-jade-mineral/45">
+                <p className="mb-3 text-xs uppercase tracking-[0.2em] text-[#716d64]/45">
                   {bondType ? `${name} · ${bondType.replace(/_/g, ' ')}` : name}
                 </p>
-                <h2 className="max-w-xl text-3xl font-extralight leading-tight text-jade-jade md:text-4xl">
+                <h2 className="max-w-xl text-3xl font-extralight leading-tight text-[#3f5544] md:text-4xl">
                   What brings {name} to mind now?
                 </h2>
-                <p className="mt-3 max-w-lg text-sm font-light leading-relaxed text-jade-mineral/60">
+                <p className="mt-3 max-w-lg text-sm font-light leading-relaxed text-[#716d64]/60">
                   A moment, a feeling, a question, a change—or nothing you can name yet.
                 </p>
 
@@ -368,7 +368,7 @@ export default function CreateRelationshipModal({
                   onChange={(event) => setNote(event.target.value)}
                   rows={4}
                   placeholder="Begin with whatever is actually here..."
-                  className="mt-8 w-full resize-none border-0 border-b border-jade-sage/20 bg-transparent px-0 py-4 text-lg font-light leading-relaxed text-jade-jade outline-none placeholder:text-jade-mineral/25 focus:border-jade-sage/50"
+                  className="mt-8 w-full resize-none border-0 border-b border-[#9aaa8a]/20 bg-transparent px-0 py-4 text-lg font-light leading-relaxed text-[#3f5544] outline-none placeholder:text-[#716d64]/25 focus:border-[#9aaa8a]/50"
                   autoFocus
                 />
 
@@ -380,7 +380,7 @@ export default function CreateRelationshipModal({
                     onClick={handleSubmit}
                     disabled={submitting}
                     whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-                    className="rounded-full border border-jade-sage/30 bg-jade-forest/30 px-6 py-3 text-sm font-light text-jade-jade transition-colors hover:bg-jade-forest/45 disabled:cursor-wait disabled:opacity-45"
+                    className="rounded-full border border-[#8fa282]/60 bg-[#e4ecdd] px-6 py-3 text-sm font-light text-[#3c523e] shadow-[0_8px_24px_rgba(76,66,51,0.05)] transition-colors hover:bg-[#dbe6d3] disabled:cursor-wait disabled:opacity-45"
                   >
                     {submitting ? 'Bringing this relationship into view…' : 'Enter this relationship →'}
                   </motion.button>
@@ -394,7 +394,7 @@ export default function CreateRelationshipModal({
               <motion.span
                 key={item}
                 className={`h-1 rounded-full ${
-                  index <= stepPosition ? 'bg-jade-sage/50' : 'bg-jade-sage/10'
+                  index <= stepPosition ? 'bg-[#cdd8c4]/50' : 'bg-[#cdd8c4]/10'
                 }`}
                 animate={{ width: index === stepPosition ? 28 : 8 }}
                 transition={transition}
