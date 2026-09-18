@@ -20,6 +20,16 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     standing: 'local-established',
     execution_adapter: 'opencode',
   }),
+  'gpt-oss-local': Object.freeze({
+    opencode_provider: 'ollama',
+    default_model: 'gpt-oss:20b',
+    models: Object.freeze(['gpt-oss:20b']),
+    external_network: false,
+    metered_provider: false,
+    credential_env: null,
+    standing: 'local-established',
+    execution_adapter: 'opencode',
+  }),
   'nemotron-nvidia': Object.freeze({
     opencode_provider: 'nvidia',
     default_model: 'nemotron-3-ultra-550b-a55b',

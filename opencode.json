@@ -16,6 +16,9 @@
         },
         "maia-coder:latest": {
           "name": "MAIA Coder (local)"
+        },
+        "gpt-oss:20b": {
+          "name": "GPT-OSS 20B (local-reasoning)"
         }
       }
     },
