@@ -159,9 +159,12 @@ export function assembleH8RelationalFieldPacket(input: {
   readonly currentSessionMemberTurns: readonly HistoricalMemberRow[];
   readonly crossSessionMemberTurns: readonly HistoricalMemberRow[];
 }): RelationalFieldPacket {
+  const currentLimit = input.crossSessionMemberTurns.length > 0
+    ? H8_CURRENT_SESSION_LIMIT
+    : HISTORY_LIMIT;
   const priorMemberTurns = [
     ...input.crossSessionMemberTurns.slice(-H8_CROSS_SESSION_LIMIT),
-    ...input.currentSessionMemberTurns.slice(-H8_CURRENT_SESSION_LIMIT),
+    ...input.currentSessionMemberTurns.slice(-currentLimit),
   ];
   return assembleRelationalFieldPacket({
     exchangeId: input.exchangeId,
