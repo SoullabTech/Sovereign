@@ -87,7 +87,7 @@ MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION=1
 
 `MAIA_RELATIONAL_FIELD_SHADOW_MODELS` may be empty. H8 is deterministic and model-independent.
 
-Cross-session H8 evidence is **fail-closed** and separately gated. It reads only member-authored prior-session turns and only when the member row satisfies `conversational_recall_enabled IS TRUE`. A missing member row, FALSE/NULL preference, or query failure yields no cross-session shadow evidence. H8 deliberately does not reuse a recall helper that defaults on after lookup failure.
+Cross-session H8 evidence is **fail-closed** and separately gated. It reads only member-authored prior-session turns and only when the member row satisfies an explicit `conversational_recall_enabled === true` preference read. A missing member row, FALSE/NULL preference, or query failure yields no cross-session shadow evidence. H8 deliberately does not reuse a recall helper that defaults on after lookup failure.
 
 When cross-session evidence is admitted, the H8 packet is bounded to at most four prior-session member turns plus four current-session prior member turns. When none is admitted, H8 retains the existing eight-turn current-session aperture. The older generative Cut-1 packet remains current-session-only in either case.
 
@@ -121,7 +121,7 @@ No prior evidence yields `no_prior_evidence`. No defensible direct anchor yields
 Same packet produces the same relation proposals, scores, selected IDs, ordering, and SHA-256 projection digest.
 
 **H8-F8 — EVIDENCE MINIMISATION / CONSENT**  
-The table stores source refs/digests, classes, scores, and selected IDs. It does not duplicate historical transcript text into the H8 projection JSON. Cross-session evidence is eligible only through the separate H8 flag plus a fail-closed `conversational_recall_enabled IS TRUE` database predicate; only member-authored turns may enter.
+The table stores source refs/digests, classes, scores, and selected IDs. It does not duplicate historical transcript text into the H8 projection JSON. Cross-session evidence is eligible only through the separate H8 flag plus a fail-closed preference read that must return `conversational_recall_enabled === true` before any prior-turn query runs; only member-authored turns may enter.
 
 **H8-F9 — OLD SHADOW WITNESS REMAINS VALID**  
 The generative blind A/B exporter excludes H8 rows because H8 has no shadow response text.
