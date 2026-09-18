@@ -6,7 +6,12 @@ import {
   H8_CURRENT_ACT_ARCHITECTURE_VERSION,
   H8_CURRENT_ACT_MODEL_NAME,
 } from './currentActProjection';
-import { assembleRelationalFieldPacket, loadPriorMemberTurns } from './fieldAssembler';
+import {
+  assembleH8RelationalFieldPacket,
+  assembleRelationalFieldPacket,
+  loadH8CrossSessionMemberTurns,
+  loadPriorMemberTurns,
+} from './fieldAssembler';
 import { persistRelationalFieldShadowEvidence } from './evidenceStore';
 import { deterministicShadowSeed, generateRelationalFieldPlan } from './ollamaProvider';
 import {
@@ -33,6 +38,11 @@ export function configuredRelationalFieldShadowModels(): string[] {
 export function configuredH8CurrentActShadow(): boolean {
   return process.env.MAIA_RELATIONAL_FIELD_SHADOW === '1'
     && process.env.MAIA_RELATIONAL_FIELD_H8 === '1';
+}
+
+export function configuredH8CrossSessionShadow(): boolean {
+  return configuredH8CurrentActShadow()
+    && process.env.MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION === '1';
 }
 
 export function launchRelationalFieldShadow(input: RelationalFieldShadowLaunch): void {
@@ -118,6 +128,8 @@ export async function runRelationalFieldShadow(
   if (!h8Enabled && models.length === 0) return;
 
   const priorMemberTurns = await loadPriorMemberTurns(input.sessionId, input.exchangeId);
+  // Preserve the frozen Cut-1/generative shadow packet exactly: current-session
+  // member-authored evidence only. H8 may assemble a richer packet separately.
   const packet = assembleRelationalFieldPacket({
     exchangeId: input.exchangeId,
     userInput: input.userInput,
@@ -125,10 +137,20 @@ export async function runRelationalFieldShadow(
   });
   const primaryDigest = sha256(input.primaryResponse);
 
-  // H8 is deterministic, model-independent and observation-only. It may run with
-  // an empty generative-model list and writes only the existing research evidence table.
+  // H8 is deterministic, model-independent and observation-only. Cross-session
+  // evidence is optional, separately gated, member-authored only and fail-closed
+  // at the SQL boundary. It never changes the older generative shadow packet.
   if (h8Enabled) {
-    await persistH8Projection(input, packet, primaryDigest);
+    const crossSessionMemberTurns = configuredH8CrossSessionShadow()
+      ? await loadH8CrossSessionMemberTurns(input.memberId, input.sessionId)
+      : [];
+    const h8Packet = assembleH8RelationalFieldPacket({
+      exchangeId: input.exchangeId,
+      userInput: input.userInput,
+      currentSessionMemberTurns: priorMemberTurns,
+      crossSessionMemberTurns,
+    });
+    await persistH8Projection(input, h8Packet, primaryDigest);
   }
 
   if (models.length === 0) return;
