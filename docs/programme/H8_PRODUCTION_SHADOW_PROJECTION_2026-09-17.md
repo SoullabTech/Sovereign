@@ -139,6 +139,17 @@ The generative blind A/B exporter excludes H8 rows because H8 has no shadow resp
 **H8-F10 — NO AUTOMATIC ADJUDICATION**  
 No H8 score changes routing, memory, model choice, standing, or future projection policy.
 
+## Rollback and staged activation
+
+H8 has two independent rollback layers:
+
+1. **Immediate runtime rollback:** set `MAIA_RELATIONAL_FIELD_H8=0` and `MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION=0` (or remove the founder/member allowlist). The existing live response path is unchanged, so disabling the flags stops H8 computation without changing MAIA cognition, prompts, routing, or memory.
+2. **Code rollback:** revert the H8 PR. The inherited Cut-1 relational-field shadow remains intact because H8 does not replace its route seam, table, generative packet, or frozen structural-standing substrate.
+
+No H8 migration exists, so there is no schema rollback. Existing H8 research rows, if any, remain inert evidence and are not read by runtime code. Their deletion is a separately authorized production mutation, not part of rollback.
+
+Staged activation is founder-only: merge (separate authority) → deploy with H8 flags OFF → verify ordinary production health → enable H8 for the exact founder/member allowlist → optionally enable `MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION=1` → collect the frozen 20-turn witness → disable H8 flags after capture.
+
 ## Frozen founder production witness
 
 After separate merge/deploy/schema/flag authorization, collect **20 founder H8 turns** before any threshold changes.
