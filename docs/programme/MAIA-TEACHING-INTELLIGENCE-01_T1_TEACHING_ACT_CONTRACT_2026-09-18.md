@@ -297,3 +297,39 @@ T2                                ⛔ NOT OPEN
 ```
 
 **Next gate: founder adjudication of T1 only.**
+
+## 14. Canonical freshness reconciliation
+
+The T1 candidate was initially built against canonical:
+
+`98dda3bed79d2052fa86afb17882a387187d3d2d`
+
+Before PR creation, canonical advanced to:
+
+`7937fc7cf1b0aede76b4e5302e36800c85f997da`
+
+through JARVIS Routing Intelligence PR #1382.
+
+The intervening canonical delta was confined to JARVIS routing documentation, desktop Work Unit preview/control files, and routing-intelligence builder proofs. It did not touch:
+
+- the ratified T0 teaching constitution;
+- `lib/maia/teaching/**`;
+- `lib/sovereign/teachingRouter.ts`;
+- governed knowledge retrieval;
+- Representation Authority Law or its named teaching-governance neighbors.
+
+The T1 branch was rebased cleanly onto current canonical and the falsification suite was rerun.
+
+Post-rebase evidence:
+
+```text
+canonical base     7937fc7cf1b0aede76b4e5302e36800c85f997da
+candidate code head before this documentary evidence append
+                   2b4d00a5d29bb00926e95a60483c5cb510526bf5
+targeted tests     20/20 PASS
+typehealth         229 vs 239 baseline · 0 regressions
+runtime callers    0
+git diff --check   PASS
+```
+
+This reconciliation changes no T1 contract semantics and opens no new authority.
