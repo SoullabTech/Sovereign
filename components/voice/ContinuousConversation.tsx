@@ -14,6 +14,7 @@ import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 import {
   assessCaptureLiveness,
+  shouldActOnCaptureLiveness,
   describeCaptureLoss,
   isCaptureLossUnexpected,
   TRACK_MUTE_GRACE_MS,
@@ -425,6 +426,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   /** Has `onaudiostart` fired for the currently armed instance? */
   const captureAudioOpenedRef = useRef<boolean>(false);
   const livenessTimerRef = useRef<NodeJS.Timeout | null>(null);
+  /** Throttle explicit-floor liveness-hold telemetry while a member is thinking. */
+  const explicitFloorLivenessHoldLoggedAtRef = useRef<number>(0);
   /** Pending confirmation that a track `mute` is sustained, not transient. */
   const trackMuteTimerRef = useRef<NodeJS.Timeout | null>(null);
   /** Audio track listeners, kept so they can be detached with the stream. */
@@ -447,6 +450,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     lastCaptureActivityAtRef.current = Date.now();
     if (audioOpened) captureAudioOpenedRef.current = true;
     selfHealAttemptedRef.current = false;
+    explicitFloorLivenessHoldLoggedAtRef.current = 0;
   }, []);
 
   // ==========================================================================
@@ -1849,6 +1853,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (!isListening) return;
 
     const tick = () => {
+      const now = Date.now();
       const applicable =
         isListeningRef.current &&
         !isSpeakingRef.current &&
@@ -1858,7 +1863,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         recognitionActiveRef.current;
 
       const verdict = assessCaptureLiveness({
-        now: Date.now(),
+        now,
         lastActivityAt: lastCaptureActivityAtRef.current,
         armedAt: captureArmedAtRef.current,
         audioOpened: captureAudioOpenedRef.current,
@@ -1866,6 +1871,45 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       });
 
       if (!verdict.dead || !verdict.cause) return;
+
+      const explicitFloorOwned = !automaticTurnCommitAllowed();
+      const recognitionProofAt = Math.max(
+        lastCaptureActivityAtRef.current,
+        captureArmedAtRef.current,
+      );
+      const analyserVoiceAfterRecognition =
+        analyserLastVoiceAtRef.current > recognitionProofAt;
+      const analyserVoiceAgeMs = analyserLastVoiceAtRef.current > 0
+        ? Math.max(0, now - analyserLastVoiceAtRef.current)
+        : -1;
+
+      const mayEndCapture = shouldActOnCaptureLiveness({
+        verdict,
+        explicitFloorOwned,
+        analyserVoiceAfterRecognition,
+        analyserVoiceAgeMs,
+      });
+
+      if (!mayEndCapture) {
+        // TURN-01-RUNTIME-CONFORMANCE-02: intentional silence is not evidence
+        // that capture died while the member explicitly owns the floor. A real
+        // recognition zombie remains detectable once the local analyser hears
+        // resumed speech and recognition stays silent past the probe grace.
+        if (
+          verdict.cause === 'silent_death' &&
+          explicitFloorOwned &&
+          shouldEmitThrottled(now, explicitFloorLivenessHoldLoggedAtRef.current, 5_000)
+        ) {
+          explicitFloorLivenessHoldLoggedAtRef.current = now;
+          logVoiceEvent('voice_floor_liveness_held', {
+            silentForMs: verdict.silentForMs,
+            analyserVoiceAfterRecognition,
+            analyserVoiceAgeMs,
+            floorControlMode: 'explicit',
+          });
+        }
+        return;
+      }
 
       console.warn(
         `🩺 [liveness] Capture silent for ${Math.round(verdict.silentForMs / 1000)}s ` +
@@ -1917,7 +1961,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         livenessTimerRef.current = null;
       }
     };
-  }, [isListening]);
+  }, [isListening, automaticTurnCommitAllowed]);
 
   /**
    * The ONE web-path start gate. Consults the lifecycle session:
