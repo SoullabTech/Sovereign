@@ -30,6 +30,7 @@ export type RestartSourceName =
   | 'user_tap'
   | 'maia_stopped_speaking'
   | 'recognition_stopped'
+  | 'capture_recovery'
   | 'interruption_end'
   | 'foreground_resume';
 

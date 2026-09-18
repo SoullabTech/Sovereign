@@ -56,7 +56,18 @@ test('packet authoring structurally denies write, production, deploy and authori
 test('exactly one new privileged channel carries a bounded action enum', () => {
   assert.match(preload, /workUnitAction: \(req\) => ipcRenderer\.invoke\('jarvis:work-unit-action', req\)/);
   assert.match(main, /ipcMain\.handle\('jarvis:work-unit-action'/);
-  for (const action of ['providers', 'preview-route', 'create', 'status', 'route-plan', 'run-provider']) {
+  for (const action of [
+    'providers',
+    'preview-route',
+    'create',
+    'status',
+    'route-plan',
+    'execution-auth-preview',
+    'authorize-execution-once',
+    'confirm-execute',
+    'revoke-execution-grant',
+    'run-provider',
+  ]) {
     assert.ok(main.includes(`action === '${action}'`), `missing action ${action}`);
   }
   assert.doesNotMatch(main, /action === 'deploy'/);
@@ -114,4 +125,61 @@ test('Routing Intelligence preview ignores stale asynchronous responses', () => 
   assert.match(renderer, /const generation = \+\+routePreviewGeneration/);
   assert.match(renderer, /generation !== routePreviewGeneration/);
   assert.match(renderer, /routePreviewGeneration \+= 1/);
+});
+
+test('R5A digest is computed in MAIN from the exact route record, never supplied by renderer', () => {
+  assert.match(main, /routing-route-integrity\.mjs/);
+  assert.match(main, /const routeDigest = integrityMod\.routeDigest\(routeRecord\)/);
+  assert.match(main, /routeDigest = preview\.route_digest/);
+  assert.match(main, /routeDigest,/);
+  assert.match(operatorWU, /route_digest: routeDigest/);
+  assert.match(operatorWU, /route_version: routeRecord\.route_version/);
+  assert.doesNotMatch(renderer, /route_digest\s*:/);
+});
+
+test('R5A binding preserves execution disconnection and does not add provider authority', () => {
+  assert.match(operatorWU, /execution_connected: false/);
+  assert.doesNotMatch(operatorWU, /authorized_acts:.*provider\.execute/s);
+  assert.match(main, /ROUTING_EXECUTION_DISCONNECTED/);
+});
+
+
+test('R5B preserves routing != authorization != execution with two human gestures', () => {
+  assert.match(renderer, /Authorize this execution once/);
+  assert.match(renderer, /Confirm Execute/);
+  assert.match(renderer, /Authorize is not Execute/);
+  assert.match(renderer, /action: 'execution-auth-preview'/);
+  assert.match(renderer, /action: 'authorize-execution-once'/);
+  assert.match(renderer, /action: 'confirm-execute'/);
+  assert.match(renderer, /action: 'revoke-execution-grant'/);
+  assert.match(main, /WUC\.executionAuthorizationPreview/);
+  assert.match(main, /WUC\.authorizeExecutionOnce/);
+  assert.match(main, /WUC\.confirmAuthorizedExecution/);
+  assert.match(controller, /evaluateHumanExecutionGrant/);
+  assert.match(controller, /Claim before provider execution/);
+});
+
+test('R5B Confirm Execute lets renderer submit only Work Unit + grant identity, never raw authority/model/route', () => {
+  assert.match(
+    renderer,
+    /action: 'confirm-execute',\s*work_unit_id: activeWorkUnitId,\s*grant_id: grantId/s,
+  );
+  assert.doesNotMatch(renderer, /action: 'confirm-execute'[\s\S]{0,180}provider_id:/);
+  assert.doesNotMatch(renderer, /action: 'confirm-execute'[\s\S]{0,180}model:/);
+  assert.doesNotMatch(renderer, /action: 'confirm-execute'[\s\S]{0,180}permission_envelope:/);
+  assert.doesNotMatch(renderer, /action: 'confirm-execute'[\s\S]{0,180}route_record:/);
+});
+
+test('R5B routed packet keeps execution-specific authority absent, not silently granted by routing', () => {
+  assert.match(operatorWU, /\.\.\.\(routed \|\| externalReview \? \[\] : \['network\.external'/);
+  assert.match(operatorWU, /\.\.\.\(routed \|\| providerSpend \? \[\] : \['provider\.spend'\]\)/);
+  assert.doesNotMatch(operatorWU, /authorized_acts:.*provider\.execute/s);
+  assert.match(operatorWU, /execution_connected: false/);
+});
+
+test('R5B uses the existing preload channel; no new privileged IPC channel is added', () => {
+  assert.match(preload, /workUnitAction: \(req\) => ipcRenderer\.invoke\('jarvis:work-unit-action', req\)/);
+  assert.doesNotMatch(preload, /r5b/i);
+  assert.doesNotMatch(preload, /confirm-execute/);
+  assert.doesNotMatch(preload, /authorize-execution-once/);
 });

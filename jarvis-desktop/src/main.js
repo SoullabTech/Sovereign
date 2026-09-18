@@ -735,13 +735,26 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 
 async function computeRoutingPreview(root, spec) {
   const routePath = path.join(root, 'scripts', 'builder', 'routing-intelligence.mjs');
-  if (!fs.existsSync(routePath)) {
-    return { ok: false, status: 'ROUTER_UNAVAILABLE', reason: 'Routing Intelligence module is not present in the bound checkout.' };
+  const integrityPath = path.join(root, 'scripts', 'builder', 'routing-route-integrity.mjs');
+  if (!fs.existsSync(routePath) || !fs.existsSync(integrityPath)) {
+    return {
+      ok: false,
+      status: 'ROUTER_UNAVAILABLE',
+      reason: 'Routing Intelligence or the canonical R5A route-integrity law is not present in the bound checkout.',
+    };
   }
   const routingInput = OPWU.buildRoutingInput(spec || {});
-  const mod = await import(`${pathToFileURL(routePath).href}?t=${Date.now()}`);
-  const routeRecord = mod.routeIntelligence(routingInput);
-  return { ok: true, status: 'PREVIEWED', routing_input: routingInput, route_record: routeRecord };
+  const routeMod = await import(`${pathToFileURL(routePath).href}?t=${Date.now()}`);
+  const integrityMod = await import(`${pathToFileURL(integrityPath).href}?t=${Date.now()}`);
+  const routeRecord = routeMod.routeIntelligence(routingInput);
+  const routeDigest = integrityMod.routeDigest(routeRecord);
+  return {
+    ok: true,
+    status: 'PREVIEWED',
+    routing_input: routingInput,
+    route_record: routeRecord,
+    route_digest: routeDigest,
+  };
 }
 
 // Governed provider-review Work Unit control. ONE narrow channel with bounded
@@ -767,16 +780,23 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       }).trim();
       const spec = req?.spec || {};
       let routeRecord = null;
+      let routeDigest = null;
       if (spec.routing && typeof spec.routing === 'object') {
         const preview = await computeRoutingPreview(root, spec);
         if (!preview.ok) return preview;
         routeRecord = preview.route_record;
+        routeDigest = preview.route_digest;
         if (routeRecord.execution_disposition === 'refused') {
           const errors = (routeRecord.blockers || []).map((block) => `${block.code}: ${block.detail}`);
           return { ok: false, status: 'ROUTE_REFUSED', reason: errors.join('; '), errors, route_record: routeRecord };
         }
       }
-      const built = OPWU.buildPacket(spec, { canonicalSha, nowMs: Date.now(), routeRecord });
+      const built = OPWU.buildPacket(spec, {
+        canonicalSha,
+        nowMs: Date.now(),
+        routeRecord,
+        routeDigest,
+      });
       if (!built.ok) return { ok: false, status: 'REFUSED', reason: built.errors.join('; '), errors: built.errors };
       const created = await WUC.create(root, built.packet);
       if (!created.ok) return { ...created, status: 'REFUSED' };
@@ -808,6 +828,54 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       return await WUC.planWorkUnitRouting(root, req.work_unit_id, {
         requested_external_family: requested,
       }, { env: childEnv(process.env).env, home: os.homedir() });
+    }
+    if (action === 'execution-auth-preview') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
+      }
+      return await WUC.executionAuthorizationPreview(
+        root,
+        req.work_unit_id,
+        req.provider_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'authorize-execution-once') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
+      }
+      return await WUC.authorizeExecutionOnce(
+        root,
+        req.work_unit_id,
+        req.provider_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'confirm-execute') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^r5b-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid grant_id.' };
+      }
+      return await WUC.confirmAuthorizedExecution(
+        root,
+        req.work_unit_id,
+        req.grant_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'revoke-execution-grant') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^r5b-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid grant_id.' };
+      }
+      return await WUC.revokeExecutionGrant(
+        root,
+        req.work_unit_id,
+        req.grant_id,
+        { env: process.env },
+      );
     }
     if (action === 'run-provider') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };

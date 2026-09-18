@@ -328,6 +328,7 @@ const OWU = window.JarvisOperatorWorkUnit;
 let providerCatalog = [];
 let activeWorkUnitId = sessionStorage.getItem('jarvis:active-work-unit') || null;
 let activeWorkUnitStrategy = [];
+let activeExecutionReview = null;
 let workUnitPollTimer = null;
 let routePreviewGeneration = 0;
 
@@ -563,6 +564,192 @@ function nextActionForReconciliation(r) {
   }
 }
 
+function boundRouteProviders(route) {
+  const providers = [];
+  if (route?.primary?.provider_id) {
+    providers.push({
+      provider_id: route.primary.provider_id,
+      role: route.primary.role || 'primary',
+      position: 'primary',
+    });
+  }
+  for (const challenger of route?.challengers || []) {
+    if (!challenger?.provider_id) continue;
+    providers.push({
+      provider_id: challenger.provider_id,
+      role: challenger.role || 'challenger',
+      position: 'challenger',
+    });
+  }
+  return providers;
+}
+
+function grantStandingForProvider(snapshot, providerId) {
+  const matches = (snapshot?.execution_grants || []).filter(
+    (entry) => entry?.grant?.provider_id === providerId,
+  );
+  return matches.length ? matches[matches.length - 1] : null;
+}
+
+function renderR5BExecutionPanel(snapshot, route) {
+  const providers = boundRouteProviders(route);
+  if (!providers.length) return '<div class="hint">No provider act exists in the bound route.</div>';
+
+  const providerRows = providers.map((entry) => {
+    const standing = grantStandingForProvider(snapshot, entry.provider_id);
+    const state = standing?.standing || 'HELD_FOR_AUTHORITY';
+    return `<div class="row" style="margin-top:6px">
+      <div>
+        <div class="label">${escapeHtml(entry.provider_id)}</div>
+        <div class="src">${escapeHtml(entry.position)} · ${escapeHtml(entry.role)}</div>
+      </div>
+      <div>
+        <span class="stage-pill ${state === 'ACTIVE' ? 'done' : state === 'CLAIMED' ? 'running' : state === 'CONSUMED' ? 'done' : 'held'}">${escapeHtml(state)}</span>
+        <button class="act" data-r5b-review="${escapeHtml(entry.provider_id)}">Review execution</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const review = activeExecutionReview?.work_unit_id === activeWorkUnitId
+    ? activeExecutionReview
+    : null;
+  let reviewHtml = '';
+  if (review) {
+    const providerId = review.provider?.id || review.provider_id || 'unknown';
+    const modelRef = review.provider?.model_ref || review.model_ref || 'unknown';
+    const requiredActs = review.required_authority?.acts || [];
+    const requiredDisclosures = review.required_authority?.disclosures || [];
+    const membrane = review.evidence_membrane || null;
+    const refs = membrane?.refs || [];
+    const isExternal = review.provider?.external_network === true;
+    const activeGrant = review.grant || null;
+    const standing = review.grant_standing || (activeGrant ? 'ACTIVE' : null);
+    const denied = snapshot?.work_unit?.authority?.not_authorized_acts || [];
+    const error = review.error || (!review.ok ? (review.reason || review.blockers?.[0]?.code) : null);
+
+    reviewHtml = `<div class="authority-box" style="margin-top:12px">
+      <div class="a-title">Human execution review · R5B</div>
+      <div class="a-line">Provider: <b>${escapeHtml(providerId)}</b></div>
+      <div class="a-line">Model: <b>${escapeHtml(modelRef)}</b></div>
+      <div class="a-line">Why selected: <b>${escapeHtml((review.route_reason_codes || []).join(' · ') || 'bound route')}</b></div>
+      <div class="a-line">Location: <b>${isExternal ? 'external' : 'local'}</b></div>
+      <div class="a-line">Evidence membrane: <b>${escapeHtml(membrane?.kind || 'unknown')} · ${escapeHtml(membrane?.scope || 'unknown')}</b></div>
+      <div class="a-line">Evidence refs: <b>${escapeHtml(refs.join(' · ') || 'none')}</b></div>
+      <div class="a-line">Network: <b>${requiredActs.includes('network.external') ? 'required by this exact act' : 'not required'}</b></div>
+      <div class="a-line">Provider spend: <b>${requiredActs.includes('provider.spend') ? 'required by this exact act' : 'not required'}</b></div>
+      <div class="a-line">Disclosure: <b>${escapeHtml(requiredDisclosures.join(' · ') || 'none')}</b></div>
+      <div class="a-line">Route digest: <b>${escapeHtml(review.route_digest || 'unknown')}</b></div>
+      <div class="a-line">Still not authorized: <b>${escapeHtml(denied.join(' · ') || 'none')}</b></div>
+      ${error ? `<div class="errors"><div>${escapeHtml(error)}</div></div>` : ''}
+      <div style="margin-top:10px">
+        ${activeGrant && standing === 'ACTIVE'
+          ? `<button class="primary" id="r5b-confirm-execute">Confirm Execute</button>
+             <button class="act" id="r5b-revoke-grant">Revoke authorization</button>`
+          : `<button class="primary" id="r5b-authorize-once" ${review.ok ? '' : 'disabled'}>Authorize this execution once</button>`}
+      </div>
+      <div class="hint" style="margin-top:8px">Authorize is not Execute. Confirm Execute rechecks the Work Unit, route digest, provider/model, evidence membrane, R4 admission, and one-shot grant before credentials or provider execution are touched.</div>
+    </div>`;
+  }
+
+  return `<div class="run-plan">
+    <div class="plan-title">R5B · Human Provider Execution Authorization</div>
+    <div class="plan-line">R3/R5A route binding remains non-executing. Each provider act requires a separate one-shot human grant and a separate Confirm Execute gesture.</div>
+    ${providerRows}
+    ${reviewHtml}
+  </div>`;
+}
+
+async function reviewExecutionAuthorization(providerId) {
+  if (!activeWorkUnitId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'execution-auth-preview',
+    work_unit_id: activeWorkUnitId,
+    provider_id: providerId,
+  });
+  const active = (out?.execution_grants || []).find(
+    (entry) => entry?.grant?.provider_id === providerId && entry?.standing === 'ACTIVE',
+  );
+  activeExecutionReview = {
+    ...out,
+    work_unit_id: activeWorkUnitId,
+    provider_id: providerId,
+    grant: active?.grant || null,
+    grant_standing: active?.standing || null,
+  };
+  await refreshActiveWorkUnit();
+}
+
+async function authorizeReviewedExecution() {
+  if (!activeWorkUnitId || !activeExecutionReview?.provider_id) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'authorize-execution-once',
+    work_unit_id: activeWorkUnitId,
+    provider_id: activeExecutionReview.provider_id,
+  });
+  if (!out?.ok) {
+    activeExecutionReview = {
+      ...activeExecutionReview,
+      ok: false,
+      error: out?.reason || out?.blockers?.[0]?.code || 'Authorization refused.',
+    };
+  } else {
+    activeExecutionReview = {
+      ...out.preview,
+      ok: true,
+      status: out.status,
+      work_unit_id: activeWorkUnitId,
+      provider_id: out.provider?.id,
+      provider: out.provider,
+      grant: out.grant,
+      grant_standing: out.standing,
+      error: null,
+    };
+  }
+  await refreshActiveWorkUnit();
+}
+
+async function confirmReviewedExecution() {
+  const grantId = activeExecutionReview?.grant?.grant_id;
+  const providerId = activeExecutionReview?.provider_id;
+  if (!activeWorkUnitId || !grantId || !providerId) return;
+  startWorkUnitPolling(providerId);
+  const result = await window.jarvis.workUnitAction({
+    action: 'confirm-execute',
+    work_unit_id: activeWorkUnitId,
+    grant_id: grantId,
+  });
+  stopWorkUnitPolling();
+
+  if (result?.ok) {
+    activeExecutionReview = null;
+    if (result.work_unit) {
+      renderWorkUnitSnapshot(result);
+      return;
+    }
+  } else {
+    activeExecutionReview = {
+      ...activeExecutionReview,
+      error: result?.reason || result?.status || 'Execution refused.',
+      grant_standing: result?.grant_standing || activeExecutionReview.grant_standing,
+    };
+  }
+  await refreshActiveWorkUnit();
+}
+
+async function revokeReviewedExecution() {
+  const grantId = activeExecutionReview?.grant?.grant_id;
+  if (!activeWorkUnitId || !grantId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'revoke-execution-grant',
+    work_unit_id: activeWorkUnitId,
+    grant_id: grantId,
+  });
+  activeExecutionReview = out?.ok
+    ? null
+    : { ...activeExecutionReview, error: out?.reason || 'Grant revocation refused.' };
+  await refreshActiveWorkUnit();
+}
+
 function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientError = null } = {}) {
   const host = document.getElementById('work-unit-live');
   if (!host) return;
@@ -583,20 +770,24 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
   const inkDone = attempts.some(a => attemptMatchesProvider(a, 'inkling-tinker'));
   const allSelectedDone = strategy.length > 0 && strategy.every(p => attempts.some(a => attemptMatchesProvider(a, p)));
   const active = wu.active_execution;
+  const grantStandings = snapshot.execution_grants || [];
+  const hasActiveGrant = grantStandings.some((entry) => entry?.standing === 'ACTIVE');
+  const hasConsumedGrant = grantStandings.some((entry) => entry?.standing === 'CONSUMED');
 
-  const attemptHtml = routeBound
-    ? '<div class="hint">No provider attempt can run from this R3 route-bound Work Unit.</div>'
-    : (attempts.length ? attempts.map(a => `<div class="attempt-card">
+  const attemptHtml = attempts.length ? attempts.map(a => `<div class="attempt-card">
       <div class="attempt-head"><span>#${escapeHtml(a.attempt_number || '?')} · ${escapeHtml(a.model || a.lane || 'unknown worker')}</span><span>${escapeHtml(a.test_results || 'not_run')}</span></div>
       <div class="why">exit ${a.exit_code ?? '?'} · next ${escapeHtml(a.recommended_next_action || 'unreported')} · ${escapeHtml(String(a.duration_s ?? '?'))}s</div>
       ${a.unresolved_questions?.length ? `<div class="why">Unresolved: ${a.unresolved_questions.map(escapeHtml).join(' · ')}</div>` : ''}
       ${a.output_excerpt ? `<details><summary class="toggle-adv">Review output</summary><pre>${escapeHtml(a.output_excerpt)}</pre></details>` : ''}
-    </div>`).join('') : '<div class="hint">No provider attempt has run yet.</div>');
+    </div>`).join('')
+    : `<div class="hint">${routeBound
+      ? 'No provider attempt has run yet. R5B requires Review execution → Authorize this execution once → Confirm Execute.'
+      : 'No provider attempt has run yet.'}</div>`;
 
   const disagreements = rec.disagreements?.length
     ? `<div class="errors">${rec.disagreements.map(d => `<div>${escapeHtml(d)}</div>`).join('')}</div>` : '';
-  const needsKelly = routeBound
-    ? '<div class="run-plan"><div class="plan-title">R3 route stored</div><div class="plan-line">This Work Unit contains an inspectable Routing Intelligence record only.</div><div class="plan-line">Next: a later gate must explicitly connect execution.</div></div>'
+  const needsKelly = routeBound && attempts.length === 0
+    ? '<div class="run-plan"><div class="plan-title">HELD_FOR_AUTHORITY</div><div class="plan-line">The route is bound, but routing is not execution authority.</div><div class="plan-line">Next: review one exact provider act, authorize it once, then separately Confirm Execute.</div></div>'
     : (rec.needs_kelly
       ? `<div class="needs-kelly"><b>Needs Kelly</b><div class="why">${escapeHtml(rec.summary)}</div><div class="fix">→ ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`
       : `<div class="run-plan"><div class="plan-title">Reconciliation · ${escapeHtml(rec.standing)}</div><div class="plan-line">${escapeHtml(rec.summary)}</div><div class="plan-line">Next: ${escapeHtml(nextActionForReconciliation(rec))}</div></div>`);
@@ -608,8 +799,10 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
     <div class="a-line">Challengers: <b>${escapeHtml((route.challengers || []).map(c => c.provider_id).join(' · ') || 'none')}</b></div>
     <div class="a-line">Review policy: <b>${escapeHtml(route.review_policy?.local || 'none')}</b></div>
     <div class="a-line">Disposition: <b>${escapeHtml(route.execution_disposition || 'unknown')}</b></div>
-    <div class="a-line">Provider execution: <b>disconnected in R3</b></div>
+    <div class="a-line">Route digest: <b>${escapeHtml(routing?.route_digest || 'unknown')}</b></div>
+    <div class="a-line">Provider execution: <b>disconnected in R3; R5B human authorization is a separate authority layer</b></div>
   </div>` : '';
+  const r5bHtml = routeBound && route ? renderR5BExecutionPanel(snapshot, route) : '';
 
   host.innerHTML = `<div class="card">
     <h3>JARVIS Run</h3>
@@ -617,7 +810,12 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
     <div class="stage-list">
       <span class="stage-pill done">Authority bound</span>
       <span class="stage-pill done">Work Unit created</span>
-      ${routeBound ? '<span class="stage-pill done">Route bound</span><span class="stage-pill held">Execution disconnected</span>' : `
+      ${routeBound ? `
+        <span class="stage-pill done">Route bound</span>
+        <span class="stage-pill ${hasActiveGrant ? 'done' : 'held'}">Human authorization</span>
+        <span class="stage-pill ${stageClass(hasConsumedGrant || attempts.length > 0, !!runningProvider, !hasConsumedGrant && !attempts.length)}">Provider execution</span>
+        <span class="stage-pill ${attempts.length ? (rec.needs_kelly || rec.standing === 'EVIDENCE_PRESENTED' ? 'held' : '') : 'held'}">Evidence / adjudication</span>
+      ` : `
         ${strategy.includes('qwen-local') ? `<span class="stage-pill ${stageClass(qwenDone, runningProvider === 'qwen-local')}">Qwen coding review</span>` : ''}
         ${strategy.includes('gpt-oss-local') ? `<span class="stage-pill ${stageClass(ossDone, runningProvider === 'gpt-oss-local')}">GPT-OSS reasoning review</span>` : ''}
         ${strategy.includes('nemotron-zen') ? `<span class="stage-pill ${stageClass(nemDone, runningProvider === 'nemotron-zen')}">Nemotron external review</span>` : ''}
@@ -627,6 +825,7 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
       `}
     </div>
     ${routeHtml}
+    ${r5bHtml}
     <div class="authority-box">
       <div class="a-title">Authority actually held</div>
       <div class="a-line">Allowed: ${escapeHtml((wu.authority?.authorized_acts || []).join(' · '))}</div>
@@ -637,12 +836,12 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
     ${transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : ''}
     <div style="margin-top:10px">
       ${routeBound
-        ? '<span class="stage-pill held">Provider execution disconnected in R3</span>'
+        ? '<span class="stage-pill held">Provider execution disconnected in R3 · use the R5B human authorization flow above</span>'
         : `<button class="primary" id="wu-run-strategy" ${runningProvider ? 'disabled' : ''}>${runningProvider ? `Running ${escapeHtml(runningProvider)}…` : 'Run remaining strategy'}</button>`}
       <button class="act" id="wu-refresh">Refresh evidence</button>
       ${active ? '<button class="act" id="wu-release">Release execution claim</button>' : ''}
     </div>
-    <h3 style="margin-top:16px">${routeBound ? 'Execution boundary' : 'Provider attempts'}</h3>
+    <h3 style="margin-top:16px">Provider attempts</h3>
     ${attemptHtml}
     ${disagreements}
     ${needsKelly}
@@ -650,6 +849,12 @@ function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientErr
 
   document.getElementById('wu-refresh')?.addEventListener('click', refreshActiveWorkUnit);
   if (!routeBound) document.getElementById('wu-run-strategy')?.addEventListener('click', runRemainingStrategy);
+  document.querySelectorAll('[data-r5b-review]').forEach((button) => {
+    button.addEventListener('click', () => reviewExecutionAuthorization(button.dataset.r5bReview));
+  });
+  document.getElementById('r5b-authorize-once')?.addEventListener('click', authorizeReviewedExecution);
+  document.getElementById('r5b-confirm-execute')?.addEventListener('click', confirmReviewedExecution);
+  document.getElementById('r5b-revoke-grant')?.addEventListener('click', revokeReviewedExecution);
   document.getElementById('wu-release')?.addEventListener('click', releaseActiveWorkUnitClaim);
 }
 
@@ -747,6 +952,7 @@ async function createGovernedWorkUnit() {
   }
   activeWorkUnitId = result.work_unit_id;
   activeWorkUnitStrategy = result.provider_strategy || spec.providers;
+  activeExecutionReview = null;
   sessionStorage.setItem('jarvis:active-work-unit', activeWorkUnitId);
   renderWorkUnitSnapshot(result.snapshot);
 }
