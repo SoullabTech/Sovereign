@@ -140,8 +140,8 @@ const uid = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(36).sl
 console.log('\n=== P1: registry is explicit and bounded ===');
 {
   const ids = listProviderIds();
-  assert('exactly the five intended provider classes are registered',
-    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'nemotron-nvidia', 'nemotron-zen', 'nemotron-tinker', 'inkling-tinker']),
+  assert('exactly the six intended provider classes are registered',
+    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'gpt-oss-local', 'nemotron-nvidia', 'nemotron-zen', 'nemotron-tinker', 'inkling-tinker']),
     JSON.stringify(ids));
 
   const local = resolveOpenCodeProvider({
@@ -153,6 +153,16 @@ console.log('\n=== P1: registry is explicit and bounded ===');
   });
   assert('local Qwen resolves without network, spend, or credential authority',
     local.ok && local.model_ref === 'ollama/qwen3-coder:30b', JSON.stringify(local));
+
+  const reasoner = resolveOpenCodeProvider({
+    providerId: 'gpt-oss-local',
+    permissionEnvelope: {
+      repo_read: true, repo_write_scope: 'none', external_network: false, provider_spend: false,
+    },
+    env: {},
+  });
+  assert('local GPT-OSS reasoner resolves without network, spend, or credential authority',
+    reasoner.ok && reasoner.model_ref === 'ollama/gpt-oss:20b', JSON.stringify(reasoner));
 
   const writeAttempt = resolveOpenCodeProvider({
     providerId: 'qwen-local',
