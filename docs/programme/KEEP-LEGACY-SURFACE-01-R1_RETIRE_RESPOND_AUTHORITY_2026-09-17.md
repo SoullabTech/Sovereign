@@ -11,9 +11,9 @@
 
 ## 1. Canonical base
 
-Repair base:
+Current repair base after freshness reconciliation:
 
-`677448106013a822156b1f972302a2077f7d8a99`
+`5b5683048c75087f8bc611fb55e6628cf2983687`
 
 The prior Keep direct-filing retirement remained intact on this base:
 
@@ -22,6 +22,22 @@ The prior Keep direct-filing retirement remained intact on this base:
 - no `CONVERSATIONAL_KEEP_ENABLED` live-route branch.
 
 The legacy response endpoint remained independently executable.
+
+### Freshness reconciliation
+
+The first implementation pass was built from `677448106013a822156b1f972302a2077f7d8a99`.
+
+Before merge readiness, canonical advanced through PR #1369 to
+`5b5683048c75087f8bc611fb55e6628cf2983687`
+(`fix(voice): disambiguate Pause from crisis speech acts`).
+
+That advance touched `components/OracleConversation.tsx`, so filename-level freshness was not sufficient. The three Keep residue pre-images were checked on the new canonical and remained byte-for-byte present:
+
+- legacy `KeepAffordance` import + client flag block;
+- stale message `keepIntent` field;
+- stale offer runtime refs.
+
+The voice changes were elsewhere in the file. The complete eight-commit Keep repair was therefore reconstructed directly on `5b568304...` rather than merged forward from the stale base.
 
 ---
 
@@ -114,7 +130,7 @@ Guard:
 
 `app/api/psyche/conversational-keep/__tests__/legacyRespondAuthorityGuard.test.ts`
 
-The same guard was run against untouched base `677448106...`.
+The same guard was run against untouched current base `5b568304...`.
 
 ### Untouched canonical result
 
@@ -136,9 +152,11 @@ The canonical capsule path and retired Oracle controls still passed.
 
 ## 7. Bounded acceptance population
 
-Candidate head before this record:
+Reconstructed candidate code tree before this documentary record amendment:
 
-`ee0b9e5db7d4b71aa8120ab64127a42be696365f`
+`0c87cc5a7a09430200d3165638c3426ecc8de9d8`
+
+This tree is the same bounded Keep repair replayed onto current canonical after the #1369 freshness reconciliation.
 
 Seven suites:
 
