@@ -457,3 +457,46 @@ W5 NOT OPEN
 ```
 
 No W5 end-to-end Work Unit witness is authorized by this record.
+
+## 16. Founder adjudication — W4 closure and W5 opening
+
+**Founder act:** 2026-09-18
+
+The Founder accepts W4 candidate commit
+`83019a4ab7d97115bc2d9fc53bf50ebee3ef0b1a` and the recorded evidence:
+
+- W1 schema: 22 / 22 passing;
+- W2 lifecycle: 27 / 27 passing;
+- ratified Routing Intelligence: 20 / 20 passing;
+- W3 routing binding: 28 / 28 passing;
+- W4 append-only ledger: 31 / 31 passing;
+- sovereignty/pre-commit gates green;
+- append-only history is preserved;
+- retry cannot be relabeled independent review;
+- builder self-verification is refused;
+- duplicate/conflicting immutable records fail closed;
+- later success cannot rewrite earlier failed/refused/rejected/insufficient/escalated evidence;
+- W4 evidence cannot mutate Work Unit authority, routing, lifecycle state, or W2 authorized core;
+- W4 never transitions lifecycle state or selects a semantic winner;
+- four deliberate W4 mutations made the suite red;
+- locally tracked canonical freshness had zero true file overlap with W4;
+- no provider/model call, credential access, external network action, JARVIS repository execution,
+  push, merge, deployment, or production access occurred during W4.
+
+**W4 standing: CLOSED.**
+
+The Founder authorizes **W5 — SYNTHETIC END-TO-END WORK UNIT WITNESS ONLY**.
+
+W5 may construct one entirely synthetic, non-confidential Work Unit and exercise the
+already-proven W1-W4 layers together through evidenced closure.
+
+W5 must prove deterministic replay and the required end-to-end falsification cases.
+
+W5 may not call providers/models, inspect credentials, access external networks,
+execute OpenCode/Tinker/shell/repository work through JARVIS, use member/PHI/production
+data, merge, push, deploy, or access production.
+
+W5 stops after the synthetic witness, deterministic replay proof, and red/green
+falsification evidence.
+
+RGR-01 remains closed.
