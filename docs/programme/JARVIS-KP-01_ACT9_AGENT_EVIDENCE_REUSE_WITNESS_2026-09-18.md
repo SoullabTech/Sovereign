@@ -257,6 +257,8 @@ No JARVIS-KP-01, Living Constellation, agent-definition, source-packet, or ACT 9
 - `JARVIS-KP-01_ACT9_PRIMARY_TASK_2026-09-18.md`
 - `JARVIS-KP-01_ACT9_NEGATIVE_CONTROL_TASK_2026-09-18.md`
 - `JARVIS-KP-01_ACT9_METHOD_2026-09-18.md`
+- `evidence/JARVIS-KP-01/ACT9/SOURCE_PACKET_EXACT.b64` — base64 encoding of the exact source bytes supplied to the scored model;
+- `evidence/JARVIS-KP-01/ACT9/SOURCE_PACKET_EXACT_SHA256` — SHA-256 of those decoded source bytes;
 - `evidence/JARVIS-KP-01/ACT9/PRIMARY_RAW.json`
 - `evidence/JARVIS-KP-01/ACT9/NEGATIVE_CONTROL_RAW.json`
 - `evidence/JARVIS-KP-01/ACT9/SHA256SUMS`
