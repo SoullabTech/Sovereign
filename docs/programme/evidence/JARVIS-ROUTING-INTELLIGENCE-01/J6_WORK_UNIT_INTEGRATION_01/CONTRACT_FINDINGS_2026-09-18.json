@@ -1,0 +1,27 @@
+{
+  "work_unit_v1_standing": "historical_and_valid",
+  "j5_law_standing": "governing_for_new_routing_integration",
+  "required_version_successors": {
+    "work_unit": "W0.v2",
+    "lifecycle": "W2.v2",
+    "routing_binding": "W3.v2",
+    "transport_binding": "W3T.v1",
+    "ledger": "W4.v2",
+    "end_to_end_witness": "W5.v2",
+    "route_contract": "J5.v1"
+  },
+  "new_authoritative_primitives": [
+    "immutable custody.evidence_class",
+    "immutable routing_request",
+    "family-first route participants with stable participant_id",
+    "append-only governed transport bindings",
+    "W2 execution admission dependent on governed transport binding",
+    "W4 v2 model identity referencing route participant + transport binding"
+  ],
+  "legacy_primitives_demoted_to_compatibility": [
+    "scripts/builder/work-unit.mjs lifecycle authority",
+    "Desktop provider_strategy as routing authority",
+    "renderer-supplied provider/model choice for canonical v2 execution",
+    "routing-intelligence-j6.mjs as a parallel canonical router"
+  ]
+}
