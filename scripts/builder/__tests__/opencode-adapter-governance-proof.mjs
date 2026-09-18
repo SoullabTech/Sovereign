@@ -133,8 +133,8 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
     permissionEnvelope: { ...base, external_network: true },
     env: {},
   });
-  assert('Zen Nemotron resolves with network authority and no spend grant',
-    zen.ok && zen.model_ref === 'opencode/nemotron-3-ultra-free' && zen.metered_provider === false,
+  assert('Zen Nemotron remains registered but governed automation fails closed',
+    !zen.ok && zen.code === 'PROVIDER_AUTOMATION_UNSUPPORTED',
     JSON.stringify(zen));
 
   const noSpend = resolveOpenCodeProvider({
@@ -203,6 +203,23 @@ console.log('\n=== P4: denied external use stops before workspace acquisition or
     readPacket(id).worktree === null, JSON.stringify(readPacket(id).worktree));
   const afterArgs = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
   assert('refused external attempt never launches OpenCode',
+    afterArgs === beforeArgs);
+}
+
+console.log('\n=== P4b: Zen Free interactive capability cannot silently become JARVIS automation ===');
+{
+  const id = uid('zen-unsupported');
+  sh(['new', id]);
+  authorizeReadOnly(id, ['network.external']);
+  const beforeArgs = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
+  const run = sh(['opencode', id, 'nemotron-zen']);
+  assert('network-authorized Zen delegation refuses with provider-automation code',
+    run.code === 3 && /PROVIDER_AUTOMATION_UNSUPPORTED/.test(run.err),
+    `exit=${run.code} err=${run.err.slice(0, 180)}`);
+  assert('Zen provider restriction is enforced before workspace acquisition',
+    readPacket(id).worktree === null, JSON.stringify(readPacket(id).worktree));
+  const afterArgs = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
+  assert('unsupported Zen delegation never launches OpenCode',
     afterArgs === beforeArgs);
 }
 

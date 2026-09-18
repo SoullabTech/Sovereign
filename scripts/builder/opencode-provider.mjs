@@ -35,7 +35,8 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     external_network: true,
     metered_provider: false,
     credential_env: null,
-    standing: 'external-free-candidate',
+    standing: 'interactive-only',
+    delegation_supported: false,
   }),
   'inkling-tinker': Object.freeze({
     opencode_provider: 'tinker',
@@ -77,6 +78,14 @@ export function resolveOpenCodeProvider({ providerId, model, permissionEnvelope,
   }
   if (spec.external_network && permissionEnvelope.external_network !== true) {
     return refused('EXTERNAL_NETWORK_NOT_AUTHORIZED');
+  }
+  // OpenCode Zen Free currently rejects JARVIS's custom read-only agent and any
+  // equivalent permission override with FreeTierError. Keep it registered for
+  // truthful capability discovery/manual OpenCode use, but fail closed before
+  // workspace acquisition for governed delegation. Do not weaken permissions to
+  // satisfy a provider gate.
+  if (spec.delegation_supported === false) {
+    return refused('PROVIDER_AUTOMATION_UNSUPPORTED');
   }
   if (spec.metered_provider && permissionEnvelope.provider_spend !== true) {
     return refused('PROVIDER_SPEND_NOT_AUTHORIZED');

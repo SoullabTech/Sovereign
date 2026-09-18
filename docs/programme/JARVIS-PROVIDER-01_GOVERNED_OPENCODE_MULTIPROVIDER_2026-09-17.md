@@ -58,7 +58,7 @@ both acts explicitly authorized on the Work Unit plus the provider credential.
 |---|---|---:|---:|---|
 | `qwen-local` | `ollama/qwen3-coder:30b` (plus allowlisted local variants) | no | no | local-established |
 | `nemotron-nvidia` | `nvidia/nemotron-3-ultra-550b-a55b` | yes | yes | external-candidate |
-| `nemotron-zen` | `opencode/nemotron-3-ultra-free` (plus allowlisted free Zen variant) | yes | no | external-free-candidate |
+| `nemotron-zen` | `opencode/nemotron-3-ultra-free` (plus allowlisted free Zen variant) | yes | no | **interactive-only · delegated automation blocked** |
 | `inkling-tinker` | `tinker/thinkingmachines/Inkling` | yes | yes | **evaluation-only** |
 
 Registration is not activation. No external provider is a default model.
@@ -67,7 +67,8 @@ Registration is not activation. No external provider is a default model.
 
 V1 deliberately supports **read-only provider evaluation only**.
 
-The project-scoped `jarvis-readonly` OpenCode agent:
+For providers that admit governed automation (`qwen-local`, direct NVIDIA Nemotron, and
+Tinker/Inkling), the project-scoped `jarvis-readonly` OpenCode agent:
 
 - allows repository read / glob / grep / list / LSP;
 - denies edit;
@@ -81,18 +82,53 @@ The delegate records OpenCode attempts through the same result contract used by 
 including the exact `provider/model` identity. A later founder act may open a separate proof for
 write-capable OpenCode execution; this lane does not smuggle that authority in.
 
+### OpenCode Zen Free live restriction — 2026-09-17
+
+The Zen credential and model are real and usable **inside native OpenCode**:
+
+```text
+opencode -m opencode/nemotron-3-ultra-free
+→ NEMOTRON CONNECTED
+```
+
+A minimal unmodified headless native `build` run also returned successfully. But the live Zen Free
+gateway rejects every tested form of the JARVIS read-only boundary with:
+
+```text
+Error from provider (Console): OpenCode's free tier can only be used from within OpenCode
+```
+
+The restriction reproduced with:
+
+- `--agent jarvis-readonly`;
+- runtime `OPENCODE_CONFIG_CONTENT` permission denial;
+- a custom `OPENCODE_CONFIG` permission file; and
+- a normal `.opencode/opencode.json` override of the native `build` agent.
+
+The unmodified native `build` agent is not an acceptable substitute: its default tool surface is
+broader than the JARVIS V1 permission contract. Therefore **JARVIS does not weaken its boundary to
+obtain free-provider access**. `nemotron-zen` remains registered for truthful capability discovery
+and manual OpenCode use, but automated JARVIS delegation fails closed with
+`PROVIDER_AUTOMATION_UNSUPPORTED` after `network.external` authority is checked and before worktree
+acquisition.
+
+Direct NVIDIA Nemotron remains the governed automated Nemotron candidate once a direct provider
+credential and `provider.spend` authority are both present. If Zen later admits the same read-only
+permission envelope, its delegated standing may be re-evaluated from new evidence.
+
 ## Provider configuration
 
 `opencode.json` registers:
 
 - the existing local Ollama models;
-- OpenCode Zen's built-in `opencode/nemotron-3-ultra-free` / `opencode/nemotron-3.5-lightning-free` models;
-- NVIDIA NIM at `https://integrate.api.nvidia.com/v1`, credential by `NVIDIA_API_KEY`;
+- NVIDIA NIM at `https://integrate.api.nvidia.com/v1`, credential by `NVIDIA_API_KEY`; and
 - Thinking Machines Tinker at
   `https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1`, credential by
   `TINKER_API_KEY`.
 
-OpenCode Zen authentication remains in the user-level OpenCode credential store; no credential is committed. No external model is selected as the repository default.
+OpenCode Zen is a built-in OpenCode provider discovered from the user-level Zen credential/model
+catalog; it is not registered by repository `opencode.json`. No credential is committed and no
+external model is selected as the repository default.
 
 ## Evidence
 
@@ -100,12 +136,13 @@ Targeted provider proof:
 
 ```text
 node scripts/builder/__tests__/opencode-adapter-governance-proof.mjs
-23 passed · 0 failed
+26 passed · 0 failed
 ```
 
-It proves registration, local Qwen resolution, Zen Nemotron external-network gating without a spend grant, V1 read-only refusal, conjunctive external-network
-and provider-spend authority for metered providers, missing-credential refusal, Inkling evaluation-only standing,
-deny-before-worktree behavior, exact model provenance, no `--auto`, and secret-free configuration.
+It proves registration, local Qwen resolution, Zen external-network gating, fail-closed Zen
+automation refusal before worktree acquisition, V1 read-only refusal, conjunctive external-network
+and provider-spend authority for metered providers, missing-credential refusal, Inkling evaluation-only
+standing, deny-before-worktree behavior, exact model provenance, no `--auto`, and secret-free configuration.
 
 Syntax/config gates also passed locally:
 
@@ -122,20 +159,37 @@ pre-existing Claude adapter proof with filesystem `ENOSPC` while another active 
 using a large temporary worktree. This is recorded as **ENVIRONMENTALLY BLOCKED**, not PASS and not
 a code assertion failure. The other lane was not killed or deleted.
 
-## What did not happen
+## Live-evaluation accounting
 
-- no NVIDIA API request;
+What **did** happen:
+
+- an OpenCode Zen credential was installed in the user-level credential store;
+- manual/synthetic Zen Nemotron requests were made;
+- one bounded voice-review delegation attempt reached the Zen path but could not execute under the
+  required JARVIS read-only boundary; it was terminated and recorded as `reject` with zero files
+  changed;
+- the synthetic governed attempt was likewise terminated/rejected with zero files changed.
+
+What did **not** happen:
+
+- no direct NVIDIA API request;
 - no Tinker/Inkling API request;
 - no provider spend;
-- no real external credential was created or committed;
+- no credential was committed;
 - no production member data was read or transmitted;
 - no production mutation;
 - no merge;
 - no deployment;
-- no change to JARVIS truth/provenance authority.
+- no weakening of JARVIS truth/provenance or permission authority.
 
 ## Next gate
 
-After independent review of this read-only seam, the next distinct question is whether OpenCode may
-become a governed **write-capable** worker. That requires a separate proof of permission mapping and
-must not be inferred from provider registration.
+Two provider questions remain distinct:
+
+1. **Inkling/Tinker live witness** — obtain/configure a Tinker credential, then prove the existing
+   evaluation-only read-only seam against the real provider.
+2. **Governed automated Nemotron** — either provide a direct NVIDIA credential for the existing
+   `nemotron-nvidia` lane, or wait for Zen Free to admit JARVIS's read-only permission boundary.
+
+Write-capable OpenCode remains a separate later question and is not authorized by any provider
+registration or live-model success.
