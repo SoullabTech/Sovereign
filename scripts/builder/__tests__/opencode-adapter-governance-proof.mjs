@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * JARVIS-PROVIDER-01 proof.
- * Exercises the real ain-delegate.sh OpenCode lane against a stub opencode binary.
+ * Exercises the real ain-delegate.sh OpenCode + direct-Tinker lanes against local stubs.
  * No NVIDIA/Tinker request is made; fake keys only prove the local authorization seam.
  */
 import {
@@ -27,16 +27,55 @@ const AIN_HOME = path.join(TMP, 'ain');
 const WORKTREES_ROOT = path.join(TMP, 'worktrees');
 const FAKE_BIN = path.join(TMP, 'bin');
 const ARGS_FILE = path.join(TMP, 'opencode-args.txt');
+const SECURITY_ARGS_FILE = path.join(TMP, 'security-args.txt');
+const OPENCODE_ENV_STATUS_FILE = path.join(TMP, 'opencode-env-status.txt');
+const TINKER_ARGS_FILE = path.join(TMP, 'tinker-args.txt');
+const TINKER_ENV_STATUS_FILE = path.join(TMP, 'tinker-env-status.txt');
+const TINKER_PROMPT_FILE = path.join(TMP, 'tinker-prompt.txt');
+const REAL_NODE = process.execPath;
 mkdirSync(AIN_HOME, { recursive: true });
 mkdirSync(WORKTREES_ROOT, { recursive: true });
 mkdirSync(FAKE_BIN, { recursive: true });
 
 writeFileSync(path.join(FAKE_BIN, 'opencode'), `#!/bin/sh
 printf '%s\\n' "$@" > "$STUB_OPENCODE_ARGS"
+if [ -n "$TINKER_API_KEY" ]; then
+  printf 'TINKER_API_KEY_PRESENT\\n' > "$STUB_OPENCODE_ENV_STATUS"
+else
+  printf 'TINKER_API_KEY_ABSENT\\n' > "$STUB_OPENCODE_ENV_STATUS"
+fi
 printf 'stub-opencode-ok\\n'
 exit 0
 `);
 chmodSync(path.join(FAKE_BIN, 'opencode'), 0o755);
+
+writeFileSync(path.join(FAKE_BIN, 'node'), `#!/bin/sh
+if [ "$1" = "$STUB_TINKER_DIRECT_SCRIPT" ]; then
+  shift
+  printf '%s\n' "$@" > "$STUB_TINKER_ARGS"
+  if [ -n "$TINKER_API_KEY" ]; then
+    printf 'TINKER_API_KEY_PRESENT\n' > "$STUB_TINKER_ENV_STATUS"
+  else
+    printf 'TINKER_API_KEY_ABSENT\n' > "$STUB_TINKER_ENV_STATUS"
+  fi
+  cat > "$STUB_TINKER_PROMPT"
+  printf '{"provider":"tinker","transport":"anthropic-compatible","model":"%s","text":"stub-direct-ok","usage":null,"stop_reason":"end_turn"}\n' "$1"
+  exit 0
+fi
+exec "$REAL_NODE" "$@"
+`);
+chmodSync(path.join(FAKE_BIN, 'node'), 0o755);
+
+writeFileSync(path.join(FAKE_BIN, 'security'), `#!/bin/sh
+printf '%s\\n' "$@" >> "$STUB_SECURITY_ARGS"
+[ -n "$STUB_SECURITY_SECRET" ] || exit 44
+printf '%s\\n' "$STUB_SECURITY_SECRET"
+`);
+chmodSync(path.join(FAKE_BIN, 'security'), 0o755);
+
+const securityLog = () => existsSync(SECURITY_ARGS_FILE)
+  ? readFileSync(SECURITY_ARGS_FILE, 'utf8')
+  : '';
 
 const baseEnv = (extra = {}) => ({
   ...process.env,
@@ -45,6 +84,13 @@ const baseEnv = (extra = {}) => ({
   AIN_WORKTREES_ROOT: WORKTREES_ROOT,
   PATH: `${FAKE_BIN}:${process.env.PATH}`,
   STUB_OPENCODE_ARGS: ARGS_FILE,
+  STUB_SECURITY_ARGS: SECURITY_ARGS_FILE,
+  STUB_OPENCODE_ENV_STATUS: OPENCODE_ENV_STATUS_FILE,
+  STUB_TINKER_ARGS: TINKER_ARGS_FILE,
+  STUB_TINKER_ENV_STATUS: TINKER_ENV_STATUS_FILE,
+  STUB_TINKER_PROMPT: TINKER_PROMPT_FILE,
+  STUB_TINKER_DIRECT_SCRIPT: path.join(REPO, 'scripts', 'builder', 'tinker-direct.mjs'),
+  REAL_NODE,
 });
 
 const sh = (args, extra = {}) => {
@@ -88,8 +134,8 @@ const uid = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(36).sl
 console.log('\n=== P1: registry is explicit and bounded ===');
 {
   const ids = listProviderIds();
-  assert('exactly the four intended provider classes are registered',
-    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'nemotron-nvidia', 'nemotron-zen', 'inkling-tinker']),
+  assert('exactly the six intended provider classes are registered',
+    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'gpt-oss-local', 'nemotron-nvidia', 'nemotron-zen', 'nemotron-tinker', 'inkling-tinker']),
     JSON.stringify(ids));
 
   const local = resolveOpenCodeProvider({
@@ -101,6 +147,16 @@ console.log('\n=== P1: registry is explicit and bounded ===');
   });
   assert('local Qwen resolves without network, spend, or credential authority',
     local.ok && local.model_ref === 'ollama/qwen3-coder:30b', JSON.stringify(local));
+
+  const reasoner = resolveOpenCodeProvider({
+    providerId: 'gpt-oss-local',
+    permissionEnvelope: {
+      repo_read: true, repo_write_scope: 'none', external_network: false, provider_spend: false,
+    },
+    env: {},
+  });
+  assert('local GPT-OSS reasoner resolves without network, spend, or credential authority',
+    reasoner.ok && reasoner.model_ref === 'ollama/gpt-oss:20b', JSON.stringify(reasoner));
 
   const writeAttempt = resolveOpenCodeProvider({
     providerId: 'qwen-local',
@@ -133,8 +189,8 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
     permissionEnvelope: { ...base, external_network: true },
     env: {},
   });
-  assert('Zen Nemotron resolves with network authority and no spend grant',
-    zen.ok && zen.model_ref === 'opencode/nemotron-3-ultra-free' && zen.metered_provider === false,
+  assert('Zen Nemotron remains registered but governed automation fails closed',
+    !zen.ok && zen.code === 'PROVIDER_AUTOMATION_UNSUPPORTED',
     JSON.stringify(zen));
 
   const noSpend = resolveOpenCodeProvider({
@@ -153,13 +209,44 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
   assert('network + spend still refuse when the provider credential is absent',
     noKey.code === 'PROVIDER_CREDENTIAL_MISSING', JSON.stringify(noKey));
 
+  const tinkerNoSpend = resolveOpenCodeProvider({
+    providerId: 'nemotron-tinker',
+    permissionEnvelope: { ...base, external_network: true },
+    env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('Tinker Nemotron remains metered and refuses without spend authority',
+    tinkerNoSpend.code === 'PROVIDER_SPEND_NOT_AUTHORIZED', JSON.stringify(tinkerNoSpend));
+
+  const tinkerNemotron = resolveOpenCodeProvider({
+    providerId: 'nemotron-tinker',
+    permissionEnvelope: { ...base, external_network: true, provider_spend: true },
+    env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('Tinker Nemotron resolves after network + spend + credential',
+    tinkerNemotron.ok
+      && tinkerNemotron.model_ref === 'tinker/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
+    JSON.stringify(tinkerNemotron));
+
+  const tinkerUltra = resolveOpenCodeProvider({
+    providerId: 'nemotron-tinker',
+    model: 'nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16',
+    permissionEnvelope: { ...base, external_network: true, provider_spend: true },
+    env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('Tinker Nemotron Ultra is an explicit allowlisted override',
+    tinkerUltra.ok
+      && tinkerUltra.model_ref === 'tinker/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16',
+    JSON.stringify(tinkerUltra));
+
   const inkling = resolveOpenCodeProvider({
     providerId: 'inkling-tinker',
     permissionEnvelope: { ...base, external_network: true, provider_spend: true },
     env: { TINKER_API_KEY: 'proof-only-not-a-real-key' },
   });
   assert('Inkling resolves only after both grants and a credential are present',
-    inkling.ok && inkling.model_ref === 'tinker/thinkingmachines/Inkling',
+    inkling.ok
+      && inkling.model_ref === 'tinker/thinkingmachines/Inkling-Small'
+      && inkling.execution_adapter === 'tinker-direct',
     JSON.stringify(inkling));
   assert('Inkling remains explicitly evaluation-only in the registry',
     inkling.provider_standing === 'evaluation-only', inkling.provider_standing);
@@ -178,6 +265,8 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
   assert('attempt provenance records OpenCode and the exact provider/model reference',
     result.lane === 'opencode' && result.model === 'ollama/qwen3-coder:30b',
     `lane=${result.lane} model=${result.model}`);
+  assert('successful delegate result persists numeric exit_code 0',
+    result.exit_code === 0, `exit_code=${result.exit_code}`);
 
   const args = readFileSync(ARGS_FILE, 'utf8');
   assert('OpenCode uses the project-scoped read-only agent',
@@ -206,33 +295,120 @@ console.log('\n=== P4: denied external use stops before workspace acquisition or
     afterArgs === beforeArgs);
 }
 
+console.log('\n=== P4b: Zen Free interactive capability cannot silently become JARVIS automation ===');
+{
+  const id = uid('zen-unsupported');
+  sh(['new', id]);
+  authorizeReadOnly(id, ['network.external']);
+  const beforeArgs = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
+  const run = sh(['opencode', id, 'nemotron-zen']);
+  assert('network-authorized Zen delegation refuses with provider-automation code',
+    run.code === 3 && /PROVIDER_AUTOMATION_UNSUPPORTED/.test(run.err),
+    `exit=${run.code} err=${run.err.slice(0, 180)}`);
+  assert('Zen provider restriction is enforced before workspace acquisition',
+    readPacket(id).worktree === null, JSON.stringify(readPacket(id).worktree));
+  const afterArgs = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
+  assert('unsupported Zen delegation never launches OpenCode',
+    afterArgs === beforeArgs);
+}
+
+console.log('\n=== P4c: denied Tinker spend never reads Keychain ===');
+{
+  const id = uid('tinker-spend-denied');
+  sh(['new', id]);
+  authorizeReadOnly(id, ['network.external']);
+  const beforeSecurity = securityLog();
+  const run = sh(['tinker', id, 'inkling-tinker'], {
+    TINKER_API_KEY: '',
+    STUB_SECURITY_SECRET: 'credential-from-keychain-stub',
+  });
+  assert('Tinker refuses missing spend authority before credential hydration',
+    run.code === 3 && /PROVIDER_SPEND_NOT_AUTHORIZED/.test(run.err),
+    `exit=${run.code} err=${run.err.slice(0, 180)}`);
+  assert('denied spend does not read macOS Keychain',
+    securityLog() === beforeSecurity, securityLog().slice(-200));
+  assert('denied Tinker attempt still has no worktree',
+    readPacket(id).worktree === null, JSON.stringify(readPacket(id).worktree));
+}
+
 console.log('\n=== P5: authorized external selection remains testable without a real API call ===');
 {
   const id = uid('inkling-stub');
   sh(['new', id]);
   authorizeReadOnly(id, ['network.external', 'provider.spend']);
-  const run = sh(['opencode', id, 'inkling-tinker'], {
+  writePacket(id, { allowed_files: ['opencode.json'] });
+  const run = sh(['tinker', id, 'inkling-tinker'], {
     TINKER_API_KEY: 'proof-only-not-a-real-key',
   });
-  assert('authorized Inkling selection reaches only the stub OpenCode process',
+  assert('authorized Inkling selection reaches only the stub direct-Tinker process',
     run.code === 0, `exit=${run.code} err=${run.err.slice(0, 160)}`);
   const result = JSON.parse(readFileSync(resultPath(id), 'utf8'));
   assert('Inkling model identity is durable in the result contract',
-    result.model === 'tinker/thinkingmachines/Inkling', result.model);
+    result.lane === 'tinker' && result.model === 'tinker/thinkingmachines/Inkling-Small', result.model);
+  assert('successful direct-Tinker result persists numeric exit_code 0',
+    result.exit_code === 0, `exit_code=${result.exit_code}`);
+  const directPrompt = readFileSync(TINKER_PROMPT_FILE, 'utf8');
+  assert('direct Tinker receives only JARVIS-bundled authorized repository evidence',
+    directPrompt.includes('=== BEGIN AUTHORIZED FILE: opencode.json ===')
+      && directPrompt.includes('\"$schema\"')
+      && !directPrompt.includes('DO NOT SEND'));
   sh(['release', id], { TINKER_API_KEY: 'proof-only-not-a-real-key' });
+}
+
+console.log('\n=== P5b: authorized Tinker may hydrate from macOS Keychain without secret leakage ===');
+{
+  const id = uid('inkling-keychain');
+  const proofSecret = 'credential-from-keychain-stub';
+  sh(['new', id]);
+  authorizeReadOnly(id, ['network.external', 'provider.spend']);
+  writePacket(id, { verification_commands: ['test -z "${TINKER_API_KEY:-}"'] });
+  const beforeSecurity = securityLog();
+  const run = sh(['tinker', id, 'inkling-tinker'], {
+    TINKER_API_KEY: '',
+    STUB_SECURITY_SECRET: proofSecret,
+  });
+  assert('authorized Tinker run reaches the direct stub after Keychain hydration',
+    run.code === 0, `exit=${run.code} err=${run.err.slice(0, 180)}`);
+
+  const afterSecurity = securityLog();
+  assert('Keychain lookup uses the bounded Soullab Tinker service name',
+    afterSecurity.length > beforeSecurity.length
+      && afterSecurity.includes('find-generic-password')
+      && afterSecurity.includes('soullab.tinker.api')
+      && afterSecurity.includes('-w'),
+    afterSecurity.slice(-320));
+
+  const args = existsSync(TINKER_ARGS_FILE) ? readFileSync(TINKER_ARGS_FILE, 'utf8') : '';
+  const resultText = readFileSync(resultPath(id), 'utf8');
+  assert('Keychain secret never enters worker args or result contract',
+    !args.includes(proofSecret) && !resultText.includes(proofSecret));
+
+  const envStatus = existsSync(TINKER_ENV_STATUS_FILE)
+    ? readFileSync(TINKER_ENV_STATUS_FILE, 'utf8')
+    : '';
+  assert('Keychain credential is present in the direct Tinker worker environment',
+    /TINKER_API_KEY_PRESENT/.test(envStatus), envStatus.trim());
+
+  const result = JSON.parse(resultText);
+  assert('post-worker verification cannot see the Keychain credential',
+    result.test_results === 'pass', JSON.stringify({ test_results: result.test_results, evidence: result.evidence }));
+  assert('Keychain-hydrated attempt preserves exact Inkling model provenance',
+    result.lane === 'tinker' && result.model === 'tinker/thinkingmachines/Inkling-Small',
+    result.model);
+  sh(['release', id], { TINKER_API_KEY: '', STUB_SECURITY_SECRET: proofSecret });
 }
 
 console.log('\n=== P6: project OpenCode config carries no credential or default external model ===');
 {
   const configText = readFileSync(path.join(REPO, 'opencode.json'), 'utf8');
   const config = JSON.parse(configText);
-  assert('project config registers Ollama, NVIDIA, and Tinker without selecting a default model',
-    !!config.provider?.ollama && !!config.provider?.nvidia && !!config.provider?.tinker
+  assert('project OpenCode config contains only Ollama + NVIDIA and no Tinker transport',
+    !!config.provider?.ollama && !!config.provider?.nvidia && !config.provider?.tinker
       && config.model === undefined);
   const secretLikePrefixes = ['nv' + 'api-', 's' + 'k-'];
   assert('project config references environment variables instead of embedding credentials',
     configText.includes('{env:NVIDIA_API_KEY}')
-      && configText.includes('{env:TINKER_API_KEY}')
+      && !configText.includes('TINKER_API_KEY')
       && secretLikePrefixes.every((prefix) => !configText.includes(prefix)));
 
   const agent = readFileSync(path.join(REPO, '.opencode', 'agents', 'jarvis-readonly.md'), 'utf8');
