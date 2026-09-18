@@ -1,0 +1,25 @@
+PASS  W4.v2 model identity binds full route→transport→model chain
+PASS  model identity without route participant is refused
+PASS  model identity without valid transport binding is refused
+PASS  model identity family mismatch with route is refused
+PASS  provider/model mismatch with transport binding is refused
+PASS  primary attempt preserves full governed provenance chain
+PASS  retry must preserve exact governed model identity
+PASS  retry is not independent review
+PASS  independent model review must use challenger participant and different family
+PASS  independent model review using primary participant is refused
+PASS  deterministic verification is a distinct non-model attempt kind
+PASS  human verification is a distinct non-model attempt kind
+PASS  verifier result must reference a real verification attempt
+PASS  builder cannot verify itself
+PASS  independent model review can produce verifier evidence only after its attempt exists
+PASS  deterministic verification can produce verifier evidence
+PASS  later retry success cannot overwrite earlier failed attempt
+PASS  duplicate immutable attempt id is refused even if bytes match
+PASS  unknown attempt fields fail closed
+PASS  unknown ledger request fields fail closed
+PASS  W4.v2 append never changes routing, authority, lifecycle, or guard
+PASS  W4.v2 source contains no lifecycle transition authority
+PASS  durable-attempt append derives status; caller cannot supply status
+
+23 passed · 0 failed

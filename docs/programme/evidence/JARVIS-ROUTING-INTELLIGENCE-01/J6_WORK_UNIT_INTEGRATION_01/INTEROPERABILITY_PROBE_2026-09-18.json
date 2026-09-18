@@ -1,0 +1,29 @@
+{
+  "subjects": {
+    "canonical_work_unit": "fab09573bea7a45e77df89d0975afb3312769f99",
+    "j5_router": "e9f803771583884793a583f13655cadfa055f4f3"
+  },
+  "local_code_route": {
+    "w3_bind": "PASS",
+    "route_version": "J5.v1",
+    "primary": {
+      "model_family": "QWEN",
+      "role": "code_primary"
+    },
+    "challenger": {
+      "model_family": "GPT_OSS",
+      "role": "independent_local_challenger"
+    }
+  },
+  "w4_model_identity_append": {
+    "result": "REFUSED",
+    "code": "MODEL_IDENTITY_NOT_IN_BOUND_ROUTE",
+    "cause": "W4.v1 participant lookup requires provider_id + role, while J5.v1 cognitive route deliberately binds model_family + role before transport."
+  },
+  "architecture_adversarial_route": {
+    "result": "REFUSED",
+    "code": "ROUTER_MODEL_FAMILY_NOT_ELIGIBLE_FOR_TASK",
+    "cause": "W3.v1 maps deep_reasoning + adversarial_challenge to Inkling, while J5 evidence does not grant Inkling generic ARCHITECTURE_REASONING challenger standing."
+  },
+  "conclusion": "W1-W3 can structurally host a J5.v1 route, but W0 task-shape projection and W4 provider-first participant identity are stale. A governed family-to-transport binding primitive is required before canonical execution provenance."
+}

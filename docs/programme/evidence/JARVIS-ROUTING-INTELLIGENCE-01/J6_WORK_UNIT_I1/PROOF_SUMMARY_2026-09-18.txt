@@ -1,0 +1,43 @@
+JARVIS-ROUTING-INTELLIGENCE-01 / J6-WORK-UNIT-INTEGRATION-02 — I1
+Pre-commit proof summary — 2026-09-18
+
+Authorized base:
+  caddb904c7cfddcec0da0888a98bfb8795ae23d2
+
+New I1 proof suites:
+  W0.v2 schema:                  12 / 12
+  W2.v2 lifecycle:              13 / 13
+  J5.v1 cognitive routing:      14 / 14
+  W3.v2 route binding:          11 / 11
+  W3T.v1 transport binding:     11 / 11
+  Required I1 falsifier matrix: 18 / 18
+
+Historical v1 regression:
+  W1 / W0.v1 schema: 22 / 22
+  W2.v1 lifecycle:   27 / 27
+  W3.v1 route bind:  28 / 28
+  W4.v1 ledger:      31 / 31
+  W5.v1 synthetic:   22 / 22
+
+Current routing/admission/integrity regression:
+  R1 routing: 20 / 20
+  R4 execution admission: 24 / 24
+  R5A immutable binding:   20 / 20
+
+Full JARVIS proof:
+  9 suites / 253 assertions / 0 failures
+
+TypeScript no-regression:
+  program files: 4379
+  diagnostics: 229
+  baseline: 239
+  regressions: 0
+
+Scripts TypeScript:
+  diagnostics: 40
+  diagnostics on I1 paths: 0
+
+No provider/model call, credential lookup, external execution, provider spend,
+repository execution, Desktop change, W4.v2 implementation, schema/database
+migration, deployment, production access, PR mutation, or member-facing MAIA
+change occurred.

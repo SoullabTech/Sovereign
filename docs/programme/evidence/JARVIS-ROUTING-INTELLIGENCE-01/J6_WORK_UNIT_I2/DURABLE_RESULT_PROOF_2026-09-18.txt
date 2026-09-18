@@ -1,0 +1,12 @@
+PASS  mapper is pure, versioned, and exposes only governed statuses
+PASS  provider admission refusal has highest precedence
+PASS  durable nonzero exit outranks wrapper exit zero and reject
+PASS  recommended reject outranks insufficient and escalation
+PASS  insufficient evidence outranks escalation
+PASS  escalation outranks otherwise successful exit zero
+PASS  structurally valid durable exit zero maps completed
+PASS  missing durable result is insufficient rather than completed
+PASS  unknown result fields cannot widen standing or authority
+PASS  mapper result is deeply immutable
+
+10 passed · 0 failed

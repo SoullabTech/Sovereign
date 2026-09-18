@@ -1,0 +1,14 @@
+I3 authorized change scope
+
+New I3 runtime module:
+  scripts/builder/work-unit-e2e-v2.mjs
+
+New I3 proof:
+  scripts/builder/__tests__/work-unit-e2e-v2-proof.mjs
+
+Governed donor material:
+  exact I2 successor modules/proofs/docs/evidence from
+  fdcff64ec0252cb4ec6fdcff160f30607760d2eb
+
+Historical W0/W2/W3/W4/W5 v1 modules are not modified.
+No Desktop, provider adapter, delegate, MAIA, schema, database, deploy, or production surface is authorized.

@@ -1,0 +1,21 @@
+I4 legacy compatibility boundary
+
+CANONICAL V2:
+- creates W0.v2 in work-units-v2 storage
+- W2.v2 owns lifecycle
+- W3.v2/J5 own route truth
+- W3T owns provider/model realization
+- W4.v2 provenance is read-only to Desktop
+- no provider_strategy routing authority
+- no R5B provider execution actions
+- no run-provider
+- provider execution connected=false
+
+LEGACY / COMPATIBILITY:
+- existing packet/manual provider strategy retained
+- historical R3 route-bound packets retained
+- R5B one-shot human execution authorization retained
+- run-provider retained where legacy law admits it
+- legacy lifecycle/reconciliation remains compatibility-only
+
+No legacy path may claim canonical W0.v2 lifecycle authority.
