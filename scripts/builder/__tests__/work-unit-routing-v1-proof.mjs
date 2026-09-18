@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 import { createWorkUnitDraftV1 } from '../work-unit-v1.mjs';
+import { routeDigest } from '../routing-route-integrity.mjs';
 import {
   createLifecycleEnvelopeV1,
   transitionLifecycleV1,
@@ -149,11 +150,12 @@ function codes(result) {
 
 console.log('=== structural purity and provenance ===');
 
-check('W3-PURE — binder imports only ratified router + W2 lifecycle', () => {
+check('W3-PURE — binder imports only ratified router + route integrity + W2 lifecycle', () => {
   const source = readFileSync(new URL('../work-unit-routing-v1.mjs', import.meta.url), 'utf8');
   const importStarts = source.split('\n').filter((line) => line.trimStart().startsWith('import '));
-  assert.equal(importStarts.length, 2);
+  assert.equal(importStarts.length, 3);
   assert.match(source, /from '\.\/routing-intelligence\.mjs';/);
+  assert.match(source, /from '\.\/routing-route-integrity\.mjs';/);
   assert.match(source, /from '\.\/work-unit-lifecycle-v1\.mjs';/);
 
   for (const forbidden of [
@@ -227,6 +229,11 @@ check('W3-F3 — default deep reasoning binds GPT-OSS primary + Qwen local chall
   assert.equal(result.route.primary.provider_id, 'gpt-oss-local');
   assert.equal(result.route.challengers[0].provider_id, 'qwen-local');
   assert.equal(result.route.review_policy.local, 'independent_local_second');
+  assert.equal(result.envelope.work_unit.routing.route_digest, routeDigest(result.route));
+  assert.equal(result.envelope.work_unit.routing.route_version, result.route.route_version);
+  assert.equal(result.envelope.work_unit.routing.route_source, 'R2-pure-router');
+  assert.equal(result.envelope.work_unit.routing.bound_at_sha, result.envelope.work_unit.scope.base_ref);
+  assert.equal(result.envelope.work_unit.routing.execution_connected, false);
   assert.equal(result.transition.reason_code, 'W3_PURE_ROUTE_BOUND');
 });
 

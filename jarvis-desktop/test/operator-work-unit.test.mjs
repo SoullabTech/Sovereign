@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { routeIntelligence } from '../../scripts/builder/routing-intelligence.mjs';
+import { routeDigest } from '../../scripts/builder/routing-route-integrity.mjs';
 const require = createRequire(import.meta.url);
 const W = require('../src/operator-work-unit.js');
 const SHA = '0123456789abcdef0123456789abcdef01234567';
@@ -112,7 +113,12 @@ test('route-bound Work Unit stores route evidence but carries no executable prov
   };
   const route = routeIntelligence(W.buildRoutingInput(spec));
   assert.equal(route.execution_disposition, 'held_for_external_authority');
-  const r = W.buildPacket(spec, { canonicalSha: SHA, nowMs: 321, routeRecord: route });
+  const r = W.buildPacket(spec, {
+    canonicalSha: SHA,
+    nowMs: 321,
+    routeRecord: route,
+    routeDigest: routeDigest(route),
+  });
   assert.equal(r.ok, true, JSON.stringify(r.errors));
   assert.deepEqual(r.packet.provider_strategy, []);
   assert.deepEqual(r.packet.authorized_acts, ['repo.read']);

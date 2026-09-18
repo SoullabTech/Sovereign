@@ -108,7 +108,12 @@
 
   function buildPacket(
     spec,
-    { canonicalSha, nowMs = Date.now(), routeRecord = null } = {},
+    {
+      canonicalSha,
+      nowMs = Date.now(),
+      routeRecord = null,
+      routeDigest = null,
+    } = {},
   ) {
     const checked = validateSpec(spec);
     if (!checked.ok) return { ok: false, errors: checked.errors, packet: null };
@@ -117,6 +122,13 @@
     }
     if (checked.routed && !routeRecord) {
       return { ok: false, errors: ['A routed Work Unit requires a MAIN-computed route record.'], packet: null };
+    }
+    if (checked.routed && !/^sha256:[0-9a-f]{64}$/i.test(String(routeDigest || ''))) {
+      return {
+        ok: false,
+        errors: ['A routed Work Unit requires a MAIN-computed immutable SHA-256 route digest.'],
+        packet: null,
+      };
     }
 
     const id = makeId(checked.objective, nowMs);
@@ -193,6 +205,8 @@
       },
       routing_intelligence: routed ? {
         route_record: routeRecord,
+        route_digest: routeDigest,
+        route_version: routeRecord.route_version,
         execution_connected: false,
         source: 'R2-pure-router',
         bound_at_sha: canonicalSha,
