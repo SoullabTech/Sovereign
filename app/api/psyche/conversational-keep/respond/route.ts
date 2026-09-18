@@ -4,7 +4,7 @@
  * KEEP-LEGACY-SURFACE-01-R1 — RETIRED.
  *
  * This Phase 1.5B endpoint formerly accepted legacy Keep affordance responses
- * and could mint or mutate member memory through applyConversationalKeepResult.
+ * and could mint or mutate member memory through a legacy persistence bridge.
  * The canonical Keep contract now lives in the capsule flow:
  *
  *   UNDERSTAND -> FACILITATE -> member CONFIRM -> POST /api/capsules
