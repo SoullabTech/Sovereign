@@ -150,6 +150,7 @@ All are mandatory:
 9. Existing generative A/B export still contains only rows with non-null shadow response text.
 10. If cross-session H8 is enabled, every `cross_session_turn` manifest row belongs to the founder/member and the consent predicate resolved TRUE; a simulated consent/read failure produces zero cross-session evidence.
 11. Generative Cut-1 rows remain current-session-only even while H8 cross-session is enabled.
+12. Every H8 projection records `researchLineage.evidenceScope` as either `current_session` or `consented_cross_session`, and that scope is included in the projection digest.
 
 ### Human adjudication PASS
 
