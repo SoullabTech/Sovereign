@@ -1,432 +1,408 @@
-#!/usr/bin/env node
 /**
- * JARVIS Routing Intelligence — J6 pure routing law.
+ * JARVIS Routing Intelligence — pure deterministic capability selection.
  *
- * This module plans intelligence attempts. It does not call models, read credentials,
- * acquire worktrees, spend provider funds, disclose evidence, merge, deploy, or mutate
- * a Work Unit. A route decision is capability/evidence planning only.
+ * R2 boundary:
+ * - no imports
+ * - no filesystem or network access
+ * - no credential-store or environment inspection
+ * - no provider calls
+ * - no Work Unit mutation
+ * - no authority mutation
+ *
+ * This module returns inspectable route evidence only.
  */
-import { CAPABILITIES } from './deterministic.mjs';
 
-export const ROUTING_LAW = 'JARVIS-ROUTING-INTELLIGENCE-01/J5';
+export const ROUTE_VERSION = 'R1.v1';
 
-export const EVIDENCE_CLASSES = Object.freeze({
-  TASK_TEXT: 'E0_TASK_TEXT',
-  REPOSITORY_LOCAL: 'E1_REPOSITORY_LOCAL',
-  CONTINUITY_LOCAL: 'E2_CONTINUITY_LOCAL',
-  EXTERNAL_REPO_BUNDLE: 'E3_EXTERNAL_REPO_BUNDLE',
-  SENSITIVE_OR_PRODUCTION: 'E4_SENSITIVE_OR_PRODUCTION',
+const TASK_SHAPES = Object.freeze(['mechanical_code', 'deep_reasoning']);
+const REVIEW_PRESSURES = Object.freeze(['ordinary', 'high_value_uncertain']);
+const CHALLENGE_MODES = Object.freeze(['none', 'adversarial', 'frontier']);
+const FRONTIER_POSTURES = Object.freeze(['none', 'text_only_manual', 'repository_grounded']);
+const WRITE_SCOPES = Object.freeze(['none', 'worktree']);
+
+const PROVIDERS = Object.freeze({
+  QWEN: 'qwen-local',
+  GPT_OSS: 'gpt-oss-local',
+  INKLING: 'inkling-tinker',
+  NEMOTRON_TINKER: 'nemotron-tinker',
+  NEMOTRON_ZEN: 'nemotron-zen',
 });
-
-export const TASK_SHAPES = Object.freeze({
-  CODE_GROUNDED: 'CODE_GROUNDED',
-  ARCHITECTURE_REASONING: 'ARCHITECTURE_REASONING',
-  ADVERSARIAL_FALSIFICATION: 'ADVERSARIAL_FALSIFICATION',
-  LONG_HORIZON_DECOMPOSITION: 'LONG_HORIZON_DECOMPOSITION',
-  EVIDENCE_SYNTHESIS: 'EVIDENCE_SYNTHESIS',
-  FRONTIER_UNKNOWN: 'FRONTIER_UNKNOWN',
-});
-
-export const MODEL_FAMILIES = Object.freeze({
-  QWEN: 'QWEN',
-  GPT_OSS: 'GPT_OSS',
-  INKLING: 'INKLING',
-  NEMOTRON: 'NEMOTRON',
-});
-
-const ALL_SHAPES = new Set(Object.values(TASK_SHAPES));
-const ALL_EVIDENCE = new Set(Object.values(EVIDENCE_CLASSES));
-const ALL_FAMILIES = new Set(Object.values(MODEL_FAMILIES));
-
-export const MODEL_PROFILES = Object.freeze({
-  [MODEL_FAMILIES.QWEN]: Object.freeze({
-    locality: 'local',
-    primary_for: Object.freeze([TASK_SHAPES.CODE_GROUNDED]),
-    reviewer_for: Object.freeze([TASK_SHAPES.ARCHITECTURE_REASONING, TASK_SHAPES.EVIDENCE_SYNTHESIS]),
-    transports: Object.freeze(['qwen-local']),
-  }),
-  [MODEL_FAMILIES.GPT_OSS]: Object.freeze({
-    locality: 'local',
-    primary_for: Object.freeze([TASK_SHAPES.ARCHITECTURE_REASONING, TASK_SHAPES.EVIDENCE_SYNTHESIS]),
-    reviewer_for: Object.freeze([TASK_SHAPES.CODE_GROUNDED]),
-    transports: Object.freeze(['gpt-oss-local']),
-  }),
-  [MODEL_FAMILIES.INKLING]: Object.freeze({
-    locality: 'external',
-    primary_for: Object.freeze([]),
-    reviewer_for: Object.freeze([
-      TASK_SHAPES.CODE_GROUNDED,
-      TASK_SHAPES.ADVERSARIAL_FALSIFICATION,
-      TASK_SHAPES.LONG_HORIZON_DECOMPOSITION,
-      TASK_SHAPES.EVIDENCE_SYNTHESIS,
-    ]),
-    transports: Object.freeze(['inkling-tinker']),
-  }),
-  [MODEL_FAMILIES.NEMOTRON]: Object.freeze({
-    locality: 'external',
-    primary_for: Object.freeze([]),
-    reviewer_for: Object.freeze([
-      TASK_SHAPES.ARCHITECTURE_REASONING,
-      TASK_SHAPES.ADVERSARIAL_FALSIFICATION,
-      TASK_SHAPES.LONG_HORIZON_DECOMPOSITION,
-      TASK_SHAPES.EVIDENCE_SYNTHESIS,
-    ]),
-    transports: Object.freeze(['nemotron-tinker']),
-  }),
-});
-
-export const RESPONSE_BUDGET_PROFILES = Object.freeze({
-  'qwen-local': Object.freeze({
-    profile_id: 'LOCAL_QWEN_EXISTING_ADAPTER',
-    enforcement: 'adapter-managed',
-    max_output_tokens: null,
-    auto_expand: false,
-    note: 'J6 plans the local review but does not invent an unproven OpenCode output-token flag.',
-  }),
-  'gpt-oss-local': Object.freeze({
-    profile_id: 'LOCAL_GPT_OSS_EXISTING_ADAPTER',
-    enforcement: 'adapter-managed',
-    max_output_tokens: null,
-    reasoning_posture: 'low',
-    auto_expand: false,
-    note: 'GPT-OSS requires its proven local chat/reasoning semantics; J6 does not invent an OpenCode output-token flag.',
-  }),
-  'inkling-tinker': Object.freeze({
-    profile_id: 'INKLING_TINKER_J3B_R1',
-    enforcement: 'transport',
-    max_output_tokens: 4096,
-    auto_expand: false,
-    evidence: 'J3-B-R1 Inkling B4 completed at 2001 provider output tokens under a 4096 ceiling.',
-  }),
-  'nemotron-tinker': Object.freeze({
-    profile_id: 'NEMOTRON_TINKER_J3B_R1',
-    enforcement: 'transport',
-    max_output_tokens: 4096,
-    auto_expand: false,
-    evidence: 'J3-B-R1 Nemotron B2-B5 completed at 2209-2974 provider output tokens under a 4096 ceiling; CODE_GROUNDED remains ineligible.',
-  }),
-});
-
-export const LOCAL_TOPOLOGY = Object.freeze({
-  [TASK_SHAPES.CODE_GROUNDED]: Object.freeze({
-    primary: MODEL_FAMILIES.QWEN,
-    independent_review: MODEL_FAMILIES.GPT_OSS,
-  }),
-  [TASK_SHAPES.ARCHITECTURE_REASONING]: Object.freeze({
-    primary: MODEL_FAMILIES.GPT_OSS,
-    independent_review: MODEL_FAMILIES.QWEN,
-  }),
-  [TASK_SHAPES.EVIDENCE_SYNTHESIS]: Object.freeze({
-    primary: MODEL_FAMILIES.GPT_OSS,
-    independent_review: MODEL_FAMILIES.QWEN,
-  }),
-});
-
-function frozen(value) {
-  return Object.freeze(value);
+function deepFreeze(value) {
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  Object.freeze(value);
+  for (const child of Object.values(value)) deepFreeze(child);
+  return value;
 }
 
-function normalizedToken(value) {
-  return String(value || '').trim().toUpperCase().replace(/[-\s]+/g, '_');
+function enumOk(value, allowed) {
+  return allowed.includes(value);
 }
 
-export function normalizeEvidenceClass(value) {
-  const raw = String(value || '').trim();
-  if (ALL_EVIDENCE.has(raw)) return raw;
-  const token = normalizedToken(raw);
-  const aliases = {
-    E0: EVIDENCE_CLASSES.TASK_TEXT,
-    TASK_TEXT: EVIDENCE_CLASSES.TASK_TEXT,
-    E1: EVIDENCE_CLASSES.REPOSITORY_LOCAL,
-    REPOSITORY_LOCAL: EVIDENCE_CLASSES.REPOSITORY_LOCAL,
-    E2: EVIDENCE_CLASSES.CONTINUITY_LOCAL,
-    CONTINUITY_LOCAL: EVIDENCE_CLASSES.CONTINUITY_LOCAL,
-    LOCAL_ONLY: EVIDENCE_CLASSES.CONTINUITY_LOCAL,
-    E3: EVIDENCE_CLASSES.EXTERNAL_REPO_BUNDLE,
-    EXTERNAL_REPO_BUNDLE: EVIDENCE_CLASSES.EXTERNAL_REPO_BUNDLE,
-    E4: EVIDENCE_CLASSES.SENSITIVE_OR_PRODUCTION,
-    SENSITIVE_OR_PRODUCTION: EVIDENCE_CLASSES.SENSITIVE_OR_PRODUCTION,
+function exactRefs(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((v) => typeof v === 'string')
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+function blocker(code, detail) {
+  return Object.freeze({ code, detail });
+}
+
+function authorityRecord(acts = [], disclosures = []) {
+  return Object.freeze({
+    acts: Object.freeze([...acts]),
+    disclosures: Object.freeze([...disclosures]),
+  });
+}
+
+function evidenceEntry(providerId, kind) {
+  return Object.freeze({ provider_id: providerId, kind });
+}
+function refusedRecord(input, blockers, reasons = ['INVALID_ROUTING_INPUT']) {
+  return deepFreeze({
+    route_version: ROUTE_VERSION,
+    task_shape: input?.task_shape ?? null,
+    review_pressure: input?.review_pressure ?? null,
+    challenge_mode: input?.challenge_mode ?? null,
+    primary: null,
+    challengers: [],
+    review_policy: { local: null, external: null },
+    evidence_policy: { primary: null, challengers: [] },
+    required_authority: authorityRecord(),
+    granted_authority: [],
+    execution_disposition: 'refused',
+    blockers,
+    routing_reason_codes: reasons,
+  });
+}
+
+function validateInput(input) {
+  const blocks = [];
+  if (!input || typeof input !== 'object') {
+    return [blocker('ROUTE_INPUT_REQUIRED', 'Structured route input is required.')];
+  }
+
+  if (!enumOk(input.task_shape, TASK_SHAPES)) {
+    blocks.push(blocker('INVALID_TASK_SHAPE', 'task_shape must be mechanical_code or deep_reasoning.'));
+  }
+  if (!enumOk(input.review_pressure, REVIEW_PRESSURES)) {
+    blocks.push(blocker('INVALID_REVIEW_PRESSURE', 'review_pressure is not recognized.'));
+  }
+  if (!enumOk(input.challenge_mode, CHALLENGE_MODES)) {
+    blocks.push(blocker('INVALID_CHALLENGE_MODE', 'challenge_mode is not recognized.'));
+  }
+  if (!enumOk(input.frontier_posture, FRONTIER_POSTURES)) {
+    blocks.push(blocker('INVALID_FRONTIER_POSTURE', 'frontier_posture is not recognized.'));
+  }
+
+  if (input.challenge_mode === 'frontier' && input.frontier_posture === 'none') {
+    blocks.push(blocker('FRONTIER_POSTURE_REQUIRED', 'Frontier routing requires an explicit frontier posture.'));
+  }
+  if (input.challenge_mode !== 'frontier' && input.frontier_posture !== 'none') {
+    blocks.push(blocker('CONTRADICTORY_FRONTIER_POSTURE', 'Only frontier challenge mode may carry a frontier posture.'));
+  }
+
+  const scope = input.authority?.repo_write_scope;
+  if (!enumOk(scope, WRITE_SCOPES)) {
+    blocks.push(blocker('INVALID_REPO_WRITE_SCOPE', 'repo_write_scope must be none or worktree.'));
+  }
+
+  if (input.evidence != null && typeof input.evidence !== 'object') {
+    blocks.push(blocker('INVALID_EVIDENCE', 'evidence must be a structured object.'));
+  }
+  if (input.authority != null && typeof input.authority !== 'object') {
+    blocks.push(blocker('INVALID_AUTHORITY', 'authority must be a structured object.'));
+  }
+  if (input.work_unit != null && typeof input.work_unit !== 'object') {
+    blocks.push(blocker('INVALID_WORK_UNIT', 'work_unit must be a structured object.'));
+  }
+  return blocks;
+}
+
+function localPrerequisiteBlockers(input) {
+  const blocks = [];
+  if (input.authority?.repo_read !== true) {
+    blocks.push(blocker('REPO_READ_REQUIRED', 'Local Work Unit review requires existing repo.read authority.'));
+  }
+  if (input.authority?.repo_write_scope !== 'none') {
+    blocks.push(blocker('READ_ONLY_ROUTE_REQUIRED', 'Routing Intelligence V1 admits review-only Work Units.'));
+  }
+  if (input.evidence?.local_worktree_available !== true) {
+    blocks.push(blocker('LOCAL_WORKTREE_REQUIRED', 'Local review requires the isolated Work Unit worktree.'));
+  }
+  return blocks;
+}
+
+function localPlan(input) {
+  const independent =
+    input.review_pressure === 'high_value_uncertain'
+    || input.work_unit?.explicit_independent_review === true
+    || input.task_shape === 'deep_reasoning';
+
+  if (input.task_shape === 'mechanical_code') {
+    return {
+      primary: PROVIDERS.QWEN,
+      primaryRole: 'mechanical_primary',
+      localReview: independent ? 'independent_local_second' : 'single_mechanical',
+      localChallenger: independent ? PROVIDERS.GPT_OSS : null,
+      reasons: independent
+        ? ['MECHANICAL_QWEN_PRIMARY', 'INDEPENDENT_LOCAL_REVIEW_REQUIRED']
+        : ['MECHANICAL_QWEN_PRIMARY', 'SINGLE_MECHANICAL_FAST_PATH'],
+    };
+  }
+
+  return {
+    primary: PROVIDERS.GPT_OSS,
+    primaryRole: 'deep_reasoning_primary',
+    localReview: 'independent_local_second',
+    localChallenger: PROVIDERS.QWEN,
+    reasons: ['DEEP_REASONING_GPT_OSS_PRIMARY', 'INDEPENDENT_LOCAL_REVIEW_REQUIRED'],
   };
-  return aliases[token] ?? EVIDENCE_CLASSES.TASK_TEXT;
 }
-
-export function classifyTaskShape(input = {}) {
-  const declared = input.task_shape ?? input.taskShape ?? input.task_class ?? input.taskClass;
-  const raw = String(declared || '').trim();
-  if (ALL_SHAPES.has(raw)) {
-    return frozen({ task_shape: raw, source: 'declared', resolved: raw !== TASK_SHAPES.FRONTIER_UNKNOWN });
+function externalPlan(input, refs) {
+  if (input.challenge_mode === 'none') {
+    return {
+      challenger: null,
+      externalReview: 'none',
+      evidenceKind: null,
+      requiredActs: [],
+      requiredDisclosures: [],
+      blockers: [],
+      reasons: [],
+      challengerDisposition: null,
+      routeDisposition: null,
+    };
   }
-  const token = normalizedToken(raw);
-  const aliases = {
-    CODE: TASK_SHAPES.CODE_GROUNDED,
-    CODE_GROUNDED: TASK_SHAPES.CODE_GROUNDED,
-    ARCHITECTURE: TASK_SHAPES.ARCHITECTURE_REASONING,
-    ARCHITECTURE_REASONING: TASK_SHAPES.ARCHITECTURE_REASONING,
-    ADVERSARIAL: TASK_SHAPES.ADVERSARIAL_FALSIFICATION,
-    ADVERSARIAL_FALSIFICATION: TASK_SHAPES.ADVERSARIAL_FALSIFICATION,
-    LONG_HORIZON: TASK_SHAPES.LONG_HORIZON_DECOMPOSITION,
-    LONG_HORIZON_DECOMPOSITION: TASK_SHAPES.LONG_HORIZON_DECOMPOSITION,
-    EVIDENCE: TASK_SHAPES.EVIDENCE_SYNTHESIS,
-    EVIDENCE_SYNTHESIS: TASK_SHAPES.EVIDENCE_SYNTHESIS,
-    FRONTIER_UNKNOWN: TASK_SHAPES.FRONTIER_UNKNOWN,
+
+  if (input.challenge_mode === 'frontier' && input.frontier_posture === 'text_only_manual') {
+    const blocks = [];
+    if (input.evidence?.task_text_available !== true) {
+      blocks.push(blocker('TASK_TEXT_REQUIRED', 'Manual Zen frontier reasoning requires founder-approved task text.'));
+    }
+    return {
+      challenger: PROVIDERS.NEMOTRON_ZEN,
+      externalReview: 'manual_frontier_proposed',
+      evidenceKind: 'task_text_only',
+      requiredActs: ['network.external'],
+      requiredDisclosures: [],
+      blockers: blocks,
+      reasons: ['ZEN_TEXT_ONLY_MANUAL'],
+      challengerDisposition: blocks.length ? 'refused' : 'manual_only',
+      routeDisposition: blocks.length ? 'refused' : 'manual_only',
+    };
+  }
+  const isAdversarial = input.challenge_mode === 'adversarial';
+  const challenger = isAdversarial ? PROVIDERS.INKLING : PROVIDERS.NEMOTRON_TINKER;
+  const blocks = [];
+
+  if (refs.length === 0) {
+    blocks.push(blocker(
+      'EVIDENCE_BUNDLE_REQUIRED',
+      'Repository-grounded external review requires exact bounded evidence refs.',
+    ));
+  }
+
+  const missingAuthority = [];
+  if (input.authority?.network_external !== true) {
+    missingAuthority.push(blocker('EXTERNAL_NETWORK_AUTHORITY_REQUIRED', 'network.external is not authorized.'));
+  }
+  if (input.authority?.provider_spend !== true) {
+    missingAuthority.push(blocker('PROVIDER_SPEND_AUTHORITY_REQUIRED', 'provider.spend is not authorized.'));
+  }
+  if (input.authority?.repository_external_disclosure !== true) {
+    missingAuthority.push(blocker(
+      'REPOSITORY_EXTERNAL_DISCLOSURE_REQUIRED',
+      'External repository evidence disclosure is not authorized.',
+    ));
+  }
+
+  blocks.push(...missingAuthority);
+  const hasEvidenceFailure = blocks.some((b) => b.code === 'EVIDENCE_BUNDLE_REQUIRED');
+  const challengerDisposition = hasEvidenceFailure
+    ? 'refused'
+    : (missingAuthority.length ? 'held_for_external_authority' : 'explicit_external_act_required');
+
+  return {
+    challenger,
+    externalReview: 'external_challenge_proposed',
+    evidenceKind: 'exact_external_bundle',
+    requiredActs: ['network.external', 'provider.spend'],
+    requiredDisclosures: ['repository_external_disclosure'],
+    blockers: blocks,
+    reasons: [isAdversarial ? 'INKLING_ADVERSARIAL_CHALLENGE' : 'NEMOTRON_TINKER_FRONTIER_CHALLENGE'],
+    challengerDisposition,
+    routeDisposition: hasEvidenceFailure
+      ? 'refused'
+      : (missingAuthority.length ? 'held_for_external_authority' : null),
   };
-  const shape = aliases[token] ?? TASK_SHAPES.FRONTIER_UNKNOWN;
-  return frozen({
-    task_shape: shape,
-    source: aliases[token] ? 'declared_alias' : 'unresolved',
-    resolved: shape !== TASK_SHAPES.FRONTIER_UNKNOWN,
+}
+
+/**
+ * Pure deterministic capability routing.
+ * Extra ambient fields are deliberately ignored.
+ */
+export function routeIntelligence(input) {
+  const validation = validateInput(input);
+  if (validation.length) return refusedRecord(input, validation);
+
+  const refs = exactRefs(input.evidence?.external_bundle_refs);
+  const local = localPlan(input);
+  const localBlocks = localPrerequisiteBlockers(input);
+  const external = externalPlan(input, refs);
+
+  const challengers = [];
+  const challengerEvidence = [];
+
+  if (local.localChallenger) {
+    challengers.push({
+      provider_id: local.localChallenger,
+      role: 'independent_local_challenger',
+      execution_disposition: localBlocks.length ? 'refused' : 'admitted_local',
+    });
+    challengerEvidence.push(evidenceEntry(local.localChallenger, 'local_worktree_read_only'));
+  }
+  if (external.challenger) {
+    challengers.push({
+      provider_id: external.challenger,
+      role: input.challenge_mode === 'adversarial' ? 'adversarial_challenger' : 'frontier_challenger',
+      execution_disposition: external.challengerDisposition,
+    });
+    challengerEvidence.push(evidenceEntry(external.challenger, external.evidenceKind));
+  }
+
+  const allBlocks = [...localBlocks, ...external.blockers];
+  let executionDisposition = 'admitted_local';
+  if (localBlocks.length) executionDisposition = 'refused';
+  else if (external.routeDisposition) executionDisposition = external.routeDisposition;
+
+  const requiredAuthority = authorityRecord(
+    external.requiredActs,
+    external.requiredDisclosures,
+  );
+
+  return deepFreeze({
+    route_version: ROUTE_VERSION,
+    task_shape: input.task_shape,
+    review_pressure: input.review_pressure,
+    challenge_mode: input.challenge_mode,
+    primary: {
+      provider_id: local.primary,
+      role: local.primaryRole,
+      execution_disposition: localBlocks.length ? 'refused' : 'admitted_local',
+    },
+    challengers,
+    review_policy: {
+      local: local.localReview,
+      external: external.externalReview,
+    },
+    evidence_policy: {
+      primary: evidenceEntry(local.primary, 'local_worktree_read_only'),
+      challengers: challengerEvidence,
+    },
+    required_authority: requiredAuthority,
+    granted_authority: [],
+    execution_disposition: executionDisposition,
+    blockers: allBlocks,
+    routing_reason_codes: [...local.reasons, ...external.reasons],
   });
 }
 
-export function modelFamilyFromRef(modelRef, lane = '') {
-  const value = `${lane} ${modelRef || ''}`.toLowerCase();
-  if (value.includes('qwen')) return MODEL_FAMILIES.QWEN;
-  if (value.includes('gpt-oss') || value.includes('gpt_oss')) return MODEL_FAMILIES.GPT_OSS;
-  if (value.includes('inkling')) return MODEL_FAMILIES.INKLING;
-  if (value.includes('nemotron')) return MODEL_FAMILIES.NEMOTRON;
-  return null;
+function isHardStop(attempt) {
+  return attempt?.status === 'failed'
+    || attempt?.status === 'refused'
+    || attempt?.recommended_next_action === 'reject'
+    || attempt?.evidence_sufficient === false
+    || attempt?.escalation_required === true;
 }
 
-export function familyEligibleForTask(family, taskShape, role = 'any') {
-  if (!ALL_FAMILIES.has(family) || !ALL_SHAPES.has(taskShape)) return false;
-  const profile = MODEL_PROFILES[family];
-  if (role === 'primary') return profile.primary_for.includes(taskShape);
-  if (role === 'reviewer') return profile.reviewer_for.includes(taskShape);
-  return profile.primary_for.includes(taskShape) || profile.reviewer_for.includes(taskShape);
+function completedClean(attempt) {
+  return attempt?.status === 'completed'
+    && attempt?.recommended_next_action !== 'reject'
+    && attempt?.evidence_sufficient !== false
+    && attempt?.escalation_required !== true;
 }
 
-export function eligibleFamilies(taskShape) {
-  return Object.values(MODEL_FAMILIES).filter((family) => familyEligibleForTask(family, taskShape));
-}
-
-export function externalCandidates(taskShape, evidenceClass) {
-  if (evidenceClass === EVIDENCE_CLASSES.CONTINUITY_LOCAL || evidenceClass === EVIDENCE_CLASSES.SENSITIVE_OR_PRODUCTION) {
-    return [];
+/**
+ * Pure post-attempt strategy reconciliation.
+ * It never invokes the returned next provider.
+ */
+export function reconcileRoutingAttempts(route, attempts = []) {
+  const list = Array.isArray(attempts) ? attempts : [];
+  if (!route || route.execution_disposition === 'refused') {
+    return deepFreeze({
+      standing: 'REFUSED',
+      next_provider: null,
+      founder_review_required: false,
+      reason: 'Route is not executable.',
+    });
   }
-  return Object.values(MODEL_FAMILIES).filter((family) => {
-    const profile = MODEL_PROFILES[family];
-    return profile.locality === 'external' && familyEligibleForTask(family, taskShape, 'reviewer');
-  });
-}
-
-function externalAuthorityBlockers(evidenceClass, permissionEnvelope = {}, metered = true) {
-  const blockers = [];
-  if (permissionEnvelope.external_network !== true) blockers.push('EXTERNAL_NETWORK_NOT_AUTHORIZED');
-  if (evidenceClass === EVIDENCE_CLASSES.EXTERNAL_REPO_BUNDLE
-      && permissionEnvelope.external_repo_disclosure !== true) {
-    blockers.push('EXTERNAL_REPOSITORY_DISCLOSURE_NOT_AUTHORIZED');
-  }
-  if (metered && permissionEnvelope.provider_spend !== true) blockers.push('PROVIDER_SPEND_NOT_AUTHORIZED');
-  return blockers;
-}
-
-export function resolveTransportForFamily({
-  family,
-  evidence_class,
-  permission_envelope = {},
-  provider_availability = {},
-} = {}) {
-  const evidenceClass = normalizeEvidenceClass(evidence_class);
-  if (!ALL_FAMILIES.has(family)) {
-    return frozen({ status: 'HOLD', family, transport: null, blockers: ['UNKNOWN_MODEL_FAMILY'] });
-  }
-  const profile = MODEL_PROFILES[family];
-  const transport = profile.transports[0] ?? null;
-  if (!transport) {
-    return frozen({ status: 'HOLD', family, transport: null, blockers: ['NO_ADMISSIBLE_TRANSPORT'] });
-  }
-
-  if (profile.locality === 'local') {
-    if (provider_availability[transport] === false) {
-      return frozen({ status: 'HOLD', family, transport: null, blockers: ['PREFERRED_TRANSPORT_UNAVAILABLE'] });
-    }
-    return frozen({
-      status: 'READY_LOCAL',
-      family,
-      transport,
-      blockers: [],
-      response_budget_profile: RESPONSE_BUDGET_PROFILES[transport],
+  const hardStop = list.find(isHardStop);
+  if (hardStop) {
+    return deepFreeze({
+      standing: 'STOPPED',
+      next_provider: null,
+      founder_review_required: hardStop.escalation_required === true,
+      reason: 'Provider cascade stopped by failed, refused, rejected, insufficient, or escalated attempt.',
     });
   }
 
-  if (evidenceClass === EVIDENCE_CLASSES.CONTINUITY_LOCAL) {
-    return frozen({ status: 'HOLD', family, transport: null, blockers: ['LOCAL_ONLY_EVIDENCE'] });
-  }
-  if (evidenceClass === EVIDENCE_CLASSES.SENSITIVE_OR_PRODUCTION) {
-    return frozen({ status: 'HOLD', family, transport: null, blockers: ['SENSITIVE_OR_PRODUCTION_OUT_OF_SCOPE'] });
-  }
-  if (provider_availability[transport] !== true) {
-    return frozen({ status: 'HOLD', family, transport: null, blockers: ['PREFERRED_TRANSPORT_UNAVAILABLE'] });
-  }
-
-  const blockers = externalAuthorityBlockers(evidenceClass, permission_envelope, true);
-  if (blockers.length) return frozen({ status: 'HOLD', family, transport: null, blockers });
-
-  return frozen({
-    status: 'READY_FOR_EXPLICIT_EXTERNAL_EXECUTION',
-    family,
-    transport,
-    blockers: [],
-    response_budget_profile: RESPONSE_BUDGET_PROFILES[transport],
-  });
-}
-
-export function planRouting(input = {}) {
-  const capability = String(input.capability || '').trim() || null;
-  const evidenceClass = normalizeEvidenceClass(input.evidence_class ?? input.evidenceClass);
-  const task = classifyTaskShape(input);
-  const deterministic = capability && Object.prototype.hasOwnProperty.call(CAPABILITIES, capability);
-
-  if (deterministic) {
-    return frozen({
-      law: ROUTING_LAW,
-      status: 'DETERMINISTIC',
-      execution_lane: 'C0',
-      deterministic_capability: capability,
-      evidence_class: evidenceClass,
-      task_shape: task.task_shape,
-      eligible_model_families: [],
-      primary_model_family: null,
-      independent_review_model_family: null,
-      external_candidates: [],
-      selected_external_family: null,
-      selected_transport: null,
-      response_budget_profile: null,
-      blockers: [],
-      execution_authorized: false,
-      provenance: frozen({
-        deterministic_capability_considered: true,
-        deterministic_capability_selected: capability,
-        task_shape_source: task.source,
-        evidence_class: evidenceClass,
-        held_reason: null,
-      }),
+  if (list.some((a) => a?.structured_disagreement === true)) {
+    return deepFreeze({
+      standing: 'FOUNDER_REVIEW_REQUIRED',
+      next_provider: null,
+      founder_review_required: true,
+      reason: 'Independent reviewers disagree; JARVIS cannot choose a semantic winner.',
     });
   }
 
-  if (evidenceClass === EVIDENCE_CLASSES.SENSITIVE_OR_PRODUCTION) {
-    return frozen({
-      law: ROUTING_LAW,
-      status: 'HOLD',
-      execution_lane: null,
-      deterministic_capability: capability,
-      evidence_class: evidenceClass,
-      task_shape: task.task_shape,
-      eligible_model_families: [],
-      primary_model_family: null,
-      independent_review_model_family: null,
-      external_candidates: [],
-      selected_external_family: null,
-      selected_transport: null,
-      response_budget_profile: null,
-      blockers: ['SENSITIVE_OR_PRODUCTION_OUT_OF_SCOPE'],
-      execution_authorized: false,
-      provenance: frozen({
-        deterministic_capability_considered: true,
-        deterministic_capability_selected: null,
-        task_shape_source: task.source,
-        evidence_class: evidenceClass,
-        held_reason: 'SENSITIVE_OR_PRODUCTION_OUT_OF_SCOPE',
-      }),
+  const clean = list.filter(completedClean);
+  if (clean.length === 0) {
+    return deepFreeze({
+      standing: 'NOT_RUN',
+      next_provider: route.primary?.provider_id ?? null,
+      founder_review_required: false,
+      reason: 'No clean provider attempt has completed.',
     });
   }
 
-  const topology = LOCAL_TOPOLOGY[task.task_shape] ?? null;
-  const eligible = eligibleFamilies(task.task_shape);
-  const external = externalCandidates(task.task_shape, evidenceClass);
-  const requestedExternal = input.requested_external_family ?? input.requestedExternalFamily ?? null;
+  if (route.review_policy?.local === 'single_mechanical') {
+    return deepFreeze({
+      standing: 'LOCAL_REVIEW_COMPLETE',
+      next_provider: null,
+      founder_review_required: false,
+      reason: 'The ratified route permits one mechanically falsifiable local review.',
+    });
+  }
+  const localSecond = route.challengers?.find(
+    (c) => c.role === 'independent_local_challenger',
+  );
 
-  const externalEvidenceClass = requestedExternal && evidenceClass === EVIDENCE_CLASSES.REPOSITORY_LOCAL
-    ? EVIDENCE_CLASSES.EXTERNAL_REPO_BUNDLE
-    : evidenceClass;
+  const secondCompleted = localSecond
+    ? clean.some((a) => a?.provider_id === localSecond.provider_id)
+    : false;
 
-  let externalResolution = null;
-  if (requestedExternal) {
-    const externalFamilyEligible = ALL_FAMILIES.has(requestedExternal)
-      && MODEL_PROFILES[requestedExternal].locality === 'external'
-      && familyEligibleForTask(requestedExternal, task.task_shape, 'reviewer');
-    if (!externalFamilyEligible) {
-      externalResolution = frozen({
-        status: 'HOLD',
-        family: requestedExternal,
-        transport: null,
-        blockers: ['MODEL_FAMILY_NOT_ELIGIBLE_FOR_TASK'],
-      });
-    } else {
-      externalResolution = resolveTransportForFamily({
-        family: requestedExternal,
-        evidence_class: externalEvidenceClass,
-        permission_envelope: input.permission_envelope ?? input.permissionEnvelope ?? {},
-        provider_availability: input.provider_availability ?? input.providerAvailability ?? {},
-      });
-    }
+  if (localSecond && !secondCompleted) {
+    return deepFreeze({
+      standing: 'SECOND_LOCAL_REVIEW_OWED',
+      next_provider: localSecond.provider_id,
+      founder_review_required: false,
+      reason: 'The route policy requires an independent local second review.',
+    });
   }
 
-  const blockers = [];
-  let status = topology ? 'ROUTED_LOCAL' : 'HOLD';
-  if (!task.resolved) blockers.push('TASK_SHAPE_UNRESOLVED');
-  if (!topology && task.resolved && !requestedExternal) blockers.push('NO_EVIDENCE_BACKED_LOCAL_PRIMARY');
-  if (externalResolution?.blockers?.length) blockers.push(...externalResolution.blockers);
-  const uniqueBlockers = [...new Set(blockers)];
-  if (uniqueBlockers.length) {
-    status = 'HOLD';
-  } else if (!topology && externalResolution?.status === 'READY_FOR_EXPLICIT_EXTERNAL_EXECUTION') {
-    status = 'EXTERNAL_REVIEW_READY';
-  }
-
-  const primary = topology?.primary ?? null;
-  const reviewer = topology?.independent_review ?? null;
-  const primaryTransport = primary
-    ? resolveTransportForFamily({
-        family: primary,
-        evidence_class: evidenceClass,
-        permission_envelope: input.permission_envelope ?? input.permissionEnvelope ?? {},
-        provider_availability: input.provider_availability ?? input.providerAvailability ?? {},
-      })
-    : null;
-
-  return frozen({
-    law: ROUTING_LAW,
-    status,
-    execution_lane: topology
-      ? 'LOCAL_REVIEW'
-      : (status === 'EXTERNAL_REVIEW_READY' ? 'EXTERNAL_REVIEW' : null),
-    deterministic_capability: capability,
-    evidence_class: evidenceClass,
-    task_shape: task.task_shape,
-    eligible_model_families: frozen([...eligible]),
-    primary_model_family: primary,
-    independent_review_model_family: reviewer,
-    primary_transport: primaryTransport?.transport ?? (primary ? MODEL_PROFILES[primary].transports[0] : null),
-    external_candidates: frozen([...external]),
-    selected_external_family: requestedExternal,
-    selected_transport: externalResolution?.transport ?? null,
-    response_budget_profile: externalResolution?.response_budget_profile
-      ?? (primaryTransport?.response_budget_profile ?? null),
-    blockers: frozen([...uniqueBlockers]),
-    execution_authorized: false,
-    external_execution_ready: externalResolution?.status === 'READY_FOR_EXPLICIT_EXTERNAL_EXECUTION',
-    provenance: frozen({
-      deterministic_capability_considered: true,
-      deterministic_capability_selected: null,
-      task_shape_source: task.source,
-      evidence_class: evidenceClass,
-      eligible_model_families: frozen([...eligible]),
-      selected_primary: primary,
-      required_independent_review: reviewer,
-      external_candidates: frozen([...external]),
-      requested_external_family: requestedExternal,
-      external_evidence_class: requestedExternal ? externalEvidenceClass : null,
-      selected_transport: externalResolution?.transport ?? null,
-      authority: frozen({
-        external_network: (input.permission_envelope ?? input.permissionEnvelope ?? {}).external_network === true,
-        external_repo_disclosure: (input.permission_envelope ?? input.permissionEnvelope ?? {}).external_repo_disclosure === true,
-        provider_spend: (input.permission_envelope ?? input.permissionEnvelope ?? {}).provider_spend === true,
-      }),
-      response_budget_profile: externalResolution?.response_budget_profile?.profile_id
-        ?? primaryTransport?.response_budget_profile?.profile_id
-        ?? null,
-      held_reason: uniqueBlockers[0] ?? null,
-    }),
+  return deepFreeze({
+    standing: 'LOCAL_EVIDENCE_PRESENTED',
+    next_provider: null,
+    founder_review_required: true,
+    reason: 'Required local reviews completed; semantic acceptance remains a founder act.',
   });
 }
+
+export const ROUTING_ENUMS = deepFreeze({
+  task_shapes: TASK_SHAPES,
+  review_pressures: REVIEW_PRESSURES,
+  challenge_modes: CHALLENGE_MODES,
+  frontier_postures: FRONTIER_POSTURES,
+});

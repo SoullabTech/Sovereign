@@ -1,240 +1,337 @@
 #!/usr/bin/env node
+/**
+ * JARVIS-ROUTING-INTELLIGENCE-01 / R2
+ * Pure deterministic router falsification suite.
+ *
+ * No provider is called by this proof.
+ */
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+import { readFileSync } from 'node:fs';
 import {
-  EVIDENCE_CLASSES,
-  TASK_SHAPES,
-  MODEL_FAMILIES,
-  RESPONSE_BUDGET_PROFILES,
-  planRouting,
-  resolveTransportForFamily,
+  routeIntelligence,
+  reconcileRoutingAttempts,
+  ROUTE_VERSION,
 } from '../routing-intelligence.mjs';
-import { deriveLifecycle } from '../work-unit.mjs';
-
-const require = createRequire(import.meta.url);
-const C = require('../../../jarvis-desktop/src/work-unit-control.js');
 
 let passed = 0;
 let failed = 0;
-function check(name, condition, detail = '') {
-  if (condition) {
+
+function check(name, fn) {
+  try {
+    fn();
     passed += 1;
-    console.log('PASS ' + name);
-  } else {
+    console.log(`PASS  ${name}`);
+  } catch (error) {
     failed += 1;
-    console.error('FAIL ' + name + (detail ? ' :: ' + detail : ''));
+    console.log(`FAIL  ${name}`);
+    console.log(`      ${error.message}`);
   }
 }
 
-console.log('\n=== J4 mutant replay against J6 ===');
-
-// M1 deterministic work must not route to a model.
-{
-  const r = planRouting({
-    capability: 'git.rev_parse',
-    task_shape: TASK_SHAPES.CODE_GROUNDED,
-    evidence_class: EVIDENCE_CLASSES.REPOSITORY_LOCAL,
-  });
-  check('M1 deterministic capability wins before model routing',
-    r.status === 'DETERMINISTIC' && r.execution_lane === 'C0'
-      && r.primary_model_family === null && r.execution_authorized === false,
-    JSON.stringify(r));
+function makeInput(patch = {}) {
+  return {
+    task_shape: 'mechanical_code',
+    review_pressure: 'ordinary',
+    challenge_mode: 'none',
+    frontier_posture: 'none',
+    evidence: {
+      local_worktree_available: true,
+      external_bundle_refs: ['src/example.ts:1-20'],
+      task_text_available: true,
+      ...(patch.evidence || {}),
+    },
+    authority: {
+      repo_read: true,
+      repo_write_scope: 'none',
+      network_external: false,
+      provider_spend: false,
+      repository_external_disclosure: false,
+      ...(patch.authority || {}),
+    },
+    work_unit: {
+      risk_class: 'mechanical',
+      explicit_independent_review: false,
+      ...(patch.work_unit || {}),
+    },
+    ...Object.fromEntries(
+      Object.entries(patch).filter(([key]) => !['evidence', 'authority', 'work_unit'].includes(key)),
+    ),
+  };
 }
 
-// M2 LOCAL_ONLY continuity must not cross externally.
-{
-  const r = planRouting({
-    task_shape: TASK_SHAPES.EVIDENCE_SYNTHESIS,
-    evidence_class: EVIDENCE_CLASSES.CONTINUITY_LOCAL,
-    requested_external_family: MODEL_FAMILIES.INKLING,
-    provider_availability: { 'inkling-tinker': true },
-    permission_envelope: {
-      external_network: true,
-      external_repo_disclosure: true,
+const providerIds = (route) => [
+  route.primary?.provider_id,
+  ...(route.challengers || []).map((c) => c.provider_id),
+].filter(Boolean);
+
+console.log('=== structural purity ===');
+check('R2-PURE — module is disconnected from execution, network, credentials, and old router', () => {
+  const source = readFileSync(new URL('../routing-intelligence.mjs', import.meta.url), 'utf8');
+  assert.equal(source.split('\n').some((line) => line.trimStart().startsWith('import ')), false);
+  assert.equal(source.includes('require('), false);
+  assert.equal(source.includes('fetch('), false);
+  assert.equal(source.includes('process.env'), false);
+  assert.doesNotMatch(source, /node:(fs|net|http|https|child_process)/);
+  assert.equal(source.includes('execFile'), false);
+  assert.equal(source.includes('spawn('), false);
+  assert.doesNotMatch(source, /find-generic-password|Keychain|TINKER_API_KEY|NVIDIA_API_KEY/);
+  assert.equal(source.includes("from './router.mjs'"), false);
+});
+
+check('R2-PURE — route evidence is immutable', () => {
+  const route = routeIntelligence(makeInput());
+  assert.equal(Object.isFrozen(route), true);
+  assert.equal(Object.isFrozen(route.primary), true);
+  assert.equal(Object.isFrozen(route.required_authority), true);
+});
+
+console.log();
+console.log('=== F-R1 through F-R5 — local routing identity ===');
+
+check('F-R1 — ordinary mechanical remains Qwen-local and single', () => {
+  const route = routeIntelligence(makeInput());
+  assert.equal(route.route_version, ROUTE_VERSION);
+  assert.equal(route.primary.provider_id, 'qwen-local');
+  assert.equal(route.review_policy.local, 'single_mechanical');
+  assert.equal(route.review_policy.external, 'none');
+  assert.deepEqual(route.challengers, []);
+  assert.deepEqual(route.required_authority.acts, []);
+  assert.deepEqual(route.required_authority.disclosures, []);
+  assert.equal(route.execution_disposition, 'admitted_local');
+});
+check('F-R2 — ordinary deep reasoning selects GPT-OSS then independent Qwen', () => {
+  const route = routeIntelligence(makeInput({ task_shape: 'deep_reasoning' }));
+  assert.equal(route.primary.provider_id, 'gpt-oss-local');
+  assert.equal(route.review_policy.local, 'independent_local_second');
+  assert.equal(route.challengers[0].provider_id, 'qwen-local');
+  assert.equal(route.challengers[0].role, 'independent_local_challenger');
+});
+
+check('F-R3 — high-value mechanical gains GPT-OSS second read without externalization', () => {
+  const route = routeIntelligence(makeInput({ review_pressure: 'high_value_uncertain' }));
+  assert.equal(route.primary.provider_id, 'qwen-local');
+  assert.equal(route.review_policy.local, 'independent_local_second');
+  assert.equal(route.challengers[0].provider_id, 'gpt-oss-local');
+  assert.equal(providerIds(route).some((p) => p.includes('tinker') || p.includes('nemotron')), false);
+});
+
+check('F-R4 — high-value deep reasoning keeps GPT-OSS primary and Qwen challenger', () => {
+  const route = routeIntelligence(makeInput({
+    task_shape: 'deep_reasoning',
+    review_pressure: 'high_value_uncertain',
+  }));
+  assert.equal(route.primary.provider_id, 'gpt-oss-local');
+  assert.equal(route.challengers[0].provider_id, 'qwen-local');
+});
+
+check('F-R5 — Inkling can never appear without explicit adversarial challenge', () => {
+  for (const task_shape of ['mechanical_code', 'deep_reasoning']) {
+    for (const review_pressure of ['ordinary', 'high_value_uncertain']) {
+      const route = routeIntelligence(makeInput({ task_shape, review_pressure }));
+      assert.equal(providerIds(route).includes('inkling-tinker'), false);
+    }
+  }
+});
+console.log();
+console.log('=== F-R6 through F-R10 — external membranes ===');
+
+check('F-R6 — adversarial challenge missing authority is proposed but held', () => {
+  const route = routeIntelligence(makeInput({
+    challenge_mode: 'adversarial',
+    evidence: { external_bundle_refs: ['src/example.ts:1-20'] },
+  }));
+  assert.equal(route.challengers.at(-1).provider_id, 'inkling-tinker');
+  assert.equal(route.execution_disposition, 'held_for_external_authority');
+  assert.equal(route.challengers.at(-1).execution_disposition, 'held_for_external_authority');
+  const codes = route.blockers.map((b) => b.code);
+  assert.ok(codes.includes('EXTERNAL_NETWORK_AUTHORITY_REQUIRED'));
+  assert.ok(codes.includes('PROVIDER_SPEND_AUTHORITY_REQUIRED'));
+  assert.ok(codes.includes('REPOSITORY_EXTERNAL_DISCLOSURE_REQUIRED'));
+  assert.deepEqual(route.granted_authority, []);
+});
+
+check('F-R7 — authorized Inkling challenge is still exact-bundle only', () => {
+  const route = routeIntelligence(makeInput({
+    challenge_mode: 'adversarial',
+    authority: {
+      network_external: true,
       provider_spend: true,
+      repository_external_disclosure: true,
     },
-  });
-  check('M2 LOCAL_ONLY evidence holds external routing',
-    r.status === 'HOLD'
-      && r.blockers.includes('LOCAL_ONLY_EVIDENCE')
-      && r.selected_transport === null,
-    JSON.stringify(r));
-}
-
-// M3 Nemotron has no CODE_GROUNDED eligibility.
-{
-  const r = planRouting({
-    task_shape: TASK_SHAPES.CODE_GROUNDED,
-    evidence_class: EVIDENCE_CLASSES.TASK_TEXT,
-    requested_external_family: MODEL_FAMILIES.NEMOTRON,
-    provider_availability: { 'nemotron-tinker': true },
-    permission_envelope: { external_network: true, provider_spend: true },
-  });
-  check('M3 Nemotron CODE_GROUNDED selection is refused',
-    r.status === 'HOLD'
-      && r.blockers.includes('MODEL_FAMILY_NOT_ELIGIBLE_FOR_TASK')
-      && r.selected_transport === null,
-    JSON.stringify(r));
-}
-
-// M4 a same-model retry is not an independent review.
-{
-  const r = C.reconcileAttempts([
-    { lane: 'opencode', model: 'ollama/qwen3-coder:30b', test_results: 'pass', exit_code: 0, recommended_next_action: 'review-diff' },
-    { lane: 'opencode', model: 'ollama/qwen3-coder:30b', test_results: 'pass', exit_code: 0, recommended_next_action: 'review-diff' },
-  ]);
-  check('M4 same-family retries leave second review owed',
-    r.standing === 'SECOND_REVIEW_OWED' && r.independent_review_count === 1,
-    JSON.stringify(r));
-}
-
-// M5 unavailable transport must HOLD without model-family substitution.
-{
-  const r = resolveTransportForFamily({
-    family: MODEL_FAMILIES.NEMOTRON,
-    evidence_class: EVIDENCE_CLASSES.TASK_TEXT,
-    provider_availability: { 'nemotron-tinker': false, 'inkling-tinker': true },
-    permission_envelope: { external_network: true, provider_spend: true },
-  });
-  check('M5 unavailable Nemotron transport holds instead of substituting Inkling',
-    r.status === 'HOLD'
-      && r.blockers.includes('PREFERRED_TRANSPORT_UNAVAILABLE')
-      && r.transport === null
-      && r.family === MODEL_FAMILIES.NEMOTRON,
-    JSON.stringify(r));
-}
-
-// M6 E3 external repository evidence requires its own disclosure grant.
-{
-  const r = planRouting({
-    task_shape: TASK_SHAPES.EVIDENCE_SYNTHESIS,
-    evidence_class: EVIDENCE_CLASSES.EXTERNAL_REPO_BUNDLE,
-    requested_external_family: MODEL_FAMILIES.INKLING,
-    provider_availability: { 'inkling-tinker': true },
-    permission_envelope: {
-      external_network: true,
-      external_repo_disclosure: false,
+  }));
+  const evidence = route.evidence_policy.challengers.find((e) => e.provider_id === 'inkling-tinker');
+  assert.equal(evidence.kind, 'exact_external_bundle');
+  assert.equal(route.challengers.at(-1).execution_disposition, 'explicit_external_act_required');
+  assert.equal(JSON.stringify(route).includes('whole_repository'), false);
+});
+check('F-R8 — repository-grounded frontier Nemotron is Tinker, never Zen/NVIDIA', () => {
+  const route = routeIntelligence(makeInput({
+    challenge_mode: 'frontier',
+    frontier_posture: 'repository_grounded',
+    authority: {
+      network_external: true,
       provider_spend: true,
+      repository_external_disclosure: true,
     },
-  });
-  check('M6 E3 requires load-bearing repository disclosure authority',
-    r.status === 'HOLD'
-      && r.blockers.includes('EXTERNAL_REPOSITORY_DISCLOSURE_NOT_AUTHORIZED')
-      && r.selected_transport === null,
-    JSON.stringify(r));
-}
+  }));
+  assert.equal(route.challengers.at(-1).provider_id, 'nemotron-tinker');
+  assert.equal(providerIds(route).includes('nemotron-zen'), false);
+  assert.equal(providerIds(route).includes('nemotron-nvidia'), false);
+});
 
-// M7 agreement from independent models is still evidence only.
-{
-  const r = C.reconcileAttempts([
-    { lane: 'opencode', model: 'ollama/qwen3-coder:30b', test_results: 'pass', exit_code: 0, recommended_next_action: 'review-diff' },
-    { lane: 'opencode', model: 'ollama/gpt-oss:20b', test_results: 'pass', exit_code: 0, recommended_next_action: 'review-diff' },
+check('F-R9 — Zen is surfaced only as text-only manual frontier', () => {
+  const route = routeIntelligence(makeInput({
+    challenge_mode: 'frontier',
+    frontier_posture: 'text_only_manual',
+  }));
+  const zen = route.challengers.at(-1);
+  assert.equal(zen.provider_id, 'nemotron-zen');
+  assert.equal(zen.execution_disposition, 'manual_only');
+  assert.equal(route.execution_disposition, 'manual_only');
+  assert.equal(route.evidence_policy.challengers.at(-1).kind, 'task_text_only');
+  assert.equal(providerIds(route).includes('nemotron-tinker'), false);
+});
+
+check('F-R10 — repository-grounded external review with zero refs refuses to widen evidence', () => {
+  for (const spec of [
+    { challenge_mode: 'adversarial', frontier_posture: 'none' },
+    { challenge_mode: 'frontier', frontier_posture: 'repository_grounded' },
+  ]) {
+    const route = routeIntelligence(makeInput({
+      ...spec,
+      evidence: { external_bundle_refs: [] },
+      authority: {
+        network_external: true,
+        provider_spend: true,
+        repository_external_disclosure: true,
+      },
+    }));
+    assert.equal(route.execution_disposition, 'refused');
+    assert.ok(route.blockers.some((b) => b.code === 'EVIDENCE_BUNDLE_REQUIRED'));
+    assert.ok(route.evidence_policy.challengers.every((e) => e.kind !== 'whole_repository'));
+  }
+});
+
+console.log();
+console.log('=== F-R11 through F-R15 — authority, stopping, determinism ===');
+
+check('F-R11 — route may name required authority but grants none', () => {
+  const variants = [
+    makeInput(),
+    makeInput({ challenge_mode: 'adversarial' }),
+    makeInput({ challenge_mode: 'frontier', frontier_posture: 'repository_grounded' }),
+    makeInput({ challenge_mode: 'frontier', frontier_posture: 'text_only_manual' }),
+    makeInput({ authority: { repo_read: false } }),
+  ];
+  for (const input of variants) {
+    const route = routeIntelligence(input);
+    assert.deepEqual(route.granted_authority, []);
+  }
+
+  const held = routeIntelligence(makeInput({ challenge_mode: 'adversarial' }));
+  assert.deepEqual(held.required_authority.acts, ['network.external', 'provider.spend']);
+  assert.deepEqual(held.required_authority.disclosures, ['repository_external_disclosure']);
+});
+
+check('F-R12 — failed/refused/rejected/insufficient attempts stop provider cascade', () => {
+  const route = routeIntelligence(makeInput({ task_shape: 'deep_reasoning' }));
+  const stops = [
+    { status: 'failed', provider_id: 'gpt-oss-local' },
+    { status: 'refused', provider_id: 'gpt-oss-local' },
+    { status: 'completed', provider_id: 'gpt-oss-local', recommended_next_action: 'reject' },
+    { status: 'completed', provider_id: 'gpt-oss-local', evidence_sufficient: false },
+    { status: 'completed', provider_id: 'gpt-oss-local', escalation_required: true },
+  ];
+  for (const attempt of stops) {
+    const result = reconcileRoutingAttempts(route, [attempt]);
+    assert.equal(result.standing, 'STOPPED');
+    assert.equal(result.next_provider, null);
+  }
+});
+
+check('F-R13 — structured disagreement has no automatic winner', () => {
+  const route = routeIntelligence(makeInput({ task_shape: 'deep_reasoning' }));
+  const result = reconcileRoutingAttempts(route, [
+    { status: 'completed', provider_id: 'gpt-oss-local' },
+    { status: 'completed', provider_id: 'qwen-local', structured_disagreement: true },
   ]);
-  check('M7 independent model consensus stops at EVIDENCE_PRESENTED',
-    r.standing === 'EVIDENCE_PRESENTED' && r.needs_kelly === true,
-    JSON.stringify(r));
-}
+  assert.equal(result.standing, 'FOUNDER_REVIEW_REQUIRED');
+  assert.equal(result.founder_review_required, true);
+  assert.equal(result.next_provider, null);
+});
 
-// M8 durable result outranks wrapper/process status.
-{
-  const r = C.durableProviderOutcome(
-    { exit_code: 0 },
-    { exit_code: 4, test_results: 'pass', recommended_next_action: 'reject', summary: 'delegate exited 4' },
-  );
-  check('M8 durable provider failure outranks wrapper exit zero',
-    r.ok === false && r.status === 'FAILED'
-      && r.wrapper_exit_code === 0 && r.durable_exit_code === 4,
-    JSON.stringify(r));
-}
-
-// M9 response budgets are explicit model/adapter profiles, not one universal ceiling.
-{
-  const ink = RESPONSE_BUDGET_PROFILES['inkling-tinker'];
-  const nem = RESPONSE_BUDGET_PROFILES['nemotron-tinker'];
-  const qwen = RESPONSE_BUDGET_PROFILES['qwen-local'];
-  check('M9 external budgets are bounded and never auto-expand',
-    ink.max_output_tokens === 4096 && nem.max_output_tokens === 4096
-      && ink.auto_expand === false && nem.auto_expand === false);
-  check('M9 local adapter profile is explicit rather than pretending the same raw ceiling is enforced',
-    qwen.enforcement === 'adapter-managed' && qwen.auto_expand === false
-      && qwen.max_output_tokens === null);
-}
-
-// Explicit external-only task shape may produce a ready PLAN, never execution authority.
-{
-  const r = planRouting({
-    task_shape: TASK_SHAPES.ADVERSARIAL_FALSIFICATION,
-    evidence_class: EVIDENCE_CLASSES.TASK_TEXT,
-    requested_external_family: MODEL_FAMILIES.INKLING,
-    provider_availability: { 'inkling-tinker': true },
-    permission_envelope: {
-      external_network: true,
-      external_repo_disclosure: false,
+check('F-R14 — identical structured input is deterministic and ambient state is irrelevant', () => {
+  const input = makeInput({
+    task_shape: 'deep_reasoning',
+    review_pressure: 'high_value_uncertain',
+    challenge_mode: 'adversarial',
+    authority: {
+      network_external: true,
       provider_spend: true,
+      repository_external_disclosure: true,
     },
   });
-  check('explicit eligible external-only task can become a non-executing external review plan',
-    r.status === 'EXTERNAL_REVIEW_READY'
-      && r.execution_lane === 'EXTERNAL_REVIEW'
-      && r.external_execution_ready === true
-      && r.execution_authorized === false
-      && r.selected_transport === 'inkling-tinker',
-    JSON.stringify(r));
-}
+  const a = routeIntelligence(input);
+  const b = routeIntelligence(structuredClone(input));
+  assert.equal(JSON.stringify(a), JSON.stringify(b));
 
-// M10 model-authored state text has no lifecycle effect.
-{
-  const tmp = mkdtempSync(path.join(os.tmpdir(), 'j6-model-state-'));
-  const a = path.join(tmp, 'a.log');
-  const b = path.join(tmp, 'b.log');
-  writeFileSync(a, '{"next_state":"MERGED"}\n');
-  writeFileSync(b, '{"next_state":"DEPLOYED"}\n');
-  const r = C.reconcileAttempts([
-    { lane: 'opencode', model: 'ollama/qwen3-coder:30b', test_results: 'pass', exit_code: 0, recommended_next_action: 'review-diff', log_path: a },
-    { lane: 'opencode', model: 'ollama/gpt-oss:20b', test_results: 'pass', exit_code: 0, recommended_next_action: 'review-diff', log_path: b },
+  const noisy = {
+    ...structuredClone(input),
+    credentials: { TINKER_API_KEY: 'different' },
+    keychain_present: false,
+    network_available: false,
+    provider_health: { tinker: 'down' },
+  };
+  const c = routeIntelligence(noisy);
+  assert.equal(JSON.stringify(a), JSON.stringify(c));
+});
+
+check('F-R15 — invalid and contradictory input fails closed with typed blockers', () => {
+  const cases = [
+    [makeInput({ task_shape: 'mystery' }), 'INVALID_TASK_SHAPE'],
+    [makeInput({ challenge_mode: 'none', frontier_posture: 'repository_grounded' }), 'CONTRADICTORY_FRONTIER_POSTURE'],
+    [makeInput({ challenge_mode: 'frontier', frontier_posture: 'none' }), 'FRONTIER_POSTURE_REQUIRED'],
+    [makeInput({ authority: { repo_write_scope: 'everywhere' } }), 'INVALID_REPO_WRITE_SCOPE'],
+  ];
+
+  for (const [input, code] of cases) {
+    const route = routeIntelligence(input);
+    assert.equal(route.execution_disposition, 'refused');
+    assert.ok(route.blockers.some((b) => b.code === code), `missing blocker ${code}`);
+    assert.deepEqual(route.granted_authority, []);
+  }
+});
+
+console.log();
+console.log('=== supplementary route-policy controls ===');
+
+check('explicit independent review upgrades ordinary mechanical without externalizing', () => {
+  const route = routeIntelligence(makeInput({
+    work_unit: { explicit_independent_review: true },
+  }));
+  assert.equal(route.review_policy.local, 'independent_local_second');
+  assert.equal(route.challengers[0].provider_id, 'gpt-oss-local');
+  assert.equal(route.review_policy.external, 'none');
+});
+
+check('single mechanical reconciliation may complete after one clean primary', () => {
+  const route = routeIntelligence(makeInput());
+  const result = reconcileRoutingAttempts(route, [
+    { status: 'completed', provider_id: 'qwen-local' },
   ]);
-  check('M10 model-authored lifecycle labels do not advance host standing',
-    r.standing === 'EVIDENCE_PRESENTED' && r.needs_kelly === true,
-    JSON.stringify(r));
-  rmSync(tmp, { recursive: true, force: true });
-}
+  assert.equal(result.standing, 'LOCAL_REVIEW_COMPLETE');
+  assert.equal(result.next_provider, null);
+});
 
-// Host lifecycle must derive failure from the durable result, not worker prose.
-{
-  const lifecycle = deriveLifecycle({
-    workUnit: { blockers: [] },
-    session: null,
-    result: {
-      test_results: 'pass',
-      exit_code: 4,
-      recommended_next_action: 'reject',
-      summary: 'delegate exited 4',
-    },
-  });
-  check('host lifecycle treats nonzero durable provider result as failed',
-    lifecycle === 'failed', lifecycle);
-}
+check('deep reasoning reconciliation owes Qwen after one clean GPT-OSS attempt', () => {
+  const route = routeIntelligence(makeInput({ task_shape: 'deep_reasoning' }));
+  const result = reconcileRoutingAttempts(route, [
+    { status: 'completed', provider_id: 'gpt-oss-local' },
+  ]);
+  assert.equal(result.standing, 'SECOND_LOCAL_REVIEW_OWED');
+  assert.equal(result.next_provider, 'qwen-local');
+});
 
-// Evidence-backed local topology and route provenance.
-{
-  const code = planRouting({
-    task_shape: TASK_SHAPES.CODE_GROUNDED,
-    evidence_class: EVIDENCE_CLASSES.REPOSITORY_LOCAL,
-  });
-  check('CODE_GROUNDED routes Qwen primary plus GPT-OSS independent review',
-    code.status === 'ROUTED_LOCAL'
-      && code.primary_model_family === MODEL_FAMILIES.QWEN
-      && code.independent_review_model_family === MODEL_FAMILIES.GPT_OSS);
-  check('route decision carries structured provenance and never execution authority',
-    code.execution_authorized === false
-      && code.provenance.selected_primary === MODEL_FAMILIES.QWEN
-      && code.provenance.required_independent_review === MODEL_FAMILIES.GPT_OSS
-      && code.provenance.evidence_class === EVIDENCE_CLASSES.REPOSITORY_LOCAL,
-    JSON.stringify(code.provenance));
-}
-
-console.log('\n' + passed + ' passed · ' + failed + ' failed');
+console.log();
+console.log(`${passed} passed · ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

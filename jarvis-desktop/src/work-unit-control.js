@@ -213,7 +213,7 @@ async function create(root, packet, opts = {}) {
 }
 
 async function planRouting(root, input = {}) {
-  const mod = await importBound(root, 'scripts/builder/routing-intelligence.mjs');
+  const mod = await importBound(root, 'scripts/builder/routing-intelligence-j6.mjs');
   return mod.planRouting(input);
 }
 
@@ -252,6 +252,7 @@ async function status(root, workUnitId) {
     ok: workUnit.exists === true,
     work_unit: workUnit,
     provider_strategy: raw?.provider_strategy ?? [],
+    routing_intelligence: raw?.routing_intelligence ?? null,
     disclosure: raw?.disclosure ?? null,
     attempts,
     reconciliation: reconcileAttempts(attempts),

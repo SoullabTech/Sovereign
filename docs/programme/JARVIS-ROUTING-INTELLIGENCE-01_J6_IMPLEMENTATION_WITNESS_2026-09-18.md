@@ -56,11 +56,13 @@ External execution remains the already-separate explicit provider act.
 
 ## 3 · Pure routing core
 
-Added:
+After canonical conflict reconciliation, the J6/J5 planner lives at:
 
-`scripts/builder/routing-intelligence.mjs`
+`scripts/builder/routing-intelligence-j6.mjs`
 
-The module:
+The original J6 candidate used `scripts/builder/routing-intelligence.mjs`. Reconciliation gave the J6/J5 planner the explicit `-j6` path so the subsequently integrated R3 pure router could remain unchanged at its canonical path. The two ratified contracts remain separately testable rather than being silently collapsed into one routing law.
+
+The J6 module:
 
 - calls no model;
 - reads no credential;
@@ -358,20 +360,23 @@ The already-ratified:
 
 `jarvis:work-unit-action`
 
-now has five bounded verbs:
+now has six bounded verbs after reconciliation with canonical R3:
 
 1. `providers`
-2. `create`
-3. `status`
-4. `route-plan`
-5. `run-provider`
+2. `preview-route` — canonical R3 pre-create pure-router preview
+3. `create`
+4. `status`
+5. `route-plan` — J6 post-create governed planning
+6. `run-provider`
 
-`route-plan` is non-executing.
+Both `preview-route` and `route-plan` are non-executing. They remain distinct because R3 previews a proposed routed Work Unit before persistence, while J6 derives a plan from an already-stored governed Work Unit.
 
-MAIN accepts only:
+For `route-plan`, MAIN accepts only:
 
 - Work Unit id;
 - optional requested external model family.
+
+For `preview-route`, MAIN constructs the R3 routing input from the bounded proposed Work Unit spec; the renderer cannot provide a route record or external authority grant.
 
 It then reloads the actual Work Unit and derives:
 
@@ -388,13 +393,20 @@ A dedicated test attempts to supply a forged permission envelope; the plan ignor
 
 ## 15 · J4 falsification replay
 
-Added:
+The J6 falsification suite now lives at:
 
-`scripts/builder/__tests__/routing-intelligence-proof.mjs`
+`scripts/builder/__tests__/routing-intelligence-j6-proof.mjs`
 
-Final result:
+The canonical R3/R2 proof remains at `scripts/builder/__tests__/routing-intelligence-proof.mjs`.
+
+Final J6 result:
 
 **15 passed · 0 failed**
+
+Canonical R3/R2 reconciliation controls also remain green:
+
+- pure routing law: **20 passed · 0 failed**
+- Work Unit/Desktop binding: **8 passed · 0 failed**
 
 It replays all ten J4 mutants and additional discriminators:
 

@@ -6,6 +6,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const fs = require('node:fs');
 const os = require('node:os');
 const { buildManifest } = require('./capability-form.js');
@@ -732,10 +733,22 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 });
 
 
-// Governed provider-review Work Unit control. ONE narrow channel, five named
-// actions. MAIN owns the repository binding, canonical SHA, Work Unit id/branch,
-// and canonical scripts; the renderer cannot supply a path, shell command, or
-// authority envelope directly.
+async function computeRoutingPreview(root, spec) {
+  const routePath = path.join(root, 'scripts', 'builder', 'routing-intelligence.mjs');
+  if (!fs.existsSync(routePath)) {
+    return { ok: false, status: 'ROUTER_UNAVAILABLE', reason: 'Routing Intelligence module is not present in the bound checkout.' };
+  }
+  const routingInput = OPWU.buildRoutingInput(spec || {});
+  const mod = await import(`${pathToFileURL(routePath).href}?t=${Date.now()}`);
+  const routeRecord = mod.routeIntelligence(routingInput);
+  return { ok: true, status: 'PREVIEWED', routing_input: routingInput, route_record: routeRecord };
+}
+
+// Governed provider-review Work Unit control. ONE narrow channel with bounded
+// actions. R3 preview remains pre-create and non-executing; J6 route-plan remains
+// post-create and derives authority from the stored Work Unit. MAIN owns repository
+// binding, canonical SHA, Work Unit identity, and canonical scripts; the renderer
+// cannot supply a path, shell command, route record, or authority envelope directly.
 ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
   const root = currentRoot();
   if (!root) return { ok: false, status: 'NO_SUBSTRATE', reason: 'No execution substrate is bound.' };
@@ -745,11 +758,25 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
     if (action === 'providers') {
       return { ok: true, status: 'COMPLETED', providers: await WUC.providers(root, { env: childEnv(process.env).env, home: os.homedir() }) };
     }
+    if (action === 'preview-route') {
+      return await computeRoutingPreview(root, req?.spec || {});
+    }
     if (action === 'create') {
       const canonicalSha = execFileSync('git', ['rev-parse', 'HEAD'], {
         cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env,
       }).trim();
-      const built = OPWU.buildPacket(req?.spec || {}, { canonicalSha, nowMs: Date.now() });
+      const spec = req?.spec || {};
+      let routeRecord = null;
+      if (spec.routing && typeof spec.routing === 'object') {
+        const preview = await computeRoutingPreview(root, spec);
+        if (!preview.ok) return preview;
+        routeRecord = preview.route_record;
+        if (routeRecord.execution_disposition === 'refused') {
+          const errors = (routeRecord.blockers || []).map((block) => `${block.code}: ${block.detail}`);
+          return { ok: false, status: 'ROUTE_REFUSED', reason: errors.join('; '), errors, route_record: routeRecord };
+        }
+      }
+      const built = OPWU.buildPacket(spec, { canonicalSha, nowMs: Date.now(), routeRecord });
       if (!built.ok) return { ok: false, status: 'REFUSED', reason: built.errors.join('; '), errors: built.errors };
       const created = await WUC.create(root, built.packet);
       if (!created.ok) return { ...created, status: 'REFUSED' };
@@ -764,6 +791,7 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
           disclosure: built.packet.disclosure,
         },
         provider_strategy: built.packet.provider_strategy,
+        routing_intelligence: built.packet.routing_intelligence,
         snapshot,
       };
     }
@@ -785,6 +813,15 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
         return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
+      }
+      const snapshot = await WUC.status(root, req.work_unit_id);
+      if (snapshot?.routing_intelligence?.execution_connected === false) {
+        return {
+          ok: false,
+          status: 'ROUTING_EXECUTION_DISCONNECTED',
+          reason: 'R3 route-bound Work Units are preview/persistence only; provider execution is not connected.',
+          routing_intelligence: snapshot.routing_intelligence,
+        };
       }
       return await WUC.runProvider(root, {
         work_unit_id: req.work_unit_id,
