@@ -118,14 +118,18 @@ describe('the existing plain-text seam is untouched', () => {
 const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
 
 /**
- * The ACTIVE pin. Founder-authorized 2026-09-08 (AIN-STRUCTURED-PROVENANCE-01).
+ * The ACTIVE pin. Founder-authorized 2026-09-18 (WS-PASSAGE-CONVERSATION-01).
+ * Kelly explicitly approved the concrete shared-inference amendment in PR #1402:
+ * optional required schema enforcement and its existing-adapter strict mapping.
+ * Policy and router remain unchanged. Prior provenance baseline:
+ * 35d0f81d167dca73431ae7640d7fabf4bae86cff (2026-09-08).
  *
  * The authorization is narrow and worth stating exactly: **those four seam-file
  * states at this commit** constitute the new governed baseline. The commit also
  * carries witness-side work, and no unrelated file gains constitutional status
  * by having travelled in the same commit — this guard resolves four paths.
  */
-const GOVERNED_SEAM_BASELINE = '35d0f81d167dca73431ae7640d7fabf4bae86cff';
+const GOVERNED_SEAM_BASELINE = 'c4f96c853ba9246546383a93875b4ae5519e8c1b';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([

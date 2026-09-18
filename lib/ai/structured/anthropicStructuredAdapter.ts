@@ -39,6 +39,7 @@ export function toAnthropicParams(
       name: t.name,
       ...(t.description !== undefined ? { description: t.description } : {}),
       input_schema: t.inputSchema,
+      ...(t.schemaEnforcement === 'required' ? { strict: true } : {}),
     }));
   }
   if (req.toolChoice !== undefined) {
