@@ -160,7 +160,14 @@ test('main owns one model-runtime channel, request shape, and explicit execution
   assert.match(MAIN, /MECH\.executeModelWorkUnit\(currentRoot\(\), shaped\.work_unit_id\)/);
 });
 
-test('renderer preload membrane remains closed to model execution channel', () => {
-  assert.ok(!PRELOAD.includes('jarvis:model-work-unit'),
-    'jarvis:model-work-unit must not be exposed before preload authority is ratified');
+test('renderer preload exposes exactly one ratified model-runtime invoke channel', () => {
+  assert.ok(PRELOAD.includes("ipcRenderer.invoke('jarvis:model-work-unit'"),
+    'the founder-authorized jarvis:model-work-unit channel must be exposed');
+  assert.ok(PRELOAD.includes('modelWorkUnit: (action, workUnitId, confirmExecute = false)'),
+    'the renderer surface must expose one bounded modelWorkUnit method');
+  assert.ok(!PRELOAD.includes('jarvis:model-routing-status'));
+  assert.ok(!PRELOAD.includes('jarvis:plan-model-work-unit'));
+  assert.ok(!PRELOAD.includes('jarvis:execute-model-work-unit'));
+  assert.ok(PRELOAD.includes("? { action, work_unit_id: workUnitId, confirm_execute: confirmExecute === true }"));
+  assert.ok(PRELOAD.includes(": { action, work_unit_id: workUnitId }"));
 });

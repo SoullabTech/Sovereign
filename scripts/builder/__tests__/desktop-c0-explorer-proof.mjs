@@ -224,12 +224,17 @@ console.log('\n==================== H — no new authority ===================='
   // this file and in jarvis-alpha-floor-proof.mjs, which is why the SAME widening
   // went unaddressed in two places for a generation. Both proofs now assert
   // against the single reviewed allow-list in desktop-preload-allowlist.mjs.
+  // ROUTER-03A (2026-09-18) — ELEVEN. `jarvis:model-work-unit` was founder-ratified
+  // as the single minimal model-runtime channel; status remains on `jarvis:status`.
   // Still EXACT, deliberately — a subset check is what lets the next one through.
   report(`preload exposes exactly the ${INVOKE_CHANNEL_NAMES.length} ratified channels`,
     JSON.stringify(channels) === JSON.stringify(INVOKE_CHANNEL_NAMES), channels.join(', '));
   report('the governance channel delegates to the governor, inventing no authority',
     code('main.js').includes('GOV.buildGovernanceArgv') && !/['"](recover|reconcile)['"]/.test(code('main.js')));
-  report('no general IPC / shell bridge added', !preload.includes('exec') && !preload.includes('send('));
+  report('no general IPC / shell bridge added',
+    !preload.includes('child_process')
+      && !/\bexec(?:File|FileSync|Sync)?\s*\(/.test(preload)
+      && !preload.includes('send('));
 
   const mainJs = code('main.js');
   report('jarvis:capabilities is read-only (no runCapability, no execution)',

@@ -338,8 +338,11 @@ console.log('\n==================== exclusions the ruling required =============
   // (required · authorized · minimal · main-validated · doctrine-compatible),
   // ratified it, and moved the whole list into desktop-preload-allowlist.mjs so
   // there is exactly ONE place to come and argue for the next addition. The
-  // list stays EXACT and is NOT relaxed to a subset check: a subset check is
-  // precisely what would let the eleventh channel through silently.
+  // ROUTER-03A (2026-09-18) — the list is now ELEVEN after explicit founder
+  // ratification of the single `jarvis:model-work-unit` channel. Readiness still
+  // uses `jarvis:status`; no separate model status/plan/execute channels exist.
+  // The list stays EXACT and is NOT relaxed to a subset check: a subset check is
+  // precisely what would let a twelfth channel through silently.
   report(`preload exposes exactly the ${INVOKE_CHANNEL_NAMES.length} ratified channels`,
     JSON.stringify(channels) === JSON.stringify(INVOKE_CHANNEL_NAMES), channels.join(', '));
   report('every ratified channel carries a documented purpose and a naming ruling',
