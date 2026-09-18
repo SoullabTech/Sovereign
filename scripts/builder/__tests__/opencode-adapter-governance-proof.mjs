@@ -284,6 +284,12 @@ console.log('\n=== P6: project OpenCode config carries no credential or default 
       'nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
       'nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16',
     ]), JSON.stringify(tinkerModels));
+  assert('every custom Tinker model declares both context and output limits',
+    Object.values(config.provider.tinker.models).every((m) =>
+      Number.isInteger(m.limit?.context) && m.limit.context > 0
+      && Number.isInteger(m.limit?.output) && m.limit.output > 0),
+    JSON.stringify(Object.fromEntries(Object.entries(config.provider.tinker.models)
+      .map(([id, m]) => [id, m.limit]))));
   const secretLikePrefixes = ['nv' + 'api-', 's' + 'k-'];
   assert('project config references environment variables instead of embedding credentials',
     configText.includes('{env:NVIDIA_API_KEY}')
