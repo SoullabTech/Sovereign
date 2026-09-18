@@ -9,7 +9,7 @@
  * The retired endpoint remains addressable only as an explicit 410 refusal so
  * stale clients fail closed rather than silently exercising a second COMMIT path.
  */
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import path from 'path';
 
 const repoRoot = path.resolve(__dirname, '../../../../..');
@@ -23,6 +23,7 @@ const LIVE_MAIA = 'app/api/sovereign/app/maia/list/route.ts';
 const RETIRED_ORACLE = 'app/api/oracle/conversation/route.ts';
 const PREPARE_KEEP = 'app/api/capsules/from-chat-window/route.ts';
 const ORACLE_UI = 'components/OracleConversation.tsx';
+const LEGACY_AFFORDANCE = 'components/psyche/KeepAffordance.tsx';
 
 describe('KEEP-LEGACY-SURFACE-01-R1 — legacy respond endpoint is non-executable', () => {
   it('hard-refuses with 410 and carries no atom-minting or mutation authority', () => {
@@ -75,6 +76,10 @@ describe('KEEP-LEGACY-SURFACE-01-R1 — canonical Keep authority remains elsewhe
     expect(ui).not.toContain('sessionOfferCountRef');
     expect(ui).not.toContain('lastOfferTurnRef');
     expect(ui).not.toContain('conversationTurnRef');
+  });
+
+  it('legacy KeepAffordance component is absent after whole-tree consumer census', () => {
+    expect(existsSync(path.join(repoRoot, LEGACY_AFFORDANCE))).toBe(false);
   });
 
   it('legacy Oracle conversation route remains hard-refused before dormant Keep machinery', () => {
