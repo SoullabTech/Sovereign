@@ -41,6 +41,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 const path = require('node:path');
 const fs = require('node:fs');
+const { execFile } = require('node:child_process');
+const { promisify } = require('node:util');
+
+const execFileAsync = promisify(execFile);
 
 /** The cluster, by exact filename. All five, or the mechanism is not present. */
 const MECHANISM_MODULES = Object.freeze([
@@ -58,6 +62,19 @@ const MECHANISM_MODULES = Object.freeze([
  * inside `executeRun`, whatever this constant says.
  */
 const AUTHORIZED_LANE = 'local-native';
+
+/** ROUTER-03 is additive. Missing model-routing modules do NOT invalidate the
+ * pre-existing local-native Builder mechanism above. */
+const MODEL_ROUTING_MODULES = Object.freeze([
+  'model-runtime-admission.mjs',
+  'model-orchestrator.mjs',
+  'work-unit-route.mjs',
+  'work-unit.mjs',
+  'router.mjs',
+  'opencode-provider.mjs',
+  'tinker-direct.mjs',
+  'external-context.mjs',
+]);
 
 const mechanismDir = (root) => path.join(root, 'scripts', 'builder');
 
@@ -98,6 +115,115 @@ function mechanismState(root) {
     };
   }
   return { available: true, reason: null, source: dir, lane: AUTHORIZED_LANE, modules };
+}
+
+
+function modelRoutingState(root) {
+  if (!root) {
+    return {
+      available: false,
+      reason: 'no repository is bound — model routing is unavailable',
+      source: null,
+      modules: MODEL_ROUTING_MODULES.map((name) => ({ name, present: false })),
+      delegate_present: false,
+    };
+  }
+  const dir = mechanismDir(root);
+  const modules = MODEL_ROUTING_MODULES.map((name) => ({
+    name,
+    present: fs.existsSync(path.join(dir, name)),
+  }));
+  const delegatePresent = fs.existsSync(path.join(root, 'scripts', 'ain-delegate.sh'));
+  const missing = modules.filter((m) => !m.present).map((m) => m.name);
+  if (!delegatePresent) missing.push('../ain-delegate.sh');
+  if (missing.length) {
+    return {
+      available: false,
+      reason: `the bound repository does not carry the multi-model routing mechanism — missing ${missing.join(', ')} in ${dir}`,
+      source: dir,
+      modules,
+      delegate_present: delegatePresent,
+    };
+  }
+  return {
+    available: true,
+    reason: null,
+    source: dir,
+    modules,
+    delegate_present: true,
+  };
+}
+
+async function runModelAdmission(root, action, workUnitId, hooks = {}) {
+  const state = modelRoutingState(root);
+  if (!state.available) {
+    return {
+      submitted: false,
+      outcome: 'MODEL_ROUTING_UNAVAILABLE',
+      disposition: null,
+      reason: state.reason,
+      admission: null,
+      mechanism: state,
+    };
+  }
+
+  const script = path.join(state.source, 'model-runtime-admission.mjs');
+  let child;
+  if (hooks.runAdmission) {
+    child = await hooks.runAdmission({ root, script, action, workUnitId });
+  } else {
+    try {
+      const { stdout, stderr } = await execFileAsync(
+        process.execPath,
+        [script, action, workUnitId],
+        {
+          cwd: root,
+          env: process.env,
+          timeout: 15 * 60 * 1000,
+          maxBuffer: 4 * 1024 * 1024,
+        },
+      );
+      child = { code: 0, stdout, stderr };
+    } catch (e) {
+      child = {
+        code: typeof e.code === 'number' ? e.code : 1,
+        stdout: e.stdout ?? '',
+        stderr: e.stderr ?? e.message ?? '',
+      };
+    }
+  }
+
+  let admission;
+  try {
+    admission = JSON.parse(String(child.stdout ?? '').trim());
+  } catch {
+    return {
+      submitted: false,
+      outcome: 'MODEL_ADMISSION_INVALID_OUTPUT',
+      disposition: null,
+      reason: String(child.stderr ?? '').slice(-500) || 'model admission returned non-JSON output',
+      admission: null,
+      mechanism: state,
+    };
+  }
+
+  return {
+    submitted: action === 'execute' && admission.executed === true,
+    outcome: admission.status,
+    disposition: admission.disposition ?? null,
+    reason: null,
+    admission,
+    mechanism: state,
+    child_exit_code: child.code ?? null,
+  };
+}
+
+async function planModelWorkUnit(root, workUnitId, hooks = {}) {
+  return runModelAdmission(root, 'plan', workUnitId, hooks);
+}
+
+async function executeModelWorkUnit(root, workUnitId, hooks = {}) {
+  return runModelAdmission(root, 'execute', workUnitId, hooks);
 }
 
 /**
@@ -238,10 +364,15 @@ async function runWorkUnit(root, packet, hooks = {}) {
 
 module.exports = {
   MECHANISM_MODULES,
+  MODEL_ROUTING_MODULES,
   AUTHORIZED_LANE,
   mechanismDir,
   mechanismState,
+  modelRoutingState,
   advisoryLaneNote,
   loadMechanism,
   runWorkUnit,
+  runModelAdmission,
+  planModelWorkUnit,
+  executeModelWorkUnit,
 };

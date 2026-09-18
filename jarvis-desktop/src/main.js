@@ -513,6 +513,7 @@ ipcMain.handle('jarvis:status', async () => {
     production: { state: 'NOT PROBED', detail: 'requires explicit production/SSH authority, which Desktop does not hold and does not request. Not probed by design.' },
     claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; Desktop Alpha does not auto-execute it (see §8 security stance) — this console itself runs the Claude Code session that built it.' },
     builder_mechanism: { state: 'UNKNOWN', detail: null },
+    model_routing: { state: 'UNKNOWN', detail: null },
     governance_holds: [],
     desktop_runtime: { state: 'AVAILABLE', detail: `Electron ${process.versions.electron}, node ${process.versions.node}` },
   };
@@ -526,6 +527,11 @@ ipcMain.handle('jarvis:status', async () => {
     result.builder_mechanism = ms.available
       ? { state: 'AVAILABLE', detail: `governed work-unit lane '${ms.lane}' (read-only); mechanism at ${ms.source}` }
       : { state: 'UNAVAILABLE', detail: ms.reason };
+
+    const mr = MECH.modelRoutingState(currentRoot());
+    result.model_routing = mr.available
+      ? { state: 'AVAILABLE', detail: `governed multi-model admission present at ${mr.source}; renderer execution membrane remains closed` }
+      : { state: 'UNAVAILABLE', detail: mr.reason };
   }
 
   if (!currentRoot()) return result;
@@ -676,6 +682,48 @@ ipcMain.handle('jarvis:capabilities', async () => {
 // fallback to any other checkout or to a bundled copy: see builder-mechanism.js.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:mechanism-status', async () => MECH.mechanismState(currentRoot()));
+
+function desktopModelRuntimeRequest(req, { execute = false } = {}) {
+  if (!req || typeof req !== 'object' || Array.isArray(req)) {
+    return { ok: false, outcome: 'DESKTOP_REQUEST_INVALID', reason: 'request must be an object' };
+  }
+  const allowed = new Set(execute ? ['action', 'work_unit_id', 'confirm_execute'] : ['action', 'work_unit_id']);
+  const unknown = Object.keys(req).filter((k) => !allowed.has(k));
+  if (unknown.length) {
+    return { ok: false, outcome: 'DESKTOP_REQUEST_INVALID', reason: `unsupported fields: ${unknown.sort().join(', ')}` };
+  }
+  if (typeof req.work_unit_id !== 'string') {
+    return { ok: false, outcome: 'DESKTOP_REQUEST_INVALID', reason: 'work_unit_id must be a string' };
+  }
+  if (execute && req.confirm_execute !== true) {
+    return { ok: false, outcome: 'EXPLICIT_EXECUTION_CONFIRMATION_REQUIRED', reason: 'confirm_execute: true is required' };
+  }
+  return { ok: true, work_unit_id: req.work_unit_id };
+}
+
+ipcMain.handle('jarvis:model-work-unit', async (_evt, req) => {
+  const action = req?.action;
+  const execute = action === 'execute';
+  if (action !== 'plan' && action !== 'execute') {
+    return {
+      submitted: false, outcome: 'DESKTOP_REQUEST_INVALID',
+      reason: 'action must be plan or execute', mechanism: MECH.modelRoutingState(currentRoot()),
+    };
+  }
+  const shaped = desktopModelRuntimeRequest(req, { execute });
+  if (!shaped.ok) return { submitted: false, ...shaped, mechanism: MECH.modelRoutingState(currentRoot()) };
+  try {
+    return execute
+      ? await MECH.executeModelWorkUnit(currentRoot(), shaped.work_unit_id)
+      : await MECH.planModelWorkUnit(currentRoot(), shaped.work_unit_id);
+  } catch (e) {
+    return {
+      submitted: false, outcome: 'DESKTOP_FAULT', disposition: null,
+      reason: String(e.message).slice(0, 300), admission: null,
+      mechanism: MECH.modelRoutingState(currentRoot()),
+    };
+  }
+});
 
 // ---------------------------------------------------------------------------
 // jarvis:run-work-unit — Desktop access to the governed Builder work-unit

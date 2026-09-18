@@ -140,8 +140,8 @@ const uid = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(36).sl
 console.log('\n=== P1: registry is explicit and bounded ===');
 {
   const ids = listProviderIds();
-  assert('exactly the five intended provider classes are registered',
-    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'nemotron-nvidia', 'nemotron-zen', 'nemotron-tinker', 'inkling-tinker']),
+  assert('exactly the six intended provider classes are registered',
+    JSON.stringify(ids) === JSON.stringify(['qwen-local', 'gpt-oss-local', 'nemotron-nvidia', 'nemotron-zen', 'nemotron-tinker', 'inkling-tinker']),
     JSON.stringify(ids));
 
   const local = resolveOpenCodeProvider({
@@ -153,6 +153,16 @@ console.log('\n=== P1: registry is explicit and bounded ===');
   });
   assert('local Qwen resolves without network, spend, or credential authority',
     local.ok && local.model_ref === 'ollama/qwen3-coder:30b', JSON.stringify(local));
+
+  const reasoner = resolveOpenCodeProvider({
+    providerId: 'gpt-oss-local',
+    permissionEnvelope: {
+      repo_read: true, repo_write_scope: 'none', external_network: false, provider_spend: false,
+    },
+    env: {},
+  });
+  assert('local GPT-OSS reasoner resolves without network, spend, or credential authority',
+    reasoner.ok && reasoner.model_ref === 'ollama/gpt-oss:20b', JSON.stringify(reasoner));
 
   const writeAttempt = resolveOpenCodeProvider({
     providerId: 'qwen-local',
@@ -264,6 +274,7 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
   const id = uid('qwen');
   sh(['new', id]);
   authorizeReadOnly(id);
+  writePacket(id, { verification_commands: ['printf VERIFIER_ONLY_SENTINEL_9F4D >/dev/null'] });
   const run = sh(['opencode', id, 'qwen-local']);
   assert('read-only local OpenCode attempt completes against the stub',
     run.code === 0, `exit=${run.code} err=${run.err.slice(0, 160)}`);
@@ -272,6 +283,8 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
   assert('attempt provenance records OpenCode and the exact provider/model reference',
     result.lane === 'opencode' && result.model === 'ollama/qwen3-coder:30b',
     `lane=${result.lane} model=${result.model}`);
+  assert('successful delegate result persists numeric exit_code 0',
+    result.exit_code === 0, `exit_code=${result.exit_code}`);
 
   const args = readFileSync(ARGS_FILE, 'utf8');
   assert('OpenCode uses the project-scoped read-only agent',
@@ -286,6 +299,10 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
     !args.split('\n').includes('--auto'), args.slice(0, 220));
   assert('the read-only prompt contains no commit instruction',
     !args.includes('commit your changes') && args.includes('READ-ONLY PROVIDER EVALUATION'));
+  assert('verifier-only verification command is absent from the worker prompt',
+    !args.includes('VERIFIER_ONLY_SENTINEL_9F4D'));
+  assert('verifier-only command still executes after the worker returns',
+    result.test_results === 'pass' && result.evidence.includes('VERIFIER_ONLY_SENTINEL_9F4D'));
   sh(['release', id]);
 }
 
@@ -375,6 +392,8 @@ console.log('\n=== P5: authorized external selection remains testable without a 
   const result = JSON.parse(readFileSync(resultPath(id), 'utf8'));
   assert('Inkling model identity is durable in the result contract',
     result.lane === 'tinker' && result.model === 'tinker/thinkingmachines/Inkling-Small', result.model);
+  assert('successful direct-Tinker result persists numeric exit_code 0',
+    result.exit_code === 0, `exit_code=${result.exit_code}`);
   const directPrompt = readFileSync(TINKER_PROMPT_FILE, 'utf8');
   assert('direct Tinker receives only JARVIS-bundled authorized repository evidence',
     directPrompt.includes('=== BEGIN AUTHORIZED FILE: opencode.json ===')

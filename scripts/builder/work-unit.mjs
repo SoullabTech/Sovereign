@@ -36,7 +36,9 @@
  *   New, OPTIONAL, defaulted when absent (this is the whole compatibility story — an
  *   existing packet with none of these fields is a completely valid canonical Work Unit):
  *     project, capability, task_class, risk_class, priority, dependencies[], blockers[],
- *     authorized_acts[], not_authorized_acts[], integration_actor, autonomy_ceiling
+ *     authorized_acts[], not_authorized_acts[], integration_actor, autonomy_ceiling,
+ *     routing_profile, review_policy, data_class, external_review, external_tiebreaker,
+ *     model_stage_budget, external_call_budget
  *
  * AUTHORITY VS CAPABILITY (preserved, not re-litigated)
  *   authorized_acts / not_authorized_acts / integration_actor express what this Work Unit
@@ -95,6 +97,11 @@ export const DEFAULT_NOT_AUTHORIZED_ACTS = [
 export const DEFAULT_INTEGRATION_ACTOR = 'jarvis';
 export const DEFAULT_RISK_CLASS = 'mechanical';
 export const DEFAULT_AUTONOMY_CEILING = 'LEVEL_2_IMPLEMENT';
+export const DEFAULT_ROUTING_PROFILE = 'local-first';
+export const DEFAULT_REVIEW_POLICY = 'auto';
+export const DEFAULT_DATA_CLASS = 'unspecified';
+export const DEFAULT_MODEL_STAGE_BUDGET = 1;
+export const DEFAULT_EXTERNAL_CALL_BUDGET = 0;
 
 export const LIFECYCLE_VOCABULARY = [
   'proposed', 'ready', 'blocked', 'needs_founder', 'claimed', 'running', 'verifying',
@@ -122,10 +129,18 @@ export function loadWorkUnit(id) {
     not_authorized_acts: raw.not_authorized_acts ?? DEFAULT_NOT_AUTHORIZED_ACTS,
     integration_actor: raw.integration_actor ?? DEFAULT_INTEGRATION_ACTOR,
     autonomy_ceiling: raw.autonomy_ceiling ?? DEFAULT_AUTONOMY_CEILING,
+    routing_profile: raw.routing_profile ?? DEFAULT_ROUTING_PROFILE,
+    review_policy: raw.review_policy ?? DEFAULT_REVIEW_POLICY,
+    data_class: raw.data_class ?? DEFAULT_DATA_CLASS,
+    external_review: raw.external_review ?? false,
+    external_tiebreaker: raw.external_tiebreaker ?? false,
+    model_stage_budget: raw.model_stage_budget ?? DEFAULT_MODEL_STAGE_BUDGET,
+    external_call_budget: raw.external_call_budget ?? DEFAULT_EXTERNAL_CALL_BUDGET,
     _defaults_applied: Object.keys({
       project: 1, capability: 1, task_class: 1, risk_class: 1, priority: 1, dependencies: 1,
       blockers: 1, authorized_acts: 1, not_authorized_acts: 1, integration_actor: 1,
-      autonomy_ceiling: 1,
+      autonomy_ceiling: 1, routing_profile: 1, review_policy: 1, data_class: 1,
+      external_review: 1, external_tiebreaker: 1, model_stage_budget: 1, external_call_budget: 1,
     }).filter((k) => raw[k] === undefined),
   };
 }
@@ -266,6 +281,15 @@ export function workUnitStatus(id) {
     exists: true,
     identity: { project: workUnit.project, capability: workUnit.capability, title: workUnit.title },
     intent: { objective: workUnit.objective, task_class: workUnit.task_class, risk_class: workUnit.risk_class, priority: workUnit.priority },
+    routing_intent: {
+      routing_profile: workUnit.routing_profile,
+      review_policy: workUnit.review_policy,
+      data_class: workUnit.data_class,
+      external_review: workUnit.external_review,
+      external_tiebreaker: workUnit.external_tiebreaker,
+      model_stage_budget: workUnit.model_stage_budget,
+      external_call_budget: workUnit.external_call_budget,
+    },
     authority: {
       governing_authority: workUnit.governing_authority,
       authorized_acts: workUnit.authorized_acts,

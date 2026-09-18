@@ -98,6 +98,23 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'all. Admission remains the mechanism\'s.',
   },
   {
+    channel: 'jarvis:model-work-unit',
+    ratified_in: 'ROUTER-03A founder grant 2026-09-18',
+    purpose:
+      'Required: lets the founder use JARVIS Desktop to plan or explicitly confirm execution of an ' +
+      'already-canonical multi-model Work Unit. Authorized: admitted by the explicit ROUTER-03A ' +
+      'founder grant of 2026-09-18. Minimal: one invoke channel covers plan and execute while ' +
+      'jarvis:status remains the only readiness/status surface; no separate model status/plan/execute ' +
+      'channels exist. Validated: preload can forward only action, work_unit_id and an execute-only ' +
+      'confirmation bit; main rejects every unsupported field, and canonical model-runtime admission ' +
+      'accepts only action + work_unit_id, so the renderer cannot supply model, provider, routing ' +
+      'profile, review policy, data class, network.external, provider.spend, stage/call budgets, ' +
+      'allowed_files, Work Unit authority, or evidence classification. Compatible: context isolation ' +
+      'is preserved; routing, spend, evidence and advancement authority remain in the canonical Work ' +
+      'Unit + ROUTER-01/02/03 mechanism, and this channel does not authorize automatic execution, ' +
+      'write-capable model authority, production access, merge, deployment, or member-facing change.',
+  },
+  {
     channel: 'jarvis:status',
     ratified_in: 'original surface',
     purpose:
