@@ -21,6 +21,9 @@ describe('H8 current-act shadow projection', () => {
     });
     const projection = buildCurrentActProjection(packet);
     expect(projection.projectionStatus).toBe('projected');
+    expect(projection.researchLineage).toMatchObject({
+      ordinaryRelationProposalVersion: 'ordinary-relation-proposal-v1',
+    });
     expect(projection.anchorEvidenceId).toBe('E1');
     expect(projection.selectedEvidenceIds[0]).toBe('E1');
     expect(projection.selectedEvidenceIds).toContain('E2');
