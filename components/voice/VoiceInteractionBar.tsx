@@ -302,20 +302,20 @@ export function VoiceInteractionBar({
         </div>
 
         {/* TURN-01 explicit floor release. This is intentionally a separate
-            action from Stop: “I’m done” sends the held turn; Stop leaves voice. */}
+            action from Stop: Pause sends the held turn; Stop leaves voice. */}
         <AnimatePresence>
           {voiceState === 'listening' && explicitYield && onDone && (
             <motion.button
-              key="im-done"
+              key="pause-floor"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               onClick={onDone}
               className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-amber-500/50 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-500/15 active:scale-95 transition-all"
-              aria-label="I'm done speaking — let MAIA respond"
+              aria-label="Pause speaking — let MAIA respond"
             >
               <Check className="w-3.5 h-3.5" />
-              I&apos;m done
+              Pause
             </motion.button>
           )}
         </AnimatePresence>
