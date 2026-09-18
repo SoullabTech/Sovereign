@@ -1605,6 +1605,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // 🔊 Voice seam: Use the clean interface instead of reaching into voiceMicRef internals
   const voiceSession = useVoiceSession(voiceMicRef, isAudioPlaying || isMicrophonePaused, isProcessing);
 
+  // 🎙️ HANDS-FREE AUTHORITY SYNC — the parent owns the member-facing policy,
+  // ContinuousConversation owns capture mechanics. Before this seam existed,
+  // `isHandsFreeMode` could say true while the capture controller had fallen
+  // back to push-to-talk, leaving MAIA's reply as a dead end until another tap.
+  // Re-run on voice-surface transitions too, because the child may remount while
+  // the policy value itself is unchanged.
+  useEffect(() => {
+    if (!voiceEnabled) return;
+    voiceMicRef.current?.setHandsFree(isHandsFreeMode);
+    console.log('🎙️ [HandsFree] synced capture policy:', isHandsFreeMode ? 'ON' : 'OFF');
+  }, [isHandsFreeMode, voiceEnabled, showChatInterface, enableVoiceInput]);
+
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -6911,7 +6923,23 @@ I'm not sure what I'm feeling yet.`;
         careSubMode: 'presence', // Crisis uses presence as base
       }));
 
-      // Speak the crisis response script line by line
+      // Crisis speech is consequential member-facing output. Record it in the
+      // visible conversation before TTS so safety language never exists only as
+      // an alarmed audio aside that disappears from the transcript.
+      const crisisInterventionText = crisisCheck.responseScript?.join(' ').trim();
+      if (crisisInterventionText) {
+        const crisisInterventionMessage: ConversationMessage = {
+          id: `crisis-intervention-${Date.now()}`,
+          role: 'oracle',
+          text: crisisInterventionText,
+          timestamp: new Date(),
+          source: 'system',
+        };
+        setMessages(prev => appendMessageCapped(prev, crisisInterventionMessage));
+        onMessageAddedRef.current?.(crisisInterventionMessage);
+      }
+
+      // Speak the same recorded crisis response script line by line.
       if (crisisCheck.responseScript && maiaReady && maiaSpeak && !isMuted) {
         for (const line of crisisCheck.responseScript) {
           await maiaSpeak(line);
@@ -7920,6 +7948,15 @@ I'm not sure what I'm feeling yet.`;
     // (UI -> unmute -> enableAudio -> startListening) so both
     // entry points into voice mode leave identical state.
     setShowChatInterface(false);
+    // Returning to the dedicated voice surface is an explicit request for the
+    // natural hands-free conversation policy. System fallback may turn this off
+    // later if recovery is exhausted, but stale fallback state must not survive
+    // a fresh member gesture to speak.
+    setIsHandsFreeMode(true);
+    voiceMicRef.current?.setHandsFree(true);
+    if (!enableVoiceInChat) {
+      toast('MAIA voice is off in this browser — replies will be text until you turn MAIA voice On.', { duration: 5000 });
+    }
     setIsMuted(false);
     lastSendWasVoiceRef.current = true;
     setMicRequestState('pending');
@@ -10702,6 +10739,11 @@ I'm not sure what I'm feeling yet.`;
               }
 
               setShowChatInterface(false);
+              setIsHandsFreeMode(true);
+              voiceMicRef.current?.setHandsFree(true);
+              if (!enableVoiceInChat) {
+                toast('MAIA voice is off in this browser — replies will be text until you turn MAIA voice On.', { duration: 5000 });
+              }
               setIsMuted(false);
               enableAudio().then(() => {
                 setTimeout(async () => {
