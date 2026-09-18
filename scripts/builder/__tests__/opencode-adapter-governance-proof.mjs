@@ -92,6 +92,12 @@ console.log('\n=== P1: registry is explicit and bounded ===');
     JSON.stringify(ids) === JSON.stringify(['qwen-local', 'nemotron-nvidia', 'nemotron-zen', 'nemotron-tinker', 'inkling-tinker']),
     JSON.stringify(ids));
 
+  const opencodeConfig = JSON.parse(readFileSync(path.join(REPO, 'opencode.json'), 'utf8'));
+  assert('project config activates native NVIDIA without shadowing its adapter or catalog',
+    Object.prototype.hasOwnProperty.call(opencodeConfig.provider ?? {}, 'nvidia')
+      && JSON.stringify(opencodeConfig.provider.nvidia) === '{}',
+    JSON.stringify(opencodeConfig.provider?.nvidia));
+
   const local = resolveOpenCodeProvider({
     providerId: 'qwen-local',
     permissionEnvelope: {
@@ -152,6 +158,17 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
   });
   assert('network + spend still refuse when the provider credential is absent',
     noKey.code === 'PROVIDER_CREDENTIAL_MISSING', JSON.stringify(noKey));
+
+  const directNvidia = resolveOpenCodeProvider({
+    providerId: 'nemotron-nvidia',
+    permissionEnvelope: { ...base, external_network: true, provider_spend: true },
+    env: { NVIDIA_API_KEY: 'proof-only-not-a-real-key' },
+  });
+  assert('direct NVIDIA uses the exact namespaced NIM model id',
+    directNvidia.ok
+      && directNvidia.model_id === 'nvidia/nemotron-3-ultra-550b-a55b'
+      && directNvidia.model_ref === 'nvidia/nvidia/nemotron-3-ultra-550b-a55b',
+    JSON.stringify(directNvidia));
 
   const tinkerNoSpend = resolveOpenCodeProvider({
     providerId: 'nemotron-tinker',
@@ -214,6 +231,8 @@ console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ==='
     args.includes('--agent') && args.includes('jarvis-readonly'));
   assert('OpenCode never receives --auto from JARVIS',
     !args.split('\n').includes('--auto'), args.slice(0, 220));
+  assert('OpenCode receives a deterministic Work Unit title instead of generating one',
+    args.includes('--title') && args.includes(id), args.slice(0, 260));
   assert('the read-only prompt contains no commit instruction',
     !args.includes('commit your changes') && args.includes('READ-ONLY PROVIDER EVALUATION'));
   sh(['release', id]);
@@ -269,12 +288,13 @@ console.log('\n=== P5: authorized external selection remains testable without a 
   sh(['release', id], { TINKER_API_KEY: 'proof-only-not-a-real-key' });
 }
 
-console.log('\n=== P6: project OpenCode config carries no credential or default external model ===');
+console.log('\n=== P6: project config does not shadow native NVIDIA or embed credentials ===');
 {
   const configText = readFileSync(path.join(REPO, 'opencode.json'), 'utf8');
   const config = JSON.parse(configText);
-  assert('project config registers Ollama, NVIDIA, and Tinker without selecting a default model',
-    !!config.provider?.ollama && !!config.provider?.nvidia && !!config.provider?.tinker
+  assert('project config activates native NVIDIA with an empty override and no default external model',
+    !!config.provider?.ollama && !!config.provider?.tinker
+      && JSON.stringify(config.provider?.nvidia) === '{}'
       && config.model === undefined);
   const tinkerModels = Object.keys(config.provider?.tinker?.models ?? {});
   assert('Tinker config carries the exact bounded Inkling + Nemotron model set',
@@ -291,8 +311,8 @@ console.log('\n=== P6: project OpenCode config carries no credential or default 
     JSON.stringify(Object.fromEntries(Object.entries(config.provider.tinker.models)
       .map(([id, m]) => [id, m.limit]))));
   const secretLikePrefixes = ['nv' + 'api-', 's' + 'k-'];
-  assert('project config references environment variables instead of embedding credentials',
-    configText.includes('{env:NVIDIA_API_KEY}')
+  assert('project config contains no NVIDIA credential seam and embeds no provider secrets',
+    !configText.includes('NVIDIA_API_KEY')
       && configText.includes('{env:TINKER_API_KEY}')
       && secretLikePrefixes.every((prefix) => !configText.includes(prefix)));
 

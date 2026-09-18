@@ -60,6 +60,36 @@ _require_packet() {
     echo "$f"
 }
 
+# JARVIS-PROVIDER-01: provider credentials may come from the current
+# environment or from macOS Keychain. This never creates provider authority:
+# Work Unit network.external/provider.spend gates are still evaluated separately.
+_keychain_load_provider_credential() {
+    local provider_id="$1"
+    local env_name="" service="" current="" secret=""
+
+    case "$provider_id" in
+        nemotron-nvidia)
+            env_name="NVIDIA_API_KEY"
+            service="ai.soullab.jarvis.nvidia-api-key"
+            ;;
+        nemotron-tinker|inkling-tinker)
+            env_name="TINKER_API_KEY"
+            service="ai.soullab.jarvis.tinker-api-key"
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+
+    current="$(printenv "$env_name" 2>/dev/null || true)"
+    [ -n "$current" ] && return 0
+    command -v security >/dev/null 2>&1 || return 0
+
+    secret="$(security find-generic-password -a "${USER:-soullab}" -s "$service" -w 2>/dev/null || true)"
+    [ -n "$secret" ] || return 0
+    export "$env_name=$secret"
+}
+
 cmd_new() {
     local work_unit_id="${1:?work_unit_id required}"
     local f
@@ -168,6 +198,7 @@ _run_lane() {
     if [ "$lane" = "opencode" ]; then
         [ -n "$provider_override" ] || { echo "🛑 opencode provider id required" >&2; exit 2; }
         local provider_code
+        _keychain_load_provider_credential "$provider_override"
         set +e
         opencode_resolution="$(node "$OPENCODE_PROVIDER_SCRIPT" resolve "$work_unit_id" "$provider_override" "$model_override")"
         provider_code=$?
@@ -290,7 +321,7 @@ _run_lane() {
     elif [ "$lane" = "opencode" ]; then
         # V1 is intentionally read-only. The project-scoped jarvis-readonly agent
         # denies edit/bash/web/task/external_directory, and we never pass --auto.
-        ( cd "$wt" && opencode run --pure --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+        ( cd "$wt" && opencode run --pure --agent "$opencode_agent" --model "$model" --title "$work_unit_id" "$prompt" ) > "$log" 2>&1
         exit_code=$?
     else
         echo "🛑 unknown lane: $lane" >&2
