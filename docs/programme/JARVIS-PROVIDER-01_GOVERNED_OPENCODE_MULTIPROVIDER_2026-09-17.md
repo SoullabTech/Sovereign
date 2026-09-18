@@ -58,6 +58,7 @@ both acts explicitly authorized on the Work Unit plus the provider credential.
 |---|---|---:|---:|---|
 | `qwen-local` | `ollama/qwen3-coder:30b` (plus allowlisted local variants) | no | no | local-established |
 | `nemotron-nvidia` | `nvidia/nemotron-3-ultra-550b-a55b` | yes | yes | external-candidate |
+| `nemotron-zen` | `opencode/nemotron-3-ultra-free` (plus allowlisted free Zen variant) | yes | no | external-free-candidate |
 | `inkling-tinker` | `tinker/thinkingmachines/Inkling` | yes | yes | **evaluation-only** |
 
 Registration is not activation. No external provider is a default model.
@@ -85,12 +86,13 @@ write-capable OpenCode execution; this lane does not smuggle that authority in.
 `opencode.json` registers:
 
 - the existing local Ollama models;
+- OpenCode Zen's built-in `opencode/nemotron-3-ultra-free` / `opencode/nemotron-3.5-lightning-free` models;
 - NVIDIA NIM at `https://integrate.api.nvidia.com/v1`, credential by `NVIDIA_API_KEY`;
 - Thinking Machines Tinker at
   `https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1`, credential by
   `TINKER_API_KEY`.
 
-No credential is committed. No external model is selected as the repository default.
+OpenCode Zen authentication remains in the user-level OpenCode credential store; no credential is committed. No external model is selected as the repository default.
 
 ## Evidence
 
@@ -98,11 +100,11 @@ Targeted provider proof:
 
 ```text
 node scripts/builder/__tests__/opencode-adapter-governance-proof.mjs
-21 passed · 0 failed
+23 passed · 0 failed
 ```
 
-It proves registration, local Qwen resolution, V1 read-only refusal, conjunctive external-network
-and provider-spend authority, missing-credential refusal, Inkling evaluation-only standing,
+It proves registration, local Qwen resolution, Zen Nemotron external-network gating without a spend grant, V1 read-only refusal, conjunctive external-network
+and provider-spend authority for metered providers, missing-credential refusal, Inkling evaluation-only standing,
 deny-before-worktree behavior, exact model provenance, no `--auto`, and secret-free configuration.
 
 Syntax/config gates also passed locally:
