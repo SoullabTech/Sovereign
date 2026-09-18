@@ -508,3 +508,56 @@ RGR-01 CLOSED
 ```
 
 No RGR-01 work is authorized by this record.
+
+## 13. Founder adjudication — W5 closure
+
+**Founder act:** 2026-09-18
+
+The Founder accepts W5 candidate commit:
+
+`6f754c78bb3023a09e5388f7f2681183916a6c7a`
+
+and accepts the following evidence:
+
+- W1 schema: 22 / 22 passing;
+- W2 lifecycle: 27 / 27 passing;
+- ratified Routing Intelligence: 20 / 20 passing;
+- W3 routing binding: 28 / 28 passing;
+- W4 append-only ledger: 31 / 31 passing;
+- W5 synthetic end-to-end witness: 22 / 22 passing;
+- total governed proof stack: 150 / 150 passing;
+- all 8 Founder-required W5 falsification cases pass;
+- all 5 integrated W5 mutation probes make the composition suite red;
+- deterministic replay from identical synthetic input produces byte-equivalent semantic witness output;
+- the final CLOSED Work Unit preserves its exact authorized core;
+- the final CLOSED Work Unit preserves its exact bound routing provenance;
+- failed-attempt history remains present and unchanged after a successful retry;
+- complete model, attempt, artifact, diff, test, verifier, and resulting-commit provenance survives closure;
+- the distinct verifier remains separate from the successful builder attempt;
+- deterministic lifecycle transition evidence is retained in the immutable W5 witness alongside the final CLOSED lifecycle envelope without expanding the W1 Work Unit schema;
+- premature `EVIDENCE_READY` without verifier evidence fails closed and cannot be retrospectively repaired through W4;
+- canonical Routing Intelligence at the then-current tracked canonical was byte-identical to the ratified router used by W3/W5 at SHA-256
+  `2837520e2f4e27aed067a84a2f8148a8b1be2436f71a57aa21a4c06d72316b4f`;
+- tracked canonical freshness had no true W5 file overlap;
+- no provider/model call, credential access, external network action, JARVIS repository execution, push, merge, deployment, production access, member data, PHI, or real repository evidence was used during W5.
+
+**W5 standing: CLOSED.**
+
+JARVIS-WORK-UNIT-01 W1-W5 is recorded as a proven local candidate architecture capable of carrying one governed synthetic Work Unit through:
+
+```text
+DRAFT
+→ BOUNDED
+→ AUTHORIZED
+→ ROUTED
+→ EXECUTING
+→ EVIDENCE_READY
+→ ADJUDICATED
+→ CLOSED
+```
+
+while preserving explicit human authority, deterministic routing, append-only evidence, independent verification, provenance, and fail-closed lifecycle law.
+
+This adjudication does not authorize merge, push, deployment, production mutation, or RGR-01.
+
+**RGR-01 remains CLOSED.**
