@@ -69,7 +69,7 @@ describe('TURN-01 · conversational sovereignty', () => {
     expect(vad.slice(guard, commit)).toContain('return;');
   });
 
-  it('I’m Done commits through the canonical accumulated-transcript path', () => {
+  it('Pause commits through the canonical accumulated-transcript path', () => {
     const src = W('components/voice/ContinuousConversation.tsx');
     const start = src.indexOf('const commitTurn = useCallback');
     expect(start).toBeGreaterThan(-1);
@@ -90,13 +90,15 @@ describe('TURN-01 · conversational sovereignty', () => {
     }
     expect(panel).toContain('Conversational Space');
     expect(panel).toContain('Learn my natural rhythm');
-    expect(panel).toContain('I’m Done button');
+    expect(panel).toContain('Pause button');
   });
 
   it('voice bar exposes explicit floor ownership as a distinct action from Stop', () => {
     const bar = W('components/voice/VoiceInteractionBar.tsx');
     expect(bar).toContain("holding your floor");
-    expect(bar).toContain("I&apos;m done");
+    expect(bar).toContain('Pause');
+    expect(bar).toContain('aria-label="Pause speaking — let MAIA respond"');
+    expect(bar).not.toContain("I&apos;m done");
     expect(bar).toContain('onClick={onDone}');
     expect(bar).toContain('onClick={onStop}');
   });
