@@ -435,11 +435,11 @@ export default function VoiceSettingsPanel() {
         </label>
 
         <div>
-          <div className="text-sm font-medium text-stone-300">Who decides when your turn is done?</div>
+          <div className="text-sm font-medium text-stone-300">Who decides when MAIA responds?</div>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {([
               ['automatic', 'Automatic', 'MAIA listens for your natural turn ending.'],
-              ['explicit', "I’m Done button", "Silence never sends your turn. Tap I’m Done when you want MAIA to respond."],
+              ['explicit', "Pause button", "Silence never sends your turn. Tap Pause when you want MAIA to respond."],
             ] as [FloorControlMode, string, string][]).map(([mode, label, desc]) => {
               const active = turnTaking.floorControlMode === mode;
               return (
