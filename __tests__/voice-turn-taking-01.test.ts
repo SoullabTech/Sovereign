@@ -69,6 +69,27 @@ describe('TURN-01 · conversational sovereignty', () => {
     expect(vad.slice(guard, commit)).toContain('return;');
   });
 
+  it('keeps explicit-floor silence outside liveness teardown authority', () => {
+    const src = W('components/voice/ContinuousConversation.tsx');
+    const start = src.indexOf('const tick = () => {', src.indexOf('The watchdog: the only observer'));
+    const end = src.indexOf('// Failure boundaries that produce no recognition error', start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const tick = src.slice(start, end);
+
+    expect(tick).toContain('const explicitFloorOwned = !automaticTurnCommitAllowed()');
+    expect(tick).toContain('shouldActOnCaptureLiveness');
+    expect(tick).toContain('analyserVoiceAfterRecognition');
+    expect(tick).toContain('voice_floor_liveness_held');
+
+    const decision = tick.indexOf('const mayEndCapture = shouldActOnCaptureLiveness');
+    const teardown = tick.indexOf('handleCaptureLossFnRef.current?.(verdict.cause)');
+    expect(decision).toBeGreaterThan(-1);
+    expect(teardown).toBeGreaterThan(decision);
+    expect(tick.slice(decision, teardown)).toContain('if (!mayEndCapture)');
+    expect(tick.slice(decision, teardown)).toContain('return;');
+  });
+
   it('Pause commits through the canonical accumulated-transcript path', () => {
     const src = W('components/voice/ContinuousConversation.tsx');
     const start = src.indexOf('const commitTurn = useCallback');
