@@ -116,14 +116,15 @@ export const RATIFIED_INVOKE_CHANNELS = [
   },
   {
     channel: 'jarvis:work-unit-action',
-    ratified_in: 'JARVIS-DESKTOP-OPERATOR-FLOW-02 founder act 2026-09-17',
+    ratified_in: 'JARVIS-DESKTOP-OPERATOR-FLOW-02 + JARVIS-ROUTING-INTELLIGENCE-01/J5 founder rulings',
     purpose:
-      'Founder-facing control of one canonical provider-review Work Unit through four fixed actions: ' +
-      'providers/create/status/run-provider. The renderer cannot supply a filesystem path, shell ' +
-      'command, Work Unit id, branch, canonical SHA, or raw authority envelope at creation: MAIN ' +
-      'derives those from the bound repository and operator-work-unit. Provider execution calls the ' +
-      'existing ain-delegate.sh opencode seam, whose canonical provider registry re-checks repo/network/' +
-      'spend authority before acquiring a worktree or launching a model. No production/deploy act is exposed.',
+      'Founder-facing control of one canonical provider-review Work Unit through five fixed actions: ' +
+      'providers/create/status/route-plan/run-provider. route-plan is non-executing and derives evidence, ' +
+      'task shape, provider readiness, and the permission envelope from the stored Work Unit; the renderer ' +
+      'cannot supply raw authority. Creation still cannot supply a filesystem path, shell command, Work Unit ' +
+      'id, branch, or canonical SHA. Provider execution remains a separate explicit action through the ' +
+      'canonical registry, which re-checks repo/network/external-disclosure/spend authority before a model ' +
+      'may run. No production/deploy act is exposed.',
   },
   {
     channel: 'jarvis:status',

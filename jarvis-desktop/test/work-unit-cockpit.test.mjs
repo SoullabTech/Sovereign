@@ -52,11 +52,15 @@ test('packet authoring structurally denies write, production, deploy and authori
 test('exactly one new privileged channel carries a bounded action enum', () => {
   assert.match(preload, /workUnitAction: \(req\) => ipcRenderer\.invoke\('jarvis:work-unit-action', req\)/);
   assert.match(main, /ipcMain\.handle\('jarvis:work-unit-action'/);
-  for (const action of ['providers', 'create', 'status', 'run-provider']) {
+  for (const action of ['providers', 'create', 'status', 'route-plan', 'run-provider']) {
     assert.ok(main.includes(`action === '${action}'`), `missing action ${action}`);
   }
   assert.doesNotMatch(main, /action === 'deploy'/);
   assert.doesNotMatch(main, /action === 'merge'/);
+  assert.match(main, /WUC\.planWorkUnitRouting/);
+  assert.match(controller, /async function planWorkUnitRouting/);
+  assert.match(controller, /derivePermissionEnvelope\(workUnit\)/);
+  assert.match(controller, /deriveWorkUnitEvidenceClass\(workUnit\)/);
 });
 
 test('MAIN, not renderer, binds canonical SHA and Work Unit identity', () => {

@@ -732,7 +732,7 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 });
 
 
-// Governed provider-review Work Unit control. ONE narrow channel, four named
+// Governed provider-review Work Unit control. ONE narrow channel, five named
 // actions. MAIN owns the repository binding, canonical SHA, Work Unit id/branch,
 // and canonical scripts; the renderer cannot supply a path, shell command, or
 // authority envelope directly.
@@ -770,6 +770,16 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
     if (action === 'status') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       return await WUC.status(root, req.work_unit_id);
+    }
+    if (action === 'route-plan') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      const requested = req?.requested_external_family ? String(req.requested_external_family) : null;
+      if (requested && !/^[A-Z][A-Z0-9_]{2,31}$/.test(requested)) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid requested_external_family.' };
+      }
+      return await WUC.planWorkUnitRouting(root, req.work_unit_id, {
+        requested_external_family: requested,
+      }, { env: childEnv(process.env).env, home: os.homedir() });
     }
     if (action === 'run-provider') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };

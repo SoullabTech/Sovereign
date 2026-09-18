@@ -37,12 +37,13 @@ test('Nemotron packet is read-only external and never gains write/deploy authori
     evidenceFocus: 'components/voice/ContinuousConversation.tsx:1700-1900\nlib/voice/safariSilentDeathRecovery.ts',
   }, { canonicalSha: SHA, nowMs: 12345 });
   assert.equal(r.ok, true, JSON.stringify(r.errors));
-  assert.deepEqual(r.packet.authorized_acts, ['repo.read', 'network.external']);
+  assert.deepEqual(r.packet.authorized_acts, ['repo.read', 'network.external', 'repo.disclose:external-readonly']);
   assert.ok(r.packet.not_authorized_acts.includes('repo.write:worktree'));
   assert.ok(r.packet.not_authorized_acts.includes('deploy'));
   assert.equal(r.packet.context_selectors[0].source_sha, SHA);
   assert.deepEqual(r.packet.context_selectors[0].selector, { type: 'lines', start: 1700, end: 1900 });
   assert.equal(r.packet.integration_actor, 'founder');
+  assert.equal(r.packet.routing.evidence_class, 'E3_EXTERNAL_REPO_BUNDLE');
 });
 
 test('Nemotron + Inkling is one Work Unit with provider strategy, not per-provider packets', () => {

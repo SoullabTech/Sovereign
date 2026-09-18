@@ -72,7 +72,10 @@
     const externalReview = checked.providers.some(p => EXTERNAL_REVIEW_PROVIDERS.includes(p));
     const providerSpend = checked.providers.includes('inkling-tinker') && spec.providerSpendOk === true;
     const acts = ['repo.read'];
-    if (externalReview) acts.push('network.external');
+    if (externalReview) {
+      acts.push('network.external');
+      acts.push('repo.disclose:external-readonly');
+    }
     if (providerSpend) acts.push('provider.spend');
 
     const packet = {
@@ -111,10 +114,18 @@
       priority: 'current',
       dependencies: [], blockers: [],
       authorized_acts: acts,
-      not_authorized_acts: ['repo.write:worktree', 'production.read', 'production.write', 'deploy', 'authority.change'],
+      not_authorized_acts: [
+        'repo.write:worktree', 'production.read', 'production.write', 'deploy', 'authority.change',
+        ...(externalReview ? [] : ['network.external', 'repo.disclose:external-readonly']),
+        ...(providerSpend ? [] : ['provider.spend']),
+      ],
       integration_actor: 'founder',
       autonomy_ceiling: 'LEVEL_1_REVIEW',
       provider_strategy: checked.providers,
+      routing: {
+        evidence_class: externalReview ? 'E3_EXTERNAL_REPO_BUNDLE' : 'E1_REPOSITORY_LOCAL',
+        task_shape: String(spec?.taskShape || 'FRONTIER_UNKNOWN'),
+      },
       disclosure: {
         repository_read_only_external: externalReview,
         provider_spend_authorized: providerSpend,
