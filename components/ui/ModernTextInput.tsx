@@ -19,6 +19,7 @@ import {
   Square
 } from 'lucide-react';
 import { useVoiceInput } from '@/lib/hooks/useVoiceInput';
+import { MAX_MAIA_TEXT_INPUT_CHARS } from '@/lib/maia/textInputLimits';
 
 interface ModernTextInputProps {
   value?: string;
@@ -70,7 +71,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   onDownloadConversation,
   onOpenPromptPicker,
   autoFocus = false,
-  maxLength: maxLengthProp = 10000,
+  maxLength: maxLengthProp = MAX_MAIA_TEXT_INPUT_CHARS,
   hasMemory = false,
   lastConnectionTime,
   currentPhase,
@@ -219,17 +220,20 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    // Allow unlimited input in scribe mode (maxLength undefined)
-    if (!maxLength || newValue.length <= maxLength) {
-      setValue(newValue);
-      onChange?.(newValue);
-      // Clear any visible submit-error banner as soon as the user begins typing again.
-      if (submitError) onClearSubmitError?.();
-    }
+    // Keep the full pasted text visible even when it exceeds the send limit.
+    // Silently clipping a paste makes the member think MAIA received material
+    // that was actually discarded. The send affordance disables until the
+    // draft is shortened (or the member uses file upload instead).
+    setValue(newValue);
+    onChange?.(newValue);
+    // Clear any visible submit-error banner as soon as the user begins typing again.
+    if (submitError) onClearSubmitError?.();
   };
 
+  const isWithinLengthLimit = !maxLength || value.length <= maxLength;
+
   const handleSubmit = () => {
-    if (value.trim() && !disabled && !isProcessing && !enableVoiceInput) {
+    if (value.trim() && isWithinLengthLimit && !disabled && !isProcessing && !enableVoiceInput) {
       onSubmit?.(value.trim());
       setValue('');
     }
@@ -254,7 +258,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     fileInputRef.current?.click();
   };
 
-  const canSubmit = value.trim().length > 0 && !disabled && !isProcessing && !enableVoiceInput && !isRecording;
+  const canSubmit = value.trim().length > 0 && isWithinLengthLimit && !disabled && !isProcessing && !enableVoiceInput && !isRecording;
   const showMic = showVoiceInputButton && value.trim().length === 0 && !isRecording && !disabled && !isProcessing;
 
   return (
@@ -486,7 +490,6 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               readOnly={disabled || isProcessing}
               // No `autoFocus` attribute: mount focus is applied imperatively
               // above so it can be withheld on touch devices. See the comment there.
-              maxLength={maxLength}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="sentences"
@@ -561,7 +564,8 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
             <span className={`text-xs ${
               value.length >= maxLength ? 'text-red-400' : 'text-white/40'
             }`}>
-              {value.length}/{maxLength}
+              {value.length.toLocaleString()}/{maxLength.toLocaleString()}
+              {value.length > maxLength ? ' — shorten or attach a file to send' : ''}
             </span>
           </div>
         )}
