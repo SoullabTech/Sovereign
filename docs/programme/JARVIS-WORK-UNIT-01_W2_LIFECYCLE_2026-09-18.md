@@ -273,3 +273,38 @@ W2 FALSIFICATION GREEN
 W2 FOUNDER ADJUDICATION OWED
 W3 NOT YET OPEN
 ```
+
+## 10. Founder adjudication — W2 closure and W3 opening
+
+**Founder act:** 2026-09-18
+
+The Founder accepts W2 candidate commit
+`c8dbf997eb95da5da10f0c547cb2a464c09dc2c5` and the recorded evidence:
+
+- W1 regression: 22 / 22 passing;
+- W2 lifecycle falsification: 27 / 27 passing;
+- deliberate `EXECUTING → CLOSED` mutation makes the suite red;
+- deliberate authorized-core-guard removal makes the suite red;
+- repository sovereignty/pre-commit gates are green;
+- canonical freshness showed zero true file overlap with W1/W2;
+- no provider call, external network use, merge, deployment, or production access
+  occurred during W2.
+
+**W2 standing: CLOSED.**
+
+The Founder authorizes **W3 — PURE ROUTING BINDING ONLY**.
+
+W3 may bind the ratified pure Routing Intelligence module to an AUTHORIZED Work
+Unit lifecycle envelope, derive route input only from canonical Work Unit fields,
+call `routeIntelligence()` in-process, populate only the Work Unit routing domain,
+prove route authority is a subset of Work Unit authority, and transition
+`AUTHORIZED → ROUTED` only through the W2 lifecycle law.
+
+W3 must fail closed when the Work Unit is not AUTHORIZED, required route authority
+or evidence is absent, the route is refused or blocked, the authorized core has
+changed, or a deterministic route cannot be bound.
+
+W3 does not authorize provider/model calls, credentials or Keychain access,
+external network access, OpenCode/Tinker execution, repository execution,
+attempt/verifier writes, semantic-winner selection, merge, push, deploy, or
+production access.
