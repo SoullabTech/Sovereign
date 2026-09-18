@@ -7,7 +7,8 @@
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.JarvisOperatorWorkUnit = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
-  const SUPPORTED_REVIEW_PROVIDERS = Object.freeze(['nemotron-zen', 'inkling-tinker']);
+  const SUPPORTED_REVIEW_PROVIDERS = Object.freeze(['qwen-local', 'gpt-oss-local', 'nemotron-zen', 'inkling-tinker']);
+  const EXTERNAL_REVIEW_PROVIDERS = Object.freeze(['nemotron-zen', 'inkling-tinker']);
 
   function lines(value) {
     return String(value || '').split('\n').map(s => s.trim()).filter(Boolean);
@@ -48,7 +49,8 @@
     if (!objective) errors.push('Describe the outcome this Work Unit should produce.');
     if (!providers.length) errors.push('Select at least one review provider.');
     for (const p of providers) if (!SUPPORTED_REVIEW_PROVIDERS.includes(p)) errors.push(`Unsupported provider strategy: ${p}`);
-    if (providers.length && spec?.externalRepoOk !== true) {
+    const externalProviders = providers.filter(p => EXTERNAL_REVIEW_PROVIDERS.includes(p));
+    if (externalProviders.length && spec?.externalRepoOk !== true) {
       errors.push('Repository-grounded external review requires explicit read-only repository disclosure authorization.');
     }
     if (providers.includes('inkling-tinker') && spec?.providerSpendOk !== true) {
@@ -67,8 +69,10 @@
     const id = makeId(checked.objective, nowMs);
     const acceptance = lines(spec.acceptanceCriteria);
     const selectors = parseEvidence(spec.evidenceFocus, canonicalSha);
+    const externalReview = checked.providers.some(p => EXTERNAL_REVIEW_PROVIDERS.includes(p));
     const providerSpend = checked.providers.includes('inkling-tinker') && spec.providerSpendOk === true;
-    const acts = ['repo.read', 'network.external'];
+    const acts = ['repo.read'];
+    if (externalReview) acts.push('network.external');
     if (providerSpend) acts.push('provider.spend');
 
     const packet = {
@@ -112,7 +116,7 @@
       autonomy_ceiling: 'LEVEL_1_REVIEW',
       provider_strategy: checked.providers,
       disclosure: {
-        repository_read_only_external: true,
+        repository_read_only_external: externalReview,
         provider_spend_authorized: providerSpend,
       },
     };

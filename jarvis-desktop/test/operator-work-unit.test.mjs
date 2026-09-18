@@ -5,6 +5,19 @@ const require = createRequire(import.meta.url);
 const W = require('../src/operator-work-unit.js');
 const SHA = '0123456789abcdef0123456789abcdef01234567';
 
+test('local open-weight review requires no external disclosure, network, spend, or credential authority', () => {
+  const r = W.buildPacket({
+    objective: 'Review voice continuity locally',
+    providers: ['qwen-local', 'gpt-oss-local'],
+  }, { canonicalSha: SHA, nowMs: 1 });
+  assert.equal(r.ok, true, JSON.stringify(r.errors));
+  assert.deepEqual(r.packet.provider_strategy, ['qwen-local', 'gpt-oss-local']);
+  assert.deepEqual(r.packet.authorized_acts, ['repo.read']);
+  assert.equal(r.packet.disclosure.repository_read_only_external, false);
+  assert.equal(r.packet.disclosure.provider_spend_authorized, false);
+  assert.equal(r.packet.max_attempts, 2);
+});
+
 test('repo-grounded external review requires explicit disclosure', () => {
   const r = W.buildPacket({ objective: 'Review voice continuity', providers: ['nemotron-zen'] }, { canonicalSha: SHA, nowMs: 1 });
   assert.equal(r.ok, false);
