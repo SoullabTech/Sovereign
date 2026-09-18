@@ -28,6 +28,15 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     credential_env: 'NVIDIA_API_KEY',
     standing: 'external-candidate',
   }),
+  'nemotron-zen': Object.freeze({
+    opencode_provider: 'opencode',
+    default_model: 'nemotron-3-ultra-free',
+    models: Object.freeze(['nemotron-3-ultra-free', 'nemotron-3.5-lightning-free']),
+    external_network: true,
+    metered_provider: false,
+    credential_env: null,
+    standing: 'external-free-candidate',
+  }),
   'inkling-tinker': Object.freeze({
     opencode_provider: 'tinker',
     default_model: 'thinkingmachines/Inkling',
