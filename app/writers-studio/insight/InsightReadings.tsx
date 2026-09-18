@@ -6,7 +6,7 @@ import type { InsightPassage } from '@/lib/writersStudio/insightCanvas';
 /** Keep visited observation drafts on this page when another observation opens. */
 export default function InsightReadings({ manuscriptId, readingId, observationKey, onRevise, busy, refreshKey = 0 }: {
   manuscriptId: string; readingId: string; observationKey: string;
-  onRevise?: (passage: InsightPassage) => void; busy?: boolean; refreshKey?: number;
+  onRevise?: (passage: InsightPassage, authorNotes?: string) => void; busy?: boolean; refreshKey?: number;
 }) {
   const [visited, setVisited] = useState([{ readingId, observationKey }]);
   useEffect(() => {
