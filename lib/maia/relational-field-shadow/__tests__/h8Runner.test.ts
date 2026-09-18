@@ -1,6 +1,10 @@
 jest.mock('../fieldAssembler', () => {
   const actual = jest.requireActual('../fieldAssembler');
-  return { ...actual, loadPriorMemberTurns: jest.fn() };
+  return {
+    ...actual,
+    loadPriorMemberTurns: jest.fn(),
+    loadH8CrossSessionMemberTurns: jest.fn(),
+  };
 });
 jest.mock('../ollamaProvider', () => {
   const actual = jest.requireActual('../ollamaProvider');
@@ -8,7 +12,10 @@ jest.mock('../ollamaProvider', () => {
 });
 jest.mock('../evidenceStore', () => ({ persistRelationalFieldShadowEvidence: jest.fn() }));
 
-import { loadPriorMemberTurns } from '../fieldAssembler';
+import {
+  loadH8CrossSessionMemberTurns,
+  loadPriorMemberTurns,
+} from '../fieldAssembler';
 import { generateRelationalFieldPlan } from '../ollamaProvider';
 import { persistRelationalFieldShadowEvidence } from '../evidenceStore';
 import {
@@ -18,6 +25,7 @@ import {
 import { launchRelationalFieldShadow, runRelationalFieldShadow } from '../runner';
 
 const load = loadPriorMemberTurns as jest.Mock;
+const loadCross = loadH8CrossSessionMemberTurns as jest.Mock;
 const generate = generateRelationalFieldPlan as jest.Mock;
 const persist = persistRelationalFieldShadowEvidence as jest.Mock;
 const base = {
@@ -36,6 +44,7 @@ describe('H8 production shadow projection runner', () => {
     jest.clearAllMocks();
     process.env.MAIA_RELATIONAL_FIELD_SHADOW = '1';
     process.env.MAIA_RELATIONAL_FIELD_H8 = '1';
+    process.env.MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION = '0';
     process.env.MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS = 'member-1';
     process.env.MAIA_RELATIONAL_FIELD_SHADOW_MODELS = '';
     load.mockResolvedValue([
@@ -44,24 +53,29 @@ describe('H8 production shadow projection runner', () => {
         exchangeId: 'ex-11',
         content: 'Do not save Sanctuary material.',
         createdAt: '2026-09-17T12:00:00Z',
+        sourceKind: 'conversation_turn',
       },
       {
         id: '12',
         exchangeId: 'ex-12',
         content: 'During Sanctuary we need to fail closed before anything can persist.',
         createdAt: '2026-09-17T12:01:00Z',
+        sourceKind: 'conversation_turn',
       },
     ]);
+    loadCross.mockResolvedValue([]);
     persist.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
     delete process.env.MAIA_RELATIONAL_FIELD_H8;
+    delete process.env.MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION;
   });
 
   test('runs deterministic H8 projection with zero generative shadow models', async () => {
     await runRelationalFieldShadow(base, []);
     expect(load).toHaveBeenCalledTimes(1);
+    expect(loadCross).not.toHaveBeenCalled();
     expect(generate).not.toHaveBeenCalled();
     expect(persist).toHaveBeenCalledTimes(1);
     const row = persist.mock.calls[0][0];
@@ -74,6 +88,34 @@ describe('H8 production shadow projection runner', () => {
     expect(row).not.toHaveProperty('shadowResponseText');
     expect(row.rawPlan.anchorEvidenceId).toBe('E1');
     expect(row.basisEvidenceIds[0]).toBe('E1');
+  });
+
+  test('cross-session evidence is separately gated and enters H8 only', async () => {
+    process.env.MAIA_RELATIONAL_FIELD_H8_CROSS_SESSION = '1';
+    process.env.MAIA_RELATIONAL_FIELD_SHADOW_MODELS = 'qwen3:32b';
+    loadCross.mockResolvedValue([
+      {
+        id: '9',
+        exchangeId: 'old-ex',
+        content: 'Do not save Sanctuary material across sessions.',
+        createdAt: '2026-09-16T12:00:00Z',
+        sourceKind: 'cross_session_turn',
+      },
+    ]);
+    generate.mockRejectedValueOnce(new Error('bounded-test-stop'));
+
+    await runRelationalFieldShadow(base, ['qwen3:32b']);
+
+    expect(loadCross).toHaveBeenCalledWith('member-1', 's-88');
+    expect(persist).toHaveBeenCalledTimes(2);
+
+    const h8Row = persist.mock.calls[0][0];
+    expect(h8Row.architectureVersion).toBe(H8_CURRENT_ACT_ARCHITECTURE_VERSION);
+    expect(h8Row.evidenceManifest.some((item: any) => item.sourceKind === 'cross_session_turn')).toBe(true);
+
+    // The inherited generative Cut-1 packet must remain current-session-only.
+    const generativePacket = generate.mock.calls[0][0].packet;
+    expect(generativePacket.manifest.some((item: any) => item.sourceKind === 'cross_session_turn')).toBe(false);
   });
 
   test('launcher schedules H8 even when model list is empty', () => {
@@ -97,6 +139,7 @@ describe('H8 production shadow projection runner', () => {
     process.env.MAIA_RELATIONAL_FIELD_H8 = '0';
     await runRelationalFieldShadow(base, []);
     expect(load).not.toHaveBeenCalled();
+    expect(loadCross).not.toHaveBeenCalled();
     expect(generate).not.toHaveBeenCalled();
     expect(persist).not.toHaveBeenCalled();
   });
