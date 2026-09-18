@@ -32,38 +32,50 @@ export default function RelationshipCard({
     ? relationship.bondType.replace(/_/g, ' ')
     : realmLabel;
 
+  const initial = relationship.name.trim().charAt(0).toUpperCase() || '•';
+
   return (
     <motion.button
       onClick={onClick}
-      whileHover={reduceMotion ? undefined : { y: -2, scale: 1.003 }}
+      whileHover={reduceMotion ? undefined : { y: -3, scale: 1.002 }}
       whileTap={reduceMotion ? undefined : { scale: 0.997 }}
       transition={{ duration: 0.2 }}
-      className="group relative w-full overflow-hidden rounded-[1.35rem] border border-jade-sage/10 bg-jade-forest/[0.045] px-5 py-5 text-left transition-colors hover:border-jade-sage/24 hover:bg-jade-forest/[0.09]"
+      className="group relative w-full overflow-hidden rounded-[1.5rem] border border-[#c8c0b2]/60 bg-[#fffaf3]/92 px-5 py-5 text-left shadow-[0_10px_34px_rgba(76,66,51,0.06)] transition-all hover:border-[#98a98b]/65 hover:bg-[#fffdf8] hover:shadow-[0_16px_42px_rgba(76,66,51,0.10)] md:px-6 md:py-6"
+      data-relational-presence
     >
       <motion.span
         aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -top-20 h-40 w-40 rounded-full bg-jade-sage/[0.045] blur-3xl"
-        whileHover={reduceMotion ? undefined : { scale: 1.15, x: -8, y: 6 }}
+        className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#dce7d4]/55 blur-3xl"
+        whileHover={reduceMotion ? undefined : { scale: 1.12, x: -8, y: 6 }}
       />
 
-      <div className="relative flex items-start justify-between gap-6">
+      <div className="relative flex items-start gap-4 md:gap-5">
+        <div
+          aria-hidden="true"
+          className="mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#a8b49c]/55 bg-[#edf2e8] text-sm font-light text-[#536853] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]"
+        >
+          {initial}
+        </div>
+
         <div className="min-w-0 flex-1">
-          <div className="text-xl font-extralight tracking-wide text-jade-jade transition-colors group-hover:text-jade-sage">
+          <div className="text-xl font-light tracking-wide text-[#3f5544] transition-colors group-hover:text-[#304235]">
             {relationship.name}
           </div>
+
           {descriptor && (
-            <div className="mt-1 text-xs capitalize tracking-wide text-jade-mineral/58">
+            <div className="mt-1 text-xs capitalize tracking-wide text-[#7b776f]">
               {descriptor}
             </div>
           )}
+
           {relationship.note && (
-            <p className="mt-4 max-w-xl text-sm font-light italic leading-relaxed text-jade-mineral/72">
+            <p className="mt-4 max-w-2xl text-sm font-light italic leading-relaxed text-[#4f4d47] md:text-[15px]">
               “{relationship.note}”
             </p>
           )}
         </div>
 
-        <span className="mt-1 text-jade-mineral/25 transition-all duration-300 group-hover:translate-x-1.5 group-hover:text-jade-sage/70">
+        <span className="mt-2 shrink-0 text-[#7e9275] transition-all duration-300 group-hover:translate-x-1.5 group-hover:text-[#50674f]">
           →
         </span>
       </div>
