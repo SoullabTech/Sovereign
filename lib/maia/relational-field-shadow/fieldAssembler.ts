@@ -60,24 +60,31 @@ export async function loadH8CrossSessionMemberTurns(
 ): Promise<HistoricalMemberRow[]> {
   if (!memberId || !currentSessionId || limit <= 0) return [];
   try {
+    const preference = await query<{ conversational_recall_enabled: boolean | null }>(
+      `SELECT conversational_recall_enabled
+         FROM members
+        WHERE id = $1
+        LIMIT 1`,
+      [memberId],
+    );
+    if (preference.rows?.[0]?.conversational_recall_enabled !== true) return [];
+
     const result = await query<{
       id: string;
       exchangeId: string | null;
       content: string;
       createdAt: string;
     }>(
-      `SELECT t.id::text AS id,
-              t.exchange_id::text AS "exchangeId",
-              t.content,
-              t.created_at::text AS "createdAt"
-         FROM conversation_turns t
-         JOIN members m ON m.id = t.user_id
-        WHERE t.user_id = $1
-          AND m.conversational_recall_enabled IS TRUE
-          AND t.role = 'user'
-          AND t.session_id IS NOT NULL
-          AND t.session_id <> $2
-        ORDER BY t.created_at DESC, t.seq DESC
+      `SELECT id::text AS id,
+              exchange_id::text AS "exchangeId",
+              content,
+              created_at::text AS "createdAt"
+         FROM conversation_turns
+        WHERE user_id = $1
+          AND role = 'user'
+          AND session_id IS NOT NULL
+          AND session_id <> $2
+        ORDER BY created_at DESC, seq DESC
         LIMIT $3`,
       [memberId, currentSessionId, limit],
     );
