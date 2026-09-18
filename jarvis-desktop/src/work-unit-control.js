@@ -10,6 +10,7 @@ const { execFile, execFileSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 const { childEnv, resolveNodeBinary } = require('./child-env.js');
 const FRONTIER = require('./frontier-worker.js');
+const CWUV2 = require('./canonical-work-unit-v2.js');
 
 const MAX_LOG_CHARS = 12000;
 const RUN_TIMEOUT_MS = 10 * 60 * 1000;
@@ -286,6 +287,13 @@ async function r5bContext(root, workUnitId, providerId, opts = {}) {
 }
 
 async function executionAuthorizationPreview(root, workUnitId, providerId, opts = {}) {
+  if (CWUV2.existsCanonicalV2(workUnitId, opts.env || process.env)) {
+    return {
+      ok: false,
+      status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+      reason: 'Canonical W0.v2 Work Units do not expose R5B execution authorization in I4.',
+    };
+  }
   const ctx = await r5bContext(root, workUnitId, providerId, opts);
   if (!ctx.ok) {
     return {
@@ -314,6 +322,13 @@ async function executionAuthorizationPreview(root, workUnitId, providerId, opts 
 }
 
 async function authorizeExecutionOnce(root, workUnitId, providerId, opts = {}) {
+  if (CWUV2.existsCanonicalV2(workUnitId, opts.env || process.env)) {
+    return {
+      ok: false,
+      status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+      reason: 'Canonical W0.v2 Work Units do not create provider execution authority in I4.',
+    };
+  }
   const ctx = await r5bContext(root, workUnitId, providerId, opts);
   if (!ctx.ok) {
     return {
@@ -453,6 +468,13 @@ async function executeResolvedProvider(
 
 async function runProvider(root, req, opts = {}) {
   const id = String(req?.work_unit_id || '');
+  if (CWUV2.existsCanonicalV2(id, opts.env || process.env)) {
+    return {
+      ok: false,
+      status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+      reason: 'Canonical W0.v2 Work Units cannot use legacy run-provider.',
+    };
+  }
   const providerId = String(req?.provider_id || '');
   const model = req?.model ? String(req.model) : '';
   if (!id || !providerId) {
@@ -503,6 +525,13 @@ async function runProvider(root, req, opts = {}) {
 
 async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) {
   const sourceEnv = opts.env || process.env;
+  if (CWUV2.existsCanonicalV2(workUnitId, sourceEnv)) {
+    return {
+      ok: false,
+      status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+      reason: 'Canonical W0.v2 Work Units cannot execute providers in I4.',
+    };
+  }
   const home = homeOf(sourceEnv);
   const store = await importBound(
     root,

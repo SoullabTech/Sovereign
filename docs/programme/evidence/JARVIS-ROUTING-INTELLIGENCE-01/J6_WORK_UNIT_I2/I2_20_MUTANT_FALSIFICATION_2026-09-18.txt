@@ -1,0 +1,22 @@
+PASS  F1 — model identity without valid route participant is refused
+PASS  F2 — model identity without valid transport binding is refused
+PASS  F3 — family mismatch between route and model identity is refused
+PASS  F4 — provider/model mismatch with transport binding is refused
+PASS  F5 — retry changing governed model identity is refused
+PASS  F6 — retry cannot be used as independent verifier evidence
+PASS  F7 — same-family different-provider review is not independent
+PASS  F8 — independent review using primary route participant is refused
+PASS  F9 — independent review using same model family as target is refused
+PASS  F10 — builder cannot verify itself
+PASS  F11 — failed attempt cannot be overwritten by later success
+PASS  F12 — append cannot mutate an earlier immutable record
+PASS  F13 — wrapper exit zero cannot override durable nonzero exit
+PASS  F14 — recommended_next_action=reject cannot map completed
+PASS  F15 — evidence_sufficient=false cannot map completed
+PASS  F16 — escalation_required=true cannot map completed
+PASS  F17 — model prose MERGED/DEPLOYED/CLOSED cannot change Work Unit state
+PASS  F18 — W4.v2 has no lifecycle transition authority
+PASS  F19 — attempt identity must match exact transport/model provenance
+PASS  F20 — unknown attempt/result fields cannot widen standing or authority
+
+20 passed · 0 failed

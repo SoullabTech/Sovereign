@@ -1,0 +1,14 @@
+J6-WORK-UNIT-INTEGRATION-01 exact substrate hashes
+Canonical subject: c6ed841f8ebc378031b5c3fa0262e367a42dc3e8
+W1-W5 merge subject: fab09573bea7a45e77df89d0975afb3312769f99
+J5 donor: e9f803771583884793a583f13655cadfa055f4f3
+
+f5c1734d7a4049125880564ec1e48f9ad0978d171e4889dfceaa1321f558821e  scripts/builder/work-unit-v1.mjs
+b8a13aa20106440dd945ef1424b37828e10458e1f7161c8769a58b45033a6f1e  scripts/builder/work-unit-lifecycle-v1.mjs
+ab382b733a250c457dbbc2c04772f72899057a5f2a011f9706c6ae54ec84b582  scripts/builder/work-unit-routing-v1.mjs
+b34d11edb6786cd0eba58d0091211619fe024e924b0a380c749635ebb93a40fb  scripts/builder/work-unit-ledger-v1.mjs
+2837520e2f4e27aed067a84a2f8148a8b1be2436f71a57aa21a4c06d72316b4f  canonical R1.v1 routing-intelligence.mjs
+84b2fe9e7e84fcb7833ca57ccc4bed298c303e8d17946b585981f696e7a106ef  J5 donor routing-intelligence.mjs at e9f803771...
+8b1be3ae07550a4dd1a3fd27af78a0ddfde5189bfeec475408da8e75be6562bc  current compatibility routing-intelligence-j6.mjs
+
+The four W1-W5 modules are byte-identical at fab09573... and c6ed841f...

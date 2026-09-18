@@ -1,0 +1,18 @@
+I1 donor admission for I2
+
+I2 was constructed from canonical:
+  caddb904c7cfddcec0da0888a98bfb8795ae23d2
+
+The proven I1 candidate:
+  e4cfc1cbcd88fe1d714f0d11a75528237110ef8e
+
+was used only as governed donor material. The I1 branch was not merged or rebased.
+
+The five successor modules were admitted byte-for-byte from the exact I1 donor:
+  work-unit-v2.mjs
+  work-unit-lifecycle-v2.mjs
+  routing-intelligence-j5-v1.mjs
+  work-unit-routing-v2.mjs
+  work-unit-transport-v1.mjs
+
+I2 adds W4.v2 provenance plus DR1.v1 durable-result mapping above that exact substrate.

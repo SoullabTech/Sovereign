@@ -19,6 +19,7 @@ const CONTINUITY = require('./continuity.js');
 const FRONTIER = require('./frontier-worker.js');
 const WUC = require('./work-unit-control.js');
 const OPWU = require('./operator-work-unit.js');
+const CWUV2 = require('./canonical-work-unit-v2.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
@@ -733,7 +734,7 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 });
 
 
-async function computeRoutingPreview(root, spec) {
+async function computeLegacyRoutingPreview(root, spec) {
   const routePath = path.join(root, 'scripts', 'builder', 'routing-intelligence.mjs');
   const integrityPath = path.join(root, 'scripts', 'builder', 'routing-route-integrity.mjs');
   if (!fs.existsSync(routePath) || !fs.existsSync(integrityPath)) {
@@ -757,6 +758,20 @@ async function computeRoutingPreview(root, spec) {
   };
 }
 
+function currentCanonicalSha(root) {
+  return execFileSync('git', ['rev-parse', 'HEAD'], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: childEnv(process.env).env,
+  }).trim();
+}
+
+function desktopHumanActorId() {
+  const username = String(os.userInfo().username || 'operator').replace(/[^a-zA-Z0-9._-]/g, '-');
+  return 'human:jarvis-desktop:' + username;
+}
+
 // Governed provider-review Work Unit control. ONE narrow channel with bounded
 // actions. R3 preview remains pre-create and non-executing; J6 route-plan remains
 // post-create and derives authority from the stored Work Unit. MAIN owns repository
@@ -772,17 +787,30 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       return { ok: true, status: 'COMPLETED', providers: await WUC.providers(root, { env: childEnv(process.env).env, home: os.homedir() }) };
     }
     if (action === 'preview-route') {
-      return await computeRoutingPreview(root, req?.spec || {});
+      if (req?.mode === 'canonical-v2') {
+        return await CWUV2.prospectivePreview(root, req?.spec || {}, {
+          canonicalSha: currentCanonicalSha(root),
+          nowMs: Date.now(),
+          env: process.env,
+        });
+      }
+      return await computeLegacyRoutingPreview(root, req?.spec || {});
     }
     if (action === 'create') {
-      const canonicalSha = execFileSync('git', ['rev-parse', 'HEAD'], {
-        cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env,
-      }).trim();
+      const canonicalSha = currentCanonicalSha(root);
       const spec = req?.spec || {};
+      if (req?.mode === 'canonical-v2') {
+        return await CWUV2.createCanonicalV2(root, spec, {
+          canonicalSha,
+          nowMs: Date.now(),
+          env: process.env,
+          actorId: desktopHumanActorId(),
+        });
+      }
       let routeRecord = null;
       let routeDigest = null;
       if (spec.routing && typeof spec.routing === 'object') {
-        const preview = await computeRoutingPreview(root, spec);
+        const preview = await computeLegacyRoutingPreview(root, spec);
         if (!preview.ok) return preview;
         routeRecord = preview.route_record;
         routeDigest = preview.route_digest;
@@ -817,7 +845,65 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
     }
     if (action === 'status') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return await CWUV2.statusCanonicalV2(root, req.work_unit_id, {
+          env: process.env,
+          actorId: desktopHumanActorId(),
+        });
+      }
       return await WUC.status(root, req.work_unit_id);
+    }
+    if (action === 'canonical-bound') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.transitionCanonicalV2(root, req.work_unit_id, 'BOUNDED', {
+        env: process.env,
+        actorId: desktopHumanActorId(),
+      });
+    }
+    if (action === 'canonical-authorize') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.transitionCanonicalV2(root, req.work_unit_id, 'AUTHORIZED', {
+        env: process.env,
+        actorId: desktopHumanActorId(),
+      });
+    }
+    if (action === 'canonical-route') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.bindCanonicalRouteV2(root, req.work_unit_id, {
+        env: process.env,
+        actorId: desktopHumanActorId(),
+      });
+    }
+    if (action === 'canonical-bind-transport') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.route_participant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid route_participant_id.' };
+      }
+      return await CWUV2.bindCanonicalTransportV2(
+        root,
+        req.work_unit_id,
+        req.route_participant_id,
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-adjudicate') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.adjudicateCanonicalV2(
+        root,
+        req.work_unit_id,
+        {
+          decision: req?.decision,
+          basis_refs: Array.isArray(req?.basis_refs) ? req.basis_refs : [],
+        },
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-close') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.closeCanonicalV2(root, req.work_unit_id, {
+        env: process.env,
+        actorId: desktopHumanActorId(),
+      });
     }
     if (action === 'route-plan') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
@@ -830,6 +916,13 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       }, { env: childEnv(process.env).env, home: os.homedir() });
     }
     if (action === 'execution-auth-preview') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
         return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
@@ -842,6 +935,13 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       );
     }
     if (action === 'authorize-execution-once') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
         return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
@@ -854,6 +954,13 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       );
     }
     if (action === 'confirm-execute') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (!/^r5b-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
         return { ok: false, status: 'REFUSED', reason: 'Invalid grant_id.' };
@@ -866,6 +973,13 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       );
     }
     if (action === 'revoke-execution-grant') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (!/^r5b-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
         return { ok: false, status: 'REFUSED', reason: 'Invalid grant_id.' };
@@ -878,6 +992,13 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
       );
     }
     if (action === 'run-provider') {
+      if (safeId(req?.work_unit_id) && CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
+        return {
+          ok: false,
+          status: 'CANONICAL_V2_EXECUTION_DISCONNECTED',
+          reason: 'Canonical W0.v2 Work Units expose no provider execution action in I4; R4/R5A remain a later execution membrane.',
+        };
+      }
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
         return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };

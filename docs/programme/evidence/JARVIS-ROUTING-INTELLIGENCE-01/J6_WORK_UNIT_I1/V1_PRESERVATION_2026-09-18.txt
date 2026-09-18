@@ -1,0 +1,12 @@
+I1 historical compatibility law
+
+The following existing modules are not modified by I1:
+  scripts/builder/work-unit-v1.mjs
+  scripts/builder/work-unit-lifecycle-v1.mjs
+  scripts/builder/work-unit-routing-v1.mjs
+  scripts/builder/work-unit-ledger-v1.mjs
+
+Their canonical proof suites remain green:
+  22/22, 27/27, 28/28, 31/31, with W5 22/22.
+
+R4 and R5A also remain green at 24/24 and 20/20.

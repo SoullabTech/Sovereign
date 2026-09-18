@@ -1,0 +1,16 @@
+I3 donor admission for I4
+
+I4 was constructed from canonical:
+  f0063747979b8104282e3f482dcd91ec6c208ad0
+
+The proven I3 candidate:
+  8ff0e1889b9eb5b619079063c29123338548bc34
+
+was used only as governed donor material. The I3 branch was not merged, rebased,
+force-pushed, amended, or otherwise mutated.
+
+The exact W0.v2/W2.v2/J5.v1/W3.v2/W3T.v1/W4.v2/DR1.v1/W5.v2 substrate and proofs
+were admitted from that candidate.
+
+I4 then adds Desktop canonical convergence above that exact substrate while preserving
+current canonical R5B for LEGACY / COMPATIBILITY Work Units.

@@ -1,0 +1,21 @@
+I2 donor admission for I3
+
+I3 was constructed from canonical:
+  8c8525eae316f21eeb844ba7af4af7ab1476f461
+
+The proven I2 candidate:
+  fdcff64ec0252cb4ec6fdcff160f30607760d2eb
+
+was used only as governed donor material. The I2 branch was not merged, rebased,
+force-pushed, amended, or otherwise mutated.
+
+All seven successor runtime modules were admitted byte-for-byte:
+  work-unit-v2.mjs
+  work-unit-lifecycle-v2.mjs
+  routing-intelligence-j5-v1.mjs
+  work-unit-routing-v2.mjs
+  work-unit-transport-v1.mjs
+  work-unit-ledger-v2.mjs
+  durable-result-v1.mjs
+
+I3 adds only W5.v2 synthetic composition plus its proof/evidence.
