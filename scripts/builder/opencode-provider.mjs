@@ -9,6 +9,28 @@
  */
 import { loadWorkUnit, derivePermissionEnvelope } from './work-unit.mjs';
 
+const E0_TASK_TEXT = 'E0_TASK_TEXT';
+const E3_EXTERNAL_REPO_BUNDLE = 'E3_EXTERNAL_REPO_BUNDLE';
+
+const isNoFilesSentinel = (value) => typeof value === 'string' && /^NO FILES\b/i.test(value.trim());
+
+export function deriveWorkUnitEvidenceClass(workUnit, { external = false } = {}) {
+  const declared = workUnit?.routing?.evidence_class ?? workUnit?.evidence_class ?? null;
+  const hasRepositoryFiles = Array.isArray(workUnit?.allowed_files)
+    && workUnit.allowed_files.some((entry) => typeof entry === 'string' && !isNoFilesSentinel(entry));
+
+  // LOCAL_ONLY / sensitive classifications may never be weakened by transport choice.
+  if (declared === 'E2_CONTINUITY_LOCAL' || declared === 'E4_SENSITIVE_OR_PRODUCTION') return declared;
+
+  // Repository material is E1 while held locally, but crossing an external membrane
+  // makes the exact same bytes E3 and therefore requires the separate disclosure act.
+  if (external && hasRepositoryFiles) return E3_EXTERNAL_REPO_BUNDLE;
+  if (workUnit?.disclosure?.repository_read_only_external === true) return E3_EXTERNAL_REPO_BUNDLE;
+  if (declared) return declared;
+  if (hasRepositoryFiles) return 'E1_REPOSITORY_LOCAL';
+  return E0_TASK_TEXT;
+}
+
 export const OPENCODE_PROVIDERS = Object.freeze({
   'qwen-local': Object.freeze({
     opencode_provider: 'ollama',
@@ -94,7 +116,8 @@ function normalizeModel(spec, requested) {
 }
 
 export function resolveOpenCodeProvider({
-  providerId, model, permissionEnvelope, env = process.env, skipCredentialCheck = false,
+  providerId, model, permissionEnvelope, evidenceClass = E0_TASK_TEXT,
+  env = process.env, skipCredentialCheck = false,
 }) {
   const spec = OPENCODE_PROVIDERS[providerId];
   if (!spec) return refused('UNKNOWN_PROVIDER');
@@ -110,6 +133,11 @@ export function resolveOpenCodeProvider({
   }
   if (spec.external_network && permissionEnvelope.external_network !== true) {
     return refused('EXTERNAL_NETWORK_NOT_AUTHORIZED');
+  }
+  if (spec.external_network
+      && evidenceClass === E3_EXTERNAL_REPO_BUNDLE
+      && permissionEnvelope.external_repo_disclosure !== true) {
+    return refused('EXTERNAL_REPOSITORY_DISCLOSURE_NOT_AUTHORIZED');
   }
   // OpenCode Zen Free currently rejects JARVIS's custom read-only agent and any
   // equivalent permission override with FreeTierError. Keep it registered for
@@ -134,6 +162,7 @@ export function resolveOpenCodeProvider({
     model_ref: `${spec.opencode_provider}/${selectedModel}`,
     agent: spec.execution_adapter === 'opencode' ? 'jarvis-readonly' : null,
     external_network: spec.external_network,
+    evidence_class: evidenceClass,
     metered_provider: spec.metered_provider,
     credential_env: spec.credential_env ?? null,
     execution_adapter: spec.execution_adapter,
@@ -145,10 +174,12 @@ export function resolveWorkUnitProvider(
 ) {
   const workUnit = loadWorkUnit(workUnitId);
   if (!workUnit) return refused('WORK_UNIT_NOT_FOUND');
+  const spec = OPENCODE_PROVIDERS[providerId];
   return resolveOpenCodeProvider({
     providerId,
     model,
     permissionEnvelope: derivePermissionEnvelope(workUnit),
+    evidenceClass: deriveWorkUnitEvidenceClass(workUnit, { external: spec?.external_network === true }),
     env,
     skipCredentialCheck,
   });

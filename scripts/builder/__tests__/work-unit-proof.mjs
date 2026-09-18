@@ -137,6 +137,8 @@ console.log('\n=== U6: authority preservation across worker/provider change ==='
     JSON.stringify(envBefore) === JSON.stringify(envAfter));
   assert('envelope never expands beyond the default authorized acts without explicit packet authorship',
     envBefore.production_write === false && envBefore.deploy === false);
+  assert('external repository disclosure is a distinct permission and defaults closed',
+    envBefore.external_repo_disclosure === false);
   assert('envelope is provider-agnostic — no vendor-specific permission strings',
     !JSON.stringify(envBefore).includes('permission-mode') && !JSON.stringify(envBefore).includes('bypassPermissions'));
   assert('integration authority is explicit and does not default to the worker',

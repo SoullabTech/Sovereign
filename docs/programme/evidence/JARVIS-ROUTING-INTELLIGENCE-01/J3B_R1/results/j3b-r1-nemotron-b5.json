@@ -1,0 +1,23 @@
+{
+  "work_unit_id": "j3b-r1-nemotron-b5",
+  "lane": "tinker",
+  "model": "tinker/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16",
+  "starting_sha": "5b2f4d556",
+  "ending_sha": null,
+  "files_changed": [],
+  "summary": "delegate exited 0; see log_path for transcript",
+  "exit_code": 0,
+  "tests_run": [],
+  "test_results": "pass",
+  "typecheck_result": "not_run",
+  "build_result": "not_run",
+  "evidence": "PASS: test -z \"${TINKER_API_KEY:-}\"\\nPASS: test -z \"$(git status --porcelain)\"\\n",
+  "uncertainties": [],
+  "scope_deviations": [],
+  "escalation_required": false,
+  "unresolved_questions": [],
+  "recommended_next_action": "review-diff",
+  "log_path": "/private/tmp/jarvis-routing-j3b-r1-ain/logs/j3b-r1-nemotron-b5.log",
+  "duration_s": 22,
+  "attempts": 1
+}

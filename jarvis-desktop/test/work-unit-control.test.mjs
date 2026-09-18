@@ -31,13 +31,34 @@ test('explicit escalation becomes Needs Kelly', () => {
   assert.equal(r.standing, 'NEEDS_KELLY');
 });
 
-test('two clean structured attempts present evidence without automating a semantic verdict', () => {
+test('two clean independent model families present evidence without automating a semantic verdict', () => {
   const r = C.reconcileAttempts([
-    { attempt_number: 1, test_results: 'pass', summary: 'delegate exited 0', recommended_next_action: 'review-diff' },
-    { attempt_number: 2, test_results: 'pass', summary: 'delegate exited 0', recommended_next_action: 'review-diff' },
+    { attempt_number: 1, lane: 'opencode', model: 'ollama/qwen3-coder:30b', test_results: 'pass', summary: 'delegate exited 0', recommended_next_action: 'review-diff' },
+    { attempt_number: 2, lane: 'opencode', model: 'ollama/gpt-oss:20b', test_results: 'pass', summary: 'delegate exited 0', recommended_next_action: 'review-diff' },
   ]);
   assert.equal(r.standing, 'EVIDENCE_PRESENTED');
+  assert.equal(r.independent_review_count, 2);
   assert.match(r.summary, /founder review/i);
+});
+
+test('same-model retry does not satisfy independent review', () => {
+  const r = C.reconcileAttempts([
+    { attempt_number: 1, lane: 'opencode', model: 'ollama/qwen3-coder:30b', test_results: 'pass', summary: 'delegate exited 0', recommended_next_action: 'review-diff' },
+    { attempt_number: 2, lane: 'opencode', model: 'ollama/qwen3-coder:30b', test_results: 'pass', summary: 'delegate exited 0', recommended_next_action: 'review-diff' },
+  ]);
+  assert.equal(r.standing, 'SECOND_REVIEW_OWED');
+  assert.equal(r.independent_review_count, 1);
+});
+
+test('durable provider result outranks wrapper process success', () => {
+  const r = C.durableProviderOutcome(
+    { exit_code: 0 },
+    { exit_code: 4, test_results: 'pass', recommended_next_action: 'reject', summary: 'delegate exited 4' },
+  );
+  assert.equal(r.ok, false);
+  assert.equal(r.status, 'FAILED');
+  assert.equal(r.wrapper_exit_code, 0);
+  assert.equal(r.durable_exit_code, 4);
 });
 
 test('different recommendations surface disagreement instead of choosing a winner', () => {
@@ -91,4 +112,71 @@ test('Desktop reports Keychain-backed Tinker AVAILABLE without a launch-environm
   assert.equal(inkling?.state, 'AVAILABLE');
   assert.equal(inkling?.credential_source, 'keychain');
   assert.match(inkling?.detail || '', /not loaded into JARVIS/i);
+});
+
+test('route-plan derives authority and task evidence from the stored Work Unit, not caller-supplied grants', async () => {
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'j6-route-plan-'));
+  const oldHome = process.env.AIN_DELEGATION_HOME;
+  process.env.AIN_DELEGATION_HOME = home;
+  try {
+    fs.mkdirSync(path.join(home, 'packets'), { recursive: true });
+    const id = 'route-plan-stored-authority';
+    fs.writeFileSync(path.join(home, 'packets', id + '.json'), JSON.stringify({
+      work_unit_id: id,
+      title: 'Stored authority route proof',
+      objective: 'Review architecture evidence',
+      execution_lane: 'opencode',
+      canonical_sha: '0123456789abcdef0123456789abcdef01234567',
+      branch: 'chore/ain-delegate-' + id,
+      worktree: null,
+      governing_authority: 'test fixture',
+      established_facts: [],
+      allowed_files: ['docs/programme/JARVIS-ROUTING-INTELLIGENCE-01_J5_FOUNDER_RULING_2026-09-18.md'],
+      prohibited_files_actions: [],
+      acceptance_criteria: [],
+      verification_commands: [],
+      escalation_conditions: [],
+      max_attempts: 2,
+      expected_output: 'review',
+      capability: 'governed-provider-review',
+      task_class: 'independent_evaluation',
+      authorized_acts: ['repo.read'],
+      not_authorized_acts: [
+        'network.external', 'provider.spend', 'repo.disclose:external-readonly',
+        'repo.write:worktree', 'production.read', 'production.write', 'deploy', 'authority.change',
+      ],
+      routing: {
+        evidence_class: 'E1_REPOSITORY_LOCAL',
+        task_shape: 'ARCHITECTURE_REASONING',
+      },
+    }, null, 2));
+
+    const planned = await C.planWorkUnitRouting(process.cwd(), id, {
+      requested_external_family: 'NEMOTRON',
+      permission_envelope: {
+        external_network: true,
+        external_repo_disclosure: true,
+        provider_spend: true,
+      },
+    }, {
+      env: { PATH: process.env.PATH, USER: 'soullab' },
+      keychainProbe: () => true,
+    });
+
+    assert.equal(planned.ok, true);
+    assert.equal(planned.route_plan.primary_model_family, 'GPT_OSS');
+    assert.equal(planned.route_plan.independent_review_model_family, 'QWEN');
+    assert.equal(planned.route_plan.status, 'HOLD');
+    assert.ok(planned.route_plan.blockers.includes('EXTERNAL_NETWORK_NOT_AUTHORIZED'));
+    assert.equal(planned.route_plan.provenance.authority.external_network, false);
+    assert.equal(planned.route_plan.provenance.authority.external_repo_disclosure, false);
+    assert.equal(planned.route_plan.provenance.authority.provider_spend, false);
+  } finally {
+    if (oldHome === undefined) delete process.env.AIN_DELEGATION_HOME;
+    else process.env.AIN_DELEGATION_HOME = oldHome;
+    fs.rmSync(home, { recursive: true, force: true });
+  }
 });

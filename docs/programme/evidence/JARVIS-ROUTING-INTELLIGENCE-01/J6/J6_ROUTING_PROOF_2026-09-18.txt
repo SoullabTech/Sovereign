@@ -1,0 +1,19 @@
+
+=== J4 mutant replay against J6 ===
+PASS M1 deterministic capability wins before model routing
+PASS M2 LOCAL_ONLY evidence holds external routing
+PASS M3 Nemotron CODE_GROUNDED selection is refused
+PASS M4 same-family retries leave second review owed
+PASS M5 unavailable Nemotron transport holds instead of substituting Inkling
+PASS M6 E3 requires load-bearing repository disclosure authority
+PASS M7 independent model consensus stops at EVIDENCE_PRESENTED
+PASS M8 durable provider failure outranks wrapper exit zero
+PASS M9 external budgets are bounded and never auto-expand
+PASS M9 local adapter profile is explicit rather than pretending the same raw ceiling is enforced
+PASS explicit eligible external-only task can become a non-executing external review plan
+PASS M10 model-authored lifecycle labels do not advance host standing
+PASS host lifecycle treats nonzero durable provider result as failed
+PASS CODE_GROUNDED routes Qwen primary plus GPT-OSS independent review
+PASS route decision carries structured provenance and never execution authority
+
+15 passed · 0 failed

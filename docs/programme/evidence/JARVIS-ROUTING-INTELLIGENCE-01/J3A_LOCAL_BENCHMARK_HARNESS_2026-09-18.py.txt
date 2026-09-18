@@ -1,0 +1,149 @@
+import json, time, urllib.request, pathlib
+
+ENDPOINT='http://127.0.0.1:11434/api/chat'
+MODELS=[
+  {'name':'qwen3-coder:30b','think':False},
+  {'name':'gpt-oss:20b','think':'low'},
+]
+OUT=pathlib.Path('/private/tmp/jarvis-routing-j3a-chat-results.jsonl')
+
+TASKS=[
+{
+'id':'B1_CODE_BOUNDARY',
+'prompt':"""Return ONLY one JSON object with keys verdict, defect, invariant, minimal_fix.
+Policy:
+- every external provider requires external_network=true;
+- every metered provider additionally requires provider_spend=true.
+Code:
+function allowed(spec, envelope) {
+  if (!envelope.repo_read) return false;
+  if (spec.external_network && !envelope.external_network && !envelope.provider_spend) return false;
+  return true;
+}
+Assume spec.external_network=true and spec.metered_provider=true.
+Identify the exact authorization defect. verdict must be FAIL. Do not discuss style.""",
+'checks':[
+ ['verdict_fail',['"verdict":"FAIL"','"verdict": "FAIL"']],
+ ['names_external_network',['external_network']],
+ ['names_provider_spend',['provider_spend']],
+ ['detects_independent_gates',['independent','separate','regardless','both','each','&&','and instead of or','and condition']]
+]
+},
+{
+'id':'B2_AUTHORITY_REASONING',
+'prompt':"""Return ONLY one JSON object with keys admissible, blocking_reason, next_state.
+Facts:
+- Work Unit authorizes repo.read.
+- network.external is NOT authorized.
+- provider.spend IS authorized.
+- selected provider is Inkling-Tinker, which is external and metered.
+- provider registration never creates Work Unit authority.
+Question: Is this provider attempt admissible? Use the smallest blocking reason. next_state must preserve the Work Unit rather than inventing permission.""",
+'checks':[
+ ['admissible_false',['"admissible":false','"admissible": false']],
+ ['network_block',['network.external','external_network','external network']],
+ ['not_permission_invention',['not authorized','missing','held','refus','await']],
+ ['preserves_state',['hold','held','refus','await','blocked']]
+]
+},
+{
+'id':'B3_ADVERSARIAL_FALSIFICATION',
+'prompt':"""Return ONLY one JSON object with keys merge_authorized, falsifier, next_state.
+Facts:
+- Two independent models both recommend MERGE.
+- Mechanical tests are green.
+- Governing law says model/provider output is evidence, never authority.
+- Founder has not authorized merge.
+Question: Does two-model agreement authorize merge? Give the smallest discriminating falsifier of the claim 'two-model agreement creates merge authority'. next_state should name the strongest legitimate state before founder action.""",
+'checks':[
+ ['merge_false',['"merge_authorized":false','"merge_authorized": false']],
+ ['authority_boundary',['authority','founder']],
+ ['falsifier_present',['falsifier']],
+ ['evidence_presented',['EVIDENCE_PRESENTED','evidence presented']]
+]
+},
+{
+'id':'B4_LONG_HORIZON_DECOMPOSITION',
+'prompt':"""Return ONLY one JSON object with keys ordered_acts, stop_after, forbidden_shortcut.
+Rules:
+- First establish repository truth by census.
+- Then write a behavioral contract.
+- A founder ruling is required before build because the contract changes authority.
+- Only after that may implementation occur.
+- Verification follows implementation.
+- Merge is not authorized by verification alone.
+Question: Give the correct ordered acts. stop_after must name the point where JARVIS must stop for founder authority before implementation. forbidden_shortcut must name the most tempting invalid jump.""",
+'checks':[
+ ['has_census',['census']],
+ ['has_contract',['contract']],
+ ['founder_before_build',['founder','ruling']],
+ ['verification_after_build',['verify','verification']],
+ ['stop_before_build',['before implementation','before build','founder ruling','contract']]
+]
+},
+{
+'id':'B5_EVIDENCE_SYNTHESIS',
+'prompt':"""Return ONLY one JSON object with keys current_truth, historical_truth, prohibited_claim, next_act.
+Evidence:
+A. canonical branch at SHA C does not contain feature X.
+B. a noncanonical branch at SHA B contains an implementation of feature X and passing branch-local tests.
+C. an older production witness at SHA P predates both B and C and says nothing about X.
+Question: State the strongest current claim. Preserve the noncanonical implementation as historical/branch evidence without calling it canonical or live. Do not infer deployment.""",
+'checks':[
+ ['canonical_current',['canonical']],
+ ['branch_noncanonical',['noncanonical','non-canonical','branch']],
+ ['no_live_claim',['not live','not deployed','cannot claim','unverified','not canonical']],
+ ['production_not_supportive',['production','predate','older','does not']]
+]
+}
+]
+
+def request(model,think,prompt,num_predict=512):
+    payload={
+      'model':model,
+      'messages':[{'role':'user','content':prompt}],
+      'stream':False,'format':'json','think':think,'keep_alive':'15m',
+      'options':{'temperature':0,'num_predict':num_predict,'seed':42}
+    }
+    req=urllib.request.Request(ENDPOINT,data=json.dumps(payload).encode(),headers={'content-type':'application/json'})
+    t0=time.time()
+    with urllib.request.urlopen(req,timeout=300) as r:
+        data=json.load(r)
+    return data,time.time()-t0
+
+def score(text,checks):
+    low=text.lower()
+    return {name:any(a.lower() in low for a in alts) for name,alts in checks}
+
+OUT.unlink(missing_ok=True)
+for spec in MODELS:
+    model,think=spec['name'],spec['think']
+    print(f'WARM {model} think={think}',flush=True)
+    try:
+        data,wall=request(model,think,'Reply with JSON: {"ready":true}',64)
+        m=data.get('message') or {}
+        rec={'kind':'warm','model':model,'think':think,'wall_s':round(wall,3),
+             'load_ns':data.get('load_duration',0),'eval_ns':data.get('eval_duration',0),
+             'content':m.get('content',''),'thinking_chars':len(m.get('thinking') or '')}
+    except Exception as e:
+        rec={'kind':'warm','model':model,'think':think,'error':repr(e)}
+    OUT.open('a').write(json.dumps(rec)+'\n'); print(json.dumps(rec),flush=True)
+    if rec.get('error'): continue
+    for task in TASKS:
+        print(f"RUN {model} {task['id']}",flush=True)
+        try:
+            data,wall=request(model,think,task['prompt'])
+            m=data.get('message') or {}
+            text=m.get('content','')
+            checks=score(text,task['checks'])
+            rec={'kind':'task','task':task['id'],'model':model,'think':think,
+                 'wall_s':round(wall,3),'load_ns':data.get('load_duration',0),
+                 'prompt_eval_ns':data.get('prompt_eval_duration',0),'eval_ns':data.get('eval_duration',0),
+                 'prompt_tokens':data.get('prompt_eval_count'),'output_tokens':data.get('eval_count'),
+                 'thinking_chars':len(m.get('thinking') or ''),'checks':checks,
+                 'check_passes':sum(checks.values()),'check_total':len(checks),'response':text}
+        except Exception as e:
+            rec={'kind':'task','task':task['id'],'model':model,'think':think,'error':repr(e)}
+        OUT.open('a').write(json.dumps(rec)+'\n')
+        print(json.dumps({k:v for k,v in rec.items() if k!='response'}),flush=True)
+print('DONE '+str(OUT),flush=True)

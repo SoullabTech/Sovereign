@@ -745,9 +745,10 @@ async function computeRoutingPreview(root, spec) {
 }
 
 // Governed provider-review Work Unit control. ONE narrow channel with bounded
-// actions. MAIN owns repository binding, canonical SHA, Work Unit identity,
-// routing input authority posture, and canonical scripts; the renderer cannot
-// supply a path, shell command, route record, or authority envelope directly.
+// actions. R3 preview remains pre-create and non-executing; J6 route-plan remains
+// post-create and derives authority from the stored Work Unit. MAIN owns repository
+// binding, canonical SHA, Work Unit identity, and canonical scripts; the renderer
+// cannot supply a path, shell command, route record, or authority envelope directly.
 ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
   const root = currentRoot();
   if (!root) return { ok: false, status: 'NO_SUBSTRATE', reason: 'No execution substrate is bound.' };
@@ -797,6 +798,16 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
     if (action === 'status') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       return await WUC.status(root, req.work_unit_id);
+    }
+    if (action === 'route-plan') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      const requested = req?.requested_external_family ? String(req.requested_external_family) : null;
+      if (requested && !/^[A-Z][A-Z0-9_]{2,31}$/.test(requested)) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid requested_external_family.' };
+      }
+      return await WUC.planWorkUnitRouting(root, req.work_unit_id, {
+        requested_external_family: requested,
+      }, { env: childEnv(process.env).env, home: os.homedir() });
     }
     if (action === 'run-provider') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
