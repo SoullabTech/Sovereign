@@ -181,8 +181,15 @@ _read_opencode_credential() {
                 -w 2>/dev/null
             ;;
         NVIDIA_API_KEY)
-            [ -n "${NVIDIA_API_KEY:-}" ] || return 1
-            printf '%s' "$NVIDIA_API_KEY"
+            if [ -n "${NVIDIA_API_KEY:-}" ]; then
+                printf '%s' "$NVIDIA_API_KEY"
+                return 0
+            fi
+            command -v security >/dev/null 2>&1 || return 1
+            security find-generic-password \
+                -a "${USER:-$(id -un)}" \
+                -s "ai.soullab.jarvis.nvidia-api-key" \
+                -w 2>/dev/null
             ;;
         *)
             return 1
@@ -399,9 +406,9 @@ _run_lane() {
         # verification commands do not inherit it.
         if [ -n "$opencode_credential_env" ] && [ -n "$opencode_credential_value" ]; then
             ( cd "$wt" && env "$opencode_credential_env=$opencode_credential_value" \
-                opencode run --pure --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+                opencode run --pure --title "JARVIS $work_unit_id" --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
         else
-            ( cd "$wt" && opencode run --pure --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+            ( cd "$wt" && opencode run --pure --title "JARVIS $work_unit_id" --agent "$opencode_agent" --model "$model" "$prompt" ) > "$log" 2>&1
         fi
         exit_code=$?
         opencode_credential_value=""

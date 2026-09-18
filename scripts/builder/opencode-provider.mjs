@@ -22,8 +22,8 @@ export const OPENCODE_PROVIDERS = Object.freeze({
   }),
   'nemotron-nvidia': Object.freeze({
     opencode_provider: 'nvidia',
-    default_model: 'nemotron-3-ultra-550b-a55b',
-    models: Object.freeze(['nemotron-3-ultra-550b-a55b']),
+    default_model: 'nvidia/nemotron-3-ultra-550b-a55b',
+    models: Object.freeze(['nvidia/nemotron-3-ultra-550b-a55b']),
     external_network: true,
     metered_provider: true,
     credential_env: 'NVIDIA_API_KEY',
@@ -79,6 +79,7 @@ function refused(code) {
 
 function normalizeModel(spec, requested) {
   const value = requested || spec.default_model;
+  if (spec.models.includes(value)) return value;
   const prefix = `${spec.opencode_provider}/`;
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
 }
