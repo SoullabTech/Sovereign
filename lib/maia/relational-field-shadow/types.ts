@@ -73,11 +73,12 @@ export interface HistoricalMemberRow {
   readonly exchangeId: string | null;
   readonly content: string;
   readonly createdAt: string;
+  readonly sourceKind?: 'conversation_turn' | 'cross_session_turn';
 }
 
 export interface EvidenceManifestItem {
   readonly evidenceId: string;
-  readonly sourceKind: 'current_request' | 'conversation_turn';
+  readonly sourceKind: 'current_request' | 'conversation_turn' | 'cross_session_turn';
   readonly sourceRowId: string | null;
   readonly exchangeId: string | null;
   readonly contentSha256: string;
