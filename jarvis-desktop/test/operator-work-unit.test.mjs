@@ -122,6 +122,12 @@ test('route-bound Work Unit stores route evidence but carries no executable prov
   assert.equal(r.ok, true, JSON.stringify(r.errors));
   assert.deepEqual(r.packet.provider_strategy, []);
   assert.deepEqual(r.packet.authorized_acts, ['repo.read']);
+  assert.equal(r.packet.authorized_acts.some((act) => act.startsWith('provider.execute:')), false);
+  assert.equal(r.packet.not_authorized_acts.includes('network.external'), false);
+  assert.equal(r.packet.not_authorized_acts.includes('provider.spend'), false);
+  assert.equal(r.packet.not_authorized_acts.includes('repo.disclose:external-readonly'), false);
+  assert.ok(r.packet.not_authorized_acts.includes('repo.write:worktree'));
+  assert.ok(r.packet.not_authorized_acts.includes('deploy'));
   assert.equal(r.packet.disclosure.repository_read_only_external, false);
   assert.equal(r.packet.disclosure.provider_spend_authorized, false);
   assert.equal(r.packet.routing_intelligence.execution_connected, false);

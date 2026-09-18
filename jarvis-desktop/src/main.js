@@ -829,6 +829,54 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
         requested_external_family: requested,
       }, { env: childEnv(process.env).env, home: os.homedir() });
     }
+    if (action === 'execution-auth-preview') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
+      }
+      return await WUC.executionAuthorizationPreview(
+        root,
+        req.work_unit_id,
+        req.provider_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'authorize-execution-once') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid provider_id.' };
+      }
+      return await WUC.authorizeExecutionOnce(
+        root,
+        req.work_unit_id,
+        req.provider_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'confirm-execute') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^r5b-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid grant_id.' };
+      }
+      return await WUC.confirmAuthorizedExecution(
+        root,
+        req.work_unit_id,
+        req.grant_id,
+        { env: process.env },
+      );
+    }
+    if (action === 'revoke-execution-grant') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^r5b-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid grant_id.' };
+      }
+      return await WUC.revokeExecutionGrant(
+        root,
+        req.work_unit_id,
+        req.grant_id,
+        { env: process.env },
+      );
+    }
     if (action === 'run-provider') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.provider_id || ''))) {
