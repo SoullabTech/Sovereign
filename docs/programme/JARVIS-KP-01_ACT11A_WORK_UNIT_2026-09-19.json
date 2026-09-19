@@ -1,0 +1,73 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "ACT 11A",
+  "title": "Narrow Epistemic Join Contract Clarification",
+  "date": "2026-09-19",
+  "status": "EVIDENCE_READY",
+  "canonical_base": "1ec63baeed4447626554e417d3ac1f2c498bf829",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11",
+    "ACT 12"
+  ],
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "authority": "NARROW_CONSTITUTIONAL_AMENDMENT_ONLY",
+  "programme_disposition": "NARROW CLARIFICATION SUFFICIENT",
+  "findings_addressed": [
+    "Composite warrant formation ambiguity",
+    "Jurisdiction-bounded adoption ambiguity"
+  ],
+  "targeted_evidence": {
+    "cases": "10/10 PASS",
+    "invariants": "10/10 PASS",
+    "mechanism_specific_assumptions": "NONE",
+    "runtime_execution": "NONE",
+    "model_execution": "NONE",
+    "data_class": "SYNTHETIC_ONLY_NO_MEMBER_CLIENT_CLINICAL_PHI_SANCTUARY_OR_PRODUCTION_DATA"
+  },
+  "artifacts": [
+    "docs/programme/JARVIS-KP-01_ACT11A_NARROW_EPISTEMIC_JOIN_CONTRACT_CLARIFICATION_2026-09-19.md",
+    "docs/programme/JARVIS-KP-01_ACT11A_WORK_UNIT_2026-09-19.json",
+    "docs/programme/evidence/JARVIS-KP-01/ACT11A/TARGETED_SYNTHETIC_FALSIFICATION_CORPUS.json",
+    "docs/programme/evidence/JARVIS-KP-01/ACT11A/TARGETED_CLARIFICATION_WITNESS_2026-09-19.md"
+  ],
+  "preserved_unchanged": [
+    "canonical ACT 10",
+    "canonical ACT 11",
+    "canonical ACT 12",
+    "ACT 11 endpoint independence",
+    "ACT 11 join separability",
+    "ACT 11 join authorship integrity",
+    "ACT 11 join provenance integrity",
+    "ACT 11 no endpoint-to-edge authority transfer",
+    "ACT 11 stage integrity",
+    "ACT 11 standing ceiling",
+    "ACT 11 jurisdiction integrity",
+    "ACT 11 boundary integrity",
+    "ACT 11 reference/reliance integrity",
+    "ACT 11 human authority integrity",
+    "ACT 11 corrigibility",
+    "ACT 11 hypothesis viability",
+    "ACT 11 no hidden promotion",
+    "canonical epistemic operation grammar"
+  ],
+  "forbidden": [
+    "runtime enforcement",
+    "schema or migration",
+    "relation or graph implementation",
+    "automated edge creation",
+    "claim ledger implementation",
+    "parser or classifier implementation",
+    "prompt or system-instruction changes",
+    "MAIA behavioral changes",
+    "member-memory mutation",
+    "Living Constellation relationship generation",
+    "automatic promotion",
+    "Work Unit or routing changes",
+    "provider/model changes",
+    "merge",
+    "deployment",
+    "production mutation"
+  ],
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_EXACT_ACT11A_CANDIDATE"
+}
