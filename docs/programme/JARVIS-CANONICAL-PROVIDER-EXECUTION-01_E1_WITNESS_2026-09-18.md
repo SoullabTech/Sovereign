@@ -512,7 +512,25 @@ ACT 11, ACT 12, and all Writer's Studio canonical populations are preserved
 byte-identically from canonical. Only this witness records the R9 freshness
 reconciliation.
 
-Freshness standing: **PASS — ninth authorized freshness lane, eighth completed non-overlapping reconciliation.**
+A tenth authorized freshness act (R10) found canonical still exactly at the
+Founder-authorized target:
+
+`5759ad39b04076ff0973ed8c27f62048b6961fa9`
+
+through MAIA Teaching Intelligence T6 Learner Dialogue Adaptation (PR #1412).
+The `65c45f36… → 5759ad39…` interval adds only the T6 learner dialogue
+adaptation contract, implementation, and test and has **zero intersection with
+the 13 E1 candidate paths**.
+
+R10 therefore merge-forward reconciles exact proven R9 head
+`078dd8d28f5d1e7f53bcdde4b8c7055ced428046` onto exact canonical
+`5759ad39b04076ff0973ed8c27f62048b6961fa9` with zero conflicts. All E1
+implementation/test paths remain byte-identical to `078dd8d2…`; RGR-04, T5,
+ACT 11, ACT 12, all Writer's Studio canonical populations, and the T6
+population are preserved byte-identically from canonical. Only this witness
+records the R10 freshness reconciliation.
+
+Freshness standing: **PASS — tenth authorized freshness lane, ninth completed non-overlapping reconciliation.**
 
 ## 16. Non-events
 
