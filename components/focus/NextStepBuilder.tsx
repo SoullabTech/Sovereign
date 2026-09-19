@@ -164,7 +164,7 @@ export function NextStepBuilder({
     setPhase('done');
 
     setTimeout(() => {
-      onComplete?.({ ...result, stewardship });
+      onComplete?.({ ...result, stewardship: stewardship ?? undefined });
       onClose();
     }, 1500);
   };

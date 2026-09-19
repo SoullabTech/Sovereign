@@ -98,3 +98,8 @@
   .wsr-pure-scroll { padding: 64px 28px 96px !important; }
   .wsr-pure-exit { top: 12px; right: 14px; }
 }
+
+.wsr-page-toolbar { flex-wrap:wrap; }
+.wsr-page-actions { flex-wrap:wrap; max-width:100%; }
+.wsr-page-actions .ws-inline-open { margin-top:0; }
+@media(max-width:900px) { .wsr-page-toolbar { gap:8px !important; padding:10px 16px !important; } .wsr-page-actions { flex-shrink:1 !important; } }

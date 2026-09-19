@@ -128,7 +128,9 @@
 .ws-insight .wsi-passage-grid .wsi-prose { max-height:none; overflow:visible; font-size:18px; line-height:1.75; }
 .ws-maia-listen { display:inline-flex; flex-wrap:wrap; align-items:center; gap:8px; margin:6px 0 10px; font:13px/1.5 system-ui; }
 .ws-maia-listen button { color:inherit; background:transparent; border:1px solid var(--ws-rule); border-radius:6px; padding:7px 10px; cursor:pointer; }
-.ws-section-observations { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+.ws-section-observations { margin:10px 0 18px; font:12px/1.5 system-ui; color:var(--ws-ink-secondary); }
+.ws-section-observations summary { cursor:pointer; padding:6px 0; }
+.ws-section-observation-list { display:flex; flex-wrap:wrap; gap:8px; padding:8px 0; }
 .ws-section-observations:empty { display:none; }
 .ws-section-observations button { border:1px solid var(--ws-rule); border-radius:20px; padding:7px 12px; color:var(--ws-ink-secondary); background:var(--ws-ground-raised); font:12px/1.4 system-ui; cursor:pointer; }
 

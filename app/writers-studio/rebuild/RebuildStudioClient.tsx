@@ -181,6 +181,8 @@ export default function RebuildStudioClient() {
   const [canvasExpanded, setCanvasExpanded] = useState(false);
   const [writingEpoch, setWritingEpoch] = useState(0);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [readingToolsOpen, setReadingToolsOpen] = useState(false);
+  const [editorialVisible, setEditorialVisible] = useState(true);
   const [passageNoteOpen, setPassageNoteOpen] = useState(true);
   const [editorialAnchor, setEditorialAnchor] = useState<HTMLElement | null>(null);
   const [inlinePreview, setInlinePreview] = useState<{ scopeKey: string; original: string; wording: string; changes: boolean } | null>(null);
@@ -879,6 +881,8 @@ export default function RebuildStudioClient() {
 
   const openWorkspace = useCallback((insight?: { readingId: string; key: string }) => {
     setPassageNoteOpen(true);
+    setEditorialVisible(true);
+    setReadingToolsOpen(false);
     if (!workspaceOpen) {
       const scroll = document.querySelector<HTMLElement>('[data-manuscript-scroll]');
       workspaceReturn.current = { focusId, selectedPassage, thread: editorialThread,
@@ -1055,7 +1059,7 @@ export default function RebuildStudioClient() {
         </div>
       )}
 
-      <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : workspaceOpen ? '250px minmax(0, 1fr)' : '286px minmax(520px, 1fr) 390px' }}>
+      <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : !readingToolsOpen ? '230px minmax(0, 1fr)' : '230px minmax(0, 1fr) 350px' }}>
         {!canvasExpanded && (<aside className={`wsr-outline ${mobilePane !== 'outline' ? 'wsr-mobile-hidden' : ''}`} style={{ borderRight: `1px solid ${C.soft}`, background: C.panel, overflowY: 'auto', padding: 16 }}>
           <Link href="/writers-studio" aria-label="Return to all Writer’s Studio works" style={{ display: 'inline-block', color: C.muted, fontSize: 12, padding: '3px 2px 15px', textDecoration: 'none' }}>‹ All Works</Link>
           <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 14, marginBottom: 18 }}>
@@ -1186,13 +1190,14 @@ export default function RebuildStudioClient() {
             display: 'flex', flexDirection: 'column',
           } as React.CSSProperties}
         >
-          {!canvasExpanded && (<div style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '10px 24px', borderBottom: `1px solid ${C.soft}` }}>
+          {!canvasExpanded && (<div className="wsr-page-toolbar" style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '10px 24px', borderBottom: `1px solid ${C.soft}` }}>
             <div style={{ minWidth: 0, fontSize: 12.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <strong style={{ color: C.secondary, fontWeight: 600 }}>{title}</strong>
               <span style={{ padding: '0 7px', color: C.quiet }}>/</span>{chapterTitle}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
-              <button type="button" className="ws-inline-open" aria-pressed={workspaceOpen} disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => workspaceOpen ? closeWorkspace() : openWorkspace()}>{workspaceOpen ? 'Clean manuscript' : 'Show editorial layer'}</button>
+            <div className="wsr-page-actions" style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+              <button type="button" className="ws-inline-open" aria-expanded={readingToolsOpen} onClick={() => { setReadingToolsOpen(value => !value); setMobilePane(readingToolsOpen ? 'manuscript' : 'maia'); }}>Read with MAIA</button>
+              <button type="button" className="ws-inline-open" aria-pressed={editorialVisible} disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => { setEditorialVisible(value => !value); if (editorialVisible) closeWorkspace(); }}>{editorialVisible ? 'Clean manuscript' : 'Show editorial layer'}</button>
               <button type="button" disabled={!chapter} title={chapter ? 'Switch between chapter and passage focus' : 'Chapter focus becomes available when this section belongs to a confirmed chapter.'}
                 onClick={() => chapter && setMaiaMode(maiaMode === 'chapter' ? 'passage' : 'chapter')}
                 style={{ border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: '8px 12px', color: C.secondary, fontSize: 11.5, cursor: chapter ? 'pointer' : 'default', opacity: chapter ? 1 : .72 }}>
@@ -1206,7 +1211,7 @@ export default function RebuildStudioClient() {
           </div>)}
 
           <div data-manuscript-scroll className={canvasExpanded ? 'wsr-pure-scroll' : undefined} style={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', padding: canvasExpanded ? '72px clamp(40px, 14vw, 220px) 120px' : '48px clamp(34px, 7vw, 100px) 90px' }}>
-            <article style={{ maxWidth: workspaceOpen ? 1040 : canvasExpanded ? 840 : 760, margin: '0 auto', fontFamily: SERIF }}>
+            <article style={{ maxWidth: workspaceOpen ? 960 : canvasExpanded ? 840 : 900, margin: '0 auto', fontFamily: SERIF }}>
               {chapter ? (
                 <>
                   <div data-canvas-heading-level="chapter" style={{ color: C.gold, fontFamily: SANS, fontSize: 10.5, letterSpacing: '.16em', fontWeight: 700, marginBottom: 9 }}>CHAPTER {chapter.root.heading?.match(/Chapter\s+(\d+)/i)?.[1] ?? ''}</div>
@@ -1233,6 +1238,7 @@ export default function RebuildStudioClient() {
                 const held = selectedPassage?.draftSectionId === section.draftSectionId
                   ? selectedPassage : null;
                 const liveBody = writing.bodyOf(section.draftSectionId);
+                const sectionFindings = review ? findingsForSection(review.findings, section.draftSectionId) : [];
                 return (
                   <section key={section.draftSectionId}
                     ref={(el) => { if (el) sectionRefs.current.set(section.draftSectionId, el); else sectionRefs.current.delete(section.draftSectionId); }}
@@ -1250,13 +1256,14 @@ export default function RebuildStudioClient() {
                         <h3 data-canvas-heading-level="unconfirmed" style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.3, fontWeight: 650, letterSpacing: '.025em', margin: '26px 0 11px', color: C.muted }}>{section.heading}</h3>
                       )
                     )}
-                    {workspaceOpen && review && <div className="ws-section-observations" aria-label="Section observations">
-                      {findingsForSection(review.findings, section.draftSectionId).map((finding, index) => <button key={finding.id} type="button"
+                    {!canvasExpanded && editorialVisible && sectionFindings.length > 0 && <details className="ws-section-observations" aria-label="Section observations">
+                      <summary>{sectionFindings.length} editorial notes{reviewNeedsRefresh ? ' · earlier reading' : ''}</summary>
+                      <div className="ws-section-observation-list">{sectionFindings.map((finding, index) => <button key={finding.id} type="button"
                         disabled={editorialBusy || adoptionBusy || memberVersionBusy}
                         onClick={() => { focusWritingSection(section.draftSectionId); openWorkspace({ readingId: finding.readingId, key: finding.id.slice(finding.readingId.length + 1) }); }}>
-                        {index + 1} · {reviewLensLabel(finding.lens)}{reviewNeedsRefresh ? ' · earlier reading' : ''}
-                      </button>)}
-                    </div>}
+                        {index + 1} · {reviewLensLabel(finding.lens)}
+                      </button>)}</div>
+                    </details>}
                     <div hidden={workspaceOpen && section.draftSectionId === focusId}><RebuildAuthoredBody
                       section={section}
                       body={liveBody}
@@ -1268,7 +1275,7 @@ export default function RebuildStudioClient() {
                       onSelectPassage={(start, end, text) => holdPassage(section, start, end, text)}
                     /></div>
                     {section.draftSectionId === focusId && <div hidden={!workspaceOpen}>
-                      <ManuscriptPassage body={liveBody} range={held}
+                      <ManuscriptPassage body={liveBody} range={held} highlight={Boolean(held)}
                         annotation={{ label: section.heading || 'This passage', open: passageNoteOpen,
                           disabled: editorialBusy || adoptionBusy || memberVersionBusy,
                           onToggle: () => { setPassageNoteOpen(value => !value); window.dispatchEvent(new Event('ws-stop-maia-reading')); } }}
@@ -1276,7 +1283,7 @@ export default function RebuildStudioClient() {
                         <div ref={setEditorialAnchor} data-inline-editorial-anchor />
                       </ManuscriptPassage>
                     </div>}
-                    {workspaceOpen && section.editable && <button type="button" className="ws-inline-open" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => { focusWritingSection(section.draftSectionId); setWorkspaceOpen(true); setPassageNoteOpen(true); setMobilePane('manuscript'); }}>
+                    {!canvasExpanded && editorialVisible && section.editable && !(workspaceOpen && section.draftSectionId === focusId && passageNoteOpen) && <button type="button" className="ws-inline-open" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => { focusWritingSection(section.draftSectionId); setWorkspaceOpen(true); setPassageNoteOpen(true); setReadingToolsOpen(false); setMobilePane('manuscript'); }}>
                       {section.draftSectionId === focusId && workspaceOpen ? (passageNoteOpen ? 'Editorial note open' : 'Open editorial note') : 'Explore this section with MAIA'}
                     </button>}
                   </section>
@@ -1294,7 +1301,7 @@ export default function RebuildStudioClient() {
           ) : null}
         </section>
 
-        {!canvasExpanded && !workspaceOpen && (<aside className={`wsr-maia ${mobilePane !== 'maia' ? 'wsr-mobile-hidden' : ''}`} style={{ borderLeft: `1px solid ${C.soft}`, background: C.panel, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {!canvasExpanded && readingToolsOpen && (<aside className={`wsr-maia ${mobilePane !== 'maia' ? 'wsr-mobile-hidden' : ''}`} style={{ borderLeft: `1px solid ${C.soft}`, background: C.panel, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '18px 18px 14px', borderBottom: `1px solid ${C.soft}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div>
@@ -1593,7 +1600,7 @@ export default function RebuildStudioClient() {
       {!canvasExpanded && (<div className="wsr-mobile-nav">
         <button type="button" onClick={() => setMobilePane('outline')} data-active={mobilePane === 'outline'}>Outline</button>
         <button type="button" onClick={() => setMobilePane('manuscript')} data-active={mobilePane === 'manuscript'}>Manuscript</button>
-        <button type="button" onClick={() => { setWorkspaceOpen(false); setMobilePane('maia'); }} data-active={mobilePane === 'maia'}>MAIA</button>
+        <button type="button" onClick={() => { setReadingToolsOpen(true); setMobilePane('maia'); }} data-active={mobilePane === 'maia'}>MAIA</button>
       </div>)}
       {writingMessage && <div className="wsr-writing-alert" role="status">{writingMessage}</div>}
 

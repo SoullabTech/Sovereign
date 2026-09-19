@@ -125,3 +125,17 @@ test('invalid annotation offsets never manufacture highlights', () => {
   expect(container.textContent).toBe('My words.');
   expect(container.querySelector('mark')).toBeNull();
 });
+
+
+test('a section conversation does not highlight unselected prose, but its preview is marked', () => {
+  const draw=(proposal: any)=>act(()=>root.render(React.createElement(ManuscriptPassage, {
+    body:'A quotation in its own context.', range:null, highlight:false, proposal,
+    children:React.createElement('aside',null,'Discuss this section')
+  })));
+  draw(null);
+  expect(container.querySelector('.ws-marked-passage')).toBeNull();
+  expect(container.textContent).toContain('A quotation in its own context.');
+  draw({original:'A quotation in its own context.',wording:'A chosen revision.',changes:true});
+  expect(container.querySelector('.ws-marked-passage ins')).not.toBeNull();
+  expect(container.querySelector('[data-preview="true"]')).not.toBeNull();
+});
