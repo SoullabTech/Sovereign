@@ -48,6 +48,12 @@ function StudioMAIAContent() {
 
   // Studio context from URL
   const clientId = searchParams?.get('clientId') || undefined;
+  // Practitioner learning is the default Studio teaching room. A practitioner
+  // can explicitly enter coaching craft with ?teaching=coaching; server-side
+  // active-practitioner standing is still required for either surface.
+  const teachingSurface = searchParams?.get('teaching') === 'coaching'
+    ? 'coaching_practice' as const
+    : 'therapist_practitioner' as const;
 
   // Load user identity on mount
   useEffect(() => {
@@ -124,6 +130,7 @@ function StudioMAIAContent() {
           onSessionActiveChange={setHasActiveSession}
           initialAction={searchParams?.get('action') || undefined}
           surface="studio"
+          teachingSurface={teachingSurface}
           studioContext={{
             surface: 'studio',
             clientId,

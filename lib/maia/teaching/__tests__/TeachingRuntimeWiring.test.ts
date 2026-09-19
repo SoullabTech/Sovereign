@@ -10,10 +10,11 @@ describe('T8 live runtime wiring', () => {
   const writerTurn = source('lib/manuscript/editorialRuntime/turn.ts');
   const bridge = source('lib/maia/teaching/TeachingRuntimeBridge.ts');
 
-  it('server-adjudicates general MAIA teaching and prevents client override', () => {
+  it('server-adjudicates live MAIA teaching surfaces and prevents client override', () => {
+    expect(sovereignRoute).toContain('resolveTeachingRuntimeSurfaceAuthority({');
     expect(sovereignRoute).toContain('buildTeachingRuntimeBridge({');
-    expect(sovereignRoute).toContain("surface: 'general_maia'");
-    expect(sovereignRoute).toContain("route: 'sovereign_maia_list'");
+    expect(sovereignRoute).toContain('surface: surfaceAuthority.surface');
+    expect(sovereignRoute).toContain('route: surfaceAuthority.route');
     const spread = sovereignRoute.indexOf('...meta,', sovereignRoute.indexOf('getMaiaResponse({'));
     const teaching = sovereignRoute.indexOf('teachingIntelligenceAddendum, // 🎓 T8', spread);
     expect(spread).toBeGreaterThan(-1);

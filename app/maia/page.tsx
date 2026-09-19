@@ -348,6 +348,16 @@ function MAIAPageContent() {
 
   // Derive showDashboard from URL
   const showDashboard = searchParams?.get('panel') === 'journey';
+  // T8B teaching-room intent. These URL values are navigation intent only;
+  // the live route verifies practitioner/research standing server-side.
+  const teachingParam = searchParams?.get('teaching');
+  const teachingSurface = teachingParam === 'coaching'
+    ? 'coaching_practice' as const
+    : teachingParam === 'practitioner'
+      ? 'therapist_practitioner' as const
+      : teachingParam === 'research'
+        ? 'research_lab' as const
+        : undefined;
 
   // Fix hydration: Initialize with safe defaults, update in useEffect
   // NOTE: Initialize name as '' (not 'Friend') so greeting shows "Good morning" without a bogus label
@@ -851,6 +861,7 @@ function MAIAPageContent() {
                   onArrivalCrossed={crossArrivalWithoutSpeech}
                   shouldRenderArrival={shouldRenderArrival}
                   initialAction={searchParams?.get('action') || undefined}
+                  teachingSurface={teachingSurface}
                   askMode={askMode}
                   onAskModeChange={setAskMode}
                   placeContext={placeFromPathname('/maia') ?? undefined}
@@ -1545,6 +1556,7 @@ function MAIAPageContent() {
               onCloseSessionSelector={() => setShowSessionSelector(false)}
               onSessionActiveChange={setHasActiveSession}
               initialAction={searchParams?.get('action') || undefined}
+              teachingSurface={teachingSurface}
               placeContext={placeFromPathname('/maia') ?? undefined}
             />
 

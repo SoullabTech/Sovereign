@@ -166,12 +166,14 @@ import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } 
 import { retrieveGovernedKnowledge, formatGovernedKnowledgeAddendum } from '@/lib/ain/knowledge/GovernedRetrievalService';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import type { TeachingSourceRef } from '@/lib/maia/teaching/TeachingContextSourceContract';
+import { requestedTeachingSurface, resolveTeachingRuntimeSurfaceAuthority } from '@/lib/maia/teaching/TeachingRuntimeSurfaceAuthority';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 
 // 🌿 Wu Xing (Five Elements) integration
 import { buildWuXingSnapshot, computeWuXingConstitution, computeWuXingMoment, generateWuXingPromptAddendum, type BaZiProfile, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
 import { type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
 import { calculateDaYun } from '@/lib/astrology/daYunCalculator';
-import { pool } from '@/lib/db/postgres';
+import { pool, query } from '@/lib/db/postgres';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { buildPracticeFieldContext, formatPracticeFieldContextForPrompt } from '@/lib/practiceField/practiceFieldService';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
@@ -892,11 +894,44 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // It does not retrieve, persist a learner profile, change routing, or create a new model path.
     let teachingIntelligenceAddendum: string | undefined;
     try {
+      // T8B: client values express room intent only. Professional/research standing
+      // is resolved from server-held state bound to the already-verified member.
+      const requestedSurface = requestedTeachingSurface((meta as any)?.teachingSurface, surfaceMode);
+      let hasActivePractitioner = false;
+      let serverRoles: string[] = [];
+      let adminRole: string | null = null;
+
+      if (userId && (requestedSurface === 'coaching_practice' || requestedSurface === 'therapist_practitioner')) {
+        hasActivePractitioner = Boolean(await getPractitionerIdForMember(userId));
+      }
+      if (userId && requestedSurface === 'research_lab') {
+        const researchStanding = await query<{ roles: string[] | null; admin_role: string | null }>(
+          'SELECT roles, admin_role FROM members WHERE id = $1 LIMIT 1',
+          [userId],
+        );
+        serverRoles = researchStanding.rows[0]?.roles ?? [];
+        adminRole = researchStanding.rows[0]?.admin_role ?? null;
+      }
+
+      const surfaceAuthority = resolveTeachingRuntimeSurfaceAuthority({
+        requestedSurface,
+        legacySurface: surfaceMode,
+        hasActivePractitioner,
+        serverRoles,
+        adminRole,
+      });
+      if (surfaceAuthority.deniedRequestedSurface) {
+        console.warn('[MAIA/teaching] requested teaching surface denied; general MAIA retained', {
+          requested: surfaceAuthority.requestedSurface,
+          reason: surfaceAuthority.deniedRequestedSurface,
+        });
+      }
+
       const teaching = buildTeachingRuntimeBridge({
-        surface: 'general_maia',
-        route: 'sovereign_maia_list',
-        context: 'general_maia',
-        audience: 'member',
+        surface: surfaceAuthority.surface,
+        route: surfaceAuthority.route,
+        context: surfaceAuthority.context,
+        audience: surfaceAuthority.audience,
         message,
         interactionId: sessionId || requestId,
         turnId: requestId,
@@ -905,6 +940,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       if (teaching.active) {
         teachingIntelligenceAddendum = teaching.directive;
         console.log('[MAIA/teaching] T8 current-turn authority', {
+          surface: surfaceAuthority.surface,
+          authorityBasis: surfaceAuthority.authorityBasis,
           signal: teaching.signal,
           domain: teaching.domainKey,
           standing: teaching.authority.executionStanding,
