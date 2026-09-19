@@ -55,5 +55,6 @@ export function selectObservation(
   reading: DevelopmentalReading,
   observationKey: string,
 ): DevelopmentalObservation | null {
+  if (reading.outcome !== 'reading') return null;
   return reading.observations.find((o) => o.key === observationKey) ?? null;
 }
