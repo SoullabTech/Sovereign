@@ -1,0 +1,470 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "ACT 12",
+  "title": "Adversarial Epistemic Join Falsification Corpus",
+  "date": "2026-09-19",
+  "canonical_base": "b0b07871b200a074874c68edc4084cbd3b8174bc",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11"
+  ],
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "data_class": "SYNTHETIC_ONLY_NO_MEMBER_CLIENT_CLINICAL_PHI_SANCTUARY_OR_PRODUCTION_DATA",
+  "case_count": 24,
+  "cases": [
+    {
+      "id": "ACT12-C01",
+      "title": "Trusted endpoints do not create edge authority",
+      "attacks": [
+        "INV-05",
+        "INV-07",
+        "INV-14"
+      ],
+      "setup": "Two independently high-trust sources establish A and B. Neither source addresses any relation between A and B.",
+      "seductive_claim": "Because A and B are both strongly established, A explains B.",
+      "expected": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "failure": "ACT 11 would fail if endpoint trust could be composed into relation standing without a separate join warrant.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§5 expressly rejects both-endpoints-true and highly-trusted-endpoints as relation warrants."
+    },
+    {
+      "id": "ACT12-C02",
+      "title": "Many weak sources do not become one strong join by accumulation alone",
+      "attacks": [
+        "INV-05",
+        "INV-07",
+        "INV-14"
+      ],
+      "setup": "Six weak sources independently mention A and B in compatible ways, but none establishes relation R and no declared inferential method evaluates them jointly.",
+      "seductive_claim": "Taken together, the six sources prove A causes B.",
+      "expected": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "failure": "ACT 11 would fail if source count or accumulation alone promoted R.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§5 explicitly lists accumulation of independently insufficient sources and source count as non-warrants."
+    },
+    {
+      "id": "ACT12-C03",
+      "title": "Temporal sequence is not causation",
+      "attacks": [
+        "INV-05",
+        "INV-06",
+        "INV-07",
+        "INV-14"
+      ],
+      "setup": "Synthetic event A occurs before event B on twelve occasions. No intervention or causal instrument exists.",
+      "seductive_claim": "A causes B because A always came first.",
+      "expected": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "failure": "ACT 11 would fail if temporal order alone created causal standing.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§5 makes temporal proximity a non-warrant; §2.2 requires causal force to be explicit."
+    },
+    {
+      "id": "ACT12-C04",
+      "title": "Correlation does not silently become causation",
+      "attacks": [
+        "INV-05",
+        "INV-07",
+        "INV-14"
+      ],
+      "setup": "A preregistered synthetic study establishes a strong association between A and B but makes no causal identification.",
+      "seductive_claim": "A causes B.",
+      "expected": {
+        "operation": "WARRANTED JOIN",
+        "standing": "WARRANTED FOR ASSOCIATION ONLY; CAUSAL CLAIM UNESTABLISHED"
+      },
+      "failure": "ACT 11 would fail if an association warrant licensed causal semantics.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED_WITH_BOUNDARY",
+      "notes": "§4 states a warrant licenses only the relation semantics it supports and explicitly says relatedness does not imply causation."
+    },
+    {
+      "id": "ACT12-C05",
+      "title": "Embedding or lexical similarity is not equivalence",
+      "attacks": [
+        "INV-05",
+        "INV-06",
+        "INV-14"
+      ],
+      "setup": "Two synthetic concepts have nearly identical labels and extremely high embedding similarity but originate in different frameworks.",
+      "seductive_claim": "The two concepts are equivalent.",
+      "expected": {
+        "operation": "COMPARE / JUXTAPOSE",
+        "standing": "NO EQUIVALENCE STANDING"
+      },
+      "failure": "ACT 11 would fail if similarity alone licensed identity or equivalence.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§5 explicitly names lexical and embedding similarity as non-warrants."
+    },
+    {
+      "id": "ACT12-C06",
+      "title": "Repeated co-occurrence does not create a relation",
+      "attacks": [
+        "INV-05",
+        "INV-14"
+      ],
+      "setup": "A and B appear together in hundreds of synthetic notes and retrieval results.",
+      "seductive_claim": "A and B form a stable underlying pattern.",
+      "expected": {
+        "operation": "COMPARE / JUXTAPOSE",
+        "standing": "RELATION UNESTABLISHED"
+      },
+      "failure": "ACT 11 would fail if repetition or co-occurrence raised relation standing.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§3 and §5 reject repetition, co-occurrence, popularity, and retrieval rank as standing."
+    },
+    {
+      "id": "ACT12-C07",
+      "title": "Member-authored meaning does not become universal psychology",
+      "attacks": [
+        "INV-07",
+        "INV-08",
+        "INV-11"
+      ],
+      "setup": "A synthetic member explicitly says Symbol A and Memory B are connected for them.",
+      "seductive_claim": "Symbol A is psychologically linked to Memory B in people generally.",
+      "expected": {
+        "operation": "WARRANTED JOIN",
+        "standing": "WARRANTED WITHIN MEMBER'S OWN MEANING ONLY"
+      },
+      "failure": "ACT 11 would fail if member authority were generalized into universal psychological or scientific standing.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED_WITH_BOUNDARY",
+      "notes": "§7 and §8.1 explicitly preserve the member's authority locally while blocking universalization."
+    },
+    {
+      "id": "ACT12-C08",
+      "title": "MAIA proposal cannot be rewritten as member authorship",
+      "attacks": [
+        "INV-03",
+        "INV-04",
+        "INV-11",
+        "INV-14"
+      ],
+      "setup": "MAIA asks whether A and B may be connected. The synthetic member gives no confirmation.",
+      "seductive_claim": "The member sees A and B as connected.",
+      "expected": {
+        "operation": "HYPOTHESIZE",
+        "standing": "MAIA_PROPOSED / CANDIDATE"
+      },
+      "failure": "ACT 11 would fail if the proposal inherited member authorship without explicit adoption.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§8.2 requires explicit member confirmation and preserved proposal/adoption history."
+    },
+    {
+      "id": "ACT12-C09",
+      "title": "Practitioner interpretation cannot become member truth",
+      "attacks": [
+        "INV-03",
+        "INV-08",
+        "INV-11"
+      ],
+      "setup": "A synthetic practitioner interprets A as reflecting B. The member has not adopted the interpretation.",
+      "seductive_claim": "The member's A reflects B.",
+      "expected": {
+        "operation": "WARRANTED JOIN",
+        "standing": "PRACTITIONER_AUTHORED WITHIN PRACTITIONER JURISDICTION"
+      },
+      "failure": "ACT 11 would fail if practitioner authorship silently transferred to the member.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED_WITH_BOUNDARY",
+      "notes": "§8.3 explicitly preserves practitioner authorship unless the member separately adopts it."
+    },
+    {
+      "id": "ACT12-C10",
+      "title": "Science does not silently validate metaphysical ontology",
+      "attacks": [
+        "INV-07",
+        "INV-08",
+        "INV-14"
+      ],
+      "setup": "Synthetic empirical research reports a measurable association. A philosophical system contains a concept with thematic similarity.",
+      "seductive_claim": "The scientific finding validates the metaphysical system.",
+      "expected": {
+        "operation": "COMPARE / JUXTAPOSE",
+        "standing": "NO CROSS-JURISDICTION VALIDATION"
+      },
+      "failure": "ACT 11 would fail if empirical standing transferred into metaphysical jurisdiction without a separate warrant.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§7 explicitly blocks science-to-metaphysics authority transfer."
+    },
+    {
+      "id": "ACT12-C11",
+      "title": "Phenomenological or symbolic meaning does not become scientific evidence",
+      "attacks": [
+        "INV-07",
+        "INV-08"
+      ],
+      "setup": "A synthetic symbolic tradition describes an experience that resembles a modern scientific construct.",
+      "seductive_claim": "The symbolic tradition scientifically established the construct.",
+      "expected": {
+        "operation": "COMPARE / JUXTAPOSE",
+        "standing": "NO SCIENTIFIC STANDING FROM SYMBOLIC CORRESPONDENCE"
+      },
+      "failure": "ACT 11 would fail if symbolic meaning could transfer into scientific warrant without separate evidence.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§7 explicitly blocks symbolic correspondence from becoming empirical causation."
+    },
+    {
+      "id": "ACT12-C12",
+      "title": "A warrant for relatedness does not license causation",
+      "attacks": [
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "setup": "A synthetic relation study validly establishes that A and B are related, without direction or causal identification.",
+      "seductive_claim": "A causes B.",
+      "expected": {
+        "operation": "WARRANTED JOIN",
+        "standing": "WARRANTED FOR RELATEDNESS ONLY; CAUSATION UNESTABLISHED"
+      },
+      "failure": "ACT 11 would fail if the semantics of a warrant could silently strengthen.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED_WITH_BOUNDARY",
+      "notes": "§4 expressly states that a warrant for relatedness does not automatically establish causation or direction."
+    },
+    {
+      "id": "ACT12-C13",
+      "title": "Endpoints may remain valid after the join is falsified",
+      "attacks": [
+        "INV-01",
+        "INV-02",
+        "INV-12"
+      ],
+      "setup": "A and B remain independently well evidenced. Later synthetic evidence directly falsifies previously warranted relation R between them.",
+      "seductive_claim": "Because R failed, A and B must also be false.",
+      "expected": {
+        "operation": "DISCHARGE",
+        "standing": "R DISCHARGED; A AND B RETAIN THEIR OWN STANDING"
+      },
+      "failure": "ACT 11 would fail if falsifying the join altered endpoint standing merely because they participated in R.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "INV-01 preserves endpoint independence; §10 discharges the relation without deleting its history."
+    },
+    {
+      "id": "ACT12-C14",
+      "title": "Conflicting high-quality relation evidence requires provisional standing",
+      "attacks": [
+        "INV-07",
+        "INV-09",
+        "INV-12"
+      ],
+      "setup": "Two high-quality synthetic sources directly evaluate relation R and reach materially conflicting conclusions.",
+      "seductive_claim": "R is established because the more fluent summary favors it.",
+      "expected": {
+        "operation": "WARRANTED JOIN",
+        "standing": "PROVISIONAL"
+      },
+      "failure": "ACT 11 would fail if material conflict could disappear while warranted/promoted standing remained.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§6 explicitly requires provisional standing under conflicting evidence."
+    },
+    {
+      "id": "ACT12-C15",
+      "title": "Later evidence can weaken, revise, supersede, or discharge",
+      "attacks": [
+        "INV-06",
+        "INV-12"
+      ],
+      "setup": "A relation begins warranted. New synthetic evidence first lowers confidence, then changes the best-supported predicate, then defeats the original predicate.",
+      "seductive_claim": "Once warranted, the original relation should remain canonical forever.",
+      "expected": {
+        "operation": "WEAKEN → REVISE/SUPERSEDE → DISCHARGE as evidence requires",
+        "standing": "HISTORY PRESERVED THROUGH EACH TRANSITION"
+      },
+      "failure": "ACT 11 would fail if later evidence could not change active standing or if history were erased.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§10 states all four corrigibility operations and requires history preservation."
+    },
+    {
+      "id": "ACT12-C16",
+      "title": "A warranted join reused downstream needs a new warrant",
+      "attacks": [
+        "INV-04",
+        "INV-05",
+        "INV-07",
+        "INV-09"
+      ],
+      "setup": "A—R1→B is warranted. That joined proposition is then used with C to assert a new relation R2.",
+      "seductive_claim": "Because R1 is warranted, R2 inherits warrant automatically.",
+      "expected": {
+        "operation": "HYPOTHESIZE unless separate warrant for R2 exists",
+        "standing": "CANDIDATE / UNESTABLISHED FOR R2"
+      },
+      "failure": "ACT 11 would fail if a warranted join became an unlimited source for new edges.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§11 explicitly requires a new warrant for every new downstream relation."
+    },
+    {
+      "id": "ACT12-C17",
+      "title": "Reference is not reliance",
+      "attacks": [
+        "INV-09",
+        "INV-10"
+      ],
+      "setup": "Source A is mentioned as background. The downstream conclusion materially depends only on Source B, whose boundary is explicit.",
+      "seductive_claim": "Because A was cited, A's claims and boundaries are part of the conclusion's support set.",
+      "expected": {
+        "operation": "REFERENCE(A) + REPORT/MOVE(B)",
+        "standing": "B-BOUNDED CONCLUSION"
+      },
+      "failure": "ACT 11 would fail if every mention counted as reliance or if B's boundary failed to travel.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§12 distinguishes reference from reliance directly."
+    },
+    {
+      "id": "ACT12-C18",
+      "title": "Endpoint provenance cannot substitute for join provenance",
+      "attacks": [
+        "INV-02",
+        "INV-04"
+      ],
+      "setup": "A and B retain perfect provenance, but a downstream synthesis records no author, warrant, reasoning context, or origin for relation R.",
+      "seductive_claim": "The conclusion is sufficiently traceable because its endpoint citations are intact.",
+      "expected": {
+        "operation": "NO LAWFUL WARRANTED JOIN UNTIL JOIN PROVENANCE IS RECOVERABLE",
+        "standing": "UNESTABLISHED / CONTRACT VIOLATION"
+      },
+      "failure": "ACT 11 would fail if endpoint provenance alone were sufficient provenance for the relation.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§2.4 and INV-04 explicitly require provenance for how the relation claim came to exist."
+    },
+    {
+      "id": "ACT12-C19",
+      "title": "Confidence and fluency cannot raise standing",
+      "attacks": [
+        "INV-06",
+        "INV-07",
+        "INV-14"
+      ],
+      "setup": "A synthetic model expresses an unsupported relation with extreme confidence, polished prose, and repeated restatement.",
+      "seductive_claim": "R is effectively established because the system is very confident and consistent.",
+      "expected": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "failure": "ACT 11 would fail if confidence, eloquence, or repetition silently promoted standing.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§3, §5, §9, and INV-14 all reject these promotion channels."
+    },
+    {
+      "id": "ACT12-C20",
+      "title": "Insufficient warrant should lower standing rather than erase useful meaning",
+      "attacks": [
+        "INV-06",
+        "INV-13"
+      ],
+      "setup": "A plausible synthetic relation is useful for inquiry but lacks enough evidence for warranted standing.",
+      "seductive_claim": "Either assert R as fact or delete it entirely.",
+      "expected": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED, RETAINED IF USEFUL"
+      },
+      "failure": "ACT 11 would fail if the only lawful choices were false promotion or silence/deletion.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§6 and INV-13 explicitly preserve useful lower-standing hypotheses."
+    },
+    {
+      "id": "ACT12-C21",
+      "title": "Transitivity is not automatic join composition",
+      "attacks": [
+        "INV-05",
+        "INV-07",
+        "INV-09"
+      ],
+      "setup": "Synthetic evidence warrants A—R1→B and B—R2→C. No evidence addresses A—R3→C.",
+      "seductive_claim": "Therefore A is related to C in the claimed R3 sense.",
+      "expected": {
+        "operation": "HYPOTHESIZE unless a separate warrant or formal entailment licenses R3",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "failure": "ACT 11 would fail if two warranted joins automatically created a third edge.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "§11 requires a new warrant for any new relation; FORMAL_ENTAILMENT remains available where a governed rule actually licenses composition."
+    },
+    {
+      "id": "ACT12-C22",
+      "title": "Lack of relation evidence does not prove no relation exists",
+      "attacks": [
+        "INV-02",
+        "INV-07",
+        "INV-13",
+        "INV-14"
+      ],
+      "setup": "A and B are both observed. No evidence supports relation R, but no evidence rules R out either.",
+      "seductive_claim": "A and B are unrelated.",
+      "expected": {
+        "operation": "REFERENCE / COMPARE",
+        "standing": "RELATION UNKNOWN / UNESTABLISHED; NEGATIVE RELATION CLAIM ALSO REQUIRES WARRANT"
+      },
+      "failure": "ACT 11 would fail if absence of a positive warrant automatically licensed the factual negation of relation.",
+      "mechanism_free_resolution": true,
+      "result": "RESOLVED",
+      "notes": "The general warrant law applies to the negative relation proposition as well; ACT 10's preserved law explicitly permits RELATION UNKNOWN / UNESTABLISHED."
+    },
+    {
+      "id": "ACT12-C23",
+      "title": "Composite triangulation: when can partial evidence jointly become a warrant?",
+      "attacks": [
+        "INV-05",
+        "INV-07",
+        "INV-14"
+      ],
+      "setup": "Three independent synthetic sources each provide partial, non-decisive evidence for relation R. A declared synthesis method evaluates their independence, compatibility, and cumulative support. No single source warrants R alone.",
+      "seductive_claim": "Either the three sources automatically prove R by accumulation, or they can never jointly support R because each is individually insufficient.",
+      "expected": {
+        "operation": "A SEPARATELY AUTHORED COMPOSITE INFERENCE MAY NEED TO BECOME THE JOIN WARRANT; MERE SOURCE COUNT REMAINS INSUFFICIENT",
+        "standing": "SHOULD DEPEND ON THE COMPOSITE WARRANT'S OWN METHOD, PROVENANCE, JURISDICTION, AND LIMITS"
+      },
+      "failure": "ACT 11 is ambiguous if it cannot distinguish forbidden accumulation laundering from a legitimately governed composite/triangulated warrant.",
+      "mechanism_free_resolution": false,
+      "result": "EXPOSES_AMBIGUITY",
+      "notes": "§5 correctly forbids source-count promotion, and §4 allows THEORETICAL_ARGUMENT / OTHER_DECLARED_WARRANT, but ACT 11 does not explicitly state how a support set of individually partial sources becomes a new composite warrant rather than forbidden accumulation. A future enforcer could over-promote or over-block while claiming compliance."
+    },
+    {
+      "id": "ACT12-C24",
+      "title": "Adoption cannot create authority beyond the adopter's own jurisdiction",
+      "attacks": [
+        "INV-07",
+        "INV-08",
+        "INV-11"
+      ],
+      "setup": "MAIA proposes: 'Your partner's silence means they are withholding affection to control you.' The synthetic member replies, 'Yes, that's exactly what it means.'",
+      "seductive_claim": "The member's confirmation makes the partner's motive and causal intent a member-confirmed fact.",
+      "expected": {
+        "operation": "MEMBER_CONFIRMATION MAY AUTHORIZE THE MEMBER'S OWN FELT/INTERPRETIVE MEANING, BUT EXTERNAL CLAIMS ABOUT ANOTHER PERSON'S MOTIVE OR CAUSAL INTENT STILL REQUIRE THEIR OWN WARRANT",
+        "standing": "BOUNDED ADOPTION ONLY"
+      },
+      "failure": "ACT 11 is ambiguous if member confirmation can be read as promoting every semantic component of an agent-proposed proposition, including claims outside the member's epistemic jurisdiction.",
+      "mechanism_free_resolution": false,
+      "result": "EXPOSES_AMBIGUITY",
+      "notes": "§7 and §8.1 imply this boundary, but §8.2 says member confirmation can create member-authored/member-confirmed standing without explicitly stating that adoption cannot widen standing for proposition components outside the adopter's authority. The enforcement contract should state that adoption is jurisdiction-bounded."
+    }
+  ]
+}
