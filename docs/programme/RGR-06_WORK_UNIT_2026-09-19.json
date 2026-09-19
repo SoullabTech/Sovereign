@@ -53,6 +53,34 @@
     "independent_verifier": "PASS",
     "runtime_lock": "LOCKED"
   },
+  "founder_adjudication": {
+    "accepted_candidate_sha": "6f6a7580f158f24b28c8f12575b5f5beb07300e3",
+    "accepted_environment_digest": "eb1798c275e098bd1d8d5f3ce41a51ce62b65eaa13cdc025b39a0cf4d45823de",
+    "accepted_evidence": {
+      "implementation_conformance": "PASS",
+      "independent_verifier": "PASS",
+      "runtime_lock": "LOCKED"
+    },
+    "accepted_implementation_digest": "2b6549ed421c74e9908a5ded09f4d16a457d39eff77d7a36fbc5eeabd5d46003",
+    "accepted_materialization_boundary": {
+      "benchmark_examples_materialized": 0,
+      "benchmark_model_training_executed": false,
+      "benchmark_pairs_materialized": 0,
+      "benchmark_performance_inspected": false,
+      "dataset_files_written": 0,
+      "replication_executed": false,
+      "test_executed": false
+    },
+    "accepted_parent_canonical": "a2d32f83d872bfa6c31b4bf96c5f83cd9d9b5804",
+    "lifecycle_transition": [
+      "EVIDENCE_READY",
+      "ADJUDICATED",
+      "CLOSED"
+    ],
+    "protected_non_work_unit_artifacts": "BYTE_IDENTICAL",
+    "status": "ACCEPTED_AND_CLOSED",
+    "successor_authority": "NOT_AUTHORIZED"
+  },
   "gate": "RGR-06",
   "implementation_lock": {
     "batch_size": 128,
@@ -113,9 +141,9 @@
   },
   "programme": "RELATIONAL-GEOMETRY-REASONING",
   "state": {
-    "disposition": "candidate",
-    "guard": "EVIDENCE_READY",
-    "lifecycle_state": "EVIDENCE_READY"
+    "disposition": "closed",
+    "guard": "CLOSED",
+    "lifecycle_state": "CLOSED"
   },
   "stop_conditions": [
     "Any frozen RGR-04 or RGR-05 law must change.",
