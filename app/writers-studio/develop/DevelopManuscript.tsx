@@ -4,7 +4,10 @@ import { useMemo } from 'react';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { WriteStateSection } from '@/lib/writersStudio/writeStateClient';
 import type { CodePointRange } from '@/lib/manuscript/development/evidenceRef';
-import { WholeManuscriptSurface } from '../canvas/WholeManuscriptSurface';
+import {
+  WholeManuscriptSurface,
+  type ReadOnlyPassageAnnotation,
+} from '../canvas/WholeManuscriptSurface';
 import { INK, RULE, SPACE } from '../studioTheme';
 
 function labelFor(section: WriteStateSection, index: number): string {
@@ -85,7 +88,8 @@ export function DevelopManuscriptRail({
 }
 
 export function DevelopManuscriptSurface({
-  sections, version, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, evidenceHighlight = null,
+  sections, version, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange,
+  evidenceHighlight = null, evidenceAnnotations = [], onEvidenceAnnotationSelect,
 }: {
   sections: readonly WriteStateSection[];
   version: number;
@@ -94,6 +98,8 @@ export function DevelopManuscriptSurface({
   onJumpHandled: () => void;
   onPlaceChange: (sectionId: string) => void;
   evidenceHighlight?: { sectionId: string; range: CodePointRange } | null;
+  evidenceAnnotations?: readonly ReadOnlyPassageAnnotation[];
+  onEvidenceAnnotationSelect?: (annotation: ReadOnlyPassageAnnotation) => void;
 }) {
   const writing = useMemo(() => readOnlyWriting(sections, version), [sections, version]);
 
@@ -114,6 +120,8 @@ export function DevelopManuscriptSurface({
         onJumpHandled={onJumpHandled}
         onPlaceChange={onPlaceChange}
         readOnlyHighlight={evidenceHighlight}
+        readOnlyAnnotations={evidenceAnnotations}
+        onReadOnlyAnnotationSelect={onEvidenceAnnotationSelect}
       />
     </div>
   );

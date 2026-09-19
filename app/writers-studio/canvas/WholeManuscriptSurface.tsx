@@ -40,7 +40,7 @@
 
 import {
   forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect,
-  useMemo, useRef, useState,
+  useMemo, useRef, useState, type ReactNode,
 } from 'react';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { splitCodePointRange, type CodePointRange } from '@/lib/manuscript/development/evidenceRef';
@@ -63,6 +63,54 @@ const NOTE_MS = 2400;
  * a fact about the writing.
  */
 const ESTIMATED_SECTION_HEIGHT = 320;
+
+export interface ReadOnlyPassageAnnotation {
+  key: string;
+  sectionId: string;
+  range: CodePointRange;
+  label: string;
+}
+
+function readOnlyBodyWithAnnotations(
+  body: string,
+  annotations: readonly ReadOnlyPassageAnnotation[],
+  onSelect?: (annotation: ReadOnlyPassageAnnotation) => void,
+) {
+  const points = Array.from(body);
+  const valid = annotations
+    .filter(({ range }) => range.start >= 0 && range.start <= points.length && range.end >= range.start && range.end <= points.length)
+    .slice()
+    .sort((a, b) => a.range.start - b.range.start);
+  if (valid.length === 0) return body;
+
+  const nodes: ReactNode[] = [];
+  let cursor = 0;
+  for (const annotation of valid) {
+    if (annotation.range.start > cursor) {
+      nodes.push(points.slice(cursor, annotation.range.start).join(''));
+    }
+    nodes.push(
+      <button
+        key={annotation.key}
+        type="button"
+        onClick={() => onSelect?.(annotation)}
+        data-development-evidence-link={annotation.key}
+        aria-label={`Show developmental observation ${annotation.label}`}
+        title={`Show developmental observation ${annotation.label}`}
+        style={{
+          border: 0, background: 'transparent', color: INK.quiet,
+          cursor: onSelect ? 'pointer' : 'default', padding: '0 2px',
+          font: 'inherit', lineHeight: 'inherit', verticalAlign: 'baseline',
+        }}
+      >
+        ◇
+      </button>,
+    );
+    cursor = annotation.range.start;
+  }
+  if (cursor < points.length) nodes.push(points.slice(cursor).join(''));
+  return nodes;
+}
 
 export interface WholeManuscriptSurfaceProps {
   writing: SectionWriting;
@@ -106,6 +154,12 @@ export interface WholeManuscriptSurfaceProps {
   onPlaceChange?: (sectionId: string) => void;
   /** Exact frozen passage to illuminate in a read-only manuscript. Never used for editing. */
   readOnlyHighlight?: { sectionId: string; range: CodePointRange } | null;
+  /**
+   * Exact CURRENT evidence loci already present in a frozen developmental reading.
+   * These are navigation affordances only: rendering or selecting one never commissions cognition.
+   */
+  readOnlyAnnotations?: readonly ReadOnlyPassageAnnotation[];
+  onReadOnlyAnnotationSelect?: (annotation: ReadOnlyPassageAnnotation) => void;
 }
 
 
@@ -129,8 +183,18 @@ export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
   writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, readOnlyHighlight = null,
+  readOnlyAnnotations = [], onReadOnlyAnnotationSelect,
 }, handleRef) {
   const sections = writing.sections;
+  const annotationsBySection = useMemo(() => {
+    const out = new Map<string, ReadOnlyPassageAnnotation[]>();
+    for (const annotation of readOnlyAnnotations) {
+      const current = out.get(annotation.sectionId) ?? [];
+      current.push(annotation);
+      out.set(annotation.sectionId, current);
+    }
+    return out;
+  }, [readOnlyAnnotations]);
   const indexOfId = useMemo(() => {
     const m = new Map<string, number>();
     sections.forEach((s, i) => m.set(s.id, i));
@@ -414,7 +478,11 @@ export const WholeManuscriptSurface = forwardRef<
                       </mark>
                       {exact.after}
                     </>
-                  ) : body}
+                  ) : readOnlyBodyWithAnnotations(
+                    body,
+                    annotationsBySection.get(section.id) ?? [],
+                    onReadOnlyAnnotationSelect,
+                  )}
                 </StudioText>
               );
             })()}
