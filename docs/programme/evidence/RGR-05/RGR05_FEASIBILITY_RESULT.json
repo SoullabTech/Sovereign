@@ -1,0 +1,345 @@
+{
+  "benchmark_id": "RGR-RT1-D2C-01",
+  "canonical_base_sha": "567e062b3d8929c41d15882ae26ea9d42077a1bc",
+  "disposition": "FEASIBILITY_PASS",
+  "frozen_parameters": {
+    "code_weight": 8,
+    "code_width": 16,
+    "codebook_size_per_split": 256,
+    "directed_edges": 8,
+    "named_streams": [
+      "CODEBOOK",
+      "GRAPH",
+      "SURFACE_ASSIGNMENT",
+      "ROW_ORDER",
+      "SWITCH"
+    ],
+    "nodes": 6,
+    "split_master_seeds": {
+      "REPLICATION": 41044,
+      "TEST": 41043,
+      "TRAIN": 41041,
+      "VALIDATION": 41042
+    },
+    "split_pair_counts": {
+      "REPLICATION": 6000,
+      "TEST": 6000,
+      "TRAIN": 12000,
+      "VALIDATION": 3000
+    },
+    "surface_specification": "BALANCED_16BIT_NODE_CODE"
+  },
+  "graph_feasibility": {
+    "canonical_query": {
+      "source": 0,
+      "target": 1
+    },
+    "capacity_margin_per_query": 200292,
+    "collision_free_pair_capacity_all_queries": 6035760,
+    "collision_free_pair_capacity_per_query": 201192,
+    "label_symmetry_bijection": "All six node labels are exchangeable under permutation; the canonical s=0,t=1 count maps bijectively to each of the 30 ordered source/target queries.",
+    "ordered_query_pairs": 30,
+    "positive_graphs_with_admissible_switch_per_query": 285500,
+    "rejected_switch_reasons": {
+      "negative_relation_or_graph_invalid": 202464,
+      "reciprocal_edge_count_change": 407184,
+      "replacement_duplicate": 487920
+    },
+    "required_pairs_per_query_for_balanced_full_plan": 900,
+    "required_total_pairs": 27000,
+    "switch_histogram": {
+      "1": 238512,
+      "2": 42504,
+      "3": 4448,
+      "4": 36
+    },
+    "unique_switch_positive_graphs_per_query": 238512,
+    "valid_positive_graphs_per_query": 1035272
+  },
+  "implementation_digest": {
+    "combined_sha256": "98597755f40316ec4b0e60318635e1ad0dd587dd0d6176147aaf36923abb731b",
+    "components": {
+      "scripts/research/rgr/rgr05_feasibility.py": "7f5b24b93c1bb5b74aaae6cbd5fc79784b7cd483c91e410201fc4ddee24af6aa",
+      "scripts/research/rgr/rgr05_independent_verifier.py": "1d1cc41f058b19d8de1b6a02cc19655cb47ac03791011f3bde366b66ebf92407"
+    }
+  },
+  "materialization_boundary": {
+    "dataset_files_written": 0,
+    "full_benchmark_materialized": false,
+    "materialized_benchmark_pair_count": 0,
+    "model_code_implemented": false,
+    "model_performance_inspected": false,
+    "model_training_executed": false,
+    "replication_executed": false,
+    "test_executed": false
+  },
+  "programme": "RELATIONAL-GEOMETRY-REASONING",
+  "schema": "RGR05_FEASIBILITY_EVIDENCE_v1",
+  "split_allocator_feasibility": {
+    "balanced_pairs_per_query": {
+      "REPLICATION": 200,
+      "TEST": 200,
+      "TRAIN": 400,
+      "VALIDATION": 100
+    },
+    "exact_tuple_cross_split_collision_possible_under_plan": false,
+    "ordinal_ranges_per_query": {
+      "REPLICATION": [
+        700,
+        899
+      ],
+      "TEST": [
+        500,
+        699
+      ],
+      "TRAIN": [
+        0,
+        399
+      ],
+      "VALIDATION": [
+        400,
+        499
+      ]
+    },
+    "positive_and_negative_collision_policy": "capacity family keeps only one-switch positives and one lexicographic positive representative per unique negative; split ordinal ranges are disjoint."
+  },
+  "stream_law": {
+    "canonical_format": "RGR04|RGR-RT1-D2C-01|<split>|<master-seed>|<stream-name>|<counter>",
+    "draw_method": "SHA-256 first-64-bit rejection sampling",
+    "samples": {
+      "REPLICATION": {
+        "CODEBOOK": {
+          "counter_0_sha256": "42a8ecec8214aa8eb78e758cb044b8c9c3126b1e0892a5681477922fba5ba054",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|REPLICATION|41044|CODEBOOK|0"
+        },
+        "GRAPH": {
+          "counter_0_sha256": "848cca42c63a1d2fea958875c01df7074966797e8486c3dcf84dcf85c3d15e14",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|REPLICATION|41044|GRAPH|0",
+          "sample_capacity_index": 70271
+        },
+        "ROW_ORDER": {
+          "counter_0_sha256": "2ec519a33e9e2f5d28a1c09297544c18fbfce7d4979d78132b9b414bc9e9182c",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|REPLICATION|41044|ROW_ORDER|0"
+        },
+        "SURFACE_ASSIGNMENT": {
+          "counter_0_sha256": "77ee5eb9457cc06dc13f7fb52a02f2499856d0970b79c5ad9c666935fc48b91d",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|REPLICATION|41044|SURFACE_ASSIGNMENT|0"
+        },
+        "SWITCH": {
+          "counter_0_sha256": "74023d304c5191384eb67a3ab11c10018b04040cb5f31af476a0641a5e7ef628",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|REPLICATION|41044|SWITCH|0",
+          "sample_choice_count": 2,
+          "sample_choice_index": 0
+        }
+      },
+      "TEST": {
+        "CODEBOOK": {
+          "counter_0_sha256": "a0567cbb5bc15bd8ffc7422d66894a841db35e1ee268d9b46f6e5056082b1835",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TEST|41043|CODEBOOK|0"
+        },
+        "GRAPH": {
+          "counter_0_sha256": "e20c97a4a82c16187a58e9fd5c8a8c8be0d94938c05b6f85c2c867da23dcd12f",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TEST|41043|GRAPH|0",
+          "sample_capacity_index": 37840
+        },
+        "ROW_ORDER": {
+          "counter_0_sha256": "00d029201bcb47aa488addd33976fcd14e0f461587941a0d24e8f442b563686b",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TEST|41043|ROW_ORDER|0"
+        },
+        "SURFACE_ASSIGNMENT": {
+          "counter_0_sha256": "f5ec30249d241f1c7e1eb057fe6552d2ad9a2cfe1c03413d48854e8feb49fa01",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TEST|41043|SURFACE_ASSIGNMENT|0"
+        },
+        "SWITCH": {
+          "counter_0_sha256": "143f49a659cba4d3b10ea55edd65069b318b758cfbfe0690bb8754b38fea833c",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TEST|41043|SWITCH|0",
+          "sample_choice_count": 2,
+          "sample_choice_index": 1
+        }
+      },
+      "TRAIN": {
+        "CODEBOOK": {
+          "counter_0_sha256": "449a3c0f4ab7d36727bf398ae8ba63fbe72cc1b15e8803753c66832045564c8f",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TRAIN|41041|CODEBOOK|0"
+        },
+        "GRAPH": {
+          "counter_0_sha256": "33bc8318ac55a54e74c40f68469027eb40d4c25ff01bbb3e135bc7a0838a10ec",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TRAIN|41041|GRAPH|0",
+          "sample_capacity_index": 94398
+        },
+        "ROW_ORDER": {
+          "counter_0_sha256": "c9f6f14eaedb9bc0bfabd21ddfaf3c56eb68acab9782a6eda78d8a6e4e59fbce",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TRAIN|41041|ROW_ORDER|0"
+        },
+        "SURFACE_ASSIGNMENT": {
+          "counter_0_sha256": "c8dfb48e6cc64c1d66dba28b5c64369b3afc883a63144b8f651bf9753cc412dd",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TRAIN|41041|SURFACE_ASSIGNMENT|0"
+        },
+        "SWITCH": {
+          "counter_0_sha256": "2d02d9f5866db79845a0f0373545324389a66413c50c6c4b35e26b9fd215873c",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|TRAIN|41041|SWITCH|0",
+          "sample_choice_count": 2,
+          "sample_choice_index": 0
+        }
+      },
+      "VALIDATION": {
+        "CODEBOOK": {
+          "counter_0_sha256": "2acd1954d9ee89cbaf30d4c8469613b19eeea9a43490768211ce91c686064fdb",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|VALIDATION|41042|CODEBOOK|0"
+        },
+        "GRAPH": {
+          "counter_0_sha256": "060f708a1bad67ab195032aa62b2d9b2f77952739829a10b2a6288e22d3dc3c1",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|VALIDATION|41042|GRAPH|0",
+          "sample_capacity_index": 128227
+        },
+        "ROW_ORDER": {
+          "counter_0_sha256": "4b47a50103ee3833c98ac124a68bb820505f04eebbecba2acbdf287e9bb7b1da",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|VALIDATION|41042|ROW_ORDER|0"
+        },
+        "SURFACE_ASSIGNMENT": {
+          "counter_0_sha256": "8ae35c33d76225040fc910d5d1eda5fc845800570234b535b5514a1f368f6937",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|VALIDATION|41042|SURFACE_ASSIGNMENT|0"
+        },
+        "SWITCH": {
+          "counter_0_sha256": "41400c75ee110f9beed0c57925b54733a467b1cf2ffc2f609fd36777bc22f2a6",
+          "counter_0_text": "RGR04|RGR-RT1-D2C-01|VALIDATION|41042|SWITCH|0",
+          "sample_choice_count": 2,
+          "sample_choice_index": 1
+        }
+      }
+    }
+  },
+  "surface_feasibility": {
+    "codebook_sha256": {
+      "REPLICATION": "c677135eaa0e2cea710bab65d5039c8d0414b7e8f8a2b8e8e0cecc4e624df72c",
+      "TEST": "a8d610cba4c64a520c0bf2254750926d3ac3b09693614edda950328301ffd151",
+      "TRAIN": "299751fc0a84825a4f8cd5809dd07911de9ffee660ed2fcf7cac5cd25a23bbd3",
+      "VALIDATION": "de7d1581ca12f26e974a1abb9b5e6e3360c8f5ba75a42b9bb13bf01482c7d2e0"
+    },
+    "codebooks_pairwise_disjoint": true,
+    "constant_weight_universe_size": 12870,
+    "required_disjoint_code_count": 1024,
+    "surface_assignment_schedule": {
+      "REPLICATION": {
+        "max_per_role_code_count_imbalance": 1,
+        "pair_count": 6000,
+        "role_step": 43,
+        "row_order_sample": [
+          3,
+          5,
+          0,
+          4,
+          2,
+          1
+        ],
+        "row_order_sample_index": 461,
+        "surface_offset": 109,
+        "surface_stride": 79
+      },
+      "TEST": {
+        "max_per_role_code_count_imbalance": 1,
+        "pair_count": 6000,
+        "role_step": 43,
+        "row_order_sample": [
+          1,
+          0,
+          2,
+          4,
+          3,
+          5
+        ],
+        "row_order_sample_index": 122,
+        "surface_offset": 28,
+        "surface_stride": 195
+      },
+      "TRAIN": {
+        "max_per_role_code_count_imbalance": 1,
+        "pair_count": 12000,
+        "role_step": 43,
+        "row_order_sample": [
+          0,
+          5,
+          1,
+          2,
+          3,
+          4
+        ],
+        "row_order_sample_index": 96,
+        "surface_offset": 29,
+        "surface_stride": 61
+      },
+      "VALIDATION": {
+        "max_per_role_code_count_imbalance": 1,
+        "pair_count": 3000,
+        "role_step": 43,
+        "row_order_sample": [
+          5,
+          3,
+          0,
+          2,
+          4,
+          1
+        ],
+        "row_order_sample_index": 675,
+        "surface_offset": 4,
+        "surface_stride": 97
+      }
+    }
+  },
+  "validator": {
+    "bounded_pair_signature": {
+      "intermediate": 2,
+      "negative_mask_sha256": "60c8da74848184658d7f8371ca4052468e27e552d4dccb0e24e78781452a59aa",
+      "positive_mask_sha256": "27107de83e85576553043175bb61f9c9146798e07e63c76f7a03a09270f2f33e",
+      "switch": [
+        5,
+        3
+      ]
+    },
+    "bounded_proof_pair_count": 1,
+    "mutation_count": 11,
+    "mutation_rejections": {
+      "degree_drift": [
+        "negative:self_loop",
+        "pair:degree_sequence_mismatch"
+      ],
+      "direct_source_target": [
+        "positive:direct_source_target_edge",
+        "positive:positive_two_step_count",
+        "pair:degree_sequence_mismatch",
+        "pair:reciprocal_edge_count_mismatch"
+      ],
+      "duplicate_surface_code": [
+        "surface:codes_not_six_distinct"
+      ],
+      "negative_relation_not_broken": [
+        "negative:negative_two_step_count"
+      ],
+      "positive_multiple_two_step": [
+        "positive:positive_two_step_count",
+        "pair:degree_sequence_mismatch"
+      ],
+      "query_mismatch": [
+        "pair:query_mismatch"
+      ],
+      "reciprocal_count_change": [
+        "pair:reciprocal_edge_count_mismatch"
+      ],
+      "row_order_mismatch": [
+        "pair:row_order_mismatch"
+      ],
+      "self_loop": [
+        "negative:self_loop",
+        "pair:degree_sequence_mismatch"
+      ],
+      "surface_mismatch": [
+        "pair:surface_mismatch"
+      ],
+      "unbalanced_surface_code": [
+        "surface:unbalanced_code"
+      ]
+    },
+    "valid_bounded_pair_accepted": true
+  },
+  "work_unit": "RGR-05"
+}

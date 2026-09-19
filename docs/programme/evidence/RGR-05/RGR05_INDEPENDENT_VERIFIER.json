@@ -1,0 +1,23 @@
+{
+  "balanced_16bit_code_universe_formula": 12870,
+  "capacity_pass": true,
+  "counts": {
+    "collision_free_pair_capacity_per_query": 201192,
+    "positive_graphs_with_admissible_switch_per_query": 285500,
+    "switch_histogram": {
+      "1": 238512,
+      "2": 42504,
+      "3": 4448,
+      "4": 36
+    },
+    "unique_switch_positive_graphs_per_query": 238512,
+    "valid_positive_graphs_per_query": 1035272
+  },
+  "full_dataset_materialized": false,
+  "matches_primary": true,
+  "method": "independent bitmask enumeration",
+  "mismatches": {},
+  "required_pairs_per_query": 900,
+  "schema": "RGR05_INDEPENDENT_VERIFIER_v1",
+  "verdict": "PASS"
+}
