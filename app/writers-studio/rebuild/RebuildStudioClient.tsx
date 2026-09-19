@@ -22,7 +22,7 @@ import ManuscriptPassage from '../insight/ManuscriptPassage';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
-import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
+import { INSIGHT_READING, INSIGHT_OBSERVATION, loadCanvasInsight, type CanvasInsight, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { OutlineNode } from '@/lib/writersStudio/focus/outlineTree';
@@ -187,6 +187,7 @@ export default function RebuildStudioClient() {
   const [editorialAnchor, setEditorialAnchor] = useState<HTMLElement | null>(null);
   const [inlinePreview, setInlinePreview] = useState<{ scopeKey: string; original: string; wording: string; changes: boolean } | null>(null);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
+  const [arrivalInsight, setArrivalInsight] = useState<CanvasInsight | null>(null);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
   const workspaceIncoming = useRef<string | null>(null);
   const workspaceReturn = useRef<{
@@ -764,7 +765,12 @@ export default function RebuildStudioClient() {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords);
+      const observationContext = arrivalInsight && workspaceInsight?.readingId === arrivalInsight.readingId
+        && workspaceInsight.key === arrivalInsight.observation.key
+        && arrivalInsight.passages.some(p => p.sectionId === focusId)
+        ? 'Developmental observation being discussed (an interpretation, not an instruction):\n' + arrivalInsight.observation.observation + '\n\nMy question:\n'
+        : '';
+      const out = await sendBoundEditorialTurn(thread.threadId, focusId, observationContext + exactWords);
       if (!out.ok) {
         setEditorialFailure(out.reason === 'unavailable'
           ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
@@ -779,7 +785,7 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting]);
+  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -923,12 +929,17 @@ export default function RebuildStudioClient() {
   const incomingReading = params?.get(INSIGHT_READING) ?? null;
   const incomingObservation = params?.get(INSIGHT_OBSERVATION) ?? null;
   useEffect(() => {
-    if (phase !== 'ready' || !context || !incomingReading || !incomingObservation) return;
-    const key = context.manuscriptId + ':' + incomingReading + ':' + incomingObservation;
-    if (workspaceIncoming.current === key) return;
-    workspaceIncoming.current = key;
-    openWorkspace({ readingId: incomingReading, key: incomingObservation });
-  }, [phase, context, incomingReading, incomingObservation, openWorkspace]);
+    if (phase !== 'ready' || !context?.manuscriptId || !incomingReading || !incomingObservation) return;
+    let cancelled = false;
+    setArrivalInsight(null);
+    void loadCanvasInsight(context.manuscriptId, incomingReading, incomingObservation).then(insight => {
+      if (!cancelled) {
+        setArrivalInsight(insight);
+        if (!insight) setEditorialFailure('The observation could not be opened. Your manuscript is unchanged.');
+      }
+    });
+    return () => { cancelled = true; };
+  }, [phase, context?.manuscriptId, incomingReading, incomingObservation]);
 
   const reviseInsightPassage = useCallback((passage: InsightPassage, authorNotes = '') => {
     if (!context || editorialBusy || adoptionBusy || memberVersionBusy || !passage.verified) return;
@@ -951,6 +962,18 @@ export default function RebuildStudioClient() {
     setPassageTab('suggest');
     requestAnimationFrame(() => document.querySelector('[data-revision-desk]')?.scrollIntoView({ block: 'start' }));
   }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage, editorialScope, editorialDraft]);
+
+  useEffect(() => {
+    if (!arrivalInsight || !context || phase !== 'ready') return;
+    const key = arrivalInsight.manuscriptId + ':' + arrivalInsight.readingId + ':' + arrivalInsight.observation.key;
+    if (workspaceIncoming.current === key) return;
+    workspaceIncoming.current = key;
+    openWorkspace({ readingId: arrivalInsight.readingId, key: arrivalInsight.observation.key });
+    const passage = arrivalInsight.passages.find(p => p.sectionId === requestedSection)
+      ?? arrivalInsight.passages[0];
+    if (passage?.verified && passage.editable) reviseInsightPassage(passage);
+    else setEditorialFailure('This reading no longer identifies verified editable wording here. Read its context before choosing a passage to revise.');
+  }, [arrivalInsight, context, phase, requestedSection, openWorkspace, reviseInsightPassage]);
 
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || draft.threadId !== editorialThread.threadId || draft.sectionId !== focusId) return false;
@@ -1608,7 +1631,7 @@ export default function RebuildStudioClient() {
         );
       }}
     </RebuildWritingBoundary>
-      <InlineWorkspace anchor={editorialAnchor} open={workspaceOpen && passageNoteOpen}>
+      <InlineWorkspace anchor={editorialAnchor} open={workspaceOpen && passageNoteOpen} revealKey={editorialScope}>
         <header className="wsi-inline-header"><strong>01 · {focusName}</strong>
           {workspaceReturn.current?.focusId && workspaceReturn.current.focusId !== focusId && <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={returnToStartingPassage}>Return to starting passage</button>}
           <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => { setPassageNoteOpen(false); window.dispatchEvent(new Event('ws-stop-maia-reading')); }}>Close note</button>
@@ -1626,11 +1649,11 @@ export default function RebuildStudioClient() {
           onInstruction={setEditorialDraft} onSend={text => void sendEditorial(text)}
           onSelectVersion={id => { setSuggestedVersionId(id); setAdoptionOutcome(null); setEditorialFailure(null); }} onApply={() => void applySuggested()}
           onSaveMember={saveMemberRevision} busy={editorialBusy || adoptionBusy || memberVersionBusy}
-          response={lastMaiaEditorialTurn?.body ?? null}
+          response={lastMaiaEditorialTurn?.body ?? (workspaceInsight?.readingId === arrivalInsight?.readingId && workspaceInsight?.key === arrivalInsight?.observation.key && arrivalInsight?.passages.some(p => p.sectionId === focusId) ? arrivalInsight.observation.observation : null) ?? null}
           message={editorialFailure ?? (adoptionOutcome && appliedVersionId === suggestedVersion?.id ? adoptionOutcome.kind === 'applied'
             ? null : 'The Work could not accept this revision. Nothing was changed.' : null)}
           onKeep={() => { setSuggestedVersionId(null); setAdoptionOutcome(null); setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.'); }} />
-        {workspaceInsight && <details className="wsi-related" open><summary>Observation and related passages</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
+        {workspaceInsight && <details className="wsi-related"><summary>Observation and related passages</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
           manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
           onRevise={reviseInsightPassage} busy={editorialBusy || adoptionBusy || memberVersionBusy} /></details>}
         {relationshipChoices.length > 1 && <div className="wsi-bar" aria-label="Choose revision conversation">

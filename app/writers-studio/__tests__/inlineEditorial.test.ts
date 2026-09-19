@@ -22,6 +22,25 @@ test('moving and hiding the conversation keeps the same unsaved draft DOM', () =
   draw(null, false); draw(first, true); expect(first.querySelector('textarea')).toBe(draft);
   act(() => root.unmount()); root = createRoot(container); first.remove(); second.remove();
 });
+test('opening a manuscript conversation reveals it once after its anchor arrives', () => {
+  jest.useFakeTimers();
+  const scroll = jest.fn();
+  const prior = HTMLElement.prototype.scrollIntoView;
+  HTMLElement.prototype.scrollIntoView = scroll;
+  const anchor = document.createElement('div'); document.body.append(anchor);
+  const draw = (target: HTMLElement | null, text: string, open = true) => act(() => root.render(
+    React.createElement(InlineWorkspace, { anchor: target, open, revealKey: 'reading:note', children: text })
+  ));
+  try {
+    draw(null, 'First'); act(() => jest.runOnlyPendingTimers()); expect(scroll).not.toHaveBeenCalled();
+    draw(anchor, 'First'); act(() => jest.runOnlyPendingTimers()); expect(scroll).toHaveBeenCalledTimes(1);
+    draw(anchor, 'MAIA replies'); act(() => jest.runOnlyPendingTimers()); expect(scroll).toHaveBeenCalledTimes(1);
+    draw(anchor, 'MAIA replies', false); draw(anchor, 'MAIA replies');
+    act(() => jest.runOnlyPendingTimers()); expect(scroll).toHaveBeenCalledTimes(2);
+  } finally {
+    HTMLElement.prototype.scrollIntoView = prior; anchor.remove(); jest.useRealTimers();
+  }
+});
 test('proposal stays at its exact unicode passage and conversation follows its paragraph', () => {
   const body = 'Before 🌿.\n\nChosen words. Rest of paragraph.\n\nFollowing paragraph.';
   const start = Array.from('Before 🌿.\n\n').length;

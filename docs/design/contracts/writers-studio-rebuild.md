@@ -159,3 +159,23 @@ size limits and explicit invocation. The Studio header also exposes Developmenta
 tools outside the manuscript scroll, including preparation and reading history.
 This does not add passage-only or discontiguous-range commissioning; supported
 scopes remain whole work, current chapter and a contiguous custom range.
+
+
+### September 19 — observation to editing canvas
+
+Founder review found that Work on canvas only moved to a section and hid the
+reading tools, while discussion still opened in the narrow sidebar. Textual
+observations now enter the existing editing canvas with manuscript, section,
+reading and observation identity. The canvas verifies the current evidence
+before selecting its exact passage, displays the observation beneath it, and
+uses the existing discussion, preview, apply and undo machinery. Unverified
+evidence is not promoted to an exact selection. Related passages remain
+available on expansion. Structural observations without a textual target keep
+their read-only discussion. The existing authorization and adoption endpoints
+are unchanged.
+
+A one-time reveal brings the mounted conversation into view; later replies do
+not steal scroll position. This behavior has a DOM test, not a visual witness.
+Actual authenticated MAIA response, apply/reopen/undo and founder visual review
+remain release requirements. The isolated review database was missing the
+canonical ask authorization migration; it has been applied to that copy only.

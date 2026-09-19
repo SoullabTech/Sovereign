@@ -627,6 +627,12 @@ export default function DevelopRoom({
   const openManuscriptNote = (key: string) => {
     if (!view) return;
     const sectionId = evidenceSectionByObservation.get(key);
+    if (sectionId) {
+      // The shared editing canvas owns preview/apply/undo. Enter it directly
+      // with the observation identity; never strand the writer in read-only talk.
+      window.location.assign(insightWriteHref(manuscriptId, view.id, key, sectionId));
+      return;
+    }
     setCanvasObservation({ readingId: view.id, key });
     setInsightOpen(true);
     if (sectionId) { showPlace(sectionId, true); setReadingToolsOpen(false); }
@@ -1139,7 +1145,7 @@ export default function DevelopRoom({
         </div>
       </aside>
     </div>
-      <InlineWorkspace anchor={noteAnchor} open={insightOpen && Boolean(noteObservation)}>
+      <InlineWorkspace anchor={noteAnchor} open={insightOpen && Boolean(noteObservation)} revealKey={canvasObservation ? canvasObservation.readingId + ":" + canvasObservation.key : undefined}>
         {noteObservation && canvasObservation && <section aria-label="MAIA’s note in the manuscript">
           <header className="wsi-inline-header"><strong>{noteObservation.phenomenonLabel}</strong>
             <button onClick={() => { setInsightOpen(false); setActiveEvidence(null); window.dispatchEvent(new Event('ws-stop-maia-reading')); }}>Close note</button></header>
@@ -1359,7 +1365,6 @@ function Observation({
   onNavigate: (sectionId: string) => void;
   onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
-  const [talking, setTalking] = useState(false);
   const [open, setOpen] = useState(defaultExpanded);
 
   useEffect(() => {
@@ -1465,28 +1470,11 @@ function Observation({
             onRefresh={onRefresh}
           />
 
-          {talking ? (
-            <ObservationDialogue
-              manuscriptId={manuscriptId}
-              readingId={readingId}
-              observationKey={o.key}
-              about={o.observation}
-              /* The room already measured this when it rendered the reading, so the
-                 writer is told BEFORE they speak rather than after their first turn. */
-              superseded={o.state === 'superseded'}
-              onClose={() => setTalking(false)}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setTalking(true)}
-              data-observation-talk={o.key}
-              className="mt-3 text-[12px] opacity-55 underline underline-offset-4"
-              style={{ cursor: 'pointer' }}
-            >
-              talk with MAIA about this
-            </button>
-          )}
+          <button type="button" onClick={() => onOpenCanvas(o.key)}
+            data-observation-talk={o.key}
+            className="mt-3 text-[12px] underline underline-offset-4">
+            Discuss at this passage
+          </button>
         </div>
       </details>
     </li>
