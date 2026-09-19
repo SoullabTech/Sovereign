@@ -329,6 +329,7 @@ let providerCatalog = [];
 let activeWorkUnitId = sessionStorage.getItem('jarvis:active-work-unit') || null;
 let activeWorkUnitStrategy = [];
 let activeExecutionReview = null;
+let activeCanonicalExecutionReview = null;
 let workUnitPollTimer = null;
 let routePreviewGeneration = 0;
 
@@ -781,6 +782,299 @@ async function revokeReviewedExecution() {
   await refreshActiveWorkUnit();
 }
 
+function activeCanonicalTransportBinding(participant) {
+  const bindings = participant?.transport_bindings || [];
+  const superseded = new Set(
+    bindings.map((binding) => binding?.supersedes_binding_id).filter(Boolean),
+  );
+  return [...bindings].reverse().find(
+    (binding) => !superseded.has(binding?.transport_binding_id),
+  ) || null;
+}
+
+function canonicalGrantStandingForParticipant(snapshot, participantId) {
+  const grants = snapshot?.execution_bridge?.grants || [];
+  const matches = grants.filter(
+    (entry) => entry?.grant?.route_participant_id === participantId,
+  );
+  return matches.length ? matches[matches.length - 1] : null;
+}
+
+function renderCanonicalExecutionBridge(snapshot) {
+  if (!snapshot?.execution_bridge?.available || !snapshot?.routing) return '';
+
+  const lifecycle = snapshot.lifecycle?.state || 'UNKNOWN';
+  const attempts = snapshot.provenance?.attempts || [];
+  const verifiers = snapshot.provenance?.verifier_results || [];
+  const participants = snapshot.routing?.participants || [];
+  const required = participants.filter((participant) => participant.required_for_completion === true);
+  const requiredComplete = required.length > 0 && required.every(
+    (participant) => attempts.some(
+      (attempt) => attempt.route_participant_id === participant.participant_id
+        && attempt.status === 'completed',
+    ),
+  );
+  const independentReview = attempts.find(
+    (attempt) => attempt.attempt_kind === 'independent_model_review'
+      && attempt.status === 'completed',
+  );
+  const targetAttempt = [...attempts].reverse().find(
+    (attempt) => ['primary', 'retry'].includes(attempt.attempt_kind),
+  );
+
+  const participantHtml = participants.map((participant) => {
+    const binding = activeCanonicalTransportBinding(participant);
+    const grantStanding = canonicalGrantStandingForParticipant(
+      snapshot,
+      participant.participant_id,
+    );
+    const completedAttempt = attempts.find(
+      (attempt) => attempt.route_participant_id === participant.participant_id
+        && attempt.status === 'completed',
+    );
+    const review = activeCanonicalExecutionReview?.work_unit_id === snapshot.work_unit_id
+      && activeCanonicalExecutionReview?.route_participant_id === participant.participant_id
+      ? activeCanonicalExecutionReview
+      : null;
+
+    let action = '';
+    if (!participant.required_for_completion) {
+      action = '<span class="stage-pill held">Not required for completion</span>';
+    } else if (!binding) {
+      action = '<span class="stage-pill held">Bind governed transport first</span>';
+    } else if (binding.readiness?.status === 'HOLD') {
+      action = `<button class="act" data-e1-prepare="${escapeHtml(participant.participant_id)}">Prepare execution transport</button>`;
+    } else if (binding.readiness?.status !== 'READY') {
+      action = `<span class="stage-pill held">${escapeHtml(binding.readiness?.status || 'NOT READY')}</span>`;
+    } else if (completedAttempt) {
+      action = `<span class="stage-pill done">Durable attempt recorded · ${escapeHtml(completedAttempt.attempt_id)}</span>`;
+    } else if (grantStanding?.standing === 'ACTIVE') {
+      action = `<button class="primary" data-e1-confirm="${escapeHtml(grantStanding.grant.grant_id)}">Confirm Execute</button>
+        <button class="act" data-e1-revoke="${escapeHtml(grantStanding.grant.grant_id)}">Revoke authorization</button>`;
+    } else {
+      action = `<button class="act" data-e1-review="${escapeHtml(participant.participant_id)}">Review exact execution</button>`;
+    }
+
+    let reviewHtml = '';
+    if (review) {
+      const p = review.route_participant || {};
+      const b = review.transport_binding || {};
+      const error = review.error || (!review.ok
+        ? review.reason || review.blockers?.[0]?.code
+        : null);
+      reviewHtml = `<div class="authority-box" style="margin-top:10px">
+        <div class="a-title">Exact one-shot execution review · E1</div>
+        <div class="a-line">Participant: <b>${escapeHtml(p.participant_id || participant.participant_id)}</b></div>
+        <div class="a-line">Cognitive family: <b>${escapeHtml(p.model_family || participant.model_family)}</b> · role <b>${escapeHtml(p.role || participant.role)}</b></div>
+        <div class="a-line">Review dimension: <b>${escapeHtml(p.review_dimension || participant.review_dimension || 'none')}</b></div>
+        <div class="a-line">Transport: <b>${escapeHtml(b.transport_binding_id || binding?.transport_binding_id || 'none')}</b></div>
+        <div class="a-line">Provider/model/adapter: <b>${escapeHtml(b.provider_id || 'none')}</b> · <b>${escapeHtml(b.model_id || 'none')}</b> · <b>${escapeHtml(b.adapter_id || 'none')}</b></div>
+        <div class="a-line">Execution mode: <b>${escapeHtml(b.execution_mode || 'none')}</b> · evidence <b>${escapeHtml(b.evidence_class || 'none')}</b></div>
+        <div class="a-line">Readiness: <b>${escapeHtml(b.readiness?.status || 'none')}</b> · ${escapeHtml(b.readiness?.evidence_ref || 'no evidence')}</div>
+        <div class="a-line">Response budget: <b>${escapeHtml(b.response_budget_profile_id || p.response_budget_profile_id || 'none')}</b></div>
+        <div class="a-line">Canonical SHA: <b>${escapeHtml(review.canonical_sha || snapshot.routing.bound_at_sha || 'unknown')}</b></div>
+        <div class="a-line">Route digest: <b>${escapeHtml(review.route_digest || snapshot.routing.route_digest || 'unknown')}</b></div>
+        <div class="a-line">Attempt population: <b>${escapeHtml(review.attempt_population_digest || 'unknown')}</b></div>
+        ${error ? `<div class="errors"><div>${escapeHtml(error)}</div></div>` : ''}
+        ${review.ok
+          ? `<button class="primary" data-e1-authorize="${escapeHtml(participant.participant_id)}">Authorize this execution once</button>`
+          : ''}
+        <div class="hint" style="margin-top:8px"><b>Authorize is not Execute.</b> Confirm Execute re-reads W2, W3, W3T, the one-shot grant, R4, R5A, and the evidence population before credential presence is consulted.</div>
+      </div>`;
+    }
+
+    return `<div class="authority-box">
+      <div class="a-title">${escapeHtml(participant.participant_id)} · ${escapeHtml(participant.model_family)}</div>
+      <div class="a-line">Role: <b>${escapeHtml(participant.role || 'unknown')}</b> · required <b>${participant.required_for_completion ? 'yes' : 'no'}</b></div>
+      <div class="a-line">Active transport: <b>${escapeHtml(binding?.transport_binding_id || 'none')}</b> · ${escapeHtml(binding?.readiness?.status || 'unbound')}</div>
+      <div class="a-line">Grant: <b>${escapeHtml(grantStanding?.standing || 'none')}</b></div>
+      <div style="margin-top:8px">${action}</div>
+      ${reviewHtml}
+    </div>`;
+  }).join('');
+
+  let evidenceActions = '';
+  if (lifecycle === 'EXECUTING' && independentReview && targetAttempt && verifiers.length === 0) {
+    evidenceActions = `<div class="authority-box">
+      <div class="a-title">Record independent verifier evidence</div>
+      <div class="a-line">Target: <b>${escapeHtml(targetAttempt.attempt_id)}</b> · verifier attempt: <b>${escapeHtml(independentReview.attempt_id)}</b></div>
+      <label class="hint">Human-recorded disposition<br>
+        <select id="e1-verifier-disposition">
+          <option value="supports">supports</option>
+          <option value="challenges">challenges</option>
+          <option value="disagrees">disagrees</option>
+          <option value="insufficient">insufficient</option>
+        </select>
+      </label>
+      <button class="act" data-e1-record-verifier="1">Record verifier evidence</button>
+      <div class="hint">The model attempt is evidence. This gesture records verifier standing; it does not adjudicate the Work Unit.</div>
+    </div>`;
+  } else if (lifecycle === 'EXECUTING' && requiredComplete && verifiers.length > 0) {
+    evidenceActions = `<div class="authority-box">
+      <div class="a-title">Evidence completeness</div>
+      <div class="a-line">All required participants have completed durable attempts and verifier evidence exists.</div>
+      <button class="primary" data-e1-evidence-ready="1">Mark evidence ready</button>
+      <div class="hint">This is a separate W2 lifecycle gesture. It does not accept the evidence.</div>
+    </div>`;
+  }
+
+  return `<div class="run-plan">
+    <div class="plan-title">Canonical provider execution · E1</div>
+    <div class="plan-line">W3 selects cognitive identity. W3T realizes transport. Human one-shot authority permits only that exact realization.</div>
+    <div class="plan-line"><b>Routing ≠ authorization ≠ execution ≠ evidence ≠ adjudication.</b></div>
+    ${participantHtml}
+    ${evidenceActions}
+  </div>`;
+}
+
+async function reviewCanonicalExecution(participantId) {
+  if (!activeWorkUnitId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'canonical-execution-auth-preview',
+    work_unit_id: activeWorkUnitId,
+    route_participant_id: participantId,
+  });
+  activeCanonicalExecutionReview = {
+    ...out,
+    work_unit_id: activeWorkUnitId,
+    route_participant_id: participantId,
+    error: out?.ok ? null : (out?.reason || out?.blockers?.[0]?.code || 'Execution review refused.'),
+  };
+  await refreshActiveWorkUnit();
+}
+
+async function authorizeCanonicalExecutionOnce(participantId) {
+  if (!activeWorkUnitId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'canonical-authorize-execution-once',
+    work_unit_id: activeWorkUnitId,
+    route_participant_id: participantId,
+  });
+  if (out?.ok) activeCanonicalExecutionReview = null;
+  else {
+    activeCanonicalExecutionReview = {
+      ...(activeCanonicalExecutionReview || {}),
+      work_unit_id: activeWorkUnitId,
+      route_participant_id: participantId,
+      error: out?.reason || out?.blockers?.[0]?.code || 'Authorization refused.',
+    };
+  }
+  await refreshActiveWorkUnit();
+}
+
+async function prepareCanonicalExecutionTransport(participantId) {
+  if (!activeWorkUnitId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'canonical-prepare-execution-transport',
+    work_unit_id: activeWorkUnitId,
+    route_participant_id: participantId,
+  });
+  if (!out?.ok) {
+    activeCanonicalExecutionReview = {
+      work_unit_id: activeWorkUnitId,
+      route_participant_id: participantId,
+      ok: false,
+      error: out?.reason || out?.blockers?.[0]?.code || 'Transport readiness refused.',
+    };
+  }
+  await refreshActiveWorkUnit();
+}
+
+async function confirmCanonicalExecution(grantId) {
+  if (!activeWorkUnitId || !grantId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'canonical-confirm-execute',
+    work_unit_id: activeWorkUnitId,
+    grant_id: grantId,
+  });
+  activeCanonicalExecutionReview = null;
+  if (out?.ok) renderWorkUnitSnapshot(out);
+  else {
+    const snapshot = await window.jarvis.workUnitAction({
+      action: 'status',
+      work_unit_id: activeWorkUnitId,
+    });
+    renderWorkUnitSnapshot(snapshot, {
+      transientError: out?.reason || out?.blockers?.[0]?.code || 'Canonical execution refused.',
+    });
+  }
+}
+
+async function revokeCanonicalExecution(grantId) {
+  if (!activeWorkUnitId || !grantId) return;
+  await window.jarvis.workUnitAction({
+    action: 'canonical-revoke-execution-grant',
+    work_unit_id: activeWorkUnitId,
+    grant_id: grantId,
+  });
+  activeCanonicalExecutionReview = null;
+  await refreshActiveWorkUnit();
+}
+
+async function recordCanonicalE1Verifier(snapshot) {
+  const attempts = snapshot?.provenance?.attempts || [];
+  const target = [...attempts].reverse().find(
+    (attempt) => ['primary', 'retry'].includes(attempt.attempt_kind),
+  );
+  const verifier = attempts.find(
+    (attempt) => attempt.attempt_kind === 'independent_model_review'
+      && attempt.status === 'completed',
+  );
+  if (!activeWorkUnitId || !target || !verifier) return;
+
+  const disposition = document.getElementById('e1-verifier-disposition')?.value || 'insufficient';
+  const out = await window.jarvis.workUnitAction({
+    action: 'canonical-record-verifier',
+    work_unit_id: activeWorkUnitId,
+    target_attempt_id: target.attempt_id,
+    verifier_attempt_id: verifier.attempt_id,
+    disposition,
+    evidence_refs: verifier.evidence_refs || [],
+  });
+  if (out?.ok) renderWorkUnitSnapshot(out);
+  else renderWorkUnitSnapshot(snapshot, {
+    transientError: out?.reason || out?.blockers?.[0]?.code || 'Verifier evidence refused.',
+  });
+}
+
+async function markCanonicalE1EvidenceReady(snapshot) {
+  if (!activeWorkUnitId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'canonical-evidence-ready',
+    work_unit_id: activeWorkUnitId,
+  });
+  if (out?.ok) renderWorkUnitSnapshot(out);
+  else renderWorkUnitSnapshot(snapshot, {
+    transientError: out?.reason || out?.blockers?.[0]?.code || 'Evidence-ready transition refused.',
+  });
+}
+
+function wireCanonicalExecutionBridge(snapshot) {
+  document.querySelectorAll('[data-e1-prepare]').forEach((button) => {
+    button.addEventListener('click', () => prepareCanonicalExecutionTransport(button.dataset.e1Prepare));
+  });
+  document.querySelectorAll('[data-e1-review]').forEach((button) => {
+    button.addEventListener('click', () => reviewCanonicalExecution(button.dataset.e1Review));
+  });
+  document.querySelectorAll('[data-e1-authorize]').forEach((button) => {
+    button.addEventListener('click', () => authorizeCanonicalExecutionOnce(button.dataset.e1Authorize));
+  });
+  document.querySelectorAll('[data-e1-confirm]').forEach((button) => {
+    button.addEventListener('click', () => confirmCanonicalExecution(button.dataset.e1Confirm));
+  });
+  document.querySelectorAll('[data-e1-revoke]').forEach((button) => {
+    button.addEventListener('click', () => revokeCanonicalExecution(button.dataset.e1Revoke));
+  });
+  document.querySelector('[data-e1-record-verifier]')?.addEventListener(
+    'click',
+    () => recordCanonicalE1Verifier(snapshot),
+  );
+  document.querySelector('[data-e1-evidence-ready]')?.addEventListener(
+    'click',
+    () => markCanonicalE1EvidenceReady(snapshot),
+  );
+}
+
 function canonicalAttemptLabel(kind) {
   const labels = {
     primary: 'Primary attempt',
@@ -864,6 +1158,8 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
       </div>`).join('')
     : '<div class="hint">No verifier evidence yet.</div>';
 
+  const executionBridgeHtml = renderCanonicalExecutionBridge(snapshot);
+
   const actionHtml = actions.map(action => {
     if (action.action === 'canonical-adjudicate') {
       const suggested = verifiers.flatMap(v => v.evidence_refs || []).join('\n');
@@ -925,6 +1221,7 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
       <div class="a-line">Execution connected: <b>NO</b> · R4/R5A remain a later provider-execution membrane.</div>
     </div>` : ''}
     ${participantHtml}
+    ${executionBridgeHtml}
 
     <h3 style="margin-top:16px">Immutable provenance</h3>
     ${attemptHtml}
@@ -941,15 +1238,15 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
     </div>
 
     <div style="margin-top:12px">
-      ${actionHtml || '<span class="stage-pill held">No canonical execution action is exposed in I4</span>'}
+      ${actionHtml || '<span class="stage-pill held">No I4 lifecycle / transport gesture is currently pending</span>'}
       <button class="act" id="wu-refresh">Refresh canonical state</button>
     </div>
 
     <div class="authority-box" style="margin-top:12px">
       <div class="a-title">Execution boundary</div>
-      <div class="a-line">Provider execution: <b>DISCONNECTED</b></div>
+      <div class="a-line">Provider execution: <b>DISCONNECTED</b> from W3 routing itself; E1 below is a separate human execution-authority bridge.</div>
       <div class="a-line">R5B legacy execution controls: <b>not available for W0.v2</b></div>
-      <div class="a-line">Future provider execution must separately satisfy R4 + R5A + a later authorized connector.</div>
+      <div class="a-line">Canonical E1 execution separately requires exact W3T transport, one-shot human authority, fresh R4 admission, and R5A integrity.</div>
     </div>
   </div>`;
 
@@ -976,6 +1273,7 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
       renderCanonicalV2Snapshot(out);
     });
   });
+  wireCanonicalExecutionBridge(snapshot);
 }
 
 function renderWorkUnitSnapshot(snapshot, { runningProvider = null, transientError = null } = {}) {
