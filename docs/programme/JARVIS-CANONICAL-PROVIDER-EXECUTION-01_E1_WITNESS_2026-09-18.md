@@ -430,7 +430,25 @@ All E1 implementation/test paths remain byte-identical to `bc751084e…`; the
 RGR-04 and T5 populations are preserved byte-identically from canonical. Only
 this witness records the R4 freshness reconciliation.
 
-Freshness standing: **PASS — fourth non-overlapping canonical reconciliation.**
+A fifth PR-level freshness check found that the proven local R4 head could not
+be published because canonical advanced again to:
+
+`bb578146086e7b24f2ccb5215a1ecbe2d807c569`
+
+through Writer's Studio manuscript-centered editorial workspace changes
+(PR #1406). The `fb9f79b… → bb578146…` interval is limited to Writer's Studio
+UI, editorial-workspace tests, and preview-support files and has **zero
+intersection with the 13 E1 candidate paths**.
+
+R5 therefore merge-forward reconciles local R4 head
+`d2c90648bce7fad8d4b1b44b48615d7806f8db67` onto exact canonical
+`bb578146086e7b24f2ccb5215a1ecbe2d807c569` with zero conflicts. All E1
+implementation/test paths remain byte-identical to `d2c90648b…`; the existing
+RGR-04 and T5 populations remain byte-identical to canonical, and the entire
+Writer's Studio interval is carried forward byte-identically from
+`bb578146…`. Only this witness records the R5 freshness reconciliation.
+
+Freshness standing: **PASS — fifth non-overlapping canonical reconciliation.**
 
 ## 16. Non-events
 

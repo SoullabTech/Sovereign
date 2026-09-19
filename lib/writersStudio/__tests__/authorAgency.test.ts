@@ -102,3 +102,16 @@ test('a returned alternative does not discard or silently reparent the working d
   expect(button('Save your revision as a version').disabled).toBe(false);
   expect(container.textContent).toContain('Quieter ending · v2');
 });
+
+test('teaching questions replace one another and preserve the working revision', () => {
+  render(); click('Adjust this wording');
+  const draft = container.querySelector('textarea.wsi-revision') as HTMLTextAreaElement;
+  const before = draft.value;
+  click('Explain the craft'); click('Make the case for my original'); click('Discuss this');
+  const sent = (props.onSend as jest.Mock).mock.calls[0][0];
+  expect(sent).toContain('Make the strongest case for keeping my original wording.');
+  expect(sent).not.toContain('Explain the craft principle behind this suggestion using');
+  expect(sent).toContain('My unsaved working revision');
+  expect(draft.value).toBe(before);
+  expect(props.onApply).not.toHaveBeenCalled(); expect(props.onSaveMember).not.toHaveBeenCalled();
+});

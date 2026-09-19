@@ -16,7 +16,9 @@ import { fetchStructure, refusalCopy as structureRefusalCopy, type StructureNode
 import RebuildWritingBoundary from './RebuildWritingBoundary';
 import RebuildAuthoredBody from './RebuildAuthoredBody';
 import GoldLine from '../insight/GoldLine';
-import CanvasWorkspace from '../insight/CanvasWorkspace';
+import MaiaListen from '../insight/MaiaListen';
+import InlineWorkspace from '../insight/InlineWorkspace';
+import ManuscriptPassage from '../insight/ManuscriptPassage';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
@@ -179,6 +181,8 @@ export default function RebuildStudioClient() {
   const [canvasExpanded, setCanvasExpanded] = useState(false);
   const [writingEpoch, setWritingEpoch] = useState(0);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [editorialAnchor, setEditorialAnchor] = useState<HTMLElement | null>(null);
+  const [inlinePreview, setInlinePreview] = useState<{ scopeKey: string; original: string; wording: string; changes: boolean } | null>(null);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
   const workspaceIncoming = useRef<string | null>(null);
@@ -208,6 +212,10 @@ export default function RebuildStudioClient() {
   const editorialDrafts = useRef(new Map<string, string>());
   const editorialScope = JSON.stringify([context?.manuscriptId, focusId,
     selectedPassage?.draftSectionId === focusId ? selectedPassage.text : null]);
+  const showInlinePreview = useCallback((preview: { original: string; wording: string; changes: boolean } | null) => {
+    setInlinePreview(preview ? { ...preview, scopeKey: editorialScope } : null);
+  }, [editorialScope]);
+  useEffect(() => { window.dispatchEvent(new Event('ws-stop-maia-reading')); }, [editorialScope]);
   const previousEditorialScope = useRef(editorialScope);
   useEffect(() => {
     if (previousEditorialScope.current === editorialScope) return;
@@ -876,10 +884,11 @@ export default function RebuildStudioClient() {
         scrollTop: scroll?.scrollTop ?? 0, scrollLeft: scroll?.scrollLeft ?? 0 };
     }
     if (insight) setWorkspaceInsight(insight);
+    setMobilePane('manuscript');
     setWorkspaceOpen(true);
   }, [workspaceOpen, focusId, selectedPassage, editorialThread, suggestedVersionId, passageTab, maiaMode]);
 
-  const closeWorkspace = useCallback(() => {
+  const returnToStartingPassage = useCallback(() => {
     if (editorialBusy || adoptionBusy || memberVersionBusy) return;
     const previous = workspaceReturn.current;
     if (previous) {
@@ -894,8 +903,15 @@ export default function RebuildStudioClient() {
         if (scroll) { scroll.scrollTop = previous.scrollTop; scroll.scrollLeft = previous.scrollLeft; }
       }));
     }
+    window.dispatchEvent(new Event('ws-stop-maia-reading'));
     setWorkspaceOpen(false);
   }, [editorialBusy, adoptionBusy, memberVersionBusy, focusId]);
+
+  const closeWorkspace = useCallback(() => {
+    if (editorialBusy || adoptionBusy || memberVersionBusy) return;
+    window.dispatchEvent(new Event('ws-stop-maia-reading'));
+    setWorkspaceOpen(false);
+  }, [editorialBusy, adoptionBusy, memberVersionBusy]);
 
   const incomingReading = params?.get(INSIGHT_READING) ?? null;
   const incomingObservation = params?.get(INSIGHT_OBSERVATION) ?? null;
@@ -1012,7 +1028,7 @@ export default function RebuildStudioClient() {
           <span style={{ fontFamily: SERIF, fontSize: 17 }}>Writer’s Studio</span>
         </div>
         <nav className="wsr-modebar" style={{ display: 'flex', justifyContent: 'center' }}>
-          <StudioModeBar current="write" manuscriptId={context.manuscriptId} />
+          <StudioModeBar current="write" manuscriptId={context.manuscriptId} currentSectionId={focusId} />
         </nav>
         {/* ── APPEARANCE ───────────────────────────────────────────────────
             The SAME control Home and the Canvas mount, writing the SAME
@@ -1036,7 +1052,7 @@ export default function RebuildStudioClient() {
         </div>
       )}
 
-      <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : '286px minmax(520px, 1fr) 390px' }}>
+      <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : workspaceOpen ? '250px minmax(0, 1fr)' : '286px minmax(520px, 1fr) 390px' }}>
         {!canvasExpanded && (<aside className={`wsr-outline ${mobilePane !== 'outline' ? 'wsr-mobile-hidden' : ''}`} style={{ borderRight: `1px solid ${C.soft}`, background: C.panel, overflowY: 'auto', padding: 16 }}>
           <Link href="/writers-studio" aria-label="Return to all Writer’s Studio works" style={{ display: 'inline-block', color: C.muted, fontSize: 12, padding: '3px 2px 15px', textDecoration: 'none' }}>‹ All Works</Link>
           <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 14, marginBottom: 18 }}>
@@ -1173,6 +1189,7 @@ export default function RebuildStudioClient() {
               <span style={{ padding: '0 7px', color: C.quiet }}>/</span>{chapterTitle}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+              <button type="button" className="ws-inline-open" aria-pressed={workspaceOpen} disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => workspaceOpen ? closeWorkspace() : openWorkspace()}>{workspaceOpen ? 'Clean manuscript' : 'Show editorial layer'}</button>
               <button type="button" disabled={!chapter} title={chapter ? 'Switch between chapter and passage focus' : 'Chapter focus becomes available when this section belongs to a confirmed chapter.'}
                 onClick={() => chapter && setMaiaMode(maiaMode === 'chapter' ? 'passage' : 'chapter')}
                 style={{ border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: '8px 12px', color: C.secondary, fontSize: 11.5, cursor: chapter ? 'pointer' : 'default', opacity: chapter ? 1 : .72 }}>
@@ -1186,7 +1203,7 @@ export default function RebuildStudioClient() {
           </div>)}
 
           <div data-manuscript-scroll className={canvasExpanded ? 'wsr-pure-scroll' : undefined} style={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', padding: canvasExpanded ? '72px clamp(40px, 14vw, 220px) 120px' : '48px clamp(34px, 7vw, 100px) 90px' }}>
-            <article style={{ maxWidth: canvasExpanded ? 840 : 760, margin: '0 auto', fontFamily: SERIF }}>
+            <article style={{ maxWidth: workspaceOpen ? 1040 : canvasExpanded ? 840 : 760, margin: '0 auto', fontFamily: SERIF }}>
               {chapter ? (
                 <>
                   <div data-canvas-heading-level="chapter" style={{ color: C.gold, fontFamily: SANS, fontSize: 10.5, letterSpacing: '.16em', fontWeight: 700, marginBottom: 9 }}>CHAPTER {chapter.root.heading?.match(/Chapter\s+(\d+)/i)?.[1] ?? ''}</div>
@@ -1230,7 +1247,14 @@ export default function RebuildStudioClient() {
                         <h3 data-canvas-heading-level="unconfirmed" style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.3, fontWeight: 650, letterSpacing: '.025em', margin: '26px 0 11px', color: C.muted }}>{section.heading}</h3>
                       )
                     )}
-                    <RebuildAuthoredBody
+                    {workspaceOpen && review && <div className="ws-section-observations" aria-label="Section observations">
+                      {findingsForSection(review.findings, section.draftSectionId).map((finding, index) => <button key={finding.id} type="button"
+                        disabled={editorialBusy || adoptionBusy || memberVersionBusy}
+                        onClick={() => { focusWritingSection(section.draftSectionId); openWorkspace({ readingId: finding.readingId, key: finding.id.slice(finding.readingId.length + 1) }); }}>
+                        {index + 1} · {reviewLensLabel(finding.lens)}{reviewNeedsRefresh ? ' · earlier reading' : ''}
+                      </button>)}
+                    </div>}
+                    <div hidden={workspaceOpen && section.draftSectionId === focusId}><RebuildAuthoredBody
                       section={section}
                       body={liveBody}
                       held={held ? { start: held.start, end: held.end } : null}
@@ -1239,7 +1263,15 @@ export default function RebuildStudioClient() {
                       onFocusPlace={() => focusWritingSection(section.draftSectionId)}
                       onCaptureBeforeBlur={(body) => writing.captureForUnmount(section.draftSectionId, body)}
                       onSelectPassage={(start, end, text) => holdPassage(section, start, end, text)}
-                    />
+                    /></div>
+                    {section.draftSectionId === focusId && <div hidden={!workspaceOpen}>
+                      <ManuscriptPassage body={liveBody} range={held} proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}>
+                        <div ref={setEditorialAnchor} data-inline-editorial-anchor />
+                      </ManuscriptPassage>
+                    </div>}
+                    {workspaceOpen && section.editable && <button type="button" className="ws-inline-open" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => { focusWritingSection(section.draftSectionId); setWorkspaceOpen(true); setMobilePane('manuscript'); }}>
+                      {section.draftSectionId === focusId && workspaceOpen ? 'Editorial passage open' : 'Explore this section with MAIA'}
+                    </button>}
                   </section>
                 );
               })}
@@ -1255,7 +1287,7 @@ export default function RebuildStudioClient() {
           ) : null}
         </section>
 
-        {!canvasExpanded && (<aside className={`wsr-maia ${mobilePane !== 'maia' ? 'wsr-mobile-hidden' : ''}`} style={{ borderLeft: `1px solid ${C.soft}`, background: C.panel, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {!canvasExpanded && !workspaceOpen && (<aside className={`wsr-maia ${mobilePane !== 'maia' ? 'wsr-mobile-hidden' : ''}`} style={{ borderLeft: `1px solid ${C.soft}`, background: C.panel, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '18px 18px 14px', borderBottom: `1px solid ${C.soft}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div>
@@ -1457,6 +1489,7 @@ export default function RebuildStudioClient() {
                         {lastMaiaEditorialTurn && (
                           <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 15, marginBottom: 14 }}>
                             <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 7 }}>MAIA's perspective</div>
+                            <MaiaListen key={focusId} text={lastMaiaEditorialTurn.body} />
                             <div style={{ fontSize: 12.5, lineHeight: 1.58, color: C.muted, whiteSpace: 'pre-wrap' }}>{lastMaiaEditorialTurn.body}</div>
                           </div>
                         )}
@@ -1523,6 +1556,7 @@ export default function RebuildStudioClient() {
                   <div>
                     <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 15, marginBottom: 14 }}>
                       <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 7 }}>MAIA's perspective</div>
+                      {maiaResponse && <MaiaListen key={focusId} text={maiaResponse} />}
                       <div style={{ fontSize: 12.5, lineHeight: 1.58, color: C.muted, whiteSpace: 'pre-wrap' }}>
                         {maiaResponse ?? (passageTab === 'interpret'
                           ? 'Stay with this part of the Work and ask MAIA what she notices in its meaning, movement, tone, or pattern.'
@@ -1552,7 +1586,7 @@ export default function RebuildStudioClient() {
       {!canvasExpanded && (<div className="wsr-mobile-nav">
         <button type="button" onClick={() => setMobilePane('outline')} data-active={mobilePane === 'outline'}>Outline</button>
         <button type="button" onClick={() => setMobilePane('manuscript')} data-active={mobilePane === 'manuscript'}>Manuscript</button>
-        <button type="button" onClick={() => setMobilePane('maia')} data-active={mobilePane === 'maia'}>MAIA</button>
+        <button type="button" onClick={() => { setWorkspaceOpen(false); setMobilePane('maia'); }} data-active={mobilePane === 'maia'}>MAIA</button>
       </div>)}
       {writingMessage && <div className="wsr-writing-alert" role="status">{writingMessage}</div>}
 
@@ -1560,12 +1594,13 @@ export default function RebuildStudioClient() {
         );
       }}
     </RebuildWritingBoundary>
-      <CanvasWorkspace style={canvasSurfaceVars} open={workspaceOpen} title={workspaceInsight ? 'Observation and revision' : focusName}
-        busy={editorialBusy || adoptionBusy || memberVersionBusy} onClose={closeWorkspace}>
-        {workspaceInsight && <InsightReadings key={context.manuscriptId} refreshKey={context.version}
-          manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
-          onRevise={reviseInsightPassage} busy={editorialBusy || adoptionBusy || memberVersionBusy} />}
-        <RevisionDesk scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
+      <InlineWorkspace anchor={editorialAnchor} open={workspaceOpen}>
+        <header className="wsi-inline-header"><strong>01 · {focusName}</strong>
+          {workspaceReturn.current?.focusId && workspaceReturn.current.focusId !== focusId && <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={returnToStartingPassage}>Return to starting passage</button>}
+          <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={closeWorkspace}>Clean manuscript · Collapse</button>
+        </header>
+
+        <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview} scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
           currentText={selectedPassage?.draftSectionId === focusId
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
             : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
@@ -1581,11 +1616,14 @@ export default function RebuildStudioClient() {
           message={editorialFailure ?? (adoptionOutcome && appliedVersionId === suggestedVersion?.id ? adoptionOutcome.kind === 'applied'
             ? null : 'The Work could not accept this revision. Nothing was changed.' : null)}
           onKeep={() => { setSuggestedVersionId(null); setAdoptionOutcome(null); setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.'); }} />
+        {workspaceInsight && <details className="wsi-related" open><summary>Observation and related passages</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
+          manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
+          onRevise={reviseInsightPassage} busy={editorialBusy || adoptionBusy || memberVersionBusy} /></details>}
         {relationshipChoices.length > 1 && <div className="wsi-bar" aria-label="Choose revision conversation">
           {relationshipChoices.map((choice, i) => <button key={choice.threadId} type="button" disabled={editorialBusy}
             onClick={() => void chooseRelationship(choice.threadId)}>Conversation {i + 1} · {choice.turnCount} turns</button>)}
         </div>}
-      </CanvasWorkspace>
+      </InlineWorkspace>
     </>
   );
 }
