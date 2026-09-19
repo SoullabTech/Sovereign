@@ -412,7 +412,25 @@ ACT 9 / ACT 10 documentary/evidence population is preserved byte-identically
 from canonical. Only this witness records the additional freshness
 reconciliation.
 
-Freshness standing: **PASS — third non-overlapping canonical reconciliation.**
+A fourth PR-level freshness check found that R3 reconciliation was not begun
+because canonical had already advanced again to:
+
+`fb9f79b10090c2e668b9e8a989de2af4ba26f69a`
+
+through MAIA Teaching Intelligence T5 Research Citation Provenance (PR #1405).
+The `567e062b… → fb9f79b…` interval is limited to the T5 research citation
+provenance contract, implementation, and test, and has **zero intersection with
+the 13 E1 candidate paths**.
+
+R4 therefore merge-forward reconciles prior E1 head
+`bc751084e3a46a6eb23b35500b8851e24f900b85` onto exact canonical
+`fb9f79b10090c2e668b9e8a989de2af4ba26f69a`. This necessarily carries forward
+the already-canonical RGR-04 package from `567e062b…` plus the three T5 files.
+All E1 implementation/test paths remain byte-identical to `bc751084e…`; the
+RGR-04 and T5 populations are preserved byte-identically from canonical. Only
+this witness records the R4 freshness reconciliation.
+
+Freshness standing: **PASS — fourth non-overlapping canonical reconciliation.**
 
 ## 16. Non-events
 
