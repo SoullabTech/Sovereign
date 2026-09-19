@@ -719,7 +719,7 @@ export default function DevelopRoom({
                   <select aria-label="Developmental reading scope" value={effectiveScope}
                     disabled={commission.phase === 'reading'}
                     onChange={e => { setDevelopScope(e.target.value as DevelopScope); if (e.target.value === 'custom') setReadingToolsOpen(true); }}
-                    className="block border rounded px-2 py-2 mt-1 bg-transparent" style={{ borderColor: PRESS.rule }}>
+                    className="block border rounded px-2 py-2 mt-1 bg-transparent" style={{ borderColor: PRESS.rule, color: PRESS.text }}>
                     <option value="work" style={{ color: PRESS.ink }}>Whole work</option>
                     <option value="chapter" disabled={!currentChapter} style={{ color: PRESS.ink }}>Current chapter</option>
                     <option value="custom" style={{ color: PRESS.ink }}>Choose a range</option>
@@ -728,7 +728,7 @@ export default function DevelopRoom({
                 <label className="text-[12px]">What would you like to explore?
                   <select aria-label="Developmental task" value={lens} disabled={commission.phase === 'reading'}
                     onChange={e => setLens(e.target.value as DevelopmentalLens)}
-                    className="block border rounded px-2 py-2 mt-1 bg-transparent max-w-full" style={{ borderColor: PRESS.rule }}>
+                    className="block border rounded px-2 py-2 mt-1 bg-transparent max-w-full" style={{ borderColor: PRESS.rule, color: PRESS.text }}>
                     {LENS_ORDER.map(l => <option key={l} value={l} style={{ color: PRESS.ink }}>{l === 'development' ? 'Development' : lensLabel(l)} · {LENS_QUESTION[l]}</option>)}
                   </select>
                 </label>
