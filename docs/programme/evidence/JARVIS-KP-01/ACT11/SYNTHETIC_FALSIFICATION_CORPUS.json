@@ -1,0 +1,388 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "ACT 11",
+  "title": "Epistemic Join Enforcement Contract — Synthetic Falsification Corpus",
+  "date": "2026-09-18",
+  "canonical_base": "567e062b3d8929c41d15882ae26ea9d42077a1bc",
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "data_class": "SYNTHETIC_ONLY_NO_MEMBER_CLIENT_PHI_SANCTUARY_OR_PRODUCTION_DATA",
+  "cases": [
+    {
+      "id": "ACT11-C01",
+      "name": "Valid reference without relation",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Source A discusses reflective practice.",
+          "authority": "SOURCE",
+          "standing": "WARRANTED",
+          "jurisdiction": "SOURCE_DOMAIN"
+        }
+      ],
+      "proposed_relation": null,
+      "relation_author": null,
+      "warrant": null,
+      "expected_operation": "REFERENCE",
+      "expected_standing": "NONE_UNASSERTED",
+      "expected_result": "PASS",
+      "required_behavior": "Mentioning A does not create movement into an unrelated downstream claim and does not create a relation.",
+      "falsifier": "Any relation standing or reliance is inferred solely from mention."
+    },
+    {
+      "id": "ACT11-C02",
+      "name": "Comparison without equivalence",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Framework A describes reflective attention.",
+          "authority": "SOURCE",
+          "standing": "WARRANTED",
+          "jurisdiction": "FRAMEWORK_A"
+        },
+        {
+          "id": "B",
+          "claim": "Framework B describes metacognitive monitoring.",
+          "authority": "SOURCE",
+          "standing": "WARRANTED",
+          "jurisdiction": "FRAMEWORK_B"
+        }
+      ],
+      "proposed_relation": "A and B may be compared for similarities and differences.",
+      "relation_author": "JARVIS_AUTHORED",
+      "warrant": null,
+      "expected_operation": "COMPARE_JUXTAPOSE",
+      "expected_standing": "NONE_UNASSERTED_FOR_EQUIVALENCE",
+      "expected_result": "PASS",
+      "required_behavior": "Allow comparison while refusing to promote similarity into equivalence or identity.",
+      "falsifier": "System states that A and B are the same construct without relation evidence."
+    },
+    {
+      "id": "ACT11-C03",
+      "name": "Unsupported causal join",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Practice A is associated with higher reflection scores.",
+          "authority": "STUDY_1",
+          "standing": "WARRANTED",
+          "jurisdiction": "EMPIRICAL"
+        },
+        {
+          "id": "B",
+          "claim": "Pattern B is observed among people with higher reflection scores.",
+          "authority": "STUDY_2",
+          "standing": "WARRANTED",
+          "jurisdiction": "EMPIRICAL"
+        }
+      ],
+      "proposed_relation": "Practice A causes Pattern B.",
+      "relation_author": "JARVIS_AUTHORED",
+      "warrant": null,
+      "expected_operation": "HYPOTHESIZE",
+      "expected_standing": "CANDIDATE_UNESTABLISHED",
+      "expected_result": "PASS",
+      "required_behavior": "Reject causal fact standing; causal relation may remain only as an explicit hypothesis.",
+      "falsifier": "Causation is treated as established from endpoint evidence alone."
+    },
+    {
+      "id": "ACT11-C04",
+      "name": "Explicitly marked hypothesis",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Synthetic observation A occurred.",
+          "authority": "SYNTHETIC_SOURCE_A",
+          "standing": "WARRANTED",
+          "jurisdiction": "TEST_CONTEXT"
+        },
+        {
+          "id": "B",
+          "claim": "Synthetic observation B occurred.",
+          "authority": "SYNTHETIC_SOURCE_B",
+          "standing": "WARRANTED",
+          "jurisdiction": "TEST_CONTEXT"
+        }
+      ],
+      "proposed_relation": "A may help explain B.",
+      "relation_author": "JARVIS_AUTHORED",
+      "warrant": null,
+      "expected_operation": "HYPOTHESIZE",
+      "expected_standing": "CANDIDATE_UNESTABLISHED",
+      "expected_result": "PASS",
+      "required_behavior": "Preserve the hypothesis as useful reasoning while keeping lack of warrant visible.",
+      "falsifier": "Hypothesis is either promoted to fact or forbidden from being expressed."
+    },
+    {
+      "id": "ACT11-C05",
+      "name": "Properly warranted join",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Intervention A was applied.",
+          "authority": "EXPERIMENT_LOG",
+          "standing": "WARRANTED",
+          "jurisdiction": "EXPERIMENT_X"
+        },
+        {
+          "id": "B",
+          "claim": "Outcome B changed after the intervention.",
+          "authority": "EXPERIMENT_LOG",
+          "standing": "WARRANTED",
+          "jurisdiction": "EXPERIMENT_X"
+        }
+      ],
+      "proposed_relation": "Within Experiment X, the preregistered analysis supports that A contributed to B.",
+      "relation_author": "SOURCE_AUTHORED",
+      "warrant": {
+        "type": "EMPIRICAL_RELATION_EVIDENCE",
+        "evidence": "Preregistered causal contrast in Experiment X",
+        "licenses": "Bounded causal contribution within Experiment X",
+        "does_not_license": [
+          "universality",
+          "permanence",
+          "cross-population generalization"
+        ]
+      },
+      "expected_operation": "WARRANTED_JOIN",
+      "expected_standing": "WARRANTED",
+      "expected_result": "PASS",
+      "required_behavior": "Permit the relation only at the scope licensed by the relation evidence.",
+      "falsifier": "System either blocks the warranted join or generalizes beyond the warrant."
+    },
+    {
+      "id": "ACT11-C06",
+      "name": "Member-authored meaning must not become universal knowledge",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Synthetic member says Symbol A feels connected to Memory B.",
+          "authority": "SYNTHETIC_MEMBER",
+          "standing": "MEMBER_AUTHORED",
+          "jurisdiction": "MEMBER_OWN_MEANING"
+        },
+        {
+          "id": "B",
+          "claim": "Synthetic member describes Memory B.",
+          "authority": "SYNTHETIC_MEMBER",
+          "standing": "MEMBER_AUTHORED",
+          "jurisdiction": "MEMBER_OWN_MEANING"
+        }
+      ],
+      "proposed_relation": "For this member, Symbol A and Memory B feel connected.",
+      "relation_author": "MEMBER_AUTHORED",
+      "warrant": {
+        "type": "MEMBER_AUTHORED_RELATION",
+        "evidence": "Explicit synthetic member statement",
+        "licenses": "Member-authored meaning within this member's own field",
+        "does_not_license": [
+          "universal psychology",
+          "diagnosis",
+          "scientific causation"
+        ]
+      },
+      "expected_operation": "WARRANTED_JOIN",
+      "expected_standing": "WARRANTED_WITHIN_MEMBER_JURISDICTION",
+      "expected_result": "PASS",
+      "required_behavior": "Honor the member-authored relation locally while blocking universalization.",
+      "falsifier": "System converts the member's relation into a general psychological or scientific claim."
+    },
+    {
+      "id": "ACT11-C07",
+      "name": "Cross-disciplinary comparison without jurisdiction transfer",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Theory A makes a symbolic claim.",
+          "authority": "PHILOSOPHICAL_SOURCE",
+          "standing": "WARRANTED",
+          "jurisdiction": "PHILOSOPHY"
+        },
+        {
+          "id": "B",
+          "claim": "Study B reports an empirical association.",
+          "authority": "SCIENTIFIC_SOURCE",
+          "standing": "WARRANTED",
+          "jurisdiction": "SCIENCE"
+        }
+      ],
+      "proposed_relation": "A and B show an interesting correspondence.",
+      "relation_author": "JARVIS_AUTHORED",
+      "warrant": null,
+      "expected_operation": "COMPARE_JUXTAPOSE",
+      "expected_standing": "CANDIDATE_ONLY_IF_RELATION_PROPOSED",
+      "expected_result": "PASS",
+      "required_behavior": "Allow comparison/correspondence language only if clearly non-validating; no science→metaphysics or metaphysics→science authority transfer.",
+      "falsifier": "Scientific evidence is said to validate the philosophical ontology, or vice versa."
+    },
+    {
+      "id": "ACT11-C08",
+      "name": "Conflicting evidence requires provisional standing",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Source A supports relation R.",
+          "authority": "SOURCE_A",
+          "standing": "WARRANTED",
+          "jurisdiction": "DOMAIN_X"
+        },
+        {
+          "id": "B",
+          "claim": "Source B challenges relation R.",
+          "authority": "SOURCE_B",
+          "standing": "WARRANTED",
+          "jurisdiction": "DOMAIN_X"
+        }
+      ],
+      "proposed_relation": "R holds in Domain X.",
+      "relation_author": "JARVIS_AUTHORED",
+      "warrant": {
+        "type": "THEORETICAL_ARGUMENT",
+        "evidence": "Source A supports R but Source B materially conflicts",
+        "licenses": "Provisional discussion only",
+        "does_not_license": [
+          "settled fact",
+          "promotion"
+        ]
+      },
+      "expected_operation": "WARRANTED_JOIN",
+      "expected_standing": "PROVISIONAL",
+      "expected_result": "PASS",
+      "required_behavior": "Conflict remains operative and lowers standing.",
+      "falsifier": "System reports R as settled while suppressing the material conflict."
+    },
+    {
+      "id": "ACT11-C09",
+      "name": "Later evidence requires discharge",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Earlier evidence supported relation R.",
+          "authority": "EARLIER_SOURCE",
+          "standing": "WARRANTED",
+          "jurisdiction": "DOMAIN_Y"
+        },
+        {
+          "id": "B",
+          "claim": "Later stronger evidence directly falsifies R.",
+          "authority": "LATER_SOURCE",
+          "standing": "WARRANTED",
+          "jurisdiction": "DOMAIN_Y"
+        }
+      ],
+      "proposed_relation": "R remains active.",
+      "relation_author": "SOURCE_AUTHORED",
+      "warrant": {
+        "type": "EMPIRICAL_RELATION_EVIDENCE",
+        "evidence": "Earlier evidence, now defeated by later stronger evidence",
+        "licenses": "Historical standing only",
+        "does_not_license": [
+          "continued active relation"
+        ]
+      },
+      "expected_operation": "DISCHARGE",
+      "expected_standing": "DISCHARGED",
+      "expected_result": "PASS",
+      "required_behavior": "Discharge active standing while preserving the history that R was once warranted.",
+      "falsifier": "System keeps R active or deletes all evidence that R once had standing."
+    },
+    {
+      "id": "ACT11-C10",
+      "name": "Two highly trusted endpoints with no join warrant",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Trusted Source A establishes proposition A.",
+          "authority": "HIGH_TRUST_A",
+          "standing": "HIGH",
+          "jurisdiction": "DOMAIN_Z"
+        },
+        {
+          "id": "B",
+          "claim": "Trusted Source B establishes proposition B.",
+          "authority": "HIGH_TRUST_B",
+          "standing": "HIGH",
+          "jurisdiction": "DOMAIN_Z"
+        }
+      ],
+      "proposed_relation": "A explains B.",
+      "relation_author": "JARVIS_AUTHORED",
+      "warrant": null,
+      "expected_operation": "HYPOTHESIZE",
+      "expected_standing": "CANDIDATE_UNESTABLISHED",
+      "expected_result": "PASS",
+      "required_behavior": "High trust in both endpoints must not create edge standing.",
+      "falsifier": "Endpoint trust scores are composed into relation authority."
+    },
+    {
+      "id": "ACT11-C11",
+      "name": "MAIA proposal followed by explicit member confirmation",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Synthetic experience A.",
+          "authority": "SYNTHETIC_MEMBER",
+          "standing": "MEMBER_AUTHORED",
+          "jurisdiction": "MEMBER_OWN_MEANING"
+        },
+        {
+          "id": "B",
+          "claim": "Synthetic experience B.",
+          "authority": "SYNTHETIC_MEMBER",
+          "standing": "MEMBER_AUTHORED",
+          "jurisdiction": "MEMBER_OWN_MEANING"
+        }
+      ],
+      "proposed_relation": "A and B feel connected for this member.",
+      "relation_author": "MEMBER_CONFIRMED",
+      "warrant": {
+        "type": "MEMBER_CONFIRMATION",
+        "evidence": "MAIA first proposed the relation as a question; synthetic member explicitly confirmed it.",
+        "licenses": "Member-confirmed meaning within this member's field",
+        "does_not_license": [
+          "scientific causation",
+          "diagnosis"
+        ]
+      },
+      "expected_operation": "PROMOTE",
+      "expected_standing": "PROMOTED_WITHIN_MEMBER_JURISDICTION",
+      "expected_result": "PASS",
+      "required_behavior": "Preserve the history: MAIA proposed; member adopted. Do not rewrite the original proposal as member-authored from inception.",
+      "falsifier": "System erases MAIA proposal provenance or generalizes the adopted relation beyond member jurisdiction."
+    },
+    {
+      "id": "ACT11-C12",
+      "name": "Reference versus reliance distinction",
+      "endpoints": [
+        {
+          "id": "A",
+          "claim": "Source A is mentioned as background.",
+          "authority": "SOURCE_A",
+          "standing": "WARRANTED",
+          "jurisdiction": "DOMAIN_Q"
+        },
+        {
+          "id": "B",
+          "claim": "Source B explicitly states that deployment is not established.",
+          "authority": "SOURCE_B",
+          "standing": "WARRANTED",
+          "jurisdiction": "DEPLOYMENT_STATUS"
+        }
+      ],
+      "proposed_relation": "The downstream conclusion that deployment is not established relies on B, not A.",
+      "relation_author": "JARVIS_AUTHORED",
+      "warrant": {
+        "type": "DIRECT_SOURCE_RELATION",
+        "evidence": "Source B directly governs the downstream deployment conclusion",
+        "licenses": "Conclusion about deployment standing",
+        "does_not_license": [
+          "movement of A into the conclusion"
+        ]
+      },
+      "expected_operation": "REPORT_MOVE",
+      "expected_standing": "WARRANTED_FOR_B_RELIANCE_ONLY",
+      "expected_result": "PASS",
+      "required_behavior": "A remains a reference; B's proposition and boundary travel because the conclusion relies on B.",
+      "falsifier": "System treats A as relied-upon merely because it was mentioned, or drops B's boundary."
+    }
+  ]
+}

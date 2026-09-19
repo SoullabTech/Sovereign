@@ -466,7 +466,25 @@ RGR-04 and T5 populations remain byte-identical to canonical, and the Writer's
 Studio canonical state is carried forward byte-identically from
 `f0a16d9c…`. Only this witness records the R6 freshness reconciliation.
 
-Freshness standing: **PASS — sixth non-overlapping canonical reconciliation.**
+A seventh PR-level freshness check found that the CI-green R6 head could not be
+merged because canonical advanced again to:
+
+`b0b07871b200a074874c68edc4084cbd3b8174bc`
+
+through JARVIS-KP-01 ACT 11 Epistemic Join Enforcement Contract (PR #1407).
+The `f0a16d9c… → b0b07871…` interval adds only the ACT 11 enforcement contract,
+Work Unit, static falsification witness, and synthetic falsification corpus and
+has **zero intersection with the 13 E1 candidate paths**.
+
+R7 therefore merge-forward reconciles exact R6 head
+`b9ea06ed5546cb00c50b91a965b7e695e3cf03af` onto exact canonical
+`b0b07871b200a074874c68edc4084cbd3b8174bc` with zero conflicts. All E1
+implementation/test paths remain byte-identical to `b9ea06ed…`; prior
+RGR-04, T5, and Writer's Studio canonical populations remain byte-identical to
+canonical, and the ACT 11 population is carried forward byte-identically from
+`b0b07871…`. Only this witness records the R7 freshness reconciliation.
+
+Freshness standing: **PASS — seventh non-overlapping canonical reconciliation.**
 
 ## 16. Non-events
 
