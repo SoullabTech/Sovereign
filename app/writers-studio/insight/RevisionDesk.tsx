@@ -24,6 +24,8 @@ export default function RevisionDesk({
   sectionBody?: string; appliedVersionId?: string | null; onUndo?: () => void; undoMessage?: string | null;
   busy: boolean; message: string | null; response: string | null; onKeep: () => void;
 }) {
+  const [openTool, setOpenTool] = useState<string | null>(null);
+  useEffect(() => { setOpenTool(null); }, [scopeKey]);
   const [editorialQuestion, setEditorialQuestion] = useState('');
   const [reasonQuestion, setReasonQuestion] = useState('');
   useEffect(() => { setReasonQuestion(''); }, [scopeKey, version?.id]);
@@ -98,6 +100,86 @@ export default function RevisionDesk({
       }
     } finally { setSaving(false); }
   };
+
+  // The inline workspace has its own reading-first presentation. The state,
+  // exact-locus checks and persistence callbacks above are shared with the desk.
+  if (inline) {
+    const latest = [...(thread?.turns ?? [])].reverse().find(t => t.speaker !== 'author');
+    const explanation = latest?.body || response || version?.rationale || '';
+    const previewing = showProposal && reviewed === previewKey;
+    const toggleTool = (name: string) => setOpenTool(openTool === name ? null : name);
+    const keep = () => { setShowProposal(false); setLocalMessage(null); onKeep(); };
+    return <section data-revision-desk data-inline className="wsi-page-conversation" aria-label="Explore this passage with MAIA">
+      <div className="wsi-page-voice"><strong>MAIA</strong>
+        {explanation && <MaiaListen text={explanation} active={active} />}
+        {version && <span className="wsi-purpose-label">{versionLabel}</span>}
+      </div>
+      {explanation ? <div className="wsi-page-response">
+        <p>{explanation.length > 420 && openTool !== 'explanation' ? explanation.slice(0, explanation.lastIndexOf(' ', 420)) + '…' : explanation}</p>
+        {explanation.length > 420 && <button className="wsi-text-button" onClick={() => toggleTool('explanation')} aria-expanded={openTool === 'explanation'}>{openTool === 'explanation' ? 'Show less' : 'Continue reading'}</button>}
+      </div> : <p className="wsi-page-welcome">What are you hoping to say here? We can explore it together.</p>}
+      <form className="wsi-page-reply" onSubmit={e => { e.preventDefault(); discuss(); }}>
+        <textarea aria-label="Discuss this passage" rows={1} value={instruction}
+          onChange={e => onInstruction(e.target.value)} disabled={blocked}
+          placeholder="Tell MAIA what feels right, or what you want to explore…"/>
+        <button type="submit" disabled={blocked || (!instruction.trim() && !directionContext.trim() && !editorialQuestion && !reasonQuestion.trim()) || Boolean(draft && !draftMatches)}>{busy ? 'Thinking…' : 'Send'}</button>
+      </form>
+      <div className="wsi-page-actions">
+        {version && <div className="wsi-reading-switch" role="group" aria-label="Read passage">
+          <button aria-pressed={!previewing} onClick={() => setShowProposal(false)}>Original</button>
+          <button aria-pressed={previewing} disabled={blocked || Boolean(draft) || !context} onClick={() => { setShowProposal(true); setReviewed(previewKey); }}>Preview in context</button>
+        </div>}
+        {version && thread && <>
+          <button disabled={blocked || Boolean(draft) || thread.legacyLocus} onClick={edit}>Adjust wording</button>
+          <button disabled={blocked} onClick={keep}>Keep original</button>
+          <button className="wsi-primary" onClick={() => { setLocalMessage(null); onApply(); }}
+            disabled={blocked || thread.legacyLocus || Boolean(draft) || !previewing || version.id === appliedVersionId}>Use this revision</button>
+        </>}
+      </div>
+      <div className="wsi-page-foot">
+        <span>{draft ? 'Your draft · not applied' : previewing ? 'Preview · only this passage would change' : 'Your manuscript is unchanged while we explore'}</span>
+        <button className="wsi-text-button" aria-expanded={openTool === 'tools'} onClick={() => toggleTool('tools')}>Explore more</button>
+      </div>
+      {draft && <section className="wsi-page-draft" aria-label="Your working revision">
+        <label>Your words<textarea className="wsi-revision" value={draft.text} disabled={saving || !draftMatches}
+          onSelect={e => { workingRange.current = { start: e.currentTarget.selectionStart, end: e.currentTarget.selectionEnd }; }}
+          onChange={e => setDraft({ ...draft, text: e.target.value })}/></label>
+        <label>Name this version <input maxLength={80} value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="A quieter ending"/></label>
+        {draftMatches && draft.supersedes !== thread?.headVersionId && <div role="status"><p>A new possibility arrived. Your draft is still here.</p>
+          <button disabled={blocked} onClick={() => setDraft({ ...draft, supersedes: thread!.headVersionId })}>Continue with my draft</button></div>}
+        {!draftMatches && <p role="status">This draft belongs to the previous passage. Return there to save it.</p>}
+        <div className="wsi-page-actions"><button disabled={blocked || !draftMatches || draft.supersedes !== thread?.headVersionId} onClick={() => void save()}>Save this version</button><button disabled={blocked} onClick={() => setDraft(null)}>Discard draft</button></div>
+        <p className="wsi-muted">You can keep talking while you write. Save this version before leaving the page.</p>
+      </section>}
+      <div hidden={openTool !== 'tools'} className="wsi-page-tools">
+        <details><summary>My intention and voice</summary><EditorialApproaches scopeKey={scopeKey} onContext={setDirectionContext} busy={blocked}/></details>
+        <details><summary>Understand the suggestion</summary>
+          {version?.rationale && <p className="wsi-prose">{version.rationale}</p>}
+          <div className="wsi-page-actions">{[
+            ['What could be lost?', 'What voice, ambiguity, rhythm, or meaning could be lost in this suggestion?'],
+            ['Why keep my original?', 'Make the strongest case for keeping my original wording. Do not assume revision is improvement.'],
+            ['Show another possibility', 'Offer another possibility that preserves my intention and voice. Explain meaning changes and stylistic changes separately.']
+          ].map(([label, question]) => <button key={label} disabled={blocked} onClick={() => onInstruction(question)}>{label}</button>)}</div>
+          <label>Explore a question<select value={editorialQuestion} onChange={e => setEditorialQuestion(e.target.value)}><option value="">Choose a question…</option>{EDITORIAL_QUESTIONS.map(q => <option key={q.id} value={q.question}>{q.label}</option>)}</select></label>
+          <p className="wsi-muted">Choose a question, make it your own, then Send.</p>
+        </details>
+        {version && <details><summary>Compare or borrow words</summary>
+          <button aria-pressed={changes} onClick={() => setChanges(!changes)}>{changes ? 'Hide changes' : 'Show additions and removals in the page'}</button>
+          <label>Select words from this proposal<textarea readOnly value={version.wording} onSelect={e => { const t=e.currentTarget; const text=selectedProposalText(version.wording,t.selectionStart,t.selectionEnd); setPart(text ? {versionId:version.id,text}:null); }}/></label>
+          <div className="wsi-page-actions"><button disabled={blocked || Boolean(draft) || thread?.legacyLocus} onClick={startFromCurrent}>Start with my original</button><button disabled={blocked || !draftMatches || !usablePart} onClick={insertPart}>Add selected words to my draft</button></div>
+        </details>}
+        {thread && <details><summary>Our conversation and versions</summary>
+          {thread.versions.length > 0 && <select aria-label="Version history" value={version?.id ?? ''} onChange={e => onSelectVersion(e.target.value)} disabled={blocked}>{thread.versions.map((v,i) => <option key={v.id} value={v.id}>{alternativeLabel(v,i)}</option>)}</select>}
+          {thread.turns.map(turn => <article key={turn.turnIndex}><strong>{turn.speaker === 'author' ? 'You' : 'MAIA'}</strong><p className="wsi-prose">{turn.body}</p></article>)}
+        </details>}
+      </div>
+      {version && !context && <p role="status">This passage has moved or changed. Reopen it to preview and apply safely.</p>}
+      {appliedVersionId && <div className="wsi-page-applied"><span>Applied: {thread?.versions.find(v => v.id === appliedVersionId) ? alternativeLabel(thread.versions.find(v => v.id === appliedVersionId)!, thread.versions.findIndex(v => v.id === appliedVersionId)) : appliedVersionId}</span>
+        {onUndo && <button disabled={blocked} onClick={onUndo}>Undo this change</button>}</div>}
+      {(localMessage || message || undoMessage) && <p role="status" aria-live="polite">{localMessage || message}{undoMessage && ' ' + undoMessage}</p>}
+    </section>;
+  }
+
   return <section data-revision-desk data-inline={inline}>
     {showInspiration && <WorkInspiration manuscriptId={manuscriptId} onBringToQuestion={text => onInstruction([instruction, 'Work inspiration and intention:\n' + text].filter(Boolean).join('\n\n'))} />}
     {!inline && <><span className="wsi-eyebrow">Passage Work</span><h3>{title}</h3></>}
