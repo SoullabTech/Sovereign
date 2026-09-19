@@ -9,6 +9,8 @@ export interface InsightPassage {
   key: string;
   sectionId: string;
   heading: string;
+  position?: number;
+  chapterHeading?: string;
   body: string;
   range: CodePointRange | null;
   verified: boolean;
@@ -81,13 +83,15 @@ export async function buildCanvasInsight(
         : 'Whole section verified · the observation names no narrower passage.';
       passages.push({
         key, sectionId, heading: section?.heading || 'Untitled section',
+        position: section?.position,
+        chapterHeading: section ? [...sections].filter(s => s.position <= section.position && /^Chapter\s+\d+/i.test(s.heading ?? '')).sort((a, b) => b.position - a.position)[0]?.heading ?? undefined : undefined,
         body: section?.body ?? '', range: bodyRange,
         verified, editable: Boolean(section?.editable),
         note,
       });
     }
   }
-  return { manuscriptId, readingId: reading.id, observation, coverage: view.coverage.sentence, passages };
+  return { manuscriptId, readingId: reading.id, observation, coverage: view.coverage.sentence, passages: passages.sort((a, b) => (a.position ?? Infinity) - (b.position ?? Infinity)) };
 }
 
 export async function loadCanvasInsight(manuscriptId: string, readingId: string, observationKey: string): Promise<CanvasInsight | null> {
