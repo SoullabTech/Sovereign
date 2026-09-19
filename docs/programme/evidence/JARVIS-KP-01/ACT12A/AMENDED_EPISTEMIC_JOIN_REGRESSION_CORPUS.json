@@ -1,0 +1,1458 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "ACT 12A",
+  "title": "Amended Epistemic Join Regression / Adversarial Synthetic Corpus",
+  "date": "2026-09-19",
+  "canonical_base": "80667d4c9fae8b7cdecd352bfbeb2d81d2fca2e0",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11",
+    "ACT 12",
+    "ACT 11A"
+  ],
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "data_class": "SYNTHETIC_ONLY_NO_MEMBER_CLIENT_CLINICAL_PHI_SANCTUARY_PRODUCTION_MEMORY_OR_PRIVATE_PRACTITIONER_DATA",
+  "source_artifacts": {
+    "act12_corpus": {
+      "path": "docs/programme/evidence/JARVIS-KP-01/ACT12/ADVERSARIAL_EPISTEMIC_JOIN_CORPUS.json",
+      "sha": "798c9960868034a3d15f699fe315abc665eae8b5"
+    },
+    "act11a_corpus": {
+      "path": "docs/programme/evidence/JARVIS-KP-01/ACT11A/TARGETED_SYNTHETIC_FALSIFICATION_CORPUS.json",
+      "sha": "cef6f2ed6c99a9c763954c0e2ebf7e48285cafa2"
+    }
+  },
+  "population": {
+    "layer1_original_act12": 24,
+    "layer2_act11a_targeted": 10,
+    "layer3_new_interaction": 8,
+    "total": 42
+  },
+  "permitted_programme_dispositions": [
+    "AMENDED CONTRACT SURVIVES REGRESSION",
+    "AMENDMENT REQUIRES NARROW REVISION",
+    "AMENDMENT INTRODUCES REGRESSION",
+    "CONTRACT INCOMPLETE",
+    "UNDERDETERMINED"
+  ],
+  "cases": [
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C01",
+      "id": "ACT12A-L1-ACT12-C01",
+      "title": "Trusted endpoints do not create edge authority",
+      "preserved_semantic_substance": {
+        "setup": "Two independently high-trust sources establish A and B. Neither source addresses any relation between A and B.",
+        "seductive_claim": "Because A and B are both strongly established, A explains B."
+      },
+      "act11_invariants": [
+        "INV-05",
+        "INV-07",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "Because A and B are both strongly established, A explains B.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "CANDIDATE / UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if endpoint trust could be composed into relation standing without a separate join warrant.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C02",
+      "id": "ACT12A-L1-ACT12-C02",
+      "title": "Many weak sources do not become one strong join by accumulation alone",
+      "preserved_semantic_substance": {
+        "setup": "Six weak sources independently mention A and B in compatible ways, but none establishes relation R and no declared inferential method evaluates them jointly.",
+        "seductive_claim": "Taken together, the six sources prove A causes B."
+      },
+      "act11_invariants": [
+        "INV-05",
+        "INV-07",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "Taken together, the six sources prove A causes B.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "CANDIDATE / UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if source count or accumulation alone promoted R.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C03",
+      "id": "ACT12A-L1-ACT12-C03",
+      "title": "Temporal sequence is not causation",
+      "preserved_semantic_substance": {
+        "setup": "Synthetic event A occurs before event B on twelve occasions. No intervention or causal instrument exists.",
+        "seductive_claim": "A causes B because A always came first."
+      },
+      "act11_invariants": [
+        "INV-05",
+        "INV-06",
+        "INV-07",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "A causes B because A always came first.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "CANDIDATE / UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if temporal order alone created causal standing.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C04",
+      "id": "ACT12A-L1-ACT12-C04",
+      "title": "Correlation does not silently become causation",
+      "preserved_semantic_substance": {
+        "setup": "A preregistered synthetic study establishes a strong association between A and B but makes no causal identification.",
+        "seductive_claim": "A causes B."
+      },
+      "act11_invariants": [
+        "INV-05",
+        "INV-07",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "A causes B.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "WARRANTED FOR ASSOCIATION ONLY; CAUSAL CLAIM UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "WARRANTED JOIN",
+        "standing": "WARRANTED FOR ASSOCIATION ONLY; CAUSAL CLAIM UNESTABLISHED"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if an association warrant licensed causal semantics.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED_WITH_BOUNDARY"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C05",
+      "id": "ACT12A-L1-ACT12-C05",
+      "title": "Embedding or lexical similarity is not equivalence",
+      "preserved_semantic_substance": {
+        "setup": "Two synthetic concepts have nearly identical labels and extremely high embedding similarity but originate in different frameworks.",
+        "seductive_claim": "The two concepts are equivalent."
+      },
+      "act11_invariants": [
+        "INV-05",
+        "INV-06",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "The two concepts are equivalent.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "NO EQUIVALENCE STANDING",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "COMPARE / JUXTAPOSE",
+        "standing": "NO EQUIVALENCE STANDING"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if similarity alone licensed identity or equivalence.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C06",
+      "id": "ACT12A-L1-ACT12-C06",
+      "title": "Repeated co-occurrence does not create a relation",
+      "preserved_semantic_substance": {
+        "setup": "A and B appear together in hundreds of synthetic notes and retrieval results.",
+        "seductive_claim": "A and B form a stable underlying pattern."
+      },
+      "act11_invariants": [
+        "INV-05",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "A and B form a stable underlying pattern.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "RELATION UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "COMPARE / JUXTAPOSE",
+        "standing": "RELATION UNESTABLISHED"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if repetition or co-occurrence raised relation standing.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C07",
+      "id": "ACT12A-L1-ACT12-C07",
+      "title": "Member-authored meaning does not become universal psychology",
+      "preserved_semantic_substance": {
+        "setup": "A synthetic member explicitly says Symbol A and Memory B are connected for them.",
+        "seductive_claim": "Symbol A is psychologically linked to Memory B in people generally."
+      },
+      "act11_invariants": [
+        "INV-07",
+        "INV-08",
+        "INV-11"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "Symbol A is psychologically linked to Memory B in people generally.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "WARRANTED WITHIN MEMBER'S OWN MEANING ONLY",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "WARRANTED JOIN",
+        "standing": "WARRANTED WITHIN MEMBER'S OWN MEANING ONLY"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if member authority were generalized into universal psychological or scientific standing.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED_WITH_BOUNDARY"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C08",
+      "id": "ACT12A-L1-ACT12-C08",
+      "title": "MAIA proposal cannot be rewritten as member authorship",
+      "preserved_semantic_substance": {
+        "setup": "MAIA asks whether A and B may be connected. The synthetic member gives no confirmation.",
+        "seductive_claim": "The member sees A and B as connected."
+      },
+      "act11_invariants": [
+        "INV-03",
+        "INV-04",
+        "INV-11",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "The member sees A and B as connected.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "MAIA_PROPOSED / CANDIDATE",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "HYPOTHESIZE",
+        "standing": "MAIA_PROPOSED / CANDIDATE"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if the proposal inherited member authorship without explicit adoption.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C09",
+      "id": "ACT12A-L1-ACT12-C09",
+      "title": "Practitioner interpretation cannot become member truth",
+      "preserved_semantic_substance": {
+        "setup": "A synthetic practitioner interprets A as reflecting B. The member has not adopted the interpretation.",
+        "seductive_claim": "The member's A reflects B."
+      },
+      "act11_invariants": [
+        "INV-03",
+        "INV-08",
+        "INV-11"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "The member's A reflects B.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "PRACTITIONER_AUTHORED WITHIN PRACTITIONER JURISDICTION",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "WARRANTED JOIN",
+        "standing": "PRACTITIONER_AUTHORED WITHIN PRACTITIONER JURISDICTION"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if practitioner authorship silently transferred to the member.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED_WITH_BOUNDARY"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C10",
+      "id": "ACT12A-L1-ACT12-C10",
+      "title": "Science does not silently validate metaphysical ontology",
+      "preserved_semantic_substance": {
+        "setup": "Synthetic empirical research reports a measurable association. A philosophical system contains a concept with thematic similarity.",
+        "seductive_claim": "The scientific finding validates the metaphysical system."
+      },
+      "act11_invariants": [
+        "INV-07",
+        "INV-08",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "The scientific finding validates the metaphysical system.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "NO CROSS-JURISDICTION VALIDATION",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "COMPARE / JUXTAPOSE",
+        "standing": "NO CROSS-JURISDICTION VALIDATION"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if empirical standing transferred into metaphysical jurisdiction without a separate warrant.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C11",
+      "id": "ACT12A-L1-ACT12-C11",
+      "title": "Phenomenological or symbolic meaning does not become scientific evidence",
+      "preserved_semantic_substance": {
+        "setup": "A synthetic symbolic tradition describes an experience that resembles a modern scientific construct.",
+        "seductive_claim": "The symbolic tradition scientifically established the construct."
+      },
+      "act11_invariants": [
+        "INV-07",
+        "INV-08"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "The symbolic tradition scientifically established the construct.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "NO SCIENTIFIC STANDING FROM SYMBOLIC CORRESPONDENCE",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "COMPARE / JUXTAPOSE",
+        "standing": "NO SCIENTIFIC STANDING FROM SYMBOLIC CORRESPONDENCE"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if symbolic meaning could transfer into scientific warrant without separate evidence.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C12",
+      "id": "ACT12A-L1-ACT12-C12",
+      "title": "A warrant for relatedness does not license causation",
+      "preserved_semantic_substance": {
+        "setup": "A synthetic relation study validly establishes that A and B are related, without direction or causal identification.",
+        "seductive_claim": "A causes B."
+      },
+      "act11_invariants": [
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "A causes B.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "WARRANTED FOR RELATEDNESS ONLY; CAUSATION UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "WARRANTED JOIN",
+        "standing": "WARRANTED FOR RELATEDNESS ONLY; CAUSATION UNESTABLISHED"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if the semantics of a warrant could silently strengthen.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED_WITH_BOUNDARY"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C13",
+      "id": "ACT12A-L1-ACT12-C13",
+      "title": "Endpoints may remain valid after the join is falsified",
+      "preserved_semantic_substance": {
+        "setup": "A and B remain independently well evidenced. Later synthetic evidence directly falsifies previously warranted relation R between them.",
+        "seductive_claim": "Because R failed, A and B must also be false."
+      },
+      "act11_invariants": [
+        "INV-01",
+        "INV-02",
+        "INV-12"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "Because R failed, A and B must also be false.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "R DISCHARGED; A AND B RETAIN THEIR OWN STANDING",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "DISCHARGE",
+        "standing": "R DISCHARGED; A AND B RETAIN THEIR OWN STANDING"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if falsifying the join altered endpoint standing merely because they participated in R.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C14",
+      "id": "ACT12A-L1-ACT12-C14",
+      "title": "Conflicting high-quality relation evidence requires provisional standing",
+      "preserved_semantic_substance": {
+        "setup": "Two high-quality synthetic sources directly evaluate relation R and reach materially conflicting conclusions.",
+        "seductive_claim": "R is established because the more fluent summary favors it."
+      },
+      "act11_invariants": [
+        "INV-07",
+        "INV-09",
+        "INV-12"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "R is established because the more fluent summary favors it.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "PROVISIONAL",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "WARRANTED JOIN",
+        "standing": "PROVISIONAL"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if material conflict could disappear while warranted/promoted standing remained.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C15",
+      "id": "ACT12A-L1-ACT12-C15",
+      "title": "Later evidence can weaken, revise, supersede, or discharge",
+      "preserved_semantic_substance": {
+        "setup": "A relation begins warranted. New synthetic evidence first lowers confidence, then changes the best-supported predicate, then defeats the original predicate.",
+        "seductive_claim": "Once warranted, the original relation should remain canonical forever."
+      },
+      "act11_invariants": [
+        "INV-06",
+        "INV-12"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "Once warranted, the original relation should remain canonical forever.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "HISTORY PRESERVED THROUGH EACH TRANSITION",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "WEAKEN → REVISE/SUPERSEDE → DISCHARGE as evidence requires",
+        "standing": "HISTORY PRESERVED THROUGH EACH TRANSITION"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if later evidence could not change active standing or if history were erased.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C16",
+      "id": "ACT12A-L1-ACT12-C16",
+      "title": "A warranted join reused downstream needs a new warrant",
+      "preserved_semantic_substance": {
+        "setup": "A—R1→B is warranted. That joined proposition is then used with C to assert a new relation R2.",
+        "seductive_claim": "Because R1 is warranted, R2 inherits warrant automatically."
+      },
+      "act11_invariants": [
+        "INV-04",
+        "INV-05",
+        "INV-07",
+        "INV-09"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "Because R1 is warranted, R2 inherits warrant automatically.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "CANDIDATE / UNESTABLISHED FOR R2",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "HYPOTHESIZE unless separate warrant for R2 exists",
+        "standing": "CANDIDATE / UNESTABLISHED FOR R2"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if a warranted join became an unlimited source for new edges.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C17",
+      "id": "ACT12A-L1-ACT12-C17",
+      "title": "Reference is not reliance",
+      "preserved_semantic_substance": {
+        "setup": "Source A is mentioned as background. The downstream conclusion materially depends only on Source B, whose boundary is explicit.",
+        "seductive_claim": "Because A was cited, A's claims and boundaries are part of the conclusion's support set."
+      },
+      "act11_invariants": [
+        "INV-09",
+        "INV-10"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "Because A was cited, A's claims and boundaries are part of the conclusion's support set.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "B-BOUNDED CONCLUSION",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "REFERENCE(A) + REPORT/MOVE(B)",
+        "standing": "B-BOUNDED CONCLUSION"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if every mention counted as reliance or if B's boundary failed to travel.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C18",
+      "id": "ACT12A-L1-ACT12-C18",
+      "title": "Endpoint provenance cannot substitute for join provenance",
+      "preserved_semantic_substance": {
+        "setup": "A and B retain perfect provenance, but a downstream synthesis records no author, warrant, reasoning context, or origin for relation R.",
+        "seductive_claim": "The conclusion is sufficiently traceable because its endpoint citations are intact."
+      },
+      "act11_invariants": [
+        "INV-02",
+        "INV-04"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "The conclusion is sufficiently traceable because its endpoint citations are intact.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "UNESTABLISHED / CONTRACT VIOLATION",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "NO LAWFUL WARRANTED JOIN UNTIL JOIN PROVENANCE IS RECOVERABLE",
+        "standing": "UNESTABLISHED / CONTRACT VIOLATION"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if endpoint provenance alone were sufficient provenance for the relation.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C19",
+      "id": "ACT12A-L1-ACT12-C19",
+      "title": "Confidence and fluency cannot raise standing",
+      "preserved_semantic_substance": {
+        "setup": "A synthetic model expresses an unsupported relation with extreme confidence, polished prose, and repeated restatement.",
+        "seductive_claim": "R is effectively established because the system is very confident and consistent."
+      },
+      "act11_invariants": [
+        "INV-06",
+        "INV-07",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "R is effectively established because the system is very confident and consistent.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "CANDIDATE / UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if confidence, eloquence, or repetition silently promoted standing.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C20",
+      "id": "ACT12A-L1-ACT12-C20",
+      "title": "Insufficient warrant should lower standing rather than erase useful meaning",
+      "preserved_semantic_substance": {
+        "setup": "A plausible synthetic relation is useful for inquiry but lacks enough evidence for warranted standing.",
+        "seductive_claim": "Either assert R as fact or delete it entirely."
+      },
+      "act11_invariants": [
+        "INV-06",
+        "INV-13"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "Either assert R as fact or delete it entirely.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "CANDIDATE / UNESTABLISHED, RETAINED IF USEFUL",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "HYPOTHESIZE",
+        "standing": "CANDIDATE / UNESTABLISHED, RETAINED IF USEFUL"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if the only lawful choices were false promotion or silence/deletion.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C21",
+      "id": "ACT12A-L1-ACT12-C21",
+      "title": "Transitivity is not automatic join composition",
+      "preserved_semantic_substance": {
+        "setup": "Synthetic evidence warrants A—R1→B and B—R2→C. No evidence addresses A—R3→C.",
+        "seductive_claim": "Therefore A is related to C in the claimed R3 sense."
+      },
+      "act11_invariants": [
+        "INV-05",
+        "INV-07",
+        "INV-09"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "Therefore A is related to C in the claimed R3 sense.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "CANDIDATE / UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "HYPOTHESIZE unless a separate warrant or formal entailment licenses R3",
+        "standing": "CANDIDATE / UNESTABLISHED"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if two warranted joins automatically created a third edge.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C22",
+      "id": "ACT12A-L1-ACT12-C22",
+      "title": "Lack of relation evidence does not prove no relation exists",
+      "preserved_semantic_substance": {
+        "setup": "A and B are both observed. No evidence supports relation R, but no evidence rules R out either.",
+        "seductive_claim": "A and B are unrelated."
+      },
+      "act11_invariants": [
+        "INV-02",
+        "INV-07",
+        "INV-13",
+        "INV-14"
+      ],
+      "act11a_invariants": [],
+      "relation_proposition": "A and B are unrelated.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "RELATION UNKNOWN / UNESTABLISHED; NEGATIVE RELATION CLAIM ALSO REQUIRES WARRANT",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "REFERENCE / COMPARE",
+        "standing": "RELATION UNKNOWN / UNESTABLISHED; NEGATIVE RELATION CLAIM ALSO REQUIRES WARRANT"
+      },
+      "exact_falsifying_outcome": "ACT 11 would fail if absence of a positive warrant automatically licensed the factual negation of relation.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE",
+      "regression_result": "REGRESSION_PASS_NO_CHANGE",
+      "rationale": "ACT11A adds no rule that weakens or changes this ACT12 disposition; canonical ACT11 law continues to resolve the case.",
+      "original_act12_result": "RESOLVED"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C23",
+      "id": "ACT12A-L1-ACT12-C23",
+      "title": "Composite triangulation: when can partial evidence jointly become a warrant?",
+      "preserved_semantic_substance": {
+        "setup": "Three independent synthetic sources each provide partial, non-decisive evidence for relation R. A declared synthesis method evaluates their independence, compatibility, and cumulative support. No single source warrants R alone.",
+        "seductive_claim": "Either the three sources automatically prove R by accumulation, or they can never jointly support R because each is individually insufficient."
+      },
+      "act11_invariants": [
+        "INV-05",
+        "INV-07",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-01",
+        "A11A-INV-02",
+        "A11A-INV-03",
+        "A11A-INV-04",
+        "A11A-INV-05",
+        "A11A-INV-06"
+      ],
+      "relation_proposition": "Either the three sources automatically prove R by accumulation, or they can never jointly support R because each is individually insufficient.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "SHOULD DEPEND ON THE COMPOSITE WARRANT'S OWN METHOD, PROVENANCE, JURISDICTION, AND LIMITS",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "A SEPARATELY AUTHORED COMPOSITE INFERENCE MAY NEED TO BECOME THE JOIN WARRANT; MERE SOURCE COUNT REMAINS INSUFFICIENT",
+        "standing": "SHOULD DEPEND ON THE COMPOSITE WARRANT'S OWN METHOD, PROVENANCE, JURISDICTION, AND LIMITS"
+      },
+      "exact_falsifying_outcome": "ACT 11 is ambiguous if it cannot distinguish forbidden accumulation laundering from a legitimately governed composite/triangulated warrant.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": true,
+      "change_classification": "INTENDED",
+      "regression_result": "REGRESSION_PASS_INTENDED_CHANGE",
+      "rationale": "ACT11A now distinguishes a multi-source support set from a separately authored composite warrant candidate, while preserving the ban on accumulation laundering.",
+      "original_act12_result": "EXPOSES_AMBIGUITY"
+    },
+    {
+      "layer": "L1_ACT12_REGRESSION",
+      "source_case_id": "ACT12-C24",
+      "id": "ACT12A-L1-ACT12-C24",
+      "title": "Adoption cannot create authority beyond the adopter's own jurisdiction",
+      "preserved_semantic_substance": {
+        "setup": "MAIA proposes: 'Your partner's silence means they are withholding affection to control you.' The synthetic member replies, 'Yes, that's exactly what it means.'",
+        "seductive_claim": "The member's confirmation makes the partner's motive and causal intent a member-confirmed fact."
+      },
+      "act11_invariants": [
+        "INV-07",
+        "INV-08",
+        "INV-11"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-07",
+        "A11A-INV-08",
+        "A11A-INV-09",
+        "A11A-INV-10"
+      ],
+      "relation_proposition": "The member's confirmation makes the partner's motive and causal intent a member-confirmed fact.",
+      "authorship": "JARVIS_AUTHORED candidate synthesis",
+      "provenance": "Synthetic case; endpoint/source provenance is preserved separately from the proposed join.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "BOUNDED ADOPTION ONLY",
+      "operative_boundary_or_invalidity_condition": "No standing beyond the relation semantics and jurisdiction supported by an explicit warrant.",
+      "lawful_expected_disposition": {
+        "operation": "MEMBER_CONFIRMATION MAY AUTHORIZE THE MEMBER'S OWN FELT/INTERPRETIVE MEANING, BUT EXTERNAL CLAIMS ABOUT ANOTHER PERSON'S MOTIVE OR CAUSAL INTENT STILL REQUIRE THEIR OWN WARRANT",
+        "standing": "BOUNDED ADOPTION ONLY"
+      },
+      "exact_falsifying_outcome": "ACT 11 is ambiguous if member confirmation can be read as promoting every semantic component of an agent-proposed proposition, including claims outside the member's epistemic jurisdiction.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": true,
+      "change_classification": "INTENDED",
+      "regression_result": "REGRESSION_PASS_INTENDED_CHANGE",
+      "rationale": "ACT11A now makes adoption jurisdiction-bounded and requires mixed semantic components to retain distinguishable standing.",
+      "original_act12_result": "EXPOSES_AMBIGUITY"
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C01",
+      "id": "ACT12A-L2-ACT11A-C01",
+      "title": "Multiple partial sources with no synthesis method",
+      "preserved_semantic_substance": {
+        "setup": "Three synthetic sources each offer partial support for relation R. No declared inferential method combines them."
+      },
+      "act11_invariants": [
+        "INV-04",
+        "INV-05",
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-01",
+        "A11A-INV-03",
+        "A11A-INV-05"
+      ],
+      "relation_proposition": "The sources may be compared, but no composite warrant exists and R remains CANDIDATE / UNESTABLISHED.",
+      "authorship": "JARVIS_AUTHORED composite inference / candidate",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "declared composite-method jurisdiction",
+      "warrant_class": "COMPOSITE WARRANT CANDIDATE or NONE as specified by the case",
+      "standing": "The sources may be compared, but no composite warrant exists and R remains CANDIDATE / UNESTABLISHED.",
+      "operative_boundary_or_invalidity_condition": "Composite standing cannot outrun method, evidence, dependence assumptions, licensed semantics, jurisdiction, uncertainty, or invalidity conditions.",
+      "lawful_expected_disposition": "The sources may be compared, but no composite warrant exists and R remains CANDIDATE / UNESTABLISHED.",
+      "exact_falsifying_outcome": "R becomes warranted solely from source count, compatibility, or apparent convergence.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A requires a separately authored composite inference with an explicit composition method before a composite warrant candidate exists."
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C02",
+      "id": "ACT12A-L2-ACT11A-C02",
+      "title": "Multiple partial sources with explicit governed triangulation method",
+      "preserved_semantic_substance": {
+        "setup": "Three synthetic sources provide complementary partial evidence. A separately authored triangulation analysis declares its proposition, support set, method, independence assumptions, jurisdiction, uncertainty, boundaries, and licensed semantics."
+      },
+      "act11_invariants": [
+        "INV-04",
+        "INV-05",
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-01",
+        "A11A-INV-02",
+        "A11A-INV-03",
+        "A11A-INV-06"
+      ],
+      "relation_proposition": "A new COMPOSITE WARRANT CANDIDATE may be evaluated on its own merits. It may earn only the standing justified by its method and support.",
+      "authorship": "JARVIS_AUTHORED composite inference / candidate",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "declared composite-method jurisdiction",
+      "warrant_class": "COMPOSITE WARRANT CANDIDATE or NONE as specified by the case",
+      "standing": "A new COMPOSITE WARRANT CANDIDATE may be evaluated on its own merits. It may earn only the standing justified by its method and support.",
+      "operative_boundary_or_invalidity_condition": "Composite standing cannot outrun method, evidence, dependence assumptions, licensed semantics, jurisdiction, uncertainty, or invalidity conditions.",
+      "lawful_expected_disposition": "A new COMPOSITE WARRANT CANDIDATE may be evaluated on its own merits. It may earn only the standing justified by its method and support.",
+      "exact_falsifying_outcome": "The analysis is either automatically promoted because multiple sources agree, or prohibited merely because no single source independently warrants R.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A distinguishes the support set from the separately governed composite inference and explicitly preserves legitimate triangulation viability."
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C03",
+      "id": "ACT12A-L2-ACT11A-C03",
+      "title": "Prestigious-source accumulation masquerading as warrant",
+      "preserved_semantic_substance": {
+        "setup": "Four highly prestigious synthetic authorities endorse nearby endpoint propositions, but none establishes relation R and no composite method exists."
+      },
+      "act11_invariants": [
+        "INV-04",
+        "INV-05",
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-04",
+        "A11A-INV-05"
+      ],
+      "relation_proposition": "Prestige does not create a warrant. R remains unestablished.",
+      "authorship": "JARVIS_AUTHORED composite inference / candidate",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "declared composite-method jurisdiction",
+      "warrant_class": "COMPOSITE WARRANT CANDIDATE or NONE as specified by the case",
+      "standing": "Prestige does not create a warrant. R remains unestablished.",
+      "operative_boundary_or_invalidity_condition": "Composite standing cannot outrun method, evidence, dependence assumptions, licensed semantics, jurisdiction, uncertainty, or invalidity conditions.",
+      "lawful_expected_disposition": "Prestige does not create a warrant. R remains unestablished.",
+      "exact_falsifying_outcome": "Authority prestige or agreement is aggregated into relation standing.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A explicitly forbids source prestige, agreement, repetition, and count from substituting for a governed composite inference."
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C04",
+      "id": "ACT12A-L2-ACT11A-C04",
+      "title": "Composite warrant with unresolved source dependence",
+      "preserved_semantic_substance": {
+        "setup": "A composite analysis combines three sources, but two may derive from the same undisclosed upstream dataset. The dependence cannot currently be resolved."
+      },
+      "act11_invariants": [
+        "INV-04",
+        "INV-05",
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-03",
+        "A11A-INV-04"
+      ],
+      "relation_proposition": "The dependence uncertainty must remain operative and cap standing; the sources may not be treated as independent.",
+      "authorship": "JARVIS_AUTHORED composite inference / candidate",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "declared composite-method jurisdiction",
+      "warrant_class": "COMPOSITE WARRANT CANDIDATE or NONE as specified by the case",
+      "standing": "The dependence uncertainty must remain operative and cap standing; the sources may not be treated as independent.",
+      "operative_boundary_or_invalidity_condition": "Composite standing cannot outrun method, evidence, dependence assumptions, licensed semantics, jurisdiction, uncertainty, or invalidity conditions.",
+      "lawful_expected_disposition": "The dependence uncertainty must remain operative and cap standing; the sources may not be treated as independent.",
+      "exact_falsifying_outcome": "The composite is evaluated as though the three sources were independent.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A requires dependence assumptions and makes unresolved dependence part of the standing ceiling."
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C05",
+      "id": "ACT12A-L2-ACT11A-C05",
+      "title": "Composite method licenses correlation but not causation",
+      "preserved_semantic_substance": {
+        "setup": "A separately governed composite method validly combines synthetic observational sources and supports an association between A and B, but contains no causal identification."
+      },
+      "act11_invariants": [
+        "INV-04",
+        "INV-05",
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-04",
+        "A11A-INV-05"
+      ],
+      "relation_proposition": "The composite warrant may support ASSOCIATION only; the causal proposition remains unestablished.",
+      "authorship": "JARVIS_AUTHORED composite inference / candidate",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "declared composite-method jurisdiction",
+      "warrant_class": "COMPOSITE WARRANT CANDIDATE or NONE as specified by the case",
+      "standing": "The composite warrant may support ASSOCIATION only; the causal proposition remains unestablished.",
+      "operative_boundary_or_invalidity_condition": "Composite standing cannot outrun method, evidence, dependence assumptions, licensed semantics, jurisdiction, uncertainty, or invalidity conditions.",
+      "lawful_expected_disposition": "The composite warrant may support ASSOCIATION only; the causal proposition remains unestablished.",
+      "exact_falsifying_outcome": "The composite warrant's standing is semantically strengthened from association to causation.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A requires the relation semantics actually licensed by the composition method to remain explicit."
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C06",
+      "id": "ACT12A-L2-ACT11A-C06",
+      "title": "Member adoption of personal meaning only",
+      "preserved_semantic_substance": {
+        "setup": "MAIA proposes that a synthetic member's recurring image may represent a desire for rest. The member says, 'Yes, that is what it means to me.'"
+      },
+      "act11_invariants": [
+        "INV-03",
+        "INV-04",
+        "INV-07",
+        "INV-08",
+        "INV-11",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-07",
+        "A11A-INV-10"
+      ],
+      "relation_proposition": "Member-confirmed standing may be created for the personal-meaning component, with MAIA proposal provenance preserved.",
+      "authorship": "MAIA, practitioner, or member authorship as declared in the synthetic setup",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "member lived-meaning jurisdiction plus any separately governed external jurisdiction",
+      "warrant_class": "MEMBER_CONFIRMATION / PRACTITIONER_INTERPRETATION only within authorized scope",
+      "standing": "Member-confirmed standing may be created for the personal-meaning component, with MAIA proposal provenance preserved.",
+      "operative_boundary_or_invalidity_condition": "Adoption affects only semantic components within adopter authority; external facts retain separate warrant requirements.",
+      "lawful_expected_disposition": "Member-confirmed standing may be created for the personal-meaning component, with MAIA proposal provenance preserved.",
+      "exact_falsifying_outcome": "The member is prevented from adopting their own meaning, or the original MAIA proposal provenance is erased.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A preserves strong member authority over lived experience and personal meaning while retaining proposal/adoption history."
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C07",
+      "id": "ACT12A-L2-ACT11A-C07",
+      "title": "Member adoption of mixed proposition containing another person's motive",
+      "preserved_semantic_substance": {
+        "setup": "MAIA proposes: 'Your partner's silence feels withholding because they intended to control you.' The member replies, 'Yes, exactly.'"
+      },
+      "act11_invariants": [
+        "INV-03",
+        "INV-04",
+        "INV-07",
+        "INV-08",
+        "INV-11",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-07",
+        "A11A-INV-08",
+        "A11A-INV-09"
+      ],
+      "relation_proposition": "The member may confirm that the silence feels withholding or controlling to them. The partner's motive/intention remains separately unwarranted.",
+      "authorship": "MAIA, practitioner, or member authorship as declared in the synthetic setup",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "member lived-meaning jurisdiction plus any separately governed external jurisdiction",
+      "warrant_class": "MEMBER_CONFIRMATION / PRACTITIONER_INTERPRETATION only within authorized scope",
+      "standing": "The member may confirm that the silence feels withholding or controlling to them. The partner's motive/intention remains separately unwarranted.",
+      "operative_boundary_or_invalidity_condition": "Adoption affects only semantic components within adopter authority; external facts retain separate warrant requirements.",
+      "lawful_expected_disposition": "The member may confirm that the silence feels withholding or controlling to them. The partner's motive/intention remains separately unwarranted.",
+      "exact_falsifying_outcome": "Whole-sentence confirmation promotes the partner's hidden motive or intention to fact.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A requires mixed components to retain distinct standing and keeps external motive claims independently warranted."
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C08",
+      "id": "ACT12A-L2-ACT11A-C08",
+      "title": "Member confirms only part of a MAIA hypothesis",
+      "preserved_semantic_substance": {
+        "setup": "MAIA proposes two linked claims: 'This transition feels like grief, and it is caused by an unconscious archetypal mechanism.' The member confirms only, 'Yes, it feels like grief.'"
+      },
+      "act11_invariants": [
+        "INV-03",
+        "INV-04",
+        "INV-07",
+        "INV-08",
+        "INV-11",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-07",
+        "A11A-INV-08",
+        "A11A-INV-10"
+      ],
+      "relation_proposition": "Only the lived-experience component becomes member-confirmed. The causal/metaphysical component retains its previous standing and authorship.",
+      "authorship": "MAIA, practitioner, or member authorship as declared in the synthetic setup",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "member lived-meaning jurisdiction plus any separately governed external jurisdiction",
+      "warrant_class": "MEMBER_CONFIRMATION / PRACTITIONER_INTERPRETATION only within authorized scope",
+      "standing": "Only the lived-experience component becomes member-confirmed. The causal/metaphysical component retains its previous standing and authorship.",
+      "operative_boundary_or_invalidity_condition": "Adoption affects only semantic components within adopter authority; external facts retain separate warrant requirements.",
+      "lawful_expected_disposition": "Only the lived-experience component becomes member-confirmed. The causal/metaphysical component retains its previous standing and authorship.",
+      "exact_falsifying_outcome": "Partial confirmation is treated as adoption of the entire proposition.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A requires the actually adopted semantic components to remain recoverable and separately scoped."
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C09",
+      "id": "ACT12A-L2-ACT11A-C09",
+      "title": "Practitioner interpretation later adopted by member",
+      "preserved_semantic_substance": {
+        "setup": "A synthetic practitioner says a recurring pattern may reflect unresolved fear and also asserts an external causal explanation. The member later says the 'unresolved fear' framing resonates."
+      },
+      "act11_invariants": [
+        "INV-03",
+        "INV-04",
+        "INV-07",
+        "INV-08",
+        "INV-11",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-07",
+        "A11A-INV-09",
+        "A11A-INV-10"
+      ],
+      "relation_proposition": "Personal resonance may become member-confirmed; practitioner authorship remains recoverable; the external causal claim does not become member-authored fact.",
+      "authorship": "MAIA, practitioner, or member authorship as declared in the synthetic setup",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "member lived-meaning jurisdiction plus any separately governed external jurisdiction",
+      "warrant_class": "MEMBER_CONFIRMATION / PRACTITIONER_INTERPRETATION only within authorized scope",
+      "standing": "Personal resonance may become member-confirmed; practitioner authorship remains recoverable; the external causal claim does not become member-authored fact.",
+      "operative_boundary_or_invalidity_condition": "Adoption affects only semantic components within adopter authority; external facts retain separate warrant requirements.",
+      "lawful_expected_disposition": "Personal resonance may become member-confirmed; practitioner authorship remains recoverable; the external causal claim does not become member-authored fact.",
+      "exact_falsifying_outcome": "Member resonance retroactively rewrites the entire practitioner proposition as member-authored truth.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A expressly preserves practitioner provenance and separate warrant requirements for external factual/causal components."
+    },
+    {
+      "layer": "L2_ACT11A_TARGETED_REGRESSION",
+      "source_case_id": "ACT11A-C10",
+      "id": "ACT12A-L2-ACT11A-C10",
+      "title": "Mixed proposition requires different standing across semantic components",
+      "preserved_semantic_substance": {
+        "setup": "A single synthetic sentence combines: member feeling, personal interpretation, another person's motive, and a scientific generalization."
+      },
+      "act11_invariants": [
+        "INV-03",
+        "INV-04",
+        "INV-07",
+        "INV-08",
+        "INV-11",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-08",
+        "A11A-INV-09"
+      ],
+      "relation_proposition": "The proposition must remain decomposable conceptually so each component can carry its own authorship, jurisdiction, warrant, and standing.",
+      "authorship": "MAIA, practitioner, or member authorship as declared in the synthetic setup",
+      "provenance": "Canonical ACT11A targeted synthetic case; proposal/support provenance and any adoption/composition history remain recoverable.",
+      "jurisdiction": "member lived-meaning jurisdiction plus any separately governed external jurisdiction",
+      "warrant_class": "MEMBER_CONFIRMATION / PRACTITIONER_INTERPRETATION only within authorized scope",
+      "standing": "The proposition must remain decomposable conceptually so each component can carry its own authorship, jurisdiction, warrant, and standing.",
+      "operative_boundary_or_invalidity_condition": "Adoption affects only semantic components within adopter authority; external facts retain separate warrant requirements.",
+      "lawful_expected_disposition": "The proposition must remain decomposable conceptually so each component can carry its own authorship, jurisdiction, warrant, and standing.",
+      "exact_falsifying_outcome": "The contract forces the entire sentence into one undifferentiated standing.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": "TARGETED_AMENDMENT_CONFIRMATION",
+      "change_classification": "INTENDED_CLARIFICATION_NO_REGRESSION",
+      "regression_result": "REGRESSION_PASS_TARGETED",
+      "rationale": "ACT 11A establishes a conceptual mixed-proposition rule without requiring a particular parser, schema, or implementation mechanism."
+    },
+    {
+      "layer": "L3_NEW_INTERACTION_ADVERSARY",
+      "id": "ACT12A-L3-C01",
+      "title": "Composite-warrant relabeling attack",
+      "act11_invariants": [
+        "INV-04",
+        "INV-05",
+        "INV-07",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-01",
+        "A11A-INV-02",
+        "A11A-INV-03",
+        "A11A-INV-05"
+      ],
+      "relation_proposition": "Weak-source bundle R is a warranted composite relation because it is labeled 'Composite warrant'.",
+      "authorship": "JARVIS_AUTHORED label/synthesis",
+      "provenance": "Synthetic weak sources plus a label; no declared composition method or separate composite provenance.",
+      "jurisdiction": "JARVIS research analysis",
+      "warrant_class": "NONE",
+      "standing": "CANDIDATE / UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "A name or label cannot substitute for a separately governed composite inference with method, provenance, support set, assumptions, jurisdiction, uncertainty, limits, and standing.",
+      "lawful_expected_disposition": "Reject warrant standing; retain only comparison/hypothesis if useful.",
+      "exact_falsifying_outcome": "The phrase 'composite warrant' itself is accepted as enough to create warranted relation standing.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": true,
+      "change_classification": "INTENDED",
+      "regression_result": "INTERACTION_PASS",
+      "rationale": "ACT11A's composite definition and anti-laundering law make the intervening epistemic object substantive rather than nominal."
+    },
+    {
+      "layer": "L3_NEW_INTERACTION_ADVERSARY",
+      "id": "ACT12A-L3-C02",
+      "title": "Circular composite warrant",
+      "act11_invariants": [
+        "INV-04",
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-03",
+        "A11A-INV-04"
+      ],
+      "relation_proposition": "Composite warrant W establishes R even though the standing of W's relied-upon sources ultimately depends on R.",
+      "authorship": "JARVIS_AUTHORED composite inference candidate",
+      "provenance": "Synthetic support chain exposes circular dependence back to R.",
+      "jurisdiction": "declared composite-method jurisdiction",
+      "warrant_class": "COMPOSITE WARRANT CANDIDATE",
+      "standing": "UNESTABLISHED / at most PROVISIONAL until non-circular support exists",
+      "operative_boundary_or_invalidity_condition": "Dependence assumptions and support provenance remain operative; circular support supplies no independent warrant for the proposition it presupposes.",
+      "lawful_expected_disposition": "Do not promote R from the circular composite; expose the dependence and cap standing.",
+      "exact_falsifying_outcome": "Circular support is treated as independent confirmation and R becomes warranted.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": true,
+      "change_classification": "INTENDED",
+      "regression_result": "INTERACTION_PASS",
+      "rationale": "ACT11A requires support provenance/dependence assumptions, while ACT11's standing ceiling forbids the composite from outrunning the support actually available."
+    },
+    {
+      "layer": "L3_NEW_INTERACTION_ADVERSARY",
+      "id": "ACT12A-L3-C03",
+      "title": "Shared-source pseudo-independence",
+      "act11_invariants": [
+        "INV-05",
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-03",
+        "A11A-INV-04",
+        "A11A-INV-05"
+      ],
+      "relation_proposition": "Five apparently independent sources jointly warrant R.",
+      "authorship": "JARVIS_AUTHORED composite inference candidate",
+      "provenance": "Five synthetic reports trace to one upstream source.",
+      "jurisdiction": "declared composite-method jurisdiction",
+      "warrant_class": "COMPOSITE WARRANT CANDIDATE",
+      "standing": "CANDIDATE / PROVISIONAL according to the single upstream support actually present",
+      "operative_boundary_or_invalidity_condition": "Shared origin defeats the assumption of independent support; count may not simulate independence.",
+      "lawful_expected_disposition": "Collapse the apparent multiplicity to its actual dependence structure and evaluate standing accordingly.",
+      "exact_falsifying_outcome": "Five derivative sources are counted as five independent warrants and R is promoted.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": true,
+      "change_classification": "INTENDED",
+      "regression_result": "INTERACTION_PASS",
+      "rationale": "ACT11A explicitly makes dependence assumptions part of the composite warrant and standing ceiling."
+    },
+    {
+      "layer": "L3_NEW_INTERACTION_ADVERSARY",
+      "id": "ACT12A-L3-C04",
+      "title": "Nested composite laundering",
+      "act11_invariants": [
+        "INV-04",
+        "INV-07",
+        "INV-09",
+        "INV-12",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-03",
+        "A11A-INV-04"
+      ],
+      "relation_proposition": "A second composite W2 treats provisional composite W1 as fully established and uses it to warrant R2.",
+      "authorship": "JARVIS_AUTHORED nested composite inference",
+      "provenance": "Synthetic W1 provenance and provisional standing are available to W2.",
+      "jurisdiction": "declared nested composite-method jurisdiction",
+      "warrant_class": "COMPOSITE WARRANT CANDIDATE",
+      "standing": "W2 cannot exceed the provisional/limited standing materially inherited from W1 without new support",
+      "operative_boundary_or_invalidity_condition": "W1 authorship, standing, jurisdiction, limits, warrant provenance and uncertainty must travel into W2.",
+      "lawful_expected_disposition": "Carry W1's provisional standing and boundaries into W2; do not silently normalize it to warranted fact.",
+      "exact_falsifying_outcome": "Nesting launders W1 from provisional to fully established and promotes R2 without new warrant.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE_STRENGTHENED_BY_CLARIFICATION",
+      "regression_result": "INTERACTION_PASS",
+      "rationale": "ACT11 §11 already requires standing and limits to travel downstream; ACT11A's composite standing ceiling supplies no bypass."
+    },
+    {
+      "layer": "L3_NEW_INTERACTION_ADVERSARY",
+      "id": "ACT12A-L3-C05",
+      "title": "Method-semantic escalation",
+      "act11_invariants": [
+        "INV-07",
+        "INV-09",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-04"
+      ],
+      "relation_proposition": "Because a composite method warrants association A↔B, A causes B.",
+      "authorship": "JARVIS_AUTHORED downstream synthesis",
+      "provenance": "Synthetic composite method explicitly licenses association only.",
+      "jurisdiction": "scientific / declared composite-method jurisdiction",
+      "warrant_class": "COMPOSITE WARRANT — ASSOCIATION ONLY",
+      "standing": "WARRANTED FOR ASSOCIATION; CAUSATION UNESTABLISHED",
+      "operative_boundary_or_invalidity_condition": "Licensed relation semantics are operative; composite status does not widen them.",
+      "lawful_expected_disposition": "Preserve association standing and reject causal promotion absent causal warrant.",
+      "exact_falsifying_outcome": "The word 'composite' is treated as permission to strengthen association into causation.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE_STRENGTHENED_BY_CLARIFICATION",
+      "regression_result": "INTERACTION_PASS",
+      "rationale": "ACT11 already blocks relation-semantic escalation; ACT11A explicitly binds composite standing to semantics licensed by its method."
+    },
+    {
+      "layer": "L3_NEW_INTERACTION_ADVERSARY",
+      "id": "ACT12A-L3-C06",
+      "title": "Whole-sentence adoption laundering",
+      "act11_invariants": [
+        "INV-03",
+        "INV-07",
+        "INV-08",
+        "INV-11",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-07",
+        "A11A-INV-08",
+        "A11A-INV-09",
+        "A11A-INV-10"
+      ],
+      "relation_proposition": "A member's whole-sentence confirmation makes personal meaning, another person's motive, and a scientific explanation equally member-confirmed facts.",
+      "authorship": "MAIA_PROPOSED mixed proposition → MEMBER_CONFIRMATION_WITHIN_SCOPE",
+      "provenance": "Synthetic MAIA proposal plus explicit member response; component scope remains inspectable.",
+      "jurisdiction": "mixed: member lived meaning + external motive + scientific claim",
+      "warrant_class": "MEMBER_CONFIRMATION only for member-authoritative components",
+      "standing": "MIXED: member meaning may be confirmed; motive/scientific components remain independently governed",
+      "operative_boundary_or_invalidity_condition": "Whole-sentence grammar cannot collapse different epistemic jurisdictions into one standing.",
+      "lawful_expected_disposition": "Preserve member confirmation for lived/personal meaning only; keep motive/scientific components separate and unpromoted absent independent warrants.",
+      "exact_falsifying_outcome": "Whole-sentence agreement promotes every component to the same member-confirmed factual standing.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": true,
+      "change_classification": "INTENDED",
+      "regression_result": "INTERACTION_PASS",
+      "rationale": "ACT11A's mixed-proposition law directly requires distinct standing across semantic components."
+    },
+    {
+      "layer": "L3_NEW_INTERACTION_ADVERSARY",
+      "id": "ACT12A-L3-C07",
+      "title": "Repeated adoption laundering",
+      "act11_invariants": [
+        "INV-07",
+        "INV-08",
+        "INV-11",
+        "INV-14"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-07",
+        "A11A-INV-09",
+        "A11A-INV-10"
+      ],
+      "relation_proposition": "Repeated member agreement with MAIA's external factual claim eventually turns that external claim into member-confirmed fact.",
+      "authorship": "MAIA_PROPOSED repeatedly; member repeatedly confirms resonance",
+      "provenance": "Synthetic repeated proposal/adoption sequence fully preserved.",
+      "jurisdiction": "member lived meaning versus external factual jurisdiction",
+      "warrant_class": "MEMBER_CONFIRMATION only within member authority",
+      "standing": "External claim remains unestablished absent independent warrant regardless of repetition",
+      "operative_boundary_or_invalidity_condition": "Repetition does not widen adopter epistemic jurisdiction or create external warrant.",
+      "lawful_expected_disposition": "Preserve repeated member resonance while leaving the external factual claim separately unwarranted.",
+      "exact_falsifying_outcome": "Repetition of adoption silently widens the member's epistemic jurisdiction.",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": true,
+      "change_classification": "INTENDED",
+      "regression_result": "INTERACTION_PASS",
+      "rationale": "ACT11 INV-14 rejects repetition as promotion and ACT11A bounds adoption to adopter jurisdiction."
+    },
+    {
+      "layer": "L3_NEW_INTERACTION_ADVERSARY",
+      "id": "ACT12A-L3-C08",
+      "title": "Role-overlap authority attack",
+      "act11_invariants": [
+        "INV-03",
+        "INV-04",
+        "INV-07",
+        "INV-08",
+        "INV-11"
+      ],
+      "act11a_invariants": [
+        "A11A-INV-07",
+        "A11A-INV-08",
+        "A11A-INV-09",
+        "A11A-INV-10"
+      ],
+      "relation_proposition": "Because the same human is both member and practitioner, their personal meaning and professional interpretation automatically share authorship, jurisdiction, and standing.",
+      "authorship": "Same synthetic human acting in distinct MEMBER and PRACTITIONER authority roles",
+      "provenance": "Synthetic record preserves which role authored each semantic component and the context of each act.",
+      "jurisdiction": "mixed: member lived-meaning field + practitioner interpretation",
+      "warrant_class": "MEMBER_AUTHORED_RELATION and/or PRACTITIONER_INTERPRETATION as separately applicable",
+      "standing": "Distinct by semantic component and declared authority role",
+      "operative_boundary_or_invalidity_condition": "Identity of the human does not erase the authority/jurisdiction under which each proposition component is authored.",
+      "lawful_expected_disposition": "Preserve role-specific authorship, provenance, jurisdiction and standing even when one human occupies both roles.",
+      "exact_falsifying_outcome": "Role co-location collapses the components into one undifferentiated authority or lets practitioner standing silently become member truth (or vice versa).",
+      "mechanism_free_resolution": true,
+      "act11a_changed_result_relative_to_act11": false,
+      "change_classification": "NO_CHANGE_STRENGTHENED_BY_CLARIFICATION",
+      "regression_result": "INTERACTION_PASS",
+      "rationale": "ACT11 requires relation authorship and jurisdiction to remain explicit; ACT11A requires mixed-jurisdiction components to remain distinguishable. Neither law is identity-based."
+    }
+  ]
+}
