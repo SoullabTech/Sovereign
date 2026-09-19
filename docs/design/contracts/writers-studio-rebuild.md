@@ -220,3 +220,15 @@ the manuscript to overflow beneath the reading tools in the founder screenshot.
 The workspace clips overflow and reading tools have an opaque surface. Full-screen
 canvas retains its separate fixed viewport presentation. Browser visual acceptance
 of this correction remains outstanding; component tests cannot prove layout.
+
+### Guided development entry and author dialogue
+
+Develop explains a whole-to-passage starting path and offers an explicit whole-work
+focus preset without triggering inference. Writers with fragments are directed to
+write and discuss those words. Passage conversations expose Explain the concern,
+Explain my intention, and Explore another approach before revision. These populate
+the editable composer and preserve existing text; Send remains explicit. Discussion
+asks MAIA to reconsider interpretations in light of author intention, distinguish
+possible reader effects from evidence, and allow keeping the original. These are
+request instructions, not proof of provider compliance. This increment does not
+claim a completed guided intake or durable cross-work intention model.

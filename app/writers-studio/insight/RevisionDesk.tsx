@@ -42,6 +42,7 @@ export default function RevisionDesk({
       sectionBody && sectionBody !== currentText ? 'Current section context (reference only):\n' + sectionBody : '',
       version ? 'Discussing saved alternative ' + versionLabel + ':\n' + version.wording : '',
       draft && draft.threadId === thread?.threadId ? 'My unsaved working revision (for discussion, do not apply):\n' + draft.text : '',
+      'First respond to my question and intention. My explanation may change your interpretation: acknowledge that explicitly when it does. Do not assume a noticed pattern is a defect or that agreement is required. If a concern remains, identify the supplied words behind it and explain a possible reader effect, not a proven one. Consider the strongest case for the original, ask one useful question when needed, and offer a manageable next step. Do not invent evidence from unseen parts of the work.',
       'If offering replacement wording, begin its rationale with "Editorial purpose: <short descriptive name>". Distinguish meaning changes from style and treat reader benefits as hypotheses. Explain the editorial rationale using supplied wording: what you notice, the craft principle, the possible reader benefit, what could be lost, and a case for keeping the original. Ask where the author’s intention is unclear.'
     ].filter(Boolean).join('\n\n');
     setLocalMessage(null); onSend(text);
@@ -121,10 +122,19 @@ export default function RevisionDesk({
         <p>{explanation.length > 420 && openTool !== 'explanation' ? explanation.slice(0, explanation.lastIndexOf(' ', 420)) + '…' : explanation}</p>
         {explanation.length > 420 && <button className="wsi-text-button" onClick={() => toggleTool('explanation')} aria-expanded={openTool === 'explanation'}>{openTool === 'explanation' ? 'Show less' : 'Continue reading'}</button>}
       </div> : <p className="wsi-page-welcome">What are you hoping to say here? We can explore it together.</p>}
+      {!version && <div className="wsi-page-actions" aria-label="Explore before revising">
+        {[
+          ['Explain the concern', 'Help me understand this observation before we edit. Show what in the supplied passages supports it, why it might matter to a reader, and when it could be intentional. If the evidence does not establish a problem, say so. Do not propose replacement wording yet.'],
+          ['Explain my intention', 'What I want this passage to do is '],
+          ['Explore another approach', 'Help me explore two possible approaches to this passage, including keeping it as it is. Explain what each could gain or lose in relation to my intention and voice. Ask me about my intention if you need it before recommending an approach. Do not rewrite yet.'],
+        ].map(([label, question]) => <button type="button" key={label} disabled={blocked} onClick={() => {
+          onInstruction(instruction.trim() ? instruction + '\n\n' + question : question);
+        }}>{label}</button>)}
+      </div>}
       <form className="wsi-page-reply" onSubmit={e => { e.preventDefault(); discuss(); }}>
         <textarea aria-label="Discuss this passage" rows={1} value={instruction}
           onChange={e => onInstruction(e.target.value)} disabled={blocked}
-          placeholder="Ask about this passage, or describe what you want to change…"/>
+          placeholder="Tell MAIA what you mean, ask about her concern, or explore another approach…"/>
         <button type="submit" disabled={blocked || (!instruction.trim() && !directionContext.trim() && !editorialQuestion && !reasonQuestion.trim()) || Boolean(draft && !draftMatches)}>{busy ? 'Thinking…' : 'Send'}</button>
       </form>
       <div className="wsi-page-actions">

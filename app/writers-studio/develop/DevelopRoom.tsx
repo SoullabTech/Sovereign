@@ -719,7 +719,15 @@ export default function DevelopRoom({
                 ? <span> &nbsp;›&nbsp; {currentSection.heading?.trim() || 'Untitled section'}</span> : null}
             </div>
             <div data-develop-task-bar className="px-6 py-3 border-b" style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}>
-              <p className="text-[14px] mb-3">Explore how the parts of your work belong together.</p>
+              <p className="text-[14px] mb-2">Let’s find the next useful step for your writing.</p>
+              <p className="text-[12px] mb-3 opacity-80">For a draft, begin with how the whole work holds together. Then open a note on the page: explore what MAIA noticed, explain your intention, and decide together whether to try a change.</p>
+              <button type="button" className="rounded border px-3 py-2 text-[12px] mb-3"
+                disabled={commission.phase === 'reading'}
+                onClick={() => { setDevelopScope('work'); setLens('development'); }}>Start with the whole work</button>
+              <span className="text-[12px] ml-3 opacity-70">Sets the focus below; choose Explore with MAIA when ready.</span>
+              <details className="mb-3"><summary className="cursor-pointer text-[12px]">Working from an idea or scattered material?</summary>
+                <p className="text-[12px] mt-2">You can begin with a few words in Write: what matters to you, whom you hope to reach, or a fragment you want to develop. Open a conversation on that writing and tell MAIA what you are trying to express. A complete draft is not required.</p>
+              </details>
               <div className="flex flex-wrap items-end gap-3">
                 <label className="text-[12px]">Where should MAIA read?
                   <select aria-label="Developmental reading scope" value={effectiveScope}
