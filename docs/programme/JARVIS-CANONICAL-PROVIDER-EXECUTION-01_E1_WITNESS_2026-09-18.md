@@ -392,7 +392,27 @@ was merge-forward reconciled with exact canonical
 implementation/test paths remain byte-identical to the accepted PR head; only
 this witness records the additional freshness reconciliation.
 
-Freshness standing: **PASS — second non-overlapping canonical reconciliation.**
+A third PR-level freshness check after the second exact-head CI found that
+canonical had advanced again to:
+
+`83214ed576fad7b4b15430d3b4e46ac613ad5528`
+
+through JARVIS-KP-01 ACT 9 / ACT 10 documentary/evidence integration (PR #1400).
+The `6ef0cbd0… → 83214ed5…` interval is limited to the ratified ACT 9 / ACT 10
+programme and evidence population. Its changed-path population has **zero
+intersection with the 13 E1 candidate paths**.
+
+PR #1404 was therefore not merged under the stale exact-canonical authorization.
+Instead, the prior E1 PR head
+`861fc24a3cd9e831ff3cb7d174ad75661b8c2921` was merge-forward reconciled
+with exact canonical
+`83214ed576fad7b4b15430d3b4e46ac613ad5528` with zero conflicts. The 12 E1
+implementation/test paths remain byte-identical to the prior PR head, while the
+ACT 9 / ACT 10 documentary/evidence population is preserved byte-identically
+from canonical. Only this witness records the additional freshness
+reconciliation.
+
+Freshness standing: **PASS — third non-overlapping canonical reconciliation.**
 
 ## 16. Non-events
 
