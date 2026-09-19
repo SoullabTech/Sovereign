@@ -1,0 +1,363 @@
+{
+  "founder_adjudication": {
+    "accepted_candidate_sha": "07004b1198d4e534fe1d9e8d701ab3d3637d8fda",
+    "accepted_disposition": "FEASIBILITY_PASS",
+    "date": "2026-09-19",
+    "evidence_summary": {
+      "collision_free_pair_capacity_per_ordered_query": 201192,
+      "exactly_one_switch_positives_per_ordered_query": 238512,
+      "gpt_oss_review": "PASS",
+      "hosted_ci": "PASS",
+      "independent_verifier": "PASS",
+      "positives_with_admissible_switch_per_ordered_query": 285500,
+      "qwen_review": "PASS",
+      "required_pairs_per_ordered_query": 900,
+      "required_total_pairs": 27000,
+      "total_query_marked_capacity": 6035760,
+      "valid_positive_graphs_per_ordered_query": 1035272
+    },
+    "finding": "The frozen RGR-RT1-D2C-01 benchmark is mechanically feasible under the canonical RGR-04 constraints without full benchmark materialization or model execution.",
+    "implementation_digest": "98597755f40316ec4b0e60318635e1ad0dd587dd0d6176147aaf36923abb731b",
+    "lifecycle_transitions": [
+      {
+        "adjudication": "accepted",
+        "authorization_ref": null,
+        "evidence_ref": "founder:rgr05-feasibility-adjudication-20260919",
+        "from": "EVIDENCE_READY",
+        "lifecycle_version": "W2.v2",
+        "reason_code": "RGR05_FEASIBILITY_PASS_ACCEPTED",
+        "superseded_by": null,
+        "to": "ADJUDICATED",
+        "work_unit_id": "rgr-05-pre-materialization-feasibility-20260918"
+      },
+      {
+        "adjudication": null,
+        "authorization_ref": null,
+        "evidence_ref": "founder:rgr05-feasibility-closure-20260919",
+        "from": "ADJUDICATED",
+        "lifecycle_version": "W2.v2",
+        "reason_code": "RGR05_FOUNDER_CLOSED",
+        "superseded_by": null,
+        "to": "CLOSED",
+        "work_unit_id": "rgr-05-pre-materialization-feasibility-20260918"
+      }
+    ],
+    "materialization_boundary": {
+      "dataset_files_written": 0,
+      "full_benchmark_materialized": false,
+      "materialized_benchmark_pair_count": 0,
+      "model_implementation": false,
+      "model_performance_inspection": false,
+      "model_training": false,
+      "replication_executed": false,
+      "test_executed": false
+    },
+    "successor_authority": {
+      "canonical_merge": "NOT_AUTHORIZED",
+      "comparator_model_implementation": "NOT_AUTHORIZED",
+      "deployment": "NOT_AUTHORIZED",
+      "elemental_operator_hypothesis": "CLOSED",
+      "freshness_reconciliation": "NOT_AUTHORIZED",
+      "full_benchmark_materialization": "NOT_AUTHORIZED",
+      "hyperparameter_search": "NOT_AUTHORIZED",
+      "maia_change": "NOT_AUTHORIZED",
+      "model_performance_inspection": "NOT_AUTHORIZED",
+      "model_training": "NOT_AUTHORIZED",
+      "production_mutation": "NOT_AUTHORIZED",
+      "replication_dataset_generation": "NOT_AUTHORIZED",
+      "replication_execution": "NOT_AUTHORIZED",
+      "test_dataset_generation": "NOT_AUTHORIZED",
+      "test_execution": "NOT_AUTHORIZED",
+      "train_dataset_generation": "NOT_AUTHORIZED",
+      "validation_dataset_generation": "NOT_AUTHORIZED"
+    }
+  },
+  "founder_authorization": {
+    "authorization": "RGR-05 PRE-MATERIALIZATION FEASIBILITY & VALIDATOR GATE ONLY",
+    "date": "2026-09-18",
+    "deployment": "NOT_AUTHORIZED",
+    "elemental_operator_hypothesis": "CLOSED",
+    "full_materialization": "NOT_AUTHORIZED",
+    "maia_change": "NOT_AUTHORIZED",
+    "merge": "NOT_AUTHORIZED",
+    "model_implementation": "NOT_AUTHORIZED",
+    "model_training": "NOT_AUTHORIZED",
+    "production_mutation": "NOT_AUTHORIZED",
+    "replication": "NOT_AUTHORIZED",
+    "test": "NOT_AUTHORIZED"
+  },
+  "result": {
+    "collision_free_pair_capacity_per_query": 201192,
+    "disposition": "FEASIBILITY_PASS",
+    "independent_verifier": "PASS",
+    "materialized_benchmark_pair_count": 0,
+    "required_pairs_per_query": 900,
+    "required_total_pairs": 27000,
+    "review_aggregate": "PASS"
+  },
+  "schema": "RGR05_GOVERNED_WORK_UNIT_v1",
+  "work_unit_envelope": {
+    "guard": {
+      "authorized_core_digest": "sha256:523a5bb917b4c59e06a3d8939f6d9c8177c2318e461baa33ce6278390e862e80",
+      "authorized_core_snapshot": "{\"authority\":{\"deploy\":false,\"external_disclosure\":\"none\",\"full_benchmark_materialization\":false,\"maia_change\":false,\"merge\":false,\"model_implementation\":false,\"model_performance_inspection\":false,\"model_training\":false,\"network_external\":false,\"production_read\":false,\"production_write\":false,\"provider_spend\":false,\"replication_execution\":false,\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"test_execution\":false},\"custody\":{\"evidence_class\":\"E1_REPOSITORY_LOCAL\"},\"evaluation\":{\"acceptance_conditions\":[\"Enough collision-free counterfactual pairs exist for every frozen split.\",\"Positive validator enforces exactly one source-to-target two-step intermediate.\",\"Negative validator enforces zero source-to-target two-step intermediates.\",\"Directed 2-switch preserves edge count, per-node in/out degree, and reciprocal-edge count.\",\"No self-loop, duplicate edge, direct shortcut, alternative two-step path, or reciprocal-count drift is admitted.\",\"Every retained positive has at least one admissible relation-breaking switch.\",\"Split allocation can satisfy exact-tuple exclusion and pairwise-disjoint 256-code codebooks.\",\"Frozen SHA-256 named-stream and seed law is implementable exactly.\",\"Independent validator rejects constitution-violating output.\",\"No full benchmark, model, training, TEST, or REPLICATION is executed.\"],\"falsification_conditions\":[\"Collision-free capacity is below 900 pairs per ordered source/target query under a balanced 30-query allocation.\",\"Independent enumeration disagrees with primary capacity counts.\",\"Any accepted switch changes a frozen pair invariant.\",\"Codebook or exact-tuple cross-split separation cannot be satisfied.\",\"A constitution-violating mutation is accepted by the independent validator.\",\"Full dataset materialization or model performance becomes necessary.\"],\"stop_conditions\":[\"Any frozen RGR-04 law must be changed.\",\"Full benchmark materialization becomes necessary.\",\"Any model implementation, training, TEST, or REPLICATION becomes necessary.\",\"Any private/member/PHI data becomes necessary.\",\"Any MAIA, schema, migration, deployment, or production action becomes necessary.\"]},\"identity\":{\"capability\":null,\"id\":\"rgr-05-pre-materialization-feasibility-20260918\",\"objective\":\"Prove or falsify pre-materialization feasibility of canonical RGR-RT1-D2C-01 using minimum deterministic generator/validator machinery without full dataset or model execution.\",\"parent_work_unit\":\"rgr-04-synthetic-relational-benchmark-constitution-20260918\",\"programme\":\"RELATIONAL-GEOMETRY-REASONING\",\"task_shape\":\"DETERMINISTIC_IMPLEMENTATION_VERIFICATION\",\"work_class\":\"RESEARCH\"},\"routing_request\":{\"requested_posture\":\"independent_review\",\"review_pressure\":\"high_value_deterministic\"},\"scope\":{\"allowed_paths\":[\"scripts/research/rgr/rgr05_feasibility.py\",\"scripts/research/rgr/rgr05_independent_verifier.py\",\"docs/programme/evidence/RGR-05/RGR05_FEASIBILITY_RESULT.json\",\"docs/programme/evidence/RGR-05/RGR05_INDEPENDENT_VERIFIER.json\",\"docs/programme/evidence/RGR-05/RGR05_REVIEW_PROVENANCE.json\",\"docs/programme/RGR-05_PRE_MATERIALIZATION_FEASIBILITY_REPORT_2026-09-18.md\",\"docs/programme/RGR-05_WORK_UNIT_2026-09-18.json\"],\"base_ref\":\"567e062b3d8929c41d15882ae26ea9d42077a1bc\",\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\"],\"repository\":\"SoullabTech/Sovereign\"}}",
+      "current_state": "CLOSED",
+      "lifecycle_version": "W2.v2",
+      "work_unit_id": "rgr-05-pre-materialization-feasibility-20260918"
+    },
+    "work_unit": {
+      "authority": {
+        "deploy": false,
+        "external_disclosure": "none",
+        "full_benchmark_materialization": false,
+        "maia_change": false,
+        "merge": false,
+        "model_implementation": false,
+        "model_performance_inspection": false,
+        "model_training": false,
+        "network_external": false,
+        "production_read": false,
+        "production_write": false,
+        "provider_spend": false,
+        "replication_execution": false,
+        "repository_read": true,
+        "repository_write": "worktree",
+        "shell": "bounded_write",
+        "test_execution": false
+      },
+      "custody": {
+        "evidence_class": "E1_REPOSITORY_LOCAL"
+      },
+      "evaluation": {
+        "acceptance_conditions": [
+          "Enough collision-free counterfactual pairs exist for every frozen split.",
+          "Positive validator enforces exactly one source-to-target two-step intermediate.",
+          "Negative validator enforces zero source-to-target two-step intermediates.",
+          "Directed 2-switch preserves edge count, per-node in/out degree, and reciprocal-edge count.",
+          "No self-loop, duplicate edge, direct shortcut, alternative two-step path, or reciprocal-count drift is admitted.",
+          "Every retained positive has at least one admissible relation-breaking switch.",
+          "Split allocation can satisfy exact-tuple exclusion and pairwise-disjoint 256-code codebooks.",
+          "Frozen SHA-256 named-stream and seed law is implementable exactly.",
+          "Independent validator rejects constitution-violating output.",
+          "No full benchmark, model, training, TEST, or REPLICATION is executed."
+        ],
+        "falsification_conditions": [
+          "Collision-free capacity is below 900 pairs per ordered source/target query under a balanced 30-query allocation.",
+          "Independent enumeration disagrees with primary capacity counts.",
+          "Any accepted switch changes a frozen pair invariant.",
+          "Codebook or exact-tuple cross-split separation cannot be satisfied.",
+          "A constitution-violating mutation is accepted by the independent validator.",
+          "Full dataset materialization or model performance becomes necessary."
+        ],
+        "stop_conditions": [
+          "Any frozen RGR-04 law must be changed.",
+          "Full benchmark materialization becomes necessary.",
+          "Any model implementation, training, TEST, or REPLICATION becomes necessary.",
+          "Any private/member/PHI data becomes necessary.",
+          "Any MAIA, schema, migration, deployment, or production action becomes necessary."
+        ],
+        "verifier_results": [
+          {
+            "disposition": "mechanical_pass",
+            "target_attempt_id": "rgr05-primary-proof-01",
+            "verifier_attempt_id": "rgr05-independent-verifier-01",
+            "verifier_result_id": "rgr05-vr-independent-counts"
+          },
+          {
+            "disposition": "review_pass",
+            "target_attempt_id": "rgr05-primary-proof-01",
+            "verifier_attempt_id": "rgr05-gptoss-review-01",
+            "verifier_result_id": "rgr05-vr-gptoss"
+          },
+          {
+            "disposition": "review_pass",
+            "target_attempt_id": "rgr05-primary-proof-01",
+            "verifier_attempt_id": "rgr05-qwen-review-01",
+            "verifier_result_id": "rgr05-vr-qwen"
+          }
+        ]
+      },
+      "execution": {
+        "attempts": [
+          {
+            "attempt_id": "rgr05-primary-proof-01",
+            "attempt_kind": "deterministic_primary",
+            "disposition": "FEASIBILITY_PASS",
+            "evidence_ref": "docs/programme/evidence/RGR-05/RGR05_FEASIBILITY_RESULT.json",
+            "participant_id": "deterministic-primary"
+          },
+          {
+            "attempt_id": "rgr05-independent-verifier-01",
+            "attempt_kind": "deterministic_independent_verification",
+            "disposition": "PASS",
+            "evidence_ref": "docs/programme/evidence/RGR-05/RGR05_INDEPENDENT_VERIFIER.json",
+            "participant_id": "independent-bitmask-verifier"
+          },
+          {
+            "attempt_id": "rgr05-gptoss-review-01",
+            "attempt_kind": "local_read_only_review",
+            "disposition": "PASS",
+            "evidence_ref": "docs/programme/evidence/RGR-05/RGR05_REVIEW_PROVENANCE.json",
+            "model_family": "GPT_OSS",
+            "model_id": "gpt-oss:20b",
+            "participant_id": "gpt-oss-review"
+          },
+          {
+            "attempt_id": "rgr05-qwen-review-01",
+            "attempt_kind": "independent_local_read_only_review",
+            "disposition": "PASS",
+            "evidence_ref": "docs/programme/evidence/RGR-05/RGR05_REVIEW_PROVENANCE.json",
+            "model_family": "QWEN",
+            "model_id": "qwen3-coder:30b",
+            "participant_id": "qwen-review"
+          }
+        ]
+      },
+      "identity": {
+        "capability": null,
+        "id": "rgr-05-pre-materialization-feasibility-20260918",
+        "objective": "Prove or falsify pre-materialization feasibility of canonical RGR-RT1-D2C-01 using minimum deterministic generator/validator machinery without full dataset or model execution.",
+        "parent_work_unit": "rgr-04-synthetic-relational-benchmark-constitution-20260918",
+        "programme": "RELATIONAL-GEOMETRY-REASONING",
+        "task_shape": "DETERMINISTIC_IMPLEMENTATION_VERIFICATION",
+        "work_class": "RESEARCH"
+      },
+      "provenance": {
+        "canonical_base_sha": "567e062b3d8929c41d15882ae26ea9d42077a1bc",
+        "evidence_files": {
+          "independent": {
+            "path": "docs/programme/evidence/RGR-05/RGR05_INDEPENDENT_VERIFIER.json",
+            "sha256": "756630d29b71fd9aafeb6d9d476619e36cbe5e2025363df1e1561d9c9290f126"
+          },
+          "primary": {
+            "path": "docs/programme/evidence/RGR-05/RGR05_FEASIBILITY_RESULT.json",
+            "sha256": "99b298cc64ad754038287bd33ccc9bca1c4a68d44d686a51ed6d2a472c63a216"
+          },
+          "reviews": {
+            "path": "docs/programme/evidence/RGR-05/RGR05_REVIEW_PROVENANCE.json",
+            "sha256": "b9642a380ed23f88577009f83df4baf79e2e92c02e1c583c4ece9428237eb9f3"
+          }
+        },
+        "implementation_digest": {
+          "combined_sha256": "98597755f40316ec4b0e60318635e1ad0dd587dd0d6176147aaf36923abb731b",
+          "components": {
+            "scripts/research/rgr/rgr05_feasibility.py": "7f5b24b93c1bb5b74aaae6cbd5fc79784b7cd483c91e410201fc4ddee24af6aa",
+            "scripts/research/rgr/rgr05_independent_verifier.py": "1d1cc41f058b19d8de1b6a02cc19655cb47ac03791011f3bde366b66ebf92407"
+          }
+        },
+        "model_performance_used": false,
+        "private_human_data_used": false,
+        "rgr04_constitution": "docs/programme/RGR-04_SYNTHETIC_RELATIONAL_BENCHMARK_CONSTITUTION_2026-09-18.md",
+        "rgr04_preregistration_lock": "docs/programme/RGR-04_PREREGISTRATION_LOCK_2026-09-18.md"
+      },
+      "routing": {
+        "bound_at_sha": "567e062b3d8929c41d15882ae26ea9d42077a1bc",
+        "execution_connected": false,
+        "route_digest": "sha256:b67ccbae067c96c9905d7ffbb07583cc8c9718aad7564c29b4f8f0fa8d538bf9",
+        "route_record": {
+          "blockers": [],
+          "challengers": [
+            {
+              "participant_id": "independent-bitmask-verifier",
+              "required_for_completion": true,
+              "role": "independent_mechanical_verifier"
+            },
+            {
+              "model_family": "GPT_OSS",
+              "participant_id": "gpt-oss-review",
+              "required_for_completion": true,
+              "role": "read_only_code_reviewer"
+            },
+            {
+              "model_family": "QWEN",
+              "participant_id": "qwen-review",
+              "required_for_completion": true,
+              "role": "independent_read_only_code_reviewer"
+            }
+          ],
+          "evidence_class": "E1_REPOSITORY_LOCAL",
+          "execution_disposition": "bounded_local",
+          "governing_law": "RGR-04 PRE-MATERIALIZATION FEASIBILITY GATE",
+          "granted_authority": [],
+          "primary": {
+            "participant_id": "deterministic-primary",
+            "required_for_completion": true,
+            "role": "mechanical_feasibility_proof"
+          },
+          "required_authority": {
+            "acts": [],
+            "disclosures": []
+          },
+          "review_pressure": "high_value_deterministic",
+          "route_version": "RGR05.v1",
+          "task_shape": "DETERMINISTIC_IMPLEMENTATION_VERIFICATION"
+        },
+        "route_source": "Founder-authorized bounded RGR-05 gate",
+        "route_version": "RGR05.v1",
+        "router_version": "RGR05.v1",
+        "transport_bindings": [
+          {
+            "authority_projection": {
+              "external_disclosure": "none",
+              "network_external": false,
+              "provider_spend": false,
+              "repository_read": true
+            },
+            "evidence_class": "E1_REPOSITORY_LOCAL",
+            "execution_mode": "read_only_review",
+            "model_family": "GPT_OSS",
+            "model_id": "gpt-oss:20b",
+            "route_participant_id": "gpt-oss-review",
+            "transport_binding_id": "rgr05-tb-gptoss",
+            "transport_binding_version": "W3T.v1",
+            "transport_posture": "local"
+          },
+          {
+            "authority_projection": {
+              "external_disclosure": "none",
+              "network_external": false,
+              "provider_spend": false,
+              "repository_read": true
+            },
+            "evidence_class": "E1_REPOSITORY_LOCAL",
+            "execution_mode": "read_only_review",
+            "model_family": "QWEN",
+            "model_id": "qwen3-coder:30b",
+            "route_participant_id": "qwen-review",
+            "transport_binding_id": "rgr05-tb-qwen",
+            "transport_binding_version": "W3T.v1",
+            "transport_posture": "local"
+          }
+        ]
+      },
+      "routing_request": {
+        "requested_posture": "independent_review",
+        "review_pressure": "high_value_deterministic"
+      },
+      "scope": {
+        "allowed_paths": [
+          "scripts/research/rgr/rgr05_feasibility.py",
+          "scripts/research/rgr/rgr05_independent_verifier.py",
+          "docs/programme/evidence/RGR-05/RGR05_FEASIBILITY_RESULT.json",
+          "docs/programme/evidence/RGR-05/RGR05_INDEPENDENT_VERIFIER.json",
+          "docs/programme/evidence/RGR-05/RGR05_REVIEW_PROVENANCE.json",
+          "docs/programme/RGR-05_PRE_MATERIALIZATION_FEASIBILITY_REPORT_2026-09-18.md",
+          "docs/programme/RGR-05_WORK_UNIT_2026-09-18.json"
+        ],
+        "base_ref": "567e062b3d8929c41d15882ae26ea9d42077a1bc",
+        "forbidden_paths": [
+          "app",
+          "lib",
+          "database",
+          "components",
+          "jarvis-desktop"
+        ],
+        "repository": "SoullabTech/Sovereign"
+      },
+      "state": {
+        "disposition": "closed",
+        "lifecycle_state": "CLOSED",
+        "supersedes": null
+      }
+    }
+  }
+}
