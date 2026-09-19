@@ -131,3 +131,22 @@
 .ws-section-observations { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
 .ws-section-observations:empty { display:none; }
 .ws-section-observations button { border:1px solid var(--ws-rule); border-radius:20px; padding:7px 12px; color:var(--ws-ink-secondary); background:var(--ws-ground-raised); font:12px/1.4 system-ui; cursor:pointer; }
+
+/* Reading is continuous; editorial tools disclose at the author's request. */
+.wsi-inline [data-revision-desk] { display:flex; flex-direction:column; }
+.wsi-inline .wsi-setup { order:2; }
+.wsi-inline .wsi-conversation-layout { display:flex; flex-direction:column; gap:12px; }
+.wsi-inline .wsi-discussion { order:0; width:100%; padding:0; }
+.wsi-inline .wsi-revision-controls { order:1; width:100%; }
+.wsi-inline .wsi-discussion textarea { min-height:64px; margin:8px 0; }
+.wsi-inline .wsi-discussion article { margin:6px 0 12px; }
+.wsi-inline .wsi-observation { max-width:none; font:16px/1.65 var(--font-spectral, Georgia, serif); }
+.wsi-inline .wsi-history { margin:0 0 10px; }
+.wsi-inline .wsi-bar { gap:8px; margin:10px 0; }
+.wsi-inline .wsi-inline-header { margin-bottom:12px; padding-bottom:10px; }
+.wsi-inline .wsi-setup, .wsi-inline .wsi-teaching, .wsi-inline .wsi-proposal-details { border-top:1px solid var(--wsi-line); padding-top:10px; }
+.ws-insight .wsi-section-heading { display:flex; align-items:baseline; flex-wrap:wrap; gap:16px; padding:12px 0; }
+.ws-insight .wsi-section-heading strong { font:500 24px/1.4 var(--font-spectral, Georgia, serif); }
+.ws-insight .wsi-section-heading span { font-size:12px; color:var(--wsi-muted); }
+.ws-insight .wsi-section-heading::before { content:'▸'; }
+.ws-insight details[open] > .wsi-section-heading::before { content:'▾'; }
