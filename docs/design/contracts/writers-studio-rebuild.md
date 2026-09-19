@@ -225,13 +225,19 @@ of this correction remains outstanding; component tests cannot prove layout.
 
 Develop explains a whole-to-passage starting path and offers an explicit whole-work
 focus preset without triggering inference. Writers with fragments are directed to
-write and discuss those words. Passage conversations expose Explain the concern,
-Explain my intention, and Explore another approach before revision. These populate
-the editable composer and preserve existing text; Send remains explicit. Discussion
-asks MAIA to reconsider interpretations in light of author intention, distinguish
-possible reader effects from evidence, and allow keeping the original. These are
-request instructions, not proof of provider compliance. This increment does not
-claim a completed guided intake or durable cross-work intention model.
+write and discuss those words. Passage conversations show a short, visible path:
+Notice, Discuss, Try, Decide. Before revision, writers can choose Help me understand,
+Explain what I meant, or Explore another approach. Help me understand explicitly
+requests a plain-language craft explanation grounded only in the supplied passage
+and observation; it asks MAIA to distinguish evidence from interpretation, preserve
+intentional choices and disagreement, avoid learner profiling or testing, and make
+no edit. These actions populate the editable composer and preserve existing text;
+Send remains explicit. Discussion asks MAIA to reconsider interpretations in light
+of author intention, distinguish possible reader effects from evidence, and allow
+keeping the original. This uses the existing editorial conversation and creates a
+future integration seam; it does not activate the non-executing Teaching Intelligence
+contracts or claim provider compliance. This increment does not claim a completed
+guided intake or durable cross-work intention model.
 
 ### Revision request visibility
 

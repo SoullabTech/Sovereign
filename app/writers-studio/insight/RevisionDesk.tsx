@@ -127,6 +127,15 @@ export default function RevisionDesk({
       {busy && <p role="status" aria-live="polite">MAIA is working on your request. Your manuscript is unchanged.</p>}
       {message && <p role="alert" className="wsi-request-error">{message}</p>}
       {previewing && <p role="status" aria-live="polite">Proposed changes are marked in the passage above: <ins>added words</ins> · <del>removed words</del>. Nothing is applied yet.</p>}
+      <div className="wsi-conversation-path" aria-label="Passage editing path">
+        <p>{version ? 'See what changed, then decide.' : 'Understand it before changing it.'}</p>
+        <ol>
+          <li data-state="complete">Notice</li>
+          <li data-state={version ? 'complete' : 'current'}>Discuss</li>
+          <li data-state={version ? 'complete' : 'next'}>Try</li>
+          <li data-state={version ? 'current' : 'next'}>Decide</li>
+        </ol>
+      </div>
       <div className="wsi-page-voice"><strong>MAIA</strong>
         {explanation && <MaiaListen text={explanation} active={active} />}
         {version && <span className="wsi-purpose-label">{versionLabel}</span>}
@@ -137,8 +146,8 @@ export default function RevisionDesk({
       </div> : <p className="wsi-page-welcome">What are you hoping to say here? We can explore it together.</p>}
       {!version && <div className="wsi-page-actions" aria-label="Explore before revising">
         {[
-          ['Explain the concern', 'Help me understand this observation before we edit. Show what in the supplied passages supports it, why it might matter to a reader, and when it could be intentional. If the evidence does not establish a problem, say so. Do not propose replacement wording yet.'],
-          ['Explain my intention', 'What I want this passage to do is '],
+          ['Help me understand', 'Teach me the craft principle this observation raises, using only the supplied passage and observation. First show me the exact words you noticed. Explain in plain language what they may do for a reader, why that may matter, and when the same choice could be intentional or effective. Distinguish evidence from interpretation. Do not test me, infer anything about my ability, or propose replacement wording yet. End by asking what I intended.'],
+          ['Explain what I meant', 'What I want this passage to do is '],
           ['Explore another approach', 'Help me explore two possible approaches to this passage, including keeping it as it is. Explain what each could gain or lose in relation to my intention and voice. Ask me about my intention if you need it before recommending an approach. Do not rewrite yet.'],
         ].map(([label, question]) => <button type="button" key={label} disabled={blocked} onClick={() => {
           onInstruction(instruction.trim() ? instruction + '\n\n' + question : question);

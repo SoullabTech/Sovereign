@@ -105,6 +105,32 @@ test('page conversation previews before apply and preserves a draft through disc
   expect(container.querySelector('.wsi-revision')).toBe(draft);
   expect(onApply).not.toHaveBeenCalled();
 });
+test('craft teaching is explicit, passage-grounded, and does not create a revision', () => {
+  const onSend = jest.fn();
+  function TeachingConversation() {
+    const [instruction, setInstruction] = React.useState('');
+    return React.createElement(RevisionDesk, {
+      inline:true, showInspiration:false, manuscriptId:'m1', title:'My chapter',
+      currentText:'The door was open.', sectionBody:'Before.\n\nThe door was open.\n\nAfter.',
+      thread:null, version:null, instruction, onInstruction:setInstruction, onSend,
+      onApply:jest.fn(), onPreview:jest.fn(), onSelectVersion:jest.fn(),
+      onSaveMember:jest.fn(), onKeep:jest.fn(), busy:false, message:null,
+      response:'This detail arrives before the reader knows why it matters.'
+    } as any);
+  }
+  act(() => root.render(React.createElement(TeachingConversation)));
+  const button=(text:string) => Array.from(container.querySelectorAll('button')).find(b=>b.textContent===text)!;
+  expect(container.textContent).toContain('Understand it before changing it.');
+  act(() => button('Help me understand').click());
+  const composer=container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Discuss this passage"]')!;
+  expect(composer.value).toContain('Teach me the craft principle');
+  expect(composer.value).toContain('using only the supplied passage and observation');
+  expect(container.textContent).not.toContain('Use this revision');
+  act(() => button('Send').click());
+  expect(onSend.mock.calls[0][0]).toContain('Distinguish evidence from interpretation');
+  expect(onSend.mock.calls[0][0]).toContain('Do not test me');
+});
+
 test('margin note can close and reopen while the paragraph and preview stay in place', () => {
   const toggled=jest.fn();
   const draw=(open:boolean)=>act(()=>root.render(React.createElement(ManuscriptPassage,{
