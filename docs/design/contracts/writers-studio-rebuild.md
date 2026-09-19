@@ -211,3 +211,12 @@ request, inline diff, read-in-context, application, reopen, and Undo without a
 route change. This is component integration evidence, not live-provider, database,
 audio, screenshot, or founder visual acceptance evidence. Those remain outstanding
 before release; no production deployment is represented by this change.
+
+### Embedded canvas containment
+
+The embedded editor explicitly sizes to its parent (100%, min-width zero), not
+the viewport. This overrides the global landscape main-element rule that caused
+the manuscript to overflow beneath the reading tools in the founder screenshot.
+The workspace clips overflow and reading tools have an opaque surface. Full-screen
+canvas retains its separate fixed viewport presentation. Browser visual acceptance
+of this correction remains outstanding; component tests cannot prove layout.

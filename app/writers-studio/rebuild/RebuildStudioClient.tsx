@@ -1082,7 +1082,7 @@ export default function RebuildStudioClient({ development }: { development?: Dev
             : statuses.includes('dirty') ? 'Unsaved'
               : statuses.includes('saving') ? 'Saving…' : null;
         return (
-    <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} data-embedded-canvas={Boolean(development)} style={{ height: development && !canvasExpanded ? '100%' : '100vh', position: development && canvasExpanded ? 'fixed' : undefined, inset: development && canvasExpanded ? 0 : undefined, zIndex: development && canvasExpanded ? 80 : undefined, flex: development ? 1 : undefined, minHeight: 0, overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
+    <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} data-embedded-canvas={Boolean(development)} style={{ height: development && !canvasExpanded ? '100%' : '100vh', position: development && canvasExpanded ? 'fixed' : undefined, inset: development && canvasExpanded ? 0 : undefined, zIndex: development && canvasExpanded ? 80 : undefined, flex: development ? 1 : undefined, width: development && !canvasExpanded ? '100%' : undefined, maxWidth: '100%', minWidth: 0, minHeight: 0, overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
       {!canvasExpanded && !development && (<header className="wsr-header" style={{ height: 58, display: 'grid', gridTemplateColumns: '300px 1fr 300px', alignItems: 'center', padding: '0 20px', borderBottom: `1px solid ${C.soft}`, background: C.field }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <Link

@@ -691,7 +691,7 @@ export default function DevelopRoom({
         data-develop-centre="manuscript"
         style={{
           borderRight: `1px solid ${PRESS.ruleSoft}`,
-          display: 'flex', flexDirection: 'column',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}
       >
         {manuscriptPhase === 'error' ? (
@@ -787,7 +787,7 @@ export default function DevelopRoom({
         className="min-w-0 shrink-0 overflow-y-auto px-6 py-5"
         aria-label="Developmental reading"
         data-develop-intelligence
-        style={{ display: readingToolsOpen ? undefined : 'none', flex: '0 1 clamp(24rem, 32vw, 38rem)' }}
+        style={{ display: readingToolsOpen ? undefined : 'none', flex: '0 1 clamp(24rem, 32vw, 38rem)', background: 'var(--ws-ground-base, #131d17)', position: 'relative' }}
       >
         {insightOpen && noteObservation && !noteSectionId && <div ref={setNoteAnchor} data-develop-structural-note-anchor />}
         <GoldLine manuscriptId={manuscriptId} />
