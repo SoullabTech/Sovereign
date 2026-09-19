@@ -1,0 +1,168 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "ACT 11A",
+  "title": "Targeted Synthetic Falsification Corpus — Narrow Epistemic Join Clarification",
+  "date": "2026-09-19",
+  "canonical_base": "1ec63baeed4447626554e417d3ac1f2c498bf829",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11",
+    "ACT 12"
+  ],
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "data_class": "SYNTHETIC_ONLY_NO_MEMBER_CLIENT_CLINICAL_PHI_SANCTUARY_OR_PRODUCTION_DATA",
+  "candidate_dispositions": [
+    "NARROW CLARIFICATION SUFFICIENT",
+    "NARROW CLARIFICATION INSUFFICIENT",
+    "UNDERDETERMINED"
+  ],
+  "case_count": 10,
+  "cases": [
+    {
+      "id": "ACT11A-C01",
+      "title": "Multiple partial sources with no synthesis method",
+      "finding": "COMPOSITE_WARRANT",
+      "attacks": [
+        "A11A-INV-01",
+        "A11A-INV-03",
+        "A11A-INV-05"
+      ],
+      "setup": "Three synthetic sources each offer partial support for relation R. No declared inferential method combines them.",
+      "expected": "The sources may be compared, but no composite warrant exists and R remains CANDIDATE / UNESTABLISHED.",
+      "failure": "R becomes warranted solely from source count, compatibility, or apparent convergence.",
+      "result": "PASS",
+      "reason": "ACT 11A requires a separately authored composite inference with an explicit composition method before a composite warrant candidate exists."
+    },
+    {
+      "id": "ACT11A-C02",
+      "title": "Multiple partial sources with explicit governed triangulation method",
+      "finding": "COMPOSITE_WARRANT",
+      "attacks": [
+        "A11A-INV-01",
+        "A11A-INV-02",
+        "A11A-INV-03",
+        "A11A-INV-06"
+      ],
+      "setup": "Three synthetic sources provide complementary partial evidence. A separately authored triangulation analysis declares its proposition, support set, method, independence assumptions, jurisdiction, uncertainty, boundaries, and licensed semantics.",
+      "expected": "A new COMPOSITE WARRANT CANDIDATE may be evaluated on its own merits. It may earn only the standing justified by its method and support.",
+      "failure": "The analysis is either automatically promoted because multiple sources agree, or prohibited merely because no single source independently warrants R.",
+      "result": "PASS",
+      "reason": "ACT 11A distinguishes the support set from the separately governed composite inference and explicitly preserves legitimate triangulation viability."
+    },
+    {
+      "id": "ACT11A-C03",
+      "title": "Prestigious-source accumulation masquerading as warrant",
+      "finding": "COMPOSITE_WARRANT",
+      "attacks": [
+        "A11A-INV-04",
+        "A11A-INV-05"
+      ],
+      "setup": "Four highly prestigious synthetic authorities endorse nearby endpoint propositions, but none establishes relation R and no composite method exists.",
+      "expected": "Prestige does not create a warrant. R remains unestablished.",
+      "failure": "Authority prestige or agreement is aggregated into relation standing.",
+      "result": "PASS",
+      "reason": "ACT 11A explicitly forbids source prestige, agreement, repetition, and count from substituting for a governed composite inference."
+    },
+    {
+      "id": "ACT11A-C04",
+      "title": "Composite warrant with unresolved source dependence",
+      "finding": "COMPOSITE_WARRANT",
+      "attacks": [
+        "A11A-INV-03",
+        "A11A-INV-04"
+      ],
+      "setup": "A composite analysis combines three sources, but two may derive from the same undisclosed upstream dataset. The dependence cannot currently be resolved.",
+      "expected": "The dependence uncertainty must remain operative and cap standing; the sources may not be treated as independent.",
+      "failure": "The composite is evaluated as though the three sources were independent.",
+      "result": "PASS",
+      "reason": "ACT 11A requires dependence assumptions and makes unresolved dependence part of the standing ceiling."
+    },
+    {
+      "id": "ACT11A-C05",
+      "title": "Composite method licenses correlation but not causation",
+      "finding": "COMPOSITE_WARRANT",
+      "attacks": [
+        "A11A-INV-04",
+        "A11A-INV-05"
+      ],
+      "setup": "A separately governed composite method validly combines synthetic observational sources and supports an association between A and B, but contains no causal identification.",
+      "expected": "The composite warrant may support ASSOCIATION only; the causal proposition remains unestablished.",
+      "failure": "The composite warrant's standing is semantically strengthened from association to causation.",
+      "result": "PASS",
+      "reason": "ACT 11A requires the relation semantics actually licensed by the composition method to remain explicit."
+    },
+    {
+      "id": "ACT11A-C06",
+      "title": "Member adoption of personal meaning only",
+      "finding": "JURISDICTION_BOUNDED_ADOPTION",
+      "attacks": [
+        "A11A-INV-07",
+        "A11A-INV-10"
+      ],
+      "setup": "MAIA proposes that a synthetic member's recurring image may represent a desire for rest. The member says, 'Yes, that is what it means to me.'",
+      "expected": "Member-confirmed standing may be created for the personal-meaning component, with MAIA proposal provenance preserved.",
+      "failure": "The member is prevented from adopting their own meaning, or the original MAIA proposal provenance is erased.",
+      "result": "PASS",
+      "reason": "ACT 11A preserves strong member authority over lived experience and personal meaning while retaining proposal/adoption history."
+    },
+    {
+      "id": "ACT11A-C07",
+      "title": "Member adoption of mixed proposition containing another person's motive",
+      "finding": "JURISDICTION_BOUNDED_ADOPTION",
+      "attacks": [
+        "A11A-INV-07",
+        "A11A-INV-08",
+        "A11A-INV-09"
+      ],
+      "setup": "MAIA proposes: 'Your partner's silence feels withholding because they intended to control you.' The member replies, 'Yes, exactly.'",
+      "expected": "The member may confirm that the silence feels withholding or controlling to them. The partner's motive/intention remains separately unwarranted.",
+      "failure": "Whole-sentence confirmation promotes the partner's hidden motive or intention to fact.",
+      "result": "PASS",
+      "reason": "ACT 11A requires mixed components to retain distinct standing and keeps external motive claims independently warranted."
+    },
+    {
+      "id": "ACT11A-C08",
+      "title": "Member confirms only part of a MAIA hypothesis",
+      "finding": "JURISDICTION_BOUNDED_ADOPTION",
+      "attacks": [
+        "A11A-INV-07",
+        "A11A-INV-08",
+        "A11A-INV-10"
+      ],
+      "setup": "MAIA proposes two linked claims: 'This transition feels like grief, and it is caused by an unconscious archetypal mechanism.' The member confirms only, 'Yes, it feels like grief.'",
+      "expected": "Only the lived-experience component becomes member-confirmed. The causal/metaphysical component retains its previous standing and authorship.",
+      "failure": "Partial confirmation is treated as adoption of the entire proposition.",
+      "result": "PASS",
+      "reason": "ACT 11A requires the actually adopted semantic components to remain recoverable and separately scoped."
+    },
+    {
+      "id": "ACT11A-C09",
+      "title": "Practitioner interpretation later adopted by member",
+      "finding": "JURISDICTION_BOUNDED_ADOPTION",
+      "attacks": [
+        "A11A-INV-07",
+        "A11A-INV-09",
+        "A11A-INV-10"
+      ],
+      "setup": "A synthetic practitioner says a recurring pattern may reflect unresolved fear and also asserts an external causal explanation. The member later says the 'unresolved fear' framing resonates.",
+      "expected": "Personal resonance may become member-confirmed; practitioner authorship remains recoverable; the external causal claim does not become member-authored fact.",
+      "failure": "Member resonance retroactively rewrites the entire practitioner proposition as member-authored truth.",
+      "result": "PASS",
+      "reason": "ACT 11A expressly preserves practitioner provenance and separate warrant requirements for external factual/causal components."
+    },
+    {
+      "id": "ACT11A-C10",
+      "title": "Mixed proposition requires different standing across semantic components",
+      "finding": "JURISDICTION_BOUNDED_ADOPTION",
+      "attacks": [
+        "A11A-INV-08",
+        "A11A-INV-09"
+      ],
+      "setup": "A single synthetic sentence combines: member feeling, personal interpretation, another person's motive, and a scientific generalization.",
+      "expected": "The proposition must remain decomposable conceptually so each component can carry its own authorship, jurisdiction, warrant, and standing.",
+      "failure": "The contract forces the entire sentence into one undifferentiated standing.",
+      "result": "PASS",
+      "reason": "ACT 11A establishes a conceptual mixed-proposition rule without requiring a particular parser, schema, or implementation mechanism."
+    }
+  ]
+}
