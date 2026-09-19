@@ -1,0 +1,73 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "ACT 12",
+  "title": "Adversarial Epistemic Join Falsification",
+  "date": "2026-09-19",
+  "status": "EVIDENCE_READY",
+  "canonical_base": "b0b07871b200a074874c68edc4084cbd3b8174bc",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11"
+  ],
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "authority": "SYNTHETIC_CONTRACT_FALSIFICATION_ONLY",
+  "programme_disposition": "CONTRACT REQUIRES NARROW REVISION",
+  "findings": [
+    {
+      "id": "F-ACT12-01",
+      "title": "Composite warrant formation ambiguity",
+      "standing": "PRESERVED_FINDING",
+      "summary": "ACT 11 forbids source-count accumulation laundering but does not explicitly define how individually partial sources may lawfully form a separately governed composite/triangulated warrant."
+    },
+    {
+      "id": "F-ACT12-02",
+      "title": "Jurisdiction-bounded adoption ambiguity",
+      "standing": "PRESERVED_FINDING",
+      "summary": "ACT 11 does not explicitly state that adoption promotes only semantic components within the adopter's epistemic authority when a proposed sentence mixes lived meaning with external factual or causal claims."
+    }
+  ],
+  "corpus_summary": {
+    "required_pressure_families": "20/20",
+    "total_cases": 24,
+    "resolved": 18,
+    "resolved_with_boundary": 4,
+    "exposes_ambiguity": 2,
+    "exposes_missing_rule": 0,
+    "underdetermined": 0,
+    "core_invariant_collapse": "NONE"
+  },
+  "authorized_outputs": [
+    "adversarial falsification method",
+    "bounded synthetic adversarial corpus",
+    "per-case static results",
+    "preserved ACT 11 weakness findings",
+    "exact candidate SHA for separate Founder adjudication"
+  ],
+  "forbidden": [
+    "ACT 10 modification",
+    "ACT 11 modification",
+    "database schema or migration",
+    "relation or graph implementation",
+    "automated semantic-edge creation",
+    "claim ledger implementation",
+    "parser or classifier implementation",
+    "prompt or system-instruction changes",
+    "MAIA behavioral changes",
+    "member-memory mutation",
+    "Living Constellation relationship generation",
+    "automatic promotion",
+    "Work Unit or routing changes",
+    "provider/model changes",
+    "merge",
+    "deployment",
+    "production mutation"
+  ],
+  "data_class": "SYNTHETIC_ONLY_NO_MEMBER_CLIENT_CLINICAL_PHI_SANCTUARY_OR_PRODUCTION_DATA",
+  "artifacts": [
+    "docs/programme/JARVIS-KP-01_ACT12_ADVERSARIAL_EPISTEMIC_JOIN_FALSIFICATION_METHOD_2026-09-19.md",
+    "docs/programme/JARVIS-KP-01_ACT12_WORK_UNIT_2026-09-19.json",
+    "docs/programme/evidence/JARVIS-KP-01/ACT12/ADVERSARIAL_EPISTEMIC_JOIN_CORPUS.json",
+    "docs/programme/evidence/JARVIS-KP-01/ACT12/ADVERSARIAL_FALSIFICATION_RESULTS_2026-09-19.md"
+  ],
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_ACT12_EXACT_CANDIDATE"
+}
