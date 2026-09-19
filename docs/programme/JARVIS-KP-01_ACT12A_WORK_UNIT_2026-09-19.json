@@ -1,0 +1,78 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "ACT 12A",
+  "title": "Amended Epistemic Join Regression Falsification",
+  "date": "2026-09-19",
+  "status": "EVIDENCE_READY",
+  "canonical_base": "80667d4c9fae8b7cdecd352bfbeb2d81d2fca2e0",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11",
+    "ACT 12",
+    "ACT 11A"
+  ],
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "authority": "STATIC_SYNTHETIC_REGRESSION_FALSIFICATION_ONLY",
+  "programme_disposition": "AMENDED CONTRACT SURVIVES REGRESSION",
+  "evidence_summary": {
+    "original_act12_cases": "24/24 PASS",
+    "previously_resolved_act12_cases": "22/22 NO REGRESSION",
+    "former_act12_ambiguities": "2/2 RESOLVED AS INTENDED",
+    "act11a_targeted_cases": "10/10 PASS",
+    "new_interaction_adversaries": "8/8 PASS",
+    "total_cases": "42/42 RESOLVED",
+    "act11_invariants": "14/14 PASS",
+    "act11a_invariants": "10/10 PASS",
+    "new_contract_ambiguity": "NONE OBSERVED",
+    "amendment_introduced_regression": "NONE OBSERVED",
+    "mechanism_specific_assumptions": "NONE"
+  },
+  "source_artifacts": {
+    "canonical_act12_corpus": {
+      "path": "docs/programme/evidence/JARVIS-KP-01/ACT12/ADVERSARIAL_EPISTEMIC_JOIN_CORPUS.json",
+      "blob_sha": "798c9960868034a3d15f699fe315abc665eae8b5"
+    },
+    "canonical_act11a_corpus": {
+      "path": "docs/programme/evidence/JARVIS-KP-01/ACT11A/TARGETED_SYNTHETIC_FALSIFICATION_CORPUS.json",
+      "blob_sha": "cef6f2ed6c99a9c763954c0e2ebf7e48285cafa2"
+    }
+  },
+  "artifacts": [
+    "docs/programme/JARVIS-KP-01_ACT12A_AMENDED_EPISTEMIC_JOIN_REGRESSION_FALSIFICATION_METHOD_2026-09-19.md",
+    "docs/programme/JARVIS-KP-01_ACT12A_WORK_UNIT_2026-09-19.json",
+    "docs/programme/evidence/JARVIS-KP-01/ACT12A/AMENDED_EPISTEMIC_JOIN_REGRESSION_CORPUS.json",
+    "docs/programme/evidence/JARVIS-KP-01/ACT12A/AMENDED_EPISTEMIC_JOIN_REGRESSION_RESULTS_2026-09-19.md"
+  ],
+  "preserved_unchanged": [
+    "canonical ACT 10",
+    "canonical ACT 11",
+    "canonical ACT 12",
+    "canonical ACT 11A",
+    "canonical epistemic operation grammar",
+    "all ACT 11 invariants",
+    "all ACT 11A invariants"
+  ],
+  "forbidden": [
+    "modification of ACT 10",
+    "modification of ACT 11",
+    "modification of ACT 11A",
+    "runtime enforcement",
+    "schema or migration",
+    "relation or graph implementation",
+    "automated semantic-edge creation",
+    "claim-ledger implementation",
+    "parser or classifier implementation",
+    "prompt or system-instruction changes",
+    "MAIA behavioral changes",
+    "member-memory mutation",
+    "Living Constellation relationship generation",
+    "automatic promotion",
+    "routing changes",
+    "provider/model changes",
+    "merge",
+    "deployment",
+    "production mutation"
+  ],
+  "data_class": "SYNTHETIC_ONLY_NO_MEMBER_CLIENT_CLINICAL_PHI_SANCTUARY_PRODUCTION_MEMORY_OR_PRIVATE_PRACTITIONER_DATA",
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_EXACT_ACT12A_CANDIDATE"
+}
