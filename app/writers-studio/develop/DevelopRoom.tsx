@@ -563,13 +563,14 @@ export default function DevelopRoom({
   const tooLarge = chosenSize > DEVELOPMENTAL_READ_CEILING_CODE_POINTS
     || (effectiveScope === 'custom' && !endChosen);
 
-  const ask = async () => {
+  const ask = async (choice?: { scope?: ReadingScope; lens?: DevelopmentalLens }) => {
     setCommission({ phase: 'reading' });
     /* The scope is a structural identifier or it is absent. Nothing about the
        Work's prose goes up the wire — the invocation carries the lens, the
        member's identity, and at most the name of a division they authored. */
-    const scope = chosenScope;
-    const outcome = await requestDevelopmentalReading(manuscriptId, lens, scope);
+    const scope = choice ? choice.scope : chosenScope;
+    const readingLens = choice?.lens ?? lens;
+    const outcome = await requestDevelopmentalReading(manuscriptId, readingLens, scope);
     if (!outcome.ok) { setCommission({ phase: 'refused', outcome }); return; }
     setCommission({ phase: 'idle' });
     setReadingToolsOpen(false);
@@ -721,53 +722,62 @@ export default function DevelopRoom({
             </div>
             <div data-develop-task-bar className="px-6 py-3 border-b" style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}>
               <WorkInspiration manuscriptId={manuscriptId} />
-              <p className="text-[14px] mb-2">Let’s find the next useful step for your writing.</p>
-              <p className="text-[12px] mb-3 opacity-80">For a draft, begin with how the whole work holds together. Then open a note on the page: explore what MAIA noticed, explain your intention, and decide together whether to try a change.</p>
-              <button type="button" className="rounded border px-3 py-2 text-[12px] mb-3"
-                disabled={commission.phase === 'reading'}
-                onClick={() => { setDevelopScope('work'); setLens('development'); }}>Start with the whole work</button>
-              <span className="text-[12px] ml-3 opacity-70">Sets the focus below; choose Explore with MAIA when ready.</span>
-              <details className="mb-3"><summary className="cursor-pointer text-[12px]">Working from an idea or scattered material?</summary>
-                <p className="text-[12px] mt-2">You can begin with a few words in Write: what matters to you, whom you hope to reach, or a fragment you want to develop. Open a conversation on that writing and tell MAIA what you are trying to express. A complete draft is not required.</p>
-              </details>
-              <div className="flex flex-wrap items-end gap-3">
-                <label className="text-[12px]">Where should MAIA read?
-                  <select aria-label="Developmental reading scope" value={effectiveScope}
-                    disabled={commission.phase === 'reading'}
-                    onChange={e => { setDevelopScope(e.target.value as DevelopScope); if (e.target.value === 'custom') setReadingToolsOpen(true); }}
-                    className="block border rounded px-2 py-2 mt-1 bg-transparent" style={{ borderColor: PRESS.rule, color: PRESS.text }}>
-                    <option value="work" style={{ color: PRESS.ink }}>Whole work</option>
-                    <option value="chapter" disabled={!currentChapter} style={{ color: PRESS.ink }}>Current chapter</option>
-                    <option value="custom" style={{ color: PRESS.ink }}>Choose a range</option>
-                  </select>
-                </label>
-                <label className="text-[12px]">What would you like to explore?
-                  <select aria-label="Developmental task" value={lens} disabled={commission.phase === 'reading'}
-                    onChange={e => setLens(e.target.value as DevelopmentalLens)}
-                    className="block border rounded px-2 py-2 mt-1 bg-transparent max-w-full" style={{ borderColor: PRESS.rule, color: PRESS.text }}>
-                    {LENS_ORDER.map(l => <option key={l} value={l} style={{ color: PRESS.ink }}>{l === 'development' ? 'Development' : lensLabel(l)} · {LENS_QUESTION[l]}</option>)}
-                  </select>
-                </label>
-                <button type="button" onClick={() => { setReadingToolsOpen(true); void ask(); }}
-                  disabled={listPhase !== 'ready' || prep.phase !== 'ready' || prep.state.kind !== 'ready' || commission.phase === 'reading' || tooLarge}
-                  className="rounded border px-3 py-2 text-[12px] disabled:opacity-40"
+              <div className="mb-4">
+                <p className="text-[15px] mb-1">Begin with the shape of the whole Work.</p>
+                <p className="text-[12px] mb-3 opacity-75">MAIA will read the manuscript as a whole and return with places worth exploring. Nothing changes until you choose it.</p>
+                <button type="button"
+                  disabled={listPhase !== 'ready' || prep.phase !== 'ready' || prep.state.kind !== 'ready' || commission.phase === 'reading'
+                    || codePointsOf(sections ?? []) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS}
+                  onClick={() => { setDevelopScope('work'); setLens('development'); setReadingToolsOpen(true); void ask({ lens: 'development' }); }}
+                  className="rounded border px-4 py-2 text-[13px] disabled:opacity-40"
                   style={{ borderColor: PRESS.rule, background: 'var(--ws-ground-active)' }}>
-                  {commission.phase === 'reading' ? 'MAIA is reading…' : 'Explore with MAIA'}
+                  {commission.phase === 'reading' ? 'MAIA is reading the whole Work…' : 'Read the whole Work with MAIA'}
                 </button>
               </div>
-              <p className="text-[12px] mt-2 opacity-70" role="status">
-                {tooLarge ? 'Choose a smaller range so MAIA can read it in one sitting.'
-                  : prep.phase === 'ready' && prep.state.kind === 'ready' ? 'Choose a focus, then ask for a reading. Your manuscript stays unchanged.'
-                  : 'Open Developmental tools to see reading readiness and preparation.'}
-              </p>
-              {view && commission.phase !== 'reading' && <div className="flex items-center gap-3 mt-2 text-[12px]" role="status">
-                <span>{view.observations.length} notes from this reading</span>
+              <details className="mb-3">
+                <summary className="cursor-pointer text-[12px] opacity-80">Choose a different focus</summary>
+                <div className="flex flex-wrap items-end gap-3 mt-3">
+                  <label className="text-[12px]">Where should MAIA read?
+                    <select aria-label="Developmental reading scope" value={effectiveScope}
+                      disabled={commission.phase === 'reading'}
+                      onChange={e => { setDevelopScope(e.target.value as DevelopScope); if (e.target.value === 'custom') setReadingToolsOpen(true); }}
+                      className="block border rounded px-2 py-2 mt-1 bg-transparent" style={{ borderColor: PRESS.rule, color: PRESS.text }}>
+                      <option value="work" style={{ color: PRESS.ink }}>Whole work</option>
+                      <option value="chapter" disabled={!currentChapter} style={{ color: PRESS.ink }}>Current chapter</option>
+                      <option value="custom" style={{ color: PRESS.ink }}>Choose a range</option>
+                    </select>
+                  </label>
+                  <label className="text-[12px]">What would you like to explore?
+                    <select aria-label="Developmental task" value={lens} disabled={commission.phase === 'reading'}
+                      onChange={e => setLens(e.target.value as DevelopmentalLens)}
+                      className="block border rounded px-2 py-2 mt-1 bg-transparent max-w-full" style={{ borderColor: PRESS.rule, color: PRESS.text }}>
+                      {LENS_ORDER.map(l => <option key={l} value={l} style={{ color: PRESS.ink }}>{l === 'development' ? 'Development' : lensLabel(l)} · {LENS_QUESTION[l]}</option>)}
+                    </select>
+                  </label>
+                  <button type="button" onClick={() => { setReadingToolsOpen(true); void ask(); }}
+                    disabled={listPhase !== 'ready' || prep.phase !== 'ready' || prep.state.kind !== 'ready' || commission.phase === 'reading' || tooLarge}
+                    className="rounded border px-3 py-2 text-[12px] disabled:opacity-40"
+                    style={{ borderColor: PRESS.rule, background: 'var(--ws-ground-active)' }}>
+                    {commission.phase === 'reading' ? 'MAIA is reading…' : 'Read this focus with MAIA'}
+                  </button>
+                </div>
+                <p className="text-[12px] mt-2 opacity-70" role="status">
+                  {tooLarge ? 'Choose a smaller range so MAIA can read it in one sitting.'
+                    : prep.phase === 'ready' && prep.state.kind === 'ready' ? 'Your manuscript remains unchanged while MAIA reads.'
+                    : 'Open Developmental tools to see reading readiness and preparation.'}
+                </p>
+              </details>
+              {view && commission.phase !== 'reading' && <div className="mt-3 p-3 border-l-2" style={{ borderColor: PRESS.rule }} role="status">
+                <p className="text-[14px]">MAIA found {view.observations.length} place{view.observations.length === 1 ? '' : 's'} to explore.</p>
+                <p className="text-[12px] mt-1 mb-2 opacity-70">Open one on the page, explain what you meant, and decide together whether anything should change.</p>
                 {view.observations.some(o => evidenceSectionByObservation.has(o.key)) && <button type="button"
-                  className="underline underline-offset-4" onClick={() => {
-                    const noted = view.observations.find(o => evidenceSectionIdsByObservation.get(o.key)?.includes(placeId ?? ''))
+                  className="rounded border px-3 py-2 text-[12px]" style={{ borderColor: PRESS.rule }}
+                  onClick={() => {
+                    const noted = view.observations.find(o => o.state === 'current' && evidenceSectionIdsByObservation.get(o.key)?.includes(placeId ?? ''))
+                      ?? view.observations.find(o => o.state === 'current' && evidenceSectionByObservation.has(o.key))
                       ?? view.observations.find(o => evidenceSectionByObservation.has(o.key));
                     if (noted) openManuscriptNote(noted.key, placeId ?? undefined);
-                  }}>Open a note on the page</button>}
+                  }}>Begin with a note in the manuscript</button>}
               </div>}
             </div>
             <RebuildStudioClient development={{
@@ -1050,7 +1060,7 @@ export default function DevelopRoom({
                 </details>
               </fieldset>
               <button
-                onClick={ask}
+                onClick={() => void ask()}
                 disabled={commission.phase === 'reading' || tooLarge}
                 aria-busy={commission.phase === 'reading'}
                 data-develop-ask

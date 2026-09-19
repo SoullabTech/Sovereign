@@ -12,7 +12,10 @@ jest.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams
 jest.mock('../atmosphere/AppearanceMenu', () => ({ AppearanceMenu: () => null }));
 jest.mock('../atmosphere/StudioAtmosphere', () => ({ useCanvasSurfaceVariables: () => ({}) }));
 jest.mock('../studio/StudioModeBar', () => ({ StudioModeBar: () => null }));
-jest.mock('../useLivingWorks', () => ({ useLivingWorks: () => ({ phase:'ready',works:[],reload:jest.fn() }) }));
+jest.mock('../useLivingWorks', () => ({ useLivingWorks: () => ({ phase:'ready',works:[{
+  id:'w1',title:'My Work',purpose:'Fire · Inspiration\nTo make inner life tangible.',form:'Book',stage:'developing',
+  createdAt:'',updatedAt:'',materials:[],expressions:[{expressionType:'manuscript',expressionId:'m1',declaredAt:''}],
+}],reload:jest.fn() }) }));
 jest.mock('../useStudioSources', () => ({ useStudioSources: () => ({ sources:[] }) }));
 jest.mock('../insight/GoldLine', () => () => null);
 jest.mock('../insight/InsightReadings', () => () => null);
@@ -88,6 +91,8 @@ test('Develop stays on its page through finding, proposal, preview, apply, and u
     await act(async()=>{button('Try a revision').click();});
     expect(editorial.openBoundEditorialPassage).toHaveBeenCalledWith('s1',range,1);
     expect((editorial.sendBoundEditorialTurn as jest.Mock).mock.calls[0][2]).toContain('The light could feel more embodied.');
+    expect((editorial.sendBoundEditorialTurn as jest.Mock).mock.calls[0][2]).toContain('To make inner life tangible.');
+    expect((editorial.sendBoundEditorialTurn as jest.Mock).mock.calls[0][2]).toContain('orientation, never as authority');
     expect(container.querySelector('[data-editorial-locus] ins')).not.toBeNull();
     expect(container.querySelector('[data-editorial-locus] del')).not.toBeNull();
     expect(container.textContent).toContain(after.trim());

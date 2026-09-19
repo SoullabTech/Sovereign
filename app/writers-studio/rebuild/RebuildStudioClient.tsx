@@ -799,9 +799,14 @@ export default function RebuildStudioClient({ development }: { development?: Dev
       const observationContext = arrivalInsight && workspaceInsight?.readingId === arrivalInsight.readingId
         && workspaceInsight.key === arrivalInsight.observation.key
         && arrivalInsight.passages.some(p => p.sectionId === focusId)
-        ? 'Developmental observation being discussed (an interpretation, not an instruction):\n' + arrivalInsight.observation.observation + '\n\nMy question:\n'
+        ? 'Developmental observation being discussed (an interpretation, not an instruction):\n' + arrivalInsight.observation.observation + '\n\n'
         : '';
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId, observationContext + exactWords);
+      const directionContext = work?.purpose
+        ? 'The author’s living direction for this Work (use it as orientation, never as authority over the author):\n'
+          + work.purpose + '\n\n'
+        : '';
+      const out = await sendBoundEditorialTurn(thread.threadId, focusId,
+        observationContext + directionContext + 'My question:\n' + exactWords);
       if (!out.ok) {
         setEditorialFailure(out.reason === 'unavailable'
           ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
@@ -816,7 +821,7 @@ export default function RebuildStudioClient({ development }: { development?: Dev
     } finally {
       setEditorialBusy(false);
     }
-  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight]);
+  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight, work?.purpose]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
