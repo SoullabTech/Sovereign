@@ -236,13 +236,17 @@
 .wsi-direction-question h4 { margin:2px 0 7px; font:500 28px/1.2 var(--font-spectral,Georgia,serif); }
 .wsi-direction-question > p { margin:0 0 15px; max-width:58ch; }
 .wsi-direction-question label span { display:block; margin-bottom:6px; font-size:12px; }
-.ws-insight .wsi-direction-question textarea { min-height:120px; margin:0 0 8px; font:18px/1.55 var(--font-spectral,Georgia,serif); }
+.wsi-direction-question textarea { width:100%; min-height:120px; margin:0 0 8px; padding:12px; color:inherit; background:var(--wsi-paper,#f4efdf); border:1px solid var(--wsi-line,#b9af97); font:18px/1.55 var(--font-spectral,Georgia,serif); }
 .wsi-direction-kept { margin-top:16px; padding:18px; background:color-mix(in srgb,#dbe7d5 76%,transparent); }
 .wsi-direction-kept dl { margin:10px 0 16px; }
 .wsi-direction-kept dl div { display:grid; grid-template-columns:135px minmax(0,1fr); gap:16px; padding:9px 0; border-top:1px solid color-mix(in srgb,var(--wsi-line) 60%,transparent); }
 .wsi-direction-kept dt { color:#78622f; font:600 10px/1.5 system-ui; letter-spacing:.12em; text-transform:uppercase; }
 .wsi-direction-kept dd { margin:0; white-space:pre-wrap; font:15px/1.5 var(--font-spectral,Georgia,serif); }
 .wsi-direction-status { color:#4f6849; margin:10px 0 0; }
+.wsi-direction .wsi-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.wsi-direction button { border:1px solid var(--wsi-line,#6f746d); border-radius:5px; padding:8px 12px; color:inherit; background:transparent; cursor:pointer; }
+.wsi-direction button.wsi-primary { border-color:#71806a; color:#f4f0e5; background:#31483a; }
+.wsi-direction button:disabled { opacity:.45; cursor:wait; }
 @media(max-width:720px) {
   .wsi-direction-heading { display:block; }
   .wsi-direction-heading > button { margin-top:12px; }

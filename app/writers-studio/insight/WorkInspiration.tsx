@@ -63,7 +63,7 @@ function directionSummary(direction: Direction): string {
 
 /** The writer's living direction, held on the existing Work rather than in a rehearsal store. */
 export default function WorkInspiration({ manuscriptId, onBringToQuestion }: {
-  manuscriptId: string; onBringToQuestion: (statement: string) => void;
+  manuscriptId: string; onBringToQuestion?: (statement: string) => void;
 }) {
   const { phase, works, reload } = useLivingWorks();
   const context = resolveWorkContext(phase, works, manuscriptId);
@@ -170,7 +170,8 @@ export default function WorkInspiration({ manuscriptId, onBringToQuestion }: {
         <dt>{part.element} · {part.name}</dt><dd>{saved[part.key]}</dd>
       </div>)}</dl>
       <div className="wsi-bar">
-        <button type="button" className="wsi-primary" onClick={() => onBringToQuestion(directionSummary(saved))}>Use this in our conversation</button>
+        {onBringToQuestion && <button type="button" className="wsi-primary"
+          onClick={() => onBringToQuestion(directionSummary(saved))}>Use this in our conversation</button>}
         <button type="button" onClick={begin}>Adjust my direction</button>
       </div>
     </div> : null}

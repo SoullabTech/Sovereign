@@ -67,6 +67,7 @@ import InlineWorkspace from '../insight/InlineWorkspace';
 import MaiaListen from '../insight/MaiaListen';
 import { insightWriteHref } from '@/lib/writersStudio/insightCanvas';
 import InsightReadings from '../insight/InsightReadings';
+import WorkInspiration from '../insight/WorkInspiration';
 import { dialogueSurfaceKey } from '@/lib/writersStudio/observationDialogueResume';
 import {
   LABEL as STANDING_LABEL, adoptInto, beginLookup, beginRefresh, expectationFor, settleLookup,
@@ -719,6 +720,7 @@ export default function DevelopRoom({
                 ? <span> &nbsp;›&nbsp; {currentSection.heading?.trim() || 'Untitled section'}</span> : null}
             </div>
             <div data-develop-task-bar className="px-6 py-3 border-b" style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}>
+              <WorkInspiration manuscriptId={manuscriptId} />
               <p className="text-[14px] mb-2">Let’s find the next useful step for your writing.</p>
               <p className="text-[12px] mb-3 opacity-80">For a draft, begin with how the whole work holds together. Then open a note on the page: explore what MAIA noticed, explain your intention, and decide together whether to try a change.</p>
               <button type="button" className="rounded border px-3 py-2 text-[12px] mb-3"
