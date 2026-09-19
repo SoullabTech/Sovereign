@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import RevisionDesk from '../insight/RevisionDesk';
 import InlineWorkspace from '../insight/InlineWorkspace';
 import ManuscriptPassage from '../insight/ManuscriptPassage';
 import MaiaListen, { speechChunks } from '../insight/MaiaListen';
@@ -56,4 +57,30 @@ test('leaving the active passage aborts voice preparation', async () => {
   const signal = (apiFetch as jest.Mock).mock.calls[0][1].signal;
   act(() => root.render(React.createElement(MaiaListen, { text:'First passage', active:false })));
   expect(signal.aborted).toBe(true);
+});
+
+test('page conversation previews before apply and preserves a draft through discussion', () => {
+  const onSend=jest.fn(), onApply=jest.fn(), onPreview=jest.fn();
+  const version={id:'v1',author:'maia',wording:'Quieter words.',rationale:'A quieter ending',supersedes:null};
+  const thread={threadId:'t1',targetSectionId:'s1',headVersionId:'v1',locusText:'Original words.',legacyLocus:false,versions:[version],turns:[]};
+  act(() => root.render(React.createElement(RevisionDesk, {
+    inline:true, showInspiration:false, manuscriptId:'m1',title:'My chapter',
+    currentText:'Original words.',sectionBody:'Before.\n\nOriginal words.\n\nAfter.',
+    thread,version,instruction:'Keep the warmth',onInstruction:jest.fn(),onSend,onApply,onPreview,
+    onSelectVersion:jest.fn(),onSaveMember:jest.fn(),onKeep:jest.fn(),busy:false,message:null,response:null
+  } as any)));
+  const button=(text:string) => Array.from(container.querySelectorAll('button')).find(b=>b.textContent===text)!;
+  expect(button('Use this revision').disabled).toBe(true);
+  expect(container.querySelector('.wsi-page-tools')?.hasAttribute('hidden')).toBe(true);
+  act(()=>button('Preview in context').click());
+  expect(onPreview).toHaveBeenLastCalledWith({original:'Original words.',wording:'Quieter words.',changes:false});
+  expect(button('Use this revision').disabled).toBe(false);
+  act(()=>button('Adjust wording').click());
+  const draft=container.querySelector('.wsi-revision') as HTMLTextAreaElement;
+  expect(draft.value).toBe('Quieter words.');
+  expect(button('Use this revision').disabled).toBe(true);
+  act(()=>button('Send').click());
+  expect(onSend.mock.calls[0][0]).toContain('My unsaved working revision (for discussion, do not apply):\nQuieter words.');
+  expect(container.querySelector('.wsi-revision')).toBe(draft);
+  expect(onApply).not.toHaveBeenCalled();
 });
