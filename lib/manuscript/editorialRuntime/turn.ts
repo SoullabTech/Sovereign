@@ -36,7 +36,8 @@ import { query } from '@/lib/db/postgres';
 import { runStructured } from '@/lib/ai/structured/router';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
 import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers-studio/canonicalWriterTurn';
-import type { MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
+import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
+import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import {
   admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchema,
   editorialTurnIdentity,
@@ -129,6 +130,23 @@ export async function runEditorialTurn(
   });
   if (!assembly.ok) return { ok: false, reason: assembly.reason };
 
+  // 🎓 T8A — teaching is a named, governed participant in the existing Writer cognition seam.
+  // It is computed only from this durable current utterance and expires with this turn.
+  const teaching = buildTeachingRuntimeBridge({
+    surface: 'writers_studio',
+    route: 'writers_studio_editorial',
+    context: 'writers_studio',
+    audience: 'writer',
+    domainKey: 'writing_rhetoric',
+    message: utterance,
+    interactionId: threadId,
+    turnId: input.exchangeId,
+  });
+  const teachingBlocks: CandidateBlock[] = teaching.active
+    ? [{ producerId: 'computed.teaching_intelligence', text: teaching.directive }]
+    : [];
+  const cognitionBlocks: CandidateBlock[] = [...assembly.blocks, ...teachingBlocks];
+
   /* 3 ⭐⭐ FREEZE. Everything after this uses THIS object. */
   const invocation: EditorialInvocation = {
     chainId: assembly.chainId,
@@ -147,8 +165,8 @@ export async function runEditorialTurn(
   const turn = constructEditorialWriterTurn({
     identity: input.identity, sessionRef: ids.sessionRef, exchangeId: ids.turnId,
     ask: utterance, sanctuary: input.sanctuary,
-  }, assembly.blocks);
-  const proof = renderEditorialTurn(turn, EDITORIAL_STRATEGY, assembly.blocks.map((b) => b.producerId));
+  }, cognitionBlocks);
+  const proof = renderEditorialTurn(turn, EDITORIAL_STRATEGY, cognitionBlocks.map((b) => b.producerId));
   if (!proof) return { ok: false, reason: 'handoff_unproven' };
 
   /* 5 ⛔ THE STRUCTURED SEAM. No fallback exists below this call. */

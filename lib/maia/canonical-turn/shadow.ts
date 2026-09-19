@@ -33,6 +33,7 @@ export const LEGACY_META_KEY_TO_PRODUCER = {
   practiceFieldAddendum: 'practitioner.practice_field',
   knowledgeGateAddendum: 'collective.knowledge_gate',
   governedKnowledgeAddendum: 'retrieved.governed_knowledge',
+  teachingIntelligenceAddendum: 'computed.teaching_intelligence',
   memberWebAddendum: 'retrieved.member_web',
   astrologyAddendum: 'computed.astrology',
   // Pass 1 divination — three keys, three producers (JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01).

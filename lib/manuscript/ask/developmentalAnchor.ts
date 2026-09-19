@@ -25,14 +25,14 @@
  */
 
 import type { AnchorCheck, AskAnchor } from './anchor';
-import type { DevelopmentalReading } from '../developmentalReading/contract';
+import type { DevelopmentalObservation, DevelopmentalReading } from '../developmentalReading/contract';
 
 export type ObservationAnchor = Extract<AskAnchor, { on: 'observation' }>;
 
 /** The reading identity this check needs. Narrowed so a caller cannot pass a proposal. */
 export interface DevelopmentalAnchorTarget {
   id: string;
-  observations: DevelopmentalReading['observations'];
+  observations: readonly DevelopmentalObservation[];
 }
 
 export function checkObservationAnchor(
@@ -54,6 +54,7 @@ export function checkObservationAnchor(
 export function selectObservation(
   reading: DevelopmentalReading,
   observationKey: string,
-): DevelopmentalReading['observations'][number] | null {
+): DevelopmentalObservation | null {
+  if (reading.outcome !== 'reading') return null;
   return reading.observations.find((o) => o.key === observationKey) ?? null;
 }

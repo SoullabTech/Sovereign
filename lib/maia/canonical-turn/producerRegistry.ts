@@ -200,6 +200,13 @@ export const PRODUCER_REGISTRY = {
     registeredAt: '2026-09-17', registeredBy: 'JARVIS-GKF-J8-REPAIR-01',
     reason: 'system-retrieved excerpts from exact governed source identities; source authorship/rights are preserved separately',
   },
+  'computed.teaching_intelligence': {
+    authoredBy: 'system', participationClass: 'computed', authority: 'compute',
+    provenance: 'lib/maia/teaching/TeachingRuntimeBridge ← T1–T8 canonical teaching contracts', consentBasis: null,
+    requires: { identity: 'any', notSanctuary: false }, rooms: ['sovereign_chat', 'writers_studio'], mandatory: false, scope: 'route',
+    registeredAt: '2026-09-19', registeredBy: 'MAIA-TEACHING-INTELLIGENCE-01 / T8',
+    reason: 'current-turn-only server-adjudicated teaching disposition; no durable learner profile, mastery, scoring, or treatment authority',
+  },
 
   // ── ROUTE-SUPPLIED — Pass 1 divination (three producers, one table) ───────
   // divination_iching_readings carries three authorships in separable columns; the

@@ -64,6 +64,14 @@ const AMBIENT: Partial<Record<ProducerId, MembraneEntry>> = {
   'member.writer_commission': { cls: 'ambient', because: 'explicitly authorized by the writer' },
   'member.writer_pursuit': { cls: 'ambient', because: 'the member act of taking an observation up' },
   'system.writer_pursued_observation': { cls: 'ambient', because: 'MAIA\'s own earlier words, returned unmixed with the member act' },
+
+  // Editorial discourse is already bounded to this Work/thread and carries explicit
+  // authorship partitions. These four producers were registered by ER-R2 and are
+  // continuity/evidence, not hidden interpretation.
+  'retrieved.writer_editorial_locus': { cls: 'ambient', because: 'the writer\'s exact current locus is primary evidence about the Work' },
+  'member.writer_editorial_history': { cls: 'ambient', because: 'the member\'s own prior editorial acts in this thread, authorship-preserved' },
+  'system.writer_editorial_history': { cls: 'ambient', because: 'MAIA\'s prior editorial acts in this thread, kept separate from member authorship' },
+  'member.writer_editorial_act': { cls: 'ambient', because: 'the writer-declared kind of the current act; no inferred motive or profile' },
 };
 
 /**
@@ -80,6 +88,10 @@ const COGNITIVE: Partial<Record<ProducerId, MembraneEntry>> = {
   'computed.consultation': {
     cls: 'cognitive',
     because: 'current-turn cognition about the WORK, not stored inference about the PERSON',
+  },
+  'computed.teaching_intelligence': {
+    cls: 'cognitive',
+    because: 'current-turn teaching is occasioned by the writer and adapts to the interaction, never to an inferred writer profile',
   },
   // Elemental / PFI / resonance / unified intelligence belong here once they are
   // truthfully represented as producers (ACTUAL / DERIVED / UNAVAILABLE). None exists yet.
@@ -112,6 +124,7 @@ const INVITED: Partial<Record<ProducerId, MembraneEntry>> = {
   'house.divination_interpretation': { cls: 'invited', because: 'symbolic systems enter by invitation, never ambiently', gesture: 'Consult this lens' },
   'collective.knowledge_field': { cls: 'invited', because: 'held for Explore/research', gesture: 'Bring the Knowledge Field in' },
   'collective.knowledge_gate': { cls: 'invited', because: 'held for Explore/research', gesture: 'Bring the Knowledge Field in' },
+  'retrieved.governed_knowledge': { cls: 'invited', because: 'governed source material should enter the creative encounter only when the writer occasions source-grounded teaching', gesture: 'Teach from a governed source' },
 };
 
 export const MEMBRANE: Partial<Record<ProducerId, MembraneEntry>> = {

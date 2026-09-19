@@ -142,6 +142,8 @@ export interface TeachingEvidenceRecord {
     provenanceChain: readonly ['SOURCE', 'ACQUISITION', 'EVIDENCE_RECORD', 'TEACHING_CLAIM'];
   };
   freshnessStanding: FreshnessStanding;
+  freshnessRequirement: string;
+  freshnessMeetsRequirement: boolean;
   claimRelation: ClaimEvidenceRelation;
   auditability: AuditabilityStanding;
   consensusCapableSourceForm: boolean;
