@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadCanvasInsight, passageWindow, insightWriteHref, type CanvasInsight, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import { intentionNote } from '@/lib/writersStudio/editorialApproaches';
+import MaiaListen from './MaiaListen';
 import WorkInspiration from './WorkInspiration';
 import { EDITORIAL_QUESTIONS } from '@/lib/writersStudio/editorialQuestions';
 import ObservationDialogue from '../develop/ObservationDialogue';
@@ -45,10 +46,10 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
   return <section data-insight-reading={readingId}>
     <WorkInspiration manuscriptId={manuscriptId} onBringToQuestion={text => setIntention(previous => [previous, 'Work inspiration and intention:\n' + text].filter(Boolean).join('\n\n'))} />
     <span className="wsi-eyebrow">{o.key} · {o.phenomenonLabel} · Reading: {o.stateLabel}</span>
-    <p className="wsi-observation">{o.observation}</p>
+    <p className="wsi-observation">{o.observation}</p><MaiaListen text={o.observation} />
     <p className="wsi-muted">{insight.coverage}</p>
     {o.state !== 'current' && <p role="status">{o.stateSentence}</p>}
-    <p className="wsi-muted" role="status">{exactCount} of {insight.passages.length} related places have verified exact passage markers. Each card explains its evidence status.</p>
+    <p className="wsi-muted" role="status">{exactCount} of {insight.passages.length} related places have verified exact passage markers. Each section explains its evidence status.</p>
     <div className="wsi-exploration">
       <aside className="wsi-intention">
     <section className="wsi-current">
@@ -86,7 +87,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
       <div className="wsi-comparison-main">
     <div className="wsi-bar">
       <label><input type="checkbox" disabled={exactCount === 0} checked={markers && exactCount > 0} onChange={e => setMarkers(e.target.checked)} /> Evidence markers</label>
-      <label>Surrounding paragraphs · {context}<br />
+      <label>Excerpt context · {context} paragraphs<br />
         <input type="range" disabled={exactCount === 0} aria-label="Surrounding paragraphs" min="0" max="3" value={context} onChange={e => setContext(Number(e.target.value))} />
       </label>
     </div>
@@ -98,7 +99,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
     </nav>
     {insight.passages.length === 0 && <p>This observation names structure rather than a textual passage. Its evidence is listed below.</p>}
     <div className="wsi-passage-grid">{insight.passages.map((p, i) => {
-      const full = expanded.has(p.key);
+      const full = !expanded.has(p.key);
       const points = Array.from(p.body);
       const window = full
         ? { before: p.range ? points.slice(0, p.range.start).join('') : '', selected: p.range ? points.slice(p.range.start, p.range.end).join('') : p.body, after: p.range ? points.slice(p.range.end).join('') : '', clippedBefore: false, clippedAfter: false }
@@ -107,7 +108,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
       return <article key={p.key} ref={el => { if (el) places.current.set(p.key, el); else places.current.delete(p.key); }}
         className="wsi-passage" data-selected={selected === p.key}>
         <span className="wsi-eyebrow">Related place {i + 1} · {p.range ? 'verified excerpt' : 'section reference'}</span>
-        <h3>{p.heading}</h3>
+        <p className="wsi-muted">{p.chapterHeading}{p.position !== undefined ? ` · Section ${p.position}` : ''}</p><h3>{p.heading}</h3>
         {!p.range && <p className="wsi-muted">{full ? 'Full section' : 'Section opening'} · no narrower evidence is highlighted.</p>}
         <div className="wsi-prose" tabIndex={0} role="region" aria-label={p.heading + ' passage text'}>
           {window.clippedBefore && <span aria-label="Earlier context omitted">… </span>}
@@ -119,7 +120,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
         <p className="wsi-muted">{p.note}</p>
         <button type="button" aria-expanded={full} onClick={() => setExpanded(previous => {
           const next = new Set(previous); if (next.has(p.key)) next.delete(p.key); else next.add(p.key); return next;
-        })}>{full ? 'Return to excerpt' : 'Show full section'}</button>
+        })}>{full ? 'Show less context' : 'Show full section'}</button>
         {p.verified && p.editable && (onRevise
           ? <button type="button" disabled={busy} onClick={() => onRevise(p, intentionNote(intention, reader))}>Revise this passage</button>
           : <a className="wsi-link" href={insightWriteHref(manuscriptId, readingId, observationKey, p.sectionId)}>Revise this passage in Write</a>)}
