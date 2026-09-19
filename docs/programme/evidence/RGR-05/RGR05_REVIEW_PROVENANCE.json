@@ -1,0 +1,37 @@
+{
+  "aggregate_verdict": "PASS",
+  "external_disclosure": "none",
+  "model_performance_evaluation": false,
+  "review_packet_bytes": 48813,
+  "review_packet_sha256": "393e523d60fb1b30c6e670661a76a3475f298b53f79d12dae206f5c117705913",
+  "reviewers": [
+    {
+      "bounded_finding": "No falsifying implementation defect identified; graph/switch invariants, collision control, stream law, codebook separation, counterbalance, validator mutations, and no-materialization boundary accepted.",
+      "model_family": "GPT_OSS",
+      "model_id": "gpt-oss:20b",
+      "raw_response_bytes": 117588,
+      "raw_response_sha256": "516da2afddd935b08242a54ae472c65a8676313020d793e4bb88b0ce862c8423",
+      "raw_transcript_committed": false,
+      "review_id": "rgr05-gptoss-review-01",
+      "transport": "local_ollama",
+      "verdict": "PASS"
+    },
+    {
+      "bounded_finding": "Independent review accepted capacity, exact positive/negative validation, degree/reciprocal preservation, forbidden-edge checks, split/codebook separation, independent verifier agreement, mutation rejection, and no dataset materialization.",
+      "model_family": "QWEN",
+      "model_id": "qwen3-coder:30b",
+      "non_fatal_notes": [
+        "Capacity is exhaustively counted for canonical s=0,t=1 and extended to all 30 ordered queries by node-label permutation symmetry.",
+        "The feasibility proof uses deterministic switch selection; RGR-04 uniform multi-switch selection remains implementable through the frozen SWITCH stream."
+      ],
+      "raw_response_bytes": 21353,
+      "raw_response_sha256": "963f8d51b8e3737f3e286a9f970a485846f209f08d94b43bdfa7a9debafbd4f7",
+      "raw_transcript_committed": false,
+      "review_id": "rgr05-qwen-review-01",
+      "transport": "local_ollama",
+      "verdict": "PASS"
+    }
+  ],
+  "schema": "RGR05_REVIEW_PROVENANCE_v1",
+  "scope": "read-only review of deterministic RGR-05 feasibility/validator implementation and evidence"
+}
