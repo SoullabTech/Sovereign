@@ -502,6 +502,9 @@ interface OracleConversationProps {
   scribeSessionContext?: ScribeSessionContext; // Context for scoped discussion
   // Studio surface mode
   surface?: 'maia' | 'studio'; // Which surface MAIA is running on
+  // T8B teaching-room intent. This is NEVER authority; the server verifies the
+  // member's practitioner/research standing before a privileged room can open.
+  teachingSurface?: 'coaching_practice' | 'therapist_practitioner' | 'research_lab';
   studioContext?: {
     surface: 'studio';
     clientId?: string;
@@ -675,6 +678,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   scribeSessionId,
   scribeSessionContext,
   surface,
+  teachingSurface,
   studioContext,
   fieldMode,
   fieldEnergyState,
@@ -5551,6 +5555,9 @@ I'm not sure what I'm feeling yet.`;
 
           // 🏢 STUDIO SURFACE: When running inside Soullab Studio
           surface: surface ?? 'maia',
+          // 🎓 T8B: room intent only. The server re-adjudicates this against
+          // authenticated practitioner/research standing before it gains effect.
+          teachingSurface: teachingSurface ?? undefined,
           studioContext: studioContext ?? undefined,
 
           // 🚪 PLACE — facts-only current-room context. Sent ONLY here, inside

@@ -251,6 +251,12 @@ export default function SystemIntelligencePage() {
             </div>
           </div>
           <div className="ml-auto flex items-center gap-3">
+            <button
+              onClick={() => router.push('/maia?teaching=research')}
+              className="text-xs px-3 py-1.5 bg-teal-900/40 hover:bg-teal-800/50 text-teal-300 rounded-lg transition-colors"
+            >
+              Teach with MAIA
+            </button>
             <span className="text-xs text-slate-600">
               {overview?.generatedAt ? `Updated ${new Date(overview.generatedAt).toLocaleTimeString()}` : ''}
             </span>
