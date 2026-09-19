@@ -16,16 +16,18 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 jest.mock('@/lib/manuscript/render/renderMemberBook', () => ({
   renderMemberBook: jest.fn(),
+  inspectPublicationMatter: jest.fn(),
 }));
 
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
-import { renderMemberBook } from '@/lib/manuscript/render/renderMemberBook';
+import { inspectPublicationMatter, renderMemberBook } from '@/lib/manuscript/render/renderMemberBook';
 import { POST } from '../route';
 
 const mockAuth = getMemberIdFromRequest as jest.Mock;
 const mockQuery = query as jest.Mock;
 const mockRender = renderMemberBook as jest.Mock;
+const mockPreflight = inspectPublicationMatter as jest.Mock;
 
 const MEMBER = '11111111-1111-1111-1111-111111111111';
 
@@ -40,6 +42,7 @@ const ctx = { params: Promise.resolve({ id: 'm1' }) };
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockPreflight.mockReturnValue({ bodyStartIndex: 0, candidates: [], issues: [] });
 });
 
 describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () => {
@@ -54,6 +57,14 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     mockAuth.mockResolvedValue(MEMBER);
     const res = await POST(req({ format: 'docx' }), ctx);
     expect(res.status).toBe(400);
+    expect(mockRender).not.toHaveBeenCalled();
+  });
+
+  it('400 for an invalid production stage before manuscript access', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    const res = await POST(req({ format: 'pdf', stage: 'publish-now' }), ctx);
+    expect(res.status).toBe(400);
+    expect(mockQuery).not.toHaveBeenCalled();
     expect(mockRender).not.toHaveBeenCalled();
   });
 
@@ -93,7 +104,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
       pageCount: 1,
       sourceHash: 'abc123',
       sectionCount: 1,
-      productionProfile: 'hallmark-6x9-v1',
+      productionProfile: 'hallmark-6x9-v3',
     });
 
     const res = await POST(req({ format: 'pdf' }), ctx);
@@ -115,7 +126,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     expect(String(insertCall?.[0])).toContain('production_profile');
     expect(insertCall?.[1]).toEqual([
       'm1', MEMBER, 'pdf', 1, 'abc123', 1,
-      'hallmark-6x9-v1', 'source', null,
+      'hallmark-6x9-v3', 'source', null, 'proof',
     ]);
 
     // rendered bytes are the response body
@@ -138,18 +149,51 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
 
     const tmp = path.join(os.tmpdir(), `render-draft-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
     await fs.writeFile(tmp, Buffer.from('%PDF-1.4 current draft'));
-    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 22, pageCount: 1, sourceHash: 'draft-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v1' });
+    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 22, pageCount: 1, sourceHash: 'draft-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v3' });
 
     const res = await POST(req({ format: 'pdf' }), ctx);
     expect(res.status).toBe(200);
     expect(mockRender).toHaveBeenCalledWith(
-      [{ heading: 'Chapter One', body: 'CURRENT EDIT', headingDepth: 1, headingSignal: 'markdown' }],
+      [{ heading: 'Chapter One', body: 'CURRENT EDIT', headingDepth: 1, headingSignal: 'markdown', publicationRole: null }],
       expect.objectContaining({ title: 'My Book', author: 'Ann Author', format: 'pdf' }),
     );
     const sql = mockQuery.mock.calls.map((c) => String(c[0])).join('\n');
     expect(sql).toContain('FROM manuscript_draft_sections');
     const insert = mockQuery.mock.calls.find((c) => String(c[0]).includes('INSERT INTO manuscript_renders'));
-    expect(insert?.[1]?.slice(-3)).toEqual(['hallmark-6x9-v1', 'working_draft', '9']);
+    expect(insert?.[1]?.slice(-4)).toEqual(['hallmark-6x9-v3', 'working_draft', '9', 'proof']);
+    await new Promise((r) => setTimeout(r, 25));
+  });
+
+  it('carries an author-owned publication role from exact draft-section identity into Final preflight', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '9', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{
+        heading: 'Permissions', body: 'Copyright © 2026 Ann Author', heading_depth: 2, heading_signal: 'markdown',
+        publication_role: 'copyright',
+      }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 });
+
+    const tmp = path.join(os.tmpdir(), `render-role-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
+    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 role'));
+    mockRender.mockResolvedValue({
+      filePath: tmp, sizeBytes: 14, pageCount: 1, sourceHash: 'role-hash', sectionCount: 1,
+      productionProfile: 'hallmark-6x9-v3',
+    });
+
+    const res = await POST(req({ format: 'pdf', stage: 'final' }), ctx);
+    expect(res.status).toBe(200);
+    const expected = [{
+      heading: 'Permissions', body: 'Copyright © 2026 Ann Author', headingDepth: 2, headingSignal: 'markdown',
+      publicationRole: 'copyright',
+    }];
+    expect(mockPreflight).toHaveBeenCalledWith(expected);
+    expect(mockRender).toHaveBeenCalledWith(expected, expect.objectContaining({ format: 'pdf' }));
+    const sql = mockQuery.mock.calls.map((c) => String(c[0])).join('\n');
+    expect(sql).toContain('manuscript_publication_members');
+    expect(sql).toContain('manuscript_publication_objects');
     await new Promise((r) => setTimeout(r, 25));
   });
 
@@ -165,6 +209,73 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     expect(await res.json()).toMatchObject({ error: expect.stringContaining('Nothing older was substituted') });
     expect(mockRender).not.toHaveBeenCalled();
     expect(mockQuery.mock.calls.some((c) => /FROM manuscript_sections WHERE/.test(String(c[0])))).toBe(false);
+  });
+
+
+  it('allows proof rendering even when final-production blockers would remain', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockPreflight.mockReturnValue({ bodyStartIndex: 1, candidates: [], issues: [
+      { code: 'front_matter_roles_unresolved', severity: 'blocker', sectionIndexes: [0], message: 'role needed' },
+    ] });
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Elemental Alchemy', body: 'Front matter', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 });
+
+    const tmp = path.join(os.tmpdir(), `render-proof-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
+    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 proof'));
+    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 14, pageCount: 1, sourceHash: 'proof-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v3' });
+
+    const res = await POST(req({ format: 'pdf', stage: 'proof' }), ctx);
+    expect(res.status).toBe(200);
+    expect(mockPreflight).not.toHaveBeenCalled();
+    const insert = mockQuery.mock.calls.find((c) => String(c[0]).includes('INSERT INTO manuscript_renders'));
+    expect(insert?.[1]?.slice(-1)).toEqual(['proof']);
+    await new Promise((r) => setTimeout(r, 25));
+  });
+
+  it('refuses final rendering when Hallmark production blockers remain', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    const blocker = { code: 'damaged_copyright_text', severity: 'blocker', sectionIndexes: [0], message: 'verify legal text' };
+    mockPreflight.mockReturnValue({ bodyStartIndex: 1, candidates: [], issues: [blocker] });
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Elemental Alchemy', body: 'Copyright � 2026', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 });
+
+    const res = await POST(req({ format: 'pdf', stage: 'final' }), ctx);
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ stage: 'final', preflight: { issues: [blocker] } });
+    expect(mockPreflight).toHaveBeenCalledTimes(1);
+    expect(mockRender).not.toHaveBeenCalled();
+    expect(mockQuery.mock.calls.some((c) => String(c[0]).includes('INSERT INTO manuscript_renders'))).toBe(false);
+  });
+
+  it('renders a final artifact only after a clean preflight and records that fact', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Copyright', body: 'Copyright © 2026 Ann Author', heading_depth: 2, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 });
+
+    const tmp = path.join(os.tmpdir(), `render-final-${process.pid}-${Math.random().toString(16).slice(2)}.pdf`);
+    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 final'));
+    mockRender.mockResolvedValue({ filePath: tmp, sizeBytes: 14, pageCount: 1, sourceHash: 'final-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v3' });
+
+    const res = await POST(req({ format: 'pdf', stage: 'final' }), ctx);
+    expect(res.status).toBe(200);
+    expect(mockPreflight).toHaveBeenCalledWith([
+      { heading: 'Copyright', body: 'Copyright © 2026 Ann Author', headingDepth: 2, headingSignal: 'markdown' },
+    ]);
+    const insert = mockQuery.mock.calls.find((c) => String(c[0]).includes('INSERT INTO manuscript_renders'));
+    expect(String(insert?.[0])).toContain('production_stage');
+    expect(insert?.[1]?.slice(-1)).toEqual(['final']);
+    await new Promise((r) => setTimeout(r, 25));
   });
 });
 
@@ -202,7 +313,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — nullable title', () =>
       pageCount: 1,
       sourceHash: 'abc123',
       sectionCount: 1,
-      productionProfile: 'hallmark-6x9-v1',
+      productionProfile: 'hallmark-6x9-v3',
     });
 
     const res = await POST(req({ format: 'pdf' }), ctx);
