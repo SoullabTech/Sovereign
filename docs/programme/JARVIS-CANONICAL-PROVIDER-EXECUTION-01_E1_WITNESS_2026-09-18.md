@@ -448,7 +448,25 @@ RGR-04 and T5 populations remain byte-identical to canonical, and the entire
 Writer's Studio interval is carried forward byte-identically from
 `bb578146…`. Only this witness records the R5 freshness reconciliation.
 
-Freshness standing: **PASS — fifth non-overlapping canonical reconciliation.**
+A sixth PR-level freshness check found that the CI-green R5 head could not be
+merged because canonical advanced again to:
+
+`f0a16d9c2fc5f5588de40726021c7b19e76e1a2e`
+
+through Writer's Studio manuscript hierarchy correction (PR #1409). The
+`bb578146… → f0a16d9c…` interval is limited to four Writer's Studio
+manuscript-hierarchy files and has **zero intersection with the 13 E1 candidate
+paths**.
+
+R6 therefore merge-forward reconciles exact R5 head
+`bf42441e22baae2176691430bae4400350ec2d36` onto exact canonical
+`f0a16d9c2fc5f5588de40726021c7b19e76e1a2e` with zero conflicts. All E1
+implementation/test paths remain byte-identical to `bf42441e…`; the existing
+RGR-04 and T5 populations remain byte-identical to canonical, and the Writer's
+Studio canonical state is carried forward byte-identically from
+`f0a16d9c…`. Only this witness records the R6 freshness reconciliation.
+
+Freshness standing: **PASS — sixth non-overlapping canonical reconciliation.**
 
 ## 16. Non-events
 
