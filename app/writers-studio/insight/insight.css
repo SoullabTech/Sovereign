@@ -94,3 +94,59 @@
 }
 
 .wsi-discussion > label { display: block; margin: 16px 0; }
+
+/* Expansion changes geometry only; drafts and conversation stay mounted. */
+.ws-insight[data-expanded="true"] { width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
+.ws-insight .wsi-window-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.ws-insight .wsi-scroll { flex: 1; }
+
+/* The book is the workspace. The conversation expands at a paragraph anchor. */
+.ws-insight.wsi-inline { position: static; width: 100%; height: auto; max-height: none; margin: 22px 0; border-radius: 8px; border-top: 2px solid var(--ws-gold-text); box-shadow: none; padding: 20px; }
+.ws-insight.wsi-inline[hidden] { display: none; }
+.wsi-inline-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; border-bottom:1px solid var(--wsi-line); padding-bottom:14px; margin-bottom:16px; }
+.wsi-inline .wsi-conversation-layout { display:block; }
+.wsi-inline .wsi-discussion { border:0; padding:16px 0 0; }
+.wsi-inline .wsi-discussion [aria-label="Passage conversation"] { max-height:none; overflow:visible; }
+.wsi-inline .wsi-direction-grid { grid-template-columns:1fr; }
+.wsi-inline .wsi-exploration, .wsi-inline .wsi-passage-grid { display:block; }
+.wsi-inline .wsi-intention { position:static; max-height:none; }
+.wsi-inline .wsi-passage-grid .wsi-prose { max-height:none; overflow:visible; }
+.wsi-inline .wsi-passage-grid .wsi-passage { margin-bottom:16px; }
+.ws-manuscript-context { white-space:pre-wrap; font-size:18px; line-height:1.75; }
+.ws-marked-passage { position:relative; background:color-mix(in srgb, #869b78 24%, transparent); box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.ws-marked-passage ins { background:#c7ad5d44; text-decoration:underline; }
+.ws-marked-passage del { background:#bc696633; text-decoration:line-through; }
+.ws-locus-marker { position:absolute; left:-40px; top:0; border-radius:50%; background:#60775d; color:#fff; font:12px/28px system-ui; width:28px; text-align:center; }
+.ws-inline-open { border:1px solid var(--ws-rule); border-radius:6px; padding:8px 12px; margin-top:10px; color:var(--ws-ink-secondary); background:var(--ws-ground-raised); font:12px/1.4 system-ui; cursor:pointer; }
+@media(max-width:760px) { .ws-insight.wsi-inline { padding:14px; } .ws-locus-marker { left:-28px; width:24px; line-height:24px; } }
+/* Related sections remain full-width and readable in manuscript order. */
+.ws-insight .wsi-exploration { display:flex; flex-direction:column; }
+.ws-insight .wsi-comparison-main { order:0; width:100%; }
+.ws-insight .wsi-intention { order:1; width:100%; position:static; max-height:none; overflow:visible; }
+.ws-insight .wsi-passage-grid { display:block; }
+.ws-insight .wsi-passage-grid .wsi-passage { padding:24px; margin:24px 0; }
+.ws-insight .wsi-passage-grid .wsi-prose { max-height:none; overflow:visible; font-size:18px; line-height:1.75; }
+.ws-maia-listen { display:inline-flex; flex-wrap:wrap; align-items:center; gap:8px; margin:6px 0 10px; font:13px/1.5 system-ui; }
+.ws-maia-listen button { color:inherit; background:transparent; border:1px solid var(--ws-rule); border-radius:6px; padding:7px 10px; cursor:pointer; }
+.ws-section-observations { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+.ws-section-observations:empty { display:none; }
+.ws-section-observations button { border:1px solid var(--ws-rule); border-radius:20px; padding:7px 12px; color:var(--ws-ink-secondary); background:var(--ws-ground-raised); font:12px/1.4 system-ui; cursor:pointer; }
+
+/* Reading is continuous; editorial tools disclose at the author's request. */
+.wsi-inline [data-revision-desk] { display:flex; flex-direction:column; }
+.wsi-inline .wsi-setup { order:2; }
+.wsi-inline .wsi-conversation-layout { display:flex; flex-direction:column; gap:12px; }
+.wsi-inline .wsi-discussion { order:0; width:100%; padding:0; }
+.wsi-inline .wsi-revision-controls { order:1; width:100%; }
+.wsi-inline .wsi-discussion textarea { min-height:64px; margin:8px 0; }
+.wsi-inline .wsi-discussion article { margin:6px 0 12px; }
+.wsi-inline .wsi-observation { max-width:none; font:16px/1.65 var(--font-spectral, Georgia, serif); }
+.wsi-inline .wsi-history { margin:0 0 10px; }
+.wsi-inline .wsi-bar { gap:8px; margin:10px 0; }
+.wsi-inline .wsi-inline-header { margin-bottom:12px; padding-bottom:10px; }
+.wsi-inline .wsi-setup, .wsi-inline .wsi-teaching, .wsi-inline .wsi-proposal-details { border-top:1px solid var(--wsi-line); padding-top:10px; }
+.ws-insight .wsi-section-heading { display:flex; align-items:baseline; flex-wrap:wrap; gap:16px; padding:12px 0; }
+.ws-insight .wsi-section-heading strong { font:500 24px/1.4 var(--font-spectral, Georgia, serif); }
+.ws-insight .wsi-section-heading span { font-size:12px; color:var(--wsi-muted); }
+.ws-insight .wsi-section-heading::before { content:'▸'; }
+.ws-insight details[open] > .wsi-section-heading::before { content:'▾'; }
