@@ -164,6 +164,8 @@ import {
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 import { retrieveGovernedKnowledge, formatGovernedKnowledgeAddendum } from '@/lib/ain/knowledge/GovernedRetrievalService';
+import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
+import type { TeachingSourceRef } from '@/lib/maia/teaching/TeachingContextSourceContract';
 
 // 🌿 Wu Xing (Five Elements) integration
 import { buildWuXingSnapshot, computeWuXingConstitution, computeWuXingMoment, generateWuXingPromptAddendum, type BaZiProfile, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
@@ -858,10 +860,21 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // is passed, so this path cannot write retrieval analytics. Sanctuary refuses
     // before any governed retrieval call.
     let governedKnowledgeAddendum: string | null = null;
+    let governedTeachingSources: TeachingSourceRef[] = [];
     if (process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1' && !isSanctuary) {
       try {
         const governedHits = await retrieveGovernedKnowledge(message);
         governedKnowledgeAddendum = formatGovernedKnowledgeAddendum(governedHits);
+        governedTeachingSources = [...new Map(governedHits.map((hit) => [
+          hit.source.subjectId,
+          {
+            sourceId: hit.source.subjectId,
+            sourceClass: 'governed_library' as const,
+            standing: 'governed_reference' as const,
+            revisionOrLocator: `sha256:${hit.source.sourceSha256}`,
+            citationAvailable: true,
+          } satisfies TeachingSourceRef,
+        ])).values()];
         if (governedHits.length > 0) {
           const sources = [...new Set(governedHits.map((hit) => hit.source.subjectId))];
           const maxSimilarity = Math.max(...governedHits.map((hit) => Number(hit.chunk.similarity)));
@@ -872,6 +885,35 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       } catch (err) {
         console.warn('[AIN Governed] retrieval failed closed (non-blocking):', err);
       }
+    }
+
+    // 🎓 T8A TEACHING INTELLIGENCE: current-turn-only and server-adjudicated.
+    // This may authorize how MAIA teaches through the EXISTING cognition seam.
+    // It does not retrieve, persist a learner profile, change routing, or create a new model path.
+    let teachingIntelligenceAddendum: string | undefined;
+    try {
+      const teaching = buildTeachingRuntimeBridge({
+        surface: 'general_maia',
+        route: 'sovereign_maia_list',
+        context: 'general_maia',
+        audience: 'member',
+        message,
+        interactionId: sessionId || requestId,
+        turnId: requestId,
+        sources: governedTeachingSources,
+      });
+      if (teaching.active) {
+        teachingIntelligenceAddendum = teaching.directive;
+        console.log('[MAIA/teaching] T8 current-turn authority', {
+          signal: teaching.signal,
+          domain: teaching.domainKey,
+          standing: teaching.authority.executionStanding,
+          knowledgeStanding: teaching.authority.knowledgeStanding,
+        });
+      }
+    } catch (err) {
+      // Teaching intelligence is additive. Contract failure closes only T8 for this turn.
+      console.warn('[MAIA/teaching] T8 authority refused (turn continues without teaching directive):', err);
     }
 
     // ═══ MEMORY ORCHESTRATOR (Phase 1.5 — live activation in sovereign chat route) ═══
@@ -1310,6 +1352,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           practiceFieldAddendum,
           knowledgeGateAddendum,
           governedKnowledgeAddendum,
+          teachingIntelligenceAddendum,
           memberWebAddendum: memberWebAddendum || undefined,
           astrologyAddendum: astrologyAddendum || undefined,
           divinationIntentAddendum,
@@ -1440,6 +1483,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           practiceFieldAddendum, // 🤝 Practice Field: practitioner accompaniment context
           knowledgeGateAddendum, // 🚪 AIN Knowledge Gate: source well modulation (Phase 1)
           governedKnowledgeAddendum, // 📚 Exact-source governed retrieval (server-authored, read-only)
+          teachingIntelligenceAddendum, // 🎓 T8 current-turn teaching authority (server-authored, non-persistent)
           memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
           astrologyAddendum: astrologyAddendum || undefined, // 🌟 Natal chart + cosmic weather context
           // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — placed AFTER ...meta so server-built
