@@ -52,7 +52,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
     <p className="wsi-muted" role="status">{exactCount} of {insight.passages.length} related places have verified exact passage markers. Each section explains its evidence status.</p>
     <div className="wsi-exploration">
       <aside className="wsi-intention">
-    <section className="wsi-current">
+    <details className="wsi-current"><summary>Intention and conversation across these passages</summary>
       <h3>What should these passages do?</h3>
       <p>Related passages can serve different purposes. Bring your intention into the conversation before deciding how to revise.</p>
       <div className="wsi-grid">
@@ -82,7 +82,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
           observationKey={observationKey} about={o.observation} superseded={o.state === 'superseded'}
           initialQuestion={conversation} onClose={() => setTalking(false)} />
       </div>}
-    </section>
+    </details>
       </aside>
       <div className="wsi-comparison-main">
     <div className="wsi-bar">
@@ -105,10 +105,10 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
         ? { before: p.range ? points.slice(0, p.range.start).join('') : '', selected: p.range ? points.slice(p.range.start, p.range.end).join('') : p.body, after: p.range ? points.slice(p.range.end).join('') : '', clippedBefore: false, clippedAfter: false }
         : p.range ? passageWindow(p.body, p.range, context)
         : { before: '', selected: points.slice(0, 500).join(''), after: '', clippedBefore: false, clippedAfter: points.length > 500 };
-      return <article key={p.key} ref={el => { if (el) places.current.set(p.key, el); else places.current.delete(p.key); }}
+      return <details open key={p.key} ref={el => { if (el) places.current.set(p.key, el); else places.current.delete(p.key); }}
         className="wsi-passage" data-selected={selected === p.key}>
-        <span className="wsi-eyebrow">Related place {i + 1} · {p.range ? 'verified excerpt' : 'section reference'}</span>
-        <p className="wsi-muted">{p.chapterHeading}{p.position !== undefined ? ` · Section ${p.position}` : ''}</p><h3>{p.heading}</h3>
+        <summary className="wsi-section-heading"><strong>{i + 1} · {p.heading}</strong><span>{p.chapterHeading}{p.position !== undefined ? ` · Section ${p.position}` : ''}</span></summary><span className="wsi-eyebrow">Related place {i + 1} · {p.range ? 'verified excerpt' : 'section reference'}</span>
+        <p className="wsi-muted">{p.chapterHeading}{p.position !== undefined ? ` · Section ${p.position}` : ''}</p>
         {!p.range && <p className="wsi-muted">{full ? 'Full section' : 'Section opening'} · no narrower evidence is highlighted.</p>}
         <div className="wsi-prose" tabIndex={0} role="region" aria-label={p.heading + ' passage text'}>
           {window.clippedBefore && <span aria-label="Earlier context omitted">… </span>}
@@ -124,7 +124,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
         {p.verified && p.editable && (onRevise
           ? <button type="button" disabled={busy} onClick={() => onRevise(p, intentionNote(intention, reader))}>Revise this passage</button>
           : <a className="wsi-link" href={insightWriteHref(manuscriptId, readingId, observationKey, p.sectionId)}>Revise this passage in Write</a>)}
-      </article>;
+      </details>;
     })}</div>
     <details><summary>Evidence and limits of this observation</summary>
       <ul>{o.evidence.map((e, i) => <li key={i}>{e}</li>)}</ul>
