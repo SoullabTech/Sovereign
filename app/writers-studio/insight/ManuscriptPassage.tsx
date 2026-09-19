@@ -22,7 +22,7 @@ export default function ManuscriptPassage({ body, range, proposal, children }: {
   const shown = valid && proposal?.original === original ? proposal : null;
   const diff = shown?.changes ? comparisonSpan(original, shown.wording) : null;
   return <div className="ws-manuscript-passage">
-    <div className="ws-manuscript-context">{before}<span className="ws-marked-passage" data-editorial-locus>
+    <div className="ws-manuscript-context">{before}<span className="ws-marked-passage" data-preview={Boolean(shown)} data-editorial-locus>
       <span className="ws-locus-marker" aria-label="Active editorial passage">01</span>
       {shown ? diff ? <>{diff.before}<del>{diff.removed}</del><ins>{diff.added}</ins>{diff.after}</> : shown.wording || <em>Proposed removal</em> : original}
     </span>{restOfParagraph}</div>
