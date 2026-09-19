@@ -107,7 +107,7 @@ export const PRODUCER_REGISTRY = {
   },
   'member.atoms': {
     authoredBy: 'member', participationClass: 'placed', authority: 'situate',
-    provenance: 'lib/maia/memoryAtomsLoader projectAtomSections().memberSection', consentBasis: 'atoms.return_preference',
+    provenance: 'lib/maia/memoryAtomsLoader projectAtomSections().memberSection', consentBasis: 'atoms.return_preference + atoms.return_authority',
     requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'now_what', 'vision_studio', 'writers_studio'], mandatory: false, scope: 'route',
     ...CMT,
     // MEMORY-PRODUCER-PARTITION-01 (2026-09-04): the practitioner observations this
@@ -131,7 +131,7 @@ export const PRODUCER_REGISTRY = {
   },
   'member.episodic_recall': {
     authoredBy: 'member', participationClass: 'marked', authority: 'situate',
-    provenance: 'lib/maia/memoryLoaders loadRecentMarkedEpisodes', consentBasis: 'episodic_recall_enabled',
+    provenance: 'lib/maia/memoryLoaders loadRecentMarkedEpisodes', consentBasis: 'episodic_recall_enabled + per-Moment member_explicit return authority',
     requires: { identity: 'verified', notSanctuary: true, recallPref: 'episodic' }, rooms: ['sovereign_chat', 'writers_studio'], mandatory: false, scope: 'route',
     partitionPending: true,
     ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: member-MARKED and recall-preference gated] member-marked significant moments; block carries the exchange (member + MAIA text) — partition owed at M3',

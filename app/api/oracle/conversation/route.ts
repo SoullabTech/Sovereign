@@ -667,7 +667,7 @@ export async function POST(request: NextRequest) {
 
     // CUT 1 — member_memory_atoms reader (Phase 1 of Psyche Engagement Layer surfacing).
     // Loads ONLY atoms the member has opted into ambient surfacing of
-    // (return_preference IN contextual_doorway / ritual_review_opt_in), excludes
+    // (eligible return_preference + return_authority=member_explicit), excludes
     // sacred_protected register, status active/still_alive only. Schema-level
     // crossing_must_be_false constraint backstops the no-cross-atom-synthesis rule.
     // See docs/specs/CUT_1_SUBSTRATE_RESTORATION.md §II.B + canon authority chain.

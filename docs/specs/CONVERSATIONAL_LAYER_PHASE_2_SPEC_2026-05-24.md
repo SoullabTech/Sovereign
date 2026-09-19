@@ -67,6 +67,8 @@ Each of these is load-bearing. None can be silently chosen by Claude.
 
 `member_memory_atoms` has explicit consent gate via `return_preference IN ('contextual_doorway', 'ritual_review_opt_in')`. The member opts atoms into ambient surfacing.
 
+> **Superseded 2026-09-17 by MAIA-MAVEN-T1A R10:** `return_preference` alone cannot prove who authorized the value. Ambient return now additionally requires durable `return_authority = 'member_explicit'`; legacy/defaulted values fail closed.
+
 `conversation_turns` has **no equivalent gate**. Every assistant/user exchange is stored unconditionally (excluding Sanctuary Mode sessions, which structurally never enter the table).
 
 Phase 2 changes the de-facto semantic of stored turns from *"session continuity buffer"* to *"ambient cross-session prompt material."* The member never explicitly consented to this re-use when the turns were written.
@@ -77,7 +79,7 @@ Phase 2 changes the de-facto semantic of stored turns from *"session continuity 
 
 2. **Explicit opt-in per member.** Add a member-level preference (`members.conversational_recall_enabled` default `false`). Surface only when member has opted in. Rationale: matches atoms consent discipline. Cost: adds onboarding step OR leaves the layer silent for all existing members until they discover the setting.
 
-3. **Default-on with explicit opt-out + visible disclosure.** Default-on for new sessions going forward, with visible disclosure ("MAIA may reference our prior exchanges") and a Settings toggle. Rationale: matches the `0fa544bc4` default-flip pattern (Keep = contextual return by default) Kelly chose for atoms.
+3. **Historical option — default-on with explicit opt-out + visible disclosure.** This option was originally justified by the `0fa544bc4` atom default-flip. **That justification is superseded by MAIA-MAVEN-T1A R10 (2026-09-17): KEEP does not grant REOPEN, and defaulted return state is not consent evidence.** This option therefore cannot inherit authority from the old atom pattern.
 
 **Kelly: which?** (Default recommendation: 3, matching the atoms default-flip — but only Kelly's explicit answer authorizes.)
 

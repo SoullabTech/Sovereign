@@ -93,7 +93,10 @@ function installQueryMock() {
             marked_by_member: true,
             source_turn_id: params[3],
             source_session_id: params[4],
+            return_preference: 'member_pulled',
+            return_authority: 'default_private',
             created_at: new Date('2026-07-17T00:00:00Z'),
+            was_created: true,
           },
         ],
       };
@@ -137,7 +140,7 @@ afterEach(() => {
 });
 
 async function post(body: Record<string, unknown>) {
-  const res = await POST(markRequest(body));
+  const res = await POST(markRequest({ sourceTurnId: 'turn-test', ...body }));
   return { res, json: await res.json() };
 }
 
@@ -166,6 +169,17 @@ describe('provenance requirement — no durable mark without a resolvable source
     const { res, json } = await post({ verbatimText: VERBATIM, sourceSessionId: 12345 });
     expect(res.status).toBe(403);
     expect(json.refusal).toBe('R18');
+    expect(insertCalls).toHaveLength(0);
+  });
+});
+
+describe('exact source-message identity — duplicate-safe formation', () => {
+  test('owned ordinary session without sourceTurnId → 400, no insert', async () => {
+    maiaSessions = [{ id: 'turn-required', member_id: MEMBER, mode: 'continuity', privacy_mode: 'standard' }];
+    const res = await POST(markRequest({ verbatimText: VERBATIM, sourceSessionId: 'turn-required' }));
+    const json = await res.json();
+    expect(res.status).toBe(400);
+    expect(json.error).toMatch(/sourceTurnId/i);
     expect(insertCalls).toHaveLength(0);
   });
 });
@@ -268,7 +282,11 @@ describe('refusal hygiene', () => {
       .filter((l) => l.includes('episodic mark refused'));
     expect(refusalLines).toHaveLength(3);
     for (const line of refusalLines) {
-      expect(line).toContain(MEMBER.slice(0, 8));
+      // Privacy-safe correlation only: the runtime deliberately hashes the
+      // durable member id rather than leaking its raw UUID or a UUID prefix.
+      expect(line).toMatch(/memberRef: [0-9a-f]{12}/);
+      expect(line).not.toContain(MEMBER);
+      expect(line).not.toContain(MEMBER.slice(0, 8));
       expect(line).not.toContain(VERBATIM);
     }
   });
@@ -306,5 +324,6 @@ describe('live caller contract', () => {
     );
     expect(callSite).not.toBeNull();
     expect(callSite![0]).toMatch(/sourceSessionId:\s*sessionId/);
+    expect(callSite![0]).toMatch(/sourceTurnId:\s*message\.id/);
   });
 });

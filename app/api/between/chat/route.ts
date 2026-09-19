@@ -1883,8 +1883,8 @@ This user is in guest mode (no authenticated identity).
           loadRecentDevelopmentalMemories(effectiveUserId, 3),
           loadRecentThemeSignals(effectiveUserId, 10),
           // CUT 1 — member-placed portfolio reader. Filters enforce canon:
-          // status active/still_alive, sacred_protected excluded, return_preference
-          // != member_pulled (member opt-in for ambient surfacing). See
+          // status active/still_alive, sacred_protected excluded, return_preference plus return_authority
+          // (member-explicit REOPEN authority required for ambient surfacing). See
           // lib/maia/memoryAtomsLoader.ts + docs/specs/CUT_1_SUBSTRATE_RESTORATION.md.
           loadMemberMemoryAtomsForPrompt(effectiveUserId, 8),
         ]);

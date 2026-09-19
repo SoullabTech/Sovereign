@@ -119,10 +119,10 @@ export const CapsuleCreateFromChatWindowSchema = z.object({
 export type CapsuleCreateFromChatWindowInput = z.infer<typeof CapsuleCreateFromChatWindowSchema>;
 
 /**
- * CONFIRM KEEP — the member-confirmed create.
+ * CONFIRM REFLECTION SAVE — the member-confirmed create.
  *
  * This is the only shape that authorizes an `INSERT INTO reflection_capsules`
- * from the Keep flow. It carries the draft the member actually saw and edited,
+ * from the Reflection flow. It carries the draft the member actually saw and edited,
  * not a window to be re-distilled: what gets written is what they confirmed,
  * never a fresh interpretation of the conversation made after the fact.
  *

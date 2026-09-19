@@ -313,10 +313,10 @@ Session synthesis available for review.`
       },
       {
         id: 'capture',
-        title: 'Keep & Reflections',
-        content: `Click Keep (sparkle icon) to distill conversation essence.
-Creates Reflection Capsule: Summary, Gold Lines, Decisions, Patterns.
-Stored in LabTools → Reflections.`
+        title: 'Reflections',
+        content: `Click Reflect (sparkle icon) to prepare an interpretive Reflection Capsule.
+Review its Summary, Gold Lines, Decisions, and Patterns before saving.
+Stored in Reflections.`
       }
     ]
   },

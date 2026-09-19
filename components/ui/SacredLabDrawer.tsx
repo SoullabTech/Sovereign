@@ -217,7 +217,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         },
         {
           icon: Sparkles,
-          label: 'Keep this moment',
+          label: 'Capture a reflection',
           action: () => onAction?.('capture-spirit'),
           description: 'Distill what mattered from this conversation'
         },

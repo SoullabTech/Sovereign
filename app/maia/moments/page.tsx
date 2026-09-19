@@ -27,6 +27,8 @@ import { apiFetch } from '@/lib/http/apiBase';
 interface Moment {
   episodeId: string;
   verbatimText: string;
+  returnPreference: 'member_pulled' | 'contextual_doorway';
+  returnAuthority: 'legacy_ambiguous' | 'default_private' | 'member_explicit';
   createdAt: string;
 }
 
@@ -48,6 +50,7 @@ export default function MarkedMomentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [armedId, setArmedId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [returningId, setReturningId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -91,6 +94,25 @@ export default function MarkedMomentsPage() {
     },
     [armedId, removingId],
   );
+
+  const setReturnPreference = useCallback(async (m: Moment, preference: 'member_pulled' | 'contextual_doorway') => {
+    if (returningId) return;
+    setReturningId(m.episodeId);
+    try {
+      const res = await apiFetch('/api/sovereign/episodes/mark', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ episodeId: m.episodeId, returnPreference: preference }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setMoments((list) => list.map((x) => x.episodeId === m.episodeId ? { ...x, ...data.episode } : x));
+    } catch {
+      setError('Could not update return permission.');
+    } finally {
+      setReturningId(null);
+    }
+  }, [returningId]);
 
   return (
     <div
@@ -138,14 +160,16 @@ export default function MarkedMomentsPage() {
               are gone, not archived.
             </p>
             <p className="text-[12px] text-stone-400 leading-relaxed mb-12">
-              A kept moment may return in conversation with MAIA — as you said
-              it, dated, yours.
+              Keeping a moment holds it here. It does not give MAIA permission to
+              bring it back. You can allow return for an individual moment below.
             </p>
 
             <div className="space-y-12">
               {moments.map((m) => {
                 const armed = armedId === m.episodeId;
                 const removing = removingId === m.episodeId;
+                const changingReturn = returningId === m.episodeId;
+                const mayReturn = m.returnAuthority === 'member_explicit' && m.returnPreference === 'contextual_doorway';
                 return (
                   <div key={m.episodeId}>
                     <p className="text-[12px] text-stone-400 mb-2 tracking-wide">
@@ -154,7 +178,16 @@ export default function MarkedMomentsPage() {
                     <p className="text-[14px] text-stone-700 leading-relaxed whitespace-pre-wrap">
                       {m.verbatimText}
                     </p>
-                    <div className="mt-3">
+                    <div className="mt-3 flex items-center gap-3">
+                      <span className="text-[12px] text-stone-400">{mayReturn ? 'May return' : 'Sealed'}</span>
+                      <button
+                        type="button"
+                        disabled={changingReturn}
+                        onClick={() => setReturnPreference(m, mayReturn ? 'member_pulled' : 'contextual_doorway')}
+                        className="text-[12px] tracking-wide text-stone-500 hover:text-stone-700 disabled:opacity-50"
+                      >
+                        {changingReturn ? '…' : mayReturn ? 'Reseal' : 'Allow return'}
+                      </button>
                       <button
                         type="button"
                         disabled={removing}

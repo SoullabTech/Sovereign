@@ -267,8 +267,9 @@ export async function loadConversationalRecallPref(userId: string): Promise<bool
  *    for member-marked rows and are never read by this loader.
  *
  * Excludes:
- *   - any row with marked_by_member = FALSE (legacy/system-authored rows,
- *     ~0 callers today, but structurally excluded regardless)
+ *   - any row with marked_by_member = FALSE (legacy/system-authored rows)
+ *   - any marked row that is not contextual_doorway + member_explicit.
+ *     KEEP is persistence only; REOPEN requires its own member act.
  *
  * Graceful: returns [] on missing input or DB error.
  */
@@ -277,6 +278,8 @@ export type MarkedEpisodeSnapshot = {
   verbatim_text: string;
   source_turn_id: string | null;
   source_session_id: string | null;
+  return_preference: 'member_pulled' | 'contextual_doorway';
+  return_authority: 'legacy_ambiguous' | 'default_private' | 'member_explicit';
   created_at: Date;
 };
 
@@ -291,12 +294,17 @@ export async function loadRecentMarkedEpisodes(
       verbatim_text: string;
       source_turn_id: string | null;
       source_session_id: string | null;
+      return_preference: 'member_pulled' | 'contextual_doorway';
+      return_authority: 'legacy_ambiguous' | 'default_private' | 'member_explicit';
       created_at: Date;
     }>(
-      `SELECT episode_id, verbatim_text, source_turn_id, source_session_id, created_at
+      `SELECT episode_id, verbatim_text, source_turn_id, source_session_id,
+              return_preference, return_authority, created_at
        FROM episodic_memories
        WHERE user_id = $1
          AND marked_by_member = TRUE
+         AND return_preference = 'contextual_doorway'
+         AND return_authority = 'member_explicit'
        ORDER BY created_at DESC
        LIMIT $2`,
       [userId, limit],
@@ -306,6 +314,8 @@ export async function loadRecentMarkedEpisodes(
       verbatim_text: r.verbatim_text ?? '',
       source_turn_id: r.source_turn_id,
       source_session_id: r.source_session_id,
+      return_preference: r.return_preference,
+      return_authority: r.return_authority,
       created_at: r.created_at,
     }));
   } catch (err) {
@@ -315,15 +325,15 @@ export async function loadRecentMarkedEpisodes(
 }
 
 /**
- * Episodic recall preference — checks members.episodic_recall_enabled.
+ * Episodic recall master switch — checks members.episodic_recall_enabled.
  *
- * Phase 2 consent gate (Option 3 — default-on with opt-out), mirroring
- * loadConversationalRecallPref exactly. The column already exists
- * (added by database/migrations/20260531000001_episodic_member_marked_provenance.sql,
- * §5) — this loader is the first reader of it.
+ * This Boolean is suppression-only. It never confers return authority: the
+ * Moment loader already requires per-row contextual_doorway + member_explicit.
+ * TRUE therefore means only “do not globally suppress otherwise-authorized
+ * Moments”; FALSE suppresses them all.
  *
- * Graceful: returns true (default) on missing input or DB error so the
- * conversation never blocks on preference lookup.
+ * Graceful: returns true on missing input or DB error because the per-row
+ * authority gate remains the grant boundary.
  */
 export async function loadEpisodicRecallPref(userId: string): Promise<boolean> {
   if (!userId) return true;
