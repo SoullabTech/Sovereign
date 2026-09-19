@@ -57,3 +57,19 @@ test('a built room without manuscript identity cannot navigate', () => {
   expect(develop.closest('a, button')).toBeNull();
   expect(container.querySelectorAll('a')).toHaveLength(0);
 });
+
+
+test('resolved room selection overrides a missing or stale address and follows selection changes', () => {
+  window.history.replaceState(null, '', '/');
+  const draw = (currentSectionId: string | null) => act(() => root.render(React.createElement(StudioModeBar, {
+    current: 'write', manuscriptId: 'manuscript-1', currentSectionId,
+  })));
+  const destination = () => container.querySelector('[data-mode="develop"]')!.closest('a')!.getAttribute('href');
+  const develop = STUDIO_MODES.find(m => m.id === 'develop')!;
+  draw('chapter-10');
+  expect(destination()).toBe(modeLocation(develop.href!, 'manuscript-1', 'chapter-10'));
+  draw('chapter-10-section-2');
+  expect(destination()).toBe(modeLocation(develop.href!, 'manuscript-1', 'chapter-10-section-2'));
+  draw(null);
+  expect(destination()).toBe(modeLocation(develop.href!, 'manuscript-1', null));
+});

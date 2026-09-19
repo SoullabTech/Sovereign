@@ -30,12 +30,14 @@ import { modeLocation } from '../studioMap';
 export interface StudioModeBarProps {
   /** The mode this room IS. */
   current: string;
+  /** Resolved place displayed by the room; undefined uses the address reader. */
+  currentSectionId?: string | null;
   style?: CSSProperties;
   /** The Work on the table. A mode switch may never lose or guess it. */
   manuscriptId?: string | null;
 }
 
-export function StudioModeBar({ current, manuscriptId = null, style }: StudioModeBarProps) {
+export function StudioModeBar({ current, currentSectionId, manuscriptId = null, style }: StudioModeBarProps) {
   /* ── THE PLACE TRAVELS WITH THE MODE (D1) ────────────────────────────────
      Read from the ADDRESS, not from a prop threaded down through every room.
 
@@ -74,7 +76,7 @@ export function StudioModeBar({ current, manuscriptId = null, style }: StudioMod
     <div style={{ position: 'relative', maxWidth: '100%' }}>
       <nav aria-label="Studio modes" style={{ display: 'flex', gap: SPACE.tight, flexWrap: 'wrap', justifyContent: 'center', ...style }}>
         {STUDIO_MODES.map((m) => (
-          <StudioModeItem key={m.id} mode={m} active={m.id === current} manuscriptId={manuscriptId} sectionId={sectionId} onPreview={setPreview} />
+          <StudioModeItem key={m.id} mode={m} active={m.id === current} manuscriptId={manuscriptId} sectionId={currentSectionId !== undefined ? currentSectionId : sectionId} onPreview={setPreview} />
         ))}
       </nav>
       {preview?.availability === 'later' && preview.preview && (
