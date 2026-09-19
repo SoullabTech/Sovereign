@@ -100,23 +100,23 @@ export default function RevisionDesk({
   };
   return <section data-revision-desk data-inline={inline}>
     {showInspiration && <WorkInspiration manuscriptId={manuscriptId} onBringToQuestion={text => onInstruction([instruction, 'Work inspiration and intention:\n' + text].filter(Boolean).join('\n\n'))} />}
-    <span className="wsi-eyebrow">Passage Work</span><h3>{title}</h3>
-    <details className="wsi-setup" open={inline ? undefined : !version}>
+    {!inline && <><span className="wsi-eyebrow">Passage Work</span><h3>{title}</h3></>}
+    <details className="wsi-setup">
       <summary>Direction, intention, and voice</summary>
       <EditorialApproaches scopeKey={scopeKey} onContext={setDirectionContext} busy={blocked} />
     </details>
-    <div className="wsi-conversation-layout"><div>
+    <div className="wsi-conversation-layout"><div className="wsi-revision-controls">
     <div className="wsi-bar">
       <button type="button" disabled={blocked} onClick={() => { setShowProposal(false); setLocalMessage(null); onKeep(); }}>Keep current wording</button>
       <label><input type="checkbox" checked={showProposal} onChange={e => setShowProposal(e.target.checked)} /> Proposed wording</label>
       {version && <button type="button" aria-pressed={changes} onClick={() => setChanges(v => !v)}>{changes ? 'Clean proposal' : 'Show additions and removals'}</button>}
-      {thread && thread.versions.length > 1 && <label>Version to compare <select value={version?.id ?? ''}
+      {thread && thread.versions.length > 1 && <details><summary>Version history</summary><label>Version to compare <select value={version?.id ?? ''}
         onChange={e => onSelectVersion(e.target.value)} disabled={blocked}>
         <option value="" disabled>Choose a version</option>
         {thread.versions.map((v, i) => <option key={v.id} value={v.id}>{alternativeLabel(v, i)}</option>)}
-      </select></label>}
+      </select></label></details>}
     </div>
-    <div className="wsi-grid">
+    <details className="wsi-proposal-details" open={inline ? undefined : true}><summary>Proposal text and selected words</summary><div className="wsi-grid">
       {!inline && <div><span className="wsi-eyebrow">Current manuscript · {title}</span><div className="wsi-current wsi-prose">{currentText}</div></div>}
       {showProposal && version && thread ? <div>
         <span className="wsi-eyebrow">{version.author === 'member' ? 'Your saved revision' : 'MAIA proposal'} · not automatically applied</span>
@@ -137,8 +137,11 @@ export default function RevisionDesk({
           <button type="button" disabled={blocked || !draftMatches || !usablePart} onClick={insertPart}>Insert selected words into my working revision</button>
           {usablePart && <p className="wsi-muted">Selected: {usablePart.text}</p>}
         </details>}
-        <section className="wsi-reasoning" aria-label="Editorial explanation">
-          <h4>Why this suggestion?</h4>
+
+      </div> : <p className="wsi-muted">{version ? 'Proposed wording is hidden.' : 'Ask for a possibility below. Your manuscript remains unchanged while you explore.'}</p>}
+    </div></details>
+    {version && thread && <details className="wsi-teaching"><summary>Why this suggestion?</summary>        <section className="wsi-reasoning" aria-label="Editorial explanation">
+
           {version.rationale ? <><p className="wsi-observation">{version.rationale}</p><MaiaListen text={version.rationale} active={active} /></> : <p>Ask MAIA to explain this alternative before choosing it.</p>}
           <p className="wsi-muted">Explore the craft, test the interpretation, and weigh what this version gains or loses.</p>
           <div className="wsi-bar">
@@ -152,9 +155,7 @@ export default function RevisionDesk({
           </div>
           {reasonQuestion && <label>Question for MAIA<textarea value={reasonQuestion} onChange={event => setReasonQuestion(event.target.value)} /></label>}
           <p className="wsi-muted">Choose or edit a question, then use Discuss this below. Your working revision stays here.</p>
-        </section>
-      </div> : <p className="wsi-muted">{version ? 'Proposed wording is hidden.' : 'Ask for a possibility below. Your manuscript remains unchanged while you explore.'}</p>}
-    </div>
+        </section></details>}
     {version && thread && <section aria-label="Review in context">
       <button type="button" disabled={blocked || Boolean(draft) || !context} onClick={() => setReviewed(previewKey)}>Read in context</button>
       {inline && reviewed === previewKey && context && <p role="status">Preview shown in the highlighted manuscript passage above. Not applied.</p>}
@@ -189,7 +190,7 @@ export default function RevisionDesk({
     </section>}
     </div><aside className="wsi-discussion">
     {thread && thread.turns.length > 0 ? <section aria-label="Passage conversation">
-      <h3>Our conversation</h3>{thread.turns.map(turn => <article key={turn.turnIndex}>
+      <details className="wsi-history"><summary>Conversation history · {thread.turns.length} turns</summary>{thread.turns.slice(0, -1).map(turn => <article key={turn.turnIndex}><strong>{turn.speaker === 'author' ? 'You' : 'MAIA'}</strong><p className="wsi-observation">{turn.body}</p></article>)}</details>{thread.turns.slice(-1).map(turn => <article key={turn.turnIndex}>
         <strong>{turn.speaker === 'author' ? 'You' : 'MAIA'}</strong>
         {turn.speaker !== 'author' && <MaiaListen text={turn.body} active={active} />}
         {turn.speaker === 'author' && turn.body.includes('If offering replacement wording,') ? <>
@@ -200,15 +201,15 @@ export default function RevisionDesk({
         </> : <p className="wsi-observation">{turn.body}</p>}
       </article>)}
     </section> : response && <div><MaiaListen text={response} active={active} /><p className="wsi-observation">{response}</p></div>}
-    <label>Add an editorial question <select value={editorialQuestion} disabled={blocked} onChange={e => setEditorialQuestion(e.target.value)}>
+    <details className="wsi-question-options"><summary>Explore an editorial question</summary><label>Add an editorial question <select value={editorialQuestion} disabled={blocked} onChange={e => setEditorialQuestion(e.target.value)}>
       <option value="">Choose a question…</option>
       {EDITORIAL_QUESTIONS.map(q => <option key={q.id} value={q.question}>{q.label}</option>)}
-    </select></label>
+    </select></label></details>
     <label>Discuss this passage
-      <textarea value={instruction} onChange={e => onInstruction(e.target.value)} disabled={blocked}
+      <textarea rows={2} value={instruction} onChange={e => onInstruction(e.target.value)} disabled={blocked}
         placeholder="Explain what you intend, what matters to the reader, and what you want to preserve, deepen, redirect, or try differently." />
     </label>
-    <p className="wsi-muted">Discuss sends your question, selected direction, intention, included voice notes, section context, and any working revision in this conversation. It does not apply wording.</p>
+    <details className="wsi-disclosure"><summary>What MAIA receives</summary><p className="wsi-muted">Your question, selected direction, intention, included voice notes, section context, and working revision. Discussing does not apply wording.</p></details>
     <div className="wsi-bar">
       <button type="button" onClick={discuss} disabled={blocked || (!instruction.trim() && !directionContext.trim() && !editorialQuestion && !reasonQuestion.trim()) || Boolean(draft && !draftMatches)}>{busy ? 'MAIA is working…' : 'Discuss this'}</button>
     </div>
