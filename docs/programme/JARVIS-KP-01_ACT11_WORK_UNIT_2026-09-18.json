@@ -1,0 +1,52 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "ACT 11",
+  "title": "Epistemic Join Enforcement Contract",
+  "date": "2026-09-18",
+  "status": "EVIDENCE_READY",
+  "canonical_base": "567e062b3d8929c41d15882ae26ea9d42077a1bc",
+  "branch": "feature/jarvis-kp-01-act11-epistemic-join-contract-20260918",
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "authority": "CONSTITUTIONAL_CONTRACT_DESIGN_ONLY",
+  "authorized_outputs": [
+    "minimum conceptual epistemic join contract",
+    "bounded synthetic falsification corpus",
+    "static targeted evidence",
+    "exact candidate head for Founder adjudication"
+  ],
+  "forbidden": [
+    "database schema or migration",
+    "semantic graph or relation table implementation",
+    "automated edge creation",
+    "claim ledger implementation",
+    "prompt or system-instruction changes",
+    "parser or classifier implementation",
+    "MAIA behavioral changes",
+    "member-memory mutation",
+    "Living Constellation relationship generation",
+    "automatic promotion",
+    "Work Unit or routing changes",
+    "CI enforcement",
+    "provider or model changes",
+    "merge",
+    "deployment",
+    "production mutation"
+  ],
+  "artifacts": [
+    "docs/programme/JARVIS-KP-01_ACT11_EPISTEMIC_JOIN_ENFORCEMENT_CONTRACT_2026-09-18.md",
+    "docs/programme/evidence/JARVIS-KP-01/ACT11/SYNTHETIC_FALSIFICATION_CORPUS.json",
+    "docs/programme/evidence/JARVIS-KP-01/ACT11/STATIC_FALSIFICATION_WITNESS_2026-09-18.md",
+    "docs/programme/JARVIS-KP-01_ACT11_WORK_UNIT_2026-09-18.json"
+  ],
+  "evidence_summary": {
+    "contract_coverage": "18/18 PASS",
+    "act10_principles": "9/9 PASS",
+    "synthetic_cases": "12/12 PASS",
+    "data_class": "SYNTHETIC_ONLY",
+    "runtime_changes": "NONE",
+    "schema_changes": "NONE",
+    "prompt_changes": "NONE",
+    "deployment": "NONE"
+  },
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_EXACT_CANDIDATE_HEAD"
+}
