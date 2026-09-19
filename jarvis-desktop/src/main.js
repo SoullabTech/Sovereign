@@ -846,7 +846,7 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
     if (action === 'status') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
-        return await CWUV2.statusCanonicalV2(root, req.work_unit_id, {
+        return await WUC.canonicalExecutionStatus(root, req.work_unit_id, {
           env: process.env,
           actorId: desktopHumanActorId(),
         });
@@ -883,6 +883,96 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
         root,
         req.work_unit_id,
         req.route_participant_id,
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-prepare-execution-transport') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.route_participant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid route_participant_id.' };
+      }
+      return await WUC.canonicalPrepareTransport(
+        root,
+        req.work_unit_id,
+        req.route_participant_id,
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-execution-auth-preview') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.route_participant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid route_participant_id.' };
+      }
+      return await WUC.canonicalExecutionPreview(
+        root,
+        req.work_unit_id,
+        req.route_participant_id,
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-authorize-execution-once') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.route_participant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid route_participant_id.' };
+      }
+      return await WUC.canonicalAuthorizeExecutionOnce(
+        root,
+        req.work_unit_id,
+        req.route_participant_id,
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-confirm-execute') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^e1-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid canonical execution grant_id.' };
+      }
+      return await WUC.canonicalConfirmAuthorizedExecution(
+        root,
+        req.work_unit_id,
+        req.grant_id,
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-revoke-execution-grant') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!/^e1-[0-9a-f]{32}$/.test(String(req?.grant_id || ''))) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid canonical execution grant_id.' };
+      }
+      return await WUC.canonicalRevokeExecutionGrant(
+        root,
+        req.work_unit_id,
+        req.grant_id,
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-record-verifier') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      const attemptId = (value) => /^[a-z0-9][a-z0-9-]{2,127}$/i.test(String(value || ''));
+      if (!attemptId(req?.target_attempt_id) || !attemptId(req?.verifier_attempt_id)) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid verifier attempt ids.' };
+      }
+      const disposition = String(req?.disposition || '');
+      if (!['mechanical_pass', 'mechanical_fail', 'supports', 'challenges', 'disagrees', 'insufficient'].includes(disposition)) {
+        return { ok: false, status: 'REFUSED', reason: 'Invalid verifier disposition.' };
+      }
+      return await WUC.canonicalRecordVerifier(
+        root,
+        req.work_unit_id,
+        {
+          target_attempt_id: req.target_attempt_id,
+          verifier_attempt_id: req.verifier_attempt_id,
+          disposition,
+          evidence_refs: Array.isArray(req?.evidence_refs) ? req.evidence_refs : [],
+        },
+        { env: process.env, actorId: desktopHumanActorId() },
+      );
+    }
+    if (action === 'canonical-evidence-ready') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await WUC.canonicalMarkEvidenceReady(
+        root,
+        req.work_unit_id,
         { env: process.env, actorId: desktopHumanActorId() },
       );
     }

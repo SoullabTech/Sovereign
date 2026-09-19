@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFile, execFileSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const { pathToFileURL } = require('node:url');
 const { childEnv, resolveNodeBinary } = require('./child-env.js');
 const FRONTIER = require('./frontier-worker.js');
@@ -390,6 +391,590 @@ async function status(root, workUnitId, opts = {}) {
   };
 }
 
+async function canonicalExecutionStatus(root, workUnitId, opts = {}) {
+  const snapshot = await CWUV2.statusCanonicalV2(root, workUnitId, opts);
+  if (!snapshot?.ok) return snapshot;
+  const store = await importBound(
+    root,
+    'scripts/builder/canonical-provider-execution-grant-store-v1.mjs',
+  );
+  const home = homeOf(opts.env || process.env);
+  const grants = store.listCanonicalGrantStandingsV1(workUnitId, { home });
+  return {
+    ...snapshot,
+    execution_bridge: {
+      version: 'E1.v1',
+      available: true,
+      authority_created_by_routing: false,
+      authorize_is_execute: false,
+      grants,
+    },
+  };
+}
+
+async function canonicalPrepareTransport(root, workUnitId, participantId, opts = {}) {
+  const out = await CWUV2.prepareCanonicalTransportForExecutionV2(
+    root,
+    workUnitId,
+    participantId,
+    opts,
+  );
+  if (!out?.ok) return out;
+  return canonicalExecutionStatus(root, workUnitId, opts);
+}
+
+function canonicalEvidenceSubstrateAvailable(root, workUnit) {
+  if (!root || !fs.existsSync(root) || !workUnit) return false;
+  const evidenceClass = workUnit.custody?.evidence_class;
+  if (evidenceClass === 'E0_TASK_TEXT') {
+    return typeof workUnit.identity?.objective === 'string'
+      && workUnit.identity.objective.trim().length > 0;
+  }
+  const sha = String(workUnit.scope?.base_ref || '');
+  const allowed = boundedCanonicalPaths(workUnit);
+  if (!/^[0-9a-f]{40}$/i.test(sha) || !allowed.length) return false;
+  try {
+    execFileSync('git', ['cat-file', '-e', sha + '^{commit}'], {
+      cwd: root,
+      stdio: 'ignore',
+    });
+    const listed = execFileSync('git', [
+      'ls-tree', '-r', '--name-only', sha, '--', ...allowed,
+    ], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      maxBuffer: 4 * 1024 * 1024,
+    });
+    return String(listed).split('\n').some((line) => line.trim());
+  } catch {
+    return false;
+  }
+}
+
+async function canonicalExecutionContext(root, workUnitId, participantId, opts = {}) {
+  const envelope = CWUV2.readCanonicalExecutionEnvelopeV2(
+    workUnitId,
+    opts.env || process.env,
+  );
+  if (!envelope) {
+    return { ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND' };
+  }
+  const e1 = await importBound(root, 'scripts/builder/canonical-provider-execution-v1.mjs');
+  const preview = e1.prepareCanonicalExecutionAuthorizationV1({
+    envelope,
+    route_participant_id: participantId,
+    local_worktree_available: canonicalEvidenceSubstrateAvailable(root, envelope.work_unit),
+  });
+  return {
+    ok: preview.ok,
+    status: preview.status,
+    reason: preview.blockers?.[0]?.code || null,
+    envelope,
+    e1,
+    preview,
+  };
+}
+
+async function canonicalExecutionPreview(root, workUnitId, participantId, opts = {}) {
+  const ctx = await canonicalExecutionContext(root, workUnitId, participantId, opts);
+  if (!ctx.ok) {
+    return {
+      ok: false,
+      status: ctx.status || 'REFUSED',
+      reason: ctx.reason || 'CANONICAL_E1_PREVIEW_REFUSED',
+      blockers: ctx.preview?.blockers || [],
+    };
+  }
+  const store = await importBound(
+    root,
+    'scripts/builder/canonical-provider-execution-grant-store-v1.mjs',
+  );
+  return {
+    ...ctx.preview,
+    status: 'HELD_FOR_HUMAN_AUTHORIZATION',
+    grants: store.listCanonicalGrantStandingsV1(workUnitId, {
+      home: homeOf(opts.env || process.env),
+    }),
+  };
+}
+
+async function canonicalAuthorizeExecutionOnce(root, workUnitId, participantId, opts = {}) {
+  const ctx = await canonicalExecutionContext(root, workUnitId, participantId, opts);
+  if (!ctx.ok) {
+    return {
+      ok: false,
+      status: ctx.status || 'REFUSED',
+      reason: ctx.reason || 'CANONICAL_E1_PREVIEW_REFUSED',
+      blockers: ctx.preview?.blockers || [],
+    };
+  }
+  const store = await importBound(
+    root,
+    'scripts/builder/canonical-provider-execution-grant-store-v1.mjs',
+  );
+  const issued = store.issueCanonicalExecutionGrantV1(ctx.preview, {
+    home: homeOf(opts.env || process.env),
+    actor_id: opts.actorId || 'human:jarvis-desktop:operator',
+    authorization_act: 'JARVIS_DESKTOP_E1_AUTHORIZE_ONCE',
+  });
+  return {
+    ...issued,
+    preview: ctx.preview,
+  };
+}
+
+async function canonicalRevokeExecutionGrant(root, workUnitId, grantId, opts = {}) {
+  const store = await importBound(
+    root,
+    'scripts/builder/canonical-provider-execution-grant-store-v1.mjs',
+  );
+  return store.revokeCanonicalExecutionGrantV1(workUnitId, grantId, {
+    home: homeOf(opts.env || process.env),
+    reason: 'HUMAN_REVOKED',
+  });
+}
+
+function canonicalResultLocation(workUnitId, grantId, env = process.env) {
+  const dir = path.join(homeOf(env), 'work-units-v2', 'results', workUnitId);
+  return {
+    dir,
+    file: path.join(dir, grantId + '.json'),
+    ref: 'canonical-result:' + workUnitId + ':' + grantId,
+  };
+}
+
+function persistCanonicalDurableResult(workUnitId, grantId, result, env = process.env) {
+  const loc = canonicalResultLocation(workUnitId, grantId, env);
+  fs.mkdirSync(loc.dir, { recursive: true });
+  const body = JSON.stringify(result, null, 2) + '\n';
+  fs.writeFileSync(loc.file, body, { mode: 0o600 });
+  return {
+    path: loc.file,
+    ref: loc.ref,
+    digest: 'sha256:' + crypto.createHash('sha256').update(body).digest('hex'),
+  };
+}
+
+function boundedCanonicalPaths(workUnit) {
+  return (workUnit?.scope?.allowed_paths || []).filter((value) =>
+    typeof value === 'string'
+    && value.trim()
+    && !value.startsWith('/')
+    && !value.startsWith('../')
+    && !value.includes('/../')
+    && !value.includes('\\'));
+}
+
+function materializeCanonicalEvidenceSandbox(root, workUnit) {
+  const sha = String(workUnit?.scope?.base_ref || '');
+  const allowed = boundedCanonicalPaths(workUnit);
+  const taskTextOnly = workUnit?.custody?.evidence_class === 'E0_TASK_TEXT';
+  if (!taskTextOnly && (!/^[0-9a-f]{40}$/i.test(sha) || !allowed.length)) {
+    throw new Error('CANONICAL_EVIDENCE_SCOPE_INVALID');
+  }
+
+  let files = [];
+  if (!taskTextOnly) {
+    const listing = execFileSync('git', [
+      'ls-tree', '-r', '--name-only', sha, '--', ...allowed,
+    ], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      maxBuffer: 4 * 1024 * 1024,
+    });
+    files = [...new Set(String(listing).split('\n').map((v) => v.trim()).filter(Boolean))];
+    if (!files.length) throw new Error('CANONICAL_EVIDENCE_SCOPE_EMPTY');
+  }
+
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-e1-evidence-'));
+  let totalBytes = 0;
+  for (const rel of files) {
+    const bytes = execFileSync('git', ['show', sha + ':' + rel], {
+      cwd: root,
+      encoding: null,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      maxBuffer: 8 * 1024 * 1024,
+    });
+    totalBytes += bytes.length;
+    if (totalBytes > 2 * 1024 * 1024) {
+      fs.rmSync(workspace, { recursive: true, force: true });
+      throw new Error('CANONICAL_EVIDENCE_BUNDLE_TOO_LARGE');
+    }
+    const target = path.join(workspace, rel);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, bytes);
+  }
+
+  const agent = path.join(root, '.opencode', 'agents', 'jarvis-readonly.md');
+  if (fs.existsSync(agent)) {
+    const target = path.join(workspace, '.opencode', 'agents', 'jarvis-readonly.md');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(agent, target);
+  }
+  return { workspace, files };
+}
+
+function canonicalProviderPrompt(workUnit, files, { inlineEvidence = false, workspace } = {}) {
+  const acceptance = (workUnit?.evaluation?.acceptance_conditions || [])
+    .map((v) => '- ' + v).join('\n') || '(none)';
+  const stops = (workUnit?.evaluation?.stop_conditions || [])
+    .map((v) => '- ' + v).join('\n') || '(none)';
+  let evidence = files.length
+    ? files.map((v) => '- ' + v).join('\n')
+    : '(task text only; no repository file evidence disclosed)';
+  if (inlineEvidence && files.length) {
+    evidence = files.map((rel) => {
+      const file = path.join(workspace, rel);
+      return '=== ' + rel + ' ===\n' + fs.readFileSync(file, 'utf8');
+    }).join('\n\n');
+  }
+  return [
+    'You are executing one read-only canonical JARVIS Work Unit.',
+    'Routing, provider selection, authority, and adjudication are already governed outside you.',
+    'Do not edit files. Do not infer authority. Return evidence, uncertainty, and falsifiers only.',
+    '',
+    'OBJECTIVE:',
+    String(workUnit?.identity?.objective || ''),
+    '',
+    'AUTHORIZED EVIDENCE:',
+    evidence,
+    '',
+    'ACCEPTANCE CONDITIONS:',
+    acceptance,
+    '',
+    'STOP CONDITIONS:',
+    stops,
+  ].join('\n');
+}
+
+async function executeCanonicalResolvedProvider(
+  root,
+  {
+    workUnitId,
+    grantId,
+    workUnit,
+    binding,
+    resolved,
+    sourceEnv,
+  },
+  opts = {},
+) {
+  let sandbox = null;
+  try {
+    sandbox = materializeCanonicalEvidenceSandbox(root, workUnit);
+    const env = providerChildEnv(sourceEnv);
+    const timeout = opts.timeoutMs || RUN_TIMEOUT_MS;
+    let run;
+
+    if (resolved.execution_adapter === 'opencode') {
+      run = await new Promise((resolve) => {
+        execFile('opencode', [
+          'run', '--pure',
+          '--agent', resolved.agent || 'jarvis-readonly',
+          '--model', resolved.model_ref,
+          canonicalProviderPrompt(workUnit, sandbox.files, {
+            inlineEvidence: false,
+            workspace: sandbox.workspace,
+          }),
+        ], {
+          cwd: sandbox.workspace,
+          env,
+          timeout,
+          maxBuffer: 4 * 1024 * 1024,
+        }, (error, stdout, stderr) => resolve({
+          exit_code: error && typeof error.code === 'number' ? error.code : error ? -1 : 0,
+          signal: error?.signal || null,
+          stdout: String(stdout || '').slice(-MAX_LOG_CHARS),
+          stderr: String(stderr || '').slice(-MAX_LOG_CHARS),
+        }));
+      });
+    } else if (resolved.execution_adapter === 'tinker-direct') {
+      const node = resolveNodeBinary();
+      if (!node.path) throw new Error('NODE_RUNTIME_UNAVAILABLE');
+      const prompt = canonicalProviderPrompt(workUnit, sandbox.files, {
+        inlineEvidence: true,
+        workspace: sandbox.workspace,
+      });
+      run = await new Promise((resolve) => {
+        // Credential value custody stays in this child. The Desktop parent has
+        // checked only presence after final R4/R5A admission.
+        const child = execFile(node.path, [
+          path.join(root, 'scripts', 'builder', 'canonical-provider-child-v1.mjs'),
+          'tinker-direct',
+          resolved.model_id,
+        ], {
+          cwd: sandbox.workspace,
+          env,
+          timeout,
+          maxBuffer: 4 * 1024 * 1024,
+        }, (error, stdout, stderr) => resolve({
+          exit_code: error && typeof error.code === 'number' ? error.code : error ? -1 : 0,
+          signal: error?.signal || null,
+          stdout: String(stdout || '').slice(-MAX_LOG_CHARS),
+          stderr: String(stderr || '').slice(-MAX_LOG_CHARS),
+        }));
+        child.stdin?.end(prompt);
+      });
+    } else {
+      run = {
+        exit_code: -1,
+        signal: null,
+        stdout: '',
+        stderr: 'CANONICAL_PROVIDER_AUTOMATION_UNSUPPORTED',
+      };
+    }
+
+    const escalation = /ESCALATE_TO_CLAUDE:/i.test(run.stdout + '\n' + run.stderr);
+    const durableResult = {
+      execution_version: 'E1.v1',
+      work_unit_id: workUnitId,
+      grant_id: grantId,
+      route_participant_id: binding.route_participant_id,
+      transport_binding_id: binding.transport_binding_id,
+      provider_id: binding.provider_id,
+      model_id: binding.model_id,
+      adapter_id: binding.adapter_id,
+      exit_code: run.exit_code,
+      test_results: 'not_run',
+      escalation_required: escalation,
+      recommended_next_action: run.exit_code === 0 && !escalation ? 'review-evidence' : 'reject',
+      output_excerpt: String(run.stdout || '').slice(-MAX_LOG_CHARS),
+      stderr_excerpt: String(run.stderr || '').slice(-MAX_LOG_CHARS),
+    };
+    const persisted = persistCanonicalDurableResult(
+      workUnitId,
+      grantId,
+      durableResult,
+      sourceEnv,
+    );
+    return {
+      ok: run.exit_code === 0 && !escalation,
+      status: run.exit_code === 0 && !escalation ? 'COMPLETED' : 'FAILED',
+      run,
+      durable_result: durableResult,
+      result_ref: persisted.ref,
+      result_digest: persisted.digest,
+      result_path: persisted.path,
+    };
+  } finally {
+    if (sandbox?.workspace) fs.rmSync(sandbox.workspace, { recursive: true, force: true });
+  }
+}
+
+async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) {
+  const sourceEnv = opts.env || process.env;
+  const home = homeOf(sourceEnv);
+  const store = await importBound(
+    root,
+    'scripts/builder/canonical-provider-execution-grant-store-v1.mjs',
+  );
+  const standing = store.canonicalGrantStandingV1(workUnitId, grantId, { home });
+  if (!standing.exists) return { ok: false, status: 'REFUSED', reason: 'GRANT_NOT_FOUND' };
+  if (standing.standing !== 'ACTIVE') {
+    return {
+      ok: false,
+      status: 'REFUSED',
+      reason: 'GRANT_NOT_ACTIVE',
+      grant_standing: standing.standing,
+    };
+  }
+
+  const envelope = CWUV2.readCanonicalExecutionEnvelopeV2(workUnitId, sourceEnv);
+  if (!envelope) return { ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND' };
+  const e1 = await importBound(root, 'scripts/builder/canonical-provider-execution-v1.mjs');
+  const finalAdmission = e1.evaluateCanonicalExecutionGrantV1({
+    grant: standing.grant,
+    envelope,
+    local_worktree_available: canonicalEvidenceSubstrateAvailable(root, envelope.work_unit),
+  });
+  if (!finalAdmission.ok) {
+    store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
+      home,
+      reason: finalAdmission.status || 'FINAL_CANONICAL_ADMISSION_REFUSED',
+    });
+    return {
+      ok: false,
+      status: finalAdmission.status,
+      reason: finalAdmission.blockers?.[0]?.code || 'FINAL_CANONICAL_ADMISSION_REFUSED',
+      blockers: finalAdmission.blockers || [],
+    };
+  }
+
+  const providerMod = await importBound(root, 'scripts/builder/opencode-provider.mjs');
+  const binding = finalAdmission.transport_binding;
+  const resolved = providerMod.resolveOpenCodeProvider({
+    providerId: binding.provider_id,
+    model: binding.model_id,
+    permissionEnvelope: finalAdmission.permission_envelope,
+    evidenceClass: binding.evidence_class,
+    env: sourceEnv,
+    skipCredentialCheck: true,
+  });
+  const exactTransport = resolved.ok
+    && resolved.provider_id === binding.provider_id
+    && resolved.model_id === binding.model_id
+    && resolved.execution_adapter === binding.adapter_id;
+  if (!exactTransport) {
+    store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
+      home,
+      reason: resolved.code || 'REGISTERED_TRANSPORT_IDENTITY_MISMATCH',
+    });
+    return {
+      ok: false,
+      status: 'GRANT_INVALID',
+      reason: resolved.code || 'REGISTERED_TRANSPORT_IDENTITY_MISMATCH',
+    };
+  }
+
+  const credential = credentialAvailability(resolved.credential_env, {
+    env: sourceEnv,
+    keychainProbe: opts.keychainProbe,
+  });
+  if (!credential.ready) {
+    return {
+      ok: false,
+      status: 'HELD_FOR_CREDENTIAL',
+      reason: 'PROVIDER_CREDENTIAL_MISSING',
+      grant_standing: 'ACTIVE',
+    };
+  }
+
+  const claimed = store.claimCanonicalExecutionGrantV1(workUnitId, grantId, { home });
+  if (!claimed.ok) return claimed;
+
+  if (envelope.work_unit.state.lifecycle_state === 'ROUTED') {
+    const executing = await CWUV2.transitionCanonicalV2(root, workUnitId, 'EXECUTING', {
+      env: sourceEnv,
+      actorId: opts.actorId || 'human:jarvis-desktop:operator',
+    });
+    if (!executing.ok) {
+      store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
+        home,
+        reason: executing.reason || 'W2_V2_EXECUTING_TRANSITION_REFUSED',
+      });
+      return {
+        ok: false,
+        status: 'EXECUTING_TRANSITION_REFUSED',
+        reason: executing.reason || 'W2_V2_EXECUTING_TRANSITION_REFUSED',
+        blockers: executing.blockers || [],
+      };
+    }
+  }
+
+  let executionResult;
+  try {
+    const runner = opts.executeCanonicalProvider || executeCanonicalResolvedProvider;
+    executionResult = await runner(root, {
+      workUnitId,
+      grantId,
+      workUnit: envelope.work_unit,
+      binding,
+      resolved,
+      sourceEnv,
+    }, opts);
+  } catch (error) {
+    const durableResult = {
+      execution_version: 'E1.v1',
+      work_unit_id: workUnitId,
+      grant_id: grantId,
+      route_participant_id: binding.route_participant_id,
+      transport_binding_id: binding.transport_binding_id,
+      provider_id: binding.provider_id,
+      model_id: binding.model_id,
+      adapter_id: binding.adapter_id,
+      exit_code: -1,
+      test_results: 'not_run',
+      escalation_required: false,
+      recommended_next_action: 'reject',
+      output_excerpt: '',
+      stderr_excerpt: String(error?.message || error).slice(-MAX_LOG_CHARS),
+    };
+    const persisted = persistCanonicalDurableResult(workUnitId, grantId, durableResult, sourceEnv);
+    executionResult = {
+      ok: false,
+      status: 'EXECUTION_ERROR',
+      reason: String(error?.message || error),
+      run: { exit_code: -1, stdout: '', stderr: durableResult.stderr_excerpt },
+      durable_result: durableResult,
+      result_ref: persisted.ref,
+      result_digest: persisted.digest,
+      result_path: persisted.path,
+    };
+  }
+
+  const consumed = store.consumeCanonicalExecutionGrantV1(workUnitId, grantId, {
+    home,
+    outcome: executionResult?.status || 'execution_attempted',
+  });
+
+  const recorded = await CWUV2.appendCanonicalExecutionResultV2(
+    root,
+    workUnitId,
+    {
+      route_participant_id: binding.route_participant_id,
+      transport_binding_id: binding.transport_binding_id,
+      provider_admission: { ok: true, disposition: 'ADMITTED' },
+      wrapper_exit_code: Number.isInteger(executionResult?.run?.exit_code)
+        ? executionResult.run.exit_code
+        : null,
+      durable_result: executionResult?.durable_result || {},
+      result_ref: executionResult?.result_ref,
+      result_digest: executionResult?.result_digest,
+    },
+    { env: sourceEnv, actorId: opts.actorId },
+  );
+  if (!recorded.ok) {
+    return {
+      ...executionResult,
+      ok: false,
+      status: 'CANONICAL_EVIDENCE_RECORD_FAILED',
+      reason: recorded.reason || recorded.blockers?.[0]?.code,
+      blockers: recorded.blockers || [],
+      execution_grant: {
+        grant_id: grantId,
+        standing: consumed.ok ? 'CONSUMED' : 'CLAIMED',
+      },
+    };
+  }
+
+  const snapshot = await canonicalExecutionStatus(root, workUnitId, {
+    env: sourceEnv,
+    actorId: opts.actorId,
+  });
+  return {
+    ...snapshot,
+    execution_result: executionResult,
+    canonical_attempt: recorded.canonical_attempt,
+    durable_mapping: recorded.durable_mapping,
+    final_admission: finalAdmission.admission,
+    r5a_integrity: finalAdmission.r5a_integrity,
+    execution_grant: {
+      grant_id: grantId,
+      standing: consumed.ok ? 'CONSUMED' : 'CLAIMED',
+      consume_status: consumed.status,
+    },
+  };
+}
+
+async function canonicalRecordVerifier(root, workUnitId, req = {}, opts = {}) {
+  const out = await CWUV2.appendCanonicalVerifierResultV2(
+    root,
+    workUnitId,
+    req,
+    opts,
+  );
+  if (!out?.ok) return out;
+  return canonicalExecutionStatus(root, workUnitId, opts);
+}
+
+async function canonicalMarkEvidenceReady(root, workUnitId, opts = {}) {
+  const out = await CWUV2.markCanonicalEvidenceReadyV2(root, workUnitId, opts);
+  if (!out?.ok) return out;
+  return canonicalExecutionStatus(root, workUnitId, opts);
+}
+
 function delegateLaneForProvider(resolved) {
   if (resolved?.execution_adapter === 'opencode') return 'opencode';
   if (resolved?.execution_adapter === 'tinker-direct') return 'tinker';
@@ -687,6 +1272,10 @@ module.exports = {
   credentialAvailability, delegateLaneForProvider,
   modelFamilyFromAttempt, durableProviderOutcome,
   reconcileAttempts, providerChildEnv, providers, create, planRouting, planWorkUnitRouting,
+  canonicalExecutionStatus, canonicalPrepareTransport,
+  canonicalExecutionPreview, canonicalAuthorizeExecutionOnce, canonicalRevokeExecutionGrant,
+  canonicalConfirmAuthorizedExecution, canonicalRecordVerifier, canonicalMarkEvidenceReady,
+  executeCanonicalResolvedProvider,
   executionAuthorizationPreview, authorizeExecutionOnce, revokeExecutionGrant,
   confirmAuthorizedExecution, executeResolvedProvider, status, runProvider,
 };
