@@ -89,7 +89,7 @@ export function DevelopManuscriptRail({
 
 export function DevelopManuscriptSurface({
   sections, version, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange,
-  evidenceHighlight = null, evidenceAnnotations = [], onEvidenceAnnotationSelect,
+  evidenceHighlight = null, evidenceAnnotations = [], onEvidenceAnnotationSelect, manuscriptNote = null,
 }: {
   sections: readonly WriteStateSection[];
   version: number;
@@ -99,6 +99,7 @@ export function DevelopManuscriptSurface({
   onPlaceChange: (sectionId: string) => void;
   evidenceHighlight?: { sectionId: string; range: CodePointRange } | null;
   evidenceAnnotations?: readonly ReadOnlyPassageAnnotation[];
+  manuscriptNote?: { sectionId: string; range: CodePointRange | null; onAnchor: (node: HTMLDivElement | null) => void } | null;
   onEvidenceAnnotationSelect?: (annotation: ReadOnlyPassageAnnotation) => void;
 }) {
   const writing = useMemo(() => readOnlyWriting(sections, version), [sections, version]);
@@ -121,6 +122,7 @@ export function DevelopManuscriptSurface({
         onPlaceChange={onPlaceChange}
         readOnlyHighlight={evidenceHighlight}
         readOnlyAnnotations={evidenceAnnotations}
+        readOnlyNote={manuscriptNote}
         onReadOnlyAnnotationSelect={onEvidenceAnnotationSelect}
       />
     </div>

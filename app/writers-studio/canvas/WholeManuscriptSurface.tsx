@@ -38,9 +38,10 @@
  * quietly makes that place inhabitable.*
  */
 
+import ManuscriptPassage from '../insight/ManuscriptPassage';
 import {
   forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect,
-  useMemo, useRef, useState, type ReactNode,
+  useMemo, useRef, useState,
 } from 'react';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { splitCodePointRange, type CodePointRange } from '@/lib/manuscript/development/evidenceRef';
@@ -71,45 +72,33 @@ export interface ReadOnlyPassageAnnotation {
   label: string;
 }
 
-function readOnlyBodyWithAnnotations(
+export function readOnlyBodyWithAnnotations(
   body: string,
   annotations: readonly ReadOnlyPassageAnnotation[],
   onSelect?: (annotation: ReadOnlyPassageAnnotation) => void,
 ) {
   const points = Array.from(body);
-  const valid = annotations
-    .filter(({ range }) => range.start >= 0 && range.start <= points.length && range.end >= range.start && range.end <= points.length)
-    .slice()
-    .sort((a, b) => a.range.start - b.range.start);
-  if (valid.length === 0) return body;
-
-  const nodes: ReactNode[] = [];
-  let cursor = 0;
-  for (const annotation of valid) {
-    if (annotation.range.start > cursor) {
-      nodes.push(points.slice(cursor, annotation.range.start).join(''));
-    }
-    nodes.push(
-      <button
-        key={annotation.key}
-        type="button"
-        onClick={() => onSelect?.(annotation)}
-        data-development-evidence-link={annotation.key}
-        aria-label={`Show developmental observation ${annotation.label}`}
-        title={`Show developmental observation ${annotation.label}`}
-        style={{
-          border: 0, background: 'transparent', color: INK.quiet,
-          cursor: onSelect ? 'pointer' : 'default', padding: '0 2px',
-          font: 'inherit', lineHeight: 'inherit', verticalAlign: 'baseline',
-        }}
-      >
-        ◇
-      </button>,
-    );
-    cursor = annotation.range.start;
-  }
-  if (cursor < points.length) nodes.push(points.slice(cursor).join(''));
-  return nodes;
+  const valid = annotations.filter(({ range }) => Number.isInteger(range.start) && Number.isInteger(range.end)
+    && range.start >= 0 && range.end > range.start && range.end <= points.length);
+  if (!valid.length) return body;
+  // Partition once so overlapping observations never duplicate the author's words.
+  const boundaries = [...new Set([0, points.length, ...valid.flatMap(a => [a.range.start, a.range.end])])].sort((a,b) => a-b);
+  return boundaries.slice(0,-1).map((start,i) => {
+    const end=boundaries[i+1];
+    const begins=valid.filter(a => a.range.start === start);
+    const marked=valid.some(a => a.range.start <= start && a.range.end >= end);
+    const text=points.slice(start,end).join('');
+    return <span key={start} style={{ position:'relative' }}>
+      {begins.length > 0 && <span className="ws-development-margin">
+        {begins.map(annotation => <button key={annotation.key} type="button"
+          onClick={() => onSelect?.(annotation)}
+          data-development-evidence-link={annotation.key}
+          aria-label={`Open MAIA’s note: ${annotation.label}`}
+          title={annotation.label}>◇</button>)}
+      </span>}
+      {marked ? <mark className="ws-development-highlight">{text}</mark> : text}
+    </span>;
+  });
 }
 
 export interface WholeManuscriptSurfaceProps {
@@ -159,6 +148,7 @@ export interface WholeManuscriptSurfaceProps {
    * These are navigation affordances only: rendering or selecting one never commissions cognition.
    */
   readOnlyAnnotations?: readonly ReadOnlyPassageAnnotation[];
+  readOnlyNote?: { sectionId: string; range: CodePointRange | null; onAnchor: (node: HTMLDivElement | null) => void } | null;
   onReadOnlyAnnotationSelect?: (annotation: ReadOnlyPassageAnnotation) => void;
 }
 
@@ -183,7 +173,7 @@ export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
   writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, readOnlyHighlight = null,
-  readOnlyAnnotations = [], onReadOnlyAnnotationSelect,
+  readOnlyAnnotations = [], onReadOnlyAnnotationSelect, readOnlyNote = null,
 }, handleRef) {
   const sections = writing.sections;
   const annotationsBySection = useMemo(() => {
@@ -457,6 +447,9 @@ export const WholeManuscriptSurface = forwardRef<
                 }}
               />
             ) : (() => {
+              if (readOnlyNote?.sectionId === section.id) return <ManuscriptPassage body={body} range={readOnlyNote.range} highlight={Boolean(readOnlyNote.range)}>
+                <div ref={readOnlyNote.onAnchor} data-develop-note-anchor />
+              </ManuscriptPassage>;
               const exact = readOnlyHighlight?.sectionId === section.id
                 ? splitCodePointRange(body, readOnlyHighlight.range)
                 : null;

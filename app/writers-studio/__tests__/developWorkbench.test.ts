@@ -29,11 +29,14 @@ describe('D3 · Develop is the manuscript seen developmentally', () => {
     expect(executableRoom).not.toContain('/write-state');
     expect(room).toContain("manuscriptPhase === 'error'");
   });
-  it('puts the manuscript in the centre and intelligence beside it', () => {
+  it('keeps the full manuscript primary and reading tools available on request', () => {
     expect(room).toContain('data-develop-centre="manuscript"');
     expect(room).toContain('data-develop-intelligence');
     expect(room).toContain('<DevelopManuscriptSurface');
-    expect(room).toContain("flex: '0 1 clamp(31rem, 38vw, 46rem)'");
+    expect(room).toContain("display: readingToolsOpen ? undefined : 'none'");
+    expect(room).toContain('aria-expanded={readingToolsOpen}');
+    expect(room).toContain('<InlineWorkspace anchor={noteAnchor}');
+    expect(room).not.toContain('<CanvasWorkspace');
     expect(room).not.toContain('w-[390px] max-w-[42vw]');
     expect(room.indexOf('data-develop-centre="manuscript"'))
       .toBeLessThan(room.indexOf('data-develop-intelligence'));

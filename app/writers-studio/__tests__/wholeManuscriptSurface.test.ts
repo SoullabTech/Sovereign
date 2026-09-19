@@ -203,7 +203,7 @@ describe('read-only developmental annotations are navigation, not authority', ()
   });
 
   it('selecting an annotation only reports the frozen locus to its caller', () => {
-    const marker = block(SRC, 'function readOnlyBodyWithAnnotations(', 'return nodes;');
+    const marker = block(SRC, 'function readOnlyBodyWithAnnotations(', 'export interface WholeManuscriptSurfaceProps');
     expect(marker).toContain('onClick={() => onSelect?.(annotation)}');
     for (const forbidden of ['requestDevelopmentalReading', 'editSection(', 'captureForUnmount(', 'fetch(']) {
       expect(marker).not.toContain(forbidden);

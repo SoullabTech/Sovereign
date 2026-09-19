@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { readOnlyBodyWithAnnotations } from '../canvas/WholeManuscriptSurface';
 import RevisionDesk from '../insight/RevisionDesk';
 import InlineWorkspace from '../insight/InlineWorkspace';
 import ManuscriptPassage from '../insight/ManuscriptPassage';
@@ -102,4 +103,25 @@ test('margin note can close and reopen while the paragraph and preview stay in p
   expect(container.textContent).toContain('After.');
   expect(container.querySelector('button')?.getAttribute('aria-label')).toBe('Open note: Voice and rhythm');
   draw(true); expect(container.querySelector('aside')?.hidden).toBe(false);
+});
+
+test('overlapping manuscript notes preserve every code point and open their own observation', () => {
+  const body='A 🌿 living page.';
+  const first={key:'voice',label:'Voice',sectionId:'s1',range:{start:2,end:10}};
+  const second={key:'flow',label:'Flow',sectionId:'s1',range:{start:4,end:14}};
+  const select=jest.fn();
+  act(()=>root.render(React.createElement('div',null,readOnlyBodyWithAnnotations(body,[first,second],select))));
+  const prose=container.cloneNode(true) as HTMLElement;
+  prose.querySelectorAll('.ws-development-margin').forEach(n=>n.remove());
+  expect(prose.textContent).toBe(body);
+  expect(container.querySelectorAll('mark').length).toBeGreaterThan(1);
+  act(()=>container.querySelector<HTMLButtonElement>('[data-development-evidence-link="flow"]')!.click());
+  expect(select).toHaveBeenLastCalledWith(second);
+});
+test('invalid annotation offsets never manufacture highlights', () => {
+  act(()=>root.render(React.createElement('div',null,readOnlyBodyWithAnnotations('My words.',[
+    {key:'bad',label:'Bad',sectionId:'s1',range:{start:0,end:100}}
+  ]))));
+  expect(container.textContent).toBe('My words.');
+  expect(container.querySelector('mark')).toBeNull();
 });

@@ -5,10 +5,10 @@ import type { ReactNode } from 'react';
 /** Character offsets here use code points, matching the manuscript selection.
  * The editorial controls are inserted after the containing paragraph, never
  * inside an editable text node or in the middle of a sentence. */
-export default function ManuscriptPassage({ body, range, proposal, children, annotation }: {
+export default function ManuscriptPassage({ body, range, proposal, children, annotation, highlight = true }: {
   body: string; range: { start: number; end: number } | null;
   proposal?: { original: string; wording: string; changes: boolean } | null;
-  children: ReactNode;
+  children: ReactNode; highlight?: boolean;
   annotation?: { label: string; open: boolean; onToggle: () => void; disabled?: boolean; number?: number };
 }) {
   const points = Array.from(body);
@@ -23,7 +23,7 @@ export default function ManuscriptPassage({ body, range, proposal, children, ann
   const shown = valid && proposal?.original === original ? proposal : null;
   const diff = shown?.changes ? comparisonSpan(original, shown.wording) : null;
   return <div className="ws-manuscript-passage">
-    <div className="ws-manuscript-context">{before}<span className="ws-marked-passage" data-preview={Boolean(shown)} data-editorial-locus>
+    <div className="ws-manuscript-context">{before}<span className={highlight ? "ws-marked-passage" : "ws-section-note-anchor"} data-preview={Boolean(shown)} data-editorial-locus>
       {annotation ? <button type="button" className="ws-locus-marker ws-locus-toggle"
         aria-label={(annotation.open ? 'Close note: ' : 'Open note: ') + annotation.label}
         aria-expanded={annotation.open} disabled={annotation.disabled} onClick={annotation.onToggle}>

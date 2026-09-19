@@ -192,3 +192,9 @@
 .ws-insight .wsi-section-disclosure::after { content:'Expand'; }
 .ws-insight details[open] > .wsi-section-heading .wsi-section-disclosure::after { content:'Collapse'; }
 .ws-insight .wsi-passage-grid .wsi-passage { scroll-margin-top:24px; }
+
+.ws-development-margin { position:absolute; right:calc(100% + 12px); top:0; display:flex; gap:3px; }
+.ws-development-margin button { border:1px solid var(--ws-rule); border-radius:50%; background:var(--ws-ground-raised); color:var(--ws-ink-primary); width:26px; height:26px; font:14px/24px system-ui; padding:0; cursor:pointer; }
+.ws-development-margin button:focus-visible { outline:2px solid var(--ws-gold-text); outline-offset:3px; }
+.ws-development-highlight { color:inherit; background:color-mix(in srgb,#869b78 23%,transparent); box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.ws-section-note-anchor { position:relative; }

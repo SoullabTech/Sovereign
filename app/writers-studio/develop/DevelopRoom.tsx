@@ -62,7 +62,9 @@ import {
 import { beginDraft } from '../../press/manuscript/workingDraftClient';
 import ObservationDialogue from './ObservationDialogue';
 import GoldLine from '../insight/GoldLine';
-import CanvasWorkspace from '../insight/CanvasWorkspace';
+import InlineWorkspace from '../insight/InlineWorkspace';
+import MaiaListen from '../insight/MaiaListen';
+import { insightWriteHref } from '@/lib/writersStudio/insightCanvas';
 import InsightReadings from '../insight/InsightReadings';
 import { dialogueSurfaceKey } from '@/lib/writersStudio/observationDialogueResume';
 import {
@@ -239,6 +241,8 @@ export default function DevelopRoom({
 }) {
   const [canvasObservation, setCanvasObservation] = useState<{ readingId: string; key: string } | null>(null);
   const [insightOpen, setInsightOpen] = useState(false);
+  const [readingToolsOpen, setReadingToolsOpen] = useState(false);
+  const [noteAnchor, setNoteAnchor] = useState<HTMLDivElement | null>(null);
   const [title, setTitle] = useState<string | null | undefined>(undefined);
   const [listPhase, setListPhase] = useState<ListPhase>('loading');
   const [summaries, setSummaries] = useState<ReadingSummary[]>([]);
@@ -615,6 +619,19 @@ export default function DevelopRoom({
     await loadPrep();
   };
 
+
+  const noteObservation = canvasObservation && canvasObservation.readingId === view?.id
+    ? view?.observations.find(o => o.key === canvasObservation.key) : undefined;
+  const noteEvidence = noteObservation ? passageEvidenceByObservation.get(noteObservation.key) : undefined;
+  const noteSectionId = noteObservation ? evidenceSectionByObservation.get(noteObservation.key) : undefined;
+  const openManuscriptNote = (key: string) => {
+    if (!view) return;
+    const sectionId = evidenceSectionByObservation.get(key);
+    setCanvasObservation({ readingId: view.id, key });
+    setInsightOpen(true);
+    if (sectionId) { showPlace(sectionId, true); setReadingToolsOpen(false); }
+    else setReadingToolsOpen(true);
+  };
   // ---- Signed out ---------------------------------------------------------
   if (listPhase === 'unauthorized') {
     return (
@@ -683,6 +700,8 @@ export default function DevelopRoom({
               className="pb-4 mb-4 border-b text-[11.5px] opacity-55"
               style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}
             >
+              <button type="button" className="float-right rounded border px-3 py-1 text-[12px]" aria-expanded={readingToolsOpen}
+                onClick={() => setReadingToolsOpen(value => !value)}>{readingToolsOpen ? 'Return to full page' : 'Read with MAIA'}</button>
               <span className="opacity-70">Manuscript</span>
               {currentChapter ? <span> &nbsp;›&nbsp; {currentChapter.root.heading?.trim() || 'Current chapter'}</span> : null}
               {currentSection && currentSection.id !== currentChapter?.root.draftSectionId
@@ -697,7 +716,9 @@ export default function DevelopRoom({
               onPlaceChange={(sectionId) => showPlace(sectionId, false)}
               evidenceHighlight={activeEvidence ? { sectionId: activeEvidence.sectionId, range: activeEvidence.range } : null}
               evidenceAnnotations={passageAnnotations}
+              manuscriptNote={insightOpen && noteSectionId ? { sectionId: noteSectionId, range: noteEvidence?.range ?? null, onAnchor: setNoteAnchor } : null}
               onEvidenceAnnotationSelect={(annotation) => {
+                openManuscriptNote(annotation.key);
                 setActiveEvidence({
                   observationKey: annotation.key,
                   sectionId: annotation.sectionId,
@@ -715,8 +736,9 @@ export default function DevelopRoom({
         className="min-w-0 shrink-0 overflow-y-auto px-6 py-5"
         aria-label="Developmental reading"
         data-develop-intelligence
-        style={{ flex: '0 1 clamp(31rem, 38vw, 46rem)' }}
+        style={{ display: readingToolsOpen ? undefined : 'none', flex: '0 1 clamp(24rem, 32vw, 38rem)' }}
       >
+        {insightOpen && noteObservation && !noteSectionId && <div ref={setNoteAnchor} data-develop-structural-note-anchor />}
         <GoldLine manuscriptId={manuscriptId} />
         <div className="pb-4 mb-4 border-b" style={{ borderColor: PRESS.ruleSoft }}>
           <p className="text-[10.5px] tracking-[0.18em] uppercase opacity-45">Current reading</p>
@@ -1061,7 +1083,7 @@ export default function DevelopRoom({
               evidenceSectionByObservation={evidenceSectionByObservation}
               evidenceSectionIdsByObservation={evidenceSectionIdsByObservation}
               passageEvidenceByObservation={passageEvidenceByObservation}
-              onOpenCanvas={(key) => { setCanvasObservation({ readingId: view.id, key }); setInsightOpen(true); }}
+              onOpenCanvas={openManuscriptNote}
               activeEvidenceKey={activeEvidence?.observationKey ?? null}
               currentSectionId={placeId}
               currentChapterLabel={currentChapter?.root.heading?.trim() || 'Current chapter'}
@@ -1079,10 +1101,23 @@ export default function DevelopRoom({
         </div>
       </aside>
     </div>
-      <CanvasWorkspace open={insightOpen} title="Explore this observation" onClose={() => setInsightOpen(false)}>
-        {canvasObservation && <InsightReadings key={manuscriptId}
-          manuscriptId={manuscriptId} readingId={canvasObservation.readingId} observationKey={canvasObservation.key} />}
-      </CanvasWorkspace>
+      <InlineWorkspace anchor={noteAnchor} open={insightOpen && Boolean(noteObservation)}>
+        {noteObservation && canvasObservation && <section aria-label="MAIA’s note in the manuscript">
+          <header className="wsi-inline-header"><strong>{noteObservation.phenomenonLabel}</strong>
+            <button onClick={() => { setInsightOpen(false); setActiveEvidence(null); window.dispatchEvent(new Event('ws-stop-maia-reading')); }}>Close note</button></header>
+          <div className="wsi-page-voice"><strong>MAIA</strong><MaiaListen text={noteObservation.observation} active={insightOpen}/></div>
+          <p className="wsi-observation">{noteObservation.observation}</p>
+          {noteObservation.state !== 'current' && <p role="status">{noteObservation.stateSentence}</p>}
+          <ObservationDialogue key={canvasObservation.readingId + ':' + canvasObservation.key}
+            manuscriptId={manuscriptId} readingId={canvasObservation.readingId} observationKey={canvasObservation.key}
+            about={noteObservation.observation} superseded={noteObservation.state === 'superseded'}
+            onClose={() => { setInsightOpen(false); setActiveEvidence(null); }}/>
+          {noteSectionId && <a className="wsi-link" href={insightWriteHref(manuscriptId, canvasObservation.readingId, canvasObservation.key, noteSectionId)}>Explore wording here in Write</a>}
+          <details><summary>Related passages, evidence, and context</summary>
+            <InsightReadings key={manuscriptId} manuscriptId={manuscriptId} readingId={canvasObservation.readingId} observationKey={canvasObservation.key}/>
+          </details>
+        </section>}
+      </InlineWorkspace>
     </WriterStudioShell>
   );
 }
