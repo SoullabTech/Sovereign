@@ -194,6 +194,23 @@ describe('the structural guarantees the view may not quietly drop', () => {
   });
 });
 
+describe('read-only developmental annotations are navigation, not authority', () => {
+  it('renders exact evidence links only in the read-only branch', () => {
+    expect(SRC).toContain('readOnlyAnnotations?: readonly ReadOnlyPassageAnnotation[];');
+    expect(SRC).toContain('data-development-evidence-link={annotation.key}');
+    expect(SRC.lastIndexOf('readOnlyBodyWithAnnotations('))
+      .toBeGreaterThan(SRC.indexOf('section.editable ? ('));
+  });
+
+  it('selecting an annotation only reports the frozen locus to its caller', () => {
+    const marker = block(SRC, 'function readOnlyBodyWithAnnotations(', 'export interface WholeManuscriptSurfaceProps');
+    expect(marker).toContain('onClick={() => onSelect?.(annotation)}');
+    for (const forbidden of ['requestDevelopmentalReading', 'editSection(', 'captureForUnmount(', 'fetch(']) {
+      expect(marker).not.toContain(forbidden);
+    }
+  });
+});
+
 describe('the page passes the two as separate props', () => {
   const PAGE = strip(readFileSync(join(__dirname, '..', 'canvas', 'CanvasClient.tsx'), 'utf8'));
 

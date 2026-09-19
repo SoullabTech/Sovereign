@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { readOnlyBodyWithAnnotations } from '../canvas/WholeManuscriptSurface';
 import RevisionDesk from '../insight/RevisionDesk';
 import InlineWorkspace from '../insight/InlineWorkspace';
 import ManuscriptPassage from '../insight/ManuscriptPassage';
@@ -20,6 +21,25 @@ test('moving and hiding the conversation keeps the same unsaved draft DOM', () =
   draw(second, true); expect(second.querySelector('textarea')).toBe(draft); expect(draft.value).toBe('Still my unsaved words');
   draw(null, false); draw(first, true); expect(first.querySelector('textarea')).toBe(draft);
   act(() => root.unmount()); root = createRoot(container); first.remove(); second.remove();
+});
+test('opening a manuscript conversation reveals it once after its anchor arrives', () => {
+  jest.useFakeTimers();
+  const scroll = jest.fn();
+  const prior = HTMLElement.prototype.scrollIntoView;
+  HTMLElement.prototype.scrollIntoView = scroll;
+  const anchor = document.createElement('div'); document.body.append(anchor);
+  const draw = (target: HTMLElement | null, text: string, open = true) => act(() => root.render(
+    React.createElement(InlineWorkspace, { anchor: target, open, revealKey: 'reading:note', children: text })
+  ));
+  try {
+    draw(null, 'First'); act(() => jest.runOnlyPendingTimers()); expect(scroll).not.toHaveBeenCalled();
+    draw(anchor, 'First'); act(() => jest.runOnlyPendingTimers()); expect(scroll).toHaveBeenCalledTimes(1);
+    draw(anchor, 'MAIA replies'); act(() => jest.runOnlyPendingTimers()); expect(scroll).toHaveBeenCalledTimes(1);
+    draw(anchor, 'MAIA replies', false); draw(anchor, 'MAIA replies');
+    act(() => jest.runOnlyPendingTimers()); expect(scroll).toHaveBeenCalledTimes(2);
+  } finally {
+    HTMLElement.prototype.scrollIntoView = prior; anchor.remove(); jest.useRealTimers();
+  }
 });
 test('proposal stays at its exact unicode passage and conversation follows its paragraph', () => {
   const body = 'Before 🌿.\n\nChosen words. Rest of paragraph.\n\nFollowing paragraph.';
@@ -83,4 +103,58 @@ test('page conversation previews before apply and preserves a draft through disc
   expect(onSend.mock.calls[0][0]).toContain('My unsaved working revision (for discussion, do not apply):\nQuieter words.');
   expect(container.querySelector('.wsi-revision')).toBe(draft);
   expect(onApply).not.toHaveBeenCalled();
+});
+test('margin note can close and reopen while the paragraph and preview stay in place', () => {
+  const toggled=jest.fn();
+  const draw=(open:boolean)=>act(()=>root.render(React.createElement(ManuscriptPassage,{
+    body:'Before.\n\nOriginal words.\n\nAfter.',range:{start:9,end:24},
+    proposal:{original:'Original words.',wording:'My new words.',changes:false},
+    annotation:{label:'Voice and rhythm',open,onToggle:toggled},
+    children:React.createElement('aside',{hidden:!open},'Conversation')
+  })));
+  draw(true);
+  const marker=container.querySelector('button')!;
+  expect(marker.getAttribute('aria-expanded')).toBe('true');
+  act(()=>marker.click()); expect(toggled).toHaveBeenCalledTimes(1);
+  draw(false);
+  expect(container.querySelector('aside')?.hidden).toBe(true);
+  expect(container.textContent).toContain('My new words.');
+  expect(container.textContent).toContain('After.');
+  expect(container.querySelector('button')?.getAttribute('aria-label')).toBe('Open note: Voice and rhythm');
+  draw(true); expect(container.querySelector('aside')?.hidden).toBe(false);
+});
+
+test('overlapping manuscript notes preserve every code point and open their own observation', () => {
+  const body='A 🌿 living page.';
+  const first={key:'voice',label:'Voice',sectionId:'s1',range:{start:2,end:10}};
+  const second={key:'flow',label:'Flow',sectionId:'s1',range:{start:4,end:14}};
+  const select=jest.fn();
+  act(()=>root.render(React.createElement('div',null,readOnlyBodyWithAnnotations(body,[first,second],select))));
+  const prose=container.cloneNode(true) as HTMLElement;
+  prose.querySelectorAll('.ws-development-margin').forEach(n=>n.remove());
+  expect(prose.textContent).toBe(body);
+  expect(container.querySelectorAll('mark').length).toBeGreaterThan(1);
+  act(()=>container.querySelector<HTMLButtonElement>('[data-development-evidence-link="flow"]')!.click());
+  expect(select).toHaveBeenLastCalledWith(second);
+});
+test('invalid annotation offsets never manufacture highlights', () => {
+  act(()=>root.render(React.createElement('div',null,readOnlyBodyWithAnnotations('My words.',[
+    {key:'bad',label:'Bad',sectionId:'s1',range:{start:0,end:100}}
+  ]))));
+  expect(container.textContent).toBe('My words.');
+  expect(container.querySelector('mark')).toBeNull();
+});
+
+
+test('a section conversation does not highlight unselected prose, but its preview is marked', () => {
+  const draw=(proposal: any)=>act(()=>root.render(React.createElement(ManuscriptPassage, {
+    body:'A quotation in its own context.', range:null, highlight:false, proposal,
+    children:React.createElement('aside',null,'Discuss this section')
+  })));
+  draw(null);
+  expect(container.querySelector('.ws-marked-passage')).toBeNull();
+  expect(container.textContent).toContain('A quotation in its own context.');
+  draw({original:'A quotation in its own context.',wording:'A chosen revision.',changes:true});
+  expect(container.querySelector('.ws-marked-passage ins')).not.toBeNull();
+  expect(container.querySelector('[data-preview="true"]')).not.toBeNull();
 });

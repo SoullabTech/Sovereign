@@ -34,7 +34,7 @@ reference_surfaces:
   - docs/design/contracts/writer-worktable-section-native.md
   - docs/design/contracts/studio-home.md
 shared_with_house: Soullab atmosphere tokens · Press serif for the writer’s work · restrained gold as state and action · human-language gestures · the Writer’s Studio mode bar
-distinct_to_room: three permanent regions — the Work’s own shape, the authored material, and MAIA — organized around one canonical Focus. The current Elemental Alchemy slice renders book language because this Work is a book; the shell may not make book structure the ontology of every creative form. Review and local work are two grains of one relationship, never separate conversation products. The visible authored place and MAIA’s subject must be the same place.
+distinct_to_room: the continuous manuscript is primary, with its outline beside it and MAIA reading tools opened on request. Editorial conversations attach to the authored passage, organized around one canonical Focus. The current Elemental Alchemy slice renders book language because this Work is a book; the shell may not make book structure the ontology of every creative form. Review and local work are two grains of one relationship, never separate conversation products. The visible authored place and MAIA’s subject must be the same place.
 screenshot_desktop: docs/design/contracts/screenshots/writers-studio-rebuild-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/writers-studio-rebuild-mobile.png
 experience_verification: >-
@@ -128,3 +128,54 @@ Evaluate support through the writer clarifying intention, comparing alternatives
 ## Related-passage comparison repair — 2026-09-17
 
 Comparison cards keep verified excerpts together with the writer’s intention and reader experience. Full sections are explicitly expandable. Unverified references have their own evidence explanation; a current reading label alone never authorizes markers or revision. Exact stored heading prefixes are preserved for verification and removed from evidence coordinates only after verification. Desktop comparison and stacked mobile behavior are covered by the controlled Chromium/WebKit witness. See docs/programme/WS-INSIGHT-COMPARISON-REPAIR-01_2026-09-17.md; production acceptance remains pending.
+
+
+## September 19 manuscript-first release candidate
+
+The founder requested the approved full-canvas hierarchy, including quiet notes,
+contextual revisions, and optional reading tools. Write now arrives with the
+manuscript and outline; Read with MAIA opens the review tools. Section findings
+are collapsed disclosures, and an unselected section is not entirely highlighted.
+Exact proposed changes remain marked when previewed. Clean manuscript hides
+editorial controls; Pure Canvas retains distraction-free writing.
+
+Verification standing: 73 suites / 1,079 tests pass, including an unselected-section
+highlight regression. Historical desktop/mobile screenshots above establish only
+the September 16 experience, not fidelity of this new layout. The founder supplied
+September 19 screenshots of the actual Elemental Alchemy review copy; those exposed
+the chip rows and whole-section highlighting corrected here. A new rendered desktop
+and mobile acceptance pass is still outstanding. The local speech probe reached the
+configured service but returned HTTP 429 with no credits remaining. No successful
+audio playback or current authenticated apply/reopen/undo witness is claimed.
+Deployment remains pending those checks and current-head release gates.
+
+### Develop task discoverability correction
+
+The founder reported that Develop appeared to offer nothing to do. Its existing
+commissioning controls had become hidden behind the reading-tools toggle. The
+manuscript now has explicit scope and seven-lens selectors and an Explore with
+MAIA action. These call the existing reading operation, preserving readiness,
+size limits and explicit invocation. The Studio header also exposes Developmental
+tools outside the manuscript scroll, including preparation and reading history.
+This does not add passage-only or discontiguous-range commissioning; supported
+scopes remain whole work, current chapter and a contiguous custom range.
+
+
+### September 19 — observation to editing canvas
+
+Founder review found that Work on canvas only moved to a section and hid the
+reading tools, while discussion still opened in the narrow sidebar. Textual
+observations now enter the existing editing canvas with manuscript, section,
+reading and observation identity. The canvas verifies the current evidence
+before selecting its exact passage, displays the observation beneath it, and
+uses the existing discussion, preview, apply and undo machinery. Unverified
+evidence is not promoted to an exact selection. Related passages remain
+available on expansion. Structural observations without a textual target keep
+their read-only discussion. The existing authorization and adoption endpoints
+are unchanged.
+
+A one-time reveal brings the mounted conversation into view; later replies do
+not steal scroll position. This behavior has a DOM test, not a visual witness.
+Actual authenticated MAIA response, apply/reopen/undo and founder visual review
+remain release requirements. The isolated review database was missing the
+canonical ask authorization migration; it has been applied to that copy only.

@@ -128,7 +128,7 @@ export function InboxTriage({ isOpen, onClose, onComplete, initialCapture = '', 
     setPhase('done');
 
     setTimeout(() => {
-      onComplete?.({ ...result, stewardship });
+      onComplete?.({ ...result, stewardship: stewardship ?? undefined });
       onClose();
     }, 1500);
   }, [captureText, selectedType, nextAction, onComplete, onClose]);
