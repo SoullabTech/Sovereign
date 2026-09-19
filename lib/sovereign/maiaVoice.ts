@@ -103,6 +103,9 @@ export interface MaiaContext {
   knowledgeGateAddendum?: string;
   // 📚 GOVERNED KNOWLEDGE: exact-source retrieved published material
   governedKnowledgeAddendum?: string;
+  // 🎓 T8 TEACHING INTELLIGENCE: server-adjudicated, current-turn-only teaching directive.
+  // Never a learner profile and never a source/retrieval grant.
+  teachingIntelligenceAddendum?: string;
   // 🕸️ MEMBER WEB: Patterns + session summaries + journals
   memberWebAddendum?: string;
   // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
@@ -455,6 +458,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'studioAddendum',                  log: () => `🏢 [Studio] Practitioner context injected` },
   { field: 'knowledgeGateAddendum',           log: () => `🚪 [Knowledge Gate] Source well modulation injected` },
   { field: 'governedKnowledgeAddendum',       log: v => `📚 [Governed Knowledge] Exact-source retrieval injected (${v.length} chars)` },
+  { field: 'teachingIntelligenceAddendum',    log: v => `🎓 [Teaching Intelligence] T8 current-turn authority injected (${v.length} chars)` },
   { field: 'memberWebAddendum',               log: () => `🕸️ [Member Web] Patterns+summaries+journals injected` },
   { field: 'consultationAddendum',            log: () => `🏛️ [Consultation] Council insights injected` },
   { field: 'fieldWisdomAddendum',             log: () => `🌀 [Field Wisdom] Collective intelligence injected` },
