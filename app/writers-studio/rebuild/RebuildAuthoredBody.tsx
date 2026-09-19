@@ -12,6 +12,7 @@ export interface RebuildAuthoredBodyProps {
   section: RebuildSection;
   body: string;
   held: HeldPassage | null;
+  highlights?: readonly HeldPassage[];
   onEdit: (body: string) => void;
   onEditingBegan: () => void;
   onFocusPlace: () => void;
@@ -22,7 +23,7 @@ export interface RebuildAuthoredBodyProps {
 const cp = (text: string, unitOffset: number) => [...text.slice(0, unitOffset)].length;
 
 export default function RebuildAuthoredBody({
-  section, body, held, onEdit, onEditingBegan, onFocusPlace,
+  section, body, held, highlights = [], onEdit, onEditingBegan, onFocusPlace,
   onCaptureBeforeBlur, onSelectPassage,
 }: RebuildAuthoredBodyProps) {
   const [editing, setEditing] = useState(false);
@@ -112,7 +113,20 @@ export default function RebuildAuthoredBody({
           }}>{points.slice(held.start, held.end).join('')}</mark>
           {points.slice(held.end).join('')}
         </>
-      ) : body}
+      ) : highlightedBody(body, highlights)}
     </div>
   );
+}
+
+/** Preserve every authored code point, including overlapping evidence and verse. */
+export function highlightedBody(body: string, ranges: readonly HeldPassage[]) {
+  const points = Array.from(body);
+  const valid = ranges.filter(r => Number.isInteger(r.start) && Number.isInteger(r.end) && r.start >= 0 && r.end > r.start && r.end <= points.length);
+  const boundaries = [...new Set([0, points.length, ...valid.flatMap(r => [r.start, r.end])])].sort((a,b) => a-b);
+  return boundaries.slice(0,-1).map((start, index) => {
+    const end = boundaries[index + 1];
+    const text = points.slice(start, end).join('');
+    return valid.some(r => r.start <= start && r.end >= end)
+      ? <mark key={start} className="ws-development-highlight">{text}</mark> : text;
+  });
 }

@@ -5,6 +5,7 @@ import { readOnlyBodyWithAnnotations } from '../canvas/WholeManuscriptSurface';
 import RevisionDesk from '../insight/RevisionDesk';
 import InlineWorkspace from '../insight/InlineWorkspace';
 import ManuscriptPassage from '../insight/ManuscriptPassage';
+import { highlightedBody } from '../rebuild/RebuildAuthoredBody';
 import MaiaListen, { speechChunks } from '../insight/MaiaListen';
 import { apiFetch } from '@/lib/http/apiBase';
 jest.mock('../insight/insight.css', () => ({}));
@@ -45,8 +46,8 @@ test('proposal stays at its exact unicode passage and conversation follows its p
   const body = 'Before 🌿.\n\nChosen words. Rest of paragraph.\n\nFollowing paragraph.';
   const start = Array.from('Before 🌿.\n\n').length;
   act(() => root.render(React.createElement(ManuscriptPassage, { body, range: { start, end: start + 13 }, proposal: { original: 'Chosen words.', wording: 'New words.', changes: false }, children: React.createElement('aside', null, 'Conversation') })));
-  expect(container.querySelector('[data-editorial-locus]')?.textContent).toBe('01New words.');
-  expect(container.querySelector('.ws-manuscript-context')?.textContent).toContain('Rest of paragraph.');
+  expect(container.querySelector('[data-editorial-locus]')?.textContent).toBe('New words.');
+  expect(container.querySelector('.ws-annotated-paragraph')?.textContent).toContain('Rest of paragraph.');
   expect(container.querySelector('aside')?.nextElementSibling?.textContent).toContain('Following paragraph.');
 });
 test('stale proposal is not projected over changed manuscript words', () => {
@@ -92,8 +93,8 @@ test('page conversation previews before apply and preserves a draft through disc
   const button=(text:string) => Array.from(container.querySelectorAll('button')).find(b=>b.textContent===text)!;
   expect(button('Use this revision').disabled).toBe(true);
   expect(container.querySelector('.wsi-page-tools')?.hasAttribute('hidden')).toBe(true);
-  act(()=>button('Preview in context').click());
-  expect(onPreview).toHaveBeenLastCalledWith({original:'Original words.',wording:'Quieter words.',changes:false});
+  act(()=>button('Read in context').click());
+  expect(onPreview).toHaveBeenLastCalledWith({original:'Original words.',wording:'Quieter words.',changes:true});
   expect(button('Use this revision').disabled).toBe(false);
   act(()=>button('Adjust wording').click());
   const draft=container.querySelector('.wsi-revision') as HTMLTextAreaElement;
@@ -157,4 +158,29 @@ test('a section conversation does not highlight unselected prose, but its previe
   draw({original:'A quotation in its own context.',wording:'A chosen revision.',changes:true});
   expect(container.querySelector('.ws-marked-passage ins')).not.toBeNull();
   expect(container.querySelector('[data-preview="true"]')).not.toBeNull();
+});
+
+test('the note marker belongs to the paragraph margin, never inside a selected word', () => {
+  const body='Before.\n\nA soulful sentence.\n\nAfter.';
+  act(()=>root.render(React.createElement(ManuscriptPassage, {body,range:{start:14,end:26},children:React.createElement('aside',null,'Note')})));
+  const marker=container.querySelector('.ws-locus-marker')!;
+  expect(marker.parentElement?.classList.contains('ws-annotated-paragraph')).toBe(true);
+  expect(container.querySelector('[data-editorial-locus]')?.contains(marker)).toBe(false);
+  const prose=container.cloneNode(true) as HTMLElement;
+  prose.querySelectorAll('.ws-locus-marker, aside').forEach(node=>node.remove());
+  expect(prose.textContent).toBe(body);
+});
+test('overlapping page highlights preserve poetry, unicode, and unmarked surrounding words', () => {
+  const body='Water 🌊\nreturns\n\nto the shore.';
+  act(()=>root.render(React.createElement('div',null,highlightedBody(body,[{start:2,end:10},{start:5,end:16},{start:-2,end:5}]))));
+  expect(container.textContent).toBe(body);
+  expect(container.querySelectorAll('button')).toHaveLength(0);
+  expect(container.querySelectorAll('mark').length).toBeGreaterThan(0);
+});
+test('import markers are distinguished without deleting source text or classifying inline filename mentions', () => {
+  const body='A sentence about ch014.xhtml in prose.\n\nch013.xhtml';
+  act(()=>root.render(React.createElement(ManuscriptPassage,{body,range:null,children:null})));
+  expect(container.querySelectorAll('.ws-import-marker')).toHaveLength(1);
+  expect(container.querySelector('.ws-import-marker')?.textContent).toBe('ch013.xhtml');
+  expect(container.querySelector('[data-editorial-locus]')?.textContent).toBe(body);
 });

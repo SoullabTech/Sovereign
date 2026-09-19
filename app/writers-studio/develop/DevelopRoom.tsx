@@ -18,8 +18,8 @@
  * passage ranges too: exact current evidence may be illuminated in context, while
  * superseded ranges remain provenance and are never applied to changed prose.
  *
- * DEVELOP DOES NOT EDIT. The shared WholeManuscriptSurface receives every
- * section with editable=false. Write remains the authority for changing prose.
+ * Developmental reading itself never edits. The embedded shared editing canvas
+ * uses the same explicit preview/application/undo authority as Write.
  */
 
 import { OUTCOME_SENTENCE, causeLine } from '@/lib/writersStudio/developRefusalCopy';
@@ -31,11 +31,12 @@ import { PRESS, SERIF } from '../pressTheme';
 import { CANVAS_HREF } from '../studioMap';
 import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { INK, RULE, SPACE } from '../studioTheme';
-import { canvasForManuscript } from '../canvasIdentity';
+import { canvasForManuscript, canvasWithoutEditorialThread } from '../canvasIdentity';
 import { locationForSection, replacePlaceAddress } from '@/lib/writersStudio/placeInWork';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import type { CodePointRange } from '@/lib/manuscript/development/evidenceRef';
-import { DevelopManuscriptRail, DevelopManuscriptSurface } from './DevelopManuscript';
+import { DevelopManuscriptRail } from './DevelopManuscript';
+import RebuildStudioClient from '../rebuild/RebuildStudioClient';
 import type { WriteStateSection } from '@/lib/writersStudio/writeStateClient';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
@@ -239,7 +240,7 @@ export default function DevelopRoom({
   requestedReadingId: string | null;
   requestedSectionId: string | null;
 }) {
-  const [canvasObservation, setCanvasObservation] = useState<{ readingId: string; key: string } | null>(null);
+  const [canvasObservation, setCanvasObservation] = useState<{ readingId: string; key: string; sectionId?: string } | null>(null);
   const [insightOpen, setInsightOpen] = useState(false);
   const [readingToolsOpen, setReadingToolsOpen] = useState(false);
   const [noteAnchor, setNoteAnchor] = useState<HTMLDivElement | null>(null);
@@ -570,6 +571,7 @@ export default function DevelopRoom({
     const outcome = await requestDevelopmentalReading(manuscriptId, lens, scope);
     if (!outcome.ok) { setCommission({ phase: 'refused', outcome }); return; }
     setCommission({ phase: 'idle' });
+    setReadingToolsOpen(false);
     await loadList(outcome.readingId);
   };
 
@@ -624,16 +626,14 @@ export default function DevelopRoom({
     ? view?.observations.find(o => o.key === canvasObservation.key) : undefined;
   const noteEvidence = noteObservation ? passageEvidenceByObservation.get(noteObservation.key) : undefined;
   const noteSectionId = noteObservation ? evidenceSectionByObservation.get(noteObservation.key) : undefined;
-  const openManuscriptNote = (key: string) => {
+  const openManuscriptNote = (key: string, preferredSectionId?: string) => {
     if (!view) return;
-    const sectionId = evidenceSectionByObservation.get(key);
-    if (sectionId) {
-      // The shared editing canvas owns preview/apply/undo. Enter it directly
-      // with the observation identity; never strand the writer in read-only talk.
-      window.location.assign(insightWriteHref(manuscriptId, view.id, key, sectionId));
-      return;
+    const sectionId = preferredSectionId && evidenceSectionIdsByObservation.get(key)?.includes(preferredSectionId)
+      ? preferredSectionId : evidenceSectionByObservation.get(key);
+    if (canvasObservation?.readingId !== view.id || canvasObservation.key !== key || canvasObservation.sectionId !== sectionId) {
+      replacePlaceAddress(canvasWithoutEditorialThread(window.location.pathname, window.location.search));
     }
-    setCanvasObservation({ readingId: view.id, key });
+    setCanvasObservation({ readingId: view.id, key, sectionId });
     setInsightOpen(true);
     if (sectionId) { showPlace(sectionId, true); setReadingToolsOpen(false); }
     else setReadingToolsOpen(true);
@@ -677,7 +677,7 @@ export default function DevelopRoom({
         <DevelopManuscriptRail
           sections={sections ?? []}
           currentSectionId={placeId}
-          onSelect={(sectionId) => showPlace(sectionId, true)}
+          onSelect={(sectionId) => { setCanvasObservation(null); showPlace(sectionId, true); }}
         />
       }
     >
@@ -686,8 +686,8 @@ export default function DevelopRoom({
       style={{ fontFamily: SERIF }}
       data-develop-workbench
     >
-      <main
-        className="flex-1 min-w-0 min-h-0 px-6 md:px-10 py-6"
+      <section aria-label="Manuscript workspace"
+        className="flex-1 min-w-0 min-h-0"
         data-develop-centre="manuscript"
         style={{
           borderRight: `1px solid ${PRESS.ruleSoft}`,
@@ -708,7 +708,7 @@ export default function DevelopRoom({
           <>
             <div
               data-develop-locus
-              className="pb-4 mb-4 border-b text-[11.5px] opacity-55"
+              className="hidden"
               style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}
             >
               <button type="button" className="float-right rounded border px-3 py-1 text-[12px]" aria-expanded={readingToolsOpen}
@@ -718,7 +718,7 @@ export default function DevelopRoom({
               {currentSection && currentSection.id !== currentChapter?.root.draftSectionId
                 ? <span> &nbsp;›&nbsp; {currentSection.heading?.trim() || 'Untitled section'}</span> : null}
             </div>
-            <div data-develop-task-bar className="pb-4 mb-4 border-b" style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}>
+            <div data-develop-task-bar className="px-6 py-3 border-b" style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}>
               <p className="text-[14px] mb-3">Explore how the parts of your work belong together.</p>
               <div className="flex flex-wrap items-end gap-3">
                 <label className="text-[12px]">Where should MAIA read?
@@ -750,31 +750,38 @@ export default function DevelopRoom({
                   : prep.phase === 'ready' && prep.state.kind === 'ready' ? 'Choose a focus, then ask for a reading. Your manuscript stays unchanged.'
                   : 'Open Developmental tools to see reading readiness and preparation.'}
               </p>
+              {view && commission.phase !== 'reading' && <div className="flex items-center gap-3 mt-2 text-[12px]" role="status">
+                <span>{view.observations.length} notes from this reading</span>
+                {view.observations.some(o => evidenceSectionByObservation.has(o.key)) && <button type="button"
+                  className="underline underline-offset-4" onClick={() => {
+                    const noted = view.observations.find(o => evidenceSectionIdsByObservation.get(o.key)?.includes(placeId ?? ''))
+                      ?? view.observations.find(o => evidenceSectionByObservation.has(o.key));
+                    if (noted) openManuscriptNote(noted.key, placeId ?? undefined);
+                  }}>Open a note on the page</button>}
+              </div>}
             </div>
-            <DevelopManuscriptSurface
-              sections={sections}
-              version={writeVersion}
-              initialOpenAt={placeId}
-              jumpTo={jumpTo}
-              onJumpHandled={() => setJumpTo(null)}
-              onPlaceChange={(sectionId) => showPlace(sectionId, false)}
-              evidenceHighlight={activeEvidence ? { sectionId: activeEvidence.sectionId, range: activeEvidence.range } : null}
-              evidenceAnnotations={passageAnnotations}
-              manuscriptNote={insightOpen && noteSectionId ? { sectionId: noteSectionId, range: noteEvidence?.range ?? null, onAnchor: setNoteAnchor } : null}
-              onEvidenceAnnotationSelect={(annotation) => {
-                openManuscriptNote(annotation.key);
-                setActiveEvidence({
-                  observationKey: annotation.key,
-                  sectionId: annotation.sectionId,
-                  range: annotation.range,
-                });
-                setPresentationScope('passage');
-                showPlace(annotation.sectionId, false);
-              }}
-            />
+            <RebuildStudioClient development={{
+              sectionId: placeId,
+              observation: canvasObservation?.sectionId ? { ...canvasObservation, sectionId: canvasObservation.sectionId,
+                label: noteObservation?.phenomenonLabel ?? 'Editorial note' } : null,
+              notes: view ? view.observations.flatMap(observation =>
+                (evidenceSectionIdsByObservation.get(observation.key) ?? []).map(sectionId => ({
+                  readingId: view.id, key: observation.key, sectionId, label: observation.phenomenonLabel ?? 'Editorial note',
+                  sourceBody: sections.find(s => s.id === sectionId)?.body,
+                  range: (() => {
+                    const exact = passageEvidenceByObservation.get(observation.key);
+                    if (!exact || exact.sectionId !== sectionId) return undefined;
+                    const offset = Array.from(structuredSections?.find(s => s.draftSectionId === sectionId)?.headingPrefix ?? '').length;
+                    return { start: exact.range.start - offset, end: exact.range.end - offset };
+                  })(),
+                }))) : [],
+              onSelect: note => openManuscriptNote(note.key, note.sectionId),
+              onReadingTools: () => setReadingToolsOpen(value => !value),
+              onPlaceChange: sectionId => showPlace(sectionId, false),
+            }} />
           </>
         )}
-      </main>
+      </section>
 
       <aside
         className="min-w-0 shrink-0 overflow-y-auto px-6 py-5"
@@ -1145,7 +1152,7 @@ export default function DevelopRoom({
         </div>
       </aside>
     </div>
-      <InlineWorkspace anchor={noteAnchor} open={insightOpen && Boolean(noteObservation)} revealKey={canvasObservation ? canvasObservation.readingId + ":" + canvasObservation.key : undefined}>
+      <InlineWorkspace anchor={noteAnchor} open={insightOpen && Boolean(noteObservation) && !noteSectionId} revealKey={canvasObservation ? canvasObservation.readingId + ":" + canvasObservation.key : undefined}>
         {noteObservation && canvasObservation && <section aria-label="MAIA’s note in the manuscript">
           <header className="wsi-inline-header"><strong>{noteObservation.phenomenonLabel}</strong>
             <button onClick={() => { setInsightOpen(false); setActiveEvidence(null); window.dispatchEvent(new Event('ws-stop-maia-reading')); }}>Close note</button></header>

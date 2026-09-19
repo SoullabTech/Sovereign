@@ -7,7 +7,7 @@ const page = read('develop/page.tsx');
 const room = read('develop/DevelopRoom.tsx');
 const executableRoom = room.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const manuscript = read('develop/DevelopManuscript.tsx');
-const canvas = read('canvas/CanvasClient.tsx');
+const editor = read('rebuild/RebuildStudioClient.tsx');
 
 describe('D3 · Develop is the manuscript seen developmentally', () => {
   it('consumes the place D1 carries across the mode boundary', () => {
@@ -32,7 +32,7 @@ describe('D3 · Develop is the manuscript seen developmentally', () => {
   it('keeps the full manuscript primary and reading tools available on request', () => {
     expect(room).toContain('data-develop-centre="manuscript"');
     expect(room).toContain('data-develop-intelligence');
-    expect(room).toContain('<DevelopManuscriptSurface');
+    expect(room).toContain('<RebuildStudioClient development=');
     expect(room).toContain("display: readingToolsOpen ? undefined : 'none'");
     expect(room).toContain('aria-expanded={readingToolsOpen}');
     expect(room).toContain('<InlineWorkspace anchor={noteAnchor}');
@@ -42,28 +42,24 @@ describe('D3 · Develop is the manuscript seen developmentally', () => {
       .toBeLessThan(room.indexOf('data-develop-intelligence'));
   });
 
-  it('reuses the same whole-manuscript surface Write already uses', () => {
-    expect(manuscript).toContain('WholeManuscriptSurface');
-    expect(canvas).toContain('<WholeManuscriptSurface');
-    expect(manuscript).not.toContain('<textarea');
-  });
-
-  it('makes every Develop section read-only before it reaches the shared surface', () => {
-    expect(manuscript).toContain('editable: false');
-    expect(manuscript).toContain('edit: () => {}');
-    expect(manuscript).toContain('editSection: () => {}');
-    expect(manuscript).toContain('captureForUnmount: () => false');
+  it('uses the existing writing, preview, application and undo authorities', () => {
+    expect(room).toContain('<RebuildStudioClient development=');
+    expect(editor).toContain('<RebuildWritingBoundary');
+    expect(editor).toContain('adoptBoundEditorialVersion(');
+    expect(editor).toContain('/api/writers-studio/editorial/undo');
+    expect(executableRoom).not.toContain('adoptBoundEditorialVersion(');
   });
 
   it('allows ordinary continuous scrolling to move developmental scope', () => {
     expect(manuscript).toContain('onPlaceChange={onPlaceChange}');
-    expect(room).toContain('onPlaceChange={(sectionId) => showPlace(sectionId, false)}');
+    expect(room).toContain('onPlaceChange: sectionId => showPlace(sectionId, false)');
+    expect(editor).toContain('development.onPlaceChange(visible[0])');
     expect(room).toContain('window.history.replaceState');
     expect(room).toContain('locationForSection');
   });
 
   it('allows structure and observations to move the manuscript', () => {
-    expect(room).toContain('onSelect={(sectionId) => showPlace(sectionId, true)}');
+    expect(room).toContain('setCanvasObservation(null); showPlace(sectionId, true)');
     expect(room).toContain('data-observation-show-in-manuscript');
     expect(room).toContain("setJumpTo(sectionId)");
   });
@@ -90,8 +86,9 @@ describe('D3 · Develop is the manuscript seen developmentally', () => {
     expect(room).not.toContain('paragraphs 3–4');
     expect(manuscript).toContain('evidenceHighlight');
     expect(manuscript).toContain('readOnlyHighlight={evidenceHighlight}');
-    expect(room).toContain('evidenceAnnotations={passageAnnotations}');
-    expect(room).toContain('onEvidenceAnnotationSelect={(annotation) =>');
+    expect(editor).toContain('note.sourceBody === liveBody');
+    expect(editor).toContain('loadCanvasInsight(');
+    expect(room).toContain('exact.range.start - offset');
     expect(manuscript).toContain('readOnlyAnnotations={evidenceAnnotations}');
     expect(manuscript).toContain('onReadOnlyAnnotationSelect={onEvidenceAnnotationSelect}');
   });

@@ -179,3 +179,35 @@ not steal scroll position. This behavior has a DOM test, not a visual witness.
 Actual authenticated MAIA response, apply/reopen/undo and founder visual review
 remain release requirements. The isolated review database was missing the
 canonical ask authorization migration; it has been applied to that copy only.
+
+
+### September 19 — one manuscript editing canvas in Write and Develop
+
+Founder rejected the report/sidebar experience even after its navigation worked.
+Develop now embeds the same RebuildStudioClient editing canvas used by Write,
+without a second header, outline, or editing sidebar. Its existing scope/lens
+commissioning remains above the page. Frozen findings attach to the sections
+they name; exact highlights require current evidence, heading-prefix offset
+translation, valid code-point bounds, and unchanged displayed source. Additional
+notes collapse after the first three. Structural findings remain in reading
+details because they do not establish an exact passage.
+
+Choosing a note opens the passage conversation in place. Before there is a
+proposal, the choices are Try a revision, Edit my words, and Keep my wording.
+Try a revision is an explicit provider act, not an automatic request on entry.
+Proposals display additions/removals in their actual paragraphs; they remain
+unapplied. Read in context precedes application. Voice, teaching and history are
+available on expansion. An applied revision is not painted as a pending proposal.
+Reopening preserves its exact applied locus and application receipt for Undo.
+
+The note marker is anchored to the paragraph margin rather than the first inline
+character. Import filename lines remain in the underlying manuscript and offsets,
+but are visually distinguished as import metadata; no source cleanup is silently
+performed. Authored line breaks and Unicode remain unchanged.
+
+Validation: sharedEditingJourney mounts the actual editor and RevisionDesk with
+controlled provider/persistence responses. It exercises a Develop finding through
+request, inline diff, read-in-context, application, reopen, and Undo without a
+route change. This is component integration evidence, not live-provider, database,
+audio, screenshot, or founder visual acceptance evidence. Those remain outstanding
+before release; no production deployment is represented by this change.

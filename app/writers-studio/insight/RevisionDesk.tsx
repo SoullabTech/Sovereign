@@ -12,9 +12,10 @@ export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;
 }
 export default function RevisionDesk({
-  active = true, inline = false, onPreview, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
+  active = true, inline = false, onPreview, onEditOriginal, onReadContext, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
 }: {
+  onEditOriginal?: () => void; onReadContext?: () => void;
   active?: boolean; inline?: boolean; onPreview?: (preview: { original: string; wording: string; changes: boolean } | null) => void;
   scopeKey?: string; showInspiration?: boolean; manuscriptId: string; title: string; currentText: string; thread: RebuildEditorialThread | null;
   version: RebuildEditorialVersion | null; instruction: string;
@@ -46,7 +47,7 @@ export default function RevisionDesk({
     setLocalMessage(null); onSend(text);
   };
   const [showProposal, setShowProposal] = useState(true);
-  const [changes, setChanges] = useState(false);
+  const [changes, setChanges] = useState(inline);
   const [draft, setDraft] = useState<MemberRevisionDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const [localMessage, setLocalMessage] = useState<string | null>(null);
@@ -79,9 +80,10 @@ export default function RevisionDesk({
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
   }, [draft]);
+  const matchesLocus = Boolean(thread && thread.locusText === currentText);
   useEffect(() => {
-    onPreview?.(showProposal && reviewed === previewKey && version ? { original: currentText, wording: version.wording, changes } : null);
-  }, [onPreview, showProposal, reviewed, previewKey, currentText, version, changes]);
+    onPreview?.((inline ? showProposal : showProposal && reviewed === previewKey) && matchesLocus && version && version.id !== appliedVersionId ? { original: currentText, wording: version.wording, changes } : null);
+  }, [onPreview, showProposal, reviewed, previewKey, currentText, version, changes, inline, matchesLocus, appliedVersionId]);
   const diff = thread && version ? comparisonSpan(thread.locusText, version.wording) : null;
   const edit = () => {
     if (!thread?.targetSectionId || !version || draft) return;
@@ -106,7 +108,8 @@ export default function RevisionDesk({
   if (inline) {
     const latest = [...(thread?.turns ?? [])].reverse().find(t => t.speaker !== 'author');
     const explanation = latest?.body || response || version?.rationale || '';
-    const previewing = showProposal && reviewed === previewKey;
+    const previewing = Boolean(version && showProposal && matchesLocus && version.id !== appliedVersionId);
+    const previewReviewed = previewing && reviewed === previewKey;
     const toggleTool = (name: string) => setOpenTool(openTool === name ? null : name);
     const keep = () => { setShowProposal(false); setLocalMessage(null); onKeep(); };
     return <section data-revision-desk data-inline className="wsi-page-conversation" aria-label="Explore this passage with MAIA">
@@ -121,24 +124,35 @@ export default function RevisionDesk({
       <form className="wsi-page-reply" onSubmit={e => { e.preventDefault(); discuss(); }}>
         <textarea aria-label="Discuss this passage" rows={1} value={instruction}
           onChange={e => onInstruction(e.target.value)} disabled={blocked}
-          placeholder="Tell MAIA what feels right, or what you want to explore…"/>
+          placeholder="Ask about this passage, or describe what you want to change…"/>
         <button type="submit" disabled={blocked || (!instruction.trim() && !directionContext.trim() && !editorialQuestion && !reasonQuestion.trim()) || Boolean(draft && !draftMatches)}>{busy ? 'Thinking…' : 'Send'}</button>
       </form>
       <div className="wsi-page-actions">
+        {!version && <>
+          <button type="button" className="wsi-primary" disabled={blocked || Boolean(draft)} onClick={() => onSend([
+            directionContext,
+            instruction.trim() ? 'My intention: ' + instruction.trim() : '',
+            sectionBody && sectionBody !== currentText ? 'Current section context (reference only):\n' + sectionBody : '',
+            'Offer one possible revision of this selected passage in response to the observation. Preserve my voice, style, subject, and intentional ambiguity. Begin the rationale with "Editorial purpose: <short descriptive name>". Explain what changes, what might be lost, and why I might keep the original. Do not invent experiences or facts. Return replacement wording only if a revision is warranted; otherwise explain why. Nothing is to be applied automatically.'
+          ].filter(Boolean).join('\n\n'))}>{busy ? 'Exploring…' : 'Try a revision'}</button>
+          {onEditOriginal && <button type="button" disabled={blocked} onClick={onEditOriginal}>Edit my words</button>}
+          <button type="button" disabled={blocked} onClick={keep}>Keep my wording</button>
+        </>}
         {version && <div className="wsi-reading-switch" role="group" aria-label="Read passage">
           <button aria-pressed={!previewing} onClick={() => setShowProposal(false)}>Original</button>
-          <button aria-pressed={previewing} disabled={blocked || Boolean(draft) || !context} onClick={() => { setShowProposal(true); setReviewed(previewKey); }}>Preview in context</button>
+          <button aria-pressed={previewReviewed} disabled={blocked || Boolean(draft) || !context || !matchesLocus || version?.id === appliedVersionId} onClick={() => { setShowProposal(true); setReviewed(previewKey); onReadContext?.(); }}>Read in context</button>
         </div>}
+        {version && <button type="button" aria-pressed={changes} onClick={() => setChanges(!changes)}>{changes ? 'Show clean proposal' : 'Show changes'}</button>}
         {version && thread && <>
           <button disabled={blocked || Boolean(draft) || thread.legacyLocus} onClick={edit}>Adjust wording</button>
           <button disabled={blocked} onClick={keep}>Keep original</button>
           <button className="wsi-primary" onClick={() => { setLocalMessage(null); onApply(); }}
-            disabled={blocked || thread.legacyLocus || Boolean(draft) || !previewing || version.id === appliedVersionId}>Use this revision</button>
+            disabled={blocked || thread.legacyLocus || Boolean(draft) || !previewReviewed || version.id === appliedVersionId}>Use this revision</button>
         </>}
       </div>
       <div className="wsi-page-foot">
-        <span>{draft ? 'Your draft · not applied' : previewing ? 'Preview · only this passage would change' : 'Your manuscript is unchanged while we explore'}</span>
-        <button className="wsi-text-button" aria-expanded={openTool === 'tools'} onClick={() => toggleTool('tools')}>Explore more</button>
+        <span>{draft ? 'Your draft · not applied' : version && version.id === appliedVersionId ? 'Applied to this passage' : previewing ? 'Proposed changes · not applied. Read in context before applying.' : version ? 'Original wording' : 'Highlighted text is the passage we are discussing. No edit proposed yet.'}</span>
+        <button className="wsi-text-button" aria-expanded={openTool === 'tools'} onClick={() => toggleTool('tools')}>{version ? 'Why this edit? · More options' : 'Intention, voice & history'}</button>
       </div>
       {draft && <section className="wsi-page-draft" aria-label="Your working revision">
         <label>Your words<textarea className="wsi-revision" value={draft.text} disabled={saving || !draftMatches}

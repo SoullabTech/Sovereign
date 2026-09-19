@@ -200,3 +200,18 @@
 .ws-development-margin button:focus-visible { outline:2px solid var(--ws-gold-text); outline-offset:3px; }
 .ws-development-highlight { color:inherit; background:color-mix(in srgb,#869b78 23%,transparent); box-decoration-break:clone; -webkit-box-decoration-break:clone; }
 .ws-section-note-anchor { position:relative; }
+
+/* Editorial marks belong to the paragraph margin, not the selected word. */
+.ws-annotated-paragraph { position:relative; }
+.ws-locus-marker { top:3px; }
+.ws-import-marker { display:block; background:var(--ws-ground-field); color:var(--ws-ink-muted); font:11px/1.4 system-ui; padding:5px 0; }
+.ws-import-marker::before { content:"Import marker · "; }
+.wsi-inline .wsi-page-actions { padding-top:8px; margin-top:6px; border-top:1px solid var(--wsi-line); }
+.wsi-inline .wsi-page-actions .wsi-primary { background:var(--ws-gold-fill,#d3bd7b); border-color:var(--ws-gold-text,#957a39); color:var(--ws-ink-primary,#2e2a21); }
+.wsi-inline .wsi-page-actions .wsi-primary:disabled { opacity:.45; }
+
+.ws-page-note-strip { display:flex; flex-wrap:wrap; gap:8px 16px; margin:12px 0 18px; font:12px/1.4 system-ui; }
+.ws-page-note-strip button { display:flex; align-items:center; gap:7px; border:0; border-bottom:1px solid var(--ws-rule-soft); padding:5px 0; background:transparent; color:var(--ws-ink-secondary); cursor:pointer; }
+.ws-note-number { background:#60775d; color:white; border-radius:50%; width:24px; height:24px; display:inline-grid; place-items:center; font-size:11px; }
+[data-embedded-canvas=true] .wsr-grid { grid-template-columns:minmax(0,1fr) !important; height:100% !important; }
+[data-embedded-canvas=true] .wsr-manuscript { display:flex !important; }

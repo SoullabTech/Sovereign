@@ -91,7 +91,7 @@ describe('Pure Canvas is still nothing but the page', () => {
        promise — the header is conditional on !canvasExpanded, and the control
        is inside it, so the writer cannot be handed chrome they asked to lose. */
     const room = source(ROOM);
-    const header = room.indexOf('{!canvasExpanded && (<header');
+    const header = room.indexOf('{!canvasExpanded && !development && (<header');
     const mount = room.indexOf('<AppearanceMenu />');
     const headerEnd = room.indexOf('</header>)}');
     expect(header).toBeGreaterThan(-1);
