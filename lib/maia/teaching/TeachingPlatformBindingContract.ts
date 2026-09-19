@@ -31,11 +31,8 @@ export const TEACHING_SURFACES = [
 export type TeachingSurface = (typeof TEACHING_SURFACES)[number];
 
 export const TEACHING_SURFACE_ROUTES = [
-  'oracle_conversation',
+  'sovereign_maia_list',
   'writers_studio_editorial',
-  'coaching_learning',
-  'practitioner_learning',
-  'research_learning',
 ] as const;
 export type TeachingSurfaceRoute = (typeof TEACHING_SURFACE_ROUTES)[number];
 
@@ -135,7 +132,7 @@ const INTERNAL_AND_EXTERNAL_SOURCES: readonly T4SourceClass[] = [
 
 const SURFACE_LAW: Readonly<Record<TeachingSurface, SurfaceLaw>> = {
   general_maia: {
-    route: 'oracle_conversation',
+    route: 'sovereign_maia_list',
     context: 'general_maia',
     audience: 'member',
     domainKeys: ALL_DOMAIN_KEYS,
@@ -156,21 +153,21 @@ const SURFACE_LAW: Readonly<Record<TeachingSurface, SurfaceLaw>> = {
     ],
   },
   coaching_practice: {
-    route: 'coaching_learning',
+    route: 'sovereign_maia_list',
     context: 'coaching_practice',
     audience: 'coach',
     domainKeys: COACHING_DOMAINS,
     sourceClasses: INTERNAL_AND_EXTERNAL_SOURCES,
   },
   therapist_practitioner: {
-    route: 'practitioner_learning',
+    route: 'sovereign_maia_list',
     context: 'therapist_practitioner',
     audience: 'therapist_practitioner',
     domainKeys: PRACTITIONER_DOMAINS,
     sourceClasses: INTERNAL_AND_EXTERNAL_SOURCES,
   },
   research_lab: {
-    route: 'research_learning',
+    route: 'sovereign_maia_list',
     context: 'research_lab',
     audience: 'researcher',
     domainKeys: RESEARCH_DOMAINS,

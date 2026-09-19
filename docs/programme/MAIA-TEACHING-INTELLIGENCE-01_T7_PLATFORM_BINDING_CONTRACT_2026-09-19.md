@@ -36,7 +36,14 @@ The initial governed surfaces are:
 - therapist/practitioner learning;
 - research lab.
 
-Each surface binds exactly one governed route class, T2 context, and audience.
+Each surface binds exactly one governed runtime seam, T2 context, and audience.
+
+The currently proven runtime seams are:
+
+- sovereign MAIA conversation: `app/api/sovereign/app/maia/list/route.ts`;
+- Writer's Studio editorial conversation: `app/api/writers-studio/editorial/turn/route.ts`.
+
+Coaching, practitioner, and research teaching currently enter through the shared sovereign MAIA conversation seam with a server-adjudicated T7 surface binding. T7 does not invent parallel chat routes that do not exist.
 
 ---
 

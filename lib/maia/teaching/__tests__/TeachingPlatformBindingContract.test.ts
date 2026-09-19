@@ -8,7 +8,7 @@ import {
 const bind = (overrides: Partial<Parameters<typeof resolveTeachingPlatformBinding>[0]> = {}) =>
   resolveTeachingPlatformBinding({
     surface: 'general_maia',
-    route: 'oracle_conversation',
+    route: 'sovereign_maia_list',
     context: 'general_maia',
     audience: 'member',
     domainKey: 'relational_geometry',
@@ -61,7 +61,7 @@ describe('T7 Teaching Platform Binding Contract', () => {
   it('binds coaching practice', () => {
     expect(bind({
       surface: 'coaching_practice',
-      route: 'coaching_learning',
+      route: 'sovereign_maia_list',
       context: 'coaching_practice',
       audience: 'coach',
       domainKey: 'coaching_practitioner_craft',
@@ -71,7 +71,7 @@ describe('T7 Teaching Platform Binding Contract', () => {
   it('binds therapist practitioner education', () => {
     expect(bind({
       surface: 'therapist_practitioner',
-      route: 'practitioner_learning',
+      route: 'sovereign_maia_list',
       context: 'therapist_practitioner',
       audience: 'therapist_practitioner',
       domainKey: 'psychology_psychotherapy_models',
@@ -81,7 +81,7 @@ describe('T7 Teaching Platform Binding Contract', () => {
   it('binds research lab', () => {
     expect(bind({
       surface: 'research_lab',
-      route: 'research_learning',
+      route: 'sovereign_maia_list',
       context: 'research_lab',
       audience: 'researcher',
       domainKey: 'relational_geometry',
@@ -172,7 +172,7 @@ describe('T7 Teaching Platform Binding Contract', () => {
 
   it('rejects non-contract keys', () => {
     expect(() => resolveTeachingPlatformBinding({
-      surface: 'general_maia', route: 'oracle_conversation', context: 'general_maia',
+      surface: 'general_maia', route: 'sovereign_maia_list', context: 'general_maia',
       audience: 'member', domainKey: 'relational_geometry', execute: true,
     } as any)).toThrow(/non-contract key/);
   });
