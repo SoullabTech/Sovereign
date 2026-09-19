@@ -132,21 +132,27 @@ async function checkScopeEnumValid() {
 // The loader enforces these in SQL; we verify the data distribution here.
 
 async function checkNoUnconsented() {
-  // return_preference = 'member_pulled' means the member has NOT consented to
-  // ambient surfacing. These should not count as "ambient" atoms —
-  // they exist but only surface on explicit member request.
+  // R10: a return_preference value is not proof of REOPEN authority. Ambient
+  // eligibility requires a member-explicit authority record as well as an
+  // eligible preference. Legacy ambiguous and default-private rows fail closed.
   const total = await qOne<{ n: number }>(
     `SELECT COUNT(*)::int AS n FROM member_memory_atoms WHERE status IN ('active', 'still_alive')`
   );
   const consented = await qOne<{ n: number }>(
     `SELECT COUNT(*)::int AS n FROM member_memory_atoms
      WHERE status IN ('active', 'still_alive')
-       AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')`
+       AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+       AND return_authority = 'member_explicit'`
   );
-  const memberpulled = (total?.n ?? 0) - (consented?.n ?? 0);
+  const ambiguous = await qOne<{ n: number }>(
+    `SELECT COUNT(*)::int AS n FROM member_memory_atoms
+     WHERE status IN ('active', 'still_alive')
+       AND return_authority = 'legacy_ambiguous'`
+  );
+  const privateOnly = (total?.n ?? 0) - (consented?.n ?? 0) - (ambiguous?.n ?? 0);
   pass(
-    `[LIVE] Consent distribution: ${consented?.n ?? 0} ambient-eligible, ${memberpulled} member-pulled only`,
-    `of ${total?.n ?? 0} active atoms`
+    `[LIVE] Return authority: ${consented?.n ?? 0} ambient-authorized, ${ambiguous?.n ?? 0} legacy-ambiguous, ${privateOnly} private/non-ambient`,
+    `of ${total?.n ?? 0} active atoms; ambiguous rows fail closed`
   );
 }
 
@@ -158,13 +164,14 @@ async function checkNoSacredProtectedInAmbientSurface() {
     `SELECT COUNT(*)::int AS n FROM member_memory_atoms
      WHERE 'sacred_protected' = ANY(registers)
        AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+       AND return_authority = 'member_explicit'
        AND status IN ('active', 'still_alive')`
   );
   if ((r?.n ?? 0) === 0) {
     pass(`[LIVE] No sacred_protected atoms are marked for ambient surfacing`);
   } else {
     fail(
-      `[LIVE] ${r?.n} sacred_protected atom(s) have ambient return_preference`,
+      `[LIVE] ${r?.n} sacred_protected atom(s) have explicit ambient-return authority`,
       `these would surface if the SQL guard were removed`
     );
   }

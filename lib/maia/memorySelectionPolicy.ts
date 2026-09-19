@@ -39,7 +39,7 @@ export const OPERATIONAL_CONTINUITY_DECLARATION =
  */
 export const ATOM_SELECTION_POLICY_REASONS: readonly string[] = [
   'Consent boundary applied in retrieval: only atoms the member has consented to surface ' +
-    '(return_preference), never sacred_protected registers, never member-rejected atoms.',
+    '(return_preference + member-explicit return_authority), never sacred_protected registers, never member-rejected atoms.',
   'Ordering is breakthrough-first then most-recently-kept; relevance to the current ' +
     'conversation does not participate in selection under this policy version.',
   'Cap applied: the first 8 atoms in policy order enter; remaining eligible atoms are ' +

@@ -268,7 +268,11 @@ describe('refusal hygiene', () => {
       .filter((l) => l.includes('episodic mark refused'));
     expect(refusalLines).toHaveLength(3);
     for (const line of refusalLines) {
-      expect(line).toContain(MEMBER.slice(0, 8));
+      // Privacy-safe correlation only: the runtime deliberately hashes the
+      // durable member id rather than leaking its raw UUID or a UUID prefix.
+      expect(line).toMatch(/memberRef: [0-9a-f]{12}/);
+      expect(line).not.toContain(MEMBER);
+      expect(line).not.toContain(MEMBER.slice(0, 8));
       expect(line).not.toContain(VERBATIM);
     }
   });

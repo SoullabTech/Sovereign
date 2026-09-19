@@ -45,6 +45,7 @@ Reads `member_memory_atoms` with the following filters (all required, all canon-
 - `status IN ('active', 'still_alive')` — excludes `set_aside`, `protected`, `archived`
 - `NOT ('sacred_protected' = ANY(registers))` — sacred-protected atoms are structurally voice-ineligible per migration constraint
 - `return_preference IN ('contextual_doorway', 'ritual_review_opt_in')` — excludes `member_pulled` default (member has not opted into ambient surfacing)
+- **2026-09-17 R10 amendment:** preference is necessary but not sufficient; ambient return also requires `return_authority = 'member_explicit'`. Legacy/defaulted preferences without that provenance fail closed.
 - `ORDER BY kept_at DESC`
 - `LIMIT 8`
 
@@ -108,7 +109,7 @@ This is the gate: Cut 1 ships only when this test passes.
 - ❌ No consolidation of `MemoryBundle` vs `MemoryOrchestrator` parallel paths. Wiring Audit Q1 is its own subsequent cut.
 - ❌ No new orchestrator. The existing Phase 1.5 `lib/maia/memoryOrchestrator.ts` stays the load-bearing composer.
 - ❌ No activation of any `lib/consciousness/*` orphan module.
-- ❌ No surfacing of `member_pulled` atoms (default). Members must explicitly set `contextual_doorway` or opt into `ritual_review_opt_in` for an atom to surface ambiently — this is the consent gate, encoded in the reader's WHERE clause.
+- ❌ No surfacing of `member_pulled` atoms (default). An ambiently eligible preference is still insufficient by itself: the row must also carry `return_authority = 'member_explicit'`, written by the member return-preference gesture. Legacy/defaulted preference values without that provenance fail closed.
 - ❌ No `crossing_allowed = TRUE` writes. Reader never bypasses the schema-level discipline.
 - ❌ No identity-guard refactor (separate concern from memory guard).
 
