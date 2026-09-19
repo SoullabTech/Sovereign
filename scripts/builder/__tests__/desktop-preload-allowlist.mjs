@@ -116,19 +116,21 @@ export const RATIFIED_INVOKE_CHANNELS = [
   },
   {
     channel: 'jarvis:work-unit-action',
-    ratified_in: 'JARVIS-DESKTOP-OPERATOR-FLOW-02 + JARVIS-ROUTING-INTELLIGENCE-01/J5 founder rulings',
+    ratified_in: 'JARVIS-DESKTOP-OPERATOR-FLOW-02 + I4 canonical convergence + E1 canonical provider execution',
     purpose:
       'Founder-facing control of canonical W0.v2 plus the explicitly LEGACY / COMPATIBILITY Work Unit lane ' +
-      'through one bounded action channel. Canonical actions are providers/preview-route/create/status/' +
+      'through one bounded action channel. I4 canonical actions remain providers/preview-route/create/status/' +
       'canonical-bound/canonical-authorize/canonical-route/canonical-bind-transport/canonical-adjudicate/' +
-      'canonical-close. Preview is prospective/noncanonical/nonexecuting; MAIN derives canonical SHA and Work ' +
-      'Unit identity, W2.v2 owns lifecycle, W3.v2 owns route binding, W3T owns provider/model realization, and ' +
-      'W4.v2 is read as append-only provenance. Canonical v2 exposes no provider execution authority in I4. ' +
-      'Legacy compatibility actions remain route-plan/execution-auth-preview/authorize-execution-once/' +
-      'confirm-execute/revoke-execution-grant/run-provider under the existing R5B/R4/R5A law. MAIN and the ' +
-      'lower controller refuse those execution verbs for W0.v2. The renderer cannot supply lifecycle state, ' +
-      'route records/digests, canonical SHA, raw authority, provider/model identity for canonical transport, ' +
-      'credentials, or execution grants. No production/deploy/merge act is exposed.',
+      'canonical-close. E1 adds canonical-prepare-execution-transport/canonical-execution-auth-preview/' +
+      'canonical-authorize-execution-once/canonical-confirm-execute/canonical-revoke-execution-grant/' +
+      'canonical-record-verifier/canonical-evidence-ready without adding a preload channel. W2.v2 owns lifecycle, ' +
+      'W3.v2 owns cognitive route, W3T.v1 owns exact provider/model/adapter realization, E1 grants one exact ' +
+      'one-shot human execution act only after fresh R4/R5A checks, DR1 maps durable result standing, and W4.v2 ' +
+      'owns execution/verifier evidence. Legacy compatibility actions remain route-plan/execution-auth-preview/' +
+      'authorize-execution-once/confirm-execute/revoke-execution-grant/run-provider under legacy R5B/R4/R5A law ' +
+      'and still cannot impersonate canonical E1. The renderer cannot supply lifecycle state, route records/digests, ' +
+      'canonical SHA, raw authority, provider/model/adapter identity, credentials, or grant contents. ' +
+      'No production/deploy/merge act is exposed.',
   },
   {
     channel: 'jarvis:status',
