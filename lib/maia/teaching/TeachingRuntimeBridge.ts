@@ -27,6 +27,11 @@ import {
   type TeachingRuntimeAuthorityRecord,
 } from './TeachingRuntimeAuthorityContract';
 import type { TeachingSourceRef } from './TeachingContextSourceContract';
+import {
+  renderTeachingCanonFidelity,
+  resolveTeachingCanonFidelity,
+  type TeachingCanonFidelityRecord,
+} from './TeachingCanonFidelityContract';
 
 export const TEACHING_RUNTIME_BRIDGE_VERSION = 'trb-1' as const;
 
@@ -106,7 +111,7 @@ export function classifyCurrentTeachingSignal(message: string): LearnerSignalKin
 export function detectTeachingDomain(message: string): string | null {
   const t = norm(message);
   const tests: readonly [string, RegExp][] = [
-    ['relational_geometry', /\brelational geometry\b/],
+    ['relational_geometry', /\brelational geometry\b|\bgeometric framing\b|\bdistance\b.*\bangle\b.*\bcurvature\b|\bgenuinely geometric\b.*\brelationship/],
     ['elemental_alchemy', /\belemental alchemy\b|\bfive elements?\b/],
     ['spiralogic', /\bspiralogic\b|\bspiral logic\b/],
     ['maia_constitutional_architecture', /\bmaia\b.*\b(constitution|architecture|canon|governance)\b|\bconstitutional maia\b/],
@@ -117,7 +122,7 @@ export function detectTeachingDomain(message: string): string | null {
     ['psychology_psychotherapy_models', /\b(psychology|psychotherapy|therapy|therapist|jung|jungian|freud|attachment|psychodynamic|trauma|somatic|cbt|family systems|archetype|shadow)\b/],
     ['spirituality_contemplative_traditions', /\b(spirituality|spiritual|contemplative|contemplation|meditation|mysticism|mystical|theology|prayer|religion|religious)\b/],
     ['philosophy', /\b(philosophy|philosophical|phenomenology|phenomenological|ontology|ontological|epistemology|epistemic|heidegger|merleau-ponty|whitehead)\b/],
-    ['systems_complexity', /\b(systems? thinking|complexity|cybernetics|bateson|emergence|complex adaptive)\b/],
+    ['systems_complexity', /\b(systems? thinking|systems? theory|field theory|complexity|cybernetics|bateson|emergence|complex adaptive)\b/],
     ['relational_collective_intelligence', /\b(relational intelligence|collective intelligence|relational field|collective field)\b/],
     ['coaching_practitioner_craft', /\b(coaching|coach|coaching practice|practitioner craft)\b/],
     ['consciousness_studies', /\b(consciousness|awareness|qualia|mind-body|neuroscience of consciousness|conscious experience)\b/],
@@ -210,8 +215,9 @@ function renderDirective(args: {
   authority: TeachingRuntimeAuthorityRecord;
   adaptation: ReturnType<typeof proposeLearnerDialogueAdaptation>;
   sourceRefs: readonly TeachingSourceRef[];
+  canonFidelity: TeachingCanonFidelityRecord | null;
 }): string {
-  const { signal, knowledgeStanding, authority, adaptation, sourceRefs } = args;
+  const { signal, knowledgeStanding, authority, adaptation, sourceRefs, canonFidelity } = args;
   const epistemic = knowledgeStanding === 'GOVERNED_SOURCE'
     ? 'GOVERNED SOURCE: source-grounded claims may use only the governed material already present in this turn. Preserve source wording/provenance and do not imply the source says more than it does.'
     : knowledgeStanding === 'MAIA_SYNTHESIS_UNVERIFIED'
@@ -228,6 +234,7 @@ function renderDirective(args: {
     sourceRefs.length > 0 && knowledgeStanding === 'GOVERNED_SOURCE'
       ? `Governed source identities: ${sourceRefs.map((s) => `${s.sourceId}@${s.revisionOrLocator}`).join('; ')}`
       : '',
+    canonFidelity ? renderTeachingCanonFidelity(canonFidelity) : '',
     'Execution law:',
     '- Teach only because this interaction occasioned teaching; do not turn the conversation into a curriculum.',
     '- Adapt to this interaction, not to an invented person. Confusion ≠ inability. Simplicity request ≠ low intelligence. Depth request ≠ expertise.',
@@ -330,13 +337,14 @@ export function buildTeachingRuntimeBridge(
     adaptation,
     knowledgeStanding,
   });
+  const canonFidelity = resolveTeachingCanonFidelity({ domainKey, message: input.message });
 
   return {
     active: true,
     reason: 'authorized',
     signal,
     domainKey,
-    directive: renderDirective({ signal, knowledgeStanding, authority, adaptation, sourceRefs }),
+    directive: renderDirective({ signal, knowledgeStanding, authority, adaptation, sourceRefs, canonFidelity }),
     authority,
   };
 }
