@@ -297,7 +297,10 @@ function assertNeed(value: unknown): asserts value is KnowledgeNeedInput {
   if (!oneOf(FRESHNESS_REQUIREMENTS, value.freshnessRequirement)) fail('knowledge need freshness is invalid');
   if (!Array.isArray(value.evidenceRoles) || !value.evidenceRoles.length) fail('knowledge need requires evidence roles');
   for (const role of value.evidenceRoles) if (!oneOf(EVIDENCE_ROLES, role)) fail('knowledge need evidence role is invalid');
-  if (!Number.isInteger(value.minimumIndependentSources) || value.minimumIndependentSources < 1 || value.minimumIndependentSources > 8) {
+  if (typeof value.minimumIndependentSources !== 'number'
+      || !Number.isInteger(value.minimumIndependentSources)
+      || value.minimumIndependentSources < 1
+      || value.minimumIndependentSources > 8) {
     fail('minimumIndependentSources must be an integer from 1 to 8');
   }
   if (!oneOf(INSUFFICIENCY_DISPOSITIONS, value.insufficiencyDisposition)) fail('knowledge need insufficiency disposition is invalid');
