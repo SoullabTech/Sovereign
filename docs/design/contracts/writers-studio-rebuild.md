@@ -232,3 +232,12 @@ asks MAIA to reconsider interpretations in light of author intention, distinguis
 possible reader effects from evidence, and allow keeping the original. These are
 request instructions, not proof of provider compliance. This increment does not
 claim a completed guided intake or durable cross-work intention model.
+
+### Revision request visibility
+
+Pending requests and failures appear at the top of the conversation. A new
+proposal reveals its marked paragraph without granting review or application
+authority; additions and removals have a visible legend. The preview clone was
+missing canonical proposal/conversation/application tables; the existing migrations
+were applied transactionally to ws_canvas_review_20260919 only. This repairs the
+observed missing-table blocker, not a claimed live-provider end-to-end witness.

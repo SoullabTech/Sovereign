@@ -772,7 +772,7 @@ export default function RebuildStudioClient({ development }: { development?: Dev
     if (!found.ok) {
       setEditorialFailure(found.reason === 'unavailable'
         ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
-        : 'The Studio could not safely look up revision conversations for this section.');
+        : 'Your request stopped before MAIA could reply because saved revision conversations could not be loaded. No new revision was created. Please try again.');
       return null;
     }
     const matching = found.relationships.filter((r) => r.locusText === desiredLocus);

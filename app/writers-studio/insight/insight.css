@@ -215,3 +215,7 @@
 .ws-note-number { background:#60775d; color:white; border-radius:50%; width:24px; height:24px; display:inline-grid; place-items:center; font-size:11px; }
 [data-embedded-canvas=true] .wsr-grid { grid-template-columns:minmax(0,1fr) !important; height:100% !important; }
 [data-embedded-canvas=true] .wsr-manuscript { display:flex !important; }
+
+.wsi-request-error { padding:10px 12px; border-left:3px solid #a94e42; background:#a94e4214; }
+.wsi-page-conversation > [role=status] ins { background:#c7ad5d44; text-decoration:underline; }
+.wsi-page-conversation > [role=status] del { background:#bc696633; text-decoration:line-through; }

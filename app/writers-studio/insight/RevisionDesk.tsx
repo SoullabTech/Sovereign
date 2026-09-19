@@ -85,6 +85,14 @@ export default function RevisionDesk({
   useEffect(() => {
     onPreview?.((inline ? showProposal : showProposal && reviewed === previewKey) && matchesLocus && version && version.id !== appliedVersionId ? { original: currentText, wording: version.wording, changes } : null);
   }, [onPreview, showProposal, reviewed, previewKey, currentText, version, changes, inline, matchesLocus, appliedVersionId]);
+  const revealedVersion = useRef<string | null>(null);
+  useEffect(() => {
+    if (!inline || !active || !version || !matchesLocus || version.id === appliedVersionId || revealedVersion.current === version.id) return;
+    revealedVersion.current = version.id;
+    // Reveal the marked paragraph without counting it as author review or approval.
+    const frame = window.requestAnimationFrame(() => onReadContext?.());
+    return () => window.cancelAnimationFrame(frame);
+  }, [inline, active, version?.id, matchesLocus, appliedVersionId, onReadContext]);
   const diff = thread && version ? comparisonSpan(thread.locusText, version.wording) : null;
   const edit = () => {
     if (!thread?.targetSectionId || !version || draft) return;
@@ -114,6 +122,9 @@ export default function RevisionDesk({
     const toggleTool = (name: string) => setOpenTool(openTool === name ? null : name);
     const keep = () => { setShowProposal(false); setLocalMessage(null); onKeep(); };
     return <section data-revision-desk data-inline className="wsi-page-conversation" aria-label="Explore this passage with MAIA">
+      {busy && <p role="status" aria-live="polite">MAIA is working on your request. Your manuscript is unchanged.</p>}
+      {message && <p role="alert" className="wsi-request-error">{message}</p>}
+      {previewing && <p role="status" aria-live="polite">Proposed changes are marked in the passage above: <ins>added words</ins> · <del>removed words</del>. Nothing is applied yet.</p>}
       <div className="wsi-page-voice"><strong>MAIA</strong>
         {explanation && <MaiaListen text={explanation} active={active} />}
         {version && <span className="wsi-purpose-label">{versionLabel}</span>}
@@ -200,7 +211,7 @@ export default function RevisionDesk({
       {version && !context && <p role="status">This passage has moved or changed. Reopen it to preview and apply safely.</p>}
       {appliedVersionId && <div className="wsi-page-applied"><span>Applied: {thread?.versions.find(v => v.id === appliedVersionId) ? alternativeLabel(thread.versions.find(v => v.id === appliedVersionId)!, thread.versions.findIndex(v => v.id === appliedVersionId)) : appliedVersionId}</span>
         {onUndo && <button disabled={blocked} onClick={onUndo}>Undo this change</button>}</div>}
-      {(localMessage || message || undoMessage) && <p role="status" aria-live="polite">{localMessage || message}{undoMessage && ' ' + undoMessage}</p>}
+      {(localMessage || undoMessage) && <p role="status" aria-live="polite">{localMessage}{undoMessage && ' ' + undoMessage}</p>}
     </section>;
   }
 
