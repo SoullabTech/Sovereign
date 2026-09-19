@@ -180,3 +180,15 @@
 .wsi-page-applied { display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--wsi-line); margin-top:10px; padding-top:10px; }
 .ws-marked-passage[data-preview=true] { background:color-mix(in srgb,#c7ad5d 25%,transparent); }
 @media(max-width:650px) { .wsi-page-actions { gap:6px; } .wsi-reading-switch { width:100%; margin-bottom:4px; } .wsi-page-foot { align-items:flex-start; } .wsi-purpose-label { margin-left:0; } }
+
+/* Notes belong to their words. Collapsing a note leaves its manuscript marker. */
+.ws-locus-toggle { border:0; padding:0; cursor:pointer; box-shadow:0 0 0 3px var(--ws-ground-field); }
+.ws-locus-toggle[aria-expanded=true] { background:var(--ws-gold-text,#896c2e); }
+.ws-locus-toggle:focus-visible { outline:2px solid var(--ws-gold-text,#896c2e); outline-offset:4px; }
+.ws-locus-toggle:disabled { opacity:.55; cursor:wait; }
+.ws-insight .wsi-section-heading { list-style:none; }
+.ws-insight .wsi-section-heading::-webkit-details-marker { display:none; }
+.ws-insight .wsi-section-disclosure { margin-left:auto; }
+.ws-insight .wsi-section-disclosure::after { content:'Expand'; }
+.ws-insight details[open] > .wsi-section-heading .wsi-section-disclosure::after { content:'Collapse'; }
+.ws-insight .wsi-passage-grid .wsi-passage { scroll-margin-top:24px; }

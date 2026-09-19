@@ -181,6 +181,7 @@ export default function RebuildStudioClient() {
   const [canvasExpanded, setCanvasExpanded] = useState(false);
   const [writingEpoch, setWritingEpoch] = useState(0);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [passageNoteOpen, setPassageNoteOpen] = useState(true);
   const [editorialAnchor, setEditorialAnchor] = useState<HTMLElement | null>(null);
   const [inlinePreview, setInlinePreview] = useState<{ scopeKey: string; original: string; wording: string; changes: boolean } | null>(null);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
@@ -216,6 +217,7 @@ export default function RebuildStudioClient() {
     setInlinePreview(preview ? { ...preview, scopeKey: editorialScope } : null);
   }, [editorialScope]);
   useEffect(() => { window.dispatchEvent(new Event('ws-stop-maia-reading')); }, [editorialScope]);
+  useEffect(() => { setPassageNoteOpen(true); }, [editorialScope]);
   const previousEditorialScope = useRef(editorialScope);
   useEffect(() => {
     if (previousEditorialScope.current === editorialScope) return;
@@ -876,6 +878,7 @@ export default function RebuildStudioClient() {
   }, []);
 
   const openWorkspace = useCallback((insight?: { readingId: string; key: string }) => {
+    setPassageNoteOpen(true);
     if (!workspaceOpen) {
       const scroll = document.querySelector<HTMLElement>('[data-manuscript-scroll]');
       workspaceReturn.current = { focusId, selectedPassage, thread: editorialThread,
@@ -1265,12 +1268,16 @@ export default function RebuildStudioClient() {
                       onSelectPassage={(start, end, text) => holdPassage(section, start, end, text)}
                     /></div>
                     {section.draftSectionId === focusId && <div hidden={!workspaceOpen}>
-                      <ManuscriptPassage body={liveBody} range={held} proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}>
+                      <ManuscriptPassage body={liveBody} range={held}
+                        annotation={{ label: section.heading || 'This passage', open: passageNoteOpen,
+                          disabled: editorialBusy || adoptionBusy || memberVersionBusy,
+                          onToggle: () => { setPassageNoteOpen(value => !value); window.dispatchEvent(new Event('ws-stop-maia-reading')); } }}
+                        proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}>
                         <div ref={setEditorialAnchor} data-inline-editorial-anchor />
                       </ManuscriptPassage>
                     </div>}
-                    {workspaceOpen && section.editable && <button type="button" className="ws-inline-open" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => { focusWritingSection(section.draftSectionId); setWorkspaceOpen(true); setMobilePane('manuscript'); }}>
-                      {section.draftSectionId === focusId && workspaceOpen ? 'Editorial passage open' : 'Explore this section with MAIA'}
+                    {workspaceOpen && section.editable && <button type="button" className="ws-inline-open" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => { focusWritingSection(section.draftSectionId); setWorkspaceOpen(true); setPassageNoteOpen(true); setMobilePane('manuscript'); }}>
+                      {section.draftSectionId === focusId && workspaceOpen ? (passageNoteOpen ? 'Editorial note open' : 'Open editorial note') : 'Explore this section with MAIA'}
                     </button>}
                   </section>
                 );
@@ -1594,13 +1601,13 @@ export default function RebuildStudioClient() {
         );
       }}
     </RebuildWritingBoundary>
-      <InlineWorkspace anchor={editorialAnchor} open={workspaceOpen}>
+      <InlineWorkspace anchor={editorialAnchor} open={workspaceOpen && passageNoteOpen}>
         <header className="wsi-inline-header"><strong>01 · {focusName}</strong>
           {workspaceReturn.current?.focusId && workspaceReturn.current.focusId !== focusId && <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={returnToStartingPassage}>Return to starting passage</button>}
-          <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={closeWorkspace}>Clean manuscript · Collapse</button>
+          <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={() => { setPassageNoteOpen(false); window.dispatchEvent(new Event('ws-stop-maia-reading')); }}>Close note</button>
         </header>
 
-        <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview} scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
+        <RevisionDesk active={workspaceOpen && passageNoteOpen} inline onPreview={showInlinePreview} scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
           currentText={selectedPassage?.draftSectionId === focusId
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
             : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}

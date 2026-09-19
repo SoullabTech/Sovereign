@@ -5,10 +5,11 @@ import type { ReactNode } from 'react';
 /** Character offsets here use code points, matching the manuscript selection.
  * The editorial controls are inserted after the containing paragraph, never
  * inside an editable text node or in the middle of a sentence. */
-export default function ManuscriptPassage({ body, range, proposal, children }: {
+export default function ManuscriptPassage({ body, range, proposal, children, annotation }: {
   body: string; range: { start: number; end: number } | null;
   proposal?: { original: string; wording: string; changes: boolean } | null;
   children: ReactNode;
+  annotation?: { label: string; open: boolean; onToggle: () => void; disabled?: boolean; number?: number };
 }) {
   const points = Array.from(body);
   const start = range?.start ?? 0, end = range?.end ?? points.length;
@@ -23,7 +24,11 @@ export default function ManuscriptPassage({ body, range, proposal, children }: {
   const diff = shown?.changes ? comparisonSpan(original, shown.wording) : null;
   return <div className="ws-manuscript-passage">
     <div className="ws-manuscript-context">{before}<span className="ws-marked-passage" data-preview={Boolean(shown)} data-editorial-locus>
-      <span className="ws-locus-marker" aria-label="Active editorial passage">01</span>
+      {annotation ? <button type="button" className="ws-locus-marker ws-locus-toggle"
+        aria-label={(annotation.open ? 'Close note: ' : 'Open note: ') + annotation.label}
+        aria-expanded={annotation.open} disabled={annotation.disabled} onClick={annotation.onToggle}>
+        {String(annotation.number ?? 1).padStart(2, '0')}
+      </button> : <span className="ws-locus-marker" aria-label="Active editorial passage">01</span>}
       {shown ? diff ? <>{diff.before}<del>{diff.removed}</del><ins>{diff.added}</ins>{diff.after}</> : shown.wording || <em>Proposed removal</em> : original}
     </span>{restOfParagraph}</div>
     {children}

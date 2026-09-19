@@ -23,7 +23,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
   const [reader, setReader] = useState('');
   const [conversation, setConversation] = useState<string | null>(null);
   const [talking, setTalking] = useState(false);
-  const places = useRef(new Map<string, HTMLElement>());
+  const places = useRef(new Map<string, HTMLDetailsElement>());
   useEffect(() => {
     let cancelled = false;
     setPhase('loading');
@@ -93,7 +93,7 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
     </div>
     <nav className="wsi-bar" aria-label="Related passages">
       {insight.passages.map((p, i) => <button key={p.key} type="button" aria-pressed={selected === p.key}
-        onClick={() => { setSelected(p.key); places.current.get(p.key)?.scrollIntoView({ block: 'nearest' }); }}>
+        onClick={() => { setSelected(p.key); const place = places.current.get(p.key); if (place) { place.open = true; place.scrollIntoView({ block: 'start', behavior: 'smooth' }); } }}>
         {i + 1} · {p.heading}
       </button>)}
     </nav>
@@ -105,9 +105,9 @@ export default function InsightReading({ manuscriptId, readingId, observationKey
         ? { before: p.range ? points.slice(0, p.range.start).join('') : '', selected: p.range ? points.slice(p.range.start, p.range.end).join('') : p.body, after: p.range ? points.slice(p.range.end).join('') : '', clippedBefore: false, clippedAfter: false }
         : p.range ? passageWindow(p.body, p.range, context)
         : { before: '', selected: points.slice(0, 500).join(''), after: '', clippedBefore: false, clippedAfter: points.length > 500 };
-      return <details open key={p.key} ref={el => { if (el) places.current.set(p.key, el); else places.current.delete(p.key); }}
+      return <details open={i === 0 || selected === p.key} key={p.key} ref={el => { if (el) places.current.set(p.key, el); else places.current.delete(p.key); }}
         className="wsi-passage" data-selected={selected === p.key}>
-        <summary className="wsi-section-heading"><strong>{i + 1} · {p.heading}</strong><span>{p.chapterHeading}{p.position !== undefined ? ` · Section ${p.position}` : ''}</span></summary><span className="wsi-eyebrow">Related place {i + 1} · {p.range ? 'verified excerpt' : 'section reference'}</span>
+        <summary className="wsi-section-heading"><strong>{i + 1} · {p.heading}</strong><span>{p.chapterHeading}{p.position !== undefined ? ` · Section ${p.position}` : ''}</span><span className="wsi-section-disclosure" aria-hidden="true" /></summary><span className="wsi-eyebrow">Related place {i + 1} · {p.range ? 'verified excerpt' : 'section reference'}</span>
         <p className="wsi-muted">{p.chapterHeading}{p.position !== undefined ? ` · Section ${p.position}` : ''}</p>
         {!p.range && <p className="wsi-muted">{full ? 'Full section' : 'Section opening'} · no narrower evidence is highlighted.</p>}
         <div className="wsi-prose" tabIndex={0} role="region" aria-label={p.heading + ' passage text'}>

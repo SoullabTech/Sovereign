@@ -84,3 +84,22 @@ test('page conversation previews before apply and preserves a draft through disc
   expect(container.querySelector('.wsi-revision')).toBe(draft);
   expect(onApply).not.toHaveBeenCalled();
 });
+test('margin note can close and reopen while the paragraph and preview stay in place', () => {
+  const toggled=jest.fn();
+  const draw=(open:boolean)=>act(()=>root.render(React.createElement(ManuscriptPassage,{
+    body:'Before.\n\nOriginal words.\n\nAfter.',range:{start:9,end:24},
+    proposal:{original:'Original words.',wording:'My new words.',changes:false},
+    annotation:{label:'Voice and rhythm',open,onToggle:toggled},
+    children:React.createElement('aside',{hidden:!open},'Conversation')
+  })));
+  draw(true);
+  const marker=container.querySelector('button')!;
+  expect(marker.getAttribute('aria-expanded')).toBe('true');
+  act(()=>marker.click()); expect(toggled).toHaveBeenCalledTimes(1);
+  draw(false);
+  expect(container.querySelector('aside')?.hidden).toBe(true);
+  expect(container.textContent).toContain('My new words.');
+  expect(container.textContent).toContain('After.');
+  expect(container.querySelector('button')?.getAttribute('aria-label')).toBe('Open note: Voice and rhythm');
+  draw(true); expect(container.querySelector('aside')?.hidden).toBe(false);
+});
