@@ -219,3 +219,34 @@
 .wsi-request-error { padding:10px 12px; border-left:3px solid #a94e42; background:#a94e4214; }
 .wsi-page-conversation > [role=status] ins { background:#c7ad5d44; text-decoration:underline; }
 .wsi-page-conversation > [role=status] del { background:#bc696633; text-decoration:line-through; }
+
+/* The Work's direction accompanies the page without competing with the manuscript. */
+.wsi-direction { margin:0 0 18px; padding:18px; border:1px solid var(--wsi-line); border-left:3px solid #748b68; background:color-mix(in srgb,#e5eedf 78%,var(--wsi-paper)); }
+.wsi-direction [data-gold-line] { margin-bottom:12px; }
+.wsi-direction-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; }
+.wsi-direction-heading h3 { margin:3px 0 6px; font:500 24px/1.25 var(--font-spectral,Georgia,serif); }
+.wsi-direction-heading p { margin:0; max-width:66ch; line-height:1.5; }
+.wsi-kicker { margin:0 0 6px !important; color:#78622f; font:600 10px/1.4 system-ui; letter-spacing:.18em; text-transform:uppercase; }
+.wsi-direction-guide { display:grid; grid-template-columns:minmax(155px,.55fr) minmax(0,1.45fr); gap:24px; margin-top:20px; }
+.wsi-direction-guide nav { display:flex; flex-direction:column; gap:5px; }
+.wsi-direction-guide nav button { text-align:left; border:0; border-left:2px solid var(--wsi-line); background:transparent; padding:8px 10px; color:inherit; }
+.wsi-direction-guide nav button[aria-current=step] { border-left-color:#806525; background:#a58a4530; }
+.wsi-direction-guide nav button.is-held span { background:#60775d; color:#fff; }
+.wsi-direction-guide nav span { display:inline-grid; place-items:center; width:21px; height:21px; margin-right:8px; border:1px solid var(--wsi-line); border-radius:50%; font-size:10px; }
+.wsi-direction-question h4 { margin:2px 0 7px; font:500 28px/1.2 var(--font-spectral,Georgia,serif); }
+.wsi-direction-question > p { margin:0 0 15px; max-width:58ch; }
+.wsi-direction-question label span { display:block; margin-bottom:6px; font-size:12px; }
+.ws-insight .wsi-direction-question textarea { min-height:120px; margin:0 0 8px; font:18px/1.55 var(--font-spectral,Georgia,serif); }
+.wsi-direction-kept { margin-top:16px; padding:18px; background:color-mix(in srgb,#dbe7d5 76%,transparent); }
+.wsi-direction-kept dl { margin:10px 0 16px; }
+.wsi-direction-kept dl div { display:grid; grid-template-columns:135px minmax(0,1fr); gap:16px; padding:9px 0; border-top:1px solid color-mix(in srgb,var(--wsi-line) 60%,transparent); }
+.wsi-direction-kept dt { color:#78622f; font:600 10px/1.5 system-ui; letter-spacing:.12em; text-transform:uppercase; }
+.wsi-direction-kept dd { margin:0; white-space:pre-wrap; font:15px/1.5 var(--font-spectral,Georgia,serif); }
+.wsi-direction-status { color:#4f6849; margin:10px 0 0; }
+@media(max-width:720px) {
+  .wsi-direction-heading { display:block; }
+  .wsi-direction-heading > button { margin-top:12px; }
+  .wsi-direction-guide { grid-template-columns:1fr; }
+  .wsi-direction-guide nav { display:grid; grid-template-columns:1fr 1fr; }
+  .wsi-direction-kept dl div { grid-template-columns:1fr; gap:3px; }
+}

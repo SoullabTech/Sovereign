@@ -122,6 +122,8 @@ export default function RevisionDesk({
     const toggleTool = (name: string) => setOpenTool(openTool === name ? null : name);
     const keep = () => { setShowProposal(false); setLocalMessage(null); onKeep(); };
     return <section data-revision-desk data-inline className="wsi-page-conversation" aria-label="Explore this passage with MAIA">
+      {showInspiration && <WorkInspiration manuscriptId={manuscriptId}
+        onBringToQuestion={text => onInstruction([instruction, 'The direction for this Work:\n' + text].filter(Boolean).join('\n\n'))} />}
       {busy && <p role="status" aria-live="polite">MAIA is working on your request. Your manuscript is unchanged.</p>}
       {message && <p role="alert" className="wsi-request-error">{message}</p>}
       {previewing && <p role="status" aria-live="polite">Proposed changes are marked in the passage above: <ins>added words</ins> · <del>removed words</del>. Nothing is applied yet.</p>}
