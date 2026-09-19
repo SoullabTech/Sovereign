@@ -662,6 +662,11 @@ export default function DevelopRoom({
       workName={headline}
       workNamed={Boolean(title)}
       workNote="Developmental view"
+      headerRight={<button type="button" aria-expanded={readingToolsOpen}
+        className="rounded border px-3 py-2 text-[12px]"
+        onClick={() => setReadingToolsOpen(value => !value)}>
+        {readingToolsOpen ? 'Close reading tools' : 'Developmental tools'}
+      </button>}
       rail={
         <DevelopManuscriptRail
           sections={sections ?? []}
@@ -706,6 +711,39 @@ export default function DevelopRoom({
               {currentChapter ? <span> &nbsp;›&nbsp; {currentChapter.root.heading?.trim() || 'Current chapter'}</span> : null}
               {currentSection && currentSection.id !== currentChapter?.root.draftSectionId
                 ? <span> &nbsp;›&nbsp; {currentSection.heading?.trim() || 'Untitled section'}</span> : null}
+            </div>
+            <div data-develop-task-bar className="pb-4 mb-4 border-b" style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}>
+              <p className="text-[14px] mb-3">Explore how the parts of your work belong together.</p>
+              <div className="flex flex-wrap items-end gap-3">
+                <label className="text-[12px]">Where should MAIA read?
+                  <select aria-label="Developmental reading scope" value={effectiveScope}
+                    disabled={commission.phase === 'reading'}
+                    onChange={e => { setDevelopScope(e.target.value as DevelopScope); if (e.target.value === 'custom') setReadingToolsOpen(true); }}
+                    className="block border rounded px-2 py-2 mt-1 bg-transparent" style={{ borderColor: PRESS.rule }}>
+                    <option value="work" style={{ color: PRESS.ink }}>Whole work</option>
+                    <option value="chapter" disabled={!currentChapter} style={{ color: PRESS.ink }}>Current chapter</option>
+                    <option value="custom" style={{ color: PRESS.ink }}>Choose a range</option>
+                  </select>
+                </label>
+                <label className="text-[12px]">What would you like to explore?
+                  <select aria-label="Developmental task" value={lens} disabled={commission.phase === 'reading'}
+                    onChange={e => setLens(e.target.value as DevelopmentalLens)}
+                    className="block border rounded px-2 py-2 mt-1 bg-transparent max-w-full" style={{ borderColor: PRESS.rule }}>
+                    {LENS_ORDER.map(l => <option key={l} value={l} style={{ color: PRESS.ink }}>{l === 'development' ? 'Development' : lensLabel(l)} · {LENS_QUESTION[l]}</option>)}
+                  </select>
+                </label>
+                <button type="button" onClick={() => { setReadingToolsOpen(true); void ask(); }}
+                  disabled={listPhase !== 'ready' || prep.phase !== 'ready' || prep.state.kind !== 'ready' || commission.phase === 'reading' || tooLarge}
+                  className="rounded border px-3 py-2 text-[12px] disabled:opacity-40"
+                  style={{ borderColor: PRESS.rule, background: 'var(--ws-ground-active)' }}>
+                  {commission.phase === 'reading' ? 'MAIA is reading…' : 'Explore with MAIA'}
+                </button>
+              </div>
+              <p className="text-[12px] mt-2 opacity-70" role="status">
+                {tooLarge ? 'Choose a smaller range so MAIA can read it in one sitting.'
+                  : prep.phase === 'ready' && prep.state.kind === 'ready' ? 'Choose a focus, then ask for a reading. Your manuscript stays unchanged.'
+                  : 'Open Developmental tools to see reading readiness and preparation.'}
+              </p>
             </div>
             <DevelopManuscriptSurface
               sections={sections}

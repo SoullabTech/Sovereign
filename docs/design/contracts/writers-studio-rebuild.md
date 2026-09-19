@@ -148,3 +148,14 @@ and mobile acceptance pass is still outstanding. The local speech probe reached 
 configured service but returned HTTP 429 with no credits remaining. No successful
 audio playback or current authenticated apply/reopen/undo witness is claimed.
 Deployment remains pending those checks and current-head release gates.
+
+### Develop task discoverability correction
+
+The founder reported that Develop appeared to offer nothing to do. Its existing
+commissioning controls had become hidden behind the reading-tools toggle. The
+manuscript now has explicit scope and seven-lens selectors and an Explore with
+MAIA action. These call the existing reading operation, preserving readiness,
+size limits and explicit invocation. The Studio header also exposes Developmental
+tools outside the manuscript scroll, including preparation and reading history.
+This does not add passage-only or discontiguous-range commissioning; supported
+scopes remain whole work, current chapter and a contiguous custom range.
