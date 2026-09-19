@@ -25,6 +25,8 @@ export default function RevisionDesk({
   busy: boolean; message: string | null; response: string | null; onKeep: () => void;
 }) {
   const [editorialQuestion, setEditorialQuestion] = useState('');
+  const [reasonQuestion, setReasonQuestion] = useState('');
+  useEffect(() => { setReasonQuestion(''); }, [scopeKey, version?.id]);
   const [directionContext, setDirectionContext] = useState('');
   const [reviewed, setReviewed] = useState<string | null>(null);
   const [purpose, setPurpose] = useState('');
@@ -32,12 +34,12 @@ export default function RevisionDesk({
   const context = passageContext(sectionBody ?? currentText, currentText);
   const versionLabel = version ? alternativeLabel(version, thread?.versions.findIndex(v => v.id === version.id) ?? 0) : '';
   const discuss = () => {
-    const question = [editorialQuestion, instruction.trim()].filter(Boolean).join('\n');
+    const question = [editorialQuestion, reasonQuestion, instruction.trim()].filter(Boolean).join('\n');
     const text = [directionContext, question ? 'My question:\n' + question : '',
       sectionBody && sectionBody !== currentText ? 'Current section context (reference only):\n' + sectionBody : '',
       version ? 'Discussing saved alternative ' + versionLabel + ':\n' + version.wording : '',
       draft && draft.threadId === thread?.threadId ? 'My unsaved working revision (for discussion, do not apply):\n' + draft.text : '',
-      'If offering replacement wording, begin its rationale with "Editorial purpose: <short descriptive name>". Distinguish meaning changes from style and treat reader benefits as hypotheses.'
+      'If offering replacement wording, begin its rationale with "Editorial purpose: <short descriptive name>". Distinguish meaning changes from style and treat reader benefits as hypotheses. Explain the editorial rationale using supplied wording: what you notice, the craft principle, the possible reader benefit, what could be lost, and a case for keeping the original. Ask where the author’s intention is unclear.'
     ].filter(Boolean).join('\n\n');
     setLocalMessage(null); onSend(text);
   };
@@ -135,7 +137,22 @@ export default function RevisionDesk({
           <button type="button" disabled={blocked || !draftMatches || !usablePart} onClick={insertPart}>Insert selected words into my working revision</button>
           {usablePart && <p className="wsi-muted">Selected: {usablePart.text}</p>}
         </details>}
-        {version.rationale && <p className="wsi-muted">{version.rationale}</p>}
+        <section className="wsi-reasoning" aria-label="Editorial explanation">
+          <h4>Why this suggestion?</h4>
+          {version.rationale ? <><p className="wsi-observation">{version.rationale}</p><MaiaListen text={version.rationale} active={active} /></> : <p>Ask MAIA to explain this alternative before choosing it.</p>}
+          <p className="wsi-muted">Explore the craft, test the interpretation, and weigh what this version gains or loses.</p>
+          <div className="wsi-bar">
+            {[
+              ['Explain the craft', 'Explain the craft principle behind this suggestion using the supplied original and proposed wording. Show what changed in meaning versus style, and when this technique might not fit.'],
+              ['What could be lost?', 'What voice, ambiguity, rhythm, or meaning could be lost in this suggestion? Treat reader effects as hypotheses and identify what more context would be needed.'],
+              ['Make the case for my original', 'Make the strongest case for keeping my original wording. What may it accomplish that this alternative does not? Do not assume that revision is improvement.'],
+              ['Try another direction', 'Offer a different editorial direction that preserves my stated intention. Explain its tradeoffs before proposing wording; do not invent personal experience or sources.'],
+            ].map(([label, question]) => <button type="button" key={label} disabled={blocked} aria-pressed={reasonQuestion === question}
+              onClick={() => setReasonQuestion(question)}>{label}</button>)}
+          </div>
+          {reasonQuestion && <label>Question for MAIA<textarea value={reasonQuestion} onChange={event => setReasonQuestion(event.target.value)} /></label>}
+          <p className="wsi-muted">Choose or edit a question, then use Discuss this below. Your working revision stays here.</p>
+        </section>
       </div> : <p className="wsi-muted">{version ? 'Proposed wording is hidden.' : 'Ask for a possibility below. Your manuscript remains unchanged while you explore.'}</p>}
     </div>
     {version && thread && <section aria-label="Review in context">
@@ -193,7 +210,7 @@ export default function RevisionDesk({
     </label>
     <p className="wsi-muted">Discuss sends your question, selected direction, intention, included voice notes, section context, and any working revision in this conversation. It does not apply wording.</p>
     <div className="wsi-bar">
-      <button type="button" onClick={discuss} disabled={blocked || (!instruction.trim() && !directionContext.trim() && !editorialQuestion) || Boolean(draft && !draftMatches)}>{busy ? 'MAIA is working…' : 'Discuss this'}</button>
+      <button type="button" onClick={discuss} disabled={blocked || (!instruction.trim() && !directionContext.trim() && !editorialQuestion && !reasonQuestion.trim()) || Boolean(draft && !draftMatches)}>{busy ? 'MAIA is working…' : 'Discuss this'}</button>
     </div>
     {undoMessage && !appliedVersionId && <p role="status">{undoMessage}</p>}
     {appliedVersionId && <section aria-label="Applied revision">
