@@ -1,4 +1,77 @@
 {
+  "founder_adjudication": {
+    "accepted_candidate_sha": "07004b1198d4e534fe1d9e8d701ab3d3637d8fda",
+    "accepted_disposition": "FEASIBILITY_PASS",
+    "date": "2026-09-19",
+    "evidence_summary": {
+      "collision_free_pair_capacity_per_ordered_query": 201192,
+      "exactly_one_switch_positives_per_ordered_query": 238512,
+      "gpt_oss_review": "PASS",
+      "hosted_ci": "PASS",
+      "independent_verifier": "PASS",
+      "positives_with_admissible_switch_per_ordered_query": 285500,
+      "qwen_review": "PASS",
+      "required_pairs_per_ordered_query": 900,
+      "required_total_pairs": 27000,
+      "total_query_marked_capacity": 6035760,
+      "valid_positive_graphs_per_ordered_query": 1035272
+    },
+    "finding": "The frozen RGR-RT1-D2C-01 benchmark is mechanically feasible under the canonical RGR-04 constraints without full benchmark materialization or model execution.",
+    "implementation_digest": "98597755f40316ec4b0e60318635e1ad0dd587dd0d6176147aaf36923abb731b",
+    "lifecycle_transitions": [
+      {
+        "adjudication": "accepted",
+        "authorization_ref": null,
+        "evidence_ref": "founder:rgr05-feasibility-adjudication-20260919",
+        "from": "EVIDENCE_READY",
+        "lifecycle_version": "W2.v2",
+        "reason_code": "RGR05_FEASIBILITY_PASS_ACCEPTED",
+        "superseded_by": null,
+        "to": "ADJUDICATED",
+        "work_unit_id": "rgr-05-pre-materialization-feasibility-20260918"
+      },
+      {
+        "adjudication": null,
+        "authorization_ref": null,
+        "evidence_ref": "founder:rgr05-feasibility-closure-20260919",
+        "from": "ADJUDICATED",
+        "lifecycle_version": "W2.v2",
+        "reason_code": "RGR05_FOUNDER_CLOSED",
+        "superseded_by": null,
+        "to": "CLOSED",
+        "work_unit_id": "rgr-05-pre-materialization-feasibility-20260918"
+      }
+    ],
+    "materialization_boundary": {
+      "dataset_files_written": 0,
+      "full_benchmark_materialized": false,
+      "materialized_benchmark_pair_count": 0,
+      "model_implementation": false,
+      "model_performance_inspection": false,
+      "model_training": false,
+      "replication_executed": false,
+      "test_executed": false
+    },
+    "successor_authority": {
+      "canonical_merge": "NOT_AUTHORIZED",
+      "comparator_model_implementation": "NOT_AUTHORIZED",
+      "deployment": "NOT_AUTHORIZED",
+      "elemental_operator_hypothesis": "CLOSED",
+      "freshness_reconciliation": "NOT_AUTHORIZED",
+      "full_benchmark_materialization": "NOT_AUTHORIZED",
+      "hyperparameter_search": "NOT_AUTHORIZED",
+      "maia_change": "NOT_AUTHORIZED",
+      "model_performance_inspection": "NOT_AUTHORIZED",
+      "model_training": "NOT_AUTHORIZED",
+      "production_mutation": "NOT_AUTHORIZED",
+      "replication_dataset_generation": "NOT_AUTHORIZED",
+      "replication_execution": "NOT_AUTHORIZED",
+      "test_dataset_generation": "NOT_AUTHORIZED",
+      "test_execution": "NOT_AUTHORIZED",
+      "train_dataset_generation": "NOT_AUTHORIZED",
+      "validation_dataset_generation": "NOT_AUTHORIZED"
+    }
+  },
   "founder_authorization": {
     "authorization": "RGR-05 PRE-MATERIALIZATION FEASIBILITY & VALIDATOR GATE ONLY",
     "date": "2026-09-18",
@@ -27,7 +100,7 @@
     "guard": {
       "authorized_core_digest": "sha256:523a5bb917b4c59e06a3d8939f6d9c8177c2318e461baa33ce6278390e862e80",
       "authorized_core_snapshot": "{\"authority\":{\"deploy\":false,\"external_disclosure\":\"none\",\"full_benchmark_materialization\":false,\"maia_change\":false,\"merge\":false,\"model_implementation\":false,\"model_performance_inspection\":false,\"model_training\":false,\"network_external\":false,\"production_read\":false,\"production_write\":false,\"provider_spend\":false,\"replication_execution\":false,\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"test_execution\":false},\"custody\":{\"evidence_class\":\"E1_REPOSITORY_LOCAL\"},\"evaluation\":{\"acceptance_conditions\":[\"Enough collision-free counterfactual pairs exist for every frozen split.\",\"Positive validator enforces exactly one source-to-target two-step intermediate.\",\"Negative validator enforces zero source-to-target two-step intermediates.\",\"Directed 2-switch preserves edge count, per-node in/out degree, and reciprocal-edge count.\",\"No self-loop, duplicate edge, direct shortcut, alternative two-step path, or reciprocal-count drift is admitted.\",\"Every retained positive has at least one admissible relation-breaking switch.\",\"Split allocation can satisfy exact-tuple exclusion and pairwise-disjoint 256-code codebooks.\",\"Frozen SHA-256 named-stream and seed law is implementable exactly.\",\"Independent validator rejects constitution-violating output.\",\"No full benchmark, model, training, TEST, or REPLICATION is executed.\"],\"falsification_conditions\":[\"Collision-free capacity is below 900 pairs per ordered source/target query under a balanced 30-query allocation.\",\"Independent enumeration disagrees with primary capacity counts.\",\"Any accepted switch changes a frozen pair invariant.\",\"Codebook or exact-tuple cross-split separation cannot be satisfied.\",\"A constitution-violating mutation is accepted by the independent validator.\",\"Full dataset materialization or model performance becomes necessary.\"],\"stop_conditions\":[\"Any frozen RGR-04 law must be changed.\",\"Full benchmark materialization becomes necessary.\",\"Any model implementation, training, TEST, or REPLICATION becomes necessary.\",\"Any private/member/PHI data becomes necessary.\",\"Any MAIA, schema, migration, deployment, or production action becomes necessary.\"]},\"identity\":{\"capability\":null,\"id\":\"rgr-05-pre-materialization-feasibility-20260918\",\"objective\":\"Prove or falsify pre-materialization feasibility of canonical RGR-RT1-D2C-01 using minimum deterministic generator/validator machinery without full dataset or model execution.\",\"parent_work_unit\":\"rgr-04-synthetic-relational-benchmark-constitution-20260918\",\"programme\":\"RELATIONAL-GEOMETRY-REASONING\",\"task_shape\":\"DETERMINISTIC_IMPLEMENTATION_VERIFICATION\",\"work_class\":\"RESEARCH\"},\"routing_request\":{\"requested_posture\":\"independent_review\",\"review_pressure\":\"high_value_deterministic\"},\"scope\":{\"allowed_paths\":[\"scripts/research/rgr/rgr05_feasibility.py\",\"scripts/research/rgr/rgr05_independent_verifier.py\",\"docs/programme/evidence/RGR-05/RGR05_FEASIBILITY_RESULT.json\",\"docs/programme/evidence/RGR-05/RGR05_INDEPENDENT_VERIFIER.json\",\"docs/programme/evidence/RGR-05/RGR05_REVIEW_PROVENANCE.json\",\"docs/programme/RGR-05_PRE_MATERIALIZATION_FEASIBILITY_REPORT_2026-09-18.md\",\"docs/programme/RGR-05_WORK_UNIT_2026-09-18.json\"],\"base_ref\":\"567e062b3d8929c41d15882ae26ea9d42077a1bc\",\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\"],\"repository\":\"SoullabTech/Sovereign\"}}",
-      "current_state": "EVIDENCE_READY",
+      "current_state": "CLOSED",
       "lifecycle_version": "W2.v2",
       "work_unit_id": "rgr-05-pre-materialization-feasibility-20260918"
     },
@@ -281,8 +354,8 @@
         "repository": "SoullabTech/Sovereign"
       },
       "state": {
-        "disposition": "FEASIBILITY_PASS",
-        "lifecycle_state": "EVIDENCE_READY",
+        "disposition": "closed",
+        "lifecycle_state": "CLOSED",
         "supersedes": null
       }
     }
