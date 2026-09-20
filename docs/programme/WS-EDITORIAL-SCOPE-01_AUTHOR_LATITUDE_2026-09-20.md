@@ -147,7 +147,63 @@ suite 70/70 (was 63/63); the Writer's Studio room membrane 51/51.**
    **not** yet send a scope, so it receives the protective default. Correct, but
    it has no slider.
 
-## 9 · Regression sweep
+## 9 · ⭐⭐ VOICE — the law the size bounds cannot reach
+
+**Founder framing, 2026-09-20:** *"it is for creatives, helpers, healers and
+those with great wisdom to offer but probably not great writers (yet) and have a
+style that needs to be protected not AI slop."*
+
+That names a failure the size law **cannot see**:
+
+```
+author     "Fire appears through energy, vision, imagination."
+proposal   "Fire discloses itself as a phenomenological register."
+```
+
+Nine words for nine. Every size bound satisfied. ⛔ And it is not their book.
+`V1` asserts exactly this — `judgeProposalScope` returns `ok: true` on it.
+
+⭐⭐ **And the audience is why it matters more here than it would elsewhere.** A
+confident writer defends their voice by instinct. Someone still finding theirs
+accepts a suggestion *because it sounds better*, cannot yet tell *better* from
+*more like everyone else*, and loses their voice one accepted suggestion at a
+time without ever seeing the moment it happened.
+
+**The measurement** (`lib/manuscript/editorialScope/voice.ts`): of the words a
+proposal ADDS, which appear nowhere in the writer's own nearby prose. Counted on
+the same diff, against the surround that was loaded anyway — no second read.
+
+⭐ **DISCLOSURE FIRST, REFUSAL ONLY AT THE EDGE.** Introducing a word is not a
+wrong; a good editor hands a writer a word they did not have. The wrong is
+introducing fifteen of them **silently**, to someone not equipped to notice. So
+the count is **carried on SUCCESS** and shown beside the proposal while the
+writer is deciding — ⛔ never afterwards, which would be a post-mortem — and a
+refusal fires only past the latitude's bound.
+
+The note states a fact and asks a question: *"This suggestion brings in 7 words
+you haven't used nearby: … Worth a look — are they yours?"* ⛔ `V8` asserts it
+never contains *better · worse · weak · strong · improve · should*. **The writer
+decides what their voice is.** This only makes the choice visible in time to be
+made.
+
+⛔ **What it is not**, each refused on purpose: not a style score · not a
+readability metric (those measure conformity to an average, which is the
+opposite of the job) · **not a stoplist** — a curated list of words that do not
+count would be a judgement about which vocabulary matters, in one language,
+imported into a system whose **Invariant 14** forbids exactly that. The
+author's own sample supplies the common words, or it does not, and either way it
+is theirs. ⛔ And **no stemming**: *spiral* and *spiralling* stay distinct,
+because a writer who uses one and not the other is telling you something.
+
+⚠️ **The sample is BOUNDED and says so.** It is the surrounding section, not the
+whole Work — a word used in chapter one and nowhere near here reads as
+unfamiliar. A false positive of **scope, ⛔ not of kind**. `sampleWords` travels
+with every result so a surface can say how much the comparison saw rather than
+implying it saw everything. Widening it to the whole Work is its own act.
+
+**15 voice falsifiers green.**
+
+## 10 · Regression sweep
 
 Every `.test.ts` under `lib/manuscript`, `lib/writers-studio`,
 `lib/writersStudio`, `app/writers-studio` and `lib/maia/canonical-turn` was run
@@ -160,10 +216,16 @@ limitations (`jest.mock`, DOM, `localStorage`), ⛔ not regressions — which is
 precisely why the comparison was made against a baseline rather than read off a
 single run.
 
-**Standing: CHANGE-SCOPE LAW LANDED · READ-SCOPE LAW LANDED · 28 NEW FALSIFIERS
-GREEN (19 change · 9 read) · SLIDER SHIPPED · PARAGRAPH PERMISSION DEFAULT OFF ·
-NO REGRESSION vs BASELINE · ⛔ NO MIGRATION · ⛔ NO SCHEMA CHANGE ·
+**Standing: CHANGE-SCOPE LAW LANDED · READ-SCOPE LAW LANDED · VOICE LAW LANDED ·
+49 NEW FALSIFIERS GREEN (19 change · 9 read · 15 voice · 6 persistence) ·
+SLIDER SHIPPED ON BOTH SURFACES · PARAGRAPH PERMISSION DEFAULT OFF AND NEVER
+PERSISTED · NO REGRESSION vs BASELINE · ⛔ NO MIGRATION · ⛔ NO SCHEMA CHANGE ·
 ⛔ NOT DEPLOYED · PRODUCTION UNTOUCHED.**
+
+> ⭐⭐ *Three bounds, three different questions. How much may change. What may be
+> read. Whose words the replacement is in. A suggestion can pass the first two
+> and still not be the writer's book — and the writer most at risk of accepting
+> it is exactly the one this studio was built for.*
 
 > ⭐ *The authorization layer protected the manuscript. It was never reached,
 > because the injury was the offer. A proposal is an edit of the author's

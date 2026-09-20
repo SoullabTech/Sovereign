@@ -52,9 +52,12 @@ import {
   type EditorialInvocation, type MemberActKind, type OutcomeRefusal,
 } from '../editorialDiscourse/contract';
 import {
-  DEFAULT_SCOPE_DECLARATION, judgeProposalScope, latitudeInstruction,
+  DEFAULT_SCOPE_DECLARATION, LATITUDE_BANDS, judgeProposalScope, latitudeInstruction,
   type EditorialScopeDeclaration, type ScopeRefusal, type ScopeMeasure,
 } from '../editorialScope/contract';
+import {
+  UNFAMILIAR_BOUND, measureVoiceIntrusion, voiceNote,
+} from '../editorialScope/voice';
 import { assembleEditorialCognition, type AssemblyRefusal } from './assembly';
 import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeResult } from './maiaOutcome';
 
@@ -117,6 +120,12 @@ export type EditorialTurnRefusal =
   /** The structured seam refused. ⛔ There is no fallback below this. */
   | 'structured_refused'
   /**
+   * ⭐⭐ THE PROPOSAL IS IN SOMEONE ELSE'S VOCABULARY, far past what the
+   * writer's latitude could plausibly mean. ⛔ Below the bound this is REPORTED
+   * and nothing is blocked — a studio that teaches shows the writer the thing.
+   */
+  | 'voice_intrusion'
+  /**
    * ⭐⭐ THE PROPOSAL EXCEEDED THE AUTHOR'S DECLARED LATITUDE.
    * ⛔ Nothing was written, and the wording is not shown.
    */
@@ -128,6 +137,14 @@ export type EditorialTurnResult =
       readonly invocation: EditorialInvocation;
       readonly request: StructuredRequest;
       readonly persisted: Extract<MaiaOutcomeResult, { ok: true }>;
+      /**
+       * ⭐ What the suggestion brought in that is not the writer's, or `null`.
+       * ⛔ Present on SUCCESS — it is a thing to notice, not a thing to fail.
+       */
+      readonly voice: {
+        readonly note: string; readonly unfamiliar: readonly string[];
+        readonly sampleWords: number;
+      } | null;
     }
   | {
       readonly ok: false;
@@ -135,6 +152,11 @@ export type EditorialTurnResult =
       readonly detail?: string;
       /** ⭐ Present only on a scope refusal, so the writer can be told in counts. */
       readonly scope?: { readonly measure: ScopeMeasure; readonly wouldPassAtLatitude: number | null };
+      /** ⭐ Present on a voice refusal, so the writer sees WHICH words. */
+      readonly voice?: {
+        readonly note: string; readonly unfamiliar: readonly string[];
+        readonly sampleWords: number;
+      };
     };
 
 export async function runEditorialTurn(
@@ -274,6 +296,10 @@ export async function runEditorialTurn(
    * kept and nothing of the author's is shown struck through. The member's own
    * act already persisted and still stands.
    */
+  let voice: {
+    note: string; unfamiliar: readonly string[]; sampleWords: number;
+  } | null = null;
+
   if (admission.outcome.kind === 'reply_with_proposal') {
     const verdict = judgeProposalScope(
       invocation.locusText, admission.outcome.proposal.replacementText, scope);
@@ -283,6 +309,38 @@ export async function runEditorialTurn(
         scope: { measure: verdict.measure, wouldPassAtLatitude: verdict.wouldPassAtLatitude },
       };
     }
+
+    /* 6c ⭐⭐ VOICE — whose words the replacement is in.
+     *
+     * ⛔ A SEPARATE QUESTION FROM SIZE, and the reason it is separate is that
+     * a proposal can satisfy every size bound and still not be the writer's
+     * book. Nine words for nine, in a vocabulary they have never used.
+     *
+     * ⭐ DISCLOSURE FIRST. Below the bound the count is carried forward and the
+     * proposal stands — introducing a word is half of what editing is for.
+     * Refusal is only for the case where *a bounded edit* and *a passage in
+     * someone else's vocabulary* have stopped being the same thing.
+     */
+    const measure = measureVoiceIntrusion(
+      assembly.authorSample, invocation.locusText,
+      admission.outcome.proposal.replacementText);
+
+    if (measure.unfamiliar.length > UNFAMILIAR_BOUND[scope.latitude]) {
+      return {
+        ok: false, reason: 'voice_intrusion',
+        detail: `This suggestion brings in ${measure.unfamiliar.length} words you haven't `
+          + `used nearby — more than "${LATITUDE_BANDS[scope.latitude].label}" allows. `
+          + 'Nothing was changed. Ask MAIA to work with your own words, or widen how much '
+          + 'she may change.',
+        voice: {
+          note: voiceNote(measure) ?? '', unfamiliar: measure.unfamiliar,
+          sampleWords: measure.sampleWords,
+        },
+      };
+    }
+
+    const note = voiceNote(measure);
+    if (note) voice = { note, unfamiliar: measure.unfamiliar, sampleWords: measure.sampleWords };
   }
 
   /* 7 · persist, with the provenance of the answer that ACTUALLY came back */
@@ -303,5 +361,5 @@ export async function runEditorialTurn(
   });
   if (!persisted.ok) return { ok: false, reason: persisted.reason, detail: persisted.detail };
 
-  return { ok: true, invocation, request, persisted };
+  return { ok: true, invocation, request, persisted, voice };
 }

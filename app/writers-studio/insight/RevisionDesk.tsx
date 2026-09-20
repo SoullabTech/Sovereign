@@ -18,7 +18,7 @@ export interface MemberRevisionDraft {
 export default function RevisionDesk({
   active = true, inline = false, onPreview, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
-  latitude = 1, onLatitude, mayRemoveParagraphs = false, onMayRemoveParagraphs,
+  latitude = 1, onLatitude, mayRemoveParagraphs = false, onMayRemoveParagraphs, voiceNotice,
 }: {
   active?: boolean; inline?: boolean; onPreview?: (preview: { original: string; wording: string; changes: boolean } | null) => void;
   scopeKey?: string; showInspiration?: boolean; manuscriptId: string; title: string; currentText: string; thread: RebuildEditorialThread | null;
@@ -31,6 +31,11 @@ export default function RevisionDesk({
   /** ⭐ The author's editing latitude. ⛔ Defaults to the most protective value. */
   latitude?: EditorialLatitude; onLatitude?: (v: EditorialLatitude) => void;
   mayRemoveParagraphs?: boolean; onMayRemoveParagraphs?: (v: boolean) => void;
+  /**
+   * ⭐ What this suggestion brought in that is not the writer's, or `null`.
+   * ⛔ Shown BESIDE the proposal, never after the writer has accepted it.
+   */
+  voiceNotice?: string | null;
 }) {
   const [openTool, setOpenTool] = useState<string | null>(null);
   useEffect(() => { setOpenTool(null); }, [scopeKey]);
@@ -159,6 +164,7 @@ export default function RevisionDesk({
             disabled={blocked || thread.legacyLocus || Boolean(draft) || !previewing || version.id === appliedVersionId}>Use this revision</button>
         </>}
       </div>
+      {voiceNotice && version && <p className="wsi-voice-notice" role="note">{voiceNotice}</p>}
       <div className="wsi-page-foot">
         <span>{draft ? 'Your draft · not applied' : previewing ? 'Preview · only this passage would change' : 'Your manuscript is unchanged while we explore'}</span>
         <button className="wsi-text-button" aria-expanded={openTool === 'tools'} onClick={() => toggleTool('tools')}>Explore more</button>
@@ -233,6 +239,10 @@ export default function RevisionDesk({
           {diff.before}<del>{diff.removed}</del><ins>{diff.added}</ins>{diff.after}
         </div> : <div className="wsi-proposed wsi-prose">{version.wording || <em>Remove the selected passage.</em>}</div>}
         {changes && <p className="wsi-muted">Changes against the original passage held by this conversation. Underline = addition; strike-through = removal.</p>}
+        {/* ⭐⭐ Placed with the PROPOSAL, not with the outcome. A writer who is
+            still finding their voice needs to see this while deciding, not
+            after. ⛔ It is a fact and a question, never a grade. */}
+        {voiceNotice && <p className="wsi-voice-notice" role="note">{voiceNotice}</p>}
         {version.wording && <details><summary>Use selected words in my own revision</summary>
           <label>Select words from this proposal
             <textarea readOnly value={version.wording} aria-label="Select words from this proposal"

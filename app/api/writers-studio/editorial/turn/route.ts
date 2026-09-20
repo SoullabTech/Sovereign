@@ -201,14 +201,20 @@ export async function POST(request: NextRequest) {
      *
      * ⛔ The refused wording is NOT returned. A refusal is not an occasion to
      * disclose the thing that was refused. */
-    const scopeRefused = turn.scope !== undefined;
+    /* ⭐ Both scope and voice are the same KIND of outcome: the writer drew a
+       line and the system held it. ⛔ Neither is a server fault. */
+    const scopeRefused = turn.scope !== undefined || turn.voice !== undefined;
     return NextResponse.json({
       threadId: parsed.threadId,
       memberTurnIndex: act.turnIndex,
       direction: act.direction ? { id: act.direction.id } : null,
       error: turn.reason,
-      ...(scopeRefused ? {
-        detail: turn.detail,
+      ...(turn.voice ? { voice: {
+        note: turn.voice.note, unfamiliar: turn.voice.unfamiliar,
+        sampleWords: turn.voice.sampleWords,
+      } } : {}),
+      ...(scopeRefused ? { detail: turn.detail } : {}),
+      ...(turn.scope ? {
         scope: {
           declared: parsed.scope,
           authorWords: turn.scope!.measure.authorWords,
@@ -231,5 +237,11 @@ export async function POST(request: NextRequest) {
     response: turn.persisted.reply,
     direction: turn.persisted.direction ? { id: turn.persisted.direction.id } : null,
     version: turn.persisted.version ? { id: turn.persisted.version.id } : null,
+    /* ⭐⭐ WHAT THE SUGGESTION BROUGHT IN THAT IS NOT THE WRITER'S.
+     *
+     * ⛔ Carried on SUCCESS, deliberately. It is a thing to notice, not a thing
+     * to fail — and for a writer still finding their voice, noticing in time is
+     * the whole of the protection. */
+    voice: turn.voice,
   });
 }

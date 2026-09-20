@@ -81,6 +81,16 @@ export type EditorialAssemblyResult =
        * arriving through the measurement instead of the write.
        */
       readonly locusText: string;
+      /**
+       * ⭐ The writer's own nearby prose, as a VOCABULARY SAMPLE for the voice
+       * measurement (WS-EDITORIAL-SCOPE-01 · voice).
+       *
+       * ⛔ It is the surround, which was loaded anyway — no second read. ⚠️ And
+       * it is BOUNDED: a word the writer used in chapter one and nowhere near
+       * here is unknown to this sample. That limit travels with the result as
+       * `sampleWords` rather than being hidden.
+       */
+      readonly authorSample: string;
     }
   | { readonly ok: false; readonly reason: AssemblyRefusal };
 
@@ -191,6 +201,7 @@ export async function assembleEditorialCognition(
     /* ⭐ THE SAME VALUE THE LOCUS BLOCK CARRIED INTO COGNITION, from the same
        read. ⛔ Not a second lookup that could disagree with it. */
     locusText: locus.expectedText,
+    authorSample: surround ? `${surround.before}\n${surround.after}` : '',
   };
 }
 

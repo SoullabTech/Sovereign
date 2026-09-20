@@ -765,10 +765,13 @@ export default function RebuildStudioClient() {
     latitude: editLatitude, setLatitude: setEditLatitude,
     mayRemoveParagraphs, setMayRemoveParagraphs,
   } = useEditingLatitude();
+  /** ⭐ What the latest suggestion brought in that is not the writer's. */
+  const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
 
   const sendEditorial = useCallback(async (requestText?: string) => {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
+    setVoiceNotice(null);
     const exactWords = requestText ?? editorialDraft;
     try {
       if (!(await settleWriting())) return;
@@ -790,6 +793,10 @@ export default function RebuildStudioClient() {
         return;
       }
       if (!bindEditorialThread(out.thread)) return;
+      /* ⭐⭐ THE VOICE NOTICE TRAVELS WITH THE SUGGESTION, not after it.
+         For a writer still finding their voice, noticing in time is the whole
+         of the protection — a note read afterwards is a post-mortem. */
+      setVoiceNotice(out.voice?.note ?? null);
       setLastEditorialInstruction(exactWords);
       if (out.producedVersionId) setSuggestedVersionId(out.producedVersionId);
       setShowChanges(false);
@@ -1632,6 +1639,7 @@ export default function RebuildStudioClient() {
           undoMessage={undoMessage}
           thread={editorialThread} version={suggestedVersion} instruction={editorialDraft}
           onInstruction={setEditorialDraft} onSend={text => void sendEditorial(text)}
+          voiceNotice={voiceNotice}
           latitude={editLatitude} onLatitude={setEditLatitude}
           mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={setMayRemoveParagraphs}
           onSelectVersion={id => { setSuggestedVersionId(id); setAdoptionOutcome(null); setEditorialFailure(null); }} onApply={() => void applySuggested()}

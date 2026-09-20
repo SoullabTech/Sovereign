@@ -405,5 +405,11 @@ export function latitudeInstruction(declared: EditorialScopeDeclaration): string
       + 'answers what they asked. If what you want to do exceeds this latitude, say that in your '
       + 'reply instead of proposing it — a proposal beyond the latitude is refused and the writer '
       + 'sees nothing.',
+    /* ⭐ The vocabulary clause, added when the voice measurement landed. ⛔ Still
+       courtesy: `measureVoiceIntrusion` counts what comes back either way. */
+    'Write in THEIR vocabulary. Every word you introduce that they have not used nearby is '
+      + 'counted and shown to them. That is not a prohibition — a good editor hands a writer a '
+      + 'word they did not have — but a passage rebuilt in your vocabulary is not their book, '
+      + 'and they are the one who has to stand behind it.',
   ].join('\n');
 }
