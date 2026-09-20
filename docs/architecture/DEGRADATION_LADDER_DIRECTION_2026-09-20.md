@@ -103,6 +103,8 @@ A member in distress does not need a systems status report. There is a real conf
 
 ## What would have to be true to ratify
 
+0. ✅ **Falsifier matrix, 2026-09-20** — `npm run matrix:serving-identity`. 6 falsifiers · 5 defeat candidates · 4 structural guards; lethal, discriminating, green. The discriminating falsifier is **SI-F4**: a turn *routed* to local and a turn *degraded* to local must be distinguishable, which is exactly the defect the change closes. ⚠️ Three failures on first run were all **instrument** defects, repaired as such and recorded in the file: a hard-coded count of structured events that missed the pre-existing `llm.truncated`; a scan that failed `classifyDivergence` because of the word inside its own name (the C21 class); and one collateral kill that was irreducible rather than an isolation defect.
+
 1. ✅ **Done at the provider boundary, 2026-09-20.** `ServingIdentity` (`intendedProvider` · `intendedModel` · `servedProvider` · `servedModel` · `divergence` · `reason`) is now on every `LLMResponse` and on the stream's `done` event, and `llm.capability_degradation` gives the cloud→local direction the structured event it never had. ⛔ **Still owed: route → response.** Identity stops at the provider boundary; no caller propagates it, and nothing is member-facing.
 2. A production witness of how often each rung is actually reached — ⛔ currently unknown, and the ladder should not be designed against a guess.
 3. A canon ruling on the distress tension above.
@@ -115,4 +117,4 @@ A member in distress does not need a systems status report. There is a real conf
 
 ## Standing
 
-**DEGRADATION LADDER ⭐ DIRECTION RECORDED · SUBSTITUTION MECHANISM ✅ ESTABLISHED IN SOURCE · SILENT DEGRADATION ✅ ESTABLISHED IN SOURCE · SERVING IDENTITY ✅ REPRESENTABLE AT THE PROVIDER BOUNDARY (2026-09-20) · CAPABILITY-DIRECTION OBSERVABILITY ✅ ADDED · ROUTE→RESPONSE PROPAGATION ⛔ NOT DONE · DISCLOSURE ⛔ NOT RULED · RUNTIME FREQUENCY ⛔ NOT ESTABLISHED · DISTRESS TENSION ⛔ UNRESOLVED · ⛔ NO LANE OPENED · ⛔ NO BEHAVIOUR CHANGE · ⛔ NO MEMBER-FACING CHANGE · PRODUCTION UNTOUCHED.**
+**DEGRADATION LADDER ⭐ DIRECTION RECORDED · FALSIFIER MATRIX ✅ LETHAL + DISCRIMINATING · SUBSTITUTION MECHANISM ✅ ESTABLISHED IN SOURCE · SILENT DEGRADATION ✅ ESTABLISHED IN SOURCE · SERVING IDENTITY ✅ REPRESENTABLE AT THE PROVIDER BOUNDARY (2026-09-20) · CAPABILITY-DIRECTION OBSERVABILITY ✅ ADDED · ROUTE→RESPONSE PROPAGATION ⛔ NOT DONE · DISCLOSURE ⛔ NOT RULED · RUNTIME FREQUENCY ⛔ NOT ESTABLISHED · DISTRESS TENSION ⛔ UNRESOLVED · ⛔ NO LANE OPENED · ⛔ NO BEHAVIOUR CHANGE · ⛔ NO MEMBER-FACING CHANGE · PRODUCTION UNTOUCHED.**

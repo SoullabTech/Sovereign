@@ -40,7 +40,17 @@ import Anthropic from '@anthropic-ai/sdk';
 import { ConsciousnessLevel } from './ConsciousnessLevelDetector';
 import { ensureUserTerminal } from './messageTerminal';
 
-export type LLMProvider = 'ollama' | 'anthropic';
+import {
+  type LLMProvider,
+  type ServingIdentity,
+  selfServing,
+  classifyDivergence,
+  servingIdentityFor,
+  causeOf,
+} from './servingIdentity';
+
+export type { LLMProvider, ServingIdentity };
+export { selfServing, classifyDivergence, servingIdentityFor, causeOf };
 export type OllamaModel = 'llama3.3:70b' | 'deepseek-r1:latest' | 'deepseek-v3' | 'llama3.1:70b';
 
 /** Route-level model selection — independent of consciousness levels */
@@ -51,33 +61,6 @@ export interface LLMConfig {
   model: string;
   temperature: number;
   maxTokens: number;
-}
-
-/**
- * How a turn's intended mind relates to the mind that actually served it.
- *
- * Two divergences are possible and they are NOT the same concern:
- *
- *   'capability'  — intended cloud, served local. The member received a lesser
- *                   mind than the tier called for. This is the axis the
- *                   degradation ladder governs.
- *   'sovereignty' — intended local, served cloud. A sovereignty-critical path
- *                   leaked to the cloud because the local path failed.
- *
- * Recorded on every response so that "which mind served this turn" is
- * representable rather than inferable. Representable is not the same as
- * disclosed: nothing here reaches a member-facing surface, and nothing in this
- * file decides that it should. See
- * docs/architecture/DEGRADATION_LADDER_DIRECTION_2026-09-20.md.
- */
-export interface ServingIdentity {
-  intendedProvider: LLMProvider;
-  intendedModel: string;
-  servedProvider: LLMProvider;
-  servedModel: string;
-  divergence: 'none' | 'capability' | 'sovereignty';
-  /** Concrete cause when divergence !== 'none'. Never carries prompt or member content. */
-  reason?: string;
 }
 
 export interface LLMResponse {
@@ -92,35 +75,6 @@ export interface LLMResponse {
     /** Why the model stopped: 'end_turn' | 'max_tokens' | 'stop_sequence'. 'max_tokens' = truncated. */
     stopReason?: string;
   };
-}
-
-/** Concrete failure cause, preferring undici's error.cause.code. Never carries content. */
-export function causeOf(e: any): string {
-  return e?.cause?.code || e?.code || e?.name || (e?.message ? String(e.message) : String(e));
-}
-
-/** Serving identity for a turn that was served by the mind it asked for. */
-export function selfServing(provider: LLMProvider, model: string): ServingIdentity {
-  return {
-    intendedProvider: provider,
-    intendedModel: model,
-    servedProvider: provider,
-    servedModel: model,
-    divergence: 'none',
-  };
-}
-
-/**
- * Classify intended-vs-served without trusting the call site to label it. The
- * direction of the substitution decides the class, so a branch cannot report a
- * capability degradation as a sovereignty fallback (or the reverse) by mistake.
- */
-export function classifyDivergence(
-  intendedProvider: LLMProvider,
-  servedProvider: LLMProvider
-): ServingIdentity['divergence'] {
-  if (intendedProvider === servedProvider) return 'none';
-  return intendedProvider === 'anthropic' ? 'capability' : 'sovereignty';
 }
 
 // Local tier config — activated when LOCAL_TIER_ENABLED=true
@@ -596,14 +550,13 @@ export class MultiLLMProvider {
 
     return {
       ...response,
-      serving: {
+      serving: servingIdentityFor({
         intendedProvider,
         intendedModel,
         servedProvider: response.provider,
         servedModel: response.model,
-        divergence,
         reason,
-      },
+      }),
     };
   }
 
