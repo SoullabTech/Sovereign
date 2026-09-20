@@ -765,8 +765,12 @@ export default function RebuildStudioClient() {
     latitude: editLatitude, setLatitude: setEditLatitude,
     mayRemoveParagraphs, setMayRemoveParagraphs,
     mayProposeImmediately, setMayProposeImmediately,
-    /* ⭐ Per-Work: the override is keyed by the manuscript, not by the session. */
-  } = useEditingLatitude(context.manuscriptId);
+    /* ⭐ Per-Work: the override is keyed by the manuscript, not by the session.
+       ⛔ `context` is `ContextReady | null` — the hook runs before the Work has
+       loaded, and an empty key is the honest value for "no Work yet": the
+       storage seam treats it as no-override rather than writing under a blank
+       name. ⛔ Never `context!`, which would be a lie about the load order. */
+  } = useEditingLatitude(context?.manuscriptId ?? '');
   /** ⭐ What the latest suggestion brought in that is not the writer's. */
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
 

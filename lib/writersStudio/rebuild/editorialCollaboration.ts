@@ -141,7 +141,11 @@ export async function sendBoundEditorialTurn(
    * that forgets the slider gets "Touch" and no paragraph removal, never a
    * permission it did not ask for.
    */
-  scope?: { latitude: number; mayRemoveParagraphs: boolean },
+  scope?: {
+    latitude: number; mayRemoveParagraphs: boolean;
+    /** ⭐ The per-Work release of the discuss-first order. ⛔ Default false. */
+    mayProposeImmediately?: boolean;
+  },
 ): Promise<EditorialTurnOutcome> {
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
