@@ -26,6 +26,27 @@
  * "grandfathered" as a yellow flag (migration debt) and additions to
  * "approved" as a load-bearing architectural decision.
  *
+ * ── MONOTONIC RATCHET (added 2026-09-20) ───────────────────────────────
+ *
+ * The allowlist alone enforced PROCEDURE, not DIRECTION: a new bypass
+ * passed indefinitely provided someone wrote it down, and "grandfathered"
+ * had no ceiling. 55 of 58 entries (95%) were migration debt.
+ *
+ * `_ratchet.grandfathered_max` now caps LIVE DEBT — grandfathered entries
+ * that still import the SDK. Raw entry count is the wrong metric: a file
+ * migrated but left listed would keep the number flat.
+ *
+ *   live > ceiling  → FAIL. The debt grew.
+ *   live < ceiling  → FAIL. A migration recovered headroom and left it
+ *                     spendable by the next bypass. Run --retighten.
+ *   live = ceiling  → PASS.
+ *
+ * --retighten only LOWERS the ceiling. Raising it requires a human edit
+ * to the JSON, visible in review. That asymmetry is the ratchet.
+ *
+ * Pattern borrowed from scripts/check-typehealth-baseline.js, which
+ * already fails on an increased occurrence count.
+ *
  * Runs in CI and as part of the .githooks/pre-commit chain. Cheap enough
  * for pre-commit (uses git ls-files + grep; scans tracked files only).
  *
@@ -50,9 +71,21 @@ type AllowlistTier = {
   notes?: Record<string, string>;
 };
 
+/**
+ * Monotonic ceiling on live grandfathered debt. Absent or malformed = exit 2;
+ * removing the ratchet must fail the guard, never quietly disable it.
+ */
+type Ratchet = {
+  _doc?: string;
+  grandfathered_max: number;
+  pinned_at?: string;
+  rationale?: string;
+};
+
 type Allowlist = {
   _doc?: string;
   _invariant?: string;
+  _ratchet?: Ratchet;
   approved: AllowlistTier;
   operational: AllowlistTier;
   grandfathered: AllowlistTier;
@@ -109,6 +142,122 @@ function findImporters(): string[] {
     .sort();
 }
 
+/**
+ * Enforce the monotonic ceiling on live grandfathered debt.
+ *
+ * Exits the process on any non-conforming state. Returns only on PASS.
+ */
+function enforceRatchet(
+  allowlist: Allowlist,
+  importers: string[],
+  retighten: boolean,
+): void {
+  const ratchet = allowlist._ratchet;
+
+  if (!ratchet || !Number.isInteger(ratchet.grandfathered_max)) {
+    console.error("");
+    console.error(
+      "\u274c Allowlist is missing a valid '_ratchet.grandfathered_max' (integer).",
+    );
+    console.error("");
+    console.error(
+      "  The ratchet is what makes migration the only direction the grandfathered",
+    );
+    console.error(
+      "  tier can move. Removing it must fail this guard, not disable it. Restore",
+    );
+    console.error("  the block from git history.");
+    process.exit(2);
+  }
+
+  const ceiling = ratchet.grandfathered_max;
+
+  // Live debt, NOT raw entry count: a file migrated off the SDK but left
+  // listed in the allowlist would otherwise keep the number flat forever.
+  const importerSet = new Set(importers);
+  const live = allowlist.grandfathered.files.filter((f) => importerSet.has(f));
+
+  console.log("");
+  console.log(
+    `\ud83e\udea2 Ratchet: live grandfathered debt ${live.length} / ceiling ${ceiling}` +
+      (ratchet.pinned_at ? ` (pinned ${ratchet.pinned_at})` : ""),
+  );
+
+  if (live.length === ceiling) {
+    console.log("   \u2705 At the ceiling. New bypasses cannot be absorbed by paperwork.");
+    return;
+  }
+
+  if (live.length > ceiling) {
+    console.error("");
+    console.error(
+      `\u274c Grandfathered debt GREW: ${live.length} live, ceiling ${ceiling} (+${live.length - ceiling}).`,
+    );
+    console.error("");
+    console.error(
+      "  A file was added to 'grandfathered' rather than migrated. That tier is",
+    );
+    console.error(
+      "  migration debt, not green-light status, and it is now capped.",
+    );
+    console.error("");
+    console.error("  Options:");
+    console.error(
+      "    1. (Preferred) Route the new surface through lib/ai/sovereignRouter.",
+    );
+    console.error(
+      "    2. If it is a genuine adapter or operational endpoint, put it in",
+    );
+    console.error("       'approved' or 'operational' with a rationale.",
+    );
+    console.error(
+      "    3. Raising 'grandfathered_max' is a deliberate human edit to the JSON.",
+    );
+    console.error(
+      "       --retighten will NOT do it. Expect PR review to ask why the debt grew.",
+    );
+    process.exit(1);
+  }
+
+  // live.length < ceiling — a migration recovered headroom.
+  const recovered = ceiling - live.length;
+
+  if (retighten) {
+    const updated: Allowlist = {
+      ...allowlist,
+      _ratchet: { ...ratchet, grandfathered_max: live.length },
+    };
+    fs.writeFileSync(
+      ALLOWLIST_PATH,
+      JSON.stringify(updated, null, 2) + "\n",
+      "utf8",
+    );
+    console.log(
+      `   \u2705 Retightened ${ceiling} \u2192 ${live.length} (${recovered} migrated). Commit the allowlist.`,
+    );
+    return;
+  }
+
+  console.error("");
+  console.error(
+    `\u274c Ceiling is STALE: ${live.length} live, ceiling still ${ceiling} (${recovered} migrated).`,
+  );
+  console.error("");
+  console.error(
+    "  This is a failure, not a congratulation. Headroom recovered by a migration",
+  );
+  console.error(
+    "  and left unclaimed is headroom the next bypass can spend for free \u2014 which",
+  );
+  console.error("  is precisely the drift the ratchet exists to stop.");
+  console.error("");
+  console.error("  Lock the gain in:");
+  console.error("");
+  console.error("    npm run check:no-direct-anthropic -- --retighten");
+  console.error("");
+  process.exit(1);
+}
+
 function main(): void {
   console.log(
     "🔒 Checking for direct @anthropic-ai/sdk imports outside allowlist...",
@@ -151,6 +300,7 @@ function main(): void {
         "   Consider removing them from scripts/anthropic-import-allowlist.json.",
       );
     }
+    enforceRatchet(allowlist, importers, process.argv.includes("--retighten"));
     process.exit(0);
   }
 

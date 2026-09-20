@@ -1,6 +1,12 @@
 {
   "_doc": "Allowlist for direct @anthropic-ai/sdk imports. Enforced by scripts/check-no-direct-anthropic.ts. See docs/orientation/maia-sovereign-runtime-intelligence-audit.md for context.",
   "_invariant": "MAIA is a layered intelligence architecture in which substrate inference is one conditional manifestation pathway, not the cognition center. New direct SDK imports bypass sovereignRouter and re-introduce drift. Additions here must be deliberate and pass PR review.",
+  "_ratchet": {
+    "_doc": "MONOTONIC RATCHET on the grandfathered tier. grandfathered_max is a ceiling on the number of grandfathered entries that STILL import the SDK (live debt), not on the raw entry count. The guard fails if live debt exceeds it, and fails if live debt is BELOW it - headroom recovered by a migration must be locked in, never left spendable by the next bypass. `npm run check:no-direct-anthropic -- --retighten` lowers the ceiling to match. It can only LOWER it: raising this number requires a human edit to this file, visible in review. Deleting this block fails the guard (exit 2) rather than disabling it.",
+    "grandfathered_max": 55,
+    "pinned_at": "2026-09-20",
+    "rationale": "The guard enforced procedure but not direction: a new bypass passed indefinitely provided someone wrote it down, and 55 of 58 allowlist entries (95%) were migration debt. The ratchet makes migration the only direction this number can move. Pattern borrowed from scripts/check-typehealth-baseline.js, which already fails on an increased occurrence count."
+  },
   "approved": {
     "description": "Canonical provider-adapter layer. The ONLY files that should newly import @anthropic-ai/sdk are SovereignRouter-backed adapters. New additions here are load-bearing architectural decisions and require explicit PR review.",
     "files": [
