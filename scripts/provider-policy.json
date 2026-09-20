@@ -1,6 +1,13 @@
 {
   "_doc": "Provider Governance policy (machine-readable). Enforced by scripts/check-provider-governance.ts (npm run check:no-openai). Human policy + rationale: docs/canon/PROVIDER_GOVERNANCE.md",
   "_invariant": "Providers are replaceable, governable infrastructure BENEATH MAIA's identity — never the identity itself. Production data flows only to sovereign/approved providers; non-approved providers are lab-only or forbidden. The guard prevents NEW non-compliant surfaces; the allowlist below is the enumerated migration debt, tracked toward zero.",
+  "_ratchet": {
+    "_doc": "MONOTONIC RATCHET on OpenAI migration debt. Ceilings are on LIVE DEBT - allowlisted files that STILL carry an OpenAI surface - not on allowlist entry counts. Entry count is unusable here: legacy_backend allowlists a path PREFIX, so one entry can cover many files. The guard fails if live debt exceeds a ceiling, and fails if it is BELOW one - headroom recovered by a migration must be locked in, never left spendable by the next surface. `npm run check:no-openai -- --retighten` lowers the ceilings to match. It can only LOWER them: raising a number requires a human edit to this file, visible in review. Deleting this block fails the guard (exit 2) rather than disabling it.",
+    "debt_max": 53,
+    "forbidden_debt_max": 3,
+    "pinned_at": "2026-09-20",
+    "rationale": "The guard enforced procedure but not direction: a new OpenAI surface passed indefinitely provided someone added the file to pending_migration, and no group had a ceiling. Separately, the 'browser api key (FORBIDDEN)' rule declared `forbidden: true` in the scanner and NOTHING READ IT - 'never allowlist; remove the client-side key' was enforced by prose only, so the class the policy burns FIRST was the one class with no mechanism. forbidden_debt_max makes that field load-bearing. Pattern borrowed from scripts/check-typehealth-baseline.js and scripts/check-no-direct-anthropic.ts."
+  },
 
   "tiers": {
     "production": {
