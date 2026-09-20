@@ -163,6 +163,25 @@ The Phase-1 expectations are about **two distinct artifacts** and should not be 
 | Grant ledger `<home>/work-units-v2/execution-grants/<WU>.jsonl` | **absent / 0 events** | **1 `ISSUED`, 0 `CLAIMED`** |
 | Ollama server log byte count | captured as a **baseline number** (after warm-up, calibrated per §G) | **unchanged** |
 
+## §I — ⚠️ The pre-flight ledger check cannot run in Phase 1
+
+**The Work Unit id does not exist until creation.** Verified at `jarvis-desktop/src/canonical-work-unit-v2.js:101`, the id is **derived at creation** from the objective text plus a suffix:
+
+```js
+return ('v2-' + slug(objective) + '-' + suffix).slice(0, 63).replace(/-+$/g, '');
+```
+
+It is not caller-supplied and not knowable in advance. So *"confirm `<WU>.jsonl` is ABSENT"* has no `<WU>` to name during host inspection.
+
+**Move it to Phase 3, between create/route and Preview** — where it keeps its real value: proving the **newly minted id carries no stale ledger**, which is the one way a prior attempt's grant could otherwise be inherited.
+
+```bash
+WU=<id returned by CREATED>; H=~/.claude/ain-delegation
+ls "$H/work-units-v2/execution-grants/$WU.jsonl" 2>&1   # → No such file or directory
+```
+
+⚠️ Note on citation hygiene: `main.js:833` returns `work_unit_id` on the **legacy** create branch; the canonical-v2 path returns earlier at `:803` via `createCanonicalV2`. Both produce the id at creation — the conclusion is unchanged, but the canonical-v2 id is minted in `canonical-work-unit-v2.js`, and that is the line to cite.
+
 ## §E — Return
 
 Work Unit id · bound SHA · route participant + digest · W3T binding · provider/model/adapter · Review standing · grant id · **the four B5 probes** · standing before Confirm · fresh admission result · CLAIMED-before-launch proof · exit status · W4 evidence · DR1 ref + digest · final standing · `git status` before and after · §A gate readings · any falsifier.
