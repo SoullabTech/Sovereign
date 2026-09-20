@@ -137,6 +137,32 @@ Remediation must **preserve the exact tag `qwen3-coder:30b`**:
 
 Then re-run the §A1 reading and confirm the tag is unchanged before any gesture.
 
+## §G — ⭐⭐ Prove the witness before trusting it
+
+**The physical non-execution witness can fail silently in the one direction that matters.** If `~/.ollama/logs/server.log` does not exist, or the host runs Ollama via `ollama serve` in a terminal (stdout, not that file), then `wc -c` either errors or returns a **frozen number** — and a frozen number reads as *no inference occurred*, which is exactly the conclusion the witness is supposed to earn. ⚠️ **An instrument that records nothing always reads as no-change.**
+
+**Calibrate it on the A2 warm-up, which is a known inference event:**
+```bash
+LOG=~/.ollama/logs/server.log
+wc -c < "$LOG"                                     # before warm-up
+ollama run qwen3-coder:30b "ok" --keepalive 30m
+wc -c < "$LOG"                                     # after warm-up
+```
+**The byte count MUST increase.** If it does not, the log witness is **vacuous** — ⛔ do not rely on it; substitute a live instrument (server stdout capture, `ollama ps` residency transitions, or the host's actual log destination) before any gesture. A witness is only evidence if it can register the thing it claims to exclude.
+
+**§B4 snapshot placement.** Take the witness snapshot **immediately before Authorize Once — after create, route and Preview** — not in Phase 1. Not because Preview is dangerous (see below) but because the tightest interval has the fewest confounders: any other local Ollama use between Phase 1 and the gesture would move the count for an innocent reason and read as a false positive.
+
+⭐ **Verified in source, and it strengthens the constitutional claim**: `resolveOpenCodeProvider` performs **no process spawn and no network call** — it is a pure registry lookup — and the Preview path issues none either. So **Preview is provably incapable of inference, not merely observed not to cause it.** The non-execution property holds across *both* Review Execution and Authorize Once; `canonical-confirm-execute` is the only path that reaches a runner.
+
+## §H — Ledger vs log: two different files
+
+The Phase-1 expectations are about **two distinct artifacts** and should not be collapsed into one line:
+
+| Artifact | Pre-flight | After Authorize Once |
+|---|---|---|
+| Grant ledger `<home>/work-units-v2/execution-grants/<WU>.jsonl` | **absent / 0 events** | **1 `ISSUED`, 0 `CLAIMED`** |
+| Ollama server log byte count | captured as a **baseline number** (after warm-up, calibrated per §G) | **unchanged** |
+
 ## §E — Return
 
 Work Unit id · bound SHA · route participant + digest · W3T binding · provider/model/adapter · Review standing · grant id · **the four B5 probes** · standing before Confirm · fresh admission result · CLAIMED-before-launch proof · exit status · W4 evidence · DR1 ref + digest · final standing · `git status` before and after · §A gate readings · any falsifier.
