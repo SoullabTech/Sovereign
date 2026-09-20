@@ -263,6 +263,22 @@ grep -aiE "llama_context: n_ctx |n_ctx_slot" ~/.ollama/logs/server.log | tail -5
 
 **After restart, A2 and §G are both VOID until re-run** — the model is unloaded and the witness must be proven live against **the server that will actually serve the run**, not its predecessor.
 
+## §K — ⛔ The grant ledger is a FILE, not a database table
+
+⚠️ A proposed Phase-2 probe queried `ask_authorization_acts` in Postgres. **Wrong store, and it would have passed for the wrong reason.**
+
+Verified at `a2d32f83`:
+- The E1 grant store contains **zero** Postgres references — it is `appendFileSync` / `readFileSync` over a JSONL path (`canonical-provider-execution-grant-store-v1.mjs`). **No database is involved in E1 grants at any point.**
+- `ask_authorization_acts` is the **S3 Writer's Studio disclosure table** (migration `20260913000001`), keyed `thread_id → ask_threads`, carrying section/scope/consent columns. **It has no `work_unit_id` column**, and can never contain an E1 grant.
+
+That probe errors on an unknown column — or, "fixed" by dropping the predicate, returns a count from a table structurally incapable of holding the row, **reading as a pass**. ⭐ Third instance of the same failure class in this pre-flight: silent prompt truncation · vacuous log witness · wrong-store probe. **All three return the desired answer for a reason unrelated to the question.**
+
+**Correct Phase-2 check:**
+```bash
+ls ~/.claude/ain-delegation/work-units-v2/execution-grants/<WU>.jsonl 2>&1
+# → No such file or directory
+```
+
 ## §E — Return
 
 Work Unit id · bound SHA · route participant + digest · W3T binding · provider/model/adapter · Review standing · grant id · **the four B5 probes** · standing before Confirm · fresh admission result · CLAIMED-before-launch proof · exit status · W4 evidence · DR1 ref + digest · final standing · `git status` before and after · §A gate readings · any falsifier.
