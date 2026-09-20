@@ -1,7 +1,7 @@
 # L2 — Latency-Class Census of the 55 Grandfathered Files
 
 **Date:** 2026-09-20
-**Status:** CENSUS COMPLETE (read-only). ⛔ No file migrated, no routing change, no runtime code touched.
+**Status:** CENSUS COMPLETE · ⚠️ AMENDED §6 after Phase-1 verification · 9 files DELETED, ceiling 55 → 46.
 **Authorizes:** nothing. It is the evidence L3 was gated on.
 **Input:** `scripts/anthropic-import-allowlist.json` → `grandfathered.files` (55, live debt = 55).
 **Method:** import-graph tracing over `git ls-files`; route reachability at 1–2 hops; per-file caller
@@ -215,3 +215,120 @@ Open questions:
    reduces debt rather than capping it — and it is the one act that needs no provider ruling.
 2. Who resolves class B? It needs the calling UI, not more static analysis.
 3. ⛔ The `legacy_backend` prefix finding (§3a) is the provider-governance lane's, not this one's.
+
+
+---
+
+## 6. ⚠️ AMENDMENT — Phase-1 verification corrected this census before anything was deleted
+
+**The census above was wrong about one file, and the error was systematic.** §2's trace covered
+`app/ lib/ scripts/` and **not `components/`**. `lib/services/conversationEssenceExtractor.ts` is
+imported by `components/OracleConversation.tsx` and is reachable from **10 entry points including
+`app/maia/page.tsx`** — the main member surface. It is **INTERACTIVE**, not unreached.
+
+**Corrected counts: Interactive 15 · Unreached 24** (Route-reached-await-unknown 11, Batch 4,
+Deferred 1 unchanged).
+
+⭐ *A census that misses a whole top-level directory misses it for every file at once.* Only Phase 1
+caught it, and only because Phase 1 rebuilt reachability instead of re-running the same query.
+
+### The instrument was rebuilt and validated
+
+Reachability is now a transitive reverse-closure over a resolved import graph: specifiers resolved
+through `@/` and relative forms with extension and `/index` candidates, edges over 7,488 tracked
+files (12,328 reverse edges), entry points = `app/**/{route,page,layout,…}` + `middleware.ts` +
+worker scripts (1,516 detected).
+
+⭐ **Validated against known-true controls before being trusted**, because a reachability tool that
+answers "unreached" for everything is indistinguishable from a broken one:
+
+```
+REACHABLE lib/consciousness/LLMProvider.ts            entries=58
+REACHABLE lib/db/postgres.ts                          entries=888
+REACHABLE lib/scribe/sovereignSummarizer.ts           entries=3   (worker)
+REACHABLE components/OracleConversation.tsx           entries=10
+REACHABLE lib/morphogenetic/PatternExtractor.ts       entries=14  ← the collision twin
+```
+
+The last control is the one that matters: it confirms the *morphogenetic* `PatternExtractor` is live
+while the *transcript-analysis* one is dead, which was the distinction the basename trap destroyed.
+
+---
+
+## 7. What was deleted, and what was deliberately not
+
+### ✅ DELETED — 9 files, 2,936 lines. Ceiling **55 → 46**.
+
+`lib/ai/ClaudeBridge.ts` · `lib/complete-sacred-oracle.ts` · `lib/layered-sacred-oracle.ts` ·
+`lib/elegant-sacred-oracle.ts` · `lib/consciousness/CacheWarmingService.ts` ·
+`lib/maia/principleExtractor.ts` · `lib/pipelines/document-analysis.ts` ·
+`lib/scribe/sessionSummaryGenerator.ts` · `lib/transcript-analysis/PatternExtractor.ts`
+
+**Selection rule: reverse-closure entirely within the deletion set.** Each has either no importer at
+all, or importers that are themselves in this set (the three sacred-oracle files form one mutually
+importing dead cluster and go together). Nothing outside the set loses a dependency.
+
+### ⛔ HELD — 4 targets whose closure pulls in 9 unflagged files
+
+`MAIAUnifiedConsciousness.ts` (+`BrainTrustOrchestrator`, `ElementalWeavingEngine`) ·
+`TranscriptAnonymizer.ts` (+`WisdomLibrary`, `MAIAWisdomIntegration`) ·
+`UnifiedInsightEngine.ts` (+`useInsightTracking`, `InsightPersistence`, `unified-insights-storage`) ·
+`secondBrainClassifier.ts` (+`secondbrain/index.ts`, `scripts/secondbrain/testCapture.ts`).
+
+**Every one of these closures has zero entry points — the collateral is provably dead too.** Deleting
+them is *correct*. It is also 9 files nobody flagged, and the authorization was for the 25 in the
+allowlist. ⛔ **Scope named rather than assumed.** A founder act saying "delete the closures too"
+makes this a 13-file deletion and drops the ceiling to 42.
+
+### ⛔ HELD — the 11 `app/api/_backend/` files
+
+All 11 are genuinely unreached from any Next entry (verified individually). Held anyway, for three
+reasons: `_backend/src/boot/diag.ts:18` does `require(m)` on a **variable**, so its dependencies are
+invisible to static analysis; `ElementalIntelligenceRouter` and `maiaModelRunner` are imported by
+other `_backend` files; and the directory is already slated for **wholesale deletion** by the
+provider-governance lane, which also owns the §3a prefix finding.
+
+⭐ *Partial demolition of a building already scheduled for demolition, by a lane that does not own the
+building, is not a win.*
+
+---
+
+## 8. ⚠️ Finding — the typecheck no-regression gate is currently red for an environmental reason
+
+`npm run typecheck` **fails on a clean tree**, before any change in this lane:
+
+```
+program files : 4402 (baseline 3965)      errors : 2 (baseline 239)
+NEW: tsconfig.ship.json:3 TS5101 / TS5107 — 'downlevelIteration' and 'moduleResolution=node10'
+     are deprecated and will stop functioning in TypeScript 7.0
+239 error(s) fixed since the baseline  ·  444 new file(s) entered the program
+```
+
+This container runs a newer TypeScript than the one that recorded `typecheck-baseline.json`. The two
+new diagnostics are **compiler-option deprecations in the tsconfig itself**, not code defects.
+
+**So the gate could not discriminate this deletion from no deletion.** The discriminating evidence is
+that the diagnostic set is **identical before and after** — 2 errors both times, same two codes, same
+line — and the program shrank by exactly 1 file (8 of the 9 deleted files were not in the ship
+program at all, consistent with the gate's own `8 baselined file(s) were deleted from disk`).
+
+⛔ **Not repaired, and deliberately not re-baselined.** The gate's own output forbids it
+(*"Do NOT run `npm run typecheck:baseline` to absorb a new error"*), re-baselining is a governed act,
+and absorbing a TypeScript-version deprecation would bless 239 errors' disappearance in the same
+stroke — a coverage change nobody reviewed.
+
+⭐ Worth its own act, and soon: **a gate that is permanently red teaches people to ignore it**, which
+is the exact reasoning that produced the S3 substrate-typecheck disposition. A red gate that cannot
+discriminate is one step from a gate nobody reads.
+
+---
+
+## 9. Standing (amended)
+
+**L2 COMPLETE AND AMENDED · 9 FILES DELETED (2,936 lines) · CEILING 55 → 46 · 13 FILES HELD PENDING
+SCOPE RULING · 11 `_backend` FILES HELD FOR THE PROVIDER LANE · TYPECHECK GATE RED PRE-EXISTING AND
+UNREPAIRED · ALL OTHER GUARDS GREEN · ⛔ NO ROUTING CHANGE · ⛔ NO SCHEMA CHANGE · ⛔ NO DEPLOY ·
+PRODUCTION UNTOUCHED.**
+
+⚠️ `lib/consciousness/README-COST-OPTIMIZATION.md` documents `CacheWarmingService` usage in sample
+code. The service is deleted; that README is now stale. Left as-is — doc repair is not this lane's.

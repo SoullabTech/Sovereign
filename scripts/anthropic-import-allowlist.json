@@ -3,7 +3,7 @@
   "_invariant": "MAIA is a layered intelligence architecture in which substrate inference is one conditional manifestation pathway, not the cognition center. New direct SDK imports bypass sovereignRouter and re-introduce drift. Additions here must be deliberate and pass PR review.",
   "_ratchet": {
     "_doc": "MONOTONIC RATCHET on the grandfathered tier. grandfathered_max is a ceiling on the number of grandfathered entries that STILL import the SDK (live debt), not on the raw entry count. The guard fails if live debt exceeds it, and fails if live debt is BELOW it - headroom recovered by a migration must be locked in, never left spendable by the next bypass. `npm run check:no-direct-anthropic -- --retighten` lowers the ceiling to match. It can only LOWER it: raising this number requires a human edit to this file, visible in review. Deleting this block fails the guard (exit 2) rather than disabling it.",
-    "grandfathered_max": 55,
+    "grandfathered_max": 46,
     "pinned_at": "2026-09-20",
     "rationale": "The guard enforced procedure but not direction: a new bypass passed indefinitely provided someone wrote it down, and 55 of 58 allowlist entries (95%) were migration debt. The ratchet makes migration the only direction this number can move. Pattern borrowed from scripts/check-typehealth-baseline.js, which already fails on an increased occurrence count."
   },
@@ -14,7 +14,7 @@
       "lib/ai/structured/anthropicStructuredAdapter.ts"
     ],
     "notes": {
-      "lib/ai/structured/anthropicStructuredAdapter.ts": "AIN-STRUCTURED-INFERENCE-SEAM-01. The structured-inference counterpart to claudeClient: the only vendor-facing file in lib/ai/structured. It translates a provider-neutral StructuredRequest into Anthropic wire params and decides nothing \u2014 no model policy, no retry, no fallback. Routing and the non-fallbackable ruling live in lib/ai/structured/router.ts. Added so cognitive surfaces needing tool contracts stop importing the SDK one at a time."
+      "lib/ai/structured/anthropicStructuredAdapter.ts": "AIN-STRUCTURED-INFERENCE-SEAM-01. The structured-inference counterpart to claudeClient: the only vendor-facing file in lib/ai/structured. It translates a provider-neutral StructuredRequest into Anthropic wire params and decides nothing — no model policy, no retry, no fallback. Routing and the non-fallbackable ruling live in lib/ai/structured/router.ts. Added so cognitive surfaces needing tool contracts stop importing the SDK one at a time."
     }
   },
   "operational": {
@@ -24,7 +24,7 @@
     ]
   },
   "grandfathered": {
-    "description": "Legacy cognitive surfaces that bypass sovereignRouter. Each one is an intelligence layer that currently delegates its reasoning to substrate instead of executing its own logic. To be migrated per docs/orientation/maia-sovereign-runtime-intelligence-audit.md. New additions are strongly discouraged \u2014 they represent expansion of the drift this guard exists to prevent.",
+    "description": "Legacy cognitive surfaces that bypass sovereignRouter. Each one is an intelligence layer that currently delegates its reasoning to substrate instead of executing its own logic. To be migrated per docs/orientation/maia-sovereign-runtime-intelligence-audit.md. New additions are strongly discouraged — they represent expansion of the drift this guard exists to prevent.",
     "files": [
       "app/api/_backend/maia-ask-needs.js",
       "app/api/_backend/maia-first-contact-direct.js",
@@ -43,10 +43,7 @@
       "app/api/portal/[slug]/chat/route.ts",
       "app/api/practitioner/practice-field/draft/route.ts",
       "app/api/studio/with-me/sessions/[sessionId]/synthesize/route.ts",
-      "lib/ai/ClaudeBridge.ts",
       "lib/astrology/spiralogicReportGenerator.ts",
-      "lib/complete-sacred-oracle.ts",
-      "lib/consciousness/CacheWarmingService.ts",
       "lib/consciousness/LLMProvider.ts",
       "lib/consciousness/MAIAUnifiedConsciousness.ts",
       "lib/consciousness/relationalCheckin.ts",
@@ -57,15 +54,10 @@
       "lib/content/extractor.ts",
       "lib/content/transformer.ts",
       "lib/dialectical-ai/core.ts",
-      "lib/elegant-sacred-oracle.ts",
-      "lib/layered-sacred-oracle.ts",
-      "lib/maia/principleExtractor.ts",
       "lib/maia/sessionProcessor.ts",
       "lib/memory/bardic/LinkingService.ts",
       "lib/memory/bardic/TeleologyService.ts",
       "lib/patterns/generatePatternIntelligence.ts",
-      "lib/pipelines/document-analysis.ts",
-      "lib/scribe/sessionSummaryGenerator.ts",
       "lib/scribe/sovereignSummarizer.ts",
       "lib/secondbrain/secondBrainClassifier.ts",
       "lib/services/ClaudeService.ts",
@@ -75,7 +67,6 @@
       "lib/story/archetypalNarrativeService.ts",
       "lib/team/maiaReflectService.ts",
       "lib/team/maiaThreadReflection.ts",
-      "lib/transcript-analysis/PatternExtractor.ts",
       "lib/transcript-analysis/TranscriptAnonymizer.ts",
       "scripts/backfill-maia-turns-summaries.ts",
       "scripts/generate-chapter-illustrations.ts",
@@ -83,13 +74,12 @@
       "scripts/walk-relational-navigation.ts"
     ],
     "notes": {
-      "_batch_2026-07-27": "The seven entries below were added retroactively on 2026-07-27. Each shipped AFTER this guard landed (2026-05-20) without being allowlisted \u2014 their lanes did not exercise preflight/pre-commit, so the guard never fired. Classified here as migration debt, NOT green-light: each pins its own model and calls messages.create directly, so routing through lib/ai/claudeClient generateWithClaude (which imposes selectClaudeModel policy) is a per-surface behavior change requiring its own reviewed migration per the audit. Migrate when each surface is next touched.",
+      "_batch_2026-07-27": "The seven entries below were added retroactively on 2026-07-27. Each shipped AFTER this guard landed (2026-05-20) without being allowlisted — their lanes did not exercise preflight/pre-commit, so the guard never fired. Classified here as migration debt, NOT green-light: each pins its own model and calls messages.create directly, so routing through lib/ai/claudeClient generateWithClaude (which imposes selectClaudeModel policy) is a per-surface behavior change requiring its own reviewed migration per the audit. Migrate when each surface is next touched.",
       "app/api/maia/living-field/[fieldKey]/encounter/route.ts": "Living Field encounter (added 2026-07-05). Cognitive surface, pins Sonnet.",
       "app/api/maia/living-field/[fieldKey]/refine/route.ts": "Living Field refine (added 2026-07-01). Cognitive surface, pins Haiku.",
       "app/api/maia/relational-navigation/route.ts": "Relational Navigation Room (added 2026-05-22, two days after the guard). Cognitive surface.",
       "app/api/practitioner/practice-field/draft/route.ts": "Practice Field draft (added 2026-07-01). Cognitive surface, pins Haiku.",
       "app/api/studio/with-me/sessions/[sessionId]/synthesize/route.ts": "With-Me session synthesis (added 2026-06-24). Cognitive surface, pins Sonnet.",
-      "lib/maia/principleExtractor.ts": "Principle extractor (added 2026-06-24). Cognitive surface, pins Haiku.",
       "scripts/walk-relational-navigation.ts": "Dev walk harness for the relational-navigation route (added 2026-05-22). Not member-facing; migrates alongside its route."
     }
   }
