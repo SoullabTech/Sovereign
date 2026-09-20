@@ -61,3 +61,50 @@ The artifact's closing advice — *build systems, not cool prompts* — names a 
 ## Standing
 
 **E1 RECORDED (single-source market observation) · E2 RECORDED AS ORIENTATION, ⛔ NOT VALIDATION · E3 QUESTION OPEN, ⛔ LANE NOT OPENED · ⛔ NO CLAIM STATE MOVED · ⛔ NO GATE CHANGED · ⛔ NO ROADMAP CHANGE · PRODUCTION UNTOUCHED.**
+
+---
+
+# Addendum A — The sorting test is not a classifier (2026-09-20)
+
+**Status:** ADDENDUM to this observation. ⛔ Still not canon · ⛔ still not a lane · ⛔ authorizes no fast path, no gate relaxation, no `CLAUDE.md` change.
+**Effect on E3:** supersedes the *framing* of E3's open question in place. E3's text stands as written; what changes is the shape of the answer it was reaching for. ⛔ Nothing above is edited or deleted.
+
+## The defect in E3's framing
+
+E3 posed the open question as a **classifier**: given a change, decide which lane it enters. That shape has a known failure mode, and it is the silent one.
+
+**An intent-based classifier produces false negatives at the moment of highest velocity and lowest attention** — exactly when the judgment is least reliable — and the change that self-reported as routine emits no signal at all. The system would be trusting a description of the work supplied by whoever is moving fastest.
+
+## The shape this repository has already ruled for, twice
+
+The same defect class was adjudicated in a different domain and the ruling is on the record:
+
+- **`093379e8d` was rejected** because it read the membership standing, refused, then mutated unconditionally. The ruling: ⭐ **the authority is the MUTATION, not a precheck.** `T10f` exists precisely because `T10a–T10e` could not discriminate the two — every one of them evaluated a standing that was already `removed` before the act began.
+- **`lib/manuscript/ask/__tests__/askRouteEffectFamily.test.ts`** does not ask whether a change is significant. It walks the route's transitive VALUE-import graph and admits an explicitly named table set, with the Work's eleven tables named and asserted disjoint **so that a guard reduced to a tautology still fails.** Its sibling `askRuntimeCannotWrite.test.ts` holds the same line at library scope.
+
+Both say one thing: ⛔ **do not classify the actor's intent — constrain the reachable surface mechanically, and fail closed.**
+
+## The mechanical model, stated
+
+A change is **ordinary** only if its file paths and their transitive import graph are **provably disjoint** from the governed substrate. Not *"the author judges it routine."*
+
+- A marketing copy string or an isolated stylesheet tweak qualifies **mechanically** — no judgment required, and none credited.
+- A one-line non-functional cleanup in `lib/memory/MemoryBundle.ts` or `lib/maia/teaching/TeachingRuntimeBridge.ts` **fails closed automatically**, however small it looks and whatever the author believes about it.
+
+⭐ The risk is thereby converted from a subjective judgment failure into a **falsifiable coverage question about the guard** — which is a kind of problem this repository already knows how to build, test and defeat.
+
+## The obligation this creates before any such path may open
+
+⛔ **A `T10f`-shaped falsifier is mandatory.** Any candidate mechanism owes a case that an **intent-based classifier PASSES and a reachability guard FAILS**: a change that looks and claims to be routine while touching a governed dependency graph.
+
+Without it, the mechanism cannot demonstrate that it is a mechanical wall rather than a behavioural tripwire — and a tripwire that passes its own tests is the precise artifact `T10f` was invented to catch.
+
+## What is still not decided
+
+⛔ Whether such a path should exist **at all** remains open and remains a founder act. This addendum narrows *what a lawful mechanism would have to be*; it does not argue that one should be built, and it opens nothing.
+
+The governed-substrate set — the thing "disjoint from" is measured against — is **undefined here and is itself constitutional.** Defining it is not a documentation task.
+
+## Standing
+
+**ADDENDUM RECORDED · E3 FRAMING SUPERSEDED IN PLACE, TEXT PRESERVED · REACHABILITY MODEL STATED, ⛔ NOT ADOPTED · `T10f`-SHAPED FALSIFIER NAMED AS A PRECONDITION · GOVERNED-SUBSTRATE SET ⛔ UNDEFINED · ⛔ LANE NOT OPENED · ⛔ NO GATE CHANGED · ⛔ NO CLAIM STATE MOVED · ⛔ `CLAUDE.md` UNTOUCHED · PRODUCTION UNTOUCHED.**
