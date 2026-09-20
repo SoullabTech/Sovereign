@@ -201,6 +201,18 @@ export function AccountSettings() {
   // Delete account state
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+  // F5 member-visible truth: the server can refuse deletion with a governed
+  // reason (409) or fail (500). Either way the member must be told what
+  // happened and whether anything changed — never left with a silent no-op.
+  const [deleteNotice, setDeleteNotice] = useState<{
+    message: string;
+    retained?: Array<{ label: string; rows: number }>;
+    // Three states, deliberately. 'unknown' is not a nicety: if the request
+    // never reached the server, or its answer never came back, we cannot tell
+    // the member nothing changed — that would be the same false certainty,
+    // pointed the other way.
+    changed: 'no' | 'yes' | 'unknown';
+  } | null>(null);
 
   // Settings applied confirmation
   const [settingsApplied, setSettingsApplied] = useState(false);
@@ -821,6 +833,7 @@ export function AccountSettings() {
 
   const deleteAccount = useCallback(async () => {
     if (!userId || !profile || deleteConfirm !== profile.username) return;
+    setDeleteNotice(null);
     setDeleting(true);
 
     try {
@@ -841,9 +854,34 @@ export function AccountSettings() {
         localStorage.removeItem('maia_settings');
         localStorage.removeItem('maia_account_settings');
         window.location.href = '/';
+        return;
       }
+
+      // F5 §4: the server-side refusal exists but previously did not reach the
+      // member — this handler branched on res.ok alone, so a governed 409 left
+      // the button returning to idle with no explanation. A member could not
+      // tell a refusal from a success.
+      const body = await res.json().catch(() => null);
+      setDeleteNotice({
+        message:
+          typeof body?.message === 'string'
+            ? body.message
+            : "We couldn't complete that request. Your account and content have not been changed.",
+        retained: Array.isArray(body?.retained) ? body.retained : undefined,
+        // Only an explicit boolean from the server is reported. An absent or
+        // unparseable field is 'unknown' — we answered the member, so we do
+        // not also guess on their behalf.
+        changed:
+          body?.accountChanged === true ? 'yes' : body?.accountChanged === false ? 'no' : 'unknown',
+      });
     } catch (err) {
       console.error('[AccountSettings] Delete error:', err);
+      // A transport failure is not evidence that nothing happened server-side.
+      setDeleteNotice({
+        message:
+          "We couldn't reach the server to complete that request. Please check your connection and try again, or contact support.",
+        changed: 'unknown',
+      });
     } finally {
       setDeleting(false);
     }
@@ -2725,7 +2763,9 @@ export function AccountSettings() {
           <div className="flex-1">
             <h4 className="text-sm font-medium text-red-300">Delete Account</h4>
             <p className="text-xs text-stone-400 mt-1 mb-3">
-              Permanently delete your account and all associated data. This cannot be undone.
+              Closes your account and revokes your sign-in credentials. This cannot be undone.
+              If other content of yours is still held, we will tell you what remains rather than
+              removing only part of it.
             </p>
             <input
               type="text"
@@ -2742,6 +2782,37 @@ export function AccountSettings() {
             >
               {deleting ? 'Deleting...' : 'Delete My Account'}
             </motion.button>
+
+            {deleteNotice && (
+              <div
+                role="status"
+                className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg"
+              >
+                <p className="text-xs text-amber-200">{deleteNotice.message}</p>
+                {deleteNotice.changed === 'no' && (
+                  <p className="text-xs text-amber-300/80 mt-1 font-medium">
+                    Nothing has been changed or removed.
+                  </p>
+                )}
+                {deleteNotice.changed === 'unknown' && (
+                  <p className="text-xs text-amber-300/80 mt-1 font-medium">
+                    We can't confirm whether anything changed. Please check before trying again.
+                  </p>
+                )}
+                {deleteNotice.retained && deleteNotice.retained.length > 0 && (
+                  <>
+                    <p className="text-xs text-stone-400 mt-2">Still held:</p>
+                    <ul className="mt-1 space-y-0.5">
+                      {deleteNotice.retained.map((r) => (
+                        <li key={r.label} className="text-xs text-stone-300">
+                          • {r.label} ({r.rows})
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

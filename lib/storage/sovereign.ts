@@ -321,6 +321,13 @@ export async function saveQuickJournal(
   };
 }
 
+/**
+ * ⚠️ UNREPAIRED STUB — routed out of the F5 truthfulness lane, not fixed here.
+ * This discards a member's consent change and returns as though it persisted.
+ * Same defect class as requestDataDeletion above (silent false success), but
+ * consent rather than erasure, so it sits outside the authorized scope.
+ * No callers today. The governed write is POST /api/account/storage-consent.
+ */
 export async function updateStorageConsent(
   userId: string,
   consent: Partial<StorageDecision>
@@ -329,10 +336,20 @@ export async function updateStorageConsent(
   console.log('Storage consent updated:', userId, consent);
 }
 
-export async function requestDataDeletion(userId: string): Promise<{ success: boolean }> {
-  // Stub
-  console.log('Data deletion requested:', userId);
-  return { success: true };
+/**
+ * F5 member-visible truth (2026-09-20): this previously logged and returned
+ * `{ success: true }` without requesting anything. A stub that reports success
+ * is worse than a missing function — a caller wiring a deletion UI to it would
+ * ship a surface that tells members their data was deleted when no request was
+ * ever made.
+ *
+ * It has no callers. It fails loudly so it cannot acquire one silently.
+ * Deletion requests belong to the governed erasure surface, not here.
+ */
+export async function requestDataDeletion(_userId: string): Promise<{ success: boolean }> {
+  throw new Error(
+    'requestDataDeletion is not implemented. Do not report deletion success to a member from this path.',
+  );
 }
 
 export async function getStorageUsage(userId: string): Promise<{

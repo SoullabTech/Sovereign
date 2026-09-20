@@ -119,7 +119,14 @@ const DataSovereigntyCenter: React.FC = () => {
         // Refresh data summary to show empty state
         await fetchDataSummary();
       } else {
-        throw new Error(result.error || 'Deletion failed');
+        // F5 member-visible truth: prefer the server's governed prose over the
+        // error code, and never leave the outcome ambiguous. `deleteComplete`
+        // stays false, so no completion is shown for a refusal.
+        throw new Error(
+          typeof result.message === 'string'
+            ? result.message
+            : result.error || 'Deletion failed',
+        );
       }
 
     } catch (err) {
