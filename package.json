@@ -80,6 +80,8 @@
     "validate:critical": "node scripts/validate-critical-files.js",
     "verify:claude": "bash scripts/verify-claude-project.sh",
     "review:custody": "npx tsx scripts/review-custody.ts",
+    "review:custody:matrix": "npx tsx tests/constitutional/review-custody/matrix.ts",
+    "typecheck:review-custody": "tsc -p tsconfig.review-custody.json",
     "verify:deploy-provenance": "bash scripts/verify-deploy-provenance.sh",
     "verify:deploy-lock": "bash scripts/verify-deploy-lock-record.sh",
     "verify:migrate-fail-closed": "bash scripts/verify-migrate-fail-closed.sh",

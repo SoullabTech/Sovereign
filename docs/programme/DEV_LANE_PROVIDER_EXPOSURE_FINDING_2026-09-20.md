@@ -181,6 +181,12 @@ so blocking the foreign increment blocks the increment and not the capability.
 
 ## Owed, if the candidate instrument is ever wired
 
+⭐ **ITEM 1 DISCHARGED same day** — `REVIEW-CUSTODY-01_STEP1_FALSIFIER_MATRIX_2026-09-20.md`:
+RC-F1…RC-F14 committed, DC-1…DC-14 built, matrix **LETHAL + DISCRIMINATING** (14/14 candidates
+dead on their named falsifier · STRICT 14/14 · all collateral CLASSIFIED · exit 0). ⛔ Items 2
+and 3 remain OWED, and the suite's **freeze is not taken**. The text below is kept as written
+rather than edited, so the obligation and its discharge are both legible.
+
 ⚠️ **The in-session verification of `scripts/review-custody.ts` is a DISPOSABLE PROBE,
 not a record.** Thirteen behaviour cases were exercised ad hoc from a scratchpad
 toolchain; **none is committed as a test.** By this project's own law — *a probe is not
