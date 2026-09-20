@@ -764,7 +764,9 @@ export default function RebuildStudioClient() {
   const {
     latitude: editLatitude, setLatitude: setEditLatitude,
     mayRemoveParagraphs, setMayRemoveParagraphs,
-  } = useEditingLatitude();
+    mayProposeImmediately, setMayProposeImmediately,
+    /* ⭐ Per-Work: the override is keyed by the manuscript, not by the session. */
+  } = useEditingLatitude(context.manuscriptId);
   /** ⭐ What the latest suggestion brought in that is not the writer's. */
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
 
@@ -778,7 +780,7 @@ export default function RebuildStudioClient() {
       const thread = await resolveEditorialForAct();
       if (!thread) return;
       const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords,
-        { latitude: editLatitude, mayRemoveParagraphs });
+        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately });
       if (!out.ok) {
         /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
            line the writer drew. ⛔ Not "MAIA could not complete" — she could,
@@ -1641,6 +1643,7 @@ export default function RebuildStudioClient() {
           onInstruction={setEditorialDraft} onSend={text => void sendEditorial(text)}
           voiceNotice={voiceNotice}
           latitude={editLatitude} onLatitude={setEditLatitude}
+          mayProposeImmediately={mayProposeImmediately} onMayProposeImmediately={setMayProposeImmediately}
           mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={setMayRemoveParagraphs}
           onSelectVersion={id => { setSuggestedVersionId(id); setAdoptionOutcome(null); setEditorialFailure(null); }} onApply={() => void applySuggested()}
           onSaveMember={saveMemberRevision} busy={editorialBusy || adoptionBusy || memberVersionBusy}

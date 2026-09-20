@@ -54,7 +54,7 @@ const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
  * wants both must send both, and a surface that sends neither gets the most
  * protective setting — never a permission it did not ask for.
  */
-const SCOPE_KEYS = ['latitude', 'mayRemoveParagraphs'] as const;
+const SCOPE_KEYS = ['latitude', 'mayRemoveParagraphs', 'mayProposeImmediately'] as const;
 
 type Parsed =
   | {
@@ -62,6 +62,8 @@ type Parsed =
       act: { act: MemberActKind; text: string; refersTo: string | null };
       sanctuary: boolean;
       scope: EditorialScopeDeclaration;
+      /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
+      mayProposeImmediately: boolean;
     }
   | { ok: false; error: string };
 
@@ -103,6 +105,8 @@ function parseClosed(body: unknown): Parsed {
      because silently reading an unrecognised value as "the safe one" would
      hide a broken surface until the day it sent something permissive. */
   let scope: EditorialScopeDeclaration = DEFAULT_SCOPE_DECLARATION;
+  /* ⛔ Absence is not release — the discussion-first order is the default. */
+  let mayProposeImmediately = false;
   if (b.scope !== undefined) {
     if (typeof b.scope !== 'object' || b.scope === null || Array.isArray(b.scope)) {
       return { ok: false, error: 'scope must be an object' };
@@ -119,6 +123,10 @@ function parseClosed(body: unknown): Parsed {
     if (!(so.mayRemoveParagraphs === undefined || typeof so.mayRemoveParagraphs === 'boolean')) {
       return { ok: false, error: 'scope.mayRemoveParagraphs must be a boolean' };
     }
+    if (!(so.mayProposeImmediately === undefined || typeof so.mayProposeImmediately === 'boolean')) {
+      return { ok: false, error: 'scope.mayProposeImmediately must be a boolean' };
+    }
+    mayProposeImmediately = so.mayProposeImmediately === true;
     scope = {
       latitude: so.latitude === undefined
         ? DEFAULT_SCOPE_DECLARATION.latitude : so.latitude,
@@ -135,6 +143,7 @@ function parseClosed(body: unknown): Parsed {
     act: { act: ao.act as MemberActKind, text: ao.text, refersTo: ao.refersTo ?? null },
     sanctuary: b.sanctuary === true,
     scope,
+    mayProposeImmediately,
   };
 }
 
@@ -184,6 +193,7 @@ export async function POST(request: NextRequest) {
     sanctuary: false,
     /* ⭐ The author's declaration, carried to the one place that enforces it. */
     scope: parsed.scope,
+    mayProposeImmediately: parsed.mayProposeImmediately,
   });
 
   if (!turn.ok) {
@@ -203,7 +213,10 @@ export async function POST(request: NextRequest) {
      * disclose the thing that was refused. */
     /* ⭐ Both scope and voice are the same KIND of outcome: the writer drew a
        line and the system held it. ⛔ Neither is a server fault. */
-    const scopeRefused = turn.scope !== undefined || turn.voice !== undefined;
+    /* ⭐ Scope, voice and sequence are one KIND of outcome: the writer drew a
+       line and the system held it. ⛔ None of them is a server fault. */
+    const scopeRefused = turn.scope !== undefined || turn.voice !== undefined
+      || turn.reason === 'sequence_discussion_first';
     return NextResponse.json({
       threadId: parsed.threadId,
       memberTurnIndex: act.turnIndex,

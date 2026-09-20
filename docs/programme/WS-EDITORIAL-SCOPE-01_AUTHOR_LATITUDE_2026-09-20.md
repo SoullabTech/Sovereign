@@ -203,7 +203,73 @@ implying it saw everything. Widening it to the whole Work is its own act.
 
 **15 voice falsifiers green.**
 
-## 10 · Regression sweep
+## 10 · ⭐⭐ SEQUENCE — discuss before wording, at the tightest bound
+
+**Founder ruling, 2026-09-20:** *"I'd gate at latitude 1 only, and make it a
+default the writer can flip per-Work rather than a hard rule: the sequence
+promise holds where the writer asked for the tightest bound, and the override is
+theirs, visibly. Latitude 2 stays ungated."*
+
+The 2026-09-19 exchange did not only propose too much. It proposed **at all**,
+on the first turn, to a writer who had asked a question. The right first move
+was *"what are you trying to say here, and where does it belong?"* — and the
+studio had no shape that made that the first move.
+
+**Three exact limits, each with a falsifier:**
+
+| | | |
+|---|---|---|
+| latitude **1 only** | `Q2` — latitudes 2–5 ungated | `=== 1`, ⛔ never `<= 1` |
+| a **default**, not a rule | `Q3` — the override releases it | the writer's, not the system's |
+| **per-Work**, visibly | `L7` — the key carries the Work | ⛔ never one global switch |
+
+⛔ `=== 1` and not an inequality is deliberate: the ruling named latitude 1 and
+named latitude 2 as ungated. An inequality would quietly absorb any tighter band
+a future act introduced — a decision nobody made.
+
+### ⭐⭐ Enforced by narrowing the vocabulary, NOT by refusing
+
+⛔ **Refusing the turn would have been wrong here, and this is the one place in
+the lane where that is true.** Latitude 1 is the *default* latitude, so a
+refusal would make an error message the **ordinary path** — the writer's first
+question on every passage coming back as a failure. An instrument that fires
+constantly stops being read.
+
+⭐ So the tool schema is **built per turn**, and when the gate is on
+`reply_with_proposal` is simply not among the kinds she may return.
+
+⛔⛔ **That is not the system authoring her act.** Dropping a proposal she made,
+or rewriting it as a reply, would be. Deciding which acts are *available* is
+what a closed discriminant has always done here — the member declares from a
+closed set, `toolChoice` is already `required`, and this narrows the same kind
+of set by one value for one turn. ⭐ `reply_with_direction` **survives the
+gate** (`Q6`): steering the exchange is discussion, and it is the act a first
+turn most often wants.
+
+The admission-time refusal remains as a **backstop**, because schema
+enforcement is a request to a provider and not a guarantee. ⛔ A law that exists
+only in a schema holds until the day a provider disagrees.
+
+### ⭐ The two switches persist differently, and the difference is the point
+
+| | persists | why |
+|---|---|---|
+| latitude slider | ✅ | a working preference |
+| **paragraph removal** | ⛔ **never** | lets MAIA arrive with the writer's words already gone |
+| sequence override | ✅ per-Work | only changes the ORDER of a conversation in which nothing is yet removed, under the tightest size bound there is |
+
+⛔ A rule that treated every switch as equally dangerous would teach the writer
+that none of them are.
+
+⚠️ **One read was widened**: `EditorialThreadView` now carries `workId`, so the
+canvas can key the setting by Work rather than claim a persistence it did not
+have. ⛔ **Exposing it on a READ is not accepting it on a WRITE** — the turn
+route's closed body still refuses `workId` and always must: a value the server
+derives is not a value the browser may assert.
+
+**11 sequence falsifiers green.**
+
+## 11 · Regression sweep
 
 Every `.test.ts` under `lib/manuscript`, `lib/writers-studio`,
 `lib/writersStudio`, `app/writers-studio` and `lib/maia/canonical-turn` was run
@@ -216,11 +282,30 @@ limitations (`jest.mock`, DOM, `localStorage`), ⛔ not regressions — which is
 precisely why the comparison was made against a baseline rather than read off a
 single run.
 
-**Standing: CHANGE-SCOPE LAW LANDED · READ-SCOPE LAW LANDED · VOICE LAW LANDED ·
-49 NEW FALSIFIERS GREEN (19 change · 9 read · 15 voice · 6 persistence) ·
-SLIDER SHIPPED ON BOTH SURFACES · PARAGRAPH PERMISSION DEFAULT OFF AND NEVER
-PERSISTED · NO REGRESSION vs BASELINE · ⛔ NO MIGRATION · ⛔ NO SCHEMA CHANGE ·
-⛔ NOT DEPLOYED · PRODUCTION UNTOUCHED.**
+**Standing: CHANGE-SCOPE · READ-SCOPE · VOICE · SEQUENCE — FOUR LAWS LANDED ·
+62 NEW FALSIFIERS GREEN (19 change · 9 read · 15 voice · 11 sequence ·
+8 persistence) · CONTROLS SHIPPED ON BOTH SURFACES · PARAGRAPH PERMISSION
+DEFAULT OFF AND NEVER PERSISTED · SEQUENCE GATE AT LATITUDE 1 ONLY, WRITER-
+FLIPPABLE PER-WORK · NO REGRESSION vs BASELINE · ⛔ NO MIGRATION ·
+⛔ NO SCHEMA CHANGE · ⛔ NOT DEPLOYED · PRODUCTION UNTOUCHED.**
+
+## 12 · ⚠️ Still owed
+
+1. **`npm test` and `npm run typecheck` on a host with `node_modules`.** This
+   container has none; the evidence here is a scratchpad toolchain plus a
+   baseline diff, ⛔ not the project's own gates.
+2. ⭐⭐ **The unit of editorial work is still a passage with replacement
+   wording.** A developmental editor's unit is a *concern about the Work* —
+   where the argument turns, what a chapter is doing, what is promised and not
+   paid off. `proposal_chain_insights` exists and every path funnels past it to
+   wording. **For writers who have the wisdom and not yet the craft, structural
+   noticing is the high-value act and sentence polish is the dangerous one.**
+   This is the largest remaining gap and it is a lane, not a patch.
+3. **The teachable moment is buried.** *Explain the craft · What could be lost ·
+   Make the case for my original* all exist, inside collapsed `<details>`. For a
+   teaching platform those are the product, not an accordion.
+4. **The voice sample is one section.** For an author's lexicon that is thin;
+   widening it to the whole Work is a real read with its own cost.
 
 > ⭐⭐ *Three bounds, three different questions. How much may change. What may be
 > read. Whose words the replacement is in. A suggestion can pass the first two

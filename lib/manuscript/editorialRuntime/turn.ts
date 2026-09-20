@@ -47,7 +47,7 @@ import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import {
-  admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchema,
+  admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchemaForKinds,
   editorialTurnIdentity,
   type EditorialInvocation, type MemberActKind, type OutcomeRefusal,
 } from '../editorialDiscourse/contract';
@@ -58,6 +58,9 @@ import {
 import {
   UNFAMILIAR_BOUND, measureVoiceIntrusion, voiceNote,
 } from '../editorialScope/voice';
+import {
+  SEQUENCE_REFUSAL_DETAIL, availableOutcomeKinds, sequenceGateActive, sequenceInstruction,
+} from '../editorialScope/sequence';
 import { assembleEditorialCognition, type AssemblyRefusal } from './assembly';
 import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeResult } from './maiaOutcome';
 
@@ -103,6 +106,12 @@ export interface EditorialTurnInput {
    * field gets "Touch" and no paragraph removal — never the other way round.
    */
   readonly scope?: EditorialScopeDeclaration;
+  /**
+   * ⭐ The writer's PER-WORK release of the sequence gate.
+   * ⛔ Absence is not release. It defaults to `false`, so a caller that forgets
+   * the field gets the discussion-first order rather than losing it.
+   */
+  readonly mayProposeImmediately?: boolean;
 }
 
 export type EditorialTurnRefusal =
@@ -125,6 +134,13 @@ export type EditorialTurnRefusal =
    * and nothing is blocked — a studio that teaches shows the writer the thing.
    */
   | 'voice_intrusion'
+  /**
+   * ⭐ MAIA proposed wording on a turn where proposing was not available.
+   * ⛔ A BACKSTOP, not the mechanism: the schema already withheld the kind.
+   * Schema enforcement is a request to a provider, not a guarantee, and a law
+   * that exists only in a schema holds until a provider disagrees.
+   */
+  | 'sequence_discussion_first'
   /**
    * ⭐⭐ THE PROPOSAL EXCEEDED THE AUTHOR'S DECLARED LATITUDE.
    * ⛔ Nothing was written, and the wording is not shown.
@@ -206,6 +222,18 @@ export async function runEditorialTurn(
      was told about. */
   const scope: EditorialScopeDeclaration = input.scope ?? DEFAULT_SCOPE_DECLARATION;
 
+  /* ⭐⭐ THE SEQUENCE GATE (founder ruling, 2026-09-20): at latitude 1, and only
+     there, MAIA discusses before offering wording — unless the writer has
+     flipped it for this Work. Resolved ONCE, like the scope, so the schema she
+     is given and the backstop she is judged by cannot disagree. */
+  const gated = sequenceGateActive({
+    declaration: {
+      latitude: scope.latitude,
+      mayProposeImmediately: input.mayProposeImmediately === true,
+    },
+    hasPriorMaiaTurn: assembly.hasPriorMaiaTurn,
+  });
+
   /* 3 ⭐⭐ FREEZE. Everything after this uses THIS object. */
   const invocation: EditorialInvocation = {
     chainId: assembly.chainId,
@@ -237,10 +265,14 @@ export async function runEditorialTurn(
        exception rather than the routine. ⛔ It is NOT the enforcement — every
        sentence of it is also a bound checked below on what actually comes
        back, and deleting this line would not change what is permitted. */
-    system: `${proof.systemPrompt}\n\n${latitudeInstruction(scope)}`,
+    system: [proof.systemPrompt, latitudeInstruction(scope), sequenceInstruction(gated)]
+      .filter(Boolean).join('\n\n'),
     messages: [{ role: 'user', content: utterance }],
     maxTokens: MAX_TOKENS,
-    tools: [{ name: EDITORIAL_TOOL_NAME, inputSchema: editorialToolSchema, schemaEnforcement: 'required',
+    /* ⭐ THE SCHEMA IS BUILT FOR THIS TURN. When the gate is on,
+       `reply_with_proposal` is simply not among the kinds. */
+    tools: [{ name: EDITORIAL_TOOL_NAME, inputSchema: editorialToolSchemaForKinds(availableOutcomeKinds(gated)),
+      schemaEnforcement: 'required',
       description: 'Return exactly one editorial outcome. For a proposal use this nested shape: '
         + '{"kind":"reply_with_proposal","reply":"Your explanation","proposal":{"replacementText":"Exact candidate wording","rationale":"Editorial purpose: Short name. Reason"}}. '
         + 'proposal is an OBJECT, never a string. replacementText and rationale belong INSIDE proposal, never at the top level. '
@@ -296,6 +328,13 @@ export async function runEditorialTurn(
    * kept and nothing of the author's is shown struck through. The member's own
    * act already persisted and still stands.
    */
+  /* 6a ⭐ THE SEQUENCE BACKSTOP. ⛔ Reached only if a provider returned a kind
+     the schema withheld — rare by construction, and never the ordinary path,
+     which is why this lane narrows the vocabulary instead of refusing. */
+  if (gated && admission.outcome.kind === 'reply_with_proposal') {
+    return { ok: false, reason: 'sequence_discussion_first', detail: SEQUENCE_REFUSAL_DETAIL };
+  }
+
   let voice: {
     note: string; unfamiliar: readonly string[]; sampleWords: number;
   } | null = null;

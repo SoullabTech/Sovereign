@@ -213,6 +213,16 @@ export interface EditorialThreadVersion {
 export interface EditorialThreadView {
   readonly threadId: string;
   readonly chainId: string;
+  /**
+   * ⭐ WHICH WORK THIS EXCHANGE BELONGS TO, so a surface can hold a per-Work
+   * setting (WS-EDITORIAL-SCOPE-01 · sequence override).
+   *
+   * ⛔⛔ EXPOSING IT ON A READ IS NOT THE SAME AS ACCEPTING IT ON A WRITE. The
+   * turn route's closed body still refuses `workId` and always must: a value
+   * the server DERIVES is not a value the browser may assert. This is the
+   * member's own Work, named to the member, on a member-scoped read.
+   */
+  readonly workId: string;
   /** ⭐ The writer's own wording at the locus, as the chain froze it. */
   readonly locusText: string;
   /**
@@ -339,6 +349,8 @@ export async function readEditorialThread(
     view: {
       application: await readApplicationRecovery(memberId, threadId),
       threadId, chainId,
+      /* ⭐ From the same validated read as the succession. ⛔ Not a second lookup. */
+      workId: work.work.chain.locus.workId,
       locusText: t.rows[0]!.expected_text ?? '',
       targetSectionId: t.rows[0]!.target_section_id,
       sectionLabel: t.rows[0]!.heading,

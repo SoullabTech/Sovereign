@@ -749,6 +749,24 @@ export function memberActPlan(act: MemberEditorialAct): MemberActPlan {
  */
 export const EDITORIAL_TOOL_NAME = 'editorial_outcome';
 
+/**
+ * ⭐⭐ THE SCHEMA IS BUILT PER TURN, because which acts are AVAILABLE is a fact
+ * about the turn (WS-EDITORIAL-SCOPE-01 · sequence).
+ *
+ * ⛔ Narrowing the kinds is NOT the system authoring MAIA's act — dropping a
+ * proposal she made, or rewriting it as a reply, would be. The member has always
+ * declared from a closed set and `toolChoice` has always been `required`; this
+ * narrows the same kind of set by one value, for one turn, and she chooses
+ * freely among what remains.
+ */
+export function editorialToolSchemaForKinds(
+  kinds: readonly string[],
+): Record<string, unknown> {
+  const schema = structuredClone(editorialToolSchema);
+  (schema.properties as Record<string, Record<string, unknown>>).kind!.enum = [...kinds];
+  return schema;
+}
+
 export const editorialToolSchema: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,

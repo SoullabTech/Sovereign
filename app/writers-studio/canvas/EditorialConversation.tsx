@@ -69,6 +69,8 @@ interface ThreadVersion {
 interface ThreadView {
   threadId: string;
   chainId: string;
+  /** ⭐ Server-derived, so the per-Work setting is keyed by the Work. */
+  workId: string;
   locusText: string;
   /** ⭐ Server-derived. ⛔ The browser never names the place a change belongs. */
   targetSectionId: string | null;
@@ -221,7 +223,8 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
   const [draft, setDraft] = useState('');
   const {
     latitude, setLatitude, mayRemoveParagraphs, setMayRemoveParagraphs,
-  } = useEditingLatitude();
+    mayProposeImmediately, setMayProposeImmediately,
+  } = useEditingLatitude(view?.workId ?? '');
   /* ⭐⭐ THE MEMBER DECLARES THE ACT. ⛔ Never classified from their wording. */
   const [actKind, setActKind] = useState<'discourse' | 'direction'>('discourse');
   const [busy, setBusy] = useState(false);
@@ -267,7 +270,7 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
         body: JSON.stringify({
           threadId, act: { act: actKind, text, refersTo: null },
           /* ⭐ The writer's declared editing latitude for this exchange. */
-          scope: { latitude, mayRemoveParagraphs },
+          scope: { latitude, mayRemoveParagraphs, mayProposeImmediately },
         }),
       });
       /* ⭐ Reload either way: on a MAIA-side failure the member's turn STILL
@@ -715,6 +718,8 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
         latitude={latitude} onLatitude={setLatitude}
         mayRemoveParagraphs={mayRemoveParagraphs}
         onMayRemoveParagraphs={setMayRemoveParagraphs}
+        mayProposeImmediately={mayProposeImmediately}
+        onMayProposeImmediately={setMayProposeImmediately}
         disabled={busy} />
 
       {/* ── Composer. Text only; no microphone exists on this surface. ── */}

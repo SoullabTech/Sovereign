@@ -91,6 +91,12 @@ export type EditorialAssemblyResult =
        * `sampleWords` rather than being hidden.
        */
       readonly authorSample: string;
+      /**
+       * ⭐ Has MAIA already answered in this thread? (sequence gate.)
+       * ⛔ Not "are there any turns" — the member's own current act is not an
+       * exchange, and reading it as one would release the gate on turn one.
+       */
+      readonly hasPriorMaiaTurn: boolean;
     }
   | { readonly ok: false; readonly reason: AssemblyRefusal };
 
@@ -202,6 +208,8 @@ export async function assembleEditorialCognition(
        read. ⛔ Not a second lookup that could disagree with it. */
     locusText: locus.expectedText,
     authorSample: surround ? `${surround.before}\n${surround.after}` : '',
+    /* ⭐ From the history already read — strictly before the current turn. */
+    hasPriorMaiaTurn: turns.some((t) => t.author === 'maia'),
   };
 }
 

@@ -19,6 +19,7 @@ export default function RevisionDesk({
   active = true, inline = false, onPreview, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
   latitude = 1, onLatitude, mayRemoveParagraphs = false, onMayRemoveParagraphs, voiceNotice,
+  mayProposeImmediately = false, onMayProposeImmediately,
 }: {
   active?: boolean; inline?: boolean; onPreview?: (preview: { original: string; wording: string; changes: boolean } | null) => void;
   scopeKey?: string; showInspiration?: boolean; manuscriptId: string; title: string; currentText: string; thread: RebuildEditorialThread | null;
@@ -31,6 +32,8 @@ export default function RevisionDesk({
   /** ⭐ The author's editing latitude. ⛔ Defaults to the most protective value. */
   latitude?: EditorialLatitude; onLatitude?: (v: EditorialLatitude) => void;
   mayRemoveParagraphs?: boolean; onMayRemoveParagraphs?: (v: boolean) => void;
+  /** ⭐ The per-Work release of the discuss-first order, at latitude 1. */
+  mayProposeImmediately?: boolean; onMayProposeImmediately?: (v: boolean) => void;
   /**
    * ⭐ What this suggestion brought in that is not the writer's, or `null`.
    * ⛔ Shown BESIDE the proposal, never after the writer has accepted it.
@@ -151,6 +154,7 @@ export default function RevisionDesk({
       {onLatitude && onMayRemoveParagraphs && <EditingLatitude
         latitude={latitude} onLatitude={onLatitude}
         mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={onMayRemoveParagraphs}
+        mayProposeImmediately={mayProposeImmediately} onMayProposeImmediately={onMayProposeImmediately}
         disabled={blocked} />}
       <div className="wsi-page-actions">
         {version && <div className="wsi-reading-switch" role="group" aria-label="Read passage">
@@ -215,6 +219,7 @@ export default function RevisionDesk({
     {onLatitude && onMayRemoveParagraphs && <EditingLatitude
       latitude={latitude} onLatitude={onLatitude}
       mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={onMayRemoveParagraphs}
+      mayProposeImmediately={mayProposeImmediately} onMayProposeImmediately={onMayProposeImmediately}
       disabled={blocked} />}
     <details className="wsi-setup">
       <summary>Direction, intention, and voice</summary>

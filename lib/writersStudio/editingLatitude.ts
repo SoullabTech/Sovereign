@@ -33,6 +33,22 @@ import {
 export const LATITUDE_STORAGE_KEY = 'ws_editing_latitude';
 
 /**
+ * ⭐⭐ THE SEQUENCE OVERRIDE IS PER-WORK, so its key carries the Work.
+ *
+ * ⛔ Not one global switch. A writer deep in a manuscript they know may want
+ * wording immediately; the same writer opening something new may not. One
+ * switch for both would make the flip mean less than it says.
+ *
+ * ⭐ AND IT DOES PERSIST, unlike the paragraph permission — deliberately, and
+ * the difference is what each one is. Paragraph removal lets MAIA arrive with
+ * the writer's words already gone; this only changes the ORDER of a
+ * conversation in which nothing is yet removed, under the tightest size bound
+ * there is. ⛔ A rule that treated every switch as equally dangerous would
+ * teach the writer that none of them are.
+ */
+export const sequenceOverrideKey = (workId: string) => `ws_propose_immediately:${workId}`;
+
+/**
  * ⭐ What a stored value becomes. Pure, so the asymmetry is falsifiable.
  *
  * ⛔ AN UNREADABLE VALUE IS THE PROTECTIVE DEFAULT, never a guess and never a
@@ -65,6 +81,22 @@ export function readStoredLatitude(): EditorialScopeDeclaration {
        a reason to be more permissive. */
     return restoreDeclaration(null);
   }
+}
+
+/** ⛔ Only an exact stored `'1'` releases the gate. Anything else keeps it. */
+export function readSequenceOverride(workId: string): boolean {
+  if (workId === '') return false;
+  try {
+    return window.localStorage.getItem(sequenceOverrideKey(workId)) === '1';
+  } catch { return false; }
+}
+
+export function writeSequenceOverride(workId: string, may: boolean): void {
+  if (workId === '') return;
+  try {
+    if (may) window.localStorage.setItem(sequenceOverrideKey(workId), '1');
+    else window.localStorage.removeItem(sequenceOverrideKey(workId));
+  } catch { /* ⛔ A preference that cannot be saved is not a failure worth raising. */ }
 }
 
 export function writeStoredLatitude(latitude: EditorialLatitude): void {
