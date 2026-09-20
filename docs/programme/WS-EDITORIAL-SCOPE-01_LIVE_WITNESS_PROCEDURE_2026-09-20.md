@@ -76,8 +76,15 @@ held, the mechanism did not, and those are different facts.
 ⭐ Then reload the page: the tick **must survive** (per-Work), and the slider
 must survive, and **paragraph removal must be back OFF**.
 
+⚠️ **A UI FACT THAT WOULD OTHERWISE LOOK LIKE A BUG**: *Suggest wording straight
+away* **renders only at latitude 1**, because that is the only latitude the
+sequence gate governs. ⭐ A control visible where it does nothing teaches the
+writer that controls do nothing. It is still ON at higher latitudes once ticked
+— set it at 1, then move the slider.
+
 ### W3 · CHANGE-SCOPE — the size bound reports in counts
-**Setup**: slider at **1**. Override on (so W3 tests size, not sequence).
+**Setup**: slider at **1**, and tick the override FIRST so W3 tests size rather
+than sequence. ⛔ Without it W3 measures W1 again and proves nothing new.
 **Act**: ask for something that plainly needs a substantial rewrite.
 **✅ EXPECTED**: **409**, a sentence naming *how many of your words* it would
 remove out of how many, and the latitude at which it would be allowed. ⛔ The
@@ -107,7 +114,11 @@ produces none — ⭐ but then W5 has **established nothing** and must be re-run
 a suggestion that does introduce vocabulary.
 
 ### ⭐⭐ W6 · THE MUST-PASS CHECK — over-refusal is a failure too
-**Setup**: slider at **3 · Passage**. Paragraph removal **on**. Override on.
+**Setup**: slider at **3 · Passage**. Paragraph removal **on**.
+⛔ The sequence override is **irrelevant here and need not be set**: latitude 3
+is ungated by law (`Q2`), so there is nothing to release. *An earlier draft of
+this procedure said "Override on" at latitude 3 — that was wrong twice over: the
+checkbox is not rendered there, and the gate it releases is already inactive.*
 **Act**: an ordinary editorial request — the kind you would actually make.
 **✅ EXPECTED**: a proposal **arrives**, is proportionate, and can be applied.
 **❌ CONTRADICTED**: refused.
