@@ -78,6 +78,50 @@ the two middle members swapped. ⛔ Nothing about those components changed.
 
 **The mechanism is no longer inferred. It is observed.**
 
+## 3b · ⭐⭐ SECOND FOUNDER RUN — THE ORDERING IS NOT EVEN STABLE BETWEEN RUNS
+
+Run 2 (after pulling the two real fixes) reports **2** new diagnostics, not 3 —
+and the two that remain carry **a THIRD ordering of the same four members**:
+
+```
+baseline   "none" | "pause"          | "invitation"   | "acknowledgment"
+run 1      "none" | "invitation"     | "pause"        | "acknowledgment"
+run 2      "none" | "acknowledgment" | "invitation"   | "pause"
+```
+
+⛔ `InboxTriage.tsx` and `NextStepBuilder.tsx` were not touched between run 1 and
+run 2. **Nothing about them changed and their diagnostic printed three
+different ways.**
+
+⭐⭐ **AND `sacred-texts/page.tsx` SILENTLY STOPPED BEING A REGRESSION.** It was
+in run 1's list and is absent from run 2's — again with no edit to that file.
+Its ordering happened to match the baseline this time.
+
+**That is the finding in its sharpest form: the identity key is coupled to
+GLOBAL PROGRAM STATE, not to the defect.** The only edits between the two runs
+were in `app/writers-studio/**` and `lib/writersStudio/**` — and they changed
+how a diagnostic in `components/focus/**` and `app/wisdom-keepers/**` is
+printed. ⛔ *An unrelated edit anywhere can make a baselined diagnostic
+elsewhere look new, or make a phantom quietly disappear.*
+
+⚠️ **THE UNDERLYING DRIVER IS NAMED IN THE SAME OUTPUT**:
+
+```
+program files : 4408 (baseline 3965)
+📈  449 new file(s) entered the program.
+```
+
+The baseline was recorded at `a6820a05`; the program has grown by **449 files**
+since. Union member ordering follows the order types are encountered during
+checking, which follows program composition — so a baseline this stale will keep
+producing reorderings indefinitely. ⛔ The drift is not a one-off.
+
+⭐ The run also shows the predicted **both-sides effect**: `12 error(s) fixed
+since the baseline (10 identities gone, 0 reduced)` alongside only 2 new. Some
+of that is real (`6 baselined file(s) were deleted from disk`), ⛔ but
+disappearing identities and appearing identities are the same phenomenon seen
+from either end.
+
 ## 4 · ⭐⭐ WHY THIS MATTERS MORE THAN A NOISY GATE
 
 The remediation the false signal invites is **worse than the false signal**:
@@ -136,8 +180,8 @@ existing `typecheck-baseline.json` keeps working **unchanged**, with no
 re-baselining act required. *That property is what makes this repair cheap and
 safe; without it the repair is a disguised re-baseline.*
 
-**Standing: THREE FALSE REGRESSIONS ✅ ESTABLISHED · MECHANISM ✅ WITNESSED
-(founder-run, verbatim) · ⛔ THE THREE FILES NOT EDITED · ⛔ THE GATE NOT
+**Standing: FALSE REGRESSIONS ✅ ESTABLISHED · MECHANISM ✅ WITNESSED TWICE
+(founder-run, verbatim; three distinct orderings of one unchanged diagnostic) · ⛔ THE THREE FILES NOT EDITED · ⛔ THE GATE NOT
 REPAIRED — PARKED FOR OWNER REVIEW BY FOUNDER RULING · ⛔ NOT RE-BASELINED ·
 ⛔ NO LANE OPENED.**
 
