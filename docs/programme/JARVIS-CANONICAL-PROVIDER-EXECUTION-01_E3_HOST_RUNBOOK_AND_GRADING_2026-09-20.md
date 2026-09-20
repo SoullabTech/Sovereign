@@ -37,7 +37,19 @@ Gestures are Electron IPC `jarvis:work-unit-action`, actions `canonical-executio
 6. Snapshot log bytes (tightest interval — after Preview).
 7. **Authorize Once** (`canonical-authorize-execution-once`).
 8. Snapshot log bytes again.
-9. **Verify:** bytes **strictly unchanged** AND ledger tail is exactly **1 `ISSUED`, 0 `CLAIMED`** AND no result file AND no `jarvis-e1-evidence-*` workspace. ⛔ Stop if anything moved.
+9. **Verify — four probes, exact paths.** ⚠️ **The ledger and the result are different files; do not expand "no result file" to `<WU>.jsonl`.** At this point the ledger **exists and has content** (Probe B); the result **does not exist yet** (Probe C).
+```bash
+WU=<id>; H=~/.claude/ain-delegation
+# A  log bytes — strictly identical to the step-6 snapshot
+wc -c < ~/.ollama/logs/server.log
+# B  LEDGER — PRESENT, exactly one ISSUED, zero CLAIMED
+cat "$H/work-units-v2/execution-grants/$WU.jsonl"
+# C  RESULT — ABSENT (a different path entirely)
+ls "$H/work-units-v2/results/$WU/" 2>&1        # → No such file or directory
+# D  evidence sandbox — ABSENT
+ls -d $TMPDIR/jarvis-e1-evidence-* 2>&1        # → no match
+```
+⛔ Stop if anything moved.
 
 **Phase 4 — execute, capture, adjudicate**
 10. **Confirm Execute** (`canonical-confirm-execute`), exact grant id.
