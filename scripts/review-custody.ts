@@ -19,9 +19,13 @@
  *   - It cannot establish that a reviewer's findings or coverage are TRUTHFUL.
  *   - Zero findings is lawful and is not evidence the reviewer was right.
  *   - It runs no proof command and inspects no code.
- *   - `admit` refuses THE RECORD. `check` refuses THE CONTINUED APPLICABILITY of an
+ *   - THREE boundaries, never merged: `witness` refuses an UNWITNESSED COVERAGE CLAIM ·
+ *     `admit` refuses THE RECORD · `check` refuses THE CONTINUED APPLICABILITY of an
  *     admitted approval. A manifest movement is a `check` refusal, never an `admit`
  *     refusal — the precheck-versus-mutation distinction the S3 lane paid to learn.
+ *   - Coverage is MECHANICALLY DERIVED from the reviewer's execution trace, never
+ *     self-reported. It bounds coverage FROM ABOVE only: a read event proves a file was
+ *     opened, never that it was understood.
  *
  * ⛔ CANDIDATE INSTRUMENT, UNWIRED. It gates nothing until a founder act wires it
  *    into a named acceptance law.
@@ -33,7 +37,7 @@
  *
  * Usage:
  *   npx tsx scripts/review-custody.ts bind   --plan PATH [--base REF] --out RECORD [--force]
- *   npx tsx scripts/review-custody.ts admit  --record RECORD --review REVIEW.json
+ *   npx tsx scripts/review-custody.ts admit  --record RECORD --review REVIEW.json --trace TRACE
  *   npx tsx scripts/review-custody.ts check  --record RECORD
  *
  * Exit codes: 0 lawful state · 1 refusal / unlawful state · 2 instrument error.
@@ -48,6 +52,7 @@ import {
   STRICT, admit, bind, check,
   type ChangedPath, type CustodyEnv, type CustodyRecord,
 } from "./review-custody-core";
+import { STRICT_COVERAGE, witnessCoverage } from "./review-custody-coverage";
 
 class Broken extends Error {}
 
@@ -152,6 +157,36 @@ function main(argvAll: string[]): number {
     const record = loadRecord(recordPath);
     const raw = realEnv.readFile(reviewPath);
     if (raw === null) throw new Broken(`review file not found: ${reviewPath}`);
+
+    // ---- boundary 1: witness the coverage claim before admitting the record ----
+    const tracePath = need(argv, "trace");
+    const traceRaw = realEnv.readFile(tracePath);
+    if (traceRaw === null) throw new Broken(`execution trace not found: ${tracePath}`);
+    let parsedReview: Record<string, unknown>;
+    try {
+      parsedReview = JSON.parse(Buffer.from(raw).toString("utf8")) as Record<string, unknown>;
+    } catch {
+      console.error("REFUSED [MALFORMED_REVIEW] — review is not valid JSON.");
+      return 1;
+    }
+    const repoRoot = path.resolve(arg(argv, "repo-root") ?? process.cwd()).replace(/\\/g, "/");
+    const cov = (parsedReview["coverage"] as { files?: unknown } | undefined)?.files;
+    const w = witnessCoverage(
+      { files: cov, traceId: parsedReview["trace_id"], inlineTrace: parsedReview["trace"] },
+      traceRaw, STRICT_COVERAGE, repoRoot,
+    );
+    if (w.kind === "refused") {
+      console.error(`REFUSED [${w.code}] — ${w.reason}`);
+      return 1;
+    }
+    console.log(`COVERAGE WITNESSED — ${w.files.length} attested file(s) carry a read event`);
+    if (w.undisclosed.length > 0) {
+      console.log(`  undisclosed reads (recorded, not refused): ${w.undisclosed.length}`);
+    }
+    if (w.scopes.length > 0) console.log(`  search scopes (witness nothing): ${w.scopes.length}`);
+    console.log("  ⛔ Bounds coverage from above only: a read proves the file was opened, not understood.\n");
+
+    // ---- boundary 2: admit the record ----
     const r = admit(record, raw, STRICT, now());
     if (r.kind === "refused") {
       console.error(`REFUSED [${r.code}] — ${r.reason}`);

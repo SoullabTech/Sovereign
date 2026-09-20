@@ -139,6 +139,11 @@ typecheck baseline.
 
 ## ⛔ FREEZE OWED BEFORE STEP 2
 
+⭐ **DISCHARGED same day** — `REVIEW-CUSTODY-01_SUITE_FREEZE_2026-09-20.md`: taken at
+`bbb5ff5c`, pinned by git blob hash, guard `npm run verify:review-custody-freeze` proven lethal
+both ways. Step 2's eight new laws landed **additively** with zero frozen bytes edited. The text
+below is kept as written rather than edited.
+
 Per the S3 Class-B precedent, the moment lethality is proved the suite should FREEZE, so that
 a later inconvenience cannot quietly domesticate the fourteen tests that killed its
 predecessors. **Lawful** is *implementation fails suite → repair the implementation*.
