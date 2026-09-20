@@ -84,6 +84,17 @@ vendor claim, not evidence, and it does not measure the thing MAIA needs measure
 
 **Disposition:** Cat 1 — preserved direction. Input to the unauthored Episodic Phase 2 spec.
 
+> ⚠️ **CORRECTED 2026-09-20, same day, after a repository read.** The table above and §3 below assert that
+> the labelled-retirement idea bears on *"the open Cut-1 traceability non-conformance."* **That
+> non-conformance is closed** — `TEMPORAL-MEMORY-CUT1-TRACEABILITY-01` closed in production 2026-09-16, and
+> `lib/memory/cut1Trace.ts` is live and wired at `lib/memory/MemoryBundle.ts:270`. The stale framing is kept
+> verbatim rather than edited, per the standing rule that a witness is a reading at a time. The corrected
+> reading — that the gap is **member legibility, not operator traceability**, and that all three harvested
+> ideas are one surface (Clause 2 refinement (c)) — is in
+> `docs/architecture/MEMORY_LEGIBILITY_DIRECTION_2026-09-20.md`. Two further corrections land there: MAIA's
+> expire/restore semantics are **stricter** than memanto's, and memanto's retention table is **unlawful under
+> Clause 1** as written.
+
 ---
 
 ### 2.2 openclaude — multi-provider CLI derived from Claude Code
@@ -330,6 +341,8 @@ today's.
    is a labelled state carrying its own reason is traceable *by construction*; an exclusion that is
    a ranking outcome is not. ⚠️ It addresses the per-memory case; our per-turn ranking case remains
    the harder unsolved problem, and this must not be allowed to look like a solution to it.
+   > ⛔ **SUPERSEDED same day** — see the correction in §2.1. Cut-1 traceability is closed; the
+   > per-turn ranking case is the case it solved. The surviving gap is member legibility.
 2. **memanto's member-legible retention policy** → the contrast with our unexpressed `0.40`
    coefficient is itself the finding. Any future member-facing memory surface should express
    retention as readable law, not as a weight.
