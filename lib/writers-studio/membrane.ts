@@ -69,6 +69,10 @@ const AMBIENT: Partial<Record<ProducerId, MembraneEntry>> = {
   // authorship partitions. These four producers were registered by ER-R2 and are
   // continuity/evidence, not hidden interpretation.
   'retrieved.writer_editorial_locus': { cls: 'ambient', because: 'the writer\'s exact current locus is primary evidence about the Work' },
+  /* ⭐ WS-EDITORIAL-SCOPE-01 · the same standing as the locus, because it is the
+     same writer's text — held apart as its own producer because it carries a
+     different permission: readable, ⛔ never changeable. */
+  'retrieved.writer_editorial_surround': { cls: 'ambient', because: 'the section around the locus is the same primary evidence; it is read for context and no proposal may replace it' },
   'member.writer_editorial_history': { cls: 'ambient', because: 'the member\'s own prior editorial acts in this thread, authorship-preserved' },
   'system.writer_editorial_history': { cls: 'ambient', because: 'MAIA\'s prior editorial acts in this thread, kept separate from member authorship' },
   'member.writer_editorial_act': { cls: 'ambient', because: 'the writer-declared kind of the current act; no inferred motive or profile' },

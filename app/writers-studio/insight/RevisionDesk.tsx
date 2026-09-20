@@ -79,8 +79,19 @@ export default function RevisionDesk({
   const versionLabel = version ? alternativeLabel(version, thread?.versions.findIndex(v => v.id === version.id) ?? 0) : '';
   const discuss = () => {
     const question = [editorialQuestion, reasonQuestion, instruction.trim()].filter(Boolean).join('\n');
+    /* ⭐⭐ THE SECTION IS NO LONGER PASTED INTO THE WRITER'S OWN MESSAGE.
+     *
+     * ⚠️ It used to travel here as "Current section context (reference only)",
+     * which made the difference between MATERIAL MAIA MAY READ and WORDS SHE
+     * MAY CHANGE a parenthetical inside something the writer said. ⛔ It was
+     * not something the writer said. The server now retrieves the surround
+     * itself, as its own governed producer with its own stated permission
+     * (`retrieved.writer_editorial_surround`).
+     *
+     * ⛔ Do not reintroduce it here. Two copies would reach cognition with two
+     * different provenances, and the one wearing the writer's voice is the one
+     * that caused the 2026-09-19 rewrite. */
     const text = [directionContext, question ? 'My question:\n' + question : '',
-      sectionBody && sectionBody !== currentText ? 'Current section context (reference only):\n' + sectionBody : '',
       version ? 'Discussing saved alternative ' + versionLabel + ':\n' + version.wording : '',
       draft && draft.threadId === thread?.threadId ? 'My unsaved working revision (for discussion, do not apply):\n' + draft.text : '',
       'If offering replacement wording, begin its rationale with "Editorial purpose: <short descriptive name>". Distinguish meaning changes from style and treat reader benefits as hypotheses. Explain the editorial rationale using supplied wording: what you notice, the craft principle, the possible reader benefit, what could be lost, and a case for keeping the original. Ask where the author’s intention is unclear.'

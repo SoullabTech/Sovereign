@@ -34,6 +34,8 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { surroundOf } from '../editorialScope/surround';
+import { loadProjectedSectionBody } from '../ask/workContext';
 import { readProposalWork } from '../proposalChain/proposalWork';
 import {
   editorialCandidates,
@@ -154,8 +156,26 @@ export async function assembleEditorialCognition(
     return [];
   });
 
+  /* ⭐⭐ THE SURROUND — the writer's section around the passage, as CONTEXT.
+   *
+   * ⛔ THE PROJECTED BODY, never `manuscript_draft_sections.text` directly:
+   * the stored column carries the heading prefix and reading it raw shifts
+   * every offset by the heading's length, silently, and only for sections that
+   * have one. `loadProjectedSectionBody` is the one projection authority.
+   *
+   * ⭐ A failed read is an ABSENT surround, never a refused turn. Context is
+   * genuinely optional — the passage is the subject and it is already in hand.
+   * ⛔ But it is never SUBSTITUTED for: no fallback to the raw column, no
+   * neighbouring section, no "close enough" locate. */
+  const locus = work.work.chain.locus;
+  const projected = await loadProjectedSectionBody(
+    locus.workId, memberId, locus.targetSectionId);
+  const surround = projected
+    ? surroundOf(projected.body, locus.expectedText) : null;
+
   const participation = editorialCandidates({
-    locus: { chainId, originalText: work.work.chain.locus.expectedText },
+    locus: { chainId, originalText: locus.expectedText },
+    surround,
     turns, versions, insights, directions, bindings, declaredAct,
   });
   /* ⛔ `versions_not_structural` cannot occur here — the order came from
@@ -170,7 +190,7 @@ export async function assembleEditorialCognition(
     invokedAgainstVersionId: work.work.focused?.id ?? null,
     /* ⭐ THE SAME VALUE THE LOCUS BLOCK CARRIED INTO COGNITION, from the same
        read. ⛔ Not a second lookup that could disagree with it. */
-    locusText: work.work.chain.locus.expectedText,
+    locusText: locus.expectedText,
   };
 }
 

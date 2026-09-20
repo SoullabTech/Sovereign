@@ -92,15 +92,51 @@ checkout has no `node_modules`.** The module typechecks clean under the
 project's own strictness. ⛔ **`npm test` and `npm run typecheck` have NOT been
 run here and are owed** on a host with dependencies installed.
 
-## 7 · Named and NOT repaired
+## 7 · ⭐⭐ READ SCOPE — the founder's first bullet, DISCHARGED
 
-1. ⭐⭐ **Read-scope and change-scope are still not separated.** `RevisionDesk`
-   sends the whole section inside the member's message text as *"Current section
-   context (reference only)"*. MAIA cannot cleanly distinguish material she
-   reads from words she may touch. The scope law contains the **harm** regardless
-   — anything she proposes is measured against the locus alone — but the
-   founder's first bullet is **not discharged**.
-2. **Nothing requires discussion before a proposal.** The UI shows
+> *"Separate the material MAIA reads for context from the exact words she may
+> change."*
+
+**The defect was worse than "not separated".** Until 2026-09-20 `RevisionDesk`
+pasted the whole section **into the writer's own message** as *"Current section
+context (reference only)"*. So Work text reached cognition under
+`encounter.input` — a producer whose provenance says *this is what the member
+said to you*. ⛔ **It was not what the member said. It was the Work, wearing the
+member's voice,** with the permission difference stated as a parenthetical in
+prose. A producer whose provenance is false about who authored the text is
+exactly the failure the registry exists to prevent, and it was live.
+
+**Repair — a fifth governed producer**, `retrieved.writer_editorial_surround`:
+
+- `lib/manuscript/editorialScope/surround.ts` — pure, so the locating rule is
+  falsifiable without a database. ⛔ Not left inside an assembly that imports
+  `pg`; a rule buried there is a rule nobody tests.
+- ⭐⭐ **Exact-once locate, or NO surround.** A surround built around *"the first
+  occurrence"* is a neighbourhood the writer is not standing in, shown to MAIA
+  as though it were. `S3` asserts the null.
+- Windowed to 4,000 characters **nearest the passage** per side — ⛔ not the
+  opening of the section, which is the part least likely to explain it — and the
+  elision is **stated** when it bites.
+- The locus block now says **"THIS IS THE ONLY TEXT ANY PROPOSAL OF YOURS
+  REPLACES."** The surround states its own permission in its own voice.
+- Registered in `PRODUCER_REGISTRY` (`rooms: ['writers_studio']`) and classified
+  `ambient` in the Writer's Studio membrane, beside the locus.
+- ⭐ **The read/change boundary is structural, not advisory:** the scope law
+  measures only against the locus, so no proposal can reach the surround even if
+  she wanted it to.
+
+⚠️ **A stale header was corrected in passing.** `editorialDiscourse/contract.ts`
+claimed *"DECLARED, NOT REGISTERED … a falsifier asserts that absence"*. That
+had been **false since ER-R2 (2026-09-15)**: the ids are registered, and the
+falsifier asserts the opposite. Corrected in place, not deleted — a header
+describing a decision the code has since reversed is worse than no header.
+
+**Evidence: 9 read-scope falsifiers green; the editorial discourse contract
+suite 70/70 (was 63/63); the Writer's Studio room membrane 51/51.**
+
+## 8 · Named and NOT repaired
+
+1. **Nothing requires discussion before a proposal.** The UI shows
    Notice → Discuss → Try → Decide; the runtime lets `reply_with_proposal`
    arrive on turn one. *Part of why this reads as an editor who acts before
    asking.*
@@ -111,8 +147,22 @@ run here and are owed** on a host with dependencies installed.
    **not** yet send a scope, so it receives the protective default. Correct, but
    it has no slider.
 
-**Standing: SCOPE LAW LANDED · 19/19 FALSIFIERS GREEN · SLIDER SHIPPED ·
-PARAGRAPH PERMISSION DEFAULT OFF · ⛔ NO MIGRATION · ⛔ NO SCHEMA CHANGE ·
+## 9 · Regression sweep
+
+Every `.test.ts` under `lib/manuscript`, `lib/writers-studio`,
+`lib/writersStudio`, `app/writers-studio` and `lib/maia/canonical-turn` was run
+at `aa15c4ef^` and again on this work, and the two runs **diff to additions
+only** — the three suites this lane adds or extends. ⭐ No other suite's result
+changed by a single case.
+
+⚠️ Several suites report failures in **both** runs. They are harness
+limitations (`jest.mock`, DOM, `localStorage`), ⛔ not regressions — which is
+precisely why the comparison was made against a baseline rather than read off a
+single run.
+
+**Standing: CHANGE-SCOPE LAW LANDED · READ-SCOPE LAW LANDED · 28 NEW FALSIFIERS
+GREEN (19 change · 9 read) · SLIDER SHIPPED · PARAGRAPH PERMISSION DEFAULT OFF ·
+NO REGRESSION vs BASELINE · ⛔ NO MIGRATION · ⛔ NO SCHEMA CHANGE ·
 ⛔ NOT DEPLOYED · PRODUCTION UNTOUCHED.**
 
 > ⭐ *The authorization layer protected the manuscript. It was never reached,
