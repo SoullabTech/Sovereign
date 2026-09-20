@@ -21,6 +21,47 @@ unauthorized caller learns nothing about what exists behind it. ⛔ It appears i
 ⭐ **A 404 is INSTRUMENT FAILURE, never a finding.** If the surface will not
 open, nothing below has been tested.
 
+### ⭐ HOW TO ACTUALLY OPEN IT
+
+⚠️ Added 2026-09-20 after the founder grepped this document for a URL and found
+none. *A procedure that assumes the reader can already reach the surface is a
+procedure written by someone who was not standing in front of it.*
+
+```bash
+git checkout claude/intelligent-bell-axjpwf && git pull
+WRITERS_STUDIO_EDITORIAL_ENABLED=1 npm run dev
+```
+
+The flag must be on the **server process**. ⛔ Exporting it in another tab does
+nothing.
+
+The rebuild auto-selects a manuscript **only when the member has exactly one**.
+With more, it refuses — *"Open the rebuild with a specific manuscript"* — which
+is a refusal to guess, ⛔ not a fault. List them, signed in, at
+`/api/sovereign/manuscripts`, then open:
+
+```
+http://localhost:3000/writers-studio/rebuild?m=<manuscriptId>
+```
+
+**If the page says it could not read the manuscript**, that is the client's
+catch branch: the context endpoint returned non-2xx. ⭐ Read the reason
+directly — it is a plain GET and returns its own diagnosis:
+
+```
+http://localhost:3000/api/writers-studio/rebuild/context?manuscriptId=<id>
+```
+
+| what comes back | what it means |
+|---|---|
+| `{"error":"not_found"}` | no `member_manuscripts` row for this member + id |
+| `{"state":"no_draft"}` | the manuscript has no working draft |
+| `{"state":"continuous"}` | `section_addressable_at` is NULL — ⛔ not section-addressable |
+| `{"state":"section_aware", sections:[…]}` | ✅ usable |
+
+⛔ Only `section_aware` can carry this witness. The other three are real states,
+⛔ not bugs, and none of them is evidence about the scope laws.
+
 Surface: `/writers-studio/rebuild` · Branch `claude/intelligent-bell-axjpwf`.
 
 **Fixture requirements** — ⛔ if any is unmet the run is invalid before it starts:
