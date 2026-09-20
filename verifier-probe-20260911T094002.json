@@ -1,0 +1,14 @@
+{
+  "set": "detector-blind",
+  "fixtures_sha256": "2873d1fbb38db850bafc2bc17a0438ca47de2ccf85879d8e325c3177eaccfc38",
+  "hhem_threshold_frozen_at": 0.5,
+  "minicheck_threshold_frozen_at": 0.5,
+  "threshold_note": "A REPORTING cut only. Raw scores are recorded. Changing it after seeing these answers is tuning to the test; it must be a separate calibration act on separate material.",
+  "not_run": [
+    {
+      "verifier": "minicheck",
+      "error": "ModuleNotFoundError: No module named 'minicheck'"
+    }
+  ],
+  "rows": []
+}

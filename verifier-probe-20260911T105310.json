@@ -1,0 +1,1630 @@
+{
+  "set": "triples",
+  "fixtures_sha256": "8461d8c78b8c78df2435d62e419c8969c924d2e4a634bb040a9f6c9976f454a4",
+  "hhem_threshold_frozen_at": 0.5,
+  "minicheck_threshold_frozen_at": 0.5,
+  "threshold_note": "A REPORTING cut only. Raw scores are recorded. Changing it after seeing these answers is tuning to the test; it must be a separate calibration act on separate material.",
+  "not_run": [],
+  "rows": [
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T001",
+      "role": "",
+      "family": "wren-street-bakery",
+      "group": "",
+      "premise": "The bakery on Wren Street opened its doors at five every morning through the winter of 2019.",
+      "hypothesis": "The Wren Street bakery was opening at five in the morning during the winter of 2019.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0013,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T002",
+      "role": "",
+      "family": "wren-street-bakery",
+      "group": "",
+      "premise": "The bakery on Wren Street opened its doors at five every morning through the winter of 2019.",
+      "hypothesis": "The Wren Street bakery did not open until midday that winter.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T003",
+      "role": "",
+      "family": "wren-street-bakery",
+      "group": "",
+      "premise": "The bakery on Wren Street opened its doors at five every morning through the winter of 2019.",
+      "hypothesis": "The Wren Street bakery still opens at five in the morning.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0099,
+        "neutral": 0.9521,
+        "contradiction": 0.0378
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T004",
+      "role": "",
+      "family": "nadia-thesis-submission",
+      "group": "",
+      "premise": "Nadia handed in her thesis on the last Friday of March, a full two weeks before her department's deadline.",
+      "hypothesis": "Nadia handed in her thesis before her department's deadline.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.999,
+        "neutral": 0.001,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T005",
+      "role": "",
+      "family": "nadia-thesis-submission",
+      "group": "",
+      "premise": "Nadia handed in her thesis on the last Friday of March, a full two weeks before her department's deadline.",
+      "hypothesis": "Nadia handed in her thesis after her department's deadline had already passed.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0002,
+        "neutral": 0.0002,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T006",
+      "role": "",
+      "family": "nadia-thesis-submission",
+      "group": "",
+      "premise": "Nadia handed in her thesis on the last Friday of March, a full two weeks before her department's deadline.",
+      "hypothesis": "Nadia had been working on that thesis for more than a year.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 1.0,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T007",
+      "role": "",
+      "family": "kestrel-ferry-schedule",
+      "group": "",
+      "premise": "Until last April the ferry to Kestrel Island ran twice a day; since then it has run on Saturdays only.",
+      "hypothesis": "The Kestrel Island ferry runs less often now than it did before last April.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9961,
+        "neutral": 0.0033,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T008",
+      "role": "",
+      "family": "kestrel-ferry-schedule",
+      "group": "",
+      "premise": "Until last April the ferry to Kestrel Island ran twice a day; since then it has run on Saturdays only.",
+      "hypothesis": "The Kestrel Island ferry still makes two crossings every day.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0003,
+        "neutral": 0.0003,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T009",
+      "role": "",
+      "family": "kestrel-ferry-schedule",
+      "group": "",
+      "premise": "Until last April the ferry to Kestrel Island ran twice a day; since then it has run on Saturdays only.",
+      "hypothesis": "The twice-daily crossing to Kestrel Island had been running for many years before it was cut back.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 1.0,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T010",
+      "role": "",
+      "family": "okonkwo-siblings",
+      "group": "",
+      "premise": "Theo and Ruth Okonkwo are siblings who grew up in the same house in Leeds; Ruth is four years older than Theo.",
+      "hypothesis": "Ruth is the elder of the two Okonkwo siblings.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0012,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T011",
+      "role": "",
+      "family": "okonkwo-siblings",
+      "group": "",
+      "premise": "Theo and Ruth Okonkwo are siblings who grew up in the same house in Leeds; Ruth is four years older than Theo.",
+      "hypothesis": "Theo is the elder of the two Okonkwo siblings.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0007,
+        "neutral": 0.0002,
+        "contradiction": 0.999
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T012",
+      "role": "",
+      "family": "okonkwo-siblings",
+      "group": "",
+      "premise": "Theo and Ruth Okonkwo are siblings who grew up in the same house in Leeds; Ruth is four years older than Theo.",
+      "hypothesis": "Theo and Ruth have the same mother and the same father.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 1.0,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T013",
+      "role": "",
+      "family": "marchetti-farrell-neighbours",
+      "group": "",
+      "premise": "For eleven years Dolores Marchetti lived next door to the Farrells, and she looked after their cat whenever they went away.",
+      "hypothesis": "Dolores Marchetti and the Farrells were next-door neighbours for eleven years.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0014,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T014",
+      "role": "",
+      "family": "marchetti-farrell-neighbours",
+      "group": "",
+      "premise": "For eleven years Dolores Marchetti lived next door to the Farrells, and she looked after their cat whenever they went away.",
+      "hypothesis": "Dolores Marchetti never lived anywhere near the Farrells.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T015",
+      "role": "",
+      "family": "marchetti-farrell-neighbours",
+      "group": "",
+      "premise": "For eleven years Dolores Marchetti lived next door to the Farrells, and she looked after their cat whenever they went away.",
+      "hypothesis": "Dolores Marchetti and the Farrells were friends.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0073,
+        "neutral": 0.9922,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T016",
+      "role": "",
+      "family": "vance-osei-letters",
+      "group": "",
+      "premise": "Ingrid Vance wrote to her old schoolteacher, Mr. Osei, every Christmas for twenty years, and he wrote back each time.",
+      "hypothesis": "Ingrid Vance and Mr. Osei exchanged letters across a span of twenty years.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9976,
+        "neutral": 0.0022,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T017",
+      "role": "",
+      "family": "vance-osei-letters",
+      "group": "",
+      "premise": "Ingrid Vance wrote to her old schoolteacher, Mr. Osei, every Christmas for twenty years, and he wrote back each time.",
+      "hypothesis": "Mr. Osei never once answered Ingrid Vance's letters.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T018",
+      "role": "",
+      "family": "vance-osei-letters",
+      "group": "",
+      "premise": "Ingrid Vance wrote to her old schoolteacher, Mr. Osei, every Christmas for twenty years, and he wrote back each time.",
+      "hypothesis": "Ingrid Vance and Mr. Osei met in person at least once during those twenty years.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0002,
+        "neutral": 0.998,
+        "contradiction": 0.0017
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T019",
+      "role": "",
+      "family": "delacroix-watercolours",
+      "group": "",
+      "premise": "The watercolours hanging in the hallway were painted by Amira Delacroix, who marks her work with a small blue heron.",
+      "hypothesis": "The hallway watercolours are the work of Amira Delacroix.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0014,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T020",
+      "role": "",
+      "family": "delacroix-watercolours",
+      "group": "",
+      "premise": "The watercolours hanging in the hallway were painted by Amira Delacroix, who marks her work with a small blue heron.",
+      "hypothesis": "The hallway watercolours were painted by someone other than Amira Delacroix.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.0007,
+        "contradiction": 0.999
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T021",
+      "role": "",
+      "family": "delacroix-watercolours",
+      "group": "",
+      "premise": "The watercolours hanging in the hallway were painted by Amira Delacroix, who marks her work with a small blue heron.",
+      "hypothesis": "Amira Delacroix paints professionally.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0005,
+        "neutral": 0.9995,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T022",
+      "role": "",
+      "family": "rowan-ash-pen-name",
+      "group": "",
+      "premise": "The crime novels published under the name Rowan Ash were all written by Beatriz Alonso, a retired magistrate from Seville.",
+      "hypothesis": "Beatriz Alonso is the author of the crime novels that appear under the name Rowan Ash.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9976,
+        "neutral": 0.0022,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T023",
+      "role": "",
+      "family": "rowan-ash-pen-name",
+      "group": "",
+      "premise": "The crime novels published under the name Rowan Ash were all written by Beatriz Alonso, a retired magistrate from Seville.",
+      "hypothesis": "Rowan Ash is a different writer from Beatriz Alonso, with novels of his own.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.0006,
+        "contradiction": 0.999
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T024",
+      "role": "",
+      "family": "rowan-ash-pen-name",
+      "group": "",
+      "premise": "The crime novels published under the name Rowan Ash were all written by Beatriz Alonso, a retired magistrate from Seville.",
+      "hypothesis": "Beatriz Alonso drew on her years on the bench when she wrote those novels.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.9995,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T025",
+      "role": "",
+      "family": "raman-twins-race",
+      "group": "",
+      "premise": "The runner who crossed the line first in the Saltcoats ten-mile was Priya Raman; her twin sister Meena came ninth.",
+      "hypothesis": "Priya Raman won the Saltcoats ten-mile.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9995,
+        "neutral": 0.0005,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T026",
+      "role": "",
+      "family": "raman-twins-race",
+      "group": "",
+      "premise": "The runner who crossed the line first in the Saltcoats ten-mile was Priya Raman; her twin sister Meena came ninth.",
+      "hypothesis": "It was Meena Raman who crossed the line first at Saltcoats.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0003,
+        "neutral": 0.0001,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T027",
+      "role": "",
+      "family": "raman-twins-race",
+      "group": "",
+      "premise": "The runner who crossed the line first in the Saltcoats ten-mile was Priya Raman; her twin sister Meena came ninth.",
+      "hypothesis": "The two Raman sisters are often mistaken for one another at races.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0002,
+        "neutral": 0.9995,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T028",
+      "role": "",
+      "family": "northgate-scheduling-desk",
+      "group": "",
+      "premise": "Since 2021 Devon Achebe has run the scheduling desk at the Northgate dental clinic, although he has no clinical training of any kind.",
+      "hypothesis": "Devon Achebe is not a trained clinician.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0011,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T029",
+      "role": "",
+      "family": "northgate-scheduling-desk",
+      "group": "",
+      "premise": "Since 2021 Devon Achebe has run the scheduling desk at the Northgate dental clinic, although he has no clinical training of any kind.",
+      "hypothesis": "Devon Achebe treats patients at the Northgate clinic.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0021,
+        "neutral": 0.0037,
+        "contradiction": 0.9941
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T030",
+      "role": "",
+      "family": "northgate-scheduling-desk",
+      "group": "",
+      "premise": "Since 2021 Devon Achebe has run the scheduling desk at the Northgate dental clinic, although he has no clinical training of any kind.",
+      "hypothesis": "Devon Achebe answers to the clinic's senior dentist.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.9976,
+        "contradiction": 0.0019
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T031",
+      "role": "",
+      "family": "barrow-vale-choir",
+      "group": "",
+      "premise": "Hannah Wexler directs the Barrow Vale community choir: she picks the programme each season and takes the Tuesday rehearsals.",
+      "hypothesis": "The Barrow Vale choir's seasonal programme is chosen by Hannah Wexler.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.999,
+        "neutral": 0.0007,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T032",
+      "role": "",
+      "family": "barrow-vale-choir",
+      "group": "",
+      "premise": "Hannah Wexler directs the Barrow Vale community choir: she picks the programme each season and takes the Tuesday rehearsals.",
+      "hypothesis": "Hannah Wexler has no say in what the Barrow Vale choir performs.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T033",
+      "role": "",
+      "family": "barrow-vale-choir",
+      "group": "",
+      "premise": "Hannah Wexler directs the Barrow Vale community choir: she picks the programme each season and takes the Tuesday rehearsals.",
+      "hypothesis": "Hannah Wexler stands in front of the Barrow Vale choir at its concerts.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0009,
+        "neutral": 0.9985,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T034",
+      "role": "",
+      "family": "ellisfield-bridge-foreman",
+      "group": "",
+      "premise": "On the Ellisfield bridge project, Marta Kubik was the foreman who signed off each day's concrete pours.",
+      "hypothesis": "Signing off the daily concrete pours at Ellisfield was Marta Kubik's job.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.998,
+        "neutral": 0.0017,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T035",
+      "role": "",
+      "family": "ellisfield-bridge-foreman",
+      "group": "",
+      "premise": "On the Ellisfield bridge project, Marta Kubik was the foreman who signed off each day's concrete pours.",
+      "hypothesis": "Marta Kubik held no authority over the concrete work at Ellisfield.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T036",
+      "role": "",
+      "family": "ellisfield-bridge-foreman",
+      "group": "",
+      "premise": "On the Ellisfield bridge project, Marta Kubik was the foreman who signed off each day's concrete pours.",
+      "hypothesis": "Marta Kubik was the most senior person on the Ellisfield site.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0003,
+        "neutral": 0.9995,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T037",
+      "role": "",
+      "family": "vance-lido-swims",
+      "group": "",
+      "premise": "Since he retired, Gerald Vance has swum at the lido on Mondays and Thursdays.",
+      "hypothesis": "Gerald Vance gets to the lido at least twice in an ordinary week.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9927,
+        "neutral": 0.0069,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T038",
+      "role": "",
+      "family": "vance-lido-swims",
+      "group": "",
+      "premise": "Since he retired, Gerald Vance has swum at the lido on Mondays and Thursdays.",
+      "hypothesis": "Gerald Vance has not set foot in the lido since he retired.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T039",
+      "role": "",
+      "family": "vance-lido-swims",
+      "group": "",
+      "premise": "Since he retired, Gerald Vance has swum at the lido on Mondays and Thursdays.",
+      "hypothesis": "Gerald Vance goes to the lido on no days other than Mondays and Thursdays.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0019,
+        "neutral": 0.9976,
+        "contradiction": 0.0007
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T040",
+      "role": "",
+      "family": "okarie-market-stall",
+      "group": "",
+      "premise": "The Okarie family has kept a vegetable stall at the Thursday market in Ashcombe for six years, missing only the weeks when the market itself was cancelled.",
+      "hypothesis": "The Okaries have been at the Ashcombe market on nearly every Thursday for six years.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9956,
+        "neutral": 0.0039,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T041",
+      "role": "",
+      "family": "okarie-market-stall",
+      "group": "",
+      "premise": "The Okarie family has kept a vegetable stall at the Thursday market in Ashcombe for six years, missing only the weeks when the market itself was cancelled.",
+      "hypothesis": "The Okaries have turned up at the Ashcombe market only once or twice in all that time.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.0005,
+        "contradiction": 0.999
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T042",
+      "role": "",
+      "family": "okarie-market-stall",
+      "group": "",
+      "premise": "The Okarie family has kept a vegetable stall at the Thursday market in Ashcombe for six years, missing only the weeks when the market itself was cancelled.",
+      "hypothesis": "The Okaries also sell their vegetables at markets in other towns.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.9995,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T043",
+      "role": "",
+      "family": "haugen-night-calls",
+      "group": "",
+      "premise": "Dr. Solveig Haugen is called out at night perhaps three or four times a month, usually to the farms north of the village.",
+      "hypothesis": "Night call-outs are not an everyday event for Dr. Haugen.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9937,
+        "neutral": 0.0056,
+        "contradiction": 0.0007
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T044",
+      "role": "",
+      "family": "haugen-night-calls",
+      "group": "",
+      "premise": "Dr. Solveig Haugen is called out at night perhaps three or four times a month, usually to the farms north of the village.",
+      "hypothesis": "Dr. Haugen is called out on very nearly every night of the month.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0016,
+        "neutral": 0.0017,
+        "contradiction": 0.9966
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T045",
+      "role": "",
+      "family": "haugen-night-calls",
+      "group": "",
+      "premise": "Dr. Solveig Haugen is called out at night perhaps three or four times a month, usually to the farms north of the village.",
+      "hypothesis": "Dr. Haugen is the only doctor serving the farms north of the village.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0003,
+        "neutral": 0.9995,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T046",
+      "role": "",
+      "family": "brennan-house-sale",
+      "group": "",
+      "premise": "The Brennans put their house on Calder Road up for sale in September, hoping to settle nearer their daughter in Cork.",
+      "hypothesis": "The Brennans wanted to end up living closer to their daughter.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9966,
+        "neutral": 0.0031,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T047",
+      "role": "",
+      "family": "brennan-house-sale",
+      "group": "",
+      "premise": "The Brennans put their house on Calder Road up for sale in September, hoping to settle nearer their daughter in Cork.",
+      "hypothesis": "The Brennans had no wish to live any nearer their daughter.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T048",
+      "role": "",
+      "family": "brennan-house-sale",
+      "group": "",
+      "premise": "The Brennans put their house on Calder Road up for sale in September, hoping to settle nearer their daughter in Cork.",
+      "hypothesis": "The Brennans have since moved to Cork.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.999,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T049",
+      "role": "",
+      "family": "iglesias-apprenticeship",
+      "group": "",
+      "premise": "Tom\u00e1s Iglesias applied for the joinery apprenticeship at Hallward & Sons because he wants a workshop of his own one day.",
+      "hypothesis": "Tom\u00e1s Iglesias has an ambition to run his own workshop.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9966,
+        "neutral": 0.0033,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T050",
+      "role": "",
+      "family": "iglesias-apprenticeship",
+      "group": "",
+      "premise": "Tom\u00e1s Iglesias applied for the joinery apprenticeship at Hallward & Sons because he wants a workshop of his own one day.",
+      "hypothesis": "Tom\u00e1s Iglesias has no interest in ever running a workshop of his own.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T051",
+      "role": "",
+      "family": "iglesias-apprenticeship",
+      "group": "",
+      "premise": "Tom\u00e1s Iglesias applied for the joinery apprenticeship at Hallward & Sons because he wants a workshop of his own one day.",
+      "hypothesis": "Hallward & Sons gave Tom\u00e1s the apprenticeship.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0003,
+        "neutral": 0.9995,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T052",
+      "role": "",
+      "family": "stanek-complaint-letter",
+      "group": "",
+      "premise": "Miriam Stanek drafted a long letter of complaint to the water company, meaning to send it once she had collected her neighbours' signatures.",
+      "hypothesis": "Miriam Stanek wanted her neighbours' signatures on the letter before it went off.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9902,
+        "neutral": 0.0091,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T053",
+      "role": "",
+      "family": "stanek-complaint-letter",
+      "group": "",
+      "premise": "Miriam Stanek drafted a long letter of complaint to the water company, meaning to send it once she had collected her neighbours' signatures.",
+      "hypothesis": "Miriam Stanek intended to post the letter with no signatures on it at all.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T054",
+      "role": "",
+      "family": "stanek-complaint-letter",
+      "group": "",
+      "premise": "Miriam Stanek drafted a long letter of complaint to the water company, meaning to send it once she had collected her neighbours' signatures.",
+      "hypothesis": "The letter reached the water company in the end.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0003,
+        "neutral": 0.9976,
+        "contradiction": 0.002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T055",
+      "role": "",
+      "family": "bankole-graduation-address",
+      "group": "",
+      "premise": "Ayo Bankole was visibly nervous before he gave the graduation address, stopping twice to steady his hands.",
+      "hypothesis": "Ayo Bankole's nerves were plain to anyone watching him before the address.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9912,
+        "neutral": 0.0087,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T056",
+      "role": "",
+      "family": "bankole-graduation-address",
+      "group": "",
+      "premise": "Ayo Bankole was visibly nervous before he gave the graduation address, stopping twice to steady his hands.",
+      "hypothesis": "Ayo Bankole showed no trace of nerves before the address.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T057",
+      "role": "",
+      "family": "bankole-graduation-address",
+      "group": "",
+      "premise": "Ayo Bankole was visibly nervous before he gave the graduation address, stopping twice to steady his hands.",
+      "hypothesis": "Ayo Bankole felt relieved once the address was behind him.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0007,
+        "neutral": 0.999,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T058",
+      "role": "",
+      "family": "doyle-collie-towpath",
+      "group": "",
+      "premise": "When her old collie died in February, Frances Doyle gave up her usual walks along the towpath.",
+      "hypothesis": "Frances Doyle's collie died in February.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9995,
+        "neutral": 0.0005,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T059",
+      "role": "",
+      "family": "doyle-collie-towpath",
+      "group": "",
+      "premise": "When her old collie died in February, Frances Doyle gave up her usual walks along the towpath.",
+      "hypothesis": "Frances Doyle's collie was still alive in the spring.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0002,
+        "neutral": 0.0004,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T060",
+      "role": "",
+      "family": "doyle-collie-towpath",
+      "group": "",
+      "premise": "When her old collie died in February, Frances Doyle gave up her usual walks along the towpath.",
+      "hypothesis": "Frances Doyle was grieving for the collie.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0469,
+        "neutral": 0.9531,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T061",
+      "role": "",
+      "family": "novak-arrivals-hall",
+      "group": "",
+      "premise": "Karel Novak laughed and wept at once when his brother came through into the arrivals hall at Ostrava after eleven years abroad.",
+      "hypothesis": "Karel Novak was in tears at the sight of his brother in the arrivals hall.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9912,
+        "neutral": 0.0086,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T062",
+      "role": "",
+      "family": "novak-arrivals-hall",
+      "group": "",
+      "premise": "Karel Novak laughed and wept at once when his brother came through into the arrivals hall at Ostrava after eleven years abroad.",
+      "hypothesis": "Karel Novak was unmoved when his brother came through into the arrivals hall.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T063",
+      "role": "",
+      "family": "novak-arrivals-hall",
+      "group": "",
+      "premise": "Karel Novak laughed and wept at once when his brother came through into the arrivals hall at Ostrava after eleven years abroad.",
+      "hypothesis": "Karel Novak had been counting the days until his brother came home.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0002,
+        "neutral": 0.9995,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T064",
+      "role": "",
+      "family": "kettlebridge-rowing-club",
+      "group": "",
+      "premise": "Paula Ferreira joined the Kettlebridge rowing club in 2018 and still pays her subscription every January.",
+      "hypothesis": "Paula Ferreira is a subscription-paying member of the Kettlebridge rowing club.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0013,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T065",
+      "role": "",
+      "family": "kettlebridge-rowing-club",
+      "group": "",
+      "premise": "Paula Ferreira joined the Kettlebridge rowing club in 2018 and still pays her subscription every January.",
+      "hypothesis": "Paula Ferreira has never belonged to the Kettlebridge rowing club.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T066",
+      "role": "",
+      "family": "kettlebridge-rowing-club",
+      "group": "",
+      "premise": "Paula Ferreira joined the Kettlebridge rowing club in 2018 and still pays her subscription every January.",
+      "hypothesis": "Paula Ferreira rows with the Kettlebridge club most weekends.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0002,
+        "neutral": 0.9995,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T067",
+      "role": "",
+      "family": "arden-depot-union",
+      "group": "",
+      "premise": "Every driver at the Arden depot except two belongs to the transport union.",
+      "hypothesis": "Not all of the Arden depot's drivers are union members.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9966,
+        "neutral": 0.0024,
+        "contradiction": 0.0011
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T068",
+      "role": "",
+      "family": "arden-depot-union",
+      "group": "",
+      "premise": "Every driver at the Arden depot except two belongs to the transport union.",
+      "hypothesis": "All of the drivers at the Arden depot belong to the transport union.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.004,
+        "neutral": 0.0016,
+        "contradiction": 0.9941
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T069",
+      "role": "",
+      "family": "arden-depot-union",
+      "group": "",
+      "premise": "Every driver at the Arden depot except two belongs to the transport union.",
+      "hypothesis": "The transport union bargains over pay on behalf of the Arden drivers.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0015,
+        "neutral": 0.9985,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T070",
+      "role": "",
+      "family": "milford-book-group",
+      "group": "",
+      "premise": "The Thursday book group at Milford library has nine members, one of them Owen Blaise, who has been with it since it began in 2005.",
+      "hypothesis": "Owen Blaise is one of the nine members of the Milford Thursday book group.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9995,
+        "neutral": 0.0002,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T071",
+      "role": "",
+      "family": "milford-book-group",
+      "group": "",
+      "premise": "The Thursday book group at Milford library has nine members, one of them Owen Blaise, who has been with it since it began in 2005.",
+      "hypothesis": "Owen Blaise has never been part of the Milford book group.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0003,
+        "neutral": 0.0001,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T072",
+      "role": "",
+      "family": "milford-book-group",
+      "group": "",
+      "premise": "The Thursday book group at Milford library has nine members, one of them Owen Blaise, who has been with it since it began in 2005.",
+      "hypothesis": "Owen Blaise founded the Milford book group.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0019,
+        "neutral": 0.9912,
+        "contradiction": 0.0068
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T073",
+      "role": "",
+      "family": "alderney-hotel-flood",
+      "group": "",
+      "premise": "The basement of the Alderney Hotel flooded after a water main burst under the street outside during January's cold snap.",
+      "hypothesis": "The flooding of the Alderney Hotel basement followed the bursting of the water main.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9995,
+        "neutral": 0.0005,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T074",
+      "role": "",
+      "family": "alderney-hotel-flood",
+      "group": "",
+      "premise": "The basement of the Alderney Hotel flooded after a water main burst under the street outside during January's cold snap.",
+      "hypothesis": "The Alderney Hotel basement stayed dry when the main gave way.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T075",
+      "role": "",
+      "family": "alderney-hotel-flood",
+      "group": "",
+      "premise": "The basement of the Alderney Hotel flooded after a water main burst under the street outside during January's cold snap.",
+      "hypothesis": "It was the cold that made the water main burst.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0002,
+        "neutral": 0.999,
+        "contradiction": 0.0007
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T076",
+      "role": "",
+      "family": "tiverton-apple-crop",
+      "group": "",
+      "premise": "The Tiverton orchard lost most of its apple crop that year; a late frost in May had killed the blossom.",
+      "hypothesis": "A late frost in May killed the blossom in the Tiverton orchard.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.999,
+        "neutral": 0.001,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T077",
+      "role": "",
+      "family": "tiverton-apple-crop",
+      "group": "",
+      "premise": "The Tiverton orchard lost most of its apple crop that year; a late frost in May had killed the blossom.",
+      "hypothesis": "The Tiverton blossom came through May unharmed.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T078",
+      "role": "",
+      "family": "tiverton-apple-crop",
+      "group": "",
+      "premise": "The Tiverton orchard lost most of its apple crop that year; a late frost in May had killed the blossom.",
+      "hypothesis": "The Tiverton orchard finished that year out of pocket.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.7764,
+        "neutral": 0.2216,
+        "contradiction": 0.0022
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T079",
+      "role": "",
+      "family": "trawler-engine-fire",
+      "group": "",
+      "premise": "The fire in the trawler's engine room started when a fuel line chafed through where it ran against a bracket.",
+      "hypothesis": "A fuel line that had chafed through was what started the fire in the engine room.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.999,
+        "neutral": 0.0009,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T080",
+      "role": "",
+      "family": "trawler-engine-fire",
+      "group": "",
+      "premise": "The fire in the trawler's engine room started when a fuel line chafed through where it ran against a bracket.",
+      "hypothesis": "The fuel line had nothing to do with the start of the engine-room fire.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T081",
+      "role": "",
+      "family": "trawler-engine-fire",
+      "group": "",
+      "premise": "The fire in the trawler's engine room started when a fuel line chafed through where it ran against a bracket.",
+      "hypothesis": "The fuel line had been run incorrectly when the engine was installed.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0002,
+        "neutral": 0.9995,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T082",
+      "role": "",
+      "family": "whitlock-reading",
+      "group": "",
+      "premise": "At six, Jonah Whitlock could not get through a sentence unaided; by the end of the following year he was working his way through chapter books on his own.",
+      "hypothesis": "Jonah Whitlock's reading improved over the course of that year.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9951,
+        "neutral": 0.0047,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T083",
+      "role": "",
+      "family": "whitlock-reading",
+      "group": "",
+      "premise": "At six, Jonah Whitlock could not get through a sentence unaided; by the end of the following year he was working his way through chapter books on his own.",
+      "hypothesis": "Jonah Whitlock read no better at seven than he had at six.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.0009,
+        "contradiction": 0.9985
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T084",
+      "role": "",
+      "family": "whitlock-reading",
+      "group": "",
+      "premise": "At six, Jonah Whitlock could not get through a sentence unaided; by the end of the following year he was working his way through chapter books on his own.",
+      "hypothesis": "Jonah Whitlock was given extra help with his reading during that year.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0005,
+        "neutral": 0.9995,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T085",
+      "role": "",
+      "family": "marrowfield-growth",
+      "group": "",
+      "premise": "Marrowfield was a village of four hundred people in 1970; today some nine thousand live there and the old lanes have disappeared under new estates.",
+      "hypothesis": "Marrowfield holds far more people now than it did in 1970.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9976,
+        "neutral": 0.0023,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T086",
+      "role": "",
+      "family": "marrowfield-growth",
+      "group": "",
+      "premise": "Marrowfield was a village of four hundred people in 1970; today some nine thousand live there and the old lanes have disappeared under new estates.",
+      "hypothesis": "Marrowfield is a smaller place today than it was in 1970.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.0006,
+        "contradiction": 0.999
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T087",
+      "role": "",
+      "family": "marrowfield-growth",
+      "group": "",
+      "premise": "Marrowfield was a village of four hundred people in 1970; today some nine thousand live there and the old lanes have disappeared under new estates.",
+      "hypothesis": "Most of Marrowfield's growth came from people moving out of the nearby city.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 1.0,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T088",
+      "role": "",
+      "family": "mbeki-walking-again",
+      "group": "",
+      "premise": "After the accident Sefton Mbeki could not stand without help; eight months later he walked the length of the hospital corridor on his own.",
+      "hypothesis": "Sefton Mbeki got back the ability to walk without help.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9937,
+        "neutral": 0.0059,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T089",
+      "role": "",
+      "family": "mbeki-walking-again",
+      "group": "",
+      "premise": "After the accident Sefton Mbeki could not stand without help; eight months later he walked the length of the hospital corridor on his own.",
+      "hypothesis": "Sefton Mbeki never walked unaided again after the accident.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0003,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "T090",
+      "role": "",
+      "family": "mbeki-walking-again",
+      "group": "",
+      "premise": "After the accident Sefton Mbeki could not stand without help; eight months later he walked the length of the hospital corridor on his own.",
+      "hypothesis": "Sefton Mbeki made a full recovery from his injuries.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0007,
+        "neutral": 0.9917,
+        "contradiction": 0.0073
+      }
+    }
+  ]
+}

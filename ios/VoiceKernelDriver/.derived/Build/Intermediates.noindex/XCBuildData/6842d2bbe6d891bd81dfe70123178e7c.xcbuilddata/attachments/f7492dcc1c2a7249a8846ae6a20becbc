@@ -1,0 +1,19 @@
+{
+  "" : {
+    "diagnostics" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-primary.dia",
+    "emit-module-dependencies" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-primary-emit-module.dia",
+    "pch" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-primary.swiftdeps"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift" : {
+    "const-values" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/K00DriverTests.swiftconstvalues",
+    "dependencies" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/K00DriverTests.d",
+    "diagnostics" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/K00DriverTests.dia",
+    "index-unit-output-path" : "/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/K00DriverTests.o",
+    "llvm-bc" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/K00DriverTests.bc",
+    "object" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/K00DriverTests.o",
+    "swift-dependencies" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/K00DriverTests.swiftdeps",
+    "swiftmodule" : "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/K00DriverTests~partial.swiftmodule"
+  }
+}

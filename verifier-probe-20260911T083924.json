@@ -1,0 +1,383 @@
+{
+  "set": "blind",
+  "fixtures_sha256": "a8fc9a92f428c9af05a65e054c3519aac829fe81108562d162d60fa2e4a1cb3e",
+  "hhem_threshold_frozen_at": 0.5,
+  "threshold_note": "A REPORTING cut only. Raw scores are recorded. Changing it after seeing these answers is tuning to the test; it must be a separate calibration act on separate material.",
+  "not_run": [],
+  "rows": [
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B01",
+      "role": "",
+      "family": "possession-vs-participation",
+      "premise": "Her grief lasted through the winter.",
+      "hypothesis": "She actively participates in the grief.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0009,
+        "neutral": 0.9985,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B02",
+      "role": "",
+      "family": "possession-vs-participation",
+      "premise": "She organised the winter fundraiser and signed every letter herself.",
+      "hypothesis": "She actively participates in the fundraiser.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9351,
+        "neutral": 0.0635,
+        "contradiction": 0.0013
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B03",
+      "role": "",
+      "family": "undergoing-vs-causing",
+      "premise": "The storm brought down the footbridge.",
+      "hypothesis": "The storm undergoes the collapse.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0214,
+        "neutral": 0.0291,
+        "contradiction": 0.9497
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B04",
+      "role": "",
+      "family": "undergoing-vs-causing",
+      "premise": "The storm brought down the footbridge.",
+      "hypothesis": "The footbridge undergoes a collapse.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9937,
+        "neutral": 0.0055,
+        "contradiction": 0.0006
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B05",
+      "role": "",
+      "family": "association-vs-membership",
+      "premise": "He has recorded with the quartet three times.",
+      "hypothesis": "He is a member of the quartet.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.8232,
+        "neutral": 0.1757,
+        "contradiction": 0.0012
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B06",
+      "role": "",
+      "family": "association-vs-membership",
+      "premise": "She joined the quartet in 2019 and has played second violin ever since.",
+      "hypothesis": "She is a member of the quartet.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9971,
+        "neutral": 0.0023,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B07",
+      "role": "",
+      "family": "observing-vs-participating",
+      "premise": "He watched the negotiation from the public gallery.",
+      "hypothesis": "He actively participates in the negotiation.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0002,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B08",
+      "role": "",
+      "family": "observing-vs-participating",
+      "premise": "He argued the final clause himself at the negotiating table.",
+      "hypothesis": "He actively participates in the negotiation.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9404,
+        "neutral": 0.0587,
+        "contradiction": 0.001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B09",
+      "role": "",
+      "family": "affected-by-vs-acting-upon",
+      "premise": "The late frost killed the seedlings.",
+      "hypothesis": "The seedlings act upon the frost.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0068,
+        "neutral": 0.0233,
+        "contradiction": 0.9697
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B10",
+      "role": "",
+      "family": "affected-by-vs-acting-upon",
+      "premise": "The late frost killed the seedlings.",
+      "hypothesis": "The seedlings are affected by the frost.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9961,
+        "neutral": 0.0033,
+        "contradiction": 0.0008
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B11",
+      "role": "",
+      "family": "property-change-vs-person-participation",
+      "premise": "The accident changed his handwriting permanently.",
+      "hypothesis": "His handwriting undergoes a change.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9888,
+        "neutral": 0.01,
+        "contradiction": 0.0011
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B12",
+      "role": "",
+      "family": "property-change-vs-person-participation",
+      "premise": "The accident changed his handwriting permanently.",
+      "hypothesis": "He actively participates in the change.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0012,
+        "neutral": 0.1602,
+        "contradiction": 0.8384
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B13",
+      "role": "",
+      "family": "explicit-role-vs-inferred-role",
+      "premise": "She chaired the licensing committee for six years.",
+      "hypothesis": "She actively participates in the committee.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.8955,
+        "neutral": 0.1032,
+        "contradiction": 0.0014
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B14",
+      "role": "",
+      "family": "explicit-role-vs-inferred-role",
+      "premise": "Her name was read into the minutes of the licensing committee.",
+      "hypothesis": "She actively participates in the committee.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0014,
+        "neutral": 0.9971,
+        "contradiction": 0.0013
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B15",
+      "role": "",
+      "family": "swapped-subject-object",
+      "premise": "The inspector questioned the foreman for an hour.",
+      "hypothesis": "The inspector undergoes questioning.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0027,
+        "neutral": 0.0051,
+        "contradiction": 0.9922
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B16",
+      "role": "",
+      "family": "swapped-subject-object",
+      "premise": "The inspector questioned the foreman for an hour.",
+      "hypothesis": "The foreman undergoes questioning.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0012,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B17",
+      "role": "",
+      "family": "negation",
+      "premise": "She declined to sit on the board.",
+      "hypothesis": "She is a member of the board.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.001,
+        "neutral": 0.001,
+        "contradiction": 0.998
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B18",
+      "role": "",
+      "family": "negation",
+      "premise": "She declined to sit on the board but agreed to advise it.",
+      "hypothesis": "She advises the board.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9888,
+        "neutral": 0.0107,
+        "contradiction": 0.0007
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B19",
+      "role": "",
+      "family": "temporality",
+      "premise": "He will join the survey team next spring.",
+      "hypothesis": "He is a member of the survey team.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0006,
+        "neutral": 0.0004,
+        "contradiction": 0.999
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B20",
+      "role": "",
+      "family": "temporality",
+      "premise": "He has rowed with the crew every morning since March.",
+      "hypothesis": "He rows with the crew.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9976,
+        "neutral": 0.0021,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B21",
+      "role": "",
+      "family": "temporality",
+      "premise": "He rowed with the crew until his injury in March.",
+      "hypothesis": "He rows with the crew.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.5513,
+        "neutral": 0.0215,
+        "contradiction": 0.427
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "B22",
+      "role": "",
+      "family": "possession-vs-participation",
+      "premise": "The inquiry ran for two years and its findings filled four volumes.",
+      "hypothesis": "The inquiry actively participates in its findings.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0008,
+        "neutral": 0.9966,
+        "contradiction": 0.0026
+      }
+    }
+  ]
+}

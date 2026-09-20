@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelTests.build/master.swiftdeps"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Tests/VoiceKernelTests/PureLogicTests.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelTests.build/PureLogicTests.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelTests.build/PureLogicTests.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelTests.build/PureLogicTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelTests.build/PureLogicTests.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelTests.build/PureLogicTests.dia"
+  }
+}

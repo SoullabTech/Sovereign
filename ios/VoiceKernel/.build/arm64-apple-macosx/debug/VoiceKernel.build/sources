@@ -1,0 +1,10 @@
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/AudioSessionAuthority.swift
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/ConfigurationChange.swift
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/HealthSupervisor.swift
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/Journal.swift
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/KernelState.swift
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/RecoveryPolicy.swift
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/Replay.swift
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/StateProjection.swift
+/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift

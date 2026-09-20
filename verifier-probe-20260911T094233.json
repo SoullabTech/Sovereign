@@ -1,0 +1,384 @@
+{
+  "set": "scope",
+  "fixtures_sha256": "51e10d22e41f9570016f25c9b1568dfb1b520db2b516202c4914290a82b78252",
+  "hhem_threshold_frozen_at": 0.5,
+  "minicheck_threshold_frozen_at": 0.5,
+  "threshold_note": "A REPORTING cut only. Raw scores are recorded. Changing it after seeing these answers is tuning to the test; it must be a separate calibration act on separate material.",
+  "not_run": [],
+  "rows": [
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S01",
+      "role": "",
+      "family": "past-to-present",
+      "group": "",
+      "premise": "Imre managed the bakery until it closed in 2019.",
+      "hypothesis": "Imre manages the bakery.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.5270",
+      "scores": {
+        "support": 0.527,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S02",
+      "role": "",
+      "family": "past-to-present",
+      "group": "",
+      "premise": "Imre has managed the bakery since 2019 and still opens it each morning.",
+      "hypothesis": "Imre manages the bakery.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8948",
+      "scores": {
+        "support": 0.8948,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S03",
+      "role": "",
+      "family": "past-to-present",
+      "group": "",
+      "premise": "Bea served on the lifeboat for a decade before moving inland.",
+      "hypothesis": "Bea serves on the lifeboat.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.5568",
+      "scores": {
+        "support": 0.5568,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S04",
+      "role": "",
+      "family": "occasional-to-habitual",
+      "group": "",
+      "premise": "Dara has covered the night shift twice this year.",
+      "hypothesis": "Dara works the night shift.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0865",
+      "scores": {
+        "support": 0.0865,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S05",
+      "role": "",
+      "family": "occasional-to-habitual",
+      "group": "",
+      "premise": "Dara works every night shift on the rota and has not missed one.",
+      "hypothesis": "Dara works the night shift.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.9410",
+      "scores": {
+        "support": 0.941,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S06",
+      "role": "",
+      "family": "participation-to-membership",
+      "group": "",
+      "premise": "Aziz was invited to sit in on the swim club's training session.",
+      "hypothesis": "Aziz belongs to the swim club.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.1171",
+      "scores": {
+        "support": 0.1171,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S07",
+      "role": "",
+      "family": "participation-to-membership",
+      "group": "",
+      "premise": "Aziz has paid dues to the swim club for six years.",
+      "hypothesis": "Aziz belongs to the swim club.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.9451",
+      "scores": {
+        "support": 0.9451,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S08",
+      "role": "",
+      "family": "participation-to-membership",
+      "group": "",
+      "premise": "The catalogue lists her among the contributors to the atlas.",
+      "hypothesis": "She is one of the atlas's editors.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.2570",
+      "scores": {
+        "support": 0.257,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S09",
+      "role": "",
+      "family": "temporary-to-permanent",
+      "group": "",
+      "premise": "Mira is covering the archive desk while the archivist is on leave.",
+      "hypothesis": "Mira is the archivist.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0271",
+      "scores": {
+        "support": 0.0271,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S10",
+      "role": "",
+      "family": "temporary-to-permanent",
+      "group": "",
+      "premise": "Mira was appointed archivist last year and holds the post still.",
+      "hypothesis": "Mira is the archivist.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.9201",
+      "scores": {
+        "support": 0.9201,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S11",
+      "role": "",
+      "family": "some-to-all",
+      "group": "",
+      "premise": "Several of the orchard's pear trees were lost to blight.",
+      "hypothesis": "The orchard's pear trees were lost to blight.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.9510",
+      "scores": {
+        "support": 0.951,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S12",
+      "role": "",
+      "family": "some-to-all",
+      "group": "",
+      "premise": "Every pear tree in the orchard was lost to blight.",
+      "hypothesis": "The orchard's pear trees were lost to blight.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8136",
+      "scores": {
+        "support": 0.8136,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S13",
+      "role": "",
+      "family": "one-event-to-enduring-trait",
+      "group": "",
+      "premise": "The kiln failed during Tuesday's firing.",
+      "hypothesis": "The kiln fails when it is fired.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.7340",
+      "scores": {
+        "support": 0.734,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S14",
+      "role": "",
+      "family": "one-event-to-enduring-trait",
+      "group": "",
+      "premise": "The kiln has failed in every firing since March.",
+      "hypothesis": "The kiln fails when it is fired.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.7819",
+      "scores": {
+        "support": 0.7819,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S15",
+      "role": "",
+      "family": "intention-to-action",
+      "group": "",
+      "premise": "Wren intends to repaint the lighthouse this summer.",
+      "hypothesis": "Wren repainted the lighthouse.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0332",
+      "scores": {
+        "support": 0.0332,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S16",
+      "role": "",
+      "family": "intention-to-action",
+      "group": "",
+      "premise": "Wren repainted the lighthouse over three weeks in June.",
+      "hypothesis": "Wren repainted the lighthouse.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8814",
+      "scores": {
+        "support": 0.8814,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S17",
+      "role": "",
+      "family": "future-to-present",
+      "group": "",
+      "premise": "The depot will take delivery of the new engines in March.",
+      "hypothesis": "The depot has the new engines.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0495",
+      "scores": {
+        "support": 0.0495,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S18",
+      "role": "",
+      "family": "future-to-present",
+      "group": "",
+      "premise": "The depot took delivery of the new engines in March and they sit in the shed.",
+      "hypothesis": "The depot has the new engines.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.9616",
+      "scores": {
+        "support": 0.9616,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S19",
+      "role": "",
+      "family": "capability-to-behaviour",
+      "group": "",
+      "premise": "Sofia can read Old Norse.",
+      "hypothesis": "Sofia reads Old Norse manuscripts in the reading room.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0361",
+      "scores": {
+        "support": 0.0361,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S20",
+      "role": "",
+      "family": "capability-to-behaviour",
+      "group": "",
+      "premise": "Sofia spends each Thursday reading Old Norse manuscripts in the reading room.",
+      "hypothesis": "Sofia reads Old Norse manuscripts in the reading room.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.9428",
+      "scores": {
+        "support": 0.9428,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S21",
+      "role": "",
+      "family": "association-to-identity",
+      "group": "",
+      "premise": "Nils supplies timber to the boatyard.",
+      "hypothesis": "Nils is a boatbuilder.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0533",
+      "scores": {
+        "support": 0.0533,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "S22",
+      "role": "",
+      "family": "association-to-identity",
+      "group": "",
+      "premise": "Nils has built boats at the yard for thirty years.",
+      "hypothesis": "Nils is a boatbuilder.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.9533",
+      "scores": {
+        "support": 0.9533,
+        "threshold": 0.5
+      }
+    }
+  ]
+}

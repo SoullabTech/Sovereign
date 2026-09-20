@@ -34,9 +34,9 @@ distinct_to_room: this is the turn itself as a readable object — the one surfa
 # repository set after the 2026-09-07 voice fix: a fix verified only by its
 # author's tests is a claim about code, not about MAIA.
 #
-# screenshot_desktop: docs/design/contracts/screenshots/conversation-turn-legibility-desktop.png
-# screenshot_mobile: docs/design/contracts/screenshots/conversation-turn-legibility-mobile.png
-# experience_verification: <the walk taken on /maia, what was looked for, what was seen>
+screenshot_desktop: docs/design/contracts/screenshots/conversation-turn-legibility-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/conversation-turn-legibility-mobile.png
+experience_verification: <the walk taken on /maia, what was looked for, what was seen>
 ---
 
 # Conversation — Turn Legibility — Experience Contract

@@ -1,0 +1,179 @@
+f98ca014aa053440810e28d4b259a45e
+"use strict";
+/**
+ * iOS Audio Session Manager
+ *
+ * The ONLY place that controls AudioContext lifecycle on iOS.
+ *
+ * iOS WKWebView is ruthless about audio:
+ * - AudioContext suspends after each playback ends
+ * - AVAudioSession deactivates between plays
+ * - No visible errors - just silent failure
+ *
+ * This module solves it with:
+ * 1. Single shared AudioContext
+ * 2. Resume before EVERY playback (not just first)
+ * 3. Silent oscillator to keep AVAudioSession warm
+ * 4. Gesture-based unlock on app boot
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getAudioContext = getAudioContext;
+exports.ensureAudioReady = ensureAudioReady;
+exports.unlockAudioOnUserGesture = unlockAudioOnUserGesture;
+exports.startSessionKeepAlive = startSessionKeepAlive;
+exports.stopSessionKeepAlive = stopSessionKeepAlive;
+exports.getAudioStatus = getAudioStatus;
+exports.assertAudioReady = assertAudioReady;
+let sharedAudioContext = null;
+let audioUnlocked = false;
+let sessionKeepAliveStop = null;
+/**
+ * Get or create the shared AudioContext
+ * ALWAYS use this - never create AudioContext elsewhere
+ */
+function getAudioContext() {
+    if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+        sharedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('[iOS Audio] Created shared AudioContext');
+    }
+    return sharedAudioContext;
+}
+/**
+ * MUST be called before EVERY playback
+ * Not "once at startup" - EVERY SINGLE TIME
+ *
+ * iOS does not care about your assumptions.
+ */
+async function ensureAudioReady() {
+    const ctx = getAudioContext();
+    console.log('[iOS Audio] ensureAudioReady - state:', ctx.state);
+    if (ctx.state !== 'running') {
+        try {
+            await ctx.resume();
+            console.log('[iOS Audio] AudioContext resumed → state:', ctx.state);
+        }
+        catch (err) {
+            console.warn('[iOS Audio] Failed to resume AudioContext:', err);
+            // Try to recreate
+            sharedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+            await sharedAudioContext.resume();
+            console.log('[iOS Audio] Recreated AudioContext → state:', sharedAudioContext.state);
+            return sharedAudioContext;
+        }
+    }
+    return ctx;
+}
+/**
+ * Unlock audio via first user gesture
+ * Call this ONCE on app boot, not per TTS
+ *
+ * WKWebView sometimes suspends audio between responses
+ * unless anchored to a gesture
+ */
+function unlockAudioOnUserGesture() {
+    if (typeof window === 'undefined')
+        return;
+    if (audioUnlocked)
+        return;
+    const unlock = async () => {
+        try {
+            const ctx = getAudioContext();
+            await ctx.resume();
+            // Play silent buffer to fully unlock
+            const buffer = ctx.createBuffer(1, 1, 22050);
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+            source.start(0);
+            audioUnlocked = true;
+            console.log('[iOS Audio] Audio unlocked via gesture, state:', ctx.state);
+            // Start session keep-alive after unlock
+            startSessionKeepAlive();
+        }
+        catch (err) {
+            console.warn('[iOS Audio] Gesture unlock failed:', err);
+        }
+        window.removeEventListener('touchstart', unlock);
+        window.removeEventListener('touchend', unlock);
+        window.removeEventListener('click', unlock);
+    };
+    window.addEventListener('touchstart', unlock, { once: true, passive: true });
+    window.addEventListener('touchend', unlock, { once: true, passive: true });
+    window.addEventListener('click', unlock, { once: true });
+    console.log('[iOS Audio] Gesture unlock listeners installed');
+}
+/**
+ * Keep AVAudioSession alive with silent oscillator
+ *
+ * This is the TestFlight-only killer fix.
+ * AVAudioSession deactivates between plays on iOS.
+ * A near-silent oscillator keeps it warm.
+ *
+ * Apple won't admit this. Everyone ships it.
+ */
+function startSessionKeepAlive() {
+    if (sessionKeepAliveStop) {
+        console.log('[iOS Audio] Session keep-alive already running');
+        return;
+    }
+    try {
+        const ctx = getAudioContext();
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        // Inaudible but keeps session alive
+        gain.gain.value = 0.0001;
+        oscillator.frequency.value = 1; // 1Hz - below human hearing
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start();
+        sessionKeepAliveStop = () => {
+            try {
+                oscillator.stop();
+                oscillator.disconnect();
+                gain.disconnect();
+            }
+            catch (_a) { }
+        };
+        console.log('[iOS Audio] Session keep-alive started (silent oscillator)');
+    }
+    catch (err) {
+        console.warn('[iOS Audio] Failed to start session keep-alive:', err);
+    }
+}
+/**
+ * Stop session keep-alive (call on app unmount if needed)
+ */
+function stopSessionKeepAlive() {
+    if (sessionKeepAliveStop) {
+        sessionKeepAliveStop();
+        sessionKeepAliveStop = null;
+        console.log('[iOS Audio] Session keep-alive stopped');
+    }
+}
+/**
+ * Check if audio is ready for playback
+ * Use this for debugging - log before every play
+ */
+function getAudioStatus() {
+    var _a;
+    return {
+        state: (_a = sharedAudioContext === null || sharedAudioContext === void 0 ? void 0 : sharedAudioContext.state) !== null && _a !== void 0 ? _a : 'no-context',
+        unlocked: audioUnlocked,
+        keepAliveActive: sessionKeepAliveStop !== null,
+    };
+}
+/**
+ * Hard assertion - throws if audio is not ready
+ * Use during development to catch silent failures
+ */
+function assertAudioReady() {
+    const status = getAudioStatus();
+    if (status.state !== 'running') {
+        throw new Error(`[iOS Audio] ASSERTION FAILED: AudioContext state is "${status.state}", expected "running"`);
+    }
+}
+// Auto-install gesture unlock on module load
+if (typeof window !== 'undefined') {
+    unlockAudioOnUserGesture();
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL2xpYi92b2ljZS9pb3MtYXVkaW8tc2Vzc2lvbi50cyIsIm1hcHBpbmdzIjoiO0FBQUE7Ozs7Ozs7Ozs7Ozs7OztHQWVHOztBQVVILDBDQU1DO0FBUUQsNENBb0JDO0FBU0QsNERBb0NDO0FBV0Qsc0RBZ0NDO0FBS0Qsb0RBTUM7QUFNRCx3Q0FNQztBQU1ELDRDQUtDO0FBcEtELElBQUksa0JBQWtCLEdBQXdCLElBQUksQ0FBQztBQUNuRCxJQUFJLGFBQWEsR0FBRyxLQUFLLENBQUM7QUFDMUIsSUFBSSxvQkFBb0IsR0FBd0IsSUFBSSxDQUFDO0FBRXJEOzs7R0FHRztBQUNILFNBQWdCLGVBQWU7SUFDN0IsSUFBSSxDQUFDLGtCQUFrQixJQUFJLGtCQUFrQixDQUFDLEtBQUssS0FBSyxRQUFRLEVBQUUsQ0FBQztRQUNqRSxrQkFBa0IsR0FBRyxJQUFJLENBQUMsTUFBTSxDQUFDLFlBQVksSUFBSyxNQUFjLENBQUMsa0JBQWtCLENBQUMsRUFBRSxDQUFDO1FBQ3ZGLE9BQU8sQ0FBQyxHQUFHLENBQUMseUNBQXlDLENBQUMsQ0FBQztJQUN6RCxDQUFDO0lBQ0QsT0FBTyxrQkFBa0IsQ0FBQztBQUM1QixDQUFDO0FBRUQ7Ozs7O0dBS0c7QUFDSSxLQUFLLFVBQVUsZ0JBQWdCO0lBQ3BDLE1BQU0sR0FBRyxHQUFHLGVBQWUsRUFBRSxDQUFDO0lBRTlCLE9BQU8sQ0FBQyxHQUFHLENBQUMsdUNBQXVDLEVBQUUsR0FBRyxDQUFDLEtBQUssQ0FBQyxDQUFDO0lBRWhFLElBQUksR0FBRyxDQUFDLEtBQUssS0FBSyxTQUFTLEVBQUUsQ0FBQztRQUM1QixJQUFJLENBQUM7WUFDSCxNQUFNLEdBQUcsQ0FBQyxNQUFNLEVBQUUsQ0FBQztZQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLDJDQUEyQyxF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QkFBa0IsYUFBbEIsa0JBQWtCLHVCQUFsQixrQkFBa0IsQ0FBRSxLQUFLLG1DQUFJLFlBQVk7UUFDaEQsUUFBUSxFQUFFLGFBQWE7UUFDdkIsZUFBZSxFQUFFLG9CQUFvQixLQUFLLElBQUk7S0FDL0MsQ0FBQztBQUNKLENBQUM7QUFFRDs7O0dBR0c7QUFDSCxTQUFnQixnQkFBZ0I7SUFDOUIsTUFBTSxNQUFNLEdBQUcsY0FBYyxFQUFFLENBQUM7SUFDaEMsSUFBSSxNQUFNLENBQUMsS0FBSyxLQUFLLFNBQVMsRUFBRSxDQUFDO1FBQy9CLE1BQU0sSUFBSSxLQUFLLENBQUMsd0RBQXdELE1BQU0sQ0FBQyxLQUFLLHVCQUF1QixDQUFDLENBQUM7SUFDL0csQ0FBQztBQUNILENBQUM7QUFFRCw2Q0FBNkM7QUFDN0MsSUFBSSxPQUFPLE1BQU0sS0FBSyxXQUFXLEVBQUUsQ0FBQztJQUNsQyx3QkFBd0IsRUFBRSxDQUFDO0FBQzdCLENBQUMiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL2xpYi92b2ljZS9pb3MtYXVkaW8tc2Vzc2lvbi50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIGlPUyBBdWRpbyBTZXNzaW9uIE1hbmFnZXJcbiAqXG4gKiBUaGUgT05MWSBwbGFjZSB0aGF0IGNvbnRyb2xzIEF1ZGlvQ29udGV4dCBsaWZlY3ljbGUgb24gaU9TLlxuICpcbiAqIGlPUyBXS1dlYlZpZXcgaXMgcnV0aGxlc3MgYWJvdXQgYXVkaW86XG4gKiAtIEF1ZGlvQ29udGV4dCBzdXNwZW5kcyBhZnRlciBlYWNoIHBsYXliYWNrIGVuZHNcbiAqIC0gQVZBdWRpb1Nlc3Npb24gZGVhY3RpdmF0ZXMgYmV0d2VlbiBwbGF5c1xuICogLSBObyB2aXNpYmxlIGVycm9ycyAtIGp1c3Qgc2lsZW50IGZhaWx1cmVcbiAqXG4gKiBUaGlzIG1vZHVsZSBzb2x2ZXMgaXQgd2l0aDpcbiAqIDEuIFNpbmdsZSBzaGFyZWQgQXVkaW9Db250ZXh0XG4gKiAyLiBSZXN1bWUgYmVmb3JlIEVWRVJZIHBsYXliYWNrIChub3QganVzdCBmaXJzdClcbiAqIDMuIFNpbGVudCBvc2NpbGxhdG9yIHRvIGtlZXAgQVZBdWRpb1Nlc3Npb24gd2FybVxuICogNC4gR2VzdHVyZS1iYXNlZCB1bmxvY2sgb24gYXBwIGJvb3RcbiAqL1xuXG5sZXQgc2hhcmVkQXVkaW9Db250ZXh0OiBBdWRpb0NvbnRleHQgfCBudWxsID0gbnVsbDtcbmxldCBhdWRpb1VubG9ja2VkID0gZmFsc2U7XG5sZXQgc2Vzc2lvbktlZXBBbGl2ZVN0b3A6ICgoKSA9PiB2b2lkKSB8IG51bGwgPSBudWxsO1xuXG4vKipcbiAqIEdldCBvciBjcmVhdGUgdGhlIHNoYXJlZCBBdWRpb0NvbnRleHRcbiAqIEFMV0FZUyB1c2UgdGhpcyAtIG5ldmVyIGNyZWF0ZSBBdWRpb0NvbnRleHQgZWxzZXdoZXJlXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBnZXRBdWRpb0NvbnRleHQoKTogQXVkaW9Db250ZXh0IHtcbiAgaWYgKCFzaGFyZWRBdWRpb0NvbnRleHQgfHwgc2hhcmVkQXVkaW9Db250ZXh0LnN0YXRlID09PSAnY2xvc2VkJykge1xuICAgIHNoYXJlZEF1ZGlvQ29udGV4dCA9IG5ldyAod2luZG93LkF1ZGlvQ29udGV4dCB8fCAod2luZG93IGFzIGFueSkud2Via2l0QXVkaW9Db250ZXh0KSgpO1xuICAgIGNvbnNvbGUubG9nKCdbaU9TIEF1ZGlvXSBDcmVhdGVkIHNoYXJlZCBBdWRpb0NvbnRleHQnKTtcbiAgfVxuICByZXR1cm4gc2hhcmVkQXVkaW9Db250ZXh0O1xufVxuXG4vKipcbiAqIE1VU1QgYmUgY2FsbGVkIGJlZm9yZSBFVkVSWSBwbGF5YmFja1xuICogTm90IFwib25jZSBhdCBzdGFydHVwXCIgLSBFVkVSWSBTSU5HTEUgVElNRVxuICpcbiAqIGlPUyBkb2VzIG5vdCBjYXJlIGFib3V0IHlvdXIgYXNzdW1wdGlvbnMuXG4gKi9cbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBlbnN1cmVBdWRpb1JlYWR5KCk6IFByb21pc2U8QXVkaW9Db250ZXh0PiB7XG4gIGNvbnN0IGN0eCA9IGdldEF1ZGlvQ29udGV4dCgpO1xuXG4gIGNvbnNvbGUubG9nKCdbaU9TIEF1ZGlvXSBlbnN1cmVBdWRpb1JlYWR5IC0gc3RhdGU6JywgY3R4LnN0YXRlKTtcblxuICBpZiAoY3R4LnN0YXRlICE9PSAncnVubmluZycpIHtcbiAgICB0cnkge1xuICAgICAgYXdhaXQgY3R4LnJlc3VtZSgpO1xuICAgICAgY29uc29sZS5sb2coJ1tpT1MgQXVkaW9dIEF1ZGlvQ29udGV4dCByZXN1bWVkIOKGkiBzdGF0ZTonLCBjdHguc3RhdGUpO1xuICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgY29uc29sZS53YXJuKCdbaU9TIEF1ZGlvXSBGYWlsZWQgdG8gcmVzdW1lIEF1ZGlvQ29udGV4dDonLCBlcnIpO1xuICAgICAgLy8gVHJ5IHRvIHJlY3JlYXRlXG4gICAgICBzaGFyZWRBdWRpb0NvbnRleHQgPSBuZXcgKHdpbmRvdy5BdWRpb0NvbnRleHQgfHwgKHdpbmRvdyBhcyBhbnkpLndlYmtpdEF1ZGlvQ29udGV4dCkoKTtcbiAgICAgIGF3YWl0IHNoYXJlZEF1ZGlvQ29udGV4dC5yZXN1bWUoKTtcbiAgICAgIGNvbnNvbGUubG9nKCdbaU9TIEF1ZGlvXSBSZWNyZWF0ZWQgQXVkaW9Db250ZXh0IOKGkiBzdGF0ZTonLCBzaGFyZWRBdWRpb0NvbnRleHQuc3RhdGUpO1xuICAgICAgcmV0dXJuIHNoYXJlZEF1ZGlvQ29udGV4dDtcbiAgICB9XG4gIH1cblxuICByZXR1cm4gY3R4O1xufVxuXG4vKipcbiAqIFVubG9jayBhdWRpbyB2aWEgZmlyc3QgdXNlciBnZXN0dXJlXG4gKiBDYWxsIHRoaXMgT05DRSBvbiBhcHAgYm9vdCwgbm90IHBlciBUVFNcbiAqXG4gKiBXS1dlYlZpZXcgc29tZXRpbWVzIHN1c3BlbmRzIGF1ZGlvIGJldHdlZW4gcmVzcG9uc2VzXG4gKiB1bmxlc3MgYW5jaG9yZWQgdG8gYSBnZXN0dXJlXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiB1bmxvY2tBdWRpb09uVXNlckdlc3R1cmUoKTogdm9pZCB7XG4gIGlmICh0eXBlb2Ygd2luZG93ID09PSAndW5kZWZpbmVkJykgcmV0dXJuO1xuICBpZiAoYXVkaW9VbmxvY2tlZCkgcmV0dXJuO1xuXG4gIGNvbnN0IHVubG9jayA9IGFzeW5jICgpID0+IHtcbiAgICB0cnkge1xuICAgICAgY29uc3QgY3R4ID0gZ2V0QXVkaW9Db250ZXh0KCk7XG4gICAgICBhd2FpdCBjdHgucmVzdW1lKCk7XG5cbiAgICAgIC8vIFBsYXkgc2lsZW50IGJ1ZmZlciB0byBmdWxseSB1bmxvY2tcbiAgICAgIGNvbnN0IGJ1ZmZlciA9IGN0eC5jcmVhdGVCdWZmZXIoMSwgMSwgMjIwNTApO1xuICAgICAgY29uc3Qgc291cmNlID0gY3R4LmNyZWF0ZUJ1ZmZlclNvdXJjZSgpO1xuICAgICAgc291cmNlLmJ1ZmZlciA9IGJ1ZmZlcjtcbiAgICAgIHNvdXJjZS5jb25uZWN0KGN0eC5kZXN0aW5hdGlvbik7XG4gICAgICBzb3VyY2Uuc3RhcnQoMCk7XG5cbiAgICAgIGF1ZGlvVW5sb2NrZWQgPSB0cnVlO1xuICAgICAgY29uc29sZS5sb2coJ1tpT1MgQXVkaW9dIEF1ZGlvIHVubG9ja2VkIHZpYSBnZXN0dXJlLCBzdGF0ZTonLCBjdHguc3RhdGUpO1xuXG4gICAgICAvLyBTdGFydCBzZXNzaW9uIGtlZXAtYWxpdmUgYWZ0ZXIgdW5sb2NrXG4gICAgICBzdGFydFNlc3Npb25LZWVwQWxpdmUoKTtcblxuICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgY29uc29sZS53YXJuKCdbaU9TIEF1ZGlvXSBHZXN0dXJlIHVubG9jayBmYWlsZWQ6JywgZXJyKTtcbiAgICB9XG5cbiAgICB3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lcigndG91Y2hzdGFydCcsIHVubG9jayk7XG4gICAgd2luZG93LnJlbW92ZUV2ZW50TGlzdGVuZXIoJ3RvdWNoZW5kJywgdW5sb2NrKTtcbiAgICB3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lcignY2xpY2snLCB1bmxvY2spO1xuICB9O1xuXG4gIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCd0b3VjaHN0YXJ0JywgdW5sb2NrLCB7IG9uY2U6IHRydWUsIHBhc3NpdmU6IHRydWUgfSk7XG4gIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCd0b3VjaGVuZCcsIHVubG9jaywgeyBvbmNlOiB0cnVlLCBwYXNzaXZlOiB0cnVlIH0pO1xuICB3aW5kb3cuYWRkRXZlbnRMaXN0ZW5lcignY2xpY2snLCB1bmxvY2ssIHsgb25jZTogdHJ1ZSB9KTtcblxuICBjb25zb2xlLmxvZygnW2lPUyBBdWRpb10gR2VzdHVyZSB1bmxvY2sgbGlzdGVuZXJzIGluc3RhbGxlZCcpO1xufVxuXG4vKipcbiAqIEtlZXAgQVZBdWRpb1Nlc3Npb24gYWxpdmUgd2l0aCBzaWxlbnQgb3NjaWxsYXRvclxuICpcbiAqIFRoaXMgaXMgdGhlIFRlc3RGbGlnaHQtb25seSBraWxsZXIgZml4LlxuICogQVZBdWRpb1Nlc3Npb24gZGVhY3RpdmF0ZXMgYmV0d2VlbiBwbGF5cyBvbiBpT1MuXG4gKiBBIG5lYXItc2lsZW50IG9zY2lsbGF0b3Iga2VlcHMgaXQgd2FybS5cbiAqXG4gKiBBcHBsZSB3b24ndCBhZG1pdCB0aGlzLiBFdmVyeW9uZSBzaGlwcyBpdC5cbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIHN0YXJ0U2Vzc2lvbktlZXBBbGl2ZSgpOiB2b2lkIHtcbiAgaWYgKHNlc3Npb25LZWVwQWxpdmVTdG9wKSB7XG4gICAgY29uc29sZS5sb2coJ1tpT1MgQXVkaW9dIFNlc3Npb24ga2VlcC1hbGl2ZSBhbHJlYWR5IHJ1bm5pbmcnKTtcbiAgICByZXR1cm47XG4gIH1cblxuICB0cnkge1xuICAgIGNvbnN0IGN0eCA9IGdldEF1ZGlvQ29udGV4dCgpO1xuXG4gICAgY29uc3Qgb3NjaWxsYXRvciA9IGN0eC5jcmVhdGVPc2NpbGxhdG9yKCk7XG4gICAgY29uc3QgZ2FpbiA9IGN0eC5jcmVhdGVHYWluKCk7XG5cbiAgICAvLyBJbmF1ZGlibGUgYnV0IGtlZXBzIHNlc3Npb24gYWxpdmVcbiAgICBnYWluLmdhaW4udmFsdWUgPSAwLjAwMDE7XG4gICAgb3NjaWxsYXRvci5mcmVxdWVuY3kudmFsdWUgPSAxOyAvLyAxSHogLSBiZWxvdyBodW1hbiBoZWFyaW5nXG5cbiAgICBvc2NpbGxhdG9yLmNvbm5lY3QoZ2Fpbik7XG4gICAgZ2Fpbi5jb25uZWN0KGN0eC5kZXN0aW5hdGlvbik7XG4gICAgb3NjaWxsYXRvci5zdGFydCgpO1xuXG4gICAgc2Vzc2lvbktlZXBBbGl2ZVN0b3AgPSAoKSA9PiB7XG4gICAgICB0cnkge1xuICAgICAgICBvc2NpbGxhdG9yLnN0b3AoKTtcbiAgICAgICAgb3NjaWxsYXRvci5kaXNjb25uZWN0KCk7XG4gICAgICAgIGdhaW4uZGlzY29ubmVjdCgpO1xuICAgICAgfSBjYXRjaCB7fVxuICAgIH07XG5cbiAgICBjb25zb2xlLmxvZygnW2lPUyBBdWRpb10gU2Vzc2lvbiBrZWVwLWFsaXZlIHN0YXJ0ZWQgKHNpbGVudCBvc2NpbGxhdG9yKScpO1xuICB9IGNhdGNoIChlcnIpIHtcbiAgICBjb25zb2xlLndhcm4oJ1tpT1MgQXVkaW9dIEZhaWxlZCB0byBzdGFydCBzZXNzaW9uIGtlZXAtYWxpdmU6JywgZXJyKTtcbiAgfVxufVxuXG4vKipcbiAqIFN0b3Agc2Vzc2lvbiBrZWVwLWFsaXZlIChjYWxsIG9uIGFwcCB1bm1vdW50IGlmIG5lZWRlZClcbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIHN0b3BTZXNzaW9uS2VlcEFsaXZlKCk6IHZvaWQge1xuICBpZiAoc2Vzc2lvbktlZXBBbGl2ZVN0b3ApIHtcbiAgICBzZXNzaW9uS2VlcEFsaXZlU3RvcCgpO1xuICAgIHNlc3Npb25LZWVwQWxpdmVTdG9wID0gbnVsbDtcbiAgICBjb25zb2xlLmxvZygnW2lPUyBBdWRpb10gU2Vzc2lvbiBrZWVwLWFsaXZlIHN0b3BwZWQnKTtcbiAgfVxufVxuXG4vKipcbiAqIENoZWNrIGlmIGF1ZGlvIGlzIHJlYWR5IGZvciBwbGF5YmFja1xuICogVXNlIHRoaXMgZm9yIGRlYnVnZ2luZyAtIGxvZyBiZWZvcmUgZXZlcnkgcGxheVxuICovXG5leHBvcnQgZnVuY3Rpb24gZ2V0QXVkaW9TdGF0dXMoKTogeyBzdGF0ZTogc3RyaW5nOyB1bmxvY2tlZDogYm9vbGVhbjsga2VlcEFsaXZlQWN0aXZlOiBib29sZWFuIH0ge1xuICByZXR1cm4ge1xuICAgIHN0YXRlOiBzaGFyZWRBdWRpb0NvbnRleHQ/LnN0YXRlID8/ICduby1jb250ZXh0JyxcbiAgICB1bmxvY2tlZDogYXVkaW9VbmxvY2tlZCxcbiAgICBrZWVwQWxpdmVBY3RpdmU6IHNlc3Npb25LZWVwQWxpdmVTdG9wICE9PSBudWxsLFxuICB9O1xufVxuXG4vKipcbiAqIEhhcmQgYXNzZXJ0aW9uIC0gdGhyb3dzIGlmIGF1ZGlvIGlzIG5vdCByZWFkeVxuICogVXNlIGR1cmluZyBkZXZlbG9wbWVudCB0byBjYXRjaCBzaWxlbnQgZmFpbHVyZXNcbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIGFzc2VydEF1ZGlvUmVhZHkoKTogdm9pZCB7XG4gIGNvbnN0IHN0YXR1cyA9IGdldEF1ZGlvU3RhdHVzKCk7XG4gIGlmIChzdGF0dXMuc3RhdGUgIT09ICdydW5uaW5nJykge1xuICAgIHRocm93IG5ldyBFcnJvcihgW2lPUyBBdWRpb10gQVNTRVJUSU9OIEZBSUxFRDogQXVkaW9Db250ZXh0IHN0YXRlIGlzIFwiJHtzdGF0dXMuc3RhdGV9XCIsIGV4cGVjdGVkIFwicnVubmluZ1wiYCk7XG4gIH1cbn1cblxuLy8gQXV0by1pbnN0YWxsIGdlc3R1cmUgdW5sb2NrIG9uIG1vZHVsZSBsb2FkXG5pZiAodHlwZW9mIHdpbmRvdyAhPT0gJ3VuZGVmaW5lZCcpIHtcbiAgdW5sb2NrQXVkaW9PblVzZXJHZXN0dXJlKCk7XG59XG4iXSwidmVyc2lvbiI6M30=

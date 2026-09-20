@@ -1,0 +1,418 @@
+{
+  "set": "modifier",
+  "fixtures_sha256": "99ce2dda3a050c52f016e62ed6c78765452ae142e70fe5e1f322032908dbbb50",
+  "hhem_threshold_frozen_at": 0.5,
+  "minicheck_threshold_frozen_at": 0.5,
+  "threshold_note": "A REPORTING cut only. Raw scores are recorded. Changing it after seeing these answers is tuning to the test; it must be a separate calibration act on separate material.",
+  "not_run": [],
+  "rows": [
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "M1",
+      "role": "",
+      "family": "T1-tailors-shop",
+      "group": "M",
+      "premise": "Odile ran the tailor's shop until the lease ended.",
+      "hypothesis": "Odile runs the tailor's shop.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.2589",
+      "scores": {
+        "support": 0.2589,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "V1",
+      "role": "",
+      "family": "T1-tailors-shop",
+      "group": "V",
+      "premise": "Odile no longer runs the tailor's shop.",
+      "hypothesis": "Odile runs the tailor's shop.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0250",
+      "scores": {
+        "support": 0.025,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "P1",
+      "role": "",
+      "family": "T1-tailors-shop",
+      "group": "P",
+      "premise": "Odile took over the tailor's shop in 2014 and runs it still.",
+      "hypothesis": "Odile runs the tailor's shop.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8708",
+      "scores": {
+        "support": 0.8708,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "M2",
+      "role": "",
+      "family": "T2-river-ferry",
+      "group": "M",
+      "premise": "Petr piloted the river ferry for eleven years before moving inland.",
+      "hypothesis": "Petr pilots the river ferry.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8379",
+      "scores": {
+        "support": 0.8379,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "V2",
+      "role": "",
+      "family": "T2-river-ferry",
+      "group": "V",
+      "premise": "Petr has retired from piloting the river ferry.",
+      "hypothesis": "Petr pilots the river ferry.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0713",
+      "scores": {
+        "support": 0.0713,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "P2",
+      "role": "",
+      "family": "T2-river-ferry",
+      "group": "P",
+      "premise": "Petr pilots the river ferry on the morning crossing.",
+      "hypothesis": "Petr pilots the river ferry.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8315",
+      "scores": {
+        "support": 0.8315,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "M3",
+      "role": "",
+      "family": "T3-cricket-side",
+      "group": "M",
+      "premise": "Hana played for the cricket side twice last season.",
+      "hypothesis": "Hana plays for the cricket side.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.5301",
+      "scores": {
+        "support": 0.5301,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "V3",
+      "role": "",
+      "family": "T3-cricket-side",
+      "group": "V",
+      "premise": "Hana gave up playing for the cricket side.",
+      "hypothesis": "Hana plays for the cricket side.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0294",
+      "scores": {
+        "support": 0.0294,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "P3",
+      "role": "",
+      "family": "T3-cricket-side",
+      "group": "P",
+      "premise": "Hana plays for the cricket side in every fixture.",
+      "hypothesis": "Hana plays for the cricket side.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8107",
+      "scores": {
+        "support": 0.8107,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "M4",
+      "role": "",
+      "family": "T4-bee-co-op",
+      "group": "M",
+      "premise": "Emil kept bees at the co-op during the trial period.",
+      "hypothesis": "Emil keeps bees at the co-op.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.4130",
+      "scores": {
+        "support": 0.413,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "V4",
+      "role": "",
+      "family": "T4-bee-co-op",
+      "group": "V",
+      "premise": "Emil stopped keeping bees at the co-op.",
+      "hypothesis": "Emil keeps bees at the co-op.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0132",
+      "scores": {
+        "support": 0.0132,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "P4",
+      "role": "",
+      "family": "T4-bee-co-op",
+      "group": "P",
+      "premise": "Emil keeps bees at the co-op and checks the hives weekly.",
+      "hypothesis": "Emil keeps bees at the co-op.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.6997",
+      "scores": {
+        "support": 0.6997,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "M5",
+      "role": "",
+      "family": "T5-mountain-hut",
+      "group": "M",
+      "premise": "Lior maintained the mountain hut in 2019.",
+      "hypothesis": "Lior maintains the mountain hut.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.6980",
+      "scores": {
+        "support": 0.698,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "V5",
+      "role": "",
+      "family": "T5-mountain-hut",
+      "group": "V",
+      "premise": "Lior resigned as keeper of the mountain hut.",
+      "hypothesis": "Lior maintains the mountain hut.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0682",
+      "scores": {
+        "support": 0.0682,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "P5",
+      "role": "",
+      "family": "T5-mountain-hut",
+      "group": "P",
+      "premise": "Lior maintains the mountain hut through each winter.",
+      "hypothesis": "Lior maintains the mountain hut.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8938",
+      "scores": {
+        "support": 0.8938,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "M6",
+      "role": "",
+      "family": "T6-broadsheet",
+      "group": "M",
+      "premise": "Sunniva printed the town's broadsheet three times.",
+      "hypothesis": "Sunniva prints the town's broadsheet.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.1616",
+      "scores": {
+        "support": 0.1616,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "V6",
+      "role": "",
+      "family": "T6-broadsheet",
+      "group": "V",
+      "premise": "Sunniva ceased printing the town's broadsheet.",
+      "hypothesis": "Sunniva prints the town's broadsheet.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0407",
+      "scores": {
+        "support": 0.0407,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "P6",
+      "role": "",
+      "family": "T6-broadsheet",
+      "group": "P",
+      "premise": "Sunniva prints the town's broadsheet each Friday.",
+      "hypothesis": "Sunniva prints the town's broadsheet.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8523",
+      "scores": {
+        "support": 0.8523,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "M7",
+      "role": "",
+      "family": "T7-town-band",
+      "group": "M",
+      "premise": "Tam\u00e1s conducted the town band on Tuesday.",
+      "hypothesis": "Tam\u00e1s conducts the town band.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.9182",
+      "scores": {
+        "support": 0.9182,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "V7",
+      "role": "",
+      "family": "T7-town-band",
+      "group": "V",
+      "premise": "Tam\u00e1s used to conduct the town band.",
+      "hypothesis": "Tam\u00e1s conducts the town band.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0548",
+      "scores": {
+        "support": 0.0548,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "P7",
+      "role": "",
+      "family": "T7-town-band",
+      "group": "P",
+      "premise": "Tam\u00e1s conducts the town band at every concert.",
+      "hypothesis": "Tam\u00e1s conducts the town band.",
+      "expected": "entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.3479",
+      "scores": {
+        "support": 0.3479,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "M8",
+      "role": "",
+      "family": "T8-language-exchange",
+      "group": "M",
+      "premise": "Ines taught at the language exchange before the funding was cut.",
+      "hypothesis": "Ines teaches at the language exchange.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.6764",
+      "scores": {
+        "support": 0.6764,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "V8",
+      "role": "",
+      "family": "T8-language-exchange",
+      "group": "V",
+      "premise": "Ines left the language exchange.",
+      "hypothesis": "Ines teaches at the language exchange.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0153",
+      "scores": {
+        "support": 0.0153,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "minicheck",
+      "run": 1,
+      "id": "P8",
+      "role": "",
+      "family": "T8-language-exchange",
+      "group": "P",
+      "premise": "Ines teaches at the language exchange on Wednesdays.",
+      "hypothesis": "Ines teaches at the language exchange.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.7337",
+      "scores": {
+        "support": 0.7337,
+        "threshold": 0.5
+      }
+    }
+  ]
+}

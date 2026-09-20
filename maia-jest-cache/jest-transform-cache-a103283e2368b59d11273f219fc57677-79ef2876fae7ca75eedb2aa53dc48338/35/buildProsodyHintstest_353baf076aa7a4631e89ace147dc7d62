@@ -1,0 +1,88 @@
+cb6244bec0ff71128668aa1d10cd0586
+"use strict";
+/**
+ * buildProsodyHints Tests — Baseline Blending + Sanctuary Override
+ *
+ * Ensures Conversation Prosody Memory behaves correctly:
+ * - Baseline blends with current-turn hints
+ * - Sanctuary bypasses baseline (regulation > continuity)
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+const buildProsodyHints_1 = require("../buildProsodyHints");
+describe('buildProsodyHints baseline blending', () => {
+    const baseContext = {
+        activation: 0.3,
+        mode: 'talk',
+        sanctuary: false,
+        brevity: 'moderate',
+        posture: 'MEET',
+        element: null,
+    };
+    it('without baseline, computes hints fresh from context', () => {
+        const hints = (0, buildProsodyHints_1.buildProsodyHints)(baseContext);
+        expect(hints.warmth).toBeDefined();
+        expect(hints.pace).toBeDefined();
+        expect(hints.emphasis).toBeDefined();
+    });
+    it('with high-continuity baseline, prevents fast warming (warmth sticks)', () => {
+        // Baseline is neutral — we want to prevent fast warming to very_warm
+        const neutralBaseline = {
+            warmth: 'neutral',
+            pace: 'steady',
+            emphasis: 'minimal',
+            continuity: 0.7, // High continuity = baseline sticks
+            updatedAt: Date.now(),
+        };
+        // Context that would normally compute very_warm warmth
+        const warmContext = Object.assign(Object.assign({}, baseContext), { sanctuary: false, posture: 'WITNESS' });
+        const hints = (0, buildProsodyHints_1.buildProsodyHints)(Object.assign(Object.assign({}, warmContext), { baseline: neutralBaseline }));
+        // With high continuity, baseline should prevent fast warming
+        // Current would be 'very_warm', but baseline 'neutral' sticks
+        expect(hints.warmth).toBe('neutral');
+    });
+    it('with low-continuity baseline, current turn dominates', () => {
+        const warmBaseline = {
+            warmth: 'warm',
+            pace: 'steady',
+            emphasis: 'minimal',
+            continuity: 0.2, // Low continuity = baseline doesn't stick
+            updatedAt: Date.now(),
+        };
+        const neutralContext = Object.assign(Object.assign({}, baseContext), { mode: 'note', posture: 'LEAD' });
+        const hints = (0, buildProsodyHints_1.buildProsodyHints)(Object.assign(Object.assign({}, neutralContext), { baseline: warmBaseline }));
+        // With low continuity (stick < 0.5), current turn should dominate
+        // Note: actual warmth depends on mode/posture logic, but baseline shouldn't override
+        expect(hints).toBeDefined();
+    });
+    it('sanctuary bypasses baseline entirely', () => {
+        const veryWarmBaseline = {
+            warmth: 'very_warm',
+            pace: 'slow',
+            emphasis: 'strong',
+            continuity: 0.9, // Very high continuity
+            updatedAt: Date.now(),
+        };
+        const sanctuaryContext = Object.assign(Object.assign({}, baseContext), { sanctuary: true });
+        const hints = (0, buildProsodyHints_1.buildProsodyHints)(Object.assign(Object.assign({}, sanctuaryContext), { baseline: veryWarmBaseline }));
+        // Sanctuary computes its own warmth (very_warm), but the key is:
+        // baseline blending is SKIPPED when sanctuary = true
+        // So hints come from sanctuary context, not from baseline continuity
+        expect(hints.warmth).toBe('very_warm'); // From sanctuary logic, not baseline
+    });
+    it('allows fast cooling (warmth shifts down immediately)', () => {
+        const warmBaseline = {
+            warmth: 'very_warm',
+            pace: 'steady',
+            emphasis: 'minimal',
+            continuity: 0.7,
+            updatedAt: Date.now(),
+        };
+        // Context that computes cooler warmth
+        const coolContext = Object.assign(Object.assign({}, baseContext), { mode: 'note', posture: 'LEAD' });
+        const hints = (0, buildProsodyHints_1.buildProsodyHints)(Object.assign(Object.assign({}, coolContext), { baseline: warmBaseline }));
+        // Fast cooling: if current is cooler than baseline, allow immediate shift
+        // The blending logic allows downward shifts
+        expect(['neutral', 'cool', 'warm']).toContain(hints.warmth);
+    });
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL2xpYi92b2ljZS9wcm9zb2R5L19fdGVzdHNfXy9idWlsZFByb3NvZHlIaW50cy50ZXN0LnRzIiwibWFwcGluZ3MiOiI7QUFBQTs7Ozs7O0dBTUc7O0FBRUgsNERBQXlEO0FBR3pELFFBQVEsQ0FBQyxxQ0FBcUMsRUFBRSxHQUFHLEVBQUU7SUFDbkQsTUFBTSxXQUFXLEdBQUc7UUFDbEIsVUFBVSxFQUFFLEdBQUc7UUFDZixJQUFJLEVBQUUsTUFBTTtRQUNaLFNBQVMsRUFBRSxLQUFLO1FBQ2hCLE9BQU8sRUFBRSxVQUFtQjtRQUM1QixPQUFPLEVBQUUsTUFBTTtRQUNmLE9BQU8sRUFBRSxJQUFJO0tBQ2QsQ0FBQztJQUVGLEVBQUUsQ0FBQyxxREFBcUQsRUFBRSxHQUFHLEVBQUU7UUFDN0QsTUFBTSxLQUFLLEdBQUcsSUFBQSxxQ0FBaUIsRUFBQyxXQUFXLENBQUMsQ0FBQztRQUU3QyxNQUFNLENBQUMsS0FBSyxDQUFDLE1BQU0sQ0FBQyxDQUFDLFdBQVcsRUFBRSxDQUFDO1FBQ25DLE1BQU0sQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUMsV0FBVyxFQUFFLENBQUM7UUFDakMsTUFBTSxDQUFDLEtBQUssQ0FBQyxRQUFRLENBQUMsQ0FBQyxXQUFXLEVBQUUsQ0FBQztJQUN2QyxDQUFDLENBQUMsQ0FBQztJQUVILEVBQUUsQ0FBQyxzRUFBc0UsRUFBRSxHQUFHLEVBQUU7UUFDOUUscUVBQXFFO1FBQ3JFLE1BQU0sZUFBZSxHQUEyQjtZQUM5QyxNQUFNLEVBQUUsU0FBUztZQUNqQixJQUFJLEVBQUUsUUFBUTtZQUNkLFFBQVEsRUFBRSxTQUFTO1lBQ25CLFVBQVUsRUFBRSxHQUFHLEVBQUUsb0NBQW9DO1lBQ3JELFNBQVMsRUFBRSxJQUFJLENBQUMsR0FBRyxFQUFFO1NBQ3RCLENBQUM7UUFFRix1REFBdUQ7UUFDdkQsTUFBTSxXQUFXLG1DQUNaLFdBQVcsS0FDZCxTQUFTLEVBQUUsS0FBSyxFQUNoQixPQUFPLEVBQUUsU0FBUyxHQUNuQixDQUFDO1FBRUYsTUFBTSxLQUFLLEdBQUcsSUFBQSxxQ0FBaUIsa0NBQU0sV0FBVyxLQUFFLFFBQVEsRUFBRSxlQUFlLElBQUcsQ0FBQztRQUUvRSw2REFBNkQ7UUFDN0QsOERBQThEO1FBQzlELE1BQU0sQ0FBQyxLQUFLLENBQUMsTUFBTSxDQUFDLENBQUMsSUFBSSxDQUFDLFNBQVMsQ0FBQyxDQUFDO0lBQ3ZDLENBQUMsQ0FBQyxDQUFDO0lBRUgsRUFBRSxDQUFDLHNEQUFzRCxFQUFFLEdBQUcsRUFBRTtRQUM5RCxNQUFNLFlBQVksR0FBMkI7WUFDM0MsTUFBTSxFQUFFLE1BQU07WUFDZCxJQUFJLEVBQUUsUUFBUTtZQUNkLFFBQVEsRUFBRSxTQUFTO1lBQ25CLFVBQVUsRUFBRSxHQUFHLEVBQUUsMENBQTBDO1lBQzNELFNBQVMsRUFBRSxJQUFJLENBQUMsR0FBRyxFQUFFO1NBQ3RCLENBQUM7UUFFRixNQUFNLGNBQWMsbUNBQ2YsV0FBVyxLQUNkLElBQUksRUFBRSxNQUFNLEVBQ1osT0FBTyxFQUFFLE1BQU0sR0FDaEIsQ0FBQztRQUVGLE1BQU0sS0FBSyxHQUFHLElBQUEscUNBQWlCLGtDQUFNLGNBQWMsS0FBRSxRQUFRLEVBQUUsWUFBWSxJQUFHLENBQUM7UUFFL0Usa0VBQWtFO1FBQ2xFLHFGQUFxRjtRQUNyRixNQUFNLENBQUMsS0FBSyxDQUFDLENBQUMsV0FBVyxFQUFFLENBQUM7SUFDOUIsQ0FBQyxDQUFDLENBQUM7SUFFSCxFQUFFLENBQUMsc0NBQXNDLEVBQUUsR0FBRyxFQUFFO1FBQzlDLE1BQU0sZ0JBQWdCLEdBQTJCO1lBQy9DLE1BQU0sRUFBRSxXQUFXO1lBQ25CLElBQUksRUFBRSxNQUFNO1lBQ1osUUFBUSxFQUFFLFFBQVE7WUFDbEIsVUFBVSxFQUFFLEdBQUcsRUFBRSx1QkFBdUI7WUFDeEMsU0FBUyxFQUFFLElBQUksQ0FBQyxHQUFHLEVBQUU7U0FDdEIsQ0FBQztRQUVGLE1BQU0sZ0JBQWdCLG1DQUNqQixXQUFXLEtBQ2QsU0FBUyxFQUFFLElBQUksR0FDaEIsQ0FBQztRQUVGLE1BQU0sS0FBSyxHQUFHLElBQUEscUNBQWlCLGtDQUFNLGdCQUFnQixLQUFFLFFBQVEsRUFBRSxnQkFBZ0IsSUFBRyxDQUFDO1FBRXJGLGlFQUFpRTtRQUNqRSxxREFBcUQ7UUFDckQscUVBQXFFO1FBQ3JFLE1BQU0sQ0FBQyxLQUFLLENBQUMsTUFBTSxDQUFDLENBQUMsSUFBSSxDQUFDLFdBQVcsQ0FBQyxDQUFDLENBQUMscUNBQXFDO0lBQy9FLENBQUMsQ0FBQyxDQUFDO0lBRUgsRUFBRSxDQUFDLHNEQUFzRCxFQUFFLEdBQUcsRUFBRTtRQUM5RCxNQUFNLFlBQVksR0FBMkI7WUFDM0MsTUFBTSxFQUFFLFdBQVc7WUFDbkIsSUFBSSxFQUFFLFFBQVE7WUFDZCxRQUFRLEVBQUUsU0FBUztZQUNuQixVQUFVLEVBQUUsR0FBRztZQUNmLFNBQVMsRUFBRSxJQUFJLENBQUMsR0FBRyxFQUFFO1NBQ3RCLENBQUM7UUFFRixzQ0FBc0M7UUFDdEMsTUFBTSxXQUFXLG1DQUNaLFdBQVcsS0FDZCxJQUFJLEVBQUUsTUFBTSxFQUNaLE9BQU8sRUFBRSxNQUFNLEdBRWhCLENBQUM7UUFFRixNQUFNLEtBQUssR0FBRyxJQUFBLHFDQUFpQixrQ0FBTSxXQUFXLEtBQUUsUUFBUSxFQUFFLFlBQVksSUFBRyxDQUFDO1FBRTVFLDBFQUEwRTtRQUMxRSw0Q0FBNEM7UUFDNUMsTUFBTSxDQUFDLENBQUMsU0FBUyxFQUFFLE1BQU0sRUFBRSxNQUFNLENBQUMsQ0FBQyxDQUFDLFNBQVMsQ0FBQyxLQUFLLENBQUMsTUFBTSxDQUFDLENBQUM7SUFDOUQsQ0FBQyxDQUFDLENBQUM7QUFDTCxDQUFDLENBQUMsQ0FBQyIsIm5hbWVzIjpbXSwic291cmNlcyI6WyIvcHJpdmF0ZS90bXAvY2xhdWRlLTUwMS8tVXNlcnMtc291bGxhYi1NQUlBLVNPVkVSRUlHTi9hOTFkZDEyMy0xYjBmLTRiODktYmRkOC1kZTA0YmFjMDUwODEvc2NyYXRjaHBhZC93dC1lbmR1cmFuY2UvbGliL3ZvaWNlL3Byb3NvZHkvX190ZXN0c19fL2J1aWxkUHJvc29keUhpbnRzLnRlc3QudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXG4gKiBidWlsZFByb3NvZHlIaW50cyBUZXN0cyDigJQgQmFzZWxpbmUgQmxlbmRpbmcgKyBTYW5jdHVhcnkgT3ZlcnJpZGVcbiAqXG4gKiBFbnN1cmVzIENvbnZlcnNhdGlvbiBQcm9zb2R5IE1lbW9yeSBiZWhhdmVzIGNvcnJlY3RseTpcbiAqIC0gQmFzZWxpbmUgYmxlbmRzIHdpdGggY3VycmVudC10dXJuIGhpbnRzXG4gKiAtIFNhbmN0dWFyeSBieXBhc3NlcyBiYXNlbGluZSAocmVndWxhdGlvbiA+IGNvbnRpbnVpdHkpXG4gKi9cblxuaW1wb3J0IHsgYnVpbGRQcm9zb2R5SGludHMgfSBmcm9tICcuLi9idWlsZFByb3NvZHlIaW50cyc7XG5pbXBvcnQgdHlwZSB7IFNlc3Npb25Qcm9zb2R5QmFzZWxpbmUgfSBmcm9tICdAL2xpYi92b2ljZS9tb3NoaS9Nb3NoaVNlc3Npb25NYW5hZ2VyJztcblxuZGVzY3JpYmUoJ2J1aWxkUHJvc29keUhpbnRzIGJhc2VsaW5lIGJsZW5kaW5nJywgKCkgPT4ge1xuICBjb25zdCBiYXNlQ29udGV4dCA9IHtcbiAgICBhY3RpdmF0aW9uOiAwLjMsXG4gICAgbW9kZTogJ3RhbGsnLFxuICAgIHNhbmN0dWFyeTogZmFsc2UsXG4gICAgYnJldml0eTogJ21vZGVyYXRlJyBhcyBjb25zdCxcbiAgICBwb3N0dXJlOiAnTUVFVCcsXG4gICAgZWxlbWVudDogbnVsbCxcbiAgfTtcblxuICBpdCgnd2l0aG91dCBiYXNlbGluZSwgY29tcHV0ZXMgaGludHMgZnJlc2ggZnJvbSBjb250ZXh0JywgKCkgPT4ge1xuICAgIGNvbnN0IGhpbnRzID0gYnVpbGRQcm9zb2R5SGludHMoYmFzZUNvbnRleHQpO1xuXG4gICAgZXhwZWN0KGhpbnRzLndhcm10aCkudG9CZURlZmluZWQoKTtcbiAgICBleHBlY3QoaGludHMucGFjZSkudG9CZURlZmluZWQoKTtcbiAgICBleHBlY3QoaGludHMuZW1waGFzaXMpLnRvQmVEZWZpbmVkKCk7XG4gIH0pO1xuXG4gIGl0KCd3aXRoIGhpZ2gtY29udGludWl0eSBiYXNlbGluZSwgcHJldmVudHMgZmFzdCB3YXJtaW5nICh3YXJtdGggc3RpY2tzKScsICgpID0+IHtcbiAgICAvLyBCYXNlbGluZSBpcyBuZXV0cmFsIOKAlCB3ZSB3YW50IHRvIHByZXZlbnQgZmFzdCB3YXJtaW5nIHRvIHZlcnlfd2FybVxuICAgIGNvbnN0IG5ldXRyYWxCYXNlbGluZTogU2Vzc2lvblByb3NvZHlCYXNlbGluZSA9IHtcbiAgICAgIHdhcm10aDogJ25ldXRyYWwnLFxuICAgICAgcGFjZTogJ3N0ZWFkeScsXG4gICAgICBlbXBoYXNpczogJ21pbmltYWwnLFxuICAgICAgY29udGludWl0eTogMC43LCAvLyBIaWdoIGNvbnRpbnVpdHkgPSBiYXNlbGluZSBzdGlja3NcbiAgICAgIHVwZGF0ZWRBdDogRGF0ZS5ub3coKSxcbiAgICB9O1xuXG4gICAgLy8gQ29udGV4dCB0aGF0IHdvdWxkIG5vcm1hbGx5IGNvbXB1dGUgdmVyeV93YXJtIHdhcm10aFxuICAgIGNvbnN0IHdhcm1Db250ZXh0ID0ge1xuICAgICAgLi4uYmFzZUNvbnRleHQsXG4gICAgICBzYW5jdHVhcnk6IGZhbHNlLCAvLyBOb3Qgc2FuY3R1YXJ5ICh0aGF0IGJ5cGFzc2VzIGJhc2VsaW5lKVxuICAgICAgcG9zdHVyZTogJ1dJVE5FU1MnLCAvLyBXSVRORVNTIGNvbXB1dGVzIHZlcnlfd2FybVxuICAgIH07XG5cbiAgICBjb25zdCBoaW50cyA9IGJ1aWxkUHJvc29keUhpbnRzKHsgLi4ud2FybUNvbnRleHQsIGJhc2VsaW5lOiBuZXV0cmFsQmFzZWxpbmUgfSk7XG5cbiAgICAvLyBXaXRoIGhpZ2ggY29udGludWl0eSwgYmFzZWxpbmUgc2hvdWxkIHByZXZlbnQgZmFzdCB3YXJtaW5nXG4gICAgLy8gQ3VycmVudCB3b3VsZCBiZSAndmVyeV93YXJtJywgYnV0IGJhc2VsaW5lICduZXV0cmFsJyBzdGlja3NcbiAgICBleHBlY3QoaGludHMud2FybXRoKS50b0JlKCduZXV0cmFsJyk7XG4gIH0pO1xuXG4gIGl0KCd3aXRoIGxvdy1jb250aW51aXR5IGJhc2VsaW5lLCBjdXJyZW50IHR1cm4gZG9taW5hdGVzJywgKCkgPT4ge1xuICAgIGNvbnN0IHdhcm1CYXNlbGluZTogU2Vzc2lvblByb3NvZHlCYXNlbGluZSA9IHtcbiAgICAgIHdhcm10aDogJ3dhcm0nLFxuICAgICAgcGFjZTogJ3N0ZWFkeScsXG4gICAgICBlbXBoYXNpczogJ21pbmltYWwnLFxuICAgICAgY29udGludWl0eTogMC4yLCAvLyBMb3cgY29udGludWl0eSA9IGJhc2VsaW5lIGRvZXNuJ3Qgc3RpY2tcbiAgICAgIHVwZGF0ZWRBdDogRGF0ZS5ub3coKSxcbiAgICB9O1xuXG4gICAgY29uc3QgbmV1dHJhbENvbnRleHQgPSB7XG4gICAgICAuLi5iYXNlQ29udGV4dCxcbiAgICAgIG1vZGU6ICdub3RlJyxcbiAgICAgIHBvc3R1cmU6ICdMRUFEJyxcbiAgICB9O1xuXG4gICAgY29uc3QgaGludHMgPSBidWlsZFByb3NvZHlIaW50cyh7IC4uLm5ldXRyYWxDb250ZXh0LCBiYXNlbGluZTogd2FybUJhc2VsaW5lIH0pO1xuXG4gICAgLy8gV2l0aCBsb3cgY29udGludWl0eSAoc3RpY2sgPCAwLjUpLCBjdXJyZW50IHR1cm4gc2hvdWxkIGRvbWluYXRlXG4gICAgLy8gTm90ZTogYWN0dWFsIHdhcm10aCBkZXBlbmRzIG9uIG1vZGUvcG9zdHVyZSBsb2dpYywgYnV0IGJhc2VsaW5lIHNob3VsZG4ndCBvdmVycmlkZVxuICAgIGV4cGVjdChoaW50cykudG9CZURlZmluZWQoKTtcbiAgfSk7XG5cbiAgaXQoJ3NhbmN0dWFyeSBieXBhc3NlcyBiYXNlbGluZSBlbnRpcmVseScsICgpID0+IHtcbiAgICBjb25zdCB2ZXJ5V2FybUJhc2VsaW5lOiBTZXNzaW9uUHJvc29keUJhc2VsaW5lID0ge1xuICAgICAgd2FybXRoOiAndmVyeV93YXJtJyxcbiAgICAgIHBhY2U6ICdzbG93JyxcbiAgICAgIGVtcGhhc2lzOiAnc3Ryb25nJyxcbiAgICAgIGNvbnRpbnVpdHk6IDAuOSwgLy8gVmVyeSBoaWdoIGNvbnRpbnVpdHlcbiAgICAgIHVwZGF0ZWRBdDogRGF0ZS5ub3coKSxcbiAgICB9O1xuXG4gICAgY29uc3Qgc2FuY3R1YXJ5Q29udGV4dCA9IHtcbiAgICAgIC4uLmJhc2VDb250ZXh0LFxuICAgICAgc2FuY3R1YXJ5OiB0cnVlLCAvLyBTYW5jdHVhcnkgbW9kZSBhY3RpdmVcbiAgICB9O1xuXG4gICAgY29uc3QgaGludHMgPSBidWlsZFByb3NvZHlIaW50cyh7IC4uLnNhbmN0dWFyeUNvbnRleHQsIGJhc2VsaW5lOiB2ZXJ5V2FybUJhc2VsaW5lIH0pO1xuXG4gICAgLy8gU2FuY3R1YXJ5IGNvbXB1dGVzIGl0cyBvd24gd2FybXRoICh2ZXJ5X3dhcm0pLCBidXQgdGhlIGtleSBpczpcbiAgICAvLyBiYXNlbGluZSBibGVuZGluZyBpcyBTS0lQUEVEIHdoZW4gc2FuY3R1YXJ5ID0gdHJ1ZVxuICAgIC8vIFNvIGhpbnRzIGNvbWUgZnJvbSBzYW5jdHVhcnkgY29udGV4dCwgbm90IGZyb20gYmFzZWxpbmUgY29udGludWl0eVxuICAgIGV4cGVjdChoaW50cy53YXJtdGgpLnRvQmUoJ3Zlcnlfd2FybScpOyAvLyBGcm9tIHNhbmN0dWFyeSBsb2dpYywgbm90IGJhc2VsaW5lXG4gIH0pO1xuXG4gIGl0KCdhbGxvd3MgZmFzdCBjb29saW5nICh3YXJtdGggc2hpZnRzIGRvd24gaW1tZWRpYXRlbHkpJywgKCkgPT4ge1xuICAgIGNvbnN0IHdhcm1CYXNlbGluZTogU2Vzc2lvblByb3NvZHlCYXNlbGluZSA9IHtcbiAgICAgIHdhcm10aDogJ3Zlcnlfd2FybScsXG4gICAgICBwYWNlOiAnc3RlYWR5JyxcbiAgICAgIGVtcGhhc2lzOiAnbWluaW1hbCcsXG4gICAgICBjb250aW51aXR5OiAwLjcsXG4gICAgICB1cGRhdGVkQXQ6IERhdGUubm93KCksXG4gICAgfTtcblxuICAgIC8vIENvbnRleHQgdGhhdCBjb21wdXRlcyBjb29sZXIgd2FybXRoXG4gICAgY29uc3QgY29vbENvbnRleHQgPSB7XG4gICAgICAuLi5iYXNlQ29udGV4dCxcbiAgICAgIG1vZGU6ICdub3RlJyxcbiAgICAgIHBvc3R1cmU6ICdMRUFEJyxcbiAgICAgIC8vIFRoaXMgc2hvdWxkIGNvbXB1dGUgbmV1dHJhbCBvciBjb29sIHdhcm10aFxuICAgIH07XG5cbiAgICBjb25zdCBoaW50cyA9IGJ1aWxkUHJvc29keUhpbnRzKHsgLi4uY29vbENvbnRleHQsIGJhc2VsaW5lOiB3YXJtQmFzZWxpbmUgfSk7XG5cbiAgICAvLyBGYXN0IGNvb2xpbmc6IGlmIGN1cnJlbnQgaXMgY29vbGVyIHRoYW4gYmFzZWxpbmUsIGFsbG93IGltbWVkaWF0ZSBzaGlmdFxuICAgIC8vIFRoZSBibGVuZGluZyBsb2dpYyBhbGxvd3MgZG93bndhcmQgc2hpZnRzXG4gICAgZXhwZWN0KFsnbmV1dHJhbCcsICdjb29sJywgJ3dhcm0nXSkudG9Db250YWluKGhpbnRzLndhcm10aCk7XG4gIH0pO1xufSk7XG4iXSwidmVyc2lvbiI6M30=

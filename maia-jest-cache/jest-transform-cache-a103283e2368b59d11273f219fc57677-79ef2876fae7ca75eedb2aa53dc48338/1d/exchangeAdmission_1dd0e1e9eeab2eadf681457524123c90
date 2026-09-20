@@ -1,0 +1,63 @@
+5c5bfd654d0e63ff7d03e1ed78650bba
+"use strict";
+/**
+ * Exchange admission — who is allowed to run inference for an utterance.
+ *
+ * THE INVARIANT (founder ruling, 2026-08-17)
+ *
+ *     ONE user utterance
+ *     ONE admitted exchange
+ *     AT MOST ONE inference
+ *     ONE assistant answer
+ *
+ * Not merely "one persisted user row". 2513 made the row unique but still let a
+ * second request run a second inference:
+ *
+ *     REQUEST A  exchange X → inserts user turn → begins inference…
+ *     REQUEST B  exchange X → insert is DUPLICATE
+ *                           → looks for the answer, none yet
+ *                           → begins ANOTHER inference   ← the defect
+ *
+ * The database prevented two rows; it did not guarantee one inference, and one
+ * inference per human utterance is the entire load-bearing property. Under an
+ * invite wave that is the difference between N and 2N calls against a
+ * rate-limited upstream.
+ *
+ * ELECTION IS THE INSERT ITSELF
+ *
+ * `INSERT … ON CONFLICT (exchange_id, seq) DO NOTHING RETURNING id` is already
+ * atomic: for a given exchange, exactly one concurrent request can come back
+ * with a row. That IS the ownership acquisition — no status column, no advisory
+ * lock, no second round trip that could itself race. The winner owns inference.
+ * Every other request carrying that id must decline, whether or not the answer
+ * exists yet.
+ *
+ * A duplicate with no answer does NOT mean "nothing has happened, go ahead". It
+ * means "someone else owns this exchange and is producing the answer right now".
+ * The correct reply is in_progress, never a second inference. That is the exact
+ * sentence in 2513 — "falls through and generates, never worse" — that was
+ * wrong: for this defect it is worse, because it forfeits the invariant.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.admitExchange = admitExchange;
+/**
+ * Decide what a request may do, given the atomic outcome of its user-turn write
+ * and a lookup for an already-persisted answer.
+ *
+ * `findExistingAnswer` is only consulted on the duplicate path, so the winning
+ * request pays no extra query.
+ */
+async function admitExchange(writeOutcome, findExistingAnswer) {
+    if (writeOutcome === 'refused') {
+        return { action: 'refused' };
+    }
+    if (writeOutcome === 'inserted') {
+        // Won the election. Exactly one concurrent request reaches here.
+        return { action: 'run_inference' };
+    }
+    // Lost the election. Serve the answer if it is ready; otherwise say so.
+    // Under no circumstance does this branch run inference.
+    const existing = await findExistingAnswer();
+    return existing ? { action: 'serve_existing', answer: existing } : { action: 'in_progress' };
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL2xpYi9tZW1vcnkvZXhjaGFuZ2VBZG1pc3Npb24udHMiLCJtYXBwaW5ncyI6IjtBQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0dBcUNHOztBQXFCSCxzQ0FpQkM7QUF4QkQ7Ozs7OztHQU1HO0FBQ0ksS0FBSyxVQUFVLGFBQWEsQ0FDakMsWUFBa0MsRUFDbEMsa0JBQWdEO0lBRWhELElBQUksWUFBWSxLQUFLLFNBQVMsRUFBRSxDQUFDO1FBQy9CLE9BQU8sRUFBRSxNQUFNLEVBQUUsU0FBUyxFQUFFLENBQUM7SUFDL0IsQ0FBQztJQUVELElBQUksWUFBWSxLQUFLLFVBQVUsRUFBRSxDQUFDO1FBQ2hDLGlFQUFpRTtRQUNqRSxPQUFPLEVBQUUsTUFBTSxFQUFFLGVBQWUsRUFBRSxDQUFDO0lBQ3JDLENBQUM7SUFFRCx3RUFBd0U7SUFDeEUsd0RBQXdEO0lBQ3hELE1BQU0sUUFBUSxHQUFHLE1BQU0sa0JBQWtCLEVBQUUsQ0FBQztJQUM1QyxPQUFPLFFBQVEsQ0FBQyxDQUFDLENBQUMsRUFBRSxNQUFNLEVBQUUsZ0JBQWdCLEVBQUUsTUFBTSxFQUFFLFFBQVEsRUFBRSxDQUFDLENBQUMsQ0FBQyxFQUFFLE1BQU0sRUFBRSxhQUFhLEVBQUUsQ0FBQztBQUMvRixDQUFDIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi9wcml2YXRlL3RtcC9jbGF1ZGUtNTAxLy1Vc2Vycy1zb3VsbGFiLU1BSUEtU09WRVJFSUdOL2E5MWRkMTIzLTFiMGYtNGI4OS1iZGQ4LWRlMDRiYWMwNTA4MS9zY3JhdGNocGFkL3d0LWVuZHVyYW5jZS9saWIvbWVtb3J5L2V4Y2hhbmdlQWRtaXNzaW9uLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogRXhjaGFuZ2UgYWRtaXNzaW9uIOKAlCB3aG8gaXMgYWxsb3dlZCB0byBydW4gaW5mZXJlbmNlIGZvciBhbiB1dHRlcmFuY2UuXG4gKlxuICogVEhFIElOVkFSSUFOVCAoZm91bmRlciBydWxpbmcsIDIwMjYtMDgtMTcpXG4gKlxuICogICAgIE9ORSB1c2VyIHV0dGVyYW5jZVxuICogICAgIE9ORSBhZG1pdHRlZCBleGNoYW5nZVxuICogICAgIEFUIE1PU1QgT05FIGluZmVyZW5jZVxuICogICAgIE9ORSBhc3Npc3RhbnQgYW5zd2VyXG4gKlxuICogTm90IG1lcmVseSBcIm9uZSBwZXJzaXN0ZWQgdXNlciByb3dcIi4gMjUxMyBtYWRlIHRoZSByb3cgdW5pcXVlIGJ1dCBzdGlsbCBsZXQgYVxuICogc2Vjb25kIHJlcXVlc3QgcnVuIGEgc2Vjb25kIGluZmVyZW5jZTpcbiAqXG4gKiAgICAgUkVRVUVTVCBBICBleGNoYW5nZSBYIOKGkiBpbnNlcnRzIHVzZXIgdHVybiDihpIgYmVnaW5zIGluZmVyZW5jZeKAplxuICogICAgIFJFUVVFU1QgQiAgZXhjaGFuZ2UgWCDihpIgaW5zZXJ0IGlzIERVUExJQ0FURVxuICogICAgICAgICAgICAgICAgICAgICAgICAgICDihpIgbG9va3MgZm9yIHRoZSBhbnN3ZXIsIG5vbmUgeWV0XG4gKiAgICAgICAgICAgICAgICAgICAgICAgICAgIOKGkiBiZWdpbnMgQU5PVEhFUiBpbmZlcmVuY2UgICDihpAgdGhlIGRlZmVjdFxuICpcbiAqIFRoZSBkYXRhYmFzZSBwcmV2ZW50ZWQgdHdvIHJvd3M7IGl0IGRpZCBub3QgZ3VhcmFudGVlIG9uZSBpbmZlcmVuY2UsIGFuZCBvbmVcbiAqIGluZmVyZW5jZSBwZXIgaHVtYW4gdXR0ZXJhbmNlIGlzIHRoZSBlbnRpcmUgbG9hZC1iZWFyaW5nIHByb3BlcnR5LiBVbmRlciBhblxuICogaW52aXRlIHdhdmUgdGhhdCBpcyB0aGUgZGlmZmVyZW5jZSBiZXR3ZWVuIE4gYW5kIDJOIGNhbGxzIGFnYWluc3QgYVxuICogcmF0ZS1saW1pdGVkIHVwc3RyZWFtLlxuICpcbiAqIEVMRUNUSU9OIElTIFRIRSBJTlNFUlQgSVRTRUxGXG4gKlxuICogYElOU0VSVCDigKYgT04gQ09ORkxJQ1QgKGV4Y2hhbmdlX2lkLCBzZXEpIERPIE5PVEhJTkcgUkVUVVJOSU5HIGlkYCBpcyBhbHJlYWR5XG4gKiBhdG9taWM6IGZvciBhIGdpdmVuIGV4Y2hhbmdlLCBleGFjdGx5IG9uZSBjb25jdXJyZW50IHJlcXVlc3QgY2FuIGNvbWUgYmFja1xuICogd2l0aCBhIHJvdy4gVGhhdCBJUyB0aGUgb3duZXJzaGlwIGFjcXVpc2l0aW9uIOKAlCBubyBzdGF0dXMgY29sdW1uLCBubyBhZHZpc29yeVxuICogbG9jaywgbm8gc2Vjb25kIHJvdW5kIHRyaXAgdGhhdCBjb3VsZCBpdHNlbGYgcmFjZS4gVGhlIHdpbm5lciBvd25zIGluZmVyZW5jZS5cbiAqIEV2ZXJ5IG90aGVyIHJlcXVlc3QgY2FycnlpbmcgdGhhdCBpZCBtdXN0IGRlY2xpbmUsIHdoZXRoZXIgb3Igbm90IHRoZSBhbnN3ZXJcbiAqIGV4aXN0cyB5ZXQuXG4gKlxuICogQSBkdXBsaWNhdGUgd2l0aCBubyBhbnN3ZXIgZG9lcyBOT1QgbWVhbiBcIm5vdGhpbmcgaGFzIGhhcHBlbmVkLCBnbyBhaGVhZFwiLiBJdFxuICogbWVhbnMgXCJzb21lb25lIGVsc2Ugb3ducyB0aGlzIGV4Y2hhbmdlIGFuZCBpcyBwcm9kdWNpbmcgdGhlIGFuc3dlciByaWdodCBub3dcIi5cbiAqIFRoZSBjb3JyZWN0IHJlcGx5IGlzIGluX3Byb2dyZXNzLCBuZXZlciBhIHNlY29uZCBpbmZlcmVuY2UuIFRoYXQgaXMgdGhlIGV4YWN0XG4gKiBzZW50ZW5jZSBpbiAyNTEzIOKAlCBcImZhbGxzIHRocm91Z2ggYW5kIGdlbmVyYXRlcywgbmV2ZXIgd29yc2VcIiDigJQgdGhhdCB3YXNcbiAqIHdyb25nOiBmb3IgdGhpcyBkZWZlY3QgaXQgaXMgd29yc2UsIGJlY2F1c2UgaXQgZm9yZmVpdHMgdGhlIGludmFyaWFudC5cbiAqL1xuXG5leHBvcnQgdHlwZSBFeGNoYW5nZUFkbWlzc2lvbiA9XG4gIC8qKiBUaGlzIHJlcXVlc3Qgd29uIHRoZSBlbGVjdGlvbi4gSXQgYWxvbmUgbWF5IGNhbGwgdGhlIG1vZGVsLiAqL1xuICB8IHsgYWN0aW9uOiAncnVuX2luZmVyZW5jZScgfVxuICAvKiogQWxyZWFkeSBhbnN3ZXJlZC4gU2VydmUgd2hhdCBleGlzdHM7IGNvc3Qgbm90aGluZy4gKi9cbiAgfCB7IGFjdGlvbjogJ3NlcnZlX2V4aXN0aW5nJzsgYW5zd2VyOiBzdHJpbmcgfVxuICAvKiogQW5vdGhlciByZXF1ZXN0IG93bnMgaXQgYW5kIGhhcyBub3QgZmluaXNoZWQuIERlY2xpbmUsIGRvIG5vdCBpbmZlci4gKi9cbiAgfCB7IGFjdGlvbjogJ2luX3Byb2dyZXNzJyB9XG4gIC8qKiBTYW5jdHVhcnkgb3IgcHJvdmVuYW5jZSByZWZ1c2VkIHRoZSB3cml0ZTsgbm90aGluZyBpcyBkdXJhYmxlLiAqL1xuICB8IHsgYWN0aW9uOiAncmVmdXNlZCcgfTtcblxuZXhwb3J0IHR5cGUgVHVybldyaXRlT3V0Y29tZUxpa2UgPSAnaW5zZXJ0ZWQnIHwgJ2R1cGxpY2F0ZScgfCAncmVmdXNlZCc7XG5cbi8qKlxuICogRGVjaWRlIHdoYXQgYSByZXF1ZXN0IG1heSBkbywgZ2l2ZW4gdGhlIGF0b21pYyBvdXRjb21lIG9mIGl0cyB1c2VyLXR1cm4gd3JpdGVcbiAqIGFuZCBhIGxvb2t1cCBmb3IgYW4gYWxyZWFkeS1wZXJzaXN0ZWQgYW5zd2VyLlxuICpcbiAqIGBmaW5kRXhpc3RpbmdBbnN3ZXJgIGlzIG9ubHkgY29uc3VsdGVkIG9uIHRoZSBkdXBsaWNhdGUgcGF0aCwgc28gdGhlIHdpbm5pbmdcbiAqIHJlcXVlc3QgcGF5cyBubyBleHRyYSBxdWVyeS5cbiAqL1xuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGFkbWl0RXhjaGFuZ2UoXG4gIHdyaXRlT3V0Y29tZTogVHVybldyaXRlT3V0Y29tZUxpa2UsXG4gIGZpbmRFeGlzdGluZ0Fuc3dlcjogKCkgPT4gUHJvbWlzZTxzdHJpbmcgfCBudWxsPlxuKTogUHJvbWlzZTxFeGNoYW5nZUFkbWlzc2lvbj4ge1xuICBpZiAod3JpdGVPdXRjb21lID09PSAncmVmdXNlZCcpIHtcbiAgICByZXR1cm4geyBhY3Rpb246ICdyZWZ1c2VkJyB9O1xuICB9XG5cbiAgaWYgKHdyaXRlT3V0Y29tZSA9PT0gJ2luc2VydGVkJykge1xuICAgIC8vIFdvbiB0aGUgZWxlY3Rpb24uIEV4YWN0bHkgb25lIGNvbmN1cnJlbnQgcmVxdWVzdCByZWFjaGVzIGhlcmUuXG4gICAgcmV0dXJuIHsgYWN0aW9uOiAncnVuX2luZmVyZW5jZScgfTtcbiAgfVxuXG4gIC8vIExvc3QgdGhlIGVsZWN0aW9uLiBTZXJ2ZSB0aGUgYW5zd2VyIGlmIGl0IGlzIHJlYWR5OyBvdGhlcndpc2Ugc2F5IHNvLlxuICAvLyBVbmRlciBubyBjaXJjdW1zdGFuY2UgZG9lcyB0aGlzIGJyYW5jaCBydW4gaW5mZXJlbmNlLlxuICBjb25zdCBleGlzdGluZyA9IGF3YWl0IGZpbmRFeGlzdGluZ0Fuc3dlcigpO1xuICByZXR1cm4gZXhpc3RpbmcgPyB7IGFjdGlvbjogJ3NlcnZlX2V4aXN0aW5nJywgYW5zd2VyOiBleGlzdGluZyB9IDogeyBhY3Rpb246ICdpbl9wcm9ncmVzcycgfTtcbn1cbiJdLCJ2ZXJzaW9uIjozfQ==

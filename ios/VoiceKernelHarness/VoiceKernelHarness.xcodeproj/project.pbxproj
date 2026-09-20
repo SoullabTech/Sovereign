@@ -1,0 +1,340 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3324379027ECBD8BF066397F /* HarnessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6A2F576CEC9BC7BBA66C36 /* HarnessView.swift */; };
+		334AA2921419E0A7F0431D97 /* HarnessModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4A3B30D21A0741709C446D /* HarnessModel.swift */; };
+		9D0255D5865FBD7127A5E475 /* VoiceKernel in Frameworks */ = {isa = PBXBuildFile; productRef = 2C0AFAF8FD0FB986FFD613BC /* VoiceKernel */; };
+		BC432E000A466FF9C5F943B6 /* VoiceKernelHarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F304E9CAE6A084EA5DFEE3 /* VoiceKernelHarnessApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		08F304E9CAE6A084EA5DFEE3 /* VoiceKernelHarnessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceKernelHarnessApp.swift; sourceTree = "<group>"; };
+		1E6A2F576CEC9BC7BBA66C36 /* HarnessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessView.swift; sourceTree = "<group>"; };
+		44985E985D7087F272930C15 /* VoiceKernel */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VoiceKernel; path = ../VoiceKernel; sourceTree = SOURCE_ROOT; };
+		5F6FCE46E12BF1EEE4CF39B4 /* VoiceKernelHarness.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = VoiceKernelHarness.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C755638F901727E18DD80A3A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FC4A3B30D21A0741709C446D /* HarnessModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessModel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3525D312DBC129AB2AEAB423 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9D0255D5865FBD7127A5E475 /* VoiceKernel in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		98949703D7B397681E8A4907 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				44985E985D7087F272930C15 /* VoiceKernel */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		BFF0670D3013D31A92F8CF8C /* Harness */ = {
+			isa = PBXGroup;
+			children = (
+				FC4A3B30D21A0741709C446D /* HarnessModel.swift */,
+				1E6A2F576CEC9BC7BBA66C36 /* HarnessView.swift */,
+				C755638F901727E18DD80A3A /* Info.plist */,
+				08F304E9CAE6A084EA5DFEE3 /* VoiceKernelHarnessApp.swift */,
+			);
+			path = Harness;
+			sourceTree = "<group>";
+		};
+		C4B25B250B1378CB7F69C6FC = {
+			isa = PBXGroup;
+			children = (
+				BFF0670D3013D31A92F8CF8C /* Harness */,
+				98949703D7B397681E8A4907 /* Packages */,
+				E8E97FB7B9B2803F2EC214A6 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E8E97FB7B9B2803F2EC214A6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5F6FCE46E12BF1EEE4CF39B4 /* VoiceKernelHarness.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8454EB9CA907068138044EF6 /* VoiceKernelHarness */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 35036E0118247417C408A12A /* Build configuration list for PBXNativeTarget "VoiceKernelHarness" */;
+			buildPhases = (
+				1D450AE40CF617E2AEE0E294 /* Sources */,
+				3525D312DBC129AB2AEAB423 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VoiceKernelHarness;
+			packageProductDependencies = (
+				2C0AFAF8FD0FB986FFD613BC /* VoiceKernel */,
+			);
+			productName = VoiceKernelHarness;
+			productReference = 5F6FCE46E12BF1EEE4CF39B4 /* VoiceKernelHarness.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		25DC25DC2DB0651CCAC6C5AA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					8454EB9CA907068138044EF6 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = C16F81AA280F6BE09101A32E /* Build configuration list for PBXProject "VoiceKernelHarness" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = C4B25B250B1378CB7F69C6FC;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2ACE9A5AB68DF42F9ADD3C9F /* XCLocalSwiftPackageReference "../VoiceKernel" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E8E97FB7B9B2803F2EC214A6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8454EB9CA907068138044EF6 /* VoiceKernelHarness */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1D450AE40CF617E2AEE0E294 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				334AA2921419E0A7F0431D97 /* HarnessModel.swift in Sources */,
+				3324379027ECBD8BF066397F /* HarnessView.swift in Sources */,
+				BC432E000A466FF9C5F943B6 /* VoiceKernelHarnessApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0592F5990080A45756541015 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Harness/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = life.soullab.voicekernel.k00;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		B90B6DA4948F38BB1FF97D9F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Harness/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = life.soullab.voicekernel.k00;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		C57DB13CBE655E1AFE8A473A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F4C0F136005BC260C641ABBA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		35036E0118247417C408A12A /* Build configuration list for PBXNativeTarget "VoiceKernelHarness" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B90B6DA4948F38BB1FF97D9F /* Debug */,
+				0592F5990080A45756541015 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C16F81AA280F6BE09101A32E /* Build configuration list for PBXProject "VoiceKernelHarness" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F4C0F136005BC260C641ABBA /* Debug */,
+				C57DB13CBE655E1AFE8A473A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		2ACE9A5AB68DF42F9ADD3C9F /* XCLocalSwiftPackageReference "../VoiceKernel" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../VoiceKernel;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2C0AFAF8FD0FB986FFD613BC /* VoiceKernel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VoiceKernel;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 25DC25DC2DB0651CCAC6C5AA /* Project object */;
+}

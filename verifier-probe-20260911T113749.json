@@ -1,0 +1,1090 @@
+{
+  "set": "terse",
+  "fixtures_sha256": "d6f1bfb08abbb49b6b213998fde0d83dd7dffc2716611f090057f075890e2728",
+  "hhem_threshold_frozen_at": 0.5,
+  "minicheck_threshold_frozen_at": 0.5,
+  "threshold_note": "A REPORTING cut only. Raw scores are recorded. Changing it after seeing these answers is tuning to the test; it must be a separate calibration act on separate material.",
+  "not_run": [],
+  "rows": [
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U01",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Marcus said he'd swing by after work, so don't lock the back gate.",
+      "hypothesis": "Marcus will come round in the evening.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9888,
+        "neutral": 0.0109,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U02",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Her brother Toby lent us the van for the whole weekend, no questions asked.",
+      "hypothesis": "Toby is her brother.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9946,
+        "neutral": 0.0047,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U03",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Rita hasn't touched her dinner and she's been upstairs since four.",
+      "hypothesis": "Rita is upset about something.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0009,
+        "neutral": 0.999,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U04",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Vik has never in his life cooked a meal for another person.",
+      "hypothesis": "Vik cooks for his mother most Sundays.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U05",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "There's a Bennett on the plaque in the church and Gran swears he's one of ours.",
+      "hypothesis": "The Bennett named on the plaque is a relative of Gran's.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0247,
+        "neutral": 0.9707,
+        "contradiction": 0.0046
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U06",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "We switched to the Italian flour last month and the bread's been coming out better.",
+      "hypothesis": "The change of flour is what improved the bread.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0016,
+        "neutral": 0.998,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U07",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Whenever the servers go down it's Bilal fixing them at two in the morning.",
+      "hypothesis": "Bilal is the person responsible for the servers.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9761,
+        "neutral": 0.0235,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U08",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Sorry, I only got back from Lisbon last night and I'm still half asleep.",
+      "hypothesis": "The speaker was in Lisbon before last night.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9883,
+        "neutral": 0.0084,
+        "contradiction": 0.0032
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U09",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Tomas was at the union meeting on Thursday, sitting at the back taking notes.",
+      "hypothesis": "Tomas is a member of the union.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.1151,
+        "neutral": 0.8848,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U10",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Jonah's talking in whole sentences now and about half of them are questions.",
+      "hypothesis": "Jonah is picking up language faster than most children his age.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.9995,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U11",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Dev's been scrolling through flats in Sheffield on his phone all week.",
+      "hypothesis": "Dev intends to move to Sheffield.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0009,
+        "neutral": 0.9985,
+        "contradiction": 0.0006
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U12",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "I was furious with Cal all evening and I'm not proud of how I spoke to him.",
+      "hypothesis": "The speaker was angry at Cal that evening.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0013,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U13",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "I ran into Greg's ex at the market and honestly she looked great.",
+      "hypothesis": "Greg and the woman separated on bad terms.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.9995,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U14",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "The fire had nothing to do with the wiring \u2014 it started in the bin out the back.",
+      "hypothesis": "Faulty wiring caused the fire.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0002,
+        "neutral": 0.0002,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U15",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "That's Delia in the blue coat, the one who wrote the letter to the council.",
+      "hypothesis": "Delia wrote the letter to the council.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0015,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U16",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Joyce is down at the pool most mornings before the rest of us are even up.",
+      "hypothesis": "Joyce swims every day.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0482,
+        "neutral": 0.9448,
+        "contradiction": 0.0072
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U17",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Ines isn't the manager, she just answers his phone when he's out on deliveries.",
+      "hypothesis": "Ines manages the shop.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U18",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Otto couldn't do a length last summer and on Saturday he swam four hundred metres.",
+      "hypothesis": "Otto's swimming has improved since last summer.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.978,
+        "neutral": 0.0217,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U19",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "You see Anneke at every allotment working party, always with her own fork.",
+      "hypothesis": "Anneke has a plot on the allotment.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0006,
+        "neutral": 0.999,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U20",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "We moved into the Ardrey Street flat the week they finally switched the fountain back on.",
+      "hypothesis": "They moved in during the summer.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0011,
+        "neutral": 0.9966,
+        "contradiction": 0.0025
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U21",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "I'm handing in my notice on Monday \u2014 the letter's already written and printed.",
+      "hypothesis": "The speaker means to leave the job.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9941,
+        "neutral": 0.0055,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U22",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Grandad laughed the whole way through the film and then went very quiet in the car.",
+      "hypothesis": "Something in the film had troubled him.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0009,
+        "neutral": 0.999,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U23",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Ade gave up coffee back in February and he's sleeping much better now.",
+      "hypothesis": "Quitting coffee is what improved Ade's sleep.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.877,
+        "neutral": 0.1229,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U24",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Hana keeps texting me about the cabin thing even though I told her I was busy.",
+      "hypothesis": "Hana and the speaker are friends.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0007,
+        "neutral": 0.999,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U25",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Everyone at the yard calls him Doc, though I don't think that's actually his name.",
+      "hypothesis": "The man's name is not Doc.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.2578,
+        "neutral": 0.7373,
+        "contradiction": 0.0051
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U26",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "We have the same argument about the thermostat every single winter, without fail.",
+      "hypothesis": "That argument has happened more than once.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.998,
+        "neutral": 0.0013,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U27",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Karen does the books for the bakery and about half the ordering as well.",
+      "hypothesis": "Karen is one of the bakery's owners.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0008,
+        "neutral": 0.9946,
+        "contradiction": 0.0047
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U28",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "I joined the choir in March and I haven't missed a single rehearsal since.",
+      "hypothesis": "The speaker belongs to the choir.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.998,
+        "neutral": 0.0017,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U29",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Her handwriting is exactly what it was at fourteen, not a stroke of it different.",
+      "hypothesis": "Her handwriting has changed a great deal since she was fourteen.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0001,
+        "contradiction": 1.0
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U30",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "I've never once been late to that class, not in three years of Tuesdays.",
+      "hypothesis": "She arrived late to that class one evening last winter.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0007,
+        "neutral": 0.228,
+        "contradiction": 0.7715
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U31",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "She asked me twice what I thought of the ring in the window at Harlow's.",
+      "hypothesis": "She is planning to propose to someone.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0014,
+        "neutral": 0.998,
+        "contradiction": 0.0006
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U32",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Honestly I wasn't nervous at all before the recital, it was strange how calm I felt.",
+      "hypothesis": "She was anxious in the run-up to the recital.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0005,
+        "neutral": 0.0003,
+        "contradiction": 0.999
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U33",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "The pipe burst because we left the heating off for a fortnight while we were away.",
+      "hypothesis": "The heating being off led to the pipe bursting.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.813,
+        "neutral": 0.1859,
+        "contradiction": 0.0009
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U34",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Priya and I have never actually met \u2014 it's been six years of email and nothing else.",
+      "hypothesis": "Priya and the writer met at a conference last year.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.0003,
+        "contradiction": 0.9995
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U35",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "The bloke who sorted our boiler turned up again on Tuesday, over at the neighbours'.",
+      "hypothesis": "The same man worked on the neighbours' boiler.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.8701,
+        "neutral": 0.1293,
+        "contradiction": 0.0006
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U36",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "I see Fareed at the bus stop now and then and we nod at each other.",
+      "hypothesis": "Fareed catches the same bus as the speaker.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0047,
+        "neutral": 0.9951,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U37",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Theo was up the front of the meeting handing out the agenda to everyone.",
+      "hypothesis": "Theo was the one running the meeting.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0081,
+        "neutral": 0.9775,
+        "contradiction": 0.0145
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U38",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Neither of the Haldane boys belongs to the club, and that's the whole grievance.",
+      "hypothesis": "The elder Haldane boy is a member of the club.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0013,
+        "neutral": 0.0029,
+        "contradiction": 0.9956
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U39",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Since the surgery Bea's been walking down to the shop and back on her own.",
+      "hypothesis": "Bea has recovered from the surgery.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.873,
+        "neutral": 0.1263,
+        "contradiction": 0.0006
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U40",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Nina went into the hospital on Tuesday and nobody's heard a word since.",
+      "hypothesis": "Nina is still in the hospital.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0046,
+        "neutral": 0.9941,
+        "contradiction": 0.0015
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U41",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "I've no plans to sell the boat \u2014 people keep asking and the answer's still no.",
+      "hypothesis": "He is trying to sell the boat.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0005,
+        "neutral": 0.0007,
+        "contradiction": 0.999
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U42",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Yusuf keeps telling everyone he's completely fine about the results.",
+      "hypothesis": "Yusuf is disappointed about the results.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0088,
+        "neutral": 0.896,
+        "contradiction": 0.0951
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U43",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "The shop's been busier every week since they finished the roadworks on Brill Street.",
+      "hypothesis": "Finishing the roadworks is what brought the customers back.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0016,
+        "neutral": 0.998,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U44",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "We've lived next to the Okonkwos eleven years and I still don't know their first names.",
+      "hypothesis": "The Okonkwos are unfriendly people.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0003,
+        "neutral": 0.9995,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U45",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "The woman who gave her name as Rosa at the shelter wasn't Rosa at all.",
+      "hypothesis": "The woman at the shelter was named Rosa.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0186,
+        "neutral": 0.0827,
+        "contradiction": 0.8989
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U46",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "The band have played the Anchor twice already this month.",
+      "hypothesis": "The band play the Anchor regularly.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.1454,
+        "neutral": 0.8535,
+        "contradiction": 0.0011
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U47",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "The new fellow shadowed Aunty Fern all week on the delivery round.",
+      "hypothesis": "The new fellow is being trained to take the round over.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0041,
+        "neutral": 0.9956,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U48",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Half the rowing club drinks in the Fox on a Friday and Priya's always in there.",
+      "hypothesis": "Priya rows with the club.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9937,
+        "neutral": 0.0057,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U49",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Ravi's finally stopped slamming the door every time he's told no.",
+      "hypothesis": "Ravi is growing out of his tempers.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0383,
+        "neutral": 0.9614,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U50",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Dad always did the crossword before anyone else in the house was up.",
+      "hypothesis": "Dad no longer does the crossword.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0004,
+        "neutral": 0.9976,
+        "contradiction": 0.0022
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U51",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Owen's started running again and this time he went and bought proper shoes.",
+      "hypothesis": "Owen means to keep the running up.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0063,
+        "neutral": 0.9937,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U52",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Ellie cried when they read her name out at the ceremony.",
+      "hypothesis": "Ellie was happy.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0068,
+        "neutral": 0.2871,
+        "contradiction": 0.7061
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U53",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Marcy took the job in Perth and six months later the marriage was over.",
+      "hypothesis": "The move to Perth ended the marriage.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.8232,
+        "neutral": 0.1764,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U54",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Sam brought someone to the wedding and never introduced her to a single one of us.",
+      "hypothesis": "Sam is seeing the woman he brought.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0001,
+        "neutral": 0.9995,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U55",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "I got a friend request from a Marta Ilves and the photo looks like my old flatmate.",
+      "hypothesis": "Marta Ilves is the speaker's former flatmate.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.4268,
+        "neutral": 0.563,
+        "contradiction": 0.0102
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U56",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Mum rings on Sundays, mostly.",
+      "hypothesis": "Mum rang this past Sunday.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0045,
+        "neutral": 0.9951,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U57",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "As chair of the residents' committee I'm the one who has to sign off the fence.",
+      "hypothesis": "The speaker chairs the residents' committee.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9912,
+        "neutral": 0.0084,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U58",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "They've put Callum's photo up in the hall with all the old team pictures.",
+      "hypothesis": "Callum played for the team.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0154,
+        "neutral": 0.9829,
+        "contradiction": 0.0016
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U59",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "The lad Terry took on used to ask me about every joint, now he just gets on with it.",
+      "hypothesis": "The lad has become competent at the work.",
+      "expected": null,
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.5195,
+        "neutral": 0.4797,
+        "contradiction": 0.0006
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "U60",
+      "role": "",
+      "family": "",
+      "group": "",
+      "premise": "Lena signed up for the Portuguese class and then paid for the whole year upfront.",
+      "hypothesis": "Lena is planning a trip to Portugal.",
+      "expected": null,
+      "observed": "not_entailed",
+      "raw_label": "neutral",
+      "scores": {
+        "entailment": 0.0005,
+        "neutral": 0.9951,
+        "contradiction": 0.0046
+      }
+    }
+  ]
+}

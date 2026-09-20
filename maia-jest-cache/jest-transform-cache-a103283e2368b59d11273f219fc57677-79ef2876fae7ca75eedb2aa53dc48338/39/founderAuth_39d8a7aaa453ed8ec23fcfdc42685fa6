@@ -1,0 +1,64 @@
+4b460c74cdc22922799e09f9b8148fa8
+"use strict";
+/**
+ * Founder auth — server-side env-var allowlist
+ *
+ * The /founder/ console is currently gated only by a feature flag in
+ * app/founder/layout.tsx. That's not enough for surfaces that hold
+ * founder-private interpretive data (verdicts, notes, etc.).
+ *
+ * This helper enforces real auth in API routes by checking the current
+ * server session against an env-var allowlist of founder member IDs.
+ *
+ * Set FOUNDER_MEMBER_IDS in production env (.env on minisForum) as a
+ * comma-separated list of UUIDs:
+ *
+ *   FOUNDER_MEMBER_IDS=ed52e28f-5331-4288-a9ab-4dae230079c9
+ *
+ * If the env var is unset, NO ONE is recognized as a founder — the
+ * allowlist is empty and all requests get 403. This is intentional:
+ * forgetting to set the env var should fail closed, not open.
+ *
+ * No schema change. Reversible. Promote to a real role system later
+ * (e.g. members.is_founder boolean, or a roles table) if needed.
+ */
+var _a;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.requireFounder = requireFounder;
+exports.getFounderAllowlistSize = getFounderAllowlistSize;
+const serverSessions_1 = require("@/lib/auth/serverSessions");
+const FOUNDER_MEMBER_IDS = new Set(((_a = process.env.FOUNDER_MEMBER_IDS) !== null && _a !== void 0 ? _a : '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean));
+/**
+ * Check whether the current request is from a founder.
+ * Returns { ok: true, memberId } on success, or a typed error result.
+ *
+ * Usage in an API route:
+ *
+ *   const auth = await requireFounder();
+ *   if (!auth.ok) {
+ *     return NextResponse.json({ error: auth.error }, { status: auth.status });
+ *   }
+ *   // auth.memberId is the founder's member id
+ */
+async function requireFounder() {
+    const session = await (0, serverSessions_1.getCurrentSession)();
+    if (!(session === null || session === void 0 ? void 0 : session.memberId)) {
+        return { ok: false, status: 401, error: 'Authentication required' };
+    }
+    if (!FOUNDER_MEMBER_IDS.has(session.memberId)) {
+        return { ok: false, status: 403, error: 'Founder access required' };
+    }
+    return { ok: true, memberId: session.memberId };
+}
+/**
+ * For diagnostics — returns the count of configured founder member IDs.
+ * Does NOT return the IDs themselves. Useful for health checks to verify
+ * the env var was actually set without leaking the values.
+ */
+function getFounderAllowlistSize() {
+    return FOUNDER_MEMBER_IDS.size;
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL2xpYi9mb3VuZGVyL2ZvdW5kZXJBdXRoLnRzIiwibWFwcGluZ3MiOiI7QUFBQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0dBcUJHOzs7QUEyQkgsd0NBWUM7QUFPRCwwREFFQztBQTlDRCw4REFBOEQ7QUFFOUQsTUFBTSxrQkFBa0IsR0FBd0IsSUFBSSxHQUFHLENBQ3JELENBQUMsTUFBQSxPQUFPLENBQUMsR0FBRyxDQUFDLGtCQUFrQixtQ0FBSSxFQUFFLENBQUM7S0FDbkMsS0FBSyxDQUFDLEdBQUcsQ0FBQztLQUNWLEdBQUcsQ0FBQyxDQUFDLENBQUMsRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFDLElBQUksRUFBRSxDQUFDO0tBQ3BCLE1BQU0sQ0FBQyxPQUFPLENBQUMsQ0FDbkIsQ0FBQztBQU1GOzs7Ozs7Ozs7OztHQVdHO0FBQ0ksS0FBSyxVQUFVLGNBQWM7SUFDbEMsTUFBTSxPQUFPLEdBQUcsTUFBTSxJQUFBLGtDQUFpQixHQUFFLENBQUM7SUFFMUMsSUFBSSxDQUFDLENBQUEsT0FBTyxhQUFQLE9BQU8sdUJBQVAsT0FBTyxDQUFFLFFBQVEsQ0FBQSxFQUFFLENBQUM7UUFDdkIsT0FBTyxFQUFFLEVBQUUsRUFBRSxLQUFLLEVBQUUsTUFBTSxFQUFFLEdBQUcsRUFBRSxLQUFLLEVBQUUseUJBQXlCLEVBQUUsQ0FBQztJQUN0RSxDQUFDO0lBRUQsSUFBSSxDQUFDLGtCQUFrQixDQUFDLEdBQUcsQ0FBQyxPQUFPLENBQUMsUUFBUSxDQUFDLEVBQUUsQ0FBQztRQUM5QyxPQUFPLEVBQUUsRUFBRSxFQUFFLEtBQUssRUFBRSxNQUFNLEVBQUUsR0FBRyxFQUFFLEtBQUssRUFBRSx5QkFBeUIsRUFBRSxDQUFDO0lBQ3RFLENBQUM7SUFFRCxPQUFPLEVBQUUsRUFBRSxFQUFFLElBQUksRUFBRSxRQUFRLEVBQUUsT0FBTyxDQUFDLFFBQVEsRUFBRSxDQUFDO0FBQ2xELENBQUM7QUFFRDs7OztHQUlHO0FBQ0gsU0FBZ0IsdUJBQXVCO0lBQ3JDLE9BQU8sa0JBQWtCLENBQUMsSUFBSSxDQUFDO0FBQ2pDLENBQUMiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL2xpYi9mb3VuZGVyL2ZvdW5kZXJBdXRoLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogRm91bmRlciBhdXRoIOKAlCBzZXJ2ZXItc2lkZSBlbnYtdmFyIGFsbG93bGlzdFxuICpcbiAqIFRoZSAvZm91bmRlci8gY29uc29sZSBpcyBjdXJyZW50bHkgZ2F0ZWQgb25seSBieSBhIGZlYXR1cmUgZmxhZyBpblxuICogYXBwL2ZvdW5kZXIvbGF5b3V0LnRzeC4gVGhhdCdzIG5vdCBlbm91Z2ggZm9yIHN1cmZhY2VzIHRoYXQgaG9sZFxuICogZm91bmRlci1wcml2YXRlIGludGVycHJldGl2ZSBkYXRhICh2ZXJkaWN0cywgbm90ZXMsIGV0Yy4pLlxuICpcbiAqIFRoaXMgaGVscGVyIGVuZm9yY2VzIHJlYWwgYXV0aCBpbiBBUEkgcm91dGVzIGJ5IGNoZWNraW5nIHRoZSBjdXJyZW50XG4gKiBzZXJ2ZXIgc2Vzc2lvbiBhZ2FpbnN0IGFuIGVudi12YXIgYWxsb3dsaXN0IG9mIGZvdW5kZXIgbWVtYmVyIElEcy5cbiAqXG4gKiBTZXQgRk9VTkRFUl9NRU1CRVJfSURTIGluIHByb2R1Y3Rpb24gZW52ICguZW52IG9uIG1pbmlzRm9ydW0pIGFzIGFcbiAqIGNvbW1hLXNlcGFyYXRlZCBsaXN0IG9mIFVVSURzOlxuICpcbiAqICAgRk9VTkRFUl9NRU1CRVJfSURTPWVkNTJlMjhmLTUzMzEtNDI4OC1hOWFiLTRkYWUyMzAwNzljOVxuICpcbiAqIElmIHRoZSBlbnYgdmFyIGlzIHVuc2V0LCBOTyBPTkUgaXMgcmVjb2duaXplZCBhcyBhIGZvdW5kZXIg4oCUIHRoZVxuICogYWxsb3dsaXN0IGlzIGVtcHR5IGFuZCBhbGwgcmVxdWVzdHMgZ2V0IDQwMy4gVGhpcyBpcyBpbnRlbnRpb25hbDpcbiAqIGZvcmdldHRpbmcgdG8gc2V0IHRoZSBlbnYgdmFyIHNob3VsZCBmYWlsIGNsb3NlZCwgbm90IG9wZW4uXG4gKlxuICogTm8gc2NoZW1hIGNoYW5nZS4gUmV2ZXJzaWJsZS4gUHJvbW90ZSB0byBhIHJlYWwgcm9sZSBzeXN0ZW0gbGF0ZXJcbiAqIChlLmcuIG1lbWJlcnMuaXNfZm91bmRlciBib29sZWFuLCBvciBhIHJvbGVzIHRhYmxlKSBpZiBuZWVkZWQuXG4gKi9cblxuaW1wb3J0IHsgZ2V0Q3VycmVudFNlc3Npb24gfSBmcm9tICdAL2xpYi9hdXRoL3NlcnZlclNlc3Npb25zJztcblxuY29uc3QgRk9VTkRFUl9NRU1CRVJfSURTOiBSZWFkb25seVNldDxzdHJpbmc+ID0gbmV3IFNldChcbiAgKHByb2Nlc3MuZW52LkZPVU5ERVJfTUVNQkVSX0lEUyA/PyAnJylcbiAgICAuc3BsaXQoJywnKVxuICAgIC5tYXAoKHMpID0+IHMudHJpbSgpKVxuICAgIC5maWx0ZXIoQm9vbGVhbilcbik7XG5cbmV4cG9ydCB0eXBlIEZvdW5kZXJBdXRoUmVzdWx0ID1cbiAgfCB7IG9rOiB0cnVlOyBtZW1iZXJJZDogc3RyaW5nIH1cbiAgfCB7IG9rOiBmYWxzZTsgc3RhdHVzOiA0MDEgfCA0MDM7IGVycm9yOiBzdHJpbmcgfTtcblxuLyoqXG4gKiBDaGVjayB3aGV0aGVyIHRoZSBjdXJyZW50IHJlcXVlc3QgaXMgZnJvbSBhIGZvdW5kZXIuXG4gKiBSZXR1cm5zIHsgb2s6IHRydWUsIG1lbWJlcklkIH0gb24gc3VjY2Vzcywgb3IgYSB0eXBlZCBlcnJvciByZXN1bHQuXG4gKlxuICogVXNhZ2UgaW4gYW4gQVBJIHJvdXRlOlxuICpcbiAqICAgY29uc3QgYXV0aCA9IGF3YWl0IHJlcXVpcmVGb3VuZGVyKCk7XG4gKiAgIGlmICghYXV0aC5vaykge1xuICogICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiBhdXRoLmVycm9yIH0sIHsgc3RhdHVzOiBhdXRoLnN0YXR1cyB9KTtcbiAqICAgfVxuICogICAvLyBhdXRoLm1lbWJlcklkIGlzIHRoZSBmb3VuZGVyJ3MgbWVtYmVyIGlkXG4gKi9cbmV4cG9ydCBhc3luYyBmdW5jdGlvbiByZXF1aXJlRm91bmRlcigpOiBQcm9taXNlPEZvdW5kZXJBdXRoUmVzdWx0PiB7XG4gIGNvbnN0IHNlc3Npb24gPSBhd2FpdCBnZXRDdXJyZW50U2Vzc2lvbigpO1xuXG4gIGlmICghc2Vzc2lvbj8ubWVtYmVySWQpIHtcbiAgICByZXR1cm4geyBvazogZmFsc2UsIHN0YXR1czogNDAxLCBlcnJvcjogJ0F1dGhlbnRpY2F0aW9uIHJlcXVpcmVkJyB9O1xuICB9XG5cbiAgaWYgKCFGT1VOREVSX01FTUJFUl9JRFMuaGFzKHNlc3Npb24ubWVtYmVySWQpKSB7XG4gICAgcmV0dXJuIHsgb2s6IGZhbHNlLCBzdGF0dXM6IDQwMywgZXJyb3I6ICdGb3VuZGVyIGFjY2VzcyByZXF1aXJlZCcgfTtcbiAgfVxuXG4gIHJldHVybiB7IG9rOiB0cnVlLCBtZW1iZXJJZDogc2Vzc2lvbi5tZW1iZXJJZCB9O1xufVxuXG4vKipcbiAqIEZvciBkaWFnbm9zdGljcyDigJQgcmV0dXJucyB0aGUgY291bnQgb2YgY29uZmlndXJlZCBmb3VuZGVyIG1lbWJlciBJRHMuXG4gKiBEb2VzIE5PVCByZXR1cm4gdGhlIElEcyB0aGVtc2VsdmVzLiBVc2VmdWwgZm9yIGhlYWx0aCBjaGVja3MgdG8gdmVyaWZ5XG4gKiB0aGUgZW52IHZhciB3YXMgYWN0dWFsbHkgc2V0IHdpdGhvdXQgbGVha2luZyB0aGUgdmFsdWVzLlxuICovXG5leHBvcnQgZnVuY3Rpb24gZ2V0Rm91bmRlckFsbG93bGlzdFNpemUoKTogbnVtYmVyIHtcbiAgcmV0dXJuIEZPVU5ERVJfTUVNQkVSX0lEUy5zaXplO1xufVxuIl0sInZlcnNpb24iOjN9

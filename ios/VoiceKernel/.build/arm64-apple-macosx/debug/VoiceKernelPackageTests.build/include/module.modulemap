@@ -1,0 +1,3 @@
+module VoiceKernelPackageTests {
+    header "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.build/include/VoiceKernelPackageTests-Swift.h"
+}

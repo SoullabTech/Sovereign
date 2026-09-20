@@ -1,0 +1,49 @@
+5d88e1852f73a8019b9432c7099ef547
+"use strict";
+/**
+ * Privacy-safe member correlation reference for logs.
+ *
+ * WHY THIS EXISTS
+ *   Member identifiers were being interpolated raw into container stdout on the memory path.
+ *   Container stdout is captured by the Docker log driver and readable by anyone with host or
+ *   `docker logs` access, and a member id is a durable join key across every table in the system.
+ *
+ * WHAT THIS IS — AND IS NOT
+ *   `memberRef()` is **pseudonymous and correlatable. It is NOT anonymous data.**
+ *   The same member yields the same token, which is the point: operators can follow one member
+ *   through a log window without the identifier being present. That same property means a token
+ *   is still member-linked data — it must be treated as such in retention, export, and disclosure.
+ *   Do not describe logs carrying memberRef as "anonymised".
+ *
+ * WHY NOT `.slice(0, 8)`
+ *   A truncated UUID is a fragment of the source identifier, not a derivation of it. It remains
+ *   directly matchable against the real value and leaks the id's own prefix. Truncation is not
+ *   the target standard here even though it is better than printing the whole thing.
+ *
+ * PREFERENCE ORDER
+ *   1. Emit no identifier at all, when correlation is not actually needed.
+ *   2. Emit `memberRef(id)` when correlation genuinely is needed.
+ *   3. Never emit the raw identifier or a slice of it.
+ *
+ * SCHEME
+ *   Truncated SHA-256, matching the convention already used by CC-A memory-provenance telemetry
+ *   (`lib/memory/provenance/turnMemoryProvenance.ts` `digest()`), so a log line and a provenance
+ *   record describing the same member agree on the token.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.memberRef = memberRef;
+const crypto_1 = require("crypto");
+/** Length of the emitted token, in hex characters. Matches CC-A telemetry. */
+const REF_LENGTH = 12;
+/**
+ * One-way, stable, correlatable reference for a member identifier.
+ *
+ * Returns `'anonymous'` for absent identifiers so call sites do not have to branch, and so an
+ * absent id is visibly different from a present one rather than rendering as `undefined`.
+ */
+function memberRef(id) {
+    if (id === null || id === undefined || id === '')
+        return 'anonymous';
+    return (0, crypto_1.createHash)('sha256').update(id).digest('hex').slice(0, REF_LENGTH);
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL2xpYi9wcml2YWN5L21lbWJlclJlZi50cyIsIm1hcHBpbmdzIjoiO0FBQUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0dBNkJHOztBQWFILDhCQUdDO0FBZEQsbUNBQW9DO0FBRXBDLDhFQUE4RTtBQUM5RSxNQUFNLFVBQVUsR0FBRyxFQUFFLENBQUM7QUFFdEI7Ozs7O0dBS0c7QUFDSCxTQUFnQixTQUFTLENBQUMsRUFBNkI7SUFDckQsSUFBSSxFQUFFLEtBQUssSUFBSSxJQUFJLEVBQUUsS0FBSyxTQUFTLElBQUksRUFBRSxLQUFLLEVBQUU7UUFBRSxPQUFPLFdBQVcsQ0FBQztJQUNyRSxPQUFPLElBQUEsbUJBQVUsRUFBQyxRQUFRLENBQUMsQ0FBQyxNQUFNLENBQUMsRUFBRSxDQUFDLENBQUMsTUFBTSxDQUFDLEtBQUssQ0FBQyxDQUFDLEtBQUssQ0FBQyxDQUFDLEVBQUUsVUFBVSxDQUFDLENBQUM7QUFDNUUsQ0FBQyIsIm5hbWVzIjpbXSwic291cmNlcyI6WyIvcHJpdmF0ZS90bXAvY2xhdWRlLTUwMS8tVXNlcnMtc291bGxhYi1NQUlBLVNPVkVSRUlHTi9hOTFkZDEyMy0xYjBmLTRiODktYmRkOC1kZTA0YmFjMDUwODEvc2NyYXRjaHBhZC93dC1lbmR1cmFuY2UvbGliL3ByaXZhY3kvbWVtYmVyUmVmLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogUHJpdmFjeS1zYWZlIG1lbWJlciBjb3JyZWxhdGlvbiByZWZlcmVuY2UgZm9yIGxvZ3MuXG4gKlxuICogV0hZIFRISVMgRVhJU1RTXG4gKiAgIE1lbWJlciBpZGVudGlmaWVycyB3ZXJlIGJlaW5nIGludGVycG9sYXRlZCByYXcgaW50byBjb250YWluZXIgc3Rkb3V0IG9uIHRoZSBtZW1vcnkgcGF0aC5cbiAqICAgQ29udGFpbmVyIHN0ZG91dCBpcyBjYXB0dXJlZCBieSB0aGUgRG9ja2VyIGxvZyBkcml2ZXIgYW5kIHJlYWRhYmxlIGJ5IGFueW9uZSB3aXRoIGhvc3Qgb3JcbiAqICAgYGRvY2tlciBsb2dzYCBhY2Nlc3MsIGFuZCBhIG1lbWJlciBpZCBpcyBhIGR1cmFibGUgam9pbiBrZXkgYWNyb3NzIGV2ZXJ5IHRhYmxlIGluIHRoZSBzeXN0ZW0uXG4gKlxuICogV0hBVCBUSElTIElTIOKAlCBBTkQgSVMgTk9UXG4gKiAgIGBtZW1iZXJSZWYoKWAgaXMgKipwc2V1ZG9ueW1vdXMgYW5kIGNvcnJlbGF0YWJsZS4gSXQgaXMgTk9UIGFub255bW91cyBkYXRhLioqXG4gKiAgIFRoZSBzYW1lIG1lbWJlciB5aWVsZHMgdGhlIHNhbWUgdG9rZW4sIHdoaWNoIGlzIHRoZSBwb2ludDogb3BlcmF0b3JzIGNhbiBmb2xsb3cgb25lIG1lbWJlclxuICogICB0aHJvdWdoIGEgbG9nIHdpbmRvdyB3aXRob3V0IHRoZSBpZGVudGlmaWVyIGJlaW5nIHByZXNlbnQuIFRoYXQgc2FtZSBwcm9wZXJ0eSBtZWFucyBhIHRva2VuXG4gKiAgIGlzIHN0aWxsIG1lbWJlci1saW5rZWQgZGF0YSDigJQgaXQgbXVzdCBiZSB0cmVhdGVkIGFzIHN1Y2ggaW4gcmV0ZW50aW9uLCBleHBvcnQsIGFuZCBkaXNjbG9zdXJlLlxuICogICBEbyBub3QgZGVzY3JpYmUgbG9ncyBjYXJyeWluZyBtZW1iZXJSZWYgYXMgXCJhbm9ueW1pc2VkXCIuXG4gKlxuICogV0hZIE5PVCBgLnNsaWNlKDAsIDgpYFxuICogICBBIHRydW5jYXRlZCBVVUlEIGlzIGEgZnJhZ21lbnQgb2YgdGhlIHNvdXJjZSBpZGVudGlmaWVyLCBub3QgYSBkZXJpdmF0aW9uIG9mIGl0LiBJdCByZW1haW5zXG4gKiAgIGRpcmVjdGx5IG1hdGNoYWJsZSBhZ2FpbnN0IHRoZSByZWFsIHZhbHVlIGFuZCBsZWFrcyB0aGUgaWQncyBvd24gcHJlZml4LiBUcnVuY2F0aW9uIGlzIG5vdFxuICogICB0aGUgdGFyZ2V0IHN0YW5kYXJkIGhlcmUgZXZlbiB0aG91Z2ggaXQgaXMgYmV0dGVyIHRoYW4gcHJpbnRpbmcgdGhlIHdob2xlIHRoaW5nLlxuICpcbiAqIFBSRUZFUkVOQ0UgT1JERVJcbiAqICAgMS4gRW1pdCBubyBpZGVudGlmaWVyIGF0IGFsbCwgd2hlbiBjb3JyZWxhdGlvbiBpcyBub3QgYWN0dWFsbHkgbmVlZGVkLlxuICogICAyLiBFbWl0IGBtZW1iZXJSZWYoaWQpYCB3aGVuIGNvcnJlbGF0aW9uIGdlbnVpbmVseSBpcyBuZWVkZWQuXG4gKiAgIDMuIE5ldmVyIGVtaXQgdGhlIHJhdyBpZGVudGlmaWVyIG9yIGEgc2xpY2Ugb2YgaXQuXG4gKlxuICogU0NIRU1FXG4gKiAgIFRydW5jYXRlZCBTSEEtMjU2LCBtYXRjaGluZyB0aGUgY29udmVudGlvbiBhbHJlYWR5IHVzZWQgYnkgQ0MtQSBtZW1vcnktcHJvdmVuYW5jZSB0ZWxlbWV0cnlcbiAqICAgKGBsaWIvbWVtb3J5L3Byb3ZlbmFuY2UvdHVybk1lbW9yeVByb3ZlbmFuY2UudHNgIGBkaWdlc3QoKWApLCBzbyBhIGxvZyBsaW5lIGFuZCBhIHByb3ZlbmFuY2VcbiAqICAgcmVjb3JkIGRlc2NyaWJpbmcgdGhlIHNhbWUgbWVtYmVyIGFncmVlIG9uIHRoZSB0b2tlbi5cbiAqL1xuXG5pbXBvcnQgeyBjcmVhdGVIYXNoIH0gZnJvbSAnY3J5cHRvJztcblxuLyoqIExlbmd0aCBvZiB0aGUgZW1pdHRlZCB0b2tlbiwgaW4gaGV4IGNoYXJhY3RlcnMuIE1hdGNoZXMgQ0MtQSB0ZWxlbWV0cnkuICovXG5jb25zdCBSRUZfTEVOR1RIID0gMTI7XG5cbi8qKlxuICogT25lLXdheSwgc3RhYmxlLCBjb3JyZWxhdGFibGUgcmVmZXJlbmNlIGZvciBhIG1lbWJlciBpZGVudGlmaWVyLlxuICpcbiAqIFJldHVybnMgYCdhbm9ueW1vdXMnYCBmb3IgYWJzZW50IGlkZW50aWZpZXJzIHNvIGNhbGwgc2l0ZXMgZG8gbm90IGhhdmUgdG8gYnJhbmNoLCBhbmQgc28gYW5cbiAqIGFic2VudCBpZCBpcyB2aXNpYmx5IGRpZmZlcmVudCBmcm9tIGEgcHJlc2VudCBvbmUgcmF0aGVyIHRoYW4gcmVuZGVyaW5nIGFzIGB1bmRlZmluZWRgLlxuICovXG5leHBvcnQgZnVuY3Rpb24gbWVtYmVyUmVmKGlkOiBzdHJpbmcgfCBudWxsIHwgdW5kZWZpbmVkKTogc3RyaW5nIHtcbiAgaWYgKGlkID09PSBudWxsIHx8IGlkID09PSB1bmRlZmluZWQgfHwgaWQgPT09ICcnKSByZXR1cm4gJ2Fub255bW91cyc7XG4gIHJldHVybiBjcmVhdGVIYXNoKCdzaGEyNTYnKS51cGRhdGUoaWQpLmRpZ2VzdCgnaGV4Jykuc2xpY2UoMCwgUkVGX0xFTkdUSCk7XG59XG4iXSwidmVyc2lvbiI6M30=

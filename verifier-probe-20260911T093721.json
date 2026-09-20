@@ -1,0 +1,14 @@
+{
+  "set": "blind",
+  "fixtures_sha256": "a8fc9a92f428c9af05a65e054c3519aac829fe81108562d162d60fa2e4a1cb3e",
+  "hhem_threshold_frozen_at": 0.5,
+  "minicheck_threshold_frozen_at": 0.5,
+  "threshold_note": "A REPORTING cut only. Raw scores are recorded. Changing it after seeing these answers is tuning to the test; it must be a separate calibration act on separate material.",
+  "not_run": [
+    {
+      "verifier": "minicheck",
+      "error": "LookupError: \n**********************************************************************\n  Resource 'punkt_tab' not found.\n  Please use the NLTK Downloader to obtain the resource:\n\n  >>> import nltk\n  >>> nltk.download('punkt_tab')\n\n  For more information see: https://www.nltk.org/data.html\n\n  Attempted to load 'tokenizers/punkt_tab/english/'\n\n  Searched in:\n    - '/Users/soullab/nltk_data'\n    - '/Users/soullab/minicheck-venv/nltk_data'\n    - '/Users/soullab/minicheck-venv/share/nltk_data'\n    - '/Users/soullab/minicheck-venv/lib/nltk_data'\n    - '/usr/share/nltk_data'\n    - '/usr/local/share/nltk_data'\n    - '/usr/lib/nltk_data'\n    - '/usr/local/lib/nltk_data'\n**********************************************************************\n"
+    }
+  ],
+  "rows": []
+}

@@ -1,0 +1,202 @@
+{
+  "hhem_threshold_frozen_at": 0.5,
+  "threshold_note": "A REPORTING cut only. Raw scores are recorded. Changing it after seeing these answers is tuning to the test; it must be a separate calibration act on separate material.",
+  "not_run": [],
+  "rows": [
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "N1-AS-ACTIVE",
+      "role": "negative",
+      "premise": "The experience facilitated a significant transformation in his relational orientation toward the natural world, and the resulting shift in perspective constituted a meaningful development in his ongoing process of integration.",
+      "hypothesis": "He actively participates in the process of integration.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.3053",
+      "scores": {
+        "consistency": 0.3053,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "N2-AS-UNDERGO",
+      "role": "negative",
+      "premise": "The experience facilitated a significant transformation in his relational orientation toward the natural world, and the resulting shift in perspective constituted a meaningful development in his ongoing process of integration.",
+      "hypothesis": "He undergoes the transformation.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8733",
+      "scores": {
+        "consistency": 0.8733,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "N3-FRAGMENT",
+      "role": "negative",
+      "premise": "his ongoing process of integration",
+      "hypothesis": "He actively participates in the integration.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.3147",
+      "scores": {
+        "consistency": 0.3147,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "N4-ASSOCIATION",
+      "role": "negative",
+      "premise": "The letter reached him in the middle of his long recovery.",
+      "hypothesis": "He actively participates in the recovery.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.1969",
+      "scores": {
+        "consistency": 0.1969,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "N5-MENTION",
+      "role": "negative",
+      "premise": "Her name appears throughout the report on the merger.",
+      "hypothesis": "She actively participates in the merger.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.1830",
+      "scores": {
+        "consistency": 0.183,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "N6-DENIAL",
+      "role": "negative-control",
+      "premise": "He took no part in the negotiation.",
+      "hypothesis": "He actively participates in the negotiation.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0581",
+      "scores": {
+        "consistency": 0.0581,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "P1-EXPLICIT",
+      "role": "positive",
+      "premise": "He actively participated in the integration process.",
+      "hypothesis": "He actively participates in the integration.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8849",
+      "scores": {
+        "consistency": 0.8849,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "P2-DOING",
+      "role": "positive",
+      "premise": "She ran every trial in the study herself, adjusting the apparatus between runs.",
+      "hypothesis": "She actively participates in the study.",
+      "expected": "entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.2475",
+      "scores": {
+        "consistency": 0.2475,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "P3-UNDERGO",
+      "role": "positive",
+      "premise": "He was sedated throughout the operation.",
+      "hypothesis": "He undergoes the operation.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.7675",
+      "scores": {
+        "consistency": 0.7675,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "P4-UNDERGO-2",
+      "role": "positive",
+      "premise": "The committee questioned her for three hours.",
+      "hypothesis": "She undergoes questioning.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8195",
+      "scores": {
+        "consistency": 0.8195,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "X1-MIXED-ACTIVE",
+      "role": "positive",
+      "premise": "Ravi chaired the first hearing and was cross-examined at the second.",
+      "hypothesis": "Ravi actively participates in the first hearing.",
+      "expected": "entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.2528",
+      "scores": {
+        "consistency": 0.2528,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "X2-MIXED-UNDERGO",
+      "role": "positive",
+      "premise": "Ravi chaired the first hearing and was cross-examined at the second.",
+      "hypothesis": "Ravi undergoes cross-examination at the second hearing.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "score=0.8931",
+      "scores": {
+        "consistency": 0.8931,
+        "threshold": 0.5
+      }
+    },
+    {
+      "verifier": "hhem",
+      "run": 1,
+      "id": "X3-MIXED-WRONG-WAY",
+      "role": "negative",
+      "premise": "Ravi chaired the first hearing and was cross-examined at the second.",
+      "hypothesis": "Ravi undergoes the first hearing as its subject rather than its chair.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "score=0.0762",
+      "scores": {
+        "consistency": 0.0762,
+        "threshold": 0.5
+      }
+    }
+  ]
+}

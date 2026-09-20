@@ -1,0 +1,75 @@
+{
+  "": {
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/master.swiftdeps"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioGraph.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioGraph.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioGraph~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioGraph.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioGraph.dia"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/AudioSessionAuthority.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioSessionAuthority.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioSessionAuthority.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioSessionAuthority~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioSessionAuthority.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/AudioSessionAuthority.dia"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/ConfigurationChange.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/ConfigurationChange.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/ConfigurationChange.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/ConfigurationChange~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/ConfigurationChange.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/ConfigurationChange.dia"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/HealthSupervisor.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/HealthSupervisor.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/HealthSupervisor.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/HealthSupervisor~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/HealthSupervisor.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/HealthSupervisor.dia"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/Journal.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Journal.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Journal.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Journal~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Journal.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Journal.dia"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/KernelState.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/KernelState.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/KernelState.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/KernelState~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/KernelState.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/KernelState.dia"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/RecoveryPolicy.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/RecoveryPolicy.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/RecoveryPolicy.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/RecoveryPolicy~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/RecoveryPolicy.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/RecoveryPolicy.dia"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/Replay.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Replay.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Replay.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Replay~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Replay.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/Replay.dia"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/StateProjection.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/StateProjection.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/StateProjection.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/StateProjection~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/StateProjection.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/StateProjection.dia"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/VoiceKernel.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/VoiceKernel.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/VoiceKernel~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/VoiceKernel.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/VoiceKernel.dia"
+  }
+}

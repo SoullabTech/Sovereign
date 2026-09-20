@@ -1,0 +1,406 @@
+{
+  "set": "detector-blind",
+  "fixtures_sha256": "2873d1fbb38db850bafc2bc17a0438ca47de2ccf85879d8e325c3177eaccfc38",
+  "hhem_threshold_frozen_at": 0.5,
+  "minicheck_threshold_frozen_at": 0.5,
+  "threshold_note": "A REPORTING cut only. Raw scores are recorded. Changing it after seeing these answers is tuning to the test; it must be a separate calibration act on separate material.",
+  "not_run": [],
+  "rows": [
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D01",
+      "role": "",
+      "family": "until",
+      "group": "",
+      "premise": "Yusuf tended the vineyard until the estate was sold.",
+      "hypothesis": "Yusuf tends the vineyard.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9092,
+        "neutral": 0.0197,
+        "contradiction": 0.0709
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D02",
+      "role": "",
+      "family": "until",
+      "group": "",
+      "premise": "Yusuf has tended the vineyard since the estate changed hands.",
+      "hypothesis": "Yusuf tends the vineyard.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0013,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D03",
+      "role": "",
+      "family": "before",
+      "group": "",
+      "premise": "Marta ran the tea house before she moved to the coast.",
+      "hypothesis": "Marta runs the tea house.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.2974,
+        "neutral": 0.1237,
+        "contradiction": 0.5791
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D04",
+      "role": "",
+      "family": "before",
+      "group": "",
+      "premise": "Marta has run the tea house since before the bypass was built.",
+      "hypothesis": "Marta runs the tea house.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.998,
+        "neutral": 0.0019,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D05",
+      "role": "",
+      "family": "after",
+      "group": "",
+      "premise": "Dov joined the bell foundry after the fire.",
+      "hypothesis": "Dov worked at the bell foundry before the fire.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.001,
+        "neutral": 0.0127,
+        "contradiction": 0.9863
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D06",
+      "role": "",
+      "family": "after",
+      "group": "",
+      "premise": "Dov joined the bell foundry after the fire and is there still.",
+      "hypothesis": "Dov works at the bell foundry.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9971,
+        "neutral": 0.0027,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D07",
+      "role": "",
+      "family": "frequency",
+      "group": "",
+      "premise": "Ingrid has led the dawn walk three times.",
+      "hypothesis": "Ingrid leads the dawn walk.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9961,
+        "neutral": 0.0037,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D08",
+      "role": "",
+      "family": "frequency",
+      "group": "",
+      "premise": "Ingrid leads the dawn walk three times a week.",
+      "hypothesis": "Ingrid leads the dawn walk.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.998,
+        "neutral": 0.0015,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D09",
+      "role": "",
+      "family": "duration",
+      "group": "",
+      "premise": "Paulo minded the canal lock for one season.",
+      "hypothesis": "Paulo minds the canal lock.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9922,
+        "neutral": 0.0053,
+        "contradiction": 0.0023
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D10",
+      "role": "",
+      "family": "duration",
+      "group": "",
+      "premise": "Paulo has minded the canal lock for eleven seasons and shows no sign of stopping.",
+      "hypothesis": "Paulo minds the canal lock.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.999,
+        "neutral": 0.0009,
+        "contradiction": 0.0001
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D11",
+      "role": "",
+      "family": "temporary-role",
+      "group": "",
+      "premise": "Runa is standing in as harbourmaster while the post is advertised.",
+      "hypothesis": "Runa is the harbourmaster.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.6772,
+        "neutral": 0.0962,
+        "contradiction": 0.2268
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D12",
+      "role": "",
+      "family": "temporary-role",
+      "group": "",
+      "premise": "Runa was confirmed as harbourmaster in the spring and holds the post.",
+      "hypothesis": "Runa is the harbourmaster.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.998,
+        "neutral": 0.0018,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D13",
+      "role": "",
+      "family": "ended-relationship",
+      "group": "",
+      "premise": "Hiroshi and the seed bank parted ways last autumn.",
+      "hypothesis": "Hiroshi works with the seed bank.",
+      "expected": "not_entailed",
+      "observed": "not_entailed",
+      "raw_label": "contradiction",
+      "scores": {
+        "entailment": 0.0186,
+        "neutral": 0.0138,
+        "contradiction": 0.9678
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D14",
+      "role": "",
+      "family": "ended-relationship",
+      "group": "",
+      "premise": "Hiroshi has worked with the seed bank every autumn since it opened.",
+      "hypothesis": "Hiroshi works with the seed bank.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9976,
+        "neutral": 0.0022,
+        "contradiction": 0.0003
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D15",
+      "role": "",
+      "family": "conditional-state",
+      "group": "",
+      "premise": "If the hail holds off, Zs\u00f3fia will open the glasshouse.",
+      "hypothesis": "Zs\u00f3fia opens the glasshouse.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.771,
+        "neutral": 0.2278,
+        "contradiction": 0.0011
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D16",
+      "role": "",
+      "family": "conditional-state",
+      "group": "",
+      "premise": "Zs\u00f3fia opens the glasshouse each morning unless the hail is heavy.",
+      "hypothesis": "Zs\u00f3fia opens the glasshouse.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9922,
+        "neutral": 0.0073,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D17",
+      "role": "",
+      "family": "interrupted-participation",
+      "group": "",
+      "premise": "Amara climbed with the gym's team until her wrist gave out.",
+      "hypothesis": "Amara climbs with the gym's team.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9971,
+        "neutral": 0.0022,
+        "contradiction": 0.0005
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D18",
+      "role": "",
+      "family": "interrupted-participation",
+      "group": "",
+      "premise": "Amara climbs with the gym's team, though she sat out two months with a broken wrist.",
+      "hypothesis": "Amara climbs with the gym's team.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9985,
+        "neutral": 0.0012,
+        "contradiction": 0.0002
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D19",
+      "role": "",
+      "family": "changing-identity",
+      "group": "",
+      "premise": "Kian trained as a bookbinder before turning to cabinetmaking.",
+      "hypothesis": "Kian is a bookbinder.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.5073,
+        "neutral": 0.0558,
+        "contradiction": 0.4368
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D20",
+      "role": "",
+      "family": "changing-identity",
+      "group": "",
+      "premise": "Kian trained as a bookbinder and has bound books for thirty years.",
+      "hypothesis": "Kian is a bookbinder.",
+      "expected": "entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9976,
+        "neutral": 0.0019,
+        "contradiction": 0.0004
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D21",
+      "role": "",
+      "family": "until",
+      "group": "",
+      "premise": "Esme kept the observatory logs until the new director arrived.",
+      "hypothesis": "Esme keeps the observatory logs.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.877,
+        "neutral": 0.0347,
+        "contradiction": 0.0881
+      }
+    },
+    {
+      "verifier": "deberta",
+      "run": 1,
+      "id": "D22",
+      "role": "",
+      "family": "frequency",
+      "group": "",
+      "premise": "Tobias has stood in at the radio station on two occasions.",
+      "hypothesis": "Tobias presents at the radio station.",
+      "expected": "not_entailed",
+      "observed": "entailed",
+      "raw_label": "entailment",
+      "scores": {
+        "entailment": 0.9854,
+        "neutral": 0.0138,
+        "contradiction": 0.001
+      }
+    }
+  ]
+}

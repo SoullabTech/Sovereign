@@ -1,0 +1,102 @@
+2e9951a6ef19ab397ff43a996b04fcd2
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * #717 (narrow containment) — /voice-controller-test founder gate.
+ *
+ * The route was publicly served in production until 2026-07-24: no accessMatrix
+ * rule, and `checkAccess()` allows unmapped routes because ACCESS_CONTROL_MODE
+ * defaults to 'permissive'. "Kelly only" existed only as a source comment.
+ *
+ * These prove the two halves that make the comment enforceable:
+ *   1. the accessMatrix rule exists, so middleware no longer falls through to
+ *      the permissive unmapped default for this path;
+ *   2. the layout refuses everyone who is not an allowlisted founder, with
+ *      identity taken from the server session.
+ */
+const accessMatrix_1 = require("@/config/accessMatrix");
+describe('#717 — /voice-controller-test is no longer an unmapped route', () => {
+    const PATH = '/voice-controller-test';
+    it('has an explicit accessMatrix rule (was unmapped → permissive → public)', () => {
+        const rule = (0, accessMatrix_1.matchRule)(PATH);
+        expect(rule).toBeDefined();
+        expect(rule === null || rule === void 0 ? void 0 : rule.public).not.toBe(true);
+    });
+    it('unauthenticated access is denied, and NOT via the unmapped fall-through', () => {
+        const res = (0, accessMatrix_1.checkAccess)(PATH, 'free', ['member'], false);
+        expect(res.allowed).toBe(false);
+        // The distinction that matters: this must be a real rule match, not
+        // `reason: 'no-rule-match'`. Under strict mode an unmapped route would also
+        // deny — but for the wrong reason, and it would flip back to public the
+        // moment the mode changed.
+        expect(res.reason).not.toBe('no-rule-match');
+        expect(res.unmapped).toBeFalsy();
+    });
+    it('an authenticated member passes middleware — the founder check is the layout, by design', () => {
+        // Middleware only proves "authenticated". Founder identity cannot be
+        // resolved in Edge runtime (no pg driver), so requireFounder() runs in the
+        // layout. This test pins that split so a future refactor cannot quietly
+        // assume middleware is doing the founder check.
+        const res = (0, accessMatrix_1.checkAccess)(PATH, 'free', ['member'], true);
+        expect(res.allowed).toBe(true);
+    });
+    it('the rule does not leak the route to a public prefix match', () => {
+        const rule = (0, accessMatrix_1.matchRule)(PATH);
+        expect(rule === null || rule === void 0 ? void 0 : rule.exact).toBe(PATH);
+    });
+});
+describe('#717 — the founder gate itself fails closed', () => {
+    const load = async (env) => {
+        jest.resetModules();
+        const prev = process.env.FOUNDER_MEMBER_IDS;
+        if (env === undefined)
+            delete process.env.FOUNDER_MEMBER_IDS;
+        else
+            process.env.FOUNDER_MEMBER_IDS = env;
+        const mod = await Promise.resolve().then(() => __importStar(require('@/lib/founder/founderAuth')));
+        process.env.FOUNDER_MEMBER_IDS = prev;
+        return mod;
+    };
+    it('an unset FOUNDER_MEMBER_IDS admits nobody (fails closed, not open)', async () => {
+        const { getFounderAllowlistSize } = await load(undefined);
+        expect(getFounderAllowlistSize()).toBe(0);
+    });
+    it('a populated allowlist is parsed, so the gate is enforceable at all', async () => {
+        const { getFounderAllowlistSize } = await load('ed52e28f-5331-4288-a9ab-4dae230079c9, 11111111-1111-4111-8111-111111111111');
+        expect(getFounderAllowlistSize()).toBe(2);
+    });
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL19fdGVzdHNfXy92b2ljZS1jb250cm9sbGVyLXRlc3QtZ2F0ZS50ZXN0LnRzIiwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUE7Ozs7Ozs7Ozs7OztHQVlHO0FBQ0gsd0RBQStEO0FBRS9ELFFBQVEsQ0FBQyw4REFBOEQsRUFBRSxHQUFHLEVBQUU7SUFDNUUsTUFBTSxJQUFJLEdBQUcsd0JBQXdCLENBQUM7SUFFdEMsRUFBRSxDQUFDLHdFQUF3RSxFQUFFLEdBQUcsRUFBRTtRQUNoRixNQUFNLElBQUksR0FBRyxJQUFBLHdCQUFTLEVBQUMsSUFBSSxDQUFDLENBQUM7UUFDN0IsTUFBTSxDQUFDLElBQUksQ0FBQyxDQUFDLFdBQVcsRUFBRSxDQUFDO1FBQzNCLE1BQU0sQ0FBQyxJQUFJLGFBQUosSUFBSSx1QkFBSixJQUFJLENBQUUsTUFBTSxDQUFDLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsQ0FBQztJQUN0QyxDQUFDLENBQUMsQ0FBQztJQUVILEVBQUUsQ0FBQyx5RUFBeUUsRUFBRSxHQUFHLEVBQUU7UUFDakYsTUFBTSxHQUFHLEdBQUcsSUFBQSwwQkFBVyxFQUFDLElBQUksRUFBRSxNQUFNLEVBQUUsQ0FBQyxRQUFRLENBQUMsRUFBRSxLQUFLLENBQUMsQ0FBQztRQUN6RCxNQUFNLENBQUMsR0FBRyxDQUFDLE9BQU8sQ0FBQyxDQUFDLElBQUksQ0FBQyxLQUFLLENBQUMsQ0FBQztRQUNoQyxvRUFBb0U7UUFDcEUsNEVBQTRFO1FBQzVFLHdFQUF3RTtRQUN4RSwyQkFBMkI7UUFDM0IsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLENBQUMsQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLGVBQWUsQ0FBQyxDQUFDO1FBQzdDLE1BQU0sQ0FBQyxHQUFHLENBQUMsUUFBUSxDQUFDLENBQUMsU0FBUyxFQUFFLENBQUM7SUFDbkMsQ0FBQyxDQUFDLENBQUM7SUFFSCxFQUFFLENBQUMsd0ZBQXdGLEVBQUUsR0FBRyxFQUFFO1FBQ2hHLHFFQUFxRTtRQUNyRSwyRUFBMkU7UUFDM0Usd0VBQXdFO1FBQ3hFLGdEQUFnRDtRQUNoRCxNQUFNLEdBQUcsR0FBRyxJQUFBLDBCQUFXLEVBQUMsSUFBSSxFQUFFLE1BQU0sRUFBRSxDQUFDLFFBQVEsQ0FBQyxFQUFFLElBQUksQ0FBQyxDQUFDO1FBQ3hELE1BQU0sQ0FBQyxHQUFHLENBQUMsT0FBTyxDQUFDLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxDQUFDO0lBQ2pDLENBQUMsQ0FBQyxDQUFDO0lBRUgsRUFBRSxDQUFDLDJEQUEyRCxFQUFFLEdBQUcsRUFBRTtRQUNuRSxNQUFNLElBQUksR0FBRyxJQUFBLHdCQUFTLEVBQUMsSUFBSSxDQUFDLENBQUM7UUFDN0IsTUFBTSxDQUFDLElBQUksYUFBSixJQUFJLHVCQUFKLElBQUksQ0FBRSxLQUFLLENBQUMsQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLENBQUM7SUFDakMsQ0FBQyxDQUFDLENBQUM7QUFDTCxDQUFDLENBQUMsQ0FBQztBQUVILFFBQVEsQ0FBQyw2Q0FBNkMsRUFBRSxHQUFHLEVBQUU7SUFDM0QsTUFBTSxJQUFJLEdBQUcsS0FBSyxFQUFFLEdBQVksRUFBRSxFQUFFO1FBQ2xDLElBQUksQ0FBQyxZQUFZLEVBQUUsQ0FBQztRQUNwQixNQUFNLElBQUksR0FBRyxPQUFPLENBQUMsR0FBRyxDQUFDLGtCQUFrQixDQUFDO1FBQzVDLElBQUksR0FBRyxLQUFLLFNBQVM7WUFBRSxPQUFPLE9BQU8sQ0FBQyxHQUFHLENBQUMsa0JBQWtCLENBQUM7O1lBQ3hELE9BQU8sQ0FBQyxHQUFHLENBQUMsa0JBQWtCLEdBQUcsR0FBRyxDQUFDO1FBQzFDLE1BQU0sR0FBRyxHQUFHLHdEQUFhLDJCQUEyQixHQUFDLENBQUM7UUFDdEQsT0FBTyxDQUFDLEdBQUcsQ0FBQyxrQkFBa0IsR0FBRyxJQUFJLENBQUM7UUFDdEMsT0FBTyxHQUFHLENBQUM7SUFDYixDQUFDLENBQUM7SUFFRixFQUFFLENBQUMsb0VBQW9FLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDbEYsTUFBTSxFQUFFLHVCQUF1QixFQUFFLEdBQUcsTUFBTSxJQUFJLENBQUMsU0FBUyxDQUFDLENBQUM7UUFDMUQsTUFBTSxDQUFDLHVCQUF1QixFQUFFLENBQUMsQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUM7SUFDNUMsQ0FBQyxDQUFDLENBQUM7SUFFSCxFQUFFLENBQUMsb0VBQW9FLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDbEYsTUFBTSxFQUFFLHVCQUF1QixFQUFFLEdBQUcsTUFBTSxJQUFJLENBQzVDLDRFQUE0RSxDQUM3RSxDQUFDO1FBQ0YsTUFBTSxDQUFDLHVCQUF1QixFQUFFLENBQUMsQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUM7SUFDNUMsQ0FBQyxDQUFDLENBQUM7QUFDTCxDQUFDLENBQUMsQ0FBQyIsIm5hbWVzIjpbXSwic291cmNlcyI6WyIvcHJpdmF0ZS90bXAvY2xhdWRlLTUwMS8tVXNlcnMtc291bGxhYi1NQUlBLVNPVkVSRUlHTi9hOTFkZDEyMy0xYjBmLTRiODktYmRkOC1kZTA0YmFjMDUwODEvc2NyYXRjaHBhZC93dC1lbmR1cmFuY2UvX190ZXN0c19fL3ZvaWNlLWNvbnRyb2xsZXItdGVzdC1nYXRlLnRlc3QudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXG4gKiAjNzE3IChuYXJyb3cgY29udGFpbm1lbnQpIOKAlCAvdm9pY2UtY29udHJvbGxlci10ZXN0IGZvdW5kZXIgZ2F0ZS5cbiAqXG4gKiBUaGUgcm91dGUgd2FzIHB1YmxpY2x5IHNlcnZlZCBpbiBwcm9kdWN0aW9uIHVudGlsIDIwMjYtMDctMjQ6IG5vIGFjY2Vzc01hdHJpeFxuICogcnVsZSwgYW5kIGBjaGVja0FjY2VzcygpYCBhbGxvd3MgdW5tYXBwZWQgcm91dGVzIGJlY2F1c2UgQUNDRVNTX0NPTlRST0xfTU9ERVxuICogZGVmYXVsdHMgdG8gJ3Blcm1pc3NpdmUnLiBcIktlbGx5IG9ubHlcIiBleGlzdGVkIG9ubHkgYXMgYSBzb3VyY2UgY29tbWVudC5cbiAqXG4gKiBUaGVzZSBwcm92ZSB0aGUgdHdvIGhhbHZlcyB0aGF0IG1ha2UgdGhlIGNvbW1lbnQgZW5mb3JjZWFibGU6XG4gKiAgIDEuIHRoZSBhY2Nlc3NNYXRyaXggcnVsZSBleGlzdHMsIHNvIG1pZGRsZXdhcmUgbm8gbG9uZ2VyIGZhbGxzIHRocm91Z2ggdG9cbiAqICAgICAgdGhlIHBlcm1pc3NpdmUgdW5tYXBwZWQgZGVmYXVsdCBmb3IgdGhpcyBwYXRoO1xuICogICAyLiB0aGUgbGF5b3V0IHJlZnVzZXMgZXZlcnlvbmUgd2hvIGlzIG5vdCBhbiBhbGxvd2xpc3RlZCBmb3VuZGVyLCB3aXRoXG4gKiAgICAgIGlkZW50aXR5IHRha2VuIGZyb20gdGhlIHNlcnZlciBzZXNzaW9uLlxuICovXG5pbXBvcnQgeyBjaGVja0FjY2VzcywgbWF0Y2hSdWxlIH0gZnJvbSAnQC9jb25maWcvYWNjZXNzTWF0cml4JztcblxuZGVzY3JpYmUoJyM3MTcg4oCUIC92b2ljZS1jb250cm9sbGVyLXRlc3QgaXMgbm8gbG9uZ2VyIGFuIHVubWFwcGVkIHJvdXRlJywgKCkgPT4ge1xuICBjb25zdCBQQVRIID0gJy92b2ljZS1jb250cm9sbGVyLXRlc3QnO1xuXG4gIGl0KCdoYXMgYW4gZXhwbGljaXQgYWNjZXNzTWF0cml4IHJ1bGUgKHdhcyB1bm1hcHBlZCDihpIgcGVybWlzc2l2ZSDihpIgcHVibGljKScsICgpID0+IHtcbiAgICBjb25zdCBydWxlID0gbWF0Y2hSdWxlKFBBVEgpO1xuICAgIGV4cGVjdChydWxlKS50b0JlRGVmaW5lZCgpO1xuICAgIGV4cGVjdChydWxlPy5wdWJsaWMpLm5vdC50b0JlKHRydWUpO1xuICB9KTtcblxuICBpdCgndW5hdXRoZW50aWNhdGVkIGFjY2VzcyBpcyBkZW5pZWQsIGFuZCBOT1QgdmlhIHRoZSB1bm1hcHBlZCBmYWxsLXRocm91Z2gnLCAoKSA9PiB7XG4gICAgY29uc3QgcmVzID0gY2hlY2tBY2Nlc3MoUEFUSCwgJ2ZyZWUnLCBbJ21lbWJlciddLCBmYWxzZSk7XG4gICAgZXhwZWN0KHJlcy5hbGxvd2VkKS50b0JlKGZhbHNlKTtcbiAgICAvLyBUaGUgZGlzdGluY3Rpb24gdGhhdCBtYXR0ZXJzOiB0aGlzIG11c3QgYmUgYSByZWFsIHJ1bGUgbWF0Y2gsIG5vdFxuICAgIC8vIGByZWFzb246ICduby1ydWxlLW1hdGNoJ2AuIFVuZGVyIHN0cmljdCBtb2RlIGFuIHVubWFwcGVkIHJvdXRlIHdvdWxkIGFsc29cbiAgICAvLyBkZW55IOKAlCBidXQgZm9yIHRoZSB3cm9uZyByZWFzb24sIGFuZCBpdCB3b3VsZCBmbGlwIGJhY2sgdG8gcHVibGljIHRoZVxuICAgIC8vIG1vbWVudCB0aGUgbW9kZSBjaGFuZ2VkLlxuICAgIGV4cGVjdChyZXMucmVhc29uKS5ub3QudG9CZSgnbm8tcnVsZS1tYXRjaCcpO1xuICAgIGV4cGVjdChyZXMudW5tYXBwZWQpLnRvQmVGYWxzeSgpO1xuICB9KTtcblxuICBpdCgnYW4gYXV0aGVudGljYXRlZCBtZW1iZXIgcGFzc2VzIG1pZGRsZXdhcmUg4oCUIHRoZSBmb3VuZGVyIGNoZWNrIGlzIHRoZSBsYXlvdXQsIGJ5IGRlc2lnbicsICgpID0+IHtcbiAgICAvLyBNaWRkbGV3YXJlIG9ubHkgcHJvdmVzIFwiYXV0aGVudGljYXRlZFwiLiBGb3VuZGVyIGlkZW50aXR5IGNhbm5vdCBiZVxuICAgIC8vIHJlc29sdmVkIGluIEVkZ2UgcnVudGltZSAobm8gcGcgZHJpdmVyKSwgc28gcmVxdWlyZUZvdW5kZXIoKSBydW5zIGluIHRoZVxuICAgIC8vIGxheW91dC4gVGhpcyB0ZXN0IHBpbnMgdGhhdCBzcGxpdCBzbyBhIGZ1dHVyZSByZWZhY3RvciBjYW5ub3QgcXVpZXRseVxuICAgIC8vIGFzc3VtZSBtaWRkbGV3YXJlIGlzIGRvaW5nIHRoZSBmb3VuZGVyIGNoZWNrLlxuICAgIGNvbnN0IHJlcyA9IGNoZWNrQWNjZXNzKFBBVEgsICdmcmVlJywgWydtZW1iZXInXSwgdHJ1ZSk7XG4gICAgZXhwZWN0KHJlcy5hbGxvd2VkKS50b0JlKHRydWUpO1xuICB9KTtcblxuICBpdCgndGhlIHJ1bGUgZG9lcyBub3QgbGVhayB0aGUgcm91dGUgdG8gYSBwdWJsaWMgcHJlZml4IG1hdGNoJywgKCkgPT4ge1xuICAgIGNvbnN0IHJ1bGUgPSBtYXRjaFJ1bGUoUEFUSCk7XG4gICAgZXhwZWN0KHJ1bGU/LmV4YWN0KS50b0JlKFBBVEgpO1xuICB9KTtcbn0pO1xuXG5kZXNjcmliZSgnIzcxNyDigJQgdGhlIGZvdW5kZXIgZ2F0ZSBpdHNlbGYgZmFpbHMgY2xvc2VkJywgKCkgPT4ge1xuICBjb25zdCBsb2FkID0gYXN5bmMgKGVudj86IHN0cmluZykgPT4ge1xuICAgIGplc3QucmVzZXRNb2R1bGVzKCk7XG4gICAgY29uc3QgcHJldiA9IHByb2Nlc3MuZW52LkZPVU5ERVJfTUVNQkVSX0lEUztcbiAgICBpZiAoZW52ID09PSB1bmRlZmluZWQpIGRlbGV0ZSBwcm9jZXNzLmVudi5GT1VOREVSX01FTUJFUl9JRFM7XG4gICAgZWxzZSBwcm9jZXNzLmVudi5GT1VOREVSX01FTUJFUl9JRFMgPSBlbnY7XG4gICAgY29uc3QgbW9kID0gYXdhaXQgaW1wb3J0KCdAL2xpYi9mb3VuZGVyL2ZvdW5kZXJBdXRoJyk7XG4gICAgcHJvY2Vzcy5lbnYuRk9VTkRFUl9NRU1CRVJfSURTID0gcHJldjtcbiAgICByZXR1cm4gbW9kO1xuICB9O1xuXG4gIGl0KCdhbiB1bnNldCBGT1VOREVSX01FTUJFUl9JRFMgYWRtaXRzIG5vYm9keSAoZmFpbHMgY2xvc2VkLCBub3Qgb3BlbiknLCBhc3luYyAoKSA9PiB7XG4gICAgY29uc3QgeyBnZXRGb3VuZGVyQWxsb3dsaXN0U2l6ZSB9ID0gYXdhaXQgbG9hZCh1bmRlZmluZWQpO1xuICAgIGV4cGVjdChnZXRGb3VuZGVyQWxsb3dsaXN0U2l6ZSgpKS50b0JlKDApO1xuICB9KTtcblxuICBpdCgnYSBwb3B1bGF0ZWQgYWxsb3dsaXN0IGlzIHBhcnNlZCwgc28gdGhlIGdhdGUgaXMgZW5mb3JjZWFibGUgYXQgYWxsJywgYXN5bmMgKCkgPT4ge1xuICAgIGNvbnN0IHsgZ2V0Rm91bmRlckFsbG93bGlzdFNpemUgfSA9IGF3YWl0IGxvYWQoXG4gICAgICAnZWQ1MmUyOGYtNTMzMS00Mjg4LWE5YWItNGRhZTIzMDA3OWM5LCAxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMTEnXG4gICAgKTtcbiAgICBleHBlY3QoZ2V0Rm91bmRlckFsbG93bGlzdFNpemUoKSkudG9CZSgyKTtcbiAgfSk7XG59KTtcbiJdLCJ2ZXJzaW9uIjozfQ==

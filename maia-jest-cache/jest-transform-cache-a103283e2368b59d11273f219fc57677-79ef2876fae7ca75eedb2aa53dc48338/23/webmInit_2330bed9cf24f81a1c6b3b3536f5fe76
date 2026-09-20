@@ -1,0 +1,37 @@
+2b482b808bbe50d3b12d490453b09eb9
+"use strict";
+/**
+ * WebM EBML init-segment helpers.
+ *
+ * A MediaRecorder's first dataavailable chunk contains an EBML/Segment header
+ * (codec info, stream metadata) followed by the first Cluster of audio. Later
+ * chunks are Cluster-only — they cannot be decoded standalone, so the init
+ * segment must be prepended to them.
+ *
+ * The init segment is everything BEFORE the first Cluster element. Storing the
+ * full first chunk and prepending it (header + audio) causes upstream Whisper
+ * to re-transcribe the prefix audio on every later chunk — the source of the
+ * phantom-prefix contamination this module exists to prevent.
+ *
+ * EBML Cluster element ID = 0x1F 0x43 0xB6 0x75.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.findFirstClusterOffset = findFirstClusterOffset;
+/**
+ * Find the byte offset of the first EBML Cluster element in a WebM buffer.
+ * Returns -1 if the Cluster element ID is not found.
+ */
+function findFirstClusterOffset(buf) {
+    if (buf.length < 4)
+        return -1;
+    for (let i = 0; i <= buf.length - 4; i++) {
+        if (buf[i] === 0x1f &&
+            buf[i + 1] === 0x43 &&
+            buf[i + 2] === 0xb6 &&
+            buf[i + 3] === 0x75) {
+            return i;
+        }
+    }
+    return -1;
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL2xpYi92b2ljZS93ZWJtSW5pdC50cyIsIm1hcHBpbmdzIjoiO0FBQUE7Ozs7Ozs7Ozs7Ozs7O0dBY0c7O0FBTUgsd0RBYUM7QUFqQkQ7OztHQUdHO0FBQ0gsU0FBZ0Isc0JBQXNCLENBQUMsR0FBZTtJQUNwRCxJQUFJLEdBQUcsQ0FBQyxNQUFNLEdBQUcsQ0FBQztRQUFFLE9BQU8sQ0FBQyxDQUFDLENBQUM7SUFDOUIsS0FBSyxJQUFJLENBQUMsR0FBRyxDQUFDLEVBQUUsQ0FBQyxJQUFJLEdBQUcsQ0FBQyxNQUFNLEdBQUcsQ0FBQyxFQUFFLENBQUMsRUFBRSxFQUFFLENBQUM7UUFDekMsSUFDRSxHQUFHLENBQUMsQ0FBQyxDQUFDLEtBQUssSUFBSTtZQUNmLEdBQUcsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxDQUFDLEtBQUssSUFBSTtZQUNuQixHQUFHLENBQUMsQ0FBQyxHQUFHLENBQUMsQ0FBQyxLQUFLLElBQUk7WUFDbkIsR0FBRyxDQUFDLENBQUMsR0FBRyxDQUFDLENBQUMsS0FBSyxJQUFJLEVBQ25CLENBQUM7WUFDRCxPQUFPLENBQUMsQ0FBQztRQUNYLENBQUM7SUFDSCxDQUFDO0lBQ0QsT0FBTyxDQUFDLENBQUMsQ0FBQztBQUNaLENBQUMiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL3ByaXZhdGUvdG1wL2NsYXVkZS01MDEvLVVzZXJzLXNvdWxsYWItTUFJQS1TT1ZFUkVJR04vYTkxZGQxMjMtMWIwZi00Yjg5LWJkZDgtZGUwNGJhYzA1MDgxL3NjcmF0Y2hwYWQvd3QtZW5kdXJhbmNlL2xpYi92b2ljZS93ZWJtSW5pdC50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIFdlYk0gRUJNTCBpbml0LXNlZ21lbnQgaGVscGVycy5cbiAqXG4gKiBBIE1lZGlhUmVjb3JkZXIncyBmaXJzdCBkYXRhYXZhaWxhYmxlIGNodW5rIGNvbnRhaW5zIGFuIEVCTUwvU2VnbWVudCBoZWFkZXJcbiAqIChjb2RlYyBpbmZvLCBzdHJlYW0gbWV0YWRhdGEpIGZvbGxvd2VkIGJ5IHRoZSBmaXJzdCBDbHVzdGVyIG9mIGF1ZGlvLiBMYXRlclxuICogY2h1bmtzIGFyZSBDbHVzdGVyLW9ubHkg4oCUIHRoZXkgY2Fubm90IGJlIGRlY29kZWQgc3RhbmRhbG9uZSwgc28gdGhlIGluaXRcbiAqIHNlZ21lbnQgbXVzdCBiZSBwcmVwZW5kZWQgdG8gdGhlbS5cbiAqXG4gKiBUaGUgaW5pdCBzZWdtZW50IGlzIGV2ZXJ5dGhpbmcgQkVGT1JFIHRoZSBmaXJzdCBDbHVzdGVyIGVsZW1lbnQuIFN0b3JpbmcgdGhlXG4gKiBmdWxsIGZpcnN0IGNodW5rIGFuZCBwcmVwZW5kaW5nIGl0IChoZWFkZXIgKyBhdWRpbykgY2F1c2VzIHVwc3RyZWFtIFdoaXNwZXJcbiAqIHRvIHJlLXRyYW5zY3JpYmUgdGhlIHByZWZpeCBhdWRpbyBvbiBldmVyeSBsYXRlciBjaHVuayDigJQgdGhlIHNvdXJjZSBvZiB0aGVcbiAqIHBoYW50b20tcHJlZml4IGNvbnRhbWluYXRpb24gdGhpcyBtb2R1bGUgZXhpc3RzIHRvIHByZXZlbnQuXG4gKlxuICogRUJNTCBDbHVzdGVyIGVsZW1lbnQgSUQgPSAweDFGIDB4NDMgMHhCNiAweDc1LlxuICovXG5cbi8qKlxuICogRmluZCB0aGUgYnl0ZSBvZmZzZXQgb2YgdGhlIGZpcnN0IEVCTUwgQ2x1c3RlciBlbGVtZW50IGluIGEgV2ViTSBidWZmZXIuXG4gKiBSZXR1cm5zIC0xIGlmIHRoZSBDbHVzdGVyIGVsZW1lbnQgSUQgaXMgbm90IGZvdW5kLlxuICovXG5leHBvcnQgZnVuY3Rpb24gZmluZEZpcnN0Q2x1c3Rlck9mZnNldChidWY6IFVpbnQ4QXJyYXkpOiBudW1iZXIge1xuICBpZiAoYnVmLmxlbmd0aCA8IDQpIHJldHVybiAtMTtcbiAgZm9yIChsZXQgaSA9IDA7IGkgPD0gYnVmLmxlbmd0aCAtIDQ7IGkrKykge1xuICAgIGlmIChcbiAgICAgIGJ1ZltpXSA9PT0gMHgxZiAmJlxuICAgICAgYnVmW2kgKyAxXSA9PT0gMHg0MyAmJlxuICAgICAgYnVmW2kgKyAyXSA9PT0gMHhiNiAmJlxuICAgICAgYnVmW2kgKyAzXSA9PT0gMHg3NVxuICAgICkge1xuICAgICAgcmV0dXJuIGk7XG4gICAgfVxuICB9XG4gIHJldHVybiAtMTtcbn1cbiJdLCJ2ZXJzaW9uIjozfQ==

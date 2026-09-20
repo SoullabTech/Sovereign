@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.build/master.swiftdeps"
+  },
+  "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.build/runner.d",
+    "object": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernelPackageTests.build/runner.dia"
+  }
+}

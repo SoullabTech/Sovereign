@@ -1,0 +1,3 @@
+module VoiceKernel {
+    header "/Users/soullab/MAIA-SOVEREIGN/ios/VoiceKernel/.build/arm64-apple-macosx/debug/VoiceKernel.build/include/VoiceKernel-Swift.h"
+}

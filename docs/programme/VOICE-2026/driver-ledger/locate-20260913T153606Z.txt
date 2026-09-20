@@ -1,0 +1,4 @@
+# locate 20260913T153606Z — expected dylib UUID 11A057AA-4A3C-3CAE-8C28-E29792489459
+other   CC0D3604-7902-373E-A2BB-2C093D9BF804  mtime 2026-09-12T12:37:57  /Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelHarness-afqjfcjktctgkjbejscivlpbxqtc/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+## summary: 1 dylib(s) inspected, 0 matching 11A057AA-4A3C-3CAE-8C28-E29792489459
+## verdict: NOT FOUND — STOP. The exact historical binary is not on this Mac under the searched roots. Do not rebuild.
