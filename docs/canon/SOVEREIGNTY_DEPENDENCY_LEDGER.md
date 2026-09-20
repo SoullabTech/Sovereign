@@ -242,15 +242,34 @@ measured latency reason (`~30s/turn` at 7b). ⛔ Not authorization to flip it.
 
 **F2 — Sanctuary is a persistence boundary, not a transmission boundary.**
 `lib/sanctuary/sanctuaryGuards.ts` states its own scope precisely: *"nothing from
-a Sanctuary session enters persistence."* The guards are correct and do what they
-say. But a Sanctuary turn still crosses to the cognition provider (§3.3) — it must,
-or MAIA cannot answer. The canon's UI copy reads:
+a Sanctuary session enters persistence."* But a Sanctuary turn still crosses to the
+cognition provider (§3.3) — it must, or MAIA cannot answer.
+
+⚠️ **Amended 2026-09-20 after verification — the enforcement is not where the law is
+written.** `sanctuaryGuards.ts` has **zero non-test importers**. The invariant is
+enforced today by three separate mechanisms, none of which routes through it:
+
+| Vector | Enforcement | Evidence |
+|---|---|---|
+| Session summary | boundary-enforced, by an **inline duplicate** of the guard | `lib/memory/stores/SessionSummaryStore.ts:57` |
+| Turns | **caller-enforced** — route returns early, sovereign service checks per tier; the store writes unconditionally | `sanctuaryGuards.ts` header, self-reported |
+| Library keep | route-level check before any DB write | `sanctuaryGuards.ts` header, self-reported |
+
+⛔ This is **not** a claim that the invariant is violated — no violation was looked
+for or found. It is a claim about *where the invariant lives*: the named, testable
+form of the law is dead code, and enforcement is carried by duplication and caller
+discipline. That is the defect class this programme names repeatedly — law written
+at one address, applied at another.
+
+The canon's UI copy reads:
 
 > *Sanctuary Mode — This session won't be remembered. Speak freely.*
 
 *Won't be remembered* is accurate. ⚠️ *Speak freely* may be read by a member as
 *this stays here*, which is true of MAIA's memory and not true of the provider
-boundary. **This is a claim-discipline question, not an implementation defect** —
+boundary. **The transmission point is a claim-discipline question, not an implementation
+defect**; the enforcement-location point above is a separate, structural
+observation —
 and the one place in the system where the gap between the two could matter most to
 a person. Routed to founder; ⛔ no copy changed here.
 
