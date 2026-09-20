@@ -235,6 +235,34 @@ ls "$H/work-units-v2/execution-grants/$WU.jsonl" 2>&1   # → No such file or di
 
 ⚠️ Note on citation hygiene: `main.js:833` returns `work_unit_id` on the **legacy** create branch; the canonical-v2 path returns earlier at `:803` via `createCanonicalV2`. Both produce the id at creation — the conclusion is unchanged, but the canonical-v2 id is minted in `canonical-work-unit-v2.js`, and that is the line to cite.
 
+## §J — Restarting Ollama to claim 65536 (⚠️ two hazards)
+
+**J1 — ⛔ `> ~/.ollama/logs/server.log` TRUNCATES the witness.** The redirect destroys the §G calibration artifact (`745251 → 764260`) *in the same file the witness depends on*. The numeric result survives in this record; the artifact does not. **Use `>>`.** Preserve the prior log first:
+```bash
+cp ~/.ollama/logs/server.log ~/.ollama/logs/server.log.pre-e3-restart
+```
+
+**J2 — ⛔ a shell-backgrounded server can die mid-run and spend the grant.** `ollama serve &` from an interactive shell dies with the terminal (and may race an auto-restarting Ollama.app for port 11434 — two servers, or the app's server wins and the env never applies). A server death during Confirm Execute throws → `exit_code: -1` → **`CONSUMED`**. Identify the management mode first:
+```bash
+pgrep -fl ollama; launchctl list | grep -i ollama
+```
+- **App/launchd-managed** → quit Ollama.app, then `launchctl setenv OLLAMA_CONTEXT_LENGTH 65536`, then relaunch the app. The GUI server inherits it.
+- **Manual** → `pkill -f "ollama serve"`, then:
+```bash
+OLLAMA_CONTEXT_LENGTH=65536 nohup ollama serve >> ~/.ollama/logs/server.log 2>&1 & disown
+```
+
+**J3 — ⚠️ ordering: `n_ctx` is only written when a model LOADS.** Grepping a freshly restarted server's log returns nothing — that is not a failure. **Warm first, then grep**, which also re-establishes A2 and §G in one pass:
+```bash
+pgrep -fl "ollama serve" | wc -l          # expect exactly 1 server
+B=$(wc -c < ~/.ollama/logs/server.log)
+ollama run qwen3-coder:30b "ok" --keepalive 30m
+A=$(wc -c < ~/.ollama/logs/server.log); echo "delta=$((A-B))"     # §G: must be > 0
+grep -aiE "llama_context: n_ctx |n_ctx_slot" ~/.ollama/logs/server.log | tail -5   # expect 65536
+```
+
+**After restart, A2 and §G are both VOID until re-run** — the model is unloaded and the witness must be proven live against **the server that will actually serve the run**, not its predecessor.
+
 ## §E — Return
 
 Work Unit id · bound SHA · route participant + digest · W3T binding · provider/model/adapter · Review standing · grant id · **the four B5 probes** · standing before Confirm · fresh admission result · CLAIMED-before-launch proof · exit status · W4 evidence · DR1 ref + digest · final standing · `git status` before and after · §A gate readings · any falsifier.
