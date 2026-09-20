@@ -7,44 +7,10 @@ import type { RebuildEditorialThread, RebuildEditorialVersion } from '@/lib/writ
 import WorkInspiration from './WorkInspiration';
 import { EDITORIAL_QUESTIONS } from '@/lib/writersStudio/editorialQuestions';
 import { comparisonSpan } from '@/lib/writersStudio/insightComparison';
-import { LATITUDE_BANDS, EDITORIAL_LATITUDES, type EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
-
-/**
- * ⭐⭐ THE AUTHOR'S EDITING CONTROLS — TWO OF THEM, AND THAT IS THE POINT.
- *
- * The slider says HOW MUCH rewording one suggestion may carry. The checkbox
- * says whether MAIA may arrive with a whole paragraph already gone. ⛔ They are
- * not one control: sliding to "Open" asks for free rewriting, it does not ask
- * for silent deletion, and the surface must never let one read as the other.
- *
- * ⭐ Both are shown as plain statements of what will happen, not as settings
- * buried behind a gear. The writer should never have to discover the rule by
- * being shown their own paragraphs struck through.
- */
-function EditingLatitude({ latitude, onLatitude, mayRemoveParagraphs, onMayRemoveParagraphs, disabled }: {
-  latitude: EditorialLatitude; onLatitude: (v: EditorialLatitude) => void;
-  mayRemoveParagraphs: boolean; onMayRemoveParagraphs: (v: boolean) => void;
-  disabled?: boolean;
-}) {
-  const band = LATITUDE_BANDS[latitude];
-  return <section className="wsi-latitude" aria-label="How much MAIA may change">
-    <label>How much may MAIA change?
-      <input type="range" min={EDITORIAL_LATITUDES[0]} max={EDITORIAL_LATITUDES[EDITORIAL_LATITUDES.length - 1]}
-        step={1} value={latitude} disabled={disabled}
-        aria-valuetext={band.label}
-        onChange={e => onLatitude(Number(e.target.value) as EditorialLatitude)} />
-    </label>
-    <p className="wsi-latitude-band"><strong>{band.label}</strong> · {band.description}</p>
-    <label className="wsi-latitude-paragraphs">
-      <input type="checkbox" checked={mayRemoveParagraphs} disabled={disabled}
-        onChange={e => onMayRemoveParagraphs(e.target.checked)} />
-      MAIA may suggest removing a whole paragraph
-    </label>
-    <p className="wsi-muted">{mayRemoveParagraphs
-      ? 'She may bring you wording with a paragraph taken out. You still decide.'
-      : 'She can tell you a paragraph should go, and you decide — but she cannot bring you wording with it already removed.'}</p>
-  </section>;
-}
+import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
+/* ⭐ ONE control, shared with the canvas surface. ⛔ Not re-declared here — a
+   second copy is a second place the protective default can drift. */
+import EditingLatitude from './EditingLatitude';
 
 export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;

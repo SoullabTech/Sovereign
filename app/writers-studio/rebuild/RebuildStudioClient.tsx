@@ -22,6 +22,7 @@ import ManuscriptPassage from '../insight/ManuscriptPassage';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
+import { useEditingLatitude } from '../insight/EditingLatitude';
 import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
@@ -755,12 +756,15 @@ export default function RebuildStudioClient() {
   /**
    * ⭐⭐ THE AUTHOR'S TWO EDITING CONTROLS (WS-EDITORIAL-SCOPE-01).
    *
-   * ⛔ Held here rather than inside the desk so a remount cannot quietly reset
-   * them to something more permissive than the writer last chose. They open at
-   * the most protective setting and only the writer moves them.
+   * ⛔ Held HERE rather than inside the desk so a remount cannot quietly reset
+   * them — and taken from the shared hook so this surface and the canvas cannot
+   * disagree about what the defaults are. The slider is remembered; the
+   * paragraph permission opens off every visit, by construction.
    */
-  const [editLatitude, setEditLatitude] = useState<number>(1);
-  const [mayRemoveParagraphs, setMayRemoveParagraphs] = useState(false);
+  const {
+    latitude: editLatitude, setLatitude: setEditLatitude,
+    mayRemoveParagraphs, setMayRemoveParagraphs,
+  } = useEditingLatitude();
 
   const sendEditorial = useCallback(async (requestText?: string) => {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
