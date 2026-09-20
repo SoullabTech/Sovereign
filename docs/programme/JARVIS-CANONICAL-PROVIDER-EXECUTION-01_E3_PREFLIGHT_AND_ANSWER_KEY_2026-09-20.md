@@ -70,6 +70,20 @@ Unchanged from the founder adjudication. The load-bearing step is **step 3**: af
 
 Return the fields named in the adjudication. **STOP after the first Qwen attempt and durable evidence.** ⛔ No GPT-OSS reviewer, no verifier disposition, no `EVIDENCE_READY`, no adjudication, no closure.
 
+## 7. ⚠️ Amendment — pre-spend instrument gate (added same day)
+
+Three ways this act can spend the one-shot on an **instrument failure that looks like a result**. All are checkable on the host before the Work Unit is created. Full procedure in the companion runbook §A.
+
+- **A1 — Context window.** No `num_ctx` is set anywhere in the builder or the adapter. The evidence bundle is **80,597 bytes ≈ 20–25k tokens**. A default 4096-token window would **silently truncate the prompt**, and Qwen would answer confidently from a fraction of the authorized evidence with nothing in the durable record showing it. ⭐ Gate: effective context ≥ 32768, else ⛔ do not spend — a silently truncated evidence set is not the authorized evidence population.
+- **A2 — Timeout spends the grant.** `RUN_TIMEOUT_MS = 600000`. A throw is caught, persists `exit_code: -1`, and consumes. Warm the model first.
+- **A3 — Output truncation.** `MAX_LOG_CHARS = 12000`; a thorough eight-condition answer can exceed it, so the durable excerpt may not hold the whole response.
+
+⭐ **Sandbox scope confirmed in source**: the evidence workspace is built by `git show <sha>:<rel>` over `allowed_paths` only (plus `.opencode/agents/jarvis-readonly.md`), into a `mkdtemp` workspace removed in `finally`. This is what makes §4's leak detector sound — Qwen **physically cannot** reach the resolver.
+
+## 8. Companion
+
+`JARVIS-CANONICAL-PROVIDER-EXECUTION-01_E3_HOST_RUNBOOK_AND_GRADING_2026-09-20.md` — executable host procedure, the armed non-execution witness, and the pre-declared grading sheet.
+
 ## 6. Standing
 
 **E3 AUTHORIZED · PRE-FLIGHT ✅ DISCHARGED · SUBSTRATE ✅ VERIFIED AT EXACT SHA · ANSWER KEY ✅ PRE-REGISTERED · ⛔ MEASUREMENT UNSPENT, OWED TO THE BOUND macOS HOST · ⛔ NO PROVIDER ATTEMPT MADE · ⛔ NO GRANT ISSUED · ⛔ NO SOURCE MODIFIED · PRODUCTION UNTOUCHED.**
