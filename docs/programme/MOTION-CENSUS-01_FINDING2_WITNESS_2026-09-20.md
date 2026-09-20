@@ -5,6 +5,14 @@
 **Standing** ❌ **RED — STRUCTURAL EXPOSURE ESTABLISHED** · ⛔ INCIDENCE NOT MEASURED ·
 ⛔ REPAIR NOT AUTHORIZED · PRODUCTION UNTOUCHED
 
+> ⚠️ **SUPERSEDED AS CURRENT STANDING, 2026-09-20.** Repair was authorized by
+> founder act later the same day and taken; the guard is now GREEN. See
+> `MOTION-CENSUS-01_FINDING2_REPAIR_2026-09-20.md`. **This record is kept
+> verbatim as the state at the time of the witness** — the RED it reports is the
+> historical evidence that the defect was real, and is never edited to read as
+> though it had always said otherwise. ⛔ The repair is not deployed and not
+> member-verified; nothing below is retroactively softened.
+
 ---
 
 ## The act as authorized, and how it changed shape

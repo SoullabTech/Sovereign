@@ -9661,11 +9661,9 @@ I'm not sure what I'm feeling yet.`;
                     return (
                     <motion.div
                       key={message.id?.trim() || `msg-${message.role}-${typeof message.timestamp === 'string' ? message.timestamp : (message.timestamp?.toISOString?.() ?? 'no-ts')}-${index}`}
-                      initial={{ opacity: 0, y: 0 }}
-                      animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 0 }}
                       transition={{ duration: 0.5, ease: "easeOut" }}
-                      className={`bg-transparent p-4 text-soul-textPrimary max-w-full
+                      className={`maia-turn-enter bg-transparent p-4 text-soul-textPrimary max-w-full
                                cursor-pointer transition-all duration-300 group
                                ${message.role === 'user' ? 'message-user' : 'message-maia'}`}
                       data-role={message.role === 'user' ? 'user' : 'assistant'}

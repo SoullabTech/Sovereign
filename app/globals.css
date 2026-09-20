@@ -1309,3 +1309,42 @@
 .book-toc-close:hover {
   color: rgba(254, 243, 199, 0.6);
 }
+
+/* ── MAIA turn entrance — fail-open by construction ──────────────────────────
+ *
+ * Law: MAIA's turn must be readable without an animation having completed.
+ *   docs/programme/MOTION-CENSUS-01_FINDING2_WITNESS_2026-09-20.md
+ *   docs/SOULLAB_DESIGN_CANON.md "Don't": avoid `initial={{ opacity: 0 }}` on
+ *   important content.
+ *
+ * WHY THIS AND NOT A MOTION PROP. `initial={{ opacity: 0 }}` SETS inline
+ * `opacity: 0` and relies on the animation engine to drive it to 1. If that
+ * never happens the words are in the DOM and cannot be read — the failure
+ * leaves the member with nothing.
+ *
+ * A CSS keyframe inverts that. The element's RESTING opacity is 1; the
+ * animation only borrows 0 for its own duration. An animation that never runs,
+ * is unsupported, or is switched off leaves the turn VISIBLE. Same fade, same
+ * duration, opposite failure mode.
+ *
+ * ⛔ Never give this rule `animation-fill-mode: backwards/both`, and never move
+ * the fade back onto a motion prop. Either reintroduces the invisible resting
+ * state this exists to remove.
+ *
+ * Transform stays on the motion element deliberately: a transform that fails to
+ * run leaves the element at its natural position, which is visible. Only
+ * opacity is the readability hazard, so only opacity moved.
+ */
+@keyframes maia-turn-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.maia-turn-enter {
+  animation: maia-turn-enter var(--maia-turn-enter-duration, 400ms) ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Resting opacity is 1, so removing the animation leaves the turn readable. */
+  .maia-turn-enter { animation: none; }
+}

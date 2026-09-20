@@ -188,11 +188,11 @@ export default function BetaMinimalMirror() {
             {messages.map((message) => (
               <motion.div
                 key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className={message.role === 'user' ? 'flex justify-end' : ''}
+                className={`maia-turn-enter ${message.role === 'user' ? 'flex justify-end' : ''}`}
               >
                 {message.role === 'assistant' ? (
                   <MaiaBubble

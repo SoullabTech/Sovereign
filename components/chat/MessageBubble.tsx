@@ -253,9 +253,9 @@ export default function MessageBubble({
       `}</style>
       
       <motion.div
-        className={`message-bubble ${message.sender}`}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+        className={`maia-turn-enter message-bubble ${message.sender}`}
+        initial={{ y: 10 }}
+        animate={{ y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}

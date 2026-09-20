@@ -99,9 +99,8 @@ export function ChatMessage({ message, isLatest = false, onPlayAudio }: ChatMess
 
         {/* Message Bubble */}
         <motion.div 
-          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          initial={{ y: 12, scale: 0.98 }}
           animate={{ 
-            opacity: 1, 
             y: 0, 
             scale: 1,
             ...(message.role === 'assistant' && {

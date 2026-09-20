@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Volume2, VolumeX, Sparkles, Loader2 } from 'lucide-react';
 import { OracleVoicePlayer } from '@/components/voice/OracleVoicePlayer';
 
@@ -65,11 +65,11 @@ export default function MaiaBubble({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 20 }}
+      animate={{ y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className={`flex gap-3 ${className}`}
+      className={`maia-turn-enter flex gap-3 ${className}`}
     >
       {/* Avatar */}
       <div className="flex-shrink-0">
@@ -134,28 +134,25 @@ export default function MaiaBubble({
             ease: "easeInOut"
           } : {}}
         >
-          {/* Message text with streaming effect */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={displayedText}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="text-sm text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap"
-            >
-              {displayedText}
-              {isStreaming && (
-                <motion.span
-                  animate={{ opacity: [0, 1, 0] }}
-                  transition={{ duration: 0.8, repeat: Infinity }}
-                  className="inline-block ml-1"
-                >
-                  ▊
-                </motion.span>
-              )}
-            </motion.div>
-          </AnimatePresence>
+          {/* Message text. Deliberately NOT keyed on its own content and
+              deliberately not entering from invisible: keying on `displayedText`
+              remounted this node on every token and restarted the fade from
+              opacity 0, so streaming text could spend the whole stream mid-fade.
+              Streaming text updates in place. The bubble around it still
+              enters once, via .maia-turn-enter on the wrapper above.
+              See MOTION-CENSUS-01_FINDING2_WITNESS_2026-09-20.md */}
+          <div className="text-sm text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap">
+            {displayedText}
+            {isStreaming && (
+              <motion.span
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+                className="inline-block ml-1"
+              >
+                ▊
+              </motion.span>
+            )}
+          </div>
 
           {/* Element indicator (subtle) */}
           <motion.div

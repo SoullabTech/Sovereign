@@ -98,10 +98,22 @@ Motion is the thinnest part of the canon (~20 lines of 481) and the part with a
 > Do not use Framer Motion for elements that must be visible on load. Avoid
 > `initial={{ opacity: 0 }}` on important content.
 
-⚠️ **OPEN NON-CONFORMANCE — MAIA's own turn violates this on 6 surfaces**
-including the live `/maia` conversation. `maia-turn-visibility.ts` is RED.
-See `docs/programme/MOTION-CENSUS-01_FINDING2_WITNESS_2026-09-20.md`.
-⛔ Do not add new instances. ⛔ Do not treat the existing ones as precedent.
+✅ **CONFORMANT ON TURN TEXT as of 2026-09-20** — `maia-turn-visibility.ts` is
+GREEN across all six conversation surfaces. The repair moved **only opacity** to
+a fail-open CSS keyframe (`.maia-turn-enter` in `app/globals.css`), keeping each
+surface's rise, slide and scale on the motion element. ⚠️ Not deployed and not
+member-verified; typecheck and the design gate are owed on a host with
+dependencies. `MOTION-CENSUS-01_FINDING2_REPAIR_2026-09-20.md`.
+
+⚠️ **STILL OPEN — the same pattern on CHROME.** 492 member-facing files animate
+*something* from invisible; only turn text was repaired. `OracleConversation.tsx`
+alone retains 15 such instances in scribe and indicator UI. ⛔ Do not read the
+green guard as blanket conformance, and ⛔ do not treat the remaining instances
+as precedent for new ones.
+
+**When you need an entrance fade on content, use `.maia-turn-enter`**, not
+`initial={{ opacity: 0 }}`. Its resting state is visible, so a failure leaves the
+content readable. ⛔ Never give it `animation-fill-mode: backwards/both`.
 
 **CANDIDATE — not ratified, do not cite as authority:**
 - *MAIA's turn — content, record, legibility — may not be contingent on any
