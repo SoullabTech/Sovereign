@@ -147,10 +147,77 @@ is therefore not on the critical path to better review; it is on the critical pa
 
 ---
 
+## Founder interim ruling — 2026-09-20 (recorded, same day)
+
+⭐ **HOLD TAKEN.** Routing **repository source or constitutional/canon text** to a
+foreign (Lab-tier) provider or CLI at development time is **BLOCKED**, with two
+predeclared lift conditions:
+
+1. **`docs/ai/MULTI_MODEL_SESSION_MODE.md` — or an equivalent dev-lane governance
+   canon — is AUTHORED AND RATIFIED.** (Not merely authored. Ratification is the act.)
+2. **The provider capability table admits explicit classes for repository source and
+   constitutional canon.** Proposed names, founder-supplied: `repository_source` and
+   `constitutional_canon`.
+
+⛔ **What this ruling does NOT do**, kept explicit so a later reader does not widen it:
+
+- ⛔ It does not settle **Q3**. Whether the `../ai/MULTI_MODEL_SESSION_MODE.md`
+  citation is a wrong path to a document under another name, or a document that was
+  always intended and never written, remains open — and condition 1 is satisfiable
+  either way, so the ruling does not need Q3 answered to be operative.
+- ⛔ Supplying the two capability names is a **proposal, not the governance act**.
+  The tier table is edited only by the reviewed act `PROVIDER_GOVERNANCE.md` §"Adding /
+  changing a provider" already requires; naming them here does not add them.
+- ⛔ It establishes nothing about whether cross-provider review is *valuable*. It is a
+  custody hold on where text may go, not a verdict on the method.
+- ⛔ It does not authorize the external tool, nor any dev-lane tool, for any other
+  purpose. Nothing is allowlisted by this ruling.
+
+⭐ **The hold costs almost nothing operationally**, and that is why it is cheap to take:
+the reviewed workflow's transferable value is same-provider (see the companion section),
+so blocking the foreign increment blocks the increment and not the capability.
+
+---
+
+## Owed, if the candidate instrument is ever wired
+
+⚠️ **The in-session verification of `scripts/review-custody.ts` is a DISPOSABLE PROBE,
+not a record.** Thirteen behaviour cases were exercised ad hoc from a scratchpad
+toolchain; **none is committed as a test.** By this project's own law — *a probe is not
+the record*, and an instrument's lethality must be demonstrated before it is relied on
+(B-ii/B-iii discipline) — the following is owed **before** the instrument gates anything:
+
+1. **A committed falsifier suite** for `review-custody`, each case paired with a
+   *defeat candidate*: a plausible, competent, WRONG custody implementation that passes
+   every other case and fails this one. Minimum set, from the probe: APPROVED-with-material-
+   finding · review-of-a-different-plan · empty review · malformed review · absent coverage ·
+   duplicate finding id · admission conflict vs idempotent re-admission · plan edited after
+   approval · **untracked file alone moves the manifest** · deletion recorded as `ABSENT`
+   rather than dropping out.
+2. **A review-authoring procedure** — how a fresh-session reviewer produces schema-valid
+   output, and how coverage/limitations are stated rather than inferred. ⚠️ Without this,
+   the instrument has custody over a record nothing is defined to produce.
+3. **A founder act naming where a bound review is REQUIRED.** Until then the instrument is
+   *landed and unwired*: built ≠ wired; wired ≠ enforced.
+
+⛔ **Note on boundaries, since the two refusal surfaces are easy to conflate**: `admit`
+refuses *the record* (material findings under APPROVED · absent coverage · wrong plan ·
+empty/malformed · conflict). `check` refuses *the continued applicability* of an already
+admitted approval (plan SHA changed · manifest moved · HEAD moved). A manifest movement is
+a `check` refusal, never an `admit` refusal — the same precheck-versus-mutation distinction
+the S3 lane paid to learn.
+
+---
+
 ## Standing
 
 **FINDING VALID · DEV-LANE PROVIDER EXPOSURE UNGOVERNED · CAPABILITY VOCABULARY HAS NO
 CLASS FOR SOURCE OR CANON · CITED DEV-LANE DOCUMENT ABSENT (never existed) ·
-Q1/Q2/Q3 OPEN AND UNCOLLAPSED · ⛔ NO LANE OPENED · ⛔ NO POLICY EDITED · ⛔ NO PROVIDER
-STANDING CHANGED · ⛔ EXTERNAL TOOL NOT INSTALLED · CANDIDATE INSTRUMENT LANDED, GATING
-NOTHING · PRODUCTION UNTOUCHED.**
+⭐ FOUNDER INTERIM HOLD TAKEN 2026-09-20: FOREIGN-PROVIDER ROUTING OF REPOSITORY SOURCE
+OR CONSTITUTIONAL TEXT **BLOCKED**, TWO LIFT CONDITIONS PREDECLARED · Q1 ANSWERED
+*PROVISIONALLY AND NEGATIVELY* (blocked pending conditions) · Q2 OPEN — CAPABILITY NAMES
+PROPOSED, ⛔ NOT ADDED · Q3 OPEN AND UNCOLLAPSED · ⛔ NO LANE OPENED · ⛔ NO POLICY EDITED ·
+⛔ NO TIER TABLE CHANGED · ⛔ EXTERNAL TOOL NOT INSTALLED · CANDIDATE INSTRUMENT LANDED,
+⛔ UNWIRED, GATING NOTHING · ⚠️ ITS 13-CASE VERIFICATION IS A PROBE, ⛔ NOT A COMMITTED
+SUITE · FALSIFIER SUITE + REVIEW-AUTHORING PROCEDURE + WIRING ACT ALL OWED ·
+PRODUCTION UNTOUCHED.**
