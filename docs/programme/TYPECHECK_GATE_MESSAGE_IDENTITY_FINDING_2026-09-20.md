@@ -56,9 +56,27 @@ The same mismatch shows up on BOTH sides at once: the entry reports as **new**
 in the current run and the baselined entry reports as **fixed**, because neither
 key is found in the other map (`:220`, `:231`).
 
-⚠️ **HYPOTHESIS, NOT YET WITNESSED.** The baseline string and the reported
-string differ in union order — but the reported string reached this record
-through a human summary, ⛔ not a verbatim paste. **The decisive check is §5.**
+## 3a · ⭐⭐ WITNESSED — founder-run, verbatim, 2026-09-20
+
+The §5 check was run on the Mac Studio. **All three differ from their baselined
+entries in UNION MEMBER ORDER AND NOTHING ELSE** — same file, same code, same
+line, same members, same everything but the sequence:
+
+```
+sacred-texts/page.tsx(207,7)
+  now       '"direct" | "gentle" | "supportive" | "exploratory" | undefined'
+  baseline  '"gentle" | "direct" | "exploratory" | "supportive" | undefined'
+
+InboxTriage.tsx(131,33)  ·  NextStepBuilder.tsx(167,33)
+  now       threshold: "none" | "invitation" | "pause" | "acknowledgment"
+  baseline  threshold: "none" | "pause" | "invitation" | "acknowledgment"
+```
+
+⭐ The second pair is the stronger evidence: the union is **nested inside an
+object type literal** (`{ threshold: …; weeklyWeight: number; … }`), and only
+the two middle members swapped. ⛔ Nothing about those components changed.
+
+**The mechanism is no longer inferred. It is observed.**
 
 ## 4 · ⭐⭐ WHY THIS MATTERS MORE THAN A NOISY GATE
 
@@ -106,9 +124,22 @@ differ only by union ordering ARE the same diagnostic. ⛔ Recommended, not take
 strings until the next reorder, and `npm run typecheck -- --accept-current` on a
 run containing two real regressions would have absorbed those too.
 
-**Standing: THREE FALSE REGRESSIONS ✅ ESTABLISHED · MECHANISM ⚠️ HYPOTHESISED,
-WITNESS OWED · ⛔ THE THREE FILES NOT EDITED · ⛔ THE GATE NOT REPAIRED ·
-⛔ NOT RE-BASELINED · ⛔ NO LANE OPENED.**
+## 7 · ⚠️ ONE PROPERTY THE REPAIR MUST HAVE, or it makes things worse
+
+⛔ Normalising only at COLLECTION time would make every one of the 173 baselined
+diagnostics look new at once: the stored messages are unsorted, so a sorted
+current run would match none of them.
+
+⭐ `keyOf()` (`:207`) reads `d.message` raw for baseline entries. **The
+normaliser must be applied on BOTH sides, at comparison time** — and then the
+existing `typecheck-baseline.json` keeps working **unchanged**, with no
+re-baselining act required. *That property is what makes this repair cheap and
+safe; without it the repair is a disguised re-baseline.*
+
+**Standing: THREE FALSE REGRESSIONS ✅ ESTABLISHED · MECHANISM ✅ WITNESSED
+(founder-run, verbatim) · ⛔ THE THREE FILES NOT EDITED · ⛔ THE GATE NOT
+REPAIRED — PARKED FOR OWNER REVIEW BY FOUNDER RULING · ⛔ NOT RE-BASELINED ·
+⛔ NO LANE OPENED.**
 
 > ⭐ *The gate was right about two things and wrong about three, and the wrong
 > three were the ones that would have had someone change working code.*
