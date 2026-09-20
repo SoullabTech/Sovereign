@@ -245,21 +245,52 @@ measured latency reason (`~30s/turn` at 7b). ⛔ Not authorization to flip it.
 a Sanctuary session enters persistence."* But a Sanctuary turn still crosses to the
 cognition provider (§3.3) — it must, or MAIA cannot answer.
 
-⚠️ **Amended 2026-09-20 after verification — the enforcement is not where the law is
-written.** `sanctuaryGuards.ts` has **zero non-test importers**. The invariant is
-enforced today by three separate mechanisms, none of which routes through it:
+⚠️⚠️ **Amended twice on 2026-09-20. The first amendment was wrong in the
+direction that mattered, and is corrected here rather than deleted.**
 
-| Vector | Enforcement | Evidence |
-|---|---|---|
-| Session summary | boundary-enforced, by an **inline duplicate** of the guard | `lib/memory/stores/SessionSummaryStore.ts:57` |
-| Turns | **caller-enforced** — route returns early, sovereign service checks per tier; the store writes unconditionally | `sanctuaryGuards.ts` header, self-reported |
-| Library keep | route-level check before any DB write | `sanctuaryGuards.ts` header, self-reported |
+The first amendment reported that `sanctuaryGuards.ts` has zero non-test importers
+(true) and concluded that the persistence invariant therefore rests on "duplication
+and caller discipline" (**false**). A canonical mechanism exists and is widely
+adopted.
 
-⛔ This is **not** a claim that the invariant is violated — no violation was looked
-for or found. It is a claim about *where the invariant lives*: the named, testable
-form of the law is dead code, and enforcement is carried by duplication and caller
-discipline. That is the defect class this programme names repeatedly — law written
-at one address, applied at another.
+**`lib/sanctuary/turnPosture.ts` is the constitutional instrument** — ratified by
+founder ruling 2026-07-17 after incident `SANC-20260614-01`, in which a session whose
+record read `standard` persisted five sanctuary exchanges:
+
+- `TurnPosture` has a **private constructor**, so a posture cannot be forged
+  downstream — `{ sanctuary: false }` does not typecheck, and a JS caller bypassing
+  types fails the `instanceof` check inside the guard.
+- `contentWritable()` **fails closed**: a missing or forged posture refuses the write
+  and logs loudly. Refusal logs are metadata only.
+- Posture is resolved **once per request at the serving boundary** and passed by
+  reference, so entering or leaving Sanctuary mid-session cannot retroactively
+  reclassify prior turns.
+
+Adoption, verified: **13 boundary resolution sites** (`TurnPosture.resolve`) across
+routes and services, **6 store-boundary enforcement sites** (`contentWritable`)
+including all three `TurnsStore` write paths, `sessionManager`, and
+`corpusCallosumService`.
+
+⭐ **The corrected finding is the inverse of the first.** `sanctuaryGuards.ts` is not
+the law left unwired. It is a **later, weaker, redundant module** that takes a plain
+`boolean` where the canonical instrument takes an unforgeable class instance — and
+its own header is **stale**, asserting that `TurnsStore.addExchange` "writes
+unconditionally" when that path has been guarded at `TurnsStore.ts:256` since the
+posture ruling.
+
+**The one real asymmetry** is in the opposite place from where the first amendment
+put it:
+
+| Vector | Instrument | Forgeable? | Evidence |
+|---|---|---|---|
+| Turns (3 paths) | `TurnPosture` + `contentWritable` | no — private ctor, fails closed | `TurnsStore.ts:113,206,256` |
+| Session exchange | `TurnPosture` + `contentWritable` | no | `sessionManager.ts:67-68` |
+| Corpus Callosum | `TurnPosture` + `contentWritable` | no | `corpusCallosumService.ts:115,175` |
+| **Session summary** | **plain `isSanctuary: boolean`, inline** | **yes** | `SessionSummaryStore.ts:37,57` |
+| Library keep | route-level check | unverified | self-reported; route not located |
+
+⛔ Again, no violation was looked for or found. The summary path may be correct at
+every caller. But it accepts a primitive the posture ruling exists to eliminate.
 
 The canon's UI copy reads:
 
@@ -268,7 +299,7 @@ The canon's UI copy reads:
 *Won't be remembered* is accurate. ⚠️ *Speak freely* may be read by a member as
 *this stays here*, which is true of MAIA's memory and not true of the provider
 boundary. **The transmission point is a claim-discipline question, not an implementation
-defect**; the enforcement-location point above is a separate, structural
+defect**; the instrument-asymmetry point above is a separate, structural
 observation —
 and the one place in the system where the gap between the two could matter most to
 a person. Routed to founder; ⛔ no copy changed here.
