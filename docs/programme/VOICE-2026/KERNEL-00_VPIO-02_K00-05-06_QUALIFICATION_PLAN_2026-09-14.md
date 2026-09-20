@@ -1048,3 +1048,8 @@ No physiological qualification change. The failed direct wrapper never crossed h
 
 ### §10.104 — SOURCE-03 acquisition complete but non-attributive; K00-06 built-in remains CHARACTERIZE ONLY / INCOMPLETE; KERNEL-00 closure still blocked (2026-09-16; discriminator §18.86; implementation §10.61)
 Fresh SOURCE-03 completed N=10 under PRELIGHT-03 CLEAN with PRE-PLAY/JIT harness zero on all ten and VALID stimulus custody on all ten. The source reader yields **10/10 UNMEASURED-SRC: stimulus_not_visible**, so the source-identifying discriminator earns no SURVIVES/SUPPRESSED attribution. Companion frozen K00-06 rows = 9 PASS-06 + 1 UNMEASURED-06 + 0 FAIL-06; these rows are evidence only and cannot be pooled into or substituted for the frozen K00-06 acceptance population. K00-06 built-in standing is unchanged: **CHARACTERIZE ONLY · INCOMPLETE**. K00-05 remains PASS · CLOSED. BATCH-03 is spent; no top-up/rerun inherits authority. ARCH-01 acceptance therefore remains unmet; the next work is a records-only census of which K00-01…18 obligations are already discharged on the VPIO-02 line and which still require bounded witnesses.
+
+
+### §10.105 — SOURCE-03 null attribution read: level shortfall against the predeclared V1 bar, gate present; no qualification change; level calibration proposed (2026-09-20; discriminator plan §18.87; implementation record §10.62)
+
+No qualification change. K00-06 built-in remains CHARACTERIZE ONLY / INCOMPLETE; the ten SOURCE-03 rows stay UNMEASURED-SRC and are never re-read under a changed threshold.
