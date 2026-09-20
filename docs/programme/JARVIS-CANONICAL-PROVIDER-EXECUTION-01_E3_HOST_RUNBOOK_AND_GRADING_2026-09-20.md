@@ -49,7 +49,15 @@ cat "$H/work-units-v2/results/$WU/"e1-*.json
 shasum -a 256 "$H/work-units-v2/results/$WU/"e1-*.json
 cd /Users/soullab/jarvis-canonical-e3-a2d32f83 && git status --porcelain   # → empty
 ```
-13. Adjudicate against §C and the corrected §D. **STOP.**
+13. Adjudicate. **Three sections, in this order — the ground truth lives in the companion record, not here:**
+    - **`…_E3_PREFLIGHT_AND_ANSWER_KEY_2026-09-20.md` §3** — the eight acceptance conditions (AC-1…AC-8). *This is the answer key.* ⚠️ Not §7, which is the pre-spend instrument gate.
+    - **§C above** — PASS criteria per condition + the falsifier list.
+    - **§D above (corrected)** — the leak detector.
+    **STOP.**
+
+⚠️ **Step 9 is four probes, not one.** Byte count unchanged is necessary and not sufficient: the ledger tail (**1 `ISSUED`, 0 `CLAIMED`**) is what proves authority was issued and *not* claimed, and the log cannot show that. Run all four — bytes · ledger · absent result file · absent `jarvis-e1-evidence-*` workspace — before Confirm Execute.
+
+⚠️ **Expected post-run ledger is THREE events: `ISSUED` → `CLAIMED` → `CONSUMED`.** A tail showing `ISSUED` + `CLAIMED` with **no `CONSUMED`** is not an incomplete capture — it is the **wedged-grant condition** named in the answer key (§8/AC-8): the participant is now blocked, `revoke` cannot clear it because it requires `ACTIVE`, and only `invalidate` recovers. Record it as a finding if it appears.
 
 ---
 
