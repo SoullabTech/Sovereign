@@ -20,6 +20,39 @@ Gestures are Electron IPC `jarvis:work-unit-action`, actions `canonical-executio
 
 ---
 
+## §0 — ⭐⭐ FINAL LOCKED ORDER (founder-ratified — **follow this, not §B**)
+
+⚠️ **§B below records the original sequence and is SUPERSEDED IN PART by §F, §G, §H and §I.** It is kept verbatim as the state at the time, ⛔ never edited to read as though it had always said otherwise. **An operator on the host follows §0.** §B remains the source for exact commands and constants.
+
+**Phase 1 — host inspection + pre-flight gates**
+1. `num_ctx ≥ 32768` for tag **`qwen3-coder:30b`** (§A1). Remediation must preserve the exact tag (§F2).
+2. §G calibration + warm-up — the server log byte count **MUST increase**, or the witness is vacuous ⇒ ⛔ STOP.
+
+**Phase 2 — create + fresh-ledger verification**
+3. Create and route the Work Unit; the `v2-<slug>-<suffix>` id is **returned**, not chosen (§I).
+4. Confirm `<WU>.jsonl` is **ABSENT** — no stale grant inherited by the new id.
+
+**Phase 3 — gestures + physical non-execution witness**
+5. Preview (`canonical-execution-auth-preview`) → standing `HELD_FOR_HUMAN_AUTHORIZATION`.
+6. Snapshot log bytes (tightest interval — after Preview).
+7. **Authorize Once** (`canonical-authorize-execution-once`).
+8. Snapshot log bytes again.
+9. **Verify:** bytes **strictly unchanged** AND ledger tail is exactly **1 `ISSUED`, 0 `CLAIMED`** AND no result file AND no `jarvis-e1-evidence-*` workspace. ⛔ Stop if anything moved.
+
+**Phase 4 — execute, capture, adjudicate**
+10. **Confirm Execute** (`canonical-confirm-execute`), exact grant id.
+11. Read the **full response in the UI** (A3 — the durable excerpt caps at 12,000 chars).
+12. ⚠️ **Capture the durable artifacts** — the step most easily lost once the answer is on screen:
+```bash
+cat "$H/work-units-v2/execution-grants/$WU.jsonl"    # ISSUED → CLAIMED → CONSUMED
+cat "$H/work-units-v2/results/$WU/"e1-*.json
+shasum -a 256 "$H/work-units-v2/results/$WU/"e1-*.json
+cd /Users/soullab/jarvis-canonical-e3-a2d32f83 && git status --porcelain   # → empty
+```
+13. Adjudicate against §C and the corrected §D. **STOP.**
+
+---
+
 ## ⚠️ §A — PRE-SPEND INSTRUMENT GATE (run before creating the Work Unit)
 
 Three ways this act can burn the one-shot on an **instrument failure that looks like a result**. A run that trips any of these is **INSTRUMENT FAILURE / NO EVIDENCE**, ⛔ never a finding.
@@ -42,7 +75,7 @@ ollama run qwen3-coder:30b "ok" --keepalive 30m    # warm + pin
 
 ---
 
-## §B — The run
+## §B — The run (⚠️ SUPERSEDED IN PART — see §0 for the ratified order; commands and constants here remain authoritative)
 
 **B1 · Immediately before Work Unit creation**
 ```bash
