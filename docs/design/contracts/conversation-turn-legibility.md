@@ -36,7 +36,7 @@ distinct_to_room: this is the turn itself as a readable object — the one surfa
 #
 screenshot_desktop: docs/design/contracts/screenshots/conversation-turn-legibility-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/conversation-turn-legibility-mobile.png
-experience_verification: <the walk taken on /maia, what was looked for, what was seen>
+experience_verification: Walk taken on /maia. Observed brief delay on Thinking with green presence indicator before text arrived. Response streamed in without per-token flicker or re-fading; reduced-motion emulation active with clean text settle.
 ---
 
 # Conversation — Turn Legibility — Experience Contract
