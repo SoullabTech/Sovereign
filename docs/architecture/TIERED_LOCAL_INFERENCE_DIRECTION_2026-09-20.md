@@ -64,20 +64,45 @@ govern — inside the machine the member's data already lives on. That is not a 
 optimization dressed as ethics; it is the ethics, and the performance question is what has been
 blocking it.
 
-### Drift measured while writing this note
+### ⚠️ Correction (2026-09-20, same day) — the guard exists and holds
 
-`docs/phase1-sovereign-inference.md` (2026-05-19) records **~45 files** bypassing `sovereignRouter`
-by importing `@anthropic-ai/sdk` directly. A count taken 2026-09-20:
+An earlier revision of this section claimed the 2026-05-19 audit's engineering invariant "was never
+enforced" and that "a CI guard is worth more than any routing change in this note." **Both claims are
+false and are corrected here rather than deleted.** The error was reasoning from a raw `grep` count
+(45 files in the audit → 63 today) without checking whether an enforcement mechanism existed.
+
+It does. `scripts/check-no-direct-anthropic.ts` is wired into **both** `npm run preflight`
+(`package.json:111`) and `.githooks/pre-commit:43`. Run 2026-09-20:
 
 ```
-grep -rIl --exclude-dir=node_modules "@anthropic-ai/sdk" --include=*.ts --include=*.js . | wc -l
-→ 63
+✅ No direct @anthropic-ai/sdk imports outside allowlist.
+   approved:      2 file(s)
+   operational:   1 file(s)
+   grandfathered: 55 file(s)
 ```
 
-⚠️ The bypass surface has grown ~40% in four months with no guard in place. The audit's proposed
-engineering invariant ("no cognitive surface bypasses `sovereignRouter` without explicit documented
-exemption") was never enforced. **A CI guard is worth more than any routing change in this note**,
-because without it every cut below decays at the same rate.
+Zero violations. The raw-grep delta is matcher difference, not undetected drift: the guard scans
+tracked files via `git ls-files`, matches import *shapes* rather than bare mentions, and excludes
+`.DISABLED` quarantines.
+
+### The actual finding, which is sharper
+
+**The guard enforces procedure, not direction.** It converts silent drift into *documented* drift —
+a real gain, and not the same thing as retiring the debt. 55 of 58 allowlist entries (95%) sit in
+`grandfathered`, the tier the guard's own docstring calls "legacy cognitive surfaces to be migrated
+per the audit" and instructs reviewers to treat as a yellow flag.
+
+**`grandfathered` has no ceiling and no ratchet.** A new bypass passes the guard indefinitely
+provided someone writes it down. Contrast `scripts/check-typehealth-baseline.js`, which fails on a
+new diagnostic, *an increased occurrence count*, or a path that left the program while still on disk
+— a true monotonic ratchet, and a pattern this repository already owns.
+
+⭐ **The cheapest high-leverage change available here is not a routing change and not a new guard: it
+is adding a ratchet to the guard that already exists.** Pin `grandfathered.files.length` at its
+current value and fail on increase. Migration then becomes the only way the number moves, and it can
+only move down. ⛔ Not authorized by this note; recorded as the item that gates the rest, because
+without it every cut below can be undone by documented additions.
+
 
 ---
 
@@ -187,8 +212,9 @@ UNTOUCHED.**
 
 Open founder questions, in the order they gate work:
 
-1. Is the bypass-surface CI guard (§2) opened as its own act, ahead of any tiering work? It is the
-   only item here that stops ongoing decay.
+1. Is the **`grandfathered` ratchet** (§2) opened as its own act, ahead of any tiering work? It is
+   the only item here that converts documented debt into retiring debt, and it is a few lines
+   inside a guard that already exists and already passes.
 2. Does `modelRouter.ts`'s `tier: 'local'` branch get retired, or gated to `deferred`? These are
    different acts with different blast radii.
 3. Does deferred cognition over member transcripts require a distinct consent posture beyond
