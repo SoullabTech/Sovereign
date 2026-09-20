@@ -28,6 +28,10 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { persistMemberEditorialAct } from '@/lib/manuscript/editorialRuntime/memberAct';
 import { runEditorialTurn } from '@/lib/manuscript/editorialRuntime/turn';
 import { MEMBER_ACT_KINDS, type MemberActKind } from '@/lib/manuscript/editorialDiscourse/contract';
+import {
+  DEFAULT_SCOPE_DECLARATION, isEditorialLatitude,
+  type EditorialScopeDeclaration,
+} from '@/lib/manuscript/editorialScope/contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,11 +45,24 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * person to read their code would believe it too. The refusal names the keys so
  * the mistake is legible rather than mysterious.
  */
-const TOP_KEYS = ['threadId', 'act', 'sanctuary'] as const;
+const TOP_KEYS = ['threadId', 'act', 'sanctuary', 'scope'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
+/**
+ * ⭐⭐ THE AUTHOR'S TWO CONTROLS, AND THEY ARE SEPARATE KEYS ON PURPOSE.
+ *
+ * ⛔ `mayRemoveParagraphs` is NOT derivable from `latitude`. A surface that
+ * wants both must send both, and a surface that sends neither gets the most
+ * protective setting — never a permission it did not ask for.
+ */
+const SCOPE_KEYS = ['latitude', 'mayRemoveParagraphs'] as const;
 
 type Parsed =
-  | { ok: true; threadId: string; act: { act: MemberActKind; text: string; refersTo: string | null }; sanctuary: boolean }
+  | {
+      ok: true; threadId: string;
+      act: { act: MemberActKind; text: string; refersTo: string | null };
+      sanctuary: boolean;
+      scope: EditorialScopeDeclaration;
+    }
   | { ok: false; error: string };
 
 function parseClosed(body: unknown): Parsed {
@@ -80,12 +97,44 @@ function parseClosed(body: unknown): Parsed {
   if (!(b.sanctuary === undefined || typeof b.sanctuary === 'boolean')) {
     return { ok: false, error: 'sanctuary must be a boolean' };
   }
+
+  /* ⭐ THE DECLARED LATITUDE. ⛔ Absence is the protective default, never a
+     wildcard — and a MALFORMED declaration is refused rather than coerced,
+     because silently reading an unrecognised value as "the safe one" would
+     hide a broken surface until the day it sent something permissive. */
+  let scope: EditorialScopeDeclaration = DEFAULT_SCOPE_DECLARATION;
+  if (b.scope !== undefined) {
+    if (typeof b.scope !== 'object' || b.scope === null || Array.isArray(b.scope)) {
+      return { ok: false, error: 'scope must be an object' };
+    }
+    const so = b.scope as Record<string, unknown>;
+    const strayScope = Object.keys(so).filter(
+      (k) => !(SCOPE_KEYS as readonly string[]).includes(k));
+    if (strayScope.length) {
+      return { ok: false, error: `unknown scope field(s): ${strayScope.join(', ')}` };
+    }
+    if (so.latitude !== undefined && !isEditorialLatitude(so.latitude)) {
+      return { ok: false, error: 'scope.latitude must be an integer 1 through 5' };
+    }
+    if (!(so.mayRemoveParagraphs === undefined || typeof so.mayRemoveParagraphs === 'boolean')) {
+      return { ok: false, error: 'scope.mayRemoveParagraphs must be a boolean' };
+    }
+    scope = {
+      latitude: so.latitude === undefined
+        ? DEFAULT_SCOPE_DECLARATION.latitude : so.latitude,
+      /* ⛔ `=== true`, so any other value is refused permission rather than
+         truthy-coerced into it. */
+      mayRemoveParagraphs: so.mayRemoveParagraphs === true,
+    };
+  }
+
   return {
     ok: true,
     threadId: b.threadId,
     /* ⛔ The member's text is carried EXACTLY. No trim, no normalisation. */
     act: { act: ao.act as MemberActKind, text: ao.text, refersTo: ao.refersTo ?? null },
     sanctuary: b.sanctuary === true,
+    scope,
   };
 }
 
@@ -133,18 +182,43 @@ export async function POST(request: NextRequest) {
     /* ⭐ Server-minted act identity. ⛔ Never supplied by the client. */
     exchangeId: randomUUID(),
     sanctuary: false,
+    /* ⭐ The author's declaration, carried to the one place that enforces it. */
+    scope: parsed.scope,
   });
 
   if (!turn.ok) {
     /* ⭐ The member's act STANDS — it was theirs and it persisted. Only MAIA's
        turn failed, and the response says exactly that rather than implying the
        whole exchange is gone. */
+
+    /* ⭐⭐ A SCOPE REFUSAL IS NOT A SERVER FAULT AND MUST NOT WEAR ONE.
+     *
+     * 502 says *something went wrong*. This went RIGHT: the author set a
+     * latitude, MAIA exceeded it, and the system held the line. 409 says
+     * *refused, and here is why* — with the counts, so the writer learns which
+     * control to move instead of being handed a screen of their own words
+     * struck through and asked to police it.
+     *
+     * ⛔ The refused wording is NOT returned. A refusal is not an occasion to
+     * disclose the thing that was refused. */
+    const scopeRefused = turn.scope !== undefined;
     return NextResponse.json({
       threadId: parsed.threadId,
       memberTurnIndex: act.turnIndex,
       direction: act.direction ? { id: act.direction.id } : null,
       error: turn.reason,
-    }, { status: 502 });
+      ...(scopeRefused ? {
+        detail: turn.detail,
+        scope: {
+          declared: parsed.scope,
+          authorWords: turn.scope!.measure.authorWords,
+          wouldRemoveWords: turn.scope!.measure.removedWords,
+          longestUnbrokenCut: turn.scope!.measure.longestContiguousRemoved,
+          wholeParagraphsRemoved: turn.scope!.measure.droppedParagraphs.length,
+          wouldPassAtLatitude: turn.scope!.wouldPassAtLatitude,
+        },
+      } : {}),
+    }, { status: scopeRefused ? 409 : 502 });
   }
 
   /* ⛔ THIN. No StructuredRequest, no systemPrompt, no EditorialInvocation, no

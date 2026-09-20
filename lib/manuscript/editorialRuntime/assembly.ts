@@ -67,6 +67,18 @@ export type EditorialAssemblyResult =
       readonly blocks: readonly EditorialCandidateBlock[];
       /** ⭐ The predecessor MAIA is being invoked against. ER-R3 carries it forward. */
       readonly invokedAgainstVersionId: string | null;
+      /**
+       * ⭐⭐ THE AUTHOR'S EXACT WORDS UNDER THE LOCUS — the only text a proposal
+       * may replace, and therefore the only text a proposal may be MEASURED
+       * against (WS-EDITORIAL-SCOPE-01).
+       *
+       * ⛔ IT IS RETURNED, NOT RE-READ LATER. The scope law must judge the
+       * proposal against the words MAIA was actually shown. A second read after
+       * the answer comes back could measure against a passage she never saw —
+       * the same defect class as rebasing her proposal onto a newer version,
+       * arriving through the measurement instead of the write.
+       */
+      readonly locusText: string;
     }
   | { readonly ok: false; readonly reason: AssemblyRefusal };
 
@@ -156,6 +168,9 @@ export async function assembleEditorialCognition(
     ok: true, chainId,
     blocks: participation.blocks,
     invokedAgainstVersionId: work.work.focused?.id ?? null,
+    /* ⭐ THE SAME VALUE THE LOCUS BLOCK CARRIED INTO COGNITION, from the same
+       read. ⛔ Not a second lookup that could disagree with it. */
+    locusText: work.work.chain.locus.expectedText,
   };
 }
 

@@ -752,6 +752,16 @@ export default function RebuildStudioClient() {
     return null;
   }, [focusId, focusSection, selectedPassage, editorialThread, startNewEditorial, bindEditorialThread]);
 
+  /**
+   * ⭐⭐ THE AUTHOR'S TWO EDITING CONTROLS (WS-EDITORIAL-SCOPE-01).
+   *
+   * ⛔ Held here rather than inside the desk so a remount cannot quietly reset
+   * them to something more permissive than the writer last chose. They open at
+   * the most protective setting and only the writer moves them.
+   */
+  const [editLatitude, setEditLatitude] = useState<number>(1);
+  const [mayRemoveParagraphs, setMayRemoveParagraphs] = useState(false);
+
   const sendEditorial = useCallback(async (requestText?: string) => {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
@@ -760,11 +770,19 @@ export default function RebuildStudioClient() {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords);
+      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords,
+        { latitude: editLatitude, mayRemoveParagraphs });
       if (!out.ok) {
-        setEditorialFailure(out.reason === 'unavailable'
-          ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
-          : 'MAIA could not complete this revision turn. Your manuscript was not changed.');
+        /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
+           line the writer drew. ⛔ Not "MAIA could not complete" — she could,
+           and what she produced went further than the writer allowed. Saying it
+           plainly is what lets the writer learn the control. */
+        setEditorialFailure(
+          out.reason === 'scope_refused'
+            ? (out.detail ?? 'That suggestion went beyond your editing latitude. Nothing was changed.')
+            : out.reason === 'unavailable'
+              ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
+              : 'MAIA could not complete this revision turn. Your manuscript was not changed.');
         return;
       }
       if (!bindEditorialThread(out.thread)) return;
@@ -1610,6 +1628,8 @@ export default function RebuildStudioClient() {
           undoMessage={undoMessage}
           thread={editorialThread} version={suggestedVersion} instruction={editorialDraft}
           onInstruction={setEditorialDraft} onSend={text => void sendEditorial(text)}
+          latitude={editLatitude} onLatitude={setEditLatitude}
+          mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={setMayRemoveParagraphs}
           onSelectVersion={id => { setSuggestedVersionId(id); setAdoptionOutcome(null); setEditorialFailure(null); }} onApply={() => void applySuggested()}
           onSaveMember={saveMemberRevision} busy={editorialBusy || adoptionBusy || memberVersionBusy}
           response={lastMaiaEditorialTurn?.body ?? null}

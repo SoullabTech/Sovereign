@@ -107,21 +107,54 @@ export async function openBoundEditorialPassage(
 
 export type EditorialTurnOutcome =
   | { ok: true; thread: RebuildEditorialThread; producedVersionId: string | null }
-  | { ok: false; reason: 'unavailable' | 'unreadable' | 'locus_mismatch' | 'turn_refused'; detail?: string };
+  | {
+      ok: false;
+      reason: 'unavailable' | 'unreadable' | 'locus_mismatch' | 'turn_refused' | 'scope_refused';
+      detail?: string;
+      /** ⭐ Counts only, present on a scope refusal. ⛔ Never the refused wording. */
+      scope?: {
+        authorWords: number; wouldRemoveWords: number;
+        longestUnbrokenCut: number; wholeParagraphsRemoved: number;
+        wouldPassAtLatitude: number | null;
+      };
+    };
 
 export async function sendBoundEditorialTurn(
   threadId: string,
   visibleDraftSectionId: string,
   text: string,
+  /**
+   * ⭐ THE AUTHOR'S EDITING LATITUDE for this exchange (WS-EDITORIAL-SCOPE-01).
+   *
+   * ⛔ Optional here so no caller is silently broken — and omitting it sends
+   * nothing, which the server reads as the most protective setting. A caller
+   * that forgets the slider gets "Touch" and no paragraph removal, never a
+   * permission it did not ask for.
+   */
+  scope?: { latitude: number; mayRemoveParagraphs: boolean },
 ): Promise<EditorialTurnOutcome> {
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ threadId, act: { act: 'discourse', text, refersTo: null } }),
+      body: JSON.stringify({
+        threadId, act: { act: 'discourse', text, refersTo: null },
+        ...(scope ? { scope } : {}),
+      }),
     });
     const body = await res.json().catch(() => null);
     if (!res.ok) {
+      /* ⭐⭐ A SCOPE REFUSAL IS A RESULT, NOT A FAILURE. The server held the
+         author's latitude. The surface must say what happened in the author's
+         terms — ⛔ never surface `scope_removes_paragraphs` as a raw error
+         code, and never imply the request broke. */
+      if (res.status === 409 && body?.scope) {
+        return {
+          ok: false, reason: 'scope_refused',
+          detail: typeof body?.detail === 'string' ? body.detail : undefined,
+          scope: body.scope,
+        };
+      }
       return {
         ok: false,
         reason: res.status === 404 ? 'unavailable' : 'turn_refused',

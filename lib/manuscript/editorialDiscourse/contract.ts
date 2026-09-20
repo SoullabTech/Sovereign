@@ -720,7 +720,21 @@ export const editorialToolSchema: Record<string, unknown> = {
       properties: {
         replacementText: {
           type: 'string',
-          description: 'The exact wording you are proposing in place of the passage.',
+          /**
+           * ⚠️ THE OLD TEXT READ *"the exact wording you are proposing in place
+           * of the passage"*, and that framing is part of why the 2026-09-19
+           * rewrite happened. A field described as wording IN PLACE OF a
+           * passage asks for a new passage, and an editor asked for a passage
+           * will write one. ⭐ The honest framing is the author's passage
+           * carrying the change — which is what the field has always MEANT and
+           * what WS-EDITORIAL-SCOPE-01 now measures.
+           *
+           * ⛔ Framing is not enforcement. The bound is the scope law.
+           */
+          description: 'The writer\'s passage, returned with your change made to it — '
+            + 'their words, rhythm and imagery kept, and the smallest alteration that answers '
+            + 'what they asked. Not a passage of your own on the same subject. '
+            + 'If what you want to do cannot be done this way, say so in reply instead.',
         },
         rationale: { type: 'string', description: 'One or two sentences.' },
       },
@@ -992,6 +1006,15 @@ export interface EditorialInvocation {
    * ⛔ Never "the newest version when the answer came back".
    */
   readonly authoredAgainstVersionId: string | null;
+  /**
+   * ⭐⭐ THE AUTHOR'S WORDS THIS INVOCATION IS ABOUT, frozen with the rest of it.
+   *
+   * ⛔ WS-EDITORIAL-SCOPE-01 measures MAIA's proposal against THIS value and
+   * never against a fresh read. She authored against what she was shown, and a
+   * proposal judged against a passage she never saw is judged unfairly in one
+   * direction and dangerously in the other.
+   */
+  readonly locusText: string;
 }
 
 /** One durable write inside MAIA's atomic outcome. */

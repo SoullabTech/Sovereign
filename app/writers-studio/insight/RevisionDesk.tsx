@@ -7,6 +7,44 @@ import type { RebuildEditorialThread, RebuildEditorialVersion } from '@/lib/writ
 import WorkInspiration from './WorkInspiration';
 import { EDITORIAL_QUESTIONS } from '@/lib/writersStudio/editorialQuestions';
 import { comparisonSpan } from '@/lib/writersStudio/insightComparison';
+import { LATITUDE_BANDS, EDITORIAL_LATITUDES, type EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
+
+/**
+ * ⭐⭐ THE AUTHOR'S EDITING CONTROLS — TWO OF THEM, AND THAT IS THE POINT.
+ *
+ * The slider says HOW MUCH rewording one suggestion may carry. The checkbox
+ * says whether MAIA may arrive with a whole paragraph already gone. ⛔ They are
+ * not one control: sliding to "Open" asks for free rewriting, it does not ask
+ * for silent deletion, and the surface must never let one read as the other.
+ *
+ * ⭐ Both are shown as plain statements of what will happen, not as settings
+ * buried behind a gear. The writer should never have to discover the rule by
+ * being shown their own paragraphs struck through.
+ */
+function EditingLatitude({ latitude, onLatitude, mayRemoveParagraphs, onMayRemoveParagraphs, disabled }: {
+  latitude: EditorialLatitude; onLatitude: (v: EditorialLatitude) => void;
+  mayRemoveParagraphs: boolean; onMayRemoveParagraphs: (v: boolean) => void;
+  disabled?: boolean;
+}) {
+  const band = LATITUDE_BANDS[latitude];
+  return <section className="wsi-latitude" aria-label="How much MAIA may change">
+    <label>How much may MAIA change?
+      <input type="range" min={EDITORIAL_LATITUDES[0]} max={EDITORIAL_LATITUDES[EDITORIAL_LATITUDES.length - 1]}
+        step={1} value={latitude} disabled={disabled}
+        aria-valuetext={band.label}
+        onChange={e => onLatitude(Number(e.target.value) as EditorialLatitude)} />
+    </label>
+    <p className="wsi-latitude-band"><strong>{band.label}</strong> · {band.description}</p>
+    <label className="wsi-latitude-paragraphs">
+      <input type="checkbox" checked={mayRemoveParagraphs} disabled={disabled}
+        onChange={e => onMayRemoveParagraphs(e.target.checked)} />
+      MAIA may suggest removing a whole paragraph
+    </label>
+    <p className="wsi-muted">{mayRemoveParagraphs
+      ? 'She may bring you wording with a paragraph taken out. You still decide.'
+      : 'She can tell you a paragraph should go, and you decide — but she cannot bring you wording with it already removed.'}</p>
+  </section>;
+}
 
 export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;
@@ -14,6 +52,7 @@ export interface MemberRevisionDraft {
 export default function RevisionDesk({
   active = true, inline = false, onPreview, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
+  latitude = 1, onLatitude, mayRemoveParagraphs = false, onMayRemoveParagraphs,
 }: {
   active?: boolean; inline?: boolean; onPreview?: (preview: { original: string; wording: string; changes: boolean } | null) => void;
   scopeKey?: string; showInspiration?: boolean; manuscriptId: string; title: string; currentText: string; thread: RebuildEditorialThread | null;
@@ -23,6 +62,9 @@ export default function RevisionDesk({
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   sectionBody?: string; appliedVersionId?: string | null; onUndo?: () => void; undoMessage?: string | null;
   busy: boolean; message: string | null; response: string | null; onKeep: () => void;
+  /** ⭐ The author's editing latitude. ⛔ Defaults to the most protective value. */
+  latitude?: EditorialLatitude; onLatitude?: (v: EditorialLatitude) => void;
+  mayRemoveParagraphs?: boolean; onMayRemoveParagraphs?: (v: boolean) => void;
 }) {
   const [openTool, setOpenTool] = useState<string | null>(null);
   useEffect(() => { setOpenTool(null); }, [scopeKey]);
@@ -124,6 +166,10 @@ export default function RevisionDesk({
           placeholder="Tell MAIA what feels right, or what you want to explore…"/>
         <button type="submit" disabled={blocked || (!instruction.trim() && !directionContext.trim() && !editorialQuestion && !reasonQuestion.trim()) || Boolean(draft && !draftMatches)}>{busy ? 'Thinking…' : 'Send'}</button>
       </form>
+      {onLatitude && onMayRemoveParagraphs && <EditingLatitude
+        latitude={latitude} onLatitude={onLatitude}
+        mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={onMayRemoveParagraphs}
+        disabled={blocked} />}
       <div className="wsi-page-actions">
         {version && <div className="wsi-reading-switch" role="group" aria-label="Read passage">
           <button aria-pressed={!previewing} onClick={() => setShowProposal(false)}>Original</button>
@@ -183,6 +229,10 @@ export default function RevisionDesk({
   return <section data-revision-desk data-inline={inline}>
     {showInspiration && <WorkInspiration manuscriptId={manuscriptId} onBringToQuestion={text => onInstruction([instruction, 'Work inspiration and intention:\n' + text].filter(Boolean).join('\n\n'))} />}
     {!inline && <><span className="wsi-eyebrow">Passage Work</span><h3>{title}</h3></>}
+    {onLatitude && onMayRemoveParagraphs && <EditingLatitude
+      latitude={latitude} onLatitude={onLatitude}
+      mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={onMayRemoveParagraphs}
+      disabled={blocked} />}
     <details className="wsi-setup">
       <summary>Direction, intention, and voice</summary>
       <EditorialApproaches scopeKey={scopeKey} onContext={setDirectionContext} busy={blocked} />

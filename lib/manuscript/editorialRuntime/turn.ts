@@ -9,6 +9,7 @@
  *        ↓  constructEditorialWriterTurn → MIPA → canonical renderer
  *        ↓  runStructured()  — forced tool contract
  *        ↓  admitEditorialToolEnvelope()
+ *        ↓  ⭐ judgeProposalScope()                  (WS-EDITORIAL-SCOPE-01)
  *        ↓  persistMaiaEditorialOutcome()           (ER-R3)
  *
  * ── FOUR LAWS THIS FILE EXISTS TO KEEP ────────────────────────────────────
@@ -30,6 +31,13 @@
  *
  * 4 ⭐⭐ THE INVOCATION IS FROZEN BEFORE THE PROVIDER CALL and the same value
  *   goes to persistence. ⛔ No assembly reread after the provider returns.
+ *
+ * 5 ⭐⭐ A PROPOSAL IS AN EDIT OF THE AUTHOR'S PASSAGE, NOT A REPLACEMENT OF IT.
+ *   The author declares an editing latitude; MAIA is told it; and what comes
+ *   back is MEASURED against the frozen locus before anything is written.
+ *   ⛔ A proposal beyond the latitude refuses the whole turn — it is never
+ *   trimmed, never downgraded to a reply, and never shown to the author as
+ *   strike-through over their own words for them to police.
  */
 
 import { query } from '@/lib/db/postgres';
@@ -43,6 +51,10 @@ import {
   editorialTurnIdentity,
   type EditorialInvocation, type MemberActKind, type OutcomeRefusal,
 } from '../editorialDiscourse/contract';
+import {
+  DEFAULT_SCOPE_DECLARATION, judgeProposalScope, latitudeInstruction,
+  type EditorialScopeDeclaration, type ScopeRefusal, type ScopeMeasure,
+} from '../editorialScope/contract';
 import { assembleEditorialCognition, type AssemblyRefusal } from './assembly';
 import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeResult } from './maiaOutcome';
 
@@ -80,6 +92,14 @@ export interface EditorialTurnInput {
   readonly currentDirectionId: string | null;
   readonly exchangeId: string;
   readonly sanctuary: boolean;
+  /**
+   * ⭐⭐ THE AUTHOR'S DECLARED EDITING LATITUDE for this exchange.
+   *
+   * ⛔ Absence is not permission: it resolves to `DEFAULT_SCOPE_DECLARATION`,
+   * which is the most protective setting available. A caller that forgets the
+   * field gets "Touch" and no paragraph removal — never the other way round.
+   */
+  readonly scope?: EditorialScopeDeclaration;
 }
 
 export type EditorialTurnRefusal =
@@ -95,7 +115,12 @@ export type EditorialTurnRefusal =
    */
   | 'model_unattributable'
   /** The structured seam refused. ⛔ There is no fallback below this. */
-  | 'structured_refused';
+  | 'structured_refused'
+  /**
+   * ⭐⭐ THE PROPOSAL EXCEEDED THE AUTHOR'S DECLARED LATITUDE.
+   * ⛔ Nothing was written, and the wording is not shown.
+   */
+  | ScopeRefusal;
 
 export type EditorialTurnResult =
   | {
@@ -104,7 +129,13 @@ export type EditorialTurnResult =
       readonly request: StructuredRequest;
       readonly persisted: Extract<MaiaOutcomeResult, { ok: true }>;
     }
-  | { readonly ok: false; readonly reason: EditorialTurnRefusal; readonly detail?: string };
+  | {
+      readonly ok: false;
+      readonly reason: EditorialTurnRefusal;
+      readonly detail?: string;
+      /** ⭐ Present only on a scope refusal, so the writer can be told in counts. */
+      readonly scope?: { readonly measure: ScopeMeasure; readonly wouldPassAtLatitude: number | null };
+    };
 
 export async function runEditorialTurn(
   input: EditorialTurnInput,
@@ -147,11 +178,19 @@ export async function runEditorialTurn(
     : [];
   const cognitionBlocks: CandidateBlock[] = [...assembly.blocks, ...teachingBlocks];
 
+  /* ⭐ The author's declaration, resolved ONCE and used for both the
+     instruction MAIA is given and the law her answer is judged by. ⛔ Two
+     resolutions could disagree, and the one that governs must be the one she
+     was told about. */
+  const scope: EditorialScopeDeclaration = input.scope ?? DEFAULT_SCOPE_DECLARATION;
+
   /* 3 ⭐⭐ FREEZE. Everything after this uses THIS object. */
   const invocation: EditorialInvocation = {
     chainId: assembly.chainId,
     threadId,
     authoredAgainstVersionId: assembly.invokedAgainstVersionId,
+    /* ⭐⭐ The words the scope law will measure against. ⛔ Never re-read. */
+    locusText: assembly.locusText,
   };
 
   /* 4 · canonical turn → MIPA → renderer, proving every supplied block crossed */
@@ -172,7 +211,11 @@ export async function runEditorialTurn(
   /* 5 ⛔ THE STRUCTURED SEAM. No fallback exists below this call. */
   const request: StructuredRequest = {
     model: EDITORIAL_MODEL,
-    system: proof.systemPrompt,
+    /* ⭐ THE LATITUDE IS STATED TO HER, as a courtesy so a refusal is the
+       exception rather than the routine. ⛔ It is NOT the enforcement — every
+       sentence of it is also a bound checked below on what actually comes
+       back, and deleting this line would not change what is permitted. */
+    system: `${proof.systemPrompt}\n\n${latitudeInstruction(scope)}`,
     messages: [{ role: 'user', content: utterance }],
     maxTokens: MAX_TOKENS,
     tools: [{ name: EDITORIAL_TOOL_NAME, inputSchema: editorialToolSchema, schemaEnforcement: 'required',
@@ -211,6 +254,36 @@ export async function runEditorialTurn(
 
   const admission = admitEditorialToolEnvelope(structured.result.content);
   if (!admission.ok) return { ok: false, reason: admission.reason };
+
+  /* 6b ⭐⭐ THE SCOPE LAW — WS-EDITORIAL-SCOPE-01.
+   *
+   * ⛔ A SECOND ADMISSION CONDITION, DELIBERATELY ITS OWN GATE. The first proved
+   * the ENVELOPE was well formed; this proves the PROPOSAL is an edit of the
+   * author's passage rather than a replacement of it. They are different
+   * questions with different inputs — the first needs only MAIA's answer, this
+   * one needs the author's words — and merging them would have made the
+   * envelope admitter depend on the Work.
+   *
+   * ⭐ MEASURED AGAINST THE FROZEN LOCUS, so she is judged against exactly what
+   * she was shown.
+   *
+   * ⛔⛔ AND THE WHOLE TURN IS REFUSED, NOT REPAIRED. It would be easy here to
+   * keep `reply` and drop the proposal — and that would be the system authoring
+   * MAIA's act, which is the member-side anti-classification law read from the
+   * other end. She proposed; the proposal was not permitted; nothing of hers is
+   * kept and nothing of the author's is shown struck through. The member's own
+   * act already persisted and still stands.
+   */
+  if (admission.outcome.kind === 'reply_with_proposal') {
+    const verdict = judgeProposalScope(
+      invocation.locusText, admission.outcome.proposal.replacementText, scope);
+    if (!verdict.ok) {
+      return {
+        ok: false, reason: verdict.reason, detail: verdict.detail,
+        scope: { measure: verdict.measure, wouldPassAtLatitude: verdict.wouldPassAtLatitude },
+      };
+    }
+  }
 
   /* 7 · persist, with the provenance of the answer that ACTUALLY came back */
   const persisted = await persistMaiaEditorialOutcome({

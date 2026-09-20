@@ -39,6 +39,8 @@ const CONTRACT_RAW =
 
 const INVOCATION: EditorialInvocation = {
   chainId: 'C1', threadId: 'T1', authoredAgainstVersionId: 'V2',
+  /* ⭐ WS-EDITORIAL-SCOPE-01 — the author's words this invocation is about. */
+  locusText: 'the passage under discussion',
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
