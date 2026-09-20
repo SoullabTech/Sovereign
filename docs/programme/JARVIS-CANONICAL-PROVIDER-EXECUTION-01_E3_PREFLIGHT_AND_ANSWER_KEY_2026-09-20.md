@@ -101,6 +101,33 @@ Three ways this act can spend the one-shot on an **instrument failure that looks
 
 **Owed before the gate clears**: the *effective allocated* context for this tag, read from the runtime rather than the metadata.
 
+## 10. A1 RESOLVED — ✅ PASSED at the boundary (2026-09-20)
+
+**Runtime allocation read from the server log, not from metadata:**
+```
+llama_context: n_ctx     = 32768
+n_ctx_seq                = 32768
+srv load_model: n_ctx_slot = 32768
+print_info: n_ctx_train  = 262144
+```
+⭐ **The gap is exactly the one A1 was written to catch**: `n_ctx_train = 262144` is the trained ceiling; `n_ctx = 32768` is what the slot actually allocates. Had `262144` been accepted, the gate would have cleared on a number that does not govern the run.
+
+**Gate: ≥ 32768. Allocated: 32768. ✅ PASSED** — met exactly, as predeclared. ⛔ The gate is **not** retroactively tightened now that the margin is visible; that would be the "reinterpret the contract when the result is inconvenient" move the freeze discipline forbids.
+
+**⚠️ Headroom is thin at the low end, recorded as an observation, ⛔ not a gate change.** Evidence bundle = **80,597 chars**; generation shares the same 32768 window:
+
+| chars/token | prompt | + scaffold | remaining for output |
+|---|---|---|---|
+| 4.0 | ~20,149 | ~1,500 | **~11,119** |
+| 3.5 | ~23,028 | ~1,500 | **~8,240** |
+| 3.0 (dense code) | ~26,866 | ~1,500 | **~4,402** |
+
+A thorough answer to eight acceptance conditions can approach the low figure. **This does not truncate the prompt** — the A1 hazard — but it can truncate the *generation*, which would surface as an answer that stops mid-condition.
+
+**⭐⭐ And a free remedy is already configured but not in effect.** `OLLAMA_CONTEXT_LENGTH = 65536` is set in the environment, yet the running server allocated **32768** — **the server did not inherit it.** *A declared setting that is not authoritative in the execution environment* — the same defect class as the branch-policy finding of 2026-09-13, where a committed rule was present but not enforced where it mattered.
+
+**Founder's call, ⛔ not a blocker:** restarting the Ollama server claims the already-configured 65536 and doubles the headroom before the Work Unit exists. Cost: **re-run the §G calibration afterwards**, since a restart may rotate the log handle and the witness must be proven live against the server that will actually serve the run. Proceeding at 32768 is within the ratified gate and defensible.
+
 ## 6. Standing
 
 **E3 AUTHORIZED · PRE-FLIGHT ✅ DISCHARGED · SUBSTRATE ✅ VERIFIED AT EXACT SHA · ANSWER KEY ✅ PRE-REGISTERED · ⛔ MEASUREMENT UNSPENT, OWED TO THE BOUND macOS HOST · ⛔ NO PROVIDER ATTEMPT MADE · ⛔ NO GRANT ISSUED · ⛔ NO SOURCE MODIFIED · PRODUCTION UNTOUCHED.**
