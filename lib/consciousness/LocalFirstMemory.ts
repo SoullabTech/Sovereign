@@ -1,4 +1,27 @@
 /**
+ * ⛔⛔ QUARANTINED — DEAD CODE, MARKED FOR REMOVAL (F5-REPAIR-02, 2026-09-20).
+ *
+ * THIS MODULE IS NOT WIRED TO ANYTHING. It has ZERO importers anywhere in the
+ * repository. Nothing in MAIA stores member data on the device, and nothing
+ * here runs.
+ *
+ * ⛔ DO NOT CITE THIS FILE AS EVIDENCE THAT LOCAL-FIRST OR END-TO-END ENCRYPTED
+ * MEMBER STORAGE EXISTS. It is a design sketch that was never connected. The
+ * consent surface that implied this capability was closed on 2026-09-20
+ * precisely because it promised what this file does not deliver.
+ *
+ * ⛔ The description below names "encrypted sync to Supabase". Supabase is a
+ * PROHIBITED dependency (CLAUDE.md: "We do NOT use Supabase. Never introduce
+ * Supabase."). No @supabase import exists here — the reference is prose only,
+ * which is why `npm run check:no-supabase` stays clean — but the prose alone
+ * makes this file misleading about the project's architecture.
+ *
+ * Disposition: delete, or rewrite against lib/db/postgres.ts if device-side
+ * storage is ever actually authorized. Deleting it is a founder act; this
+ * header is the interim quarantine. Git history preserves the content.
+ *
+ * ── original header follows, unedited ──────────────────────────────────────
+ *
  * LOCAL-FIRST ENCRYPTED MEMORY SYSTEM
  *
  * Privacy-first architecture:

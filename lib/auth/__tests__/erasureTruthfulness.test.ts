@@ -29,6 +29,7 @@
  */
 import { describe, it, expect } from '@jest/globals';
 import { readFileSync } from 'fs';
+import { execSync } from 'child_process';
 import path from 'path';
 
 const root = (rel: string) => path.resolve(__dirname, '../../..', rel);
@@ -147,5 +148,83 @@ describe('requestDataDeletion cannot report a success it never requested', () =>
   it('throws rather than returning a success flag', async () => {
     const mod = await import('@/lib/storage/sovereign');
     await expect(mod.requestDataDeletion('member-1')).rejects.toThrow(/not implemented/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 4. The consent surface (F5-REPAIR-02, 2026-09-20)
+//
+// The panel offered seven storage controls. Exactly one was enforced anywhere
+// (`audioServer`, at app/api/journal/quick/audio/route.ts:176). The other six —
+// three "Device" buttons carrying the local_only affordance, two non-audio
+// "Server" buttons, and a "Sanctuary Mode Default" toggle promising that
+// nothing would be saved — enforced nothing.
+//
+// A control that collects a sovereign decision the system cannot honour is the
+// same defect as a success message for work that did not happen.
+
+describe('the consent surface offers only what is enforced', () => {
+  const code = stripped(SETTINGS);
+
+  it('no longer offers device-only storage', () => {
+    // The local_only affordance. No code path stores a data type on the device
+    // instead of the server, or withholds a server write on its account.
+    expect(code).not.toMatch(/<HardDrive[^>]*\/>\s*\n\s*Device/);
+    expect(code).not.toMatch(/>\s*Device\s*</);
+  });
+
+  it('no longer offers a standing Sanctuary default', () => {
+    // Per-SESSION sanctuary is real and enforced. This standing preference
+    // wrote localStorage that only this panel read back, while promising
+    // "no conversations, journals, transcripts, or audio saved".
+    expect(code).not.toMatch(/updateSanctuaryDefault\(/);
+    expect(code).not.toMatch(/Sanctuary Mode Default/);
+  });
+
+  it('keeps the one control that IS enforced', () => {
+    // Removing a working consent control would reduce member sovereignty.
+    expect(code).toMatch(/updateDataTypeConsent\('audio'/);
+  });
+
+  it('states what the member cannot control, rather than implying it', () => {
+    expect(code).toMatch(/What you cannot control yet/);
+    expect(code).toMatch(/Sanctuary works per session/);
+  });
+
+  it('does not claim deletion is complete', () => {
+    expect(code).toMatch(/Deleting your account is also currently incomplete/);
+  });
+});
+
+describe('updateStorageConsent cannot silently discard a consent change', () => {
+  it('throws rather than resolving as though it persisted', async () => {
+    const mod = await import('@/lib/storage/sovereign');
+    await expect(mod.updateStorageConsent('member-1', {})).rejects.toThrow(/not implemented/i);
+  });
+});
+
+describe('LocalFirstMemory stays quarantined', () => {
+  it('is marked as dead code and not a capability', () => {
+    const raw = readFileSync(root('lib/consciousness/LocalFirstMemory.ts'), 'utf8');
+    expect(raw).toMatch(/QUARANTINED/);
+    expect(raw).toMatch(/ZERO importers/);
+  });
+
+  it('has no importers — if this fails, someone wired dead code to a member path', () => {
+    // The load-bearing assertion. The header comment stops a reader being
+    // misled; this stops the file being used.
+    const out = execSync(
+      "grep -rl 'LocalFirstMemory' --include='*.ts' --include='*.tsx' lib app components 2>/dev/null || true",
+      { cwd: root('.'), encoding: 'utf8' },
+    )
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(
+        (l) =>
+          l.length > 0 &&
+          !l.endsWith('lib/consciousness/LocalFirstMemory.ts') &&
+          !l.includes('__tests__'), // this file names it in order to guard it
+      );
+    expect(out).toEqual([]);
   });
 });

@@ -2080,210 +2080,128 @@ export function AccountSettings() {
     showSaveIndicator();
   }, [showSaveIndicator]);
 
+  /**
+   * F5-REPAIR-02 — CONSENT SURFACE CLOSURE (founder act, 2026-09-20).
+   *
+   * This panel previously offered seven controls. Exactly ONE of them was
+   * enforced anywhere in the system:
+   *
+   *   audio → Server   ENFORCED at app/api/journal/quick/audio/route.ts:176
+   *                    (`if (storageConsent.audioServer !== true)` refuses the
+   *                    upload). Server-authoritative, read from
+   *                    member_settings.storage_consent. KEPT.
+   *
+   *   conversations → Device / Server   NOT enforced. The value persists to
+   *   journals      → Device / Server   member_settings.storage_consent and
+   *   audio         → Device            nothing reads it. The "Device" buttons
+   *                                     are the local_only affordance: no code
+   *                                     path anywhere stores a data type on the
+   *                                     device instead of the server, and none
+   *                                     withholds a server write on their
+   *                                     account. CLOSED.
+   *
+   *   Sanctuary Mode Default   NOT enforced, and the most serious of the seven:
+   *                            it wrote localStorage.maia_sanctuary_default,
+   *                            which only this panel read back, while promising
+   *                            "no conversations, journals, transcripts, or
+   *                            audio saved". Nothing set a session sanctuary
+   *                            from it. Per-SESSION Sanctuary is real and is
+   *                            enforced (app/api/voice/persist/route.ts:72;
+   *                            scribe end-session purge) — it was only this
+   *                            standing DEFAULT that was inert. CLOSED, and the
+   *                            member is pointed at the mechanism that works.
+   *
+   * Removing the working audio control would have reduced member sovereignty,
+   * so it stays. Everything that enforced nothing is gone rather than disabled:
+   * a greyed-out toggle still implies the capability exists and is merely
+   * unavailable. What is not enforced is now stated, not implied.
+   *
+   * ⛔ This closes a surface. It implements no storage control, and it does not
+   * alter F5 ERASURE CONFORMANCE, which remains FAIL / STOP.
+   * Record: docs/programme/F5-REPAIR-02_CONSENT_SURFACE_CLOSURE_2026-09-20.md
+   */
   const renderDataPrivacy = () => {
     const details = consentSummary?.details;
-
-    // Compute live status
-    const getStatusLabel = () => {
-      if (consentSummary?.sanctuaryDefault) {
-        return { text: 'Sanctuary mode — not saved', color: 'text-emerald-400', icon: Shield };
-      }
-      const hasLocal = consentSummary?.localEnabled;
-      const hasServer = consentSummary?.serverEnabled;
-      // Use shared defaults from storage system
-      const audioLocal = details?.audio?.saveLocal ?? DEFAULT_STORAGE_CONSENT.audioLocal;
-      const audioServer = details?.audio?.saveServer ?? DEFAULT_STORAGE_CONSENT.audioServer;
-      const audioSaved = audioLocal || audioServer;
-
-      // Build status text with audio indicator
-      let audioStatus = audioSaved
-        ? (audioLocal && audioServer ? ' | Audio: device + server' : audioLocal ? ' | Audio: device' : ' | Audio: server')
-        : '';
-
-      if (hasLocal && hasServer) {
-        return { text: `Saved locally + synced to server${audioStatus || ' | Audio: off'}`, color: 'text-amber-400', icon: Check };
-      }
-      if (hasLocal) {
-        return { text: `Saved locally only${audioStatus || ' | Audio: off'}`, color: 'text-blue-400', icon: HardDrive };
-      }
-      if (hasServer) {
-        return { text: `Synced to server only${audioStatus || ' | Audio: off'}`, color: 'text-purple-400', icon: Cloud };
-      }
-      return { text: 'Not saving', color: 'text-stone-400', icon: AlertTriangle };
-    };
-
-    const status = getStatusLabel();
-    const StatusIcon = status.icon;
-
-    const DATA_TYPES: { id: DataType; label: string; desc: string; helper?: string }[] = [
-      { id: 'conversations', label: 'Conversations', desc: 'Your chats with MAIA (includes voice transcripts)' },
-      { id: 'journals', label: 'Journals', desc: 'Quick journal entries and reflections' },
-      {
-        id: 'audio',
-        label: 'Audio recordings',
-        desc: 'Raw voice recordings (off by default)',
-        helper: 'Transcript and audio are separate: you can save transcripts without saving raw audio.'
-      },
-    ];
+    const memberTier = profile?.membership?.tier || 'explorer';
+    const canSaveAudioServer = memberTier !== 'explorer';
+    const audioServer = details?.audio?.saveServer ?? Boolean(DEFAULT_STORAGE_CONSENT.audioServer);
 
     return (
       <div className="space-y-6">
-        {/* Live Status Indicator */}
-        <div className={`flex items-center gap-3 p-4 rounded-xl border ${
-          consentSummary?.sanctuaryDefault
-            ? 'bg-emerald-500/10 border-emerald-500/30'
-            : 'bg-white/5 border-white/10'
-        }`}>
-          <StatusIcon size={20} className={status.color} />
-          <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
+        {/* Honest status: what is actually true today */}
+        <div className="flex items-start gap-3 p-4 rounded-xl border bg-white/5 border-white/10">
+          <Database size={18} className="text-amber-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <div className="text-sm font-medium text-stone-200">
+              Your conversations and journals are stored on Soullab&apos;s server
+            </div>
+            <div className="text-xs text-stone-400 mt-1">
+              Self-hosted on hardware we control. No third-party processor, no cloud database.
+            </div>
+          </div>
         </div>
 
-        {/* Audio Privacy Banner */}
-        {(() => {
-          // Adaptive footnote based on what's enabled
-          const convoEnabled = details?.conversations?.saveLocal || details?.conversations?.saveServer;
-          const journalEnabled = details?.journals?.saveLocal || details?.journals?.saveServer;
-          const transcriptNote = convoEnabled && journalEnabled
-            ? 'Voice transcripts may be saved in Conversations or Journals.'
-            : convoEnabled
-              ? 'Voice transcripts may be saved in Conversations.'
-              : journalEnabled
-                ? 'Voice transcripts may be saved in Journals.'
-                : 'Voice transcripts won\u2019t be saved unless you enable Conversations or Journals.';
-
-          return (
-            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-              <div className="flex items-start gap-3">
-                <Mic className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                <div className="text-sm">
-                  <p className="text-amber-200 font-medium mb-2">Audio privacy (default: off)</p>
-                  <p className="text-stone-300 leading-relaxed">
-                    Raw audio recordings are <strong>not saved</strong> unless you enable audio saving below.
-                  </p>
-                  <p className="text-stone-400 mt-2 text-xs">
-                    Transcript and audio are separate: you can save transcripts without saving raw audio.
-                  </p>
-                  <p className="text-stone-400 mt-1 text-xs">
-                    {transcriptNote} Use <strong>Sanctuary mode</strong> for sessions that aren&apos;t saved at all.
-                  </p>
+        {/* The one control that is actually enforced */}
+        <div>
+          <label className="text-sm font-medium text-amber-200/80 mb-3 block">
+            What you can control today
+          </label>
+          <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-sm font-medium text-stone-200">Audio recordings</div>
+                <div className="text-xs text-stone-400 mt-0.5">
+                  Raw voice recordings. Off by default. Transcripts are separate — declining
+                  this does not stop transcripts being saved.
                 </div>
               </div>
+              {renderToggle(
+                audioServer && canSaveAudioServer,
+                () => {
+                  if (!canSaveAudioServer) return;
+                  updateDataTypeConsent('audio', details?.audio?.saveLocal ?? false, !audioServer);
+                }
+              )}
             </div>
-          );
-        })()}
-
-        {/* Sanctuary Mode Toggle */}
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl border border-emerald-500/20">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
-              <Shield size={18} />
-            </div>
-            <div>
-              <div className="text-sm font-medium text-emerald-200">Sanctuary Mode Default</div>
-              <div className="text-xs text-stone-400">
-                Ephemeral sessions — no conversations, journals, transcripts, or audio saved
+            {!canSaveAudioServer && (
+              <div className="mt-3 text-xs text-amber-300/60">
+                Cloud audio backup is a paid feature.{' '}
+                <a href="/patrons" className="underline hover:text-amber-200">Upgrade</a> to enable.
+                Your recordings are not uploaded.
               </div>
-            </div>
+            )}
           </div>
-          {renderToggle(
-            consentSummary?.sanctuaryDefault ?? false,
-            () => updateSanctuaryDefault(!consentSummary?.sanctuaryDefault)
-          )}
         </div>
 
-        {/* Per-Data-Type Toggles */}
-        {!consentSummary?.sanctuaryDefault && (() => {
-          // Paid feature gate: server audio requires paid membership
-          const memberTier = profile?.membership?.tier || 'explorer';
-          const canSaveAudioServer = memberTier !== 'explorer';
-
-          return (
-          <div>
-            <label className="text-sm font-medium text-amber-200/80 mb-3 block">
-              Choose what MAIA saves
-            </label>
-            <div className="space-y-3">
-              {DATA_TYPES.map(({ id, label, desc, helper }) => {
-                const typeDetails = details?.[id];
-                // Use shared defaults from storage system (single source of truth)
-                const localKey = `${id}Local` as keyof typeof DEFAULT_STORAGE_CONSENT;
-                const serverKey = `${id}Server` as keyof typeof DEFAULT_STORAGE_CONSENT;
-                const saveLocal = typeDetails?.saveLocal ?? Boolean(DEFAULT_STORAGE_CONSENT[localKey]);
-                const saveServer = typeDetails?.saveServer ?? Boolean(DEFAULT_STORAGE_CONSENT[serverKey]);
-                const neitherEnabled = !saveLocal && !saveServer;
-
-                // Audio server is gated to paid members
-                const isAudio = id === 'audio';
-                const serverDisabled = isAudio && !canSaveAudioServer;
-
-                return (
-                  <div key={id} className="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <div className="text-sm font-medium text-stone-200">{label}</div>
-                        <div className="text-xs text-stone-400">{desc}</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => updateDataTypeConsent(id, !saveLocal, saveServer)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
-                          saveLocal
-                            ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300'
-                            : 'bg-white/5 border border-white/10 text-stone-400'
-                        }`}
-                      >
-                        <HardDrive size={14} />
-                        Device
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (serverDisabled) return;
-                          updateDataTypeConsent(id, saveLocal, !saveServer);
-                        }}
-                        disabled={serverDisabled}
-                        title={serverDisabled ? 'Server audio backup is a paid feature' : undefined}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
-                          saveServer
-                            ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
-                            : 'bg-white/5 border border-white/10 text-stone-400'
-                        } ${serverDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      >
-                        <Cloud size={14} />
-                        Server{serverDisabled ? ' 🔒' : ''}
-                      </button>
-                    </div>
-                    {/* Paid feature notice for audio server */}
-                    {isAudio && !canSaveAudioServer && (
-                      <div className="mt-2 text-xs text-amber-300/60 text-center">
-                        Cloud audio backup is a paid feature.{' '}
-                        <a href="/patrons" className="underline hover:text-amber-200">
-                          Upgrade
-                        </a>{' '}
-                        to enable. Your audio stays on this device unless you opt in.
-                      </div>
-                    )}
-                    {/* Status text when neither enabled */}
-                    {neitherEnabled && (
-                      <div className="mt-2 text-xs text-stone-400 text-center">
-                        {id === 'audio' ? 'Audio recordings will not be stored' : `${label} will not be stored`}
-                      </div>
-                    )}
-                    {/* Helper text (e.g., for audio) */}
-                    {helper && (
-                      <div className="mt-2 text-xs text-amber-300/60 italic">
-                        {helper}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+        {/* What is NOT controllable — stated, not implied */}
+        <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20">
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={16} className="text-amber-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-medium text-amber-200">
+                What you cannot control yet
+              </div>
+              <p className="text-xs text-stone-300 mt-2">
+                We previously showed device-only and per-type storage switches here. They did not
+                do anything, so we have removed them rather than leave you with controls that
+                look real. Today you cannot choose to keep conversations or journals only on
+                your device, and you cannot set Sanctuary as a standing default.
+              </p>
+              <p className="text-xs text-stone-300 mt-2">
+                <span className="text-stone-200 font-medium">Sanctuary works per session.</span>{' '}
+                Turn it on for a conversation and that conversation is not saved. That mechanism
+                is real — it was only the &ldquo;always start in Sanctuary&rdquo; preference that
+                was not wired to anything.
+              </p>
+              <p className="text-xs text-stone-300 mt-2">
+                Deleting your account is also currently incomplete. If you ask, we will tell you
+                exactly what is still held rather than report a deletion that did not happen.
+              </p>
             </div>
           </div>
-          );
-        })()}
+        </div>
 
-        {/* What MAIA Uses */}
+        {/* What MAIA uses your data for */}
         <div className="pt-4 border-t border-white/10">
           <label className="text-sm font-medium text-amber-200/80 mb-3 block">
             What MAIA uses your data for
@@ -2304,15 +2222,6 @@ export function AccountSettings() {
                 <span className="text-stone-200 font-medium">Personalization</span>
                 <p className="text-stone-400 text-xs mt-0.5">
                   Your journals and conversations help MAIA understand what matters to you.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
-              <RefreshCw size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-stone-200 font-medium">Cross-device sync</span>
-                <p className="text-stone-400 text-xs mt-0.5">
-                  Server storage enables access from any device you sign into.
                 </p>
               </div>
             </div>

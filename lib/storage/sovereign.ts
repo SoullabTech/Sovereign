@@ -322,18 +322,27 @@ export async function saveQuickJournal(
 }
 
 /**
- * ⚠️ UNREPAIRED STUB — routed out of the F5 truthfulness lane, not fixed here.
- * This discards a member's consent change and returns as though it persisted.
- * Same defect class as requestDataDeletion above (silent false success), but
- * consent rather than erasure, so it sits outside the authorized scope.
- * No callers today. The governed write is POST /api/account/storage-consent.
+ * F5-REPAIR-02 consent surface closure (2026-09-20): this previously logged a
+ * member's consent change and returned as though it had persisted. Same defect
+ * class as requestDataDeletion below — a silent false success — but about
+ * consent rather than erasure.
+ *
+ * It has no callers. It fails loudly so it cannot acquire one silently: a
+ * caller wiring a consent control to this would ship a switch that appears to
+ * save and does not.
+ *
+ * The governed write is POST /api/account/storage-consent, which persists to
+ * member_settings.storage_consent. ⚠️ Persisting is not enforcing — at the time
+ * of this repair exactly one key was read by any runtime path
+ * (`audioServer`, at app/api/journal/quick/audio/route.ts:176).
  */
 export async function updateStorageConsent(
-  userId: string,
-  consent: Partial<StorageDecision>
+  _userId: string,
+  _consent: Partial<StorageDecision>
 ): Promise<void> {
-  // Stub
-  console.log('Storage consent updated:', userId, consent);
+  throw new Error(
+    'updateStorageConsent is not implemented. Do not present a consent control backed by this path.',
+  );
 }
 
 /**
