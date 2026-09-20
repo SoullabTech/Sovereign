@@ -40,7 +40,8 @@ The Deep-Intelligence Gate already ratified this shape for a different substitut
 | Provider chain is bidirectional: Claude failure falls back to Ollama, and Ollama failure falls forward to Claude | `lib/consciousness/LLMProvider.ts:202-245` |
 | The Claude→Ollama path is explicitly commented *"Graceful degradation"* and emits `console.warn` / `console.error` only | `lib/consciousness/LLMProvider.ts:207,240-245` |
 | `MAIA_STRICT_503` returns 503 instead of falling back — read once at construction from env | `lib/consciousness/LLMProvider.ts:23,160` |
-| **No provider or tier identity reaches the response payload.** `generateSimple` / tier generation return text; the serving identity is not carried out | `lib/consciousness/LLMProvider.ts:545-617` |
+| ⚠️ **CORRECTED 2026-09-20 (see below).** Non-streaming paths *did* carry served identity: `LLMResponse` has `provider` and `model`. The streaming path did not — `StreamEvent`'s `done` carried `metadata` only | `lib/consciousness/LLMProvider.ts` — `LLMResponse`, `StreamEvent` |
+| Structured fallback observability existed in **one direction only**: `logSovereigntyFallback` fires on intended-local → served-cloud. The intended-cloud → served-local direction emitted `console.log` and nothing else | `lib/consciousness/LLMProvider.ts` — `logSovereigntyFallback` and the two "Falling back to Ollama" branches |
 
 ⚠️ **Repository facts, not runtime facts.** No host read was performed. Whether production sets `LOCAL_TIER_ENABLED`, `ORACLE_FORCE_CLOUD` or `MAIA_STRICT_503`, and how often the fallback path is taken, are **NOT ESTABLISHED** here and must not later be cited from this note.
 
@@ -50,7 +51,15 @@ Three things are true together, and the third is the one that matters:
 
 1. **The substitution mechanism exists and is already exercised by design**, not only under failure. Under `LOCAL_TIER_ENABLED`, a member asking for a short Note transform receives a different mind than a member asking for depth — and nothing in the exchange says so.
 2. **The degradation is silent by construction.** Its only trace is a `console.warn` in an operator's log stream. The member-facing surface is identical.
-3. ⭐ **There is no channel through which it could be declared even if we decided to.** The serving identity is not returned from the provider layer at all. This is not a disclosure decision that was made and lost — it is a disclosure decision that has never been representable.
+3. ⭐ **Intended-versus-served was not representable, and the streaming path carried no identity at all.**
+
+⚠️ **Correction, 2026-09-20.** The first version of this document stated that "no provider or tier identity reaches the response payload." That was **wrong**, and it is corrected here rather than deleted. `LLMResponse` already carried `provider` and `model`, so the non-streaming paths did report *which mind answered*. The real gap was narrower and, in one respect, worse:
+
+- **Served identity existed; intended identity did not.** A turn degraded from Claude to Ollama and a turn routed to Ollama by design both returned `provider: 'ollama'`. At the boundary they were **indistinguishable**, so the degradation was invisible even though the served mind was named.
+- **The streaming path carried nothing.** `StreamEvent`'s `done` event had `metadata` only. A stream that failed over to Ollama mid-flight yielded text and a `done` with no serving identity whatsoever.
+- ⭐ **Observability ran in exactly one direction.** `logSovereigntyFallback` instrumented intended-local → served-cloud — a sovereignty leak. The opposite direction, intended-cloud → served-local, which is precisely the substitution this ladder governs, had **no structured event at all**. The instrument that existed was built to protect sovereignty, and capability degradation was never its subject.
+
+*The correction makes the finding sharper, not softer: the system could say which mind answered, and could not say that a substitution had occurred.*
 
 The honest option that does exist — `MAIA_STRICT_503`, refuse rather than substitute — is an **operator env flag, deployment-wide, read at construction**. It is a good instinct in the wrong hands: the choice between *a lesser MAIA* and *no MAIA* is currently made by whoever set an environment variable, for everyone, in advance, invisibly.
 
@@ -82,7 +91,7 @@ Two properties do the work:
 2. **MAIA declares it in her own voice, not the interface's.** *"I'm working with less depth than usual right now"* is MAIA speaking truthfully about herself. A grey banner is the system talking about MAIA, which is the interface claiming an authority over her state that it does not have.
 3. **The member's agency is over the choice, not the mechanism.** Where feasible, *a lesser MAIA now* versus *wait for the full one* is the member's call — not an operator's env flag set in advance for everyone. This is what `MAIA_STRICT_503` gets right in instinct and wrong in location.
 4. **Never retroactive.** A turn served at REDUCED is recorded as REDUCED. A later turn may not present the earlier one as though it were FULL.
-5. **Serving identity must become representable before anything else.** Until the provider layer carries out *which mind served this turn*, every rung above is undesignable. This is the first engineering step and it is small.
+5. **Serving identity must become representable before anything else.** Until the provider layer carries out *which mind was asked for, which answered, and how they diverged*, every rung above is undesignable. ✅ **Taken 2026-09-20** — see below. Representable is not disclosed: nothing reaches a member-facing surface, and that ruling is still owed.
 
 ## The tension worth keeping, not resolving here
 
@@ -94,7 +103,7 @@ A member in distress does not need a systems status report. There is a real conf
 
 ## What would have to be true to ratify
 
-1. Serving identity representable end-to-end (provider → route → response), with no member-facing change. Small, mechanical, and a precondition for everything else.
+1. ✅ **Done at the provider boundary, 2026-09-20.** `ServingIdentity` (`intendedProvider` · `intendedModel` · `servedProvider` · `servedModel` · `divergence` · `reason`) is now on every `LLMResponse` and on the stream's `done` event, and `llm.capability_degradation` gives the cloud→local direction the structured event it never had. ⛔ **Still owed: route → response.** Identity stops at the provider boundary; no caller propagates it, and nothing is member-facing.
 2. A production witness of how often each rung is actually reached — ⛔ currently unknown, and the ladder should not be designed against a guess.
 3. A canon ruling on the distress tension above.
 4. A ruling on where the FULL/REDUCED choice sits: member, operator, or contextual.
@@ -106,4 +115,4 @@ A member in distress does not need a systems status report. There is a real conf
 
 ## Standing
 
-**DEGRADATION LADDER ⭐ DIRECTION RECORDED · SUBSTITUTION MECHANISM ✅ ESTABLISHED IN SOURCE · SILENT DEGRADATION ✅ ESTABLISHED IN SOURCE · DISCLOSURE CHANNEL ❌ DOES NOT EXIST · RUNTIME FREQUENCY ⛔ NOT ESTABLISHED · DISTRESS TENSION ⛔ UNRESOLVED · ⛔ NO LANE OPENED · ⛔ NOTHING AUTHORIZED · PRODUCTION UNTOUCHED.**
+**DEGRADATION LADDER ⭐ DIRECTION RECORDED · SUBSTITUTION MECHANISM ✅ ESTABLISHED IN SOURCE · SILENT DEGRADATION ✅ ESTABLISHED IN SOURCE · SERVING IDENTITY ✅ REPRESENTABLE AT THE PROVIDER BOUNDARY (2026-09-20) · CAPABILITY-DIRECTION OBSERVABILITY ✅ ADDED · ROUTE→RESPONSE PROPAGATION ⛔ NOT DONE · DISCLOSURE ⛔ NOT RULED · RUNTIME FREQUENCY ⛔ NOT ESTABLISHED · DISTRESS TENSION ⛔ UNRESOLVED · ⛔ NO LANE OPENED · ⛔ NO BEHAVIOUR CHANGE · ⛔ NO MEMBER-FACING CHANGE · PRODUCTION UNTOUCHED.**
