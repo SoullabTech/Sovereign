@@ -84,6 +84,23 @@ Three ways this act can spend the one-shot on an **instrument failure that looks
 
 `JARVIS-CANONICAL-PROVIDER-EXECUTION-01_E3_HOST_RUNBOOK_AND_GRADING_2026-09-20.md` — executable host procedure, the armed non-execution witness, and the pre-declared grading sheet.
 
+## 9. Host readings — first pass (2026-09-20, Kellys-Mac-Studio)
+
+**§G witness calibration — ✅ PASS.** `~/.ollama/logs/server.log` **745251 → 764260 = +19,009 bytes** across a known inference event. The log witness is **live and non-vacuous**: it demonstrably registers the thing it is relied upon to exclude. Warm-up returned a normal completion, no timeout — A2 mitigated, model resident under a 30m keepalive.
+
+**⚠️ A1 context window — ⛔ NOT PASSED · HELD AT THE GATE.** The reading is ambiguous in the dangerous direction:
+
+- `ollama show qwen3-coder:30b` → **`context length 262144`**
+- `ollama show qwen3-coder:30b --modelfile | grep -i num_ctx` → **no output**
+
+⭐⭐ **These measure different things, and only the second one is the gate.** `context length 262144` is the **architecture's trained maximum**, read from GGUF metadata — the ceiling the weights support. It is **not** the runtime context Ollama allocates. With **no `PARAMETER num_ctx` in the Modelfile**, the served `num_ctx` falls back to the **Ollama server default** (historically 4096; later builds 8192, settable via `OLLAMA_CONTEXT_LENGTH`) — potentially **32× smaller than the ceiling the same command prints.**
+
+⭐ **Corroborated from the founder's own registry**: the sibling `maia-coder` carries an explicit `PARAMETER num_ctx 65536`. The tooling pins the runtime window when it matters — so its **absence** on `qwen3-coder:30b` is a meaningful silence, not an implied default of 262144.
+
+⛔ **A headline capability number is not an allocation.** Accepting `262144` here would have passed the A1 gate on a figure that does not govern the run — the exact silent-truncation failure A1 exists to prevent, wearing a larger number.
+
+**Owed before the gate clears**: the *effective allocated* context for this tag, read from the runtime rather than the metadata.
+
 ## 6. Standing
 
 **E3 AUTHORIZED · PRE-FLIGHT ✅ DISCHARGED · SUBSTRATE ✅ VERIFIED AT EXACT SHA · ANSWER KEY ✅ PRE-REGISTERED · ⛔ MEASUREMENT UNSPENT, OWED TO THE BOUND macOS HOST · ⛔ NO PROVIDER ATTEMPT MADE · ⛔ NO GRANT ISSUED · ⛔ NO SOURCE MODIFIED · PRODUCTION UNTOUCHED.**
