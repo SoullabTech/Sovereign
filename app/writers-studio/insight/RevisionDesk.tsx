@@ -7,6 +7,10 @@ import type { RebuildEditorialThread, RebuildEditorialVersion } from '@/lib/writ
 import WorkInspiration from './WorkInspiration';
 import { EDITORIAL_QUESTIONS } from '@/lib/writersStudio/editorialQuestions';
 import { comparisonSpan } from '@/lib/writersStudio/insightComparison';
+import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
+/* ⭐ ONE control, shared with the canvas surface. ⛔ Not re-declared here — a
+   second copy is a second place the protective default can drift. */
+import EditingLatitude from './EditingLatitude';
 
 export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;
@@ -14,6 +18,8 @@ export interface MemberRevisionDraft {
 export default function RevisionDesk({
   active = true, inline = false, onPreview, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
+  latitude = 1, onLatitude, mayRemoveParagraphs = false, onMayRemoveParagraphs, voiceNotice,
+  mayProposeImmediately = false, onMayProposeImmediately,
 }: {
   active?: boolean; inline?: boolean; onPreview?: (preview: { original: string; wording: string; changes: boolean } | null) => void;
   scopeKey?: string; showInspiration?: boolean; manuscriptId: string; title: string; currentText: string; thread: RebuildEditorialThread | null;
@@ -23,6 +29,16 @@ export default function RevisionDesk({
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   sectionBody?: string; appliedVersionId?: string | null; onUndo?: () => void; undoMessage?: string | null;
   busy: boolean; message: string | null; response: string | null; onKeep: () => void;
+  /** ⭐ The author's editing latitude. ⛔ Defaults to the most protective value. */
+  latitude?: EditorialLatitude; onLatitude?: (v: EditorialLatitude) => void;
+  mayRemoveParagraphs?: boolean; onMayRemoveParagraphs?: (v: boolean) => void;
+  /** ⭐ The per-Work release of the discuss-first order, at latitude 1. */
+  mayProposeImmediately?: boolean; onMayProposeImmediately?: (v: boolean) => void;
+  /**
+   * ⭐ What this suggestion brought in that is not the writer's, or `null`.
+   * ⛔ Shown BESIDE the proposal, never after the writer has accepted it.
+   */
+  voiceNotice?: string | null;
 }) {
   const [openTool, setOpenTool] = useState<string | null>(null);
   useEffect(() => { setOpenTool(null); }, [scopeKey]);
@@ -37,8 +53,19 @@ export default function RevisionDesk({
   const versionLabel = version ? alternativeLabel(version, thread?.versions.findIndex(v => v.id === version.id) ?? 0) : '';
   const discuss = () => {
     const question = [editorialQuestion, reasonQuestion, instruction.trim()].filter(Boolean).join('\n');
+    /* ⭐⭐ THE SECTION IS NO LONGER PASTED INTO THE WRITER'S OWN MESSAGE.
+     *
+     * ⚠️ It used to travel here as "Current section context (reference only)",
+     * which made the difference between MATERIAL MAIA MAY READ and WORDS SHE
+     * MAY CHANGE a parenthetical inside something the writer said. ⛔ It was
+     * not something the writer said. The server now retrieves the surround
+     * itself, as its own governed producer with its own stated permission
+     * (`retrieved.writer_editorial_surround`).
+     *
+     * ⛔ Do not reintroduce it here. Two copies would reach cognition with two
+     * different provenances, and the one wearing the writer's voice is the one
+     * that caused the 2026-09-19 rewrite. */
     const text = [directionContext, question ? 'My question:\n' + question : '',
-      sectionBody && sectionBody !== currentText ? 'Current section context (reference only):\n' + sectionBody : '',
       version ? 'Discussing saved alternative ' + versionLabel + ':\n' + version.wording : '',
       draft && draft.threadId === thread?.threadId ? 'My unsaved working revision (for discussion, do not apply):\n' + draft.text : '',
       'If offering replacement wording, begin its rationale with "Editorial purpose: <short descriptive name>". Distinguish meaning changes from style and treat reader benefits as hypotheses. Explain the editorial rationale using supplied wording: what you notice, the craft principle, the possible reader benefit, what could be lost, and a case for keeping the original. Ask where the author’s intention is unclear.'
@@ -124,6 +151,11 @@ export default function RevisionDesk({
           placeholder="Tell MAIA what feels right, or what you want to explore…"/>
         <button type="submit" disabled={blocked || (!instruction.trim() && !directionContext.trim() && !editorialQuestion && !reasonQuestion.trim()) || Boolean(draft && !draftMatches)}>{busy ? 'Thinking…' : 'Send'}</button>
       </form>
+      {onLatitude && onMayRemoveParagraphs && <EditingLatitude
+        latitude={latitude} onLatitude={onLatitude}
+        mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={onMayRemoveParagraphs}
+        mayProposeImmediately={mayProposeImmediately} onMayProposeImmediately={onMayProposeImmediately}
+        disabled={blocked} />}
       <div className="wsi-page-actions">
         {version && <div className="wsi-reading-switch" role="group" aria-label="Read passage">
           <button aria-pressed={!previewing} onClick={() => setShowProposal(false)}>Original</button>
@@ -136,6 +168,7 @@ export default function RevisionDesk({
             disabled={blocked || thread.legacyLocus || Boolean(draft) || !previewing || version.id === appliedVersionId}>Use this revision</button>
         </>}
       </div>
+      {voiceNotice && version && <p className="wsi-voice-notice" role="note">{voiceNotice}</p>}
       <div className="wsi-page-foot">
         <span>{draft ? 'Your draft · not applied' : previewing ? 'Preview · only this passage would change' : 'Your manuscript is unchanged while we explore'}</span>
         <button className="wsi-text-button" aria-expanded={openTool === 'tools'} onClick={() => toggleTool('tools')}>Explore more</button>
@@ -183,6 +216,11 @@ export default function RevisionDesk({
   return <section data-revision-desk data-inline={inline}>
     {showInspiration && <WorkInspiration manuscriptId={manuscriptId} onBringToQuestion={text => onInstruction([instruction, 'Work inspiration and intention:\n' + text].filter(Boolean).join('\n\n'))} />}
     {!inline && <><span className="wsi-eyebrow">Passage Work</span><h3>{title}</h3></>}
+    {onLatitude && onMayRemoveParagraphs && <EditingLatitude
+      latitude={latitude} onLatitude={onLatitude}
+      mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={onMayRemoveParagraphs}
+      mayProposeImmediately={mayProposeImmediately} onMayProposeImmediately={onMayProposeImmediately}
+      disabled={blocked} />}
     <details className="wsi-setup">
       <summary>Direction, intention, and voice</summary>
       <EditorialApproaches scopeKey={scopeKey} onContext={setDirectionContext} busy={blocked} />
@@ -206,6 +244,10 @@ export default function RevisionDesk({
           {diff.before}<del>{diff.removed}</del><ins>{diff.added}</ins>{diff.after}
         </div> : <div className="wsi-proposed wsi-prose">{version.wording || <em>Remove the selected passage.</em>}</div>}
         {changes && <p className="wsi-muted">Changes against the original passage held by this conversation. Underline = addition; strike-through = removal.</p>}
+        {/* ⭐⭐ Placed with the PROPOSAL, not with the outcome. A writer who is
+            still finding their voice needs to see this while deciding, not
+            after. ⛔ It is a fact and a question, never a grade. */}
+        {voiceNotice && <p className="wsi-voice-notice" role="note">{voiceNotice}</p>}
         {version.wording && <details><summary>Use selected words in my own revision</summary>
           <label>Select words from this proposal
             <textarea readOnly value={version.wording} aria-label="Select words from this proposal"

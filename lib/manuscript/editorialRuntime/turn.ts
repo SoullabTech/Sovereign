@@ -9,6 +9,7 @@
  *        ↓  constructEditorialWriterTurn → MIPA → canonical renderer
  *        ↓  runStructured()  — forced tool contract
  *        ↓  admitEditorialToolEnvelope()
+ *        ↓  ⭐ judgeProposalScope()                  (WS-EDITORIAL-SCOPE-01)
  *        ↓  persistMaiaEditorialOutcome()           (ER-R3)
  *
  * ── FOUR LAWS THIS FILE EXISTS TO KEEP ────────────────────────────────────
@@ -30,6 +31,13 @@
  *
  * 4 ⭐⭐ THE INVOCATION IS FROZEN BEFORE THE PROVIDER CALL and the same value
  *   goes to persistence. ⛔ No assembly reread after the provider returns.
+ *
+ * 5 ⭐⭐ A PROPOSAL IS AN EDIT OF THE AUTHOR'S PASSAGE, NOT A REPLACEMENT OF IT.
+ *   The author declares an editing latitude; MAIA is told it; and what comes
+ *   back is MEASURED against the frozen locus before anything is written.
+ *   ⛔ A proposal beyond the latitude refuses the whole turn — it is never
+ *   trimmed, never downgraded to a reply, and never shown to the author as
+ *   strike-through over their own words for them to police.
  */
 
 import { query } from '@/lib/db/postgres';
@@ -39,10 +47,20 @@ import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import {
-  admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchema,
+  admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchemaForKinds,
   editorialTurnIdentity,
   type EditorialInvocation, type MemberActKind, type OutcomeRefusal,
 } from '../editorialDiscourse/contract';
+import {
+  DEFAULT_SCOPE_DECLARATION, LATITUDE_BANDS, judgeProposalScope, latitudeInstruction,
+  type EditorialScopeDeclaration, type ScopeRefusal, type ScopeMeasure,
+} from '../editorialScope/contract';
+import {
+  UNFAMILIAR_BOUND, measureVoiceIntrusion, voiceNote,
+} from '../editorialScope/voice';
+import {
+  SEQUENCE_REFUSAL_DETAIL, availableOutcomeKinds, sequenceGateActive, sequenceInstruction,
+} from '../editorialScope/sequence';
 import { assembleEditorialCognition, type AssemblyRefusal } from './assembly';
 import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeResult } from './maiaOutcome';
 
@@ -80,6 +98,20 @@ export interface EditorialTurnInput {
   readonly currentDirectionId: string | null;
   readonly exchangeId: string;
   readonly sanctuary: boolean;
+  /**
+   * ⭐⭐ THE AUTHOR'S DECLARED EDITING LATITUDE for this exchange.
+   *
+   * ⛔ Absence is not permission: it resolves to `DEFAULT_SCOPE_DECLARATION`,
+   * which is the most protective setting available. A caller that forgets the
+   * field gets "Touch" and no paragraph removal — never the other way round.
+   */
+  readonly scope?: EditorialScopeDeclaration;
+  /**
+   * ⭐ The writer's PER-WORK release of the sequence gate.
+   * ⛔ Absence is not release. It defaults to `false`, so a caller that forgets
+   * the field gets the discussion-first order rather than losing it.
+   */
+  readonly mayProposeImmediately?: boolean;
 }
 
 export type EditorialTurnRefusal =
@@ -95,7 +127,25 @@ export type EditorialTurnRefusal =
    */
   | 'model_unattributable'
   /** The structured seam refused. ⛔ There is no fallback below this. */
-  | 'structured_refused';
+  | 'structured_refused'
+  /**
+   * ⭐⭐ THE PROPOSAL IS IN SOMEONE ELSE'S VOCABULARY, far past what the
+   * writer's latitude could plausibly mean. ⛔ Below the bound this is REPORTED
+   * and nothing is blocked — a studio that teaches shows the writer the thing.
+   */
+  | 'voice_intrusion'
+  /**
+   * ⭐ MAIA proposed wording on a turn where proposing was not available.
+   * ⛔ A BACKSTOP, not the mechanism: the schema already withheld the kind.
+   * Schema enforcement is a request to a provider, not a guarantee, and a law
+   * that exists only in a schema holds until a provider disagrees.
+   */
+  | 'sequence_discussion_first'
+  /**
+   * ⭐⭐ THE PROPOSAL EXCEEDED THE AUTHOR'S DECLARED LATITUDE.
+   * ⛔ Nothing was written, and the wording is not shown.
+   */
+  | ScopeRefusal;
 
 export type EditorialTurnResult =
   | {
@@ -103,8 +153,27 @@ export type EditorialTurnResult =
       readonly invocation: EditorialInvocation;
       readonly request: StructuredRequest;
       readonly persisted: Extract<MaiaOutcomeResult, { ok: true }>;
+      /**
+       * ⭐ What the suggestion brought in that is not the writer's, or `null`.
+       * ⛔ Present on SUCCESS — it is a thing to notice, not a thing to fail.
+       */
+      readonly voice: {
+        readonly note: string; readonly unfamiliar: readonly string[];
+        readonly sampleWords: number;
+      } | null;
     }
-  | { readonly ok: false; readonly reason: EditorialTurnRefusal; readonly detail?: string };
+  | {
+      readonly ok: false;
+      readonly reason: EditorialTurnRefusal;
+      readonly detail?: string;
+      /** ⭐ Present only on a scope refusal, so the writer can be told in counts. */
+      readonly scope?: { readonly measure: ScopeMeasure; readonly wouldPassAtLatitude: number | null };
+      /** ⭐ Present on a voice refusal, so the writer sees WHICH words. */
+      readonly voice?: {
+        readonly note: string; readonly unfamiliar: readonly string[];
+        readonly sampleWords: number;
+      };
+    };
 
 export async function runEditorialTurn(
   input: EditorialTurnInput,
@@ -147,11 +216,31 @@ export async function runEditorialTurn(
     : [];
   const cognitionBlocks: CandidateBlock[] = [...assembly.blocks, ...teachingBlocks];
 
+  /* ⭐ The author's declaration, resolved ONCE and used for both the
+     instruction MAIA is given and the law her answer is judged by. ⛔ Two
+     resolutions could disagree, and the one that governs must be the one she
+     was told about. */
+  const scope: EditorialScopeDeclaration = input.scope ?? DEFAULT_SCOPE_DECLARATION;
+
+  /* ⭐⭐ THE SEQUENCE GATE (founder ruling, 2026-09-20): at latitude 1, and only
+     there, MAIA discusses before offering wording — unless the writer has
+     flipped it for this Work. Resolved ONCE, like the scope, so the schema she
+     is given and the backstop she is judged by cannot disagree. */
+  const gated = sequenceGateActive({
+    declaration: {
+      latitude: scope.latitude,
+      mayProposeImmediately: input.mayProposeImmediately === true,
+    },
+    hasPriorMaiaTurn: assembly.hasPriorMaiaTurn,
+  });
+
   /* 3 ⭐⭐ FREEZE. Everything after this uses THIS object. */
   const invocation: EditorialInvocation = {
     chainId: assembly.chainId,
     threadId,
     authoredAgainstVersionId: assembly.invokedAgainstVersionId,
+    /* ⭐⭐ The words the scope law will measure against. ⛔ Never re-read. */
+    locusText: assembly.locusText,
   };
 
   /* 4 · canonical turn → MIPA → renderer, proving every supplied block crossed */
@@ -172,10 +261,18 @@ export async function runEditorialTurn(
   /* 5 ⛔ THE STRUCTURED SEAM. No fallback exists below this call. */
   const request: StructuredRequest = {
     model: EDITORIAL_MODEL,
-    system: proof.systemPrompt,
+    /* ⭐ THE LATITUDE IS STATED TO HER, as a courtesy so a refusal is the
+       exception rather than the routine. ⛔ It is NOT the enforcement — every
+       sentence of it is also a bound checked below on what actually comes
+       back, and deleting this line would not change what is permitted. */
+    system: [proof.systemPrompt, latitudeInstruction(scope), sequenceInstruction(gated)]
+      .filter(Boolean).join('\n\n'),
     messages: [{ role: 'user', content: utterance }],
     maxTokens: MAX_TOKENS,
-    tools: [{ name: EDITORIAL_TOOL_NAME, inputSchema: editorialToolSchema, schemaEnforcement: 'required',
+    /* ⭐ THE SCHEMA IS BUILT FOR THIS TURN. When the gate is on,
+       `reply_with_proposal` is simply not among the kinds. */
+    tools: [{ name: EDITORIAL_TOOL_NAME, inputSchema: editorialToolSchemaForKinds(availableOutcomeKinds(gated)),
+      schemaEnforcement: 'required',
       description: 'Return exactly one editorial outcome. For a proposal use this nested shape: '
         + '{"kind":"reply_with_proposal","reply":"Your explanation","proposal":{"replacementText":"Exact candidate wording","rationale":"Editorial purpose: Short name. Reason"}}. '
         + 'proposal is an OBJECT, never a string. replacementText and rationale belong INSIDE proposal, never at the top level. '
@@ -212,6 +309,79 @@ export async function runEditorialTurn(
   const admission = admitEditorialToolEnvelope(structured.result.content);
   if (!admission.ok) return { ok: false, reason: admission.reason };
 
+  /* 6b ⭐⭐ THE SCOPE LAW — WS-EDITORIAL-SCOPE-01.
+   *
+   * ⛔ A SECOND ADMISSION CONDITION, DELIBERATELY ITS OWN GATE. The first proved
+   * the ENVELOPE was well formed; this proves the PROPOSAL is an edit of the
+   * author's passage rather than a replacement of it. They are different
+   * questions with different inputs — the first needs only MAIA's answer, this
+   * one needs the author's words — and merging them would have made the
+   * envelope admitter depend on the Work.
+   *
+   * ⭐ MEASURED AGAINST THE FROZEN LOCUS, so she is judged against exactly what
+   * she was shown.
+   *
+   * ⛔⛔ AND THE WHOLE TURN IS REFUSED, NOT REPAIRED. It would be easy here to
+   * keep `reply` and drop the proposal — and that would be the system authoring
+   * MAIA's act, which is the member-side anti-classification law read from the
+   * other end. She proposed; the proposal was not permitted; nothing of hers is
+   * kept and nothing of the author's is shown struck through. The member's own
+   * act already persisted and still stands.
+   */
+  /* 6a ⭐ THE SEQUENCE BACKSTOP. ⛔ Reached only if a provider returned a kind
+     the schema withheld — rare by construction, and never the ordinary path,
+     which is why this lane narrows the vocabulary instead of refusing. */
+  if (gated && admission.outcome.kind === 'reply_with_proposal') {
+    return { ok: false, reason: 'sequence_discussion_first', detail: SEQUENCE_REFUSAL_DETAIL };
+  }
+
+  let voice: {
+    note: string; unfamiliar: readonly string[]; sampleWords: number;
+  } | null = null;
+
+  if (admission.outcome.kind === 'reply_with_proposal') {
+    const verdict = judgeProposalScope(
+      invocation.locusText, admission.outcome.proposal.replacementText, scope);
+    if (!verdict.ok) {
+      return {
+        ok: false, reason: verdict.reason, detail: verdict.detail,
+        scope: { measure: verdict.measure, wouldPassAtLatitude: verdict.wouldPassAtLatitude },
+      };
+    }
+
+    /* 6c ⭐⭐ VOICE — whose words the replacement is in.
+     *
+     * ⛔ A SEPARATE QUESTION FROM SIZE, and the reason it is separate is that
+     * a proposal can satisfy every size bound and still not be the writer's
+     * book. Nine words for nine, in a vocabulary they have never used.
+     *
+     * ⭐ DISCLOSURE FIRST. Below the bound the count is carried forward and the
+     * proposal stands — introducing a word is half of what editing is for.
+     * Refusal is only for the case where *a bounded edit* and *a passage in
+     * someone else's vocabulary* have stopped being the same thing.
+     */
+    const measure = measureVoiceIntrusion(
+      assembly.authorSample, invocation.locusText,
+      admission.outcome.proposal.replacementText);
+
+    if (measure.unfamiliar.length > UNFAMILIAR_BOUND[scope.latitude]) {
+      return {
+        ok: false, reason: 'voice_intrusion',
+        detail: `This suggestion brings in ${measure.unfamiliar.length} words you haven't `
+          + `used nearby — more than "${LATITUDE_BANDS[scope.latitude].label}" allows. `
+          + 'Nothing was changed. Ask MAIA to work with your own words, or widen how much '
+          + 'she may change.',
+        voice: {
+          note: voiceNote(measure) ?? '', unfamiliar: measure.unfamiliar,
+          sampleWords: measure.sampleWords,
+        },
+      };
+    }
+
+    const note = voiceNote(measure);
+    if (note) voice = { note, unfamiliar: measure.unfamiliar, sampleWords: measure.sampleWords };
+  }
+
   /* 7 · persist, with the provenance of the answer that ACTUALLY came back */
   const persisted = await persistMaiaEditorialOutcome({
     memberId, invocation, outcome: admission.outcome,
@@ -230,5 +400,5 @@ export async function runEditorialTurn(
   });
   if (!persisted.ok) return { ok: false, reason: persisted.reason, detail: persisted.detail };
 
-  return { ok: true, invocation, request, persisted };
+  return { ok: true, invocation, request, persisted, voice };
 }

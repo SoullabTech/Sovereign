@@ -84,3 +84,23 @@ test('page conversation previews before apply and preserves a draft through disc
   expect(container.querySelector('.wsi-revision')).toBe(draft);
   expect(onApply).not.toHaveBeenCalled();
 });
+
+test('inline applied receipt keeps Undo visible outside the collapsed tools', () => {
+  const onUndo=jest.fn();
+  const version={id:'v1',author:'maia',wording:'Quieter words.',rationale:'A quieter ending',supersedes:null};
+  const thread={threadId:'t1',targetSectionId:'s1',headVersionId:'v1',locusText:'Original words.',legacyLocus:false,versions:[version],turns:[]};
+  act(() => root.render(React.createElement(RevisionDesk, {
+    inline:true, showInspiration:false, manuscriptId:'m1',title:'My chapter',
+    currentText:'Quieter words.',sectionBody:'Before.\n\nQuieter words.\n\nAfter.',
+    thread,version,instruction:'',onInstruction:jest.fn(),onSend:jest.fn(),onApply:jest.fn(),
+    onPreview:jest.fn(),onSelectVersion:jest.fn(),onSaveMember:jest.fn(),onKeep:jest.fn(),
+    busy:false,message:null,response:null,appliedVersionId:'v1',onUndo
+  } as any)));
+  const tools=container.querySelector('.wsi-page-tools');
+  expect(tools?.hasAttribute('hidden')).toBe(true);
+  const undo=Array.from(container.querySelectorAll('button')).find(b=>b.textContent==='Undo this change')!;
+  expect(undo).toBeTruthy();
+  expect(undo.closest('.wsi-page-tools')).toBeNull();
+  act(()=>undo.click());
+  expect(onUndo).toHaveBeenCalledTimes(1);
+});

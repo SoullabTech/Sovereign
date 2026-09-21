@@ -39,6 +39,8 @@ const CONTRACT_RAW =
 
 const INVOCATION: EditorialInvocation = {
   chainId: 'C1', threadId: 'T1', authoredAgainstVersionId: 'V2',
+  /* ⭐ WS-EDITORIAL-SCOPE-01 — the author's words this invocation is about. */
+  locusText: 'the passage under discussion',
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -115,6 +117,9 @@ const BINDINGS: readonly TurnBinding[] = [
 ];
 const PARTICIPATION = {
   locus: { chainId: 'C1', originalText: 'He was there, fixated, and the river ran on.' },
+  /* ⭐ Context by default in the fixture, so the surround's absence is asserted
+     deliberately below rather than by accident everywhere. */
+  surround: { before: 'The morning had been long. ', after: ' He did not move.', truncated: false },
   turns: TURNS, versions: ORDERED, insights: INSIGHTS, directions: DIRECTIONS,
   bindings: BINDINGS, declaredAct: 'discourse' as const,
 };
@@ -281,12 +286,66 @@ describe('C1 · editorial participation partitions by authorship', () => {
   it('⛔ a producer with nothing to carry does not participate', () => {
     const empty = editorialCandidates({
       locus: { chainId: 'C1', originalText: 'x' },
+      surround: null,
       turns: [], versions: [], insights: [], directions: [], bindings: [],
       declaredAct: 'direction',
     });
     expect(ok(empty).map((b) => b.producerId)).toEqual([
       'retrieved.writer_editorial_locus', 'member.writer_editorial_act',
     ]);
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     ⭐⭐ THE SURROUND — READ SCOPE SEPARATED FROM CHANGE SCOPE (2026-09-20)
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  it('⭐ the surround is its own producer, after the locus', () => {
+    const ids = ok(editorialCandidates(PARTICIPATION)).map((b) => b.producerId);
+    expect(ids).toContain('retrieved.writer_editorial_surround');
+    expect(ids.indexOf('retrieved.writer_editorial_surround'))
+      .toBeGreaterThan(ids.indexOf('retrieved.writer_editorial_locus'));
+  });
+
+  it('⛔ an absent surround produces NO block, never an empty one', () => {
+    const ids = ok(editorialCandidates({ ...PARTICIPATION, surround: null }))
+      .map((b) => b.producerId);
+    expect(ids).not.toContain('retrieved.writer_editorial_surround');
+  });
+
+  it('⛔ an all-empty surround also produces no block', () => {
+    const ids = ok(editorialCandidates({
+      ...PARTICIPATION, surround: { before: '', after: '', truncated: false },
+    })).map((b) => b.producerId);
+    expect(ids).not.toContain('retrieved.writer_editorial_surround');
+  });
+
+  it('⭐⭐ the locus says it is the only text a proposal replaces', () => {
+    const locusBlock = ok(editorialCandidates(PARTICIPATION))
+      .find((b) => b.producerId === 'retrieved.writer_editorial_locus')!;
+    expect(locusBlock.text).toMatch(/ONLY TEXT ANY PROPOSAL OF YOURS REPLACES/);
+  });
+
+  it('⭐⭐ the surround states its own permission — context, not changeable', () => {
+    const block = ok(editorialCandidates(PARTICIPATION))
+      .find((b) => b.producerId === 'retrieved.writer_editorial_surround')!;
+    expect(block.text).toMatch(/CONTEXT ONLY, NOT YOURS TO CHANGE/);
+    expect(block.text).toContain('The morning had been long.');
+    expect(block.text).toContain('He did not move.');
+  });
+
+  it('⭐ a windowed surround says so; an unwindowed one does not', () => {
+    const say = (truncated: boolean) => ok(editorialCandidates({
+      ...PARTICIPATION, surround: { before: 'a', after: 'b', truncated },
+    })).find((b) => b.producerId === 'retrieved.writer_editorial_surround')!.text;
+    expect(say(true)).toMatch(/part nearest the passage/);
+    expect(say(false)).not.toMatch(/part nearest the passage/);
+  });
+
+  it('⭐ the surround carries the WRITER\'s authorship, like the locus', () => {
+    expect(EDITORIAL_PRODUCERS['retrieved.writer_editorial_surround'].authoredBy)
+      .toBe('member');
+    expect(EDITORIAL_PRODUCERS['retrieved.writer_editorial_surround'].participationClass)
+      .toBe('retrieved');
   });
 
   it('⛔ the locus is its own producer — never retrieved.writer_work_context', () => {
@@ -310,9 +369,13 @@ describe('C1 · editorial participation partitions by authorship', () => {
    * ⛔ The replacement is STRICTLY STRONGER: it pins the frozen axes, the room,
    * and the requirement flags — an inversion alone would have admitted the four
    * ids registered with any axes at all. */
-  it('⭐⭐ ER-R2 · the exact four are registered, with the frozen axes', () => {
+  it('⭐⭐ ER-R2 · the exact FIVE are registered, with the frozen axes', () => {
     const FROZEN = {
       'retrieved.writer_editorial_locus':  ['member', 'retrieved', 'situate'],
+      /* ⭐ WS-EDITORIAL-SCOPE-01 · the surround shares the locus's axes because
+         it is the same writer's text — and is its own id because it carries a
+         different permission. ⛔ Read, never changed. */
+      'retrieved.writer_editorial_surround': ['member', 'retrieved', 'situate'],
       'member.writer_editorial_history':   ['member', 'retrieved', 'situate'],
       'system.writer_editorial_history':   ['system', 'retrieved', 'situate'],
       'member.writer_editorial_act':       ['member', 'declared',  'situate'],
@@ -329,7 +392,7 @@ describe('C1 · editorial participation partitions by authorship', () => {
     }
   });
 
-  it('⛔ ER-R2 · none of the four is registered outside writers_studio', () => {
+  it('⛔ ER-R2 · none of the five is registered outside writers_studio', () => {
     for (const id of EDITORIAL_PRODUCER_IDS) {
       const spec = PRODUCER_REGISTRY[id as keyof typeof PRODUCER_REGISTRY];
       expect(spec.rooms).toEqual(['writers_studio']);
