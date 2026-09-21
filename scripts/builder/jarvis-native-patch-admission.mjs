@@ -111,7 +111,7 @@ export function inspectPatch(patchText, allowedFiles = []) {
   if (/^GOVERNANCE_GATE:/m.test(patch)) {
     return refusal("GOVERNANCE_GATE_IS_NOT_A_PATCH");
   }
-  if (!patch.trimStart().startsWith("diff --git ")) {
+  if (!patch.startsWith("diff --git ")) {
     return refusal("PATCH_MUST_BE_PURE_GIT_DIFF");
   }
   if (/```/.test(patch)) return refusal("PATCH_CODE_FENCE_UNSUPPORTED");
