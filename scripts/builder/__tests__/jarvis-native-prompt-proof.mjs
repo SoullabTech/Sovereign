@@ -38,11 +38,13 @@ try {
   assert.match(prompt, /MATERIALIZED CONTEXT/);
   assert.match(prompt, /alpha/);
   assert.match(prompt, /diff --git/);
+  assert.match(prompt, /first bytes of the response MUST be exactly `diff --git `/);
+  assert.match(prompt, /never delete and re-add unchanged lines/);
   assert.match(prompt, /GOVERNANCE_GATE:/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("6 passed · 0 failed");
+  console.log("8 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
