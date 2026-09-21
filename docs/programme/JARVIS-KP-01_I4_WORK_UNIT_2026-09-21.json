@@ -1,0 +1,121 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "I4",
+  "title": "Epistemic Join Integration Shadow",
+  "date": "2026-09-21",
+  "status": "EVIDENCE_READY",
+  "canonical_base": "20c8764b516e042f38e33800f71b2bb040025665",
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11",
+    "ACT 12",
+    "ACT 11A",
+    "ACT 12A",
+    "I1",
+    "I2",
+    "I3 canonical @ 20c8764b516e042f38e33800f71b2bb040025665"
+  ],
+  "authority": "INTEGRATION_SHADOW_ONLY_DEFAULT_OFF_NO_BEHAVIORAL_AUTHORITY",
+  "disposition": "REAL MAIA PROPOSAL PATH WIRED TO I2 CANDIDATE EVALUATION WITH STRUCTURAL TELEMETRY ONLY",
+  "selected_ingress": {
+    "path": "MAIA relational-field generative shadow",
+    "reason": "already member-scoped, provisional, basis-traced and jurisdiction-compatible",
+    "jurisdiction": "maia_conversational_inquiry",
+    "requires_existing_standing_render": true
+  },
+  "mapping": {
+    "minimum_distinct_basis_evidence": 2,
+    "basis_authorship": "member only",
+    "operation": "HYPOTHESIZE",
+    "requested_standing": "CANDIDATE_UNESTABLISHED",
+    "claimed_relation_semantics": [],
+    "warrants": [],
+    "authorship": "MAIA_PROPOSED",
+    "boundary": "basis establishes lineage, not entailment",
+    "stronger_standing_blocked": true
+  },
+  "feature_gate": {
+    "name": "MAIA_EPISTEMIC_JOIN_INTEGRATION_SHADOW",
+    "on_value": "1",
+    "default": "OFF",
+    "configured_outside_implementation_or_tests": false,
+    "outer_shadow_gate_still_required": true
+  },
+  "telemetry": {
+    "table": "maia_epistemic_join_integration_shadow_runs",
+    "parent": "maia_relational_field_shadow_runs",
+    "payload": [
+      "status",
+      "proposal_count",
+      "evaluated_count",
+      "admitted_standing_counts",
+      "refusal_code_counts",
+      "representation_closed",
+      "error_count"
+    ],
+    "semantic_payload": "NONE",
+    "member_id": "ABSENT",
+    "evidence_id": "ABSENT",
+    "join_id": "ABSENT",
+    "proposition_text": "ABSENT"
+  },
+  "containment": {
+    "live_response_effect": "NONE",
+    "memory_effect": "NONE",
+    "routing_effect": "NONE",
+    "projection_effect": "NONE",
+    "provider_model_change": "NONE",
+    "i3_semantic_persistence_call": "NONE",
+    "single_source_forced_into_join": false,
+    "ordinary_shadow_writer_changed": false,
+    "telemetry_failure_rolls_back_parent": false
+  },
+  "evidence": {
+    "i4_matrix": "22/22 PASS",
+    "epistemic_join_tests": "110/110 PASS",
+    "relational_shadow_runner_tests": "8/8 PASS",
+    "strict_epistemic_join_typecheck": "EXIT 0",
+    "i4_database_witness": "PASS",
+    "legacy_shadow_writer_and_types": "BYTE_IDENTICAL",
+    "diff_check": "PASS",
+    "repository_typecheck_local": "NOT_ADJUDICABLE_FROM_SPARSE_WORKTREE",
+    "repository_typecheck_required_hosted": true,
+    "data_class": "SYNTHETIC / LOCAL ONLY"
+  },
+  "falsifier_corrections": [
+    "one-source synthesis refused by I2 as relation_requires_two_endpoints; I4 narrowed to 2+ distinct basis evidence",
+    "nullable telemetry column on existing shadow writer rejected; separate child sink adopted",
+    "comment-based async falsifier corrected to executable setImmediate/unawaited-run structure"
+  ],
+  "forbidden_and_not_done": [
+    "feature activation",
+    "Founder production shadow",
+    "production member observation",
+    "I3 semantic persistence from runtime proposal path",
+    "standing promotion",
+    "representation or projection",
+    "MAIA prompt or context change",
+    "Member Memory mutation",
+    "lifting crossing_allowed",
+    "Wisdom Graph semantic edges",
+    "Living Constellation semantic lines",
+    "routing change",
+    "provider or model change",
+    "deployment",
+    "I5",
+    "pull request",
+    "merge"
+  ],
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_EXACT_I4_CANDIDATE",
+  "freshness_at_freeze": {
+    "origin_clean_main_no_secrets": "0319940f9dc94a637e6f1b0e9f843c971f6fb0c2",
+    "authorized_base_ahead": 0,
+    "origin_ahead": 22,
+    "origin_delta_file_count": 35,
+    "candidate_file_overlap": 0,
+    "governed_seam_overlap": 0,
+    "rebase_performed": false,
+    "next_requirement": "SEPARATE_FOUNDER_FRESHNESS_RECONCILIATION_BEFORE_PR_OR_CANONICALIZATION"
+  }
+}
