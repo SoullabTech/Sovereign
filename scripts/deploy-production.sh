@@ -79,6 +79,104 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 #
 # ⛔ NOT CHANGED: migration discovery, selection, ordering, the ledger, manifests,
 # or any migration file.
+# REVIEW-CUSTODY-01 / STEP 3 — production migration review preflight.
+#
+# This belongs at the DEPLOYMENT surface, not in the generic local migration
+# engine. Bootstrap/test/reconstruction databases are not production authority.
+# The pending set is derived read-only from the exact migration context + ledger,
+# and every pending SQL file must carry a physically witnessed Read event.
+_review_migration_compose() {
+    if [ -n "${MAIA_BUILD_CONTEXT:-}" ]; then
+        deploy_ctx_compose "$@"
+    else
+        docker compose -f "$COMPOSE_FILE" "$@"
+    fi
+}
+
+collect_pending_production_migrations() {
+    local raw
+    if ! raw="$(_review_migration_compose --profile migrate run --rm -T migrate sh -c '
+        set -eu
+        ledger="$(mktemp)"
+        trap '"'"'rm -f "$ledger"'"'"' EXIT
+        psql "$DATABASE_URL" -Atc "SELECT filename FROM schema_migrations WHERE filename IS NOT NULL ORDER BY 1" > "$ledger"
+        for f in /app/database/migrations/*.sql; do
+            [ -e "$f" ] || continue
+            b="${f##*/}"
+            if ! grep -Fxq "$b" "$ledger"; then
+                printf "database/migrations/%s\n" "$b"
+            fi
+        done
+    ')"; then
+        log_error "⛔ Could not derive the production-pending migration set read-only."
+        log_error "   REVIEW-CUSTODY refuses rather than guessing what would execute."
+        return 1
+    fi
+    printf '%s\n' "$raw" | grep -E '^database/migrations/[^/]+\.sql$' || true
+}
+
+review_migration_custody_or_abort() {
+    local phase="$1"
+    local target="${DEPLOY_CTX_FULL_SHA:-}"
+    if [ -z "$target" ]; then
+        target="$(git -C "$PROJECT_DIR" rev-parse HEAD 2>/dev/null || true)"
+    fi
+    if [ -z "$target" ]; then
+        log_error "⛔ REVIEW-CUSTODY cannot resolve the exact migration target commit."
+        return 1
+    fi
+
+    local pending
+    if ! pending="$(collect_pending_production_migrations)"; then
+        log_error "$phase aborted before migration: pending-set witness failed."
+        return 1
+    fi
+    if [ -z "$pending" ]; then
+        log_info "REVIEW-CUSTODY: no production-pending migrations; no migration review required."
+        return 0
+    fi
+
+    local record="${REVIEW_CUSTODY_RECORD:-}"
+    local review="${REVIEW_CUSTODY_REVIEW:-}"
+    local trace="${REVIEW_CUSTODY_TRACE:-}"
+    if [ -z "$record" ] || [ -z "$review" ] || [ -z "$trace" ]; then
+        log_error "════════════════════════════════════════════════════════════════"
+        log_error "⛔ DATABASE MIGRATION REVIEW REQUIRED — $phase REFUSED"
+        log_error "════════════════════════════════════════════════════════════════"
+        log_error "Pending migrations exist, but the bound evidence triplet is incomplete."
+        log_error "Set REVIEW_CUSTODY_RECORD, REVIEW_CUSTODY_REVIEW, REVIEW_CUSTODY_TRACE."
+        log_error "Self-reported coverage is not accepted."
+        printf '%s\n' "$pending" | sed 's/^/  pending: /' >&2
+        return 1
+    fi
+
+    local gate_root="${MAIA_BUILD_CONTEXT:-$PROJECT_DIR}"
+    local gate="$gate_root/scripts/review-custody-migration-gate.ts"
+    if [ ! -f "$gate" ]; then
+        log_error "⛔ Migration review gate is absent from target context: $gate"
+        return 1
+    fi
+    local tsx_bin="$PROJECT_DIR/node_modules/.bin/tsx"
+    if [ ! -x "$tsx_bin" ]; then
+        log_error "⛔ Migration review gate cannot execute: host tsx unavailable at $tsx_bin"
+        return 1
+    fi
+
+    local args=(--record "$record" --review "$review" --trace "$trace"
+                --repo "$PROJECT_DIR" --target "$target")
+    local m
+    while IFS= read -r m; do
+        [ -n "$m" ] && args+=(--migration "$m")
+    done <<< "$pending"
+
+    log_info "REVIEW-CUSTODY: checking bound review for production-pending migrations..."
+    if ! "$tsx_bin" "$gate" "${args[@]}"; then
+        log_error "⛔ $phase aborted before migration: bound review does not apply."
+        return 1
+    fi
+    log_success "Migration review custody applies to the exact pending set"
+}
+
 run_migrations_or_abort() {
     local phase="$1"   # the command whose deploy this is, for the operator
 
@@ -516,6 +614,10 @@ cmd_deploy() {
     # PRE-swap: the built image must carry the asserted stamp; abort before any swap.
     deploy_ctx_verify_image "$GIT_COMMIT" "$MAIA_IMAGE_REPO:prod" || exit 1
 
+    # REVIEW-CUSTODY-01 / STEP 3: refuse before the swap if pending migrations
+    # do not carry an exact, mechanically witnessed, still-applicable review.
+    review_migration_custody_or_abort "Deployment"
+
     # Tag images for rollback capability BEFORE starting
     tag_images_for_rollback "$GIT_COMMIT"
 
@@ -608,6 +710,9 @@ cmd_update() {
     # PRE-swap: the built image must carry the asserted stamp; abort before any swap.
     deploy_ctx_verify_image "$GIT_COMMIT" "$MAIA_IMAGE_REPO:prod" || exit 1
 
+    # REVIEW-CUSTODY-01 / STEP 3: same pre-swap gate on update.
+    review_migration_custody_or_abort "Update"
+
     # Tag images for rollback capability BEFORE restarting
     tag_images_for_rollback "$GIT_COMMIT"
 
@@ -641,6 +746,9 @@ cmd_migrate() {
     log_info "Running database migrations..."
 
     cd "$PROJECT_DIR"
+
+    # Migration-only production acts are governed by the same bound review.
+    review_migration_custody_or_abort "Migration-only run"
 
     docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate
 

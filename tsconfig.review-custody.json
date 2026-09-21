@@ -15,6 +15,7 @@
     "tests/constitutional/review-custody/**/*.ts",
     "scripts/review-custody-core.ts",
     "scripts/review-custody-coverage.ts",
+    "scripts/review-custody-migration-gate.ts",
     "scripts/verify-review-custody-freeze.ts",
     "scripts/review-custody.ts"
   ]
