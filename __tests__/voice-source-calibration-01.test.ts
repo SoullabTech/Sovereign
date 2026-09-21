@@ -38,6 +38,8 @@ describe('SOURCE LEVEL-CALIBRATION-01 bounded implementation', () => {
     expect(batch).toContain('OUTPUT_VOLUME=69');
     expect(batch).not.toContain('set volume');
     expect(batch).not.toContain('output volume of');
+    expect(batch).not.toContain('sort -z');
+    expect(batch).not.toContain('xargs -0');
   });
 
   it('requires fixed geometry and fail-closed harness-zero custody before playback and after source settle', () => {
