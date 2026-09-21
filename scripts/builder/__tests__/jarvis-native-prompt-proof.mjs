@@ -63,12 +63,12 @@ try {
   const prompt = buildNativePrompt(packet, repo);
   assert.match(prompt, /MATERIALIZED CONTEXT/);
   assert.match(prompt, /alpha/);
-  assert.match(prompt, /diff --git/);
-  assert.match(prompt, /first bytes of the response MUST be exactly `diff --git `/);
-  assert.match(prompt, /never delete and re-add unchanged lines/);
-  assert.match(prompt, /Do not wrap the diff in a Markdown code fence/);
-  assert.match(prompt, /single backticks, are allowed when they belong to the file/);
-  assert.match(prompt, /no commentary or summary may follow it/);
+  assert.match(prompt, /EDIT_JSON:/);
+  assert.match(prompt, /one physical line/);
+  assert.match(prompt, /old_text must be copied EXACTLY/);
+  assert.match(prompt, /smallest exact replacement/);
+  assert.match(prompt, /JARVIS, not you, renders the git patch/);
+  assert.match(prompt, /response itself remains one physical line/);
   assert.match(prompt, /every identifier you add is already in scope or is imported/);
   assert.match(prompt, /follow that precedent exactly/);
   assert.match(prompt, /GOVERNANCE_GATE:/);
