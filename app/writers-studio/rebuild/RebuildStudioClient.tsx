@@ -1,6 +1,6 @@
  'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -19,6 +19,7 @@ import GoldLine from '../insight/GoldLine';
 import MaiaListen from '../insight/MaiaListen';
 import InlineWorkspace from '../insight/InlineWorkspace';
 import ManuscriptPassage, { type EditAction, type MarkedEdit } from '../insight/ManuscriptPassage';
+import { editorialSegments, editIds, composeSelected } from '@/lib/writersStudio/editorialDiff';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
@@ -186,6 +187,14 @@ export default function RebuildStudioClient() {
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
   const [arrivalInsight, setArrivalInsight] = useState<CanvasInsight | null>(null);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
+  /* ⭐⭐ C6R2 — THE WORKING DECISION, HELD AND NOT PERSISTED.
+     Which of MAIA's marks the writer has taken so far. ⛔ Not a version: a new
+     row for every click would fill the history with combinations nobody chose
+     to keep. It becomes a version once, at `Use selected changes`.
+     ⚠️ Held here rather than in RevisionDesk — the desk and the marked page are
+     siblings, and this is the only place that sees both. Same law, the one
+     position that can carry it. */
+  const [selectedEdits, setSelectedEdits] = useState<ReadonlySet<number>>(new Set());
   const workspaceIncoming = useRef<string | null>(null);
   const autoProposalKey = useRef<string | null>(null);
   const workspaceReturn = useRef<{
@@ -949,18 +958,65 @@ export default function RebuildStudioClient() {
      current one: applying part of a proposal is a DIFFERENT text from the one
      the member is looking at, and it would arrive with no version of its own
      to review, adopt or undo. The writer still decides in the desk above. */
+  /* ⭐⭐ C6R2 — THE COMPOSITION, AND ITS PROVENANCE.
+     Three outcomes, and the distinction between them is the history we want:
+
+       none selected  → the writer's own words. ⛔ Nothing to persist.
+       all selected   → MAIA's exact proposal, chosen by the writer. ⛔ Do NOT
+                        mint a duplicate member version that says the writer
+                        wrote what MAIA wrote.
+       a subset       → a text that is neither MAIA's nor the original, so it
+                        is the WRITER'S, and it goes through the member-version
+                        route and carries their authorship.
+
+     ⭐ *MAIA proposed three edits; the writer accepted two; the revision is the
+     writer's* is a true sentence the record can support. */
+  const composition = useMemo(() => {
+    if (!editorialThread || !suggestedVersion) return null;
+    const segs = editorialSegments(editorialThread.locusText, suggestedVersion.wording);
+    const all = editIds(segs);
+    return {
+      text: composeSelected(segs, selectedEdits),
+      taken: selectedEdits.size, total: all.length,
+      everyMark: all.length > 0 && all.every((id) => selectedEdits.has(id)),
+    };
+  }, [editorialThread, suggestedVersion, selectedEdits]);
+
+  /* ⛔ A new proposal is a new set of marks; carrying selections across would
+     let a number chosen against one wording silently mean another. */
+  useEffect(() => { setSelectedEdits(new Set()); }, [suggestedVersionId]);
+
   const editAction = useCallback((action: EditAction, edit: MarkedEdit) => {
     const it = edit.from.trim()
       ? `"${edit.from.trim()}" to "${edit.to.trim()}"`
       : `adding "${edit.to.trim()}"`;
-    if (action === 'keep') { setEditorialFailure(null); return; }
-    const ask = action === 'accept'
-      ? `Of the changes you proposed, I want only this one: ${it}. Offer a revision of this passage that makes that single change and leaves the rest of my wording exactly as I wrote it.`
-      : action === 'change'
-        ? `About your change of ${it} — I want to word that differently. Ask me what I am reaching for before proposing anything, then offer wording built from my answer.`
-        : action === 'challenge'
-          ? `Why did you change ${it}? Show me the words in my sentence that led you there, and make the strongest case for keeping mine. Do not propose new wording in this answer.`
-          : `What writing technique is at work in changing ${it}? Describe what it does for a reader, what it may cost, and when my original would be the better choice. Do not test me and do not propose new wording.`;
+    /* ⭐⭐ ACCEPT SELECTS A MARK THAT ALREADY EXISTS. ⛔ It does not call MAIA
+       and ⛔ it does not touch the manuscript. Asking her to re-propose the
+       change she has already proposed is a model turn the writer did not need
+       and cannot tell they are paying for. */
+    if (action === 'accept' || action === 'keep') {
+      setEditorialFailure(null);
+      setSelectedEdits((prev) => {
+        const next = new Set(prev);
+        if (action === 'accept') next.add(edit.id); else next.delete(edit.id);
+        return next;
+      });
+      return;
+    }
+    /* ⭐ Change it opens the CURRENT COMPOSITION as the writer's own draft —
+       what the page is showing them, not MAIA's full proposal, which they may
+       never have taken whole. */
+    if (action === 'change') {
+      setPassageTab('suggest');
+      setEditorialFailure(null);
+      requestAnimationFrame(() =>
+        document.querySelector('[data-revision-desk] textarea')
+          ?.scrollIntoView({ block: 'center' }));
+      return;
+    }
+    const ask = action === 'challenge'
+      ? `Why did you change ${it}? Show me the words in my sentence that led you there, and make the strongest case for keeping mine. Do not propose new wording in this answer.`
+      : `What writing technique is at work in changing ${it}? Describe what it does for a reader, what it may cost, and when my original would be the better choice. Do not test me and do not propose new wording.`;
     void sendEditorial(ask);
   }, [sendEditorial]);
 
@@ -1043,6 +1099,19 @@ export default function RebuildStudioClient() {
     ].join('\n'));
   }, [incomingAction, arrivalInsight, workspaceOpen, workspaceInsight, selectedPassage, focusId,
     editorialBusy, suggestedVersionId, sendEditorial]);
+
+  const useSelectedChanges = useCallback(async () => {
+    if (!composition || !editorialThread || !focusId || !suggestedVersion) return;
+    if (composition.taken === 0) return;
+    /* ⛔ Every mark taken IS MAIA's proposal. It is already a version; a second
+       one would only misattribute it. */
+    if (composition.everyMark) { await applySuggested(); return; }
+    await saveMemberRevision({
+      threadId: editorialThread.threadId, sectionId: focusId,
+      supersedes: suggestedVersion.id, text: composition.text,
+    });
+  }, [composition, editorialThread, focusId, suggestedVersion,
+      applySuggested, saveMemberRevision]);
 
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || draft.threadId !== editorialThread.threadId || draft.sectionId !== focusId) return false;
@@ -1367,7 +1436,20 @@ export default function RebuildStudioClient() {
                       <ManuscriptPassage body={liveBody} range={held}
                         proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}
                         onEditAction={editAction}
+                        selectedEdits={selectedEdits}
                         proposalRationale={suggestedVersion?.rationale ?? null}>
+                        {composition && composition.total > 0 && <div className="ws-compose-bar" data-compose-bar>
+                          <span>{composition.taken === 0
+                            ? `${composition.total} suggested change${composition.total === 1 ? '' : 's'} · none taken`
+                            : `${composition.taken} of ${composition.total} taken`}</span>
+                          <button type="button" className="wsi-primary"
+                            disabled={composition.taken === 0 || adoptionBusy || memberVersionBusy || editorialBusy}
+                            onClick={() => void useSelectedChanges()}>
+                            {composition.everyMark ? 'Use all of these changes' : 'Use selected changes'}
+                          </button>
+                          {composition.taken > 0 && <button type="button"
+                            onClick={() => setSelectedEdits(new Set())}>Keep all of mine</button>}
+                        </div>}
                         <div ref={setEditorialAnchor} data-inline-editorial-anchor />
                       </ManuscriptPassage>
                     </div>}
@@ -1706,7 +1788,9 @@ export default function RebuildStudioClient() {
           <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={closeWorkspace}>Clean manuscript · Collapse</button>
         </header>
 
-        <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview} scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
+        <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview}
+          composedText={composition && composition.taken > 0 ? composition.text : null}
+          scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
           currentText={selectedPassage?.draftSectionId === focusId
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
             : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}

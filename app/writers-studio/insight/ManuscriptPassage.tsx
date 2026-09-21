@@ -11,7 +11,7 @@ export interface MarkedEdit { id: number; from: string; to: string }
  * The editorial controls are inserted after the containing paragraph, never
  * inside an editable text node or in the middle of a sentence. */
 export default function ManuscriptPassage({
-  body, range, proposal, selectedEdits, onToggleEdit, children,
+  body, range, proposal, selectedEdits, onToggleEdit, onEditAction, proposalRationale, children,
 }: {
   body: string; range: { start: number; end: number } | null;
   proposal?: { original: string; wording: string; changes: boolean } | null;

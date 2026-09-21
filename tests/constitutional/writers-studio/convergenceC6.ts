@@ -203,6 +203,34 @@ export function runC6(): readonly Check[] {
     editIds(editorialSegments(orig, bad)).length === 0,
     'a change inside a quotation is offered as no member choice at all');
 
+  /* ⭐⭐ C6R2 — ACCEPT SELECTS; IT DOES NOT CALL MAIA AND DOES NOT MUTATE. */
+  const act = rebuild.slice(rebuild.indexOf('const editAction'), rebuild.indexOf('const ask ='));
+  add('C6R2-8-accept-and-keep-never-call-maia',
+    /if \(action === 'accept' \|\| action === 'keep'\)/.test(act) &&
+    !/sendEditorial|apiFetch|adoptBound/.test(act),
+    'accept and keep only move the working set — no model turn, no mutation');
+
+  add('C6R2-9-selection-is-not-persisted-per-click',
+    !/saveMemberRevision|editorial\/version/.test(act),
+    'no version is minted on a click; the decision persists once, at Use selected changes');
+
+  /* ⭐ The provenance rule: all marks taken is MAIA's proposal, not the writer's. */
+  add('C6R2-10-all-marks-adopts-maia-not-a-duplicate',
+    /if \(composition\.everyMark\) \{ await applySuggested\(\); return; \}/.test(rebuild),
+    'taking every mark adopts MAIA’s existing version rather than minting a copy');
+
+  add('C6R2-11-subset-is-member-authored',
+    /await saveMemberRevision\(\{[\s\S]{0,160}text: composition\.text,/.test(rebuild),
+    'a subset goes through the member-version route and carries the writer’s authorship');
+
+  add('C6R2-12-selection-resets-with-the-proposal',
+    /setSelectedEdits\(new Set\(\)\); \}, \[suggestedVersionId\]\)/.test(rebuild),
+    'marks chosen against one wording cannot silently mean another');
+
+  add('C6R2-13-adjusting-edits-the-composition',
+    /const base = composedText \?\? version\.wording;/.test(desk),
+    'Adjust wording opens what the page is showing, not MAIA’s whole proposal');
+
   const c5 = runC5();
   add('C6-10-c5-still-green',
     c5.every(c => c.ok),

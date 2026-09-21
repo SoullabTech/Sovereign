@@ -12,10 +12,12 @@ export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;
 }
 export default function RevisionDesk({
-  active = true, inline = false, onPreview, onEditOriginal, onReadContext, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
+  active = true, inline = false, onPreview, onEditOriginal, onReadContext, composedText, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
 }: {
   onEditOriginal?: () => void; onReadContext?: () => void;
+  /** ⭐ C6R2 — the current composition of taken marks, when there is one. */
+  composedText?: string | null;
   active?: boolean; inline?: boolean; onPreview?: (preview: { original: string; wording: string; changes: boolean } | null) => void;
   scopeKey?: string; showInspiration?: boolean; manuscriptId: string; title: string; currentText: string; thread: RebuildEditorialThread | null;
   version: RebuildEditorialVersion | null; instruction: string;
@@ -99,9 +101,13 @@ export default function RevisionDesk({
   const diff = thread && version ? editorialSegments(thread.locusText, version.wording) : null;
   const edit = () => {
     if (!thread?.targetSectionId || !version || draft) return;
+    /* ⭐ C6R2 — the writer adjusts WHAT THE PAGE IS SHOWING THEM: the marks they
+       have taken so far. ⛔ Not MAIA's whole proposal, which they may never have
+       accepted entire. Falls back to her wording when nothing is composed. */
+    const base = composedText ?? version.wording;
     setDraft({ threadId: thread.threadId, sectionId: thread.targetSectionId,
-      supersedes: version.id, text: version.wording });
-    workingRange.current = { start: version.wording.length, end: version.wording.length };
+      supersedes: version.id, text: base });
+    workingRange.current = { start: base.length, end: base.length };
     setLocalMessage(null);
   };
   const save = async () => {
