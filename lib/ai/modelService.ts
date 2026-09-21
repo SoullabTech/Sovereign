@@ -5,6 +5,13 @@ import { generateWithKimi, checkKimiHealth, isKimiAvailable } from './kimiClient
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
 import { generateTextWithSovereignty } from './sovereignRouter';
 import type { TextResult, ProviderMeta, InferenceMode } from './types';
+import {
+  intendedDomain,
+  intendedProvider,
+  truthFromProviderMeta,
+  type LiveIntendedTarget,
+  type LiveRoutingContract,
+} from './liveServingTruth';
 
 // Phase 1: Sovereign inference mode — unset/empty = zero behavior change
 const MAIA_INFERENCE_MODE = (process.env.MAIA_INFERENCE_MODE || '') as InferenceMode | '';
@@ -68,6 +75,24 @@ export interface TextRequest {
   meta?: Record<string, unknown>;
 }
 
+function stampServingTruth(
+  result: TextResult,
+  routingContract: LiveRoutingContract,
+  intended: LiveIntendedTarget,
+  reason?: string
+): TextResult {
+  return {
+    ...result,
+    servingTruth: truthFromProviderMeta({
+      routingContract,
+      intended,
+      provider: result.provider,
+      ...(reason ? { reason } : {}),
+    }),
+  };
+}
+
+
 /**
  * Main gateway for ALL text generation in MAIA.
  * Primary: Claude (Anthropic). Fallback: local Ollama.
@@ -75,6 +100,23 @@ export interface TextRequest {
  */
 export async function generateText(req: TextRequest): Promise<TextResult> {
   const t0 = Date.now();
+
+  // R2 serving truth observes the routing contract; it does not alter routing.
+  const moonshotRequested =
+    TEXT_MODEL_PROVIDER === 'moonshot' || req.meta?.useKimi === true;
+  const downstreamRoutingContract: LiveRoutingContract = moonshotRequested
+    ? 'explicit_moonshot'
+    : 'legacy_default';
+  const downstreamIntended: LiveIntendedTarget = moonshotRequested
+    ? intendedProvider('moonshot')
+    : TEXT_MODEL_PROVIDER === 'anthropic'
+      ? intendedProvider('anthropic')
+      : TEXT_MODEL_PROVIDER === 'consciousness_engine'
+        ? intendedProvider('consciousness_engine')
+        : TEXT_MODEL_PROVIDER === 'multi_engine'
+          ? intendedProvider('multi_engine')
+          : intendedDomain('local', 'configured_local_route');
+  let downstreamReason: string | undefined;
 
   // ── Phase 1 sovereign routing guard ─────────────────────────────────────
   // If MAIA_INFERENCE_MODE is unset/empty, skip entirely — zero behavior change.
@@ -119,7 +161,11 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
       },
     };
     logTokenUsageLine({ provider: 'multi_engine', model: multiResult.provider.model, t0, routeTag: 'modelService.generateText' });
-    return multiResult;
+    return stampServingTruth(
+      multiResult,
+      'multi_engine',
+      intendedProvider('multi_engine')
+    );
   }
 
   // Explicit Moonshot/Kimi routing (for library distillation, deep synthesis)
@@ -127,6 +173,7 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
   if (TEXT_MODEL_PROVIDER === 'moonshot' || req.meta?.useKimi) {
     if (!isKimiAvailable()) {
       console.warn('🌙 Kimi requested but MOONSHOT_API_KEY not set - falling through');
+      downstreamReason = 'intended_provider_unavailable';
     } else {
       console.log('🌙 Using Kimi (Moonshot) for backstage task');
       try {
@@ -137,7 +184,11 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
           thinkingMode: req.meta?.thinkingMode !== false, // Default to thinking mode
         });
         logTokenUsageLine({ provider: 'moonshot', model: kimiResult.provider?.model, t0, usage: kimiResult.provider?.usage, routeTag: 'modelService.generateText' });
-        return kimiResult;
+        return stampServingTruth(
+          kimiResult,
+          'explicit_moonshot',
+          intendedProvider('moonshot')
+        );
       } catch (error: any) {
         console.error('Kimi error:', error);
         // If Kimi was explicitly requested, don't fall back
@@ -146,6 +197,7 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
         }
         // If just meta flag, fall through to Claude
         console.warn('Kimi unavailable, falling back to Claude');
+        downstreamReason = 'intended_provider_failed';
       }
     }
   }
@@ -161,7 +213,12 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
         meta: req.meta,
       });
       logTokenUsageLine({ provider: 'anthropic', model: claudeResult.provider?.model, t0, usage: claudeResult.provider?.usage, routeTag: 'modelService.generateText' });
-      return claudeResult;
+      return stampServingTruth(
+        claudeResult,
+        downstreamRoutingContract,
+        downstreamIntended,
+        downstreamReason
+      );
     } catch (error: any) {
       // 🚨 BILLING/AUTH ERRORS: Do NOT fallback - fail fast with clear error
       if (error?.noFallback || error?.code === 'ANTHROPIC_BILLING_ERROR') {
@@ -178,6 +235,7 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
       }
 
       console.warn('Claude unavailable, falling back to local:', error);
+      downstreamReason = 'intended_provider_failed';
       // Fall through to local
     }
   }
@@ -190,7 +248,12 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
     meta: req.meta,
   });
   logTokenUsageLine({ provider: localResult.provider?.provider ?? 'ollama', model: localResult.provider?.model, t0, usage: localResult.provider?.usage, routeTag: 'modelService.generateText' });
-  return localResult;
+  return stampServingTruth(
+    localResult,
+    downstreamRoutingContract,
+    downstreamIntended,
+    downstreamReason
+  );
 }
 
 // Re-export types for convenience

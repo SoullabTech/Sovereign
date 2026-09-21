@@ -10,9 +10,10 @@
  *   packet  → jarvis-packet-guard.mjs   (leakage lint, SHA binding — Unit 10)
  *           → jarvis-context.mjs        (materialize + budget gate — Unit 8)
  *           → session.mjs status        (Builder capacity — Unit 3/6)
- *           → ain-delegate.sh local-native  (claim → prompt → native worker →
- *                                            result contract → ledger — Units 7/9)
- *           → independent evidence verification (this file)
+ *           → ain-delegate.sh local-native  (claim → bounded prompt → toolless Qwen →
+ *                                            NPA1 diff admission → verifier → JARVIS
+ *                                            candidate commit → result contract)
+ *           → independent candidate/ledger/verifier re-validation (this file)
  *
  * The one thing genuinely missing from Units 7–10 was a MECHANICAL verifier.
  * In every prior run the worker self-reported `escalation_required: false` and a
@@ -27,9 +28,12 @@ import { spawn, execFileSync } from 'node:child_process';
 import { readFileSync, existsSync, writeFileSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { lintLeakage, bindSelector, headOf } from './jarvis-packet-guard.mjs';
+import { lintLeakage } from './jarvis-packet-guard.mjs';
 import { validateWorkerGate } from './jarvis-governance-gate.mjs';
 import { materializePacket, budget } from './jarvis-context.mjs';
+import { validateNativeExecutionBoundary } from './jarvis-native-prompt.mjs';
+import { derivePermissionEnvelope } from './work-unit.mjs';
+import { ledgerPath, pathAllowed } from './jarvis-native-patch-admission.mjs';
 import { AIN_HOME, nowISO } from './jarvis-runtime-store.mjs';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -87,7 +91,14 @@ export function isLegalTransition(from, to) {
 }
 
 // ── §8 authority ─────────────────────────────────────────────────────────────
-/** The local lane is READ-ONLY. The HTTP API is not an authority bypass. */
+/**
+ * The MODEL on local-native is read-only/toolless. JARVIS itself may hold a
+ * bounded worktree-write envelope so NPA1 can admit, verify and candidate-commit
+ * a model-proposed diff. Worker authority and integration authority are distinct.
+ *
+ * READ_ONLY_LANES is preserved as a compatibility export: it names MODEL
+ * authority, not the mutation authority of the JARVIS control plane.
+ */
 export const READ_ONLY_LANES = ['local-native'];
 const WRITE_REQUESTING_KEYS = [
   'allow_write', 'requested_write_authority', 'write_authority',
@@ -99,16 +110,41 @@ export function checkAuthority(packet) {
     return { ok: false, failure_class: 'LANE_NOT_PERMITTED',
       detail: `runtime accepts ${READ_ONLY_LANES.join(', ')} only; got '${packet.execution_lane}'` };
   }
+
+  // Legacy/direct worker-write knobs remain forbidden. Worktree mutation is
+  // granted only through the canonical Work Unit permission envelope below.
   for (const k of WRITE_REQUESTING_KEYS) {
     if (!(k in packet)) continue;
     const v = packet[k];
     const requestsWrite = v === true || (typeof v === 'string' && /write|worktree|bypass|acceptedits/i.test(v));
     if (requestsWrite) {
-      return { ok: false, failure_class: 'LOCAL_WRITE_AUTHORITY_REFUSED',
-        detail: `packet field '${k}' requests write authority; LOCAL worker authority is READ-ONLY` };
+      return { ok: false, failure_class: 'LOCAL_WORKER_WRITE_AUTHORITY_REFUSED',
+        detail: `packet field '${k}' attempts to grant write authority to the worker; the model is toolless` };
     }
   }
-  return { ok: true };
+
+  const envelope = derivePermissionEnvelope(packet);
+  if (!envelope.repo_read || envelope.repo_write_scope !== 'worktree') {
+    return { ok: false, failure_class: 'NATIVE_WORKTREE_WRITE_AUTHORITY_REQUIRED',
+      detail: 'local-native coding V1 requires repo.read + bounded repo.write:worktree for JARVIS patch admission' };
+  }
+  if (envelope.integration_actor !== 'jarvis') {
+    return { ok: false, failure_class: 'JARVIS_INTEGRATION_ACTOR_REQUIRED',
+      detail: `local-native candidate integration belongs to JARVIS; got '${envelope.integration_actor}'` };
+  }
+  if (envelope.production_read || envelope.production_write || envelope.deploy
+      || envelope.authority_change || envelope.external_network
+      || envelope.external_repo_disclosure || envelope.provider_spend) {
+    return { ok: false, failure_class: 'NATIVE_AUTHORITY_TOO_BROAD',
+      detail: 'local-native V1 admits only local repo read + worktree write + checks; production/network/spend authority is refused' };
+  }
+  if (!envelope.execute_checks
+      || !Array.isArray(packet.verification_commands)
+      || packet.verification_commands.length === 0) {
+    return { ok: false, failure_class: 'NATIVE_VERIFICATION_REQUIRED',
+      detail: 'local-native coding V1 requires at least one packet verification command' };
+  }
+  return { ok: true, envelope };
 }
 
 // ── §14 packet validation ────────────────────────────────────────────────────
@@ -208,6 +244,222 @@ export function validateResult(result) {
     : { ok: true, missing: [] };
 }
 
+const COMMIT_SHA_RE = /^[0-9a-f]{7,40}$/i;
+
+const exactPaths = (value) => {
+  if (!Array.isArray(value) || value.some((v) => typeof v !== 'string' || !v.trim())) {
+    return { ok: false, paths: [] };
+  }
+  const paths = value.map((v) => v.trim());
+  const unique = [...new Set(paths)].sort();
+  return { ok: unique.length === paths.length, paths: unique };
+};
+const samePaths = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+
+const nativeGit = (worktree, args) => execFileSync('git', ['-C', worktree, ...args], {
+  encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000,
+}).trim();
+
+const nativeRefusal = (failure_class, detail) => ({ ok: false, failure_class, detail });
+
+/**
+ * Validate a successful local-native coding result independently of the worker
+ * and independently of the delegate's summary. This proves the mutation was one
+ * JARVIS-authored candidate commit created from one NPA1-admitted patch, on the
+ * packet's exact canonical parent, and that the packet's verifier commands pass
+ * again against that committed candidate without mutating it.
+ */
+export function validateNativePatchResult(packet, result, worktree, {
+  runGit = nativeGit,
+  runVerification = null,
+} = {}) {
+  if (result?.lane !== 'local-native') {
+    return nativeRefusal('NATIVE_RESULT_LANE_MISMATCH', `got lane '${result?.lane}'`);
+  }
+  if (result?.model !== 'qwen3-coder:30b') {
+    return nativeRefusal('NATIVE_RESULT_MODEL_MISMATCH', `got model '${result?.model}'`);
+  }
+  if (result?.exit_code !== 0) {
+    return nativeRefusal('NATIVE_RESULT_EXIT_NONZERO', `exit_code=${result?.exit_code}`);
+  }
+  if (result?.test_results !== 'pass') {
+    return nativeRefusal('NATIVE_VERIFICATION_NOT_PASSING', `test_results=${result?.test_results}`);
+  }
+  if (result?.escalation_required === true) {
+    return nativeRefusal('NATIVE_LEGACY_ESCALATION_UNSUPPORTED', 'coding result may gate, but may not carry legacy escalation');
+  }
+
+  const admission = result?.patch_admission;
+  if (!admission || admission.ok !== true || admission.status !== 'APPLIED'
+      || admission.code !== 'PATCH_APPLIED' || admission.event?.applied !== true) {
+    return nativeRefusal('NATIVE_PATCH_ADMISSION_MISSING', 'result lacks a successful NPA1 APPLIED record');
+  }
+
+  const admitted = exactPaths(admission.changed_paths);
+  const proposed = exactPaths(admission.patch_paths);
+  const reported = exactPaths(result.files_changed);
+  if (!admitted.ok || !proposed.ok || !reported.ok || admitted.paths.length === 0) {
+    return nativeRefusal('NATIVE_PATH_EVIDENCE_INVALID', 'changed/patch/result paths must be unique non-empty string arrays');
+  }
+  if (!samePaths(admitted.paths, proposed.paths) || !samePaths(admitted.paths, reported.paths)) {
+    return nativeRefusal('NATIVE_PATH_EVIDENCE_MISMATCH',
+      `admitted=${admitted.paths.join(',')} proposed=${proposed.paths.join(',')} reported=${reported.paths.join(',')}`);
+  }
+  const unauthorized = admitted.paths.filter((file) => !pathAllowed(file, packet.allowed_files ?? []));
+  if (unauthorized.length) {
+    return nativeRefusal('NATIVE_PATH_OUTSIDE_PACKET', unauthorized.join(','));
+  }
+
+  if (!COMMIT_SHA_RE.test(String(packet.canonical_sha || ''))
+      || !COMMIT_SHA_RE.test(String(result.starting_sha || ''))
+      || !COMMIT_SHA_RE.test(String(result.ending_sha || ''))) {
+    return nativeRefusal('NATIVE_COMMIT_ID_INVALID', 'base/start/end must be immutable hex commit ids');
+  }
+
+  let base;
+  let start;
+  let head;
+  let ending;
+  let parent;
+  let count;
+  let commitPaths;
+  let authorName;
+  let authorEmail;
+  let committerName;
+  let committerEmail;
+  let subject;
+  let status;
+  try {
+    base = runGit(worktree, ['rev-parse', packet.canonical_sha + '^{commit}']);
+    start = runGit(worktree, ['rev-parse', result.starting_sha + '^{commit}']);
+    head = runGit(worktree, ['rev-parse', 'HEAD']);
+    ending = runGit(worktree, ['rev-parse', result.ending_sha + '^{commit}']);
+    parent = runGit(worktree, ['rev-parse', head + '^']);
+    count = Number(runGit(worktree, ['rev-list', '--count', base + '..' + head]));
+    commitPaths = runGit(worktree, ['diff', '--name-only', base + '..' + head, '--'])
+      .split('\n').map((v) => v.trim()).filter(Boolean).sort();
+    authorName = runGit(worktree, ['show', '-s', '--format=%an', head]);
+    authorEmail = runGit(worktree, ['show', '-s', '--format=%ae', head]);
+    committerName = runGit(worktree, ['show', '-s', '--format=%cn', head]);
+    committerEmail = runGit(worktree, ['show', '-s', '--format=%ce', head]);
+    subject = runGit(worktree, ['show', '-s', '--format=%s', head]);
+    status = runGit(worktree, ['status', '--porcelain', '--untracked-files=all']);
+  } catch (error) {
+    return nativeRefusal('NATIVE_COMMIT_CUSTODY_UNREADABLE', String(error?.message || error).slice(0, 500));
+  }
+
+  if (base !== start || head !== ending || parent !== base || count !== 1) {
+    return nativeRefusal('NATIVE_COMMIT_LINEAGE_INVALID',
+      `base=${base} start=${start} parent=${parent} head=${head} ending=${ending} count=${count}`);
+  }
+  if (!samePaths(admitted.paths, commitPaths)) {
+    return nativeRefusal('NATIVE_COMMIT_PATH_MISMATCH',
+      `admitted=${admitted.paths.join(',')} commit=${commitPaths.join(',')}`);
+  }
+  if (authorName !== 'JARVIS' || authorEmail !== 'jarvis@local.invalid'
+      || committerName !== 'JARVIS' || committerEmail !== 'jarvis@local.invalid') {
+    return nativeRefusal('NATIVE_COMMIT_ACTOR_INVALID',
+      `author=${authorName}<${authorEmail}> committer=${committerName}<${committerEmail}>`);
+  }
+  if (subject !== `chore(jarvis): ${packet.work_unit_id}`) {
+    return nativeRefusal('NATIVE_COMMIT_MESSAGE_INVALID', subject);
+  }
+  if (status) {
+    return nativeRefusal('NATIVE_WORKTREE_NOT_CLEAN_AFTER_COMMIT', status.slice(0, 500));
+  }
+
+  const expectedLedger = path.resolve(ledgerPath(packet.work_unit_id));
+  if (path.resolve(String(admission.evidence_path || '')) !== expectedLedger || !existsSync(expectedLedger)) {
+    return nativeRefusal('NATIVE_PATCH_LEDGER_MISSING', expectedLedger);
+  }
+  let ledgerEvents;
+  try {
+    ledgerEvents = readFileSync(expectedLedger, 'utf8').trim().split('\n')
+      .filter(Boolean).map((line) => JSON.parse(line));
+  } catch (error) {
+    return nativeRefusal('NATIVE_PATCH_LEDGER_INVALID', String(error?.message || error).slice(0, 500));
+  }
+  const appliedEvent = [...ledgerEvents].reverse().find((event) =>
+    event?.work_unit_id === packet.work_unit_id
+    && event?.event === 'APPLIED'
+    && event?.code === 'PATCH_APPLIED'
+    && event?.applied === true
+    && event?.patch_digest === admission.patch_digest);
+  if (!appliedEvent) {
+    return nativeRefusal('NATIVE_PATCH_LEDGER_APPLIED_EVENT_MISSING', admission.patch_digest);
+  }
+  const ledgerPaths = exactPaths(appliedEvent.changed_paths);
+  if (!ledgerPaths.ok || !samePaths(admitted.paths, ledgerPaths.paths)) {
+    return nativeRefusal('NATIVE_PATCH_LEDGER_PATH_MISMATCH', JSON.stringify(appliedEvent.changed_paths ?? []));
+  }
+
+  const commands = packet.verification_commands;
+  if (!Array.isArray(commands) || commands.length === 0) {
+    return nativeRefusal('NATIVE_VERIFICATION_REQUIRED', 'no verification commands');
+  }
+  const verify = runVerification ?? ((command) => execFileSync('bash', ['-lc', command], {
+    cwd: worktree, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000,
+  }));
+  const verification = [];
+  for (const command of commands) {
+    try {
+      verify(command, worktree);
+      verification.push({ command, status: 'PASS' });
+    } catch (error) {
+      return nativeRefusal('NATIVE_VERIFICATION_FAILED',
+        `${command}: ${String(error?.stderr || error?.message || error).slice(0, 300)}`);
+    }
+    try {
+      const verifyHead = runGit(worktree, ['rev-parse', 'HEAD']);
+      const verifyStatus = runGit(worktree, ['status', '--porcelain', '--untracked-files=all']);
+      if (verifyHead !== head || verifyStatus) {
+        return nativeRefusal('NATIVE_VERIFICATION_MUTATED_CANDIDATE',
+          `command=${command} head=${verifyHead} status=${verifyStatus.slice(0, 300)}`);
+      }
+    } catch (error) {
+      return nativeRefusal('NATIVE_VERIFICATION_CUSTODY_UNREADABLE',
+        String(error?.message || error).slice(0, 500));
+    }
+  }
+
+  return {
+    ok: true,
+    method: 'NPA1 + candidate-commit custody + independent verifier replay',
+    commit_sha: head,
+    parent_sha: base,
+    patch_digest: admission.patch_digest,
+    changed_paths: admitted.paths,
+    verification,
+  };
+}
+
+/**
+ * A candidate rejected by the persistent runtime is not left sitting in the
+ * isolated worktree as if it were usable. Return the claimed worktree to the
+ * packet's exact canonical base and prove that cleanup completed.
+ */
+export function rollbackNativeCandidate(worktree, canonicalSha, { runGit = nativeGit } = {}) {
+  if (!COMMIT_SHA_RE.test(String(canonicalSha || ''))) {
+    return { ok: false, failure_class: 'NATIVE_RUNTIME_ROLLBACK_BASE_INVALID',
+      detail: 'canonical SHA is not an immutable commit id' };
+  }
+  try {
+    const base = runGit(worktree, ['rev-parse', canonicalSha + '^{commit}']);
+    runGit(worktree, ['reset', '--hard', base]);
+    runGit(worktree, ['clean', '-fd']);
+    const head = runGit(worktree, ['rev-parse', 'HEAD']);
+    const status = runGit(worktree, ['status', '--porcelain', '--untracked-files=all']);
+    if (head !== base || status) {
+      return { ok: false, failure_class: 'NATIVE_RUNTIME_ROLLBACK_INCOMPLETE',
+        detail: `base=${base} head=${head} status=${status.slice(0, 300)}` };
+    }
+    return { ok: true, base_sha: base };
+  } catch (error) {
+    return { ok: false, failure_class: 'NATIVE_RUNTIME_ROLLBACK_INCOMPLETE',
+      detail: String(error?.stderr || error?.message || error).slice(0, 500) };
+  }
+}
+
 // ── the run driver ───────────────────────────────────────────────────────────
 const packetFile = (id) => path.join(PACKETS_DIR, `${id}.json`);
 const resultFile = (id) => path.join(RESULTS_DIR, `${id}.json`);
@@ -219,6 +471,10 @@ const DELEGATE_EXIT_FAILURES = {
   5: 'CONTEXT_BUDGET_EXCEEDED',
   7: 'PACKET_ANSWER_LEAKAGE',
   8: 'SELECTOR_SHA_MISMATCH',
+  9: 'NATIVE_PATCH_ADMISSION_REFUSED',
+  10: 'NATIVE_OUTPUT_CONTRACT_INVALID',
+  11: 'NATIVE_CUSTODY_FAILURE',
+  12: 'NATIVE_VERIFICATION_FAILED',
 };
 
 /**
@@ -283,10 +539,14 @@ export async function executeRun(run, ctx) {
   // Unit 10's SHA gate, run here so the runtime can report WHICH gate refused
   // rather than only that the delegate exited non-zero. ain-delegate re-runs both
   // gates itself before invoking any worker; both paths fail closed on the same modules.
-  const execHead = headOf(worktree);
-  const bindings = (bound.context_selectors ?? []).map((s) => bindSelector(s, worktree, execHead));
-  const badBinding = bindings.find((b) => b.error);
-  if (badBinding) return fail(badBinding.error, JSON.stringify(badBinding).slice(0, 500));
+  let nativeBoundary;
+  try {
+    nativeBoundary = validateNativeExecutionBoundary(bound, worktree);
+  } catch (error) {
+    return fail(error?.code || 'NATIVE_CONTEXT_BOUNDARY_REFUSED',
+      JSON.stringify(error?.detail ?? error?.message ?? error).slice(0, 500));
+  }
+  const execHead = nativeBoundary.execHead;
 
   let fragments, budgetReport;
   try {
@@ -324,8 +584,8 @@ export async function executeRun(run, ctx) {
   run.blocked = null;
 
   // ── RUNNING ────────────────────────────────────────────────────────────────
-  T('RUNNING', { worker: { lane: packet.execution_lane, model: process.env.JARVIS_LOCAL_MODEL || 'maia-coder:latest',
-                           transport: 'ollama-native', started_at: nowISO() } });
+  T('RUNNING', { worker: { lane: packet.execution_lane, model: 'qwen3-coder:30b',
+                           transport: 'ollama-native-toolless', started_at: nowISO() } });
   ctx.emit('worker.started', { run_id: run.run_id, lane: packet.execution_lane });
 
   // The ONE seam into the proven pipeline. `ctx.spawnDelegate` exists so the proof
@@ -364,18 +624,16 @@ export async function executeRun(run, ctx) {
   const rv = validateResult(result);
   if (!rv.ok) return fail(rv.failure_class, `missing: ${rv.missing.join(', ')}`);
 
-  // §8 post-hoc authority enforcement: a READ-ONLY lane that changed the tree is a
-  // governance failure regardless of what the worker reported about itself.
-  if ((result.files_changed?.length ?? 0) > 0 || result.ending_sha) {
-    return fail('LOCAL_WORKER_WROTE',
-      `read-only lane mutated the worktree: files_changed=${result.files_changed?.length ?? 0} ending_sha=${result.ending_sha}`);
-  }
   // ── Unit 19: native governance gate ────────────────────────────────────────
   // A worker may return a structured claim that it cannot legitimately continue.
   // The claim is validated against THIS run before it becomes governance state;
   // an invalid gate is a result-contract failure, never an indefinite pause, so
   // a worker cannot suspend its own run by emitting nonsense.
   if (result.governance_gate !== undefined) {
+    if ((result.files_changed?.length ?? 0) > 0 || result.ending_sha || result.patch_admission !== undefined) {
+      return fail('GOVERNANCE_GATE_MUTATION_CONFLICT',
+        'a worker gate may identify missing authority; it may not coexist with an applied patch or candidate commit');
+    }
     const held = {
       operation_class: run.operation_class ?? run.admission?.operation_class ?? null,
       allowed_targets: run.delegation?.allowed_targets ?? [],
@@ -408,41 +666,40 @@ export async function executeRun(run, ctx) {
   run.result = {
     lane: result.lane, model: result.model, exit_summary: result.summary,
     duration_s: result.duration_s, starting_sha: result.starting_sha,
-    files_changed: result.files_changed, test_results: result.test_results,
+    ending_sha: result.ending_sha, files_changed: result.files_changed,
+    test_results: result.test_results, patch_admission: result.patch_admission ?? null,
     worker_self_reported_escalation: result.escalation_required,
     recommended_next_action: result.recommended_next_action,
   };
 
   // ── VERIFYING_EVIDENCE ─────────────────────────────────────────────────────
+  // Coding evidence is not prose citation evidence. The worker produced a diff;
+  // JARVIS admitted/applied it and created the candidate commit. Re-prove that
+  // custody here and independently replay the Work Unit verifier commands.
   T('VERIFYING_EVIDENCE', {});
   ctx.emit('verification.started', { run_id: run.run_id });
-  let output = '';
-  try { output = readFileSync(run.log_path, 'utf8'); } catch { /* absent log handled below */ }
-  if (!output.trim()) return fail('WORKER_OUTPUT_EMPTY', `no worker output at ${run.log_path}`);
-
-  const evidence = verifyEvidence(output, fragments);
-  const escalated = result.escalation_required === true || /^ESCALATE_TO_CLAUDE:/m.test(output);
+  const nativeVerification = validateNativePatchResult(packet, result, worktree);
   run.verification = {
-    ...evidence,
-    worker_self_reported_escalation: result.escalation_required,
-    decided_by: 'runtime (independent) — worker self-report is never authoritative',
+    ...nativeVerification,
+    decided_by: 'runtime (independent) — model has no mutation or commit authority',
   };
-  ctx.emit('verification.completed', {
-    run_id: run.run_id, citations: evidence.total, valid: evidence.valid, invalid: evidence.invalid,
-  });
-
-  if (escalated) {
-    T('ESCALATION_REQUIRED', { failure_class: 'WORKER_ESCALATED', disposition: 'ESCALATION_REQUIRED',
-      unresolved_questions: result.unresolved_questions ?? [] });
-  } else if (evidence.total === 0) {
-    T('ESCALATION_REQUIRED', { failure_class: 'EVIDENCE_INSUFFICIENT', disposition: 'ESCALATION_REQUIRED',
-      failure_detail: 'worker returned no citable file:line evidence' });
-  } else if (evidence.invalid > 0) {
-    T('ESCALATION_REQUIRED', { failure_class: 'EVIDENCE_OUT_OF_CONTEXT', disposition: 'ESCALATION_REQUIRED',
-      failure_detail: `${evidence.invalid}/${evidence.total} citations fall outside the materialized context` });
-  } else {
-    T('VERIFIED', { disposition: 'VERIFIED', failure_class: null });
+  if (!nativeVerification.ok) {
+    ctx.emit('verification.completed', {
+      run_id: run.run_id, ok: false, failure_class: nativeVerification.failure_class,
+    });
+    const rollback = rollbackNativeCandidate(worktree, packet.canonical_sha);
+    run.verification.rollback = rollback;
+    if (!rollback.ok) {
+      return fail('NATIVE_RUNTIME_ROLLBACK_INCOMPLETE',
+        `${nativeVerification.failure_class}: ${nativeVerification.detail}; rollback: ${rollback.detail}`);
+    }
+    return fail(nativeVerification.failure_class, nativeVerification.detail);
   }
+  ctx.emit('verification.completed', {
+    run_id: run.run_id, ok: true, commit_sha: nativeVerification.commit_sha,
+    changed_paths: nativeVerification.changed_paths,
+  });
+  T('VERIFIED', { disposition: 'VERIFIED', failure_class: null });
   return run;
 }
 
