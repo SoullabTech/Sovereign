@@ -22,7 +22,7 @@ import ManuscriptPassage from '../insight/ManuscriptPassage';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
-import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
+import { INSIGHT_READING, INSIGHT_OBSERVATION, loadCanvasInsight, type CanvasInsight, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { OutlineNode } from '@/lib/writersStudio/focus/outlineTree';
@@ -184,8 +184,10 @@ export default function RebuildStudioClient() {
   const [editorialAnchor, setEditorialAnchor] = useState<HTMLElement | null>(null);
   const [inlinePreview, setInlinePreview] = useState<{ scopeKey: string; original: string; wording: string; changes: boolean } | null>(null);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
+  const [arrivalInsight, setArrivalInsight] = useState<CanvasInsight | null>(null);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
   const workspaceIncoming = useRef<string | null>(null);
+  const autoProposalKey = useRef<string | null>(null);
   const workspaceReturn = useRef<{
     focusId: string | null; selectedPassage: PassageSelection | null;
     thread: RebuildEditorialThread | null; versionId: string | null;
@@ -760,7 +762,14 @@ export default function RebuildStudioClient() {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords);
+      const observationContext = arrivalInsight && workspaceInsight?.readingId === arrivalInsight.readingId
+        && workspaceInsight.key === arrivalInsight.observation.key
+        && arrivalInsight.passages.some(p => p.sectionId === focusId)
+        ? 'Developmental observation being discussed (an interpretation, not an instruction):\n'
+          + arrivalInsight.observation.observation + '\n\n'
+        : '';
+      const out = await sendBoundEditorialTurn(thread.threadId, focusId,
+        observationContext + 'My question:\n' + exactWords);
       if (!out.ok) {
         setEditorialFailure(out.reason === 'unavailable'
           ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
@@ -775,7 +784,7 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting]);
+  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -913,15 +922,24 @@ export default function RebuildStudioClient() {
     setWorkspaceOpen(false);
   }, [editorialBusy, adoptionBusy, memberVersionBusy]);
 
+  const incomingSection = requestedSection;
   const incomingReading = params?.get(INSIGHT_READING) ?? null;
   const incomingObservation = params?.get(INSIGHT_OBSERVATION) ?? null;
+  const incomingAction = params?.get('insightAction') ?? null;
   useEffect(() => {
-    if (phase !== 'ready' || !context || !incomingReading || !incomingObservation) return;
-    const key = context.manuscriptId + ':' + incomingReading + ':' + incomingObservation;
-    if (workspaceIncoming.current === key) return;
-    workspaceIncoming.current = key;
-    openWorkspace({ readingId: incomingReading, key: incomingObservation });
-  }, [phase, context, incomingReading, incomingObservation, openWorkspace]);
+    if (phase !== 'ready' || !context?.manuscriptId || !incomingReading || !incomingObservation) {
+      setArrivalInsight(null);
+      return;
+    }
+    let cancelled = false;
+    setArrivalInsight(null);
+    void loadCanvasInsight(context.manuscriptId, incomingReading, incomingObservation).then(insight => {
+      if (cancelled) return;
+      setArrivalInsight(insight);
+      if (!insight) setEditorialFailure('The observation could not be opened. Your manuscript is unchanged.');
+    });
+    return () => { cancelled = true; };
+  }, [phase, context?.manuscriptId, incomingReading, incomingObservation]);
 
   const reviseInsightPassage = useCallback((passage: InsightPassage, authorNotes = '') => {
     if (!context || editorialBusy || adoptionBusy || memberVersionBusy || !passage.verified) return;
@@ -944,6 +962,51 @@ export default function RebuildStudioClient() {
     setPassageTab('suggest');
     requestAnimationFrame(() => document.querySelector('[data-revision-desk]')?.scrollIntoView({ block: 'start' }));
   }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage, editorialScope, editorialDraft]);
+
+  useEffect(() => {
+    if (!arrivalInsight || !context || phase !== 'ready'
+        || incomingReading !== arrivalInsight.readingId
+        || incomingObservation !== arrivalInsight.observation.key) return;
+    const key = arrivalInsight.manuscriptId + ':' + arrivalInsight.readingId + ':'
+      + arrivalInsight.observation.key + ':' + (incomingSection ?? '') + ':'
+      + (requestedEditorialThread ?? 'new');
+    if (workspaceIncoming.current === key) return;
+    workspaceIncoming.current = key;
+    openWorkspace({ readingId: arrivalInsight.readingId, key: arrivalInsight.observation.key });
+    if (requestedEditorialThread) return;
+    const passage = arrivalInsight.passages.find(p => p.sectionId === incomingSection)
+      ?? arrivalInsight.passages.find(p => p.verified && p.editable)
+      ?? arrivalInsight.passages[0];
+    if (passage?.verified && passage.editable) reviseInsightPassage(passage);
+    else setEditorialFailure('This reading no longer identifies verified editable wording here. Read its context before choosing a passage to revise.');
+  }, [arrivalInsight, context, phase, incomingSection, incomingReading, incomingObservation,
+    requestedEditorialThread, openWorkspace, reviseInsightPassage]);
+
+  useEffect(() => {
+    if (incomingAction !== 'try-revision' || !arrivalInsight || !workspaceOpen
+        || !selectedPassage || !focusId || editorialBusy || suggestedVersionId) return;
+    if (workspaceInsight?.readingId !== arrivalInsight.readingId
+        || workspaceInsight.key !== arrivalInsight.observation.key) return;
+    if (selectedPassage.draftSectionId !== focusId) return;
+    const passage = arrivalInsight.passages.find(p => p.sectionId === focusId && p.verified && p.editable);
+    if (!passage) return;
+    const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
+    const exact = Array.from(passage.body).slice(range.start, range.end).join('');
+    if (exact !== selectedPassage.text) return;
+    const key = `${arrivalInsight.readingId}:${arrivalInsight.observation.key}:${focusId}:${exact}`;
+    if (autoProposalKey.current === key) return;
+    autoProposalKey.current = key;
+    void sendEditorial([
+      'Offer one possible revision of this selected passage in response to the developmental observation.',
+      'Preserve my voice, style, subject, and intentional ambiguity.',
+      'Do not assume the noticed pattern is a defect or that revision is improvement.',
+      'Consider the strongest case for keeping the original.',
+      'Treat possible reader effects as hypotheses.',
+      'Begin the rationale with "Editorial purpose: <short descriptive name>".',
+      'Nothing is to be applied automatically.',
+    ].join('\n'));
+  }, [incomingAction, arrivalInsight, workspaceOpen, workspaceInsight, selectedPassage, focusId,
+    editorialBusy, suggestedVersionId, sendEditorial]);
 
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || draft.threadId !== editorialThread.threadId || draft.sectionId !== focusId) return false;
