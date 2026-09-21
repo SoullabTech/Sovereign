@@ -149,18 +149,47 @@ export function buildNativePrompt(packet, repo) {
   ].join("\n");
 }
 
+export function buildNativeReviewPrompt(packet, repo, candidateText) {
+  const candidate = String(candidateText ?? "");
+  if (!candidate.trim()) {
+    const error = new Error("NATIVE_REVIEW_CANDIDATE_REQUIRED");
+    error.code = "NATIVE_REVIEW_CANDIDATE_REQUIRED";
+    throw error;
+  }
+  const base = buildNativePrompt(packet, repo);
+  return [
+    base,
+    "",
+    "SELF-REVIEW PHASE — the candidate below has NOT been admitted.",
+    "Audit it only against the same TARGET FILE source and sibling precedents already materialized above.",
+    "Do not assume a precedent-only import or declaration is in target-file scope.",
+    "Check every identifier introduced by the candidate. If supporting imports/declarations are missing, add the necessary exact target-file edit.",
+    "Preserve the same objective, authority, allowed files, and output contract. Do not broaden scope.",
+    "Return exactly one corrected EDIT_SCRIPT, PATCH, or GOVERNANCE_GATE and nothing else.",
+    "",
+    "CANDIDATE TO REVIEW:",
+    candidate,
+  ].join("\n");
+}
+
 const argv = process.argv.slice(2);
-if (argv[0] === "build") {
+if (argv[0] === "build" || argv[0] === "review") {
+  const mode = argv[0];
   const packetPath = argv[1];
   const repoIdx = argv.indexOf("--repo");
+  const candidateIdx = argv.indexOf("--candidate-file");
   const repo = repoIdx >= 0 ? argv[repoIdx + 1] : process.cwd();
-  if (!packetPath) {
-    console.error("usage: jarvis-native-prompt.mjs build <packet.json> [--repo <dir>]");
+  const candidateFile = candidateIdx >= 0 ? argv[candidateIdx + 1] : null;
+  if (!packetPath || (mode === "review" && !candidateFile)) {
+    console.error("usage: jarvis-native-prompt.mjs <build|review> <packet.json> [--repo <dir>] [--candidate-file <file>]");
     process.exit(4);
   }
   try {
     const packet = JSON.parse(readFileSync(packetPath, "utf8"));
-    process.stdout.write(buildNativePrompt(packet, path.resolve(repo)));
+    const rendered = mode === "review"
+      ? buildNativeReviewPrompt(packet, path.resolve(repo), readFileSync(candidateFile, "utf8"))
+      : buildNativePrompt(packet, path.resolve(repo));
+    process.stdout.write(rendered);
   } catch (error) {
     console.error("🛑 " + String(error?.code || error?.message || error));
     if (error?.detail) console.error(JSON.stringify(error.detail));

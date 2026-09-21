@@ -6,7 +6,7 @@ import {
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
-import { buildNativePrompt } from "../jarvis-native-prompt.mjs";
+import { buildNativePrompt, buildNativeReviewPrompt } from "../jarvis-native-prompt.mjs";
 
 const tmp = mkdtempSync(path.join(os.tmpdir(), "jarvis-native-prompt-"));
 try {
@@ -52,7 +52,16 @@ try {
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("17 passed · 0 failed");
+
+  const candidate = 'EDIT_SCRIPT:{"edits":[{"path":"target.txt","old":"beta","new":"gamma"}]}';
+  const review = buildNativeReviewPrompt(packet, repo, candidate);
+  assert.match(review, /SELF-REVIEW PHASE/);
+  assert.match(review, /CANDIDATE TO REVIEW:/);
+  assert.match(review, /"new":"gamma"/);
+  assert.match(review, /precedent-only import or declaration/);
+  assert.doesNotMatch(review, /SECRET_VERIFIER_EXPECTATION/);
+  assert.doesNotMatch(review, /SECRET_VERIFIER_NOTE/);
+  console.log("23 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
