@@ -37,10 +37,13 @@ const POSTURES = Object.freeze([
 ]);
 const REVIEW_PRESSURES = Object.freeze(['ordinary', 'high_value_uncertain']);
 const DISCLOSURES = Object.freeze(['none', 'task_text_only', 'exact_bundle']);
+const EXECUTION_INTENTS = Object.freeze(['review', 'develop']);
+const DEVELOPMENT_WORK_CLASSES = Object.freeze(['PATCH', 'REFACTOR', 'REBUILD', 'DELIVERY']);
 
 const SPEC_FIELDS = Object.freeze([
   'objective',
   'workClass',
+  'executionIntent',
   'taskShape',
   'capability',
   'evidenceClass',
@@ -198,6 +201,7 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
   const taskShape = text(spec?.taskShape || 'CODE_GROUNDED');
   const evidenceClass = text(spec?.evidenceClass || 'E1_REPOSITORY_LOCAL');
   const workClass = text(spec?.workClass || 'VERIFICATION');
+  const executionIntent = text(spec?.executionIntent || 'review');
   const posture = text(spec?.requestedPosture || 'default');
   const reviewPressure = text(spec?.reviewPressure || 'ordinary');
   const capability = text(spec?.capability) || null;
@@ -206,12 +210,43 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
   if (!TASK_SHAPES.includes(taskShape)) blocks.push(blocker('INVALID_TASK_SHAPE', 'Use one of the six J5 task shapes.', 'taskShape'));
   if (!EVIDENCE_CLASSES.includes(evidenceClass)) blocks.push(blocker('INVALID_EVIDENCE_CLASS', 'Use E0-E4 custody.', 'evidenceClass'));
   if (!WORK_CLASSES.includes(workClass)) blocks.push(blocker('INVALID_WORK_CLASS', 'Work class is not canonical.', 'workClass'));
+  if (!EXECUTION_INTENTS.includes(executionIntent)) blocks.push(blocker('INVALID_EXECUTION_INTENT', 'executionIntent must be review or develop.', 'executionIntent'));
   if (!POSTURES.includes(posture)) blocks.push(blocker('INVALID_REQUESTED_POSTURE', 'Requested posture is not canonical.', 'requestedPosture'));
   if (!REVIEW_PRESSURES.includes(reviewPressure)) blocks.push(blocker('INVALID_REVIEW_PRESSURE', 'Review pressure is not canonical.', 'reviewPressure'));
   if (!/^[0-9a-f]{40}$/i.test(String(canonicalSha || ''))) {
     blocks.push(blocker('CANONICAL_SHA_REQUIRED', 'MAIN must derive exact canonical SHA.'));
   }
   if (!safeId(workUnitId)) blocks.push(blocker('WORK_UNIT_ID_REQUIRED', 'MAIN must derive canonical Work Unit identity.'));
+
+  const developmentIntent = executionIntent === 'develop';
+  if (developmentIntent && !DEVELOPMENT_WORK_CLASSES.includes(workClass)) {
+    blocks.push(blocker(
+      'DEVELOPMENT_WORK_CLASS_REQUIRED',
+      'Develop intent is limited to PATCH, REFACTOR, REBUILD, or DELIVERY.',
+      'workClass',
+    ));
+  }
+  if (developmentIntent && taskShape !== 'CODE_GROUNDED') {
+    blocks.push(blocker(
+      'DEVELOPMENT_CODE_GROUNDED_REQUIRED',
+      'Develop intent requires taskShape=CODE_GROUNDED.',
+      'taskShape',
+    ));
+  }
+  if (developmentIntent && evidenceClass !== 'E1_REPOSITORY_LOCAL') {
+    blocks.push(blocker(
+      'DEVELOPMENT_LOCAL_EVIDENCE_REQUIRED',
+      'Develop intent requires E1_REPOSITORY_LOCAL custody.',
+      'evidenceClass',
+    ));
+  }
+  if (developmentIntent && !['default', 'local_only', 'independent_review'].includes(posture)) {
+    blocks.push(blocker(
+      'DEVELOPMENT_EXTERNAL_POSTURE_REFUSED',
+      'D2 develop intent is local-first; external challenge is a separate review act.',
+      'requestedPosture',
+    ));
+  }
 
   const focus = unique(lines(spec?.evidenceFocus).map(boundedRepoPath).filter(Boolean));
   const acceptance = lines(spec?.acceptanceCriteria);
@@ -281,7 +316,7 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
     },
     authority: {
       repository_read: !isTaskTextOnly,
-      repository_write: 'none',
+      repository_write: developmentIntent ? 'worktree' : 'none',
       shell: 'none',
       network_external: networkExternal,
       provider_spend: providerSpend,
@@ -311,6 +346,7 @@ function prospectiveIntentKey(spec, canonicalSha) {
   return digestObject({
     objective: text(spec?.objective),
     workClass: text(spec?.workClass),
+    executionIntent: text(spec?.executionIntent || 'review'),
     taskShape: text(spec?.taskShape),
     capability: text(spec?.capability) || null,
     evidenceClass: text(spec?.evidenceClass),
