@@ -428,7 +428,8 @@ const FALSIFIERS: Check[] = [
         'tests/constitutional/serving-identity/f1-charter-conformance-matrix.ts',
         'utf8'
       );
-      assert(!self.includes("from '../../../lib/consciousness/memberDisclosureDecision'"), 'D1 imported');
+      const d1Import = ["from '../../../lib/consciousness/", "memberDisclosureDecision'"].join('');
+      assert(!self.includes(d1Import), 'D1 imported');
       assert(!self.includes('decide' + 'MemberDisclosure('), 'D1 invoked');
     },
   },
@@ -440,7 +441,8 @@ const FALSIFIERS: Check[] = [
         'tests/constitutional/serving-identity/f1-charter-conformance-matrix.ts',
         'utf8'
       );
-      assert(!self.includes("from '../../../lib/consciousness/disclosureFactAdmission'"), 'D2 imported');
+      const d2Import = ["from '../../../lib/consciousness/", "disclosureFactAdmission'"].join('');
+      assert(!self.includes(d2Import), 'D2 imported');
       assert(!self.includes('admit' + 'DisclosureFacts('), 'D2 admission invoked');
     },
   },
@@ -621,9 +623,25 @@ function runNpm(script: string): void {
 }
 
 let pass = true;
-for (const check of [...FALSIFIERS, ...GUARDS]) {
+let falsifiersPassed = 0;
+let guardsPassed = 0;
+
+for (const check of FALSIFIERS) {
   try {
     check.run();
+    falsifiersPassed += 1;
+    console.log('PASS  ' + check.id + '  ' + check.law);
+  } catch (error: any) {
+    pass = false;
+    console.log('FAIL  ' + check.id + '  ' + check.law);
+    console.log('      ' + (error?.message ?? String(error)));
+  }
+}
+
+for (const check of GUARDS) {
+  try {
+    check.run();
+    guardsPassed += 1;
     console.log('PASS  ' + check.id + '  ' + check.law);
   } catch (error: any) {
     pass = false;
@@ -635,8 +653,8 @@ for (const check of [...FALSIFIERS, ...GUARDS]) {
 console.log(
   '\nRESULT: ' +
   (pass ? 'PASS' : 'FAIL') +
-  ' · ' + FALSIFIERS.length + '/15 charter falsifiers · ' +
-  GUARDS.length + '/' + GUARDS.length + ' guards'
+  ' · ' + falsifiersPassed + '/' + FALSIFIERS.length + ' charter falsifiers · ' +
+  guardsPassed + '/' + GUARDS.length + ' guards'
 );
 
 process.exit(pass ? 0 : 1);
