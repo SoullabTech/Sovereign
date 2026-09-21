@@ -226,7 +226,19 @@ export async function POST(request: NextRequest) {
         note: turn.voice.note, unfamiliar: turn.voice.unfamiliar,
         sampleWords: turn.voice.sampleWords,
       } } : {}),
-      ...(scopeRefused ? { detail: turn.detail } : {}),
+      /* ⭐ THE REFUSAL NAMES ITSELF, INCLUDING WHEN IT IS NOT A SCOPE REFUSAL.
+       *
+       * `structured_refused` carries the seam's own code as its detail — one of
+       * `invalid_inference_mode` · `structured_inference_unavailable` ·
+       * `not_configured` · `provider_unavailable`. Gating `detail` on
+       * `scopeRefused` discarded exactly the word that distinguishes a
+       * misconfigured deployment from an unreachable provider, and nothing logs
+       * it, so a 502 was unattributable from either side.
+       *
+       * ⛔ Still never content: every detail on this path is a fixed code, a
+       * model name, or the writer-facing refusal sentence. ⛔ No authored prose,
+       * no candidate wording. A refusal is not an occasion to disclose. */
+      ...(turn.detail !== undefined ? { detail: turn.detail } : {}),
       ...(turn.scope ? {
         scope: {
           declared: parsed.scope,
