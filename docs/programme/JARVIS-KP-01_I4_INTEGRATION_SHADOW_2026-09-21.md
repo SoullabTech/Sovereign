@@ -108,16 +108,17 @@ Local candidate evidence:
 - relational-field runner containment suite → **8/8 PASS**;
 - `npm run typecheck:epistemic-join` → **EXIT 0**;
 - `npm run witness:epistemic-join-i4-db` → **PASS**;
+- `npm run typecheck` → **229 diagnostics vs 239 baseline · 0 regressions · EXIT 0**;
+- full `npm run db:verify-bootstrap` → **PASS** with the I4 migration present;
 - legacy relational-shadow evidence writer/type → **byte-identical**;
 - `git diff --check` → **PASS**.
 
-The repository-wide no-regression typecheck was **not locally adjudicable** from
-the sparse worktree: the baseline correctly refused a ship program narrowed to
-9 files and reported missing directories/coverage. Those diagnostics are not
-claimed as candidate evidence in either direction.
+An earlier sparse-worktree run of the repository typecheck was correctly
+non-adjudicable because the ship program had been narrowed. After host disk
+pressure cleared, the sparse checkout was disabled and both full-repository
+gates above were rerun successfully.
 
-A full repository typecheck and empty-database reconstruction are therefore
-required hosted-PR evidence before any I4 canonicalization.
+Hosted PR CI remains required as exact-head freshness evidence before merge.
 
 ## Canonical freshness at candidate freeze
 
