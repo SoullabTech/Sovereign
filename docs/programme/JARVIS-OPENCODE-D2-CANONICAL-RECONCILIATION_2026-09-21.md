@@ -47,6 +47,15 @@ The canonical Qwen verification lane subsequently proved that OpenCode's headles
 
 That worker is toolless by construction and sends exactly the bounded prompt to local Ollama `/api/generate`. The E1 Qwen transport binds to it as `ollama-direct`; OpenCode remains a separate governed development/review substrate rather than a required Qwen verification hop.
 
+## Guard relocation after Qwen direct
+
+When Qwen verification moved to `ollama-direct`, GPT-OSS remained the active local
+`execution_adapter = opencode` reviewer. The D2 containment envelope therefore follows
+the surviving local OpenCode adapter rather than the former Qwen-specific subject:
+GPT-OSS launches with `--standalone`, private HOME/config/data roots, project discovery
+disabled, and a single inline `jarvis-readonly` configuration. The containment test is
+bound to that live GPT-OSS path instead of being deleted with the former Qwen/OpenCode path.
+
 ## Standing
 
 - PR #1425 containment law: **correct under the inline-agent composition**.
