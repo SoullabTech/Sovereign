@@ -183,7 +183,8 @@
     "matrix:ws-observation-identity-live": "tsx tests/constitutional/writers-studio/liveRunner.ts",
     "witness:ws-observation-address": "tsx tests/constitutional/writers-studio/addressRunner.ts",
     "gates:ws-convergence-c2-c4": "tsx tests/constitutional/writers-studio/convergenceRunner.ts",
-    "gates:ws-convergence-c5": "tsx tests/constitutional/writers-studio/convergenceC5Runner.ts"
+    "typecheck:ws-convergence-c5": "tsc -p tsconfig.ws-convergence-c5.json --pretty false",
+    "gates:ws-convergence-c5": "npm run typecheck:ws-convergence-c5 && tsx tests/constitutional/writers-studio/convergenceC5Runner.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
