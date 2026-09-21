@@ -9,7 +9,7 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
 
   it('pins the exact bounded implementation candidate', () => {
     for (const src of [preflight, run]) {
-      expect(src).toContain('SHA=b61c79e44697f29e9bc16cc4c6c2c7fb064bc484');
+      expect(src).toContain('SHA=21517b80060629bb6d7aa2d39fd02fe61eb99ee3');
       expect(src).toContain('SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8');
     }
   });
@@ -31,6 +31,8 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
     expect(preflight).not.toContain('afplay -v');
     expect(preflight).toContain('K00_CAL_DISTANCE_CM');
     expect(preflight).toContain('geometry-record.txt');
+    expect(preflight).not.toContain('sort -z');
+    expect(preflight).not.toContain('xargs -0');
   });
 
   it('run pin requires fresh authority, unchanged geometry and operator safety', () => {
@@ -48,6 +50,8 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
     expect(run).toContain('break');
     expect(run).toContain('NO_LEVEL_PIN');
     expect(run).toContain('V1 remains 20 dB');
+    expect(run).not.toContain('sort -z');
+    expect(run).not.toContain('xargs -0');
   });
 
   it('executes VP-off only after a VP-on level pin exists', () => {
