@@ -602,7 +602,8 @@ _run_lane() {
             files_changed_json='[]'
         else
             echo "🛑 [ain-delegate] native verification failed and rollback did not complete cleanly." >&2
-            [ "$exit_code" -ne 0 ] || exit_code=11
+            exit_code=11
+            verification_evidence="${verification_evidence}FAIL: NATIVE_ROLLBACK_INCOMPLETE\n"
         fi
     fi
 
