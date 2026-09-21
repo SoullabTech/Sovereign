@@ -258,11 +258,19 @@ export function applyNativePatch({
   if (!inspected.ok) return recordRefusal(inspected.code, inspected.detail);
 
   const envelope = derivePermissionEnvelope(packet);
-  if (envelope.repo_write_scope !== "worktree") {
+  if (!envelope.repo_read || envelope.repo_write_scope !== "worktree") {
     return recordRefusal("WORKTREE_WRITE_AUTHORITY_REQUIRED");
   }
-  if (envelope.production_write || envelope.deploy || envelope.authority_change) {
-    return recordRefusal("PATCH_AUTHORITY_TOO_BROAD");
+  if (
+    envelope.production_read
+    || envelope.production_write
+    || envelope.deploy
+    || envelope.authority_change
+    || envelope.external_network
+    || envelope.external_repo_disclosure
+    || envelope.provider_spend
+  ) {
+    return recordRefusal("PATCH_AUTHORITY_TOO_BROAD", { envelope });
   }
 
   let status;
