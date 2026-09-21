@@ -402,6 +402,31 @@ export function runC6(): readonly Check[] {
       desk.slice(desk.indexOf('DEPTH_CHOICES.map'), desk.indexOf('DEPTH_CHOICES.map') + 500)),
     'the depth control asks the editorial turn to re-explain; it reads nothing again');
 
+  /* ⭐⭐ C6R5A — THE TWO PROVENANCE FACTS ARE INDEPENDENT AND NEITHER
+     SUBSTITUTES FOR THE OTHER. `readerVersion` names the human-readable
+     contract GENERATION; `promptHash` identifies the exact contract INSTANCE.
+     ⭐ The version is not inside READER_SYSTEM, so bumping it leaves the hash
+     untouched — which is the proof that they are separate facts rather than
+     one fact spelled twice. */
+  add('C6R5A-1-reader-version-is-06',
+    /export const READER_VERSION = 'DEVELOPMENTAL-READER-06';/.test(render),
+    'the human-readable contract generation tells the truth at a glance');
+
+  add('C6R5A-2-version-is-not-part-of-the-hashed-prompt',
+    !/DEVELOPMENTAL-READER/.test(render.match(/READER_SYSTEM = `([\s\S]*?)`;/)?.[1] ?? '') &&
+    /update\(READER_SYSTEM, 'utf8'\)/.test(render),
+    'the prompt hash still derives from the prompt alone, automatically');
+
+  /* ⚠️ A FIXTURE IS NOT AN EXPECTATION. `refusalTruth` builds a stored refusal
+     record carrying `DEVELOPMENTAL-READER-05` and a fake hash — it stands for a
+     record written under the previous generation, and bumping it would erase
+     the only place the suite shows two generations coexisting. ⛔ Historical
+     records are never rewritten to match the current contract. */
+  add('C6R5A-3-historical-records-keep-their-own-generation',
+    /readerVersion: 'DEVELOPMENTAL-READER-05', promptHash: 'abc'/
+      .test(read('lib/manuscript/developmentalReading/__tests__/refusalTruth.test.ts')),
+    'a record from the previous contract still says so; nothing was backfilled');
+
   const c5 = runC5();
   const reusableC5 = c5.filter(c => c.id !== 'C5-19-no-new-revision-substrate');
   add('C6-10-c5-still-green',

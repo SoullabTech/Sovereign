@@ -82,7 +82,7 @@ import {
  * -03: a reading's identity is the whole of what the model was shown, and the
  * -04 text is not the -05 text. `promptContractHash()` moves with it.
  */
-export const READER_VERSION = 'DEVELOPMENTAL-READER-05';
+export const READER_VERSION = 'DEVELOPMENTAL-READER-06';
 export const TOOL_NAME = 'draft_reader_claims';
 
 /* ── the prompt ──────────────────────────────────────────────────────────── */
