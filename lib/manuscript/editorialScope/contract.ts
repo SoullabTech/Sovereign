@@ -399,8 +399,19 @@ export function latitudeInstruction(declared: EditorialScopeDeclaration): string
       + `them, with no single unbroken cut longer than ${band.maxContiguousRemovedWords} words.`,
     declared.mayRemoveParagraphs
       ? 'The writer has allowed proposals that remove a whole paragraph.'
+      /* ⭐⭐ W4 REPAIR (live witness, 2026-09-21). She obeyed this and still failed
+         the check: she refused, she said *paragraph*, and the writer was left with
+         no way to act on it. The control was three inches away and she could not
+         name it, because nothing here had ever told her it exists.
+         ⛔ NAMING IS NOT SOLICITING. The bounds in the last sentence are the
+         sovereignty guard: a companion that repeatedly points at the checkbox
+         standing between it and a freer hand is lobbying for its own latitude. */
       : 'The writer has NOT allowed removing whole paragraphs. If you believe one should go, '
-        + 'say so in your reply and let them decide. Do not return wording with it removed.',
+        + 'say so in your reply and let them decide. Do not return wording with it removed. '
+        + 'That permission is theirs and it is on this page, a checkbox reading \u201cMAIA may '
+        + 'suggest removing a whole paragraph\u201d. When a paragraph really is what your answer '
+        + 'turns on, you may tell them once that the control is there and unticked — plainly, '
+        + 'without pressing it, and never when the work in front of you does not need it.',
     'Work with the writer\'s existing words, rhythm and imagery. Propose the smallest change that '
       + 'answers what they asked. If what you want to do exceeds this latitude, say that in your '
       + 'reply instead of proposing it — a proposal beyond the latitude is refused and the writer '

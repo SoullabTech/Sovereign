@@ -7,12 +7,20 @@
  * weakened back to the state that produced the incident.
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   DEFAULT_SCOPE_DECLARATION, LATITUDE_BANDS,
   judgeProposalScope, measureProposalScope, paragraphSpans, words,
   latitudeInstruction,
   type EditorialScopeDeclaration,
 } from '../contract';
+
+/**
+ * ⭐ The checkbox, in the writer's own field of view — `EditingLatitude.tsx`.
+ * ⛔ Not a paraphrase of it. F16 reads the surface and fails if the two part.
+ */
+const PARAGRAPH_CONTROL_LABEL = 'MAIA may suggest removing a whole paragraph';
 
 /* The author's words, as they stood. Two paragraphs of the opening. */
 const AUTHOR = `To be human is to move through cycles. Morning turns to midday, midday leads toward dusk, dusk gives way to nightfall, and night eventually finds its way back to the light of day. Winter moves into spring, spring opens into summer, summer releases into fall, and fall returns again to the dormancy of winter. These rhythms surround us so completely that we rarely stop to consider how deeply they shape the way life itself unfolds.
@@ -182,5 +190,29 @@ describe('WS-EDITORIAL-SCOPE-01 · the law', () => {
     expect(text).toContain(LATITUDE_BANDS[1].label);
     expect(text).toMatch(/NOT allowed removing whole paragraphs/);
     expect(latitudeInstruction(at(5, true))).toMatch(/has allowed proposals that remove/);
+  });
+
+  /* ⭐⭐ F15 · THE W4 FAILURE, MADE FALSIFIABLE.
+     The 2026-09-21 live witness refused correctly and still failed its check:
+     the refusal named the paragraph and left the writer with nowhere to go.
+     ⛔ This asserts the courtesy string names the control — it asserts nothing
+     about enforcement, which `judgeProposalScope` already owns above. */
+  it('F15 · a withheld paragraph permission tells her the control exists', () => {
+    const withheld = latitudeInstruction(at(5, false));
+    expect(withheld).toContain(PARAGRAPH_CONTROL_LABEL);
+    /* ⛔ Nothing to invite when it is already on — and an instruction that
+       pointed at a ticked checkbox would be lobbying, not informing. */
+    expect(latitudeInstruction(at(5, true))).not.toContain(PARAGRAPH_CONTROL_LABEL);
+  });
+
+  /* ⭐ F16 · THE DRIFT GUARD, AND THE REASON F15 IS NOT ENOUGH.
+     F15 passes forever against a control the writer cannot find. A name MAIA
+     speaks that is not on the screen is worse than silence: it sends the writer
+     looking for something that is not there. ⛔ So the label is read off the
+     surface itself, and the day someone rewords the checkbox this goes red. */
+  it('F16 · the control she names is the control the writer sees', () => {
+    const surface = readFileSync(
+      join(__dirname, '../../../../app/writers-studio/insight/EditingLatitude.tsx'), 'utf8');
+    expect(surface).toContain(PARAGRAPH_CONTROL_LABEL);
   });
 });
