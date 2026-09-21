@@ -114,7 +114,6 @@ export function inspectPatch(patchText, allowedFiles = []) {
   if (!patch.startsWith("diff --git ")) {
     return refusal("PATCH_MUST_BE_PURE_GIT_DIFF");
   }
-  if (/```/.test(patch)) return refusal("PATCH_CODE_FENCE_UNSUPPORTED");
   if (/^GIT binary patch$/m.test(patch) || /^Binary files /m.test(patch)) {
     return refusal("PATCH_BINARY_UNSUPPORTED");
   }
@@ -126,6 +125,10 @@ export function inspectPatch(patchText, allowedFiles = []) {
   }
 
   const lines = patch.replace(/\r\n/g, "\n").split("\n");
+  // split() produces one terminal empty item for the ordinary final newline.
+  // Remove only that serialization artifact; an actual unprefixed blank line
+  // inside a hunk remains and is refused by the grammar below.
+  if (lines.at(-1) === "") lines.pop();
   const sections = [];
   let current = null;
   let inHunk = false;
@@ -153,14 +156,11 @@ export function inspectPatch(patchText, allowedFiles = []) {
     }
 
     if (inHunk) {
-      const isFinalEmpty = line === "" && lines.indexOf(line) === lines.length - 1;
       if (
-        !isFinalEmpty
-        && !line.startsWith(" ")
+        !line.startsWith(" ")
         && !line.startsWith("+")
         && !line.startsWith("-")
         && !line.startsWith("\\")
-        && !line.startsWith("diff --git ")
         && !line.startsWith("@@ ")
       ) {
         return refusal("PATCH_HUNK_LINE_UNSUPPORTED", { line: line.slice(0, 180) });
