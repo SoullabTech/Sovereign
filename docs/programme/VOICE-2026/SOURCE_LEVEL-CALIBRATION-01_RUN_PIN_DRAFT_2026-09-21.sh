@@ -14,6 +14,8 @@ AUTH="$(printenv K00_EXEC_AUTHORITY 2>/dev/null || true)"
 [ -n "$AUTH" ]
 GEOMETRY_CONFIRMATION="$(printenv K00_CAL_GEOMETRY_CONFIRMATION 2>/dev/null || true)"
 [ "$GEOMETRY_CONFIRMATION" = UNCHANGED ]
+SAFETY_CONFIRMATION="$(printenv K00_CAL_OPERATOR_SAFETY 2>/dev/null || true)"
+[ "$SAFETY_CONFIRMATION" = CONFIRMED ]
 
 test -f "$PTR"
 WT="$(sed -n '1p' "$PTR")"
