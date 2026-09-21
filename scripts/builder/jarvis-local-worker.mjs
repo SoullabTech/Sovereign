@@ -24,20 +24,40 @@
  *
  * Usage:
  *   jarvis-local-worker.mjs run --prompt-file <f> [--model maia-coder:latest]
- *                               [--host http://localhost:11434] [--json]
+ *                               [--host http://127.0.0.1:11434] [--json]
  *   jarvis-local-worker.mjs health [--host ...]
  */
 
 import { readFileSync } from 'node:fs';
 
-const DEFAULT_HOST = process.env.JARVIS_OLLAMA_HOST || 'http://localhost:11434';
+const LOOPBACK_HOST = 'http://127.0.0.1:11434';
+const DEFAULT_HOST = process.env.JARVIS_OLLAMA_HOST || LOOPBACK_HOST;
 const DEFAULT_MODEL = process.env.JARVIS_LOCAL_MODEL || 'maia-coder:latest';
 const DEFAULT_TIMEOUT_MS = Number(process.env.JARVIS_LOCAL_TIMEOUT_MS || 600000);
 
+export function isPermittedLocalHost(host) {
+  try {
+    const u = new URL(String(host));
+    return u.protocol === 'http:'
+      && u.hostname === '127.0.0.1'
+      && u.port === '11434'
+      && (u.pathname === '' || u.pathname === '/')
+      && !u.username
+      && !u.password
+      && !u.search
+      && !u.hash;
+  } catch {
+    return false;
+  }
+}
+
 export async function health(host = DEFAULT_HOST) {
   const t0 = Date.now();
+  if (!isPermittedLocalHost(host)) {
+    return { ok: false, reason: 'NONLOCAL_HOST_REFUSED', host, latency_ms: 0 };
+  }
   try {
-    const r = await fetch(`${host}/api/tags`, { signal: AbortSignal.timeout(5000) });
+    const r = await fetch(`${host}/api/tags`, { signal: AbortSignal.timeout(5000), redirect: 'error' });
     if (!r.ok) return { ok: false, reason: `HTTP ${r.status}`, latency_ms: Date.now() - t0 };
     const j = await r.json();
     return {
@@ -63,6 +83,14 @@ export async function run({
   temperature = 0,
 } = {}) {
   if (!prompt || !prompt.trim()) throw new Error('local-worker: empty prompt');
+  if (!isPermittedLocalHost(host)) {
+    return {
+      ok: false, transport: 'ollama-native', model, host,
+      failure_class: 'NONLOCAL_HOST_REFUSED',
+      error: `local-worker: host must be ${LOOPBACK_HOST}`,
+      duration_s: 0, output: '',
+    };
+  }
   const t0 = Date.now();
   let res;
   try {
@@ -76,6 +104,7 @@ export async function run({
         options: { temperature, num_ctx: Number(process.env.JARVIS_NUM_CTX || 65536) },
       }),
       signal: AbortSignal.timeout(timeoutMs),
+      redirect: 'error',
     });
   } catch (e) {
     return {
