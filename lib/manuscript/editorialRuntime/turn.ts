@@ -42,6 +42,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { runStructured } from '@/lib/ai/structured/router';
+import type { DispatchObservation } from '@/lib/ai/structured/dispatch';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
 import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers-studio/canonicalWriterTurn';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
@@ -166,6 +167,14 @@ export type EditorialTurnResult =
       readonly ok: false;
       readonly reason: EditorialTurnRefusal;
       readonly detail?: string;
+      /**
+        * ⭐ Present only on `structured_refused`: whether a provider response was
+        * observed. ⛔ This is what lets a disclosure receipt say whether the
+        * crossing happened, since `reason` alone cannot — an HTTP error and a
+        * refused connection are the same refusal with different `detail`.
+        * ⚠️ `unknown` is a real answer, not a missing one.
+        */
+      readonly dispatch?: DispatchObservation;
       /** ⭐ Present only on a scope refusal, so the writer can be told in counts. */
       readonly scope?: { readonly measure: ScopeMeasure; readonly wouldPassAtLatitude: number | null };
       /** ⭐ Present on a voice refusal, so the writer sees WHICH words. */
@@ -282,7 +291,14 @@ export async function runEditorialTurn(
   };
   const structured = await runStructured(request);
   if (!structured.ok) {
-    return { ok: false, reason: 'structured_refused', detail: structured.refusal };
+    /* ⭐ `detail` stays the refusal CLASS, unchanged — the caller's contract is
+       not rewritten here. ⛔ What is added is the delivery fact, which the class
+       cannot carry: `provider_unavailable` covers both a request that arrived
+       and was rejected and one that never left. */
+    return {
+      ok: false, reason: 'structured_refused', detail: structured.refusal,
+      dispatch: structured.dispatch,
+    };
   }
 
   /* 6 ⛔ ADMISSION. A refusal here reaches no transaction, and prose is never

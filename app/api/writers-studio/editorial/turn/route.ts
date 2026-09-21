@@ -217,11 +217,35 @@ export async function POST(request: NextRequest) {
        line and the system held it. ⛔ None of them is a server fault. */
     const scopeRefused = turn.scope !== undefined || turn.voice !== undefined
       || turn.reason === 'sequence_discussion_first';
+    /* ⭐ THE DIAGNOSTIC THAT WAS MISLEADING, CORRECTED.
+     *
+     * `detail` is withheld from the RESPONSE for non-scope refusals, and that is
+     * right: a refusal is not an occasion to disclose provider internals to a
+     * member. ⚠️ But withholding it from the SERVER too left `structured_refused`
+     * arriving as a bare four-value class with the one field that distinguishes
+     * its causes stripped — an operator could not tell a missing key from a
+     * rejected schema from a timeout. ⭐ The record is now written where
+     * operators read and members do not. */
+    if (!scopeRefused) {
+      console.error('[editorial/turn] refused', {
+        reason: turn.reason,
+        detail: turn.detail,
+        dispatch: turn.dispatch ?? 'not_applicable',
+        threadId: parsed.threadId,
+        memberTurnIndex: act.turnIndex,
+      });
+    }
     return NextResponse.json({
       threadId: parsed.threadId,
       memberTurnIndex: act.turnIndex,
       direction: act.direction ? { id: act.direction.id } : null,
       error: turn.reason,
+      /* ⭐ SAFE TO RETURN, and the reason the field exists: it reports whether a
+         request arrived, never what any provider said. ⛔ It is not `detail` by
+         another name. ⚠️ `unknown` is returned as itself — a client that renders
+         it as "nothing was sent" would be inventing the certainty this value
+         exists to deny. */
+      ...(turn.dispatch ? { dispatch: turn.dispatch } : {}),
       ...(turn.voice ? { voice: {
         note: turn.voice.note, unfamiliar: turn.voice.unfamiliar,
         sampleWords: turn.voice.sampleWords,

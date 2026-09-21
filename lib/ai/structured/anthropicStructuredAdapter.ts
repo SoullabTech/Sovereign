@@ -18,6 +18,42 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { StructuredDispatchError, type DispatchObservation } from './dispatch';
+
+/**
+ * ⭐ CLASSIFY WHAT THE WIRE DID — the one judgement this file is permitted, and
+ * only because it is the only file that can see the vendor's error classes.
+ *
+ * ⛔ It classifies DELIVERY, not meaning. A 400 and a 200 are both
+ * `response_observed`: the question is whether the request arrived, never
+ * whether the answer was good.
+ *
+ * ⛔ ORDER IS LOAD-BEARING. `APIConnectionTimeoutError` extends
+ * `APIConnectionError`, so it must be tested first — otherwise every timeout
+ * would be misreported as "nothing arrived", which is precisely the lie the
+ * third value exists to prevent.
+ */
+function classifyDispatch(err: unknown): DispatchObservation {
+  try {
+    /* A timeout is undetermined: the request may have arrived and the response
+       been lost. ⛔ Never `no_response_observed`. */
+    if (err instanceof Anthropic.APIConnectionTimeoutError) return 'unknown';
+    /* ⭐ The server answered. That it answered with an error changes nothing
+       about arrival — which is the only thing being asked here. */
+    if (err instanceof Anthropic.APIError && typeof (err as { status?: unknown }).status === 'number') {
+      return 'response_observed';
+    }
+    /* Connection refused, DNS failure, TLS failure — no response came back.
+       The unconstructable-client case lands here too: it throws before
+       `toAnthropicParams` has even built a body. */
+    if (err instanceof Anthropic.APIConnectionError) return 'no_response_observed';
+    return 'unknown';
+  } catch {
+    /* ⛔ If the SDK's shape is not what we expect, the honest answer is that we
+       do not know. Classification must never be the thing that throws. */
+    return 'unknown';
+  }
+}
 import { deriveModelAgreement } from './types';
 import type { ProviderName } from '../types';
 import type {
@@ -85,6 +121,24 @@ export function anthropicStructuredProvider(
   return {
     name: provider,
     async execute(req: StructuredRequest): Promise<StructuredResult> {
+      /* ⭐ THE WHOLE BODY IS WRAPPED, deliberately. The client constructor is
+         inside: a missing key throws there, BEFORE `toAnthropicParams` builds a
+         body, so nothing left the process — and that is a fact the receipt is
+         entitled to. ⛔ Wrapping only the network call would lose it. */
+      try {
+        return await executeOnce(opts, req);
+      } catch (err) {
+        /* ⛔ RE-THROWN, NOT SWALLOWED. The router still decides what a failure
+           means; this adds one fact and changes no control flow. */
+        throw new StructuredDispatchError(classifyDispatch(err), err);
+      }
+    },
+  };
+}
+
+async function executeOnce(
+  opts: AnthropicStructuredOptions, req: StructuredRequest,
+): Promise<StructuredResult> {
       const client = opts.client ?? new Anthropic();
       const params = toAnthropicParams(req);
       const t0 = Date.now();
@@ -129,6 +183,4 @@ export function anthropicStructuredProvider(
           latencyMs: Date.now() - t0,
         },
       };
-    },
-  };
 }

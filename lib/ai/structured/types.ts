@@ -16,6 +16,9 @@
  */
 
 import type { ProviderName } from '../types';
+import type { DispatchObservation } from './dispatch';
+
+export type { DispatchObservation };
 
 export interface StructuredMessage {
   /** ROLES ARE PRESERVED, never flattened into one turn. */
@@ -164,7 +167,20 @@ export type StructuredRefusal =
 
 export type StructuredOutcome =
   | { ok: true; result: StructuredResult }
-  | { ok: false; refusal: StructuredRefusal; detail?: string };
+  | {
+      ok: false; refusal: StructuredRefusal; detail?: string;
+      /**
+       * ⭐ Whether a provider response was observed — the fact a disclosure
+       * receipt needs and `refusal` alone cannot give, since an HTTP 400 and a
+       * refused connection are both `provider_unavailable`.
+       *
+       * ⛔ OPTIONAL BY CONSTRUCTION. Absent means this refusal happened before
+       * any provider was reached at all (policy, mode, no local provider), where
+       * the question does not arise. ⛔ Absent is never evidence that nothing
+       * was sent — a caller needing that must read the value, not its absence.
+       */
+      dispatch?: DispatchObservation;
+    };
 
 /**
  * What a provider must be able to do to serve a structured request AT ALL.

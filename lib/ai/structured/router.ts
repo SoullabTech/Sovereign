@@ -37,6 +37,7 @@
 
 import type { InferenceMode } from '../types';
 import { resolveStructuredMode } from './policy';
+import { dispatchOf } from './dispatch';
 import type {
   StructuredOutcome, StructuredProvider, StructuredRequest,
 } from './types';
@@ -108,6 +109,10 @@ async function route(
   try {
     p = await defaultProvider();
   } catch (err) {
+    /* ⛔ No `dispatch`. The adapter module could not even be loaded, so no
+       provider was reached and the question does not arise. ⭐ Absent is not
+       `no_response_observed` — it is "not applicable", and a caller that needs
+       an answer must read a value rather than infer one from silence. */
     return { ok: false, refusal: 'not_configured', detail: String(err) };
   }
   return execute(p, req);
@@ -126,6 +131,12 @@ async function execute(
       ok: false,
       refusal: 'provider_unavailable',
       detail: err instanceof Error ? err.message : String(err),
+      /* ⭐ THE ONE FACT ADDED HERE, and the reason this seam changed at all: a
+         disclosure receipt must distinguish a request that demonstrably arrived
+         from one that never left. ⛔ The router does not classify — it cannot,
+         without importing the vendor SDK and destroying the lazy-load property
+         the module header defends. It reads what the adapter attached. */
+      dispatch: dispatchOf(err),
     };
   }
 }
