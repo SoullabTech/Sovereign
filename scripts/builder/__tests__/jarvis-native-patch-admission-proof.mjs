@@ -156,6 +156,10 @@ check("code-fenced patches are refused", () => {
   const r = inspectPatch("```diff\n" + patchFor("allowed.txt", "before", "after") + "```\n", ["allowed.txt"]);
   assert.equal(r.ok, false);
 });
+check("ordinary source backticks remain admissible", () => {
+  const r = inspectPatch(patchFor("allowed.txt", "before", "const s = `value`;"), ["allowed.txt"]);
+  assert.equal(r.ok, true, JSON.stringify(r));
+});
 check("trailing prose after a diff is refused", () => {
   const r = inspectPatch(patchFor("allowed.txt", "before", "after") + "Here is why this works\n", ["allowed.txt"]);
   assert.equal(r.ok, false);
