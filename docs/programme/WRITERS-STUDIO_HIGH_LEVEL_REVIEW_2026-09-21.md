@@ -322,3 +322,141 @@ S1 Editorial Reading (coverage-licensed) · S2 the pass as a unit · S3 collapse
 Repetition-detection and quote-checking are **new capabilities**, not convergence. They belong
 after the spine is walkable, or the convergence lane quietly becomes a build lane — which is how
 the labyrinth got built the first time.
+
+---
+
+# Addendum 2 — Writer mode / Pro mode, and the one object all three drafts converge on
+
+Three design passes have now landed. They agree on the spine and differ only in surface. Reading
+them together, **they are all describing the same missing object** — and it is small.
+
+## ⭐ The object: a Commission layer
+
+Every proposal so far needs the same thing: something that turns *what a writer says* into *what
+the reader is commissioned to do*.
+
+```
+  "Help me strengthen the book"   ─┐
+  "Something isn't right here"     ├─▶  COMMISSION  ─▶  reader(lens, scope, coverage)
+  "Review my manuscript"          ─┘                    ×N passes
+  "Reread only for continuity"    ─┘
+```
+
+This is the whole Writer-mode/Pro-mode split, correctly located. **Writer mode and Pro mode are
+not two products and must not be two interfaces over two behaviours. They are two ways of
+addressing one commission layer** — one in ordinary language, one in the vocabulary. The same
+commission, the same reading, the same coverage, the same law. Pro mode only lets you *name* the
+commission directly instead of describing it.
+
+Test to hold it honest: **Writer mode and Pro mode, given the same intent, must produce the same
+reading.** If they can diverge, you have built two products and the labyrinth has returned wearing
+a friendlier coat.
+
+### The mapping is ratifiable today
+
+`DEVELOPMENTAL_LENSES` is a closed set of seven with founder-ratified semantics. The proposed
+mapping needs only one correction (see Sources, below):
+
+| Writer says | Commission | Status |
+|---|---|---|
+| Give me the full picture | all seven, coverage-complete | needs S1 |
+| Help me strengthen the book | structure · arc · development · continuity | ✅ buildable now |
+| Help me strengthen the writing | voice · coherence · reader | ✅ buildable now |
+| Check accuracy and sources | — | ⛔ **no substrate — see below** |
+| Help me finish | prioritisation across all | needs the ranking ruling |
+
+Three of five are buildable against existing lenses. That is the cheapest real progress available.
+
+### ⚠️ Where "MAIA decides what expertise is needed" must live
+
+The proposal that a writer highlights a paragraph, says *"something isn't right here,"* and MAIA
+selects the lenses is right — **and it collides with a ratified law if built in the wrong place**:
+
+> `commissionedLens: DevelopmentalLens` — *"A2 — required. **The reader never infers a lens from
+> its own output.**"*
+
+That law is load-bearing: it is what makes a reading reproducible and stops a reader from
+rationalising its own findings into a discipline after the fact.
+
+⭐ Both survive if the inference happens **in the commission, never in the reader**. MAIA may
+interpret "something isn't right here" into `coherence + continuity`; she may not hand the reader
+an unspecified lens and let it decide once it has already read. The commission is a member-facing
+act with a record; the reader stays exactly as strict as it is now.
+
+⛔ This is the single most likely place for the convergence to quietly break a law that took a long
+time to earn.
+
+## ⛔ "Check accuracy and sources" — now proposed three times, still absent
+
+It has appeared as review finding #3, as a focus control, and now as one of five primary Writer-mode
+choices. It does not exist. There is no quotation, citation, claim or attribution capability in
+`lib/manuscript/**`, and per Addendum 1 it cannot be an eighth lens — every existing lens reads the
+Work against **itself**; this one reads the Work against **the world**.
+
+**Offering it in the primary menu before it is built is precisely the defect
+`assertStudioMapHonest()` exists to prevent**: *"a destination that is not built carries NO href…
+it never implies a capability that is absent."* That rule was written for the Studio map. It applies
+with more force to a menu a writer will read as a promise about their book.
+
+⭐ Either build it as its own governed capability — with its own consent question, since it means
+MAIA consulting something outside the member's material — or leave it out of the menu until it
+exists. ⛔ Not both.
+
+## ⚠️ Three severity levels is still the ranking ruling
+
+*Important · Worth considering · Small things* is a better vocabulary than "findings" and I would
+adopt the language. But bucketing by consequence is the same act as ordering by consequence:
+`editorial-consequence` is a non-conclusion. Three buckets need the ruling exactly as six ranked
+patterns did.
+
+Likewise the opening line *"I think the book is fundamentally working"* — that is
+`whole-work-pattern` + `editorial-consequence` in nine words. It is the right sentence. It needs S1
+to be sayable.
+
+## ✅ Two items that need no ruling and can ship whenever
+
+**Orientation.** *"Elemental Alchemy › Chapter 6 › paragraph 18"* + **Back to manuscript**. The
+primitives exist — `locationForSection`, `resolveInitialSection`, `replacePlaceAddress`,
+`STUDIO_PLACE_CHANGE_EVENT`, and a `?s=` section param that makes a place linkable. This is
+composition over built parts. ⭐ Highest experience-per-effort item on any of the three lists.
+
+**Progressive literacy** ("Why this matters", optional). No constitutional obstacle — teaching
+craft is not a claim about the member's work. One boundary worth writing into it: MAIA may describe
+**technique**, never prescribe **quality**. The voice lens already holds that line — *"the
+manuscript itself is the reference, never an external standard"* — and a "Why this matters" panel
+that imports an external standard of good writing would breach it, and Invariant 14 with it.
+
+## The product law, amended
+
+Proposed: *"MAIA carries the complexity. The writer carries the work."* — adopt it.
+
+Proposed: *"Nothing technical appears until the writer asks for technical depth."* — **amend it.**
+Coverage is not technical depth; it is the ground of trust. A writer should never have to ask
+whether MAIA read the whole book. The honest form:
+
+> **Nothing technical appears until the writer asks for it — except what MAIA read, which is always
+> visible.**
+
+## What I would actually do next, in order
+
+1. **Ratify the commission mapping** for the three buildable intents. Small, ratifiable this week,
+   and it makes Writer/Pro one product by construction.
+2. **Ship orientation.** Breadcrumb + Back to manuscript. No ruling needed.
+3. **S1 — the Editorial Reading**, coverage-licensed. Everything narrative waits on it.
+4. **S2 — the pass as a unit.** Chapter passes under the ceiling; synthesis over observations.
+5. **Rule on ranking.** Then severity levels, priority map, "help me finish" — all three unlock at once.
+6. **Collapse the shell** to Manuscript · Review · Ask MAIA. Reverses WS2-03B for the shell.
+7. **Then** walk the spine on Elemental Alchemy as `WS-CONVERGENCE-01`.
+
+Sources-and-quotes and cross-manuscript repetition are **new capabilities**. They come after the
+spine walks, or the convergence lane becomes a build lane — which is how the present condition
+arose the first time.
+
+## Founder decisions now outstanding
+
+1. **Ranking** — on what basis may MAIA order or bucket the writer's concerns? (blocks 3 surfaces)
+2. **Sources** — build as a separate governed capability with its own consent question, or drop
+   from the menu until built? (no third option)
+3. **Naming** — Author Studio (ruled) vs Writer's Studio (route).
+4. **WS2-03B** — reverse for the shell, to make "the hierarchy comes from the manuscript" true.
+5. **Beta reach** — does Develop enter a tester surface before or after the spine walks?
