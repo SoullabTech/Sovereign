@@ -100,20 +100,23 @@ With the inner flag ON in synthetic tests:
 
 I4 contains no call to `persistEpistemicJoinSnapshot`.
 
-## Local repository-typecheck limitation
+## Full repository gates after disk recovery
 
-The host was already under severe disk pressure, so I4 was opened in a sparse
-worktree after a full checkout failed.
+I4 was initially opened in a sparse worktree because the host was under severe
+disk pressure. The first repository baseline run therefore saw only a 9-file
+ship program and correctly refused lost coverage. That sparse run remains
+recorded as **non-adjudicable**, not as an I4 failure.
 
-Running the repository baseline gate there produced a 9-file ship program
-instead of the canonical ~4k-file program. The gate correctly failed on lost
-coverage and absent sparse directories.
+After host disk pressure cleared, sparse checkout was disabled and the actual
+full repository gates were rerun:
 
-That run is **not evidence of an I4 regression** and is **not recorded as a
-PASS**.
+- `npm run typecheck` → **229 diagnostics vs 239 baseline · 0 regressions · EXIT 0**;
+- `VERIFY_DB=maia_i4_full_bootstrap_20260921 npm run db:verify-bootstrap` → **PASS**.
 
-Hosted PR CI must establish the full repository no-regression gate before I4
-may be considered for merge.
+The blank database accepted the complete canonical baseline plus migrations,
+including the I4 telemetry migration, and satisfied the application schema gate.
+
+Hosted PR CI is still required as exact-head freshness evidence before merge.
 ## Canonical freshness at candidate freeze
 
 After I4 opened from the authorized base, `origin/clean-main-no-secrets` advanced to
