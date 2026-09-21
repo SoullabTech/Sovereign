@@ -9,7 +9,7 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
 
   it('pins the exact bounded implementation candidate', () => {
     for (const src of [preflight, run]) {
-      expect(src).toContain('SHA=21517b80060629bb6d7aa2d39fd02fe61eb99ee3');
+      expect(src).toContain('SHA=89022e8f021b8fb8217eb09c9e7caef94ffce52f');
       expect(src).toContain('SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8');
     }
   });
