@@ -1722,11 +1722,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate before delivery (FAST path - no regeneration to maintain speed)
-  let {
-    response: validatedResponse,
-    regeneratedProvider,
-    regeneratedServingTruth,
-  } = await validateAndRepairResponse(
+  let { response: validatedResponse } = await validateAndRepairResponse(
     sessionId,
     input,
     response,
@@ -2214,7 +2210,11 @@ The current user has not provided their name. Address them as "friend" or "there
   }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate with regeneration capability
-  let { response: validatedResponse } = await validateAndRepairResponse(
+  let {
+    response: validatedResponse,
+    regeneratedProvider,
+    regeneratedServingTruth,
+  } = await validateAndRepairResponse(
     sessionId,
     input,
     response,
