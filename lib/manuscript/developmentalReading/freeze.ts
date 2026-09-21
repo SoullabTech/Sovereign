@@ -32,6 +32,15 @@
  */
 
 import { bindEvidence } from '../development/bind';
+/* ⛔ `compareAdmitted` is deliberately NOT used here: admission stores in
+   ADMISSION order, because `key` (`o1`, `o2` …) encodes the claim's index and
+   BUILD-07F standing addresses observations by that key. Sorting at the seam
+   would silently re-address every member's recorded standing. Ordering is a
+   READ-TIME concern; the seam records, it does not arrange. */
+import {
+  computeBasisFingerprint, mintObservationId,
+  resolveManuscriptPosition, type MintObservationId,
+} from './observationIdentity';
 import { isStructural, type EvidenceRef, type NonEmptyArray } from '../development/evidenceRef';
 import type { DevelopmentalReaderRequest, DevelopmentalReaderResult } from '../developmentalReader/contract';
 import type { ReaderIdentity } from '../structure/readerProvenance';
@@ -57,6 +66,14 @@ export interface FreezeInput {
   reader: ReaderIdentity;
   /** Required iff the result has claims. */
   classifier: ClassifierIdentity | null;
+  /**
+   * ⭐ OBSERVATION-IDENTITY-01 / I1 — injected ONLY so a test can mint
+   * deterministically and so the suite can prove that every admitted
+   * observation's identity came from THIS seam. ⛔ Not a policy seam: a caller
+   * cannot supply identities, only the function that makes them, and omitting
+   * it is the ordinary path.
+   */
+  mintId?: MintObservationId;
 }
 
 export type FreezeRefusal =
@@ -116,6 +133,7 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
       `${result.claims.length} claim(s), ${phenomena.length} classification(s)`);
   }
 
+  const mint = input.mintId ?? mintObservationId;
   const observations: DevelopmentalObservation[] = [];
   for (const [i, claim] of result.claims.entries()) {
     const phenomenon = phenomena[i];
@@ -138,8 +156,22 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
       return refuse('fingerprint_mismatch',
         `claims[${i}] binds to ${bound.value.inputFingerprint}, not this reading's ${evidence.readState.inputFingerprint}`, i);
     }
+    /* ⭐ THE ADMISSION ACT. Identity is minted HERE and nowhere else: this is
+       the only call site of `mintObservationId` in `lib/**`, asserted by
+       `singleAdmissionSeam`. Basis and position are computed from what the
+       reading already froze — ⛔ never from the claim's text. */
+    const observationId = mint();
     observations.push({
       key: observationKey(i),
+      observationId,
+      admissionIndex: i,
+      basisFingerprint: computeBasisFingerprint({
+        lens: request.commissionedLens,
+        evidenceRefs: bound.value.refs,
+        doesNotEstablish: claim.doesNotEstablish,
+        revisionDigest: evidence.readState.revisionDigest,
+      }),
+      position: resolveManuscriptPosition(bound.value.refs, evidence.readState.sectionTopology),
       lens: request.commissionedLens,
       /* Omission, never `phenomenon: null` — one representation of "no taxonomy
          claim", per the WS2-07-F1 ruling. */

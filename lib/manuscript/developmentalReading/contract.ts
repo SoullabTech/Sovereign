@@ -25,6 +25,7 @@ import type { EvidenceRef, NonEmptyArray } from '../development/evidenceRef';
 import type { DevelopmentalCoverage, DevelopmentalReadState } from '../development/readState';
 import type { DevelopmentalLens, DevelopmentalNonConclusion } from '../developmentalReader/contract';
 import type { ReaderIdentity } from '../structure/readerProvenance';
+import type { BasisFingerprint, ManuscriptPosition, ObservationId } from './observationIdentity';
 
 /* ── phenomenon — UNDERSTAND §4, verbatim; no new taxonomy in implementation ── */
 
@@ -133,8 +134,56 @@ export type StructureDependency =
   | { kind: 'authored-structure' };
 
 export interface DevelopmentalObservation {
-  /** Reading-internal, stable for the life of the reading: `o1`, `o2` … (INV-2). */
+  /**
+   * Reading-internal ADDRESS, stable for the life of the reading: `o1`, `o2` …
+   * (INV-2).
+   *
+   * ⚠️ NOT the canonical identity, and the distinction is load-bearing.
+   * `key` says WHERE IN THIS READING; `observationId` says WHICH OBSERVATION.
+   * `key` encodes admission order in its own name, so it is position-
+   * transparent — which is exactly what `OBSERVATION-IDENTITY-01 §3` forbids of
+   * an identity. It is kept because it is the durable address BUILD-07F's
+   * standing stream already writes against; see the note on `observationId`.
+   */
   key: string;
+  /**
+   * `OBSERVATION-IDENTITY-01 §II/§3` — the canonical identity. Opaque · minted
+   * at admission (`freezeReading`, the one seam) · ⛔ never derived from
+   * `observation` text, from rendered facet text, or from `basisFingerprint`.
+   *
+   * ⭐ Every facet expression of this observation carries THIS value.
+   *
+   * ⚠️⚠️ RAISED FOR ADJUDICATION, ⛔ NOT DECIDED HERE: `developmental_observation_
+   * standing` addresses a member's recorded stance by `(member_id, reading_id,
+   * observation_key, event_index)`. So the member's own acts hang off `key`,
+   * while facets will key on `observationId`. ⭐ They are 1:1 within a reading
+   * and a guard asserts it, so nothing can drift today — but which of the two
+   * is the durable member-facing address is a founder question, and answering
+   * it by migration is not authorized by this act.
+   */
+  observationId: ObservationId;
+  /**
+   * `§5` — the non-evaluative tie-break. The order in which this reading
+   * admitted the observation. ⛔ Never a ranking: it records WHEN a thing
+   * entered the record, never how much it matters.
+   */
+  admissionIndex: number;
+  /**
+   * `§4` — integrity witness over the immutable basis: *still grounded in the
+   * same basis.* ⛔ Never identity · ⛔ never deduplication · ⛔ never semantic
+   * sameness · ⛔ never ranking. ⭐ Two observations may lawfully share one.
+   */
+  basisFingerprint: BasisFingerprint;
+  /**
+   * `§5` — the EARLIEST position across cited refs, by `sectionPosition` then
+   * `codePointStart ?? 0`.
+   *
+   * ⚠️ `null` when the observation cites only structural evidence, which names
+   * authored divisions and carries no place in the prose. Such observations
+   * sort AFTER every positioned one, holding admission order among themselves —
+   * ⛔ a position is never invented for them.
+   */
+  position: ManuscriptPosition | null;
   /** The editorial question the reading was commissioned under (INV-10). Copied, never inferred. */
   lens: DevelopmentalLens;
   /**
@@ -176,8 +225,13 @@ export interface ClassifierIdentity {
  *       phenomenon. Identified by the ABSENCE of this field. Never backfilled —
  *       a historical row's missing version IS the evidence of that contract.
  *   v2  the corrected contract: an observation MAY exist without a phenomenon.
+ *   v3  OBSERVATION-IDENTITY-01 / I1: every admitted observation carries
+ *       `observationId`, `admissionIndex`, `basisFingerprint` and `position`.
+ *       ⛔ NEVER BACKFILLED — a v1/v2 row's missing identity IS the evidence
+ *       that it was admitted under a contract that had none, and minting one
+ *       now would fabricate an admission event that never happened.
  */
-export const READING_CONTRACT_VERSION = 'DEVELOPMENTAL-READING-CONTRACT-02';
+export const READING_CONTRACT_VERSION = 'DEVELOPMENTAL-READING-CONTRACT-03';
 
 /**
  * INV-25 (WS2-07-F1 replacement) — `classifier === null` iff classification was

@@ -8,12 +8,17 @@ surfaces:
   # Shared by Write and Develop: one continuous manuscript surface. D5 adds an
   # optional read-only evidence highlight; editing behavior remains unchanged.
   - app/writers-studio/canvas/WholeManuscriptSurface.tsx
+  - app/writers-studio/canvas/CanvasClient.tsx
   # Supporting material belongs to the same Writer's Studio ecology, but it
   # remains source material unless the writer explicitly brings it to a Work.
   - app/writers-studio/canvas/MaterialsDrawer.tsx
   - app/writers-studio/sources/**
   - app/writers-studio/studioMap.ts
   - app/writers-studio/studio/StudioModeBar.tsx
+  - app/writers-studio/studio/PlaceInWork.tsx
+  - app/writers-studio/studio/StudioMovements.tsx
+  - app/writers-studio/studio/StudioRail.tsx
+  - app/writers-studio/studio/WriterStudioShell.tsx
   - app/writers-studio/workContext.ts
   # WS-EDITORIAL-SCOPE-01, 2026-09-20. The editorial thread conversation on the
   # Canvas was named by NO contract — the canvas contracts name explicit files
@@ -37,6 +42,8 @@ reference_surfaces:
   - docs/programme/WRITERS-STUDIO-EXPERIENCE-REBUILD-01_TARGET_STATE_2026-09-16.md
   - docs/programme/WRITERS-STUDIO-EXPERIENCE-REBUILD-01_PACKAGE_2026-09-16.md
   - docs/programme/WS-SOURCE-INTAKE-01_2026-09-16.md
+  - docs/programme/WRITERS-STUDIO-CONVERGENCE-01_C5_WALK_CLOSURE_2026-09-21.md
+  - docs/programme/WRITERS-STUDIO-CONVERGENCE-01_THREE-LEVEL_WITNESS_2026-09-21.md
   - docs/design/contracts/writer-worktable-section-native.md
   - docs/design/contracts/studio-home.md
 shared_with_house: Soullab atmosphere tokens · Press serif for the writer’s work · restrained gold as state and action · human-language gestures · the Writer’s Studio mode bar

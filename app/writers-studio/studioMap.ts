@@ -577,3 +577,98 @@ export function assertModesHonest(modes: StudioMode[] = STUDIO_MODES): void {
     }
   }
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+   WS-CONVERGENCE-01 · C4 — THE WORKING SHELL COLLAPSES TO THREE MOVEMENTS
+
+   ⭐ WS2-03B ruled that inside the working room an unbuilt destination is
+   PRESENT AND TRUTHFULLY UNAVAILABLE. C4 amends that **for the ordinary
+   working surface only**: an unavailable destination leaves it.
+
+   ⛔ WHAT IS NOT TOUCHED, and the distinction is the whole point of the
+   amendment being bounded: `STUDIO_MAP` keeps every destination ·
+   `shellDestinations()` is UNCHANGED and still renders the full truthful map
+   where a caller wants it · `visibleDestinations()` is UNCHANGED ·
+   `assertStudioMapHonest()` is UNCHANGED and still binding.
+   ⭐ Simplification may hide machinery. ⛔ It may not delete it, and it may not
+   fabricate readiness.
+   ──────────────────────────────────────────────────────────────────────── */
+
+/** The three movements. ⛔ Movements, ⛔ not new capability promises. */
+export type StudioMovementId = 'work' | 'review' | 'ask-maia';
+
+export interface StudioMovement {
+  readonly id: StudioMovementId;
+  readonly label: string;
+  /** One quiet line. ⛔ Never a promise about what MAIA will produce. */
+  readonly note: string;
+  /**
+   * ⭐ PRESENT IFF REACHABLE. A movement the member cannot take is ABSENT, ⛔
+   * never rendered disabled — the honesty rule, and the same law
+   * `ReadingsEntry` already keeps for itself: *nothing where there is nothing.*
+   */
+  readonly reachable: boolean;
+}
+
+export interface WorkingMovementInput {
+  readonly hasManuscript: boolean;
+  /**
+   * ⚠️ THE HONESTY CRUX OF C4. `ReadingsEntry` renders NULL with no stored
+   * reading, because *"no interpreter runs in production, and a surface that
+   * implied one does would be the static-UI-claim failure."*
+   *
+   * ⭐ So REVIEW is a movement only when there is something to review. ⛔ A
+   * permanent Review control would advertise a capability the system does not
+   * have — the exact defect that component exists to refuse, lifted one layer
+   * up to the shell. ⛔ It is never satisfied by "the member could commission
+   * one", because today they cannot.
+   */
+  readonly hasReading: boolean;
+  /** The in-Work conversation path, mounted in the room (`WorkConversation`). */
+  readonly hasWorkConversation: boolean;
+}
+
+/**
+ * ⭐ Pure. The ordinary working surface's primary navigation.
+ *
+ * ⛔ Returns only reachable movements — a caller cannot render an unreachable
+ * one, because it is not in the list to render.
+ */
+export function workingMovements(input: WorkingMovementInput): StudioMovement[] {
+  const all: StudioMovement[] = [
+    { id: 'work', label: 'Work', note: 'Your manuscript.', reachable: input.hasManuscript },
+    { id: 'review', label: 'Review', note: 'What MAIA has read.', reachable: input.hasManuscript && input.hasReading },
+    { id: 'ask-maia', label: 'Ask MAIA', note: 'Talk about this Work.', reachable: input.hasManuscript && input.hasWorkConversation },
+  ];
+  return all.filter((m) => m.reachable);
+}
+
+/**
+ * ⭐ C4's rail law: the ordinary working surface shows ONLY what can actually
+ * be taken — `available`, or satisfied by a panel in this very room.
+ *
+ * ⛔ The seventeen `later` destinations leave the working surface. They are NOT
+ * deleted: `STUDIO_MAP` still carries them and `shellDestinations()` still
+ * renders them truthfully for any surface whose job is to show the map.
+ *
+ * ⭐ This is why C4 collapses the rail rather than removing it: four
+ * destinations (materials · structure · versions · conversations) are
+ * `satisfiedInRoom` and genuinely actionable. ⛔ Ripping the rail out would
+ * have deleted real capability while claiming to simplify.
+ */
+export function workingRailGroups(
+  hasManuscript: boolean,
+  satisfiedInRoom: readonly string[],
+  map: StudioGroup[] = STUDIO_MAP,
+): StudioGroup[] {
+  return map
+    .map((g) => ({
+      ...g,
+      destinations: g.destinations.filter(
+        (d) =>
+          (d.availability === 'available' || satisfiedInRoom.includes(d.id)) &&
+          (!d.requiresManuscript || hasManuscript),
+      ),
+    }))
+    .filter((g) => g.destinations.length > 0);
+}

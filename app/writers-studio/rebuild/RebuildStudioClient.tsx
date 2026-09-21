@@ -1,6 +1,6 @@
  'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -18,12 +18,16 @@ import RebuildAuthoredBody from './RebuildAuthoredBody';
 import GoldLine from '../insight/GoldLine';
 import MaiaListen from '../insight/MaiaListen';
 import InlineWorkspace from '../insight/InlineWorkspace';
-import ManuscriptPassage from '../insight/ManuscriptPassage';
+import ManuscriptPassage, { type EditAction, type MarkedEdit } from '../insight/ManuscriptPassage';
+import { editorialSegments, editIds, composeSelected } from '@/lib/writersStudio/editorialDiff';
+import {
+  DEFAULT_EDITORIAL_DEPTH, DEPTH_CHOICES, editorialDirective, type EditorialDepth,
+} from '@/lib/writersStudio/editorialDepth';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
 import { useEditingLatitude } from '../insight/EditingLatitude';
-import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
+import { INSIGHT_READING, INSIGHT_OBSERVATION, loadCanvasInsight, type CanvasInsight, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { OutlineNode } from '@/lib/writersStudio/focus/outlineTree';
@@ -169,6 +173,40 @@ function AuthoredStructureBranch({
   );
 }
 
+/**
+ * ⭐⭐ ALL SIX COMMISSION STAGES, PLUS FETCH, PLUS THE UNKNOWN CASE.
+ *
+ * ⚠️ The first version of this mapped three of them, so `read`, `classify` and
+ * `store` still collapsed into the generic sentence — a partial taxonomy that
+ * LOOKED complete, which is worse than none, because it reads as though the
+ * unnamed cases cannot happen.
+ *
+ * ⛔ WHERE the reading was lost, ⛔ never the internals of why: no schema,
+ * provider, constraint or stack ever reaches the page.
+ */
+const FAILED_AT: Record<string, string> = {
+  capture: 'Could not open the Work',
+  recover: 'Could not open the Work',
+  read: 'Could not finish this reading',
+  classify: 'Read, but findings not prepared',
+  freeze: 'Read, but not finalized',
+  store: 'Read, but not recorded',
+  fetch: 'Read, but not loaded back',
+};
+
+const FAILURE_SENTENCE: Record<string, string> = {
+  capture: 'MAIA could not open this part of your Work to read it, so this lens did not run. Nothing was changed.',
+  recover: 'MAIA could not open this part of your Work to read it, so this lens did not run. Nothing was changed.',
+  read: 'MAIA could not finish reading with this lens. Nothing from it was kept, and nothing in your Work changed.',
+  classify: 'MAIA finished reading with this lens, but its findings could not be prepared, so none were kept. Your Work is unchanged.',
+  freeze: 'MAIA finished reading with this lens, but the result could not be finalized, so nothing from it was kept. Your Work is unchanged.',
+  store: 'MAIA finished reading with this lens, but the result could not be recorded, so nothing from it was kept. Your Work is unchanged.',
+  fetch: 'This lens completed, but its reading could not be loaded back. Nothing from it is shown, and nothing in your Work changed.',
+  /* ⛔ The honest floor: we do not know where it was lost, and ⛔ saying so
+     beats naming a stage we did not observe. */
+  '': 'The result of this reading could not be confirmed, so nothing from it was kept. Your Work is unchanged.',
+};
+
 export default function RebuildStudioClient() {
   const params = useSearchParams();
   const requested = params?.get('m') ?? null;
@@ -185,8 +223,18 @@ export default function RebuildStudioClient() {
   const [editorialAnchor, setEditorialAnchor] = useState<HTMLElement | null>(null);
   const [inlinePreview, setInlinePreview] = useState<{ scopeKey: string; original: string; wording: string; changes: boolean } | null>(null);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
+  const [arrivalInsight, setArrivalInsight] = useState<CanvasInsight | null>(null);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
+  /* ⭐⭐ C6R2 — THE WORKING DECISION, HELD AND NOT PERSISTED.
+     Which of MAIA's marks the writer has taken so far. ⛔ Not a version: a new
+     row for every click would fill the history with combinations nobody chose
+     to keep. It becomes a version once, at `Use selected changes`.
+     ⚠️ Held here rather than in RevisionDesk — the desk and the marked page are
+     siblings, and this is the only place that sees both. Same law, the one
+     position that can carry it. */
+  const [selectedEdits, setSelectedEdits] = useState<ReadonlySet<number>>(new Set());
   const workspaceIncoming = useRef<string | null>(null);
+  const autoProposalKey = useRef<string | null>(null);
   const workspaceReturn = useRef<{
     focusId: string | null; selectedPassage: PassageSelection | null;
     thread: RebuildEditorialThread | null; versionId: string | null;
@@ -201,6 +249,14 @@ export default function RebuildStudioClient() {
   const [reviewPhase, setReviewPhase] = useState<'idle' | 'reading' | 'ready' | 'partial'>('idle');
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number; lens: string } | null>(null);
   const [reviewNeedsRefresh, setReviewNeedsRefresh] = useState(false);
+  /* ⭐ C — kept beside the member sentence, never folded into it. */
+  /* ⭐ C6R4 — member-declared, per-observation, changeable without ceremony.
+     ⛔ Never assigned, never inferred, and the default is identical for every
+     member rather than chosen from anything about this one. */
+  const [editorialDepth, setEditorialDepth] = useState<EditorialDepth>(DEFAULT_EDITORIAL_DEPTH);
+  /* ⭐ C6R7 — one request from a mark to open the writer's draft. */
+  const [openDraftNonce, setOpenDraftNonce] = useState(0);
+  const [reviewManifestRefusal, setReviewManifestRefusal] = useState<string | null>(null);
   const [reviewContinuityMessage, setReviewContinuityMessage] = useState<string | null>(null);
   const [reviewLens, setReviewLens] = useState<DevelopmentalLens | 'all'>('all');
   const [reviewFindingsOpen, setReviewFindingsOpen] = useState(true);
@@ -439,21 +495,44 @@ export default function RebuildStudioClient() {
     return true;
   }, []);
 
-  const runReview = useCallback(async () => {
+  /* ⭐ `lenses` present = the member asked to continue the readings that were
+     never attempted. ⛔ Absent = the ordinary whole-chapter gesture. */
+  const runReview = useCallback(async (lenses?: readonly DevelopmentalLens[]) => {
     if (!chapter || !context || reviewPhase === 'reading') return;
     if (!(await settleWriting())) return;
     const reviewRevision = writingRef.current?.currentRevisionId() ?? context.version;
     setReviewContinuityMessage(null);
-    setReview({ readingIds: [], payloads: [], findings: [], failures: [] });
+    const asked = lenses ?? DEVELOPMENTAL_LENSES;
+    const carried = lenses && review
+      ? { readingIds: [...review.readingIds], payloads: [...review.payloads],
+          findings: [...review.findings], failures: [...review.failures], remaining: [] }
+      : { readingIds: [], payloads: [], findings: [], failures: [], remaining: [] };
+    setReview(carried);
     setReviewLens('all');
     setReviewFindingsOpen(false);
     setReviewPhase('reading');
-    setReviewProgress({ done: 0, total: DEVELOPMENTAL_LENSES.length, lens: DEVELOPMENTAL_LENSES[0]! });
-    const bundle = await runChapterReview(
+    setReviewProgress({ done: 0, total: asked.length, lens: asked[0]! });
+    const fresh = await runChapterReview(
       context.manuscriptId, chapter.sections,
       (done, total, lens) => setReviewProgress({ done, total, lens }),
-      (partial) => setReview(partial),
+      (partial) => setReview({
+        ...partial,
+        readingIds: [...carried.readingIds, ...partial.readingIds],
+        payloads: [...carried.payloads, ...partial.payloads],
+        findings: [...carried.findings, ...partial.findings],
+        failures: [...carried.failures, ...partial.failures],
+      }),
+      asked,
     );
+    /* ⛔ The earlier readings are not re-read and not replaced; a resumed
+       gesture adds to what already completed. */
+    const bundle = {
+      ...fresh,
+      readingIds: [...carried.readingIds, ...fresh.readingIds],
+      payloads: [...carried.payloads, ...fresh.payloads],
+      findings: [...carried.findings, ...fresh.findings],
+      failures: [...carried.failures, ...fresh.failures],
+    };
     setReview(bundle);
     setReviewNeedsRefresh(false);
     setReviewPhase(bundle.failures.length === 0 ? 'ready' : 'partial');
@@ -466,8 +545,15 @@ export default function RebuildStudioClient() {
     });
     if (!kept.ok) {
       setReviewContinuityMessage('The readings are kept, but this chapter review could not be remembered as one set. Reload may not restore it yet.');
+      /* ⭐ C — the member sentence is right and says nothing operational, so
+         the refusal code is kept beside it rather than folded into it. Without
+         this the only way to learn why the manifest save refused was to
+         reconstruct it from the database afterwards. */
+      setReviewManifestRefusal(kept.refusal);
+    } else {
+      setReviewManifestRefusal(null);
     }
-  }, [chapter, context, reviewPhase, settleWriting]);
+  }, [chapter, context, reviewPhase, settleWriting, review]);
 
   const replaceAddress = useCallback((sectionId: string, threadId: string | null) => {
     if (typeof window === 'undefined') return;
@@ -592,7 +678,16 @@ export default function RebuildStudioClient() {
     if (failure.refusal === 'claim_unbindable') {
       return 'MAIA could not bind one or more claims from this lens to the frozen evidence, so this lens was not kept. The other completed readings are unaffected.';
     }
-    return 'This lens could not complete safely, so no findings from it were kept. The other completed readings are unaffected.';
+    /* ⭐⭐ WHERE THE READING WAS LOST IS THE WRITER'S INFORMATION, NOT OURS.
+       `ReviewFailure` has carried `stage` all along and this surface threw it
+       away, so every outcome read as *MAIA could not complete* — and a lens
+       that finished a full read and then failed to RECORD it was
+       indistinguishable from one that failed to think. The writer waited out
+       the whole read, lost it, and was told nothing that would let them tell
+       the two apart or know whether reading again would help.
+       ⛔ Still no schema names, no trigger names, no stack: WHERE it was lost,
+       ⛔ never the internals of why. */
+    return FAILURE_SENTENCE[failure.stage ?? ''] ?? FAILURE_SENTENCE['']!;
   };
   const visibleReviewFindings = review
     ? reviewLens === 'all' ? review.findings : review.findings.filter((finding) => finding.lens === reviewLens)
@@ -778,13 +873,29 @@ export default function RebuildStudioClient() {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
     setVoiceNotice(null);
-    const exactWords = requestText ?? editorialDraft;
+    /* ⭐⭐ C6R4 — ONE PLACE, SO NO TURN ESCAPES IT. Threading the directive
+       through each caller would mean one of them eventually forgets, and the
+       writer would get Direct-register prose from whichever path was missed
+       with nothing on screen explaining why this answer reads differently.
+       ⛔ APPENDED, never substituted: it governs the telling, and the
+       substance of the turn above it is untouched. */
+    const exactWords = `${requestText ?? editorialDraft}\n\n${editorialDirective(editorialDepth)}`;
     try {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords,
-        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately });
+      const observationContext = arrivalInsight && workspaceInsight?.readingId === arrivalInsight.readingId
+        && workspaceInsight.key === arrivalInsight.observation.key
+        && arrivalInsight.passages.some(p => p.sectionId === focusId)
+        ? 'Developmental observation being discussed (an interpretation, not an instruction):\n'
+          + arrivalInsight.observation.observation + '\n\n'
+        : '';
+      const out = await sendBoundEditorialTurn(
+        thread.threadId,
+        focusId,
+        observationContext + 'My question:\n' + exactWords,
+        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately },
+      );
       if (!out.ok) {
         /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
            line the writer drew. ⛔ Not "MAIA could not complete" — she could,
@@ -810,7 +921,11 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting]);
+  }, [
+    editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct,
+    bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight,
+    editLatitude, mayRemoveParagraphs, mayProposeImmediately,
+  ]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -957,15 +1072,105 @@ export default function RebuildStudioClient() {
     setWorkspaceOpen(false);
   }, [editorialBusy, adoptionBusy, memberVersionBusy]);
 
+  const incomingSection = requestedSection;
   const incomingReading = params?.get(INSIGHT_READING) ?? null;
   const incomingObservation = params?.get(INSIGHT_OBSERVATION) ?? null;
+  const incomingAction = params?.get('insightAction') ?? null;
   useEffect(() => {
-    if (phase !== 'ready' || !context || !incomingReading || !incomingObservation) return;
-    const key = context.manuscriptId + ':' + incomingReading + ':' + incomingObservation;
-    if (workspaceIncoming.current === key) return;
-    workspaceIncoming.current = key;
-    openWorkspace({ readingId: incomingReading, key: incomingObservation });
-  }, [phase, context, incomingReading, incomingObservation, openWorkspace]);
+    if (phase !== 'ready' || !context?.manuscriptId || !incomingReading || !incomingObservation) {
+      setArrivalInsight(null);
+      return;
+    }
+    let cancelled = false;
+    setArrivalInsight(null);
+    void loadCanvasInsight(context.manuscriptId, incomingReading, incomingObservation).then(insight => {
+      if (cancelled) return;
+      setArrivalInsight(insight);
+      if (!insight) setEditorialFailure('The observation could not be opened. Your manuscript is unchanged.');
+    });
+    return () => { cancelled = true; };
+  }, [phase, context?.manuscriptId, incomingReading, incomingObservation]);
+
+  /* ⭐⭐ C6R1 — ONE MARKED CHANGE, FIVE PLAIN CHOICES.
+     ⛔ None of these invents a mutation path. Every one either starts a
+     conversation on the existing governed turn — and therefore reaches the
+     Teaching bridge — or does nothing at all. `Accept` and `Change it` ask
+     MAIA for a narrower proposal rather than quietly applying a slice of the
+     current one: applying part of a proposal is a DIFFERENT text from the one
+     the member is looking at, and it would arrive with no version of its own
+     to review, adopt or undo. The writer still decides in the desk above. */
+  /* ⭐⭐ C6R2 — THE COMPOSITION, AND ITS PROVENANCE.
+     Three outcomes, and the distinction between them is the history we want:
+
+       none selected  → the writer's own words. ⛔ Nothing to persist.
+       all selected   → MAIA's exact proposal, chosen by the writer. ⛔ Do NOT
+                        mint a duplicate member version that says the writer
+                        wrote what MAIA wrote.
+       a subset       → a text that is neither MAIA's nor the original, so it
+                        is the WRITER'S, and it goes through the member-version
+                        route and carries their authorship.
+
+     ⭐ *MAIA proposed three edits; the writer accepted two; the revision is the
+     writer's* is a true sentence the record can support. */
+  const composition = useMemo(() => {
+    if (!editorialThread || !suggestedVersion) return null;
+    const segs = editorialSegments(editorialThread.locusText, suggestedVersion.wording);
+    const all = editIds(segs);
+    return {
+      text: composeSelected(segs, selectedEdits),
+      taken: selectedEdits.size, total: all.length,
+      everyMark: all.length > 0 && all.every((id) => selectedEdits.has(id)),
+    };
+  }, [editorialThread, suggestedVersion, selectedEdits]);
+
+  /* ⛔ A new proposal is a new set of marks; carrying selections across would
+     let a number chosen against one wording silently mean another. */
+  useEffect(() => { setSelectedEdits(new Set()); }, [suggestedVersionId]);
+
+  const editAction = useCallback((action: EditAction, edit: MarkedEdit) => {
+    const it = edit.from.trim()
+      ? `"${edit.from.trim()}" to "${edit.to.trim()}"`
+      : `adding "${edit.to.trim()}"`;
+    /* ⭐⭐ ACCEPT SELECTS A MARK THAT ALREADY EXISTS. ⛔ It does not call MAIA
+       and ⛔ it does not touch the manuscript. Asking her to re-propose the
+       change she has already proposed is a model turn the writer did not need
+       and cannot tell they are paying for. */
+    if (action === 'accept' || action === 'keep') {
+      setEditorialFailure(null);
+      setSelectedEdits((prev) => {
+        const next = new Set(prev);
+        if (action === 'accept') next.add(edit.id); else next.delete(edit.id);
+        return next;
+      });
+      return;
+    }
+    /* ⭐ Change it opens the CURRENT COMPOSITION as the writer's own draft —
+       what the page is showing them, not MAIA's full proposal, which they may
+       never have taken whole. */
+    /* ⭐⭐ C6R7 — `Change it` OPENS THE WRITER'S DRAFT. It used to scroll toward
+       the desk, which left the only visible editable field the one labelled
+       *Discuss this passage* — so the plain promise *I see this edit → Change
+       it → now I rewrite this edit* was answered by a conversation box, and
+       rewriting still required finding another control.
+       ⭐ It opens the CURRENT COMPOSITION, which is what the page is showing:
+       the marks taken so far, ⛔ not MAIA's whole proposal, which the writer
+       may never have accepted entire.
+       ⛔ Still no model call and ⛔ still no mutation — the draft is the
+       writer's until they save it. */
+    if (action === 'change') {
+      setPassageTab('suggest');
+      setEditorialFailure(null);
+      setOpenDraftNonce((n) => n + 1);
+      requestAnimationFrame(() =>
+        document.querySelector('[data-revision-desk] .wsi-revision')
+          ?.scrollIntoView({ block: 'center' }));
+      return;
+    }
+    const ask = action === 'challenge'
+      ? `Why did you change ${it}? Show me the words in my sentence that led you there, and make the strongest case for keeping mine. Do not propose new wording in this answer.`
+      : `What writing technique is at work in changing ${it}? Describe what it does for a reader, what it may cost, and when my original would be the better choice. Do not test me and do not propose new wording.`;
+    void sendEditorial(ask);
+  }, [sendEditorial]);
 
   const reviseInsightPassage = useCallback((passage: InsightPassage, authorNotes = '') => {
     if (!context || editorialBusy || adoptionBusy || memberVersionBusy || !passage.verified) return;
@@ -988,6 +1193,64 @@ export default function RebuildStudioClient() {
     setPassageTab('suggest');
     requestAnimationFrame(() => document.querySelector('[data-revision-desk]')?.scrollIntoView({ block: 'start' }));
   }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage, editorialScope, editorialDraft]);
+
+  /* ⭐ C6 null-target ruling — the member goes and chooses an exact passage
+     THEMSELVES, by selecting text in their own manuscript. The existing
+     selection seam (RebuildAuthoredBody -> onSelectPassage -> holdPassage)
+     then binds it, and the desk's conversation runs through the editorial
+     runtime from there.
+     ⛔ This selects nothing, widens nothing and promotes no section reference
+     into a passage — it moves the member to where their own choice is made. */
+  const chooseOwnPassage = useCallback(() => {
+    setPassageTab('suggest');
+    requestAnimationFrame(() =>
+      document.querySelector('[data-authored-body]')?.scrollIntoView({ block: 'start' }));
+  }, []);
+
+  useEffect(() => {
+    if (!arrivalInsight || !context || phase !== 'ready'
+        || incomingReading !== arrivalInsight.readingId
+        || incomingObservation !== arrivalInsight.observation.key) return;
+    const key = arrivalInsight.manuscriptId + ':' + arrivalInsight.readingId + ':'
+      + arrivalInsight.observation.key + ':' + (incomingSection ?? '') + ':'
+      + (requestedEditorialThread ?? 'new');
+    if (workspaceIncoming.current === key) return;
+    workspaceIncoming.current = key;
+    openWorkspace({ readingId: arrivalInsight.readingId, key: arrivalInsight.observation.key });
+    if (requestedEditorialThread) return;
+    const passage = arrivalInsight.passages.find(p => p.sectionId === incomingSection)
+      ?? arrivalInsight.passages.find(p => p.verified && p.editable)
+      ?? arrivalInsight.passages[0];
+    if (passage?.verified && passage.editable) reviseInsightPassage(passage);
+    else setEditorialFailure('This reading no longer identifies verified editable wording here. Read its context before choosing a passage to revise.');
+  }, [arrivalInsight, context, phase, incomingSection, incomingReading, incomingObservation,
+    requestedEditorialThread, openWorkspace, reviseInsightPassage]);
+
+  useEffect(() => {
+    if (incomingAction !== 'try-revision' || !arrivalInsight || !workspaceOpen
+        || !selectedPassage || !focusId || editorialBusy || suggestedVersionId) return;
+    if (workspaceInsight?.readingId !== arrivalInsight.readingId
+        || workspaceInsight.key !== arrivalInsight.observation.key) return;
+    if (selectedPassage.draftSectionId !== focusId) return;
+    const passage = arrivalInsight.passages.find(p => p.sectionId === focusId && p.verified && p.editable);
+    if (!passage) return;
+    const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
+    const exact = Array.from(passage.body).slice(range.start, range.end).join('');
+    if (exact !== selectedPassage.text) return;
+    const key = `${arrivalInsight.readingId}:${arrivalInsight.observation.key}:${focusId}:${exact}`;
+    if (autoProposalKey.current === key) return;
+    autoProposalKey.current = key;
+    void sendEditorial([
+      'Offer one possible revision of this selected passage in response to the developmental observation.',
+      'Preserve my voice, style, subject, and intentional ambiguity.',
+      'Do not assume the noticed pattern is a defect or that revision is improvement.',
+      'Consider the strongest case for keeping the original.',
+      'Treat possible reader effects as hypotheses.',
+      'Begin the rationale with "Editorial purpose: <short descriptive name>".',
+      'Nothing is to be applied automatically.',
+    ].join('\n'));
+  }, [incomingAction, arrivalInsight, workspaceOpen, workspaceInsight, selectedPassage, focusId,
+    editorialBusy, suggestedVersionId, sendEditorial]);
 
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || draft.threadId !== editorialThread.threadId || draft.sectionId !== focusId) return false;
@@ -1014,6 +1277,19 @@ export default function RebuildStudioClient() {
       return false;
     } finally { setMemberVersionBusy(false); }
   }, [memberVersionBusy, editorialThread, focusId]);
+
+  const useSelectedChanges = useCallback(async () => {
+    if (!composition || !editorialThread || !focusId || !suggestedVersion) return;
+    if (composition.taken === 0) return;
+    /* ⛔ Every mark taken IS MAIA's proposal. It is already a version; a second
+       one would only misattribute it. */
+    if (composition.everyMark) { await applySuggested(); return; }
+    await saveMemberRevision({
+      threadId: editorialThread.threadId, sectionId: focusId,
+      supersedes: suggestedVersion.id, text: composition.text,
+    });
+  }, [composition, editorialThread, focusId, suggestedVersion,
+      applySuggested, saveMemberRevision]);
 
   /* The PAGE's variables. The ROOM's arrive from the Studio layout's
      provider and are simply inherited — this room states none of its own.
@@ -1309,7 +1585,23 @@ export default function RebuildStudioClient() {
                       onSelectPassage={(start, end, text) => holdPassage(section, start, end, text)}
                     /></div>
                     {section.draftSectionId === focusId && <div hidden={!workspaceOpen}>
-                      <ManuscriptPassage body={liveBody} range={held} proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}>
+                      <ManuscriptPassage body={liveBody} range={held}
+                        proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}
+                        onEditAction={editAction}
+                        selectedEdits={selectedEdits}
+                        proposalRationale={suggestedVersion?.rationale ?? null}>
+                        {composition && composition.total > 0 && <div className="ws-compose-bar" data-compose-bar>
+                          <span>{composition.taken === 0
+                            ? `${composition.total} suggested change${composition.total === 1 ? '' : 's'} · none taken`
+                            : `${composition.taken} of ${composition.total} taken`}</span>
+                          <button type="button" className="wsi-primary"
+                            disabled={composition.taken === 0 || adoptionBusy || memberVersionBusy || editorialBusy}
+                            onClick={() => void useSelectedChanges()}>
+                            {composition.everyMark ? 'Use all of these changes' : 'Use selected changes'}
+                          </button>
+                          {composition.taken > 0 && <button type="button"
+                            onClick={() => setSelectedEdits(new Set())}>Keep all of mine</button>}
+                        </div>}
                         <div ref={setEditorialAnchor} data-inline-editorial-anchor />
                       </ManuscriptPassage>
                     </div>}
@@ -1368,9 +1660,30 @@ export default function RebuildStudioClient() {
                       : reviewPhase === 'ready'
                         ? `MAIA read all ${chapter?.sections.length ?? 0} sections through ${DEVELOPMENTAL_LENSES.length} developmental lenses. Her frozen findings stay available as you work.`
                         : reviewPhase === 'partial'
-                          ? `MAIA kept every reading that completed. ${review?.failures.length ?? 0} lens${review?.failures.length === 1 ? '' : 'es'} could not complete, so this is not labeled a full review.`
+                          ? ((review?.remaining.length ?? 0) > 0
+                            /* ⭐ *Not attempted* is not *failed*, and the writer
+                               is owed the difference: one says the reading was
+                               refused, the other says it was never asked for
+                               and is theirs to ask for now. */
+                            ? `${review?.readingIds.length ?? 0} of ${DEVELOPMENTAL_LENSES.length} readings completed and are kept. MAIA stopped after a reading could not finish, rather than working through the rest. ${review?.remaining.length} were not attempted.`
+                            : `MAIA kept every reading that completed. ${review?.failures.length ?? 0} lens${review?.failures.length === 1 ? '' : 'es'} could not complete, so this is not labeled a full review.`)
                           : 'MAIA will read this chapter first, then keep her findings available while you move into individual sections.'}
                   </p>
+                  {/* ⭐⭐ A NEW MEMBER GESTURE, ⛔ NOT A HIDDEN RETRY. It
+                      commissions only the lenses that were never asked; a lens
+                      that refused stays refused, because one commission is one
+                      reading. */}
+                  {reviewPhase === 'partial' && (review?.remaining.length ?? 0) > 0 && (
+                    <button type="button" data-continue-remaining
+                      disabled={reviewPhase !== 'partial'}
+                      onClick={() => void runReview(review!.remaining)}
+                      style={{ border: `1px solid ${C.gold}`, borderRadius: 9, background: C.field, padding: '8px 12px', fontSize: 12, color: C.secondary, cursor: 'pointer', margin: '0 0 12px' }}>
+                      Continue the {review!.remaining.length} remaining reading{review!.remaining.length === 1 ? '' : 's'}
+                    </button>
+                  )}
+                  {reviewManifestRefusal && (
+                    <div data-manifest-refusal={reviewManifestRefusal} hidden />
+                  )}
                   {reviewContinuityMessage && (
                     <div role="status" data-review-continuity-message style={{ borderRadius: 9, background: C.panel, padding: '9px 10px', fontSize: 10.5, lineHeight: 1.45, color: C.muted, margin: '-5px 0 12px' }}>
                       {reviewContinuityMessage}
@@ -1393,7 +1706,13 @@ export default function RebuildStudioClient() {
                     const failure = reviewFailureFor(lens);
                     const readingNow = reviewPhase === 'reading' && reviewProgress?.lens === lens;
                     const complete = completedReviewLenses.has(lens);
-                    const status = failure ? 'Could not complete'
+                    /* ⭐ The card is the at-a-glance surface, and three cards all
+                       reading *Could not complete* is the same undifferentiated
+                       state one layer up: the writer must open each one to learn
+                       that they failed in different places. Short here, full
+                       sentence below. */
+                    const failedAt = FAILED_AT[failure?.stage ?? ''] ?? 'Could not be confirmed';
+                    const status = failure ? failedAt
                       : readingNow ? 'Reading…'
                         : complete ? (count === 0 ? 'Complete · no observations' : active ? 'Showing findings from this lens.' : 'Open findings from this lens.')
                           : reviewPhase === 'reading' ? 'Waiting in this review.' : review ? 'No completed reading in this review.' : 'Waiting for MAIA’s chapter reading.';
@@ -1576,6 +1895,10 @@ export default function RebuildStudioClient() {
                               {adoptionOutcome.kind === 'applied' ? 'Applied to this exact place in the Work.'
                                 : adoptionOutcome.kind === 'work_moved' ? 'You have written here since this suggestion was made. Nothing was changed.'
                                   : adoptionOutcome.kind === 'legacy_locus' ? 'This older suggestion cannot be safely applied. Nothing was changed.'
+                                  /* ⭐ Says what it is in the writer's terms, and says plainly
+                                     that NOTHING was applied — not even the part of the change
+                                     that fell outside the quotation. */
+                                  : adoptionOutcome.kind === 'protected_quotation' ? 'This suggestion would change the words inside a quotation. Nothing was applied. MAIA can shorten it, move it, cut it, or revise your wording around it.'
                                     : 'The Studio could not apply this suggestion. Nothing was changed.'}
                             </div>}
                           </div>
@@ -1644,7 +1967,11 @@ export default function RebuildStudioClient() {
           <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={closeWorkspace}>Clean manuscript · Collapse</button>
         </header>
 
-        <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview} scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
+        <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview}
+          composedText={composition && composition.taken > 0 ? composition.text : null}
+          depth={editorialDepth} onDepth={setEditorialDepth}
+          openDraftNonce={openDraftNonce}
+          scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
           currentText={selectedPassage?.draftSectionId === focusId
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
             : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
@@ -1665,9 +1992,15 @@ export default function RebuildStudioClient() {
           message={editorialFailure ?? (adoptionOutcome && appliedVersionId === suggestedVersion?.id ? adoptionOutcome.kind === 'applied'
             ? null : 'The Work could not accept this revision. Nothing was changed.' : null)}
           onKeep={() => { setSuggestedVersionId(null); setAdoptionOutcome(null); setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.'); }} />
-        {workspaceInsight && <details className="wsi-related" open><summary>Observation and related passages</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
+        {workspaceInsight && <details className="wsi-related" open={!suggestedVersionId}>
+          {/* ⭐ C6R1 — forced open, this was the second live workspace under the
+              decision. Once MAIA has proposed, it closes and renames itself to
+              what it now is: the reason for the marks on the page. */}
+          <summary>{suggestedVersionId ? 'Reading behind these edits' : 'Observation and related passages'}</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
           manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
-          onRevise={reviseInsightPassage} busy={editorialBusy || adoptionBusy || memberVersionBusy} /></details>}
+          onRevise={reviseInsightPassage} onChoosePassage={chooseOwnPassage}
+          proposalActive={Boolean(suggestedVersionId)}
+          busy={editorialBusy || adoptionBusy || memberVersionBusy} /></details>}
         {relationshipChoices.length > 1 && <div className="wsi-bar" aria-label="Choose revision conversation">
           {relationshipChoices.map((choice, i) => <button key={choice.threadId} type="button" disabled={editorialBusy}
             onClick={() => void chooseRelationship(choice.threadId)}>Conversation {i + 1} · {choice.turnCount} turns</button>)}

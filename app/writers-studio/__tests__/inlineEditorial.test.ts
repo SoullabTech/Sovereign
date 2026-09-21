@@ -72,14 +72,14 @@ test('page conversation previews before apply and preserves a draft through disc
   const button=(text:string) => Array.from(container.querySelectorAll('button')).find(b=>b.textContent===text)!;
   expect(button('Use this revision').disabled).toBe(true);
   expect(container.querySelector('.wsi-page-tools')?.hasAttribute('hidden')).toBe(true);
-  act(()=>button('Preview in context').click());
-  expect(onPreview).toHaveBeenLastCalledWith({original:'Original words.',wording:'Quieter words.',changes:false});
+  act(()=>button('Read in context').click());
+  expect(onPreview).toHaveBeenLastCalledWith({original:'Original words.',wording:'Quieter words.',changes:true});
   expect(button('Use this revision').disabled).toBe(false);
-  act(()=>button('Adjust wording').click());
+  act(()=>button('Change it').click());
   const draft=container.querySelector('.wsi-revision') as HTMLTextAreaElement;
   expect(draft.value).toBe('Quieter words.');
   expect(button('Use this revision').disabled).toBe(true);
-  act(()=>button('Send').click());
+  act(()=>button('Talk about it').click());
   expect(onSend.mock.calls[0][0]).toContain('My unsaved working revision (for discussion, do not apply):\nQuieter words.');
   expect(container.querySelector('.wsi-revision')).toBe(draft);
   expect(onApply).not.toHaveBeenCalled();
