@@ -433,6 +433,33 @@ export function validateNativePatchResult(packet, result, worktree, {
   };
 }
 
+/**
+ * A candidate rejected by the persistent runtime is not left sitting in the
+ * isolated worktree as if it were usable. Return the claimed worktree to the
+ * packet's exact canonical base and prove that cleanup completed.
+ */
+export function rollbackNativeCandidate(worktree, canonicalSha, { runGit = nativeGit } = {}) {
+  if (!COMMIT_SHA_RE.test(String(canonicalSha || ''))) {
+    return { ok: false, failure_class: 'NATIVE_RUNTIME_ROLLBACK_BASE_INVALID',
+      detail: 'canonical SHA is not an immutable commit id' };
+  }
+  try {
+    const base = runGit(worktree, ['rev-parse', canonicalSha + '^{commit}']);
+    runGit(worktree, ['reset', '--hard', base]);
+    runGit(worktree, ['clean', '-fd']);
+    const head = runGit(worktree, ['rev-parse', 'HEAD']);
+    const status = runGit(worktree, ['status', '--porcelain', '--untracked-files=all']);
+    if (head !== base || status) {
+      return { ok: false, failure_class: 'NATIVE_RUNTIME_ROLLBACK_INCOMPLETE',
+        detail: `base=${base} head=${head} status=${status.slice(0, 300)}` };
+    }
+    return { ok: true, base_sha: base };
+  } catch (error) {
+    return { ok: false, failure_class: 'NATIVE_RUNTIME_ROLLBACK_INCOMPLETE',
+      detail: String(error?.stderr || error?.message || error).slice(0, 500) };
+  }
+}
+
 // ── the run driver ───────────────────────────────────────────────────────────
 const packetFile = (id) => path.join(PACKETS_DIR, `${id}.json`);
 const resultFile = (id) => path.join(RESULTS_DIR, `${id}.json`);
@@ -660,6 +687,12 @@ export async function executeRun(run, ctx) {
     ctx.emit('verification.completed', {
       run_id: run.run_id, ok: false, failure_class: nativeVerification.failure_class,
     });
+    const rollback = rollbackNativeCandidate(worktree, packet.canonical_sha);
+    run.verification.rollback = rollback;
+    if (!rollback.ok) {
+      return fail('NATIVE_RUNTIME_ROLLBACK_INCOMPLETE',
+        `${nativeVerification.failure_class}: ${nativeVerification.detail}; rollback: ${rollback.detail}`);
+    }
     return fail(nativeVerification.failure_class, nativeVerification.detail);
   }
   ctx.emit('verification.completed', {

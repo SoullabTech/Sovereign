@@ -14,7 +14,7 @@ mkdirSync(home);
 mkdirSync(repo);
 process.env.AIN_DELEGATION_HOME = home;
 
-const { checkAuthority, validateNativePatchResult } =
+const { checkAuthority, validateNativePatchResult, rollbackNativeCandidate } =
   await import("../jarvis-runtime-pipeline.mjs?native-runtime-proof=" + Date.now());
 
 let passed = 0;
@@ -154,7 +154,7 @@ try {
     assert.equal(verdict.failure_class, "NATIVE_PATH_EVIDENCE_MISMATCH");
   });
 
-  check("runtime verifier may not mutate the committed candidate", () => {
+  check("runtime verifier mutation is rejected and rollback restores the exact canonical base", () => {
     const mutatingPacket = {
       ...packet,
       verification_commands: ["printf 'drift\\n' >> allowed.txt"],
@@ -162,8 +162,12 @@ try {
     const verdict = validateNativePatchResult(mutatingPacket, result, repo);
     assert.equal(verdict.ok, false);
     assert.equal(verdict.failure_class, "NATIVE_VERIFICATION_MUTATED_CANDIDATE");
-    git(["reset", "--hard", head]);
-    assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "after\n");
+
+    const rollback = rollbackNativeCandidate(repo, base);
+    assert.equal(rollback.ok, true, JSON.stringify(rollback));
+    assert.equal(git(["rev-parse", "HEAD"]), base);
+    assert.equal(git(["status", "--porcelain", "--untracked-files=all"]), "");
+    assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "before\n");
   });
 
   console.log("\n" + passed + " passed · 0 failed");
