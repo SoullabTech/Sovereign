@@ -1,7 +1,7 @@
 set -e
 set -o pipefail
 
-SHA=b61c79e44697f29e9bc16cc4c6c2c7fb064bc484
+SHA=21517b80060629bb6d7aa2d39fd02fe61eb99ee3
 SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
 BID=life.soullab.voicekernel.vpio02sid
 SID_CONTAINER=85948DBD-BA8F-4679-950D-31767B1C24E5
@@ -13,8 +13,8 @@ OUTPUT_READER_BLOB=a87c56d0a6073b177e160f8c92dc95ec2673b3ca
 ENTRY_READER_BLOB=abd26d05efd838cd87c93fcdb1d1706e2b671901
 FIXTURE_GENERATOR_BLOB=7ea01b1b4413e0b1de23db73941b3a6b80829033
 CAL_READER_BLOB=f4c71767aae7afe3f64a64cf95398bd7c358c128
-CAL_BATCH_BLOB=aa4d6f9d591e56df49f6a3ff69a7ea4ed1758906
-CAL_TEST_BLOB=def62e14c41b4a3017476dc76a2b53b3d3226337
+CAL_BATCH_BLOB=75a7b7c1ec19ff8ef6b5e97705f5ae487f6973db
+CAL_TEST_BLOB=c4f030226caaf4e34ed57892cf4fb95102cceed0
 AFPLAY=/usr/bin/afplay
 AFPLAY_SHA=88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb
 DEV="$(printenv K00_DEVICE 2>/dev/null || true)"
@@ -131,7 +131,7 @@ test "$(shasum -a 256 "$FIXTURE" | awk '{print $1}')" = "$FIXTURE_SHA"
 printf 'SOURCE-LEVEL-CALIBRATION-01 PRELIGHT CLEAN %s implementation %s subject %s fixture %s geometry %s\n'   "$STAMP" "$SHA" "$SUBJECT_SHA" "$FIXTURE_SHA" "$GEOMETRY_SHA" | tee "$PF/PREFLIGHT-CLEAN"
 
 SEAL="/private/tmp/source-level-calibration-01-$STAMP.SHA256SUMS.preflight"
-( cd "$PF" && find . -type f ! -name SHA256SUMS.preflight -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256 ) > "$SEAL"
+( cd "$PF" && find . -type f ! -name SHA256SUMS.preflight | LC_ALL=C sort | xargs shasum -a 256 ) > "$SEAL"
 mv "$SEAL" "$PF/SHA256SUMS.preflight"
 
 {
