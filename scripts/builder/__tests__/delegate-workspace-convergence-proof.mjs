@@ -22,7 +22,8 @@ const assert = (name, cond, detail = '') => {
   if (detail) console.log(`          ${detail}`);
 };
 
-const REPO = '/Users/soullab/MAIA-SOVEREIGN';
+import { fileURLToPath } from 'node:url';
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const DELEGATE = path.join(REPO, 'scripts', 'ain-delegate.sh');
 const SESSION = path.join(REPO, 'scripts', 'builder', 'session.mjs');
 
