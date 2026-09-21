@@ -1,7 +1,7 @@
 set -e
 set -o pipefail
 
-SHA=b61c79e44697f29e9bc16cc4c6c2c7fb064bc484
+SHA=21517b80060629bb6d7aa2d39fd02fe61eb99ee3
 SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
 PTR=/private/tmp/source-level-calibration-01-preflight-current.txt
 ACT_MARK=/private/tmp/source-level-calibration-01-act-invoked.txt
@@ -76,7 +76,7 @@ done
 
 if [ -z "$SELECTED" ]; then
   printf 'NO_LEVEL_PIN\nV1 remains 20 dB; no threshold change; no L4 authorized.\n' | tee "$RUNROOT/RESULT"
-  ( cd "$RUNROOT" && find . -type f ! -name SHA256SUMS.act -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256 ) > "$RUNROOT/SHA256SUMS.act"
+  ( cd "$RUNROOT" && find . -type f ! -name SHA256SUMS.act | LC_ALL=C sort | xargs shasum -a 256 ) > "$RUNROOT/SHA256SUMS.act"
   echo "SOURCE-LEVEL-CALIBRATION-01 COMPLETE NO_LEVEL_PIN $RUNROOT"
   exit 0
 fi
@@ -130,5 +130,5 @@ PY
   printf 'historicalSource03=UNMEASURED_FOREVER\n'
 } | tee "$RUNROOT/SELECTED-SOURCE-PIN"
 
-( cd "$RUNROOT" && find . -type f ! -name SHA256SUMS.act -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256 ) > "$RUNROOT/SHA256SUMS.act"
+( cd "$RUNROOT" && find . -type f ! -name SHA256SUMS.act | LC_ALL=C sort | xargs shasum -a 256 ) > "$RUNROOT/SHA256SUMS.act"
 echo "SOURCE-LEVEL-CALIBRATION-01 COMPLETE SELECTED $SELECTED $RUNROOT"
