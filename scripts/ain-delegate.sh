@@ -224,6 +224,19 @@ _run_lane() {
             echo "🛑 [ain-delegate] LOCAL_NATIVE_AUTHORITY_REFUSED — V1 requires bounded local worktree-write authority only." >&2
             exit 3
         }
+
+        [ "$(printf '%s' "$native_envelope" | jq -r '.integration_actor // empty')" = "jarvis" ] || {
+            echo "🛑 [ain-delegate] LOCAL_NATIVE_INTEGRATION_ACTOR_REFUSED — candidate mutation belongs to JARVIS." >&2
+            exit 3
+        }
+        [ "$(jq -r '(.allowed_files // []) | length' "$f")" -gt 0 ] || {
+            echo "🛑 [ain-delegate] LOCAL_NATIVE_FILE_SCOPE_REQUIRED — no model turn without explicit allowed_files." >&2
+            exit 3
+        }
+        [ "$(jq -r '(.verification_commands // []) | length' "$f")" -gt 0 ] || {
+            echo "🛑 [ain-delegate] LOCAL_NATIVE_VERIFICATION_REQUIRED — coding candidates require independent verification commands." >&2
+            exit 3
+        }
     fi
 
     # JARVIS-PROVIDER-01: authorization precedes workspace acquisition. Registration
@@ -524,6 +537,9 @@ _run_lane() {
         done < <(jq -r '.verification_commands[]' "$f")
         if $all_pass; then test_results="pass"; else test_results="fail"; fi
     fi
+    if [ "$lane" = "local-native" ] && [ "$test_results" = "fail" ] && [ "$exit_code" -eq 0 ]; then
+        exit_code=12
+    fi
 
     # A native candidate that fails independent verification never remains in the
     # worktree. Patch admission begins from a clean claimed worktree, so restoring
@@ -542,7 +558,7 @@ _run_lane() {
     fi
 
     # A verified native patch is committed by JARVIS, never by the model.
-    if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ] && { [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; }; then
+    if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ] && [ "$test_results" = "pass" ]; then
         local native_changed_count
         native_changed_count="$(printf '%s' "$patch_admission_json" | jq -r '.changed_paths | length // 0' 2>/dev/null || echo 0)"
         if [ "$native_changed_count" -gt 0 ]; then
