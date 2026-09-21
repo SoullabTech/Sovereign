@@ -486,15 +486,20 @@ test('canonical Qwen v2 launch is standalone and isolated from user OpenCode con
     assert.deepEqual(Object.keys(config.provider), ['ollama']);
     assert.deepEqual(Object.keys(config.provider.ollama.models), ['qwen3-coder:30b']);
     assert.equal(config.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
-    assert.deepEqual(Object.keys(config.agent), ['jarvis-readonly']);
-    assert.equal(config.agent['jarvis-readonly'].mode, 'primary');
-    assert.equal(config.agent['jarvis-readonly'].permission.edit, 'deny');
-    assert.equal(config.agent['jarvis-readonly'].permission.bash, 'deny');
-    assert.equal(config.agent['jarvis-readonly'].permission.task, 'deny');
-    assert.equal(config.agent['jarvis-readonly'].permission.external_directory, 'deny');
-    assert.equal(config.agent['jarvis-readonly'].permission.webfetch, 'deny');
-    assert.equal(config.agent['jarvis-readonly'].permission.websearch, 'deny');
-    assert.equal(config.agent['jarvis-readonly'].permission.skill, 'deny');
+    assert.equal(config.agent, undefined);
+    assert.deepEqual(Object.keys(config.agents), ['jarvis-readonly']);
+    const agent = config.agents['jarvis-readonly'];
+    assert.equal(agent.mode, 'primary');
+    assert.equal(agent.permission, undefined);
+    assert.equal(agent.prompt, undefined);
+    assert.match(agent.system, /bounded JARVIS work unit/);
+    assert.equal(agent.steps, 8);
+    assert.deepEqual(agent.permissions, [
+      { action: '*', resource: '*', effect: 'deny' },
+      { action: 'read', resource: '*', effect: 'allow' },
+      { action: 'glob', resource: '*', effect: 'allow' },
+      { action: 'grep', resource: '*', effect: 'allow' },
+    ]);
     assert.equal(JSON.stringify(config).includes('gpt-oss'), false);
     assert.equal(JSON.stringify(config).includes('tinker'), false);
     assert.equal(JSON.stringify(config).includes('nvidia'), false);
