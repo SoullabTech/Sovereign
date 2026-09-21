@@ -44,7 +44,8 @@ PY
 
 test ! -e "$WT"
 cd /Users/soullab/MAIA-SOVEREIGN
-git fetch origin feature/voice-2026-record-of-record-20260916\ngit merge-base --is-ancestor "$SHA" FETCH_HEAD
+git fetch origin feature/voice-2026-record-of-record-20260916
+git merge-base --is-ancestor "$SHA" FETCH_HEAD
 git worktree add --detach "$WT" "$SHA"
 cd "$WT"
 ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
