@@ -22,9 +22,10 @@ const check = (name, fn) => {
   }
 };
 
-const packet = (allowedFiles = ["allowed.txt"]) => ({
+const packet = (allowedFiles = ["allowed.txt"], canonicalSha = null) => ({
   work_unit_id: "native-patch-proof",
   allowed_files: allowedFiles,
+  canonical_sha: canonicalSha,
   authorized_acts: ["repo.read", "repo.write:worktree", "tests.run"],
   not_authorized_acts: [
     "production.read", "production.write", "deploy", "authority.change",
@@ -141,6 +142,36 @@ check("non-JARVIS integration actor is refused before any git invocation", () =>
   rmSync(tmp, { recursive: true, force: true });
 });
 
+console.log("\n=== NPA1D: stale worktree SHA is refused before apply-check ===");
+check("packet canonical SHA must equal the execution worktree HEAD", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-sha-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  execFileSync("git", ["init", "-q"], { cwd: repo });
+  execFileSync("git", ["config", "user.name", "Proof"], { cwd: repo });
+  execFileSync("git", ["config", "user.email", "proof@local.invalid"], { cwd: repo });
+  writeFileSync(path.join(repo, "allowed.txt"), "before\n");
+  execFileSync("git", ["add", "."], { cwd: repo });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
+  const oldSha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim();
+  writeFileSync(path.join(repo, "marker.txt"), "advance\n");
+  execFileSync("git", ["add", "marker.txt"], { cwd: repo });
+  execFileSync("git", ["commit", "-qm", "advance"], { cwd: repo });
+
+  const result = applyNativePatch({
+    packet: packet(["allowed.txt"], oldSha),
+    patchText: patchFor("allowed.txt", "before", "after"),
+    worktree: repo,
+    home,
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "WORKTREE_CANONICAL_SHA_MISMATCH");
+  assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "before\n");
+  rmSync(tmp, { recursive: true, force: true });
+});
+
 console.log("\n=== NPA2: structural refusals ===");
 check("prose before a patch is refused", () => {
   const r = inspectPatch("Here is the patch:\n" + patchFor("allowed.txt", "before", "after"), ["allowed.txt"]);
@@ -191,8 +222,9 @@ check("authorized text patch is checked, applied, scoped, and evidenced", () => 
   execFileSync("git", ["add", "."], { cwd: repo });
   execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
 
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim();
   const result = applyNativePatch({
-    packet: packet(["allowed.txt"]),
+    packet: packet(["allowed.txt"], head),
     patchText: patchFor("allowed.txt", "before", "after"),
     worktree: repo,
     home,
