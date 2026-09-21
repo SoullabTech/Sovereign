@@ -37,6 +37,8 @@ try {
   const prompt = buildNativePrompt(packet, repo);
   assert.match(prompt, /MATERIALIZED CONTEXT/);
   assert.match(prompt, /alpha/);
+  assert.match(prompt, /<<<SOURCE_BYTES>>>\nalpha\nbeta\n\n<<<END_SOURCE_BYTES>>>/);
+  assert.doesNotMatch(prompt, /^\\s*1\\| alpha$/m);
   assert.match(prompt, /diff --git/);
   assert.match(prompt, /first bytes of the response MUST be exactly `diff --git `/);
   assert.match(prompt, /never delete and re-add unchanged lines/);
@@ -50,7 +52,7 @@ try {
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("14 passed · 0 failed");
+  console.log("17 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
