@@ -22,6 +22,7 @@ import ManuscriptPassage from '../insight/ManuscriptPassage';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
+import { useEditingLatitude } from '../insight/EditingLatitude';
 import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
@@ -752,22 +753,56 @@ export default function RebuildStudioClient() {
     return null;
   }, [focusId, focusSection, selectedPassage, editorialThread, startNewEditorial, bindEditorialThread]);
 
+  /**
+   * ⭐⭐ THE AUTHOR'S TWO EDITING CONTROLS (WS-EDITORIAL-SCOPE-01).
+   *
+   * ⛔ Held HERE rather than inside the desk so a remount cannot quietly reset
+   * them — and taken from the shared hook so this surface and the canvas cannot
+   * disagree about what the defaults are. The slider is remembered; the
+   * paragraph permission opens off every visit, by construction.
+   */
+  const {
+    latitude: editLatitude, setLatitude: setEditLatitude,
+    mayRemoveParagraphs, setMayRemoveParagraphs,
+    mayProposeImmediately, setMayProposeImmediately,
+    /* ⭐ Per-Work: the override is keyed by the manuscript, not by the session.
+       ⛔ `context` is `ContextReady | null` — the hook runs before the Work has
+       loaded, and an empty key is the honest value for "no Work yet": the
+       storage seam treats it as no-override rather than writing under a blank
+       name. ⛔ Never `context!`, which would be a lie about the load order. */
+  } = useEditingLatitude(context?.manuscriptId ?? '');
+  /** ⭐ What the latest suggestion brought in that is not the writer's. */
+  const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
+
   const sendEditorial = useCallback(async (requestText?: string) => {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
+    setVoiceNotice(null);
     const exactWords = requestText ?? editorialDraft;
     try {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords);
+      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords,
+        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately });
       if (!out.ok) {
-        setEditorialFailure(out.reason === 'unavailable'
-          ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
-          : 'MAIA could not complete this revision turn. Your manuscript was not changed.');
+        /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
+           line the writer drew. ⛔ Not "MAIA could not complete" — she could,
+           and what she produced went further than the writer allowed. Saying it
+           plainly is what lets the writer learn the control. */
+        setEditorialFailure(
+          out.reason === 'scope_refused'
+            ? (out.detail ?? 'That suggestion went beyond your editing latitude. Nothing was changed.')
+            : out.reason === 'unavailable'
+              ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
+              : 'MAIA could not complete this revision turn. Your manuscript was not changed.');
         return;
       }
       if (!bindEditorialThread(out.thread)) return;
+      /* ⭐⭐ THE VOICE NOTICE TRAVELS WITH THE SUGGESTION, not after it.
+         For a writer still finding their voice, noticing in time is the whole
+         of the protection — a note read afterwards is a post-mortem. */
+      setVoiceNotice(out.voice?.note ?? null);
       setLastEditorialInstruction(exactWords);
       if (out.producedVersionId) setSuggestedVersionId(out.producedVersionId);
       setShowChanges(false);
@@ -805,9 +840,10 @@ export default function RebuildStudioClient() {
         return;
       }
       setAdoptionOutcome(out.outcome);
-      setAppliedVersionId(suggestedVersion.id);
-      const reread = await readBoundEditorialThread(editorialThread.threadId, focusId);
-      if (reread.ok) setEditorialThread(reread.thread);
+      /* ⭐ The immediate receipt is local presentation state. ⛔ Only an
+         actually-applied outcome may set it; a moved or refused Work must not
+         render as though this click changed the manuscript. */
+      setAppliedVersionId(out.outcome.kind === 'applied' ? suggestedVersion.id : null);
       if (out.outcome.kind === 'applied' || out.outcome.kind === 'work_moved') {
         if (review) setReviewNeedsRefresh(true);
         const fresh = await refreshContext();
@@ -824,10 +860,18 @@ export default function RebuildStudioClient() {
           setSelectedPassage(null);
         }
       }
+      /* ⭐⭐ RECOVERY IS READ AFTER THE WORK HAS SETTLED. The application row
+         is the authority for Undo; reading it before the context refresh made
+         the inline desk depend on a race between two post-apply projections. */
+      const reread = await readBoundEditorialThread(editorialThread.threadId, focusId);
+      if (reread.ok) {
+        setEditorialThread(reread.thread);
+        replaceAddress(focusId, reread.thread.threadId);
+      }
     } finally {
       setAdoptionBusy(false);
     }
-  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting]);
+  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting, replaceAddress]);
 
   const undoSuggested = useCallback(async () => {
     const application = editorialThread?.application;
@@ -1605,11 +1649,16 @@ export default function RebuildStudioClient() {
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
             : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
           sectionBody={focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
-          appliedVersionId={editorialThread?.application && !editorialThread.application.undone ? editorialThread.application.versionId : null}
+          appliedVersionId={editorialThread?.application && !editorialThread.application.undone
+            ? editorialThread.application.versionId : appliedVersionId}
           onUndo={editorialThread?.application?.canUndo ? () => void undoSuggested() : undefined}
           undoMessage={undoMessage}
           thread={editorialThread} version={suggestedVersion} instruction={editorialDraft}
           onInstruction={setEditorialDraft} onSend={text => void sendEditorial(text)}
+          voiceNotice={voiceNotice}
+          latitude={editLatitude} onLatitude={setEditLatitude}
+          mayProposeImmediately={mayProposeImmediately} onMayProposeImmediately={setMayProposeImmediately}
+          mayRemoveParagraphs={mayRemoveParagraphs} onMayRemoveParagraphs={setMayRemoveParagraphs}
           onSelectVersion={id => { setSuggestedVersionId(id); setAdoptionOutcome(null); setEditorialFailure(null); }} onApply={() => void applySuggested()}
           onSaveMember={saveMemberRevision} busy={editorialBusy || adoptionBusy || memberVersionBusy}
           response={lastMaiaEditorialTurn?.body ?? null}

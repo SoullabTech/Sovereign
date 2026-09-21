@@ -29,6 +29,11 @@
  * never authored from prose by this component or any other.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+/* ⭐ WS-EDITORIAL-SCOPE-01 · the same control and the same defaults as the desk.
+   ⛔ Not a second implementation: this surface calls the same route, and a
+   surface that sends no latitude gets the protective default — correct, but it
+   left the writer with no way to widen it. */
+import EditingLatitude, { useEditingLatitude } from '../insight/EditingLatitude';
 import { apiFetch } from '@/lib/http/apiBase';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText, typeStyle } from '../studio/StudioType';
@@ -64,6 +69,8 @@ interface ThreadVersion {
 interface ThreadView {
   threadId: string;
   chainId: string;
+  /** ⭐ Server-derived, so the per-Work setting is keyed by the Work. */
+  workId: string;
   locusText: string;
   /** ⭐ Server-derived. ⛔ The browser never names the place a change belongs. */
   targetSectionId: string | null;
@@ -214,6 +221,10 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
      else, because the conversation itself is server state. */
   const [view, setView] = useState<ThreadView | null>(null);
   const [draft, setDraft] = useState('');
+  const {
+    latitude, setLatitude, mayRemoveParagraphs, setMayRemoveParagraphs,
+    mayProposeImmediately, setMayProposeImmediately,
+  } = useEditingLatitude(view?.workId ?? '');
   /* ⭐⭐ THE MEMBER DECLARES THE ACT. ⛔ Never classified from their wording. */
   const [actKind, setActKind] = useState<'discourse' | 'direction'>('discourse');
   const [busy, setBusy] = useState(false);
@@ -256,14 +267,27 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
         headers: { 'Content-Type': 'application/json' },
         /* ⛔ THE MEMBER'S TEXT, EXACTLY. No trim — the server stores what they
            wrote, and a Direction's instruction IS the turn body. */
-        body: JSON.stringify({ threadId, act: { act: actKind, text, refersTo: null } }),
+        body: JSON.stringify({
+          threadId, act: { act: actKind, text, refersTo: null },
+          /* ⭐ The writer's declared editing latitude for this exchange. */
+          scope: { latitude, mayRemoveParagraphs, mayProposeImmediately },
+        }),
       });
       /* ⭐ Reload either way: on a MAIA-side failure the member's turn STILL
          persisted, and the surface must show that rather than pretend the
          exchange never happened. */
       await reload(threadId);
       if (res.ok) { setDraft(''); setActKind('discourse'); }
-      else setFailure('Your words are saved. MAIA could not answer this time.');
+      else {
+        /* ⭐⭐ A SCOPE REFUSAL IS A RESULT, NOT A FAULT. The writer set a
+           latitude and the system held it. ⛔ Never reported as *MAIA could not
+           answer* — she could, and what she produced went further than the
+           writer allowed. Saying which is how the writer learns the control. */
+        const why = await res.json().catch(() => null);
+        setFailure(res.status === 409 && typeof why?.detail === 'string'
+          ? `Your words are saved. ${why.detail}`
+          : 'Your words are saved. MAIA could not answer this time.');
+      }
     } catch {
       setFailure('Your words may be saved. MAIA could not answer this time.');
       await reload(threadId);
@@ -685,6 +709,18 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
           </div>
         </section>
       )}
+
+      {/* ── ⭐ The writer's editing latitude, beside the composer, because it
+             governs the message about to be sent. ⛔ Not in a settings panel:
+             a control the writer has to go looking for is one they discover by
+             being shown their own paragraphs struck through. ── */}
+      <EditingLatitude
+        latitude={latitude} onLatitude={setLatitude}
+        mayRemoveParagraphs={mayRemoveParagraphs}
+        onMayRemoveParagraphs={setMayRemoveParagraphs}
+        mayProposeImmediately={mayProposeImmediately}
+        onMayProposeImmediately={setMayProposeImmediately}
+        disabled={busy} />
 
       {/* ── Composer. Text only; no microphone exists on this surface. ── */}
       <div style={{ borderTop: `1px solid ${RULE.soft}`, paddingTop: SPACE.base }}>

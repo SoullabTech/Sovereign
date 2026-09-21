@@ -15,6 +15,12 @@ surfaces:
   - app/writers-studio/studioMap.ts
   - app/writers-studio/studio/StudioModeBar.tsx
   - app/writers-studio/workContext.ts
+  # WS-EDITORIAL-SCOPE-01, 2026-09-20. The editorial thread conversation on the
+  # Canvas was named by NO contract — the canvas contracts name explicit files
+  # and this one was not among them, so a member-facing surface where MAIA
+  # proposes changes to the writer's words was governed by nothing. It belongs
+  # to this room by its own human_activity: MAIA present at the writer's locus.
+  - app/writers-studio/canvas/EditorialConversation.tsx
   # The mode bar was already named in shared_with_house and was covered by no
   # surface glob, so the room shared a component no contract governed. D1 makes
   # it the bar this room actually renders, which is what surfaced the gap.
