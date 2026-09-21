@@ -14,6 +14,7 @@ import { authorizedCoreSnapshotV2 } from './work-unit-lifecycle-v2.mjs';
 import { activeTransportBindingsV1 } from './work-unit-transport-v1.mjs';
 import { routeDigest, ROUTE_SOURCE } from './routing-route-integrity.mjs';
 import { evaluateExecutionAdmission } from './routing-execution-admission.mjs';
+import { developmentProviderPermissionEnvelopeV1 } from './canonical-development-v1.mjs';
 
 export const CANONICAL_EXECUTION_VERSION = 'E1.v1';
 export const CANONICAL_EXECUTION_GRANT_VERSION = 'E1-GRANT.v1';
@@ -646,9 +647,13 @@ export function validateCanonicalExecutionGrantV1(grant, currentPreview) {
 }
 
 function permissionEnvelope(workUnit) {
+  if (workUnit.authority?.repository_write === 'worktree') {
+    const development = developmentProviderPermissionEnvelopeV1(workUnit);
+    if (development.ok) return deepFreeze(clone(development.permission_envelope));
+  }
   return deepFreeze({
     repo_read: workUnit.authority?.repository_read === true,
-    repo_write_scope: workUnit.authority?.repository_write === 'worktree' ? 'worktree' : 'none',
+    repo_write_scope: 'none',
     execute_checks: false,
     production_read: workUnit.authority?.production_read === true,
     production_write: workUnit.authority?.production_write === true,
@@ -681,6 +686,18 @@ export function evaluateCanonicalExecutionGrantV1({
   }
 
   const workUnit = envelope.work_unit;
+  if (workUnit.authority?.repository_write === 'worktree') {
+    const development = developmentProviderPermissionEnvelopeV1(workUnit);
+    if (!development.ok) {
+      return deepFreeze({
+        ok: false,
+        status: 'DEVELOPMENT_CONTRACT_REFUSED',
+        blockers: clone(development.blockers),
+        admission: null,
+        preview,
+      });
+    }
+  }
   const participant = participantById(workUnit, grant.route_participant_id);
   const binding = activeBindingForParticipant(workUnit, grant.route_participant_id);
   const r4 = runR4(workUnit, participant, binding, {

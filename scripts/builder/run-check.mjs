@@ -36,6 +36,9 @@ import { fileURLToPath } from 'node:url';
 const REGISTRY = {
   typecheck: 'npm run typecheck',
   lint: 'npm run lint',
+  'jarvis-proof': 'npm run jarvis:proof',
+  'jarvis-desktop': 'node --test jarvis-desktop/test/*.test.mjs',
+  'db-bootstrap': 'npm run db:verify-bootstrap',
 };
 
 const args = process.argv.slice(2);
