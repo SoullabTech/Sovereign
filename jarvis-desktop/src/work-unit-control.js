@@ -179,11 +179,16 @@ function providerChildEnv(sourceEnv = process.env) {
   return built;
 }
 
-function canonicalQwenOpenCodeV2Env(sourceEnv, runtimeRoot, binding) {
-  if (binding?.provider_id !== 'qwen-local'
-      || binding?.model_id !== 'qwen3-coder:30b'
+function canonicalLocalOpenCodeV2Env(sourceEnv, runtimeRoot, binding) {
+  const localModel = binding?.provider_id === 'qwen-local'
+    ? { id: 'qwen3-coder:30b', name: 'Qwen3 Coder 30B (local)' }
+    : binding?.provider_id === 'gpt-oss-local'
+      ? { id: 'gpt-oss:20b', name: 'GPT-OSS 20B (local)' }
+      : null;
+  if (!localModel
+      || binding?.model_id !== localModel.id
       || binding?.adapter_id !== 'opencode') {
-    throw new Error('CANONICAL_QWEN_V2_ENV_IDENTITY_MISMATCH');
+    throw new Error('CANONICAL_LOCAL_OPENCODE_V2_ENV_IDENTITY_MISMATCH');
   }
 
   const env = providerChildEnv(sourceEnv);
@@ -197,16 +202,22 @@ function canonicalQwenOpenCodeV2Env(sourceEnv, runtimeRoot, binding) {
   env.HOME = isolatedHome;
   env.XDG_CONFIG_HOME = isolatedConfig;
   env.XDG_DATA_HOME = isolatedData;
+  // Cache is intentionally shared for already-installed provider/package reuse.
+  // It is not a configuration authority: HOME/config/data are private, project
+  // discovery is disabled below, and explicit inline config owns provider/agent law.
   env.XDG_CACHE_HOME = sourceEnv.XDG_CACHE_HOME
     || path.join(sourceEnv.HOME || os.homedir(), '.cache');
 
   // OpenCode v2.0.12 no longer accepts --pure and does not expose
-  // OPENCODE_PURE. Canonical Qwen therefore uses a private server, private
-  // config roots, explicit inline provider/agent config, and project-config
-  // discovery disabled. Disclosed evidence never becomes executable config.
+  // OPENCODE_PURE. Canonical local OpenCode execution therefore uses a private
+  // server, private config roots, explicit inline provider/agent config, and
+  // project-config discovery disabled. Disclosed evidence never becomes executable config.
   delete env.OPENCODE_CONFIG;
   delete env.OPENCODE_CONFIG_DIR;
   delete env.OPENCODE_CLI_CONFIG_CONTENT;
+  // server-process.ts maps these to config.project=false. That kill switch is
+  // safe here because jarvis-readonly is supplied below through the single inline
+  // OPENCODE_CONFIG_CONTENT channel rather than project/ancestor discovery.
   env.OPENCODE_CONFIG_PROJECT_DISABLE = '1';
   env.OPENCODE_DISABLE_PROJECT_CONFIG = '1';
   env.OPENCODE_DISABLE_MODELS_FETCH = '1';
@@ -219,7 +230,7 @@ function canonicalQwenOpenCodeV2Env(sourceEnv, runtimeRoot, binding) {
         name: 'Ollama (local)',
         options: { baseURL: 'http://127.0.0.1:11434/v1' },
         models: {
-          'qwen3-coder:30b': { name: 'Qwen3 Coder 30B (local)' },
+          [localModel.id]: { name: localModel.name },
         },
       },
     },
@@ -736,21 +747,49 @@ async function executeCanonicalResolvedProvider(
     const timeout = opts.timeoutMs || RUN_TIMEOUT_MS;
     let run;
 
-    if (resolved.execution_adapter === 'opencode') {
-      const canonicalQwenV2 = binding.provider_id === 'qwen-local'
-        && binding.model_id === 'qwen3-coder:30b'
-        && binding.adapter_id === 'opencode';
-      if (canonicalQwenV2) {
+    if (resolved.execution_adapter === 'ollama-direct') {
+      if (binding.provider_id !== 'qwen-local'
+          || binding.model_id !== 'qwen3-coder:30b'
+          || binding.adapter_id !== 'ollama-direct') {
+        throw new Error('CANONICAL_OLLAMA_DIRECT_IDENTITY_MISMATCH');
+      }
+      const prompt = canonicalProviderPrompt(workUnit, sandbox.files, {
+        inlineEvidence: true,
+        workspace: sandbox.workspace,
+      });
+      const localWorker = opts.localWorkerRun
+        ? { run: opts.localWorkerRun }
+        : await importBound(root, 'scripts/builder/jarvis-local-worker.mjs');
+      const native = await localWorker.run({
+        prompt,
+        model: 'jarvis-qwen3-coder:65k',
+        host: 'http://127.0.0.1:11434',
+        timeoutMs: timeout,
+        temperature: 0,
+      });
+      run = {
+        exit_code: native?.ok === true ? 0 : 1,
+        signal: null,
+        stdout: String(native?.output || '').slice(-MAX_LOG_CHARS),
+        stderr: native?.ok === true
+          ? ''
+          : `${String(native?.failure_class || 'WORKER_EXECUTION_FAILED')}: ${String(native?.error || 'local worker failed')}`.slice(-MAX_LOG_CHARS),
+      };
+    } else if (resolved.execution_adapter === 'opencode') {
+      const canonicalLocalOpenCodeV2 = binding.adapter_id === 'opencode'
+        && ((binding.provider_id === 'qwen-local' && binding.model_id === 'qwen3-coder:30b')
+          || (binding.provider_id === 'gpt-oss-local' && binding.model_id === 'gpt-oss:20b'));
+      if (canonicalLocalOpenCodeV2) {
         // The historical markdown agent is copied by the generic sandbox helper.
         // v2 carries the agent explicitly in inline config instead, so remove the
         // project config surface before booting the private server.
         fs.rmSync(path.join(sandbox.workspace, '.opencode'), { recursive: true, force: true });
         openCodeRuntime = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-e1-opencode-v2-'));
       }
-      const env = canonicalQwenV2
-        ? canonicalQwenOpenCodeV2Env(sourceEnv, openCodeRuntime, binding)
+      const env = canonicalLocalOpenCodeV2
+        ? canonicalLocalOpenCodeV2Env(sourceEnv, openCodeRuntime, binding)
         : providerChildEnv(sourceEnv);
-      const args = canonicalQwenV2
+      const args = canonicalLocalOpenCodeV2
         ? [
           'run', '--standalone',
           '--agent', resolved.agent || 'jarvis-readonly',
@@ -1365,7 +1404,7 @@ module.exports = {
   homeOf, resultPath, readLogExcerpt, exitCodeFromSummary,
   credentialAvailability, delegateLaneForProvider,
   modelFamilyFromAttempt, durableProviderOutcome,
-  reconcileAttempts, providerChildEnv, canonicalQwenOpenCodeV2Env,
+  reconcileAttempts, providerChildEnv, canonicalLocalOpenCodeV2Env,
   providers, create, planRouting, planWorkUnitRouting,
   canonicalExecutionStatus, canonicalPrepareTransport,
   canonicalExecutionPreview, canonicalAuthorizeExecutionOnce, canonicalRevokeExecutionGrant,

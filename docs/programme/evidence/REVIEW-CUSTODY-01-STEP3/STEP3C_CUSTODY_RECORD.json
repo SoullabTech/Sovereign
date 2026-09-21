@@ -1,0 +1,32 @@
+{
+  "instrument": "review-custody/v1",
+  "bound_at": "2026-09-21T14:03:25.897Z",
+  "repo_head": "86e4249870bf9464737a63f9a2974d8d8c0c7659",
+  "plan": {
+    "path": "docs/programme/REVIEW-CUSTODY-01_STEP3_BOUND_MIGRATION_SURFACE_2026-09-21.md",
+    "sha256": "b152bea4613a6e1404772eb06f004a34718a35b01d592be0ce4475c5f0f9d1a4",
+    "bytes": 5718
+  },
+  "base": {
+    "ref": "HEAD",
+    "commit": "86e4249870bf9464737a63f9a2974d8d8c0c7659"
+  },
+  "tree": {
+    "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "paths": 0
+  },
+  "approval": {
+    "admitted_at": "2026-09-21T14:06:56.375Z",
+    "verdict": "REVISE",
+    "reviewer": "Claude Code independent migration reviewer",
+    "plan_sha256": "b152bea4613a6e1404772eb06f004a34718a35b01d592be0ce4475c5f0f9d1a4",
+    "review_sha256": "f89e7b28ef642d2734395ea8cfa44e072e15c37ea50a4b86a7fb259b30dd77b0",
+    "findings": {
+      "high": 0,
+      "medium": 2,
+      "low": 1
+    },
+    "coverage_files": 10,
+    "limitations": 4
+  }
+}

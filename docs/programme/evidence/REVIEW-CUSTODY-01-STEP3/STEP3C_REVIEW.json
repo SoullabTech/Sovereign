@@ -1,0 +1,50 @@
+{
+  "verdict": "REVISE",
+  "plan_sha256": "b152bea4613a6e1404772eb06f004a34718a35b01d592be0ce4475c5f0f9d1a4",
+  "trace_id": "20f85488-52a9-4e15-9123-d73a43c1dd9b",
+  "reviewer": "Claude Code independent migration reviewer",
+  "summary": "The migration is a small, structurally sound additive change (three columns with constant defaults plus two CHECK constraints on member_voice_preferences), and its allowed value sets match the application-level TypeScript types exactly, so there is no silent drift between validated app values and the DB constraint. However, two material production-risk defects are visible from the repository source and are not mitigated anywhere in the reviewed surface: (1) both CHECK constraints are added without NOT VALID, so the migration's single transaction holds an ACCESS EXCLUSIVE lock on member_voice_preferences for the full duration of two whole-table validation scans, and the repository's own deploy ordering (schema migration runs AFTER the container swap, with new reader code already live) means this lock contends directly with live traffic against that table; (2) the write path (upsertMemberVoicePreferences, invoked by POST /api/settings/voice) has no error handling for missing columns, unlike the read path which gracefully degrades to defaults, so any member save request that lands in the swap-to-migration-complete window will surface as an unhandled DB error, caught only at the route boundary as a generic 500. Both risks are bounded and self-healing (the window is the ordinary migration-run duration), and the CHECK-without-NOT VALID pattern is an existing house convention already used in a prior migration on the same table, but neither risk is addressed or acknowledged in this migration file, and both are the kind of production-visible schema-safety and reader/writer-compatibility issues Step 3 review is meant to catch. No rollback/down migration exists, but given the change is purely additive (new columns, new constraints) this is low severity and consistent with most of the migration set, which does not carry paired rollback files.",
+  "findings": [
+    {
+      "id": "F1-LOCK-CHECK-VALIDATE",
+      "severity": "medium",
+      "path": "database/migrations/20260916123000_turn_taking_preferences.sql",
+      "evidence": "Lines 11-21: ADD CONSTRAINT ... CHECK (...) is issued without NOT VALID for both member_voice_pref_conversational_space_valid and member_voice_pref_floor_control_mode_valid, inside the same BEGIN/COMMIT (lines 4,23) as the ADD COLUMN statements. Postgres holds an ACCESS EXCLUSIVE lock on member_voice_preferences for the whole transaction, and validating a CHECK constraint added without NOT VALID requires a full table scan under that lock. scripts/deploy-production.sh (lines 73-78, 617-619) confirms the migration runs after the container swap, i.e. while the new reader is already live and issuing queries against this table.",
+      "fix": "Split constraint addition: ADD CONSTRAINT ... CHECK (...) NOT VALID, then a separate VALIDATE CONSTRAINT statement (optionally in a later migration or outside the exclusive-lock window), so validation takes only a SHARE UPDATE EXCLUSIVE lock and does not block concurrent reads/writes for the scan duration."
+    },
+    {
+      "id": "F2-WRITE-PATH-NO-DEGRADE",
+      "severity": "medium",
+      "path": "lib/voice/voiceControlsService.ts",
+      "evidence": "getMemberVoicePreferences (lines 105-142) wraps its SELECT of the new columns in try/catch and returns DEFAULT_MEMBER_PREFS on any error (documented at lines 4-5 as deliberate graceful degradation). upsertMemberVoicePreferences (lines 144-179) has no such handling and will throw if conversational_space/floor_control_mode/learn_turn_rhythm do not yet exist. app/api/settings/voice/route.ts lines 145-160 only catches this at the route boundary and returns a generic 500. Because scripts/deploy-production.sh runs the migration after the container swap (lines 73-78, 630-640), any member POST to /api/settings/voice that lands between swap and migration completion will fail.",
+      "fix": "Either move the migration ahead of the swap for this deploy path, or make upsertMemberVoicePreferences tolerant of a transiently missing column set (e.g. catch the specific undefined-column error and retry without the new fields), matching the graceful-degradation contract already used on the read path."
+    },
+    {
+      "id": "F3-NO-ROLLBACK-FILE",
+      "severity": "low",
+      "path": "database/migrations/20260916123000_turn_taking_preferences.sql",
+      "evidence": "No accompanying .rollback file exists for this migration, unlike database/migrations/20260422000001_idea_block_maia_reflection_rollback.rollback which shows the codebase does use that convention occasionally. database/migrations/README.md does not mandate a rollback file per migration.",
+      "fix": "Optional: add a companion rollback file (DROP the three columns and two constraints) for operational convenience, consistent with the occasional house pattern, though not required by the documented convention since the change is purely additive."
+    }
+  ],
+  "coverage": {
+    "files": [
+      "docs/programme/REVIEW-CUSTODY-01_STEP3_BOUND_MIGRATION_SURFACE_2026-09-21.md",
+      "database/migrations/20260916123000_turn_taking_preferences.sql",
+      "database/migrations/20260214000001_voice_controls.sql",
+      "database/migrations/20260214200001_voice_prefs_not_empty.sql",
+      "scripts/deploy-production.sh",
+      "database/migrations/README.md",
+      "scripts/run-sql-migrations.sh",
+      "lib/voice/voiceControlsService.ts",
+      "app/api/settings/voice/route.ts",
+      "lib/voice/turnTaking.ts"
+    ]
+  },
+  "limitations": [
+    "No shell or database access: production row counts, table size, and actual lock-wait duration for member_voice_preferences could not be measured, only inferred from Postgres locking semantics.",
+    "No access to production schema_migrations ledger state, so it cannot be confirmed whether this migration is currently pending, applied, or how long the swap-to-migration-complete window has historically been in practice.",
+    "Reviewed only the source files listed in coverage; other callers of member_voice_preferences columns, if any exist outside lib/voice and app/api/settings/voice, were not exhaustively enumerated beyond the Grep scope used.",
+    "This review evaluates the migration as static repository content only, per the bound plan's explicit non-authority; no migration was applied, re-applied, or otherwise executed against any database."
+  ]
+}

@@ -29,7 +29,7 @@ function input() {
     state:{supersedes:null},
   };
 }
-const QWEN={model_identity_id:'mi-q',route_participant_id:'primary',transport_binding_id:'tb-q',model_family:'QWEN',provider_id:'qwen-local',model_id:'qwen3-coder:30b',adapter_id:'opencode',role:'code_primary'};
+const QWEN={model_identity_id:'mi-q',route_participant_id:'primary',transport_binding_id:'tb-q',model_family:'QWEN',provider_id:'qwen-local',model_id:'qwen3-coder:30b',adapter_id:'ollama-direct',role:'code_primary'};
 const GPT={model_identity_id:'mi-g',route_participant_id:'local-review-1',transport_binding_id:'tb-g',model_family:'GPT_OSS',provider_id:'gpt-oss-local',model_id:'gpt-oss:20b',adapter_id:'opencode',role:'independent_local_challenger'};
 function prepared() {
   const d=createWorkUnitDraftV2(input()); assert.equal(d.ok,true);
@@ -39,7 +39,7 @@ function prepared() {
   env=bindAuthorizedRouteV2(env).envelope;
   env=appendTransportBindingV1(env,{
     transport_binding_id:'tb-q',supersedes_binding_id:null,route_participant_id:'primary',
-    provider_id:'qwen-local',model_id:'qwen3-coder:30b',adapter_id:'opencode',
+    provider_id:'qwen-local',model_id:'qwen3-coder:30b',adapter_id:'ollama-direct',
     readiness:{status:'READY',evidence_ref:'ready:q'},
   }).envelope;
   env=appendTransportBindingV1(env,{
