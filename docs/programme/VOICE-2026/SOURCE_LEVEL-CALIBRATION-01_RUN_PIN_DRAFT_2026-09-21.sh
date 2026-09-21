@@ -1,7 +1,7 @@
 set -e
 set -o pipefail
 
-SHA=21517b80060629bb6d7aa2d39fd02fe61eb99ee3
+SHA=89022e8f021b8fb8217eb09c9e7caef94ffce52f
 SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
 PTR=/private/tmp/source-level-calibration-01-preflight-current.txt
 ACT_MARK=/private/tmp/source-level-calibration-01-act-invoked.txt
