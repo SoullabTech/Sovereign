@@ -1,0 +1,101 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "I4",
+  "title": "Epistemic Join Integration Shadow",
+  "date": "2026-09-21",
+  "status": "EVIDENCE_READY",
+  "founder_authorized_base": "20c8764b516e042f38e33800f71b2bb040025665",
+  "reconciled_opening_canonical": "0319940f9dc94a637e6f1b0e9f843c971f6fb0c2",
+  "freshness": {
+    "authorized_base_to_opening_canonical_commits": 22,
+    "interval": "Writer's Studio/editorial only",
+    "i2_i3_overlap": 0,
+    "selected_now_what_seam_overlap": 0,
+    "authorized_meaning_changed": false
+  },
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "operation_grammar": "REFERENCE -> REPORT/MOVE -> COMPARE/JUXTAPOSE -> HYPOTHESIZE -> WARRANTED JOIN -> PROMOTE/DISCHARGE",
+  "selected_locus": {
+    "path": "app/api/now-what/interview/route.ts",
+    "producer": "detectCellCandidate",
+    "reason": "Existing structured system inference is already read-only, secondary, non-fatal, member-scoped, and outside the moving Writer's Studio freshness interval."
+  },
+  "implementation_head_witnessed": "193e2af37845aa215bac8ffe8300dd7f069f415c",
+  "shadow_flag": {
+    "name": "AIN_EPISTEMIC_JOIN_INTEGRATION_SHADOW_ENABLED",
+    "on_value": "1",
+    "default": "OFF",
+    "independent_of_i3_persistence": true
+  },
+  "authority": "OBSERVATION_ONLY_NO_PERSISTENCE_NO_REPRESENTATION_NO_BEHAVIORAL_AUTHORITY",
+  "translation": {
+    "authorship": "MAIA_PROPOSED",
+    "jurisdiction": "maia_conversational_inquiry",
+    "operation": "HYPOTHESIZE",
+    "relation_semantics": ["association"],
+    "offered_warrants": [],
+    "adoption_acts": [],
+    "requested_standing": "CANDIDATE_UNESTABLISHED",
+    "reference_reliance_explicit": true,
+    "uncertainty_explicit": true,
+    "boundaries_explicit": true
+  },
+  "evidence": {
+    "i4_shadow_matrix": "20/20 PASS",
+    "canonical_i2_i3_jest": "104/104 PASS",
+    "canonical_i3_matrix": "18/18 PASS",
+    "epistemic_join_typecheck": "PASS",
+    "full_typecheck_candidate": "229 total diagnostics; 3 baseline-gate identities reported",
+    "full_typecheck_opening_canonical_control": "same 229 total diagnostics; exact same 3 identities",
+    "full_typecheck_i4_regressions": 0,
+    "diff_check": "PASS",
+    "forbidden_shadow_import_scan": "CLEAN",
+    "working_tree_after_witness": "CLEAN",
+    "production_data": "NONE",
+    "production_shadow": "NOT ENABLED",
+    "i3_store_called": false,
+    "downstream_representation_authority": "CLOSED"
+  },
+  "canonical_typecheck_debt_reproduced": [
+    "app/wisdom-keepers/sacred-texts/page.tsx:207 TS2322",
+    "components/focus/InboxTriage.tsx:131 TS2322",
+    "components/focus/NextStepBuilder.tsx:167 TS2322"
+  ],
+  "parallel_candidate_custody": {
+    "local_head": "19ee4fad0a40a723f8c76900a0113db96640de23",
+    "adopted": false,
+    "reason": "Parallel local candidate introduces a new I4 database migration/telemetry store, which exceeds the current authorization prohibiting schema/migration changes beyond canonical I3.",
+    "mutation_performed": false
+  },
+  "artifacts": [
+    "app/api/now-what/interview/route.ts",
+    "lib/ain/epistemic-join/shadow/feature.ts",
+    "lib/ain/epistemic-join/shadow/nowWhatCell.ts",
+    "tests/constitutional/epistemic-join/i4-shadow-matrix.ts",
+    "docs/programme/JARVIS-KP-01_I4_INTEGRATION_SHADOW_2026-09-21.md",
+    "docs/programme/JARVIS-KP-01_I4_WORK_UNIT_2026-09-21.json",
+    "docs/programme/evidence/JARVIS-KP-01/I4/PROPOSAL_SEAM_CENSUS_2026-09-21.md",
+    "docs/programme/evidence/JARVIS-KP-01/I4/INTEGRATION_SHADOW_WITNESS_2026-09-21.md"
+  ],
+  "prohibited_authority_preserved": [
+    "I3 persistence activation",
+    "production persistence",
+    "production shadow",
+    "MAIA response influence",
+    "prompt/context changes",
+    "Member Memory mutation",
+    "Wisdom Graph semantic edges",
+    "Relational Practice Ledger semantic claims",
+    "Living Constellation semantic lines",
+    "automatic adoption",
+    "standing promotion",
+    "routing changes",
+    "provider/model changes",
+    "schema/migration changes",
+    "production data reads/writes",
+    "I5",
+    "deployment"
+  ],
+  "disposition": "REAL APPLICATION PROPOSAL CAN BE EVALUATED THROUGH CANONICAL I2 IN DEFAULT-OFF SHADOW WHILE BEHAVIORALLY INERT, WITHOUT I3 PERSISTENCE OR REPRESENTATION AUTHORITY",
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_EXACT_I4_CANDIDATE"
+}
