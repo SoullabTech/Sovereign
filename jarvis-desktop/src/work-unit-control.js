@@ -197,6 +197,9 @@ function canonicalQwenOpenCodeV2Env(sourceEnv, runtimeRoot, binding) {
   env.HOME = isolatedHome;
   env.XDG_CONFIG_HOME = isolatedConfig;
   env.XDG_DATA_HOME = isolatedData;
+  // Cache is intentionally shared for already-installed provider/package reuse.
+  // It is not a configuration authority: HOME/config/data are private, project
+  // discovery is disabled below, and explicit inline config owns provider/agent law.
   env.XDG_CACHE_HOME = sourceEnv.XDG_CACHE_HOME
     || path.join(sourceEnv.HOME || os.homedir(), '.cache');
 
@@ -207,6 +210,9 @@ function canonicalQwenOpenCodeV2Env(sourceEnv, runtimeRoot, binding) {
   delete env.OPENCODE_CONFIG;
   delete env.OPENCODE_CONFIG_DIR;
   delete env.OPENCODE_CLI_CONFIG_CONTENT;
+  // server-process.ts maps these to config.project=false. That kill switch is
+  // safe here because jarvis-readonly is supplied below through the single inline
+  // OPENCODE_CONFIG_CONTENT channel rather than project/ancestor discovery.
   env.OPENCODE_CONFIG_PROJECT_DISABLE = '1';
   env.OPENCODE_DISABLE_PROJECT_CONFIG = '1';
   env.OPENCODE_DISABLE_MODELS_FETCH = '1';
@@ -746,32 +752,23 @@ async function executeCanonicalResolvedProvider(
         inlineEvidence: true,
         workspace: sandbox.workspace,
       });
-      const fetchImpl = opts.fetch || globalThis.fetch;
-      if (typeof fetchImpl !== 'function') throw new Error('FETCH_RUNTIME_UNAVAILABLE');
-      const response = await fetchImpl('http://127.0.0.1:11434/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'jarvis-qwen3-coder:65k',
-          prompt,
-          stream: false,
-          keep_alive: '30m',
-          options: { num_ctx: 65536 },
-        }),
-        signal: AbortSignal.timeout(timeout),
+      const localWorker = opts.localWorkerRun
+        ? { run: opts.localWorkerRun }
+        : await importBound(root, 'scripts/builder/jarvis-local-worker.mjs');
+      const native = await localWorker.run({
+        prompt,
+        model: 'jarvis-qwen3-coder:65k',
+        host: 'http://127.0.0.1:11434',
+        timeoutMs: timeout,
+        temperature: 0,
       });
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(
-          'OLLAMA_DIRECT_HTTP_' + response.status + ':'
-          + String(body?.error || 'request failed').slice(0, 500),
-        );
-      }
       run = {
-        exit_code: 0,
+        exit_code: native?.ok === true ? 0 : 1,
         signal: null,
-        stdout: String(body?.response || '').slice(-MAX_LOG_CHARS),
-        stderr: '',
+        stdout: String(native?.output || '').slice(-MAX_LOG_CHARS),
+        stderr: native?.ok === true
+          ? ''
+          : `${String(native?.failure_class || 'WORKER_EXECUTION_FAILED')}: ${String(native?.error || 'local worker failed')}`.slice(-MAX_LOG_CHARS),
       };
     } else if (resolved.execution_adapter === 'opencode') {
       const canonicalQwenV2 = binding.provider_id === 'qwen-local'

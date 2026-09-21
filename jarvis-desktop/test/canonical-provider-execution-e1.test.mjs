@@ -393,7 +393,7 @@ test('legacy R5B/run-provider surfaces still refuse canonical W0.v2 and cannot i
 
 
 
-test('canonical Qwen direct launch inlines only bounded evidence and uses the JARVIS 65K Ollama model', async () => {
+test('canonical Qwen direct launch reuses Unit 9 native worker with bounded evidence and JARVIS 65K identity', async () => {
   const { home } = tempEnv();
   let seen = null;
   try {
@@ -429,14 +429,18 @@ test('canonical Qwen direct launch inlines only bounded evidence and uses the JA
         sourceEnv: { ...process.env, AIN_DELEGATION_HOME: home },
       },
       {
-        fetch: async (url, req) => {
-          seen = { url, req, body: JSON.parse(req.body) };
+        localWorkerRun: async (args) => {
+          seen = args;
           return {
             ok: true,
-            status: 200,
-            async json() {
-              return { model: 'jarvis-qwen3-coder:65k', response: 'SYNTHETIC_DIRECT_QWEN_OK' };
-            },
+            transport: 'ollama-native',
+            model: 'jarvis-qwen3-coder:65k',
+            output: 'SYNTHETIC_DIRECT_QWEN_OK',
+            duration_s: 0,
+            prompt_eval_count: 10,
+            eval_count: 2,
+            done_reason: 'stop',
+            failure_class: null,
           };
         },
       },
@@ -447,14 +451,13 @@ test('canonical Qwen direct launch inlines only bounded evidence and uses the JA
     assert.equal(out.run.exit_code, 0);
     assert.equal(out.run.stdout, 'SYNTHETIC_DIRECT_QWEN_OK');
     assert.ok(seen);
-    assert.equal(seen.url, 'http://127.0.0.1:11434/api/generate');
-    assert.equal(seen.body.model, 'jarvis-qwen3-coder:65k');
-    assert.equal(seen.body.stream, false);
-    assert.equal(seen.body.keep_alive, '30m');
-    assert.deepEqual(seen.body.options, { num_ctx: 65536 });
-    assert.match(seen.body.prompt, /=== scripts\/builder\/work-unit-v2\.mjs ===/);
-    assert.match(seen.body.prompt, /createWorkUnitDraftV2/);
-    assert.doesNotMatch(seen.body.prompt, /jarvis-desktop\/src\/work-unit-control\.js/);
+    assert.equal(seen.model, 'jarvis-qwen3-coder:65k');
+    assert.equal(seen.host, 'http://127.0.0.1:11434');
+    assert.equal(seen.temperature, 0);
+    assert.equal(typeof seen.timeoutMs, 'number');
+    assert.match(seen.prompt, /=== scripts\/builder\/work-unit-v2\.mjs ===/);
+    assert.match(seen.prompt, /createWorkUnitDraftV2/);
+    assert.doesNotMatch(seen.prompt, /jarvis-desktop\/src\/work-unit-control\.js/);
   } finally {
     cleanup(home);
   }
