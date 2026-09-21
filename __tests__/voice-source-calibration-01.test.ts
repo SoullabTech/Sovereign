@@ -69,6 +69,11 @@ describe('SOURCE LEVEL-CALIBRATION-01 bounded implementation', () => {
     expect(batch).toContain('grep -ci VoiceKernelHarness');
   });
 
+  it('does not expand idx or phase inside the same local declaration under set -u', () => {
+    expect(batch).toContain('local idx="$1"\n  local phase="$2"\n  local js="$LEDGER/sample-$idx-$phase-processes.json"');
+    expect(batch).not.toContain('local idx="$1" phase="$2" js="$LEDGER/sample-$idx-$phase-processes.json"');
+  });
+
   it('passes both Python self-tests', () => {
     expect(() => execFileSync('python3', ['scripts/witness/k00-source-calibration-fixture.py', '--selftest'], { stdio: 'pipe' })).not.toThrow();
     expect(() => execFileSync('python3', ['scripts/witness/k00-source-calibration.py', '--selftest'], { stdio: 'pipe' })).not.toThrow();
