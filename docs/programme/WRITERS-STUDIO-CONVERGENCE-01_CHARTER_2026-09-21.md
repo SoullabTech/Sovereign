@@ -261,3 +261,111 @@ product-capability lane before the spine has been walked.
 
 > ⭐ The design question is answered. What remains is six steps, two constitutional objects, and a
 > surface over substrate that mostly already exists.
+
+---
+
+# 8 · AMENDMENT 1 — L6 becomes three facets (founder, 2026-09-21)
+
+⭐ **Founder amendment to a frozen law**, taken as a named act rather than an edit. The original L6
+text is preserved in §1 and is **SUPERSEDED AS CURRENT LAW**, ⛔ not deleted.
+
+## 8.1 What changed
+
+L6 as frozen named **two** modes — Writer and Pro. The founder names **three facets**:
+
+1. a writer who needs the most help and is not a professional writer
+2. a writer who wants to **learn**
+3. full professional level
+
+⭐ The amendment is right, and the reason is worth stating: two modes assumed the only axis was
+*vocabulary*. There are two axes, and the second one is **pedagogy** — a writer may want ordinary
+language *and* want to understand the craft behind what MAIA notices. That is a real and distinct
+need, and it was not expressible in a two-mode split.
+
+## 8.2 L6, amended
+
+> **L6 (AMENDED).** Three facets address **one Commission layer**. A facet governs **register and
+> pedagogy** — how much MAIA explains, and in whose vocabulary.
+>
+> ⛔ A facet **never** governs what MAIA reads, what she concludes, what is reachable, or how much
+> of the Work she writes.
+
+| Facet | What MAIA does |
+|---|---|
+| **F1 · Plain** | Ordinary language. MAIA says what she notices and what may help, and explains what she means without craft vocabulary. |
+| **F2 · Teaching** | F1, plus the craft reasoning behind the observation — offered, ⛔ never imposed. |
+| **F3 · Professional** | Editorial vocabulary, lenses, evidence, coverage, scope, rationale, provenance. |
+
+### The riders, each load-bearing
+
+**L6a · Facet parity — ⭐ testable, and the release test for this amendment.**
+All three facets, same intent, same Work → **the same reading, the same observations, the same
+reachability.** Only register and explanation differ. ⛔ If a facet can change what MAIA finds,
+three products have been built and the amendment has failed exactly where the original law
+succeeded.
+
+**L6b · ⛔ Authorship is facet-invariant.**
+Facets differ in how much MAIA **explains**, ⛔ never in how much MAIA **writes**. ⭐ This is the
+sharpest hazard in the amendment: a facet built for *"needs the most help"* drifts naturally toward
+*MAIA does more of it*, and that is precisely the population for whom dependency risk is highest.
+The Sovereignty Invariant check applies directly — *does this increase user agency? does it reduce
+the system's psychological centrality over time?* ⛔ No facet grants MAIA more authorship of the
+member's prose. The proposal chain, the authorization, and `Use it · Change it · Talk about it ·
+Undo` are **identical in all three**.
+
+**L6c · ⛔ A facet is never assigned.**
+Member-declared under **L7** (observe → ask → **member declares** → record). ⛔ MAIA never infers,
+assigns, or silently adjusts a facet. ⭐ A facet is a judgment about *the writer*, not about the
+work — MAIA assigning one would be **MAIA grading the writer**, which is more invasive than
+anything this lane has otherwise contemplated. Same family as FR-06 and D-003.
+
+**L6d · Changeable without ceremony, and per-observation.**
+⛔ Nobody is one kind of writer permanently. A professional novelist writing a first memoir may want
+F2. A writer may be F1 about structure and F3 about voice. ⛔ A facet is a **dial, not an identity**,
+and it is never sticky in a way the writer cannot reverse in one gesture.
+
+**L6e · ⛔ No self-classification at the door.**
+⛔ No threshold question asks a writer to rank their own competence. *"I need the most help"* is a
+sentence almost nobody will click, and asking for it is the questionnaire-at-the-door failure the
+founder already refused for the Elemental opening. ⭐ The facet names **what MAIA does**, never
+**who the writer is** — which is also why the table above is written in MAIA's verbs.
+
+## 8.3 ⭐ Recommended implementation — facets as depth, not as a selector
+
+⭐ **Recommended, ⛔ not ruled.** The three facets can be delivered **without a mode selector at
+all**, which satisfies L6e structurally rather than by careful wording.
+
+Every observation already has one shape under L4:
+
+```
+   What I'm noticing.              ← all facets
+   What I think may help.          ← all facets
+   What do you think?              ← all facets
+   ▸ Why this matters              ← F2 expands this by default
+   ▸ Editorial detail              ← F3 expands this by default
+```
+
+⭐ One answer. One reading. The facet is simply **which disclosures are open by default** — so:
+
+- ⛔ nobody self-classifies; the writer pulls depth and MAIA remembers the pull
+- ⭐ **L6a is satisfied by construction** — there is only one reading to present, so no facet can
+  change what was found
+- ⭐ L6d is free — the dial moves per observation, because each disclosure is per observation
+- ⭐ L7 is honoured in its natural form: MAIA **observes** the pull, **asks** (*"would you like me
+  to explain the craft as we go?"*), the **member declares**, the system **records**
+- ⛔ and F1 is not a reduced product: it is the full observation with the machinery closed
+
+⚠️ The alternative — three named modes chosen up front — is buildable and is the founder's call.
+⛔ If taken, L6e still binds: the labels must name MAIA's behaviour, never the writer's level.
+
+## 8.4 Standing of this amendment
+
+**RATIFIED** L6 (amended) · L6a–L6e.
+**⛔ NOT RULED** — the §8.3 implementation shape (depth-by-default vs named modes).
+**Execution order impact**: step **5** (Commission layer) now carries L6a as an acceptance
+obligation; the facet parity test joins the §6.4 defeat-candidate table as: *a facet that changes
+what MAIA finds.*
+⛔ Steps 2–8 remain **NOT STARTED**. ⛔ Production untouched.
+
+> ⭐ Two axes, not one: **vocabulary** and **pedagogy**. Three facets over one reading. The writer
+> chooses how much MAIA explains — ⛔ never how much MAIA writes.
