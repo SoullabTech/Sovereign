@@ -9,7 +9,7 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
 
   it('pins the exact bounded implementation candidate', () => {
     for (const src of [preflight, run]) {
-      expect(src).toContain('SHA=89022e8f021b8fb8217eb09c9e7caef94ffce52f');
+      expect(src).toContain('SHA=858ee4948fd5e4f7a65dab156004bb863ad8ae66');
       expect(src).toContain('SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8');
     }
   });
@@ -31,6 +31,8 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
     expect(preflight).not.toContain('afplay -v');
     expect(preflight).toContain('K00_CAL_DISTANCE_CM');
     expect(preflight).toContain('geometry-record.txt');
+    expect(preflight).toContain('git fetch origin feature/voice-2026-record-of-record-20260916');
+    expect(preflight).toContain('git merge-base --is-ancestor "$SHA" FETCH_HEAD');
     expect(preflight).not.toContain('sort -z');
     expect(preflight).not.toContain('xargs -0');
   });
