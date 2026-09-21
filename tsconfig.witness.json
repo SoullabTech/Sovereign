@@ -1,0 +1,5 @@
+{
+  "//": "Witness-only. Next compiles jsx:preserve with the automatic runtime itself; a standalone tsx run has no such step, so a real component would fail on a missing React global. ⛔ Changes no build and no gate — it exists so a witness can render the SHIPPED component rather than a copy of it.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "jsx": "react-jsx" }
+}
