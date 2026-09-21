@@ -49,7 +49,7 @@ try {
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("13 passed · 0 failed");
+  console.log("14 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
