@@ -43,11 +43,14 @@ try {
   assert.match(prompt, /Never emit a backtick character anywhere in PATCH output/);
   assert.match(prompt, /every identifier you add is already in scope or is imported/);
   assert.match(prompt, /follow that precedent exactly/);
+  assert.match(prompt, /Do not emit an index line/);
+  assert.match(prompt, /Hunk ranges must never overlap/);
+  assert.match(prompt, /diff --git a\/example.txt b\/example.txt/);
   assert.match(prompt, /GOVERNANCE_GATE:/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("11 passed · 0 failed");
+  console.log("14 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

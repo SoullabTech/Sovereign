@@ -142,6 +142,48 @@ check("tracked symlink mode is refused before git apply", () => {
   rmSync(tmp, { recursive: true, force: true });
 });
 
+console.log("\n=== NPA2c: diff bookkeeping is normalized without changing model hunks ===");
+check("wrong index metadata and stale hunk counts are stripped/recounted", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-recount-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  execFileSync("git", ["init", "-q"], { cwd: repo });
+  execFileSync("git", ["config", "user.name", "Proof"], { cwd: repo });
+  execFileSync("git", ["config", "user.email", "proof@local.invalid"], { cwd: repo });
+  writeFileSync(path.join(repo, "allowed.txt"), "before\nkeep\n");
+  execFileSync("git", ["add", "."], { cwd: repo });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
+
+  const candidate = [
+    "diff --git a/allowed.txt b/allowed.txt",
+    "index deadbee..c0ffee0 100755",
+    "--- a/allowed.txt",
+    "+++ b/allowed.txt",
+    "@@ -1,99 +1,99 @@",
+    "-before",
+    "+after",
+    " keep",
+    "",
+  ].join("\n");
+
+  const result = applyNativePatch({
+    packet: packet(["allowed.txt"]),
+    patchText: candidate,
+    worktree: repo,
+    home,
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "after\nkeep\n");
+  assert.match(result.normalized_patch_digest, /^sha256:[0-9a-f]{64}$/);
+  const events = readFileSync(ledgerPath("native-patch-proof", { home }), "utf8")
+    .trim().split("\n").map(JSON.parse);
+  assert.equal(events[0].normalization, "strip-index-metadata+git-recount");
+  assert.equal(events[1].normalization, "strip-index-metadata+git-recount");
+  rmSync(tmp, { recursive: true, force: true });
+});
+
 console.log("\n=== NPA3: authorized patch checks then applies ===");
 check("authorized text patch is checked, applied, scoped, and evidenced", () => {
   const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-apply-"));

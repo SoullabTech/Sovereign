@@ -102,6 +102,18 @@ export function pathAllowed(file, allowedFiles = []) {
     && allowedFiles.some((pattern) => globRegex(pattern).test(p));
 }
 
+/**
+ * Strip only untrusted diff metadata that JARVIS can derive independently.
+ * Hunk contents and all path headers remain byte-for-byte model output.
+ */
+export function normalizePatchForGit(patchText) {
+  return String(patchText ?? "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .filter((line) => !line.startsWith("index "))
+    .join("\n");
+}
+
 export function inspectPatch(patchText, allowedFiles = []) {
   const patch = String(patchText ?? "");
   if (!patch.trim()) return refusal("PATCH_EMPTY");
@@ -234,6 +246,8 @@ export function applyNativePatch({
   const workUnitId = String(packet?.work_unit_id || "");
   const patch = String(patchText ?? "");
   const inspected = inspectPatch(patch, packet?.allowed_files ?? []);
+  const normalizedPatch = inspected.ok ? normalizePatchForGit(patch) : patch;
+  const normalizedPatchDigest = inspected.ok ? digest(normalizedPatch) : null;
 
   const recordRefusal = (code, detail = null, extra = {}) => {
     const base = eventBase(workUnitId, inspected.ok ? inspected : {
@@ -298,11 +312,11 @@ export function applyNativePatch({
 
   const tmp = mkdtempSync(path.join(os.tmpdir(), "jarvis-native-patch-"));
   const patchFile = path.join(tmp, "candidate.patch");
-  writeFileSync(patchFile, patch, { encoding: "utf8", mode: 0o600 });
+  writeFileSync(patchFile, normalizedPatch, { encoding: "utf8", mode: 0o600 });
 
   try {
     try {
-      runGit(worktree, ["apply", "--check", "--whitespace=nowarn", patchFile]);
+      runGit(worktree, ["apply", "--check", "--recount", "--whitespace=nowarn", patchFile]);
     } catch (error) {
       return recordRefusal(
         "GIT_APPLY_CHECK_FAILED",
@@ -315,13 +329,15 @@ export function applyNativePatch({
       ...eventBase(workUnitId, inspected, "ADMITTED"),
       code: "PATCH_ADMITTED",
       applied: false,
+      normalized_patch_digest: normalizedPatchDigest,
+      normalization: "strip-index-metadata+git-recount",
       git_check_invoked: true,
       git_apply_invoked: false,
     };
     const evidence_path = appendEvent(workUnitId, admitted, { home });
 
     try {
-      runGit(worktree, ["apply", "--whitespace=nowarn", patchFile]);
+      runGit(worktree, ["apply", "--recount", "--whitespace=nowarn", patchFile]);
     } catch (error) {
       const event = {
         ...eventBase(workUnitId, inspected, "APPLY_FAILED"),
@@ -362,6 +378,8 @@ export function applyNativePatch({
       ...eventBase(workUnitId, inspected, "APPLIED"),
       code: "PATCH_APPLIED",
       applied: true,
+      normalized_patch_digest: normalizedPatchDigest,
+      normalization: "strip-index-metadata+git-recount",
       git_check_invoked: true,
       git_apply_invoked: true,
       changed_paths: changed,
@@ -372,6 +390,7 @@ export function applyNativePatch({
       status: "APPLIED",
       code: applied.code,
       patch_digest: inspected.patch_digest,
+      normalized_patch_digest: normalizedPatchDigest,
       patch_paths: inspected.patch_paths,
       changed_paths: changed,
       evidence_path,
