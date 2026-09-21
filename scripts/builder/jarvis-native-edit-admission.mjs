@@ -3,13 +3,14 @@
  * JARVIS-NATIVE-EDIT-ADMISSION-01
  *
  * Serialization adapter for the toolless local coding lane.
- * The worker emits exact old_text -> new_text edits, never filesystem actions.
+ * The worker emits exact old_text -> new_text edits or explicitly-authorized
+ * new text-file creations, never filesystem actions.
  * This module validates the closed edit grammar against the SHA-bound source,
  * deterministically renders a git patch, and delegates ALL mutation authority to
  * JARVIS-NATIVE-PATCH-ADMISSION-01.
  */
 import {
-  appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync,
+  appendFileSync, chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync,
   readFileSync, rmSync, writeFileSync,
 } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -58,6 +59,36 @@ function countOccurrences(haystack, needle) {
 function exactKeys(value, allowed) {
   const keys = Object.keys(value || {}).sort();
   return keys.length === allowed.length && keys.every((key, i) => key === [...allowed].sort()[i]);
+}
+function explicitlyAllowedPath(file, allowedFiles = []) {
+  const target = normalizePath(file);
+  return Array.isArray(allowedFiles)
+    && allowedFiles.some((entry) => normalizePath(entry) === target);
+}
+function createParentRefusal(worktree, file) {
+  const parentRel = path.dirname(file);
+  const segments = parentRel === "." ? [] : parentRel.split("/").filter(Boolean);
+  let cursor = worktree;
+  for (const segment of segments) {
+    cursor = path.join(cursor, segment);
+    let stat;
+    try { stat = lstatSync(cursor); }
+    catch (error) {
+      if (error?.code === "ENOENT") {
+        return refusal("CREATE_PARENT_NOT_FOUND", { path: file, parent: parentRel });
+      }
+      return refusal("CREATE_PARENT_UNREADABLE", {
+        path: file, parent: parentRel, error: String(error?.message || error),
+      });
+    }
+    if (stat.isSymbolicLink()) {
+      return refusal("CREATE_PARENT_SYMLINK", { path: file, parent: path.relative(worktree, cursor) });
+    }
+    if (!stat.isDirectory()) {
+      return refusal("CREATE_PARENT_NOT_DIRECTORY", { path: file, parent: path.relative(worktree, cursor) });
+    }
+  }
+  return null;
 }
 
 /**
@@ -173,18 +204,35 @@ export function parseNativeEditOutput(outputText, allowedFiles = []) {
   const edits = [];
   for (let index = 0; index < body.length; index += 1) {
     const edit = body[index];
-    if (!edit || typeof edit !== "object" || Array.isArray(edit)
-      || !exactKeys(edit, ["new_text", "old_text", "path"])) {
+    if (!edit || typeof edit !== "object" || Array.isArray(edit)) {
       return refusal("EDIT_OBJECT_CLOSED", { index });
     }
+
+    const isReplace = exactKeys(edit, ["new_text", "old_text", "path"]);
+    const isCreate = exactKeys(edit, ["new_text", "path"]);
+    if (!isReplace && !isCreate) return refusal("EDIT_OBJECT_CLOSED", { index });
+
     const file = normalizePath(edit.path);
     if (unsafePath(file)) return refusal("EDIT_PATH_UNSAFE", { index, path: file });
     if (!pathAllowed(file, allowedFiles)) return refusal("EDIT_PATH_NOT_AUTHORIZED", { index, path: file });
-    if (typeof edit.old_text !== "string" || !edit.old_text.length || typeof edit.new_text !== "string") {
+    if (typeof edit.new_text !== "string" || edit.new_text.includes("\u0000")) {
+      return refusal("EDIT_TEXT_INVALID", { index, path: file });
+    }
+
+    if (isCreate) {
+      if (!explicitlyAllowedPath(file, allowedFiles)) {
+        return refusal("CREATE_PATH_EXPLICIT_AUTHORIZATION_REQUIRED", { index, path: file });
+      }
+      if (!edit.new_text.length) return refusal("CREATE_TEXT_EMPTY", { index, path: file });
+      edits.push({ kind: "create", path: file, new_text: edit.new_text });
+      continue;
+    }
+
+    if (typeof edit.old_text !== "string" || !edit.old_text.length || edit.old_text.includes("\u0000")) {
       return refusal("EDIT_TEXT_INVALID", { index, path: file });
     }
     if (edit.old_text === edit.new_text) return refusal("EDIT_NO_EFFECT", { index, path: file });
-    edits.push({ path: file, old_text: edit.old_text, new_text: edit.new_text });
+    edits.push({ kind: "replace", path: file, old_text: edit.old_text, new_text: edit.new_text });
   }
   return { ok: true, status: "STRUCTURALLY_ADMITTED", raw, edits, output_digest: digest(raw) };
 }
@@ -201,6 +249,25 @@ function renderFilePatch(tmp, file, before, after, mode) {
   chmodSync(newFile, perms);
   try {
     execFileSync("git", ["diff", "--no-index", "--no-prefix", "--binary", "--no-renames", "--", `a/${file}`, `b/${file}`], {
+      cwd: tmp, encoding: "utf8", maxBuffer: 4 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"],
+    });
+    return "";
+  } catch (error) {
+    if (error?.status !== 1) throw error;
+    return String(error.stdout || "");
+  }
+}
+
+function renderCreateFilePatch(tmp, file, content) {
+  const newFile = path.join(tmp, file);
+  mkdirSync(path.dirname(newFile), { recursive: true });
+  writeFileSync(newFile, content, "utf8");
+  chmodSync(newFile, 0o644);
+  try {
+    execFileSync("git", [
+      "diff", "--no-index", "--src-prefix=a/", "--dst-prefix=b/",
+      "--binary", "--no-renames", "--", "/dev/null", file,
+    ], {
       cwd: tmp, encoding: "utf8", maxBuffer: 4 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"],
     });
     return "";
@@ -254,6 +321,34 @@ export function applyNativeEdits({
   const states = new Map();
   for (let index = 0; index < parsed.edits.length; index += 1) {
     const edit = parsed.edits[index];
+
+    if (edit.kind === "create") {
+      if (states.has(edit.path)) {
+        return recordRefusal("CREATE_PATH_DUPLICATED_OR_MIXED", { index, path: edit.path });
+      }
+      let tracked;
+      try { tracked = String(runGit(worktree, ["ls-tree", authorizedHead, "--", edit.path]) || "").trim(); }
+      catch (error) { return recordRefusal("CREATE_TARGET_UNREADABLE", { index, path: edit.path, error: String(error?.message || error) }); }
+      if (tracked) return recordRefusal("CREATE_TARGET_ALREADY_TRACKED", { index, path: edit.path });
+
+      const target = path.join(worktree, edit.path);
+      try {
+        lstatSync(target);
+        return recordRefusal("CREATE_TARGET_EXISTS", { index, path: edit.path });
+      } catch (error) {
+        if (error?.code !== "ENOENT") {
+          return recordRefusal("CREATE_TARGET_UNREADABLE", { index, path: edit.path, error: String(error?.message || error) });
+        }
+      }
+      const parentFailure = createParentRefusal(worktree, edit.path);
+      if (parentFailure) return recordRefusal(parentFailure.code, { index, ...parentFailure.detail });
+      states.set(edit.path, { kind: "create", mode: "100644", before: null, after: edit.new_text });
+      continue;
+    }
+
+    if (states.has(edit.path) && states.get(edit.path).kind !== "replace") {
+      return recordRefusal("EDIT_KIND_CONFLICT", { index, path: edit.path });
+    }
     if (!states.has(edit.path)) {
       let tracked;
       try { tracked = String(runGit(worktree, ["ls-tree", authorizedHead, "--", edit.path]) || "").trim(); }
@@ -265,7 +360,7 @@ export function applyNativeEdits({
       try { content = String(runGit(worktree, ["show", `${authorizedHead}:${edit.path}`]) || ""); }
       catch (error) { return recordRefusal("EDIT_TARGET_UNREADABLE", { index, path: edit.path, error: String(error?.message || error) }); }
       if (content.includes("\u0000")) return recordRefusal("EDIT_BINARY_UNSUPPORTED", { index, path: edit.path });
-      states.set(edit.path, { mode, before: content, after: content });
+      states.set(edit.path, { kind: "replace", mode, before: content, after: content });
     }
     const state = states.get(edit.path);
     const occurrences = countOccurrences(state.after, edit.old_text);
@@ -277,13 +372,20 @@ export function applyNativeEdits({
   try {
     let patchText = "";
     for (const [file, state] of [...states.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+      if (state.kind === "create") {
+        patchText += renderCreateFilePatch(tmp, file, state.after);
+        continue;
+      }
       if (state.before === state.after) return recordRefusal("EDIT_FILE_NO_EFFECT", { path: file });
       patchText += renderFilePatch(tmp, file, state.before, state.after, state.mode);
     }
     if (!patchText.startsWith("diff --git ")) return recordRefusal("EDIT_PATCH_RENDER_FAILED");
+    const createCount = [...states.values()].filter((state) => state.kind === "create").length;
     const converted = {
       ...baseEvent, event: "CONVERTED", code: "EDIT_CONVERTED", converted: true,
-      edit_count: parsed.edits.length, paths: [...states.keys()].sort(), patch_digest: digest(patchText),
+      edit_count: parsed.edits.length, create_count: createCount,
+      replace_count: parsed.edits.length - createCount,
+      paths: [...states.keys()].sort(), patch_digest: digest(patchText),
     };
     const edit_evidence_path = appendEvent(workUnitId, converted, { home });
     const result = patchAdmission({ packet, patchText, worktree, home, runGit });
@@ -291,6 +393,8 @@ export function applyNativeEdits({
       ...result,
       input_kind: "EDIT_JSON",
       edit_count: parsed.edits.length,
+      create_count: [...states.values()].filter((state) => state.kind === "create").length,
+      replace_count: [...states.values()].filter((state) => state.kind === "replace").length,
       structured_output_digest: parsed.output_digest,
       generated_patch_digest: digest(patchText),
       edit_evidence_path,
