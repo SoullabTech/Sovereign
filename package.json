@@ -188,7 +188,10 @@
     "matrix:editorial-runtime": "tsx tests/constitutional/editorial-runtime/matrix.ts",
     "matrix:migration-compatibility": "npx tsx tests/constitutional/migration-compatibility/matrix.ts",
     "typecheck:migration-compatibility": "tsc -p tsconfig.migration-compatibility.json",
-    "verify:migration-compatibility-bundle": "bash scripts/verify-migration-compatibility-bundle.sh"
+    "verify:migration-compatibility-bundle": "bash scripts/verify-migration-compatibility-bundle.sh",
+    "matrix:migration-compatibility-gate": "npx tsx tests/constitutional/migration-compatibility-gate/matrix.ts",
+    "typecheck:migration-compatibility-gate": "tsc -p tsconfig.migration-compatibility-gate.json",
+    "verify:migration-compatibility-gate-e2e": "bash scripts/verify-migration-compatibility-gate-e2e.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

@@ -4,13 +4,13 @@
  *
  * Additive law only. The frozen Step 1 core is imported, never edited.
  *
- * This gate answers one narrow question:
- *   May this exact set of production-pending migration files proceed under this
- *   exact admitted review, trace, plan and repository commit?
+ * This gate composes two separate questions:
+ *   1. Does the exact admitted migration review still apply?
+ *   2. Does that SAME admitted review carry a compatibility attestation that
+ *      still applies to the exact old reader, target reader and ordered pending bytes?
  *
- * It does NOT decide whether a migration is semantically correct. It proves that
- * the admitted review is still applicable and that every migration about to run
- * is among the files whose Read event was physically witnessed.
+ * Neither law rescues the other. There is one admitted review and one custody-
+ * witnessed corpus; compatibility has no independent trace input.
  */
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -20,6 +20,7 @@ import {
   type ChangedPath, type CustodyEnv, type CustodyRecord,
 } from "./review-custody-core";
 import { STRICT_COVERAGE, witnessCoverage } from "./review-custody-coverage";
+import { composeMigrationGate } from "./migration-compatibility-gate-core";
 
 class GateRefusal extends Error {
   constructor(readonly code: string, message: string) { super(message); }
@@ -109,8 +110,12 @@ function main(argv: string[]): number {
   const tracePath = need(argv, "trace");
   const repo = path.resolve(need(argv, "repo"));
   const target = git(repo, "rev-parse", `${need(argv, "target")}^{commit}`);
-  const migrations = [...new Set(argAll(argv, "migration").map(normalizeRepoPath))].sort();
+  const oldReader = git(repo, "rev-parse", `${need(argv, "old-reader")}^{commit}`);
+  const migrations = argAll(argv, "migration").map(normalizeRepoPath);
   if (migrations.length === 0) throw new GateRefusal("NO_PENDING_MIGRATIONS", "no pending migration paths supplied");
+  if (new Set(migrations).size !== migrations.length) {
+    throw new GateRefusal("DUPLICATE_PENDING_PATH", "pending migration arguments contain a duplicate path");
+  }
 
   const record = readJson<CustodyRecord>(recordPath);
   if (record.instrument !== "review-custody/v1") {
@@ -161,21 +166,64 @@ function main(argv: string[]): number {
     throw new GateRefusal("PLAN_NOT_WITNESSED",
       `the admitted review did not physically witness a Read of its bound plan: ${planPath}`);
   }
+  const observedPending: { path: string; sha256: string }[] = [];
   for (const migration of migrations) {
     if (!migration.startsWith("database/migrations/") || !migration.endsWith(".sql")) {
       throw new GateRefusal("BAD_MIGRATION_PATH", `outside governed migration surface: ${migration}`);
     }
-    if (gitBlob(repo, target, migration) === null) {
+    const bytes = gitBlob(repo, target, migration);
+    if (bytes === null) {
       throw new GateRefusal("MIGRATION_NOT_IN_TARGET", `${migration} does not exist at target ${target}`);
     }
     if (!covered.has(migration)) {
       throw new GateRefusal("PENDING_MIGRATION_NOT_WITNESSED",
         `production would execute ${migration}, but the admitted review carries no witnessing Read event for it`);
     }
+    observedPending.push({ path: migration, sha256: sha256(bytes) });
   }
 
-  console.log("MIGRATION REVIEW GATE APPLIES");
+  // DEPLOYMENT-SAFETY-03 / STEP 2B. Compatibility lives inside the exact
+  // admitted review bytes above. It receives this SAME custody-witnessed corpus;
+  // there is no second trace parameter to substitute.
+  const compatibilityRaw = review["migration_compatibility"];
+  const oldReaderEvidence: { repo_path: string; sha256: string }[] = [];
+  if (compatibilityRaw && typeof compatibilityRaw === "object" && !Array.isArray(compatibilityRaw)) {
+    const rawEvidence = (compatibilityRaw as Record<string, unknown>)["old_reader_evidence"];
+    if (Array.isArray(rawEvidence)) {
+      for (const item of rawEvidence) {
+        if (!item || typeof item !== "object") continue;
+        const rawPath = (item as Record<string, unknown>)["repo_path"];
+        if (typeof rawPath !== "string" || rawPath === "") continue;
+        const repoPath = normalizeRepoPath(rawPath);
+        const bytes = gitBlob(repo, oldReader, repoPath);
+        if (bytes !== null) oldReaderEvidence.push({ repo_path: repoPath, sha256: sha256(bytes) });
+      }
+    }
+  }
+
+  const composition = composeMigrationGate(
+    {
+      applies: true,
+      targetReaderCommit: target,
+      pending: observedPending,
+      witnessedFiles: witnessed.files,
+    },
+    compatibilityRaw,
+    "admitted_review",
+    {
+      oldReaderCommit: oldReader,
+      targetReaderCommit: target,
+      pending: observedPending,
+      oldReaderEvidence,
+    },
+  );
+  if (composition.kind === "refused") {
+    throw new GateRefusal(composition.code, composition.reason);
+  }
+
+  console.log("MIGRATION REVIEW + COMPATIBILITY GATE APPLIES");
   console.log(`  target       ${target}`);
+  console.log(`  old reader   ${oldReader}`);
   console.log(`  reviewer     ${approval.reviewer}`);
   console.log(`  review sha   ${approval.review_sha256.slice(0, 16)}…`);
   console.log(`  trace id     ${traceId}`);

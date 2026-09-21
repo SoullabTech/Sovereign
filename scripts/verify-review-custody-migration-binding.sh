@@ -30,6 +30,18 @@ run_case(){ # pending, evidence(yes/no), gate_rc
     MAIA_BUILD_CONTEXT="$PROJECT_DIR"
     DEPLOY_CTX_FULL_SHA="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     collect_pending_production_migrations(){ printf "%s" "$PENDING"; }
+    docker(){
+      if [ "$1" = exec ]; then printf "111111111\n"; return 0; fi
+      return 1
+    }
+    git(){
+      if [ "$1" = -C ] && [ "$3" = rev-parse ]; then
+        case "$4" in
+          111111111*) printf "1111111111111111111111111111111111111111\n"; return 0 ;;
+        esac
+      fi
+      command git "$@"
+    }
     if [ "$EVIDENCE" = yes ]; then
       export REVIEW_CUSTODY_RECORD=/evidence/record.json
       export REVIEW_CUSTODY_REVIEW=/evidence/review.json
@@ -71,6 +83,9 @@ ARGS="$(cat "$TMP/args")"
 case "$ARGS" in *"--migration database/migrations/a.sql"*"--migration database/migrations/b.sql"*)
   ok "complete pending set is passed to the custody gate" ;;
   *) bad "pending-set forwarding incomplete: $ARGS" ;; esac
+case "$ARGS" in *"--old-reader 1111111111111111111111111111111111111111"*)
+  ok "exact live old-reader commit is passed to the composed gate" ;;
+  *) bad "old-reader identity missing from gate arguments: $ARGS" ;; esac
 
 python3 - "$DEPLOY" <<'PY'
 import re, sys

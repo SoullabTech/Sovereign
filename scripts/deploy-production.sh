@@ -162,19 +162,34 @@ review_migration_custody_or_abort() {
         return 1
     fi
 
+    # DEPLOYMENT-SAFETY-03 / STEP 2B: compatibility is relational to
+    # the reader that is actually live before any swap. Missing/unresolvable
+    # identity refuses; a guessed old reader would make compatibility meaningless.
+    local old_stamp old_reader
+    old_stamp="$(docker exec maia-sovereign printenv GIT_COMMIT 2>/dev/null || true)"
+    if [ -z "$old_stamp" ]; then
+        log_error "⛔ MIGRATION-COMPATIBILITY cannot identify the currently running reader."
+        return 1
+    fi
+    old_reader="$(git -C "$PROJECT_DIR" rev-parse "$old_stamp^{commit}" 2>/dev/null || true)"
+    if [ -z "$old_reader" ]; then
+        log_error "⛔ Running reader stamp does not resolve to a repository commit: $old_stamp"
+        return 1
+    fi
+
     local args=(--record "$record" --review "$review" --trace "$trace"
-                --repo "$PROJECT_DIR" --target "$target")
+                --repo "$PROJECT_DIR" --target "$target" --old-reader "$old_reader")
     local m
     while IFS= read -r m; do
         [ -n "$m" ] && args+=(--migration "$m")
     done <<< "$pending"
 
-    log_info "REVIEW-CUSTODY: checking bound review for production-pending migrations..."
+    log_info "REVIEW-CUSTODY + MIGRATION-COMPATIBILITY: checking exact pending relation..."
     if ! "$tsx_bin" "$gate" "${args[@]}"; then
-        log_error "⛔ $phase aborted before migration: bound review does not apply."
+        log_error "⛔ $phase aborted before migration: review/compatibility gate does not apply."
         return 1
     fi
-    log_success "Migration review custody applies to the exact pending set"
+    log_success "Migration review custody + old-reader compatibility apply to the exact pending set"
 }
 
 run_migrations_or_abort() {
