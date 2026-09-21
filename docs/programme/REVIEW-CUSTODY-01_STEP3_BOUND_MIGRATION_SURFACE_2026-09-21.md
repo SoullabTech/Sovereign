@@ -144,3 +144,51 @@ a separate Step 3 host-conformance witness proves the new classification.
 Because the repository state changes to make this repair, the first review trace
 will not be reused for admission. Step 3C must be rerun against the repaired exact
 SHA with a newly bound record and a fresh reviewer session.
+
+## Step 3C observed result — HOLD
+
+Fresh review target:
+
+`86e4249870bf9464737a63f9a2974d8d8c0c7659`
+
+The separate reviewer independently read the deployment script as well as the
+migration and relevant voice preference source. Its exact structured result is
+preserved in `STEP3C_REVIEW.json`.
+
+Observed custody chain:
+
+```text
+physical review trace      PASS · 10 attested files witnessed
+admit                       ADMITTED · verdict REVISE · 2 medium · 1 low
+check                       REFUSED [NOT_APPROVED]
+drift witness               NOT REACHED — no approved state exists
+```
+
+The two material review findings are:
+
+1. the migration adds its CHECK constraints without a staged `NOT VALID` /
+   `VALIDATE CONSTRAINT` path, creating a lock/validation risk whose practical
+   severity depends on production table size; and
+2. the repository's current deploy ordering swaps the new reader before running
+   migrations, while the voice preference write path references the new columns
+   without the read path's graceful-degradation behavior, creating a bounded
+   missing-column failure window if this migration were genuinely pending.
+
+The low finding records absence of a companion rollback file.
+
+These are reviewer findings, not production observations. The reviewer explicitly
+had no production ledger, row-count, or runtime timing access.
+
+### Standing
+
+**STEP 3 SUCCESS CONDITION: NOT MET.**
+
+The instrument worked: it did not turn a material review into an approval.
+The authorized drift witness cannot be manufactured because `check` correctly
+refuses `REVISE` before continued-applicability analysis.
+
+No alternate migration will be selected merely to obtain a green result. No
+historical migration bytes, deployment ordering, reader compatibility behavior,
+production schema, merge, or deploy are changed under this Step 3 act.
+
+A new Founder ruling is required to open remediation of the material findings.
