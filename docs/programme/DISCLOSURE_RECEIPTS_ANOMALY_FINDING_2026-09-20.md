@@ -109,7 +109,20 @@ cheap to check.
 1. **What ran the delete**, if it is still knowable. Everything else follows from it.
 2. Whether the same boundary-value condition exists in **production**
    `context_disclosure_receipts` — a read, not a repair, and not taken here.
-3. Whether a writer somewhere emits `writers_studio.ask->maia_developmental`.
+3. ⚠️ **PROVENANCE REMAINS OPEN — and a later search did NOT close it.**
+   On 2026-09-21 the tree was searched for that boundary value. It appears
+   **nowhere in source**; the only literals present are
+   `writers_studio.developmental_ask->maia_cognition` (×2) and
+   `writers_studio.focus->maia_cognition` (×7).
+
+   ⛔ **That absence establishes nothing about where the 45 rows came from.**
+   Source as it stands today cannot testify about code that ran on 2026-09-10:
+   the writer may have been removed since, may live on another branch, or may
+   never have been application code at all. ⭐ *A value's absence from the
+   present tree is evidence about the present tree, not about the past.*
+
+   The remaining question, unchanged:
+   whether a writer somewhere emits `writers_studio.ask->maia_developmental`.
    ⚠️ **Stated at the strength the evidence supports, and no further.** 45 rows
    across ~65 minutes *suggests a repeated automated or systematic writer* — it
    ⛔ does **not** establish a continuously running process, and the actor
