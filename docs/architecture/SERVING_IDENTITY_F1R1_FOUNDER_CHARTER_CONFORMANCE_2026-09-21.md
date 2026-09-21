@@ -2,6 +2,7 @@
 
 **Date:** 2026-09-21
 **Opening canonical:** `4c097b4c81402c62e42613e83ae28180fef46f08`
+**Freshness-reconciled base:** `505ee71da83139de7d2441e6693574f3b1a68c97`
 **Predecessor:** canonical F1 evidence law admitted at `4c097b4c8`
 **Status:** CONTRACT + FALSIFICATION ONLY · NO RUNTIME PRODUCER · NO D2 ADMISSION · NO D1 · NO DISCLOSURE · NO DEPLOYMENT
 
@@ -31,6 +32,10 @@ The governing question is:
 F1R1 does not build runtime producers.
 
 It defines and falsifies the law future producers must obey.
+
+### Freshness reconciliation
+
+After F1R1 opened, canonical advanced by one commit: `505ee71da`, adding only the JARVIS O0 operator constitution files. That delta had zero overlap with F1R1. The candidate was rebased cleanly with no conflict or semantic edit; the executable self-scope baseline is therefore bound to `505ee71da`.
 
 ## 2. Closed D2 input vocabulary
 
