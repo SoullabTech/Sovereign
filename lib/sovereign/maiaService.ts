@@ -22,6 +22,13 @@ import {
 const DEEP_CONSULTATION_APERTURE = 5;
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
+import {
+  degradedNonModelTruth,
+  servedNonModelTruth,
+  unresolvedIntent,
+  unresolvedServingTruth,
+  type LiveServingTruth,
+} from '../ai/liveServingTruth';
 import { renderTurnForCognition, type CanonicalTurn } from '../maia/canonical-turn';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
@@ -599,7 +606,8 @@ export type MaiaResponse = {
   processingProfile?: ProcessingProfile;
   processingTimeMs?: number;
   audio?: Buffer;
-  provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
+  provider?: ProviderMeta;  // 🔮 Legacy served-provider audit field
+  servingTruth?: LiveServingTruth; // R2: routing intent + actual serving outcome
   stateVector?: StateVector;                  // 🌀 State vector reading from this turn
   practiceRecommendation?: PracticeRecommendation;  // 🌿 Practice recommendation from state vector
   metadata?: {
@@ -699,8 +707,16 @@ async function validateAndRepairResponse(
   draftResponse: string,
   meta: Record<string, unknown>,
   processingPath: 'FAST' | 'CORE' | 'DEEP',
-  regenerateFn?: (repairPrompt: string) => Promise<string>
-): Promise<{ response: string; validation: SocraticValidationResult | null; regenerated: boolean }> {
+  regenerateFn?: (repairPrompt: string) => Promise<
+    string | { text: string; provider?: ProviderMeta; servingTruth?: LiveServingTruth }
+  >
+): Promise<{
+  response: string;
+  validation: SocraticValidationResult | null;
+  regenerated: boolean;
+  regeneratedProvider?: ProviderMeta;
+  regeneratedServingTruth?: LiveServingTruth;
+}> {
   try {
     // Extract context for validation
     const atlas = (meta as any).atlasContext as AtlasResult | undefined;
@@ -728,12 +744,21 @@ async function validateAndRepairResponse(
     // If regeneration requested and function provided, attempt repair
     let finalResponse = draftResponse;
     let wasRegenerated = false;
+    let regeneratedProvider: ProviderMeta | undefined;
+    let regeneratedServingTruth: LiveServingTruth | undefined;
 
     if (validation.decision === 'REGENERATE' && validation.repairPrompt && regenerateFn) {
       console.log(`🔧 [Socratic Validator ${processingPath}] Regenerating with repair prompt...`);
 
       try {
-        finalResponse = await regenerateFn(validation.repairPrompt);
+        const regenerated = await regenerateFn(validation.repairPrompt);
+        if (typeof regenerated === 'string') {
+          finalResponse = regenerated;
+        } else {
+          finalResponse = regenerated.text;
+          regeneratedProvider = regenerated.provider;
+          regeneratedServingTruth = regenerated.servingTruth;
+        }
         wasRegenerated = true;
 
         console.log(`✅ [Socratic Validator ${processingPath}] Regeneration complete`);
@@ -775,7 +800,13 @@ async function validateAndRepairResponse(
       }
     })();
 
-    return { response: finalResponse, validation, regenerated: wasRegenerated };
+    return {
+      response: finalResponse,
+      validation,
+      regenerated: wasRegenerated,
+      regeneratedProvider,
+      regeneratedServingTruth,
+    };
   } catch (error) {
     console.error(`❌ [Socratic Validator ${processingPath}] Validation failed:`, error);
     return { response: draftResponse, validation: null, regenerated: false };
@@ -835,7 +866,7 @@ async function fastPathResponse(
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
   allSessionExchanges: readonly DisplacedExchange[] = [],
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; servingTruth?: LiveServingTruth }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
   // 🧬 CONSCIOUSNESS POLICY (lightweight for FAST path)
@@ -1673,7 +1704,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   }
 
   // Use single model call with complete MAIA intelligence stack
-  const { text: response, provider } = await generateText({
+  const { text: response, provider, servingTruth } = await generateText({
     systemPrompt: baseSystemPrompt,
     userInput: contextPrompt,
     meta: {
@@ -1691,7 +1722,11 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate before delivery (FAST path - no regeneration to maintain speed)
-  let { response: validatedResponse } = await validateAndRepairResponse(
+  let {
+    response: validatedResponse,
+    regeneratedProvider,
+    regeneratedServingTruth,
+  } = await validateAndRepairResponse(
     sessionId,
     input,
     response,
@@ -1706,7 +1741,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider };
+  return { response: validatedResponse, provider, servingTruth };
 }
 
 /**
@@ -1725,7 +1760,7 @@ async function corePathResponse(
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
   allSessionExchanges: readonly DisplacedExchange[] = [],
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; servingTruth?: LiveServingTruth }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
 
@@ -2157,7 +2192,11 @@ The current user has not provided their name. Address them as "friend" or "there
     });
   }
 
-  const { text: response, provider: coreProvider } = await generateText({
+  const {
+    text: response,
+    provider: coreProvider,
+    servingTruth: coreServingTruth,
+  } = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
     meta: {
@@ -2196,7 +2235,7 @@ The current user has not provided their name. Address them as "friend" or "there
 
       repairedPrompt = repairedPrompt + '\n\n' + repairPrompt;
 
-      const { text } = await generateText({
+      const regenerated = await generateText({
         systemPrompt: repairedPrompt,
         userInput: input,
         meta: {
@@ -2207,7 +2246,11 @@ The current user has not provided their name. Address them as "friend" or "there
           conversationProfile: conversationContext.profile
         }
       });
-      return text;
+      return {
+        text: regenerated.text,
+        provider: regenerated.provider,
+        servingTruth: regenerated.servingTruth,
+      };
     }
   );
 
@@ -2218,7 +2261,11 @@ The current user has not provided their name. Address them as "friend" or "there
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider: coreProvider };
+  return {
+    response: validatedResponse,
+    provider: regeneratedProvider ?? coreProvider,
+    servingTruth: regeneratedServingTruth ?? coreServingTruth,
+  };
 }
 
 /**
@@ -2236,7 +2283,13 @@ async function deepPathResponse(
   // AIN-CONTEXT-01 · A6 — completed exchanges durably on record for THIS session,
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
-): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta }> {
+): Promise<{
+  response: string;
+  consciousnessData?: any;
+  socraticValidation?: any;
+  provider?: ProviderMeta;
+  servingTruth?: LiveServingTruth;
+}> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
 
   // 🧬 CONSCIOUSNESS POLICY (full depth for DEEP path)
@@ -2679,7 +2732,12 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
   }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate with full regeneration capability
-  const { response: validatedResponse, validation } = await validateAndRepairResponse(
+  const {
+    response: validatedResponse,
+    validation,
+    regeneratedProvider,
+    regeneratedServingTruth,
+  } = await validateAndRepairResponse(
     sessionId,
     input,
     finalResponse,
@@ -2773,7 +2831,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         }
       }
 
-      const { text } = await generateText({
+      const regenerated = await generateText({
         systemPrompt: repairedPrompt + '\n\n' + repairPrompt,
         userInput: input,
         meta: {
@@ -2785,7 +2843,11 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
           consciousnessDepth: 'full'
         }
       });
-      return text;
+      return {
+        text: regenerated.text,
+        provider: regenerated.provider,
+        servingTruth: regenerated.servingTruth,
+      };
     }
   );
 
@@ -2816,12 +2878,17 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     },
     // DEEP path uses consciousnessWrapper which doesn't yet track provider
     // Explicit placeholder for audit completeness (not undefined)
-    provider: {
+    provider: regeneratedProvider ?? {
       provider: 'unknown',
       model: 'consciousness-wrapper',
       mode: 'full',
       reason: 'provider_not_threaded_in_deep_path',
-    } as ProviderMeta
+    } as ProviderMeta,
+    servingTruth: regeneratedServingTruth ?? unresolvedServingTruth({
+      routingContract: 'deep_wrapper',
+      intended: unresolvedIntent('deep_provider_not_threaded'),
+      reason: 'provider_not_threaded_in_deep_path',
+    }),
   };
 }
 
@@ -3112,7 +3179,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             return {
               text,
               processingProfile: 'FAST',
-              processingTimeMs: Date.now() - startTime
+              processingTimeMs: Date.now() - startTime,
+              servingTruth: servedNonModelTruth({
+                routingContract: 'unknown',
+                intended: unresolvedIntent('provider_routing_not_entered'),
+                subsystem: 'field_safety',
+                domain: 'local',
+                reason: 'field_safety_refusal',
+              }),
             };
           }
 
@@ -3419,6 +3493,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     let consciousnessData: any = null;
     // 🔮 Request-local provider tracking (not module-level - safe for serverless concurrency)
     let provider: ProviderMeta | undefined;
+    let servingTruth: LiveServingTruth | undefined;
     // 🧬 RCN tracking
     let rcnResult: MaiaRcnResult | null = null;
 
@@ -3475,6 +3550,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             text: rcnText,
             processingProfile: 'DEEP', // Report as DEEP for client compatibility
             processingTimeMs: Date.now() - startTime,
+            servingTruth: servedNonModelTruth({
+              routingContract: 'unknown',
+              intended: unresolvedIntent('provider_routing_bypassed_by_rcn'),
+              subsystem: 'rcn',
+              domain: 'local',
+              reason: 'high_confidence_rcn',
+            }),
             rcn: {
               used: true,
               intent: rcnResult.intent,
@@ -3614,9 +3696,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         meta: { ...meta, currentUserMessage: input, canonicalTurnId: writerStudioTurn.turnId },
       });
       writerStudio?.onHandoff?.();
-      const { text: canonicalText, provider: canonicalProvider } = await canonicalGeneration;
+      const {
+        text: canonicalText,
+        provider: canonicalProvider,
+        servingTruth: canonicalServingTruth,
+      } = await canonicalGeneration;
       rawResponse = canonicalText;
       provider = canonicalProvider;
+      servingTruth = canonicalServingTruth;
       console.log(`🖋️ [MAIA/writers-studio] canonical turn ${writerStudioTurn.turnId} rendered at ${rendered.tier}: ${rendered.participantOrder.join(', ')}`);
     } else
     // Route to appropriate processing path (with optional MindContext for PFI integration)
@@ -3625,6 +3712,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
+        servingTruth = fastResult.servingTruth;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
@@ -3636,6 +3724,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
+        servingTruth = coreResult.servingTruth;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'CORE');
@@ -3648,6 +3737,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
         provider = deepResult.provider; // May be undefined for DEEP path
+        servingTruth = deepResult.servingTruth;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'DEEP');
@@ -3660,6 +3750,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
+        servingTruth = fallbackResult.servingTruth;
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
         }
@@ -4299,15 +4390,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           try {
             const rewriteSystem = AIN_NO_MENU_REWRITE_PROMPT;
 
-            const { text: rewritten } = await generateText({
+            const rewriteResult = await generateText({
               systemPrompt: rewriteSystem,
               userInput: `USER INPUT:\n${input}\n\nASSISTANT RESPONSE TO REWRITE:\n${text}`,
               meta: { ...meta, currentUserMessage: input, ainRewritePass: true }
             });
 
-            if (rewritten && rewritten.trim().length > 50) {
+            if (rewriteResult.text && rewriteResult.text.trim().length > 50) {
               console.log('[AIN SHAPE REWRITE] Menu mode response rewritten');
-              text = rewritten.trim();
+              text = rewriteResult.text.trim();
+              provider = rewriteResult.provider;
+              servingTruth = rewriteResult.servingTruth;
               // Recompute shape for accurate telemetry
               shape = assessAINResponseShape(input, text, shapeContext);
             }
@@ -4401,7 +4494,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       processingProfile,
       processingTimeMs,
       audio: audioResponse,
-      provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
+      provider,  // 🔮 Legacy served-provider audit field
+      servingTruth,
       stateVector: parsedStateVector || undefined,
       practiceRecommendation: practiceRec || undefined,
       metadata: hasMetadata ? responseMetadata : undefined
@@ -4417,8 +4511,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       text,
       processingProfile: 'FAST',
       processingTimeMs,
-      // 🔮 Sovereignty: error path has no provider info (don't inherit from previous request)
-      provider: undefined
+      // 🔮 Sovereignty: error path has no model provider service.
+      provider: undefined,
+      servingTruth: degradedNonModelTruth({
+        routingContract: 'unknown',
+        intended: unresolvedIntent('processing_failed_before_service_resolution'),
+        reason: 'maia_processing_failed',
+      }),
     };
   }
 }
