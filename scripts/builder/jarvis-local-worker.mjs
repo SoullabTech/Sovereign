@@ -57,7 +57,7 @@ export async function health(host = DEFAULT_HOST) {
     return { ok: false, reason: 'NONLOCAL_HOST_REFUSED', host, latency_ms: 0 };
   }
   try {
-    const r = await fetch(`${host}/api/tags`, { signal: AbortSignal.timeout(5000) });
+    const r = await fetch(`${host}/api/tags`, { signal: AbortSignal.timeout(5000), redirect: 'error' });
     if (!r.ok) return { ok: false, reason: `HTTP ${r.status}`, latency_ms: Date.now() - t0 };
     const j = await r.json();
     return {
@@ -104,6 +104,7 @@ export async function run({
         options: { temperature, num_ctx: Number(process.env.JARVIS_NUM_CTX || 65536) },
       }),
       signal: AbortSignal.timeout(timeoutMs),
+      redirect: 'error',
     });
   } catch (e) {
     return {
