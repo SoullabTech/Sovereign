@@ -1,17 +1,18 @@
 /**
  * WS-CONVERGENCE-01 · C6 — OBSERVATION LAYER CONVERGENCE.
  *
- * ⭐ The law this gate holds: every response the writer can give to an
- * observation must reach the SAME cognition as `Talk about it` inside the
- * passage desk — the governed editorial runtime, and through it the Teaching
- * bridge. ⛔ Not "Help me understand alone": the bypass was the LAYER, and a
- * fix that converged one of five siblings would leave four behaving
- * differently for no reason the writer can see.
+ * ⭐ The law this gate holds: every response offered against an EXACT verified
+ * editable passage must reach the SAME cognition as `Talk about it` inside
+ * the passage desk — the governed editorial runtime, and through it the
+ * Teaching bridge. Where no exact range exists, the declared observation
+ * dialogue fallback remains lawful and must not imply that Teacher is active.
+ * ⛔ Not "Help me understand alone": the bypass was the bound response LAYER.
  *
  * ⛔ NOT a second Teaching integration. The bridge has exactly one call site
  * in the editorial runtime and this lane does not add another.
  */
 import { readFileSync } from 'fs';
+import { execSync } from 'child_process';
 import { runC5 } from './convergenceC5';
 import {
   editorialSegments, editIds, composeSelected, altersProtectedText,
@@ -156,9 +157,13 @@ export function runC6(): readonly Check[] {
       rebuild.slice(rebuild.indexOf('const editAction'), rebuild.indexOf('const reviseInsightPassage'))),
     'accept · change · challenge · learn all enter the existing editorial turn; none applies text');
 
+  const editAction = rebuild.slice(rebuild.indexOf('const editAction'),
+                                  rebuild.indexOf('const reviseInsightPassage'));
   add('C6R1-9-keep-mine-mutates-nothing',
-    /if \(action === 'keep'\) \{ setEditorialFailure\(null\); return; \}/.test(rebuild),
-    'declining a mark sends nothing and changes nothing');
+    /if \(action === 'accept' \|\| action === 'keep'\)/.test(editAction) &&
+    /if \(action === 'accept'\) next\.add\(edit\.id\); else next\.delete\(edit\.id\);/.test(editAction) &&
+    editAction.indexOf('return;') < editAction.indexOf('void sendEditorial(ask)'),
+    'Keep mine only removes the mark from the working set; it sends nothing and changes no manuscript text');
 
   add('C6R1-10-related-workspace-closes-once-proposed',
     /<details className="wsi-related" open=\{!suggestedVersionId\}>/.test(rebuild),
@@ -231,10 +236,25 @@ export function runC6(): readonly Check[] {
     /const base = composedText \?\? version\.wording;/.test(desk),
     'Adjust wording opens what the page is showing, not MAIA’s whole proposal');
 
+  /* ⭐ C5-19 was an opening-packet containment check measured against the C5
+     base. C6R2 lawfully modifies the EXISTING adoption route to add a refusal,
+     so a descendant cannot keep passing "no editorial route changed since C5".
+     Preserve C5-19 historically; replace it here with the descendant law:
+     existing seams may tighten, but C6 creates no new route/table/substrate. */
+  const substrateDelta = execSync(
+    'git diff --name-status d519f5165..HEAD -- database/migrations app/api/writers-studio/editorial lib/manuscript/revisionAuthorization lib/manuscript/proposalChain',
+    { encoding: 'utf8' },
+  ).trim().split('\n').filter(Boolean);
+  const newSubstrate = substrateDelta.filter((line) => /^(A|C|R)/.test(line));
+  add('C6R2-14-no-new-revision-substrate',
+    newSubstrate.length === 0,
+    `new route/table/substrate entries: ${newSubstrate.join(', ') || 'none'}`);
+
   const c5 = runC5();
+  const reusableC5 = c5.filter(c => c.id !== 'C5-19-no-new-revision-substrate');
   add('C6-10-c5-still-green',
-    c5.every(c => c.ok),
-    `${c5.filter(c => c.ok).length}/${c5.length} C5 acceptance checks green`);
+    reusableC5.every(c => c.ok),
+    `${reusableC5.filter(c => c.ok).length}/${reusableC5.length} reusable C5 invariants green; C5-19 remains the historical C5 containment record`);
 
   return out;
 }

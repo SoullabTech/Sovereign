@@ -1100,19 +1100,6 @@ export default function RebuildStudioClient() {
   }, [incomingAction, arrivalInsight, workspaceOpen, workspaceInsight, selectedPassage, focusId,
     editorialBusy, suggestedVersionId, sendEditorial]);
 
-  const useSelectedChanges = useCallback(async () => {
-    if (!composition || !editorialThread || !focusId || !suggestedVersion) return;
-    if (composition.taken === 0) return;
-    /* ⛔ Every mark taken IS MAIA's proposal. It is already a version; a second
-       one would only misattribute it. */
-    if (composition.everyMark) { await applySuggested(); return; }
-    await saveMemberRevision({
-      threadId: editorialThread.threadId, sectionId: focusId,
-      supersedes: suggestedVersion.id, text: composition.text,
-    });
-  }, [composition, editorialThread, focusId, suggestedVersion,
-      applySuggested, saveMemberRevision]);
-
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || draft.threadId !== editorialThread.threadId || draft.sectionId !== focusId) return false;
     setMemberVersionBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
@@ -1138,6 +1125,19 @@ export default function RebuildStudioClient() {
       return false;
     } finally { setMemberVersionBusy(false); }
   }, [memberVersionBusy, editorialThread, focusId]);
+
+  const useSelectedChanges = useCallback(async () => {
+    if (!composition || !editorialThread || !focusId || !suggestedVersion) return;
+    if (composition.taken === 0) return;
+    /* ⛔ Every mark taken IS MAIA's proposal. It is already a version; a second
+       one would only misattribute it. */
+    if (composition.everyMark) { await applySuggested(); return; }
+    await saveMemberRevision({
+      threadId: editorialThread.threadId, sectionId: focusId,
+      supersedes: suggestedVersion.id, text: composition.text,
+    });
+  }, [composition, editorialThread, focusId, suggestedVersion,
+      applySuggested, saveMemberRevision]);
 
   /* The PAGE's variables. The ROOM's arrive from the Studio layout's
      provider and are simply inherited — this room states none of its own.
