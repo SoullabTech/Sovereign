@@ -541,6 +541,27 @@ _run_lane() {
         exit_code=12
     fi
 
+    # Verification itself may not widen the candidate or create a commit. Recompute
+    # changed paths independently after all verifier commands and require the same
+    # admitted path set while HEAD remains at the captured starting SHA.
+    if [ "$lane" = "local-native" ] && [ "$test_results" = "pass" ] && [ "$exit_code" -eq 0 ]; then
+        local admitted_paths_json post_verify_paths_json post_verify_head
+        admitted_paths_json="$(printf '%s' "$patch_admission_json" | jq -c '.changed_paths | sort')"
+        post_verify_paths_json="$(
+            { git -C "$wt" diff --name-only "$starting_sha" -- 2>/dev/null || true
+              git -C "$wt" ls-files --others --exclude-standard 2>/dev/null || true; } |
+            sed '/^$/d' | sort -u | jq -R . | jq -s -c 'sort'
+        )"
+        post_verify_head="$(git -C "$wt" rev-parse --short HEAD)"
+        if [ "$post_verify_paths_json" != "$admitted_paths_json" ] || [ "$post_verify_head" != "$starting_sha" ]; then
+            test_results="fail"
+            exit_code=13
+            verification_evidence="${verification_evidence}FAIL: post-verification candidate custody\n"
+        else
+            verification_evidence="${verification_evidence}PASS: post-verification candidate custody\n"
+        fi
+    fi
+
     # A native candidate that fails independent verification never remains in the
     # worktree. Patch admission begins from a clean claimed worktree, so restoring
     # the captured starting SHA and removing newly-created untracked files returns
