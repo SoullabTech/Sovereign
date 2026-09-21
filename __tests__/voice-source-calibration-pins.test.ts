@@ -6,10 +6,11 @@ const read = (path: string) => readFileSync(path, 'utf8');
 describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
   const preflight = read('docs/programme/VOICE-2026/SOURCE_LEVEL-CALIBRATION-01_PREFLIGHT_PIN_DRAFT_2026-09-21.sh');
   const run = read('docs/programme/VOICE-2026/SOURCE_LEVEL-CALIBRATION-01_RUN_PIN_DRAFT_2026-09-21.sh');
+  const retry = read('docs/programme/VOICE-2026/SOURCE_LEVEL-CALIBRATION-01_RETRY-01_RUN_PIN_DRAFT_2026-09-21.sh');
 
   it('pins the exact bounded implementation candidate', () => {
-    for (const src of [preflight, run]) {
-      expect(src).toContain('SHA=858ee4948fd5e4f7a65dab156004bb863ad8ae66');
+    for (const src of [preflight, run, retry]) {
+      expect(src).toContain('SHA=2f211f432394a236cc2bcdb4fea55ca1bd179713');
       expect(src).toContain('SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8');
     }
   });
@@ -39,7 +40,7 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
     expect(preflight).not.toContain('xargs -0');
   });
 
-  it('run pin requires fresh authority, unchanged geometry and operator safety', () => {
+  it('run pin requires fresh authority, unchanged geometry and operator safety before spending its marker', () => {
     expect(run).toContain('K00_EXEC_AUTHORITY');
     expect(run).toContain('K00_CAL_GEOMETRY_CONFIRMATION');
     expect(run).toContain('[ "$GEOMETRY_CONFIRMATION" = UNCHANGED ]');
@@ -47,6 +48,39 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
     expect(run).toContain('[ "$SAFETY_CONFIRMATION" = CONFIRMED ]');
     expect(run.match(/K00_CAL_BATCH_AUTHORITY=BOUND bash scripts\/witness\/k00-source-calibration-batch\.sh/g)?.length).toBe(2);
     expect(run).toContain('operatorSafety=%s');
+    const freshness = run.indexOf('test "$AGE" -le 300');
+    const marker = run.indexOf("SOURCE-LEVEL-CALIBRATION-01 INVOKED");
+    expect(freshness).toBeGreaterThan(-1);
+    expect(marker).toBeGreaterThan(freshness);
+  });
+
+  it('Retry-01 proves ACT-01 was an infrastructure-only zero-measurement stop', () => {
+    expect(retry).toContain('PRIOR_SHA=858ee4948fd5e4f7a65dab156004bb863ad8ae66');
+    expect(retry).toContain('PRIOR_ACT_MARK=/private/tmp/source-level-calibration-01-act-invoked.txt');
+    expect(retry).toContain('RETRY_MARK=/private/tmp/source-level-calibration-01-retry-01-act-invoked.txt');
+    expect(retry).toContain("grep -q 'idx: unbound variable'");
+    expect(retry).toContain("test ! -f \"$PRIOR_L1DIR/sample-timing.tsv\"");
+    expect(retry).toContain("sample-*-afplay-liveness.tsv");
+    expect(retry).toContain("sample-*-xcodebuild.log");
+    expect(retry).toContain("sample-*-harness-state.txt");
+    expect(retry).toContain("sample-*-preplay-processes.json");
+    expect(retry).toContain("*.jsonl");
+    expect(retry).toContain('priorMeasurementRows=0');
+    expect(retry).toContain('priorPlaybackStarted=false');
+    expect(retry).toContain('priorPhoneInvocationStarted=false');
+    expect(retry).toContain('FOUNDER-REAUTHORIZED-SOURCE-LEVEL-CALIBRATION-01-RETRY-01');
+    expect(retry).toContain('ACT01_INFRA_PREPLAY_ZERO_MEASUREMENT');
+  });
+
+  it('Retry-01 spends a distinct marker only after prior-act proof and fresh preflight', () => {
+    const proof = retry.indexOf("grep -q 'idx: unbound variable'");
+    const fresh = retry.indexOf('test "$AGE" -le 300');
+    const marker = retry.indexOf('SOURCE-LEVEL-CALIBRATION-01 RETRY-01 INVOKED');
+    expect(proof).toBeGreaterThan(-1);
+    expect(fresh).toBeGreaterThan(proof);
+    expect(marker).toBeGreaterThan(fresh);
+    expect(retry).not.toContain('rm -f "$PRIOR_ACT_MARK"');
+    expect(retry).not.toContain('rm "$PRIOR_ACT_MARK"');
   });
 
   it('implements the closed first-pass-wins ladder with no L4', () => {
@@ -71,5 +105,6 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
   it('both pin scripts are shell-syntax clean', () => {
     expect(() => execFileSync('bash', ['-n', 'docs/programme/VOICE-2026/SOURCE_LEVEL-CALIBRATION-01_PREFLIGHT_PIN_DRAFT_2026-09-21.sh'], { stdio: 'pipe' })).not.toThrow();
     expect(() => execFileSync('bash', ['-n', 'docs/programme/VOICE-2026/SOURCE_LEVEL-CALIBRATION-01_RUN_PIN_DRAFT_2026-09-21.sh'], { stdio: 'pipe' })).not.toThrow();
+    expect(() => execFileSync('bash', ['-n', 'docs/programme/VOICE-2026/SOURCE_LEVEL-CALIBRATION-01_RETRY-01_RUN_PIN_DRAFT_2026-09-21.sh'], { stdio: 'pipe' })).not.toThrow();
   });
 });
