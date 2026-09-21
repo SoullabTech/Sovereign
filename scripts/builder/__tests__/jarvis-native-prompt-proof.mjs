@@ -64,18 +64,19 @@ try {
   assert.match(prompt, /MATERIALIZED CONTEXT/);
   assert.match(prompt, /alpha/);
   assert.match(prompt, /EDIT_JSON:/);
-  assert.match(prompt, /one physical line/);
+  assert.match(prompt, /FIRST BYTES are exactly `EDIT_JSON: `/);
   assert.match(prompt, /old_text must be copied EXACTLY/);
   assert.match(prompt, /smallest exact replacement/);
   assert.match(prompt, /JARVIS, not you, renders the git patch/);
-  assert.match(prompt, /response itself remains one physical line/);
+  assert.match(prompt, /Do NOT echo `A\)`/);
   assert.match(prompt, /every identifier you add is already in scope or is imported/);
+  assert.match(prompt, /include a separate exact edit that adds the required import/);
   assert.match(prompt, /follow that precedent exactly/);
   assert.match(prompt, /GOVERNANCE_GATE:/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("18 passed · 0 failed");
+  console.log("19 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
