@@ -194,7 +194,8 @@
     "verify:migration-compatibility-gate-e2e": "bash scripts/verify-migration-compatibility-gate-e2e.sh",
     "matrix:migration-prefix-compatibility": "npx tsx tests/constitutional/migration-prefix-compatibility/matrix.ts",
     "typecheck:migration-prefix-compatibility": "tsc -p tsconfig.migration-prefix-compatibility.json",
-    "verify:migrate-before-swap-step3": "bash scripts/verify-migrate-before-swap-step3.sh"
+    "verify:migrate-before-swap-step3": "bash scripts/verify-migrate-before-swap-step3.sh",
+    "verify:migrate-before-swap-ordering": "npx tsx tests/constitutional/migration-compatibility-gate/step3-ordering.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
