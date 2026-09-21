@@ -22,6 +22,9 @@ const src = (p: string) => stripComments(read(p));
 const GUIDED = 'app/writers-studio/insight/InsightReading.tsx';
 const TURN = 'lib/manuscript/editorialRuntime/turn.ts';
 const REBUILD = 'app/writers-studio/rebuild/RebuildStudioClient.tsx';
+const DIFF = 'lib/writersStudio/editorialDiff.ts';
+const PASSAGE = 'app/writers-studio/insight/ManuscriptPassage.tsx';
+const DESK = 'app/writers-studio/insight/RevisionDesk.tsx';
 
 export function runC6(): readonly Check[] {
   const out: Check[] = [];
@@ -29,6 +32,9 @@ export function runC6(): readonly Check[] {
   const guided = src(GUIDED);
   const turn = src(TURN);
   const rebuild = src(REBUILD);
+  const diff = src(DIFF);
+  const passage = src(PASSAGE);
+  const desk = src(DESK);
 
   /* ⭐ ONE entry point for every observation-level response, so the five
      controls cannot drift apart. The gate asserts the shape, not the count of
@@ -99,6 +105,43 @@ export function runC6(): readonly Check[] {
     /domainKey: 'writing_rhetoric'/.test(turn) &&
     !guided.includes('TeachingRuntimeBridge'),
     `editorial runtime holds exactly ${bridgeCalls} bridge call site; the surface adds none`);
+
+  /* ⭐⭐ C6R1 — the page is marked, not replaced. */
+  add('C6R1-1-no-single-span-diff-in-the-editorial-surfaces',
+    !passage.includes('comparisonSpan') && !desk.includes('comparisonSpan') &&
+    passage.includes('editorialSegments') && desk.includes('editorialSegments'),
+    'both editorial surfaces render word-level segments, not one replacement span');
+
+  add('C6R1-2-composing-declines-to-the-original',
+    /if \(s\.kind === 'del' && !take\) out \+= s\.text;/.test(diff),
+    'an unselected change falls back to the author’s words — declining is not an edit');
+
+  add('C6R1-3-protected-spans-are-never-composable',
+    /if \(s\.protectedSpan\) \{ if \(s\.kind === 'del'\) out \+= s\.text; continue; \}/.test(diff) &&
+    /if \(s\.editId !== null && !s\.protectedSpan\) seen\.add/.test(diff),
+    'a detected quotation is restored verbatim and is offered as no member choice');
+
+  /* ⛔ THE LETHAL CASE: one character altered inside an attributed quotation. */
+  add('C6R1-4-adoption-guard-refuses-whole',
+    /export function altersProtectedText/.test(diff) &&
+    /editorialSegments\(original, proposed\)\.some\(\(s\) => s\.protectedSpan\)/.test(diff),
+    'a proposal altering protected text is refused whole, never trimmed to its lawful part');
+
+  /* ⚠️ The detector is partial and must never be reported as quote custody. */
+  add('C6R1-5-detector-declares-itself-partial',
+    diff.includes('never reaches this path') || /A PARTIAL INSTRUMENT/.test(read(DIFF)),
+    'the quotation detector states in source that it is detection, not preserved identity');
+
+  add('C6R1-6-one-workspace-once-a-proposal-exists',
+    /proposalActive \? <details className="wsi-reading-behind"/.test(guided) &&
+    /\{!proposalActive && <div className="wsi-page-actions">/.test(guided) &&
+    /proposalActive=\{Boolean\(suggestedVersionId\)\}/.test(rebuild),
+    'with a live proposal the reading becomes disclosure, not a second live workspace');
+
+  add('C6R1-7-rangeless-try-a-revision-leak-closed',
+    /if \(!boundTarget\) return;/.test(guided) &&
+    !/\{target && onRevise &&/.test(guided),
+    'Try a revision requires boundTarget; the whole-section widening leak is closed');
 
   const c5 = runC5();
   add('C6-10-c5-still-green',

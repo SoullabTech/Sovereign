@@ -21,7 +21,8 @@ const RESPONSE_PROMPTS = [
 ] as const;
 
 export default function InsightReading({
-  manuscriptId, readingId, observationKey, onRevise, onChoosePassage, busy = false, refreshKey = 0,
+  manuscriptId, readingId, observationKey, onRevise, onChoosePassage,
+  proposalActive = false, busy = false, refreshKey = 0,
 }: {
   manuscriptId: string; readingId: string; observationKey: string;
   onRevise?: (passage: InsightPassage, authorNotes?: string) => void;
@@ -30,6 +31,14 @@ export default function InsightReading({
    *  prohibition. Absent outside the workspace, where there is nothing to
    *  select in, and the control is then simply not offered. */
   onChoosePassage?: () => void;
+  /** ⭐⭐ C6R1 — TRUE once a proposal exists for this passage. The observation
+   *  then STOPS BEING A SECOND WORKSPACE and becomes the explanation of the
+   *  edit the member is deciding about. Two stacked Notice/Discuss/Try/Decide
+   *  paths, two sets of response buttons and a second `Try a revision` do not
+   *  give the member more control — they make them reconstruct which screen
+   *  they are on. ⛔ Nothing is removed from the product: the same conversation
+   *  continues in the desk above, against the same passage. */
+  proposalActive?: boolean;
   busy?: boolean; refreshKey?: number;
 }) {
   const [loadedKey, setLoadedKey] = useState(refreshKey);
@@ -101,27 +110,49 @@ export default function InsightReading({
     setTalking(true);
   };
   const tryRevision = () => {
-    if (!target) return;
+    if (!boundTarget) return;
     setStatus(null);
-    if (onRevise) onRevise(target, memberContext);
+    if (onRevise) onRevise(boundTarget, memberContext);
   };
-  const revisionHref = target
-    ? insightWriteHref(manuscriptId, readingId, observationKey, target.sectionId) + '&insightAction=try-revision'
+  const revisionHref = boundTarget
+    ? insightWriteHref(manuscriptId, readingId, observationKey, boundTarget.sectionId) + '&insightAction=try-revision'
     : null;
 
-  return <section data-insight-reading={readingId} data-guided-editorial-loop>
-    <div className="wsi-page-voice">
-      <strong>MAIA · with this passage</strong>
-      <MaiaListen text={o.observation} />
-    </div>
-    <h3>Here’s what I’m noticing.</h3>
+  /* ⭐ The reading itself, identical in both states. ⛔ Nothing is withheld
+     when a proposal is live — coverage and the non-conclusion line travel with
+     it into the disclosure, because they are what keep the observation
+     falsifiable and they are not decoration to be dropped when space is short. */
+  const theReading = <>
     <p className="wsi-observation">{o.observation}</p>
     <p className="wsi-muted"><strong>What I read:</strong> {insight.coverage}</p>
     <p className="wsi-muted">
       I’m reading what is on the page. This doesn’t establish what you intended or how a reader will feel.
     </p>
     {o.state !== 'current' && <p role="status">{o.stateSentence}</p>}
+  </>;
 
+  return <section data-insight-reading={readingId} data-guided-editorial-loop
+    data-proposal-active={proposalActive ? 'true' : 'false'}>
+    {/* ⭐⭐ C6R1 — ONE WORKSPACE AT A TIME.
+        Once MAIA has proposed an edit, this stopped being a place to decide
+        and became the REASON for the decision being made above it. Rendering
+        it as a second live workspace — its own heading, its own response
+        buttons, its own Notice/Discuss/Try/Decide, its own `Try a revision` —
+        asked the member to work out which screen they were on before they
+        could think about their sentence.
+        ⛔ NOT hidden, and nothing is removed: the whole reading, its coverage
+        and its related passages are one click away, and stop competing with
+        the editing task. */}
+    {proposalActive ? <details className="wsi-reading-behind" data-reading-behind>
+      <summary>Reading behind these suggestions</summary>
+      {theReading}
+    </details> : <>
+    <div className="wsi-page-voice">
+      <strong>MAIA · with this passage</strong>
+      <MaiaListen text={o.observation} />
+    </div>
+    <h3>Here’s what I’m noticing.</h3>
+    {theReading}
     <section aria-label="Respond to MAIA">
       <h3>What do you think?</h3>
       {/* ⭐ BOUND: these reach the editorial runtime, and therefore the
@@ -196,13 +227,21 @@ export default function InsightReading({
       </ol>
     </div>
 
-    <div className="wsi-page-actions">
-      {target && onRevise &&
+    </>}
+
+    {/* ⛔ C6R1 — one `Try a revision` on screen at a time. While a proposal is
+        live the decision belongs to the desk above, not to a second entry
+        point that would open a competing one.
+        ⭐ And it now requires boundTarget, not target: without a range the only
+        available locus is the whole section body, and automatic widening is
+        refused. Closing the leak the membrane already named. */}
+    {!proposalActive && <div className="wsi-page-actions">
+      {boundTarget && onRevise &&
         <button type="button" className="wsi-primary" disabled={busy}
           onClick={tryRevision}>Try a revision</button>}
-      {target && !onRevise && revisionHref &&
+      {boundTarget && !onRevise && revisionHref &&
         <a className="wsi-link" href={revisionHref}>Try a revision</a>}
-    </div>
+    </div>}
     {status && <p role="status" aria-live="polite">{status}</p>}
 
     <div className="wsi-passage-grid">{insight.passages.map((p, i) => {

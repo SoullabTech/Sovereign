@@ -6,7 +6,7 @@ import { selectedProposalText, alternativeLabel, passageContext } from '@/lib/wr
 import type { RebuildEditorialThread, RebuildEditorialVersion } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import WorkInspiration from './WorkInspiration';
 import { EDITORIAL_QUESTIONS } from '@/lib/writersStudio/editorialQuestions';
-import { comparisonSpan } from '@/lib/writersStudio/insightComparison';
+import { editorialSegments } from '@/lib/writersStudio/editorialDiff';
 
 export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;
@@ -93,7 +93,10 @@ export default function RevisionDesk({
     const frame = window.requestAnimationFrame(() => onReadContext?.());
     return () => window.cancelAnimationFrame(frame);
   }, [inline, active, version?.id, matchesLocus, appliedVersionId, onReadContext]);
-  const diff = thread && version ? comparisonSpan(thread.locusText, version.wording) : null;
+  /* ⭐ C6R1 — the same word-level segments the manuscript now shows, so the
+     secondary full-proposal view and the marked page cannot disagree about
+     what changed. ⛔ This view is SECONDARY: the page carries the editing. */
+  const diff = thread && version ? editorialSegments(thread.locusText, version.wording) : null;
   const edit = () => {
     if (!thread?.targetSectionId || !version || draft) return;
     setDraft({ threadId: thread.threadId, sectionId: thread.targetSectionId,
@@ -249,7 +252,10 @@ export default function RevisionDesk({
       {showProposal && version && thread ? <div>
         <span className="wsi-eyebrow">{version.author === 'member' ? 'Your saved revision' : 'MAIA proposal'} · not automatically applied</span>
         {changes && diff ? <div className="wsi-proposed wsi-prose">
-          {diff.before}<del>{diff.removed}</del><ins>{diff.added}</ins>{diff.after}
+          {diff.map((seg, i) => seg.kind === 'same' ? <span key={i}>{seg.text}</span>
+            : seg.protectedSpan ? (seg.kind === 'del'
+              ? <span key={i} className="ws-protected-quote" data-protected-quote>{seg.text}</span> : null)
+            : seg.kind === 'del' ? <del key={i}>{seg.text}</del> : <ins key={i}>{seg.text}</ins>)}
         </div> : <div className="wsi-proposed wsi-prose">{version.wording || <em>Remove the selected passage.</em>}</div>}
         {changes && <p className="wsi-muted">Changes against the original passage held by this conversation. Underline = addition; strike-through = removal.</p>}
         {version.wording && <details><summary>Use selected words in my own revision</summary>

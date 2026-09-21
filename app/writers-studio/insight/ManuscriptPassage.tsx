@@ -1,13 +1,18 @@
 'use client';
-import { comparisonSpan } from '@/lib/writersStudio/insightComparison';
+import { editorialSegments, editIds, type Segment } from '@/lib/writersStudio/editorialDiff';
 import type { ReactNode } from 'react';
 
 /** Character offsets here use code points, matching the manuscript selection.
  * The editorial controls are inserted after the containing paragraph, never
  * inside an editable text node or in the middle of a sentence. */
-export default function ManuscriptPassage({ body, range, proposal, children }: {
+export default function ManuscriptPassage({
+  body, range, proposal, selectedEdits, onToggleEdit, children,
+}: {
   body: string; range: { start: number; end: number } | null;
   proposal?: { original: string; wording: string; changes: boolean } | null;
+  /** ⭐ C6R1 — the changes the member has taken. Absent = read-only markup. */
+  selectedEdits?: ReadonlySet<number>;
+  onToggleEdit?: (editId: number) => void;
   children: ReactNode;
 }) {
   const points = Array.from(body);
@@ -20,11 +25,45 @@ export default function ManuscriptPassage({ body, range, proposal, children }: {
   const restOfParagraph = boundary < 0 ? after : after.slice(0, boundary);
   const following = boundary < 0 ? '' : after.slice(boundary);
   const shown = valid && proposal?.original === original ? proposal : null;
-  const diff = shown?.changes ? comparisonSpan(original, shown.wording) : null;
+
+  /* ⭐⭐ C6R1 — THE PAGE IS MARKED, NOT REPLACED.
+     The old single-span comparison turned two small wording changes into one
+     struck-out block followed by a near-identical block, so the member was
+     handed their paragraph twice and asked to spot the difference. That is
+     editor work, and the product should be doing it for them. Now the
+     manuscript stays where it is and only the proposed changes carry a mark. */
+  const segments = shown?.changes ? editorialSegments(original, shown.wording) : null;
+  const actionable = segments ? new Set(editIds(segments)) : null;
+
+  const mark = (s: Segment, i: number) => {
+    if (s.kind === 'same') return <span key={i}>{s.text}</span>;
+    /* ⛔ A detected quotation is shown as protected source, never as ordinary
+       editable markup — and it is not clickable, because there is no member
+       choice to offer over words the source wrote. */
+    if (s.protectedSpan) return s.kind === 'del'
+      ? <span key={i} className="ws-protected-quote" data-protected-quote
+          title="Verbatim source quotation — not editable here">{s.text}</span>
+      : null;
+    const id = s.editId;
+    const taken = id !== null && selectedEdits?.has(id);
+    const Tag = onToggleEdit && id !== null && actionable?.has(id) ? 'button' : 'span';
+    const props = Tag === 'button'
+      ? { type: 'button' as const, onClick: () => onToggleEdit!(id!), 'aria-pressed': Boolean(taken) }
+      : {};
+    return <Tag key={i} {...props} className={`ws-edit-mark ws-edit-${s.kind}`}
+      data-edit-id={id ?? undefined} data-taken={taken ? 'true' : 'false'}>
+      {s.kind === 'del' ? <del>{s.text}</del> : <ins>{s.text}</ins>}
+    </Tag>;
+  };
+
   return <div className="ws-manuscript-passage">
     <div className="ws-manuscript-context">{before}<span className="ws-marked-passage" data-preview={Boolean(shown)} data-editorial-locus>
       <span className="ws-locus-marker" aria-label="Active editorial passage">01</span>
-      {shown ? diff ? <>{diff.before}<del>{diff.removed}</del><ins>{diff.added}</ins>{diff.after}</> : shown.wording || <em>Proposed removal</em> : original}
+      {shown
+        ? segments
+          ? segments.map(mark)
+          : shown.wording || <em>Proposed removal</em>
+        : original}
     </span>{restOfParagraph}</div>
     {children}
     {following && <div className="ws-manuscript-context">{following}</div>}

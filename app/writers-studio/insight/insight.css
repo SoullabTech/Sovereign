@@ -263,3 +263,24 @@
   .wsi-direction-guide nav { display:grid; grid-template-columns:1fr 1fr; }
   .wsi-direction-kept dl div { grid-template-columns:1fr; gap:3px; }
 }
+
+/* ⭐⭐ C6R1 — INLINE EDITORIAL MARKUP.
+   A teacher's marks, not a diff report: unchanged words stay ordinary prose,
+   and only what MAIA proposes changing carries a mark, in the place it occurs. */
+.ws-edit-mark { border: 0; background: none; padding: 0; font: inherit; cursor: pointer; }
+.ws-edit-mark del { text-decoration-thickness: 1px; opacity: 0.55; }
+.ws-edit-mark ins { text-decoration: none; box-shadow: inset 0 -0.55em 0 rgba(193, 154, 62, 0.22); }
+.ws-edit-mark[data-taken='true'] ins { box-shadow: inset 0 -0.55em 0 rgba(193, 154, 62, 0.5); }
+.ws-edit-mark[data-taken='true'] del { opacity: 0.3; }
+button.ws-edit-mark:hover ins,
+button.ws-edit-mark:focus-visible ins { box-shadow: inset 0 -0.6em 0 rgba(193, 154, 62, 0.4); }
+
+/* ⛔ Protected source text. Marked as evidence, never as editable markup —
+   and deliberately not interactive, because there is no member choice to
+   offer over words the source wrote. */
+.ws-protected-quote {
+  border-bottom: 1px dotted currentColor; opacity: 0.85; cursor: help;
+}
+
+/* ⭐ The reading, once it is the reason for an edit rather than a workspace. */
+.wsi-reading-behind > summary { cursor: pointer; opacity: 0.75; font-size: 0.95em; }
