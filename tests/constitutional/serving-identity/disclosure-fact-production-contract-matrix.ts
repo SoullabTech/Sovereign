@@ -611,8 +611,10 @@ const GUARDS: readonly { id: string; law: string; run: () => void }[] = [
     law: 'F1 matrix does not invoke D1 or D2',
     run: () => {
       const self = source('tests/constitutional/serving-identity/disclosure-fact-production-contract-matrix.ts');
-      assert(!self.includes('decideMemberDisclosure('), 'F1 invokes D1');
-      assert(!self.includes('admitDisclosureFacts('), 'F1 invokes D2');
+      const d1Call = ['decideMember', 'Disclosure('].join('');
+      const d2Call = ['admitDisclosure', 'Facts('].join('');
+      assert(!self.includes(d1Call), 'F1 invokes D1');
+      assert(!self.includes(d2Call), 'F1 invokes D2');
     },
   },
   {
