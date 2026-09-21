@@ -111,6 +111,36 @@ check("external-network authority is refused before any git invocation", () => {
   rmSync(tmp, { recursive: true, force: true });
 });
 
+console.log("\n=== NPA1C: integration custody is JARVIS-only ===");
+check("non-JARVIS integration actor is refused before any git invocation", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-integrator-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  writeFileSync(path.join(repo, "allowed.txt"), "before\n");
+
+  const wrongIntegrator = packet(["allowed.txt"]);
+  wrongIntegrator.integration_actor = "human";
+
+  let gitCalls = 0;
+  const result = applyNativePatch({
+    packet: wrongIntegrator,
+    patchText: patchFor("allowed.txt", "before", "after"),
+    worktree: repo,
+    home,
+    runGit: () => {
+      gitCalls += 1;
+      throw new Error("git must not be called");
+    },
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "JARVIS_INTEGRATION_ACTOR_REQUIRED");
+  assert.equal(gitCalls, 0);
+  assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "before\n");
+  rmSync(tmp, { recursive: true, force: true });
+});
+
 console.log("\n=== NPA2: structural refusals ===");
 check("prose before a patch is refused", () => {
   const r = inspectPatch("Here is the patch:\n" + patchFor("allowed.txt", "before", "after"), ["allowed.txt"]);
@@ -125,6 +155,11 @@ check("even leading whitespace before a patch is refused", () => {
 check("code-fenced patches are refused", () => {
   const r = inspectPatch("```diff\n" + patchFor("allowed.txt", "before", "after") + "```\n", ["allowed.txt"]);
   assert.equal(r.ok, false);
+});
+check("trailing prose after a diff is refused", () => {
+  const r = inspectPatch(patchFor("allowed.txt", "before", "after") + "Here is why this works\n", ["allowed.txt"]);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "PATCH_HUNK_LINE_UNSUPPORTED");
 });
 check("rename shapes are refused", () => {
   const p = [
