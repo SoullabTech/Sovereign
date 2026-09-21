@@ -187,7 +187,8 @@
     "guards:s3-substrate": "tsx tests/constitutional/s3-substrate/guards.ts",
     "matrix:editorial-runtime": "tsx tests/constitutional/editorial-runtime/matrix.ts",
     "matrix:migration-compatibility": "npx tsx tests/constitutional/migration-compatibility/matrix.ts",
-    "typecheck:migration-compatibility": "tsc -p tsconfig.migration-compatibility.json"
+    "typecheck:migration-compatibility": "tsc -p tsconfig.migration-compatibility.json",
+    "verify:migration-compatibility-bundle": "bash scripts/verify-migration-compatibility-bundle.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

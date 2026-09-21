@@ -95,3 +95,37 @@ Neighbour standing remained unchanged:
     Step 2 matrix            8/8
 
 No deployment surface changed.
+
+## Step 2A — exact review-bundle provenance
+
+Before compatibility can enter the deploy gate, the reviewer needs a physical
+workspace whose source identity is stronger than a directory name.
+
+The bundle builder materializes:
+
+    review-root/
+      <exact target tree>
+      old-reader/<exact-old-reader-sha>/<exact old-reader tree>
+      MIGRATION_COMPATIBILITY_CONTEXT.json
+
+Both trees come from git archive of exact commit objects.
+
+This gives the trace a stable path grammar:
+
+    target migration:
+      database/migrations/<file>.sql
+
+    old-reader evidence:
+      old-reader/<exact-old-reader-sha>/<repo-path>
+
+The compatibility attestation separately carries each old-reader repo path and
+SHA-256. The future gate can therefore recompute the evidence bytes from the
+observed old-reader git object and compare them with the physically witnessed
+trace path.
+
+The bundle verifier proves target package.json bytes and old-reader package.json
+bytes are byte-identical to their respective git objects, and proves the context
+record names both exact commits.
+
+This is provenance substrate only. deploy-production.sh remains unchanged and
+migrations still run after the swap.
