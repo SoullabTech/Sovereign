@@ -217,6 +217,12 @@ export async function POST(request: NextRequest) {
        line and the system held it. ⛔ None of them is a server fault. */
     const scopeRefused = turn.scope !== undefined || turn.voice !== undefined
       || turn.reason === 'sequence_discussion_first';
+    /* ⭐ A DISCLOSURE REFUSAL IS ALSO NOT A SERVER FAULT — and not a scope
+       refusal either, so it gets its own name rather than being folded into one.
+       Authorization or accountability for the crossing could not be established,
+       and nothing was sent. ⛔ 502 would blame the provider for a line this
+       system drew before reaching it. */
+    const disclosureRefused = turn.reason === 'disclosure_unavailable';
     /* ⭐ THE DIAGNOSTIC THAT WAS MISLEADING, CORRECTED.
      *
      * `detail` is withheld from the RESPONSE for non-scope refusals, and that is
@@ -226,7 +232,7 @@ export async function POST(request: NextRequest) {
      * its causes stripped — an operator could not tell a missing key from a
      * rejected schema from a timeout. ⭐ The record is now written where
      * operators read and members do not. */
-    if (!scopeRefused) {
+    if (!scopeRefused && !disclosureRefused) {
       console.error('[editorial/turn] refused', {
         reason: turn.reason,
         detail: turn.detail,
@@ -250,7 +256,11 @@ export async function POST(request: NextRequest) {
         note: turn.voice.note, unfamiliar: turn.voice.unfamiliar,
         sampleWords: turn.voice.sampleWords,
       } } : {}),
-      ...(scopeRefused ? { detail: turn.detail } : {}),
+      /* ⭐ `detail` travels for the lines this system drew — scope, voice,
+         sequence, and now disclosure — because the writer is entitled to know
+         which boundary held. ⛔ It still does not travel for provider failures,
+         where it would disclose internals rather than a boundary. */
+      ...(scopeRefused || disclosureRefused ? { detail: turn.detail } : {}),
       ...(turn.scope ? {
         scope: {
           declared: parsed.scope,
@@ -261,7 +271,7 @@ export async function POST(request: NextRequest) {
           wouldPassAtLatitude: turn.scope!.wouldPassAtLatitude,
         },
       } : {}),
-    }, { status: scopeRefused ? 409 : 502 });
+    }, { status: scopeRefused || disclosureRefused ? 409 : 502 });
   }
 
   /* ⛔ THIN. No StructuredRequest, no systemPrompt, no EditorialInvocation, no

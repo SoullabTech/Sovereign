@@ -66,6 +66,10 @@ export type EditorialAssemblyResult =
   | {
       readonly ok: true;
       readonly chainId: string;
+      /** ⭐ Identity of the Work this locus belongs to. For the receipt's `sourceRef`. */
+      readonly workId: string;
+      /** ⭐ Identity of the section the locus sits in. ⛔ Never its text. */
+      readonly targetSectionId: string;
       readonly blocks: readonly EditorialCandidateBlock[];
       /** ⭐ The predecessor MAIA is being invoked against. ER-R3 carries it forward. */
       readonly invokedAgainstVersionId: string | null;
@@ -202,6 +206,11 @@ export async function assembleEditorialCognition(
 
   return {
     ok: true, chainId,
+    /* ⭐ THE IDENTITIES THE DISCLOSURE RECEIPT NAMES, from the same locus read
+       that produced the prose — ⛔ never a second lookup that could disagree
+       with it, for the same reason `locusText` is not re-read. */
+    workId: locus.workId,
+    targetSectionId: locus.targetSectionId,
     blocks: participation.blocks,
     invokedAgainstVersionId: work.work.focused?.id ?? null,
     /* ⭐ THE SAME VALUE THE LOCUS BLOCK CARRIED INTO COGNITION, from the same

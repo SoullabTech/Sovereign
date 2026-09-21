@@ -40,9 +40,13 @@
  *   strike-through over their own words for them to police.
  */
 
+import { randomUUID } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
 import { runStructured } from '@/lib/ai/structured/router';
 import type { DispatchObservation } from '@/lib/ai/structured/dispatch';
+import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
+import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
 import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers-studio/canonicalWriterTurn';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
@@ -129,6 +133,12 @@ export type EditorialTurnRefusal =
   | 'model_unattributable'
   /** The structured seam refused. ⛔ There is no fallback below this. */
   | 'structured_refused'
+  /**
+   * ⭐ Authorization or accountability for the crossing could not be
+   * established. ⛔ NOTHING was sent — the refusal happens before the author's
+   * words enter cognition, which is the whole point of putting it here.
+   */
+  | 'disclosure_unavailable'
   /**
    * ⭐⭐ THE PROPOSAL IS IN SOMEONE ELSE'S VOCABULARY, far past what the
    * writer's latitude could plausibly mean. ⛔ Below the bound this is REPORTED
@@ -223,6 +233,59 @@ export async function runEditorialTurn(
   const teachingBlocks: CandidateBlock[] = teaching.active
     ? [{ producerId: 'computed.teaching_intelligence', text: teaching.directive }]
     : [];
+  /* ⭐⭐ THE BOUNDARY — authorization AND accountability, before the author's
+   * words become part of what MAIA is given.
+   *
+   * Founder ruling 2026-09-21: external editorial processing requires
+   * authorization before dispatch AND a durable record naming destination and
+   * disclosed context. `establishDisclosureBoundary` does both in that order —
+   * consent first and fail-closed, then an `attempted` receipt — and returns
+   * permission only when both hold.
+   *
+   * ⭐ WHY HERE AND NOT IN THE ROUTE, where every other boundary is established.
+   * The identities a receipt must name — the Work and the section — are derived
+   * from the thread's locus, which is resolved by `assembleEditorialCognition`.
+   * ⛔ The route does not hold them, and a receipt naming coordinates the caller
+   * supplied rather than the ones the crossing used would be evidence of the
+   * wrong thing.
+   *
+   * ⚠️ AND THE NARROWING, STATED RATHER THAN PAPERED OVER. Assembly has already
+   * read the locus text into this process. The boundary therefore precedes prose
+   * entering COGNITION — which is what `->maia_cognition` names and what a
+   * refusal here prevents — ⛔ but it does NOT precede prose being read from the
+   * database. Making authority precede the read as well requires splitting the
+   * locus read so identity resolves before text, which would touch the frozen
+   * locus the scope law measures against. ⭐ That is the stronger ordering and it
+   * is OWED; it is not what this repair does.
+   */
+  const disclosureId = randomUUID();
+  const boundary = await establishDisclosureBoundary({
+    requestId: input.exchangeId,
+    posture: TurnPosture.resolve({ sanctuary: false }),
+    memberId,
+    sessionId: threadId,
+    disclosure: {
+      disclosureId,
+      boundary: 'writers_studio.editorial_turn->maia_cognition',
+      sourceClass: 'work',
+      participationBasis: 'member_invoked',
+      sourceRef: assembly.workId,
+      /* ⭐ `passage`, and therefore ⛔ NO `sectionRef`. The disclosed thing is the
+         locus, not the section; naming the containing section would materially
+         narrow reconstruction, which the receipt type and a CHECK both refuse. */
+      scopeKind: 'passage',
+      gesture: 'work_with_this',
+    },
+  });
+  if (!mayCrossBoundary(boundary)) {
+    /* ⛔ Nothing assembled into cognition, nothing dispatched. The member's act
+       stands; only the crossing was refused. */
+    return {
+      ok: false, reason: 'disclosure_unavailable',
+      detail: boundary.kind === 'consent_unavailable' ? boundary.reason : boundary.outcome.kind,
+    };
+  }
+
   const cognitionBlocks: CandidateBlock[] = [...assembly.blocks, ...teachingBlocks];
 
   /* ⭐ The author's declaration, resolved ONCE and used for both the
@@ -295,11 +358,22 @@ export async function runEditorialTurn(
        not rewritten here. ⛔ What is added is the delivery fact, which the class
        cannot carry: `provider_unavailable` covers both a request that arrived
        and was rejected and one that never left. */
+    /* ⭐⭐ CONFIRM FROM ARRIVAL, NOT FROM SUCCESS — founder ruling 2026-09-21.
+     * A provider that answered received the words, whatever it answered. ⛔ A
+     * refusal is not evidence of non-arrival.
+     *
+     * ⚠️ `unknown` does NOT confirm. A timeout may have arrived and been lost,
+     * and the receipt stays `attempted`, which the table defines as *a crossing
+     * MAY have occurred and was not confirmed* — ⛔ never as nothing crossed.
+     * That is the honest state and it needs no new vocabulary. */
+    if (structured.dispatch === 'response_observed') await confirmDisclosureCrossed(disclosureId);
     return {
       ok: false, reason: 'structured_refused', detail: structured.refusal,
       dispatch: structured.dispatch,
     };
   }
+  /* ⭐ A result came back, so the words demonstrably arrived. */
+  await confirmDisclosureCrossed(disclosureId);
 
   /* 6 ⛔ ADMISSION. A refusal here reaches no transaction, and prose is never
      inspected afterwards to rescue it. */
