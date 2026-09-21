@@ -8,7 +8,7 @@
  * - precision context materialization + budget
  * - governance-gate class taxonomy
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import {
@@ -18,6 +18,46 @@ import {
   budget, materializePacket, renderFragments,
 } from "./jarvis-context.mjs";
 import { GATE_CLASS_NAMES } from "./jarvis-governance-gate.mjs";
+
+const COMMIT_SHA = /^[0-9a-f]{7,40}$/i;
+
+function selectorRef(selector) {
+  return typeof selector === "string" ? selector : selector?.ref;
+}
+
+function assertSelectorContained(selector, repo) {
+  const ref = String(selectorRef(selector) || "");
+  const slash = ref.replaceAll("\\", "/");
+  if (
+    !ref
+    || ref !== slash
+    || path.isAbsolute(ref)
+    || slash === ".git"
+    || slash.startsWith(".git/")
+    || slash.split("/").some((segment) => segment === "..")
+  ) {
+    const error = new Error("SELECTOR_PATH_UNSAFE");
+    error.code = "SELECTOR_PATH_UNSAFE";
+    error.detail = { ref };
+    throw error;
+  }
+
+  let repoReal;
+  let targetReal;
+  try {
+    repoReal = realpathSync(repo);
+    targetReal = realpathSync(path.join(repo, ref));
+  } catch {
+    return; // bindSelector emits the canonical FILE_NOT_FOUND refusal.
+  }
+  const relative = path.relative(repoReal, targetReal);
+  if (relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative)) {
+    const error = new Error("SELECTOR_PATH_ESCAPE");
+    error.code = "SELECTOR_PATH_ESCAPE";
+    error.detail = { ref };
+    throw error;
+  }
+}
 
 export function buildNativePrompt(packet, repo) {
   const lint = lintLeakage(packet);
@@ -34,6 +74,7 @@ export function buildNativePrompt(packet, repo) {
     error.code = "LOCAL_NATIVE_CONTEXT_REQUIRED";
     throw error;
   }
+  selectors.forEach((selector) => assertSelectorContained(selector, repo));
 
   const execHead = headOf(repo);
   if (!execHead) {
@@ -46,6 +87,11 @@ export function buildNativePrompt(packet, repo) {
   if (!packetCanonical) {
     const error = new Error("PACKET_CANONICAL_SHA_REQUIRED");
     error.code = "PACKET_CANONICAL_SHA_REQUIRED";
+    throw error;
+  }
+  if (!COMMIT_SHA.test(packetCanonical)) {
+    const error = new Error("PACKET_CANONICAL_SHA_INVALID");
+    error.code = "PACKET_CANONICAL_SHA_INVALID";
     throw error;
   }
   let authorizedHead;
@@ -63,6 +109,16 @@ export function buildNativePrompt(packet, repo) {
     const error = new Error("EXECUTION_HEAD_MISMATCH");
     error.code = "EXECUTION_HEAD_MISMATCH";
     error.detail = { packet_canonical_sha: authorizedHead, execution_head: execHead };
+    throw error;
+  }
+
+  const worktreeStatus = execFileSync(
+    "git", ["-C", repo, "status", "--porcelain", "--untracked-files=all"],
+    { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+  ).trim();
+  if (worktreeStatus) {
+    const error = new Error("EXECUTION_WORKTREE_NOT_CLEAN");
+    error.code = "EXECUTION_WORKTREE_NOT_CLEAN";
     throw error;
   }
 
