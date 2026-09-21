@@ -1,0 +1,32 @@
+{
+  "instrument": "review-custody/v1",
+  "bound_at": "2026-09-21T22:55:33.392Z",
+  "repo_head": "bcd4debfed1285d2ff14829db7f117ffaff05f11",
+  "plan": {
+    "path": "docs/programme/DEPLOYMENT-SAFETY-03_STEP3_COMPATIBILITY_GATED_MIGRATE_BEFORE_SWAP_2026-09-21.md",
+    "sha256": "44aa49dfa754a07ba05ea8c95a28b3bdd7eb7e420c4cf393b553c4cddb8f3089",
+    "bytes": 5141
+  },
+  "base": {
+    "ref": "HEAD",
+    "commit": "bcd4debfed1285d2ff14829db7f117ffaff05f11"
+  },
+  "tree": {
+    "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "paths": 0
+  },
+  "approval": {
+    "admitted_at": "2026-09-21T22:59:27.323Z",
+    "verdict": "APPROVED",
+    "reviewer": "independent-production-db-migration-reviewer",
+    "plan_sha256": "44aa49dfa754a07ba05ea8c95a28b3bdd7eb7e420c4cf393b553c4cddb8f3089",
+    "review_sha256": "2ffc5b10488e3d2cb34a2265b0fd8c7e03cc6e661807480b98ed9a3349970f59",
+    "findings": {
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "coverage_files": 9,
+    "limitations": 6
+  }
+}
