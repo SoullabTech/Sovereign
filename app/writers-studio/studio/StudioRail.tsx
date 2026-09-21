@@ -31,6 +31,7 @@ import {
   type StudioDestination,
   type StudioGroup,
   type StudioRegion,
+  workingRailGroups,
 } from '../studioMap';
 import { StudioText } from './StudioType';
 import { StudioIcon } from './StudioIcon';
@@ -286,8 +287,19 @@ export function StudioShellRail({
   onSelect,
   lead,
   style,
+  working = false,
 }: {
   hasManuscript: boolean;
+  /**
+   * ⭐ WS-CONVERGENCE-01 · C4. TRUE on the ordinary WORKING surface: the rail
+   * shows only what can actually be taken — `available`, or satisfied by a
+   * panel in this very room.
+   *
+   * ⛔ DEFAULTS TO FALSE, so every existing caller keeps WS2-03B's full
+   * truthful map unchanged. ⭐ C4 amends the working surface, ⛔ not the map and
+   * ⛔ not the rail's behaviour anywhere else.
+   */
+  working?: boolean;
   /** Facts the shell counted. Nothing here may be a reference figure. */
   counts?: Readonly<Record<string, number>>;
   /** Destination ids this room opens as panels rather than navigating to. */
@@ -304,7 +316,12 @@ export function StudioShellRail({
   lead?: ReactNode;
   style?: CSSProperties;
 }) {
-  const groups = shellDestinations(hasManuscript, undefined, {
+  /* ⭐ C4. On the working surface the map is filtered to what can be taken
+     BEFORE the shell composes it, so an unavailable destination is never given
+     a chrome state to render. ⛔ Off the working surface nothing changes: the
+     full WS2-03B rail is composed exactly as before. */
+  const source = working ? workingRailGroups(hasManuscript, satisfiedInRoom ?? []) : undefined;
+  const groups = shellDestinations(hasManuscript, source, {
     counts, satisfiedInRoom, manuscriptId, situatedHrefs,
   });
   return (

@@ -140,8 +140,10 @@ tracks `unclaimed | single | ambiguous` while holding that *"order is never a ra
 is satisfied.
 
 **Step 4 — Shell.** ⚠️ This **amends WS2-03B**, which ruled that inside the working room an unbuilt
-destination is *"present and truthfully unavailable."* Current count: **24 destinations, 5
-available, 17 `later`.** ⛔ The WS2-02 boundary that `later` destinations carry **no href** is
+destination is *"present and truthfully unavailable."* ⚠️ **CORRECTED 2026-09-21 (C2–C4):** this charter first recorded *24 destinations, 5
+available, 17 `later`* — a **grep artifact** that counted `id: '` across the whole file,
+including type definitions. ⭐ The real map is **16 destinations, 3 available, 13 `later`**,
+read from `STUDIO_MAP` itself. ⛔ The ruling is unchanged; only the number was wrong. ⛔ The WS2-02 boundary that `later` destinations carry **no href** is
 **untouched and remains in force** — this step removes them from the ordinary working surface; it
 ⛔ does not make any of them clickable, and ⛔ does not delete the map. `assertStudioMapHonest()`
 stands unchanged.

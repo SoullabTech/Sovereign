@@ -181,7 +181,8 @@
     "typecheck:ws-observation-identity": "tsc -p tsconfig.ws-observation-identity.json",
     "matrix:ws-observation-identity": "tsx tests/constitutional/writers-studio/matrix.ts",
     "matrix:ws-observation-identity-live": "tsx tests/constitutional/writers-studio/liveRunner.ts",
-    "witness:ws-observation-address": "tsx tests/constitutional/writers-studio/addressRunner.ts"
+    "witness:ws-observation-address": "tsx tests/constitutional/writers-studio/addressRunner.ts",
+    "gates:ws-convergence-c2-c4": "tsx tests/constitutional/writers-studio/convergenceRunner.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
