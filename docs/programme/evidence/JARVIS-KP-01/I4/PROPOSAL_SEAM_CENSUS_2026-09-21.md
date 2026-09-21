@@ -1,8 +1,8 @@
 # JARVIS-KP-01 / I4 — Proposal-Seam Census
 
-**Date:** 2026-09-21  
-**Founder-authorized base:** `20c8764b516e042f38e33800f71b2bb040025665`  
-**Actual reconciled opening canonical:** `0319940f9dc94a637e6f1b0e9f843c971f6fb0c2`  
+**Date:** 2026-09-21
+**Founder-authorized base:** `20c8764b516e042f38e33800f71b2bb040025665`
+**Actual reconciled opening canonical:** `0319940f9dc94a637e6f1b0e9f843c971f6fb0c2`
 **Purpose:** read-only census before selecting the first epistemic-join integration shadow.
 
 > **NO SEMANTIC JOIN WITHOUT A WARRANT.**

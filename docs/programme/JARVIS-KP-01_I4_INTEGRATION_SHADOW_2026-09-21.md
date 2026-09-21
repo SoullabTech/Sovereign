@@ -1,9 +1,9 @@
 # JARVIS-KP-01 / I4 — Epistemic Join Integration Shadow
 
-**Date:** 2026-09-21  
-**Status:** EVIDENCE-READY CANDIDATE · NO PR · NO MERGE · NO I5  
-**Founder-authorized base:** `20c8764b516e042f38e33800f71b2bb040025665`  
-**Reconciled opening canonical:** `0319940f9dc94a637e6f1b0e9f843c971f6fb0c2`  
+**Date:** 2026-09-21
+**Status:** EVIDENCE-READY CANDIDATE · NO PR · NO MERGE · NO I5
+**Founder-authorized base:** `20c8764b516e042f38e33800f71b2bb040025665`
+**Reconciled opening canonical:** `0319940f9dc94a637e6f1b0e9f843c971f6fb0c2`
 **Witnessed implementation head:** `193e2af37845aa215bac8ffe8300dd7f069f415c`
 
 > **NO SEMANTIC JOIN WITHOUT A WARRANT.**
