@@ -183,7 +183,7 @@ export const SYNTHETIC_MODEL_IDENTITIES = deepFreeze({
     model_family: 'QWEN',
     provider_id: 'qwen-local',
     model_id: 'qwen3-coder:30b',
-    adapter_id: 'opencode',
+    adapter_id: 'ollama-direct',
     role: 'code_primary',
   },
   gpt: {
@@ -520,7 +520,7 @@ export function runSyntheticCanonicalCompositionV2() {
     route_participant_id: 'primary',
     provider_id: 'qwen-local',
     model_id: 'qwen3-coder:30b',
-    adapter_id: 'opencode',
+    adapter_id: 'ollama-direct',
     readiness: {
       status: 'READY',
       evidence_ref: 'transport-ready:qwen',

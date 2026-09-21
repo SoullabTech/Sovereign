@@ -275,16 +275,16 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
 
 console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ===');
 {
-  const id = uid('qwen');
+  const id = uid('gpt-oss');
   sh(['new', id]);
   authorizeReadOnly(id);
-  const run = sh(['opencode', id, 'qwen-local']);
+  const run = sh(['opencode', id, 'gpt-oss-local']);
   assert('read-only local OpenCode attempt completes against the stub',
     run.code === 0, `exit=${run.code} err=${run.err.slice(0, 160)}`);
 
   const result = JSON.parse(readFileSync(resultPath(id), 'utf8'));
   assert('attempt provenance records OpenCode and the exact provider/model reference',
-    result.lane === 'opencode' && result.model === 'ollama/qwen3-coder:30b',
+    result.lane === 'opencode' && result.model === 'ollama/gpt-oss:20b',
     `lane=${result.lane} model=${result.model}`);
   assert('successful delegate result persists numeric exit_code 0',
     result.exit_code === 0, `exit_code=${result.exit_code}`);
