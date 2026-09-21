@@ -119,6 +119,34 @@ async function execute(
   try {
     return { ok: true, result: await provider.execute(req) };
   } catch (err) {
+    /* ⭐ CLASSIFY, SERVER-SIDE ONLY. `provider_unavailable` covers four
+     * different worlds — a key that never resolved, a socket that never
+     * opened, a provider that refused, a tool contract that was rejected —
+     * and callers upstream keep only the refusal word, so from outside they
+     * are indistinguishable. This names the world without changing routing,
+     * authorization, fallback, or what is returned.
+     *
+     * ⛔⛔ THE MESSAGE IS LOGGED ONLY WHEN THE REQUEST NEVER REACHED THE WIRE.
+     * A pre-flight throw (no `status`) cannot carry provider output and cannot
+     * echo the request, so its message is safe and is the only thing that
+     * distinguishes, say, an unresolved credential from a bad base URL. Once a
+     * status exists the request DID go up, and a provider's error body may
+     * quote the field that offended it — which on this path is a tool schema
+     * carrying the writer's own sentence. So after the wire: shape only. */
+    const e = err as { name?: unknown; status?: unknown; code?: unknown;
+      cause?: { code?: unknown }; error?: { type?: unknown } };
+    const reachedWire = typeof e.status === 'number';
+    console.error('[structured] provider_unavailable', {
+      name: typeof e.name === 'string' ? e.name : 'unknown',
+      status: reachedWire ? e.status : null,
+      providerErrorType: typeof e.error?.type === 'string' ? e.error.type : null,
+      code: (typeof e.code === 'string' ? e.code : null)
+        ?? (typeof e.cause?.code === 'string' ? e.cause.code : null),
+      ...(reachedWire ? {} : {
+        preflightMessage: err instanceof Error ? err.message : String(err),
+      }),
+    });
+
     /* THE FAILURE STOPS HERE. No second provider, no local text path, no
        degraded template. A structured request that could not be served exactly
        was not served. */
