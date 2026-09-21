@@ -369,3 +369,162 @@ what MAIA finds.*
 
 > ⭐ Two axes, not one: **vocabulary** and **pedagogy**. Three facets over one reading. The writer
 > chooses how much MAIA explains — ⛔ never how much MAIA writes.
+
+---
+
+# 9 · `WRITERS-STUDIO-FACETS-01` — RATIFIED AS A BOUNDED CONTRACT (founder, 2026-09-21)
+
+⭐ Second founder direction of the day. **SUPERSEDES Amendment 1 (§8) as current law**; §8 is
+preserved and ⛔ not deleted. ⛔ **No implementation beyond this bounded facet contract is
+authorized by this act.**
+
+## 9.1 Governing law
+
+> ⭐ **Three facets. One intelligence. One Work.**
+
+**GUIDED · LEARNING · PRO** — ⛔ not separate products, ⛔ not capability tiers, ⛔ not different
+editorial truths. Three interaction surfaces over the **same Work, same MAIA, same commissioned
+editorial intelligence, same evidence, same revision authority**.
+
+| A facet MAY change | A facet MUST NOT change |
+|---|---|
+| how much orientation MAIA carries | the underlying observation |
+| how observations are expressed | the evidence supporting it |
+| how much teaching MAIA offers | the reading coverage |
+| how much governed machinery is visible | the Work · revision history · authorship authority · the governed editorial act |
+
+> ⭐ Given the same Work, scope and commission, **all three facets must resolve to the same
+> underlying editorial observation.**
+
+### The three
+
+- **GUIDED** — *"Help me shape this with you."* ⭐⭐ **NOT a reduced-capability mode. It is the mode
+  in which MAIA carries the GREATEST amount of interface and editorial translation complexity.**
+  Default interaction is L4.
+- **LEARNING** — *"Help me write — and teach me as we go."* Guided plus contextual craft teaching,
+  in relationship to the member's actual Work. Canonical affordance: **Why this matters.**
+  ⛔ Optional and invited, never imposed. ⛔ Never a detached course system.
+- **PRO** — *"Give me full editorial control."* Exposes lens · scope · coverage · evidence ·
+  rationale · revision history · comparison · provenance · editorial records.
+  ⭐ **Pro exposes machinery. ⛔ It does not create a different reading.**
+
+## 9.2 Selection
+
+Asked at Work establishment: **"How would you like MAIA to work with you?"** — then a quiet control
+near the Work name (`Guided ▾`). Stated explicitly: ⭐ *"You can change this anytime. It does not
+change your Work."*
+
+⛔ **No qualification, test, professional status or inferred skill level.**
+⛔ **No member is labelled beginner, intermediate or expert.**
+⭐ **The member declares the preferred relationship.**
+
+### ⚠️ Disposition of Amendment 1's L6e
+
+L6e recommended delivering facets as default disclosure depth **with no selector**, to satisfy the
+no-self-classification rule structurally. ⛔ **That mechanism is NOT TAKEN.** Recorded plainly, ⛔
+not re-argued.
+
+⭐ Its *substance* survives and is strengthened: the founder's options name **the relationship the
+member wants of MAIA**, never the member's level — which is why *"Give me full editorial control"*
+carries no implication that the others are for people who cannot handle it. ⭐ The dignity hazard
+L6e was written against is answered by **what the options say**, rather than by removing the
+question.
+
+## 9.3 ⚠️ L6b survives, and it is the rider most likely to be lost
+
+Amendment 1 held: *facets differ in how much MAIA **explains**, ⛔ never in how much MAIA **writes**.*
+This direction lists **authorship authority** among what must not change, which carries it — ⭐ but
+only under the broad reading, and the narrow reading is the more natural one.
+
+⚠️ **The two readings, kept apart:**
+
+- **Narrow** — *who may authorize a mutation.* ⭐ Already structurally guaranteed by the three-object
+  ruling, and ⛔ **unchanged by any facet automatically.**
+- **Broad** — *how much of the proposed prose MAIA generated.* ⛔ **NOT guaranteed by anything.**
+
+⭐⭐ A Guided facet can preserve authorization authority perfectly while MAIA drafts far more of the
+member's text — and *"MAIA holds more of the process"* is the exact phrase under which that drift
+arrives, sounding like care. ⛔ That is the population where dependency risk is highest, and the
+Sovereignty Invariant check applies directly.
+
+> ⭐ **Operative reading, binding on implementation: a facet changes how much MAIA TRANSLATES and
+> EXPLAINS. ⛔ It never changes how much MAIA WRITES.** The proposal chain, the authorization, and
+> `Use it · Change it · Talk about it · Undo` are **identical in all three facets.**
+
+⭐ The direction's own word is the right one and should be kept verbatim in the implementation:
+MAIA carries *"editorial **translation** complexity."*
+
+## 9.4 Orthogonal state model
+
+**Work state** (Idea → Material → Draft → Completed → Revisited) and **facet**
+(Guided → Learning → Pro) are **independent axes**.
+
+⛔ Never infer writing expertise from Work state. ⛔ Never infer Work state from facet.
+⭐ A member with an idea may choose Pro; a member with a completed manuscript may choose Guided.
+
+⚠️ **Four of the five Work states have no substrate** (§3 and study Addendum 3). ⭐ The 5×3 matrix is
+the **conceptual model, ratified**; ⛔ it is **not a build authorization for the twelve cells whose
+Work state this lane excludes.** In `WRITERS-STUDIO-CONVERGENCE-01`, only the **Draft** and
+**Completed** rows are in scope.
+
+## 9.5 Elemental foundation — the distinction to protect
+
+⭐ The facet system **does not replace or alter** the Elemental opening (L2).
+
+| | Describes |
+|---|---|
+| **Elements** — Inspiration · Meaning · Form · Function · Coherence | **the Work** |
+| **Facet** — Guided · Learning · Pro | **how MAIA accompanies the member** |
+
+⭐ Different dimensions. ⛔ Preserve the distinction; a facet must never be derived from an
+elemental answer, and an elemental answer must never be inferred from a facet.
+
+## 9.6 Acceptance invariant
+
+For **one governed observation in Elemental Alchemy**, demonstrate all three surfaces. The
+underlying observation, evidence and revision authority must remain **identical**.
+
+**⛔ FOUR FAILURE CONDITIONS — any one fails the implementation**
+
+1. ⛔ Changing facets changes what MAIA believes happened in the passage
+2. ⛔ Pro has access to a different editorial truth than Guided or Learning
+3. ⛔ Guided exposes professional machinery the member did not request
+4. ⛔ Learning teaches **away from** the actual Work rather than **through** it
+
+**Added, from the substrate:**
+
+5. ⛔ A facet changes how much of the proposed prose MAIA authored (§9.3)
+6. ⛔ **Teaching prescribes quality rather than describing technique.** ⭐ The `voice` lens holds
+   that *"the manuscript itself is the reference, never an external standard"*; a **Why this
+   matters** panel that imports an external standard of good writing breaches that lens and
+   Invariant 14 with it. ⭐ Teaching may explain what a technique does to a reader; ⛔ it may not
+   rank the member's choice against an outside ideal.
+
+## 9.7 ⚠️ Two things this act does not settle
+
+**(a) Does a facet change which observations are SURFACED?** §4 ratified *unranked, **all
+reachable***. The acceptance invariant governs **one observation rendered three ways** and is
+silent on the **set**. ⚠️ *"Guided shows 6 patterns, Pro shows 87 observations"* is the
+implementation that will be built by default, and it is a **reachability** difference wearing a
+presentation costume. ⭐ The compatible reading is: **one set, differing default depth, everything
+reachable from every facet.** ⛔ Not ruled here — founder question.
+
+**(b) ⚠️ NAMING COLLISION — "Pro".** Layer 1 of the ruled house grammar is
+**Vision Studio · Author Studio · Pro Studio** (`studioMap.ts:7`). Under this act a member would be
+in **Author Studio** using the **Pro facet**, while **Pro Studio** is a different house entirely.
+⛔ Two different things named Pro, one product — the category-collision class this codebase has
+repeatedly caught before it shipped. ⭐ Rename one; ⛔ not decided here. Joins the open naming
+question (Author Studio vs Writer's Studio).
+
+## 9.8 Standing
+
+**RATIFIED** §9.1 governing law · the three facets · selection · orthogonality · the elemental
+distinction · the acceptance invariant (6 failure conditions).
+**SUPERSEDED** Amendment 1 §8 as current law; L6a/L6c/L6d carried forward inside §9.1–9.2, L6b
+carried forward as §9.3, L6e mechanism ⛔ not taken, substance ratified.
+**⛔ NOT AUTHORIZED BY THIS ACT** — any implementation beyond this bounded facet contract · the
+twelve out-of-scope matrix cells · the Elemental arrival · the §9.7 questions.
+⛔ Steps 2–8 remain **NOT STARTED**. ⛔ **Production untouched.**
+
+> ⭐ One observation. Three expressions. The writer chooses how MAIA accompanies them — ⛔ never how
+> much of their book MAIA writes.
