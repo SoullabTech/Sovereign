@@ -3,17 +3,48 @@ set -o pipefail
 
 SHA=2f211f432394a236cc2bcdb4fea55ca1bd179713
 SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
+PRIOR_SHA=858ee4948fd5e4f7a65dab156004bb863ad8ae66
 PTR=/private/tmp/source-level-calibration-01-preflight-current.txt
-ACT_MARK=/private/tmp/source-level-calibration-01-act-invoked.txt
+PRIOR_ACT_MARK=/private/tmp/source-level-calibration-01-act-invoked.txt
+RETRY_MARK=/private/tmp/source-level-calibration-01-retry-01-act-invoked.txt
 
-test ! -e "$ACT_MARK"
+test -f "$PRIOR_ACT_MARK"
+test ! -e "$RETRY_MARK"
+grep -Eq '^SOURCE-LEVEL-CALIBRATION-01 INVOKED [0-9]{8}T[0-9]{6}Z implementation 858ee4948fd5e4f7a65dab156004bb863ad8ae66 subject faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8$' "$PRIOR_ACT_MARK"
+PRIOR_ACTSTAMP="$(awk '{print $3}' "$PRIOR_ACT_MARK")"
+
+PRIOR_RUNROOTS="$(find /private/tmp -type d -path "*/docs/programme/VOICE-2026/driver-ledger/SOURCE-LEVEL-CALIBRATION-01-ACT-$PRIOR_ACTSTAMP" -print 2>/dev/null | LC_ALL=C sort)"
+PRIOR_COUNT="$(printf '%s\n' "$PRIOR_RUNROOTS" | sed '/^$/d' | wc -l | tr -d ' ')"
+test "$PRIOR_COUNT" = 1
+PRIOR_RUNROOT="$(printf '%s\n' "$PRIOR_RUNROOTS" | sed '/^$/d')"
+PRIOR_LEDGER="$(dirname "$PRIOR_RUNROOT")"
+PRIOR_L1DIR="$PRIOR_LEDGER/SOURCE-LEVEL-CALIBRATION-01-L1-on-$PRIOR_ACTSTAMP"
+test -d "$PRIOR_L1DIR"
+test -f "$PRIOR_RUNROOT/L1.stdout"
+grep -q 'xcodegen generate (driver only; no phone sample, no source playback)' "$PRIOR_RUNROOT/L1.stdout"
+grep -q 'build-for-testing (driver only; no source playback)' "$PRIOR_RUNROOT/L1.stdout"
+grep -q 'sample 1/5 — PRE-PLAY harness-zero' "$PRIOR_RUNROOT/L1.stdout"
+grep -q 'idx: unbound variable' "$PRIOR_RUNROOT/L1.stdout"
+test ! -f "$PRIOR_L1DIR/sample-timing.tsv"
+test -z "$(find "$PRIOR_L1DIR" -maxdepth 1 -type f -name 'sample-*-afplay-liveness.tsv' -print -quit)"
+test -z "$(find "$PRIOR_L1DIR" -maxdepth 1 -type f -name 'sample-*-xcodebuild.log' -print -quit)"
+test -z "$(find "$PRIOR_L1DIR" -maxdepth 1 -type f -name 'sample-*-harness-state.txt' -print -quit)"
+test -z "$(find "$PRIOR_L1DIR" -maxdepth 1 -type f -name 'sample-*-preplay-processes.json' -print -quit)"
+if [ -d "$PRIOR_L1DIR/journals" ]; then
+  test -z "$(find "$PRIOR_L1DIR/journals" -maxdepth 1 -type f -name '*.jsonl' -print -quit)"
+fi
+test ! -f "$PRIOR_RUNROOT/populations.tsv"
+test ! -f "$PRIOR_RUNROOT/RESULT"
+test ! -f "$PRIOR_RUNROOT/SELECTED-SOURCE-PIN"
 
 AUTH="$(printenv K00_EXEC_AUTHORITY 2>/dev/null || true)"
-[ -n "$AUTH" ]
+test "$AUTH" = FOUNDER-REAUTHORIZED-SOURCE-LEVEL-CALIBRATION-01-RETRY-01
+RETRY_BASIS="$(printenv K00_CAL_RETRY_BASIS 2>/dev/null || true)"
+test "$RETRY_BASIS" = ACT01_INFRA_PREPLAY_ZERO_MEASUREMENT
 GEOMETRY_CONFIRMATION="$(printenv K00_CAL_GEOMETRY_CONFIRMATION 2>/dev/null || true)"
-[ "$GEOMETRY_CONFIRMATION" = UNCHANGED ]
+test "$GEOMETRY_CONFIRMATION" = UNCHANGED
 SAFETY_CONFIRMATION="$(printenv K00_CAL_OPERATOR_SAFETY 2>/dev/null || true)"
-[ "$SAFETY_CONFIRMATION" = CONFIRMED ]
+test "$SAFETY_CONFIRMATION" = CONFIRMED
 
 test -f "$PTR"
 WT="$(sed -n '1p' "$PTR")"
@@ -43,12 +74,23 @@ test "$AGE" -ge 0
 test "$AGE" -le 300
 
 ACTSTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-( set -o noclobber; printf 'SOURCE-LEVEL-CALIBRATION-01 INVOKED %s implementation %s subject %s\n' "$ACTSTAMP" "$SHA" "$SUBJECT_SHA" > "$ACT_MARK" )
+( set -o noclobber; printf 'SOURCE-LEVEL-CALIBRATION-01 RETRY-01 INVOKED %s implementation %s subject %s priorAct %s\n' "$ACTSTAMP" "$SHA" "$SUBJECT_SHA" "$PRIOR_ACTSTAMP" > "$RETRY_MARK" )
 
-RUNROOT="$WT/docs/programme/VOICE-2026/driver-ledger/SOURCE-LEVEL-CALIBRATION-01-ACT-$ACTSTAMP"
+RUNROOT="$WT/docs/programme/VOICE-2026/driver-ledger/SOURCE-LEVEL-CALIBRATION-01-RETRY-01-ACT-$ACTSTAMP"
 mkdir -p "$RUNROOT"
-cp "$ACT_MARK" "$RUNROOT/act-marker.txt"
-printf 'implementation=%s\nsubject=%s\npreflight=%s\nfixtureSha256=%s\ngeometrySha256=%s\ngeometryConfirmation=%s\noperatorSafety=%s\n'   "$SHA" "$SUBJECT_SHA" "$PF" "$FIXTURE_SHA" "$GEOMETRY_SHA" "$GEOMETRY_CONFIRMATION" "$SAFETY_CONFIRMATION" > "$RUNROOT/act-identity.txt"
+cp "$RETRY_MARK" "$RUNROOT/retry-act-marker.txt"
+cp "$PRIOR_ACT_MARK" "$RUNROOT/prior-act-marker.txt"
+{
+  printf 'retryBasis=%s\n' "$RETRY_BASIS"
+  printf 'priorActStamp=%s\n' "$PRIOR_ACTSTAMP"
+  printf 'priorRunroot=%s\n' "$PRIOR_RUNROOT"
+  printf 'priorL1Dir=%s\n' "$PRIOR_L1DIR"
+  printf 'priorL1StdoutSha256=%s\n' "$(shasum -a 256 "$PRIOR_RUNROOT/L1.stdout" | awk '{print $1}')"
+  printf 'priorMeasurementRows=0\n'
+  printf 'priorPlaybackStarted=false\n'
+  printf 'priorPhoneInvocationStarted=false\n'
+} > "$RUNROOT/retry-basis.txt"
+printf 'implementation=%s\nsubject=%s\npreflight=%s\nfixtureSha256=%s\ngeometrySha256=%s\ngeometryConfirmation=%s\noperatorSafety=%s\n' "$SHA" "$SUBJECT_SHA" "$PF" "$FIXTURE_SHA" "$GEOMETRY_SHA" "$GEOMETRY_CONFIRMATION" "$SAFETY_CONFIRMATION" > "$RUNROOT/act-identity.txt"
 
 SELECTED=""
 SELECTED_DIR=""
@@ -78,7 +120,7 @@ done
 if [ -z "$SELECTED" ]; then
   printf 'NO_LEVEL_PIN\nV1 remains 20 dB; no threshold change; no L4 authorized.\n' | tee "$RUNROOT/RESULT"
   ( cd "$RUNROOT" && find . -type f ! -name SHA256SUMS.act | LC_ALL=C sort | xargs shasum -a 256 ) > "$RUNROOT/SHA256SUMS.act"
-  echo "SOURCE-LEVEL-CALIBRATION-01 COMPLETE NO_LEVEL_PIN $RUNROOT"
+  echo "SOURCE-LEVEL-CALIBRATION-01 RETRY-01 COMPLETE NO_LEVEL_PIN $RUNROOT"
   exit 0
 fi
 
@@ -132,4 +174,4 @@ PY
 } | tee "$RUNROOT/SELECTED-SOURCE-PIN"
 
 ( cd "$RUNROOT" && find . -type f ! -name SHA256SUMS.act | LC_ALL=C sort | xargs shasum -a 256 ) > "$RUNROOT/SHA256SUMS.act"
-echo "SOURCE-LEVEL-CALIBRATION-01 COMPLETE SELECTED $SELECTED $RUNROOT"
+echo "SOURCE-LEVEL-CALIBRATION-01 RETRY-01 COMPLETE SELECTED $SELECTED $RUNROOT"
