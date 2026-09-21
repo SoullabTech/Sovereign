@@ -67,7 +67,7 @@ export type DisclosureSourceClass = 'work';
  */
 export type DisclosureParticipationBasis = 'member_invoked';
 
-/** The only boundary constituted in v1. */
+/** The boundaries constituted in v1. Each value mirrors one migration. */
 export type DisclosureBoundary =
   | 'writers_studio.focus->maia_cognition'
   /**
@@ -77,7 +77,19 @@ export type DisclosureBoundary =
    * boundary its disclosure actually crossed. Mirrors migration
    * `20260913000002`, one value and nothing else.
    */
-  | 'writers_studio.developmental_ask->maia_cognition';
+  | 'writers_studio.developmental_ask->maia_cognition'
+  /**
+   * ⭐ THE EDITORIAL TURN crossing — passage prose handed to MAIA cognition
+   * from the Writer's Studio editorial runtime. A third path into cognition and
+   * therefore a third boundary, for the same reason S3 refused to reuse Focus:
+   * a receipt must name the boundary its disclosure actually crossed.
+   *
+   * ⚠ THIS UNION IS THE SECOND ENFORCEMENT OF THE SQL CHECK, never a
+   * restatement of it. Mirrors migration `20260921000001`, one value and
+   * nothing else. ⛔ A value present in SQL and absent here (or the reverse) is
+   * a defect, not a convenience — the S3 lane recorded exactly that drift.
+   */
+  | 'writers_studio.editorial_turn->maia_cognition';
 
 /** The SHAPE of the selection — never its location. */
 export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';

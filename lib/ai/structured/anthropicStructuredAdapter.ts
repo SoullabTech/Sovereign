@@ -109,6 +109,12 @@ function toBlocks(content: readonly unknown[]): StructuredBlock[] {
   return out;
 }
 
+/* ⚠ MODULE SCOPE, DELIBERATELY. `executeOnce` is a sibling of the factory, not
+   a closure inside it, so the provenance block cannot read a binding held in the
+   factory. Hoisting one constant is the honest fix; re-nesting the function to
+   recover the closure would undo the wrapping that `execute` depends on. */
+const provider: ProviderName = 'anthropic';
+
 export interface AnthropicStructuredOptions {
   /** Injected in tests. Never constructed lazily behind the caller's back. */
   client?: Anthropic;
@@ -117,7 +123,6 @@ export interface AnthropicStructuredOptions {
 export function anthropicStructuredProvider(
   opts: AnthropicStructuredOptions = {},
 ): StructuredProvider {
-  const provider: ProviderName = 'anthropic';
   return {
     name: provider,
     async execute(req: StructuredRequest): Promise<StructuredResult> {
@@ -139,48 +144,48 @@ export function anthropicStructuredProvider(
 async function executeOnce(
   opts: AnthropicStructuredOptions, req: StructuredRequest,
 ): Promise<StructuredResult> {
-      const client = opts.client ?? new Anthropic();
-      const params = toAnthropicParams(req);
-      const t0 = Date.now();
+  const client = opts.client ?? new Anthropic();
+  const params = toAnthropicParams(req);
+  const t0 = Date.now();
 
-      /* THE REQUIREMENT IS NEUTRAL; THE MECHANISM IS THIS ADAPTER'S CHOICE.
-         The caller asks that a long completion not be cut off. For Anthropic
-         today that means streaming and taking the final message — a different
-         provider may honour the same requirement by long-polling a job or by
-         simply not having the timeout. Consumed whole either way, so the
-         neutral result is identical. */
-      const message = req.execution?.completion === 'long-running'
-        ? await (client.messages.stream(params as never)).finalMessage()
-        : await client.messages.create(params as never) as Anthropic.Message;
+  /* THE REQUIREMENT IS NEUTRAL; THE MECHANISM IS THIS ADAPTER'S CHOICE.
+     The caller asks that a long completion not be cut off. For Anthropic
+     today that means streaming and taking the final message — a different
+     provider may honour the same requirement by long-polling a job or by
+     simply not having the timeout. Consumed whole either way, so the
+     neutral result is identical. */
+  const message = req.execution?.completion === 'long-running'
+    ? await (client.messages.stream(params as never)).finalMessage()
+    : await client.messages.create(params as never) as Anthropic.Message;
 
-      return {
-        content: toBlocks(message.content as readonly unknown[]),
-        stopReason: (message.stop_reason as string | null) ?? null,
-        usage: {
-          inputTokens: message.usage?.input_tokens ?? 0,
-          outputTokens: message.usage?.output_tokens ?? 0,
-        },
-        provenance: {
-          provider,
-          /* THE MODEL REQUESTED AND SENT. Taken from the request that went up the
-             wire, so this fact can never drift from what was asked for — and it
-             is deliberately NOT the answer to "what actually replied". */
-          model: req.model,
-          /* WHAT THE PROVIDER SAYS ANSWERED — read from the RESPONSE, from the
-             same message object already read for content, stop_reason and usage.
-             No second request, no retry.
+  return {
+    content: toBlocks(message.content as readonly unknown[]),
+    stopReason: (message.stop_reason as string | null) ?? null,
+    usage: {
+      inputTokens: message.usage?.input_tokens ?? 0,
+      outputTokens: message.usage?.output_tokens ?? 0,
+    },
+    provenance: {
+      provider,
+      /* THE MODEL REQUESTED AND SENT. Taken from the request that went up the
+         wire, so this fact can never drift from what was asked for — and it
+         is deliberately NOT the answer to "what actually replied". */
+      model: req.model,
+      /* WHAT THE PROVIDER SAYS ANSWERED — read from the RESPONSE, from the
+         same message object already read for content, stop_reason and usage.
+         No second request, no retry.
 
-             ⛔ Never `req.model`. Populating this from the request would recreate
-             the original defect under a second field name, and the check built on
-             it would again reduce to `requested === requested`. */
-          reportedModel: typeof message.model === 'string' && message.model.length > 0
-            ? message.model
-            : null,
-          modelAgreement: deriveModelAgreement(
-            req.model,
-            typeof message.model === 'string' && message.model.length > 0 ? message.model : null,
-          ),
-          latencyMs: Date.now() - t0,
-        },
-      };
+         ⛔ Never `req.model`. Populating this from the request would recreate
+         the original defect under a second field name, and the check built on
+         it would again reduce to `requested === requested`. */
+      reportedModel: typeof message.model === 'string' && message.model.length > 0
+        ? message.model
+        : null,
+      modelAgreement: deriveModelAgreement(
+        req.model,
+        typeof message.model === 'string' && message.model.length > 0 ? message.model : null,
+      ),
+      latencyMs: Date.now() - t0,
+    },
+  };
 }
