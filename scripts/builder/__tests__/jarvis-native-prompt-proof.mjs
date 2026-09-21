@@ -41,9 +41,24 @@ try {
   };
 
   assert.throws(
+    () => buildNativePrompt({ ...packet, canonical_sha: "HEAD" }, repo),
+    (error) => error?.code === "PACKET_CANONICAL_SHA_INVALID",
+  );
+  assert.throws(
     () => buildNativePrompt({ ...packet, canonical_sha: baseSha }, repo),
     (error) => error?.code === "EXECUTION_HEAD_MISMATCH",
   );
+  assert.throws(
+    () => buildNativePrompt({ ...packet, context_selectors: ["../outside.txt"] }, repo),
+    (error) => error?.code === "SELECTOR_PATH_UNSAFE",
+  );
+
+  writeFileSync(path.join(repo, "target.txt"), "dirty\n");
+  assert.throws(
+    () => buildNativePrompt(packet, repo),
+    (error) => error?.code === "EXECUTION_WORKTREE_NOT_CLEAN",
+  );
+  execFileSync("git", ["checkout", "--", "target.txt"], { cwd: repo });
 
   const prompt = buildNativePrompt(packet, repo);
   assert.match(prompt, /MATERIALIZED CONTEXT/);
@@ -60,7 +75,7 @@ try {
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("15 passed · 0 failed");
+  console.log("18 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
