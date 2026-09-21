@@ -56,6 +56,21 @@ _packet_file() { echo "$PACKETS_DIR/$1.json"; }
 _result_file() { echo "$RESULTS_DIR/$1.json"; }
 _log_file()    { echo "$LOGS_DIR/$1.log"; }
 
+# Fingerprint the exact candidate bytes relative to HEAD, including untracked
+# files created by a new-file patch. Verification commands are allowed to inspect
+# and execute checks; they are not allowed to silently rewrite the admitted patch.
+_native_worktree_fingerprint() {
+    local wt="$1" f
+    {
+        git -C "$wt" diff --binary --no-ext-diff HEAD --
+        while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            printf 'UNTRACKED %s ' "$f"
+            git -C "$wt" hash-object -- "$f"
+        done < <(git -C "$wt" ls-files --others --exclude-standard)
+    } | git hash-object --stdin
+}
+
 _require_packet() {
     local f
     f="$(_packet_file "$1")"
@@ -470,7 +485,7 @@ _run_lane() {
     [ "$ending_sha" = "$starting_sha" ] && ending_sha=""
 
     # Unit 20 + NPA1: native output is either a governance claim or a patch.
-    local gate_json='' patch_admission_json=''
+    local gate_json='' patch_admission_json='' native_admitted_fingerprint=''
     if grep -q '^GOVERNANCE_GATE:' "$log" 2>/dev/null; then
         local gate_output gate_line_count gate_output_line_count gate_prefix_ok=true
         gate_output="$(cat "$log")"
@@ -506,6 +521,17 @@ _run_lane() {
         set -e
         if [ "$patch_code" -ne 0 ]; then
             [ "$exit_code" -ne 0 ] || exit_code="$patch_code"
+        else
+            set +e
+            native_admitted_fingerprint="$(_native_worktree_fingerprint "$wt")"
+            local fingerprint_code=$?
+            set -e
+            if [ "$fingerprint_code" -ne 0 ] || [ -z "$native_admitted_fingerprint" ]; then
+                echo "🛑 [ain-delegate] could not fingerprint admitted native patch — rolling back." >&2
+                exit_code=11
+                git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 || true
+                git -C "$wt" clean -fd >> "$log.verify" 2>&1 || true
+            fi
         fi
     fi
 
@@ -544,12 +570,32 @@ _run_lane() {
         if $all_pass; then test_results="pass"; else test_results="fail"; fi
     fi
 
+    # Verification may inspect and execute the declared checks, but it may not
+    # transform the candidate that patch admission actually admitted. Recompute
+    # the exact candidate fingerprint and HEAD after verification; any drift is
+    # a failed verification and is rolled back below.
+    if [ "$lane" = "local-native" ]         && [ "$exit_code" -eq 0 ]         && [ -z "$gate_json" ]         && [ -n "$native_admitted_fingerprint" ]         && { [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; }; then
+        local native_verified_fingerprint native_verified_head
+        set +e
+        native_verified_fingerprint="$(_native_worktree_fingerprint "$wt")"
+        local verified_fingerprint_code=$?
+        native_verified_head="$(git -C "$wt" rev-parse --short HEAD 2>/dev/null)"
+        local verified_head_code=$?
+        set -e
+        if [ "$verified_fingerprint_code" -ne 0 ]             || [ "$verified_head_code" -ne 0 ]             || [ "$native_verified_fingerprint" != "$native_admitted_fingerprint" ]             || [ "$native_verified_head" != "$starting_sha" ]; then
+            test_results="fail"
+            exit_code=12
+            verification_evidence="${verification_evidence}FAIL: VERIFICATION_MUTATED_WORKTREE\n"
+        fi
+    fi
+
     # A native candidate that fails independent verification never remains in the
     # worktree. Patch admission begins from a clean claimed worktree, so restoring
     # the captured starting SHA and removing newly-created untracked files returns
     # exactly to the pre-model state. The failed candidate remains evidenced by its
     # patch-admission ledger digest; only its filesystem effects are rolled back.
     if [ "$lane" = "local-native" ] && [ "$test_results" = "fail" ]; then
+        [ "$exit_code" -ne 0 ] || exit_code=12
         if git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 \
             && git -C "$wt" clean -fd >> "$log.verify" 2>&1; then
             ending_sha=""
