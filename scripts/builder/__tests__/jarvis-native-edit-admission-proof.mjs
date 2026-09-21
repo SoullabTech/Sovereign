@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 import os from "node:os";
 import { applyNativeEdits, parseNativeEditOutput } from "../jarvis-native-edit-admission.mjs";
@@ -46,7 +47,17 @@ try {
   must(readFileSync(path.join(wt,"src/a.txt"),"utf8") === "alpha\ngamma\nalpha\n", "only exact replacement bytes are applied");
   must(typeof r.generated_patch_digest === "string" && typeof r.structured_output_digest === "string", "structured output and generated patch have separate custody digests");
 
-  console.log("\n=== NEA4 stale SHA remains fail-closed through adapter ===");
+  console.log("\n=== NEA4 CLI composition does not trigger imported NPA CLI ===");
+  execFileSync("git", ["reset", "--hard", sha], { cwd: wt, stdio:"ignore" });
+  const packetFile = path.join(tmp, "packet.json");
+  const outputFile = path.join(tmp, "output.txt");
+  writeFileSync(packetFile, JSON.stringify(packet));
+  writeFileSync(outputFile, out([{ path:"src/a.txt", old_text:"beta", new_text:"gamma" }]));
+  const editCli = fileURLToPath(new URL("../jarvis-native-edit-admission.mjs", import.meta.url));
+  const cliResult = JSON.parse(execFileSync("node", [editCli, "apply", packetFile, wt, outputFile], { encoding:"utf8" }));
+  must(cliResult.ok && cliResult.input_kind === "EDIT_JSON", "edit CLI reaches adapter instead of imported patch CLI");
+
+  console.log("\n=== NEA5 stale SHA remains fail-closed through adapter ===");
   execFileSync("git", ["reset", "--hard", "HEAD"], { cwd: wt, stdio:"ignore" });
   writeFileSync(path.join(wt,"marker.txt"),"advance\n"); execFileSync("git",["add","marker.txt"],{cwd:wt}); execFileSync("git",["commit","-qm","advance"],{cwd:wt});
   r = applyNativeEdits({ packet, worktree: wt, outputText: out([{ path:"src/a.txt", old_text:"beta", new_text:"gamma" }]) });

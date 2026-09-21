@@ -21,6 +21,7 @@ import { execFileSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import path from "node:path";
 import os from "node:os";
+import { pathToFileURL } from "node:url";
 import { derivePermissionEnvelope } from "./work-unit.mjs";
 
 const MAX_PATCH_BYTES = 512 * 1024;
@@ -425,7 +426,9 @@ export function applyNativePatch({
 }
 
 const argv = process.argv.slice(2);
-if (argv[0] === "apply") {
+const IS_MAIN = Boolean(process.argv[1])
+  && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (IS_MAIN && argv[0] === "apply") {
   const packetPath = argv[1];
   const worktree = argv[2];
   const patchFile = argv[3];
