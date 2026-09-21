@@ -472,11 +472,32 @@ _run_lane() {
     # Unit 20 + NPA1: native output is either a governance claim or a patch.
     local gate_json='' patch_admission_json=''
     if grep -q '^GOVERNANCE_GATE:' "$log" 2>/dev/null; then
-        local gate_output gate_line_count
+        local gate_output gate_line_count gate_output_line_count gate_prefix_ok=true
         gate_output="$(cat "$log")"
         gate_line_count="$(grep -c '^GOVERNANCE_GATE:' "$log" 2>/dev/null || true)"
+        gate_output_line_count="$(printf '%s' "$gate_output" | awk 'END { print NR }')"
+        case "$gate_output" in
+            GOVERNANCE_GATE:*) ;;
+            *) gate_prefix_ok=false ;;
+        esac
         if [ "$lane" = "local-native" ] && {
-            [ "$gate_line_count" -ne 1 ]             || [[ "$gate_output" == *
+            [ "$gate_line_count" -ne 1 ] \
+            || [ "$gate_output_line_count" -ne 1 ] \
+            || [ "$gate_prefix_ok" != true ];
+        }; then
+            echo "[ain-delegate] native GOVERNANCE_GATE output was not one pure single-line claim — refusing result." >&2
+            gate_json=''
+            [ "$exit_code" -ne 0 ] || exit_code=10
+        else
+            gate_json="${gate_output#GOVERNANCE_GATE:}"
+            gate_json="${gate_json# }"
+            if ! printf '%s' "$gate_json" | jq -e 'type == "object"' >/dev/null 2>&1; then
+                echo "[ain-delegate] malformed GOVERNANCE_GATE claim — refusing result." >&2
+                gate_json=''
+                [ "$exit_code" -ne 0 ] || exit_code=10
+            fi
+        fi
+    fi
     if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ]; then
         local patch_code
         set +e
