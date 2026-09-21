@@ -97,4 +97,41 @@ for d in "$CFG/agent" "$CFG/agents" "$HOME/.claude/agents" "$HOME/.agents"; do
 done
 printf '(no "found:" lines means the agent reaches a run only from the materialized sandbox)\n'
 
+line 'C1 — NETWORK-CAPABLE SURFACES (presence of controls only; nothing contacted)'
+for v in OPENCODE_DISABLE_MODELS_FETCH OPENCODE_MODELS_URL OPENCODE_MODELS_PATH \
+         OPENCODE_DISABLE_AUTOUPDATE OTEL_EXPORTER_OTLP_ENDPOINT OTEL_EXPORTER_OTLP_HEADERS \
+         HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY; do
+  printf '%s: %s\n' "$v" "$(printenv "$v" >/dev/null 2>&1 && echo SET || echo '<unset>')"
+done
+printf '(SET/unset only — proxy and OTEL values may carry credentials)\n'
+
+line 'C2 — SECOND INLINE CONFIG CHANNEL + AMBIENT PROVIDER CREDENTIALS (presence only)'
+for v in OPENCODE_CLI_CONFIG_CONTENT OPENCODE_CONFIG_CONTENT OPENCODE_API_KEY OPENCODE_DB \
+         OPENCODE_SERVER_PASSWORD OPENCODE_PASSWORD OPENCODE_LOG_LEVEL OPENCODE_PRINT_LOGS; do
+  printf '%s: %s\n' "$v" "$(printenv "$v" >/dev/null 2>&1 && echo SET || echo '<unset>')"
+done
+for v in AWS_BEARER_TOKEN_BEDROCK AWS_REGION AZURE_RESOURCE_NAME GOOGLE_VERTEX_API_KEY \
+         GOOGLE_CLOUD_PROJECT CLOUDFLARE_ACCOUNT_ID SNOWFLAKE_CORTEX_PAT GITLAB_TOKEN \
+         MODAL_PROXY_TOKEN AICORE_SERVICE_KEY; do
+  printf '%s: %s\n' "$v" "$(printenv "$v" >/dev/null 2>&1 && echo SET || echo '<unset>')"
+done
+printf '(presence only — no value is printed; these can authorize NON-authorized providers)\n'
+
+line 'C3 — WELLKNOWN ORIGIN STORE + PROVIDER PACKAGE ROOT (presence only)'
+for p in "$CFG/auth.json" "${XDG_DATA_HOME:-$HOME/.local/share}/opencode" \
+         "${XDG_DATA_HOME:-$HOME/.local/share}/opencode/node_modules" \
+         "${XDG_CACHE_HOME:-$HOME/.cache}/opencode"; do
+  if [ -e "$p" ]; then printf 'PRESENT  %s\n' "$p"; else printf 'absent   %s\n' "$p"; fi
+done
+
+line 'C4 — ANCESTOR CONFIG ON THE SANDBOX WALK (TMPDIR to /)'
+d="$(cd "${TMPDIR:-/tmp}" && pwd -P)"
+while :; do
+  for n in opencode.json opencode.jsonc .opencode .claude .agents AGENTS.md; do
+    [ -e "$d/$n" ] && printf 'PRESENT  %s/%s\n' "$d" "$n"
+  done
+  parent="$(dirname "$d")"; [ "$parent" = "$d" ] && break; d="$parent"
+done
+printf '(any line above is an ambient source reachable by the unbounded config walk)\n'
+
 line 'PROBE COMPLETE — read-only, nothing written'
