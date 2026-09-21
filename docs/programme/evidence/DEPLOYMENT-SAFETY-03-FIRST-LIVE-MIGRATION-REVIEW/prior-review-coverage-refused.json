@@ -1,0 +1,80 @@
+{
+  "verdict": "APPROVED",
+  "plan_sha256": "44aa49dfa754a07ba05ea8c95a28b3bdd7eb7e420c4cf393b553c4cddb8f3089",
+  "trace_id": "736fcb8f-ec23-4992-aa5e-1ce3ed17784c",
+  "reviewer": "Independent production database migration reviewer (Claude, DS03 first-live review)",
+  "summary": "The single pending migration (20260921000002_epistemic_join_integration_shadow.sql) adds one new child table, maia_epistemic_join_integration_shadow_runs, with a composite FK into the existing maia_relational_field_shadow_runs table via its existing UNIQUE(turn_id, model_name, architecture_version) constraint. It does not alter, rename, or add any column to the parent table, and creates no trigger on it. Target code (runner.ts + epistemicTelemetryStore.ts) writes to the new table with an INSERT column list and value shapes that exactly satisfy every CHECK constraint (closed-vocabulary JSONB key sets for admitted_standing_counts and refusal_code_counts verified 1:1 against the RelationStanding and RefusalCode TypeScript unions; status/error_count/proposal_count arithmetic checks; representation_closed always literal-true by the type system). The exact old-reader files (runner.ts, evidenceStore.ts at commit 8dd6b93b) contain no import of, or reference to, epistemicTelemetryStore or the new table; they perform the identical unchanged INSERT into maia_relational_field_shadow_runs. Because the migration is purely additive to a new table and the parent table's shape/contract is untouched, the exact old reader can remain live and continue writing safely after this migration commits, both as the sole committed prefix and as the terminal state. No high or medium findings were identified; one low-severity operational note about FK-creation lock timing is recorded.",
+  "findings": [
+    {
+      "id": "FK-LOCK-TIMING",
+      "severity": "low",
+      "path": "database/migrations/20260921000002_epistemic_join_integration_shadow.sql",
+      "evidence": "The migration CREATEs a new table with `FOREIGN KEY (turn_id, model_name, architecture_version) REFERENCES public.maia_relational_field_shadow_runs(...)`. PostgreSQL takes a lock on the referenced table while adding the FK's enforcement trigger/constraint, which can briefly contend with concurrent INSERTs from the old reader's persistRelationalFieldShadowEvidence() into that same parent table.",
+      "fix": "No code change needed: the new table is empty at creation time so constraint validation is effectively instantaneous, and the migration runs in its own short transaction. Deploy runbooks should still avoid running schema migrations during a burst of shadow-run inserts if lock wait is a concern in practice; this was not measured in production."
+    }
+  ],
+  "coverage": {
+    "files": [
+      "docs/programme/DEPLOYMENT-SAFETY-03_STEP3_COMPATIBILITY_GATED_MIGRATE_BEFORE_SWAP_2026-09-21.md",
+      "database/migrations/20260921000002_epistemic_join_integration_shadow.sql",
+      "database/migrations/20260916211500_relational_field_shadow_runs.sql",
+      "lib/maia/relational-field-shadow/epistemicTelemetryStore.ts",
+      "lib/maia/relational-field-shadow/runner.ts",
+      "old-reader/8dd6b93bb4faa6a32bb5c54af85dcebe0a0eda14/lib/maia/relational-field-shadow/runner.ts",
+      "old-reader/8dd6b93bb4faa6a32bb5c54af85dcebe0a0eda14/lib/maia/relational-field-shadow/evidenceStore.ts",
+      "lib/ain/epistemic-join/shadow/relationalField.ts",
+      "lib/ain/epistemic-join/types.ts"
+    ]
+  },
+  "limitations": [
+    "No production execution was observed; this review is a static/read-only inspection of the two-tree bundle and does not include a live or shadow-database run of the migration or the runners.",
+    "Actual PostgreSQL lock acquisition order and duration for the new FK constraint were not measured against a running production instance; the assessment that it is negligible rests on the child table being empty at migration time, not on an observed lock trace.",
+    "The old-reader evidence trace paths and hashes for runner.ts and evidenceStore.ts were supplied by the governing schema as fixed constants; this review physically Read both files at the stated old-reader path and relied on their content (absence of any reference to the new table or to epistemicTelemetryStore) as the basis for compatibility, but did not independently recompute or verify the SHA-256 values against the file bytes.",
+    "Target-code review of enum/CHECK alignment (RelationStanding, RefusalCode) was performed by reading lib/ain/epistemic-join/types.ts and lib/ain/epistemic-join/shadow/relationalField.ts, which were not on the mandatory Read list but were necessary to verify claim B (target code matches the schema it creates); no other target-tree files were inspected beyond what was needed to support the review questions.",
+    "No assessment was made of database engine version, extension availability, or non-PostgreSQL deployment targets; the review assumes the same PostgreSQL semantics evidenced elsewhere in the bundle's migrations."
+  ],
+  "migration_compatibility": {
+    "instrument": "migration-compatibility/v1",
+    "verdict": "COMPATIBLE",
+    "old_reader_commit": "8dd6b93bb4faa6a32bb5c54af85dcebe0a0eda14",
+    "target_reader_commit": "241e039ad7dffd4fffbe4a209ea152133d7b0f02",
+    "pending": [
+      {
+        "path": "database/migrations/20260921000002_epistemic_join_integration_shadow.sql",
+        "sha256": "e93179f834ae9746484403813d534d319c1089c1070fc2404477ac4618c1756b"
+      }
+    ],
+    "old_reader_evidence": [
+      {
+        "repo_path": "lib/maia/relational-field-shadow/runner.ts",
+        "trace_path": "old-reader/8dd6b93bb4faa6a32bb5c54af85dcebe0a0eda14/lib/maia/relational-field-shadow/runner.ts",
+        "sha256": "32d159da412ec26705a9779786bf4e2318bc5deeb9b899590cc324816dd341ac"
+      },
+      {
+        "repo_path": "lib/maia/relational-field-shadow/evidenceStore.ts",
+        "trace_path": "old-reader/8dd6b93bb4faa6a32bb5c54af85dcebe0a0eda14/lib/maia/relational-field-shadow/evidenceStore.ts",
+        "sha256": "a5f71a52436a7aa9fe05cbdfdfb5ce4c332f4ac6bf5ebea7864b3f92a3b6788d"
+      }
+    ],
+    "rationale": "The exact old-reader runner.ts and evidenceStore.ts (physically Read at their trace paths) contain no import of, or call into, epistemicTelemetryStore.ts, and their only database write is the unchanged INSERT into maia_relational_field_shadow_runs via ON CONFLICT (turn_id, model_name, architecture_version) DO NOTHING — the same statement, same columns, same target table as the version at the target commit. The pending migration only CREATEs a new child table (maia_epistemic_join_integration_shadow_runs) with an additive FK into the parent table's existing UNIQUE(turn_id, model_name, architecture_version) constraint; it adds no column, index rename, or trigger to the parent table itself. Because the old reader never references the new table and the parent table's read/write contract is unchanged, the old reader can continue writing safely after the migration commits, and the target reader's runner.ts/epistemicTelemetryStore.ts INSERT into the new table exactly matches every CHECK constraint the migration defines (closed JSONB key vocabularies verified against the RelationStanding and RefusalCode TypeScript unions; representation_closed is structurally always true; evaluated_count+error_count=proposal_count is enforced by the increment loop).",
+    "limitations": [
+      "No live database was used to execute the migration or observe the old reader continuing to write under it; compatibility is established by static code and schema inspection only.",
+      "Lock behavior during FK constraint creation on the parent table was not measured, only reasoned about from the empty-child-table condition."
+    ],
+    "failure_prefix_compatibility": {
+      "instrument": "migration-prefix-compatibility/v1",
+      "verdict": "ALL_PREFIXES_COMPATIBLE",
+      "prefixes": [
+        {
+          "through_path": "database/migrations/20260921000002_epistemic_join_integration_shadow.sql",
+          "through_sha256": "e93179f834ae9746484403813d534d319c1089c1070fc2404477ac4618c1756b",
+          "rationale": "This is a one-file pending set, so the only possible committed prefix is the migration itself in full. That prefix creates only the new, isolated child table and its FK/index; the parent table maia_relational_field_shadow_runs that the old reader writes to is untouched in shape and constraints. The old reader's exact write path (evidenceStore.ts INSERT ... ON CONFLICT DO NOTHING into maia_relational_field_shadow_runs) is therefore unaffected whether or not the migration transaction has committed, satisfying old-reader safety at this exact and only prefix.",
+          "limitations": [
+            "Only one prefix exists because there is only one pending migration; this finding does not generalize to multi-migration pending sets.",
+            "Prefix safety was established by static inspection of the migration's DDL and the old reader's exact source, not by executing the prefix against a live database and observing old-reader behavior."
+          ]
+        }
+      ]
+    }
+  }
+}
