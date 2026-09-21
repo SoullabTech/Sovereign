@@ -207,3 +207,118 @@ Never depth without provenance.**
    identity, one act.
 4. **Beta reach.** Should Develop enter a tester surface before or after S1–S3? Source says the
    server-side refusal must land first if it does.
+
+---
+
+# Addendum — the convergence plan, checked against substrate (2026-09-21)
+
+A convergence spine was proposed: **Book → insight → passage → conversation → revision → book**,
+with `Review my manuscript` as the single primary command and Elemental Alchemy as the acceptance
+manuscript. The spine is right and most of it is buildable. Three items in it assume substrate that
+does not exist, and one carries a category collision worth catching before a lane opens.
+
+## ✅ Endorsed without qualification
+
+**The single command.** `Review my manuscript` with `Whole · Chapter · Selection` beneath, whole
+defaulted for a completed book. This is S3 of the recommendation, arrived at independently.
+
+**Lenses move behind MAIA.** "Ways MAIA can look, not places the writer has to go" is exactly
+right, and cheap — `DEVELOPMENTAL_LENSES` is already a closed set with ratified semantics. A
+"Focus the review" control over the existing seven is composition, not construction.
+
+**The acceptance manuscript.** Formalising a real book as the acceptance instrument is the
+strongest idea in the plan. See "How to make it binding" below.
+
+## ⚠️ Three assumed capabilities that have no substrate
+
+### 1. "Check this quote" / source fidelity — ⛔ does not exist, and is a different capability class
+
+There is no quotation, attribution, or citation-verification capability in `lib/manuscript/**`.
+(Searches matching `attribution` resolve to `RefusalAttribution` — *who caused a refusal* — which
+is unrelated.) It is not one of the seven lenses, and it cannot be added as an eighth without
+crossing a line the others hold:
+
+> `voice`: "the manuscript itself is the reference, **never an external standard**."
+
+Every existing lens reads the Work against **itself**. Checking a quotation requires reading the
+Work against **the world** — a source outside the member's material. That is a different epistemic
+act with its own consent, provenance and sovereignty questions (what may MAIA consult? what does it
+mean for MAIA to tell an author their citation is wrong?).
+
+⭐ Worth building. ⛔ Not a lens. Presenting it in the review mock-up as finding #3 implies a
+capability that is absent, which is the one thing `assertStudioMapHonest()` exists to prevent.
+
+### 2. "Am I repeating this? / Show me where else I say this" — ⛔ no manuscript-level similarity
+
+`/api/writers-studio/editorial/relationships` returns **editorial relationships already open on a
+passage** — dialogue threads — "whole, and unranked. ⛔ No `mostRecent`, no `suggested`, no
+`default`." It is not semantic retrieval and does not answer "where else do I say this."
+
+No embedding or similarity substrate exists in `lib/manuscript/**`. It *does* exist elsewhere:
+`lib/corpus` runs `nomic-embed-text` at 768 dimensions over governed sources. So this is portable —
+but it is a **build**, not a wiring, and the repetition finding ("eleven passages carrying
+substantially the same conceptual function") depends entirely on it.
+
+### 3. "Prioritize a handful of consequential issues" — ⛔ blocked on the Finding 4 ruling
+
+Unchanged from the main review: ranking is an `editorial-consequence` judgment. It is the second
+constitutional act, not a sort order.
+
+## ⚠️ A category collision to name before the lane opens
+
+**There are already two Elemental Alchemys in this system.**
+
+1. **EA as governed knowledge** — `lib/corpus/eaIngestContract.ts`, frozen: 1,238 chunks,
+   SHA-pinned source and chunk set, `nomic-embed-text` 768-dim. Material MAIA reasons **from**.
+2. **EA as manuscript** — 174 sections in the Studio workspace. Material MAIA reasons **about**.
+
+These must not merge. If the acceptance run lets the reader reach EA-as-knowledge while reviewing
+EA-as-manuscript, the reading is contaminated: MAIA would be reading the book with the book already
+in her context, and every whole-work claim becomes unfalsifiable — you could not tell a reading from
+a recollection. ⭐ **Declare the separation in the acceptance instrument's preconditions**, not after
+a confusing result.
+
+## ⛔ The trap in "more naturally than Claude Code"
+
+The criterion is good and I would keep it, with one boundary.
+
+Claude Code has **no non-conclusions**. It will cheerfully tell an author what their book is trying
+to do, having read a third of it, and sound completely confident. That fluency is exactly what makes
+it feel easy — and exactly what Writer's Studio must not copy.
+
+So the criterion needs its second half:
+
+> More natural than Claude Code **at the same task**, and more *accountable* than Claude Code about
+> what it actually read.
+
+⭐ The distinctive claim of this product is not that MAIA reads well. It is that MAIA is the only
+reader that **knows what it read** — coverage, depth, revision, digest. Convergence should bury the
+machinery. It should not bury the provenance. "I read all 174 sections at body depth" is not
+machinery; it is the sentence that makes the editorial letter trustworthy, and it belongs in the
+letter.
+
+## How to make the acceptance manuscript binding
+
+The 11-task table is, in this codebase's own idiom, a **falsifier set**. Making it one costs little
+and makes the convergence testable rather than aspirational:
+
+1. **Name it.** `WS-CONVERGENCE-01`, acceptance manuscript Elemental Alchemy, pinned by manuscript
+   id and revision — so a later run is comparable to this one.
+2. **Preconditions, declared.** EA-as-knowledge unreachable from the reader (above). Develop
+   ungated for the run. Coverage recorded.
+3. **One falsifier per task**, each with the defeat candidate this codebase always asks for — the
+   plausible, competent, wrong implementation that passes the rest and fails this one. The obvious
+   ones: a review that ranks by recency; a "Show me" that opens the chapter but not the passage; a
+   revision that applies without an authorization row; a whole-work claim made on partial coverage.
+4. **The spine as a single falsifier.** Book → insight → passage → conversation → revision → book,
+   walked once end to end, with **no dead end and no loss of place**. That one is the release gate.
+   Everything else is a component test.
+
+## Revised sequence
+
+S1 Editorial Reading (coverage-licensed) · S2 the pass as a unit · S3 collapse to one command
+→ **then** the spine walk on Elemental Alchemy · S4 patterns · S5 chapter map.
+
+Repetition-detection and quote-checking are **new capabilities**, not convergence. They belong
+after the spine is walkable, or the convergence lane quietly becomes a build lane — which is how
+the labyrinth got built the first time.
