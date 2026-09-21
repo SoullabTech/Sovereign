@@ -30,6 +30,8 @@ const DIFF = 'lib/writersStudio/editorialDiff.ts';
 const PASSAGE = 'app/writers-studio/insight/ManuscriptPassage.tsx';
 const DESK = 'app/writers-studio/insight/RevisionDesk.tsx';
 const ADOPTION = 'lib/manuscript/editorialRuntime/adoption.ts';
+const REVIEW = 'lib/writersStudio/rebuild/chapterReview.ts';
+const STAGES = 'lib/manuscript/developmentalReading/commission.ts';
 
 export function runC6(): readonly Check[] {
   const out: Check[] = [];
@@ -41,6 +43,8 @@ export function runC6(): readonly Check[] {
   const passage = src(PASSAGE);
   const desk = src(DESK);
   const adoption = src(ADOPTION);
+  const review = src(REVIEW);
+  const stages = src(STAGES);
 
   /* ⭐ ONE entry point for every observation-level response, so the five
      controls cannot drift apart. The gate asserts the shape, not the count of
@@ -263,6 +267,44 @@ export function runC6(): readonly Check[] {
       rebuild.slice(rebuild.indexOf('const reviewFailureCopy'),
                     rebuild.indexOf('const visibleReviewFindings'))),
     'the writer is told where the reading was lost, never the internals of why');
+
+  /* ⭐⭐ THE TAXONOMY MUST COVER EVERY STAGE THE PIPELINE CAN REFUSE AT. A
+     partial map that LOOKS complete is worse than none: it reads as though the
+     unnamed cases cannot happen. Derived from the contract, ⛔ never a list
+     kept in step by hand. */
+  const declared = (stages.match(/export type CommissionStage = ([^;]+);/)?.[1] ?? '')
+    .split('|').map((x) => x.trim().replace(/'/g, '')).filter(Boolean);
+  add('C6R3-1-every-commission-stage-is-named',
+    declared.length === 6 && declared.every((st) => new RegExp(`\\b${st}:`).test(rebuild)),
+    `stages covered: ${declared.filter((st) => new RegExp(`\\b${st}:`).test(rebuild)).join(', ')}`);
+
+  add('C6R3-2-unknown-stage-has-an-honest-floor',
+    /'': '[^']*could not be confirmed/.test(rebuild),
+    'an unobserved stage says so rather than borrowing a stage name');
+
+  /* ⭐ Stop rather than grind through calls already doomed — ⛔ and never retry. */
+  add('C6R3-3-sequence-stops-on-upstream-failure',
+    /if \(upstream\(failure\)\) \{/.test(review) && /break;/.test(review),
+    'one upstream failure ends the sequence instead of producing three more');
+
+  add('C6R3-4-contract-refusals-do-not-stop-the-sequence',
+    /f\.attribution !== 'contract_violation'/.test(review),
+    'a lawful lens-specific refusal predicts nothing about the next lens and does not stop it');
+
+  add('C6R3-5-remaining-is-not-a-failure-list',
+    /remaining: DevelopmentalLens\[\]/.test(read(REVIEW)) &&
+    /remaining = lenses\.slice\(i \+ 1\)/.test(review),
+    'lenses never asked for are recorded apart from lenses that refused');
+
+  add('C6R3-6-resuming-is-a-member-gesture-over-unasked-lenses',
+    /data-continue-remaining/.test(rebuild) &&
+    /runReview\(review!\.remaining\)/.test(rebuild) &&
+    !/retry|attempt\s*\+\+|backoff/i.test(review),
+    'continuing commissions only what was never asked; nothing re-commissions a refusal');
+
+  add('C6R3-7-manifest-refusal-is-preserved',
+    /setReviewManifestRefusal\(kept\.refusal\)/.test(rebuild),
+    'the manifest refusal code is kept rather than reconstructed from the database');
 
   const c5 = runC5();
   const reusableC5 = c5.filter(c => c.id !== 'C5-19-no-new-revision-substrate');

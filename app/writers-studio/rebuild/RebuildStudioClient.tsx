@@ -169,6 +169,40 @@ function AuthoredStructureBranch({
   );
 }
 
+/**
+ * ⭐⭐ ALL SIX COMMISSION STAGES, PLUS FETCH, PLUS THE UNKNOWN CASE.
+ *
+ * ⚠️ The first version of this mapped three of them, so `read`, `classify` and
+ * `store` still collapsed into the generic sentence — a partial taxonomy that
+ * LOOKED complete, which is worse than none, because it reads as though the
+ * unnamed cases cannot happen.
+ *
+ * ⛔ WHERE the reading was lost, ⛔ never the internals of why: no schema,
+ * provider, constraint or stack ever reaches the page.
+ */
+const FAILED_AT: Record<string, string> = {
+  capture: 'Could not open the Work',
+  recover: 'Could not open the Work',
+  read: 'Could not finish this reading',
+  classify: 'Read, but findings not prepared',
+  freeze: 'Read, but not finalized',
+  store: 'Read, but not recorded',
+  fetch: 'Read, but not loaded back',
+};
+
+const FAILURE_SENTENCE: Record<string, string> = {
+  capture: 'MAIA could not open this part of your Work to read it, so this lens did not run. Nothing was changed.',
+  recover: 'MAIA could not open this part of your Work to read it, so this lens did not run. Nothing was changed.',
+  read: 'MAIA could not finish reading with this lens. Nothing from it was kept, and nothing in your Work changed.',
+  classify: 'MAIA finished reading with this lens, but its findings could not be prepared, so none were kept. Your Work is unchanged.',
+  freeze: 'MAIA finished reading with this lens, but the result could not be finalized, so nothing from it was kept. Your Work is unchanged.',
+  store: 'MAIA finished reading with this lens, but the result could not be recorded, so nothing from it was kept. Your Work is unchanged.',
+  fetch: 'This lens completed, but its reading could not be loaded back. Nothing from it is shown, and nothing in your Work changed.',
+  /* ⛔ The honest floor: we do not know where it was lost, and ⛔ saying so
+     beats naming a stage we did not observe. */
+  '': 'The result of this reading could not be confirmed, so nothing from it was kept. Your Work is unchanged.',
+};
+
 export default function RebuildStudioClient() {
   const params = useSearchParams();
   const requested = params?.get('m') ?? null;
@@ -211,6 +245,8 @@ export default function RebuildStudioClient() {
   const [reviewPhase, setReviewPhase] = useState<'idle' | 'reading' | 'ready' | 'partial'>('idle');
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number; lens: string } | null>(null);
   const [reviewNeedsRefresh, setReviewNeedsRefresh] = useState(false);
+  /* ⭐ C — kept beside the member sentence, never folded into it. */
+  const [reviewManifestRefusal, setReviewManifestRefusal] = useState<string | null>(null);
   const [reviewContinuityMessage, setReviewContinuityMessage] = useState<string | null>(null);
   const [reviewLens, setReviewLens] = useState<DevelopmentalLens | 'all'>('all');
   const [reviewFindingsOpen, setReviewFindingsOpen] = useState(true);
@@ -449,21 +485,44 @@ export default function RebuildStudioClient() {
     return true;
   }, []);
 
-  const runReview = useCallback(async () => {
+  /* ⭐ `lenses` present = the member asked to continue the readings that were
+     never attempted. ⛔ Absent = the ordinary whole-chapter gesture. */
+  const runReview = useCallback(async (lenses?: readonly DevelopmentalLens[]) => {
     if (!chapter || !context || reviewPhase === 'reading') return;
     if (!(await settleWriting())) return;
     const reviewRevision = writingRef.current?.currentRevisionId() ?? context.version;
     setReviewContinuityMessage(null);
-    setReview({ readingIds: [], payloads: [], findings: [], failures: [] });
+    const asked = lenses ?? DEVELOPMENTAL_LENSES;
+    const carried = lenses && review
+      ? { readingIds: [...review.readingIds], payloads: [...review.payloads],
+          findings: [...review.findings], failures: [...review.failures], remaining: [] }
+      : { readingIds: [], payloads: [], findings: [], failures: [], remaining: [] };
+    setReview(carried);
     setReviewLens('all');
     setReviewFindingsOpen(false);
     setReviewPhase('reading');
-    setReviewProgress({ done: 0, total: DEVELOPMENTAL_LENSES.length, lens: DEVELOPMENTAL_LENSES[0]! });
-    const bundle = await runChapterReview(
+    setReviewProgress({ done: 0, total: asked.length, lens: asked[0]! });
+    const fresh = await runChapterReview(
       context.manuscriptId, chapter.sections,
       (done, total, lens) => setReviewProgress({ done, total, lens }),
-      (partial) => setReview(partial),
+      (partial) => setReview({
+        ...partial,
+        readingIds: [...carried.readingIds, ...partial.readingIds],
+        payloads: [...carried.payloads, ...partial.payloads],
+        findings: [...carried.findings, ...partial.findings],
+        failures: [...carried.failures, ...partial.failures],
+      }),
+      asked,
     );
+    /* ⛔ The earlier readings are not re-read and not replaced; a resumed
+       gesture adds to what already completed. */
+    const bundle = {
+      ...fresh,
+      readingIds: [...carried.readingIds, ...fresh.readingIds],
+      payloads: [...carried.payloads, ...fresh.payloads],
+      findings: [...carried.findings, ...fresh.findings],
+      failures: [...carried.failures, ...fresh.failures],
+    };
     setReview(bundle);
     setReviewNeedsRefresh(false);
     setReviewPhase(bundle.failures.length === 0 ? 'ready' : 'partial');
@@ -476,8 +535,15 @@ export default function RebuildStudioClient() {
     });
     if (!kept.ok) {
       setReviewContinuityMessage('The readings are kept, but this chapter review could not be remembered as one set. Reload may not restore it yet.');
+      /* ⭐ C — the member sentence is right and says nothing operational, so
+         the refusal code is kept beside it rather than folded into it. Without
+         this the only way to learn why the manifest save refused was to
+         reconstruct it from the database afterwards. */
+      setReviewManifestRefusal(kept.refusal);
+    } else {
+      setReviewManifestRefusal(null);
     }
-  }, [chapter, context, reviewPhase, settleWriting]);
+  }, [chapter, context, reviewPhase, settleWriting, review]);
 
   const replaceAddress = useCallback((sectionId: string, threadId: string | null) => {
     if (typeof window === 'undefined') return;
@@ -611,16 +677,7 @@ export default function RebuildStudioClient() {
        the two apart or know whether reading again would help.
        ⛔ Still no schema names, no trigger names, no stack: WHERE it was lost,
        ⛔ never the internals of why. */
-    if (failure.stage === 'freeze') {
-      return 'MAIA finished reading with this lens, but the result could not be recorded, so nothing from it was kept. Your manuscript is unchanged, and reading again will not help until that is fixed.';
-    }
-    if (failure.stage === 'capture' || failure.stage === 'recover') {
-      return 'MAIA could not open this part of your Work to read it, so this lens did not run. Nothing was changed.';
-    }
-    if (failure.stage === 'fetch') {
-      return 'This lens completed, but its reading could not be loaded back. Nothing from it is shown, and nothing in your Work changed.';
-    }
-    return 'This lens could not complete safely, so no findings from it were kept. The other completed readings are unaffected.';
+    return FAILURE_SENTENCE[failure.stage ?? ''] ?? FAILURE_SENTENCE['']!;
   };
   const visibleReviewFindings = review
     ? reviewLens === 'all' ? review.findings : review.findings.filter((finding) => finding.lens === reviewLens)
@@ -1526,9 +1583,30 @@ export default function RebuildStudioClient() {
                       : reviewPhase === 'ready'
                         ? `MAIA read all ${chapter?.sections.length ?? 0} sections through ${DEVELOPMENTAL_LENSES.length} developmental lenses. Her frozen findings stay available as you work.`
                         : reviewPhase === 'partial'
-                          ? `MAIA kept every reading that completed. ${review?.failures.length ?? 0} lens${review?.failures.length === 1 ? '' : 'es'} could not complete, so this is not labeled a full review.`
+                          ? ((review?.remaining.length ?? 0) > 0
+                            /* ⭐ *Not attempted* is not *failed*, and the writer
+                               is owed the difference: one says the reading was
+                               refused, the other says it was never asked for
+                               and is theirs to ask for now. */
+                            ? `${review?.readingIds.length ?? 0} of ${DEVELOPMENTAL_LENSES.length} readings completed and are kept. MAIA stopped after a reading could not finish, rather than working through the rest. ${review?.remaining.length} were not attempted.`
+                            : `MAIA kept every reading that completed. ${review?.failures.length ?? 0} lens${review?.failures.length === 1 ? '' : 'es'} could not complete, so this is not labeled a full review.`)
                           : 'MAIA will read this chapter first, then keep her findings available while you move into individual sections.'}
                   </p>
+                  {/* ⭐⭐ A NEW MEMBER GESTURE, ⛔ NOT A HIDDEN RETRY. It
+                      commissions only the lenses that were never asked; a lens
+                      that refused stays refused, because one commission is one
+                      reading. */}
+                  {reviewPhase === 'partial' && (review?.remaining.length ?? 0) > 0 && (
+                    <button type="button" data-continue-remaining
+                      disabled={reviewPhase !== 'partial'}
+                      onClick={() => void runReview(review!.remaining)}
+                      style={{ border: `1px solid ${C.gold}`, borderRadius: 9, background: C.field, padding: '8px 12px', fontSize: 12, color: C.secondary, cursor: 'pointer', margin: '0 0 12px' }}>
+                      Continue the {review!.remaining.length} remaining reading{review!.remaining.length === 1 ? '' : 's'}
+                    </button>
+                  )}
+                  {reviewManifestRefusal && (
+                    <div data-manifest-refusal={reviewManifestRefusal} hidden />
+                  )}
                   {reviewContinuityMessage && (
                     <div role="status" data-review-continuity-message style={{ borderRadius: 9, background: C.panel, padding: '9px 10px', fontSize: 10.5, lineHeight: 1.45, color: C.muted, margin: '-5px 0 12px' }}>
                       {reviewContinuityMessage}
@@ -1556,10 +1634,7 @@ export default function RebuildStudioClient() {
                        state one layer up: the writer must open each one to learn
                        that they failed in different places. Short here, full
                        sentence below. */
-                    const failedAt = failure?.stage === 'freeze' ? 'Read, but not recorded'
-                      : failure?.stage === 'capture' || failure?.stage === 'recover' ? 'Could not open the Work'
-                        : failure?.stage === 'fetch' ? 'Read, but could not be loaded back'
-                          : 'Could not complete';
+                    const failedAt = FAILED_AT[failure?.stage ?? ''] ?? 'Could not be confirmed';
                     const status = failure ? failedAt
                       : readingNow ? 'Reading…'
                         : complete ? (count === 0 ? 'Complete · no observations' : active ? 'Showing findings from this lens.' : 'Open findings from this lens.')
