@@ -4,6 +4,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEPLOY="$SCRIPT_DIR/deploy-production.sh"
+DOCKERFILE="$SCRIPT_DIR/../Dockerfile"
 PASS=0; FAIL=0
 ok(){ echo "  ok:   $1"; PASS=$((PASS+1)); }
 bad(){ echo "  FAIL: $1"; FAIL=$((FAIL+1)); }
@@ -69,6 +70,12 @@ run_case(){ # context yes/no, verify_rc, docker_rc, evidence yes/no
 
 echo "DEPLOYMENT-SAFETY-03 — gate runtime custody"
 echo
+
+RUNNER_PACKAGES="$(sed -n '/^FROM node:20-bookworm-slim AS runner/,$p' "$DOCKERFILE" | sed -n '/apt-get install -y --no-install-recommends/,/rm -rf/p')"
+case " $RUNNER_PACKAGES " in
+  *" git "*) ok "target runtime image carries git for immutable object verification" ;;
+  *) bad "runner image does not carry git required by review-custody-migration-gate.ts" ;;
+esac
 
 OUT="$(run_case yes 0 0 yes)"; RC=$?
 [ "$RC" -eq 0 ] && ok "host-tsx absent + verified immutable image → gate may execute"                  || bad "lawful image fallback was refused: $OUT"

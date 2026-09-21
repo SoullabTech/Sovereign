@@ -41,18 +41,27 @@ host node_modules absent
 host tsx          absent
 ```
 
-Both the running sovereign image and the built sovereign image contain:
+The deployed sovereign image contains the TypeScript execution substrate but did
+**not** contain Git:
 
 ```text
-/app/node_modules/.bin/tsx                  PRESENT
+/app/node_modules/.bin/tsx                    PRESENT
 /app/scripts/review-custody-migration-gate.ts PRESENT
-node                                          PRESENT
-git                                           PRESENT
+node                                           PRESENT
+git                                            ABSENT
 ```
+
+A real, non-mutating container mechanism witness therefore refused:
+
+`REFUSED [GIT_UNREADABLE] — git rev-parse ... failed: spawnSync git ENOENT`
+
+This falsified the first GR1 candidate before merge. GR1 now also installs `git`
+in the sovereign runner stage, because immutable Git-object recomputation is part
+of the gate's custody contract.
 
 Installing a mutable host dependency tree merely to execute a gate would weaken
 deployment custody. GR1 therefore uses the already-built, immutable target image
-as the fallback execution substrate.
+as the fallback execution substrate and requires that image to carry Git.
 
 ## GR1 law
 
@@ -84,11 +93,12 @@ fallback. If host tsx is absent, migration-only remains refused.
 `scripts/verify-review-custody-gate-runtime.sh` proves:
 
 ```text
-12 passed · 0 failed
+13 passed · 0 failed
 ```
 
 including:
 
+- target runtime image carries Git for immutable object verification;
 - verified target image + host tsx absent → gate may execute;
 - target-image provenance is re-witnessed;
 - target-image tsx and target-image gate source are used;
