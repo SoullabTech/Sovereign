@@ -60,7 +60,17 @@ review={
       "trace_path":os.environ["OLD_TRACE_PATH"]
     }],
     "rationale":"Fixture old reader tolerates fixture target migration.",
-    "limitations":["Synthetic fixture only."]
+    "limitations":["Synthetic fixture only."],
+    "failure_prefix_compatibility":{
+      "instrument":"migration-prefix-compatibility/v1",
+      "verdict":"ALL_PREFIXES_COMPATIBLE",
+      "prefixes":[{
+        "through_path":os.environ["MIG"],
+        "through_sha256":os.environ["MIG_SHA"],
+        "rationale":"Fixture old reader tolerates the schema after the only committed prefix.",
+        "limitations":["Synthetic fixture only."]
+      }]
+    }
   }
 }
 open(os.environ["REV"],"w").write(json.dumps(review,indent=2)+"\n")
@@ -83,7 +93,7 @@ OUT="$("$TSX" "$ROOT/scripts/review-custody-migration-gate.ts" \
   --record "$REC" --review "$REV" --trace "$TRACE" \
   --repo "$ROOT" --target "$TARGET" --old-reader "$OLD" --migration "$MIG" 2>&1)"
 case "$OUT" in
-  *"MIGRATION REVIEW + COMPATIBILITY GATE APPLIES"*) ;;
+  *"MIGRATION REVIEW + COMPATIBILITY + PREFIX GATE APPLIES"*) ;;
   *) echo "FAIL: composed gate did not apply" >&2; echo "$OUT" >&2; exit 1 ;;
 esac
 
@@ -119,6 +129,39 @@ case "$BAD" in
   *) echo "FAIL: wrong refusal for omitted custody witness" >&2; echo "$BAD" >&2; exit 1 ;;
 esac
 
+# Counterexample: final-schema compatibility is present, but the Step 3
+# failure-prefix attestation is absent. Review Custody may admit the review bytes;
+# the ordering gate must still refuse migrate-before-swap.
+REC3="$TMP/record3.json"
+REV3="$TMP/review3.json"
+(
+  cd "$TARGET_WT"
+  "$TSX" "$ROOT/scripts/review-custody.ts" bind --plan "$PLAN" --base HEAD --out "$REC3" >/dev/null
+)
+python3 - "$REV" "$REV3" <<'PY'
+import json,sys
+r=json.load(open(sys.argv[1]))
+r["migration_compatibility"].pop("failure_prefix_compatibility",None)
+open(sys.argv[2],"w").write(json.dumps(r,indent=2)+"\n")
+PY
+(
+  cd "$TARGET_WT"
+  "$TSX" "$ROOT/scripts/review-custody.ts" admit \
+    --record "$REC3" --review "$REV3" --trace "$TRACE" --repo-root "$BUNDLE" >/dev/null
+)
+set +e
+NOPREFIX="$("$TSX" "$ROOT/scripts/review-custody-migration-gate.ts" \
+  --record "$REC3" --review "$REV3" --trace "$TRACE" \
+  --repo "$ROOT" --target "$TARGET" --old-reader "$OLD" --migration "$MIG" 2>&1)"
+RC=$?
+set -e
+[ "$RC" -ne 0 ] || { echo "FAIL: missing prefix compatibility was accepted" >&2; exit 1; }
+case "$NOPREFIX" in
+  *"BAD_PREFIX_COMPATIBILITY"*) ;;
+  *) echo "FAIL: wrong refusal for missing prefix compatibility" >&2; echo "$NOPREFIX" >&2; exit 1 ;;
+esac
+
 echo "MIGRATION COMPATIBILITY GATE E2E: PASS"
-echo "  lawful exact review + same trace -> applies"
+echo "  lawful exact review + same trace + all-prefix compatibility -> applies"
 echo "  raw trace read omitted from admitted custody coverage -> compatibility refused"
+echo "  final compatibility without failure-prefix compatibility -> ordering refused"

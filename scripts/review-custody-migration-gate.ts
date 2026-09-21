@@ -21,6 +21,7 @@ import {
 } from "./review-custody-core";
 import { STRICT_COVERAGE, witnessCoverage } from "./review-custody-coverage";
 import { composeMigrationGate } from "./migration-compatibility-gate-core";
+import { evaluatePrefixCompatibility } from "./migration-prefix-compatibility-core";
 
 class GateRefusal extends Error {
   constructor(readonly code: string, message: string) { super(message); }
@@ -221,7 +222,18 @@ function main(argv: string[]): number {
     throw new GateRefusal(composition.code, composition.reason);
   }
 
-  console.log("MIGRATION REVIEW + COMPATIBILITY GATE APPLIES");
+  // STEP 3 ordering law: because each migration commits independently, failure
+  // may leave any successful prefix in production while the old reader remains live.
+  // Final-schema compatibility is therefore insufficient for migrate-before-swap.
+  const prefixRaw = compatibilityRaw && typeof compatibilityRaw === "object" && !Array.isArray(compatibilityRaw)
+    ? (compatibilityRaw as Record<string, unknown>)["failure_prefix_compatibility"]
+    : undefined;
+  const prefix = evaluatePrefixCompatibility(prefixRaw, observedPending);
+  if (prefix.kind === "refused") {
+    throw new GateRefusal(prefix.code, prefix.reason);
+  }
+
+  console.log("MIGRATION REVIEW + COMPATIBILITY + PREFIX GATE APPLIES");
   console.log(`  target       ${target}`);
   console.log(`  old reader   ${oldReader}`);
   console.log(`  reviewer     ${approval.reviewer}`);
@@ -229,6 +241,7 @@ function main(argv: string[]): number {
   console.log(`  trace id     ${traceId}`);
   console.log(`  coverage     ${witnessed.files.length} witnessed file(s)`);
   console.log(`  migrations   ${migrations.length} pending file(s), all witnessed`);
+  console.log(`  prefixes     ${prefix.prefixes} committed prefix(es), all attested compatible`);
   for (const m of migrations) console.log(`    ✓ ${m}`);
   console.log("\n⛔ This proves custody and continued applicability, never migration correctness.");
   return 0;
