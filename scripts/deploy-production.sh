@@ -70,50 +70,223 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 #   migration success  →  deployment may continue
 #   migration failure  →  deployment STOPS, non-zero, no success message
 #
-# ⚠️ WHAT THIS CANNOT DO, STATED PLAINLY. Migrations run AFTER the container
-# swap (build → swap → provenance verify → migrate), so by the time a failure is
-# visible the reader is already live. Propagation makes the deploy fail closed
-# and routes the operator to rollback; it cannot retroactively prevent the swap.
-# Whether migrate should precede the swap is a deploy-ORDERING question, not a
-# propagation one, and is deliberately NOT decided here.
+# DEPLOYMENT-SAFETY-03 / STEP 3 strengthens the ordering after the original
+# fail-closed repair: an exact admitted review must establish final-schema and
+# every-prefix old-reader compatibility before pending migrations may run.
 #
-# ⛔ NOT CHANGED: migration discovery, selection, ordering, the ledger, manifests,
-# or any migration file.
-run_migrations_or_abort() {
-    local phase="$1"   # the command whose deploy this is, for the operator
+# Normal deploy/update now order:
+#   build → image provenance → review/compatibility gate
+#         → re-witness pending set + old reader → migrate
+#         → rollback tags → candidate swap → running provenance
+#
+# A migration failure therefore leaves the candidate reader unswapped. Because
+# the runner commits each migration independently, the admitted review must also
+# cover every successfully committed prefix that could remain after failure.
+#
+# ⛔ NOT CHANGED: migration discovery, selection, per-file transaction semantics,
+# the ledger, migration contents, or the migration-only command's role.
+# REVIEW-CUSTODY-01 / STEP 3 — production migration review preflight.
+#
+# This belongs at the DEPLOYMENT surface, not in the generic local migration
+# engine. Bootstrap/test/reconstruction databases are not production authority.
+# The pending set is derived read-only from the exact migration context + ledger,
+# and every pending SQL file must carry a physically witnessed Read event.
+_review_migration_compose() {
+    if [ -n "${MAIA_BUILD_CONTEXT:-}" ]; then
+        deploy_ctx_compose "$@"
+    else
+        docker compose -f "$COMPOSE_FILE" "$@"
+    fi
+}
 
-    log_info "Running database migrations..."
+collect_pending_production_migrations() {
+    local raw
+    if ! raw="$(_review_migration_compose --profile migrate run --rm -T migrate sh -c '
+        set -eu
+        ledger="$(mktemp)"
+        trap '"'"'rm -f "$ledger"'"'"' EXIT
+        psql "$DATABASE_URL" -Atc "SELECT filename FROM schema_migrations WHERE filename IS NOT NULL ORDER BY 1" > "$ledger"
+        for f in /app/database/migrations/*.sql; do
+            [ -e "$f" ] || continue
+            b="${f##*/}"
+            if ! grep -Fxq "$b" "$ledger"; then
+                printf "database/migrations/%s\n" "$b"
+            fi
+        done
+    ')"; then
+        log_error "⛔ Could not derive the production-pending migration set read-only."
+        log_error "   REVIEW-CUSTODY refuses rather than guessing what would execute."
+        return 1
+    fi
+    printf '%s\n' "$raw" | grep -E '^database/migrations/[^/]+\.sql$' || true
+}
+
+review_migration_custody_or_abort() {
+    local phase="$1"
+
+    # Cache only observations that have actually passed the composed gate.
+    # Step 3 will re-witness them immediately before schema mutation.
+    MIGRATION_COMPAT_EXPECTED_PENDING=""
+    MIGRATION_COMPAT_EXPECTED_OLD_READER=""
+
+    local target="${DEPLOY_CTX_FULL_SHA:-}"
+    if [ -z "$target" ]; then
+        target="$(git -C "$PROJECT_DIR" rev-parse HEAD 2>/dev/null || true)"
+    fi
+    if [ -z "$target" ]; then
+        log_error "⛔ REVIEW-CUSTODY cannot resolve the exact migration target commit."
+        return 1
+    fi
+
+    local pending
+    if ! pending="$(collect_pending_production_migrations)"; then
+        log_error "$phase aborted before migration: pending-set witness failed."
+        return 1
+    fi
+    MIGRATION_COMPAT_EXPECTED_PENDING="$pending"
+    if [ -z "$pending" ]; then
+        log_info "REVIEW-CUSTODY: no production-pending migrations; no migration review required."
+        return 0
+    fi
+
+    local record="${REVIEW_CUSTODY_RECORD:-}"
+    local review="${REVIEW_CUSTODY_REVIEW:-}"
+    local trace="${REVIEW_CUSTODY_TRACE:-}"
+    if [ -z "$record" ] || [ -z "$review" ] || [ -z "$trace" ]; then
+        log_error "════════════════════════════════════════════════════════════════"
+        log_error "⛔ DATABASE MIGRATION REVIEW REQUIRED — $phase REFUSED"
+        log_error "════════════════════════════════════════════════════════════════"
+        log_error "Pending migrations exist, but the bound evidence triplet is incomplete."
+        log_error "Set REVIEW_CUSTODY_RECORD, REVIEW_CUSTODY_REVIEW, REVIEW_CUSTODY_TRACE."
+        log_error "Self-reported coverage is not accepted."
+        printf '%s\n' "$pending" | sed 's/^/  pending: /' >&2
+        return 1
+    fi
+
+    local gate_root="${MAIA_BUILD_CONTEXT:-$PROJECT_DIR}"
+    local gate="$gate_root/scripts/review-custody-migration-gate.ts"
+    if [ ! -f "$gate" ]; then
+        log_error "⛔ Migration review gate is absent from target context: $gate"
+        return 1
+    fi
+    local tsx_bin="$PROJECT_DIR/node_modules/.bin/tsx"
+    if [ ! -x "$tsx_bin" ]; then
+        log_error "⛔ Migration review gate cannot execute: host tsx unavailable at $tsx_bin"
+        return 1
+    fi
+
+    # DEPLOYMENT-SAFETY-03 / STEP 2B: compatibility is relational to
+    # the reader that is actually live before any swap. Missing/unresolvable
+    # identity refuses; a guessed old reader would make compatibility meaningless.
+    local old_stamp old_reader
+    old_stamp="$(docker exec maia-sovereign printenv GIT_COMMIT 2>/dev/null || true)"
+    if [ -z "$old_stamp" ]; then
+        log_error "⛔ MIGRATION-COMPATIBILITY cannot identify the currently running reader."
+        return 1
+    fi
+    old_reader="$(git -C "$PROJECT_DIR" rev-parse "$old_stamp^{commit}" 2>/dev/null || true)"
+    if [ -z "$old_reader" ]; then
+        log_error "⛔ Running reader stamp does not resolve to a repository commit: $old_stamp"
+        return 1
+    fi
+
+    local args=(--record "$record" --review "$review" --trace "$trace"
+                --repo "$PROJECT_DIR" --target "$target" --old-reader "$old_reader")
+    local m
+    while IFS= read -r m; do
+        [ -n "$m" ] && args+=(--migration "$m")
+    done <<< "$pending"
+
+    log_info "REVIEW-CUSTODY + MIGRATION-COMPATIBILITY: checking exact pending relation..."
+    if ! "$tsx_bin" "$gate" "${args[@]}"; then
+        log_error "⛔ $phase aborted before migration: review/compatibility gate does not apply."
+        return 1
+    fi
+    MIGRATION_COMPAT_EXPECTED_OLD_READER="$old_reader"
+    log_success "Migration review custody + old-reader compatibility apply to the exact pending set"
+}
+
+rewitness_migration_relation_or_abort() {
+    local phase="$1"
+    local expected_pending="${MIGRATION_COMPAT_EXPECTED_PENDING-}"
+    local expected_old="${MIGRATION_COMPAT_EXPECTED_OLD_READER-}"
+
+    # Re-derive the mutable ledger relation immediately before mutation. The
+    # target tree is immutable; the production ledger and live reader are not.
+    local pending_now
+    if ! pending_now="$(collect_pending_production_migrations)"; then
+        log_error "⛔ $phase aborted before migration: could not re-witness the pending set."
+        return 1
+    fi
+    if [ "$pending_now" != "$expected_pending" ]; then
+        log_error "⛔ $phase aborted before migration: pending migration state moved after review."
+        log_error "   The compatibility claim applies only to the exact ordered set it reviewed."
+        return 1
+    fi
+
+    # If there is schema work to do, the old reader is the load-bearing recovery
+    # relation. Read it LAST, immediately before the migration runner.
+    if [ -n "$expected_pending" ]; then
+        if [ -z "$expected_old" ]; then
+            log_error "⛔ $phase aborted before migration: no reviewed old-reader identity is cached."
+            return 1
+        fi
+
+        local live_stamp live_old
+        live_stamp="$(docker exec maia-sovereign printenv GIT_COMMIT 2>/dev/null || true)"
+        if [ -z "$live_stamp" ]; then
+            log_error "⛔ $phase aborted before migration: the live reader identity cannot be read."
+            return 1
+        fi
+        live_old="$(git -C "$PROJECT_DIR" rev-parse "$live_stamp^{commit}" 2>/dev/null || true)"
+        if [ -z "$live_old" ] || [ "$live_old" != "$expected_old" ]; then
+            log_error "⛔ $phase aborted before migration: the live reader moved after compatibility review."
+            log_error "   reviewed: $expected_old"
+            log_error "   live:     ${live_old:-unresolved}"
+            return 1
+        fi
+        log_success "Old reader re-witnessed immediately before migration: $live_old"
+    fi
+}
+
+run_migrations_or_abort() {
+    local phase="$1"
+
+    # STEP 3 ordering law: no schema mutation occurs unless the mutable parts of
+    # the reviewed relation still match at the last possible pre-migration point.
+    if ! rewitness_migration_relation_or_abort "$phase"; then
+        exit 1
+    fi
+
+    log_info "Running database migrations before candidate swap..."
     if deploy_ctx_compose --profile migrate run --rm migrate; then
-        log_success "Migrations applied"
+        log_success "Migrations applied before candidate swap"
         return 0
     fi
 
     echo ""
     log_error "════════════════════════════════════════════════════════════════"
-    log_error "⛔ DATABASE MIGRATIONS FAILED — DEPLOYMENT ABORTED"
+    log_error "⛔ DATABASE MIGRATIONS FAILED — DEPLOYMENT ABORTED PRE-SWAP"
     log_error "════════════════════════════════════════════════════════════════"
     log_error ""
-    log_error "The runner stops at the FIRST failing file, so every later migration"
-    log_error "is unapplied too. This deploy is NOT complete and is NOT reported as"
-    log_error "complete. Smoke checks are skipped deliberately: passing them would"
-    log_error "only prove the reader starts, not that its schema exists."
+    log_error "The candidate reader was NOT swapped in."
+    log_error "The previously witnessed old reader remains the live reader."
+    log_error "Any earlier migration in this run that committed successfully was"
+    log_error "required by the admitted review to leave that old reader compatible"
+    log_error "at every committed prefix."
     log_error ""
-    log_error "⚠️  The container swap already happened — the reader is live against"
-    log_error "    a schema that did not finish migrating. Decide deliberately:"
+    log_error "The runner stops at the first failing file. Later migrations are"
+    log_error "unapplied and this deployment is NOT complete."
     log_error ""
-    log_error "  1. What failed, and what is unapplied:"
-    log_error "     docker exec maia-postgres psql -U soullab -d maia_consciousness \\"
-    log_error "       -c \"SELECT filename FROM schema_migrations ORDER BY applied_at DESC LIMIT 10;\""
+    log_error "Inspect what committed and what remains before any retry:"
+    log_error "  docker exec maia-postgres psql -U soullab -d maia_consciousness \\"
+    log_error "    -c \"SELECT filename FROM schema_migrations ORDER BY applied_at DESC LIMIT 10;\""
     log_error ""
-    log_error "  2. Roll the reader back to the previous image:"
-    log_error "     ./scripts/deploy-production.sh rollback"
-    log_error ""
-    log_error "  3. Or fix the migration and re-run migrations only:"
-    log_error "     ./scripts/deploy-production.sh migrate"
-    log_error ""
+    log_error "Do not swap the candidate reader until a newly applicable review/"
+    log_error "compatibility record governs the remaining exact pending set."
     log_error "════════════════════════════════════════════════════════════════"
     echo ""
-    log_error "$phase aborted: migrations did not succeed."
+    log_error "$phase aborted pre-swap: migrations did not succeed."
     exit 1
 }
 
@@ -516,10 +689,19 @@ cmd_deploy() {
     # PRE-swap: the built image must carry the asserted stamp; abort before any swap.
     deploy_ctx_verify_image "$GIT_COMMIT" "$MAIA_IMAGE_REPO:prod" || exit 1
 
-    # Tag images for rollback capability BEFORE starting
+    # REVIEW-CUSTODY + DS-03: the exact pending relation must carry an
+    # admitted review, exact old-reader compatibility, and failure-prefix safety.
+    review_migration_custody_or_abort "Deployment"
+
+    # STEP 3: migrate while the reviewed old reader is still live. The helper
+    # re-derives the pending set and re-witnesses the old reader immediately
+    # before invoking the runner. Failure exits here, before tags or candidate swap.
+    run_migrations_or_abort "Deployment"
+
+    # Only a successful pre-swap migration may advance rollback roles or the reader.
     tag_images_for_rollback "$GIT_COMMIT"
 
-    log_info "Starting containers..."
+    log_info "Starting containers after successful migrations..."
     deploy_ctx_compose up -d
 
     log_info "Waiting for services to be healthy..."
@@ -528,14 +710,12 @@ cmd_deploy() {
     # Post-swap: assert the running container is the commit we authorized.
     if ! deploy_ctx_verify_running "$GIT_COMMIT"; then
         log_error "Post-swap provenance verification FAILED — the running container does not report the"
-        log_error "authorized immutable commit $GIT_COMMIT. ABORTING before migrations and smoke checks."
-        log_error "The container swap already happened; roll back to the previous image:"
+        log_error "authorized immutable commit $GIT_COMMIT. Migrations already succeeded pre-swap."
+        log_error "The reviewed old reader was compatible with the resulting schema; restore the"
+        log_error "previous reader image if the candidate cannot be made live:"
         log_error "  ./scripts/deploy-production.sh rollback"
         exit 1
     fi
-
-    # Run migrations
-    run_migrations_or_abort "Deployment"
 
     log_success "Deployment complete!"
     echo ""
@@ -608,7 +788,14 @@ cmd_update() {
     # PRE-swap: the built image must carry the asserted stamp; abort before any swap.
     deploy_ctx_verify_image "$GIT_COMMIT" "$MAIA_IMAGE_REPO:prod" || exit 1
 
-    # Tag images for rollback capability BEFORE restarting
+    # REVIEW-CUSTODY + DS-03: same exact relation gate on update.
+    review_migration_custody_or_abort "Update"
+
+    # STEP 3: no candidate reader is swapped until the reviewed schema transition
+    # succeeds while the exact old reader remains live.
+    run_migrations_or_abort "Update"
+
+    # Rollback roles advance only after the pre-swap schema transition succeeds.
     tag_images_for_rollback "$GIT_COMMIT"
 
     deploy_ctx_compose up -d
@@ -617,13 +804,12 @@ cmd_update() {
     sleep 10
     if ! deploy_ctx_verify_running "$GIT_COMMIT"; then
         log_error "Post-swap provenance verification FAILED — the running container does not report the"
-        log_error "authorized immutable commit $GIT_COMMIT. ABORTING before migrations and smoke checks."
-        log_error "The container swap already happened; roll back to the previous image:"
+        log_error "authorized immutable commit $GIT_COMMIT. Migrations already succeeded pre-swap."
+        log_error "The reviewed old reader was compatible with the resulting schema; restore the"
+        log_error "previous reader image if the candidate cannot be made live:"
         log_error "  ./scripts/deploy-production.sh rollback"
         exit 1
     fi
-
-    run_migrations_or_abort "Update"
 
     log_success "Update complete!"
     cmd_status
@@ -641,6 +827,9 @@ cmd_migrate() {
     log_info "Running database migrations..."
 
     cd "$PROJECT_DIR"
+
+    # Migration-only production acts are governed by the same bound review.
+    review_migration_custody_or_abort "Migration-only run"
 
     docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate
 
