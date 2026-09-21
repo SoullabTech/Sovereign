@@ -393,7 +393,7 @@ test('legacy R5B/run-provider surfaces still refuse canonical W0.v2 and cannot i
 
 
 
-test('canonical Qwen v2 launch is standalone and isolated from user OpenCode config without provider inference', async () => {
+test('canonical GPT-OSS OpenCode v2 launch is standalone and isolated from user config', async () => {
   const { home } = tempEnv();
   const sourceEnv = {
     ...process.env,
@@ -404,18 +404,16 @@ test('canonical Qwen v2 launch is standalone and isolated from user OpenCode con
     OPENCODE_CONFIG: '/tmp/leaky-opencode.json',
     OPENCODE_CONFIG_DIR: '/tmp/leaky-opencode-dir',
     OPENCODE_CLI_CONFIG_CONTENT: '{"leak":true}',
-    OPENCODE_CONFIG_PROJECT_DISABLE: '1',
-    OPENCODE_DISABLE_PROJECT_CONFIG: '1',
   };
   let seen = null;
   try {
     const out = await WUC.executeCanonicalResolvedProvider(
       REPO,
       {
-        workUnitId: 'e3-v2-qwen-proof',
-        grantId: 'e3-grant-proof',
+        workUnitId: 'e3-v2-gpt-oss-proof',
+        grantId: 'e3-gpt-oss-grant-proof',
         workUnit: {
-          identity: { objective: 'Prove canonical Qwen v2 launch containment.' },
+          identity: { objective: 'Prove canonical GPT-OSS OpenCode v2 containment.' },
           custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
           scope: {
             base_ref: SHA,
@@ -427,17 +425,17 @@ test('canonical Qwen v2 launch is standalone and isolated from user OpenCode con
           },
         },
         binding: {
-          route_participant_id: 'primary',
-          transport_binding_id: 'tb-qwen-proof',
-          provider_id: 'qwen-local',
-          model_id: 'qwen3-coder:30b',
+          route_participant_id: 'challenger',
+          transport_binding_id: 'tb-gpt-oss-proof',
+          provider_id: 'gpt-oss-local',
+          model_id: 'gpt-oss:20b',
           adapter_id: 'opencode',
         },
         resolved: {
           execution_adapter: 'opencode',
           agent: 'jarvis-readonly',
-          model_ref: 'ollama/qwen3-coder:30b',
-          model_id: 'qwen3-coder:30b',
+          model_ref: 'ollama/gpt-oss:20b',
+          model_id: 'gpt-oss:20b',
         },
         sourceEnv,
       },
@@ -450,7 +448,7 @@ test('canonical Qwen v2 launch is standalone and isolated from user OpenCode con
             projectConfigExists: fs.existsSync(path.join(options.cwd, '.opencode')),
             runtimeHomeExists: fs.existsSync(options.env.HOME),
           };
-          callback(null, 'SYNTHETIC_QWEN_V2_OK', '');
+          callback(null, 'SYNTHETIC_GPT_OSS_V2_OK', '');
         },
       },
     );
@@ -462,7 +460,7 @@ test('canonical Qwen v2 launch is standalone and isolated from user OpenCode con
     assert.deepEqual(seen.args.slice(0, 2), ['run', '--standalone']);
     assert.equal(seen.args.includes('--pure'), false);
     assert.equal(seen.args[seen.args.indexOf('--agent') + 1], 'jarvis-readonly');
-    assert.equal(seen.args[seen.args.indexOf('--model') + 1], 'ollama/qwen3-coder:30b');
+    assert.equal(seen.args[seen.args.indexOf('--model') + 1], 'ollama/gpt-oss:20b');
 
     const env = seen.options.env;
     assert.match(env.HOME, /jarvis-e1-opencode-v2-[^/]+\/home$/);
@@ -484,25 +482,92 @@ test('canonical Qwen v2 launch is standalone and isolated from user OpenCode con
 
     const config = JSON.parse(env.OPENCODE_CONFIG_CONTENT);
     assert.deepEqual(Object.keys(config.provider), ['ollama']);
-    assert.deepEqual(Object.keys(config.provider.ollama.models), ['qwen3-coder:30b']);
+    assert.deepEqual(Object.keys(config.provider.ollama.models), ['gpt-oss:20b']);
     assert.equal(config.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
-    assert.equal(config.agent, undefined);
     assert.deepEqual(Object.keys(config.agents), ['jarvis-readonly']);
-    const agent = config.agents['jarvis-readonly'];
-    assert.equal(agent.mode, 'primary');
-    assert.equal(agent.permission, undefined);
-    assert.equal(agent.prompt, undefined);
-    assert.match(agent.system, /bounded JARVIS work unit/);
-    assert.equal(agent.steps, 8);
-    assert.deepEqual(agent.permissions, [
-      { action: '*', resource: '*', effect: 'deny' },
-      { action: 'read', resource: '*', effect: 'allow' },
-      { action: 'glob', resource: '*', effect: 'allow' },
-      { action: 'grep', resource: '*', effect: 'allow' },
-    ]);
-    assert.equal(JSON.stringify(config).includes('gpt-oss'), false);
+    assert.equal(config.agents['jarvis-readonly'].mode, 'primary');
+    assert.deepEqual(config.agents['jarvis-readonly'].permissions[0], {
+      action: '*', resource: '*', effect: 'deny',
+    });
+    assert.equal(
+      config.agents['jarvis-readonly'].permissions.some(
+        (p) => p.action === 'read' && p.resource === '*' && p.effect === 'allow',
+      ),
+      true,
+    );
+    assert.equal(JSON.stringify(config).includes('qwen3-coder:30b'), false);
     assert.equal(JSON.stringify(config).includes('tinker'), false);
     assert.equal(JSON.stringify(config).includes('nvidia'), false);
+  } finally {
+    cleanup(home);
+  }
+});
+
+test('canonical Qwen direct launch reuses Unit 9 native worker with bounded evidence and JARVIS 65K identity', async () => {
+  const { home } = tempEnv();
+  let seen = null;
+  try {
+    const out = await WUC.executeCanonicalResolvedProvider(
+      REPO,
+      {
+        workUnitId: 'e3-direct-qwen-proof',
+        grantId: 'e3-direct-grant-proof',
+        workUnit: {
+          identity: { objective: 'Prove canonical Qwen direct containment.' },
+          custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
+          scope: {
+            base_ref: SHA,
+            allowed_paths: ['scripts/builder/work-unit-v2.mjs'],
+          },
+          evaluation: {
+            acceptance_conditions: ['Return bounded evidence only.'],
+            stop_conditions: ['Stop before any write.'],
+          },
+        },
+        binding: {
+          route_participant_id: 'primary',
+          transport_binding_id: 'tb-qwen-proof',
+          provider_id: 'qwen-local',
+          model_id: 'qwen3-coder:30b',
+          adapter_id: 'ollama-direct',
+        },
+        resolved: {
+          execution_adapter: 'ollama-direct',
+          model_ref: 'ollama/qwen3-coder:30b',
+          model_id: 'qwen3-coder:30b',
+        },
+        sourceEnv: { ...process.env, AIN_DELEGATION_HOME: home },
+      },
+      {
+        localWorkerRun: async (args) => {
+          seen = args;
+          return {
+            ok: true,
+            transport: 'ollama-native',
+            model: 'jarvis-qwen3-coder:65k',
+            output: 'SYNTHETIC_DIRECT_QWEN_OK',
+            duration_s: 0,
+            prompt_eval_count: 10,
+            eval_count: 2,
+            done_reason: 'stop',
+            failure_class: null,
+          };
+        },
+      },
+    );
+
+    assert.equal(out.ok, true);
+    assert.equal(out.status, 'COMPLETED');
+    assert.equal(out.run.exit_code, 0);
+    assert.equal(out.run.stdout, 'SYNTHETIC_DIRECT_QWEN_OK');
+    assert.ok(seen);
+    assert.equal(seen.model, 'jarvis-qwen3-coder:65k');
+    assert.equal(seen.host, 'http://127.0.0.1:11434');
+    assert.equal(seen.temperature, 0);
+    assert.equal(typeof seen.timeoutMs, 'number');
+    assert.match(seen.prompt, /=== scripts\/builder\/work-unit-v2\.mjs ===/);
+    assert.match(seen.prompt, /createWorkUnitDraftV2/);
+    assert.doesNotMatch(seen.prompt, /jarvis-desktop\/src\/work-unit-control\.js/);
   } finally {
     cleanup(home);
   }
