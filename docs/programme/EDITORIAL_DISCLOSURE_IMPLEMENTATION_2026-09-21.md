@@ -30,7 +30,7 @@ continuation with a shared inference outcome extension in this conversation.
 
 ## Evidence and limits
 
-Synthetic Jest suites exercise dispatch evidence, request equivalence, policy,
+134 tests across eight synthetic Jest suites passed. They exercise dispatch evidence, request equivalence, policy,
 non-fallback behavior, consent/receipt ordering, failures, and content-free metadata.
 The HTTP refusal test uses the real SDK through the adapter against loopback only.
 No additional SDK import was allowed: the initial test import was rejected by the
@@ -44,10 +44,12 @@ already-forbidden same-state update. Corrected fixtures passed; no production
 constraint was relaxed to admit them. The reusable SQL witness is under scripts/
 writers-studio/editorial-disclosure-schema-witness.sql.
 
-One external synthetic request using the current local configuration succeeded:
+Two external synthetic requests using the current local configuration succeeded:
 provider=anthropic, modelAgreement=agreed. No manuscript or personal data was sent.
-This establishes present structured-provider availability only. It does not
-explain the historical failed W1 request or prove the full editorial schema works.
+The second used the actual discussion-first editorial tool schema and passed
+`admitEditorialToolEnvelope`, with matching model identity. This establishes
+present provider/schema availability, not the full UI/persistence journey or
+the cause of the historical failed W1 request.
 
 Typecheck no-regression gate passed with 229 existing diagnostics against 239
 baselined diagnostics. This is not a type-clean project. No baseline was regenerated.
@@ -56,9 +58,12 @@ baselined diagnostics. This is not a type-clean project. No baseline was regener
 
 - Visual review of the per-request permission interaction (currently a native
   confirm dialog; no screenshot or visual pass claimed).
-- Integrated full editorial-schema response and W1–W6, including apply and undo.
+- Integrated W1–W6 in the Studio, including apply and undo.
 - Verification on the intended preview database after the migration pair.
 - Historical failure attribution remains unresolved.
 
 No scope, voice, sequence or latitude threshold was weakened. No manuscript was
 edited by this repair. Beta remains held until the complete writer journey passes.
+
+Pre-commit provider, sovereignty, PHI-pattern and design-contract gates passed.
+Design-contract coverage is not visual verification.
