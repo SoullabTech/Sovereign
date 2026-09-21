@@ -242,6 +242,20 @@ export function runLive(engine: Engine): readonly Check[] {
   add('L0-distinct-identity', new Set(ids).size === ids.length,
     `${new Set(ids).size} distinct identities for ${ids.length} observations`);
 
+  /* ⭐⭐ §VIII OBSERVATION ADDRESS LAW — the 1:1 relation the address bridge will
+     rest on, GUARDED rather than assumed. `observation_id` answers *which
+     admitted observation is this*; `(readingId, key)` answers *where is it
+     addressed within this frozen reading record*. ⛔ They are not conceptually
+     interchangeable — but while they are 1:1, a deterministic bridge is
+     possible without a migration. The moment that breaks, so does the bridge. */
+  const keys = observations.map((o) => o.key);
+  add('L7-identity-and-key-are-1to1',
+    new Set(keys).size === keys.length && new Set(ids).size === ids.length && keys.length === ids.length,
+    `${new Set(keys).size} key(s) and ${new Set(ids).size} identity/ies over ${observations.length} observations`);
+  add('L7-key-tracks-admission-index',
+    observations.every((o, i) => o.key === `o${i + 1}` && o.admissionIndex === i),
+    'the read-local address still tracks admission order — standing custody is not re-addressed');
+
   /* §III required falsifier — claims 2 and 3 share a basis and are distinct. */
   const a = observations[1], b = observations[2];
   add('L1-basis-shared-by-construction',

@@ -15,7 +15,9 @@ const NAMED: Readonly<Record<string, string>> = {
 };
 const CLASSIFIED: Readonly<Record<string, readonly string[]>> = {
   D1_TEXT_IDENTITY: ['L0-single-admission-seam'],
+  SIBLING_ADMISSION_PATH: ['L7-key-tracks-admission-index'],
   D2_EVIDENCE_IDENTITY: ['L0-single-admission-seam', 'L0-distinct-identity', 'L1-identity-not-basis',
+    'L7-identity-and-key-are-1to1',
     'L3-set-invariant', 'L3-set-equals-admitted', 'L4-manuscript-order'],
   D3_PER_FACET_REREAD: ['L3-set-invariant', 'L3-set-equals-admitted', 'L3-authorship-facet-invariant', 'L4-manuscript-order'],
   D4_GUIDED_EXPANSION: ['L3-set-invariant', 'L3-authorship-facet-invariant', 'L4-manuscript-order'],
