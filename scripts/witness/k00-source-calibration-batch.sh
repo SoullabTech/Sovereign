@@ -144,7 +144,7 @@ else
   python3 "$ROOT/scripts/witness/k00-source-calibration.py" --label "$LEVEL-$VP" --json-out "$RESULT" $JOURNALS > "$LEDGER/calibration-result.stdout"
 fi
 
-( cd "$LEDGER" && find . -type f ! -name SHA256SUMS.calibration -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256 ) > "$LEDGER/SHA256SUMS.calibration"
+( cd "$LEDGER" && find . -type f ! -name SHA256SUMS.calibration | LC_ALL=C sort | xargs shasum -a 256 ) > "$LEDGER/SHA256SUMS.calibration"
 
 python3 - "$RESULT" <<'PY'
 import json,sys
