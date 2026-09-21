@@ -142,7 +142,31 @@ check("non-JARVIS integration actor is refused before any git invocation", () =>
   rmSync(tmp, { recursive: true, force: true });
 });
 
-console.log("\n=== NPA1D: stale worktree SHA is refused before apply-check ===");
+console.log("\n=== NPA1D: canonical SHA must be immutable commit syntax ===");
+check("movable canonical ref is refused before any git invocation", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-sha-format-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  writeFileSync(path.join(repo, "allowed.txt"), "before\n");
+  let gitCalls = 0;
+  const result = applyNativePatch({
+    packet: packet(["allowed.txt"], "HEAD"),
+    patchText: patchFor("allowed.txt", "before", "after"),
+    worktree: repo,
+    home,
+    runGit: () => {
+      gitCalls += 1;
+      throw new Error("git must not be called");
+    },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "PACKET_CANONICAL_SHA_INVALID");
+  assert.equal(gitCalls, 0);
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+console.log("\n=== NPA1E: stale worktree SHA is refused before apply-check ===");
 check("packet canonical SHA must equal the execution worktree HEAD", () => {
   const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-sha-"));
   const repo = path.join(tmp, "repo");
@@ -169,6 +193,34 @@ check("packet canonical SHA must equal the execution worktree HEAD", () => {
   assert.equal(result.ok, false);
   assert.equal(result.code, "WORKTREE_CANONICAL_SHA_MISMATCH");
   assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "before\n");
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+console.log("\n=== NPA1F: non-text tracked target is refused before apply-check ===");
+check("tracked symlink/submodule mode is outside native V1 text-patch authority", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-mode-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  const sha = "a".repeat(40);
+  let applyCheckSeen = false;
+  const result = applyNativePatch({
+    packet: packet(["allowed.txt"], sha),
+    patchText: patchFor("allowed.txt", "before", "after"),
+    worktree: repo,
+    home,
+    runGit: (_worktree, args) => {
+      if (args[0] === "rev-parse") return sha + "\n";
+      if (args[0] === "ls-files" && args[1] === "-s") {
+        return "120000 1111111111111111111111111111111111111111 0\tallowed.txt\n";
+      }
+      if (args[0] === "apply" && args.includes("--check")) applyCheckSeen = true;
+      throw new Error("unexpected git call: " + args.join(" "));
+    },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "PATCH_TARGET_MODE_UNSUPPORTED");
+  assert.equal(applyCheckSeen, false);
   rmSync(tmp, { recursive: true, force: true });
 });
 
