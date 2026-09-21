@@ -22,6 +22,7 @@
     "tests/constitutional/writers-studio/**/*.ts",
     "lib/manuscript/developmentalReading/observationIdentity.ts",
     "lib/manuscript/developmentalReading/freeze.ts",
-    "lib/manuscript/developmentalReading/contract.ts"
+    "lib/manuscript/developmentalReading/contract.ts",
+    "lib/manuscript/developmentalReading/observationAddress.ts"
   ]
 }
