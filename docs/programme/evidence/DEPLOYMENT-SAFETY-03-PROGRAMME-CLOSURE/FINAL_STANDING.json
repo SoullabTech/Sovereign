@@ -1,0 +1,52 @@
+{
+  "instrument": "deployment-safety-03-programme-closure/v1",
+  "date": "2026-09-21",
+  "status": "CLOSED",
+  "closure_canonical": "65bcb76bb38d4f57e816253fdbec0ea036d6c166",
+  "production_at_closure": {
+    "reader_stamp": "4c097b4c8",
+    "health": "running|healthy",
+    "pending_canonical_migrations": 0
+  },
+  "implementation_lineage": {
+    "compatibility_contract": "e07f100cfc5b361169f6428bb4e5bd7df4d97c45",
+    "review_bundle": "e87875116975fd0d26f3c2855c8d89731117f76c",
+    "composition_gate": "d75e304711e12174dfe2d7e80f26c7a5e1ad2f5f",
+    "prefix_safe_step3": "6f447b17727da8f41dfaa626419c389653d3e9b0",
+    "full_lineage_reconciliation": "5c12d891207fb786c847251fc383c562c374bf22",
+    "canonical_admission": "8dd6b93bb4faa6a32bb5c54af85dcebe0a0eda14"
+  },
+  "evidence_freeze": {
+    "p1": "ca4cd640e689844d52dd94c0511b13da2cd4508a",
+    "p2": "22d2a13693d3e7ff54430a90a23282de9f1f97c2",
+    "first_live_review": "12d43e4f32e66d690c6e2ac45a494cc6edd01af0",
+    "p3": "1eebc065deedf2b7eb7da369cf56fd480ba2c725",
+    "p4": "66c6c6297a3d21305f0549f5c18ceb28826037d8"
+  },
+  "final_matrices": {
+    "review_custody": "14/14",
+    "review_coverage": "8/8",
+    "migration_compatibility": "10/10",
+    "compatibility_composition": "6/6",
+    "failure_prefix_compatibility": "5/5",
+    "relation_rewitness": "10/0",
+    "migration_fail_closed": "11/0",
+    "migration_binding": "9/0",
+    "deploy_provenance": "27/0",
+    "deploy_lock": "25/0",
+    "typechecks": "PASS"
+  },
+  "first_live_migration": {
+    "old_reader": "8dd6b93bb4faa6a32bb5c54af85dcebe0a0eda14",
+    "target_reader": "bcd4debfed1285d2ff14829db7f117ffaff05f11",
+    "migration": "database/migrations/20260921000002_epistemic_join_integration_shadow.sql",
+    "migration_sha256": "e93179f834ae9746484403813d534d319c1089c1070fc2404477ac4618c1756b",
+    "production_review_sha256": "2ffc5b10488e3d2cb34a2265b0fd8c7e03cc6e661807480b98ed9a3349970f59",
+    "production_trace_id": "3728a636-63a7-445e-922b-370e8261b566",
+    "migration_applied_at": "2026-09-21 23:12:25.449498+00",
+    "target_container_created_at": "2026-09-21T23:12:32.96249354Z",
+    "target_container_started_at": "2026-09-21T23:12:43.910373415Z"
+  },
+  "routed_next_programme": "PRODUCTION-BUILD-SECURITY-01",
+  "reopen_rule": "Do not reopen DEPLOYMENT-SAFETY-03 for dependency-audit/build-security work or ordinary governed deployments."
+}
