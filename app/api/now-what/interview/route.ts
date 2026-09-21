@@ -48,7 +48,7 @@ import { inferSpiralogicCell, type Element } from '@/lib/consciousness/spiralogi
 // no-write contract. Everything composed is read-only; MAIA_RUNTIME_PROMPT already
 // embeds the memory-canon guard.
 import { composeRoomTurnPrompt, composeConstitutionalFloor, cloudRegisterPinned } from '@/lib/maia/roomComposition';
-import { buildResponseGrammar, LIVED_RETURN_GROUNDING } from '@/lib/nowWhat/roomGrammar';
+import { buildResponseGrammar, LIVED_RETURN_GROUNDING } from '@/lib/nowWhat/roomGrammar';\nimport { runNowWhatCellShadow } from '@/lib/ain/epistemic-join/shadow/nowWhatCell';
 
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
@@ -409,7 +409,7 @@ export async function POST(request: NextRequest) {
       // Read-only, best-effort cell inference on the member's own message text.
       // This route remains read+reply only — no writes occur here or below.
       const lastMemberTurn = [...history].reverse().find((t) => t.role === 'user');
-      const cellCandidate = lastMemberTurn ? await detectCellCandidate(lastMemberTurn.content) : null;
+      const cellCandidate = lastMemberTurn ? await detectCellCandidate(lastMemberTurn.content) : null;\n      // JARVIS-KP-01 / I4 — default-OFF epistemic integration shadow.\n      // The helper cannot persist, route, represent, or alter this response; its\n      // structural-only result is deliberately discarded.\n      await runNowWhatCellShadow({\n        memberScope: memberId,\n        jurisdiction: 'maia_conversational_inquiry',\n        candidate: cellCandidate,\n        emit: (telemetry) => {\n          console.info('[JARVIS-KP/I4 shadow]', JSON.stringify(telemetry));\n        },\n      });
       // Provider provenance travels with the reply (label-travels-with-assertion;
       // the room persists nothing, so the response IS the artifact — "what am I
       // talking to" must be answerable from the data, not the deploy env).
