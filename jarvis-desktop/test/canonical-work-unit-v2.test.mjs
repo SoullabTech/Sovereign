@@ -61,6 +61,81 @@ test('prospective J5 preview is explicitly noncanonical and family-first', async
   });
 });
 
+
+test('develop intent derives worktree authority in MAIN while J5 model routing stays local and nonexecuting', async () => {
+  await withHome(async (_home, env) => {
+    const devSpec = spec({
+      executionIntent: 'develop',
+      workClass: 'PATCH',
+      requestedPosture: 'default',
+    });
+
+    const preview = await C.prospectivePreview(REPO, devSpec, {
+      canonicalSha: SHA,
+      nowMs: 1000,
+      env,
+    });
+    assert.equal(preview.ok, true, JSON.stringify(preview.blockers));
+    assert.equal(preview.route_record.primary.model_family, 'QWEN');
+    assert.equal(preview.route_record.challengers[0].model_family, 'GPT_OSS');
+    assert.equal(preview.execution_connected, false);
+
+    let out = await C.createCanonicalV2(REPO, devSpec, {
+      canonicalSha: SHA,
+      nowMs: 1003,
+      env,
+      actorId: 'human:test',
+    });
+    assert.equal(out.ok, true, JSON.stringify(out.blockers));
+    assert.equal(out.work_unit.authority.repository_write, 'worktree');
+    assert.equal(out.work_unit.authority.shell, 'none');
+    assert.equal(out.work_unit.authority.merge, false);
+    assert.equal(out.work_unit.authority.deploy, false);
+    assert.equal(out.work_unit.authority.production_read, false);
+    assert.equal(out.work_unit.authority.production_write, false);
+
+    const id = out.work_unit_id;
+    out = await C.transitionCanonicalV2(REPO, id, 'BOUNDED', { env, actorId: 'human:test' });
+    out = await C.transitionCanonicalV2(REPO, id, 'AUTHORIZED', { env, actorId: 'human:test' });
+    out = await C.bindCanonicalRouteV2(REPO, id, { env, actorId: 'human:test' });
+    assert.equal(out.ok, true, JSON.stringify(out.blockers));
+    assert.equal(out.lifecycle.state, 'ROUTED');
+    assert.equal(out.routing.execution_connected, false);
+  });
+});
+
+test('develop intent is refused for non-development work classes and external challenge posture', async () => {
+  await withHome(async (_home, env) => {
+    const badClass = await C.prospectivePreview(REPO, spec({
+      executionIntent: 'develop',
+      workClass: 'RESEARCH',
+    }), {
+      canonicalSha: SHA,
+      nowMs: 1004,
+      env,
+    });
+    assert.equal(badClass.ok, false);
+    assert.ok(badClass.blockers.some((b) => b.code === 'DEVELOPMENT_WORK_CLASS_REQUIRED'));
+
+    const badPosture = await C.prospectivePreview(REPO, spec({
+      executionIntent: 'develop',
+      workClass: 'PATCH',
+      requestedPosture: 'adversarial_challenge',
+      authorityRequest: {
+        networkExternal: true,
+        providerSpend: true,
+        externalDisclosure: 'exact_bundle',
+      },
+    }), {
+      canonicalSha: SHA,
+      nowMs: 1005,
+      env,
+    });
+    assert.equal(badPosture.ok, false);
+    assert.ok(badPosture.blockers.some((b) => b.code === 'DEVELOPMENT_EXTERNAL_POSTURE_REFUSED'));
+  });
+});
+
 test('canonical Desktop creates W0.v2 DRAFT, then W2/W3 advance it without using preview as route truth', async () => {
   await withHome(async (home, env) => {
     let out = await C.createCanonicalV2(REPO, spec(), {
