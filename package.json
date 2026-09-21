@@ -41,6 +41,7 @@
     "matrix:serving-identity": "npx tsx tests/constitutional/serving-identity/matrix.ts",
     "matrix:serving-identity-r1": "npx tsx tests/constitutional/serving-identity/propagation-matrix.ts",
     "matrix:serving-disclosure-d1": "npx tsx tests/constitutional/serving-identity/disclosure-decision-matrix.ts",
+    "matrix:serving-disclosure-d2": "npx tsx tests/constitutional/serving-identity/disclosure-fact-admission-matrix.ts",
     "check:no-supabase": "npx tsx scripts/check-no-supabase.ts",
     "check:no-direct-anthropic": "npx tsx scripts/check-no-direct-anthropic.ts",
     "check:no-vendor-voices": "npx tsx scripts/check-no-vendor-voices.ts",
