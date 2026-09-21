@@ -39,6 +39,7 @@
     "lint": "next lint",
     "check:sovereignty": "npx tsx scripts/check-maia-sovereignty.ts",
     "matrix:serving-identity": "npx tsx tests/constitutional/serving-identity/matrix.ts",
+    "matrix:serving-identity-r1": "npx tsx tests/constitutional/serving-identity/propagation-matrix.ts",
     "check:no-supabase": "npx tsx scripts/check-no-supabase.ts",
     "check:no-direct-anthropic": "npx tsx scripts/check-no-direct-anthropic.ts",
     "check:no-vendor-voices": "npx tsx scripts/check-no-vendor-voices.ts",
