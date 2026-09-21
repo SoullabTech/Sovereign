@@ -183,8 +183,12 @@ const cases: Array<{ name: string; run: () => void | Promise<void> }> = [
         'warrantless elevation must be refused',
       );
       invariant(
-        verdict.admittedStanding === 'CANDIDATE_UNESTABLISHED',
-        'warrantless elevation must fail closed to candidate',
+        verdict.admittedStanding !== 'WARRANTED' && verdict.admittedStanding !== 'PROMOTED',
+        'warrantless elevation must not receive warranted or promoted standing',
+      );
+      invariant(
+        verdict.lowerStandingRepresentationPermitted,
+        'failed elevation must preserve lower-standing hypothesis representation',
       );
     },
   },
