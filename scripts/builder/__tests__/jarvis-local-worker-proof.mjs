@@ -64,6 +64,12 @@ try {
     assert.match(delegate, /\[ "\$gate_line_count" -ne 1 \]/);
   });
 
+  await check("verification cannot mutate the admitted native candidate", async () => {
+    assert.match(delegate, /_native_worktree_fingerprint/);
+    assert.match(delegate, /VERIFICATION_MUTATED_WORKTREE/);
+    assert.match(delegate, /exit_code=12/);
+  });
+
   console.log("\n" + passed + " passed · 0 failed");
 } finally {
   globalThis.fetch = originalFetch;
