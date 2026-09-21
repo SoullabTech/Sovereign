@@ -284,3 +284,20 @@ button.ws-edit-mark:focus-visible ins { box-shadow: inset 0 -0.6em 0 rgba(193, 1
 
 /* ⭐ The reading, once it is the reason for an edit rather than a workspace. */
 .wsi-reading-behind > summary { cursor: pointer; opacity: 0.75; font-size: 0.95em; }
+
+/* ⭐⭐ C6R1 — the decision panel for ONE mark, beside the sentence it is about. */
+.ws-edit-panel {
+  margin: 0.5rem 0 0.75rem; padding: 0.6rem 0.75rem;
+  border-left: 2px solid rgba(193, 154, 62, 0.55); border-radius: 2px;
+  background: rgba(193, 154, 62, 0.06); font-size: 0.95em;
+}
+.ws-edit-change { margin: 0 0 0.35rem; }
+.ws-edit-change del { opacity: 0.6; }
+.ws-edit-change ins { text-decoration: none; font-weight: 600; }
+.ws-edit-why { margin: 0 0 0.5rem; opacity: 0.8; font-size: 0.95em; }
+.ws-edit-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.ws-edit-actions button {
+  padding: 0.25rem 0.6rem; border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 3px; background: transparent; font: inherit; cursor: pointer;
+}
+.ws-edit-actions .ws-edit-quiet { border-color: transparent; opacity: 0.7; }

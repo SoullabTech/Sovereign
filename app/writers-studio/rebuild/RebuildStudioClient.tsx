@@ -18,7 +18,7 @@ import RebuildAuthoredBody from './RebuildAuthoredBody';
 import GoldLine from '../insight/GoldLine';
 import MaiaListen from '../insight/MaiaListen';
 import InlineWorkspace from '../insight/InlineWorkspace';
-import ManuscriptPassage from '../insight/ManuscriptPassage';
+import ManuscriptPassage, { type EditAction, type MarkedEdit } from '../insight/ManuscriptPassage';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
@@ -941,6 +941,29 @@ export default function RebuildStudioClient() {
     return () => { cancelled = true; };
   }, [phase, context?.manuscriptId, incomingReading, incomingObservation]);
 
+  /* ⭐⭐ C6R1 — ONE MARKED CHANGE, FIVE PLAIN CHOICES.
+     ⛔ None of these invents a mutation path. Every one either starts a
+     conversation on the existing governed turn — and therefore reaches the
+     Teaching bridge — or does nothing at all. `Accept` and `Change it` ask
+     MAIA for a narrower proposal rather than quietly applying a slice of the
+     current one: applying part of a proposal is a DIFFERENT text from the one
+     the member is looking at, and it would arrive with no version of its own
+     to review, adopt or undo. The writer still decides in the desk above. */
+  const editAction = useCallback((action: EditAction, edit: MarkedEdit) => {
+    const it = edit.from.trim()
+      ? `"${edit.from.trim()}" to "${edit.to.trim()}"`
+      : `adding "${edit.to.trim()}"`;
+    if (action === 'keep') { setEditorialFailure(null); return; }
+    const ask = action === 'accept'
+      ? `Of the changes you proposed, I want only this one: ${it}. Offer a revision of this passage that makes that single change and leaves the rest of my wording exactly as I wrote it.`
+      : action === 'change'
+        ? `About your change of ${it} — I want to word that differently. Ask me what I am reaching for before proposing anything, then offer wording built from my answer.`
+        : action === 'challenge'
+          ? `Why did you change ${it}? Show me the words in my sentence that led you there, and make the strongest case for keeping mine. Do not propose new wording in this answer.`
+          : `What writing technique is at work in changing ${it}? Describe what it does for a reader, what it may cost, and when my original would be the better choice. Do not test me and do not propose new wording.`;
+    void sendEditorial(ask);
+  }, [sendEditorial]);
+
   const reviseInsightPassage = useCallback((passage: InsightPassage, authorNotes = '') => {
     if (!context || editorialBusy || adoptionBusy || memberVersionBusy || !passage.verified) return;
     const section = context.sections.find(s => s.draftSectionId === passage.sectionId);
@@ -1341,7 +1364,10 @@ export default function RebuildStudioClient() {
                       onSelectPassage={(start, end, text) => holdPassage(section, start, end, text)}
                     /></div>
                     {section.draftSectionId === focusId && <div hidden={!workspaceOpen}>
-                      <ManuscriptPassage body={liveBody} range={held} proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}>
+                      <ManuscriptPassage body={liveBody} range={held}
+                        proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}
+                        onEditAction={editAction}
+                        proposalRationale={suggestedVersion?.rationale ?? null}>
                         <div ref={setEditorialAnchor} data-inline-editorial-anchor />
                       </ManuscriptPassage>
                     </div>}
@@ -1692,7 +1718,11 @@ export default function RebuildStudioClient() {
           message={editorialFailure ?? (adoptionOutcome && appliedVersionId === suggestedVersion?.id ? adoptionOutcome.kind === 'applied'
             ? null : 'The Work could not accept this revision. Nothing was changed.' : null)}
           onKeep={() => { setSuggestedVersionId(null); setAdoptionOutcome(null); setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.'); }} />
-        {workspaceInsight && <details className="wsi-related" open><summary>Observation and related passages</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
+        {workspaceInsight && <details className="wsi-related" open={!suggestedVersionId}>
+          {/* ⭐ C6R1 — forced open, this was the second live workspace under the
+              decision. Once MAIA has proposed, it closes and renames itself to
+              what it now is: the reason for the marks on the page. */}
+          <summary>{suggestedVersionId ? 'Reading behind these edits' : 'Observation and related passages'}</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
           manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
           onRevise={reviseInsightPassage} onChoosePassage={chooseOwnPassage}
           proposalActive={Boolean(suggestedVersionId)}

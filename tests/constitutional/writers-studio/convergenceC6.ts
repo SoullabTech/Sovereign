@@ -143,6 +143,22 @@ export function runC6(): readonly Check[] {
     !/\{target && onRevise &&/.test(guided),
     'Try a revision requires boundTarget; the whole-section widening leak is closed');
 
+  /* ⭐ Five choices on one mark, and ⛔ none of them a new mutation path. */
+  add('C6R1-8-per-edit-actions-use-the-governed-turn',
+    /const editAction = useCallback/.test(rebuild) &&
+    /void sendEditorial\(ask\);/.test(rebuild) &&
+    !/adoptBound|editorial\/adoption|saveMemberVersion/.test(
+      rebuild.slice(rebuild.indexOf('const editAction'), rebuild.indexOf('const reviseInsightPassage'))),
+    'accept · change · challenge · learn all enter the existing editorial turn; none applies text');
+
+  add('C6R1-9-keep-mine-mutates-nothing',
+    /if \(action === 'keep'\) \{ setEditorialFailure\(null\); return; \}/.test(rebuild),
+    'declining a mark sends nothing and changes nothing');
+
+  add('C6R1-10-related-workspace-closes-once-proposed',
+    /<details className="wsi-related" open=\{!suggestedVersionId\}>/.test(rebuild),
+    'the observation workspace is no longer forced open under the decision');
+
   const c5 = runC5();
   add('C6-10-c5-still-green',
     c5.every(c => c.ok),
