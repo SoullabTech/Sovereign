@@ -1644,6 +1644,9 @@ export default function RebuildStudioClient() {
           sectionBody={focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
           appliedVersionId={editorialThread?.application && !editorialThread.application.undone ? editorialThread.application.versionId : null}
           onUndo={editorialThread?.application?.canUndo ? () => void undoSuggested() : undefined}
+          /* ⭐ Handed down from the server, which is the only place that knows.
+             ⛔ Not derived from `canUndo` — a false boolean has three causes. */
+          undoAvailability={editorialThread?.application?.undoAvailability}
           undoMessage={undoMessage}
           thread={editorialThread} version={suggestedVersion} instruction={editorialDraft}
           onInstruction={setEditorialDraft} onSend={text => void sendEditorial(text)}

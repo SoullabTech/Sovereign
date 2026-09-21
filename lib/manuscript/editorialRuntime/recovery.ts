@@ -2,10 +2,48 @@ import { transaction, query } from '@/lib/db/postgres';
 import { saveSectionInTransaction } from '@/lib/manuscript/sections/saveSection';
 import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 
+/**
+ * ⭐⭐ WHY UNDO IS UNAVAILABLE, NOT MERELY THAT IT IS.
+ *
+ * The 2026-09-21 live witness found the inline desk showing an applied
+ * revision with no undo control and no reason, and ⛔ nothing anywhere could
+ * say whether the control was withheld or simply never wired — `canUndo`
+ * collapsed three distinct facts into one boolean and discarded which.
+ *
+ *     ok             undo is available
+ *     work_moved     the writer has written here since
+ *     already_undone it has already been taken back
+ *     no_snapshot    applied before recovery custody existed
+ */
+export type UndoAvailability = 'ok' | 'work_moved' | 'already_undone' | 'no_snapshot';
+
 export interface ApplicationRecovery {
   authorizationId: string; versionId: string; resultingVersion: number;
   undone: boolean; canUndo: boolean;
+  /** ⛔ Never inferred by a surface. The reason is read where it is known. */
+  undoAvailability: UndoAvailability;
 }
+/**
+ * ⭐⭐ THE PREDICATE, PURE AND SEPARATELY FALSIFIABLE.
+ *
+ * ⛔ ORDER IS THE RULING, and it matches `undoApplication` below: custody
+ * first, then the act, then the state of the work. A row with no snapshot is
+ * never reported as *the work moved* — nothing was ever kept to move from,
+ * and telling a writer their own writing cost them the undo would be false.
+ *
+ * ⛔ It is a pure function so the mapping can be falsified without a database.
+ * The three failing causes were collapsed into one boolean for as long as this
+ * code existed, which is why the live witness could not tell them apart.
+ */
+export function classifyUndoAvailability(state: {
+  hasSnapshot: boolean; undone: boolean; currentVersion: number; resultingVersion: number;
+}): UndoAvailability {
+  if (!state.hasSnapshot) return 'no_snapshot';
+  if (state.undone) return 'already_undone';
+  if (state.currentVersion !== state.resultingVersion) return 'work_moved';
+  return 'ok';
+}
+
 export async function readApplicationRecovery(memberId: string, threadId: string): Promise<ApplicationRecovery | null> {
   const result = await query<{
     id: string; proposal_version_id: string; resulting_version: number;
@@ -19,9 +57,17 @@ export async function readApplicationRecovery(memberId: string, threadId: string
     WHERE t.id = $1 AND t.member_id = $2 AND a.accepted_at IS NOT NULL
     ORDER BY a.resulting_version DESC LIMIT 1`, [threadId, memberId]);
   const row = result.rows[0];
-  return row ? { authorizationId: row.id, versionId: row.proposal_version_id,
+  if (!row) return null;
+  const undoAvailability = classifyUndoAvailability({
+    hasSnapshot: row.has_snapshot,
+    undone: row.undone_at !== null,
+    currentVersion: Number(row.current_version),
+    resultingVersion: Number(row.resulting_version),
+  });
+  return { authorizationId: row.id, versionId: row.proposal_version_id,
     resultingVersion: Number(row.resulting_version), undone: row.undone_at !== null,
-    canUndo: row.has_snapshot && row.undone_at === null && Number(row.current_version) === Number(row.resulting_version) } : null;
+    /* ⛔ Kept derived, never stored twice: one predicate, two readings. */
+    canUndo: undoAvailability === 'ok', undoAvailability };
 }
 export type RecoveryOutcome =
   | { kind: 'undone'; resultingVersion: number }
