@@ -122,3 +122,25 @@ Only after those observations exist may Step 3 be presented as complete.
 No production mutation, schema application, canon-amendment binding,
 provider-governance change, capability-tier change, Q3 resolution,
 foreign-provider execution, or weakening of the frozen corpus is authorized.
+
+## Live instrument finding before Step 3C completion
+
+The first real reviewer run returned a substantive `REVISE` review, but admission
+did not reach the record boundary. Claude Code's `--json-schema` mode emitted a
+`StructuredOutput` tool event after the reviewer reads. Step 2 had never observed
+that host event and therefore classified it fail-closed as an unknown possible
+read channel:
+
+`UNWITNESSABLE_READ_CHANNEL: StructuredOutput`
+
+The record remained unapproved. No review verdict was converted or discarded.
+
+This exposed a host-conformance defect in the instrument: `StructuredOutput`
+formats model output and does not read repository content. The repair classifies
+that one observed formatter as non-witnessing. `Bash` and every unrecognised
+tool remain fail-closed. The original Step 2 eight-law matrix remains unchanged;
+a separate Step 3 host-conformance witness proves the new classification.
+
+Because the repository state changes to make this repair, the first review trace
+will not be reused for admission. Step 3C must be rerun against the repaired exact
+SHA with a newly bound record and a fresh reviewer session.

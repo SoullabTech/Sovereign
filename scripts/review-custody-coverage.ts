@@ -147,7 +147,10 @@ function parseClaudeTrace(raw: Uint8Array): TraceParse {
 export const STRICT_COVERAGE: CoverageDecisions = {
   parseTrace: parseClaudeTrace,
   witnessableTools: { Read: "file_path", NotebookRead: "notebook_path" },
-  nonWitnessingTools: new Set(["Grep", "Glob", "TodoWrite", "Task"]),
+  // StructuredOutput is emitted by Claude's --json-schema response formatter.
+  // The host witness proved it carries model output, not a repository read channel.
+  // Classifying this one observed non-reader preserves fail-closed for every unknown tool.
+  nonWitnessingTools: new Set(["Grep", "Glob", "TodoWrite", "Task", "StructuredOutput"]),
   // Fail closed: an unrecognised tool may be able to read, so it is an unwitnessable
   // channel until it is classified deliberately.
   classifyUnknownTool: () => "unwitnessable",
