@@ -98,6 +98,9 @@ jobs:
       - name: Native patch-admission falsifiers
         run: node scripts/builder/__tests__/jarvis-native-patch-admission-proof.mjs
 
+      - name: Native structured-edit admission falsifiers
+        run: node scripts/builder/__tests__/jarvis-native-edit-admission-proof.mjs
+
       - name: Native runtime candidate-custody proof
         run: node scripts/builder/__tests__/jarvis-native-runtime-proof.mjs
 
