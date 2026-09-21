@@ -48,6 +48,7 @@ TINKER_DIRECT_SCRIPT="$PROJECT_DIR/scripts/builder/tinker-direct.mjs"
 EXTERNAL_CONTEXT_SCRIPT="$PROJECT_DIR/scripts/builder/external-context.mjs"
 LOCAL_WORKER_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-local-worker.mjs"
 NATIVE_PROMPT_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-prompt.mjs"
+NATIVE_FALLBACK_PROMPT_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-fallback-prompt.mjs"
 PATCH_ADMISSION_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-patch-admission.mjs"
 
 mkdir -p "$PACKETS_DIR" "$RESULTS_DIR" "$LOGS_DIR"
@@ -193,12 +194,27 @@ _read_opencode_credential() {
     esac
 }
 
+_native_fallback_eligible() {
+    case "$1" in
+        WORKER_TIMEOUT|PATCH_MUST_BE_PURE_GIT_DIFF|PATCH_PROSE_OR_PREFIX_UNSUPPORTED|PATCH_CODE_FENCE_UNSUPPORTED|PATCH_HAS_NO_FILES|PATCH_SECTION_HAS_NO_TEXT_HUNK|PATCH_FILE_HEADERS_PARTIAL|PATCH_HUNK_WITHOUT_FILE|PATCH_HUNK_HEADER_UNSUPPORTED|PATCH_HUNK_BODY_UNSUPPORTED|PATCH_OLD_BYTES_MISMATCH|PATCH_HUNK_OUTSIDE_MATERIALIZED_TARGET|PATCH_HUNKS_OVERLAP_OR_UNSORTED|PATCH_POSITION_BASIS_AMBIGUOUS|PATCH_FRAGMENT_RELATIVE_AMBIGUOUS|GIT_APPLY_CHECK_FAILED)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 _run_lane() {
     local lane="$1" work_unit_id="$2" model_override="${3:-}" provider_override="${4:-}"
     local f wt starting_sha exit_code log ending_sha prompt cmd branch model
     local opencode_resolution="" opencode_agent=""
     local opencode_credential_env="" opencode_credential_value=""
     local tinker_resolution="" tinker_model_id=""
+    local native_primary_model="" native_candidate_model=""
+    local native_fallback_model="" native_fallback_log=""
+    local primary_patch_admission_json="" native_fallback_used=false
+    local attempt_count=1
     f="$(_require_packet "$work_unit_id")"
 
     # Native coding authority is proven before workspace acquisition or model use.
@@ -334,6 +350,11 @@ _run_lane() {
     elif [ "$lane" = "tinker" ]; then
         model="$(echo "$tinker_resolution" | jq -r '.model_ref')"
     else model="UNKNOWN"; fi
+
+    if [ "$lane" = "local-native" ]; then
+        native_primary_model="$model"
+        native_candidate_model="$model"
+    fi
 
     # ─── Unit 3 convergence (2026-08-09): physical worktree existing is not the
     # same fact as Builder WRITE ownership existing. Register the claim HERE,
@@ -492,16 +513,96 @@ _run_lane() {
         fi
     fi
 
-    if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ]; then
-        local patch_code
-        set +e
-        patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" apply "$f" "$wt" "$log")"
-        patch_code=$?
-        set -e
-        if [ "$patch_code" -ne 0 ]; then
-            [ "$exit_code" -ne 0 ] || exit_code="$patch_code"
+    if [ "$lane" = "local-native" ]; then
+        local patch_code=0 primary_failure_code="" primary_failure_pre_mutation=false
+
+        if [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ]; then
+            set +e
+            patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" apply "$f" "$wt" "$log")"
+            patch_code=$?
+            set -e
+            if [ "$patch_code" -ne 0 ]; then
+                primary_patch_admission_json="$patch_admission_json"
+                primary_failure_code="$(printf '%s' "$patch_admission_json" | jq -r '.code // empty' 2>/dev/null)"
+                if printf '%s' "$patch_admission_json" | jq -e '
+                    (.event.applied // false) == false
+                    and (.event.git_apply_invoked // false) == false
+                ' >/dev/null 2>&1; then
+                    primary_failure_pre_mutation=true
+                fi
+                exit_code="$patch_code"
+            fi
+        elif [ "$exit_code" -ne 0 ] && grep -q 'WORKER_TIMEOUT' "$log" 2>/dev/null; then
+            primary_failure_code="WORKER_TIMEOUT"
+            primary_failure_pre_mutation=true
+        fi
+
+        if [ -n "$primary_failure_code" ] && $primary_failure_pre_mutation && _native_fallback_eligible "$primary_failure_code"; then
+            local fallback_head fallback_dirty fallback_prompt fallback_prompt_file fallback_exit
+            fallback_head="$(git -C "$wt" rev-parse --short HEAD)"
+            fallback_dirty="$(git -C "$wt" status --porcelain --untracked-files=all)"
+
+            if [ "$fallback_head" != "$starting_sha" ] || [ -n "$fallback_dirty" ]; then
+                echo "🛑 [ain-delegate] native fallback REFUSED — primary attempt did not leave the exact starting worktree." >&2
+                exit_code=14
+            else
+                native_fallback_used=true
+                native_fallback_model="gpt-oss:20b"
+                native_candidate_model="$native_fallback_model"
+                native_fallback_log="$log.fallback"
+                attempt_count=2
+
+                fallback_prompt="$(node "$NATIVE_FALLBACK_PROMPT_SCRIPT" build "$f" --repo "$wt")" || {
+                    echo "🛑 [ain-delegate] native fallback prompt construction failed." >&2
+                    exit_code=5
+                    fallback_prompt=""
+                }
+
+                if [ -n "$fallback_prompt" ]; then
+                    fallback_prompt_file="$(mktemp -t jarvis-native-fallback-prompt)"
+                    printf '%s' "$fallback_prompt" > "$fallback_prompt_file"
+
+                    set +e
+                    ( cd "$wt" && env \
+                        JARVIS_OLLAMA_HOST="http://127.0.0.1:11434" \
+                        JARVIS_NUM_CTX="${JARVIS_NUM_CTX:-32768}" \
+                        JARVIS_LOCAL_TIMEOUT_MS="${JARVIS_LOCAL_TIMEOUT_MS:-120000}" \
+                        node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$fallback_prompt_file" --model "$native_fallback_model" ) > "$native_fallback_log" 2>&1
+                    fallback_exit=$?
+                    set -e
+                    rm -f "$fallback_prompt_file"
+
+                    exit_code="$fallback_exit"
+                    patch_admission_json=""
+                    gate_json=""
+
+                    if [ "$fallback_exit" -eq 0 ]; then
+                        if grep -q '^GOVERNANCE_GATE:' "$native_fallback_log" 2>/dev/null; then
+                            gate_json="$(grep '^GOVERNANCE_GATE:' "$native_fallback_log" | tail -1 | sed 's/^GOVERNANCE_GATE: *//')"
+                            if ! printf '%s' "$gate_json" | jq -e 'type == "object"' >/dev/null 2>&1; then
+                                echo "[ain-delegate] malformed fallback GOVERNANCE_GATE claim — refusing result." >&2
+                                gate_json=""
+                                exit_code=10
+                            fi
+                        else
+                            set +e
+                            patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" apply "$f" "$wt" "$native_fallback_log")"
+                            patch_code=$?
+                            set -e
+                            if [ "$patch_code" -eq 0 ]; then
+                                exit_code=0
+                            else
+                                exit_code="$patch_code"
+                            fi
+                        fi
+                    fi
+                fi
+            fi
         fi
     fi
+
+    # Include patch admission and any bounded fallback turn in duration.
+    t1="$(date +%s)"
 
     # Bug found by AIN Builder OS MVJ Unit 2 (2026-08-09): `head -n -1` is a GNU coreutils
     # extension. macOS/BSD `head` rejects it outright ("illegal line count -- -1"), which
@@ -628,11 +729,21 @@ _run_lane() {
     fi
 
     # model already resolved above, before Builder ownership registration.
+    local result_model="$model"
+    if [ "$lane" = "local-native" ] && [ -n "$native_candidate_model" ]; then
+        result_model="$native_candidate_model"
+    fi
 
     jq -n \
         --arg wid "$work_unit_id" \
         --arg lane "$lane" \
-        --arg model "$model" \
+        --arg model "$result_model" \
+        --arg primary_model "$native_primary_model" \
+        --arg fallback_model "$native_fallback_model" \
+        --arg fallback_log_path "$native_fallback_log" \
+        --arg primary_patch_admission_json "$primary_patch_admission_json" \
+        --argjson fallback_used "$native_fallback_used" \
+        --argjson attempt_count "$attempt_count" \
         --arg starting_sha "$starting_sha" \
         --arg ending_sha "$ending_sha" \
         --argjson files_changed "$files_changed_json" \
@@ -667,8 +778,21 @@ _run_lane() {
             recommended_next_action: $recommended,
             log_path: $log_path,
             duration_s: $duration_s,
-            attempts: 1
+            attempts: $attempt_count
         }
+        + (if $primary_model == "" then {} else {
+            primary_model: $primary_model,
+            candidate_model: $model
+          } end)
+        + (if $fallback_used then {
+            native_fallback: {
+              used: true,
+              model: $fallback_model,
+              log_path: $fallback_log_path,
+              primary_patch_admission:
+                (if $primary_patch_admission_json == "" then null else ($primary_patch_admission_json | fromjson) end)
+            }
+          } else {} end)
         + (if $gate_json == "" then {} else {governance_gate: ($gate_json | fromjson)} end)
         + (if $patch_admission_json == "" then {} else {patch_admission: ($patch_admission_json | fromjson)} end)
         ' > "$(_result_file "$work_unit_id")"
@@ -679,10 +803,12 @@ _run_lane() {
         --arg wid "$work_unit_id" \
         --arg lane "$lane" \
         --argjson escalation_required "$escalation_required" \
+        --argjson fallback_used "$native_fallback_used" \
+        --argjson attempts "$attempt_count" \
         --arg test_results "$test_results" \
         --argjson exit_code "$exit_code" \
         --argjson duration_s "$((t1 - t0))" \
-        '{ts: $ts, work_unit_id: $wid, lane: $lane, escalation_required: $escalation_required, test_results: $test_results, exit_code: $exit_code, duration_s: $duration_s}' \
+        '{ts: $ts, work_unit_id: $wid, lane: $lane, escalation_required: $escalation_required, fallback_used: $fallback_used, attempts: $attempts, test_results: $test_results, exit_code: $exit_code, duration_s: $duration_s}' \
         >> "$LEDGER"
 
     echo "[ain-delegate] $lane run complete for '$work_unit_id' — exit=$exit_code tests=$test_results escalate=$escalation_required" >&2

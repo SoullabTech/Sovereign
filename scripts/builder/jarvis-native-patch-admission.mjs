@@ -22,6 +22,7 @@ import { createHash, randomBytes } from "node:crypto";
 import path from "node:path";
 import os from "node:os";
 import { derivePermissionEnvelope } from "./work-unit.mjs";
+import { materializePacket } from "./jarvis-context.mjs";
 
 const MAX_PATCH_BYTES = 512 * 1024;
 const HOME = (env = process.env) => (
@@ -103,16 +104,113 @@ export function pathAllowed(file, allowedFiles = []) {
 }
 
 /**
- * Strip only untrusted diff metadata that JARVIS can derive independently.
- * Hunk contents and all path headers remain byte-for-byte model output.
+ * Normalize only diff bookkeeping JARVIS can derive mechanically.
+ * Model-authored + / - content bytes are never rewritten here.
  */
-export function normalizePatchForGit(patchText) {
-  return String(patchText ?? "")
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .filter((line) => !line.startsWith("index "))
-    .join("\n");
+export function normalizePatchForGitDetailed(patchText) {
+  const source = String(patchText ?? "").replace(/\r\n/g, "\n");
+  const lines = source.split("\n").filter((line) => !line.startsWith("index "));
+  const out = [];
+  const hunks = [];
+  let currentPath = null;
+  let fileDelta = 0;
+
+  for (let i = 0; i < lines.length;) {
+    const line = lines[i];
+
+    if (line.startsWith("diff --git ")) {
+      const m = /^diff --git a\/([^\t ]+) b\/([^\t ]+)$/.exec(line);
+      if (!m || m[1] !== m[2]) {
+        return refusal("PATCH_PATH_HEADER_UNSUPPORTED", { header: line.slice(0, 180) });
+      }
+      currentPath = normalizePath(m[1]);
+      fileDelta = 0;
+      out.push(line);
+
+      let hasOld = false;
+      let hasNew = false;
+      for (let j = i + 1; j < lines.length && !lines[j].startsWith("diff --git ") && !lines[j].startsWith("@@ "); j += 1) {
+        if (lines[j].startsWith("--- ")) hasOld = true;
+        if (lines[j].startsWith("+++ ")) hasNew = true;
+      }
+      if (hasOld !== hasNew) {
+        return refusal("PATCH_FILE_HEADERS_PARTIAL", { path: currentPath });
+      }
+      if (!hasOld) {
+        out.push("--- a/" + currentPath);
+        out.push("+++ b/" + currentPath);
+      }
+      i += 1;
+      continue;
+    }
+
+    if (line.startsWith("@@ ")) {
+      if (!currentPath) return refusal("PATCH_HUNK_WITHOUT_FILE");
+      const m = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$/.exec(line);
+      if (!m) return refusal("PATCH_HUNK_HEADER_UNSUPPORTED", { header: line.slice(0, 180) });
+
+      const oldStart = Number(m[1]);
+      const suffix = m[5] ?? "";
+      const body = [];
+      let j = i + 1;
+      while (j < lines.length && !lines[j].startsWith("@@ ") && !lines[j].startsWith("diff --git ")) {
+        const bodyLine = lines[j];
+        if (bodyLine === "" && j === lines.length - 1) break;
+        if (bodyLine.startsWith("\\ No newline at end of file")) {
+          body.push(bodyLine);
+          j += 1;
+          continue;
+        }
+        if (![" ", "+", "-"].includes(bodyLine.slice(0, 1))) {
+          return refusal("PATCH_HUNK_BODY_UNSUPPORTED", { path: currentPath, line: bodyLine.slice(0, 180) });
+        }
+        body.push(bodyLine);
+        j += 1;
+      }
+
+      const oldCount = body.filter((x) => x.startsWith(" ") || x.startsWith("-")).length;
+      const newCount = body.filter((x) => x.startsWith(" ") || x.startsWith("+")).length;
+      const contextCount = body.filter((x) => x.startsWith(" ")).length;
+      const newStart = oldStart + fileDelta + (oldCount === 0 ? 1 : 0);
+
+      out.push(`@@ -${oldStart},${oldCount} +${newStart},${newCount} @@${suffix}`);
+      out.push(...body);
+      hunks.push({
+        path: currentPath,
+        old_start: oldStart,
+        old_count: oldCount,
+        new_start: newStart,
+        new_count: newCount,
+        context_count: contextCount,
+        body,
+      });
+      fileDelta += newCount - oldCount;
+      i = j;
+      continue;
+    }
+
+    out.push(line);
+    i += 1;
+  }
+
+  const zeroContext = hunks.length > 0 && hunks.every((h) => h.context_count === 0);
+  const joined = out.join("\n");
+  return {
+    ok: true,
+    patch: joined.endsWith("\n") ? joined : joined + "\n",
+    hunks,
+    zero_context: zeroContext,
+    normalization: zeroContext
+      ? "strip-index+derive-file-headers+recount+zero-context-offsets"
+      : "strip-index+derive-file-headers+recount",
+  };
 }
+
+export function normalizePatchForGit(patchText) {
+  const result = normalizePatchForGitDetailed(patchText);
+  return result.ok ? result.patch : String(patchText ?? "");
+}
+
 
 export function inspectPatch(patchText, allowedFiles = []) {
   const patch = String(patchText ?? "");
@@ -207,6 +305,146 @@ export function inspectPatch(patchText, allowedFiles = []) {
     patch_paths: paths,
   };
 }
+function rewriteZeroContextHunkHeaders(normalized, mappedHunks) {
+  const lines = normalized.patch.split("\n");
+  let hunkIndex = 0;
+  const out = lines.map((line) => {
+    if (!line.startsWith("@@ ")) return line;
+    const h = mappedHunks[hunkIndex++];
+    const suffixMatch = /^@@ [^@]+@@(.*)$/.exec(line);
+    const suffix = suffixMatch?.[1] ?? "";
+    return `@@ -${h.old_start},${h.old_count} +${h.new_start},${h.new_count} @@${suffix}`;
+  });
+  return out.join("\n");
+}
+
+function resolveAndValidateZeroContextAgainstTarget(packet, worktree, normalized) {
+  let fragments;
+  try {
+    fragments = materializePacket(packet, worktree);
+  } catch (error) {
+    return refusal("PATCH_TARGET_CONTEXT_UNAVAILABLE", String(error?.message || error));
+  }
+
+  const rangesByPath = new Map();
+  for (const fragment of fragments) {
+    const p = normalizePath(fragment.source_file);
+    if (!rangesByPath.has(p)) rangesByPath.set(p, []);
+    rangesByPath.get(p).push([fragment.start_line, fragment.end_line]);
+  }
+
+  const fileLinesByPath = new Map();
+  const readLines = (patchPath) => {
+    if (fileLinesByPath.has(patchPath)) return fileLinesByPath.get(patchPath);
+    const lines = readFileSync(path.join(worktree, patchPath), "utf8")
+      .replace(/\r\n/g, "\n")
+      .split("\n");
+    fileLinesByPath.set(patchPath, lines);
+    return lines;
+  };
+
+  const validateBasis = (basis) => {
+    const mapped = [];
+    const lastEndByPath = new Map();
+    const deltaByPath = new Map();
+
+    for (const hunk of normalized.hunks) {
+      const ranges = rangesByPath.get(hunk.path) ?? [];
+      if (!ranges.length) return { ok: false, code: "PATCH_TARGET_CONTEXT_REQUIRED", detail: { path: hunk.path } };
+
+      let oldStart = hunk.old_start;
+      if (basis === "fragment-relative") {
+        if (ranges.length !== 1) {
+          return { ok: false, code: "PATCH_FRAGMENT_RELATIVE_AMBIGUOUS", detail: { path: hunk.path, ranges } };
+        }
+        oldStart = ranges[0][0] + hunk.old_start - 1;
+      }
+
+      const oldEnd = hunk.old_count === 0 ? oldStart : oldStart + hunk.old_count - 1;
+      const inRange = ranges.some(([start, end]) => (
+        hunk.old_count === 0
+          ? oldStart >= start - 1 && oldStart <= end
+          : oldStart >= start && oldEnd <= end
+      ));
+      if (!inRange) {
+        return {
+          ok: false,
+          code: "PATCH_HUNK_OUTSIDE_MATERIALIZED_TARGET",
+          detail: { path: hunk.path, old_start: oldStart, old_count: hunk.old_count, ranges, basis },
+        };
+      }
+
+      const previousEnd = lastEndByPath.get(hunk.path);
+      if (previousEnd != null && oldStart <= previousEnd) {
+        return { ok: false, code: "PATCH_HUNKS_OVERLAP_OR_UNSORTED", detail: { path: hunk.path, basis } };
+      }
+      lastEndByPath.set(hunk.path, Math.max(oldStart, oldEnd));
+
+      if (hunk.old_count > 0) {
+        let fileLines;
+        try {
+          fileLines = readLines(hunk.path);
+        } catch (error) {
+          return {
+            ok: false,
+            code: "PATCH_TARGET_READ_FAILED",
+            detail: { path: hunk.path, reason: String(error?.message || error) },
+          };
+        }
+        const removed = hunk.body.filter((x) => x.startsWith("-")).map((x) => x.slice(1));
+        const actual = fileLines.slice(oldStart - 1, oldStart - 1 + hunk.old_count);
+        if (removed.length !== hunk.old_count || JSON.stringify(removed) !== JSON.stringify(actual)) {
+          return {
+            ok: false,
+            code: "PATCH_OLD_BYTES_MISMATCH",
+            detail: { path: hunk.path, old_start: oldStart, expected_removed: removed, actual, basis },
+          };
+        }
+      }
+
+      const delta = deltaByPath.get(hunk.path) ?? 0;
+      const newStart = oldStart + delta + (hunk.old_count === 0 ? 1 : 0);
+      mapped.push({ ...hunk, old_start: oldStart, new_start: newStart });
+      deltaByPath.set(hunk.path, delta + hunk.new_count - hunk.old_count);
+    }
+
+    return { ok: true, mapped };
+  };
+
+  const absolute = validateBasis("absolute");
+  const relative = validateBasis("fragment-relative");
+
+  let chosen;
+  let positionBasis;
+  if (absolute.ok && relative.ok) {
+    const same = JSON.stringify(absolute.mapped.map((h) => h.old_start))
+      === JSON.stringify(relative.mapped.map((h) => h.old_start));
+    if (!same) {
+      return refusal("PATCH_POSITION_BASIS_AMBIGUOUS");
+    }
+    chosen = absolute;
+    positionBasis = "absolute";
+  } else if (absolute.ok) {
+    chosen = absolute;
+    positionBasis = "absolute";
+  } else if (relative.ok) {
+    chosen = relative;
+    positionBasis = "fragment-relative";
+  } else {
+    return refusal(absolute.code ?? relative.code ?? "PATCH_ZERO_CONTEXT_POSITION_INVALID", {
+      absolute: absolute.detail ?? null,
+      fragment_relative: relative.detail ?? null,
+    });
+  }
+
+  return {
+    ok: true,
+    status: "ZERO_CONTEXT_TARGET_VALIDATED",
+    position_basis: positionBasis,
+    hunks: chosen.mapped,
+    patch: rewriteZeroContextHunkHeaders(normalized, chosen.mapped),
+  };
+}
 
 function realGit(worktree, args) {
   return execFileSync("git", ["-C", worktree, ...args], {
@@ -246,8 +484,10 @@ export function applyNativePatch({
   const workUnitId = String(packet?.work_unit_id || "");
   const patch = String(patchText ?? "");
   const inspected = inspectPatch(patch, packet?.allowed_files ?? []);
-  const normalizedPatch = inspected.ok ? normalizePatchForGit(patch) : patch;
-  const normalizedPatchDigest = inspected.ok ? digest(normalizedPatch) : null;
+  let normalized = inspected.ok ? normalizePatchForGitDetailed(patch) : null;
+  let normalizedPatch = normalized?.ok ? normalized.patch : patch;
+  let normalizedPatchDigest = normalized?.ok ? digest(normalizedPatch) : null;
+  let positionBasis = null;
 
   const recordRefusal = (code, detail = null, extra = {}) => {
     const base = eventBase(workUnitId, inspected.ok ? inspected : {
@@ -270,6 +510,7 @@ export function applyNativePatch({
   if (!workUnitId) return recordRefusal("WORK_UNIT_ID_REQUIRED");
   if (!worktree || !existsSync(worktree)) return recordRefusal("WORKTREE_NOT_FOUND");
   if (!inspected.ok) return recordRefusal(inspected.code, inspected.detail);
+  if (!normalized?.ok) return recordRefusal(normalized?.code ?? "PATCH_NORMALIZATION_FAILED", normalized?.detail);
 
   const envelope = derivePermissionEnvelope(packet);
   if (envelope.repo_write_scope !== "worktree") {
@@ -310,13 +551,35 @@ export function applyNativePatch({
     }
   }
 
+  if (normalized.zero_context) {
+    const targetValidation = resolveAndValidateZeroContextAgainstTarget(packet, worktree, normalized);
+    if (!targetValidation.ok) {
+      return recordRefusal(targetValidation.code, targetValidation.detail, {
+        zero_context: true,
+      });
+    }
+    positionBasis = targetValidation.position_basis;
+    normalized = {
+      ...normalized,
+      patch: targetValidation.patch,
+      hunks: targetValidation.hunks,
+      normalization: normalized.normalization
+        + (positionBasis === "fragment-relative" ? "+fragment-relative-old-lines" : ""),
+    };
+    normalizedPatch = normalized.patch;
+    normalizedPatchDigest = digest(normalizedPatch);
+  }
+
   const tmp = mkdtempSync(path.join(os.tmpdir(), "jarvis-native-patch-"));
   const patchFile = path.join(tmp, "candidate.patch");
   writeFileSync(patchFile, normalizedPatch, { encoding: "utf8", mode: 0o600 });
 
   try {
     try {
-      runGit(worktree, ["apply", "--check", "--recount", "--whitespace=nowarn", patchFile]);
+      const checkArgs = ["apply", "--check", "--recount"];
+      if (normalized.zero_context) checkArgs.push("--unidiff-zero");
+      checkArgs.push("--whitespace=nowarn", patchFile);
+      runGit(worktree, checkArgs);
     } catch (error) {
       return recordRefusal(
         "GIT_APPLY_CHECK_FAILED",
@@ -330,14 +593,19 @@ export function applyNativePatch({
       code: "PATCH_ADMITTED",
       applied: false,
       normalized_patch_digest: normalizedPatchDigest,
-      normalization: "strip-index-metadata+git-recount",
+      normalization: normalized.normalization,
+      zero_context: normalized.zero_context,
+      position_basis: positionBasis,
       git_check_invoked: true,
       git_apply_invoked: false,
     };
     const evidence_path = appendEvent(workUnitId, admitted, { home });
 
     try {
-      runGit(worktree, ["apply", "--recount", "--whitespace=nowarn", patchFile]);
+      const applyArgs = ["apply", "--recount"];
+      if (normalized.zero_context) applyArgs.push("--unidiff-zero");
+      applyArgs.push("--whitespace=nowarn", patchFile);
+      runGit(worktree, applyArgs);
     } catch (error) {
       const event = {
         ...eventBase(workUnitId, inspected, "APPLY_FAILED"),
@@ -379,7 +647,9 @@ export function applyNativePatch({
       code: "PATCH_APPLIED",
       applied: true,
       normalized_patch_digest: normalizedPatchDigest,
-      normalization: "strip-index-metadata+git-recount",
+      normalization: normalized.normalization,
+      zero_context: normalized.zero_context,
+      position_basis: positionBasis,
       git_check_invoked: true,
       git_apply_invoked: true,
       changed_paths: changed,

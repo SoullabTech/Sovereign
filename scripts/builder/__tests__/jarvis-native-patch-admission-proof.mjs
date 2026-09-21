@@ -31,6 +31,7 @@ const packet = (allowedFiles = ["allowed.txt"]) => ({
     "network.external", "provider.spend", "repo.disclose:external-readonly",
   ],
   integration_actor: "jarvis",
+  context_selectors: allowedFiles,
 });
 
 const patchFor = (file, before, after) => [
@@ -179,8 +180,134 @@ check("wrong index metadata and stale hunk counts are stripped/recounted", () =>
   assert.match(result.normalized_patch_digest, /^sha256:[0-9a-f]{64}$/);
   const events = readFileSync(ledgerPath("native-patch-proof", { home }), "utf8")
     .trim().split("\n").map(JSON.parse);
-  assert.equal(events[0].normalization, "strip-index-metadata+git-recount");
-  assert.equal(events[1].normalization, "strip-index-metadata+git-recount");
+  assert.match(events[0].normalization, /^strip-index\+derive-file-headers\+recount/);
+  assert.match(events[1].normalization, /^strip-index\+derive-file-headers\+recount/);
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+console.log("\n=== NPA2d: zero-context bookkeeping normalization ===");
+check("headerless multi-hunk zero-context patch normalizes and applies without changing semantic bytes", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-zero-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  execFileSync("git", ["init", "-q"], { cwd: repo });
+  execFileSync("git", ["config", "user.name", "Proof"], { cwd: repo });
+  execFileSync("git", ["config", "user.email", "proof@local.invalid"], { cwd: repo });
+  writeFileSync(path.join(repo, "allowed.txt"), [
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "",
+  ].join("\n"));
+  execFileSync("git", ["add", "."], { cwd: repo });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
+
+  const candidate = [
+    "diff --git a/allowed.txt b/allowed.txt",
+    "@@ -2,0 +3,1 @@",
+    "+inserted",
+    "@@ -4,1 +4,1 @@",
+    "-four",
+    "+FOUR",
+    "",
+  ].join("\n");
+
+  const result = applyNativePatch({
+    packet: packet(["allowed.txt"]),
+    patchText: candidate,
+    worktree: repo,
+    home,
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(result.event.zero_context, true);
+  assert.match(result.event.normalization, /zero-context-offsets/);
+  assert.equal(
+    readFileSync(path.join(repo, "allowed.txt"), "utf8"),
+    "one\ntwo\ninserted\nthree\nFOUR\nfive\n",
+  );
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+check("fragment-relative zero-context positions are translated only after exact target validation", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-fragrel-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  execFileSync("git", ["init", "-q"], { cwd: repo });
+  execFileSync("git", ["config", "user.name", "Proof"], { cwd: repo });
+  execFileSync("git", ["config", "user.email", "proof@local.invalid"], { cwd: repo });
+  writeFileSync(path.join(repo, "allowed.txt"), "one\ntwo\nthree\nfour\nfive\nsix\n");
+  execFileSync("git", ["add", "."], { cwd: repo });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
+
+  const candidate = [
+    "diff --git a/allowed.txt b/allowed.txt",
+    "@@ -2,0 +3,1 @@",
+    "+inserted",
+    "@@ -3,1 +3,1 @@",
+    "-five",
+    "+FIVE",
+  ].join("\n"); // deliberately no final newline
+
+  const p = packet(["allowed.txt"]);
+  p.context_selectors = [{
+    ref: "allowed.txt",
+    selector: { type: "anchor", find: "three", mode: "lines", after: 3 },
+  }];
+
+  const result = applyNativePatch({
+    packet: p,
+    patchText: candidate,
+    worktree: repo,
+    home,
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(result.event.position_basis, "fragment-relative");
+  assert.match(result.event.normalization, /fragment-relative-old-lines/);
+  assert.equal(
+    readFileSync(path.join(repo, "allowed.txt"), "utf8"),
+    "one\ntwo\nthree\nfour\ninserted\nFIVE\nsix\n",
+  );
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+check("zero-context removed bytes must match exact target bytes before git apply", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-zero-mismatch-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  execFileSync("git", ["init", "-q"], { cwd: repo });
+  execFileSync("git", ["config", "user.name", "Proof"], { cwd: repo });
+  execFileSync("git", ["config", "user.email", "proof@local.invalid"], { cwd: repo });
+  writeFileSync(path.join(repo, "allowed.txt"), "one\ntwo\nthree\n");
+  execFileSync("git", ["add", "."], { cwd: repo });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
+
+  const candidate = [
+    "diff --git a/allowed.txt b/allowed.txt",
+    "@@ -2,1 +2,1 @@",
+    "-NOT_TWO",
+    "+TWO",
+    "",
+  ].join("\n");
+
+  const result = applyNativePatch({
+    packet: packet(["allowed.txt"]),
+    patchText: candidate,
+    worktree: repo,
+    home,
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "PATCH_OLD_BYTES_MISMATCH");
+  assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "one\ntwo\nthree\n");
+  assert.equal(result.event.git_check_invoked, false);
+  assert.equal(result.event.git_apply_invoked, false);
   rmSync(tmp, { recursive: true, force: true });
 });
 

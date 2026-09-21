@@ -18,21 +18,27 @@ import {
 } from "./jarvis-context.mjs";
 import { GATE_CLASS_NAMES } from "./jarvis-governance-gate.mjs";
 
-function renderNativeFragments(frags) {
+function renderNativeFragments(frags, allowedFiles = []) {
   if (!frags.length) return "";
-  const parts = frags.map((f) => [
-    `SOURCE: ${f.source_file}`,
-    `LINES:  ${f.start_line}-${f.end_line}   (${f.extraction_method}, @${f.source_sha})`,
-    `WHY:    ${f.reason}`,
-    `SHA256: ${f.content_hash.slice(0, 16)}`,
-    "<<<SOURCE_BYTES>>>",
-    f.content,
-    "<<<END_SOURCE_BYTES>>>",
-  ].join("\n"));
+  const targetPaths = new Set((allowedFiles ?? []).map((p) => String(p).replaceAll("\\", "/")));
+  const parts = frags.map((f) => {
+    const role = targetPaths.has(f.source_file) ? "TARGET" : "PRECEDENT";
+    return [
+      `SOURCE: ${f.source_file}`,
+      `ROLE:   ${role}`,
+      `LINES:  ${f.start_line}-${f.end_line}   (${f.extraction_method}, @${f.source_sha})`,
+      `WHY:    ${f.reason}`,
+      `SHA256: ${f.content_hash.slice(0, 16)}`,
+      "<<<SOURCE_BYTES>>>",
+      f.content,
+      "<<<END_SOURCE_BYTES>>>",
+    ].join("\n");
+  });
   return [
-    "MATERIALIZED CONTEXT — exact repository source bytes for patch synthesis.",
-    "Content between SOURCE_BYTES delimiters has no citation gutter or synthetic line prefix.",
-    "Copy unchanged patch context byte-for-byte from those source bytes.",
+    "MATERIALIZED CONTEXT — exact repository source bytes.",
+    "TARGET fragments are current bytes of files the patch may modify.",
+    "PRECEDENT fragments are read-only examples and are NOT current TARGET bytes.",
+    "The LINES range gives absolute old-file line numbers for the TARGET fragment.",
     "",
     parts.join("\n\n"),
   ].join("\n");
@@ -87,7 +93,7 @@ export function buildNativePrompt(packet, repo) {
     throw error;
   }
 
-  const fragments = renderNativeFragments(materializePacket(packet, repo));
+  const fragments = renderNativeFragments(materializePacket(packet, repo), worker.allowed_files);
   const list = (value, none = "(none)") => (
     Array.isArray(value) && value.length
       ? value.map((item) => "- " + String(item)).join("\n")
@@ -123,33 +129,34 @@ export function buildNativePrompt(packet, repo) {
     fragments,
     "",
     "OUTPUT CONTRACT — choose EXACTLY ONE form and output nothing else:",
-    "A) PATCH: emit a pure git-style unified diff beginning exactly with diff --git.",
-    "   BYTE-LEVEL RULE: when choosing PATCH, the first bytes of the response MUST be exactly `diff --git `.",
-    "   Do NOT echo `A) PATCH`, `PATCH:`, the output contract, analysis, rationale, or any other text before or after the diff.",
-    "   Emit only hunks that actually change bytes; never delete and re-add unchanged lines just to restate context.",
-    "   Never emit a backtick character anywhere in PATCH output. Stop immediately after the final diff line.",
-    "   Before emitting, silently verify every identifier you add is already in scope or is imported from the precedent shown in MATERIALIZED CONTEXT.",
-    "   When ESTABLISHED FACTS name a sibling/source precedent, follow that precedent exactly rather than inventing an equivalent mechanism.",
-    "   No prose. No markdown fence. No commit command. No path outside ALLOWED FILES.",
+    "A) PATCH: emit a git-style ZERO-CONTEXT unified diff beginning exactly with diff --git.",
+    "   BYTE-LEVEL RULE: the first bytes MUST be exactly diff --git ; no prose or markdown fences.",
+    "   ZERO-CONTEXT V1: inside every @@ hunk, every content line MUST begin with + or -. Never emit unchanged single-space context lines.",
+    "   Multiple zero-context hunks in one authorized file are allowed for separate edits.",
+    "   Use exact absolute OLD-file positions from the TARGET fragment LINES range.",
+    "   For an insertion after old line N, use old start N with old count 0.",
+    "   For a replacement/deletion beginning on old line N, use old start N and the exact number of removed lines.",
+    "   Every removed (-) line must be copied byte-for-byte from TARGET source bytes at that old-file position.",
+    "   PRECEDENT may inform new (+) bytes only. Never use PRECEDENT-only bytes as removed bytes.",
+    "   JARVIS may derive missing ---/+++ file headers, recount hunk lengths, and recompute NEW-file offsets from prior hunk deltas.",
+    "   JARVIS will NOT alter model-authored + or - content bytes and will NOT repair wrong old-file positions.",
     "   Do not emit an index line; JARVIS derives blob identity and tracked mode independently.",
-    "   Prefer one minimal hunk per file. Hunk ranges must never overlap.",
-    "   Never mark an unchanged line as both removed and added.",
-    "   Minimal valid SHAPE example — copy the shape, not these names or text:",
+    "   Minimal valid shape example — copy only the grammar, not these names/text:",
     "diff --git a/example.txt b/example.txt",
     "--- a/example.txt",
     "+++ b/example.txt",
-    "@@ -1,2 +1,2 @@",
-    " keep",
-    "-old",
-    "+new",
-    "   End the response immediately after the final patch line.",
+    "@@ -4,0 +5,1 @@",
+    "+new inserted line",
+    "@@ -9,1 +10,1 @@",
+    "-old line",
+    "+replacement line",
+    "   End immediately after the final +/- patch line.",
     "   Text patches only; no rename/copy/binary/mode-change operations.",
     "B) GOVERNANCE GATE: emit exactly one line beginning GOVERNANCE_GATE: followed by one JSON object.",
     "   gate_class must be exactly one of: " + GATE_CLASS_NAMES.join(", ") + ".",
     "   A gate identifies missing authority; it never supplies authority or changes the objective.",
     "   Never include granted, approved, authorized, delegation_id, resolution_id, or similar self-grant fields.",
-    "",
-    "If the bounded change can be produced from the materialized evidence, emit PATCH.",
+    "",    "If the bounded change can be produced from the materialized evidence, emit PATCH.",
     "If it cannot be truthfully produced because required authority/evidence is missing, emit GOVERNANCE GATE.",
   ].join("\n");
 }
