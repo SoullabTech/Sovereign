@@ -44,14 +44,20 @@ authorization* — and ⛔ neither should silently stand in for the other.
 - ⛔ **That it is a defect.** A ruling may exist placing the editorial path under
   Sanctuary posture rather than receipts. None was found; ⭐ **absence of a found
   ruling is not absence of a ruling.**
-- ⛔ **That the failed W1 request transmitted prose.** It did not reach the
-  provider cleanly — it returned `structured_refused`. And the order in
-  `anthropicStructuredAdapter.ts` is load-bearing here: `new Anthropic()` (line
-  88) runs **before** `toAnthropicParams(req)` (line 89), so a constructor
-  failure means the request body was never built and **nothing left the
-  process**. A later network failure would not carry that guarantee. ⭐ Which of
-  those occurred is readable only from the refusal's `detail`, and is **not
-  inferable from `structured_refused` alone.**
+- ⛔ **That the failed W1 request transmitted prose** — and ⚠️ **`detail` does
+  not always settle this either.** An earlier draft of this record said it did;
+  that was too strong, and the correction matters more than the original claim.
+
+  | failure | transmission |
+  |---|---|
+  | `new Anthropic()` throws (line 88, **before** `toAnthropicParams` on line 89) | ✅ **none through that call** — the body was never built |
+  | provider returns a refusal after the round trip | ✅ transmitted |
+  | ⚠️ timeout, socket reset, mid-flight network error | ⛔ **UNKNOWN** — the request may have left and the response been lost |
+
+  ⭐ The third row is the one that must not be collapsed into the first. *"We saw
+  an error before we saw a response"* is not *"nothing was sent."* Where the
+  evidence does not distinguish them, ⛔ the record says **unknown**, and a
+  repair must be able to store that.
 - ⛔ **Any connection to the 45 deleted receipts** recorded in
   `DISCLOSURE_RECEIPTS_ANOMALY_FINDING_2026-09-20.md`. Those carried
   `writers_studio.ask->maia_developmental`; this route writes no receipts at all,
