@@ -47,14 +47,14 @@ test "$AGE" -le 300
 RUNROOT="$WT/docs/programme/VOICE-2026/driver-ledger/SOURCE-LEVEL-CALIBRATION-01-ACT-$ACTSTAMP"
 mkdir -p "$RUNROOT"
 cp "$ACT_MARK" "$RUNROOT/act-marker.txt"
-printf 'implementation=%s\nsubject=%s\npreflight=%s\nfixtureSha256=%s\ngeometrySha256=%s\ngeometryConfirmation=%s\n'   "$SHA" "$SUBJECT_SHA" "$PF" "$FIXTURE_SHA" "$GEOMETRY_SHA" "$GEOMETRY_CONFIRMATION" > "$RUNROOT/act-identity.txt"
+printf 'implementation=%s\nsubject=%s\npreflight=%s\nfixtureSha256=%s\ngeometrySha256=%s\ngeometryConfirmation=%s\noperatorSafety=%s\n'   "$SHA" "$SUBJECT_SHA" "$PF" "$FIXTURE_SHA" "$GEOMETRY_SHA" "$GEOMETRY_CONFIRMATION" "$SAFETY_CONFIRMATION" > "$RUNROOT/act-identity.txt"
 
 SELECTED=""
 SELECTED_DIR=""
 for LEVEL in L1 L2 L3; do
   OUT="$RUNROOT/$LEVEL.stdout"
   set +e
-  bash scripts/witness/k00-source-calibration-batch.sh "$LEVEL" on 5 "$FIXTURE" "$FIXTURE_SHA" "$GEOMETRY" "$GEOMETRY_SHA" > "$OUT" 2>&1
+  K00_CAL_BATCH_AUTHORITY=BOUND bash scripts/witness/k00-source-calibration-batch.sh "$LEVEL" on 5 "$FIXTURE" "$FIXTURE_SHA" "$GEOMETRY" "$GEOMETRY_SHA" > "$OUT" 2>&1
   RC=$?
   set -e
   [ "$RC" -eq 0 ] || { printf 'LEVEL %s infrastructure/precondition return rc=%s\n' "$LEVEL" "$RC" | tee "$RUNROOT/RETURN"; exit "$RC"; }
@@ -90,7 +90,7 @@ esac
 VPON_RESULT="$SELECTED_DIR/calibration-result.json"
 VPOUT="$RUNROOT/$SELECTED-VP-OFF.stdout"
 set +e
-bash scripts/witness/k00-source-calibration-batch.sh "$SELECTED" off 3 "$FIXTURE" "$FIXTURE_SHA" "$GEOMETRY" "$GEOMETRY_SHA" "$VPON_RESULT" > "$VPOUT" 2>&1
+K00_CAL_BATCH_AUTHORITY=BOUND bash scripts/witness/k00-source-calibration-batch.sh "$SELECTED" off 3 "$FIXTURE" "$FIXTURE_SHA" "$GEOMETRY" "$GEOMETRY_SHA" "$VPON_RESULT" > "$VPOUT" 2>&1
 VPRC=$?
 set -e
 [ "$VPRC" -eq 0 ] || { printf 'VP-OFF characterization infrastructure/precondition return rc=%s\n' "$VPRC" | tee "$RUNROOT/RETURN"; exit "$VPRC"; }

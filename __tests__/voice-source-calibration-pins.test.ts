@@ -41,6 +41,8 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
     expect(run).toContain('[ "$GEOMETRY_CONFIRMATION" = UNCHANGED ]');
     expect(run).toContain('K00_CAL_OPERATOR_SAFETY');
     expect(run).toContain('[ "$SAFETY_CONFIRMATION" = CONFIRMED ]');
+    expect(run.match(/K00_CAL_BATCH_AUTHORITY=BOUND bash scripts\/witness\/k00-source-calibration-batch\.sh/g)?.length).toBe(2);
+    expect(run).toContain('operatorSafety=%s');
   });
 
   it('implements the closed first-pass-wins ladder with no L4', () => {
