@@ -107,10 +107,11 @@ ENV APP_VERSION=${APP_VERSION}
 ENV BUILD_DATE=${BUILD_DATE}
 ENV DEPLOY_LANE=${DEPLOY_LANE_TOKEN}
 
-# Install psql for migrations + curl for worker preflight health checks + ffmpeg for media processing
+# Install psql for migrations + curl for worker preflight health checks + git for
+# immutable Review Custody object verification + ffmpeg for media processing
 # + pandoc/chromium for book render + local OCR for sovereign Writer's Studio source intake.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    postgresql-client curl ffmpeg pandoc chromium fonts-liberation \
+    postgresql-client curl git ffmpeg pandoc chromium fonts-liberation \
     tesseract-ocr tesseract-ocr-eng poppler-utils \
   && rm -rf /var/lib/apt/lists/*
 
