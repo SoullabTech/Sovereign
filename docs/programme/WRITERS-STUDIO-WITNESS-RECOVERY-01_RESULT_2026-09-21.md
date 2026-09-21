@@ -124,7 +124,7 @@ the live question, and the only thing founder presence is needed for.
 ## 4 · FOUNDER BURDEN — OBSERVATION ONLY
 
 ```
-npx tsx --tsconfig tsconfig.witness.json scripts/witness/editorial-scope-fixture-prep.ts
+npx tsx scripts/witness/editorial-scope-fixture-prep.ts
 ```
 Paste the passage, set the named controls, send the named act, record: proposal
 produced or refused · the exact reason shown · which boundary fired.

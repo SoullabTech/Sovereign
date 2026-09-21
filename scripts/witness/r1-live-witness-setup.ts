@@ -15,8 +15,15 @@
  * surface, observed by a human. This only removes the setup from their plate.
  *
  * Usage, on the authorized environment:
- *   DATABASE_URL=... MEMBER_ID=<founder member uuid> \
- *     npx tsx --tsconfig tsconfig.witness.json scripts/witness/r1-live-witness-setup.ts
+ *   DATABASE_URL=... MEMBER_USERNAME=<studio username> WRITERS_STUDIO_EDITORIAL_ENABLED=1 \
+ *     npx tsx scripts/witness/r1-live-witness-setup.ts
+ *
+ * ⚠️ ⛔ NO `--tsconfig` FLAG. An earlier sheet carried one, copied from the
+ * undo witness, which renders a React component and needs the automatic JSX
+ * runtime. This script renders nothing, so the flag only made the command fail
+ * on any checkout without that file — which is every checkout not on this
+ * branch. A precondition that is not real is worse than none: it sends the
+ * person to diagnose a tsconfig when the actual answer is the branch.
  */
 import { randomUUID } from 'node:crypto';
 import { query, closePool } from '@/lib/db/postgres';

@@ -17,18 +17,43 @@ Everything else is prepared by `scripts/witness/r1-live-witness-setup.ts`.
 
 ---
 
-## 1 · ONE COMMAND
+## 1 · THE PRECONDITION THAT WOULD WASTE THE RUN
 
-On the authorized environment, with the dev server already running **with
-`WRITERS_STUDIO_EDITORIAL_ENABLED=1` in the SERVER's environment**, and signed
+⚠️ **All three R1 artifacts live on `claude/vibrant-bardeen-w5btk0`.** On any
+other checkout the script is simply not there, and the failure reads as
+something else entirely.
+
+⭐ Use a **separate worktree**, so whatever the main checkout is in the middle
+of stays exactly as it is:
+
+```bash
+cd /Users/soullab/MAIA-SOVEREIGN
+git fetch origin claude/vibrant-bardeen-w5btk0
+git worktree add ../r1-witness origin/claude/vibrant-bardeen-w5btk0
+cd ../r1-witness && npm ci
+```
+
+The worktree shares the same database, which already carries
+`20260918000006_editorial_application_recovery.sql`.
+
+## 2 · ONE COMMAND
+
+Dev server running **from the worktree**, with
+`WRITERS_STUDIO_EDITORIAL_ENABLED=1` in the **server's** environment, and signed
 in to the Studio in the browser:
 
 ```bash
 DATABASE_URL="$DATABASE_URL" \
 MEMBER_USERNAME="<the username you are signed in as>" \
 WRITERS_STUDIO_EDITORIAL_ENABLED=1 \
-  npx tsx --tsconfig tsconfig.witness.json scripts/witness/r1-live-witness-setup.ts
+  npx tsx scripts/witness/r1-live-witness-setup.ts
 ```
+
+⛔ **No `--tsconfig` flag.** An earlier version of this sheet carried one,
+copied from the undo witness — which renders a React component and needs the
+automatic JSX runtime. This script renders nothing. The flag only made the
+command fail on any checkout without that file, and sent the reader to diagnose
+a tsconfig when the answer was the branch.
 
 It prints the four checks with live URLs. ⭐ The passages, the acts and the
 expected refusal sentences come out of the script, **re-proven against the real
@@ -40,7 +65,7 @@ sheet promising a refusal that no longer fires.
 
 ---
 
-## 2 · WHAT IT SEEDS, AND WHAT IT WILL NOT TOUCH
+## 3 · WHAT IT SEEDS, AND WHAT IT WILL NOT TOUCH
 
 One manuscript, *Witness — R1 editorial scope and recovery*, with two sections:
 
@@ -80,7 +105,7 @@ state = section_aware
 
 ---
 
-## 3 · THE FOUR CHECKS
+## 4 · THE FOUR CHECKS
 
 ⚠️ **A fresh passage thread for each.** A thread already carrying turns is not
 the state these criteria were written for.
@@ -138,14 +163,14 @@ that point is witnessed at `23f1b3ada`.
 
 ---
 
-## 4 · REPORT
+## 5 · REPORT
 
 Four lines. `PASS | FAIL | NO EVIDENCE`, and for W3a/W3b/Undo the sentence that
 actually appeared. Nothing else is asked.
 
 ---
 
-## 5 · LANE BOOKKEEPING
+## 6 · LANE BOOKKEEPING
 
 ⛔ **This does not satisfy `WRITERS-STUDIO-OBSERVATION-ADDRESS-01 / C1`.** That
 read-only production custody census is outstanding and stays a separate lane:
