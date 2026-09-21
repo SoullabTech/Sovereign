@@ -213,6 +213,7 @@ _run_lane() {
         printf '%s' "$native_envelope" | jq -e '
           .repo_read == true
           and .repo_write_scope == "worktree"
+          and .integration_actor == "jarvis"
           and .production_read == false
           and .production_write == false
           and .deploy == false
