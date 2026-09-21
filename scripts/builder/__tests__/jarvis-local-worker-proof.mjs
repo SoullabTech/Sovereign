@@ -58,6 +58,12 @@ try {
     assert.match(tail, /clean -fd/);
   });
 
+  await check("native gate serialization requires one pure single-line claim", async () => {
+    assert.match(delegate, /gate_line_count/);
+    assert.match(delegate, /native GOVERNANCE_GATE output was not one pure single-line claim/);
+    assert.match(delegate, /\[ "\$gate_line_count" -ne 1 \]/);
+  });
+
   console.log("\n" + passed + " passed · 0 failed");
 } finally {
   globalThis.fetch = originalFetch;
