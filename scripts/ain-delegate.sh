@@ -406,7 +406,7 @@ _run_lane() {
         prompt="$(_build_prompt "$f")"
     fi
 
-    local t0 t1
+    local t0 t1 attempt_count=1
     t0="$(date +%s)"
     set +e
     # Harness fix found by MVJ Kimi proving-case run (2026-08-09): neither lane wrapper
@@ -422,16 +422,41 @@ _run_lane() {
     # cannot escape, and every claim is independently re-verified afterward regardless of
     # what the worker did (never trust self-report — AIN_RESULT_CONTRACT.md).
     if [ "$lane" = "local-native" ]; then
-        local native_prompt_file
+        local native_prompt_file native_review_prompt_file native_synth_log review_build_code
         native_prompt_file="$(mktemp -t jarvis-native-prompt)"
+        native_synth_log="${log}.synth"
         printf '%s' "$prompt" > "$native_prompt_file"
         ( cd "$wt" && env \
             JARVIS_OLLAMA_HOST="http://127.0.0.1:11434" \
             JARVIS_NUM_CTX="${JARVIS_NUM_CTX:-32768}" \
             JARVIS_LOCAL_TIMEOUT_MS="${JARVIS_LOCAL_TIMEOUT_MS:-120000}" \
-            node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$native_prompt_file" --model "$model" ) > "$log" 2>&1
+            node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$native_prompt_file" --model "$model" ) > "$native_synth_log" 2>&1
         exit_code=$?
         rm -f "$native_prompt_file"
+
+        # A toolless local worker gets one bounded self-review before admission.
+        # The review sees only the same worker-visible packet/context plus its own
+        # candidate; verifier commands and verifier output remain partitioned away.
+        if [ "$exit_code" -eq 0 ] && ! grep -q '^GOVERNANCE_GATE:' "$native_synth_log" 2>/dev/null; then
+            native_review_prompt_file="$(mktemp -t jarvis-native-review-prompt)"
+            node "$NATIVE_PROMPT_SCRIPT" review "$f" --repo "$wt" --candidate-file "$native_synth_log" > "$native_review_prompt_file"
+            review_build_code=$?
+            if [ "$review_build_code" -eq 0 ]; then
+                attempt_count=2
+                ( cd "$wt" && env \
+                    JARVIS_OLLAMA_HOST="http://127.0.0.1:11434" \
+                    JARVIS_NUM_CTX="${JARVIS_NUM_CTX:-32768}" \
+                    JARVIS_LOCAL_TIMEOUT_MS="${JARVIS_LOCAL_TIMEOUT_MS:-120000}" \
+                    node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$native_review_prompt_file" --model "$model" ) > "$log" 2>&1
+                exit_code=$?
+            else
+                cp "$native_synth_log" "$log"
+                exit_code="$review_build_code"
+            fi
+            rm -f "$native_review_prompt_file"
+        else
+            cp "$native_synth_log" "$log"
+        fi
     elif [ "$lane" = "local" ]; then
         ( cd "$wt" && maia-code -p "$prompt" --permission-mode bypassPermissions ) > "$log" 2>&1
         exit_code=$?
@@ -528,6 +553,7 @@ _run_lane() {
     local verify_this_run=true
     if [ "$lane" = "local-native" ] && { [ "$exit_code" -ne 0 ] || [ -n "$gate_json" ]; }; then verify_this_run=false; fi
     if [ "$vcount" -gt 0 ] && $verify_this_run; then
+        : > "$log.verify"
         local all_pass=true
         while IFS= read -r vcmd; do
             [ -z "$vcmd" ] && continue
@@ -649,6 +675,7 @@ _run_lane() {
         --arg log_path "$log" \
         --argjson duration_s "$((t1 - t0))" \
         --argjson exit_code "$exit_code" \
+        --argjson attempts "$attempt_count" \
         '{
             work_unit_id: $wid,
             lane: $lane,
@@ -670,7 +697,7 @@ _run_lane() {
             recommended_next_action: $recommended,
             log_path: $log_path,
             duration_s: $duration_s,
-            attempts: 1
+            attempts: $attempts
         }
         + (if $gate_json == "" then {} else {governance_gate: ($gate_json | fromjson)} end)
         + (if $patch_admission_json == "" then {} else {patch_admission: ($patch_admission_json | fromjson)} end)
