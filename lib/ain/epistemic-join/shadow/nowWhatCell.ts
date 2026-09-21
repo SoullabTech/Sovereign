@@ -235,7 +235,20 @@ export async function runNowWhatCellShadow(
     return telemetry;
   }
 
-  const translated = translateNowWhatCellCandidate(input);
+  let translated: ShadowTranslation;
+  try {
+    translated = translateNowWhatCellCandidate(input);
+  } catch {
+    const telemetry: EpistemicJoinShadowTelemetry = {
+      surface: 'now_what_cell_candidate',
+      shadowOnly: true,
+      downstreamRepresentationAuthorized: false,
+      status: 'evaluation_error',
+    };
+    safeEmit(input.emit, telemetry);
+    return telemetry;
+  }
+
   if (!translated.ok) {
     const telemetry: EpistemicJoinShadowTelemetry = {
       surface: 'now_what_cell_candidate',
