@@ -1,7 +1,7 @@
 set -e
 set -o pipefail
 
-SHA=89022e8f021b8fb8217eb09c9e7caef94ffce52f
+SHA=858ee4948fd5e4f7a65dab156004bb863ad8ae66
 SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
 BID=life.soullab.voicekernel.vpio02sid
 SID_CONTAINER=85948DBD-BA8F-4679-950D-31767B1C24E5
@@ -14,7 +14,7 @@ ENTRY_READER_BLOB=abd26d05efd838cd87c93fcdb1d1706e2b671901
 FIXTURE_GENERATOR_BLOB=7ea01b1b4413e0b1de23db73941b3a6b80829033
 CAL_READER_BLOB=f4c71767aae7afe3f64a64cf95398bd7c358c128
 CAL_BATCH_BLOB=a6605808799da65aaf42aa20c7c22fc841759bd2
-CAL_TEST_BLOB=bae34223d1591f4aa96b393ba8032d430395ceb2
+CAL_TEST_BLOB=33fe69f25bb357f25df5e48adc0fbbfaf0e3bd2d
 AFPLAY=/usr/bin/afplay
 AFPLAY_SHA=88f3b577790877524edc79a20de8838a019c0ca723a0eaa4a8612a860317cabb
 DEV="$(printenv K00_DEVICE 2>/dev/null || true)"
@@ -44,7 +44,7 @@ PY
 
 test ! -e "$WT"
 cd /Users/soullab/MAIA-SOVEREIGN
-git fetch origin claude/voice-2026-closure-reconcile-20260921
+git fetch origin feature/voice-2026-record-of-record-20260916\ngit merge-base --is-ancestor "$SHA" FETCH_HEAD
 git worktree add --detach "$WT" "$SHA"
 cd "$WT"
 ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules
