@@ -1,7 +1,7 @@
 # SERVING-IDENTITY / R2D — LIVE SERVING-TRUTH CONTRACT DESIGN
 
-**Status:** DESIGN/FALSIFICATION ONLY · NO RUNTIME MUTATION  
-**Source SHA examined:** `dbc7701c313d331e8104c4c5d7b8b2d863f2cd6f`  
+**Status:** DESIGN/FALSIFICATION ONLY · NO RUNTIME MUTATION
+**Source SHA examined:** `dbc7701c313d331e8104c4c5d7b8b2d863f2cd6f`
 **Authoritative live route:** `app/api/sovereign/app/maia/list/route.ts`
 
 ## 1. Route authority
