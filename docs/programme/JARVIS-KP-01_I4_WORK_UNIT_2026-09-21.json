@@ -118,5 +118,26 @@
     "governed_seam_overlap": 0,
     "rebase_performed": false,
     "next_requirement": "SEPARATE_FOUNDER_FRESHNESS_RECONCILIATION_BEFORE_PR_OR_CANONICALIZATION"
+  },
+  "i4r1": {
+    "status": "EVIDENCE_READY",
+    "canonical_base": "0319940f9dc94a637e6f1b0e9f843c971f6fb0c2",
+    "source_relational_candidate": "d2e4dbc24a5efd993bcb785d7b9a05145b7cbd7f",
+    "replay_implementation_head": "890a1a042",
+    "competing_now_what_candidate": "e90ddf4fce2b4bd325f161267877f5084578209c",
+    "seam_ruling": "RELATIONAL_FIELD_FIRST_INGRESS",
+    "now_what_disposition": "PARKED_NOT_ADOPTED_NOT_CO_AUTHORITATIVE",
+    "replay_conflicts": 0,
+    "manual_implementation_edits": 0,
+    "stable_patch_identity": true,
+    "tests": "118/118 PASS",
+    "matrix": "22/22 PASS",
+    "db_witness": "7/7 PASS",
+    "repository_typecheck": "229 vs baseline 239; 0 regressions; EXIT 0",
+    "blank_database_bootstrap": "PASS 5/5",
+    "production_activation": "NONE",
+    "merge": "NONE",
+    "deployment": "NONE",
+    "next_gate": "EXACT_HEAD_PR_CI_ADJUDICATION_BEFORE_CANONICAL_MERGE"
   }
 }
