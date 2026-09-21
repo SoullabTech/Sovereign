@@ -56,7 +56,7 @@ describe('primary: executed exactly, and never fallen back from', () => {
   it('a provider failure REFUSES — nothing else is called', async () => {
     execute.mockRejectedValue(new Error('529 overloaded'));
     const r = await withMode('primary', () => runStructured(req));
-    expect(r).toEqual({ ok: false, refusal: 'provider_unavailable', detail: '529 overloaded' });
+    expect(r).toEqual({ ok: false, refusal: 'provider_unavailable', detail: '529 overloaded', dispatch: 'unknown' });
     expect(execute).toHaveBeenCalledTimes(1);
   });
 

@@ -55,7 +55,7 @@ function capturingClient(reply: Record<string, unknown> = {}) {
         },
         stream: (params: Record<string, unknown>) => {
           seen.push({ method: 'stream', params });
-          return { finalMessage: async () => message };
+          return { on() { return this; }, finalMessage: async () => message };
         },
       },
     } as never,

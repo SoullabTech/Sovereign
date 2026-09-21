@@ -162,9 +162,20 @@ export type StructuredRefusal =
   | 'invalid_inference_mode'
   | 'not_configured';
 
+/** Evidence about a response, never a claim that an unobserved request was not sent. */
+export type StructuredDispatch = 'response_observed' | 'no_response_observed' | 'unknown';
+
+/** Adapter-owned observation. No SDK object, request, or provider prose crosses here. */
+export class StructuredDispatchError extends Error {
+  constructor(readonly dispatch: StructuredDispatch, readonly status: number | null = null) {
+    super('Structured provider execution failed');
+    this.name = 'StructuredDispatchError';
+  }
+}
+
 export type StructuredOutcome =
   | { ok: true; result: StructuredResult }
-  | { ok: false; refusal: StructuredRefusal; detail?: string };
+  | { ok: false; refusal: StructuredRefusal; detail?: string; dispatch?: StructuredDispatch };
 
 /**
  * What a provider must be able to do to serve a structured request AT ALL.

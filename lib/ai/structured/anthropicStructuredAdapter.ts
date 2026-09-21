@@ -18,7 +18,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { deriveModelAgreement } from './types';
+import { deriveModelAgreement, StructuredDispatchError } from './types';
 import type { ProviderName } from '../types';
 import type {
   StructuredBlock, StructuredProvider, StructuredRequest, StructuredResult,
@@ -85,50 +85,64 @@ export function anthropicStructuredProvider(
   return {
     name: provider,
     async execute(req: StructuredRequest): Promise<StructuredResult> {
-      const client = opts.client ?? new Anthropic();
-      const params = toAnthropicParams(req);
-      const t0 = Date.now();
+      let responseObserved = false;
+      let dispatchStarted = false;
+      try {
+        const client = opts.client ?? new Anthropic();
+        const params = toAnthropicParams(req);
+        const t0 = Date.now();
 
-      /* THE REQUIREMENT IS NEUTRAL; THE MECHANISM IS THIS ADAPTER'S CHOICE.
-         The caller asks that a long completion not be cut off. For Anthropic
-         today that means streaming and taking the final message — a different
-         provider may honour the same requirement by long-polling a job or by
-         simply not having the timeout. Consumed whole either way, so the
-         neutral result is identical. */
-      const message = req.execution?.completion === 'long-running'
-        ? await (client.messages.stream(params as never)).finalMessage()
-        : await client.messages.create(params as never) as Anthropic.Message;
+        /* THE REQUIREMENT IS NEUTRAL; THE MECHANISM IS THIS ADAPTER'S CHOICE.
+           The caller asks that a long completion not be cut off. For Anthropic
+           today that means streaming and taking the final message — a different
+           provider may honour the same requirement by long-polling a job or by
+           simply not having the timeout. Consumed whole either way, so the
+           neutral result is identical. */
+        dispatchStarted = true;
+        const message = req.execution?.completion === 'long-running'
+          ? await (client.messages.stream(params as never)).on('connect', () => { responseObserved = true; }).finalMessage()
+          : await client.messages.create(params as never) as Anthropic.Message;
 
-      return {
-        content: toBlocks(message.content as readonly unknown[]),
-        stopReason: (message.stop_reason as string | null) ?? null,
-        usage: {
-          inputTokens: message.usage?.input_tokens ?? 0,
-          outputTokens: message.usage?.output_tokens ?? 0,
-        },
-        provenance: {
-          provider,
-          /* THE MODEL REQUESTED AND SENT. Taken from the request that went up the
-             wire, so this fact can never drift from what was asked for — and it
-             is deliberately NOT the answer to "what actually replied". */
-          model: req.model,
-          /* WHAT THE PROVIDER SAYS ANSWERED — read from the RESPONSE, from the
-             same message object already read for content, stop_reason and usage.
-             No second request, no retry.
+        responseObserved = true;
+        return {
+          content: toBlocks(message.content as readonly unknown[]),
+          stopReason: (message.stop_reason as string | null) ?? null,
+          usage: {
+            inputTokens: message.usage?.input_tokens ?? 0,
+            outputTokens: message.usage?.output_tokens ?? 0,
+          },
+          provenance: {
+            provider,
+            /* THE MODEL REQUESTED AND SENT. Taken from the request that went up the
+               wire, so this fact can never drift from what was asked for — and it
+               is deliberately NOT the answer to "what actually replied". */
+            model: req.model,
+            /* WHAT THE PROVIDER SAYS ANSWERED — read from the RESPONSE, from the
+               same message object already read for content, stop_reason and usage.
+               No second request, no retry.
 
-             ⛔ Never `req.model`. Populating this from the request would recreate
-             the original defect under a second field name, and the check built on
-             it would again reduce to `requested === requested`. */
-          reportedModel: typeof message.model === 'string' && message.model.length > 0
-            ? message.model
-            : null,
-          modelAgreement: deriveModelAgreement(
-            req.model,
-            typeof message.model === 'string' && message.model.length > 0 ? message.model : null,
-          ),
-          latencyMs: Date.now() - t0,
-        },
-      };
+               ⛔ Never `req.model`. Populating this from the request would recreate
+               the original defect under a second field name, and the check built on
+               it would again reduce to `requested === requested`. */
+            reportedModel: typeof message.model === 'string' && message.model.length > 0
+              ? message.model
+              : null,
+            modelAgreement: deriveModelAgreement(
+              req.model,
+              typeof message.model === 'string' && message.model.length > 0 ? message.model : null,
+            ),
+            latencyMs: Date.now() - t0,
+          },
+        };
+      } catch (err) {
+        // SDK status is evidence of an HTTP response, not editorial success.
+        const status = err instanceof Anthropic.APIError && typeof err.status === 'number'
+          ? err.status : null;
+        throw new StructuredDispatchError(
+          responseObserved || status !== null ? 'response_observed'
+            : dispatchStarted ? 'unknown' : 'no_response_observed', status,
+        );
+      }
     },
   };
 }
