@@ -13,6 +13,7 @@
  */
 import { readFileSync } from 'fs';
 import { execSync } from 'child_process';
+import ts from 'typescript';
 import { runC5 } from './convergenceC5';
 import {
   editorialSegments, editIds, composeSelected, altersProtectedText,
@@ -32,6 +33,7 @@ const DESK = 'app/writers-studio/insight/RevisionDesk.tsx';
 const ADOPTION = 'lib/manuscript/editorialRuntime/adoption.ts';
 const REVIEW = 'lib/writersStudio/rebuild/chapterReview.ts';
 const DEPTH = 'lib/writersStudio/editorialDepth.ts';
+const CONTRACT = 'lib/manuscript/developmentalReader/contract.ts';
 const RENDER = 'lib/manuscript/developmentalReader/render.ts';
 const STAGES = 'lib/manuscript/developmentalReading/commission.ts';
 
@@ -48,6 +50,20 @@ export function runC6(): readonly Check[] {
   const review = src(REVIEW);
   const depth = src(DEPTH);
   const depthRaw = read(DEPTH);
+  const contractRaw = read(CONTRACT);
+  const contractFile = ts.createSourceFile(
+    CONTRACT, contractRaw, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS,
+  );
+  const requestNode = contractFile.statements.find(
+    (statement): statement is ts.InterfaceDeclaration =>
+      ts.isInterfaceDeclaration(statement) && statement.name.text === 'DevelopmentalReaderRequest',
+  ) ?? null;
+  const requestFields = requestNode
+    ? requestNode.members
+        .filter(ts.isPropertySignature)
+        .map((member) => member.name.getText(contractFile).replace(/^['"]|['"]$/g, ''))
+    : [];
+  const requestContract = requestNode?.getText(contractFile) ?? '';
   const render = read(RENDER);
   const stages = src(STAGES);
 
@@ -364,7 +380,7 @@ export function runC6(): readonly Check[] {
 
   add('C6R5-2-no-depth-or-profile-reaches-the-reader',
     !/depth|writerLevel|styleProfile|experience|skillLevel|preferences|compass|conversation/i
-      .test(contract.slice(reqStart, reqEnd)) &&
+      .test(requestContract) &&
     !/editorialDepth|EditorialDepth/.test(src(RENDER)),
     'no depth, level, style, preference, Compass or conversation field enters the reader');
 
