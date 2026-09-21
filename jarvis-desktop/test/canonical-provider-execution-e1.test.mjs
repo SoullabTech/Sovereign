@@ -363,6 +363,76 @@ test('E1 external preview/Authorize Once do not inspect credentials; Confirm Exe
   }
 });
 
+test('F6 containment refusal leaves GPT-OSS grant ACTIVE and never reaches runner', async () => {
+  const { home, env } = tempEnv();
+  let sentinel = null;
+  try {
+    let { id, status } = await routedReady(env, 3350);
+    const gpt = status.routing.participants.find((participant) =>
+      participant.transport_bindings.some((binding) => binding.provider_id === 'gpt-oss-local'));
+    assert.ok(gpt, JSON.stringify(status.routing.participants));
+
+    const primaryId = status.work_unit.routing.route_record.primary.participant_id;
+    if (gpt.participant_id !== primaryId) {
+      const primary = status.routing.participants.find((p) => p.participant_id === primaryId);
+      const primaryGrant = await WUC.canonicalAuthorizeExecutionOnce(
+        REPO, id, primary.participant_id, { env, actorId: 'human:e1-proof' },
+      );
+      assert.equal(primaryGrant.ok, true);
+      const primaryResult = await WUC.canonicalConfirmAuthorizedExecution(
+        REPO, id, primaryGrant.grant.grant_id,
+        {
+          env,
+          actorId: 'human:e1-proof',
+          executeCanonicalProvider: async (_root, args) => stubResult(args),
+        },
+      );
+      assert.equal(primaryResult.ok, true);
+      status = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    }
+
+    const issued = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, gpt.participant_id, { env, actorId: 'human:e1-proof' },
+    );
+    assert.equal(issued.ok, true, JSON.stringify(issued.blockers));
+    assert.equal(issued.standing, 'ACTIVE');
+
+    const probeRuntime = WUC.createCanonicalOpenCodeRuntime();
+    const neutralRoot = probeRuntime.neutralRoot;
+    fs.rmSync(probeRuntime.runRoot, { recursive: true, force: true });
+    sentinel = path.join(neutralRoot, 'opencode.json');
+    assert.equal(fs.existsSync(sentinel), false, 'neutral root must start sentinel-free');
+    fs.writeFileSync(sentinel, 'F6_PRECLAIM_SENTINEL_MUST_NOT_RUN\n');
+
+    let runnerCalls = 0;
+    const refused = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, issued.grant.grant_id,
+      {
+        env,
+        actorId: 'human:e1-proof',
+        executeCanonicalProvider: async () => {
+          runnerCalls += 1;
+          throw new Error('runner must not be reached');
+        },
+      },
+    );
+    assert.equal(refused.ok, false);
+    assert.equal(refused.status, 'REFUSED');
+    assert.equal(refused.reason, 'AMBIENT_OPENCODE_PROJECT_CONFIGURATION');
+    assert.equal(refused.grant_standing, 'ACTIVE');
+    assert.equal(runnerCalls, 0);
+
+    const after = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    const standing = after.execution_bridge.grants.find(
+      (entry) => entry.grant?.grant_id === issued.grant.grant_id,
+    );
+    assert.equal(standing?.standing, 'ACTIVE');
+  } finally {
+    if (sentinel) fs.rmSync(sentinel, { force: true });
+    cleanup(home);
+  }
+});
+
 test('legacy R5B/run-provider surfaces still refuse canonical W0.v2 and cannot impersonate E1', async () => {
   const { home, env } = tempEnv();
   try {
@@ -393,17 +463,34 @@ test('legacy R5B/run-provider surfaces still refuse canonical W0.v2 and cannot i
 
 
 
-test('canonical GPT-OSS OpenCode v2 launch is standalone and isolated from user config', async () => {
+test('canonical GPT-OSS OpenCode v2 launch is standalone and D1d-contained', async () => {
   const { home } = tempEnv();
   const sourceEnv = {
     ...process.env,
     AIN_DELEGATION_HOME: home,
     HOME: '/tmp/leaky-user-home',
+    TMPDIR: '/tmp/leaky-tmp',
     XDG_CONFIG_HOME: '/tmp/leaky-user-config',
     XDG_DATA_HOME: '/tmp/leaky-user-data',
+    XDG_CACHE_HOME: '/tmp/leaky-user-cache',
+    XDG_STATE_HOME: '/tmp/leaky-user-state',
     OPENCODE_CONFIG: '/tmp/leaky-opencode.json',
-    OPENCODE_CONFIG_DIR: '/tmp/leaky-opencode-dir',
-    OPENCODE_CLI_CONFIG_CONTENT: '{"leak":true}',
+    OPENCODE_CONFIG_CONTENT: '{"leak":true}',
+    OPENCODE_CLI_CONFIG_CONTENT: '{"cliLeak":true}',
+    OPENCODE_TEST_HOME: '/tmp/leaky-test-home',
+    OPENCODE_CONFIG_PROJECT_DISABLE: '1',
+    OPENCODE_DISABLE_PROJECT_CONFIG: '1',
+    HTTP_PROXY: 'http://ambient.invalid',
+    HTTPS_PROXY: 'http://ambient.invalid',
+    ALL_PROXY: 'http://ambient.invalid',
+    WS_PROXY: 'ws://ambient.invalid',
+    WSS_PROXY: 'wss://ambient.invalid',
+    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://ambient.invalid/otel',
+    OPENCODE_PTY_BIN: '/tmp/ambient-pty',
+    OPENCODE_TREE_SITTER_WASM_PATH: '/tmp/ambient-wasm',
+    NVIDIA_API_KEY: 'must-not-cross',
+    TINKER_API_KEY: 'must-not-cross',
+    AWS_REGION: 'must-not-cross',
   };
   let seen = null;
   try {
@@ -413,7 +500,7 @@ test('canonical GPT-OSS OpenCode v2 launch is standalone and isolated from user 
         workUnitId: 'e3-v2-gpt-oss-proof',
         grantId: 'e3-gpt-oss-grant-proof',
         workUnit: {
-          identity: { objective: 'Prove canonical GPT-OSS OpenCode v2 containment.' },
+          identity: { objective: 'Prove canonical GPT-OSS v2 D1d containment.' },
           custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
           scope: {
             base_ref: SHA,
@@ -441,12 +528,17 @@ test('canonical GPT-OSS OpenCode v2 launch is standalone and isolated from user 
       },
       {
         execFile: (file, args, options, callback) => {
+          const config = JSON.parse(fs.readFileSync(
+            path.join(options.env.OPENCODE_CONFIG_DIR, 'opencode.json'),
+            'utf8',
+          ));
           seen = {
             file,
             args: [...args],
-            options: { ...options, env: { ...options.env } },
+            cwd: options.cwd,
+            env: { ...options.env },
+            config,
             projectConfigExists: fs.existsSync(path.join(options.cwd, '.opencode')),
-            runtimeHomeExists: fs.existsSync(options.env.HOME),
           };
           callback(null, 'SYNTHETIC_GPT_OSS_V2_OK', '');
         },
@@ -462,45 +554,95 @@ test('canonical GPT-OSS OpenCode v2 launch is standalone and isolated from user 
     assert.equal(seen.args[seen.args.indexOf('--agent') + 1], 'jarvis-readonly');
     assert.equal(seen.args[seen.args.indexOf('--model') + 1], 'ollama/gpt-oss:20b');
 
-    const env = seen.options.env;
-    assert.match(env.HOME, /jarvis-e1-opencode-v2-[^/]+\/home$/);
-    assert.match(env.XDG_CONFIG_HOME, /jarvis-e1-opencode-v2-[^/]+\/config$/);
-    assert.match(env.XDG_DATA_HOME, /jarvis-e1-opencode-v2-[^/]+\/data$/);
-    assert.equal(env.HOME.startsWith(seen.options.cwd), false);
-    assert.equal(env.XDG_CONFIG_HOME.startsWith(seen.options.cwd), false);
-    assert.equal(env.XDG_DATA_HOME.startsWith(seen.options.cwd), false);
-    assert.equal(seen.projectConfigExists, false);
-    assert.equal(seen.runtimeHomeExists, true);
-    assert.equal(env.XDG_CACHE_HOME, '/tmp/leaky-user-home/.cache');
-    assert.equal(env.OPENCODE_CONFIG, undefined);
-    assert.equal(env.OPENCODE_CONFIG_DIR, undefined);
-    assert.equal(env.OPENCODE_CLI_CONFIG_CONTENT, undefined);
-    assert.equal(env.OPENCODE_CONFIG_PROJECT_DISABLE, '1');
-    assert.equal(env.OPENCODE_DISABLE_PROJECT_CONFIG, '1');
+    const env = seen.env;
+    const runRoot = path.dirname(env.HOME);
+    assert.equal(seen.cwd, path.join(runRoot, 'workspace'));
+    assert.equal(env.TMPDIR, path.join(runRoot, 'tmp'));
+    assert.equal(env.XDG_CONFIG_HOME, path.join(runRoot, 'xdg-config'));
+    assert.equal(env.XDG_DATA_HOME, path.join(runRoot, 'xdg-data'));
+    assert.equal(env.XDG_CACHE_HOME, path.join(runRoot, 'xdg-cache'));
+    assert.equal(env.XDG_STATE_HOME, path.join(runRoot, 'xdg-state'));
+    assert.equal(env.OPENCODE_CONFIG_DIR, path.join(runRoot, 'opencode-config'));
     assert.equal(env.OPENCODE_DISABLE_MODELS_FETCH, '1');
     assert.equal(env.OPENCODE_DISABLE_AUTOUPDATE, '1');
+    assert.equal(seen.projectConfigExists, false);
 
-    const config = JSON.parse(env.OPENCODE_CONFIG_CONTENT);
-    assert.deepEqual(Object.keys(config.provider), ['ollama']);
-    assert.deepEqual(Object.keys(config.provider.ollama.models), ['gpt-oss:20b']);
-    assert.equal(config.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
-    assert.deepEqual(Object.keys(config.agents), ['jarvis-readonly']);
-    assert.equal(config.agents['jarvis-readonly'].mode, 'primary');
-    assert.deepEqual(config.agents['jarvis-readonly'].permissions[0], {
+    for (const forbidden of [
+      'AIN_DELEGATION_HOME', 'OPENCODE_CONFIG', 'OPENCODE_CONFIG_CONTENT',
+      'OPENCODE_CLI_CONFIG_CONTENT', 'OPENCODE_TEST_HOME',
+      'OPENCODE_CONFIG_PROJECT_DISABLE', 'OPENCODE_DISABLE_PROJECT_CONFIG',
+      'HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'WS_PROXY', 'WSS_PROXY',
+      'OTEL_EXPORTER_OTLP_ENDPOINT', 'OPENCODE_PTY_BIN',
+      'OPENCODE_TREE_SITTER_WASM_PATH', 'NVIDIA_API_KEY', 'TINKER_API_KEY',
+      'AWS_REGION',
+    ]) {
+      assert.equal(env[forbidden], undefined, forbidden + ' leaked into canonical OpenCode');
+    }
+
+    assert.deepEqual(Object.keys(seen.config.provider), ['ollama']);
+    assert.deepEqual(Object.keys(seen.config.provider.ollama.models), ['gpt-oss:20b']);
+    assert.equal(seen.config.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
+    assert.deepEqual(Object.keys(seen.config.agents), ['jarvis-readonly']);
+    const agent = seen.config.agents['jarvis-readonly'];
+    assert.equal(agent.mode, 'primary');
+    assert.equal(agent.steps, 8);
+    assert.deepEqual(agent.permissions[0], {
       action: '*', resource: '*', effect: 'deny',
     });
     assert.equal(
-      config.agents['jarvis-readonly'].permissions.some(
-        (p) => p.action === 'read' && p.resource === '*' && p.effect === 'allow',
+      agent.permissions.some(
+        (rule) => rule.action === 'read' && rule.resource === '*' && rule.effect === 'allow',
       ),
       true,
     );
-    assert.equal(JSON.stringify(config).includes('qwen3-coder:30b'), false);
-    assert.equal(JSON.stringify(config).includes('tinker'), false);
-    assert.equal(JSON.stringify(config).includes('nvidia'), false);
+    assert.equal(JSON.stringify(seen.config).includes('qwen3-coder:30b'), false);
+    assert.equal(JSON.stringify(seen.config).includes('tinker'), false);
+    assert.equal(JSON.stringify(seen.config).includes('nvidia'), false);
+    assert.equal(fs.existsSync(runRoot), false);
   } finally {
     cleanup(home);
   }
+});
+
+test('unreconciled non-local OpenCode refuses before process creation', async () => {
+  let processCalls = 0;
+  const out = await WUC.executeCanonicalResolvedProvider(
+    REPO,
+    {
+      workUnitId: 'e3-v2-nvidia-refusal',
+      grantId: 'e3-nvidia-grant-proof',
+      workUnit: {
+        identity: { objective: 'Refuse unreconciled external OpenCode.' },
+        custody: { evidence_class: 'E0_TASK_TEXT' },
+        scope: { allowed_paths: [] },
+        evaluation: { acceptance_conditions: [], stop_conditions: [] },
+      },
+      binding: {
+        route_participant_id: 'challenger',
+        transport_binding_id: 'tb-nvidia-proof',
+        provider_id: 'nemotron-nvidia',
+        model_id: 'nemotron-3-ultra-550b-a55b',
+        adapter_id: 'opencode',
+      },
+      resolved: {
+        execution_adapter: 'opencode',
+        agent: 'jarvis-readonly',
+        model_ref: 'nvidia/nemotron-3-ultra-550b-a55b',
+        model_id: 'nemotron-3-ultra-550b-a55b',
+      },
+      sourceEnv: { PATH: process.env.PATH },
+    },
+    {
+      execFile: () => {
+        processCalls += 1;
+        throw new Error('must not create provider process');
+      },
+    },
+  );
+  assert.equal(out.ok, false);
+  assert.equal(out.status, 'REFUSED');
+  assert.equal(out.reason, 'CANONICAL_OPENCODE_V2_PROVIDER_NOT_RECONCILED');
+  assert.equal(processCalls, 0);
 });
 
 test('canonical Qwen direct launch reuses Unit 9 native worker with bounded evidence and JARVIS 65K identity', async () => {
