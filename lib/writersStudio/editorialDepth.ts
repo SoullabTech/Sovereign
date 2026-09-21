@@ -55,6 +55,15 @@ export const DEPTH_DIRECTIVE: Record<EditorialDepth, string> = {
   direct: [
     'Use the full editorial vocabulary: structure, register, syntax, evidence, tradeoffs, provenance.',
     'Assume I read editorially and do not translate the terms.',
+    /* ⭐⭐ THE WITNESSED FAILURE. Direct said `214 nominalizes With into a stage
+       or term in the system` — where the evidence established only that the
+       wording changed from "opens another question" to "opens into With" and
+       that a clause was added. ⭐ The naming was apt; the CERTAINTY was not.
+       ⛔ Editorial vocabulary is the vehicle this arrives in: a strong claim in
+       confident terminology reads as expertise, which is precisely why the
+       depth that licenses the vocabulary must refuse the promotion. */
+    'Naming a move precisely is not the same as establishing it. Keep the epistemic status of every claim exactly what the evidence supports: what may be, stays may be.',
+    'A difference in wording or syntax does not establish a claim about the Work\'s ontology, its framework, my intentions, or a reader\'s experience unless the supplied evidence establishes that too.',
     'Do not write more of my prose than you would at any other depth.',
   ].join(' '),
 };
@@ -147,7 +156,29 @@ export const ATTUNEMENT_DIRECTIVE = [
 ].join(' ');
 
 /**
- * ⭐ The three signals, composed. ⛔ Never collapsed into one dial.
+ * ⭐⭐ EPISTEMIC INTEGRITY — COMPOSED INTO ALL THREE DEPTHS, AND THAT IS THE
+ * POINT OF IT.
+ *
+ * ⚠️⚠️ THE SEQUENTIAL FAILURE THE WITNESS FOUND, which a per-depth rule alone
+ * would not have caught. Direct promoted an interpretation to a fact; the
+ * writer then switched to Guided, and Guided did EXACTLY WHAT IT WAS ASKED —
+ * it preserved the substance faithfully — and in doing so carried the
+ * overstatement forward as established, stated more strongly than before.
+ *
+ * ⭐ So the translation system behaved well and the conversation still ended
+ * up further from the evidence than it started. ⛔ Preserving substance must
+ * never mean preserving an epistemic mistake as fact, and the guard therefore
+ * cannot live only at the depth where the inflation began — it has to hold at
+ * the depth that inherits it.
+ */
+export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
+  'Treat nothing said earlier in this conversation as established merely because it was said confidently or said by you.',
+  'If an earlier turn stated an interpretation as a fact, do not carry it forward as one: say what the supplied evidence actually establishes, and mark the rest as a possible reading.',
+  'Changing how deeply you explain never changes how certain a claim is entitled to be.',
+].join(' ');
+
+/**
+ * ⭐ The signals, composed. ⛔ Never collapsed into one dial.
  *
  * ⭐⭐ THE STANDARD THIS SERVES: *a response is not well-formed merely because
  * its editorial content is correct — it must also be appropriately translated
@@ -156,5 +187,6 @@ export const ATTUNEMENT_DIRECTIVE = [
 export function editorialDirective(depth: EditorialDepth): string {
   return [
     DEPTH_DIRECTIVE[depth], STYLE_RESPONSIVE_DIRECTIVE, ATTUNEMENT_DIRECTIVE,
+    EPISTEMIC_INTEGRITY_DIRECTIVE,
   ].join(' ');
 }

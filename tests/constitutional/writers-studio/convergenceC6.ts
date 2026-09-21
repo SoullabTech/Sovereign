@@ -443,6 +443,35 @@ export function runC6(): readonly Check[] {
       .test(read('lib/manuscript/developmentalReading/__tests__/refusalTruth.test.ts')),
     'a record from the previous contract still says so; nothing was backfilled');
 
+  /* ⭐⭐ C6R6 — THE HUMAN WITNESS FOUND WHAT NO CHECK HERE COULD.
+     Direct said `214 nominalizes With into a stage or term in the system` where
+     the evidence established only that the wording changed and a clause was
+     added. ⭐ The naming was apt; the CERTAINTY was not — and editorial
+     vocabulary is the vehicle, because a strong claim in confident terminology
+     reads as expertise. */
+  add('C6R6-1-direct-may-not-promote-an-interpretation',
+    /Keep the epistemic status of every claim exactly what the evidence supports/.test(depth) &&
+    /does not establish a claim about the Work/.test(depth),
+    'the depth that licenses the vocabulary is the depth that refuses the promotion');
+
+  add('C6R6-2-promotion-guard-is-directs-alone',
+    !/Keep the epistemic status/.test(depth.slice(depth.indexOf('guided: ['), depth.indexOf('direct: ['))),
+    'Guided and Learning are not given a rule about vocabulary they do not use');
+
+  /* ⚠️⚠️ THE SEQUENTIAL HALF, which a per-depth rule alone would have missed:
+     Guided did exactly what it was asked — preserved the substance — and
+     carried the overstatement forward as established. So the guard must hold
+     at the depth that INHERITS, not only where the inflation began. */
+  add('C6R6-3-no-depth-inherits-an-unsupported-claim',
+    /do not carry it forward as one/.test(depth) &&
+    /Treat nothing said earlier in this conversation as established merely because it was said confidently/.test(depth),
+    'preserving substance never means preserving an epistemic mistake as fact');
+
+  add('C6R6-4-integrity-holds-at-every-depth',
+    /EPISTEMIC_INTEGRITY_DIRECTIVE,\n  \]\.join/.test(depthRaw) &&
+    /Changing how deeply you explain never changes how certain a claim is entitled to be/.test(depth),
+    'the guard is composed into all three depths, not attached to one');
+
   const c5 = runC5();
   const reusableC5 = c5.filter(c => c.id !== 'C5-19-no-new-revision-substrate');
   add('C6-10-c5-still-green',
