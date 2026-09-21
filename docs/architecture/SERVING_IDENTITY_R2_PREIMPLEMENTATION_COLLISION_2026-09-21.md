@@ -1,7 +1,7 @@
 # SERVING-IDENTITY / R2 — PRE-IMPLEMENTATION CONTRACT COLLISION
 
-**Branch:** `feature/serving-identity-r2`  
-**Authorized parent:** `22c529daedf9e992c2b044bd0462e14b880302bf`  
+**Branch:** `feature/serving-identity-r2`
+**Authorized parent:** `22c529daedf9e992c2b044bd0462e14b880302bf`
 **Finding status:** RUNTIME IMPLEMENTATION HELD · CONTRACT AMENDMENT REQUIRED
 
 ## 1. Purpose
