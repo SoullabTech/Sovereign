@@ -70,6 +70,7 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
     expect(retry).toContain('priorPhoneInvocationStarted=false');
     expect(retry).toContain('FOUNDER-REAUTHORIZED-SOURCE-LEVEL-CALIBRATION-01-RETRY-01');
     expect(retry).toContain('ACT01_INFRA_PREPLAY_ZERO_MEASUREMENT');
+    expect(retry.match(/K00_CAL_BATCH_AUTHORITY=BOUND bash scripts\/witness\/k00-source-calibration-batch\.sh/g)?.length).toBe(2);
   });
 
   it('Retry-01 spends a distinct marker only after prior-act proof and fresh preflight', () => {
@@ -83,23 +84,27 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
     expect(retry).not.toContain('rm "$PRIOR_ACT_MARK"');
   });
 
-  it('implements the closed first-pass-wins ladder with no L4', () => {
-    expect(run).toContain('for LEVEL in L1 L2 L3');
-    expect(run).not.toContain('L4');
-    expect(run).toContain('if [ "$PASS" = yes ]; then');
-    expect(run).toContain('break');
-    expect(run).toContain('NO_LEVEL_PIN');
-    expect(run).toContain('V1 remains 20 dB');
-    expect(run).not.toContain('sort -z');
-    expect(run).not.toContain('xargs -0');
+  it('implements the closed first-pass-wins ladder with no L4 in initial and Retry-01 pins', () => {
+    for (const src of [run, retry]) {
+      expect(src).toContain('for LEVEL in L1 L2 L3');
+      expect(src).not.toContain('L4');
+      expect(src).toContain('if [ "$PASS" = yes ]; then');
+      expect(src).toContain('break');
+      expect(src).toContain('NO_LEVEL_PIN');
+      expect(src).toContain('V1 remains 20 dB');
+      expect(src).not.toContain('sort -z');
+      expect(src).not.toContain('xargs -0');
+    }
   });
 
   it('executes VP-off only after a VP-on level pin exists', () => {
-    const noPin = run.indexOf('if [ -z "$SELECTED" ]');
-    const vpOff = run.indexOf('off 3 "$FIXTURE"');
-    expect(noPin).toBeGreaterThan(-1);
-    expect(vpOff).toBeGreaterThan(noPin);
-    expect(run).toContain('vpCharacterization=');
+    for (const src of [run, retry]) {
+      const noPin = src.indexOf('if [ -z "$SELECTED" ]');
+      const vpOff = src.indexOf('off 3 "$FIXTURE"');
+      expect(noPin).toBeGreaterThan(-1);
+      expect(vpOff).toBeGreaterThan(noPin);
+      expect(src).toContain('vpCharacterization=');
+    }
   });
 
   it('both pin scripts are shell-syntax clean', () => {
