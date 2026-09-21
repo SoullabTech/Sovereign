@@ -124,7 +124,10 @@ run_test(){
 }
 
 process_guard(){
-  local idx="$1" phase="$2" js="$LEDGER/sample-$idx-$phase-processes.json" out="$LEDGER/sample-$idx-$phase-processes.stdout"
+  local idx="$1"
+  local phase="$2"
+  local js="$LEDGER/sample-$idx-$phase-processes.json"
+  local out="$LEDGER/sample-$idx-$phase-processes.stdout"
   xcrun devicectl device info processes --device "$DEV" --json-output "$js" >"$out" 2>&1 || return 1
   [ -s "$js" ] || return 1
   local n
