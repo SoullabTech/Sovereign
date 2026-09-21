@@ -298,7 +298,7 @@ function systemPrompt(workUnit, mode, allowedFiles) {
   ].join("\n");
 }
 
-async function ollamaChat(payload, timeoutMs = 180_000) {
+async function ollamaChat(payload, timeoutMs = 120_000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -392,7 +392,7 @@ export async function runLocalWorker({
       stream: false,
       options: {
         num_ctx: 32768,
-        num_predict: mode === "build" ? 4096 : 3072,
+        num_predict: mode === "build" ? 1024 : 2048,
         temperature: 0.1,
       },
     });
