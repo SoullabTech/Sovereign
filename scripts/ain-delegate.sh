@@ -412,7 +412,11 @@ _run_lane() {
         local native_prompt_file
         native_prompt_file="$(mktemp -t jarvis-native-prompt)"
         printf '%s' "$prompt" > "$native_prompt_file"
-        ( cd "$wt" && env JARVIS_NUM_CTX="${JARVIS_NUM_CTX:-32768}" JARVIS_LOCAL_TIMEOUT_MS="${JARVIS_LOCAL_TIMEOUT_MS:-120000}" node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$native_prompt_file" --model "$model" ) > "$log" 2>&1
+        ( cd "$wt" && env \
+            JARVIS_OLLAMA_HOST="http://127.0.0.1:11434" \
+            JARVIS_NUM_CTX="${JARVIS_NUM_CTX:-32768}" \
+            JARVIS_LOCAL_TIMEOUT_MS="${JARVIS_LOCAL_TIMEOUT_MS:-120000}" \
+            node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$native_prompt_file" --model "$model" ) > "$log" 2>&1
         exit_code=$?
         rm -f "$native_prompt_file"
     elif [ "$lane" = "local" ]; then
@@ -559,6 +563,16 @@ _run_lane() {
                 exit_code=11
                 test_results="fail"
                 verification_evidence="${verification_evidence}FAIL: JARVIS candidate commit\n"
+                # A failed commit must not leave an admitted patch staged or dirty.
+                # Return to the exact pre-model state just as verification failure does.
+                if git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 \
+                    && git -C "$wt" clean -fd >> "$log.verify" 2>&1; then
+                    ending_sha=""
+                    files_changed_json='[]'
+                    verification_evidence="${verification_evidence}PASS: rollback after candidate commit failure\n"
+                else
+                    verification_evidence="${verification_evidence}FAIL: rollback after candidate commit failure\n"
+                fi
             fi
         fi
     fi
