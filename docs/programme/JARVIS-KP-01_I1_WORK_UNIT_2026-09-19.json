@@ -1,0 +1,105 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "I1",
+  "title": "Epistemic Join Implementation Architecture",
+  "date": "2026-09-19",
+  "status": "EVIDENCE_READY",
+  "canonical_base": "17851fbdaeddd649e6a05c180c94ff3fdd335332",
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11",
+    "ACT 12",
+    "ACT 11A",
+    "ACT 12A"
+  ],
+  "authority": "ARCHITECTURE_ONLY_NO_RUNTIME_AUTHORITY",
+  "disposition": "IMPLEMENTATION ARCHITECTURE SUFFICIENT TO OPEN I2",
+  "architecture": {
+    "package_boundary": "lib/ain/epistemic-join/",
+    "persistence_model": "future dedicated member-scoped append-only epistemic join ledger; exact SQL not authorized in I1",
+    "standing_model": "immutable evidence + append-only standing acts + derived current standing",
+    "proposal_model": "proposal authority is separate from standing authority and downstream representation authority",
+    "composite_warrant": "support set is distinct from separately governed composite inference",
+    "adoption": "component-scoped and jurisdiction-bounded",
+    "reference_reliance": "explicitly distinct",
+    "failure_posture": "fail closed for standing elevation; lower-standing hypotheses remain representable"
+  },
+  "preserved_existing_seams": {
+    "relational_practice_ledger": "not overloaded",
+    "wisdom_graph": "source/event substrate only; not warrant authority",
+    "member_memory_atoms": "crossing_allowed remains FALSE",
+    "living_constellation": "read-only; no semantic-edge write authority",
+    "jarvis_epistemic_ci_ledger": "CI/build scope only"
+  },
+  "source_seams": [
+    {
+      "path": "database/migrations/20260120000001_relational_ledger.sql",
+      "blob_sha": "14e0d7cf52c8b2d93f938bb3d83eb2dae62493d2"
+    },
+    {
+      "path": "database/migrations/20260214100001_wisdom_graph_foundation.sql",
+      "blob_sha": "a60190bc12560b2d294bee9873ef62105d18cecd"
+    },
+    {
+      "path": "database/migrations/20260521000001_member_memory_atoms.sql",
+      "blob_sha": "4c15e3a08f3125b22f88416046e26db92ab0acc6"
+    },
+    {
+      "path": "lib/maia/living-constellation/types.ts",
+      "blob_sha": "8d5142428c617afdcf39ebd923c89531d4b5d69e"
+    },
+    {
+      "path": "lib/maia/living-constellation/projection.ts",
+      "blob_sha": "dec478bf3d89ce38bebd027419eb9b46570adecb"
+    },
+    {
+      "path": "scripts/research/structural-standing/claim-standing.ts",
+      "blob_sha": "f7b3e9e652f18bec3f65ff4b468da369671da4ea"
+    },
+    {
+      "path": ".ain/epistemic-ledger.jsonl",
+      "blob_sha": "e06fa7c7eac852563126c5b87a883228199a3e0e"
+    }
+  ],
+  "evidence": {
+    "architecture_falsifiers": "16/16 PASS",
+    "act11_invariants": "14/14 preserved",
+    "act11a_invariants": "10/10 preserved",
+    "runtime_execution": "NONE",
+    "schema_change": "NONE",
+    "production_data": "NONE"
+  },
+  "deployment_sequence": [
+    "I1 implementation architecture",
+    "I2 pure constitutional evaluator",
+    "I3 append-only persistence behind default-OFF flag",
+    "I4 integration shadow with no behavioral authority",
+    "I5 founder production shadow",
+    "I6 bounded runtime admission",
+    "I7 production deployment"
+  ],
+  "artifacts": [
+    "docs/programme/JARVIS-KP-01_I1_EPISTEMIC_JOIN_IMPLEMENTATION_ARCHITECTURE_2026-09-19.md",
+    "docs/programme/JARVIS-KP-01_I1_WORK_UNIT_2026-09-19.json",
+    "docs/programme/evidence/JARVIS-KP-01/I1/SOURCE_SEAM_CENSUS_2026-09-19.md",
+    "docs/programme/evidence/JARVIS-KP-01/I1/ARCHITECTURE_FALSIFICATION_WITNESS_2026-09-19.md"
+  ],
+  "forbidden": [
+    "runtime implementation",
+    "schema or migration",
+    "database writes",
+    "graph edge creation",
+    "member memory mutation",
+    "lifting member_memory_atoms.crossing_allowed",
+    "prompt changes",
+    "MAIA behavior changes",
+    "automatic member adoption",
+    "routing changes",
+    "provider/model changes",
+    "Living Constellation semantic lines",
+    "production shadow",
+    "deployment"
+  ],
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_EXACT_I1_CANDIDATE"
+}

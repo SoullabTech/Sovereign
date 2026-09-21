@@ -1,0 +1,166 @@
+{
+  "acceptance_conditions": [
+    "Frozen RGR-04 comparator classes are implemented exactly.",
+    "Observable-access boundaries are mechanically enforced.",
+    "Optimizer and remaining training semantics are frozen before materialization.",
+    "Metrics, hierarchical bootstrap, permutation control, and outcome adjudication are implemented.",
+    "Independent verifier returns PASS.",
+    "Implementation and environment digests are recorded.",
+    "Benchmark materialized pair count remains zero.",
+    "No benchmark model training, performance inspection, TEST, or REPLICATION occurs."
+  ],
+  "allowed_paths": [
+    "docs/programme/RGR-06_CONFIRMATORY_IMPLEMENTATION_LOCK_2026-09-19.md",
+    "docs/programme/RGR-06_WORK_UNIT_2026-09-19.json",
+    "docs/programme/evidence/RGR-06/RGR06_IMPLEMENTATION_CONFORMANCE.json",
+    "docs/programme/evidence/RGR-06/RGR06_INDEPENDENT_VERIFIER.json",
+    "docs/programme/evidence/RGR-06/RGR06_RUNTIME_LOCK.json",
+    "scripts/research/rgr/rgr06_confirmatory.py",
+    "scripts/research/rgr/rgr06_independent_verifier.py",
+    "scripts/research/rgr/requirements-rgr06.txt"
+  ],
+  "authority": {
+    "benchmark_materialization": false,
+    "benchmark_model_training": false,
+    "benchmark_performance_inspection": false,
+    "dataset_generation": false,
+    "deployment": false,
+    "external_ai_inference": false,
+    "maia_change": false,
+    "model_provider_api": false,
+    "production_read": false,
+    "production_write": false,
+    "public_package_registry_read": true,
+    "replication_execution": false,
+    "repository_read": true,
+    "repository_write": "isolated_worktree_only",
+    "test_execution": false
+  },
+  "base_ref": "a2d32f83d872bfa6c31b4bf96c5f83cd9d9b5804",
+  "evidence": {
+    "artifact_sha256": {
+      "contract": "159ad0d99067b09df9259e0628bb15a662b2dad654e55a0d29ae29f54834c09c",
+      "implementation_conformance": "b161695b086f33b116355a5479c578a4e906384ebb00f09a3126e3bc58b526b2",
+      "independent_verifier": "b33d335c977f678f2ee86101cb30261f6acc7e8f8e1482392ecaee7a721a0062",
+      "primary": "de483659a331a3ee8dccdc479faad3fc4e20a2a8b9751036d6e2554fff57be81",
+      "requirements": "cbb6214fb7b4d94a1a51d3589b6ab2b5e564041031d5b3fa44faea16b6bacb82",
+      "runtime_lock": "322f6cc16a033e92e5c86811607d41ab9c5914e9353f0871d54216b887f647b4",
+      "verifier_source": "ccedc6eca60e5260db85fb3b4921e719d20fe94869709c551d483561b4d6c7b3"
+    },
+    "environment_digest": "eb1798c275e098bd1d8d5f3ce41a51ce62b65eaa13cdc025b39a0cf4d45823de",
+    "implementation_conformance": "PASS",
+    "implementation_digest": "2b6549ed421c74e9908a5ded09f4d16a457d39eff77d7a36fbc5eeabd5d46003",
+    "independent_verifier": "PASS",
+    "runtime_lock": "LOCKED"
+  },
+  "founder_adjudication": {
+    "accepted_candidate_sha": "6f6a7580f158f24b28c8f12575b5f5beb07300e3",
+    "accepted_environment_digest": "eb1798c275e098bd1d8d5f3ce41a51ce62b65eaa13cdc025b39a0cf4d45823de",
+    "accepted_evidence": {
+      "implementation_conformance": "PASS",
+      "independent_verifier": "PASS",
+      "runtime_lock": "LOCKED"
+    },
+    "accepted_implementation_digest": "2b6549ed421c74e9908a5ded09f4d16a457d39eff77d7a36fbc5eeabd5d46003",
+    "accepted_materialization_boundary": {
+      "benchmark_examples_materialized": 0,
+      "benchmark_model_training_executed": false,
+      "benchmark_pairs_materialized": 0,
+      "benchmark_performance_inspected": false,
+      "dataset_files_written": 0,
+      "replication_executed": false,
+      "test_executed": false
+    },
+    "accepted_parent_canonical": "a2d32f83d872bfa6c31b4bf96c5f83cd9d9b5804",
+    "lifecycle_transition": [
+      "EVIDENCE_READY",
+      "ADJUDICATED",
+      "CLOSED"
+    ],
+    "protected_non_work_unit_artifacts": "BYTE_IDENTICAL",
+    "status": "ACCEPTED_AND_CLOSED",
+    "successor_authority": "NOT_AUTHORIZED"
+  },
+  "gate": "RGR-06",
+  "implementation_lock": {
+    "batch_size": 128,
+    "bootstrap_replicates": 10000,
+    "bootstrap_seed": 706196780616792293,
+    "early_stopping_patience": 5,
+    "forbidden_selection_splits": [
+      "TEST",
+      "REPLICATION"
+    ],
+    "fr_depth_candidates": [
+      1,
+      2,
+      3
+    ],
+    "fs1_dtype": "float64",
+    "max_epochs": 50,
+    "model_selection_splits": [
+      "TRAIN",
+      "VALIDATION"
+    ],
+    "neural_device": "CPU_ONLY",
+    "neural_dtype": "float32",
+    "optimizer_family": "AdamW",
+    "permutation_seed": 91991,
+    "primary_seeds": [
+      51001,
+      51002,
+      51003,
+      51004,
+      51005
+    ],
+    "replication_seeds": [
+      61001,
+      61002,
+      61003,
+      61004,
+      61005
+    ],
+    "selection_metric": "validation_balanced_accuracy"
+  },
+  "materialization_boundary": {
+    "benchmark_examples_materialized": 0,
+    "benchmark_model_training_executed": false,
+    "benchmark_pairs_materialized": 0,
+    "benchmark_performance_inspected": false,
+    "dataset_files_written": 0,
+    "replication_executed": false,
+    "test_executed": false
+  },
+  "objective": "Freeze complete confirmatory model, training, metric, bootstrap, permutation-control, and adjudication machinery before any RGR benchmark evidence exists.",
+  "parent_work_unit": "rgr-05-pre-materialization-feasibility-20260918",
+  "preserved_lineage": {
+    "rgr05_accepted_candidate": "07004b1198d4e534fe1d9e8d701ab3d3637d8fda",
+    "rgr05_disposition": "FEASIBILITY_PASS",
+    "rgr05_implementation_digest": "98597755f40316ec4b0e60318635e1ad0dd587dd0d6176147aaf36923abb731b",
+    "rgr05_standing": "CLOSED / closed / CLOSED"
+  },
+  "programme": "RELATIONAL-GEOMETRY-REASONING",
+  "state": {
+    "disposition": "closed",
+    "guard": "CLOSED",
+    "lifecycle_state": "CLOSED"
+  },
+  "stop_conditions": [
+    "Any frozen RGR-04 or RGR-05 law must change.",
+    "Any repository path outside the eight authorized paths is required.",
+    "Any benchmark example or split data becomes necessary.",
+    "Any benchmark model performance must be inspected.",
+    "Any MAIA, production, schema, migration, or deployment mutation becomes necessary."
+  ],
+  "successor_authority": {
+    "benchmark_materialization": "NOT_AUTHORIZED",
+    "benchmark_model_training": "NOT_AUTHORIZED",
+    "dataset_generation": "NOT_AUTHORIZED",
+    "deployment": "NOT_AUTHORIZED",
+    "merge": "NOT_AUTHORIZED",
+    "replication_execution": "NOT_AUTHORIZED",
+    "test_execution": "NOT_AUTHORIZED"
+  },
+  "title": "Confirmatory Implementation Lock",
+  "work_unit_id": "rgr-06-confirmatory-implementation-lock-20260919"
+}
