@@ -37,11 +37,11 @@ try {
   const prompt = buildNativePrompt(packet, repo);
   assert.match(prompt, /MATERIALIZED CONTEXT/);
   assert.match(prompt, /alpha/);
-  assert.match(prompt, /diff --git/);
-  assert.match(prompt, /first bytes of the response MUST be exactly `diff --git `/);
-  assert.match(prompt, /never delete and re-add unchanged lines/);
-  assert.match(prompt, /Never emit a backtick character anywhere in PATCH output/);
-  assert.match(prompt, /every identifier you add is already in scope or is imported/);
+  assert.match(prompt, /EDIT_JSON:/);
+  assert.match(prompt, /old_text must be copied EXACTLY/);
+  assert.match(prompt, /smallest exact replacement/);
+  assert.match(prompt, /JARVIS, not you, performs the write/);
+  assert.match(prompt, /every identifier you add is already in scope or imported/);
   assert.match(prompt, /follow that precedent exactly/);
   assert.match(prompt, /GOVERNANCE_GATE:/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);

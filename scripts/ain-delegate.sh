@@ -49,6 +49,7 @@ EXTERNAL_CONTEXT_SCRIPT="$PROJECT_DIR/scripts/builder/external-context.mjs"
 LOCAL_WORKER_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-local-worker.mjs"
 NATIVE_PROMPT_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-prompt.mjs"
 PATCH_ADMISSION_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-patch-admission.mjs"
+EDIT_ADMISSION_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-edit-admission.mjs"
 
 mkdir -p "$PACKETS_DIR" "$RESULTS_DIR" "$LOGS_DIR"
 
@@ -464,7 +465,9 @@ _run_lane() {
     ending_sha="$(git -C "$wt" rev-parse --short HEAD)"
     [ "$ending_sha" = "$starting_sha" ] && ending_sha=""
 
-    # Unit 20 + NPA1: native output is either a governance claim or a patch.
+    # Native output is either a governance claim or a JARVIS-admitted edit candidate.
+    # EDIT_JSON is preferred because the model need not serialize git internals; pure
+    # unified diff remains a backward-compatible fallback through NPA1.
     local gate_json='' patch_admission_json=''
     if grep -q '^GOVERNANCE_GATE:' "$log" 2>/dev/null; then
         gate_json="$(grep '^GOVERNANCE_GATE:' "$log" | tail -1 | sed 's/^GOVERNANCE_GATE: *//')"
@@ -478,7 +481,11 @@ _run_lane() {
     if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ]; then
         local patch_code
         set +e
-        patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" apply "$f" "$wt" "$log")"
+        if grep -q '^EDIT_JSON:' "$log" 2>/dev/null; then
+            patch_admission_json="$(node "$EDIT_ADMISSION_SCRIPT" apply "$f" "$wt" "$log")"
+        else
+            patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" apply "$f" "$wt" "$log")"
+        fi
         patch_code=$?
         set -e
         if [ "$patch_code" -ne 0 ]; then
