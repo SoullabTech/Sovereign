@@ -59,7 +59,7 @@ function assertSelectorContained(selector, repo) {
   }
 }
 
-export function buildNativePrompt(packet, repo) {
+export function validateNativeExecutionBoundary(packet, repo) {
   const lint = lintLeakage(packet);
   if (!lint.ok) {
     const error = new Error("PACKET_ANSWER_LEAKAGE");
@@ -131,6 +131,10 @@ export function buildNativePrompt(packet, repo) {
     throw error;
   }
 
+  return { execHead, authorizedHead, bindings };
+}
+export function buildNativePrompt(packet, repo) {
+  validateNativeExecutionBoundary(packet, repo);
   const { worker } = partitionPacket(packet);
   const nativeContextLimit = Number(process.env.JARVIS_NUM_CTX || 32768);
   // Budget the materialized evidence against the context the native transport

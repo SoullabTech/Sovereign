@@ -22,7 +22,8 @@
 #
 #   3. The bounded JARVIS native-patch-admission falsifiers passed: exact-loopback
 #      worker transport/custody, verifier-separated native prompt construction,
-#      patch path/authority/shape admission, and delegate shell syntax.
+#      patch path/authority/shape admission, runtime candidate-commit custody and
+#      independent verifier replay, and delegate shell syntax.
 #
 #   A green run does NOT establish that the repository typechecks cleanly
 #   (there is pre-existing debt in the baseline, by design), that the broad unit
@@ -96,6 +97,9 @@ jobs:
 
       - name: Native patch-admission falsifiers
         run: node scripts/builder/__tests__/jarvis-native-patch-admission-proof.mjs
+
+      - name: Native runtime candidate-custody proof
+        run: node scripts/builder/__tests__/jarvis-native-runtime-proof.mjs
 
   typecheck:
     name: TypeScript no-regression gate
