@@ -1,4 +1,5 @@
 import {
+  TEACHING_CANON_FIDELITY_VERSION,
   resolveTeachingCanonFidelity,
   renderTeachingCanonFidelity,
 } from '../TeachingCanonFidelityContract';
@@ -20,9 +21,19 @@ describe('Teaching Canon Fidelity remediation', () => {
       message: 'What evidence do we actually have for Relational Geometry?',
     });
     expect(r).not.toBeNull();
+    expect(TEACHING_CANON_FIDELITY_VERSION).toBe('tcf-2');
+    expect(r!.contractVersion).toBe('tcf-2');
     expect(r!.laws.join('\n')).toContain('geometry is a candidate language');
-    expect(r!.laws.join('\n')).toContain('has NOT yet been empirically established');
-    expect(r!.laws.join('\n')).toContain('RGR-05');
+    expect(r!.laws.join('\n')).toContain('RGR-06');
+    expect(r!.laws.join('\n')).toContain('Confirmatory Implementation Lock');
+    expect(r!.laws.join('\n')).toContain('H-RT1 has NOT yet been empirically established');
+    expect(r!.laws.join('\n')).toContain('does not constitute benchmark evidence');
+    expect(r!.laws.join('\n')).toContain('No benchmark examples were materialized');
+    expect(r!.references).toContainEqual({
+      sourceId: 'rgr-06-confirmatory-implementation-lock',
+      locator: 'git:0a84282d8ea2560e3b2d4a79d37c47b3a2ace099',
+      standing: 'soullab_research',
+    });
     expect(r!.mayRetrieve).toBe(false);
     expect(r!.mayCallModel).toBe(false);
   });
@@ -102,8 +113,11 @@ describe('Teaching Canon Fidelity remediation', () => {
     });
     expect(r.active).toBe(true);
     if (!r.active) return;
-    expect(r.directive).toContain('RGR-05');
-    expect(r.directive).toContain('has NOT yet been empirically established');
+    expect(r.directive).toContain('RGR-06');
+    expect(r.directive).toContain('Confirmatory Implementation Lock');
+    expect(r.directive).toContain('H-RT1 has NOT yet been empirically established');
+    expect(r.directive).toContain('does not constitute benchmark evidence');
+    expect(r.directive).toContain('No benchmark examples were materialized');
   });
 
   it('injects the Founder ontology law into the ontology witness turn', () => {
