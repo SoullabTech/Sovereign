@@ -86,6 +86,11 @@ check("prose before a patch is refused", () => {
   assert.equal(r.ok, false);
   assert.equal(r.code, "PATCH_MUST_BE_PURE_GIT_DIFF");
 });
+check("even leading whitespace before a patch is refused", () => {
+  const r = inspectPatch("\n" + patchFor("allowed.txt", "before", "after"), ["allowed.txt"]);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "PATCH_MUST_BE_PURE_GIT_DIFF");
+});
 check("code-fenced patches are refused", () => {
   const r = inspectPatch("```diff\n" + patchFor("allowed.txt", "before", "after") + "```\n", ["allowed.txt"]);
   assert.equal(r.ok, false);
