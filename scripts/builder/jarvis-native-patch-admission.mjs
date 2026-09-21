@@ -273,6 +273,29 @@ export function applyNativePatch({
   }
   if (status) return recordRefusal("WORKTREE_NOT_CLEAN");
 
+  // Text-patch V1 refuses tracked symlink/submodule/special-file targets even
+  // when the path itself is authorized. This prevents an allowed path from
+  // becoming an indirect write outside the worktree by changing a symlink target.
+  for (const patchPath of inspected.patch_paths) {
+    let indexLine;
+    try {
+      indexLine = String(runGit(worktree, ["ls-files", "-s", "--", patchPath]) || "").trim();
+    } catch (error) {
+      return recordRefusal("PATCH_TARGET_MODE_UNREADABLE", {
+        path: patchPath,
+        reason: String(error?.message || error),
+      });
+    }
+    if (!indexLine) continue; // ordinary new text file; git apply determines creation validity.
+    const mode = indexLine.split(/\\s+/, 1)[0];
+    if (mode !== "100644" && mode !== "100755") {
+      return recordRefusal("PATCH_TARGET_MODE_UNSUPPORTED", {
+        path: patchPath,
+        mode,
+      });
+    }
+  }
+
   const tmp = mkdtempSync(path.join(os.tmpdir(), "jarvis-native-patch-"));
   const patchFile = path.join(tmp, "candidate.patch");
   writeFileSync(patchFile, patch, { encoding: "utf8", mode: 0o600 });
