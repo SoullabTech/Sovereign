@@ -46,12 +46,31 @@ WORK_UNIT_SCRIPT="$PROJECT_DIR/scripts/builder/work-unit.mjs"
 OPENCODE_PROVIDER_SCRIPT="$PROJECT_DIR/scripts/builder/opencode-provider.mjs"
 TINKER_DIRECT_SCRIPT="$PROJECT_DIR/scripts/builder/tinker-direct.mjs"
 EXTERNAL_CONTEXT_SCRIPT="$PROJECT_DIR/scripts/builder/external-context.mjs"
+LOCAL_WORKER_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-local-worker.mjs"
+NATIVE_PROMPT_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-prompt.mjs"
+PATCH_ADMISSION_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-patch-admission.mjs"
+EDIT_ADMISSION_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-edit-admission.mjs"
 
 mkdir -p "$PACKETS_DIR" "$RESULTS_DIR" "$LOGS_DIR"
 
 _packet_file() { echo "$PACKETS_DIR/$1.json"; }
 _result_file() { echo "$RESULTS_DIR/$1.json"; }
 _log_file()    { echo "$LOGS_DIR/$1.log"; }
+
+# Fingerprint the exact candidate bytes relative to HEAD, including untracked
+# files created by a new-file patch. Verification commands are allowed to inspect
+# and execute checks; they are not allowed to silently rewrite the admitted patch.
+_native_worktree_fingerprint() {
+    local wt="$1" f
+    {
+        git -C "$wt" diff --binary --no-ext-diff HEAD --
+        while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            printf 'UNTRACKED %s ' "$f"
+            git -C "$wt" hash-object -- "$f"
+        done < <(git -C "$wt" ls-files --others --exclude-standard)
+    } | git hash-object --stdin
+}
 
 _require_packet() {
     local f
@@ -198,6 +217,32 @@ _run_lane() {
     local tinker_resolution="" tinker_model_id=""
     f="$(_require_packet "$work_unit_id")"
 
+    # Native coding authority is proven before workspace acquisition or model use.
+    # The direct worker is toolless, but the lane itself still represents a coding
+    # act, so a read-only or broadly privileged packet must not enter it.
+    if [ "$lane" = "local-native" ]; then
+        local native_envelope
+        native_envelope="$(node "$WORK_UNIT_SCRIPT" permission-envelope "$work_unit_id" 2>/dev/null)" || {
+            echo "🛑 [ain-delegate] could not derive local-native permission envelope." >&2
+            exit 3
+        }
+        printf '%s' "$native_envelope" | jq -e '
+          .repo_read == true
+          and .repo_write_scope == "worktree"
+          and .integration_actor == "jarvis"
+          and .production_read == false
+          and .production_write == false
+          and .deploy == false
+          and .authority_change == false
+          and .external_network == false
+          and .external_repo_disclosure == false
+          and .provider_spend == false
+        ' >/dev/null || {
+            echo "🛑 [ain-delegate] LOCAL_NATIVE_AUTHORITY_REFUSED — V1 requires bounded local worktree-write authority only." >&2
+            exit 3
+        }
+    fi
+
     # JARVIS-PROVIDER-01: authorization precedes workspace acquisition. Registration
     # is not permission to send repository material to a provider or incur spend.
     if [ "$lane" = "opencode" ]; then
@@ -285,6 +330,9 @@ _run_lane() {
         # discovered Builder policy (none existed to discover; recorded as this unit's
         # own choice in docs/architecture/BUILDER_OS_CLAUDE_ADAPTER_2026-08-09.md).
         model="${model_override:-sonnet}"
+    elif [ "$lane" = "local-native" ]; then
+        model="${model_override:-qwen3-coder:30b}"
+        [ "$model" = "qwen3-coder:30b" ] || { echo "🛑 local-native V1 is bound to qwen3-coder:30b" >&2; exit 3; }
     elif [ "$lane" = "opencode" ]; then
         model="$(echo "$opencode_resolution" | jq -r '.model_ref')"
     elif [ "$lane" = "tinker" ]; then
@@ -347,7 +395,9 @@ _run_lane() {
 
     log="$(_log_file "$work_unit_id")"
     starting_sha="$(git -C "$wt" rev-parse --short HEAD)"
-    if [ "$lane" = "opencode" ]; then
+    if [ "$lane" = "local-native" ]; then
+        prompt="$(node "$NATIVE_PROMPT_SCRIPT" build "$f" --repo "$wt")" || exit $?
+    elif [ "$lane" = "opencode" ]; then
         prompt="$(_build_prompt "$f" "READ-ONLY PROVIDER EVALUATION: inspect the authorized repository evidence and return the requested analysis. Do not edit, run shell commands, browse, commit, or access outside this worktree.")"
     elif [ "$lane" = "tinker" ]; then
         prompt="$(_build_prompt "$f" "DIRECT EXTERNAL PROVIDER EVALUATION: JARVIS has bounded the evidence. You have no tools or filesystem access. Analyze only the prompt and the AUTHORIZED REPOSITORY EVIDENCE below.")"
@@ -375,7 +425,18 @@ _run_lane() {
     # interactive prompt: the worker runs inside an isolated git worktree (Unit 3) it
     # cannot escape, and every claim is independently re-verified afterward regardless of
     # what the worker did (never trust self-report — AIN_RESULT_CONTRACT.md).
-    if [ "$lane" = "local" ]; then
+    if [ "$lane" = "local-native" ]; then
+        local native_prompt_file
+        native_prompt_file="$(mktemp -t jarvis-native-prompt)"
+        printf '%s' "$prompt" > "$native_prompt_file"
+        ( cd "$wt" && env \
+            JARVIS_OLLAMA_HOST="http://127.0.0.1:11434" \
+            JARVIS_NUM_CTX="${JARVIS_NUM_CTX:-32768}" \
+            JARVIS_LOCAL_TIMEOUT_MS="${JARVIS_LOCAL_TIMEOUT_MS:-120000}" \
+            node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$native_prompt_file" --model "$model" ) > "$log" 2>&1
+        exit_code=$?
+        rm -f "$native_prompt_file"
+    elif [ "$lane" = "local" ]; then
         ( cd "$wt" && maia-code -p "$prompt" --permission-mode bypassPermissions ) > "$log" 2>&1
         exit_code=$?
     elif [ "$lane" = "kimi" ]; then
@@ -424,6 +485,62 @@ _run_lane() {
     ending_sha="$(git -C "$wt" rev-parse --short HEAD)"
     [ "$ending_sha" = "$starting_sha" ] && ending_sha=""
 
+    # Unit 20 + NPA1: native output is either a governance claim or a patch.
+    local gate_json='' patch_admission_json='' native_admitted_fingerprint=''
+    if grep -q '^GOVERNANCE_GATE:' "$log" 2>/dev/null; then
+        local gate_output gate_line_count gate_output_line_count gate_prefix_ok=true
+        gate_output="$(cat "$log")"
+        gate_line_count="$(grep -c '^GOVERNANCE_GATE:' "$log" 2>/dev/null || true)"
+        gate_output_line_count="$(printf '%s' "$gate_output" | awk 'END { print NR }')"
+        case "$gate_output" in
+            GOVERNANCE_GATE:*) ;;
+            *) gate_prefix_ok=false ;;
+        esac
+        if [ "$lane" = "local-native" ] && {
+            [ "$gate_line_count" -ne 1 ] \
+            || [ "$gate_output_line_count" -ne 1 ] \
+            || [ "$gate_prefix_ok" != true ];
+        }; then
+            echo "[ain-delegate] native GOVERNANCE_GATE output was not one pure single-line claim — refusing result." >&2
+            gate_json=''
+            [ "$exit_code" -ne 0 ] || exit_code=10
+        else
+            gate_json="${gate_output#GOVERNANCE_GATE:}"
+            gate_json="${gate_json# }"
+            if ! printf '%s' "$gate_json" | jq -e 'type == "object"' >/dev/null 2>&1; then
+                echo "[ain-delegate] malformed GOVERNANCE_GATE claim — refusing result." >&2
+                gate_json=''
+                [ "$exit_code" -ne 0 ] || exit_code=10
+            fi
+        fi
+    fi
+    if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ]; then
+        local patch_code
+        set +e
+        if grep -q '^EDIT_JSON: ' "$log" 2>/dev/null; then
+            patch_admission_json="$(node "$EDIT_ADMISSION_SCRIPT" apply "$f" "$wt" "$log")"
+        else
+            # Backward-compatible fallback for already-issued PATCH-contract packets.
+            patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" apply "$f" "$wt" "$log")"
+        fi
+        patch_code=$?
+        set -e
+        if [ "$patch_code" -ne 0 ]; then
+            [ "$exit_code" -ne 0 ] || exit_code="$patch_code"
+        else
+            set +e
+            native_admitted_fingerprint="$(_native_worktree_fingerprint "$wt")"
+            local fingerprint_code=$?
+            set -e
+            if [ "$fingerprint_code" -ne 0 ] || [ -z "$native_admitted_fingerprint" ]; then
+                echo "🛑 [ain-delegate] could not fingerprint admitted native patch — rolling back." >&2
+                exit_code=11
+                git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 || true
+                git -C "$wt" clean -fd >> "$log.verify" 2>&1 || true
+            fi
+        fi
+    fi
+
     # Bug found by AIN Builder OS MVJ Unit 2 (2026-08-09): `head -n -1` is a GNU coreutils
     # extension. macOS/BSD `head` rejects it outright ("illegal line count -- -1"), which
     # corrupted files_changed_json on every prior run on this machine and cascaded into
@@ -443,7 +560,9 @@ _run_lane() {
     local verification_evidence=""
     local vcount
     vcount="$(jq '.verification_commands | length' "$f")"
-    if [ "$vcount" -gt 0 ]; then
+    local verify_this_run=true
+    if [ "$lane" = "local-native" ] && { [ "$exit_code" -ne 0 ] || [ -n "$gate_json" ]; }; then verify_this_run=false; fi
+    if [ "$vcount" -gt 0 ] && $verify_this_run; then
         local all_pass=true
         while IFS= read -r vcmd; do
             [ -z "$vcmd" ] && continue
@@ -457,8 +576,83 @@ _run_lane() {
         if $all_pass; then test_results="pass"; else test_results="fail"; fi
     fi
 
+    # Verification may inspect and execute the declared checks, but it may not
+    # transform the candidate that patch admission actually admitted. Recompute
+    # the exact candidate fingerprint and HEAD after verification; any drift is
+    # a failed verification and is rolled back below.
+    if [ "$lane" = "local-native" ]         && [ "$exit_code" -eq 0 ]         && [ -z "$gate_json" ]         && [ -n "$native_admitted_fingerprint" ]         && { [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; }; then
+        local native_verified_fingerprint native_verified_head
+        set +e
+        native_verified_fingerprint="$(_native_worktree_fingerprint "$wt")"
+        local verified_fingerprint_code=$?
+        native_verified_head="$(git -C "$wt" rev-parse --short HEAD 2>/dev/null)"
+        local verified_head_code=$?
+        set -e
+        if [ "$verified_fingerprint_code" -ne 0 ]             || [ "$verified_head_code" -ne 0 ]             || [ "$native_verified_fingerprint" != "$native_admitted_fingerprint" ]             || [ "$native_verified_head" != "$starting_sha" ]; then
+            test_results="fail"
+            exit_code=12
+            verification_evidence="${verification_evidence}FAIL: VERIFICATION_MUTATED_WORKTREE\n"
+        fi
+    fi
+
+    # A native candidate that fails independent verification never remains in the
+    # worktree. Patch admission begins from a clean claimed worktree, so restoring
+    # the captured starting SHA and removing newly-created untracked files returns
+    # exactly to the pre-model state. The failed candidate remains evidenced by its
+    # patch-admission ledger digest; only its filesystem effects are rolled back.
+    if [ "$lane" = "local-native" ] && [ "$test_results" = "fail" ]; then
+        [ "$exit_code" -ne 0 ] || exit_code=12
+        if git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 \
+            && git -C "$wt" clean -fd >> "$log.verify" 2>&1; then
+            ending_sha=""
+            files_changed_json='[]'
+        else
+            echo "🛑 [ain-delegate] native verification failed and rollback did not complete cleanly." >&2
+            exit_code=11
+            verification_evidence="${verification_evidence}FAIL: NATIVE_ROLLBACK_INCOMPLETE\n"
+        fi
+    fi
+
+    # A verified native patch is committed by JARVIS, never by the model.
+    if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ] && { [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; }; then
+        local native_changed_count
+        native_changed_count="$(printf '%s' "$patch_admission_json" | jq -r '.changed_paths | length // 0' 2>/dev/null || echo 0)"
+        if [ "$native_changed_count" -gt 0 ]; then
+            while IFS= read -r native_changed; do
+                [ -n "$native_changed" ] && git -C "$wt" add -- "$native_changed"
+            done < <(printf '%s' "$patch_admission_json" | jq -r '.changed_paths[]?')
+            # This is an isolated candidate commit, not canonical integration.
+            # JARVIS has already run the Work Unit verification commands above; local
+            # pre-commit hooks may require checkout-local node_modules that delegated
+            # worktrees intentionally do not carry. Integration gates still run later.
+            if git -C "$wt" \
+                -c user.name="JARVIS" \
+                -c user.email="jarvis@local.invalid" \
+                -c core.hooksPath=/dev/null \
+                commit -m "chore(jarvis): $work_unit_id" >> "$log.verify" 2>&1; then
+                ending_sha="$(git -C "$wt" rev-parse --short HEAD)"
+            else
+                exit_code=11
+                test_results="fail"
+                verification_evidence="${verification_evidence}FAIL: JARVIS candidate commit\n"
+                # A failed commit must not leave an admitted patch staged or dirty.
+                # Return to the exact pre-model state just as verification failure does.
+                if git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 \
+                    && git -C "$wt" clean -fd >> "$log.verify" 2>&1; then
+                    ending_sha=""
+                    files_changed_json='[]'
+                    verification_evidence="${verification_evidence}PASS: rollback after candidate commit failure\n"
+                else
+                    verification_evidence="${verification_evidence}FAIL: rollback after candidate commit failure\n"
+                fi
+            fi
+        fi
+    fi
+
     local recommended="review-diff"
-    if $escalation_required; then
+    if [ -n "$gate_json" ]; then
+        recommended="governance-gate"
+    elif $escalation_required; then
         recommended="escalate"
     elif [ "$exit_code" -ne 0 ]; then
         recommended="reject"
@@ -482,6 +676,8 @@ _run_lane() {
         --argjson escalation_required "$escalation_required" \
         --argjson unresolved_questions "$unresolved_questions_json" \
         --arg recommended "$recommended" \
+        --arg gate_json "$gate_json" \
+        --arg patch_admission_json "$patch_admission_json" \
         --arg log_path "$log" \
         --argjson duration_s "$((t1 - t0))" \
         --argjson exit_code "$exit_code" \
@@ -507,7 +703,10 @@ _run_lane() {
             log_path: $log_path,
             duration_s: $duration_s,
             attempts: 1
-        }' > "$(_result_file "$work_unit_id")"
+        }
+        + (if $gate_json == "" then {} else {governance_gate: ($gate_json | fromjson)} end)
+        + (if $patch_admission_json == "" then {} else {patch_admission: ($patch_admission_json | fromjson)} end)
+        ' > "$(_result_file "$work_unit_id")"
 
     # Observability ledger — one line per delegated run.
     jq -n \
@@ -530,6 +729,7 @@ _run_lane() {
 }
 
 cmd_local()  { _run_lane "local" "$1"; }
+cmd_local_native() { _run_lane "local-native" "$1" "${2:-}"; }
 cmd_kimi()   { _run_lane "kimi" "$1"; }
 cmd_claude() { _run_lane "claude" "$1" "${2:-}"; }   # optional model, e.g. `claude <id> opus`
 cmd_opencode() {
@@ -606,6 +806,7 @@ case "${1:-}" in
     new)      shift; cmd_new "$@" ;;
     claim)    shift; cmd_claim "$@" ;;
     local)    shift; cmd_local "$@" ;;
+    local-native) shift; cmd_local_native "$@" ;;
     kimi)     shift; cmd_kimi "$@" ;;
     claude)   shift; cmd_claude "$@" ;;
     opencode) shift; cmd_opencode "$@" ;;
@@ -615,7 +816,7 @@ case "${1:-}" in
     escalate) shift; cmd_escalate "$@" ;;
     release)  shift; cmd_release "$@" ;;
     *)
-        echo "usage: $0 {new|claim|local|kimi|claude|opencode|tinker|result|review|escalate|release} <work_unit_id> [args...]" >&2
+        echo "usage: $0 {new|claim|local|local-native|kimi|claude|opencode|tinker|result|review|escalate|release} <work_unit_id> [args...]" >&2
         exit 2
         ;;
 esac

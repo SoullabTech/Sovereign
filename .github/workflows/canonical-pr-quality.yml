@@ -10,7 +10,7 @@
 #
 # Evidence: docs/ops/CANONICAL_PR_QUALITY_GATE_CENSUS.md
 #
-# ⛔ SCOPE of what a green run here establishes, exactly two things and no further:
+# ⛔ SCOPE of what a green run here establishes, exactly three things and no further:
 #
 #   1. `npm run typecheck` passed on this PR's head — meaning the
 #      application-wide ship config produced NO NEW diagnostic against
@@ -20,11 +20,18 @@
 #      reconstruct a bootable schema from a blank PostgreSQL instance, using
 #      only files in this repository.
 #
+#   3. The bounded JARVIS native-patch-admission falsifiers passed: exact-loopback
+#      worker transport/custody, verifier-separated native prompt construction,
+#      patch path/authority/shape admission, runtime candidate-commit custody and
+#      independent verifier replay, and delegate shell syntax.
+#
 #   A green run does NOT establish that the repository typechecks cleanly
-#   (there is pre-existing debt in the baseline, by design), that unit tests
-#   pass, that lint passes, that the change behaves correctly at runtime, or
-#   that a migration is safe to apply to the production database. Unit tests are
-#   deliberately NOT gated here yet — see below.
+#   (there is pre-existing debt in the baseline, by design), that the broad unit
+#   suite passes, that lint passes, that a real local model solved a Work Unit,
+#   that Ollama is available on the runner, that the change behaves correctly at
+#   runtime, or that a migration is safe to apply to the production database.
+#   A real Mac Studio Work Unit witness remains separate from (3). Broad unit
+#   tests are deliberately NOT gated here yet — see below.
 #
 #   On (2): the baseline is a snapshot of the current schema, not recovered
 #   history — see docs/ops/DB_BASELINE_DESIGN_NOTE.md and the
@@ -67,6 +74,33 @@ permissions:
   contents: read
 
 jobs:
+  jarvis-native-patch-admission:
+    name: JARVIS native patch-admission falsifiers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Delegate shell syntax
+        run: bash -n scripts/ain-delegate.sh
+
+      - name: Native worker transport and custody proof
+        run: node scripts/builder/__tests__/jarvis-local-worker-proof.mjs
+
+      - name: Native prompt proof
+        run: node scripts/builder/__tests__/jarvis-native-prompt-proof.mjs
+
+      - name: Native patch-admission falsifiers
+        run: node scripts/builder/__tests__/jarvis-native-patch-admission-proof.mjs
+
+      - name: Native runtime candidate-custody proof
+        run: node scripts/builder/__tests__/jarvis-native-runtime-proof.mjs
+
   typecheck:
     name: TypeScript no-regression gate
     runs-on: ubuntu-latest
