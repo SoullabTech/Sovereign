@@ -185,7 +185,9 @@
     "matrix:s3-constitutional": "tsx tests/constitutional/s3/matrix.ts",
     "typecheck:s3-substrate": "node scripts/typecheck-s3-substrate.mjs",
     "guards:s3-substrate": "tsx tests/constitutional/s3-substrate/guards.ts",
-    "matrix:editorial-runtime": "tsx tests/constitutional/editorial-runtime/matrix.ts"
+    "matrix:editorial-runtime": "tsx tests/constitutional/editorial-runtime/matrix.ts",
+    "matrix:migration-compatibility": "npx tsx tests/constitutional/migration-compatibility/matrix.ts",
+    "typecheck:migration-compatibility": "tsc -p tsconfig.migration-compatibility.json"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
