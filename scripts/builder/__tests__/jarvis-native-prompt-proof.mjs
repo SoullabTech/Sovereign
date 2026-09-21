@@ -43,7 +43,7 @@ try {
   assert.match(prompt, /first bytes MUST be exactly EDIT_SCRIPT:/);
   assert.match(prompt, /old must be non-empty/);
   assert.match(prompt, /Copy old text exactly from SOURCE_BYTES/);
-  assert.match(prompt, /every identifier you add is already in scope or imported/);
+  assert.match(prompt, /precedent file does NOT put it in scope/);
   assert.match(prompt, /follow that precedent exactly/);
   assert.match(prompt, /Do not emit an index line/);
   assert.match(prompt, /Hunk ranges must never overlap/);
