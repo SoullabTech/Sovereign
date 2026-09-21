@@ -15,6 +15,7 @@ import { loadWorkUnit, derivePermissionEnvelope } from "./work-unit.mjs";
 import {
   validateBuilderAllowedFiles, pathAllowed,
 } from "./opencode-builder.mjs";
+import { dispatchDirectTool } from "./jarvis-tool-permissions.mjs";
 
 const OLLAMA_URL = "http://127.0.0.1:11434/api/chat";
 const MAX_TURNS = 24;
@@ -316,23 +317,32 @@ async function ollamaChat(payload, timeoutMs = 180_000) {
   }
 }
 
-function executeTool(root, mode, call, allowedFiles) {
+async function executeTool(root, mode, call, allowedFiles) {
   const name = String(call?.function?.name || "");
   const args = call?.function?.arguments && typeof call.function.arguments === "object"
     ? call.function.arguments
     : {};
-  try {
-    if (name === "read_file") return readTool(root, args);
-    if (name === "list_dir") return listTool(root, args);
-    if (name === "search_repo") return searchTool(root, args);
-    if (name === "git_diff") return diffTool(root, mode);
-    if (name === "git_status") return statusTool(root);
-    if (mode === "build" && name === "write_file") return writeTool(root, args, allowedFiles);
-    if (mode === "build" && name === "delete_file") return deleteTool(root, args, allowedFiles);
-    return "REFUSED_UNKNOWN_TOOL: " + name;
-  } catch (error) {
-    return "TOOL_ERROR " + name + ": " + String(error?.message || error);
-  }
+
+  return dispatchDirectTool({
+    mode,
+    tool: name,
+    args,
+    allowedFiles,
+    executor: async () => {
+      try {
+        if (name === "read_file") return readTool(root, args);
+        if (name === "list_dir") return listTool(root, args);
+        if (name === "search_repo") return searchTool(root, args);
+        if (name === "git_diff") return diffTool(root, mode);
+        if (name === "git_status") return statusTool(root);
+        if (mode === "build" && name === "write_file") return writeTool(root, args, allowedFiles);
+        if (mode === "build" && name === "delete_file") return deleteTool(root, args, allowedFiles);
+        throw new Error("ADMITTED_TOOL_HAS_NO_EXECUTOR");
+      } catch (error) {
+        return "TOOL_ERROR " + name + ": " + String(error?.message || error);
+      }
+    },
+  });
 }
 
 export async function runLocalWorker({
@@ -371,6 +381,7 @@ export async function runLocalWorker({
   ];
   const tools = toolsFor(mode);
   const transcript = [];
+  const toolEvents = [];
   let toolCallCount = 0;
 
   for (let turn = 0; turn < MAX_TURNS; turn += 1) {
@@ -388,13 +399,12 @@ export async function runLocalWorker({
 
     const message = response?.message || {};
     messages.push(message);
+    const calls = Array.isArray(message.tool_calls) ? message.tool_calls : [];
     transcript.push({
       turn: turn + 1,
       content: String(message.content || ""),
-      tool_calls: message.tool_calls || [],
+      tool_call_names: calls.map((call) => String(call?.function?.name || "unknown")),
     });
-
-    const calls = Array.isArray(message.tool_calls) ? message.tool_calls : [];
     if (calls.length === 0) {
       return {
         ok: true,
@@ -404,6 +414,7 @@ export async function runLocalWorker({
         output: String(message.content || ""),
         turns: turn + 1,
         tool_call_count: toolCallCount,
+        tool_events: toolEvents,
         transcript,
       };
     }
@@ -411,11 +422,12 @@ export async function runLocalWorker({
     for (const call of calls) {
       toolCallCount += 1;
       if (toolCallCount > 80) return fail("TOOL_CALL_LIMIT_EXCEEDED");
-      const content = executeTool(root, mode, call, authority.allowed_files);
+      const dispatched = await executeTool(root, mode, call, authority.allowed_files);
+      toolEvents.push(dispatched.receipt);
       messages.push({
         role: "tool",
         tool_name: String(call?.function?.name || "unknown"),
-        content: clamp(content),
+        content: clamp(dispatched.content),
       });
     }
   }
