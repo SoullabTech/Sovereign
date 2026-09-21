@@ -1,0 +1,48 @@
+{
+  "work_unit_id": "wu-convergence-proof-portability-01",
+  "title": "Make the delegate workspace convergence proof portable",
+  "objective": "The delegate workspace convergence proof currently resolves the repository under test from a single absolute path literal that only exists on one operator's machine. On every other checkout, worktree, container or CI host the proof aborts before it can evaluate any of its own propositions, and reports failures that describe the environment rather than the behaviour under test. Replace that fixed literal with a resolution that derives the repository root from the proof's own location, so the proof evaluates the checkout it was launched from. Preserve every existing assertion and its meaning exactly; this is a resolution change, not a change to what is proved.",
+  "governing_authority": "JARVIS activation lane \u2014 founder direction 2026-09-21: finish the hybrid execution path as an operational system.",
+  "execution_lane": "opencode",
+  "task_class": "CODE_GROUNDED",
+  "canonical_sha": "0a84282d",
+  "branch": "fix/convergence-proof-portability",
+  "established_facts": [
+    "The proof is an ES module under scripts/builder/__tests__/ and is run directly by node.",
+    "Sibling proofs in the same directory already run correctly on any checkout; their resolution approach is the precedent to follow.",
+    "The proof shells out to git and to a repository script, so the resolved root must be a real checkout, not a temporary directory.",
+    "The repository is the working tree the proof file itself lives in."
+  ],
+  "allowed_files": [
+    "scripts/builder/__tests__/delegate-workspace-convergence-proof.mjs"
+  ],
+  "prohibited_files_actions": [
+    "Do not modify any file outside allowed_files.",
+    "Do not weaken, delete, skip or reorder any existing assertion.",
+    "Do not introduce a new runtime dependency or package.",
+    "Do not change the proof's output format or its exit-code contract.",
+    "Do not add an environment variable as the primary resolution mechanism."
+  ],
+  "acceptance_criteria": [
+    "The proof resolves its repository root from its own module location.",
+    "No absolute path literal naming a specific user account or home directory remains in the file.",
+    "Running the proof from a fresh clone at any filesystem location reaches its assertions instead of aborting during setup.",
+    "The set of assertions and their descriptions are unchanged.",
+    "The proof continues to pass on a checkout where it previously passed."
+  ],
+  "escalation_conditions": [
+    "The existing assertions cannot pass under a derived root without changing what is asserted.",
+    "The proof depends on state outside the checkout that cannot be derived from the module location.",
+    "Making the proof portable would require editing a file outside allowed_files."
+  ],
+  "expected_output": "A single-file diff against the allowed file, plus a short statement of how the repository root is now derived and confirmation that the assertion set is unchanged. Cite the lines you actually changed.",
+  "context_selectors": [
+    "scripts/builder/__tests__/delegate-workspace-convergence-proof.mjs",
+    "scripts/builder/__tests__/session-proof.mjs"
+  ],
+  "verification_commands": [
+    "node scripts/builder/__tests__/delegate-workspace-convergence-proof.mjs",
+    "grep -n \"/Users/\" scripts/builder/__tests__/delegate-workspace-convergence-proof.mjs"
+  ],
+  "verifier_notes": "The defect is a single module-scope constant assigned a fixed absolute path. The expected shape is derivation from import.meta.url walking up to the repository root, matching sibling proofs. Second verification command must return no matches. Assertion count must remain identical to the pre-change file."
+}
