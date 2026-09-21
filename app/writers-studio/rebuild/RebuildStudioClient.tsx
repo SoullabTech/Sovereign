@@ -1551,7 +1551,16 @@ export default function RebuildStudioClient() {
                     const failure = reviewFailureFor(lens);
                     const readingNow = reviewPhase === 'reading' && reviewProgress?.lens === lens;
                     const complete = completedReviewLenses.has(lens);
-                    const status = failure ? 'Could not complete'
+                    /* ⭐ The card is the at-a-glance surface, and three cards all
+                       reading *Could not complete* is the same undifferentiated
+                       state one layer up: the writer must open each one to learn
+                       that they failed in different places. Short here, full
+                       sentence below. */
+                    const failedAt = failure?.stage === 'freeze' ? 'Read, but not recorded'
+                      : failure?.stage === 'capture' || failure?.stage === 'recover' ? 'Could not open the Work'
+                        : failure?.stage === 'fetch' ? 'Read, but could not be loaded back'
+                          : 'Could not complete';
+                    const status = failure ? failedAt
                       : readingNow ? 'Reading…'
                         : complete ? (count === 0 ? 'Complete · no observations' : active ? 'Showing findings from this lens.' : 'Open findings from this lens.')
                           : reviewPhase === 'reading' ? 'Waiting in this review.' : review ? 'No completed reading in this review.' : 'Waiting for MAIA’s chapter reading.';
