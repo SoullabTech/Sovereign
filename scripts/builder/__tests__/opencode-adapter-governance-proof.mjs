@@ -156,8 +156,24 @@ console.log('\n=== P1: registry is explicit and bounded ===');
     },
     env: {},
   });
-  assert('local GPT-OSS reasoner resolves without network, spend, or credential authority',
-    reasoner.ok && reasoner.model_ref === 'ollama/gpt-oss:20b', JSON.stringify(reasoner));
+  assert('local GPT-OSS reasoner resolves as direct MODEL MODE without network, spend, or credential authority',
+    reasoner.ok
+      && reasoner.model_ref === 'ollama/gpt-oss:20b'
+      && reasoner.execution_adapter === 'ollama-direct'
+      && reasoner.agent === null,
+    JSON.stringify(reasoner));
+
+  const unknownLocalModel = resolveOpenCodeProvider({
+    providerId: 'gpt-oss-local',
+    model: 'gpt-oss:not-admitted',
+    permissionEnvelope: {
+      repo_read: true, repo_write_scope: 'none', external_network: false, provider_spend: false,
+    },
+    env: {},
+  });
+  assert('unregistered local model identity is refused before execution',
+    !unknownLocalModel.ok && unknownLocalModel.code === 'MODEL_NOT_REGISTERED',
+    JSON.stringify(unknownLocalModel));
 
   const writeAttempt = resolveOpenCodeProvider({
     providerId: 'qwen-local',
@@ -273,29 +289,21 @@ console.log('\n=== P2: external provider authority is conjunctive and fail-close
     JSON.stringify(e3WithDisclosure));
 }
 
-console.log('\n=== P3: real delegate seam invokes governed OpenCode locally ===');
+console.log('\n=== P3: MODEL MODE cannot be smuggled through the legacy OpenCode lane ===');
 {
-  const id = uid('gpt-oss');
+  const id = uid('gpt-oss-model-mode');
   sh(['new', id]);
   authorizeReadOnly(id);
+  const beforeArgs = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
   const run = sh(['opencode', id, 'gpt-oss-local']);
-  assert('read-only local OpenCode attempt completes against the stub',
-    run.code === 0, `exit=${run.code} err=${run.err.slice(0, 160)}`);
-
-  const result = JSON.parse(readFileSync(resultPath(id), 'utf8'));
-  assert('attempt provenance records OpenCode and the exact provider/model reference',
-    result.lane === 'opencode' && result.model === 'ollama/gpt-oss:20b',
-    `lane=${result.lane} model=${result.model}`);
-  assert('successful delegate result persists numeric exit_code 0',
-    result.exit_code === 0, `exit_code=${result.exit_code}`);
-
-  const args = readFileSync(ARGS_FILE, 'utf8');
-  assert('OpenCode uses the project-scoped read-only agent',
-    args.includes('--agent') && args.includes('jarvis-readonly'));
-  assert('OpenCode never receives --auto from JARVIS',
-    !args.split('\n').includes('--auto'), args.slice(0, 220));
-  assert('the read-only prompt contains no commit instruction',
-    !args.includes('commit your changes') && args.includes('READ-ONLY PROVIDER EVALUATION'));
+  assert('legacy OpenCode lane refuses GPT-OSS after direct MODEL MODE admission',
+    run.code === 3 && /not a governed OpenCode adapter/.test(run.err),
+    'exit=' + run.code + ' err=' + run.err.slice(0, 220));
+  const afterArgs = existsSync(ARGS_FILE) ? readFileSync(ARGS_FILE, 'utf8') : '';
+  assert('MODEL MODE refusal occurs before any OpenCode child launch',
+    afterArgs === beforeArgs);
+  assert('MODEL MODE refusal occurs before workspace acquisition',
+    readPacket(id).worktree === null, JSON.stringify(readPacket(id).worktree));
   sh(['release', id]);
 }
 
