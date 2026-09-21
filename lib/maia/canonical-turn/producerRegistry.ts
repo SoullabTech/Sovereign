@@ -441,6 +441,9 @@ export const PRODUCER_REGISTRY = {
      WRITER'S STUDIO · EDITORIAL DISCOURSE  (ER-R2, 2026-09-15)
      ⭐ The four ids the editorial discourse contract DECLARED and deliberately
      left unregistered. Registration is its own act, and this is it.
+     ⭐ A FIFTH JOINED THEM 2026-09-20 — `retrieved.writer_editorial_surround`,
+     registered in the same act that created it, because the text it carries
+     was ALREADY reaching cognition under a producer that misnamed its author.
      ⛔ `writers_studio` ONLY. ⛔ Nothing existing was altered to make them fit.
      ══════════════════════════════════════════════════════════════════════ */
 
@@ -452,6 +455,32 @@ export const PRODUCER_REGISTRY = {
     requires: { identity: 'verified', notSanctuary: false }, rooms: WRITERS_ONLY,
     mandatory: false, scope: 'route',
     ...ER2, reason: 'the writer\u2019s own wording at the locus; retrieved, never restated',
+  },
+
+  /**
+   * ⭐⭐ THE SECTION AROUND THE PASSAGE — READABLE, NOT CHANGEABLE.
+   * (WS-EDITORIAL-SCOPE-01, 2026-09-20.)
+   *
+   * ⚠️ REGISTERED BECAUSE THE ALTERNATIVE WAS WORSE. Until this existed the
+   * surrounding section reached cognition INSIDE THE MEMBER'S UTTERANCE, pasted
+   * there by the surface — so Work text arrived under `encounter.input`, whose
+   * provenance says *this is what the member said to you*. ⛔ A producer whose
+   * provenance is false about WHO AUTHORED THE TEXT is the failure this
+   * registry exists to prevent, and it was live.
+   *
+   * ⭐ Same axes as the locus, because it IS the writer's own text — and a
+   * SEPARATE ID, because it is a different retrieval act carrying a different
+   * permission. ⛔ Nothing may propose against it: the scope law measures only
+   * against the locus, so the read/change boundary is structural rather than
+   * stated.
+   */
+  'retrieved.writer_editorial_surround': {
+    authoredBy: 'member', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'lib/manuscript/ask/workContext loadProjectedSectionBody → editorialScope/surround surroundOf (exact-once locate)',
+    consentBasis: 'the member opened this proposal chain against their own Work, and this is the rest of the same section',
+    requires: { identity: 'verified', notSanctuary: false }, rooms: WRITERS_ONLY,
+    mandatory: false, scope: 'route',
+    ...ER2, reason: 'context the writer may have MAIA read, held apart from the words she may change',
   },
 
   /** Prior MEMBER discourse turns, Directions and ProposalVersions. */

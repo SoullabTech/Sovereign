@@ -392,6 +392,122 @@ test('legacy R5B/run-provider surfaces still refuse canonical W0.v2 and cannot i
 });
 
 
+
+test('canonical Qwen v2 launch is standalone and isolated from user OpenCode config without provider inference', async () => {
+  const { home } = tempEnv();
+  const sourceEnv = {
+    ...process.env,
+    AIN_DELEGATION_HOME: home,
+    HOME: '/tmp/leaky-user-home',
+    XDG_CONFIG_HOME: '/tmp/leaky-user-config',
+    XDG_DATA_HOME: '/tmp/leaky-user-data',
+    OPENCODE_CONFIG: '/tmp/leaky-opencode.json',
+    OPENCODE_CONFIG_DIR: '/tmp/leaky-opencode-dir',
+    OPENCODE_CLI_CONFIG_CONTENT: '{"leak":true}',
+    OPENCODE_CONFIG_PROJECT_DISABLE: '1',
+    OPENCODE_DISABLE_PROJECT_CONFIG: '1',
+  };
+  let seen = null;
+  try {
+    const out = await WUC.executeCanonicalResolvedProvider(
+      REPO,
+      {
+        workUnitId: 'e3-v2-qwen-proof',
+        grantId: 'e3-grant-proof',
+        workUnit: {
+          identity: { objective: 'Prove canonical Qwen v2 launch containment.' },
+          custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
+          scope: {
+            base_ref: SHA,
+            allowed_paths: ['scripts/builder/work-unit-v2.mjs'],
+          },
+          evaluation: {
+            acceptance_conditions: ['Return bounded evidence only.'],
+            stop_conditions: ['Stop before any write.'],
+          },
+        },
+        binding: {
+          route_participant_id: 'primary',
+          transport_binding_id: 'tb-qwen-proof',
+          provider_id: 'qwen-local',
+          model_id: 'qwen3-coder:30b',
+          adapter_id: 'opencode',
+        },
+        resolved: {
+          execution_adapter: 'opencode',
+          agent: 'jarvis-readonly',
+          model_ref: 'ollama/qwen3-coder:30b',
+          model_id: 'qwen3-coder:30b',
+        },
+        sourceEnv,
+      },
+      {
+        execFile: (file, args, options, callback) => {
+          seen = {
+            file,
+            args: [...args],
+            options: { ...options, env: { ...options.env } },
+            projectConfigExists: fs.existsSync(path.join(options.cwd, '.opencode')),
+            runtimeHomeExists: fs.existsSync(options.env.HOME),
+          };
+          callback(null, 'SYNTHETIC_QWEN_V2_OK', '');
+        },
+      },
+    );
+
+    assert.equal(out.ok, true);
+    assert.equal(out.status, 'COMPLETED');
+    assert.ok(seen);
+    assert.equal(seen.file, 'opencode');
+    assert.deepEqual(seen.args.slice(0, 2), ['run', '--standalone']);
+    assert.equal(seen.args.includes('--pure'), false);
+    assert.equal(seen.args[seen.args.indexOf('--agent') + 1], 'jarvis-readonly');
+    assert.equal(seen.args[seen.args.indexOf('--model') + 1], 'ollama/qwen3-coder:30b');
+
+    const env = seen.options.env;
+    assert.match(env.HOME, /jarvis-e1-opencode-v2-[^/]+\/home$/);
+    assert.match(env.XDG_CONFIG_HOME, /jarvis-e1-opencode-v2-[^/]+\/config$/);
+    assert.match(env.XDG_DATA_HOME, /jarvis-e1-opencode-v2-[^/]+\/data$/);
+    assert.equal(env.HOME.startsWith(seen.options.cwd), false);
+    assert.equal(env.XDG_CONFIG_HOME.startsWith(seen.options.cwd), false);
+    assert.equal(env.XDG_DATA_HOME.startsWith(seen.options.cwd), false);
+    assert.equal(seen.projectConfigExists, false);
+    assert.equal(seen.runtimeHomeExists, true);
+    assert.equal(env.XDG_CACHE_HOME, '/tmp/leaky-user-home/.cache');
+    assert.equal(env.OPENCODE_CONFIG, undefined);
+    assert.equal(env.OPENCODE_CONFIG_DIR, undefined);
+    assert.equal(env.OPENCODE_CLI_CONFIG_CONTENT, undefined);
+    assert.equal(env.OPENCODE_CONFIG_PROJECT_DISABLE, '1');
+    assert.equal(env.OPENCODE_DISABLE_PROJECT_CONFIG, '1');
+    assert.equal(env.OPENCODE_DISABLE_MODELS_FETCH, '1');
+    assert.equal(env.OPENCODE_DISABLE_AUTOUPDATE, '1');
+
+    const config = JSON.parse(env.OPENCODE_CONFIG_CONTENT);
+    assert.deepEqual(Object.keys(config.provider), ['ollama']);
+    assert.deepEqual(Object.keys(config.provider.ollama.models), ['qwen3-coder:30b']);
+    assert.equal(config.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
+    assert.equal(config.agent, undefined);
+    assert.deepEqual(Object.keys(config.agents), ['jarvis-readonly']);
+    const agent = config.agents['jarvis-readonly'];
+    assert.equal(agent.mode, 'primary');
+    assert.equal(agent.permission, undefined);
+    assert.equal(agent.prompt, undefined);
+    assert.match(agent.system, /bounded JARVIS work unit/);
+    assert.equal(agent.steps, 8);
+    assert.deepEqual(agent.permissions, [
+      { action: '*', resource: '*', effect: 'deny' },
+      { action: 'read', resource: '*', effect: 'allow' },
+      { action: 'glob', resource: '*', effect: 'allow' },
+      { action: 'grep', resource: '*', effect: 'allow' },
+    ]);
+    assert.equal(JSON.stringify(config).includes('gpt-oss'), false);
+    assert.equal(JSON.stringify(config).includes('tinker'), false);
+    assert.equal(JSON.stringify(config).includes('nvidia'), false);
+  } finally {
+    cleanup(home);
+  }
+});
+
 test('E1 reuses one existing Work Unit IPC channel and renderer cannot supply provider/model/raw authority on Confirm Execute', () => {
   const renderer = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/renderer.js'), 'utf8');
   const preload = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/preload.js'), 'utf8');

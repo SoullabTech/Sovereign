@@ -105,23 +105,71 @@ export async function openBoundEditorialPassage(
   }
 }
 
+/** ⭐ What a suggestion brought in that is not the writer's. ⛔ Never a verdict. */
+export interface VoiceNotice {
+  note: string; unfamiliar: string[]; sampleWords: number;
+}
+
 export type EditorialTurnOutcome =
-  | { ok: true; thread: RebuildEditorialThread; producedVersionId: string | null }
-  | { ok: false; reason: 'unavailable' | 'unreadable' | 'locus_mismatch' | 'turn_refused'; detail?: string };
+  | {
+      ok: true; thread: RebuildEditorialThread; producedVersionId: string | null;
+      /** ⭐ Carried on SUCCESS — noticing in time IS the protection. */
+      voice: VoiceNotice | null;
+    }
+  | {
+      ok: false;
+      reason: 'unavailable' | 'unreadable' | 'locus_mismatch' | 'turn_refused' | 'scope_refused';
+      detail?: string;
+      voice?: VoiceNotice;
+      /** ⭐ Counts only, present on a scope refusal. ⛔ Never the refused wording. */
+      scope?: {
+        authorWords: number; wouldRemoveWords: number;
+        longestUnbrokenCut: number; wholeParagraphsRemoved: number;
+        wouldPassAtLatitude: number | null;
+      };
+    };
 
 export async function sendBoundEditorialTurn(
   threadId: string,
   visibleDraftSectionId: string,
   text: string,
+  /**
+   * ⭐ THE AUTHOR'S EDITING LATITUDE for this exchange (WS-EDITORIAL-SCOPE-01).
+   *
+   * ⛔ Optional here so no caller is silently broken — and omitting it sends
+   * nothing, which the server reads as the most protective setting. A caller
+   * that forgets the slider gets "Touch" and no paragraph removal, never a
+   * permission it did not ask for.
+   */
+  scope?: {
+    latitude: number; mayRemoveParagraphs: boolean;
+    /** ⭐ The per-Work release of the discuss-first order. ⛔ Default false. */
+    mayProposeImmediately?: boolean;
+  },
 ): Promise<EditorialTurnOutcome> {
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ threadId, act: { act: 'discourse', text, refersTo: null } }),
+      body: JSON.stringify({
+        threadId, act: { act: 'discourse', text, refersTo: null },
+        ...(scope ? { scope } : {}),
+      }),
     });
     const body = await res.json().catch(() => null);
     if (!res.ok) {
+      /* ⭐⭐ A SCOPE REFUSAL IS A RESULT, NOT A FAILURE. The server held the
+         author's latitude. The surface must say what happened in the author's
+         terms — ⛔ never surface `scope_removes_paragraphs` as a raw error
+         code, and never imply the request broke. */
+      if (res.status === 409 && (body?.scope || body?.voice)) {
+        return {
+          ok: false, reason: 'scope_refused',
+          detail: typeof body?.detail === 'string' ? body.detail : undefined,
+          ...(body?.scope ? { scope: body.scope } : {}),
+          ...(body?.voice ? { voice: body.voice } : {}),
+        };
+      }
       return {
         ok: false,
         reason: res.status === 404 ? 'unavailable' : 'turn_refused',
@@ -129,9 +177,13 @@ export async function sendBoundEditorialTurn(
       };
     }
     const producedVersionId = typeof body?.version?.id === 'string' ? body.version.id : null;
+    const voice: VoiceNotice | null = body?.voice && typeof body.voice.note === 'string'
+      ? { note: body.voice.note, unfamiliar: body.voice.unfamiliar ?? [],
+          sampleWords: Number(body.voice.sampleWords) || 0 }
+      : null;
     const reread = await readBoundEditorialThread(threadId, visibleDraftSectionId);
     if (!reread.ok) return reread;
-    return { ok: true, thread: reread.thread, producedVersionId };
+    return { ok: true, thread: reread.thread, producedVersionId, voice };
   } catch {
     return { ok: false, reason: 'unavailable' };
   }

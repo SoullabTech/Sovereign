@@ -40,6 +40,8 @@ const RULED_ADMIT = [
   'retrieved.conversational_recall',
   'retrieved.member_web',
   'retrieved.writer_editorial_locus',
+  /* ⭐ WS-EDITORIAL-SCOPE-01 · read scope, held apart from change scope. */
+  'retrieved.writer_editorial_surround',
   'system.writer_editorial_history',
   // the room's own evidence
   'computed.writer_structure',
