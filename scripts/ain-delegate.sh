@@ -472,11 +472,293 @@ _run_lane() {
     # Unit 20 + NPA1: native output is either a governance claim or a patch.
     local gate_json='' patch_admission_json=''
     if grep -q '^GOVERNANCE_GATE:' "$log" 2>/dev/null; then
-        gate_json="$(grep '^GOVERNANCE_GATE:' "$log" | tail -1 | sed 's/^GOVERNANCE_GATE: *//')"
-        if ! printf '%s' "$gate_json" | jq -e 'type == "object"' >/dev/null 2>&1; then
-            echo "[ain-delegate] malformed GOVERNANCE_GATE claim — refusing result." >&2
+        local gate_output gate_line_count
+        gate_output="$(cat "$log")"
+        gate_line_count="$(grep -c '^GOVERNANCE_GATE:' "$log" 2>/dev/null || true)"
+        if [ "$lane" = "local-native" ] && {
+            [ "$gate_line_count" -ne 1 ]             || [[ "$gate_output" == *
+    if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ]; then
+        local patch_code
+        set +e
+        patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" apply "$f" "$wt" "$log")"
+        patch_code=$?
+        set -e
+        if [ "$patch_code" -ne 0 ]; then
+            [ "$exit_code" -ne 0 ] || exit_code="$patch_code"
+        fi
+    fi
+
+    # Bug found by AIN Builder OS MVJ Unit 2 (2026-08-09): `head -n -1` is a GNU coreutils
+    # extension. macOS/BSD `head` rejects it outright ("illegal line count -- -1"), which
+    # corrupted files_changed_json on every prior run on this machine and cascaded into
+    # `jq: invalid JSON text passed to --argjson` — silently preventing ANY local-lane
+    # result from ever being persisted, regardless of what the worker did. `--name-only`
+    # gives the file list directly; no stat-line parsing to break in the first place.
+    local files_changed_json
+    files_changed_json="$(git -C "$wt" diff --name-only "$starting_sha" 2>/dev/null | jq -R . | jq -s . 2>/dev/null || echo '[]')"
+
+    local escalation_required=false unresolved_questions_json='[]'
+    if grep -q '^ESCALATE_TO_CLAUDE:' "$log" 2>/dev/null; then
+        escalation_required=true
+        unresolved_questions_json="$(grep '^ESCALATE_TO_CLAUDE:' "$log" | sed 's/^ESCALATE_TO_CLAUDE: *//' | jq -R . | jq -s .)"
+    fi
+
+    local test_results="not_run"
+    local verification_evidence=""
+    local vcount
+    vcount="$(jq '.verification_commands | length' "$f")"
+    local verify_this_run=true
+    if [ "$lane" = "local-native" ] && { [ "$exit_code" -ne 0 ] || [ -n "$gate_json" ]; }; then verify_this_run=false; fi
+    if [ "$vcount" -gt 0 ] && $verify_this_run; then
+        local all_pass=true
+        while IFS= read -r vcmd; do
+            [ -z "$vcmd" ] && continue
+            if ( cd "$wt" && eval "$vcmd" ) >> "$log.verify" 2>&1; then
+                verification_evidence="${verification_evidence}PASS: $vcmd\n"
+            else
+                verification_evidence="${verification_evidence}FAIL: $vcmd\n"
+                all_pass=false
+            fi
+        done < <(jq -r '.verification_commands[]' "$f")
+        if $all_pass; then test_results="pass"; else test_results="fail"; fi
+    fi
+
+    # A native candidate that fails independent verification never remains in the
+    # worktree. Patch admission begins from a clean claimed worktree, so restoring
+    # the captured starting SHA and removing newly-created untracked files returns
+    # exactly to the pre-model state. The failed candidate remains evidenced by its
+    # patch-admission ledger digest; only its filesystem effects are rolled back.
+    if [ "$lane" = "local-native" ] && [ "$test_results" = "fail" ]; then
+        if git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 \
+            && git -C "$wt" clean -fd >> "$log.verify" 2>&1; then
+            ending_sha=""
+            files_changed_json='[]'
+        else
+            echo "🛑 [ain-delegate] native verification failed and rollback did not complete cleanly." >&2
+            [ "$exit_code" -ne 0 ] || exit_code=11
+        fi
+    fi
+
+    # A verified native patch is committed by JARVIS, never by the model.
+    if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ] && { [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; }; then
+        local native_changed_count
+        native_changed_count="$(printf '%s' "$patch_admission_json" | jq -r '.changed_paths | length // 0' 2>/dev/null || echo 0)"
+        if [ "$native_changed_count" -gt 0 ]; then
+            while IFS= read -r native_changed; do
+                [ -n "$native_changed" ] && git -C "$wt" add -- "$native_changed"
+            done < <(printf '%s' "$patch_admission_json" | jq -r '.changed_paths[]?')
+            # This is an isolated candidate commit, not canonical integration.
+            # JARVIS has already run the Work Unit verification commands above; local
+            # pre-commit hooks may require checkout-local node_modules that delegated
+            # worktrees intentionally do not carry. Integration gates still run later.
+            if git -C "$wt" \
+                -c user.name="JARVIS" \
+                -c user.email="jarvis@local.invalid" \
+                -c core.hooksPath=/dev/null \
+                commit -m "chore(jarvis): $work_unit_id" >> "$log.verify" 2>&1; then
+                ending_sha="$(git -C "$wt" rev-parse --short HEAD)"
+            else
+                exit_code=11
+                test_results="fail"
+                verification_evidence="${verification_evidence}FAIL: JARVIS candidate commit\n"
+                # A failed commit must not leave an admitted patch staged or dirty.
+                # Return to the exact pre-model state just as verification failure does.
+                if git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 \
+                    && git -C "$wt" clean -fd >> "$log.verify" 2>&1; then
+                    ending_sha=""
+                    files_changed_json='[]'
+                    verification_evidence="${verification_evidence}PASS: rollback after candidate commit failure\n"
+                else
+                    verification_evidence="${verification_evidence}FAIL: rollback after candidate commit failure\n"
+                fi
+            fi
+        fi
+    fi
+
+    local recommended="review-diff"
+    if [ -n "$gate_json" ]; then
+        recommended="governance-gate"
+    elif $escalation_required; then
+        recommended="escalate"
+    elif [ "$exit_code" -ne 0 ]; then
+        recommended="reject"
+    elif [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; then
+        recommended="review-diff"
+    else
+        recommended="reject"
+    fi
+
+    # model already resolved above, before Builder ownership registration.
+
+    jq -n \
+        --arg wid "$work_unit_id" \
+        --arg lane "$lane" \
+        --arg model "$model" \
+        --arg starting_sha "$starting_sha" \
+        --arg ending_sha "$ending_sha" \
+        --argjson files_changed "$files_changed_json" \
+        --arg test_results "$test_results" \
+        --arg evidence "$verification_evidence" \
+        --argjson escalation_required "$escalation_required" \
+        --argjson unresolved_questions "$unresolved_questions_json" \
+        --arg recommended "$recommended" \
+        --arg gate_json "$gate_json" \
+        --arg patch_admission_json "$patch_admission_json" \
+        --arg log_path "$log" \
+        --argjson duration_s "$((t1 - t0))" \
+        --argjson exit_code "$exit_code" \
+        '{
+            work_unit_id: $wid,
+            lane: $lane,
+            model: $model,
+            starting_sha: $starting_sha,
+            ending_sha: (if $ending_sha == "" then null else $ending_sha end),
+            files_changed: $files_changed,
+            summary: ("delegate exited " + ($exit_code|tostring) + "; see log_path for transcript"),
+            exit_code: $exit_code,
+            tests_run: [],
+            test_results: $test_results,
+            typecheck_result: "not_run",
+            build_result: "not_run",
+            evidence: $evidence,
+            uncertainties: [],
+            scope_deviations: [],
+            escalation_required: $escalation_required,
+            unresolved_questions: $unresolved_questions,
+            recommended_next_action: $recommended,
+            log_path: $log_path,
+            duration_s: $duration_s,
+            attempts: 1
+        }
+        + (if $gate_json == "" then {} else {governance_gate: ($gate_json | fromjson)} end)
+        + (if $patch_admission_json == "" then {} else {patch_admission: ($patch_admission_json | fromjson)} end)
+        ' > "$(_result_file "$work_unit_id")"
+
+    # Observability ledger — one line per delegated run.
+    jq -n \
+        --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+        --arg wid "$work_unit_id" \
+        --arg lane "$lane" \
+        --argjson escalation_required "$escalation_required" \
+        --arg test_results "$test_results" \
+        --argjson exit_code "$exit_code" \
+        --argjson duration_s "$((t1 - t0))" \
+        '{ts: $ts, work_unit_id: $wid, lane: $lane, escalation_required: $escalation_required, test_results: $test_results, exit_code: $exit_code, duration_s: $duration_s}' \
+        >> "$LEDGER"
+
+    echo "[ain-delegate] $lane run complete for '$work_unit_id' — exit=$exit_code tests=$test_results escalate=$escalation_required" >&2
+    cat "$(_result_file "$work_unit_id")"
+    # J6 routing law: wrapper/process success may not contradict the durable
+    # provider-attempt result. Preserve the worker/provider exit after writing
+    # the result contract so immediate callers and durable evidence agree.
+    return "$exit_code"
+}
+
+cmd_local()  { _run_lane "local" "$1"; }
+cmd_local_native() { _run_lane "local-native" "$1" "${2:-}"; }
+cmd_kimi()   { _run_lane "kimi" "$1"; }
+cmd_claude() { _run_lane "claude" "$1" "${2:-}"; }   # optional model, e.g. `claude <id> opus`
+cmd_opencode() {
+    local work_unit_id="${1:?work_unit_id required}"
+    local provider_id="${2:?provider_id required}"
+    local model_override="${3:-}"
+    _run_lane "opencode" "$work_unit_id" "$model_override" "$provider_id"
+}
+
+cmd_tinker() {
+    local work_unit_id="${1:?work_unit_id required}"
+    local provider_id="${2:?provider_id required}"
+    local model_override="${3:-}"
+    _run_lane "tinker" "$work_unit_id" "$model_override" "$provider_id"
+}
+
+cmd_result() {
+    local f
+    f="$(_result_file "$1")"
+    [ -f "$f" ] || { echo "🛑 no result yet for '$1'" >&2; exit 1; }
+    jq . "$f"
+}
+
+cmd_review() {
+    local work_unit_id="$1"
+    local pf wt
+    pf="$(_require_packet "$work_unit_id")"
+    wt="$(jq -r '.worktree // empty' "$pf")"
+    echo "=== packet: $pf ==="
+    jq '{title, objective, execution_lane, acceptance_criteria}' "$pf"
+    if [ -n "$wt" ] && [ -d "$wt" ]; then
+        echo "=== diff in $wt (vs canonical_sha) ==="
+        git -C "$wt" diff --stat "$(jq -r '.canonical_sha' "$pf")" || true
+    fi
+    echo "=== result ==="
+    cmd_result "$work_unit_id" || echo "(no result yet)"
+}
+
+cmd_escalate() {
+    local work_unit_id="${1:?work_unit_id required}"
+    local reason="${2:?reason required}"
+    jq -n \
+        --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+        --arg wid "$work_unit_id" \
+        --arg reason "$reason" \
+        '{ts: $ts, work_unit_id: $wid, lane: "manual-escalation", escalation_required: true, reason: $reason}' \
+        >> "$LEDGER"
+    echo "[ain-delegate] escalated '$work_unit_id': $reason" >&2
+}
+
+# ─── Unit 3 convergence: release BOTH halves of the workspace, not just one.
+# Releasing only the physical worktree (ain-worktree-claim.sh alone) would leave
+# a phantom Builder WRITE claim nothing can ever clear except manual recovery.
+# Releasing only the Builder claim would leave the physical worktree lock held.
+# `state` follows session.mjs's own vocabulary (completed|handed-off|paused|abandoned).
+cmd_release() {
+    local work_unit_id="${1:?work_unit_id required}"
+    local state="${2:-completed}"
+    local f sid
+    f="$(_require_packet "$work_unit_id")"
+    sid="$(jq -r '.builder_session_id // empty' "$f")"
+    if [ -n "$sid" ]; then
+        node "$SESSION_SCRIPT" close --session "$sid" --state "$state" >&2 \
+            || echo "⚠️  [ain-delegate] Builder claim release reported an issue for $sid — inspect: node $SESSION_SCRIPT status" >&2
+        jq 'del(.builder_session_id)' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+    else
+        echo "[ain-delegate] no live Builder claim recorded for '$work_unit_id' — nothing to release there" >&2
+    fi
+    "$CLAIM_SCRIPT" release "$work_unit_id" >&2
+    echo "[ain-delegate] released '$work_unit_id' (state=$state) — worktree left in place, ownership cleared" >&2
+}
+
+case "${1:-}" in
+    new)      shift; cmd_new "$@" ;;
+    claim)    shift; cmd_claim "$@" ;;
+    local)    shift; cmd_local "$@" ;;
+    local-native) shift; cmd_local_native "$@" ;;
+    kimi)     shift; cmd_kimi "$@" ;;
+    claude)   shift; cmd_claude "$@" ;;
+    opencode) shift; cmd_opencode "$@" ;;
+    tinker)   shift; cmd_tinker "$@" ;;
+    result)   shift; cmd_result "$@" ;;
+    review)   shift; cmd_review "$@" ;;
+    escalate) shift; cmd_escalate "$@" ;;
+    release)  shift; cmd_release "$@" ;;
+    *)
+        echo "usage: $0 {new|claim|local|local-native|kimi|claude|opencode|tinker|result|review|escalate|release} <work_unit_id> [args...]" >&2
+        exit 2
+        ;;
+esac
+\n'* ]]             || [[ "$gate_output" != GOVERNANCE_GATE:* ]];
+        }; then
+            echo "[ain-delegate] native GOVERNANCE_GATE output was not one pure single-line claim — refusing result." >&2
             gate_json=''
             [ "$exit_code" -ne 0 ] || exit_code=10
+        else
+            gate_json="${gate_output#GOVERNANCE_GATE:}"
+            gate_json="${gate_json# }"
+            if ! printf '%s' "$gate_json" | jq -e 'type == "object"' >/dev/null 2>&1; then
+                echo "[ain-delegate] malformed GOVERNANCE_GATE claim — refusing result." >&2
+                gate_json=''
+                [ "$exit_code" -ne 0 ] || exit_code=10
+            fi
         fi
     fi
 
