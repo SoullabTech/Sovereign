@@ -38,6 +38,7 @@
  * quietly makes that place inhabitable.*
  */
 
+import ManuscriptPassage from '../insight/ManuscriptPassage';
 import {
   forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect,
   useMemo, useRef, useState,
@@ -63,6 +64,42 @@ const NOTE_MS = 2400;
  * a fact about the writing.
  */
 const ESTIMATED_SECTION_HEIGHT = 320;
+
+export interface ReadOnlyPassageAnnotation {
+  key: string;
+  sectionId: string;
+  range: CodePointRange;
+  label: string;
+}
+
+export function readOnlyBodyWithAnnotations(
+  body: string,
+  annotations: readonly ReadOnlyPassageAnnotation[],
+  onSelect?: (annotation: ReadOnlyPassageAnnotation) => void,
+) {
+  const points = Array.from(body);
+  const valid = annotations.filter(({ range }) => Number.isInteger(range.start) && Number.isInteger(range.end)
+    && range.start >= 0 && range.end > range.start && range.end <= points.length);
+  if (!valid.length) return body;
+  // Partition once so overlapping observations never duplicate the author's words.
+  const boundaries = [...new Set([0, points.length, ...valid.flatMap(a => [a.range.start, a.range.end])])].sort((a,b) => a-b);
+  return boundaries.slice(0,-1).map((start,i) => {
+    const end=boundaries[i+1];
+    const begins=valid.filter(a => a.range.start === start);
+    const marked=valid.some(a => a.range.start <= start && a.range.end >= end);
+    const text=points.slice(start,end).join('');
+    return <span key={start} style={{ position:'relative' }}>
+      {begins.length > 0 && <span className="ws-development-margin">
+        {begins.map(annotation => <button key={annotation.key} type="button"
+          onClick={() => onSelect?.(annotation)}
+          data-development-evidence-link={annotation.key}
+          aria-label={`Open MAIA’s note: ${annotation.label}`}
+          title={annotation.label}>◇</button>)}
+      </span>}
+      {marked ? <mark className="ws-development-highlight">{text}</mark> : text}
+    </span>;
+  });
+}
 
 export interface WholeManuscriptSurfaceProps {
   writing: SectionWriting;
@@ -106,6 +143,13 @@ export interface WholeManuscriptSurfaceProps {
   onPlaceChange?: (sectionId: string) => void;
   /** Exact frozen passage to illuminate in a read-only manuscript. Never used for editing. */
   readOnlyHighlight?: { sectionId: string; range: CodePointRange } | null;
+  /**
+   * Exact CURRENT evidence loci already present in a frozen developmental reading.
+   * These are navigation affordances only: rendering or selecting one never commissions cognition.
+   */
+  readOnlyAnnotations?: readonly ReadOnlyPassageAnnotation[];
+  readOnlyNote?: { sectionId: string; range: CodePointRange | null; onAnchor: (node: HTMLDivElement | null) => void } | null;
+  onReadOnlyAnnotationSelect?: (annotation: ReadOnlyPassageAnnotation) => void;
 }
 
 
@@ -129,8 +173,18 @@ export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
   writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, readOnlyHighlight = null,
+  readOnlyAnnotations = [], onReadOnlyAnnotationSelect, readOnlyNote = null,
 }, handleRef) {
   const sections = writing.sections;
+  const annotationsBySection = useMemo(() => {
+    const out = new Map<string, ReadOnlyPassageAnnotation[]>();
+    for (const annotation of readOnlyAnnotations) {
+      const current = out.get(annotation.sectionId) ?? [];
+      current.push(annotation);
+      out.set(annotation.sectionId, current);
+    }
+    return out;
+  }, [readOnlyAnnotations]);
   const indexOfId = useMemo(() => {
     const m = new Map<string, number>();
     sections.forEach((s, i) => m.set(s.id, i));
@@ -393,6 +447,9 @@ export const WholeManuscriptSurface = forwardRef<
                 }}
               />
             ) : (() => {
+              if (readOnlyNote?.sectionId === section.id) return <ManuscriptPassage body={body} range={readOnlyNote.range} highlight={Boolean(readOnlyNote.range)}>
+                <div ref={readOnlyNote.onAnchor} data-develop-note-anchor />
+              </ManuscriptPassage>;
               const exact = readOnlyHighlight?.sectionId === section.id
                 ? splitCodePointRange(body, readOnlyHighlight.range)
                 : null;
@@ -414,7 +471,11 @@ export const WholeManuscriptSurface = forwardRef<
                       </mark>
                       {exact.after}
                     </>
-                  ) : body}
+                  ) : readOnlyBodyWithAnnotations(
+                    body,
+                    annotationsBySection.get(section.id) ?? [],
+                    onReadOnlyAnnotationSelect,
+                  )}
                 </StudioText>
               );
             })()}

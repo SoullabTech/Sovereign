@@ -18,8 +18,8 @@
  * passage ranges too: exact current evidence may be illuminated in context, while
  * superseded ranges remain provenance and are never applied to changed prose.
  *
- * DEVELOP DOES NOT EDIT. The shared WholeManuscriptSurface receives every
- * section with editable=false. Write remains the authority for changing prose.
+ * Developmental reading itself never edits. The embedded shared editing canvas
+ * uses the same explicit preview/application/undo authority as Write.
  */
 
 import { OUTCOME_SENTENCE, causeLine } from '@/lib/writersStudio/developRefusalCopy';
@@ -31,11 +31,12 @@ import { PRESS, SERIF } from '../pressTheme';
 import { CANVAS_HREF } from '../studioMap';
 import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { INK, RULE, SPACE } from '../studioTheme';
-import { canvasForManuscript } from '../canvasIdentity';
+import { canvasForManuscript, canvasWithoutEditorialThread } from '../canvasIdentity';
 import { locationForSection, replacePlaceAddress } from '@/lib/writersStudio/placeInWork';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import type { CodePointRange } from '@/lib/manuscript/development/evidenceRef';
-import { DevelopManuscriptRail, DevelopManuscriptSurface } from './DevelopManuscript';
+import { DevelopManuscriptRail } from './DevelopManuscript';
+import RebuildStudioClient from '../rebuild/RebuildStudioClient';
 import type { WriteStateSection } from '@/lib/writersStudio/writeStateClient';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
@@ -50,14 +51,23 @@ import {
   LENS_MEANING, LENS_ORDER, LENS_QUESTION, readingView, type ObservationView, type ReadingView, type StateName,
 } from '@/lib/writersStudio/developPresentation';
 import {
+  observationSectionIdsByKey,
+  settleReadingPresentationScope,
+  visibleObservationKeys,
+  type ReadingPresentationScope,
+} from '@/lib/writersStudio/developReadingContext';
+import {
   actOnPreparation, fetchPreparation, preparationCopy,
   type DevelopPreparation,
 } from '@/lib/writersStudio/developPreparationClient';
 import { beginDraft } from '../../press/manuscript/workingDraftClient';
 import ObservationDialogue from './ObservationDialogue';
 import GoldLine from '../insight/GoldLine';
-import CanvasWorkspace from '../insight/CanvasWorkspace';
+import InlineWorkspace from '../insight/InlineWorkspace';
+import MaiaListen from '../insight/MaiaListen';
+import { insightWriteHref } from '@/lib/writersStudio/insightCanvas';
 import InsightReadings from '../insight/InsightReadings';
+import WorkInspiration from '../insight/WorkInspiration';
 import { dialogueSurfaceKey } from '@/lib/writersStudio/observationDialogueResume';
 import {
   LABEL as STANDING_LABEL, adoptInto, beginLookup, beginRefresh, expectationFor, settleLookup,
@@ -231,8 +241,10 @@ export default function DevelopRoom({
   requestedReadingId: string | null;
   requestedSectionId: string | null;
 }) {
-  const [canvasObservation, setCanvasObservation] = useState<{ readingId: string; key: string } | null>(null);
+  const [canvasObservation, setCanvasObservation] = useState<{ readingId: string; key: string; sectionId?: string } | null>(null);
   const [insightOpen, setInsightOpen] = useState(false);
+  const [readingToolsOpen, setReadingToolsOpen] = useState(false);
+  const [noteAnchor, setNoteAnchor] = useState<HTMLDivElement | null>(null);
   const [title, setTitle] = useState<string | null | undefined>(undefined);
   const [listPhase, setListPhase] = useState<ListPhase>('loading');
   const [summaries, setSummaries] = useState<ReadingSummary[]>([]);
@@ -250,6 +262,7 @@ export default function DevelopRoom({
   const [placeId, setPlaceId] = useState<string | null>(requestedSectionId);
   const [jumpTo, setJumpTo] = useState<string | null>(null);
   const [activeEvidence, setActiveEvidence] = useState<{ observationKey: string; sectionId: string; range: CodePointRange } | null>(null);
+  const [presentationScope, setPresentationScope] = useState<ReadingPresentationScope>('work');
   /* 'whole' until the writer says otherwise, or until the work is too large to
      read at once — in which case the choice is opened FOR them, with the
      reason said in a sentence, rather than left to be discovered by pressing a
@@ -435,6 +448,10 @@ export default function DevelopRoom({
     [payload],
   );
 
+  const evidenceSectionIdsByObservation = useMemo(() => {
+    if (!payload || payload.reading.outcome !== 'reading') return new Map<string, readonly string[]>();
+    return observationSectionIdsByKey(payload.reading.observations);
+  }, [payload]);
 
   /* Section-level navigation from frozen evidence. D5 adds exact current
      passage precision separately; this map remains the section fallback for
@@ -467,6 +484,16 @@ export default function DevelopRoom({
     return out;
   }, [payload]);
 
+  const passageAnnotations = useMemo(
+    () => Array.from(passageEvidenceByObservation, ([observationKey, evidence]) => ({
+      key: observationKey,
+      label: observationKey,
+      sectionId: evidence.sectionId,
+      range: evidence.range,
+    })),
+    [passageEvidenceByObservation],
+  );
+
   useEffect(() => { setActiveEvidence(null); }, [selectedId]);
 
   const showPlace = useCallback((sectionId: string, requestJump: boolean) => {
@@ -494,6 +521,21 @@ export default function DevelopRoom({
     [structuredSections, placeId],
   );
   const effectiveScope: DevelopScope = developScope === 'chapter' && !currentChapter ? 'work' : developScope;
+  const currentChapterSectionIds = useMemo(
+    () => currentChapter?.sections.map((section) => section.draftSectionId) ?? [],
+    [currentChapter],
+  );
+
+  useEffect(() => {
+    setPresentationScope(currentChapterSectionIds.length > 0 ? 'chapter' : 'work');
+  }, [currentChapterSectionIds.length, selectedId]);
+
+  useEffect(() => {
+    setPresentationScope((prev) => settleReadingPresentationScope(prev, {
+      chapterAvailable: currentChapterSectionIds.length > 0,
+      passageAvailable: activeEvidence !== null,
+    }));
+  }, [activeEvidence, currentChapterSectionIds]);
 
   const last = sections && sections.length > 0 ? sections.length - 1 : 0;
   const endChosen = toIndex !== null;
@@ -521,15 +563,17 @@ export default function DevelopRoom({
   const tooLarge = chosenSize > DEVELOPMENTAL_READ_CEILING_CODE_POINTS
     || (effectiveScope === 'custom' && !endChosen);
 
-  const ask = async () => {
+  const ask = async (choice?: { scope?: ReadingScope; lens?: DevelopmentalLens }) => {
     setCommission({ phase: 'reading' });
     /* The scope is a structural identifier or it is absent. Nothing about the
        Work's prose goes up the wire — the invocation carries the lens, the
        member's identity, and at most the name of a division they authored. */
-    const scope = chosenScope;
-    const outcome = await requestDevelopmentalReading(manuscriptId, lens, scope);
+    const scope = choice ? choice.scope : chosenScope;
+    const readingLens = choice?.lens ?? lens;
+    const outcome = await requestDevelopmentalReading(manuscriptId, readingLens, scope);
     if (!outcome.ok) { setCommission({ phase: 'refused', outcome }); return; }
     setCommission({ phase: 'idle' });
+    setReadingToolsOpen(false);
     await loadList(outcome.readingId);
   };
 
@@ -579,6 +623,23 @@ export default function DevelopRoom({
     await loadPrep();
   };
 
+
+  const noteObservation = canvasObservation && canvasObservation.readingId === view?.id
+    ? view?.observations.find(o => o.key === canvasObservation.key) : undefined;
+  const noteEvidence = noteObservation ? passageEvidenceByObservation.get(noteObservation.key) : undefined;
+  const noteSectionId = noteObservation ? evidenceSectionByObservation.get(noteObservation.key) : undefined;
+  const openManuscriptNote = (key: string, preferredSectionId?: string) => {
+    if (!view) return;
+    const sectionId = preferredSectionId && evidenceSectionIdsByObservation.get(key)?.includes(preferredSectionId)
+      ? preferredSectionId : evidenceSectionByObservation.get(key);
+    if (canvasObservation?.readingId !== view.id || canvasObservation.key !== key || canvasObservation.sectionId !== sectionId) {
+      replacePlaceAddress(canvasWithoutEditorialThread(window.location.pathname, window.location.search));
+    }
+    setCanvasObservation({ readingId: view.id, key, sectionId });
+    setInsightOpen(true);
+    if (sectionId) { showPlace(sectionId, true); setReadingToolsOpen(false); }
+    else setReadingToolsOpen(true);
+  };
   // ---- Signed out ---------------------------------------------------------
   if (listPhase === 'unauthorized') {
     return (
@@ -609,11 +670,16 @@ export default function DevelopRoom({
       workName={headline}
       workNamed={Boolean(title)}
       workNote="Developmental view"
+      headerRight={<button type="button" aria-expanded={readingToolsOpen}
+        className="rounded border px-3 py-2 text-[12px]"
+        onClick={() => setReadingToolsOpen(value => !value)}>
+        {readingToolsOpen ? 'Close reading tools' : 'Developmental tools'}
+      </button>}
       rail={
         <DevelopManuscriptRail
           sections={sections ?? []}
           currentSectionId={placeId}
-          onSelect={(sectionId) => showPlace(sectionId, true)}
+          onSelect={(sectionId) => { setCanvasObservation(null); showPlace(sectionId, true); }}
         />
       }
     >
@@ -622,12 +688,12 @@ export default function DevelopRoom({
       style={{ fontFamily: SERIF }}
       data-develop-workbench
     >
-      <main
-        className="flex-1 min-w-0 min-h-0 px-6 md:px-10 py-6"
+      <section aria-label="Manuscript workspace"
+        className="flex-1 min-w-0 min-h-0"
         data-develop-centre="manuscript"
         style={{
           borderRight: `1px solid ${PRESS.ruleSoft}`,
-          display: 'flex', flexDirection: 'column',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}
       >
         {manuscriptPhase === 'error' ? (
@@ -644,45 +710,109 @@ export default function DevelopRoom({
           <>
             <div
               data-develop-locus
-              className="pb-4 mb-4 border-b text-[11.5px] opacity-55"
+              className="hidden"
               style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}
             >
+              <button type="button" className="float-right rounded border px-3 py-1 text-[12px]" aria-expanded={readingToolsOpen}
+                onClick={() => setReadingToolsOpen(value => !value)}>{readingToolsOpen ? 'Return to full page' : 'Read with MAIA'}</button>
               <span className="opacity-70">Manuscript</span>
               {currentChapter ? <span> &nbsp;›&nbsp; {currentChapter.root.heading?.trim() || 'Current chapter'}</span> : null}
               {currentSection && currentSection.id !== currentChapter?.root.draftSectionId
                 ? <span> &nbsp;›&nbsp; {currentSection.heading?.trim() || 'Untitled section'}</span> : null}
             </div>
-            <DevelopManuscriptSurface
-              sections={sections}
-              version={writeVersion}
-              initialOpenAt={placeId}
-              jumpTo={jumpTo}
-              onJumpHandled={() => setJumpTo(null)}
-              onPlaceChange={(sectionId) => showPlace(sectionId, false)}
-              evidenceHighlight={activeEvidence ? { sectionId: activeEvidence.sectionId, range: activeEvidence.range } : null}
-            />
+            <div data-develop-task-bar className="px-6 py-3 border-b" style={{ borderColor: PRESS.ruleSoft, flexShrink: 0 }}>
+              <WorkInspiration manuscriptId={manuscriptId} />
+              <div className="mb-4">
+                <p className="text-[15px] mb-1">Begin with the shape of the whole Work.</p>
+                <p className="text-[12px] mb-3 opacity-75">MAIA will read the manuscript as a whole and return with places worth exploring. Nothing changes until you choose it.</p>
+                <button type="button"
+                  disabled={listPhase !== 'ready' || prep.phase !== 'ready' || prep.state.kind !== 'ready' || commission.phase === 'reading'
+                    || codePointsOf(sections ?? []) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS}
+                  onClick={() => { setDevelopScope('work'); setLens('development'); setReadingToolsOpen(true); void ask({ lens: 'development' }); }}
+                  className="rounded border px-4 py-2 text-[13px] disabled:opacity-40"
+                  style={{ borderColor: PRESS.rule, background: 'var(--ws-ground-active)' }}>
+                  {commission.phase === 'reading' ? 'MAIA is reading the whole Work…' : 'Read the whole Work with MAIA'}
+                </button>
+              </div>
+              <details className="mb-3">
+                <summary className="cursor-pointer text-[12px] opacity-80">Choose a different focus</summary>
+                <div className="flex flex-wrap items-end gap-3 mt-3">
+                  <label className="text-[12px]">Where should MAIA read?
+                    <select aria-label="Developmental reading scope" value={effectiveScope}
+                      disabled={commission.phase === 'reading'}
+                      onChange={e => { setDevelopScope(e.target.value as DevelopScope); if (e.target.value === 'custom') setReadingToolsOpen(true); }}
+                      className="block border rounded px-2 py-2 mt-1 bg-transparent" style={{ borderColor: PRESS.rule, color: PRESS.text }}>
+                      <option value="work" style={{ color: PRESS.ink }}>Whole work</option>
+                      <option value="chapter" disabled={!currentChapter} style={{ color: PRESS.ink }}>Current chapter</option>
+                      <option value="custom" style={{ color: PRESS.ink }}>Choose a range</option>
+                    </select>
+                  </label>
+                  <label className="text-[12px]">What would you like to explore?
+                    <select aria-label="Developmental task" value={lens} disabled={commission.phase === 'reading'}
+                      onChange={e => setLens(e.target.value as DevelopmentalLens)}
+                      className="block border rounded px-2 py-2 mt-1 bg-transparent max-w-full" style={{ borderColor: PRESS.rule, color: PRESS.text }}>
+                      {LENS_ORDER.map(l => <option key={l} value={l} style={{ color: PRESS.ink }}>{l === 'development' ? 'Development' : lensLabel(l)} · {LENS_QUESTION[l]}</option>)}
+                    </select>
+                  </label>
+                  <button type="button" onClick={() => { setReadingToolsOpen(true); void ask(); }}
+                    disabled={listPhase !== 'ready' || prep.phase !== 'ready' || prep.state.kind !== 'ready' || commission.phase === 'reading' || tooLarge}
+                    className="rounded border px-3 py-2 text-[12px] disabled:opacity-40"
+                    style={{ borderColor: PRESS.rule, background: 'var(--ws-ground-active)' }}>
+                    {commission.phase === 'reading' ? 'MAIA is reading…' : 'Read this focus with MAIA'}
+                  </button>
+                </div>
+                <p className="text-[12px] mt-2 opacity-70" role="status">
+                  {tooLarge ? 'Choose a smaller range so MAIA can read it in one sitting.'
+                    : prep.phase === 'ready' && prep.state.kind === 'ready' ? 'Your manuscript remains unchanged while MAIA reads.'
+                    : 'Open Developmental tools to see reading readiness and preparation.'}
+                </p>
+              </details>
+              {view && commission.phase !== 'reading' && <div className="mt-3 p-3 border-l-2" style={{ borderColor: PRESS.rule }} role="status">
+                <p className="text-[14px]">MAIA found {view.observations.length} place{view.observations.length === 1 ? '' : 's'} to explore.</p>
+                <p className="text-[12px] mt-1 mb-2 opacity-70">Open one on the page, explain what you meant, and decide together whether anything should change.</p>
+                {view.observations.some(o => evidenceSectionByObservation.has(o.key)) && <button type="button"
+                  className="rounded border px-3 py-2 text-[12px]" style={{ borderColor: PRESS.rule }}
+                  onClick={() => {
+                    const noted = view.observations.find(o => o.state === 'current' && evidenceSectionIdsByObservation.get(o.key)?.includes(placeId ?? ''))
+                      ?? view.observations.find(o => o.state === 'current' && evidenceSectionByObservation.has(o.key))
+                      ?? view.observations.find(o => evidenceSectionByObservation.has(o.key));
+                    if (noted) openManuscriptNote(noted.key, placeId ?? undefined);
+                  }}>Begin with a note in the manuscript</button>}
+              </div>}
+            </div>
+            <RebuildStudioClient development={{
+              sectionId: placeId,
+              observation: canvasObservation?.sectionId ? { ...canvasObservation, sectionId: canvasObservation.sectionId,
+                label: noteObservation?.phenomenonLabel ?? 'Editorial note' } : null,
+              notes: view ? view.observations.flatMap(observation =>
+                (evidenceSectionIdsByObservation.get(observation.key) ?? []).map(sectionId => ({
+                  readingId: view.id, key: observation.key, sectionId, label: observation.phenomenonLabel ?? 'Editorial note',
+                  sourceBody: sections.find(s => s.id === sectionId)?.body,
+                  range: (() => {
+                    const exact = passageEvidenceByObservation.get(observation.key);
+                    if (!exact || exact.sectionId !== sectionId) return undefined;
+                    const offset = Array.from(structuredSections?.find(s => s.draftSectionId === sectionId)?.headingPrefix ?? '').length;
+                    return { start: exact.range.start - offset, end: exact.range.end - offset };
+                  })(),
+                }))) : [],
+              onSelect: note => openManuscriptNote(note.key, note.sectionId),
+              onReadingTools: () => setReadingToolsOpen(value => !value),
+              onPlaceChange: sectionId => showPlace(sectionId, false),
+            }} />
           </>
         )}
-      </main>
+      </section>
 
       <aside
-        className="w-[390px] max-w-[42vw] shrink-0 overflow-y-auto px-5 py-5"
+        className="min-w-0 shrink-0 overflow-y-auto px-6 py-5"
         aria-label="Developmental reading"
         data-develop-intelligence
+        style={{ display: readingToolsOpen ? undefined : 'none', flex: '0 1 clamp(24rem, 32vw, 38rem)', background: 'var(--ws-ground-base, #131d17)', position: 'relative' }}
       >
+        {insightOpen && noteObservation && !noteSectionId && <div ref={setNoteAnchor} data-develop-structural-note-anchor />}
         <GoldLine manuscriptId={manuscriptId} />
-        <div className="grid grid-cols-3 gap-1 p-1 mb-4 rounded-full border" style={{ borderColor: PRESS.ruleSoft }} data-develop-scope-tabs>
-          <button type="button" onClick={() => setDevelopScope('work')} aria-pressed={effectiveScope === 'work'}
-            className="rounded-full px-2 py-2 text-[11.5px]"
-            style={{ background: effectiveScope === 'work' ? 'var(--ws-ground-active)' : 'transparent', color: PRESS.text }}>Work</button>
-          <button type="button" onClick={() => setDevelopScope('chapter')} aria-pressed={effectiveScope === 'chapter'} disabled={!currentChapter}
-            className="rounded-full px-2 py-2 text-[11.5px] disabled:opacity-30"
-            style={{ background: effectiveScope === 'chapter' ? 'var(--ws-ground-active)' : 'transparent', color: PRESS.text }}>Chapter</button>
-          <button type="button" disabled aria-disabled="true" title="Exact passage focus is not available in Develop yet"
-            className="rounded-full px-2 py-2 text-[11.5px] opacity-30">Passage</button>
-        </div>
         <div className="pb-4 mb-4 border-b" style={{ borderColor: PRESS.ruleSoft }}>
-          <p className="text-[10.5px] tracking-[0.18em] uppercase opacity-45">Develop</p>
+          <p className="text-[10.5px] tracking-[0.18em] uppercase opacity-45">Current reading</p>
           <p className="text-[15px] mt-1">{currentSection?.heading?.trim() || 'Manuscript'}</p>
           <p className="text-[12px] opacity-50 mt-1">
             {view ? `${view.lensMeaning}.` : 'The manuscript stays in view while MAIA’s reading sits beside it.'}
@@ -819,8 +949,29 @@ export default function DevelopRoom({
                   ceiling untouched. None of that appears here. */}
               {sections && sections.length > 0 && (
                 <fieldset disabled={commission.phase === 'reading'} className="mb-4" data-develop-scope>
-                  <legend className="text-[12.5px] opacity-60 mb-2">Read</legend>
-                  <p className="text-[11.5px] opacity-50">
+                  <legend className="text-[12.5px] opacity-60 mb-2">Where should MAIA read?</legend>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px]" data-develop-reading-scope-controls>
+                    <button
+                      type="button"
+                      onClick={() => setDevelopScope('work')}
+                      aria-pressed={effectiveScope === 'work'}
+                      className="underline underline-offset-4"
+                      style={{ opacity: effectiveScope === 'work' ? 1 : 0.55 }}
+                    >
+                      Whole work
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDevelopScope('chapter')}
+                      aria-pressed={effectiveScope === 'chapter'}
+                      disabled={!currentChapter}
+                      className="underline underline-offset-4 disabled:opacity-30"
+                      style={{ opacity: effectiveScope === 'chapter' ? 1 : 0.55 }}
+                    >
+                      Current chapter
+                    </button>
+                  </div>
+                  <p className="text-[11.5px] opacity-50 mt-2" data-develop-reading-scope-current>
                     {effectiveScope === 'chapter'
                       ? (currentChapter?.root.heading?.trim() || 'Current chapter')
                       : effectiveScope === 'custom' ? 'A range you choose' : 'The whole work'}
@@ -909,7 +1060,7 @@ export default function DevelopRoom({
                 </details>
               </fieldset>
               <button
-                onClick={ask}
+                onClick={() => void ask()}
                 disabled={commission.phase === 'reading' || tooLarge}
                 aria-busy={commission.phase === 'reading'}
                 data-develop-ask
@@ -1001,13 +1152,19 @@ export default function DevelopRoom({
               onStanding={adoptStanding}
               onRefresh={() => loadStandings(view.id)}
               evidenceSectionByObservation={evidenceSectionByObservation}
+              evidenceSectionIdsByObservation={evidenceSectionIdsByObservation}
               passageEvidenceByObservation={passageEvidenceByObservation}
-              onOpenCanvas={(key) => { setCanvasObservation({ readingId: view.id, key }); setInsightOpen(true); }}
+              onOpenCanvas={openManuscriptNote}
               activeEvidenceKey={activeEvidence?.observationKey ?? null}
               currentSectionId={placeId}
+              currentChapterLabel={currentChapter?.root.heading?.trim() || 'Current chapter'}
+              currentChapterSectionIds={currentChapterSectionIds}
+              presentationScope={presentationScope}
+              onPresentationScopeChange={setPresentationScope}
               onNavigate={(sectionId) => { setActiveEvidence(null); showPlace(sectionId, true); }}
               onNavigateEvidence={(observationKey, evidence) => {
                 setActiveEvidence({ observationKey, ...evidence });
+                setPresentationScope('passage');
                 showPlace(evidence.sectionId, true);
               }}
             />
@@ -1015,10 +1172,23 @@ export default function DevelopRoom({
         </div>
       </aside>
     </div>
-      <CanvasWorkspace open={insightOpen} title="Explore this observation" onClose={() => setInsightOpen(false)}>
-        {canvasObservation && <InsightReadings key={manuscriptId}
-          manuscriptId={manuscriptId} readingId={canvasObservation.readingId} observationKey={canvasObservation.key} />}
-      </CanvasWorkspace>
+      <InlineWorkspace anchor={noteAnchor} open={insightOpen && Boolean(noteObservation) && !noteSectionId} revealKey={canvasObservation ? canvasObservation.readingId + ":" + canvasObservation.key : undefined}>
+        {noteObservation && canvasObservation && <section aria-label="MAIA’s note in the manuscript">
+          <header className="wsi-inline-header"><strong>{noteObservation.phenomenonLabel}</strong>
+            <button onClick={() => { setInsightOpen(false); setActiveEvidence(null); window.dispatchEvent(new Event('ws-stop-maia-reading')); }}>Close note</button></header>
+          <div className="wsi-page-voice"><strong>MAIA</strong><MaiaListen text={noteObservation.observation} active={insightOpen}/></div>
+          <p className="wsi-observation">{noteObservation.observation}</p>
+          {noteObservation.state !== 'current' && <p role="status">{noteObservation.stateSentence}</p>}
+          <ObservationDialogue key={canvasObservation.readingId + ':' + canvasObservation.key}
+            manuscriptId={manuscriptId} readingId={canvasObservation.readingId} observationKey={canvasObservation.key}
+            about={noteObservation.observation} superseded={noteObservation.state === 'superseded'}
+            onClose={() => { setInsightOpen(false); setActiveEvidence(null); }}/>
+          {noteSectionId && <a className="wsi-link" href={insightWriteHref(manuscriptId, canvasObservation.readingId, canvasObservation.key, noteSectionId)}>Explore wording here in Write</a>}
+          <details><summary>Related passages, evidence, and context</summary>
+            <InsightReadings key={manuscriptId} manuscriptId={manuscriptId} readingId={canvasObservation.readingId} observationKey={canvasObservation.key}/>
+          </details>
+        </section>}
+      </InlineWorkspace>
     </WriterStudioShell>
   );
 }
@@ -1027,33 +1197,121 @@ export default function DevelopRoom({
 
 function Reading({
   view, manuscriptId, standings, onStanding, onRefresh,
-  evidenceSectionByObservation, passageEvidenceByObservation, activeEvidenceKey, currentSectionId, onNavigate, onNavigateEvidence, onOpenCanvas,
+  evidenceSectionByObservation, evidenceSectionIdsByObservation, passageEvidenceByObservation,
+  activeEvidenceKey, currentSectionId, currentChapterLabel, currentChapterSectionIds,
+  presentationScope, onPresentationScopeChange, onNavigate, onNavigateEvidence, onOpenCanvas,
 }: {
   view: ReadingView; manuscriptId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
   evidenceSectionByObservation: ReadonlyMap<string, string>;
+  evidenceSectionIdsByObservation: ReadonlyMap<string, readonly string[]>;
   passageEvidenceByObservation: ReadonlyMap<string, { sectionId: string; range: CodePointRange }>;
   activeEvidenceKey: string | null;
   currentSectionId: string | null;
+  currentChapterLabel: string;
+  currentChapterSectionIds: readonly string[];
+  presentationScope: ReadingPresentationScope;
+  onPresentationScopeChange: (scope: ReadingPresentationScope) => void;
   onOpenCanvas: (key: string) => void;
   onNavigate: (sectionId: string) => void;
   onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
+  const observationKeys = useMemo(() => view.observations.map((observation) => observation.key), [view.observations]);
+  const chapterVisible = useMemo(() => visibleObservationKeys({
+    observationKeys,
+    observationSectionIds: evidenceSectionIdsByObservation,
+    scope: 'chapter',
+    chapterSectionIds: currentChapterSectionIds,
+  }), [currentChapterSectionIds, evidenceSectionIdsByObservation, observationKeys]);
+  const visible = useMemo(() => visibleObservationKeys({
+    observationKeys,
+    observationSectionIds: evidenceSectionIdsByObservation,
+    scope: presentationScope,
+    chapterSectionIds: currentChapterSectionIds,
+    passageObservationKey: activeEvidenceKey,
+  }), [
+    activeEvidenceKey,
+    currentChapterSectionIds,
+    evidenceSectionIdsByObservation,
+    observationKeys,
+    presentationScope,
+  ]);
+  const scopeSentence = presentationScope === 'work'
+    ? 'Seeing the whole reading in the order MAIA made it.'
+    : presentationScope === 'chapter'
+      ? chapterVisible.size > 0
+        ? `Showing what this reading names in ${currentChapterLabel}.`
+        : `${currentChapterLabel} is in view, but this reading names no exact locus in it. Work keeps the full reading intact.`
+      : 'Showing the observation attached to the exact passage currently in view.';
+
   return (
-    <article data-reading-id={view.id} data-reading-state={view.state} className="max-w-[70ch]">
+    <article data-reading-id={view.id} data-reading-state={view.state} className="max-w-[74ch]">
       <header className="mb-7">
+        <p className="text-[10.5px] tracking-[0.25em] uppercase opacity-45 mb-1.5">
+          Current reading
+        </p>
         <p className="text-[12px] tracking-[0.25em] uppercase opacity-45 mb-1.5">
           <span className="normal-case tracking-normal capitalize">{view.lens}</span> lens
         </p>
         <p className="text-[15px] leading-relaxed opacity-85">{view.lensMeaning}.</p>
-        <p className="text-[12.5px] opacity-55 mt-2">
-          Read {formatWhen(view.frozenAt)} · version {view.revisionNumber} · {view.coverage.sentence}
-          {view.withStructure ? ' Your authored structure was supplied.' : ''}
-        </p>
-        <p className="text-[11px] opacity-35 mt-1" data-reading-provenance>
-          {view.readerVersion} · {view.readerModel}
-          {view.classifierVersion ? ` · classified by ${view.classifierVersion}` : ''}
-        </p>
+        {view.outcome === 'reading' && (
+          <div className="mt-4" data-develop-reading-presentation>
+            <div
+              className="grid grid-cols-3 gap-1 rounded-full border p-1"
+              style={{ borderColor: PRESS.ruleSoft }}
+              data-develop-presentation-hierarchy
+            >
+              <button
+                type="button"
+                onClick={() => onPresentationScopeChange('work')}
+                aria-pressed={presentationScope === 'work'}
+                className="rounded-full px-2 py-2 text-[11.5px]"
+                data-develop-presentation-scope="work"
+                style={{ background: presentationScope === 'work' ? 'var(--ws-ground-active)' : 'transparent', color: PRESS.text }}
+              >
+                Work
+              </button>
+              <button
+                type="button"
+                onClick={() => onPresentationScopeChange('chapter')}
+                aria-pressed={presentationScope === 'chapter'}
+                disabled={currentChapterSectionIds.length === 0}
+                className="rounded-full px-2 py-2 text-[11.5px] disabled:opacity-30"
+                data-develop-presentation-scope="chapter"
+                style={{ background: presentationScope === 'chapter' ? 'var(--ws-ground-active)' : 'transparent', color: PRESS.text }}
+              >
+                Chapter
+              </button>
+              <button
+                type="button"
+                onClick={() => onPresentationScopeChange('passage')}
+                aria-pressed={presentationScope === 'passage'}
+                disabled={activeEvidenceKey === null}
+                className="rounded-full px-2 py-2 text-[11.5px] disabled:opacity-30"
+                data-develop-presentation-scope="passage"
+                style={{ background: presentationScope === 'passage' ? 'var(--ws-ground-active)' : 'transparent', color: PRESS.text }}
+              >
+                Passage
+              </button>
+            </div>
+            <p className="mt-2 text-[12.5px] leading-relaxed opacity-60" data-develop-presentation-context>
+              {scopeSentence}
+            </p>
+          </div>
+        )}
+        <details className="mt-3" data-develop-reading-details>
+          <summary className="cursor-pointer text-[12.5px] opacity-60">Reading details</summary>
+          <div className="pt-3">
+            <p className="text-[12.5px] opacity-55">
+              Read {formatWhen(view.frozenAt)} · version {view.revisionNumber} · {view.coverage.sentence}
+              {view.withStructure ? ' Your authored structure was supplied.' : ''}
+            </p>
+            <p className="text-[11px] opacity-35 mt-1" data-reading-provenance>
+              {view.readerVersion} · {view.readerModel}
+              {view.classifierVersion ? ` · classified by ${view.classifierVersion}` : ''}
+            </p>
+          </div>
+        </details>
         <StateLine state={view.state} label={view.stateLabel} sentence={view.stateSentence} moved={view.moved} whole />
       </header>
 
@@ -1063,7 +1321,15 @@ function Reading({
           not an empty one.
         </p>
       ) : (
-        <ol className="space-y-8" aria-label="Observations">
+        <>
+          {visible.size === 0 && (
+            <p className="text-[13px] leading-relaxed opacity-60 mb-5" data-develop-presentation-empty={presentationScope}>
+              {presentationScope === 'chapter'
+                ? 'No observation in this reading is anchored to this chapter exactly.'
+                : 'No exact passage from this reading is currently in view.'}
+            </p>
+          )}
+          <ol className="space-y-5" aria-label="Observations">
           {view.observations.map((o) => (
             /* THE DIALOGUE SURFACE'S IDENTITY IS (readingId, observationKey) —
                `o1` is stable only WITHIN one reading. The `key` on `Reading`
@@ -1079,15 +1345,20 @@ function Reading({
               onStanding={onStanding}
               onRefresh={onRefresh}
               evidenceSectionId={evidenceSectionByObservation.get(o.key) ?? null}
+              evidenceSectionIds={evidenceSectionIdsByObservation.get(o.key) ?? []}
               passageEvidence={passageEvidenceByObservation.get(o.key) ?? null}
               onOpenCanvas={onOpenCanvas}
               evidenceHighlighted={activeEvidenceKey === o.key}
-              activeForPlace={evidenceSectionByObservation.get(o.key) === currentSectionId}
+              activeForPlace={currentSectionId !== null && (evidenceSectionIdsByObservation.get(o.key) ?? []).includes(currentSectionId)}
+              chapterRelevant={(evidenceSectionIdsByObservation.get(o.key) ?? []).some((sectionId) => currentChapterSectionIds.includes(sectionId))}
+              hidden={!visible.has(o.key)}
+              defaultExpanded={presentationScope === 'passage' || activeEvidenceKey === o.key || (currentSectionId !== null && (evidenceSectionIdsByObservation.get(o.key) ?? []).includes(currentSectionId))}
               onNavigate={onNavigate}
               onNavigateEvidence={onNavigateEvidence}
             />
           ))}
-        </ol>
+          </ol>
+        </>
       )}
     </article>
   );
@@ -1107,117 +1378,132 @@ function Reading({
  */
 function Observation({
   o, manuscriptId, readingId, standings, onStanding, onRefresh,
-  evidenceSectionId, passageEvidence, evidenceHighlighted, activeForPlace, onNavigate, onNavigateEvidence, onOpenCanvas,
+  evidenceSectionId, evidenceSectionIds, passageEvidence, evidenceHighlighted, activeForPlace, chapterRelevant,
+  hidden = false, defaultExpanded = false, onNavigate, onNavigateEvidence, onOpenCanvas,
 }: {
   o: ObservationView; manuscriptId: string; readingId: string; standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
   evidenceSectionId: string | null;
+  evidenceSectionIds: readonly string[];
   passageEvidence: { sectionId: string; range: CodePointRange } | null;
-  evidenceHighlighted: boolean; activeForPlace: boolean;
+  evidenceHighlighted: boolean; activeForPlace: boolean; chapterRelevant: boolean;
+  hidden?: boolean; defaultExpanded?: boolean;
   onOpenCanvas: (key: string) => void;
   onNavigate: (sectionId: string) => void;
   onNavigateEvidence: (observationKey: string, evidence: { sectionId: string; range: CodePointRange }) => void;
 }) {
-  const [talking, setTalking] = useState(false);
+  const [open, setOpen] = useState(defaultExpanded);
+
+  useEffect(() => {
+    if (defaultExpanded) setOpen(true);
+  }, [defaultExpanded]);
+
   return (
     <li
+      hidden={hidden}
+      aria-hidden={hidden}
       data-observation-key={o.key}
       data-observation-state={o.state}
       className="border-l pl-5"
-      style={{ borderColor: o.state === 'superseded' ? PRESS.ruleSoft : PRESS.rule }}
+      style={{
+        borderColor: evidenceHighlighted
+          ? PRESS.accent
+          : o.state === 'superseded' ? PRESS.ruleSoft : PRESS.rule,
+      }}
     >
-      <p className="text-[11px] tracking-[0.15em] uppercase opacity-45 mb-2 flex flex-wrap gap-x-3 gap-y-1">
-        <span style={{ color: PRESS.accent, opacity: 0.9 }}>{o.key}</span>
-        <span>{o.phenomenonLabel}</span>
-        {o.dependsOnStructure && <span className="opacity-70">rests on your structure</span>}
-        <StateChip state={o.state} label={o.stateLabel} />
-      </p>
-
-      {/* VERBATIM. pre-wrap so what MAIA wrote is what is shown, spaces and all. */}
-      <p
-        className="text-[16px] leading-relaxed"
-        style={{ whiteSpace: 'pre-wrap', opacity: o.state === 'superseded' ? 0.8 : 1 }}
-        data-observation-text
+      <details
+        open={open}
+        onToggle={(event) => setOpen(event.currentTarget.open)}
+        data-observation-panel={o.key}
       >
-        {o.observation}
-      </p>
+        <summary
+          className="cursor-pointer list-none"
+          data-observation-summary={o.key}
+        >
+          <p className="text-[11px] tracking-[0.15em] uppercase opacity-45 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span style={{ color: PRESS.accent, opacity: 0.9 }}>{o.key}</span>
+            <span>{o.phenomenonLabel}</span>
+            {o.dependsOnStructure && <span className="opacity-70">rests on your structure</span>}
+            {evidenceHighlighted && <span className="opacity-80">exact passage in view</span>}
+            {!evidenceHighlighted && activeForPlace && <span className="opacity-80">this section is in view</span>}
+            {!activeForPlace && !evidenceHighlighted && chapterRelevant && <span className="opacity-70">this chapter</span>}
+            {evidenceSectionIds.length > 1 && <span className="opacity-60">{evidenceSectionIds.length} named sections</span>}
+            <StateChip state={o.state} label={o.stateLabel} />
+            <span className="ml-auto text-[10px] tracking-[0.08em] opacity-55">{open ? 'Hide details' : 'Show details'}</span>
+          </p>
 
-      <button type="button" onClick={() => onOpenCanvas(o.key)} data-observation-work-on-canvas={o.key}
-        className="mt-3 rounded-md border px-3 py-2 text-[13px]"
-        style={{ borderColor: PRESS.rule, background: 'var(--ws-ground-active)' }}>Work on canvas</button>
-
-      {evidenceSectionId && (
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-          {passageEvidence && (
-            <span data-evidence-precision="passage" className="text-[10.5px] uppercase tracking-[0.12em] opacity-45">Exact passage</span>
-          )}
-          <button
-            type="button"
-            onClick={() => passageEvidence ? onNavigateEvidence(o.key, passageEvidence) : onNavigate(evidenceSectionId)}
-            data-observation-show-in-manuscript={o.key}
-            className="text-[12px] underline underline-offset-4"
-            style={{ cursor: 'pointer', opacity: evidenceHighlighted || activeForPlace ? 1 : 0.58, color: evidenceHighlighted ? PRESS.accent : 'inherit' }}
+          {/* VERBATIM. pre-wrap so what MAIA wrote is what is shown, spaces and all. */}
+          <p
+            className="text-[16px] leading-relaxed"
+            style={{ whiteSpace: 'pre-wrap', opacity: o.state === 'superseded' ? 0.8 : 1 }}
+            data-observation-text
           >
-            {evidenceHighlighted ? 'Passage in view' : passageEvidence ? 'Show exact passage' : activeForPlace ? 'Section in view' : 'Show in manuscript'}
+            {o.observation}
+          </p>
+        </summary>
+
+        <div className="pt-3">
+          <button type="button" onClick={() => onOpenCanvas(o.key)} data-observation-work-on-canvas={o.key}
+            className="rounded-md border px-3 py-2 text-[13px]"
+            style={{ borderColor: PRESS.rule, background: 'var(--ws-ground-active)' }}>Work on canvas</button>
+
+          {evidenceSectionId && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              {passageEvidence && (
+                <span data-evidence-precision="passage" className="text-[10.5px] uppercase tracking-[0.12em] opacity-45">Exact passage</span>
+              )}
+              <button
+                type="button"
+                onClick={() => passageEvidence ? onNavigateEvidence(o.key, passageEvidence) : onNavigate(evidenceSectionId)}
+                data-observation-show-in-manuscript={o.key}
+                className="text-[12px] underline underline-offset-4"
+                style={{ cursor: 'pointer', opacity: evidenceHighlighted || activeForPlace ? 1 : 0.58, color: evidenceHighlighted ? PRESS.accent : 'inherit' }}
+              >
+                {evidenceHighlighted ? 'Passage in view' : passageEvidence ? 'Show exact passage' : activeForPlace ? 'Section in view' : 'Show in manuscript'}
+              </button>
+            </div>
+          )}
+
+          <div className="mt-3 text-[12.5px] leading-relaxed opacity-60">
+            <p className="opacity-70 uppercase tracking-[0.15em] text-[10.5px] mb-1">Rests on</p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              {o.evidence.map((e, i) => <li key={i}>{e}</li>)}
+            </ul>
+          </div>
+
+          <div className="mt-3 text-[12.5px] leading-relaxed opacity-60">
+            <p className="opacity-70 uppercase tracking-[0.15em] text-[10.5px] mb-1">Does not establish</p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              {o.limits.map((l) => (
+                <li key={l.name}>
+                  <span className="opacity-90">{l.name}</span>
+                  <span className="opacity-70"> — {l.meaning}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {o.state !== 'current' && (
+            <StateLine state={o.state} label={o.stateLabel} sentence={o.stateSentence} moved={o.moved} />
+          )}
+
+          <YourStanding
+            key={standingSurfaceKey(readingId, o.key)}
+            manuscriptId={manuscriptId}
+            readingId={readingId}
+            observationKey={o.key}
+            standings={standings}
+            onStanding={onStanding}
+            onRefresh={onRefresh}
+          />
+
+          <button type="button" onClick={() => onOpenCanvas(o.key)}
+            data-observation-talk={o.key}
+            className="mt-3 text-[12px] underline underline-offset-4">
+            Discuss at this passage
           </button>
         </div>
-      )}
-
-      <div className="mt-3 text-[12.5px] leading-relaxed opacity-60">
-        <p className="opacity-70 uppercase tracking-[0.15em] text-[10.5px] mb-1">Rests on</p>
-        <ul className="list-disc pl-4 space-y-0.5">
-          {o.evidence.map((e, i) => <li key={i}>{e}</li>)}
-        </ul>
-      </div>
-
-      <div className="mt-3 text-[12.5px] leading-relaxed opacity-60">
-        <p className="opacity-70 uppercase tracking-[0.15em] text-[10.5px] mb-1">Does not establish</p>
-        <ul className="list-disc pl-4 space-y-0.5">
-          {o.limits.map((l) => (
-            <li key={l.name}>
-              <span className="opacity-90">{l.name}</span>
-              <span className="opacity-70"> — {l.meaning}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {o.state !== 'current' && (
-        <StateLine state={o.state} label={o.stateLabel} sentence={o.stateSentence} moved={o.moved} />
-      )}
-
-      <YourStanding
-        key={standingSurfaceKey(readingId, o.key)}
-        manuscriptId={manuscriptId}
-        readingId={readingId}
-        observationKey={o.key}
-        standings={standings}
-        onStanding={onStanding}
-        onRefresh={onRefresh}
-      />
-
-      {talking ? (
-        <ObservationDialogue
-          manuscriptId={manuscriptId}
-          readingId={readingId}
-          observationKey={o.key}
-          about={o.observation}
-          /* The room already measured this when it rendered the reading, so the
-             writer is told BEFORE they speak rather than after their first turn. */
-          superseded={o.state === 'superseded'}
-          onClose={() => setTalking(false)}
-        />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setTalking(true)}
-          data-observation-talk={o.key}
-          className="mt-3 text-[12px] opacity-55 underline underline-offset-4"
-          style={{ cursor: 'pointer' }}
-        >
-          talk with MAIA about this
-        </button>
-      )}
+      </details>
     </li>
   );
 }

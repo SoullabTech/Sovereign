@@ -34,7 +34,7 @@ reference_surfaces:
   - docs/design/contracts/writer-worktable-section-native.md
   - docs/design/contracts/studio-home.md
 shared_with_house: Soullab atmosphere tokens · Press serif for the writer’s work · restrained gold as state and action · human-language gestures · the Writer’s Studio mode bar
-distinct_to_room: three permanent regions — the Work’s own shape, the authored material, and MAIA — organized around one canonical Focus. The current Elemental Alchemy slice renders book language because this Work is a book; the shell may not make book structure the ontology of every creative form. Review and local work are two grains of one relationship, never separate conversation products. The visible authored place and MAIA’s subject must be the same place.
+distinct_to_room: the continuous manuscript is primary, with its outline beside it and MAIA reading tools opened on request. Editorial conversations attach to the authored passage, organized around one canonical Focus. The current Elemental Alchemy slice renders book language because this Work is a book; the shell may not make book structure the ontology of every creative form. Review and local work are two grains of one relationship, never separate conversation products. The visible authored place and MAIA’s subject must be the same place.
 screenshot_desktop: docs/design/contracts/screenshots/writers-studio-rebuild-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/writers-studio-rebuild-mobile.png
 experience_verification: >-
@@ -128,3 +128,122 @@ Evaluate support through the writer clarifying intention, comparing alternatives
 ## Related-passage comparison repair — 2026-09-17
 
 Comparison cards keep verified excerpts together with the writer’s intention and reader experience. Full sections are explicitly expandable. Unverified references have their own evidence explanation; a current reading label alone never authorizes markers or revision. Exact stored heading prefixes are preserved for verification and removed from evidence coordinates only after verification. Desktop comparison and stacked mobile behavior are covered by the controlled Chromium/WebKit witness. See docs/programme/WS-INSIGHT-COMPARISON-REPAIR-01_2026-09-17.md; production acceptance remains pending.
+
+
+## September 19 manuscript-first release candidate
+
+The founder requested the approved full-canvas hierarchy, including quiet notes,
+contextual revisions, and optional reading tools. Write now arrives with the
+manuscript and outline; Read with MAIA opens the review tools. Section findings
+are collapsed disclosures, and an unselected section is not entirely highlighted.
+Exact proposed changes remain marked when previewed. Clean manuscript hides
+editorial controls; Pure Canvas retains distraction-free writing.
+
+Verification standing: 73 suites / 1,079 tests pass, including an unselected-section
+highlight regression. Historical desktop/mobile screenshots above establish only
+the September 16 experience, not fidelity of this new layout. The founder supplied
+September 19 screenshots of the actual Elemental Alchemy review copy; those exposed
+the chip rows and whole-section highlighting corrected here. A new rendered desktop
+and mobile acceptance pass is still outstanding. The local speech probe reached the
+configured service but returned HTTP 429 with no credits remaining. No successful
+audio playback or current authenticated apply/reopen/undo witness is claimed.
+Deployment remains pending those checks and current-head release gates.
+
+### Develop task discoverability correction
+
+The founder reported that Develop appeared to offer nothing to do. Its existing
+commissioning controls had become hidden behind the reading-tools toggle. The
+manuscript now has explicit scope and seven-lens selectors and an Explore with
+MAIA action. These call the existing reading operation, preserving readiness,
+size limits and explicit invocation. The Studio header also exposes Developmental
+tools outside the manuscript scroll, including preparation and reading history.
+This does not add passage-only or discontiguous-range commissioning; supported
+scopes remain whole work, current chapter and a contiguous custom range.
+
+
+### September 19 — observation to editing canvas
+
+Founder review found that Work on canvas only moved to a section and hid the
+reading tools, while discussion still opened in the narrow sidebar. Textual
+observations now enter the existing editing canvas with manuscript, section,
+reading and observation identity. The canvas verifies the current evidence
+before selecting its exact passage, displays the observation beneath it, and
+uses the existing discussion, preview, apply and undo machinery. Unverified
+evidence is not promoted to an exact selection. Related passages remain
+available on expansion. Structural observations without a textual target keep
+their read-only discussion. The existing authorization and adoption endpoints
+are unchanged.
+
+A one-time reveal brings the mounted conversation into view; later replies do
+not steal scroll position. This behavior has a DOM test, not a visual witness.
+Actual authenticated MAIA response, apply/reopen/undo and founder visual review
+remain release requirements. The isolated review database was missing the
+canonical ask authorization migration; it has been applied to that copy only.
+
+
+### September 19 — one manuscript editing canvas in Write and Develop
+
+Founder rejected the report/sidebar experience even after its navigation worked.
+Develop now embeds the same RebuildStudioClient editing canvas used by Write,
+without a second header, outline, or editing sidebar. Its existing scope/lens
+commissioning remains above the page. Frozen findings attach to the sections
+they name; exact highlights require current evidence, heading-prefix offset
+translation, valid code-point bounds, and unchanged displayed source. Additional
+notes collapse after the first three. Structural findings remain in reading
+details because they do not establish an exact passage.
+
+Choosing a note opens the passage conversation in place. Before there is a
+proposal, the choices are Try a revision, Edit my words, and Keep my wording.
+Try a revision is an explicit provider act, not an automatic request on entry.
+Proposals display additions/removals in their actual paragraphs; they remain
+unapplied. Read in context precedes application. Voice, teaching and history are
+available on expansion. An applied revision is not painted as a pending proposal.
+Reopening preserves its exact applied locus and application receipt for Undo.
+
+The note marker is anchored to the paragraph margin rather than the first inline
+character. Import filename lines remain in the underlying manuscript and offsets,
+but are visually distinguished as import metadata; no source cleanup is silently
+performed. Authored line breaks and Unicode remain unchanged.
+
+Validation: sharedEditingJourney mounts the actual editor and RevisionDesk with
+controlled provider/persistence responses. It exercises a Develop finding through
+request, inline diff, read-in-context, application, reopen, and Undo without a
+route change. This is component integration evidence, not live-provider, database,
+audio, screenshot, or founder visual acceptance evidence. Those remain outstanding
+before release; no production deployment is represented by this change.
+
+### Embedded canvas containment
+
+The embedded editor explicitly sizes to its parent (100%, min-width zero), not
+the viewport. This overrides the global landscape main-element rule that caused
+the manuscript to overflow beneath the reading tools in the founder screenshot.
+The workspace clips overflow and reading tools have an opaque surface. Full-screen
+canvas retains its separate fixed viewport presentation. Browser visual acceptance
+of this correction remains outstanding; component tests cannot prove layout.
+
+### Guided development entry and author dialogue
+
+Develop explains a whole-to-passage starting path and offers an explicit whole-work
+focus preset without triggering inference. Writers with fragments are directed to
+write and discuss those words. Passage conversations show a short, visible path:
+Notice, Discuss, Try, Decide. Before revision, writers can choose Help me understand,
+Explain what I meant, or Explore another approach. Help me understand explicitly
+requests a plain-language craft explanation grounded only in the supplied passage
+and observation; it asks MAIA to distinguish evidence from interpretation, preserve
+intentional choices and disagreement, avoid learner profiling or testing, and make
+no edit. These actions populate the editable composer and preserve existing text;
+Send remains explicit. Discussion asks MAIA to reconsider interpretations in light
+of author intention, distinguish possible reader effects from evidence, and allow
+keeping the original. This uses the existing editorial conversation and creates a
+future integration seam; it does not activate the non-executing Teaching Intelligence
+contracts or claim provider compliance. This increment does not claim a completed
+guided intake or durable cross-work intention model.
+
+### Revision request visibility
+
+Pending requests and failures appear at the top of the conversation. A new
+proposal reveals its marked paragraph without granting review or application
+authority; additions and removals have a visible legend. The preview clone was
+missing canonical proposal/conversation/application tables; the existing migrations
+were applied transactionally to ws_canvas_review_20260919 only. This repairs the
+observed missing-table blocker, not a claimed live-provider end-to-end witness.

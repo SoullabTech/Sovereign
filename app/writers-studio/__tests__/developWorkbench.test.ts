@@ -7,7 +7,7 @@ const page = read('develop/page.tsx');
 const room = read('develop/DevelopRoom.tsx');
 const executableRoom = room.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const manuscript = read('develop/DevelopManuscript.tsx');
-const canvas = read('canvas/CanvasClient.tsx');
+const editor = read('rebuild/RebuildStudioClient.tsx');
 
 describe('D3 · Develop is the manuscript seen developmentally', () => {
   it('consumes the place D1 carries across the mode boundary', () => {
@@ -29,42 +29,45 @@ describe('D3 · Develop is the manuscript seen developmentally', () => {
     expect(executableRoom).not.toContain('/write-state');
     expect(room).toContain("manuscriptPhase === 'error'");
   });
-  it('puts the manuscript in the centre and intelligence beside it', () => {
+  it('keeps the full manuscript primary and reading tools available on request', () => {
     expect(room).toContain('data-develop-centre="manuscript"');
     expect(room).toContain('data-develop-intelligence');
-    expect(room).toContain('<DevelopManuscriptSurface');
+    expect(room).toContain('<RebuildStudioClient development=');
+    expect(room).toContain("display: readingToolsOpen ? undefined : 'none'");
+    expect(room).toContain('aria-expanded={readingToolsOpen}');
+    expect(room).toContain('<InlineWorkspace anchor={noteAnchor}');
+    expect(room).not.toContain('<CanvasWorkspace');
+    expect(room).not.toContain('w-[390px] max-w-[42vw]');
     expect(room.indexOf('data-develop-centre="manuscript"'))
       .toBeLessThan(room.indexOf('data-develop-intelligence'));
   });
 
-  it('reuses the same whole-manuscript surface Write already uses', () => {
-    expect(manuscript).toContain('WholeManuscriptSurface');
-    expect(canvas).toContain('<WholeManuscriptSurface');
-    expect(manuscript).not.toContain('<textarea');
-  });
-
-  it('makes every Develop section read-only before it reaches the shared surface', () => {
-    expect(manuscript).toContain('editable: false');
-    expect(manuscript).toContain('edit: () => {}');
-    expect(manuscript).toContain('editSection: () => {}');
-    expect(manuscript).toContain('captureForUnmount: () => false');
+  it('uses the existing writing, preview, application and undo authorities', () => {
+    expect(room).toContain('<RebuildStudioClient development=');
+    expect(editor).toContain('<RebuildWritingBoundary');
+    expect(editor).toContain('adoptBoundEditorialVersion(');
+    expect(editor).toContain('/api/writers-studio/editorial/undo');
+    expect(executableRoom).not.toContain('adoptBoundEditorialVersion(');
   });
 
   it('allows ordinary continuous scrolling to move developmental scope', () => {
     expect(manuscript).toContain('onPlaceChange={onPlaceChange}');
-    expect(room).toContain('onPlaceChange={(sectionId) => showPlace(sectionId, false)}');
+    expect(room).toContain('onPlaceChange: sectionId => showPlace(sectionId, false)');
+    expect(editor).toContain('development.onPlaceChange(visible[0])');
     expect(room).toContain('window.history.replaceState');
     expect(room).toContain('locationForSection');
   });
 
   it('allows structure and observations to move the manuscript', () => {
-    expect(room).toContain('onSelect={(sectionId) => showPlace(sectionId, true)}');
+    expect(room).toContain('setCanvasObservation(null); showPlace(sectionId, true)');
     expect(room).toContain('data-observation-show-in-manuscript');
     expect(room).toContain("setJumpTo(sectionId)");
   });
 
   it('demotes reading administration instead of making it the primary surface', () => {
     expect(room).toContain('Readings & reading focus');
+    expect(room).toContain('Current reading');
+    expect(room).toContain('Reading details');
     expect(room).toContain('<details');
     expect(room).toContain('aria-label="Developmental reading"');
   });
@@ -78,21 +81,46 @@ describe('D3 · Develop is the manuscript seen developmentally', () => {
     expect(room).toContain('CodePointRange');
     expect(room).toContain('data-evidence-precision="passage"');
     expect(room).toContain('Show exact passage');
+    expect(room).toContain("setPresentationScope('passage')");
     expect(room).toContain("assessed?.state !== 'current'");
     expect(room).not.toContain('paragraphs 3–4');
     expect(manuscript).toContain('evidenceHighlight');
     expect(manuscript).toContain('readOnlyHighlight={evidenceHighlight}');
+    expect(editor).toContain('note.sourceBody === liveBody');
+    expect(editor).toContain('loadCanvasInsight(');
+    expect(room).toContain('exact.range.start - offset');
+    expect(manuscript).toContain('readOnlyAnnotations={evidenceAnnotations}');
+    expect(manuscript).toContain('onReadOnlyAnnotationSelect={onEvidenceAnnotationSelect}');
   });
 });
 
 
 describe('D4 · human-scale developmental scope and lens disclosure', () => {
-  it('keeps Work and Chapter live while Passage is visibly unavailable', () => {
-    expect(room).toContain('data-develop-scope-tabs');
+  it('keeps new-reading scope subordinate and never claims passage commissioning', () => {
+    expect(room).not.toContain('data-develop-scope-tabs');
+    expect(room).toContain('data-develop-reading-scope-controls');
     expect(room).toContain("setDevelopScope('work')");
     expect(room).toContain("setDevelopScope('chapter')");
-    expect(room).toContain('>Passage</button>');
-    expect(room).toContain('disabled aria-disabled="true"');
+    expect(room).toContain('Whole work');
+    expect(room).toContain('Current chapter');
+    expect(room).not.toContain('title="Exact passage focus is not available in Develop yet"');
+  });
+
+  it('presents current findings through a separate Work-to-Chapter-to-Passage hierarchy', () => {
+    expect(room).toContain('data-develop-reading-presentation');
+    expect(room).toContain('data-develop-presentation-hierarchy');
+    expect(room).toContain('data-develop-presentation-scope="work"');
+    expect(room).toContain('data-develop-presentation-scope="chapter"');
+    expect(room).toContain('data-develop-presentation-scope="passage"');
+    expect(room).toContain('data-develop-presentation-context');
+  });
+
+  it('keeps observations in frozen order while making their supporting detail collapsible', () => {
+    expect(room).toContain('view.observations.map((o) =>');
+    expect(room).toContain('data-observation-panel={o.key}');
+    expect(room).toContain('data-observation-summary={o.key}');
+    expect(room).toContain('Show details');
+    expect(room).toContain('Hide details');
   });
 
   it('resolves Chapter from the same structural context Write uses', () => {

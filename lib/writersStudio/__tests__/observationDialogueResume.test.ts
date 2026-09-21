@@ -212,7 +212,9 @@ describe('the room performs the decision rather than remembering', () => {
       join(__dirname, '..', '..', '..', 'app', 'writers-studio', 'develop', 'DevelopRoom.tsx'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     expect(ROOM).not.toContain('threadId');
-    expect(ROOM).toContain('setTalking');
+    expect(ROOM).toContain('setInsightOpen');
+    expect(ROOM).not.toContain('setTalking');
+    expect(ROOM).toContain('onClick={() => onOpenCanvas(o.key)}');
   });
 
   it('reads once when it opens: no timer, no refetch on focus or visibility', () => {
