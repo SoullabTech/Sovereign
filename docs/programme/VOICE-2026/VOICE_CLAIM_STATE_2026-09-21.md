@@ -29,13 +29,24 @@ The following product work landed after the 2026-09-15 claim-state:
 
 These merges materially advance the product layer but do **not** establish cross-platform acceptance by themselves.
 
+### Production reachability of the Sept. 18 voice repairs
+
+A later founder-run authenticated production member witness for MAIA Teaching Intelligence records production runtime `1faec40167fcbb5e4feb5bf97d2386df2192c4b4` on 2026-09-21. Git ancestry independently shows all four late product-voice repair merges below are ancestors of that runtime with zero commits behind:
+
+- `5b568304…` · Pause / crisis-speech disambiguation;
+- `83b8ab814…` · hands-free authority reconciliation;
+- `297ab2d3…` · explicit-floor liveness preservation;
+- `c6ed841f…` · bounded automatic silent-death recovery.
+
+Therefore those repairs had reached the production application lineage by the `1faec401…` witness. This establishes **production reachability**, not a complete voice acceptance walk: the teaching witness did not exercise microphone capture, floor timing, TTS handoff, re-arm, or the 10-turn product matrix.
+
 ---
 
 ## 2. Platform claim table — highest state licensed on 2026-09-21
 
 | Platform / layer | Highest state supported by this record | Evidence | Still owed |
 |---|---|---|---|
-| **Web / Safari / PWA** | **LIVE · deployment-witnessed through the 2026-09-17 Safari repair** | PR #1334 records exact-image production deployment at `8b80ec210…`; the Safari finalization and silent-response handoff repair is canonical. Later TURN-01/TURN-02 repairs are canonical ancestors of current head. | This act does not independently prove which post-#1334 SHA production serves today. A fresh runtime identity + member walk is required to claim the full Sept-18 product stack as live. |
+| **Web / Safari / PWA** | **LIVE · production lineage includes the Sept. 18 TURN-01/TURN-02 repairs** | PR #1334 records exact-image production deployment at `8b80ec210…`. A later authenticated production witness names runtime `1faec401…`, and ancestry proves `5b568304…`, `83b8ab814…`, `297ab2d3…`, and `c6ed841f…` are all ancestors. | Product acceptance is still owed: production reachability is not the P1–P10 + 10-turn microphone/TTS/re-arm witness. |
 | **Desktop / Mac app** | **CANONICAL BETA IMPLEMENTATION · device/runtime acceptance incomplete** | #1328 and #1330 are canonical: native/Desktop capture, rolling sovereign transcription, final-only transcript authority, Conversational Space, explicit floor completion. | Exact installed app identity and a real microphone conversation walk on the current build. The merge records themselves explicitly left that witness open. |
 | **iOS MAIA product app** | **SHARED PRODUCT REPAIRS PRESENT · current-device parity NOT PROVEN** | TURN-01/TURN-02 behavior lives in the shared conversation runtime and is canonical. | A post-Sept-18 native/TestFlight build identity plus an on-device acceptance walk. Do not infer this from shared-code ancestry alone. |
 | **iPhone native VoiceKernel** | **QUALIFICATION PROGRAMME ACTIVE · KERNEL-00 NOT ACCEPTED** | Record-of-record through `4e2600a406…`: ENTRY-05 green; SOURCE-03 completed; C0 evidence exists; C1 implementation/pins exist; C2 and C3-C5 designs exist. | Source level calibration / fresh attributable source population; C1 device population; C2 core-fault witnesses; C3 route matrix; C4 interruption/reset/lifecycle; C5 endurance; 18-row all-PASS packet; founder KERNEL-00 ruling. |
@@ -79,6 +90,6 @@ The next lawful source act is therefore **SOURCE LEVEL-CALIBRATION-01**, records
 
 ## 5. Sentence of record
 
-> **MAIA’s product voice has moved materially beyond the 2026-09-15 state: Safari/PWA has a deployment-witnessed repair, Desktop live transcription and member-owned turn-taking are canonical, and the latest hands-free/floor/liveness repairs are canonical. Cross-platform product acceptance is still incomplete. Separately, the native iPhone VoiceKernel remains under KERNEL-00 and is not accepted or bridged into production.**
+> **MAIA’s product voice has moved materially beyond the 2026-09-15 state: Safari/PWA has a deployment-witnessed repair; the Sept. 18 Pause, hands-free, explicit-floor-liveness and bounded silent-death-recovery repairs are all in the production lineage witnessed at runtime `1faec401…`; and Desktop live transcription/member-owned turn-taking are canonical. Cross-platform product acceptance is still incomplete. Separately, the native iPhone VoiceKernel remains under KERNEL-00 and is not accepted or bridged into production.**
 
 This is a records statement, not a deployment or acceptance act.
