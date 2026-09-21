@@ -1,7 +1,7 @@
 # SERVING-IDENTITY / F1 — DISCLOSURE FACT-PRODUCTION CONTRACT
 
-**Status:** DESIGN + EXECUTABLE FALSIFICATION ONLY · NO RUNTIME PRODUCER · NO D1/D2 WIRING  
-**Source canonical:** `bcd4debfed1285d2ff14829db7f117ffaff05f11`  
+**Status:** DESIGN + EXECUTABLE FALSIFICATION ONLY · NO RUNTIME PRODUCER · NO D1/D2 WIRING
+**Source canonical:** `bcd4debfed1285d2ff14829db7f117ffaff05f11`
 **Predecessor:** `SERVING-IDENTITY / R2P1` real-provider serving-truth witness
 
 ## 1. Question
