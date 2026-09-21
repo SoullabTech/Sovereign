@@ -57,6 +57,12 @@ _packet_file() { echo "$PACKETS_DIR/$1.json"; }
 _result_file() { echo "$RESULTS_DIR/$1.json"; }
 _log_file()    { echo "$LOGS_DIR/$1.log"; }
 
+_rotate_run_log() {
+    local file="$1"
+    [ -e "$file" ] || return 0
+    mv "$file" "${file}.previous.$(date +%s).$$"
+}
+
 # Fingerprint the exact candidate bytes relative to HEAD, including untracked
 # files created by a new-file patch. Verification commands are allowed to inspect
 # and execute checks; they are not allowed to silently rewrite the admitted patch.
@@ -394,6 +400,13 @@ _run_lane() {
     fi
 
     log="$(_log_file "$work_unit_id")"
+    # Fixed log names are the current-run surface. Preserve prior attempts by
+    # rotating them before any new worker or verifier writes, so a fresh run never
+    # inherits stale failures while historical evidence remains available.
+    local prior_log
+    for prior_log in "$log" "$log.verify" "$log.repair1" "$log.verify.repair1"; do
+        _rotate_run_log "$prior_log"
+    done
     starting_sha="$(git -C "$wt" rev-parse --short HEAD)"
     if [ "$lane" = "local-native" ]; then
         prompt="$(node "$NATIVE_PROMPT_SCRIPT" build "$f" --repo "$wt")" || exit $?
@@ -580,7 +593,7 @@ _run_lane() {
     # transform the candidate that patch admission actually admitted. Recompute
     # the exact candidate fingerprint and HEAD after verification; any drift is
     # a failed verification and is rolled back below.
-    if [ "$lane" = "local-native" ]         && [ "$exit_code" -eq 0 ]         && [ -z "$gate_json" ]         && [ -n "$native_admitted_fingerprint" ]         && { [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; }; then
+    if [ "$lane" = "local-native" ]         && [ "$exit_code" -eq 0 ]         && [ -z "$gate_json" ]         && [ -n "$native_admitted_fingerprint" ]; then
         local native_verified_fingerprint native_verified_head
         set +e
         native_verified_fingerprint="$(_native_worktree_fingerprint "$wt")"
@@ -592,6 +605,125 @@ _run_lane() {
             test_results="fail"
             exit_code=12
             verification_evidence="${verification_evidence}FAIL: VERIFICATION_MUTATED_WORKTREE\n"
+        fi
+    fi
+
+    # One bounded native repair attempt. This is available ONLY after a candidate
+    # was admitted successfully and ordinary verification failed without verifier
+    # mutation. Authority, selectors, allowed_files and canonical SHA do not change.
+    # The replacement sees the same materialized context plus bounded verifier output.
+    local attempts=1 repair_attempted=false repair_log=""
+    if [ "$lane" = "local-native" ] \
+        && [ "$test_results" = "fail" ] \
+        && [ "$exit_code" -eq 0 ] \
+        && [ -z "$gate_json" ] \
+        && [ "$(printf '%s' "$patch_admission_json" | jq -r '.ok // false' 2>/dev/null)" = "true" ]; then
+        repair_attempted=true
+        attempts=2
+        repair_log="${log}.repair1"
+        local repair_verify_log="${log}.verify.repair1"
+        local repair_prompt_file repair_worker_code repair_code
+
+        # A repair never edits on top of the rejected candidate. Return exactly to
+        # the packet's starting SHA first; if that rollback is incomplete, STOP.
+        if git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 \
+            && git -C "$wt" clean -fd >> "$log.verify" 2>&1; then
+            ending_sha=""
+            files_changed_json='[]'
+            native_admitted_fingerprint=''
+
+            repair_prompt_file="$(mktemp -t jarvis-native-repair)"
+            {
+                printf '%s\n\n' "$prompt"
+                printf '%s\n' 'REPAIR TURN — ONE BOUNDED RETRY.'
+                printf '%s\n' 'No authority, scope, files, selectors, or canonical SHA changed. You still have no tools.'
+                printf '%s\n' 'Your previous candidate was admitted but independent verification rejected it.'
+                printf '%s\n' 'Return a COMPLETE REPLACEMENT candidate using the SAME output contract.'
+                printf '%s\n' 'After EDIT_JSON: emit exactly ONE JSON ARRAY containing ALL required edit objects.'
+                printf '%s\n' 'Do not explain the failure. Do not emit a partial repair.'
+                printf '%s\n' 'Ensure every identifier introduced by the replacement is in scope, including required imports.'
+                printf '\nPREVIOUS CANDIDATE:\n'
+                cat "$log"
+                printf '\nINDEPENDENT VERIFICATION FAILURE (bounded tail):\n'
+                tail -c 6000 "$log.verify" 2>/dev/null || true
+            } > "$repair_prompt_file"
+
+            set +e
+            ( cd "$wt" && env \
+                JARVIS_OLLAMA_HOST="http://127.0.0.1:11434" \
+                JARVIS_NUM_CTX="${JARVIS_NUM_CTX:-32768}" \
+                JARVIS_LOCAL_TIMEOUT_MS="${JARVIS_LOCAL_TIMEOUT_MS:-120000}" \
+                node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$repair_prompt_file" --model "$model" ) > "$repair_log" 2>&1
+            repair_worker_code=$?
+            set -e
+            rm -f "$repair_prompt_file"
+
+            if [ "$repair_worker_code" -ne 0 ]; then
+                exit_code="$repair_worker_code"
+                test_results="fail"
+                verification_evidence="${verification_evidence}FAIL: NATIVE_REPAIR_WORKER\n"
+            else
+                set +e
+                if grep -q '^EDIT_JSON: ' "$repair_log" 2>/dev/null; then
+                    patch_admission_json="$(node "$EDIT_ADMISSION_SCRIPT" apply "$f" "$wt" "$repair_log")"
+                else
+                    patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" apply "$f" "$wt" "$repair_log")"
+                fi
+                repair_code=$?
+                set -e
+
+                if [ "$repair_code" -ne 0 ]; then
+                    exit_code="$repair_code"
+                    test_results="fail"
+                    verification_evidence="${verification_evidence}FAIL: NATIVE_REPAIR_ADMISSION\n"
+                else
+                    set +e
+                    native_admitted_fingerprint="$(_native_worktree_fingerprint "$wt")"
+                    local repair_fingerprint_code=$?
+                    set -e
+                    if [ "$repair_fingerprint_code" -ne 0 ] || [ -z "$native_admitted_fingerprint" ]; then
+                        exit_code=11
+                        test_results="fail"
+                        verification_evidence="${verification_evidence}FAIL: NATIVE_REPAIR_FINGERPRINT\n"
+                    else
+                        files_changed_json="$(git -C "$wt" diff --name-only "$starting_sha" 2>/dev/null | jq -R . | jq -s . 2>/dev/null || echo '[]')"
+                        test_results="not_run"
+                        local repair_all_pass=true
+                        : > "$repair_verify_log"
+                        while IFS= read -r vcmd; do
+                            [ -z "$vcmd" ] && continue
+                            if ( cd "$wt" && eval "$vcmd" ) >> "$repair_verify_log" 2>&1; then
+                                verification_evidence="${verification_evidence}REPAIR PASS: $vcmd\n"
+                            else
+                                verification_evidence="${verification_evidence}REPAIR FAIL: $vcmd\n"
+                                repair_all_pass=false
+                            fi
+                        done < <(jq -r '.verification_commands[]' "$f")
+                        if $repair_all_pass; then test_results="pass"; else test_results="fail"; fi
+
+                        # The repair verifier is held to the same byte-custody law.
+                        local repair_verified_fingerprint repair_verified_head
+                        set +e
+                        repair_verified_fingerprint="$(_native_worktree_fingerprint "$wt")"
+                        local repair_verified_fingerprint_code=$?
+                        repair_verified_head="$(git -C "$wt" rev-parse --short HEAD 2>/dev/null)"
+                        local repair_verified_head_code=$?
+                        set -e
+                        if [ "$repair_verified_fingerprint_code" -ne 0 ] \
+                            || [ "$repair_verified_head_code" -ne 0 ] \
+                            || [ "$repair_verified_fingerprint" != "$native_admitted_fingerprint" ] \
+                            || [ "$repair_verified_head" != "$starting_sha" ]; then
+                            test_results="fail"
+                            exit_code=12
+                            verification_evidence="${verification_evidence}FAIL: REPAIR_VERIFICATION_MUTATED_WORKTREE\n"
+                        fi
+                    fi
+                fi
+            fi
+        else
+            exit_code=11
+            test_results="fail"
+            verification_evidence="${verification_evidence}FAIL: NATIVE_REPAIR_PREP_ROLLBACK_INCOMPLETE\n"
         fi
     fi
 
@@ -649,6 +781,9 @@ _run_lane() {
         fi
     fi
 
+    # Include any bounded repair turn in observed duration.
+    t1="$(date +%s)"
+
     local recommended="review-diff"
     if [ -n "$gate_json" ]; then
         recommended="governance-gate"
@@ -679,6 +814,9 @@ _run_lane() {
         --arg gate_json "$gate_json" \
         --arg patch_admission_json "$patch_admission_json" \
         --arg log_path "$log" \
+        --arg repair_log_path "$repair_log" \
+        --argjson repair_attempted "$repair_attempted" \
+        --argjson attempts "$attempts" \
         --argjson duration_s "$((t1 - t0))" \
         --argjson exit_code "$exit_code" \
         '{
@@ -702,7 +840,9 @@ _run_lane() {
             recommended_next_action: $recommended,
             log_path: $log_path,
             duration_s: $duration_s,
-            attempts: 1
+            attempts: $attempts,
+            repair_attempted: $repair_attempted,
+            repair_log_path: (if $repair_log_path == "" then null else $repair_log_path end)
         }
         + (if $gate_json == "" then {} else {governance_gate: ($gate_json | fromjson)} end)
         + (if $patch_admission_json == "" then {} else {patch_admission: ($patch_admission_json | fromjson)} end)

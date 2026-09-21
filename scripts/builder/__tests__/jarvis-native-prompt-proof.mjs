@@ -66,6 +66,10 @@ try {
   assert.match(prompt, /EDIT_JSON:/);
   assert.match(prompt, /FIRST BYTES are exactly `EDIT_JSON: `/);
   assert.match(prompt, /old_text must be copied EXACTLY/);
+  assert.match(prompt, /edit ARRAY ITSELF/);
+  assert.match(prompt, /do not emit an edits key/);
+  assert.match(prompt, /TWO-EDIT SYNTAX EXAMPLE ONLY/);
+  assert.match(prompt, /comma-separated INSIDE that single array/);
   assert.match(prompt, /smallest exact replacement/);
   assert.match(prompt, /JARVIS, not you, renders the git patch/);
   assert.match(prompt, /Do NOT echo `A\)`/);

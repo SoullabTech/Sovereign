@@ -70,6 +70,30 @@ try {
     assert.match(delegate, /exit_code=12/);
   });
 
+  await check("native repair is exactly one bounded post-verification retry", async () => {
+    assert.match(delegate, /REPAIR TURN — ONE BOUNDED RETRY/);
+    assert.match(delegate, /repair_attempted=true/);
+    assert.match(delegate, /attempts=2/);
+    assert.match(delegate, /\.ok \/\/ false/);
+    const retryStart = delegate.indexOf("REPAIR TURN — ONE BOUNDED RETRY");
+    const rollbackBefore = delegate.lastIndexOf('reset --hard "$starting_sha"', retryStart);
+    assert.ok(rollbackBefore >= 0 && rollbackBefore < retryStart);
+    assert.equal((delegate.match(/REPAIR TURN — ONE BOUNDED RETRY/g) || []).length, 1);
+    assert.doesNotMatch(delegate.slice(retryStart), /while .*REPAIR TURN/);
+  });
+
+  await check("repair verification holds the same candidate-byte custody law", async () => {
+    assert.match(delegate, /REPAIR_VERIFICATION_MUTATED_WORKTREE/);
+    assert.match(delegate, /repair_verified_fingerprint/);
+    assert.match(delegate, /repair_verified_head/);
+  });
+
+  await check("each native run rotates prior fixed-path logs instead of mixing evidence", async () => {
+    assert.match(delegate, /_rotate_run_log/);
+    assert.match(delegate, /log\.verify\.repair1/);
+    assert.match(delegate, /previous\.\$\(date \+%s\)\.\$\$/);
+  });
+
   console.log("\n" + passed + " passed · 0 failed");
 } finally {
   globalThis.fetch = originalFetch;

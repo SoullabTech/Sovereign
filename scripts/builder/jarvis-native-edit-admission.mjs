@@ -60,6 +60,97 @@ function exactKeys(value, allowed) {
   return keys.length === allowed.length && keys.every((key, i) => key === [...allowed].sort()[i]);
 }
 
+/**
+ * JSON.parse() silently keeps only the last occurrence of a duplicate object key.
+ * For a mutation contract that is unsafe: two `edits` arrays can collapse into one
+ * and erase part of the worker's proposed change before admission sees it. Scan the
+ * JSON grammar first and fail closed on duplicate keys at ANY object depth.
+ * Malformed JSON is left to JSON.parse() so it still receives EDIT_JSON_INVALID.
+ */
+function duplicateJsonKey(jsonText) {
+  let i = 0;
+  const fail = () => { throw new Error("JSON_SCAN_INVALID"); };
+  const skip = () => { while (i < jsonText.length && /\s/.test(jsonText[i])) i += 1; };
+
+  function stringValue() {
+    if (jsonText[i] !== '"') fail();
+    const start = i;
+    i += 1;
+    while (i < jsonText.length) {
+      if (jsonText[i] === "\\") { i += 2; continue; }
+      if (jsonText[i] === '"') {
+        i += 1;
+        return JSON.parse(jsonText.slice(start, i));
+      }
+      i += 1;
+    }
+    fail();
+  }
+
+  function primitive() {
+    const start = i;
+    while (i < jsonText.length && !/[\s,\]}]/.test(jsonText[i])) i += 1;
+    if (i === start) fail();
+    return null;
+  }
+
+  function arrayValue() {
+    i += 1;
+    skip();
+    if (jsonText[i] === "]") { i += 1; return null; }
+    while (i < jsonText.length) {
+      const duplicate = value();
+      if (duplicate) return duplicate;
+      skip();
+      if (jsonText[i] === ",") { i += 1; skip(); continue; }
+      if (jsonText[i] === "]") { i += 1; return null; }
+      fail();
+    }
+    fail();
+  }
+
+  function objectValue() {
+    i += 1;
+    const seen = new Set();
+    skip();
+    if (jsonText[i] === "}") { i += 1; return null; }
+    while (i < jsonText.length) {
+      const key = stringValue();
+      if (seen.has(key)) return { key };
+      seen.add(key);
+      skip();
+      if (jsonText[i] !== ":") fail();
+      i += 1;
+      skip();
+      const duplicate = value();
+      if (duplicate) return duplicate;
+      skip();
+      if (jsonText[i] === ",") { i += 1; skip(); continue; }
+      if (jsonText[i] === "}") { i += 1; return null; }
+      fail();
+    }
+    fail();
+  }
+
+  function value() {
+    skip();
+    if (jsonText[i] === "{") return objectValue();
+    if (jsonText[i] === "[") return arrayValue();
+    if (jsonText[i] === '"') { stringValue(); return null; }
+    return primitive();
+  }
+
+  try {
+    const duplicate = value();
+    if (duplicate) return duplicate;
+    skip();
+    if (i !== jsonText.length) fail();
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function parseNativeEditOutput(outputText, allowedFiles = []) {
   let raw = String(outputText ?? "").replace(/\r\n/g, "\n");
   if (raw.endsWith("\n")) raw = raw.slice(0, -1);
@@ -67,19 +158,21 @@ export function parseNativeEditOutput(outputText, allowedFiles = []) {
   if (raw.includes("\n")) return refusal("EDIT_JSON_MUST_BE_SINGLE_LINE");
   if (Buffer.byteLength(raw, "utf8") > MAX_OUTPUT_BYTES) return refusal("EDIT_JSON_TOO_LARGE");
 
+  const jsonText = raw.slice("EDIT_JSON: ".length);
+  const duplicate = duplicateJsonKey(jsonText);
+  if (duplicate) return refusal("EDIT_JSON_DUPLICATE_KEY", duplicate);
+
   let body;
-  try { body = JSON.parse(raw.slice("EDIT_JSON: ".length)); }
+  try { body = JSON.parse(jsonText); }
   catch { return refusal("EDIT_JSON_INVALID"); }
-  if (!body || typeof body !== "object" || Array.isArray(body) || !exactKeys(body, ["edits"])) {
-    return refusal("EDIT_JSON_TOP_LEVEL_CLOSED");
-  }
-  if (!Array.isArray(body.edits) || body.edits.length < 1 || body.edits.length > MAX_EDITS) {
+  if (!Array.isArray(body)) return refusal("EDIT_JSON_ARRAY_REQUIRED");
+  if (body.length < 1 || body.length > MAX_EDITS) {
     return refusal("EDIT_COUNT_INVALID", { max_edits: MAX_EDITS });
   }
 
   const edits = [];
-  for (let index = 0; index < body.edits.length; index += 1) {
-    const edit = body.edits[index];
+  for (let index = 0; index < body.length; index += 1) {
+    const edit = body[index];
     if (!edit || typeof edit !== "object" || Array.isArray(edit)
       || !exactKeys(edit, ["new_text", "old_text", "path"])) {
       return refusal("EDIT_OBJECT_CLOSED", { index });

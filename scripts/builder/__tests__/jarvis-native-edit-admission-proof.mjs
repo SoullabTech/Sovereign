@@ -27,11 +27,13 @@ try {
     prohibited_files_actions: [], acceptance_criteria: [], escalation_conditions: [], expected_output: "x",
     context_selectors: ["src/a.txt"], verification_commands: [],
   };
-  const out = (edits) => "EDIT_JSON: " + JSON.stringify({ edits });
+  const out = (edits) => "EDIT_JSON: " + JSON.stringify(edits);
 
   console.log("\n=== NEA1 closed serialization ===");
   must(parseNativeEditOutput("prose\n" + out([]), packet.allowed_files).code === "EDIT_JSON_REQUIRED", "prose prefix is refused");
   must(parseNativeEditOutput(out([{ path:"src/a.txt", old_text:"beta", new_text:"gamma", extra:true }]), packet.allowed_files).code === "EDIT_OBJECT_CLOSED", "unknown edit keys are refused");
+  must(parseNativeEditOutput('EDIT_JSON: {"edits":[]}', packet.allowed_files).code === "EDIT_JSON_ARRAY_REQUIRED", "object wrapper is refused; top level must be the edit array itself");
+  must(parseNativeEditOutput('EDIT_JSON: {"edits":[{"path":"src/a.txt","path":"src/b.txt","old_text":"beta","new_text":"gamma"}]}', packet.allowed_files).code === "EDIT_JSON_DUPLICATE_KEY", "duplicate nested edit keys are refused");
 
   console.log("\n=== NEA2 authorization and ambiguity ===");
   let r = applyNativeEdits({ packet, worktree: wt, outputText: out([{ path:"src/b.txt", old_text:"x", new_text:"y" }]) });
