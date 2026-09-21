@@ -307,23 +307,30 @@ const cases: Array<{ name: string; run: () => void | Promise<void> }> = [
   },
 ];
 
-let failures = 0;
-console.log('JARVIS-KP-01 / I4 — EPISTEMIC JOIN INTEGRATION SHADOW MATRIX\n');
+async function main(): Promise<void> {
+  let failures = 0;
+  console.log('JARVIS-KP-01 / I4 — EPISTEMIC JOIN INTEGRATION SHADOW MATRIX\n');
 
-for (const testCase of cases) {
-  try {
-    await testCase.run();
-    console.log(`PASS  ${testCase.name}`);
-  } catch (error) {
-    failures += 1;
-    const detail = error instanceof Error ? error.message : String(error);
-    console.error(`FAIL  ${testCase.name}\n      ${detail}`);
+  for (const testCase of cases) {
+    try {
+      await testCase.run();
+      console.log(`PASS  ${testCase.name}`);
+    } catch (error) {
+      failures += 1;
+      const detail = error instanceof Error ? error.message : String(error);
+      console.error(`FAIL  ${testCase.name}\n      ${detail}`);
+    }
   }
+
+  console.log(`\nRESULT: ${cases.length - failures}/${cases.length} PASS`);
+  console.log('SHADOW AUTHORITY: OBSERVATION ONLY');
+  console.log('I3 PERSISTENCE: NOT ACTIVATED');
+  console.log('DOWNSTREAM REPRESENTATION: CLOSED');
+
+  process.exit(failures === 0 ? 0 : 1);
 }
 
-console.log(`\nRESULT: ${cases.length - failures}/${cases.length} PASS`);
-console.log('SHADOW AUTHORITY: OBSERVATION ONLY');
-console.log('I3 PERSISTENCE: NOT ACTIVATED');
-console.log('DOWNSTREAM REPRESENTATION: CLOSED');
-
-process.exit(failures === 0 ? 0 : 1);
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
