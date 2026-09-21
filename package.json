@@ -176,6 +176,8 @@
     "typecheck:s3-constitutional": "tsc -p tsconfig.s3-constitutional.json",
     "typecheck:epistemic-join": "tsc -p tsconfig.epistemic-join.json",
     "test:epistemic-join": "jest lib/ain/epistemic-join",
+    "matrix:epistemic-join-i3": "tsx tests/constitutional/epistemic-join/i3-persistence-matrix.ts",
+    "witness:epistemic-join-i3-db": "bash scripts/witness/epistemic-join-i3-db-witness.sh",
     "matrix:s3-constitutional": "tsx tests/constitutional/s3/matrix.ts",
     "typecheck:s3-substrate": "node scripts/typecheck-s3-substrate.mjs",
     "guards:s3-substrate": "tsx tests/constitutional/s3-substrate/guards.ts",
