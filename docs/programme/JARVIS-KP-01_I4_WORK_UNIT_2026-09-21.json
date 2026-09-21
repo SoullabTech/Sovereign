@@ -79,7 +79,8 @@
     "i4_database_witness": "PASS",
     "legacy_shadow_writer_and_types": "BYTE_IDENTICAL",
     "diff_check": "PASS",
-    "repository_typecheck_local": "NOT_ADJUDICABLE_FROM_SPARSE_WORKTREE",
+    "repository_typecheck_local": "229 vs baseline 239; 0 regressions; EXIT 0",
+    "full_blank_database_bootstrap": "PASS",
     "repository_typecheck_required_hosted": true,
     "data_class": "SYNTHETIC / LOCAL ONLY"
   },
