@@ -80,6 +80,37 @@ check("unauthorized patch is refused before any git invocation and durably recor
   rmSync(tmp, { recursive: true, force: true });
 });
 
+console.log("\n=== NPA1B: overbroad authority is refused before git ===");
+check("external-network authority is refused before any git invocation", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-authority-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  writeFileSync(path.join(repo, "allowed.txt"), "before\n");
+
+  const broad = packet(["allowed.txt"]);
+  broad.authorized_acts = [...broad.authorized_acts, "network.external"];
+  broad.not_authorized_acts = broad.not_authorized_acts.filter((act) => act !== "network.external");
+
+  let gitCalls = 0;
+  const result = applyNativePatch({
+    packet: broad,
+    patchText: patchFor("allowed.txt", "before", "after"),
+    worktree: repo,
+    home,
+    runGit: () => {
+      gitCalls += 1;
+      throw new Error("git must not be called");
+    },
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "PATCH_AUTHORITY_TOO_BROAD");
+  assert.equal(gitCalls, 0);
+  assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "before\n");
+  rmSync(tmp, { recursive: true, force: true });
+});
+
 console.log("\n=== NPA2: structural refusals ===");
 check("prose before a patch is refused", () => {
   const r = inspectPatch("Here is the patch:\n" + patchFor("allowed.txt", "before", "after"), ["allowed.txt"]);
