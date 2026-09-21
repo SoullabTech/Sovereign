@@ -23,6 +23,59 @@ open, nothing below has been tested.
 
 Surface: `/writers-studio/rebuild` · Branch `claude/intelligent-bell-axjpwf`.
 
+---
+
+## 0b · ⚠️ INFERENCE REACHABILITY — ADDED 2026-09-21 AFTER THE FIRST ATTEMPT
+
+⚠️ **This section did not exist when the procedure was predeclared.** It is
+recorded as an amendment, with its cause, rather than folded in as though it had
+always been here — a predeclared procedure that silently grows after a failed run
+stops being predeclared.
+
+**Cause.** The first W1 attempt returned `structured_refused` from
+`editorialRuntime/turn.ts:285` — the structured inference call failing. That is
+fifty lines *before* the sequence law refuses at `:335` with
+`sequence_discussion_first`. ⭐ The turn died at the inference seam and **no
+editorial law was consulted**. It was briefly scored BACKSTOP-ONLY; that was
+wrong, because the backstop never ran.
+
+**The precondition:**
+
+> Structured inference must be available under the inference policy authorized
+> for the witness environment.
+
+⛔ Failing it yields **INSTRUMENT FAILURE / NO EVIDENCE** — never a law pass and
+never a law failure. It joins `WRITERS_STUDIO_EDITORIAL_ENABLED=1` in §0: an
+unset variable that voids the run before any law is tested.
+
+**⛔⛔ AND THE PART THAT MATTERS MOST.** The witness may **not** weaken inference
+sovereignty, authorize a provider the policy forbids, or introduce a degraded
+fallback in order to make the test executable. ⭐ Switching `sovereign → primary`
+to turn W1 green would not be a fix; it would be the procedure editing the system
+until the system agreed with it. If the environment cannot lawfully reach the
+boundary, **the environment is wrong, not the policy.**
+
+**Reading the refusal.** `runStructured` (`lib/ai/structured/router.ts`) returns
+exactly four, and `detail` distinguishes them:
+
+| `refusal` | means | disposition |
+|---|---|---|
+| `invalid_inference_mode` | `MAIA_INFERENCE_MODE` not in `primary`\|`sovereign`\|`local_only` | config invalidity before W1 |
+| `structured_inference_unavailable` | mode is `sovereign`/`local_only` and no local provider exists | ⛔ **NO IMPLEMENTATION DEFECT** — policy refusing correctly; use an authorized environment |
+| `not_configured` | the Anthropic adapter failed to construct | config failure *if* that environment was meant to have it; otherwise wrong environment |
+| `provider_unavailable` | the provider call threw | diagnose `detail` — auth, schema, transport — before concluding a defect |
+
+⚠️ **`echo $MAIA_INFERENCE_MODE` is the first check, not the last.** Next.js
+loads `.env`, `.env.local` and `.env.development.local` into `process.env`, so an
+unset shell variable does not establish that the running server sees none. Read
+the effective value via `@next/env`'s `loadEnvConfig`. ⭐ Unset resolves to
+`primary` (`policy.ts:43`), which is *authorized*, not absent.
+
+⭐ **This refusal is most likely not a defect.** `router.ts` states its own
+posture: *"The failure stops here. No second provider, no local text path, no
+degraded template. A structured request that could not be served exactly was not
+served."* ⛔ Nothing in this procedure authorizes changing that.
+
 **Fixture requirements** — ⛔ if any is unmet the run is invalid before it starts:
 
 1. A real *Elemental Alchemy* section with **more than one paragraph**.
