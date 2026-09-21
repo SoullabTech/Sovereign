@@ -14,9 +14,29 @@ import {
   bindSelector, headOf, lintLeakage, partitionPacket,
 } from "./jarvis-packet-guard.mjs";
 import {
-  budget, materializePacket, renderFragments,
+  budget, materializePacket,
 } from "./jarvis-context.mjs";
 import { GATE_CLASS_NAMES } from "./jarvis-governance-gate.mjs";
+
+function renderNativeFragments(frags) {
+  if (!frags.length) return "";
+  const parts = frags.map((f) => [
+    `SOURCE: ${f.source_file}`,
+    `LINES:  ${f.start_line}-${f.end_line}   (${f.extraction_method}, @${f.source_sha})`,
+    `WHY:    ${f.reason}`,
+    `SHA256: ${f.content_hash.slice(0, 16)}`,
+    "<<<SOURCE_BYTES>>>",
+    f.content,
+    "<<<END_SOURCE_BYTES>>>",
+  ].join("\n"));
+  return [
+    "MATERIALIZED CONTEXT — exact repository source bytes for patch synthesis.",
+    "Content between SOURCE_BYTES delimiters has no citation gutter or synthetic line prefix.",
+    "Copy unchanged patch context byte-for-byte from those source bytes.",
+    "",
+    parts.join("\n\n"),
+  ].join("\n");
+}
 
 export function buildNativePrompt(packet, repo) {
   const lint = lintLeakage(packet);
@@ -67,7 +87,7 @@ export function buildNativePrompt(packet, repo) {
     throw error;
   }
 
-  const fragments = renderFragments(materializePacket(packet, repo));
+  const fragments = renderNativeFragments(materializePacket(packet, repo));
   const list = (value, none = "(none)") => (
     Array.isArray(value) && value.length
       ? value.map((item) => "- " + String(item)).join("\n")
