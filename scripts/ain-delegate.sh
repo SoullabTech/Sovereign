@@ -521,6 +521,22 @@ _run_lane() {
         if $all_pass; then test_results="pass"; else test_results="fail"; fi
     fi
 
+    # A native candidate that fails independent verification never remains in the
+    # worktree. Patch admission begins from a clean claimed worktree, so restoring
+    # the captured starting SHA and removing newly-created untracked files returns
+    # exactly to the pre-model state. The failed candidate remains evidenced by its
+    # patch-admission ledger digest; only its filesystem effects are rolled back.
+    if [ "$lane" = "local-native" ] && [ "$test_results" = "fail" ]; then
+        if git -C "$wt" reset --hard "$starting_sha" >> "$log.verify" 2>&1 \
+            && git -C "$wt" clean -fd >> "$log.verify" 2>&1; then
+            ending_sha=""
+            files_changed_json='[]'
+        else
+            echo "🛑 [ain-delegate] native verification failed and rollback did not complete cleanly." >&2
+            [ "$exit_code" -ne 0 ] || exit_code=11
+        fi
+    fi
+
     # A verified native patch is committed by JARVIS, never by the model.
     if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ] && { [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; }; then
         local native_changed_count
@@ -529,8 +545,21 @@ _run_lane() {
             while IFS= read -r native_changed; do
                 [ -n "$native_changed" ] && git -C "$wt" add -- "$native_changed"
             done < <(printf '%s' "$patch_admission_json" | jq -r '.changed_paths[]?')
-            git -C "$wt" -c user.name="JARVIS" -c user.email="jarvis@local.invalid" commit -m "chore(jarvis): $work_unit_id" >> "$log.verify" 2>&1
-            ending_sha="$(git -C "$wt" rev-parse --short HEAD)"
+            # This is an isolated candidate commit, not canonical integration.
+            # JARVIS has already run the Work Unit verification commands above; local
+            # pre-commit hooks may require checkout-local node_modules that delegated
+            # worktrees intentionally do not carry. Integration gates still run later.
+            if git -C "$wt" \
+                -c user.name="JARVIS" \
+                -c user.email="jarvis@local.invalid" \
+                -c core.hooksPath=/dev/null \
+                commit -m "chore(jarvis): $work_unit_id" >> "$log.verify" 2>&1; then
+                ending_sha="$(git -C "$wt" rev-parse --short HEAD)"
+            else
+                exit_code=11
+                test_results="fail"
+                verification_evidence="${verification_evidence}FAIL: JARVIS candidate commit\n"
+            fi
         fi
     fi
 
