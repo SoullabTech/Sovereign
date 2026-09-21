@@ -570,3 +570,172 @@ the idea path · the re-edition path. In that order, each as its own lane.
 
 > The four entrances are the right ten-year architecture. The spine is the right next month. ⛔ The
 > failure mode is building the entrances before the corridor they all open onto exists.
+
+---
+
+# Addendum 4 — the elemental opening, and why it unlocks a blocked law
+
+A fifth pass proposes the elemental opening as **interpretive compass**, and recasts findings as
+relational dialogue. This pass **converges** rather than expanding, and one part of it resolves a
+constitutional blocker this review raised in Finding 1.
+
+## ⭐⭐ The opening makes `author-intent` lawful
+
+Finding 1 recorded that `author-intent` is a permanent non-conclusion: MAIA may never say what the
+author was trying to do. That looked like a hard ceiling on the editorial letter.
+
+**The elemental opening removes it — not by weakening the law, but by changing who speaks.**
+
+> *"Earlier you said you wanted this book to help readers feel less alienated from their own inner
+> life. This section is intellectually strong, but it moves away from that original relational
+> quality."*
+
+⭐ MAIA is not inferring intent here. She is **holding the writer's own declared intention and
+reflecting the work against it.** `author-intent` bars MAIA from *inferring*; it says nothing about
+her *remembering what she was told*. That is precisely the FR-06 move — explicit member declaration
+is lawful where system inference is barred — applied to purpose instead of interest.
+
+This is the strongest structural idea in the five passes. It converts the most valuable sentence in
+editorial work from forbidden to licensed, **and the license is the writer's own voice.**
+
+## ⚠️ And it carries the sharpest danger in the five passes
+
+The moment a stated intention becomes *"criteria MAIA can return to throughout the process,"* MAIA
+holds the writer's past self against their present self.
+
+⛔ Books change what they are about. That is usually the book getting better. A compass that cannot
+be re-set is not a compass — it is a leash, and it would be a leash made of the writer's own
+earliest and least-informed sentence about their work.
+
+⭐ **This codebase has already ruled on exactly this class**
+(`docs/architecture/MAIA_TEMPORAL_RELATIONAL_MEMORY_GESTALT_LAW_2026-09-16.md`):
+
+> *"Memory may deepen MAIA's orientation to the present. It may never become the fixed lens through
+> which she sees the present."*
+> *"For substantially similar stored history, materially different present-member evidence must be
+> capable of producing materially different encounter configurations."*
+
+Applied here, three binding consequences:
+
+1. **The intention is revisable at any time, by the writer, without ceremony.**
+2. **Divergence must be able to point both ways.** ⛔ Not *"this section fails your stated purpose."*
+   ⭐ *"This has moved away from what you told me at the start — is the book changing, or is this
+   section?"* The second is an observation. The first is a verdict, and it is the leash.
+3. **Orientation, never criteria.** The stated purpose may inform what MAIA attends to. It may not
+   become a standard the work is scored against — the same line `voice` already holds when it says
+   the manuscript is the reference, never an external standard. A frozen past intention is an
+   external standard wearing the writer's handwriting.
+
+## ⚠️ Store the writer's words, not the elemental classification
+
+The pass is explicit that the opening must not feel like a questionnaire or a taxonomy exercise.
+Agreed — and there is a structural way to guarantee it rather than rely on tone.
+
+**FR-06, in operative form:** only explicit selection drives matching; free text is *"expressive
+only, never inferred into taxonomy."*
+
+So if MAIA asks an open question and then silently classifies the answer into
+Fire/Water/Air/Earth/Aether, the taxonomy has been inferred from free text — which is the barred
+move, and it is also how a warm opening becomes a hidden questionnaire.
+
+⭐ **The resolution is also the better product**: the elemental dimensions organise *MAIA's
+attention*; the writer's own sentences are what is *stored and returned to*. MAIA later says *"you
+said you wanted readers to feel less alienated from their own inner life"* — verbatim, their words.
+⛔ Never *"your Water declaration."* The sophistication is felt and never operated, which is the
+stated goal, and the record stays the member's own language.
+
+## ⭐ "Edit the edit" is already built — completely
+
+This is the happiest finding in the review. The most collaborative interaction in the whole vision
+has the most complete substrate of anything proposed.
+
+`lib/manuscript/proposalChain/contract.ts`:
+
+```
+export type VersionAuthor = 'maia' | 'member';
+```
+
+> *"It can say 'MAIA proposed once, the member revised N times, the member adopted revision K'…
+> the intermediate authorship that is the entire point."*
+> *"⛔ There is no `system` and no `unknown`. A version nobody authored is not a thing."*
+
+And the distinction between **Use this** and **Edit this** is already modelled exactly:
+`member_confirmed_maia_proposal` is deliberately *not* a version author — *"a member accepting
+MAIA's wording unchanged binds an authorization to HER version; it does not author one of their
+own."*
+
+Succession is ordered by `supersedes`, never by clocks — *"inferring sequence from clocks is how
+two versions written in the same second become unorderable, and how a corrected clock silently
+rewrites who revised whom."*
+
+⭐ `Use it · Change it · Talk about it`, with full provenance of who wrote which words, needs **no
+new substrate.** It needs a surface.
+
+## ⚠️ One law to add: disagreement must revise the reading, not dissolve it
+
+The disagreement example is right, and it is right for a reason worth making explicit — because the
+easy version of it is corrosive.
+
+> *"That makes sense. Reading it with that intention, I think the first and third instances are
+> doing different work. The second may be the one creating the sense of duplication."*
+
+⭐ MAIA **partially concedes and refines**. She does not capitulate. An editor who agrees with
+everything the author says is worth nothing to the author, and under this project's own law,
+agreeableness that seeks approval is attachment capture — *"MAIA does not seek emotional
+dependency, loyalty, or psychological bonding."*
+
+Proposed law:
+
+> **A writer's disagreement is evidence. It revises the reading. It does not delete it, and it does
+> not automatically win.**
+
+If the writer's stated intention genuinely dissolves the observation, MAIA says so. If it explains
+part of it, MAIA says which part — which is what the example does, and why the example is good.
+
+## ✅ The three experiences
+
+**Understand the Work · Work with the Work · See the Work** is the cleanest formulation of the five
+passes, and it maps onto existing objects without strain:
+
+| Experience | Substrate |
+|---|---|
+| Understand the Work | `living_works` + declarations · ⛔ the opening conversation itself is new |
+| Work with the Work | ✅ Write, sources, ingest, materials, Ask |
+| See the Work | ✅ lenses, scope, evidence, coverage · ⛔ + the Editorial Reading (S1) |
+
+⭐ Note that `Notice → Suggest → Ask → Work together → Apply` is the same spine as
+`Perceive → Understand → Discuss → Consider → Revise → Apply` from the second pass, in the writer's
+language instead of the system's. **Five passes have converged on one loop.** That is the signal to
+stop designing and build it.
+
+## Revised buildable list
+
+**No ruling required, build now**
+1. Work-as-primary · orientation breadcrumb · commission mapping (3 intents)
+2. ⭐ **The proposal surface** — `Use it · Change it · Talk about it · Undo`, over the existing
+   proposal chain. Highest value-to-effort item in the entire review.
+3. The relational presentation of an observation: *what I notice → what may help → what do you
+   think?* This is a **presentation** change over existing readings, and it does not need S1
+   because a section-scoped observation makes no whole-work claim.
+
+**Needs a ruling first**
+4. S1 Editorial Reading (coverage-licensed) — unlocks the whole-book letter
+5. Ranking — unlocks priority, severity, "help me finish"
+6. ⭐ **Intention custody** — how a declared purpose is stored, revised, and returned to under the
+   gestalt non-capture law. New, and owed **before** the elemental opening is built, not after.
+
+**After the spine walks**
+7. Sources/quotes · cross-manuscript repetition · material clustering · the idea path · re-editions
+
+## Founder decisions outstanding
+
+1. **Ranking** — on what basis may MAIA order or bucket the writer's concerns?
+2. **Sources** — separate governed capability with its own consent question, or out of the menu?
+3. **Intention custody** — ⭐ new. Revisable how? Returned to how often? What stops orientation
+   becoming criteria? *(The gestalt law supplies the principle; this lane supplies the mechanism.)*
+4. **Naming** — Author Studio (ruled) vs Writer's Studio (route)
+5. **WS2-03B** — reverse for the shell?
+6. **Beta reach** — Develop into a tester surface before or after the spine walks?
+
+> ⭐ Five passes now describe one loop, one spine, and one relationship. The design question is
+> answered. What remains are six rulings and a surface over substrate that mostly already exists.
