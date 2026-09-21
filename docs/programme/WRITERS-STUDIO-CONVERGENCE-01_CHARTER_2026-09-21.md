@@ -528,3 +528,72 @@ twelve out-of-scope matrix cells · the Elemental arrival · the §9.7 questions
 
 > ⭐ One observation. Three expressions. The writer chooses how MAIA accompanies them — ⛔ never how
 > much of their book MAIA writes.
+
+---
+
+# 10 · §9.7 SETTLED (founder, 2026-09-21)
+
+Both questions carried open at §9.7 are ruled. ⭐ Both rulings **narrow** the contract; neither
+widens it.
+
+## 10.1 (a) Facet reachability — RULED
+
+> ⭐ **One observation set. Different default depth. Everything reachable from every facet.**
+
+A facet **may** change how many observations are initially expanded · how much explanation appears
+by default · whether technical evidence is exposed automatically.
+⛔ A facet **may not** make an observation unreachable because the member chose Guided or Learning.
+
+⛔ *"Guided shows six while Direct has access to eighty-seven"* is **impermissible** unless the
+remaining observations are reachable in Guided. Lawful: *"I'm showing you a few at a time so this
+stays workable"* + **See more observations**.
+
+⚠️ **Implementation constraint this implies**: *a few at a time* requires choosing **which** few,
+and §4 dissolved ranking — so ⛔ the cut may not be evaluative. ⭐ **Manuscript order is the lawful
+and natural cut**: *the observations, in the order they occur in your book.* ⛔ *Most severe /
+most confident / most actionable first* are ranking under other names and require the act §4
+deferred. Full reasoning: `WRITERS-STUDIO-ELEMENTAL-ARRIVAL-01_DESIGN_CANDIDATE_2026-09-21.md` §XII.
+
+## 10.2 (b) The third facet is renamed **DIRECT** — RULED
+
+⛔ **PRO** is retired as a facet name. ⭐ **DIRECT** — *"Give me direct editorial control."*
+
+Two reasons, both recorded: it ⛔ no longer collides with the ruled Layer-1 house **Pro Studio**
+(`studioMap.ts:7`), and it ⭐ describes **a relationship rather than a status** — consistent with
+L6e, which holds that a facet names what MAIA does, never who the writer is.
+
+⭐ Verified clear: no existing `direct` facet or mode identifier in `app/writers-studio/**` or
+`lib/writersStudio/**`.
+
+⭐ The facets are now **GUIDED · LEARNING · DIRECT**. §9 is amended to that effect; ⛔ every other
+clause of §9 stands unchanged, and ⛔ the rename carries no behavioural change.
+
+⚠️ The **Author Studio vs Writer's Studio** naming question (§7.2(2)) is **untouched** and remains
+open.
+
+## 10.3 ⭐⭐ Carried into this charter from the arrival design — THE COMPASS LICENSES NOTHING
+
+Binding on **step 6** (the coverage-licensed Editorial Reading), because the hazard lands there:
+
+1. ⭐ The Work Compass may orient **what MAIA attends to**.
+2. ⛔ It is **never evidence**, and ⛔ **never discharges coverage**. Whole-work authority remains
+   licensed by **recorded coverage of the text**, and by nothing else.
+3. ⛔ A declaration may never be restated as an observation about the manuscript.
+   *"You said the book does X"* ✅ · *"the book does X"* ⛔ unless the covered text says so.
+
+⭐ Already ruled in the repository, and this only names where it now applies —
+`lib/manuscript/structure/readScope.ts`: *"this reader interprets the Work **AS WRITTEN**, not
+authorial intention reconstructed from auxiliary material. That could become a later, **separately
+consented** capability; it is not this one."*
+
+⭐ **The Work Compass is auxiliary material.** Feeding it to a reader is that deferred capability
+and ⛔ is not authorized by any act to date.
+
+## 10.4 Standing
+
+**RATIFIED** §10.1 reachability · §10.2 the DIRECT rename · §10.3 Compass-licenses-nothing.
+**⛔ STILL OPEN** §7.2(2) naming (Author Studio vs Writer's Studio) · §7.2(3) beta reach ·
+§7.2(4) the disagreement law.
+**⭐ DISCHARGED** §7.2(1) intention custody — substance delivered in the arrival design candidate
+§IV–VII and §XII-b, ⭐ ratifiable on a founder act.
+⛔ Steps 2–8 remain **NOT STARTED**. ⛔ **Production untouched.**
