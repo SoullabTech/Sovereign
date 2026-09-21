@@ -9,6 +9,7 @@
  * - governance-gate class taxonomy
  */
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import {
   bindSelector, headOf, lintLeakage, partitionPacket,
@@ -40,6 +41,31 @@ export function buildNativePrompt(packet, repo) {
     error.code = "EXECUTION_HEAD_UNAVAILABLE";
     throw error;
   }
+
+  const packetCanonical = String(packet.canonical_sha || "").trim();
+  if (!packetCanonical) {
+    const error = new Error("PACKET_CANONICAL_SHA_REQUIRED");
+    error.code = "PACKET_CANONICAL_SHA_REQUIRED";
+    throw error;
+  }
+  let authorizedHead;
+  try {
+    authorizedHead = execFileSync(
+      "git", ["-C", repo, "rev-parse", packetCanonical + "^{commit}"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    ).trim();
+  } catch {
+    const error = new Error("PACKET_CANONICAL_SHA_UNRESOLVED");
+    error.code = "PACKET_CANONICAL_SHA_UNRESOLVED";
+    throw error;
+  }
+  if (authorizedHead !== execHead) {
+    const error = new Error("EXECUTION_HEAD_MISMATCH");
+    error.code = "EXECUTION_HEAD_MISMATCH";
+    error.detail = { packet_canonical_sha: authorizedHead, execution_head: execHead };
+    throw error;
+  }
+
   const bindings = selectors.map((selector) => bindSelector(selector, repo, execHead));
   const bad = bindings.filter((binding) => binding.error);
   if (bad.length) {
