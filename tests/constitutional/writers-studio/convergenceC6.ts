@@ -32,6 +32,7 @@ const DESK = 'app/writers-studio/insight/RevisionDesk.tsx';
 const ADOPTION = 'lib/manuscript/editorialRuntime/adoption.ts';
 const REVIEW = 'lib/writersStudio/rebuild/chapterReview.ts';
 const DEPTH = 'lib/writersStudio/editorialDepth.ts';
+const RENDER = 'lib/manuscript/developmentalReader/render.ts';
 const STAGES = 'lib/manuscript/developmentalReading/commission.ts';
 
 export function runC6(): readonly Check[] {
@@ -47,6 +48,7 @@ export function runC6(): readonly Check[] {
   const review = src(REVIEW);
   const depth = src(DEPTH);
   const depthRaw = read(DEPTH);
+  const render = read(RENDER);
   const stages = src(STAGES);
 
   /* ⭐ ONE entry point for every observation-level response, so the five
@@ -351,6 +353,54 @@ export function runC6(): readonly Check[] {
     /onDepth\(d\)/.test(desk) &&
     !/setEditorialDepth\(/.test(rebuild.slice(rebuild.indexOf('const sendEditorial'), rebuild.indexOf('const applySuggested'))),
     'the default is identical for everyone and only the member moves it');
+
+  /* ⭐⭐ C6R5 — THE READER MAY THINK TECHNICALLY; ITS OBSERVATION SPEAKS PLAINLY.
+     ⛔ The boundary is unchanged and is the first thing checked: the depth dial
+     must never reach the reader, or how a writer wants a thing EXPLAINED would
+     start changing what MAIA NOTICES. */
+  add('C6R5-1-reader-request-boundary-unchanged',
+    JSON.stringify(requestFields) === JSON.stringify(['commissionedLens', 'evidence', 'recovered']),
+    `DevelopmentalReaderRequest: ${requestFields.join(', ')}`);
+
+  add('C6R5-2-no-depth-or-profile-reaches-the-reader',
+    !/depth|writerLevel|styleProfile|experience|skillLevel|preferences|compass|conversation/i
+      .test(contract.slice(reqStart, reqEnd)) &&
+    !/editorialDepth|EditorialDepth/.test(src(RENDER)),
+    'no depth, level, style, preference, Compass or conversation field enters the reader');
+
+  add('C6R5-3-plain-language-is-the-default-expression',
+    /write the claim in plain language/.test(render) &&
+    /Say the thing itself rather than naming the device/.test(render),
+    'the reader is required to speak plainly by default, not on request');
+
+  add('C6R5-4-translation-never-reduces',
+    /Translate the noticing; never reduce it/.test(render) &&
+    /Plain language is not permission to notice less/.test(render) &&
+    /change no evidence reference and no non-conclusion/.test(render),
+    'same claims, same tradeoffs, same evidence and non-conclusions — only the telling changes');
+
+  add('C6R5-5-reader-adapts-to-prose-never-to-the-author',
+    /describe only the WRITING/.test(render) &&
+    /Never describe, classify, rate or infer anything about the AUTHOR/.test(render) &&
+    /it never lets you claim more than the evidence carries/.test(render),
+    'register may follow the prose; nothing may be inferred about the person');
+
+  add('C6R5-6-no-writing-style-state-is-persisted',
+    !/localStorage|INSERT|UPDATE |writer_style|style_profile/i.test(src(RENDER)) &&
+    !/localStorage|INSERT INTO/i.test(depth),
+    'no style is stored anywhere; adaptation cannot outlive the turn that made it');
+
+  add('C6R5-7-no-observation-schema-change',
+    !/ALTER TABLE|CREATE TABLE/i.test(render),
+    'the expression discipline is prompt-level; no schema or migration moved');
+
+  /* ⭐ `Go deeper` must unpack the observation that exists, ⛔ never commission
+     a second reading — that would be three readings wearing one identity. */
+  add('C6R5-8-changing-depth-commissions-no-reading',
+    /onDepth\(d\)/.test(desk) &&
+    !/runChapterReview|requestDevelopmentalReading/.test(
+      desk.slice(desk.indexOf('DEPTH_CHOICES.map'), desk.indexOf('DEPTH_CHOICES.map') + 500)),
+    'the depth control asks the editorial turn to re-explain; it reads nothing again');
 
   const c5 = runC5();
   const reusableC5 = c5.filter(c => c.id !== 'C5-19-no-new-revision-substrate');
