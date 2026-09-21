@@ -152,6 +152,21 @@ export function inspectPatch(patchText, allowedFiles = []) {
       continue;
     }
 
+    if (inHunk) {
+      const isFinalEmpty = line === "" && lines.indexOf(line) === lines.length - 1;
+      if (
+        !isFinalEmpty
+        && !line.startsWith(" ")
+        && !line.startsWith("+")
+        && !line.startsWith("-")
+        && !line.startsWith("\\")
+        && !line.startsWith("diff --git ")
+        && !line.startsWith("@@ ")
+      ) {
+        return refusal("PATCH_HUNK_LINE_UNSUPPORTED", { line: line.slice(0, 180) });
+      }
+    }
+
     if (line.startsWith("@@ ")) {
       current.saw_hunk = true;
       inHunk = true;
@@ -260,6 +275,11 @@ export function applyNativePatch({
   const envelope = derivePermissionEnvelope(packet);
   if (!envelope.repo_read || envelope.repo_write_scope !== "worktree") {
     return recordRefusal("WORKTREE_WRITE_AUTHORITY_REQUIRED");
+  }
+  if (envelope.integration_actor !== "jarvis") {
+    return recordRefusal("JARVIS_INTEGRATION_ACTOR_REQUIRED", {
+      integration_actor: envelope.integration_actor,
+    });
   }
   if (
     envelope.production_read
