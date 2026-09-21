@@ -110,8 +110,15 @@ cheap to check.
 2. Whether the same boundary-value condition exists in **production**
    `context_disclosure_receipts` — a read, not a repair, and not taken here.
 3. Whether a writer somewhere emits `writers_studio.ask->maia_developmental`.
-   45 rows in ~65 minutes is a running process, not a hand-inserted fixture; if
-   that code still exists it will do this again wherever the CHECK is absent.
+   ⚠️ **Stated at the strength the evidence supports, and no further.** 45 rows
+   across ~65 minutes *suggests a repeated automated or systematic writer* — it
+   ⛔ does **not** establish a continuously running process, and the actor
+   remains unidentified. What follows is conditional: **if** such a writer
+   exists, it will do this again wherever the CHECK is absent. *(An earlier
+   draft of this line asserted "is a running process, not a hand-inserted
+   fixture." That overstated a frequency observation into a claim about a
+   mechanism nobody has seen. Corrected 2026-09-21; the weaker claim is the
+   true one.)*
 
 ⛔ NOT AUTHORIZED BY THIS RECORD: schema change · trigger change · data repair ·
 restoring or reconstructing the deleted rows · reading or touching production ·
