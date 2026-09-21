@@ -1,0 +1,79 @@
+# JARVIS NATIVE PATCH ADMISSION — bounded local-coding lane proof.
+#
+# SCOPE of a green run:
+#   1. the native worker refuses non-loopback Ollama endpoints before fetch;
+#   2. the native prompt withholds verifier-only material and pins the patch/gate contract;
+#   3. patch admission refuses unauthorized paths and overbroad authority before git,
+#      rejects unsupported patch shapes, and check/applies an authorized text patch;
+#   4. the delegate shell remains syntactically valid and contains the governed
+#      candidate-commit rollback custody asserted by the worker proof.
+#
+# A green run does NOT prove a real model can solve a Work Unit, that Ollama is
+# available on a GitHub runner, or that a Mac Studio live witness passed. The
+# live local Work Unit remains a separate required witness before this lane may
+# be admitted to canonical.
+#
+# No network model call occurs in this workflow. The local-worker proof replaces
+# fetch and proves rejected endpoints are refused before transport invocation.
+
+name: JARVIS Native Patch Admission
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets]
+    paths:
+      - 'scripts/ain-delegate.sh'
+      - 'scripts/builder/jarvis-local-worker.mjs'
+      - 'scripts/builder/jarvis-native-prompt.mjs'
+      - 'scripts/builder/jarvis-native-patch-admission.mjs'
+      - 'scripts/builder/jarvis-packet-guard.mjs'
+      - 'scripts/builder/jarvis-context.mjs'
+      - 'scripts/builder/jarvis-governance-gate.mjs'
+      - 'scripts/builder/work-unit.mjs'
+      - 'scripts/builder/__tests__/jarvis-local-worker-proof.mjs'
+      - 'scripts/builder/__tests__/jarvis-native-prompt-proof.mjs'
+      - 'scripts/builder/__tests__/jarvis-native-patch-admission-proof.mjs'
+      - '.github/workflows/jarvis-native-patch-admission.yml'
+  push:
+    branches: [clean-main-no-secrets]
+    paths:
+      - 'scripts/ain-delegate.sh'
+      - 'scripts/builder/jarvis-local-worker.mjs'
+      - 'scripts/builder/jarvis-native-prompt.mjs'
+      - 'scripts/builder/jarvis-native-patch-admission.mjs'
+      - 'scripts/builder/jarvis-packet-guard.mjs'
+      - 'scripts/builder/jarvis-context.mjs'
+      - 'scripts/builder/jarvis-governance-gate.mjs'
+      - 'scripts/builder/work-unit.mjs'
+      - 'scripts/builder/__tests__/jarvis-local-worker-proof.mjs'
+      - 'scripts/builder/__tests__/jarvis-native-prompt-proof.mjs'
+      - 'scripts/builder/__tests__/jarvis-native-patch-admission-proof.mjs'
+      - '.github/workflows/jarvis-native-patch-admission.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  native-patch-admission:
+    name: Native lane falsifiers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Shell syntax
+        run: bash -n scripts/ain-delegate.sh
+
+      - name: Native worker transport and custody proof
+        run: node scripts/builder/__tests__/jarvis-local-worker-proof.mjs
+
+      - name: Native prompt proof
+        run: node scripts/builder/__tests__/jarvis-native-prompt-proof.mjs
+
+      - name: Native patch-admission falsifiers
+        run: node scripts/builder/__tests__/jarvis-native-patch-admission-proof.mjs
