@@ -184,7 +184,9 @@
     "witness:ws-observation-address": "tsx tests/constitutional/writers-studio/addressRunner.ts",
     "gates:ws-convergence-c2-c4": "tsx tests/constitutional/writers-studio/convergenceRunner.ts",
     "typecheck:ws-convergence-c5": "tsc -p tsconfig.ws-convergence-c5.json --pretty false",
-    "gates:ws-convergence-c5": "npm run typecheck:ws-convergence-c5 && tsx tests/constitutional/writers-studio/convergenceC5Runner.ts"
+    "gates:ws-convergence-c5": "npm run typecheck:ws-convergence-c5 && tsx tests/constitutional/writers-studio/convergenceC5Runner.ts",
+    "typecheck:ws-convergence-c6": "tsc -p tsconfig.ws-convergence-c6.json --pretty false",
+    "gates:ws-convergence-c6": "npm run typecheck:ws-convergence-c6 && tsx tests/constitutional/writers-studio/convergenceC6Runner.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

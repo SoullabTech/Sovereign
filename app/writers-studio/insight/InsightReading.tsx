@@ -67,11 +67,28 @@ export default function InsightReading({
     ?? insight.passages.find(p => p.verified && p.editable)
     ?? null;
   const exactCount = insight.passages.filter(p => p.verified && p.range).length;
+  /* ⭐⭐ C6 — THE OBSERVATION LAYER CONVERGES ONTO THE BOUND EDITORIAL TURN.
+     Every response below used to open ObservationDialogue on the general Ask
+     path, while `Talk about it` inside the passage desk ran through
+     runEditorialTurn and its governed Teaching bridge. Same layer, same
+     posture, two different minds — and nothing visible told the writer which
+     one they had reached. The exact passage is already known here (`target`
+     is resolved at render, and `Try a revision` has always used it), so the
+     convergence needs no new selection step.
+     ⛔ NOT a second Teaching integration: the bridge call site is untouched.
+     ⭐ D-D preserved — the member's words land in the EDITABLE draft for this
+     turn, so they stay removable before anything is sent. */
+  const boundToPassage = Boolean(target && onRevise);
   const beginConversation = (prompt: string) => {
     const next = [memberContext, prompt].filter(Boolean).join('\n\n');
+    setStatus(null);
+    if (target && onRevise) { onRevise(target, next); return; }
+    /* ⛔ No exact passage, or this surface is not inside the workspace. The
+       older path still answers — ⛔ but never silently: the notice below says
+       so, because a conversation that reaches a different cognition without
+       saying which is the defect, not the fallback. */
     setConversation(next);
     setTalking(true);
-    setStatus(null);
   };
   const tryRevision = () => {
     if (!target) return;
@@ -106,6 +123,11 @@ export default function InsightReading({
           setStatus('Left as it is. Nothing changed.');
         }}>Leave this as it is</button>
       </div>
+      {!boundToPassage && <p className="wsi-muted">
+        This observation has no verified exact passage to bind here, so this
+        conversation is held against the observation itself rather than against
+        wording in your manuscript.
+      </p>}
     </section>
 
     <details className="wsi-question-options">
