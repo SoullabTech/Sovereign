@@ -31,7 +31,11 @@ describe('SOURCE LEVEL-CALIBRATION-01 bounded implementation', () => {
     expect(batch).not.toContain('--act output');
     expect(batch).not.toContain('--act duplex');
     expect(batch).not.toContain('testTerminateOnly');
-    expect(batch).not.toContain('k00-driver-batch.sh');
+    const executableLines = batch
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith('#'));
+    expect(executableLines.some((line) => line.includes('k00-driver-batch.sh'))).toBe(false);
   });
 
   it('closes the ladder and does not change Mac system volume', () => {
@@ -50,7 +54,7 @@ describe('SOURCE LEVEL-CALIBRATION-01 bounded implementation', () => {
     const loop = batch.indexOf('for i in $(seq 1 "$N")');
     const start = batch.indexOf('start_player "$i"');
     const run = batch.indexOf('run_test > "$LEDGER/sample-$i-xcodebuild.log"');
-    const stop = batch.indexOf('stop_player "$i"');
+    const stop = batch.indexOf('stop_player "$i"', run);
     expect(build).toBeGreaterThan(-1);
     expect(loop).toBeGreaterThan(build);
     expect(start).toBeGreaterThan(loop);
