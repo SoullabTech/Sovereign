@@ -840,9 +840,10 @@ export default function RebuildStudioClient() {
         return;
       }
       setAdoptionOutcome(out.outcome);
-      setAppliedVersionId(suggestedVersion.id);
-      const reread = await readBoundEditorialThread(editorialThread.threadId, focusId);
-      if (reread.ok) setEditorialThread(reread.thread);
+      /* ⭐ The immediate receipt is local presentation state. ⛔ Only an
+         actually-applied outcome may set it; a moved or refused Work must not
+         render as though this click changed the manuscript. */
+      setAppliedVersionId(out.outcome.kind === 'applied' ? suggestedVersion.id : null);
       if (out.outcome.kind === 'applied' || out.outcome.kind === 'work_moved') {
         if (review) setReviewNeedsRefresh(true);
         const fresh = await refreshContext();
@@ -859,10 +860,18 @@ export default function RebuildStudioClient() {
           setSelectedPassage(null);
         }
       }
+      /* ⭐⭐ RECOVERY IS READ AFTER THE WORK HAS SETTLED. The application row
+         is the authority for Undo; reading it before the context refresh made
+         the inline desk depend on a race between two post-apply projections. */
+      const reread = await readBoundEditorialThread(editorialThread.threadId, focusId);
+      if (reread.ok) {
+        setEditorialThread(reread.thread);
+        replaceAddress(focusId, reread.thread.threadId);
+      }
     } finally {
       setAdoptionBusy(false);
     }
-  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting]);
+  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting, replaceAddress]);
 
   const undoSuggested = useCallback(async () => {
     const application = editorialThread?.application;
@@ -1640,7 +1649,8 @@ export default function RebuildStudioClient() {
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
             : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
           sectionBody={focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
-          appliedVersionId={editorialThread?.application && !editorialThread.application.undone ? editorialThread.application.versionId : null}
+          appliedVersionId={editorialThread?.application && !editorialThread.application.undone
+            ? editorialThread.application.versionId : appliedVersionId}
           onUndo={editorialThread?.application?.canUndo ? () => void undoSuggested() : undefined}
           undoMessage={undoMessage}
           thread={editorialThread} version={suggestedVersion} instruction={editorialDraft}
