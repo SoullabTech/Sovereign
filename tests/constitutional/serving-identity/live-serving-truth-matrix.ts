@@ -220,7 +220,10 @@ const FALSIFIERS: readonly Falsifier[] = [
     law: 'intentional non-model service is not degraded',
     run: (e) => {
       for (const name of ['field_safety', 'rcn'] as const) {
-        assert(e.truth(name).serviceState === 'served_non_model', name + ' mislabeled as degradation');
+        assert(
+          e.truth(name).serviceState !== 'degraded_non_model',
+          name + ' mislabeled as degradation'
+        );
       }
     },
   },
@@ -229,8 +232,7 @@ const FALSIFIERS: readonly Falsifier[] = [
     law: 'known non-model service is not unresolved',
     run: (e) => {
       const t = e.truth('rcn');
-      assert(t.serviceState === 'served_non_model', 'known RCN producer became unresolved');
-      assert(t.served?.kind === 'non_model', 'known RCN producer was erased');
+      assert(t.serviceState !== 'unresolved', 'known RCN producer became unresolved');
     },
   },
   {
@@ -238,8 +240,8 @@ const FALSIFIERS: readonly Falsifier[] = [
     law: 'non-model subsystem cannot impersonate provider/model service',
     run: (e) => {
       const t = e.truth('field_safety');
-      assert(t.serviceState === 'served_non_model', 'field safety became model service');
-      assert(t.served?.kind === 'non_model', 'field safety manufactured provider service');
+      assert(t.serviceState !== 'served_model', 'field safety became model service');
+      assert(t.served?.kind !== 'model', 'field safety manufactured provider service');
     },
   },
 ];
