@@ -460,3 +460,113 @@ arose the first time.
 3. **Naming** — Author Studio (ruled) vs Writer's Studio (route).
 4. **WS2-03B** — reverse for the shell, to make "the hierarchy comes from the manuscript" true.
 5. **Beta reach** — does Develop enter a tester surface before or after the spine walks?
+
+---
+
+# Addendum 3 — "meet the work where it is", and a sequencing warning
+
+A fourth pass proposes four starting states — **idea · material · draft · finished book** — with
+the Studio organised around the state of the work rather than around tools.
+
+## ⭐ The principle is right, and the object model already agrees
+
+This is the most important finding in this addendum, and it is encouraging.
+
+**The Work already exists independently of a manuscript.** `living_works` +
+`living_work_expressions` + `/api/sovereign/living-works/[id]/materials` model exactly this:
+
+- a Work with **no expressions** — the *idea* state
+- a Work with **materials** — the *pile* state
+- a Work with a `manuscript` expression — the *draft* state
+- D-018: a manuscript may be declared in **more than one** Work, and the Studio *"correctly refuses
+  to guess which one is 'the' Work"*
+
+⭐ So the proposed architecture is **closer to the existing data model than the current interface
+is**. It is the UI that assumes a manuscript, not the substrate. `workDeclarations.ts` already
+tracks `unclaimed | single | ambiguous` and is careful that *"order is never a ranking."*
+
+⭐ **The convergence move available today is therefore one sentence**: *the Work is the primary
+object; the manuscript is one expression of it.* That is a simplification, it is already true
+underneath, and it does not require the three new capabilities below.
+
+## ⚠️ But this pass is a scope expansion, arriving at the convergence moment
+
+Stated plainly, because the previous pass made the criterion explicit — *"You don't need another
+developmental surface"* — and this pass proposes three:
+
+| Entrance | Substrate today |
+|---|---|
+| I have a draft / finished book | ✅ exists (lenses, scope, evidence, revision, undo) |
+| I have material | ⚠️ intake exists (`ingest`, `source`, `materials`) · ⛔ **no clustering, no theme-finding, no "three possible shapes"** |
+| I have an idea | ⛔ **nothing**. Inquiry-led concept development is a different capability entirely |
+| I have an older book | ⛔ needs source/quote checking (absent) + voice-then-vs-now comparison (absent) |
+
+Each of the three is a good product. None is convergence. ⛔ **Specifying them now is how the
+present condition arose the first time** — capability accumulating faster than the spine that makes
+it reachable.
+
+⭐ Recommendation: keep the four entrances as the **roadmap and the naming discipline**, and build
+the spine on the one state that is fully supported — a finished manuscript, Elemental Alchemy. The
+other three inherit the spine rather than each inventing one.
+
+## ⛔ Work state must be member-declared, never MAIA-assigned
+
+The proposal has MAIA announce the state of the work:
+
+> *"You're gathering material."* · *"This has become a full draft."* · *"I think we have enough to
+> form a provisional structure."*
+
+⚠️ These are judgments about the member's creative state, and this codebase has ruled twice against
+exactly this move:
+
+- **FR-06** — `living_field_affinities` is system-created from private memory atoms and is
+  **BARRED ABSOLUTELY**; only **explicit member selection** may drive matching. Free text is
+  *"expressive only, never inferred into taxonomy."*
+- **Temporal memory** — staleness is **detect → ask → record**; *"the system never sets `valid_to`
+  from a timer."*
+
+⭐ The ratified pattern for this whole class already exists and fits perfectly:
+
+> **MAIA may observe and ask. The member declares. The system records the declaration.**
+
+So: *"There is a lot here now — would you like to call this a draft?"* ✅
+Not: *"This has become a full draft."* ⛔
+
+Same warmth, and the writer keeps authorship of what their own work **is** — which is a larger form
+of the authorship this whole product exists to protect. ⭐ A system that tells you what stage your
+book is at has taken something from you that is harder to notice than a rewritten sentence.
+
+## ⚠️ "There may be two books here" is the deepest claim proposed yet
+
+*"I see three recurring centers in this material… there may actually be two books here."*
+
+This is further past `whole-work-pattern` than anything in the earlier passes, over material that
+has no authored structure at all, and it requires clustering substrate that does not exist
+(embeddings exist in `lib/corpus`, not in `lib/manuscript`). It is a wonderful capability and it is
+a lane, not a screen.
+
+## ✅ What I would adopt from this pass immediately
+
+1. **The Work is primary; the manuscript is an expression.** Already true underneath. Make the UI
+   say it. Pure simplification.
+2. **"Continue my work"** as the default door. Most returns are resumptions, and
+   `useStudioHistory` / `useCurrentManuscript` already supply the facts.
+3. **Don't rush to outline.** ⭐ Strongly aligned with canon — *"MAIA offers reflection, framing,
+   and choice — never command."* Worth recording as a standing constraint on the idea path **before**
+   that path is built, so it is a precondition rather than a later correction.
+4. **The re-editing framing** — *"without shaming the earlier self"* — is genuinely distinctive and
+   costs nothing to write down now.
+
+## Final sequence
+
+**Now** — Work-as-primary · orientation breadcrumb · commission mapping for the three buildable
+intents · ratify the state-declaration law (detect → ask → record) before any state UI exists.
+
+**Next** — S1 Editorial Reading · S2 the pass as a unit · ranking ruling · collapse the shell ·
+walk the spine on Elemental Alchemy.
+
+**After the spine walks** — sources/quotes · cross-manuscript repetition · material clustering ·
+the idea path · the re-edition path. In that order, each as its own lane.
+
+> The four entrances are the right ten-year architecture. The spine is the right next month. ⛔ The
+> failure mode is building the entrances before the corridor they all open onto exists.
