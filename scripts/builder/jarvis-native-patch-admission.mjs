@@ -5,7 +5,7 @@
  * Bounded mutation membrane for the toolless native Ollama worker.
  *
  * The model never receives filesystem, shell, git, web, or tool-call authority.
- * It may emit only a pure git-style unified diff candidate or a governance gate.
+ * It may emit a structured exact-text edit, a pure git-style diff, or a governance gate.
  *
  * This module validates every path before invoking git, requires worktree write
  * authority, refuses unsupported patch shapes, runs git apply check, then
@@ -17,13 +17,15 @@ import {
   appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync,
   rmSync, writeFileSync,
 } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import path from "node:path";
 import os from "node:os";
 import { derivePermissionEnvelope } from "./work-unit.mjs";
 
 const MAX_PATCH_BYTES = 512 * 1024;
+const MAX_EDIT_SCRIPT_BYTES = 512 * 1024;
+const MAX_NATIVE_EDITS = 32;
 const HOME = (env = process.env) => (
   env.AIN_DELEGATION_HOME || path.join(os.homedir(), ".claude", "ain-delegation")
 );
@@ -112,6 +114,72 @@ export function normalizePatchForGit(patchText) {
     .split("\n")
     .filter((line) => !line.startsWith("index "))
     .join("\n");
+}
+
+export function inspectEditScript(editText, allowedFiles = []) {
+  const raw = String(editText ?? "");
+  if (!raw.trim()) return refusal("EDIT_SCRIPT_EMPTY");
+  if (Buffer.byteLength(raw, "utf8") > MAX_EDIT_SCRIPT_BYTES) {
+    return refusal("EDIT_SCRIPT_TOO_LARGE", { max_bytes: MAX_EDIT_SCRIPT_BYTES });
+  }
+  if (!raw.startsWith("EDIT_SCRIPT:")) {
+    return refusal("EDIT_SCRIPT_PREFIX_REQUIRED");
+  }
+  if (/```/.test(raw)) return refusal("EDIT_SCRIPT_CODE_FENCE_UNSUPPORTED");
+
+  let parsed;
+  try {
+    parsed = JSON.parse(raw.slice("EDIT_SCRIPT:".length).trim());
+  } catch (error) {
+    return refusal("EDIT_SCRIPT_JSON_INVALID", String(error?.message || error).slice(0, 500));
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return refusal("EDIT_SCRIPT_OBJECT_REQUIRED");
+  }
+  const topKeys = Object.keys(parsed).sort();
+  if (topKeys.length !== 1 || topKeys[0] !== "edits") {
+    return refusal("EDIT_SCRIPT_KEYS_UNSUPPORTED", { keys: topKeys });
+  }
+  if (!Array.isArray(parsed.edits) || parsed.edits.length < 1) {
+    return refusal("EDIT_SCRIPT_EDITS_REQUIRED");
+  }
+  if (parsed.edits.length > MAX_NATIVE_EDITS) {
+    return refusal("EDIT_SCRIPT_TOO_MANY_EDITS", { max_edits: MAX_NATIVE_EDITS });
+  }
+
+  const edits = [];
+  for (let i = 0; i < parsed.edits.length; i += 1) {
+    const edit = parsed.edits[i];
+    if (!edit || typeof edit !== "object" || Array.isArray(edit)) {
+      return refusal("EDIT_SCRIPT_EDIT_OBJECT_REQUIRED", { index: i });
+    }
+    const keys = Object.keys(edit).sort();
+    if (keys.join(",") !== "new,old,path") {
+      return refusal("EDIT_SCRIPT_EDIT_KEYS_UNSUPPORTED", { index: i, keys });
+    }
+    const p = normalizePath(edit.path);
+    if (unsafePath(p)) return refusal("EDIT_SCRIPT_PATH_UNSAFE", { index: i, path: p });
+    if (!pathAllowed(p, allowedFiles)) {
+      return refusal("EDIT_SCRIPT_PATH_NOT_AUTHORIZED", { index: i, path: p });
+    }
+    if (typeof edit.old !== "string" || typeof edit.new !== "string") {
+      return refusal("EDIT_SCRIPT_TEXT_REQUIRED", { index: i, path: p });
+    }
+    if (!edit.old.length) return refusal("EDIT_SCRIPT_OLD_TEXT_REQUIRED", { index: i, path: p });
+    if (edit.old === edit.new) return refusal("EDIT_SCRIPT_NOOP_EDIT", { index: i, path: p });
+    if (edit.old.includes("\u0000") || edit.new.includes("\u0000")) {
+      return refusal("EDIT_SCRIPT_NUL_UNSUPPORTED", { index: i, path: p });
+    }
+    edits.push({ path: p, old: edit.old, new: edit.new });
+  }
+
+  return {
+    ok: true,
+    status: "EDIT_SCRIPT_STRUCTURALLY_ADMITTED",
+    edit_script_digest: digest(raw),
+    edit_paths: [...new Set(edits.map((edit) => edit.path))],
+    edits,
+  };
 }
 
 export function inspectPatch(patchText, allowedFiles = []) {
@@ -233,6 +301,172 @@ function eventBase(workUnitId, inspected, event) {
     work_unit_id: workUnitId,
     patch_digest: inspected?.patch_digest ?? null,
     patch_paths: inspected?.patch_paths ?? [],
+  };
+}
+
+function countOccurrences(haystack, needle) {
+  let count = 0;
+  let from = 0;
+  while (true) {
+    const at = haystack.indexOf(needle, from);
+    if (at < 0) return count;
+    count += 1;
+    from = at + needle.length;
+  }
+}
+
+export function compileNativeEditScript({
+  packet,
+  editText,
+  worktree,
+  runGit = realGit,
+} = {}) {
+  const inspected = inspectEditScript(editText, packet?.allowed_files ?? []);
+  if (!inspected.ok) return inspected;
+  if (!worktree || !existsSync(worktree)) return refusal("WORKTREE_NOT_FOUND");
+
+  const originals = new Map();
+  const finals = new Map();
+  for (let i = 0; i < inspected.edits.length; i += 1) {
+    const edit = inspected.edits[i];
+    if (!finals.has(edit.path)) {
+      let base;
+      try {
+        base = String(runGit(worktree, ["show", `HEAD:${edit.path}`]) || "");
+      } catch (error) {
+        return refusal("EDIT_TARGET_NOT_TRACKED", {
+          index: i,
+          path: edit.path,
+          reason: String(error?.stderr || error?.message || error).slice(0, 500),
+        });
+      }
+      if (base.includes("\u0000")) {
+        return refusal("EDIT_TARGET_BINARY_UNSUPPORTED", { index: i, path: edit.path });
+      }
+      originals.set(edit.path, base);
+      finals.set(edit.path, base);
+    }
+
+    const current = finals.get(edit.path);
+    const occurrences = countOccurrences(current, edit.old);
+    if (occurrences !== 1) {
+      return refusal("EDIT_OLD_TEXT_NOT_UNIQUE", {
+        index: i,
+        path: edit.path,
+        occurrences,
+      });
+    }
+    finals.set(edit.path, current.replace(edit.old, edit.new));
+  }
+
+  const changedPaths = [...finals.keys()].filter((p) => finals.get(p) !== originals.get(p));
+  if (!changedPaths.length) return refusal("EDIT_SCRIPT_NO_NET_CHANGE");
+
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "jarvis-native-edit-"));
+  try {
+    const patches = [];
+    for (const p of changedPaths) {
+      const oldPath = path.join(tmp, "a", p);
+      const newPath = path.join(tmp, "b", p);
+      mkdirSync(path.dirname(oldPath), { recursive: true });
+      mkdirSync(path.dirname(newPath), { recursive: true });
+      writeFileSync(oldPath, originals.get(p), "utf8");
+      writeFileSync(newPath, finals.get(p), "utf8");
+
+      const diff = spawnSync(
+        "git",
+        ["diff", "--no-index", "--no-prefix", "--", `a/${p}`, `b/${p}`],
+        { cwd: tmp, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+      );
+      if (diff.status !== 1 || !diff.stdout) {
+        return refusal("EDIT_DIFF_CONSTRUCTION_FAILED", {
+          path: p,
+          status: diff.status,
+          stderr: String(diff.stderr || "").slice(0, 500),
+        });
+      }
+      patches.push(String(diff.stdout).trimEnd());
+    }
+
+    const patchText = patches.join("\n") + "\n";
+    const patchInspection = inspectPatch(patchText, packet?.allowed_files ?? []);
+    if (!patchInspection.ok) {
+      return refusal("EDIT_COMPILED_PATCH_INVALID", {
+        code: patchInspection.code,
+        detail: patchInspection.detail,
+      });
+    }
+    return {
+      ok: true,
+      status: "EDIT_SCRIPT_COMPILED",
+      edit_script_digest: inspected.edit_script_digest,
+      edit_paths: inspected.edit_paths,
+      patch_text: patchText,
+      patch_digest: patchInspection.patch_digest,
+      patch_paths: patchInspection.patch_paths,
+    };
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
+export function applyNativeEditScript({
+  packet,
+  editText,
+  worktree,
+  home,
+  runGit = realGit,
+} = {}) {
+  const workUnitId = String(packet?.work_unit_id || "");
+  const compiled = compileNativeEditScript({ packet, editText, worktree, runGit });
+
+  if (!compiled.ok) {
+    const event = {
+      event_version: "NPA1.v1",
+      event_id: "npa-" + randomBytes(8).toString("hex"),
+      event: "EDIT_REFUSED",
+      at: now(),
+      work_unit_id: workUnitId,
+      edit_script_digest: editText ? digest(editText) : null,
+      code: compiled.code,
+      detail: compiled.detail ?? null,
+      applied: false,
+      git_check_invoked: false,
+      git_apply_invoked: false,
+    };
+    const evidence_path = appendEvent(workUnitId, event, { home });
+    return { ...compiled, evidence_path, event };
+  }
+
+  appendEvent(workUnitId, {
+    event_version: "NPA1.v1",
+    event_id: "npa-" + randomBytes(8).toString("hex"),
+    event: "EDIT_COMPILED",
+    at: now(),
+    work_unit_id: workUnitId,
+    edit_script_digest: compiled.edit_script_digest,
+    patch_digest: compiled.patch_digest,
+    edit_paths: compiled.edit_paths,
+    patch_paths: compiled.patch_paths,
+    code: "EDIT_SCRIPT_COMPILED",
+    applied: false,
+    git_check_invoked: false,
+    git_apply_invoked: false,
+  }, { home });
+
+  const applied = applyNativePatch({
+    packet,
+    patchText: compiled.patch_text,
+    worktree,
+    home,
+    runGit,
+  });
+  return {
+    ...applied,
+    edit_script_digest: compiled.edit_script_digest,
+    compiled_patch_digest: compiled.patch_digest,
+    edit_paths: compiled.edit_paths,
+    compiled_from: "EDIT_SCRIPT_V1",
   };
 }
 
@@ -402,17 +636,20 @@ export function applyNativePatch({
 }
 
 const argv = process.argv.slice(2);
-if (argv[0] === "apply") {
+if (argv[0] === "apply" || argv[0] === "apply-edit") {
+  const mode = argv[0];
   const packetPath = argv[1];
   const worktree = argv[2];
-  const patchFile = argv[3];
-  if (!packetPath || !worktree || !patchFile) {
-    console.error("usage: jarvis-native-patch-admission.mjs apply <packet.json> <worktree> <patch-file>");
+  const candidateFile = argv[3];
+  if (!packetPath || !worktree || !candidateFile) {
+    console.error("usage: jarvis-native-patch-admission.mjs <apply|apply-edit> <packet.json> <worktree> <candidate-file>");
     process.exit(4);
   }
   const packet = JSON.parse(readFileSync(packetPath, "utf8"));
-  const patchText = readFileSync(patchFile, "utf8");
-  const result = applyNativePatch({ packet, patchText, worktree });
+  const candidateText = readFileSync(candidateFile, "utf8");
+  const result = mode === "apply-edit"
+    ? applyNativeEditScript({ packet, editText: candidateText, worktree })
+    : applyNativePatch({ packet, patchText: candidateText, worktree });
   process.stdout.write(JSON.stringify(result, null, 2) + "\n");
   process.exit(result.ok ? 0 : 9);
 }

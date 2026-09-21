@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
 import {
-  applyNativePatch, inspectPatch, ledgerPath,
+  applyNativeEditScript, applyNativePatch, inspectEditScript, inspectPatch, ledgerPath,
 } from "../jarvis-native-patch-admission.mjs";
 
 let passed = 0;
@@ -181,6 +181,71 @@ check("wrong index metadata and stale hunk counts are stripped/recounted", () =>
     .trim().split("\n").map(JSON.parse);
   assert.equal(events[0].normalization, "strip-index-metadata+git-recount");
   assert.equal(events[1].normalization, "strip-index-metadata+git-recount");
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+console.log("\n=== NPA2d: structured edits compile to governed patches ===");
+check("unauthorized structured edit is refused structurally", () => {
+  const text = "EDIT_SCRIPT:" + JSON.stringify({
+    edits: [{ path: "forbidden.txt", old: "before", new: "after" }],
+  });
+  const r = inspectEditScript(text, ["allowed.txt"]);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "EDIT_SCRIPT_PATH_NOT_AUTHORIZED");
+});
+
+check("ambiguous old text is refused without mutation", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-edit-ambiguous-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  execFileSync("git", ["init", "-q"], { cwd: repo });
+  execFileSync("git", ["config", "user.name", "Proof"], { cwd: repo });
+  execFileSync("git", ["config", "user.email", "proof@local.invalid"], { cwd: repo });
+  writeFileSync(path.join(repo, "allowed.txt"), "same\nsame\n");
+  execFileSync("git", ["add", "."], { cwd: repo });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
+
+  const editText = "EDIT_SCRIPT:" + JSON.stringify({
+    edits: [{ path: "allowed.txt", old: "same", new: "changed" }],
+  });
+  const result = applyNativeEditScript({ packet: packet(), editText, worktree: repo, home });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "EDIT_OLD_TEXT_NOT_UNIQUE");
+  assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "same\nsame\n");
+  const events = readFileSync(ledgerPath("native-patch-proof", { home }), "utf8")
+    .trim().split("\n").map(JSON.parse);
+  assert.deepEqual(events.map((e) => e.event), ["EDIT_REFUSED"]);
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+check("exact structured edit is compiled, admitted, and applied", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-edit-apply-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+  execFileSync("git", ["init", "-q"], { cwd: repo });
+  execFileSync("git", ["config", "user.name", "Proof"], { cwd: repo });
+  execFileSync("git", ["config", "user.email", "proof@local.invalid"], { cwd: repo });
+  writeFileSync(path.join(repo, "allowed.txt"), "alpha\nbeta\n");
+  execFileSync("git", ["add", "."], { cwd: repo });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
+
+  const editText = "EDIT_SCRIPT:" + JSON.stringify({
+    edits: [{ path: "allowed.txt", old: "beta", new: "gamma" }],
+  });
+  const result = applyNativeEditScript({ packet: packet(), editText, worktree: repo, home });
+
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(result.compiled_from, "EDIT_SCRIPT_V1");
+  assert.deepEqual(result.changed_paths, ["allowed.txt"]);
+  assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "alpha\ngamma\n");
+  assert.match(result.edit_script_digest, /^sha256:[0-9a-f]{64}$/);
+  assert.match(result.compiled_patch_digest, /^sha256:[0-9a-f]{64}$/);
+  const events = readFileSync(ledgerPath("native-patch-proof", { home }), "utf8")
+    .trim().split("\n").map(JSON.parse);
+  assert.deepEqual(events.map((e) => e.event), ["EDIT_COMPILED", "ADMITTED", "APPLIED"]);
   rmSync(tmp, { recursive: true, force: true });
 });
 

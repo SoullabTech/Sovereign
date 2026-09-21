@@ -481,7 +481,7 @@ _run_lane() {
     ending_sha="$(git -C "$wt" rev-parse --short HEAD)"
     [ "$ending_sha" = "$starting_sha" ] && ending_sha=""
 
-    # Unit 20 + NPA1: native output is either a governance claim or a patch.
+    # Unit 20 + NPA1: native output is a governance claim, structured edit, or patch.
     local gate_json='' patch_admission_json=''
     if grep -q '^GOVERNANCE_GATE:' "$log" 2>/dev/null; then
         gate_json="$(grep '^GOVERNANCE_GATE:' "$log" | tail -1 | sed 's/^GOVERNANCE_GATE: *//')"
@@ -493,9 +493,12 @@ _run_lane() {
     fi
 
     if [ "$lane" = "local-native" ] && [ "$exit_code" -eq 0 ] && [ -z "$gate_json" ]; then
-        local patch_code
+        local patch_code native_apply_mode="apply"
+        if grep -q '^EDIT_SCRIPT:' "$log" 2>/dev/null; then
+            native_apply_mode="apply-edit"
+        fi
         set +e
-        patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" apply "$f" "$wt" "$log")"
+        patch_admission_json="$(node "$PATCH_ADMISSION_SCRIPT" "$native_apply_mode" "$f" "$wt" "$log")"
         patch_code=$?
         set -e
         if [ "$patch_code" -ne 0 ]; then
