@@ -46,6 +46,7 @@ import { runStructured } from '@/lib/ai/structured/router';
 import type { DispatchObservation } from '@/lib/ai/structured/dispatch';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
+import { shouldConfirmCrossing } from '@/lib/disclosure/crossingConfirmation';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
 import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers-studio/canonicalWriterTurn';
@@ -366,14 +367,16 @@ export async function runEditorialTurn(
      * and the receipt stays `attempted`, which the table defines as *a crossing
      * MAY have occurred and was not confirmed* — ⛔ never as nothing crossed.
      * That is the honest state and it needs no new vocabulary. */
-    if (structured.dispatch === 'response_observed') await confirmDisclosureCrossed(disclosureId);
+    if (shouldConfirmCrossing({ kind: 'refusal', dispatch: structured.dispatch })) {
+      await confirmDisclosureCrossed(disclosureId);
+    }
     return {
       ok: false, reason: 'structured_refused', detail: structured.refusal,
       dispatch: structured.dispatch,
     };
   }
   /* ⭐ A result came back, so the words demonstrably arrived. */
-  await confirmDisclosureCrossed(disclosureId);
+  if (shouldConfirmCrossing({ kind: 'result' })) await confirmDisclosureCrossed(disclosureId);
 
   /* 6 ⛔ ADMISSION. A refusal here reaches no transaction, and prose is never
      inspected afterwards to rescue it. */
