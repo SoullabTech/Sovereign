@@ -107,6 +107,41 @@ check("rename shapes are refused", () => {
   assert.equal(r.ok, false);
 });
 
+console.log("\n=== NPA2b: tracked special-file targets are refused ===");
+check("tracked symlink mode is refused before git apply", () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-mode-"));
+  const repo = path.join(tmp, "repo");
+  const home = path.join(tmp, "ain");
+  mkdirSync(repo);
+
+  let applyCalls = 0;
+  const result = applyNativePatch({
+    packet: packet(["allowed.txt"]),
+    patchText: patchFor("allowed.txt", "before", "after"),
+    worktree: repo,
+    home,
+    runGit: (_worktree, args) => {
+      if (args[0] === "status") return "";
+      if (args[0] === "ls-files") return "120000 deadbeef 0\tallowed.txt\n";
+      if (args[0] === "apply") applyCalls += 1;
+      return "";
+    },
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "PATCH_TARGET_MODE_UNSUPPORTED");
+  assert.equal(result.detail.path, "allowed.txt");
+  assert.equal(result.detail.mode, "120000");
+  assert.equal(applyCalls, 0);
+
+  const events = readFileSync(ledgerPath("native-patch-proof", { home }), "utf8")
+    .trim().split("\n").map(JSON.parse);
+  assert.equal(events.at(-1).code, "PATCH_TARGET_MODE_UNSUPPORTED");
+  assert.equal(events.at(-1).git_check_invoked, false);
+  assert.equal(events.at(-1).git_apply_invoked, false);
+  rmSync(tmp, { recursive: true, force: true });
+});
+
 console.log("\n=== NPA3: authorized patch checks then applies ===");
 check("authorized text patch is checked, applied, scoped, and evidenced", () => {
   const tmp = mkdtempSync(path.join(os.tmpdir(), "npa-apply-"));
