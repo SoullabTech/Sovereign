@@ -158,19 +158,35 @@ async function seed(memberId: string) {
   if (!memberId && handle) {
     const found = await query<{ id: string; username: string }>(
       'SELECT id, username FROM members WHERE username = $1 OR email = $1', [handle]);
-    if (found.rows.length !== 1) {
-      console.error(`REFUSED: "${handle}" matched ${found.rows.length} members, need exactly 1.`);
-      await closePool(); process.exit(2);
+    if (found.rows.length === 1) {
+      memberId = found.rows[0]!.id;
+      console.log(`member: ${found.rows[0]!.username} (${memberId})\n`);
+    } else {
+      console.error(`"${handle}" matched ${found.rows.length} members, need exactly 1.\n`);
     }
-    memberId = found.rows[0]!.id;
-    console.log(`member: ${found.rows[0]!.username} (${memberId})\n`);
   }
   if (!/^[0-9a-f-]{36}$/i.test(memberId)) {
-    console.error('REFUSED: identify the member this witness runs as, by either:');
-    console.error('  MEMBER_USERNAME=<your studio username>   (or MEMBER_EMAIL=...)');
-    console.error('  MEMBER_ID=<member uuid>');
-    console.error('\n⚠️  It must be the member you are SIGNED IN AS in the browser,');
-    console.error('   or the seeded Work will not be visible to you.');
+    /* ⭐⭐ A REFUSAL THAT LEAVES THE READER SOMEWHERE IS NOT A REFUSAL, IT IS
+       HOMEWORK. R1 says the founder should not have to discover state, and
+       "which of my own usernames is it" is discovery. So the refusal hands
+       back the candidates and they copy one.
+       ⛔ It never PICKS one. Most-recently-signed-in is a good guess, and a
+       guess is exactly what must not seed a witness Work into an account. */
+    const recent = await query<{ id: string; username: string; last_sign_in: Date | null }>(
+      'SELECT id, username, last_sign_in FROM members ORDER BY last_sign_in DESC NULLS LAST LIMIT 5');
+    console.error('REFUSED: name the member this witness runs as.\n');
+    if (recent.rows.length === 0) {
+      console.error('  ⚠️  This database holds no members at all — wrong DATABASE_URL?');
+    } else {
+      console.error('  Most recently signed in on this database:\n');
+      for (const r of recent.rows) {
+        const when = r.last_sign_in
+          ? new Date(r.last_sign_in).toISOString().slice(0, 16).replace('T', ' ') : 'never';
+        console.error(`    MEMBER_ID=${r.id}   ${r.username}   (last sign-in ${when})`);
+      }
+      console.error('\n  Copy the line for the account you are SIGNED IN AS in the browser.');
+      console.error('  ⚠️  If it is a different member, the seeded Work will not be visible.');
+    }
     await closePool(); process.exit(2);
   }
   if (process.env.WRITERS_STUDIO_EDITORIAL_ENABLED !== '1') {

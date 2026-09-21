@@ -43,8 +43,17 @@ Dev server running **from the worktree**, with
 in to the Studio in the browser:
 
 ```bash
-DATABASE_URL="$DATABASE_URL" \
-MEMBER_USERNAME="<the username you are signed in as>" \
+DATABASE_URL="$DATABASE_URL" WRITERS_STUDIO_EDITORIAL_ENABLED=1 \
+  npx tsx scripts/witness/r1-live-witness-setup.ts
+```
+
+⭐ **Run it with no member named.** It refuses and prints the five most
+recently signed-in members as copyable `MEMBER_ID=` lines; copy the one you are
+signed in as and re-run. ⛔ It never picks for you — most-recently-signed-in is
+a good guess, and a guess is exactly what must not seed a Work into an account.
+
+```bash
+DATABASE_URL="$DATABASE_URL" MEMBER_ID=<the line you copied> \
 WRITERS_STUDIO_EDITORIAL_ENABLED=1 \
   npx tsx scripts/witness/r1-live-witness-setup.ts
 ```
@@ -60,8 +69,9 @@ expected refusal sentences come out of the script, **re-proven against the real
 `judgeProposalScope` on every run** — so a drift in the law cannot leave a stale
 sheet promising a refusal that no longer fires.
 
-`MEMBER_ID=<uuid>` works instead of `MEMBER_USERNAME`. ⚠️ It must be the member
-**signed in in the browser**, or the seeded Work will not be visible.
+`MEMBER_USERNAME=<username>` or `MEMBER_EMAIL=<email>` work too, when you
+already know which. ⚠️ Whichever you use, it must be the member **signed in in
+the browser**, or the seeded Work will not be visible.
 
 ---
 
