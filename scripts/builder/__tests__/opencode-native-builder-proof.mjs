@@ -75,12 +75,12 @@ console.log("\n=== NB2: generated agent encodes deny-all then exact grants ===")
 {
   const resolved = resolveOpenCodeBuilder({ workUnit: baseWU() });
   const agent = builderAgentMarkdown(resolved);
-  check("edit defaults to deny", /edit:\n\s+"*": deny/.test(agent));
+  check("edit defaults to deny", agent.includes("  edit:\n    \"*\": deny"));
   check("declared file is allowed", agent.includes("\"src/a.js\": allow"));
   check("declared glob is allowed", agent.includes("\"docs/**/*.md\": allow"));
   check(
     "shell defaults to deny but git inspection is allowed",
-    /bash:\n\s+"*": deny/.test(agent) && agent.includes("\"git diff*\": allow"),
+    agent.includes("  bash:\n    \"*\": deny") && agent.includes("\"git diff*\": allow"),
   );
   check(
     "external/web/subagent surfaces are denied",
