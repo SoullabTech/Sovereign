@@ -44,6 +44,7 @@ CLAIM_SCRIPT="$PROJECT_DIR/scripts/ain-worktree-claim.sh"
 SESSION_SCRIPT="$PROJECT_DIR/scripts/builder/session.mjs"
 WORK_UNIT_SCRIPT="$PROJECT_DIR/scripts/builder/work-unit.mjs"
 OPENCODE_PROVIDER_SCRIPT="$PROJECT_DIR/scripts/builder/opencode-provider.mjs"
+OPENCODE_BUILDER_SCRIPT="$PROJECT_DIR/scripts/builder/opencode-builder.mjs"
 TINKER_DIRECT_SCRIPT="$PROJECT_DIR/scripts/builder/tinker-direct.mjs"
 EXTERNAL_CONTEXT_SCRIPT="$PROJECT_DIR/scripts/builder/external-context.mjs"
 
@@ -194,6 +195,7 @@ _run_lane() {
     local lane="$1" work_unit_id="$2" model_override="${3:-}" provider_override="${4:-}"
     local f wt starting_sha exit_code log ending_sha prompt cmd branch model
     local opencode_resolution="" opencode_agent=""
+    local opencode_builder_resolution="" opencode_builder_agent="" opencode_builder_config=""
     local opencode_credential_env="" opencode_credential_value=""
     local tinker_resolution="" tinker_model_id=""
     f="$(_require_packet "$work_unit_id")"
@@ -239,6 +241,18 @@ _run_lane() {
         opencode_agent="$(echo "$opencode_resolution" | jq -r '.agent')"
     fi
 
+    if [ "$lane" = "opencode-build" ]; then
+        [ -z "$provider_override" ] || [ "$provider_override" = "qwen-local" ] || {
+            echo "🛑 native OpenCode builder provider must be qwen-local" >&2
+            exit 3
+        }
+        local builder_code
+        set +e
+        opencode_builder_resolution="$(node "$OPENCODE_BUILDER_SCRIPT" resolve "$work_unit_id" "$model_override")"
+        builder_code=$?
+        set -e
+        [ "$builder_code" -eq 0 ] || exit "$builder_code"
+    fi
     if [ "$lane" = "tinker" ]; then
         [ -n "$provider_override" ] || { echo "🛑 tinker provider id required" >&2; exit 2; }
         local provider_code provider_authorization credential_env
@@ -287,6 +301,8 @@ _run_lane() {
         model="${model_override:-sonnet}"
     elif [ "$lane" = "opencode" ]; then
         model="$(echo "$opencode_resolution" | jq -r '.model_ref')"
+    elif [ "$lane" = "opencode-build" ]; then
+        model="$(echo "$opencode_builder_resolution" | jq -r '.model_ref')"
     elif [ "$lane" = "tinker" ]; then
         model="$(echo "$tinker_resolution" | jq -r '.model_ref')"
     else model="UNKNOWN"; fi
@@ -349,6 +365,11 @@ _run_lane() {
     starting_sha="$(git -C "$wt" rev-parse --short HEAD)"
     if [ "$lane" = "opencode" ]; then
         prompt="$(_build_prompt "$f" "READ-ONLY PROVIDER EVALUATION: inspect the authorized repository evidence and return the requested analysis. Do not edit, run shell commands, browse, commit, or access outside this worktree.")"
+    elif [ "$lane" = "opencode-build" ]; then
+        opencode_builder_resolution="$(node "$OPENCODE_BUILDER_SCRIPT" prepare "$work_unit_id" "$model_override")" || exit $?
+        opencode_builder_agent="$(echo "$opencode_builder_resolution" | jq -r '.agent')"
+        opencode_builder_config="$(echo "$opencode_builder_resolution" | jq -r '.config_dir')"
+        prompt="$(_build_prompt "$f" "BOUNDED NATIVE OPENCODE IMPLEMENTATION: edit only ALLOWED FILES. Do not commit. Do not browse or launch subagents. Shell is restricted to git status/diff; JARVIS independently verifies scope and tests after you finish.")"
     elif [ "$lane" = "tinker" ]; then
         prompt="$(_build_prompt "$f" "DIRECT EXTERNAL PROVIDER EVALUATION: JARVIS has bounded the evidence. You have no tools or filesystem access. Analyze only the prompt and the AUTHORIZED REPOSITORY EVIDENCE below.")"
         local external_context
@@ -405,6 +426,11 @@ _run_lane() {
         fi
         exit_code=$?
         opencode_credential_value=""
+    elif [ "$lane" = "opencode-build" ]; then
+        ( cd "$wt" && env OPENCODE_CONFIG_DIR="$opencode_builder_config" \
+            opencode run --pure --auto --agent "$opencode_builder_agent" --model "$model" "$prompt" ) > "$log" 2>&1
+        exit_code=$?
+        node "$OPENCODE_BUILDER_SCRIPT" cleanup "$work_unit_id" >/dev/null 2>&1 || true
     elif [ "$lane" = "tinker" ]; then
         if [ -z "$opencode_credential_env" ] || [ -z "$opencode_credential_value" ]; then
             echo "🛑 Tinker credential missing after governed resolution" >&2
@@ -430,8 +456,27 @@ _run_lane() {
     # `jq: invalid JSON text passed to --argjson` — silently preventing ANY local-lane
     # result from ever being persisted, regardless of what the worker did. `--name-only`
     # gives the file list directly; no stat-line parsing to break in the first place.
-    local files_changed_json
-    files_changed_json="$(git -C "$wt" diff --name-only "$starting_sha" 2>/dev/null | jq -R . | jq -s . 2>/dev/null || echo '[]')"
+    local files_changed_json scope_deviations_json='[]' scope_ok=true
+    if [ "$lane" = "opencode-build" ]; then
+        local scope_json scope_code
+        set +e
+        scope_json="$(node "$OPENCODE_BUILDER_SCRIPT" verify-scope "$work_unit_id" "$wt" "$starting_sha")"
+        scope_code=$?
+        set -e
+        files_changed_json="$(printf '%s' "$scope_json" | jq -c '.changed_files // []' 2>/dev/null || echo '[]')"
+        scope_deviations_json="$(printf '%s' "$scope_json" | jq -c '.out_of_scope // []' 2>/dev/null || echo '[]')"
+        if [ "$scope_code" -ne 0 ]; then
+            scope_ok=false
+            [ "$exit_code" -ne 0 ] || exit_code=97
+            printf 'JARVIS_SCOPE_REFUSAL: %s\n' "$scope_json" >> "$log"
+        fi
+    else
+        files_changed_json="$(
+            { git -C "$wt" diff --name-only "$starting_sha" 2>/dev/null || true
+              git -C "$wt" ls-files --others --exclude-standard 2>/dev/null || true; } |
+            sort -u | sed '/^$/d' | jq -R . | jq -s . 2>/dev/null || echo '[]'
+        )"
+    fi
 
     local escalation_required=false unresolved_questions_json='[]'
     if grep -q '^ESCALATE_TO_CLAUDE:' "$log" 2>/dev/null; then
@@ -443,7 +488,7 @@ _run_lane() {
     local verification_evidence=""
     local vcount
     vcount="$(jq '.verification_commands | length' "$f")"
-    if [ "$vcount" -gt 0 ]; then
+    if [ "$vcount" -gt 0 ] && $scope_ok; then
         local all_pass=true
         while IFS= read -r vcmd; do
             [ -z "$vcmd" ] && continue
@@ -455,6 +500,11 @@ _run_lane() {
             fi
         done < <(jq -r '.verification_commands[]' "$f")
         if $all_pass; then test_results="pass"; else test_results="fail"; fi
+    elif ! $scope_ok; then
+        test_results="fail"
+    fi
+    if [ "$lane" = "opencode-build" ] && [ "$test_results" = "fail" ] && [ "$exit_code" -eq 0 ]; then
+        exit_code=98
     fi
 
     local recommended="review-diff"
@@ -466,6 +516,21 @@ _run_lane() {
         recommended="review-diff"
     else
         recommended="reject"
+    fi
+
+    # Native builder candidates are committed only by the JARVIS harness, after
+    # model completion, scope verification, and independent checks. This remains
+    # an isolated candidate commit: it is not merge or canonical integration.
+    if [ "$lane" = "opencode-build" ] && [ "$exit_code" -eq 0 ] && $scope_ok \
+        && { [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; } \
+        && [ "$escalation_required" = false ] \
+        && [ "$(printf '%s' "$files_changed_json" | jq 'length')" -gt 0 ]; then
+        while IFS= read -r changed; do
+            [ -n "$changed" ] && git -C "$wt" add -- "$changed"
+        done < <(printf '%s' "$files_changed_json" | jq -r '.[]')
+        git -C "$wt" -c user.name="JARVIS" -c user.email="jarvis@local.invalid" \
+            commit -m "chore(jarvis): $work_unit_id" >> "$log" 2>&1
+        ending_sha="$(git -C "$wt" rev-parse --short HEAD)"
     fi
 
     # model already resolved above, before Builder ownership registration.
@@ -481,6 +546,7 @@ _run_lane() {
         --arg evidence "$verification_evidence" \
         --argjson escalation_required "$escalation_required" \
         --argjson unresolved_questions "$unresolved_questions_json" \
+        --argjson scope_deviations "$scope_deviations_json" \
         --arg recommended "$recommended" \
         --arg log_path "$log" \
         --argjson duration_s "$((t1 - t0))" \
@@ -500,7 +566,7 @@ _run_lane() {
             build_result: "not_run",
             evidence: $evidence,
             uncertainties: [],
-            scope_deviations: [],
+            scope_deviations: $scope_deviations,
             escalation_required: $escalation_required,
             unresolved_questions: $unresolved_questions,
             recommended_next_action: $recommended,
@@ -539,6 +605,11 @@ cmd_opencode() {
     _run_lane "opencode" "$work_unit_id" "$model_override" "$provider_id"
 }
 
+cmd_opencode_build() {
+    local work_unit_id="${1:?work_unit_id required}"
+    local model_override="${2:-}"
+    _run_lane "opencode-build" "$work_unit_id" "$model_override" "qwen-local"
+}
 cmd_tinker() {
     local work_unit_id="${1:?work_unit_id required}"
     local provider_id="${2:?provider_id required}"
@@ -609,13 +680,14 @@ case "${1:-}" in
     kimi)     shift; cmd_kimi "$@" ;;
     claude)   shift; cmd_claude "$@" ;;
     opencode) shift; cmd_opencode "$@" ;;
+    opencode-build) shift; cmd_opencode_build "$@" ;;
     tinker)   shift; cmd_tinker "$@" ;;
     result)   shift; cmd_result "$@" ;;
     review)   shift; cmd_review "$@" ;;
     escalate) shift; cmd_escalate "$@" ;;
     release)  shift; cmd_release "$@" ;;
     *)
-        echo "usage: $0 {new|claim|local|kimi|claude|opencode|tinker|result|review|escalate|release} <work_unit_id> [args...]" >&2
+        echo "usage: $0 {new|claim|local|kimi|claude|opencode|opencode-build|tinker|result|review|escalate|release} <work_unit_id> [args...]" >&2
         exit 2
         ;;
 esac
