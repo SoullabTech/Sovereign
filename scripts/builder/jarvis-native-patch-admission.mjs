@@ -24,6 +24,8 @@ import os from "node:os";
 import { derivePermissionEnvelope } from "./work-unit.mjs";
 
 const MAX_PATCH_BYTES = 512 * 1024;
+const COMMIT_SHA = /^[0-9a-f]{7,40}$/i;
+const TEXT_FILE_MODES = new Set(["100644", "100755"]);
 const HOME = (env = process.env) => (
   env.AIN_DELEGATION_HOME || path.join(os.homedir(), ".claude", "ain-delegation")
 );
@@ -295,6 +297,7 @@ export function applyNativePatch({
 
   const packetCanonical = String(packet?.canonical_sha || "").trim();
   if (!packetCanonical) return recordRefusal("PACKET_CANONICAL_SHA_REQUIRED");
+  if (!COMMIT_SHA.test(packetCanonical)) return recordRefusal("PACKET_CANONICAL_SHA_INVALID");
   let executionHead;
   let authorizedHead;
   try {
@@ -308,6 +311,23 @@ export function applyNativePatch({
       packet_canonical_sha: authorizedHead || packetCanonical,
       execution_head: executionHead || null,
     });
+  }
+
+  for (const file of inspected.patch_paths) {
+    let tracked = "";
+    try {
+      tracked = String(runGit(worktree, ["ls-files", "-s", "--", file]) || "").trim();
+    } catch (error) {
+      return recordRefusal("PATCH_TARGET_MODE_UNREADABLE", {
+        path: file, error: String(error?.message || error),
+      });
+    }
+    if (tracked) {
+      const mode = tracked.split(/\s+/, 1)[0];
+      if (!TEXT_FILE_MODES.has(mode)) {
+        return recordRefusal("PATCH_TARGET_MODE_UNSUPPORTED", { path: file, mode });
+      }
+    }
   }
 
   let status;
