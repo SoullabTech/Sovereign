@@ -1,14 +1,12 @@
 set -e
 set -o pipefail
 
-SHA=858ee4948fd5e4f7a65dab156004bb863ad8ae66
+SHA=2f211f432394a236cc2bcdb4fea55ca1bd179713
 SUBJECT_SHA=faf918b5c5b2cd85f8e8a6c9cbda8bc76df11ce8
 PTR=/private/tmp/source-level-calibration-01-preflight-current.txt
 ACT_MARK=/private/tmp/source-level-calibration-01-act-invoked.txt
 
 test ! -e "$ACT_MARK"
-ACTSTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-printf 'SOURCE-LEVEL-CALIBRATION-01 INVOKED %s implementation %s subject %s\n' "$ACTSTAMP" "$SHA" "$SUBJECT_SHA" > "$ACT_MARK"
 
 AUTH="$(printenv K00_EXEC_AUTHORITY 2>/dev/null || true)"
 [ -n "$AUTH" ]
@@ -43,6 +41,9 @@ PFSEC="$(date -u -j -f %Y%m%dT%H%M%SZ "$PFSTAMP" +%s)"
 AGE=$((NOW - PFSEC))
 test "$AGE" -ge 0
 test "$AGE" -le 300
+
+ACTSTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+( set -o noclobber; printf 'SOURCE-LEVEL-CALIBRATION-01 INVOKED %s implementation %s subject %s\n' "$ACTSTAMP" "$SHA" "$SUBJECT_SHA" > "$ACT_MARK" )
 
 RUNROOT="$WT/docs/programme/VOICE-2026/driver-ledger/SOURCE-LEVEL-CALIBRATION-01-ACT-$ACTSTAMP"
 mkdir -p "$RUNROOT"
