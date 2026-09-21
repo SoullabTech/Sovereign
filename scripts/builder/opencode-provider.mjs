@@ -50,7 +50,7 @@ export const OPENCODE_PROVIDERS = Object.freeze({
     metered_provider: false,
     credential_env: null,
     standing: 'local-established',
-    execution_adapter: 'opencode',
+    execution_adapter: 'ollama-direct',
   }),
   'nemotron-nvidia': Object.freeze({
     opencode_provider: 'nvidia',
