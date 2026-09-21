@@ -15,9 +15,37 @@ import EditingLatitude from './EditingLatitude';
 export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;
 }
+type UndoWithheld = 'ok' | 'work_moved' | 'already_undone' | 'no_snapshot';
+
+/**
+ * ⭐⭐ AN APPLIED REVISION THAT CANNOT BE TAKEN BACK SAYS SO.
+ *
+ * ⛔ The silent case is the defect the 2026-09-21 witness found: the desk
+ * showed the change and withheld the control, and the writer had no way to
+ * tell *withheld* from *never built*. Silence about a lost recovery reads as
+ * a missing feature, and a writer who thinks undo is missing stops applying.
+ *
+ * ⛔ `'ok'` returns null — there is a button, and copy beside it explaining a
+ * capacity the writer is currently holding would only make them doubt it.
+ */
+function undoWithheldCopy(why: UndoWithheld | undefined): string | null {
+  switch (why) {
+    case 'work_moved':
+      return 'You\u2019ve written here since this was applied, so it can no longer be undone.';
+    case 'already_undone':
+      return 'This was already taken back.';
+    case 'no_snapshot':
+      return 'This was applied before the Studio kept what it would need to undo it.';
+    /* ⛔ 'ok' and absent both fall here: neither is an occasion to say anything. */
+    default:
+      return null;
+  }
+}
+
 export default function RevisionDesk({
   active = true, inline = false, onPreview, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
+  undoAvailability,
   latitude = 1, onLatitude, mayRemoveParagraphs = false, onMayRemoveParagraphs, voiceNotice,
   mayProposeImmediately = false, onMayProposeImmediately,
 }: {
@@ -28,6 +56,10 @@ export default function RevisionDesk({
   onSelectVersion: (id: string) => void; onApply: () => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   sectionBody?: string; appliedVersionId?: string | null; onUndo?: () => void; undoMessage?: string | null;
+  /** ⭐ Why undo is withheld, when it is. ⛔ Never guessed here — this desk
+   *  does not know what happened to the work, and a surface that invents a
+   *  cause is worse than one that says nothing. Absent ⇒ say nothing. */
+  undoAvailability?: UndoWithheld;
   busy: boolean; message: string | null; response: string | null; onKeep: () => void;
   /** ⭐ The author's editing latitude. ⛔ Defaults to the most protective value. */
   latitude?: EditorialLatitude; onLatitude?: (v: EditorialLatitude) => void;
@@ -208,7 +240,10 @@ export default function RevisionDesk({
       </div>
       {version && !context && <p role="status">This passage has moved or changed. Reopen it to preview and apply safely.</p>}
       {appliedVersionId && <div className="wsi-page-applied"><span>Applied: {thread?.versions.find(v => v.id === appliedVersionId) ? alternativeLabel(thread.versions.find(v => v.id === appliedVersionId)!, thread.versions.findIndex(v => v.id === appliedVersionId)) : appliedVersionId}</span>
-        {onUndo && <button disabled={blocked} onClick={onUndo}>Undo this change</button>}</div>}
+        {onUndo
+          ? <button disabled={blocked} onClick={onUndo}>Undo this change</button>
+          : undoWithheldCopy(undoAvailability)
+            && <span className="wsi-muted">{undoWithheldCopy(undoAvailability)}</span>}</div>}
       {(localMessage || message || undoMessage) && <p role="status" aria-live="polite">{localMessage || message}{undoMessage && ' ' + undoMessage}</p>}
     </section>;
   }
@@ -341,7 +376,13 @@ export default function RevisionDesk({
     {appliedVersionId && <section aria-label="Applied revision">
       <p>Applied revision: {thread?.versions.findIndex(v => v.id === appliedVersionId)! >= 0
         ? alternativeLabel(thread!.versions.find(v => v.id === appliedVersionId)!, thread!.versions.findIndex(v => v.id === appliedVersionId)) : appliedVersionId}.</p>
-      {onUndo && <button type="button" disabled={blocked} onClick={onUndo}>Undo that application</button>}
+      {/* ⭐ THE SAME WORDS AS THE INLINE DESK, and that is the point: two names
+             for one control made *absent* and *renamed* indistinguishable to the
+             witness who went looking for it. */}
+      {onUndo
+        ? <button type="button" disabled={blocked} onClick={onUndo}>Undo this change</button>
+        : undoWithheldCopy(undoAvailability)
+          && <p className="wsi-muted">{undoWithheldCopy(undoAvailability)}</p>}
       {undoMessage && <p role="status">{undoMessage}</p>}
     </section>}
     <p role="status" aria-live="polite">{draft ? (localMessage ?? 'Working revision · not applied. Discussing preserves this draft.') : localMessage ?? message ?? 'Comparing and drafting do not change the manuscript.'}</p>

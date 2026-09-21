@@ -10,7 +10,11 @@ export interface RebuildEditorialVersion {
 }
 
 export interface RebuildEditorialThread {
-  application?: { authorizationId: string; versionId: string; resultingVersion: number; undone: boolean; canUndo: boolean } | null;
+  application?: { authorizationId: string; versionId: string; resultingVersion: number;
+    undone: boolean; canUndo: boolean;
+    /* ⭐ Why, when `canUndo` is false — so the desk can say it rather than
+       fall silent on an applied revision the writer cannot take back. */
+    undoAvailability?: 'ok' | 'work_moved' | 'already_undone' | 'no_snapshot' } | null;
   threadId: string;
   chainId: string;
   locusText: string;
