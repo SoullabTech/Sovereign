@@ -250,6 +250,20 @@ export function runC6(): readonly Check[] {
     newSubstrate.length === 0,
     `new route/table/substrate entries: ${newSubstrate.join(', ') || 'none'}`);
 
+  /* ⭐ A reading lost at the storage boundary is not a reading MAIA could not
+     do, and the writer who waited out the read is owed that difference. */
+  add('C6R2-14-failure-copy-distinguishes-where-it-was-lost',
+    /failure\.stage === 'freeze'/.test(rebuild) &&
+    /could not be recorded/.test(rebuild) &&
+    /failure\.stage === 'capture' \|\| failure\.stage === 'recover'/.test(rebuild),
+    'a read that completed and failed to save no longer reads as a read that failed');
+
+  add('C6R2-15-failure-copy-leaks-no-internals',
+    !/trigger|validator|constraint|schema_migrations|postgres|SQLSTATE/i.test(
+      rebuild.slice(rebuild.indexOf('const reviewFailureCopy'),
+                    rebuild.indexOf('const visibleReviewFindings'))),
+    'the writer is told where the reading was lost, never the internals of why');
+
   const c5 = runC5();
   const reusableC5 = c5.filter(c => c.id !== 'C5-19-no-new-revision-substrate');
   add('C6-10-c5-still-green',

@@ -602,6 +602,24 @@ export default function RebuildStudioClient() {
     if (failure.refusal === 'claim_unbindable') {
       return 'MAIA could not bind one or more claims from this lens to the frozen evidence, so this lens was not kept. The other completed readings are unaffected.';
     }
+    /* ⭐⭐ WHERE THE READING WAS LOST IS THE WRITER'S INFORMATION, NOT OURS.
+       `ReviewFailure` has carried `stage` all along and this surface threw it
+       away, so every outcome read as *MAIA could not complete* — and a lens
+       that finished a full read and then failed to RECORD it was
+       indistinguishable from one that failed to think. The writer waited out
+       the whole read, lost it, and was told nothing that would let them tell
+       the two apart or know whether reading again would help.
+       ⛔ Still no schema names, no trigger names, no stack: WHERE it was lost,
+       ⛔ never the internals of why. */
+    if (failure.stage === 'freeze') {
+      return 'MAIA finished reading with this lens, but the result could not be recorded, so nothing from it was kept. Your manuscript is unchanged, and reading again will not help until that is fixed.';
+    }
+    if (failure.stage === 'capture' || failure.stage === 'recover') {
+      return 'MAIA could not open this part of your Work to read it, so this lens did not run. Nothing was changed.';
+    }
+    if (failure.stage === 'fetch') {
+      return 'This lens completed, but its reading could not be loaded back. Nothing from it is shown, and nothing in your Work changed.';
+    }
     return 'This lens could not complete safely, so no findings from it were kept. The other completed readings are unaffected.';
   };
   const visibleReviewFindings = review
