@@ -170,10 +170,6 @@ review_migration_custody_or_abort() {
         return 1
     fi
     local tsx_bin="$PROJECT_DIR/node_modules/.bin/tsx"
-    if [ ! -x "$tsx_bin" ]; then
-        log_error "⛔ Migration review gate cannot execute: host tsx unavailable at $tsx_bin"
-        return 1
-    fi
 
     # DEPLOYMENT-SAFETY-03 / STEP 2B: compatibility is relational to
     # the reader that is actually live before any swap. Missing/unresolvable
@@ -198,7 +194,72 @@ review_migration_custody_or_abort() {
     done <<< "$pending"
 
     log_info "REVIEW-CUSTODY + MIGRATION-COMPATIBILITY: checking exact pending relation..."
-    if ! "$tsx_bin" "$gate" "${args[@]}"; then
+
+    local gate_passed=0
+    if [ -x "$tsx_bin" ]; then
+        # Local/dev and explicitly provisioned hosts may execute the gate directly.
+        if "$tsx_bin" "$gate" "${args[@]}"; then
+            gate_passed=1
+        fi
+    else
+        # Production deploy/update already built and provenance-verified the exact
+        # target image before this point. Use that immutable image as the gate
+        # execution substrate rather than depending on mutable host node_modules.
+        #
+        # Migration-only has no immutable build context and deliberately does NOT
+        # enter this fallback; without host tsx it remains fail-closed.
+        if [ -z "${MAIA_BUILD_CONTEXT:-}" ]; then
+            log_error "⛔ Migration review gate cannot execute: host tsx unavailable at $tsx_bin"
+            log_error "   No immutable target-image context is available for a governed fallback."
+            return 1
+        fi
+
+        local gate_image="$MAIA_IMAGE_REPO:prod"
+        if ! deploy_ctx_verify_image "$target" "$gate_image"; then
+            log_error "⛔ Migration review gate cannot use target image: provenance verification failed."
+            return 1
+        fi
+
+        local evidence_path
+        for evidence_path in "$record" "$review" "$trace"; do
+            if [ ! -f "$evidence_path" ]; then
+                log_error "⛔ Migration review evidence file is not a regular file: $evidence_path"
+                return 1
+            fi
+        done
+
+        local record_abs review_abs trace_abs
+        record_abs="$(cd "$(dirname "$record")" && pwd -P)/$(basename "$record")"
+        review_abs="$(cd "$(dirname "$review")" && pwd -P)/$(basename "$review")"
+        trace_abs="$(cd "$(dirname "$trace")" && pwd -P)/$(basename "$trace")"
+
+        local image_args=(--record /evidence/record.json
+                          --review /evidence/review.json
+                          --trace /evidence/trace.ndjson
+                          --repo /repo
+                          --target "$target"
+                          --old-reader "$old_reader")
+        while IFS= read -r m; do
+            [ -n "$m" ] && image_args+=(--migration "$m")
+        done <<< "$pending"
+
+        log_info "Host tsx unavailable; executing migration review gate inside verified target image..."
+        if docker run --rm --user 0:0 \
+            -e GIT_CONFIG_COUNT=1 \
+            -e GIT_CONFIG_KEY_0=safe.directory \
+            -e GIT_CONFIG_VALUE_0=/repo \
+            --mount "type=bind,src=$PROJECT_DIR,dst=/repo,readonly" \
+            --mount "type=bind,src=$record_abs,dst=/evidence/record.json,readonly" \
+            --mount "type=bind,src=$review_abs,dst=/evidence/review.json,readonly" \
+            --mount "type=bind,src=$trace_abs,dst=/evidence/trace.ndjson,readonly" \
+            --entrypoint /app/node_modules/.bin/tsx \
+            "$gate_image" \
+            /app/scripts/review-custody-migration-gate.ts "${image_args[@]}"; then
+            gate_passed=1
+        fi
+    fi
+
+    if [ "$gate_passed" -ne 1 ]; then
         log_error "⛔ $phase aborted before migration: review/compatibility gate does not apply."
         return 1
     fi
