@@ -293,6 +293,23 @@ export function applyNativePatch({
     return recordRefusal("PATCH_AUTHORITY_TOO_BROAD", { envelope });
   }
 
+  const packetCanonical = String(packet?.canonical_sha || "").trim();
+  if (!packetCanonical) return recordRefusal("PACKET_CANONICAL_SHA_REQUIRED");
+  let executionHead;
+  let authorizedHead;
+  try {
+    executionHead = String(runGit(worktree, ["rev-parse", "HEAD"]) || "").trim();
+    authorizedHead = String(runGit(worktree, ["rev-parse", packetCanonical + "^{commit}"]) || "").trim();
+  } catch (error) {
+    return recordRefusal("PACKET_CANONICAL_SHA_UNRESOLVED", String(error?.message || error));
+  }
+  if (!executionHead || !authorizedHead || executionHead !== authorizedHead) {
+    return recordRefusal("WORKTREE_CANONICAL_SHA_MISMATCH", {
+      packet_canonical_sha: authorizedHead || packetCanonical,
+      execution_head: executionHead || null,
+    });
+  }
+
   let status;
   try {
     status = String(runGit(worktree, ["status", "--porcelain", "--untracked-files=all"]) || "").trim();
