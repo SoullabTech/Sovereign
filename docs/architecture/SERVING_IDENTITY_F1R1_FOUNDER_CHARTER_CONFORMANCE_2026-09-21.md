@@ -1,7 +1,7 @@
 # SERVING-IDENTITY / F1R1 — FOUNDER CHARTER CONFORMANCE HARDENING
 
 **Date:** 2026-09-21
-**Opening canonical:** `4c097b4c81402c62e42613e83ae28180fef46f08`
+**Opening canonical for this reconciliation:** `c346031f7241280982f56f0e4eb760728761c412`
 **Predecessor:** canonical F1 evidence law admitted at `4c097b4c8`
 **Status:** CONTRACT + FALSIFICATION ONLY · NO RUNTIME PRODUCER · NO D2 ADMISSION · NO D1 · NO DISCLOSURE · NO DEPLOYMENT
 
@@ -31,6 +31,21 @@ The governing question is:
 F1R1 does not build runtime producers.
 
 It defines and falsifies the law future producers must obey.
+
+### Current-canonical reconciliation
+
+The original F1 evidence law was admitted earlier at `4c097b4c8`. Current
+canonical has since advanced to
+`c346031f7241280982f56f0e4eb760728761c412`, including the separately governed
+F2-IQ classifier contract.
+
+This F1R1 act does not modify, invoke, admit, or widen F2-IQ. Its presence in
+canonical is inherited substrate only. F1R1 changes remain limited to this
+contract record, its deterministic charter-conformance matrix, and package
+registration for that matrix.
+
+The F1R1 self-scope and byte-identity guards are therefore bound to exact
+opening canonical `c346031f7241280982f56f0e4eb760728761c412`.
 
 ## 2. Closed D2 input vocabulary
 
