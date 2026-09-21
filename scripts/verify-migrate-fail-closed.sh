@@ -18,12 +18,10 @@
 # to a THROWAWAY COPY and shown to go RED, the innocent control is shown GREEN,
 # and the real tree is proven untouched.
 #
-# ⚠️ SCOPE, SAID PLAINLY — THIS DOES NOT PREVENT THE SWAP. Migrations run AFTER
-# the container swap (build → swap → provenance verify → migrate), so when a
-# failure becomes visible the reader is already live. This proves the deploy
-# FAILS CLOSED and routes to rollback; it does NOT prove the reader never
-# shipped. Whether migrate should precede the swap is a deploy-ORDERING question
-# and is deliberately NOT answered here.
+# DEPLOYMENT-SAFETY-03 strengthens this law without replacing it:
+# normal deploy/update now run migration BEFORE candidate swap, after an exact
+# review/compatibility gate and an immediate relation re-witness. A migration
+# failure must therefore leave the old reader live and prevent candidate swap.
 #
 # Run:  scripts/verify-migrate-fail-closed.sh   (npm run verify:migrate-fail-closed)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -48,7 +46,17 @@ run_case() { # $1=script $2=migrate exit code $3=phase
   bash -c '
     source "$1" >/dev/null 2>&1
     set +e
-    deploy_ctx_compose() { return '"$2"'; }
+    MAIA_BUILD_CONTEXT=/tmp/step3-fixture-snapshot
+    # The immediate pending-set re-witness is read-only and empty in this fixture.
+    # Only the actual migration invocation receives the requested exit code.
+    deploy_ctx_compose() {
+      case " $* " in
+        *" -T migrate sh -c "*) return 0 ;;
+        *) return '"$2"' ;;
+      esac
+    }
+    MIGRATION_COMPAT_EXPECTED_PENDING=""
+    MIGRATION_COMPAT_EXPECTED_OLD_READER=""
     run_migrations_or_abort "$3"
     echo "SENTINEL_DEPLOYMENT_CONTINUED"
   ' _ "$1" "$3" 2>&1
@@ -65,10 +73,12 @@ case "$OUT" in *SENTINEL_DEPLOYMENT_CONTINUED*)
 case "$OUT" in *"Deployment complete"*|*"Update complete"*|*"Migrations applied"*)
   bad "a success message was emitted on failure" ;; *)
   ok "no success message emitted on failure" ;; esac
-case "$OUT" in *"DEPLOYMENT ABORTED"*) ok "the abort is stated to the operator" ;;
-  *) bad "the failure is not stated as an abort" ;; esac
-case "$OUT" in *"rollback"*) ok "the operator is routed to rollback" ;;
-  *) bad "no rollback route offered after a live swap" ;; esac
+case "$OUT" in *"DEPLOYMENT ABORTED PRE-SWAP"*) ok "the abort is explicitly pre-swap" ;;
+  *) bad "the failure is not stated as a pre-swap abort" ;; esac
+case "$OUT" in *"candidate reader was NOT swapped in"*) ok "candidate reader is explicitly unswapped on migration failure" ;;
+  *) bad "failure does not state that the candidate reader stayed unswapped" ;; esac
+case "$OUT" in *"old reader remains the live reader"*) ok "old reader remains live on migration failure" ;;
+  *) bad "failure does not preserve the old-reader standing" ;; esac
 
 # ── 2 · SUCCESS WITNESS ─────────────────────────────────────────────────────
 OUT_OK="$(run_case "$DEPLOY" 0 Deployment)"; CODE_OK="$(run_code "$DEPLOY" 0 Deployment)"
@@ -103,40 +113,53 @@ case "$MUT_OUT" in *SENTINEL_DEPLOYMENT_CONTINUED*)
   ok "hostile mutation (swallow restored) is DETECTED — the harness discriminates" ;; *)
   bad "hostile mutation was NOT detected — this harness proves nothing" ;; esac
 
-# ── 4 · STRUCTURAL — both paths call it, bare, before any success message ───
+# ── 4 · STRUCTURAL — gate → migrate → tags → swap → verify → success ────────
 python3 - "$DEPLOY" <<'PY'
 import re, sys
 src = open(sys.argv[1]).read()
 def section(name):
     m = re.search(rf'^{name}\(\) \{{(.*?)^\}}', src, re.S | re.M)
     return m.group(1) if m else None
-issues, oks = [], []
-for fn, msg in (('cmd_deploy', 'Deployment complete!'), ('cmd_update', 'Update complete!')):
+issues = []
+for fn, phase, success in (
+    ('cmd_deploy', 'Deployment', 'Deployment complete!'),
+    ('cmd_update', 'Update', 'Update complete!'),
+):
     body = section(fn)
     if body is None:
-        issues.append(f'{fn} not found'); continue
-    call = re.search(r'^\s*run_migrations_or_abort "\w+"\s*$', body, re.M)
-    if not call:
-        issues.append(f'{fn} does not call run_migrations_or_abort as a bare command')
+        issues.append(f'{fn} not found')
         continue
-    oks.append(f'{fn} calls run_migrations_or_abort as a bare command '
-               '(not in $(...), not behind || or if !)')
-    at = body.index(f'log_success "{msg}"') if f'log_success "{msg}"' in body else -1
-    if at < 0: issues.append(f'{fn} success message not found')
-    elif call.start() < at: oks.append(f'{fn} success message comes strictly AFTER the migration step')
-    else: issues.append(f'{fn} reports success BEFORE migrations run')
+    bare = re.search(rf'^\s*run_migrations_or_abort "{phase}"\s*$', body, re.M)
+    if not bare:
+        issues.append(f'{fn}: migration is not a bare command')
+        continue
+    markers = {
+        'gate': body.find(f'review_migration_custody_or_abort "{phase}"'),
+        'migrate': bare.start(),
+        'tag': body.find('tag_images_for_rollback "$GIT_COMMIT"'),
+        'swap': body.find('deploy_ctx_compose up -d'),
+        'verify': body.find('deploy_ctx_verify_running "$GIT_COMMIT"'),
+        'success': body.find(f'log_success "{success}"'),
+    }
+    if any(v < 0 for v in markers.values()):
+        issues.append(f'{fn}: missing order marker(s): {markers}')
+        continue
+    order = [markers[k] for k in ('gate','migrate','tag','swap','verify','success')]
+    if order != sorted(order) or len(set(order)) != len(order):
+        issues.append(f'{fn}: wrong order {markers}')
 if re.search(r'if ! deploy_ctx_compose --profile migrate', src):
-    issues.append('a swallowing `if ! … migrate` block remains')
-else:
-    oks.append('no swallowing `if ! … migrate` block remains anywhere')
-if re.search(r'^set -e', src, re.M): oks.append('set -e is in force, so cmd_migrate aborts on failure too')
-else: issues.append('set -e absent — cmd_migrate would not fail closed')
-for o in oks: print(f'  ok:   {o}')
-for i in issues: print(f'  FAIL: {i}')
-sys.exit(len(issues))
+    issues.append('a swallowing if-not migrate block remains')
+if not re.search(r'^set -e', src, re.M):
+    issues.append('set -e absent')
+for i in issues: print('  FAIL:', i)
+sys.exit(1 if issues else 0)
 PY
 STRUCT=$?
-PASS=$((PASS + 5 - STRUCT)); FAIL=$((FAIL + STRUCT))
+if [ "$STRUCT" -eq 0 ]; then
+  ok "deploy/update structurally order gate → migrate → tags → swap → verify → success"
+else
+  bad "deploy/update structural ordering is wrong"
+fi
 
 # ── 5 · the real tree is untouched ─────────────────────────────────────────
 AFTER="$(sha256sum "$DEPLOY" | cut -c1-16)"
