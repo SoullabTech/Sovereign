@@ -111,6 +111,27 @@ test('canonical containment owns runtime, env, config, and local endpoint', () =
       config.provider.ollama.options.baseURL,
       'http://127.0.0.1:11434/v1',
     );
+    const readonly = config.agent?.['jarvis-readonly'];
+    assert.ok(readonly, 'governed jarvis-readonly must be materialized in v2 config');
+    assert.equal(readonly.mode, 'primary');
+    assert.match(readonly.description, /inspect only, never mutate/);
+    assert.match(readonly.prompt, /bounded JARVIS work unit/);
+    assert.deepEqual(readonly.permission, {
+      read: 'allow',
+      glob: 'allow',
+      grep: 'allow',
+      list: 'allow',
+      lsp: 'allow',
+      edit: 'deny',
+      bash: 'deny',
+      task: 'deny',
+      external_directory: 'deny',
+      webfetch: 'deny',
+      websearch: 'deny',
+      skill: 'deny',
+      question: 'deny',
+      doom_loop: 'deny',
+    });
     assert.equal(
       fs.existsSync(path.join(runtime.configDir, 'agents', 'jarvis-readonly.md')),
       true,

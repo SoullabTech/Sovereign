@@ -684,8 +684,73 @@ function materializeCanonicalEvidenceSandbox(root, workUnit, opts = {}) {
   return { workspace, files };
 }
 
+function governedReadonlyAgentConfig(root) {
+  const file = path.join(root, '.opencode', 'agents', 'jarvis-readonly.md');
+  if (!fs.existsSync(file)) throw new Error('JARVIS_READONLY_AGENT_MISSING');
+
+  const raw = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+  const lines = raw.split('\n');
+  if (lines[0] !== '---') throw new Error('JARVIS_READONLY_AGENT_FRONTMATTER_REQUIRED');
+  const end = lines.indexOf('---', 1);
+  if (end < 0) throw new Error('JARVIS_READONLY_AGENT_FRONTMATTER_UNTERMINATED');
+
+  const agent = { description: '', mode: '', permission: {} };
+  let section = null;
+  for (const line of lines.slice(1, end)) {
+    if (!line.trim()) continue;
+    const nested = /^  ([A-Za-z0-9_]+):\s*(allow|deny|ask)\s*$/.exec(line);
+    if (nested) {
+      if (section !== 'permission') throw new Error('JARVIS_READONLY_AGENT_FRONTMATTER_INVALID');
+      agent.permission[nested[1]] = nested[2];
+      continue;
+    }
+    const top = /^([A-Za-z0-9_]+):(?:\s*(.*))?$/.exec(line);
+    if (!top) throw new Error('JARVIS_READONLY_AGENT_FRONTMATTER_INVALID');
+    const [, key, value = ''] = top;
+    if (key === 'permission' && !value.trim()) {
+      section = 'permission';
+      continue;
+    }
+    if (!['description', 'mode'].includes(key)) {
+      throw new Error('JARVIS_READONLY_AGENT_FRONTMATTER_UNSUPPORTED:' + key);
+    }
+    section = null;
+    agent[key] = value.trim();
+  }
+
+  const prompt = lines.slice(end + 1).join('\n').trim();
+  if (!agent.description || agent.mode !== 'primary' || !prompt) {
+    throw new Error('JARVIS_READONLY_AGENT_REQUIRED_FIELDS');
+  }
+  const required = {
+    read: 'allow', glob: 'allow', grep: 'allow', list: 'allow', lsp: 'allow',
+    edit: 'deny', bash: 'deny', task: 'deny', external_directory: 'deny',
+    webfetch: 'deny', websearch: 'deny', skill: 'deny', question: 'deny',
+    doom_loop: 'deny',
+  };
+  for (const [action, effect] of Object.entries(required)) {
+    if (agent.permission[action] !== effect) {
+      throw new Error('JARVIS_READONLY_AGENT_POLICY_MISMATCH:' + action);
+    }
+  }
+  if (Object.keys(agent.permission).length !== Object.keys(required).length) {
+    throw new Error('JARVIS_READONLY_AGENT_POLICY_UNEXPECTED');
+  }
+  return {
+    description: agent.description,
+    mode: agent.mode,
+    prompt,
+    permission: agent.permission,
+  };
+}
+
 function materializeGovernedOpenCodeConfig(root, resolved, runtime) {
-  const config = { $schema: 'https://opencode.ai/config.json' };
+  const config = {
+    $schema: 'https://opencode.ai/config.json',
+    agent: {
+      'jarvis-readonly': governedReadonlyAgentConfig(root),
+    },
+  };
   if (resolved?.model_ref?.startsWith('ollama/')) {
     config.provider = {
       ollama: {
@@ -698,11 +763,13 @@ function materializeGovernedOpenCodeConfig(root, resolved, runtime) {
   }
   const file = path.join(runtime.configDir, 'opencode.json');
   fs.writeFileSync(file, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 });
-  const agent = path.join(root, '.opencode', 'agents', 'jarvis-readonly.md');
-  if (!fs.existsSync(agent)) throw new Error('JARVIS_READONLY_AGENT_MISSING');
+
+  // Preserve the governed markdown bytes alongside the v2 JSON projection for
+  // custody/debug evidence. OpenCode v2 consumes the JSON agent entry above.
+  const source = path.join(root, '.opencode', 'agents', 'jarvis-readonly.md');
   const target = path.join(runtime.configDir, 'agents', 'jarvis-readonly.md');
   fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
-  fs.copyFileSync(agent, target);
+  fs.copyFileSync(source, target);
 }
 
 function canonicalOpenCodeEnv(sourceEnv, runtime) {
