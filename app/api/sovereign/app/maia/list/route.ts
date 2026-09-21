@@ -1849,7 +1849,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       runtimeContext: formatRuntimeContextForResponse(runtimeContext),
       // 🌀 Cut 2 — spiralOrientation: PARKED (see import + call-site comments above)
       // spiralOrientation,
-      // 🔮 Top-level provider info for easy screenshot verification
+      // R2 machine-readable live serving truth. Facts only; no disclosure decision.
+      servingTruth: orchestratorResult.servingTruth ?? null,
+      // 🔮 Legacy provider info retained for compatibility.
       providerUsed,
       model: modelUsed,
       modeUsed,
