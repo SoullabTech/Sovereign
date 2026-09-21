@@ -33,6 +33,8 @@ describe('SOURCE LEVEL-CALIBRATION-01 execution pins', () => {
     expect(preflight).toContain('geometry-record.txt');
     expect(preflight).toContain('git fetch origin feature/voice-2026-record-of-record-20260916');
     expect(preflight).toContain('git merge-base --is-ancestor "$SHA" FETCH_HEAD');
+    expect(preflight).not.toContain('feature/voice-2026-record-of-record-20260916\\ngit merge-base');
+    expect(preflight).toContain('feature/voice-2026-record-of-record-20260916\ngit merge-base --is-ancestor "$SHA" FETCH_HEAD');
     expect(preflight).not.toContain('sort -z');
     expect(preflight).not.toContain('xargs -0');
   });
