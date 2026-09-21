@@ -9,7 +9,7 @@ const path = require('node:path');
 const { execFile, execFileSync } = require('node:child_process');
 const crypto = require('node:crypto');
 const { pathToFileURL } = require('node:url');
-const { childEnv, resolveNodeBinary } = require('./child-env.js');
+const { childEnv, allowlistedChildEnv, resolveNodeBinary } = require('./child-env.js');
 const FRONTIER = require('./frontier-worker.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
 
@@ -170,9 +170,9 @@ function reconcileAttempts(attempts = []) {
 function providerChildEnv(sourceEnv = process.env) {
   const built = childEnv(sourceEnv).env;
   const dirs = [];
-  const node = resolveNodeBinary({ env: sourceEnv });
+  const node = resolveNodeBinary({ env: built });
   if (node.path && node.path !== 'node') dirs.push(path.dirname(node.path));
-  const oc = FRONTIER.resolveOpenCodeBinary(sourceEnv, os.homedir());
+  const oc = FRONTIER.resolveOpenCodeBinary(built, os.homedir());
   if (oc.path) dirs.push(path.dirname(oc.path));
   dirs.push('/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin');
   built.PATH = [...new Set([...dirs, ...(String(built.PATH || '').split(':').filter(Boolean))])].join(':');
@@ -566,7 +566,80 @@ function boundedCanonicalPaths(workUnit) {
     && !value.includes('\\'));
 }
 
-function materializeCanonicalEvidenceSandbox(root, workUnit) {
+const OPENCODE_PROJECT_DISCOVERY_NAMES = Object.freeze([
+  '.claude',
+  '.agents',
+  '.opencode',
+  'opencode.json',
+  'opencode.jsonc',
+]);
+
+function canonicalOpenCodeNeutralRoot() {
+  const uid = os.userInfo().uid;
+  const base = process.platform === 'darwin' ? '/private/tmp' : '/tmp';
+  const neutralRoot = path.join(base, 'jarvis-canonical-opencode-' + uid);
+  fs.mkdirSync(neutralRoot, { recursive: true, mode: 0o700 });
+  try { fs.chmodSync(neutralRoot, 0o700); } catch {}
+  return neutralRoot;
+}
+
+function createCanonicalOpenCodeRuntime() {
+  const neutralRoot = canonicalOpenCodeNeutralRoot();
+  const runRoot = fs.mkdtempSync(path.join(neutralRoot, 'run-'));
+  const runtime = {
+    neutralRoot,
+    runRoot,
+    workspace: path.join(runRoot, 'workspace'),
+    tmp: path.join(runRoot, 'tmp'),
+    home: path.join(runRoot, 'home'),
+    xdgConfig: path.join(runRoot, 'xdg-config'),
+    xdgData: path.join(runRoot, 'xdg-data'),
+    xdgCache: path.join(runRoot, 'xdg-cache'),
+    xdgState: path.join(runRoot, 'xdg-state'),
+    configDir: path.join(runRoot, 'opencode-config'),
+  };
+  for (const dir of Object.values(runtime).filter((value) =>
+    typeof value === 'string' && value.startsWith(runRoot))) {
+    fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  }
+  return runtime;
+}
+
+function canonicalOpenCodeAncestorPreflight(cwd) {
+  let current = path.resolve(cwd);
+  while (true) {
+    for (const name of OPENCODE_PROJECT_DISCOVERY_NAMES) {
+      const candidate = path.join(current, name);
+      try {
+        fs.lstatSync(candidate);
+        return {
+          ok: false,
+          status: 'REFUSED',
+          reason: 'AMBIENT_OPENCODE_PROJECT_CONFIGURATION',
+          offending_path: candidate,
+          discovery_class: name.startsWith('.') ? 'directory:' + name : 'file:' + name,
+        };
+      } catch (error) {
+        if (error?.code !== 'ENOENT') {
+          return {
+            ok: false,
+            status: 'REFUSED',
+            reason: 'OPENCODE_DISCOVERY_PREFLIGHT_ERROR',
+            offending_path: candidate,
+            discovery_class: name.startsWith('.') ? 'directory:' + name : 'file:' + name,
+            error_code: error?.code || 'UNKNOWN',
+          };
+        }
+      }
+    }
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return { ok: true, status: 'ADMITTED', reason: null };
+}
+
+function materializeCanonicalEvidenceSandbox(root, workUnit, opts = {}) {
   const sha = String(workUnit?.scope?.base_ref || '');
   const allowed = boundedCanonicalPaths(workUnit);
   const taskTextOnly = workUnit?.custody?.evidence_class === 'E0_TASK_TEXT';
@@ -588,7 +661,8 @@ function materializeCanonicalEvidenceSandbox(root, workUnit) {
     if (!files.length) throw new Error('CANONICAL_EVIDENCE_SCOPE_EMPTY');
   }
 
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-e1-evidence-'));
+  const workspace = opts.workspace || fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-e1-evidence-'));
+  fs.mkdirSync(workspace, { recursive: true, mode: 0o700 });
   let totalBytes = 0;
   for (const rel of files) {
     const bytes = execFileSync('git', ['show', sha + ':' + rel], {
@@ -607,13 +681,76 @@ function materializeCanonicalEvidenceSandbox(root, workUnit) {
     fs.writeFileSync(target, bytes);
   }
 
-  const agent = path.join(root, '.opencode', 'agents', 'jarvis-readonly.md');
-  if (fs.existsSync(agent)) {
-    const target = path.join(workspace, '.opencode', 'agents', 'jarvis-readonly.md');
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.copyFileSync(agent, target);
-  }
   return { workspace, files };
+}
+
+function materializeGovernedOpenCodeConfig(root, resolved, runtime) {
+  const config = { $schema: 'https://opencode.ai/config.json' };
+  if (resolved?.model_ref?.startsWith('ollama/')) {
+    config.provider = {
+      ollama: {
+        npm: '@ai-sdk/openai-compatible',
+        name: 'Ollama (local)',
+        options: { baseURL: 'http://127.0.0.1:11434/v1' },
+        models: { [resolved.model_id]: { name: resolved.model_id + ' (governed local)' } },
+      },
+    };
+  }
+  const file = path.join(runtime.configDir, 'opencode.json');
+  fs.writeFileSync(file, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 });
+  const agent = path.join(root, '.opencode', 'agents', 'jarvis-readonly.md');
+  if (!fs.existsSync(agent)) throw new Error('JARVIS_READONLY_AGENT_MISSING');
+  const target = path.join(runtime.configDir, 'agents', 'jarvis-readonly.md');
+  fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
+  fs.copyFileSync(agent, target);
+}
+
+function canonicalOpenCodeEnv(sourceEnv, runtime) {
+  const built = allowlistedChildEnv(sourceEnv, {
+    overrides: {
+      HOME: runtime.home,
+      TMPDIR: runtime.tmp,
+      XDG_CONFIG_HOME: runtime.xdgConfig,
+      XDG_DATA_HOME: runtime.xdgData,
+      XDG_CACHE_HOME: runtime.xdgCache,
+      XDG_STATE_HOME: runtime.xdgState,
+      OPENCODE_CONFIG_DIR: runtime.configDir,
+      OPENCODE_DISABLE_MODELS_FETCH: '1',
+      OPENCODE_DISABLE_AUTOUPDATE: '1',
+    },
+  }).env;
+
+  // Finder-launched JARVIS may not inherit the founder's executable paths.
+  // Add only the already-resolved executable directories; do not carry the
+  // corresponding ambient configuration variables into the canonical child.
+  const dirs = [];
+  const node = resolveNodeBinary({ env: built });
+  if (node.path && node.path !== 'node') dirs.push(path.dirname(node.path));
+  const oc = FRONTIER.resolveOpenCodeBinary(built, os.homedir());
+  if (oc.path) dirs.push(path.dirname(oc.path));
+  dirs.push('/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin');
+  built.PATH = [...new Set([...dirs, ...(String(built.PATH || '').split(':').filter(Boolean))])].join(':');
+  return built;
+}
+
+function prepareCanonicalOpenCodeContainment(root, workUnit, resolved, sourceEnv) {
+  const runtime = createCanonicalOpenCodeRuntime();
+  const sandbox = materializeCanonicalEvidenceSandbox(root, workUnit, {
+    workspace: runtime.workspace,
+  });
+  materializeGovernedOpenCodeConfig(root, resolved, runtime);
+  const preflight = canonicalOpenCodeAncestorPreflight(sandbox.workspace);
+  if (!preflight.ok) {
+    fs.rmSync(runtime.runRoot, { recursive: true, force: true });
+    return preflight;
+  }
+  return {
+    ok: true,
+    status: 'ADMITTED',
+    runtime,
+    sandbox,
+    env: canonicalOpenCodeEnv(sourceEnv, runtime),
+  };
 }
 
 function canonicalProviderPrompt(workUnit, files, { inlineEvidence = false, workspace } = {}) {
@@ -662,16 +799,33 @@ async function executeCanonicalResolvedProvider(
   opts = {},
 ) {
   let sandbox = null;
+  let containment = opts.preparedContainment || null;
   try {
-    sandbox = materializeCanonicalEvidenceSandbox(root, workUnit);
-    const env = providerChildEnv(sourceEnv);
+    let env;
+    if (resolved.execution_adapter === 'opencode') {
+      if (!containment) {
+        const runtime = createCanonicalOpenCodeRuntime();
+        sandbox = materializeCanonicalEvidenceSandbox(root, workUnit, {
+          workspace: runtime.workspace,
+        });
+        materializeGovernedOpenCodeConfig(root, resolved, runtime);
+        const preflight = canonicalOpenCodeAncestorPreflight(sandbox.workspace);
+        if (!preflight.ok) return preflight;
+        containment = { runtime, sandbox, env: canonicalOpenCodeEnv(sourceEnv, runtime) };
+      }
+      sandbox = containment.sandbox;
+      env = containment.env;
+    } else {
+      sandbox = materializeCanonicalEvidenceSandbox(root, workUnit);
+      env = providerChildEnv(sourceEnv);
+    }
     const timeout = opts.timeoutMs || RUN_TIMEOUT_MS;
     let run;
 
     if (resolved.execution_adapter === 'opencode') {
       run = await new Promise((resolve) => {
         execFile('opencode', [
-          'run', '--pure',
+          'run', '--standalone',
           '--agent', resolved.agent || 'jarvis-readonly',
           '--model', resolved.model_ref,
           canonicalProviderPrompt(workUnit, sandbox.files, {
@@ -841,8 +995,26 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
     };
   }
 
+  let preparedContainment = null;
+  if (resolved.execution_adapter === 'opencode') {
+    preparedContainment = prepareCanonicalOpenCodeContainment(
+      root, envelope.work_unit, resolved, sourceEnv,
+    );
+    if (!preparedContainment.ok) {
+      return {
+        ...preparedContainment,
+        grant_standing: 'ACTIVE',
+      };
+    }
+  }
+
   const claimed = store.claimCanonicalExecutionGrantV1(workUnitId, grantId, { home });
-  if (!claimed.ok) return claimed;
+  if (!claimed.ok) {
+    if (preparedContainment?.runtime?.runRoot) {
+      fs.rmSync(preparedContainment.runtime.runRoot, { recursive: true, force: true });
+    }
+    return claimed;
+  }
 
   if (envelope.work_unit.state.lifecycle_state === 'ROUTED') {
     const executing = await CWUV2.transitionCanonicalV2(root, workUnitId, 'EXECUTING', {
@@ -850,6 +1022,9 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
       actorId: opts.actorId || 'human:jarvis-desktop:operator',
     });
     if (!executing.ok) {
+      if (preparedContainment?.runtime?.runRoot) {
+        fs.rmSync(preparedContainment.runtime.runRoot, { recursive: true, force: true });
+      }
       store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
         home,
         reason: executing.reason || 'W2_V2_EXECUTING_TRANSITION_REFUSED',
@@ -873,7 +1048,7 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
       binding,
       resolved,
       sourceEnv,
-    }, opts);
+    }, { ...opts, preparedContainment });
   } catch (error) {
     const durableResult = {
       execution_version: 'E1.v1',
@@ -902,6 +1077,10 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
       result_digest: persisted.digest,
       result_path: persisted.path,
     };
+  } finally {
+    if (preparedContainment?.runtime?.runRoot) {
+      fs.rmSync(preparedContainment.runtime.runRoot, { recursive: true, force: true });
+    }
   }
 
   const consumed = store.consumeCanonicalExecutionGrantV1(workUnitId, grantId, {
@@ -1272,6 +1451,8 @@ module.exports = {
   credentialAvailability, delegateLaneForProvider,
   modelFamilyFromAttempt, durableProviderOutcome,
   reconcileAttempts, providerChildEnv, providers, create, planRouting, planWorkUnitRouting,
+  OPENCODE_PROJECT_DISCOVERY_NAMES, canonicalOpenCodeAncestorPreflight,
+  createCanonicalOpenCodeRuntime, canonicalOpenCodeEnv, prepareCanonicalOpenCodeContainment,
   canonicalExecutionStatus, canonicalPrepareTransport,
   canonicalExecutionPreview, canonicalAuthorizeExecutionOnce, canonicalRevokeExecutionGrant,
   canonicalConfirmAuthorizedExecution, canonicalRecordVerifier, canonicalMarkEvidenceReady,

@@ -24,20 +24,46 @@
 // So: children get a deliberately cleaned environment, and we record what was
 // removed so the Desktop can say it rather than hide it.
 
-// Variables that alter how a Node child interprets or instruments its own
-// startup. Removed for children regardless of where they came from.
-const STRIPPED = [
+// Variables that alter how an ordinary Node child interprets or instruments
+// its own startup. Historical Desktop/Builder children keep this subtraction
+// behavior; D2's strict allowlist is intentionally canonical-execution-only.
+const STRIPPED = Object.freeze([
   'NODE_OPTIONS',
   'NODE_REPL_EXTERNAL_MODULE',
   'NODE_V8_COVERAGE',
   'ELECTRON_RUN_AS_NODE',
-];
+]);
+
+// JARVIS-CANONICAL-PROVIDER-EXECUTION-01 / E3R1-D2.
+// Exact environment admitted to the canonical OpenCode child before governed
+// overrides are applied. Unknown variables are absent by construction.
+const CANONICAL_EXECUTION_ALLOWED = Object.freeze([
+  'PATH',
+  'HOME',
+  'TMPDIR',
+  'USER',
+  'LOGNAME',
+  'SHELL',
+  'LANG',
+  'LC_ALL',
+  'LC_CTYPE',
+  'TERM',
+  'COLORTERM',
+  'NO_COLOR',
+  'TZ',
+  'XDG_CONFIG_HOME',
+  'XDG_DATA_HOME',
+  'XDG_CACHE_HOME',
+  'XDG_STATE_HOME',
+  'OPENCODE_CONFIG_DIR',
+  'OPENCODE_DISABLE_MODELS_FETCH',
+  'OPENCODE_DISABLE_AUTOUPDATE',
+]);
 
 /**
- * Build a child environment with startup-altering variables removed.
- *
- * @param {object} sourceEnv normally process.env
- * @returns {{env: object, removed: string[]}} removed names the caller may surface
+ * Historical environment hygiene for ordinary Desktop/Builder children.
+ * It strips only startup-altering Node variables and otherwise preserves the
+ * caller's environment.
  */
 function childEnv(sourceEnv) {
   const src = sourceEnv || {};
@@ -48,6 +74,35 @@ function childEnv(sourceEnv) {
       removed.push(key);
       delete env[key];
     }
+  }
+  return { env, removed };
+}
+
+/**
+ * Canonical provider-execution environment builder.
+ * Only explicitly admitted names survive, and overrides may not widen the
+ * allowlist. This is deliberately separate from childEnv(): D1d forbids
+ * turning the canonical containment rule into a generic environment scrubber.
+ */
+function allowlistedChildEnv(sourceEnv, options = {}) {
+  const src = sourceEnv || {};
+  const allowedNames = options.allowed || CANONICAL_EXECUTION_ALLOWED;
+  const allowed = new Set(allowedNames);
+  const overrides = options.overrides || {};
+  const env = {};
+  const removed = [];
+
+  for (const [key, value] of Object.entries(src)) {
+    if (value === undefined) continue;
+    if (allowed.has(key)) env[key] = value;
+    else removed.push(key);
+  }
+  for (const [key, value] of Object.entries(overrides)) {
+    if (!allowed.has(key)) {
+      throw new Error('CANONICAL_ENV_OVERRIDE_NOT_ALLOWLISTED:' + key);
+    }
+    if (value === undefined || value === null) delete env[key];
+    else env[key] = String(value);
   }
   return { env, removed };
 }
@@ -174,4 +229,4 @@ function resolveNodeBinary(deps = {}) {
 /** Test seam. Resolution is cached, and a test must be able to start clean. */
 function _resetNodeCache() { _cachedNode = null; }
 
-module.exports = { STRIPPED, childEnv, resolveNodeBinary, RESOLUTION_SOURCE, _resetNodeCache };
+module.exports = { STRIPPED, CANONICAL_EXECUTION_ALLOWED, childEnv, allowlistedChildEnv, resolveNodeBinary, RESOLUTION_SOURCE, _resetNodeCache };
