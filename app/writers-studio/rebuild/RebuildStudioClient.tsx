@@ -963,6 +963,19 @@ export default function RebuildStudioClient() {
     requestAnimationFrame(() => document.querySelector('[data-revision-desk]')?.scrollIntoView({ block: 'start' }));
   }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage, editorialScope, editorialDraft]);
 
+  /* ⭐ C6 null-target ruling — the member goes and chooses an exact passage
+     THEMSELVES, by selecting text in their own manuscript. The existing
+     selection seam (RebuildAuthoredBody -> onSelectPassage -> holdPassage)
+     then binds it, and the desk's conversation runs through the editorial
+     runtime from there.
+     ⛔ This selects nothing, widens nothing and promotes no section reference
+     into a passage — it moves the member to where their own choice is made. */
+  const chooseOwnPassage = useCallback(() => {
+    setPassageTab('suggest');
+    requestAnimationFrame(() =>
+      document.querySelector('[data-authored-body]')?.scrollIntoView({ block: 'start' }));
+  }, []);
+
   useEffect(() => {
     if (!arrivalInsight || !context || phase !== 'ready'
         || incomingReading !== arrivalInsight.readingId
@@ -1681,7 +1694,8 @@ export default function RebuildStudioClient() {
           onKeep={() => { setSuggestedVersionId(null); setAdoptionOutcome(null); setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.'); }} />
         {workspaceInsight && <details className="wsi-related" open><summary>Observation and related passages</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
           manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
-          onRevise={reviseInsightPassage} busy={editorialBusy || adoptionBusy || memberVersionBusy} /></details>}
+          onRevise={reviseInsightPassage} onChoosePassage={chooseOwnPassage}
+          busy={editorialBusy || adoptionBusy || memberVersionBusy} /></details>}
         {relationshipChoices.length > 1 && <div className="wsi-bar" aria-label="Choose revision conversation">
           {relationshipChoices.map((choice, i) => <button key={choice.threadId} type="button" disabled={editorialBusy}
             onClick={() => void chooseRelationship(choice.threadId)}>Conversation {i + 1} · {choice.turnCount} turns</button>)}

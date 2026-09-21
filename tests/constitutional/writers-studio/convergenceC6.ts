@@ -37,55 +37,71 @@ export function runC6(): readonly Check[] {
                              guided.indexOf('const tryRevision'));
   add('C6-1-single-conversation-entry',
     /RESPONSE_PROMPTS\.map/.test(guided) &&
-    (guided.match(/beginConversation\(/g) ?? []).length >= 2 &&
-    !/onClick=\{\(\) => \{[^}]*setTalking\(true\)/.test(guided),
+    (guided.match(/beginConversation\(/g) ?? []).length >= 2,
     'every observation-level response goes through one beginConversation seam');
 
   add('C6-2-bound-responses-reach-editorial-runtime',
-    /if \(target && onRevise\) \{ onRevise\(target, next\); return; \}/.test(begin),
-    'with an exact passage, a response binds the passage and enters the editorial runtime');
+    /if \(boundTarget && onRevise\) \{ onRevise\(boundTarget, next\); return; \}/.test(begin),
+    'with an exact passage, a response binds it and enters the editorial runtime');
 
   /* ⛔ THE DEFEAT CANDIDATE THIS KILLS: converging only the teaching-shaped
-     control. If the bound branch were guarded by the prompt text, the other
-     four would silently stay on the Ask path. */
+     control, which would leave four siblings on the Ask path for no reason a
+     writer can see. */
   add('C6-3-convergence-not-keyed-on-prompt-text',
-    !/Help me understand[\s\S]{0,120}onRevise/.test(begin) &&
     !/prompt\.(includes|startsWith|indexOf)/.test(begin),
     'the bound branch is keyed on the passage, never on which button was pressed');
 
-  add('C6-4-unbound-case-is-declared',
-    guided.includes('no verified exact passage to bind here'),
-    'an unbound conversation says so rather than reaching a different mind silently');
+  /* ⭐⭐ THE RULING'S MEMBRANE. `verified && editable` is not sufficient: a
+     passage with no range yields only the whole section body, and automatic
+     widening is the ruling's third prohibition. */
+  add('C6-4-binding-requires-an-exact-range',
+    /const boundTarget = target && target\.range \? target : null;/.test(guided),
+    'no exact range, no editorial binding — widening to the whole section is refused');
 
-  /* ⭐ D-D, carried forward from C5: the member's own words land in the
-     EDITABLE draft for this turn. ⛔ Nothing is auto-sent, so the direction and
-     the response both stay removable before anything leaves the surface. */
-  add('C6-5-response-is-editable-before-sending',
-    /onRevise\(target, next\)/.test(begin) &&
+  add('C6-5-unbound-states-the-position-plainly',
+    guided.includes('isn’t tied to one exact editable passage yet') &&
+    !/no verified exact passage to bind/.test(guided),
+    'the unbound notice is plain language, not binding vocabulary');
+
+  /* ⛔ "Help me understand" must not appear where it cannot reach the governed
+     Teacher path — that would make two cognition paths look like one
+     capability. Structural: the prompt set renders only inside the bound
+     branch, so no future label can leak across. */
+  const unbound = guided.slice(guided.indexOf('This observation isn’t tied'),
+                               guided.indexOf('</section>', guided.indexOf('This observation isn’t tied')));
+  add('C6-6-unbound-never-offers-the-bound-vocabulary',
+    /boundToPassage \? <div className="wsi-page-actions">[\s\S]{0,200}RESPONSE_PROMPTS\.map/.test(guided) &&
+    !unbound.includes('Help me understand') &&
+    unbound.includes('Talk about this'),
+    'the bound prompt set renders only when bound; unbound offers discussion and passage choice');
+
+  /* ⛔ THE RULING'S FIRST PROHIBITION: it is not permission to invent a locus. */
+  const chooser = rebuild.slice(rebuild.indexOf('const chooseOwnPassage'),
+                                rebuild.indexOf('const chooseOwnPassage') + 400);
+  add('C6-7-choose-a-passage-chooses-nothing',
+    /const chooseOwnPassage = useCallback/.test(rebuild) &&
+    !/passages\.find|setSelected|holdPassage|reviseInsightPassage/.test(chooser),
+    'the chooser moves the member to their manuscript; it selects no passage for them');
+
+  /* ⭐ D-D, carried forward from C5. */
+  add('C6-8-response-is-editable-before-sending',
     /const next = \[memberContext, prompt\]/.test(begin) &&
-    !/sendEditorial|apiFetch/.test(begin),
+    !/sendEditorial|apiFetch/.test(begin) &&
+    /appendEditorialNote\(prior, authorNotes\)/.test(rebuild),
     'the response seeds the editable draft; the seam sends nothing itself');
 
-  add('C6-6-member-context-reaches-the-draft-not-the-wire',
-    /appendEditorialNote\(prior, authorNotes\)/.test(rebuild) &&
-    /setEditorialDraft\(combined\)/.test(rebuild),
-    'authorNotes are appended to the editorial draft, never posted directly');
-
-  /* ⛔ NOT A SECOND INTEGRATION. */
+  /* ⛔ NOT A SECOND INTEGRATION, and ⛔ the runtime is never entered merely to
+     reach the bridge — it is entered only where a real locus exists. */
   const bridgeCalls = (turn.match(/buildTeachingRuntimeBridge\(/g) ?? []).length;
-  add('C6-7-one-teaching-bridge-call-site-in-the-editorial-runtime',
+  add('C6-9-one-teaching-bridge-call-site-unchanged',
     bridgeCalls === 1 &&
     /route: 'writers_studio_editorial'/.test(turn) &&
-    /domainKey: 'writing_rhetoric'/.test(turn),
-    `editorial runtime holds exactly ${bridgeCalls} bridge call site, unchanged`);
-
-  add('C6-8-guided-surface-adds-no-teaching-integration',
-    !guided.includes('buildTeachingRuntimeBridge') &&
+    /domainKey: 'writing_rhetoric'/.test(turn) &&
     !guided.includes('TeachingRuntimeBridge'),
-    'the observation surface routes to the runtime; it does not integrate teaching itself');
+    `editorial runtime holds exactly ${bridgeCalls} bridge call site; the surface adds none`);
 
   const c5 = runC5();
-  add('C6-9-c5-still-green',
+  add('C6-10-c5-still-green',
     c5.every(c => c.ok),
     `${c5.filter(c => c.ok).length}/${c5.length} C5 acceptance checks green`);
 

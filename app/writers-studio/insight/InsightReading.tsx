@@ -21,10 +21,15 @@ const RESPONSE_PROMPTS = [
 ] as const;
 
 export default function InsightReading({
-  manuscriptId, readingId, observationKey, onRevise, busy = false, refreshKey = 0,
+  manuscriptId, readingId, observationKey, onRevise, onChoosePassage, busy = false, refreshKey = 0,
 }: {
   manuscriptId: string; readingId: string; observationKey: string;
   onRevise?: (passage: InsightPassage, authorNotes?: string) => void;
+  /** ⭐ Sends the member to the manuscript to select an exact passage
+   *  themselves. ⛔ Never chooses one for them — that is the ruling's first
+   *  prohibition. Absent outside the workspace, where there is nothing to
+   *  select in, and the control is then simply not offered. */
+  onChoosePassage?: () => void;
   busy?: boolean; refreshKey?: number;
 }) {
   const [loadedKey, setLoadedKey] = useState(refreshKey);
@@ -72,21 +77,26 @@ export default function InsightReading({
      path, while `Talk about it` inside the passage desk ran through
      runEditorialTurn and its governed Teaching bridge. Same layer, same
      posture, two different minds — and nothing visible told the writer which
-     one they had reached. The exact passage is already known here (`target`
-     is resolved at render, and `Try a revision` has always used it), so the
-     convergence needs no new selection step.
+     one they had reached.
      ⛔ NOT a second Teaching integration: the bridge call site is untouched.
      ⭐ D-D preserved — the member's words land in the EDITABLE draft for this
-     turn, so they stay removable before anything is sent. */
-  const boundToPassage = Boolean(target && onRevise);
+     turn, so they stay removable before anything is sent.
+
+     ⭐⭐ THE MEMBRANE, per the null-target ruling: NO EXACT TARGET, NO
+     EDITORIAL BINDING; NO EDITORIAL BINDING, NO CLAIM THAT THE GOVERNED
+     TEACHER PATH IS ACTIVE. Discussion stays lawful; revision waits for a
+     member-chosen exact locus.
+     ⛔ `verified && editable` is NOT sufficient — a `range` is required too.
+     Without one the only available locus is the whole section body, and
+     automatic widening is named on the ruling's forbidden list. A structural
+     or multi-place observation is not defective for having no range; it has
+     simply not crossed into passage-level editorial action. */
+  const boundTarget = target && target.range ? target : null;
+  const boundToPassage = Boolean(boundTarget && onRevise);
   const beginConversation = (prompt: string) => {
     const next = [memberContext, prompt].filter(Boolean).join('\n\n');
     setStatus(null);
-    if (target && onRevise) { onRevise(target, next); return; }
-    /* ⛔ No exact passage, or this surface is not inside the workspace. The
-       older path still answers — ⛔ but never silently: the notice below says
-       so, because a conversation that reaches a different cognition without
-       saying which is the defect, not the fallback. */
+    if (boundTarget && onRevise) { onRevise(boundTarget, next); return; }
     setConversation(next);
     setTalking(true);
   };
@@ -114,7 +124,11 @@ export default function InsightReading({
 
     <section aria-label="Respond to MAIA">
       <h3>What do you think?</h3>
-      <div className="wsi-page-actions">
+      {/* ⭐ BOUND: these reach the editorial runtime, and therefore the
+          governed Teaching bridge. ⛔ UNBOUND: they are not offered at all —
+          presenting `Help me understand` here would make two different
+          cognition paths look like one capability. */}
+      {boundToPassage ? <div className="wsi-page-actions">
         {RESPONSE_PROMPTS.map(([label, prompt]) =>
           <button key={label} type="button" disabled={busy}
             onClick={() => beginConversation(prompt)}>{label}</button>)}
@@ -122,12 +136,22 @@ export default function InsightReading({
           setTalking(false); setConversation(null);
           setStatus('Left as it is. Nothing changed.');
         }}>Leave this as it is</button>
-      </div>
-      {!boundToPassage && <p className="wsi-muted">
-        This observation has no verified exact passage to bind here, so this
-        conversation is held against the observation itself rather than against
-        wording in your manuscript.
-      </p>}
+      </div> : <>
+        <p className="wsi-muted">
+          This observation isn’t tied to one exact editable passage yet. We can
+          talk about what MAIA noticed, or you can choose a passage to work on.
+        </p>
+        <div className="wsi-page-actions">
+          <button type="button" disabled={busy}
+            onClick={() => beginConversation('')}>Talk about this</button>
+          {onChoosePassage && <button type="button" disabled={busy}
+            onClick={onChoosePassage}>Choose a passage</button>}
+          <button type="button" disabled={busy} onClick={() => {
+            setTalking(false); setConversation(null);
+            setStatus('Left as it is. Nothing changed.');
+          }}>Leave this as it is</button>
+        </div>
+      </>}
     </section>
 
     <details className="wsi-question-options">
