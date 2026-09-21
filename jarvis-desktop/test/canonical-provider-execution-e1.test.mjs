@@ -393,29 +393,17 @@ test('legacy R5B/run-provider surfaces still refuse canonical W0.v2 and cannot i
 
 
 
-test('canonical Qwen v2 launch is standalone and isolated from user OpenCode config without provider inference', async () => {
+test('canonical Qwen direct launch inlines only bounded evidence and uses the JARVIS 65K Ollama model', async () => {
   const { home } = tempEnv();
-  const sourceEnv = {
-    ...process.env,
-    AIN_DELEGATION_HOME: home,
-    HOME: '/tmp/leaky-user-home',
-    XDG_CONFIG_HOME: '/tmp/leaky-user-config',
-    XDG_DATA_HOME: '/tmp/leaky-user-data',
-    OPENCODE_CONFIG: '/tmp/leaky-opencode.json',
-    OPENCODE_CONFIG_DIR: '/tmp/leaky-opencode-dir',
-    OPENCODE_CLI_CONFIG_CONTENT: '{"leak":true}',
-    OPENCODE_CONFIG_PROJECT_DISABLE: '1',
-    OPENCODE_DISABLE_PROJECT_CONFIG: '1',
-  };
   let seen = null;
   try {
     const out = await WUC.executeCanonicalResolvedProvider(
       REPO,
       {
-        workUnitId: 'e3-v2-qwen-proof',
-        grantId: 'e3-grant-proof',
+        workUnitId: 'e3-direct-qwen-proof',
+        grantId: 'e3-direct-grant-proof',
         workUnit: {
-          identity: { objective: 'Prove canonical Qwen v2 launch containment.' },
+          identity: { objective: 'Prove canonical Qwen direct containment.' },
           custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
           scope: {
             base_ref: SHA,
@@ -431,78 +419,42 @@ test('canonical Qwen v2 launch is standalone and isolated from user OpenCode con
           transport_binding_id: 'tb-qwen-proof',
           provider_id: 'qwen-local',
           model_id: 'qwen3-coder:30b',
-          adapter_id: 'opencode',
+          adapter_id: 'ollama-direct',
         },
         resolved: {
-          execution_adapter: 'opencode',
-          agent: 'jarvis-readonly',
+          execution_adapter: 'ollama-direct',
           model_ref: 'ollama/qwen3-coder:30b',
           model_id: 'qwen3-coder:30b',
         },
-        sourceEnv,
+        sourceEnv: { ...process.env, AIN_DELEGATION_HOME: home },
       },
       {
-        execFile: (file, args, options, callback) => {
-          seen = {
-            file,
-            args: [...args],
-            options: { ...options, env: { ...options.env } },
-            projectConfigExists: fs.existsSync(path.join(options.cwd, '.opencode')),
-            runtimeHomeExists: fs.existsSync(options.env.HOME),
+        fetch: async (url, req) => {
+          seen = { url, req, body: JSON.parse(req.body) };
+          return {
+            ok: true,
+            status: 200,
+            async json() {
+              return { model: 'jarvis-qwen3-coder:65k', response: 'SYNTHETIC_DIRECT_QWEN_OK' };
+            },
           };
-          callback(null, 'SYNTHETIC_QWEN_V2_OK', '');
         },
       },
     );
 
     assert.equal(out.ok, true);
     assert.equal(out.status, 'COMPLETED');
+    assert.equal(out.run.exit_code, 0);
+    assert.equal(out.run.stdout, 'SYNTHETIC_DIRECT_QWEN_OK');
     assert.ok(seen);
-    assert.equal(seen.file, 'opencode');
-    assert.deepEqual(seen.args.slice(0, 2), ['run', '--standalone']);
-    assert.equal(seen.args.includes('--pure'), false);
-    assert.equal(seen.args[seen.args.indexOf('--agent') + 1], 'jarvis-readonly');
-    assert.equal(seen.args[seen.args.indexOf('--model') + 1], 'ollama/qwen3-coder:30b');
-
-    const env = seen.options.env;
-    assert.match(env.HOME, /jarvis-e1-opencode-v2-[^/]+\/home$/);
-    assert.match(env.XDG_CONFIG_HOME, /jarvis-e1-opencode-v2-[^/]+\/config$/);
-    assert.match(env.XDG_DATA_HOME, /jarvis-e1-opencode-v2-[^/]+\/data$/);
-    assert.equal(env.HOME.startsWith(seen.options.cwd), false);
-    assert.equal(env.XDG_CONFIG_HOME.startsWith(seen.options.cwd), false);
-    assert.equal(env.XDG_DATA_HOME.startsWith(seen.options.cwd), false);
-    assert.equal(seen.projectConfigExists, false);
-    assert.equal(seen.runtimeHomeExists, true);
-    assert.equal(env.XDG_CACHE_HOME, '/tmp/leaky-user-home/.cache');
-    assert.equal(env.OPENCODE_CONFIG, undefined);
-    assert.equal(env.OPENCODE_CONFIG_DIR, undefined);
-    assert.equal(env.OPENCODE_CLI_CONFIG_CONTENT, undefined);
-    assert.equal(env.OPENCODE_CONFIG_PROJECT_DISABLE, '1');
-    assert.equal(env.OPENCODE_DISABLE_PROJECT_CONFIG, '1');
-    assert.equal(env.OPENCODE_DISABLE_MODELS_FETCH, '1');
-    assert.equal(env.OPENCODE_DISABLE_AUTOUPDATE, '1');
-
-    const config = JSON.parse(env.OPENCODE_CONFIG_CONTENT);
-    assert.deepEqual(Object.keys(config.provider), ['ollama']);
-    assert.deepEqual(Object.keys(config.provider.ollama.models), ['qwen3-coder:30b']);
-    assert.equal(config.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
-    assert.equal(config.agent, undefined);
-    assert.deepEqual(Object.keys(config.agents), ['jarvis-readonly']);
-    const agent = config.agents['jarvis-readonly'];
-    assert.equal(agent.mode, 'primary');
-    assert.equal(agent.permission, undefined);
-    assert.equal(agent.prompt, undefined);
-    assert.match(agent.system, /bounded JARVIS work unit/);
-    assert.equal(agent.steps, 8);
-    assert.deepEqual(agent.permissions, [
-      { action: '*', resource: '*', effect: 'deny' },
-      { action: 'read', resource: '*', effect: 'allow' },
-      { action: 'glob', resource: '*', effect: 'allow' },
-      { action: 'grep', resource: '*', effect: 'allow' },
-    ]);
-    assert.equal(JSON.stringify(config).includes('gpt-oss'), false);
-    assert.equal(JSON.stringify(config).includes('tinker'), false);
-    assert.equal(JSON.stringify(config).includes('nvidia'), false);
+    assert.equal(seen.url, 'http://127.0.0.1:11434/api/generate');
+    assert.equal(seen.body.model, 'jarvis-qwen3-coder:65k');
+    assert.equal(seen.body.stream, false);
+    assert.equal(seen.body.keep_alive, '30m');
+    assert.deepEqual(seen.body.options, { num_ctx: 65536 });
+    assert.match(seen.body.prompt, /=== scripts\/builder\/work-unit-v2\.mjs ===/);
+    assert.match(seen.body.prompt, /createWorkUnitDraftV2/);
+    assert.doesNotMatch(seen.body.prompt, /jarvis-desktop\/src\/work-unit-control\.js/);
   } finally {
     cleanup(home);
   }

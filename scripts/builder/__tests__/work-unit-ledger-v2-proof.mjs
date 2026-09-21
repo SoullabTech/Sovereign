@@ -32,7 +32,7 @@ function baseInput() {
 function modelIdentity(id,participant,binding,family,provider,model,adapter,role) {
   return {model_identity_id:id,route_participant_id:participant,transport_binding_id:binding,model_family:family,provider_id:provider,model_id:model,adapter_id:adapter,role};
 }
-const QWEN=modelIdentity('mi-qwen','primary','tb-qwen','QWEN','qwen-local','qwen3-coder:30b','opencode','code_primary');
+const QWEN=modelIdentity('mi-qwen','primary','tb-qwen','QWEN','qwen-local','qwen3-coder:30b','ollama-direct','code_primary');
 const GPT=modelIdentity('mi-gpt','local-review-1','tb-gpt','GPT_OSS','gpt-oss-local','gpt-oss:20b','opencode','independent_local_challenger');
 
 function authorizeAndRoute() {
@@ -46,7 +46,7 @@ function authorizeAndRoute() {
 function bindTransports(env) {
   let r=appendTransportBindingV1(env,{
     transport_binding_id:'tb-qwen',supersedes_binding_id:null,route_participant_id:'primary',
-    provider_id:'qwen-local',model_id:'qwen3-coder:30b',adapter_id:'opencode',
+    provider_id:'qwen-local',model_id:'qwen3-coder:30b',adapter_id:'ollama-direct',
     readiness:{status:'READY',evidence_ref:'ready:qwen'},
   }); assert.equal(r.ok,true,JSON.stringify(r.blockers)); env=r.envelope;
   r=appendTransportBindingV1(env,{

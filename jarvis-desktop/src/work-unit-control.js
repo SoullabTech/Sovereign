@@ -736,7 +736,44 @@ async function executeCanonicalResolvedProvider(
     const timeout = opts.timeoutMs || RUN_TIMEOUT_MS;
     let run;
 
-    if (resolved.execution_adapter === 'opencode') {
+    if (resolved.execution_adapter === 'ollama-direct') {
+      if (binding.provider_id !== 'qwen-local'
+          || binding.model_id !== 'qwen3-coder:30b'
+          || binding.adapter_id !== 'ollama-direct') {
+        throw new Error('CANONICAL_OLLAMA_DIRECT_IDENTITY_MISMATCH');
+      }
+      const prompt = canonicalProviderPrompt(workUnit, sandbox.files, {
+        inlineEvidence: true,
+        workspace: sandbox.workspace,
+      });
+      const fetchImpl = opts.fetch || globalThis.fetch;
+      if (typeof fetchImpl !== 'function') throw new Error('FETCH_RUNTIME_UNAVAILABLE');
+      const response = await fetchImpl('http://127.0.0.1:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'jarvis-qwen3-coder:65k',
+          prompt,
+          stream: false,
+          keep_alive: '30m',
+          options: { num_ctx: 65536 },
+        }),
+        signal: AbortSignal.timeout(timeout),
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          'OLLAMA_DIRECT_HTTP_' + response.status + ':'
+          + String(body?.error || 'request failed').slice(0, 500),
+        );
+      }
+      run = {
+        exit_code: 0,
+        signal: null,
+        stdout: String(body?.response || '').slice(-MAX_LOG_CHARS),
+        stderr: '',
+      };
+    } else if (resolved.execution_adapter === 'opencode') {
       const canonicalQwenV2 = binding.provider_id === 'qwen-local'
         && binding.model_id === 'qwen3-coder:30b'
         && binding.adapter_id === 'opencode';
