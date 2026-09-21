@@ -393,7 +393,7 @@ test('legacy R5B/run-provider surfaces still refuse canonical W0.v2 and cannot i
 
 
 
-test('canonical GPT-OSS OpenCode v2 launch is standalone and isolated from user config', async () => {
+test('explicit GPT-OSS AGENT MODE helper remains standalone and isolated from user config', async () => {
   const { home } = tempEnv();
   const sourceEnv = {
     ...process.env,
@@ -620,4 +620,102 @@ test('E1 Desktop keeps authorization, execution, verification, evidence-ready, a
   assert.ok(evidenceReadyAction >= 0);
   assert.ok(adjudicationAction >= 0);
   assert.notEqual(evidenceReadyAction, adjudicationAction);
+});
+
+test('M1 MODEL MODE uses exact frozen local realizations and never invokes OpenCode', async () => {
+  assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS), true);
+  assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS['qwen-local']), true);
+  assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS['gpt-oss-local']), true);
+  assert.deepEqual(
+    WUC.canonicalLocalOllamaDirectRealization({
+      provider_id: 'qwen-local', model_id: 'qwen3-coder:30b', adapter_id: 'ollama-direct',
+    }),
+    { governed_model_id: 'qwen3-coder:30b', runtime_model: 'jarvis-qwen3-coder:65k' },
+  );
+  assert.deepEqual(
+    WUC.canonicalLocalOllamaDirectRealization({
+      provider_id: 'gpt-oss-local', model_id: 'gpt-oss:20b', adapter_id: 'ollama-direct',
+    }),
+    { governed_model_id: 'gpt-oss:20b', runtime_model: 'gpt-oss:20b' },
+  );
+  assert.equal(WUC.canonicalLocalOllamaDirectRealization({
+    provider_id: 'gpt-oss-local', model_id: 'gpt-oss:not-admitted', adapter_id: 'ollama-direct',
+  }), null);
+  assert.equal(WUC.canonicalLocalOllamaDirectRealization({
+    provider_id: 'gpt-oss-local', model_id: 'gpt-oss:20b', adapter_id: 'opencode',
+  }), null);
+  assert.equal(WUC.canonicalLocalOllamaDirectRealization({
+    provider_id: 'unknown-local', model_id: 'gpt-oss:20b', adapter_id: 'ollama-direct',
+  }), null);
+
+  const { home, env } = tempEnv();
+  try {
+    const { id, status } = await routedReady(env, 3150);
+    const calls = [];
+    let openCodeCalls = 0;
+    const executionOpts = {
+      env,
+      actorId: 'human:m1-proof',
+      localWorkerRun: async ({ prompt, model, host, timeoutMs, temperature }) => {
+        calls.push({ model, host, timeoutMs, temperature, prompt_length: prompt.length });
+        return { ok: true, output: 'bounded MODEL MODE evidence', model, host };
+      },
+      execFile: () => {
+        openCodeCalls += 1;
+        throw new Error('OpenCode must not run in MODEL MODE');
+      },
+    };
+
+    const primary = status.routing.participants.find((entry) => entry.participant_id === 'primary');
+    assert.ok(primary);
+    const primaryGrant = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, primary.participant_id, { env, actorId: 'human:m1-proof' },
+    );
+    assert.equal(primaryGrant.ok, true, JSON.stringify(primaryGrant.blockers));
+    const primaryResult = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, primaryGrant.grant.grant_id, executionOpts,
+    );
+    assert.equal(primaryResult.ok, true, JSON.stringify(primaryResult.blockers));
+
+    const afterPrimary = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    const challenger = afterPrimary.routing.participants.find(
+      (entry) => entry.participant_id === 'local-review-1',
+    );
+    assert.ok(challenger);
+    const challengerActive = challenger.transport_bindings.find(
+      (binding) => binding.readiness.status === 'READY' && binding.adapter_id === 'ollama-direct',
+    );
+    assert.ok(challengerActive);
+    assert.equal(challengerActive.provider_id, 'gpt-oss-local');
+    assert.equal(challengerActive.model_id, 'gpt-oss:20b');
+
+    const challengerGrant = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, challenger.participant_id, { env, actorId: 'human:m1-proof' },
+    );
+    assert.equal(challengerGrant.ok, true, JSON.stringify(challengerGrant.blockers));
+    const challengerResult = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, challengerGrant.grant.grant_id, executionOpts,
+    );
+    assert.equal(challengerResult.ok, true, JSON.stringify(challengerResult.blockers));
+
+    assert.deepEqual(
+      calls.map(({ model, host, temperature }) => ({ model, host, temperature })),
+      [
+        { model: 'jarvis-qwen3-coder:65k', host: 'http://127.0.0.1:11434', temperature: 0 },
+        { model: 'gpt-oss:20b', host: 'http://127.0.0.1:11434', temperature: 0 },
+      ],
+    );
+    assert.equal(openCodeCalls, 0);
+    assert.ok(calls.every((call) => call.prompt_length > 0));
+
+    const final = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    assert.deepEqual(final.work_unit.authority, status.work_unit.authority);
+    assert.equal(final.provenance.attempts.length, 2);
+    assert.equal(final.provenance.attempts[0].adapter_id, 'ollama-direct');
+    assert.equal(final.provenance.attempts[1].adapter_id, 'ollama-direct');
+    assert.equal(final.provenance.attempts[0].status, 'completed');
+    assert.equal(final.provenance.attempts[1].status, 'completed');
+  } finally {
+    cleanup(home);
+  }
 });

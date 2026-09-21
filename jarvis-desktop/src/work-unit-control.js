@@ -19,6 +19,24 @@ const KEYCHAIN_CREDENTIALS = Object.freeze({
   TINKER_API_KEY: Object.freeze({ service: 'soullab.tinker.api' }),
 });
 
+const LOCAL_OLLAMA_DIRECT_REALIZATIONS = Object.freeze({
+  'qwen-local': Object.freeze({
+    governed_model_id: 'qwen3-coder:30b',
+    runtime_model: 'jarvis-qwen3-coder:65k',
+  }),
+  'gpt-oss-local': Object.freeze({
+    governed_model_id: 'gpt-oss:20b',
+    runtime_model: 'gpt-oss:20b',
+  }),
+});
+
+function canonicalLocalOllamaDirectRealization(binding) {
+  if (binding?.adapter_id !== 'ollama-direct') return null;
+  const realization = LOCAL_OLLAMA_DIRECT_REALIZATIONS[binding?.provider_id];
+  if (!realization || binding?.model_id !== realization.governed_model_id) return null;
+  return realization;
+}
+
 const homeOf = (env = process.env) => env.AIN_DELEGATION_HOME || path.join(os.homedir(), '.claude', 'ain-delegation');
 const resultPath = (id, env = process.env) => path.join(homeOf(env), 'results', `${id}.json`);
 
@@ -748,9 +766,8 @@ async function executeCanonicalResolvedProvider(
     let run;
 
     if (resolved.execution_adapter === 'ollama-direct') {
-      if (binding.provider_id !== 'qwen-local'
-          || binding.model_id !== 'qwen3-coder:30b'
-          || binding.adapter_id !== 'ollama-direct') {
+      const realization = canonicalLocalOllamaDirectRealization(binding);
+      if (!realization) {
         throw new Error('CANONICAL_OLLAMA_DIRECT_IDENTITY_MISMATCH');
       }
       const prompt = canonicalProviderPrompt(workUnit, sandbox.files, {
@@ -762,7 +779,7 @@ async function executeCanonicalResolvedProvider(
         : await importBound(root, 'scripts/builder/jarvis-local-worker.mjs');
       const native = await localWorker.run({
         prompt,
-        model: 'jarvis-qwen3-coder:65k',
+        model: realization.runtime_model,
         host: 'http://127.0.0.1:11434',
         timeoutMs: timeout,
         temperature: 0,
@@ -1401,6 +1418,7 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
 
 module.exports = {
   MAX_LOG_CHARS, RUN_TIMEOUT_MS, KEYCHAIN_CREDENTIALS,
+  LOCAL_OLLAMA_DIRECT_REALIZATIONS, canonicalLocalOllamaDirectRealization,
   homeOf, resultPath, readLogExcerpt, exitCodeFromSummary,
   credentialAvailability, delegateLaneForProvider,
   modelFamilyFromAttempt, durableProviderOutcome,
