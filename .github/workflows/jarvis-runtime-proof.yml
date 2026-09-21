@@ -60,3 +60,6 @@ jobs:
 
       - name: Run canonical JARVIS proof chain
         run: npm run jarvis:proof
+
+      - name: Run JARVIS Desktop regression suite
+        run: node --test jarvis-desktop/test/*.test.mjs
