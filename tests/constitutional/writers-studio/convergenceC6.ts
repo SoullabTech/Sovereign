@@ -31,6 +31,7 @@ const PASSAGE = 'app/writers-studio/insight/ManuscriptPassage.tsx';
 const DESK = 'app/writers-studio/insight/RevisionDesk.tsx';
 const ADOPTION = 'lib/manuscript/editorialRuntime/adoption.ts';
 const REVIEW = 'lib/writersStudio/rebuild/chapterReview.ts';
+const DEPTH = 'lib/writersStudio/editorialDepth.ts';
 const STAGES = 'lib/manuscript/developmentalReading/commission.ts';
 
 export function runC6(): readonly Check[] {
@@ -44,6 +45,8 @@ export function runC6(): readonly Check[] {
   const desk = src(DESK);
   const adoption = src(ADOPTION);
   const review = src(REVIEW);
+  const depth = src(DEPTH);
+  const depthRaw = read(DEPTH);
   const stages = src(STAGES);
 
   /* ⭐ ONE entry point for every observation-level response, so the five
@@ -305,6 +308,48 @@ export function runC6(): readonly Check[] {
   add('C6R3-7-manifest-refusal-is-preserved',
     /setReviewManifestRefusal\(kept\.refusal\)/.test(rebuild),
     'the manifest refusal code is kept rather than reconstructed from the database');
+
+  /* ⛔⛔ THE FAILURE CONDITION FACETS-01 NAMES AS THE SHARPEST: a facet that
+     changes how much prose MAIA authored. Every depth carries the clause. */
+  add('C6R4-1-authorship-is-depth-invariant',
+    (depth.match(/Do not write more of my prose than you would at any other depth/g) ?? []).length === 3,
+    'all three depths forbid MAIA writing more of the member’s prose');
+
+  /* ⭐⭐ NO CLASSIFIER, SO NO LABEL CAN ACCUMULATE. Structural, not a rule. */
+  add('C6R4-2-no-style-classifier-exists',
+    !/sentenceLength|detectStyle|classifyWriter|styleProfile|readingLevel/i.test(depth) &&
+    !/localStorage|apiFetch|query\(|INSERT/i.test(depth),
+    'nothing measures, derives or stores a style — adaptation cannot outlive the turn');
+
+  add('C6R4-3-richer-language-never-licenses-a-stronger-claim',
+    /never licenses a stronger claim/.test(depth),
+    'style may change the language; it may not change what the evidence supports');
+
+  add('C6R4-4-no-classification-of-the-member',
+    /Do not describe, classify, rate or comment on me as a writer/.test(depth) &&
+    /Do not infer my education, profession, experience or ability/.test(depth),
+    'MAIA may describe the writing; she may never characterise the writer');
+
+  /* ⭐ The writer's correction outranks the dial, and ⛔ MAIA never moves it. */
+  add('C6R4-5-attunement-is-repairable-in-conversation',
+    /too technical, too simplified/.test(depth) &&
+    /NOT WRITTEN BACK TO THE DIAL/.test(depthRaw),
+    'a said correction is honoured at once and never rewrites a member-declared setting');
+
+  add('C6R4-6-three-signals-are-not-collapsed',
+    /DEPTH_DIRECTIVE\[depth\], STYLE_RESPONSIVE_DIRECTIVE, ATTUNEMENT_DIRECTIVE/.test(depth),
+    'manuscript, conversation and depth are composed as three separate signals');
+
+  /* ⛔ One place, so no turn can escape the translation standard. */
+  add('C6R4-7-every-turn-carries-the-directive',
+    /const exactWords = `\$\{requestText \?\? editorialDraft\}[\s\S]{0,40}editorialDirective\(editorialDepth\)/.test(rebuild),
+    'the directive is appended in the single turn seam, not threaded through callers');
+
+  add('C6R4-8-depth-is-declared-not-assigned',
+    /DEFAULT_EDITORIAL_DEPTH: EditorialDepth = 'guided'/.test(depth) &&
+    /onDepth\(d\)/.test(desk) &&
+    !/setEditorialDepth\(/.test(rebuild.slice(rebuild.indexOf('const sendEditorial'), rebuild.indexOf('const applySuggested'))),
+    'the default is identical for everyone and only the member moves it');
 
   const c5 = runC5();
   const reusableC5 = c5.filter(c => c.id !== 'C5-19-no-new-revision-substrate');

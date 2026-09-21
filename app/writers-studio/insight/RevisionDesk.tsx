@@ -7,15 +7,20 @@ import type { RebuildEditorialThread, RebuildEditorialVersion } from '@/lib/writ
 import WorkInspiration from './WorkInspiration';
 import { EDITORIAL_QUESTIONS } from '@/lib/writersStudio/editorialQuestions';
 import { editorialSegments } from '@/lib/writersStudio/editorialDiff';
+import { DEPTH_CHOICES, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 
 export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;
 }
 export default function RevisionDesk({
-  active = true, inline = false, onPreview, onEditOriginal, onReadContext, composedText, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
+  active = true, inline = false, onPreview, onEditOriginal, onReadContext, composedText, depth, onDepth, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
 }: {
   onEditOriginal?: () => void; onReadContext?: () => void;
+  /** ⭐ C6R4 — what the writer wants of MAIA next. ⛔ Never what MAIA has
+   *  concluded about the writer. */
+  depth?: EditorialDepth;
+  onDepth?: (depth: EditorialDepth) => void;
   /** ⭐ C6R2 — the current composition of taken marks, when there is one. */
   composedText?: string | null;
   active?: boolean; inline?: boolean; onPreview?: (preview: { original: string; wording: string; changes: boolean } | null) => void;
@@ -153,6 +158,19 @@ export default function RevisionDesk({
         <p>{explanation.length > 420 && openTool !== 'explanation' ? explanation.slice(0, explanation.lastIndexOf(' ', 420)) + '…' : explanation}</p>
         {explanation.length > 420 && <button className="wsi-text-button" onClick={() => toggleTool('explanation')} aria-expanded={openTool === 'explanation'}>{openTool === 'explanation' ? 'Show less' : 'Continue reading'}</button>}
       </div> : <p className="wsi-page-welcome">What are you hoping to say here? We can explore it together.</p>}
+      {/* ⭐⭐ C6R4 — THE DEPTH DIAL, WHERE THE ANSWER IS.
+          ⭐ `That makes sense` asks for nothing: understanding is allowed to be
+          enough, and the Studio may not require a craft lesson or a
+          deliberation the writer did not ask for.
+          ⛔ No option names a level of skill — each names what the writer wants
+          MAIA to do next. */}
+      {explanation && onDepth && <div className="wsi-depth-choices" aria-label="How should MAIA explain this?">
+        {DEPTH_CHOICES.map(({ label, depth: d }) =>
+          <button type="button" key={label} disabled={blocked}
+            aria-pressed={d !== null && d === depth}
+            onClick={() => { if (d === null) { setOpenTool(null); return; }
+              onDepth(d); }}>{label}</button>)}
+      </div>}
       {!version && <div className="wsi-page-actions" aria-label="Explore before revising">
         {[
           ['Help me understand', 'Teach me the craft principle this observation raises, using only the supplied passage and observation. First show me the exact words you noticed. Explain in plain language what they may do for a reader, why that may matter, and when the same choice could be intentional or effective. Distinguish evidence from interpretation. Do not test me, infer anything about my ability, or propose replacement wording yet. End by asking what I intended.'],

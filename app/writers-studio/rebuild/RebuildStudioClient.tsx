@@ -20,6 +20,9 @@ import MaiaListen from '../insight/MaiaListen';
 import InlineWorkspace from '../insight/InlineWorkspace';
 import ManuscriptPassage, { type EditAction, type MarkedEdit } from '../insight/ManuscriptPassage';
 import { editorialSegments, editIds, composeSelected } from '@/lib/writersStudio/editorialDiff';
+import {
+  DEFAULT_EDITORIAL_DEPTH, DEPTH_CHOICES, editorialDirective, type EditorialDepth,
+} from '@/lib/writersStudio/editorialDepth';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
@@ -246,6 +249,10 @@ export default function RebuildStudioClient() {
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number; lens: string } | null>(null);
   const [reviewNeedsRefresh, setReviewNeedsRefresh] = useState(false);
   /* ⭐ C — kept beside the member sentence, never folded into it. */
+  /* ⭐ C6R4 — member-declared, per-observation, changeable without ceremony.
+     ⛔ Never assigned, never inferred, and the default is identical for every
+     member rather than chosen from anything about this one. */
+  const [editorialDepth, setEditorialDepth] = useState<EditorialDepth>(DEFAULT_EDITORIAL_DEPTH);
   const [reviewManifestRefusal, setReviewManifestRefusal] = useState<string | null>(null);
   const [reviewContinuityMessage, setReviewContinuityMessage] = useState<string | null>(null);
   const [reviewLens, setReviewLens] = useState<DevelopmentalLens | 'all'>('all');
@@ -841,7 +848,13 @@ export default function RebuildStudioClient() {
   const sendEditorial = useCallback(async (requestText?: string) => {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
-    const exactWords = requestText ?? editorialDraft;
+    /* ⭐⭐ C6R4 — ONE PLACE, SO NO TURN ESCAPES IT. Threading the directive
+       through each caller would mean one of them eventually forgets, and the
+       writer would get Direct-register prose from whichever path was missed
+       with nothing on screen explaining why this answer reads differently.
+       ⛔ APPENDED, never substituted: it governs the telling, and the
+       substance of the turn above it is untouched. */
+    const exactWords = `${requestText ?? editorialDraft}\n\n${editorialDirective(editorialDepth)}`;
     try {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
@@ -868,7 +881,7 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight]);
+  }, [editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -1892,6 +1905,7 @@ export default function RebuildStudioClient() {
 
         <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview}
           composedText={composition && composition.taken > 0 ? composition.text : null}
+          depth={editorialDepth} onDepth={setEditorialDepth}
           scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
           currentText={selectedPassage?.draftSectionId === focusId
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
