@@ -241,6 +241,55 @@ test('E1 full canonical local flow: Authorize Once != Confirm Execute, DR1/W4 ev
   }
 });
 
+
+test('E1 executes a develop Work Unit through a read-only provider projection', async () => {
+  const { home, env } = tempEnv();
+  try {
+    const { id, status } = await routedReady(env, 3150, spec({
+      executionIntent: 'develop',
+      workClass: 'PATCH',
+    }));
+    assert.equal(status.work_unit.authority.repository_write, 'worktree');
+    assert.equal(status.work_unit.authority.shell, 'none');
+
+    const primary = status.routing.participants.find((p) =>
+      p.required_for_completion && p.participant_id === 'primary');
+    assert.ok(primary);
+
+    const issued = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, primary.participant_id,
+      { env, actorId: 'human:e1-proof' },
+    );
+    assert.equal(issued.ok, true, JSON.stringify(issued.blockers));
+
+    let seen = null;
+    const confirmed = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, issued.grant.grant_id,
+      {
+        env,
+        actorId: 'human:e1-proof',
+        executeCanonicalProvider: async (_root, args) => {
+          seen = args;
+          return stubResult(args, { exitCode: 0, testResults: 'not_run' });
+        },
+      },
+    );
+    assert.equal(confirmed.ok, true, JSON.stringify(confirmed.blockers));
+    assert.ok(seen);
+    assert.equal(seen.binding.provider_id, 'qwen-local');
+    assert.equal(seen.binding.model_id, 'qwen3-coder:30b');
+    assert.equal(seen.binding.adapter_id, 'opencode');
+    assert.equal(confirmed.work_unit.authority.repository_write, 'worktree');
+    const act = confirmed.final_admission.provider_acts
+      .find((entry) => entry.provider_id === 'qwen-local');
+    assert.ok(act);
+    assert.equal(act.disposition, 'ADMITTED');
+    assert.equal(act.required_authority.acts.includes('repo.write:worktree'), false);
+  } finally {
+    cleanup(home);
+  }
+});
+
 test('E1 provider failure consumes grant and DR1/W4 preserve failed attempt without automatic retry', async () => {
   const { home, env } = tempEnv();
   try {
@@ -503,6 +552,227 @@ test('canonical Qwen v2 launch is standalone and isolated from user OpenCode con
     assert.equal(JSON.stringify(config).includes('gpt-oss'), false);
     assert.equal(JSON.stringify(config).includes('tinker'), false);
     assert.equal(JSON.stringify(config).includes('nvidia'), false);
+  } finally {
+    cleanup(home);
+  }
+});
+
+
+test('D2 valid local Qwen development proposal is persisted as bounded durable patch evidence', async () => {
+  const { home, env } = tempEnv();
+  const workUnitId = 'd2-valid-development-proposal';
+  const grantId = 'd2-valid-grant';
+  const allowed = 'scripts/builder/work-unit-v2.mjs';
+  const patch = [
+    'diff --git a/' + allowed + ' b/' + allowed,
+    '--- a/' + allowed,
+    '+++ b/' + allowed,
+    '@@ -1,1 +1,1 @@',
+    '-/**',
+    '+/**',
+  ].join('\n');
+  const workUnit = {
+    work_unit_version: 'W0.v2',
+    identity: {
+      id: workUnitId,
+      programme: 'JARVIS-D2-PROOF',
+      parent_work_unit: null,
+      objective: 'Propose one bounded development patch.',
+      work_class: 'PATCH',
+      task_shape: 'CODE_GROUNDED',
+      capability: null,
+    },
+    custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
+    scope: {
+      repository: 'bound-desktop-repository',
+      base_ref: SHA,
+      allowed_paths: [allowed],
+      forbidden_paths: [],
+    },
+    authority: {
+      repository_read: true,
+      repository_write: 'worktree',
+      shell: 'none',
+      network_external: false,
+      provider_spend: false,
+      external_disclosure: 'none',
+      merge: false,
+      deploy: false,
+      production_read: false,
+      production_write: false,
+    },
+    routing: {
+      route_record: { primary: { participant_id: 'primary' } },
+    },
+    evaluation: {
+      acceptance_conditions: ['Proposal remains inside allowed path.'],
+      stop_conditions: ['Stop before JARVIS applies any patch.'],
+    },
+  };
+  const binding = {
+    route_participant_id: 'primary',
+    transport_binding_id: 'd2-qwen-binding',
+    provider_id: 'qwen-local',
+    model_id: 'qwen3-coder:30b',
+    adapter_id: 'opencode',
+  };
+  const resolved = {
+    execution_adapter: 'opencode',
+    agent: 'jarvis-readonly',
+    model_ref: 'ollama/qwen3-coder:30b',
+    model_id: 'qwen3-coder:30b',
+  };
+
+  try {
+    let seenArgs = null;
+    const out = await WUC.executeCanonicalResolvedProvider(
+      REPO,
+      {
+        workUnitId,
+        grantId,
+        workUnit,
+        binding,
+        resolved,
+        sourceEnv: env,
+      },
+      {
+        execFile: (_file, args, _options, callback) => {
+          seenArgs = [...args];
+          callback(null, [
+            'BEGIN_JARVIS_PATCH',
+            patch,
+            'END_JARVIS_PATCH',
+          ].join('\n'), '');
+        },
+      },
+    );
+
+    assert.equal(out.ok, true, JSON.stringify(out.durable_result));
+    assert.equal(out.status, 'COMPLETED');
+    assert.ok(seenArgs);
+    const prompt = seenArgs[seenArgs.length - 1];
+    assert.match(prompt, /DEVELOPMENT PROPOSAL CONTRACT/);
+    assert.match(prompt, /READ-ONLY model/);
+    assert.match(prompt, /BEGIN_JARVIS_PATCH/);
+
+    assert.equal(out.durable_result.exit_code, 0);
+    assert.equal(out.durable_result.development_contract_version, 'D1.v1');
+    assert.equal(out.durable_result.development_proposal_status, 'admitted');
+    assert.deepEqual(out.durable_result.development_proposal_paths, [allowed]);
+    assert.equal(out.durable_result.recommended_next_action, 'review-development-proposal');
+    assert.match(out.durable_result.development_proposal_digest, /^sha256:[0-9a-f]{64}$/);
+
+    const loc = WUC.canonicalDevelopmentProposalLocation(workUnitId, grantId, env);
+    assert.equal(fs.existsSync(loc.file), true);
+    assert.equal(fs.readFileSync(loc.file, 'utf8'), patch + '\n');
+    const mode = fs.statSync(loc.file).mode & 0o777;
+    assert.equal(mode, 0o600);
+    assert.equal(out.development_proposal.ref, loc.ref);
+    assert.equal(out.development_proposal.digest, out.durable_result.development_proposal_digest);
+  } finally {
+    cleanup(home);
+  }
+});
+
+test('D2 out-of-scope patch fails durably even when OpenCode wrapper exits zero', async () => {
+  const { home, env } = tempEnv();
+  const workUnitId = 'd2-refused-development-proposal';
+  const grantId = 'd2-refused-grant';
+  const allowed = 'scripts/builder/work-unit-v2.mjs';
+  const escaped = 'scripts/deploy-production.sh';
+  const patch = [
+    'diff --git a/' + escaped + ' b/' + escaped,
+    '--- a/' + escaped,
+    '+++ b/' + escaped,
+    '@@ -1,1 +1,1 @@',
+    '-old',
+    '+new',
+  ].join('\n');
+  const workUnit = {
+    work_unit_version: 'W0.v2',
+    identity: {
+      id: workUnitId,
+      programme: 'JARVIS-D2-PROOF',
+      parent_work_unit: null,
+      objective: 'Attempt an out-of-scope patch.',
+      work_class: 'PATCH',
+      task_shape: 'CODE_GROUNDED',
+      capability: null,
+    },
+    custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
+    scope: {
+      repository: 'bound-desktop-repository',
+      base_ref: SHA,
+      allowed_paths: [allowed],
+      forbidden_paths: [],
+    },
+    authority: {
+      repository_read: true,
+      repository_write: 'worktree',
+      shell: 'none',
+      network_external: false,
+      provider_spend: false,
+      external_disclosure: 'none',
+      merge: false,
+      deploy: false,
+      production_read: false,
+      production_write: false,
+    },
+    routing: {
+      route_record: { primary: { participant_id: 'primary' } },
+    },
+    evaluation: {
+      acceptance_conditions: ['Out-of-scope patch must fail.'],
+      stop_conditions: ['Stop before mutation.'],
+    },
+  };
+  const binding = {
+    route_participant_id: 'primary',
+    transport_binding_id: 'd2-qwen-binding-refused',
+    provider_id: 'qwen-local',
+    model_id: 'qwen3-coder:30b',
+    adapter_id: 'opencode',
+  };
+  const resolved = {
+    execution_adapter: 'opencode',
+    agent: 'jarvis-readonly',
+    model_ref: 'ollama/qwen3-coder:30b',
+    model_id: 'qwen3-coder:30b',
+  };
+
+  try {
+    const out = await WUC.executeCanonicalResolvedProvider(
+      REPO,
+      {
+        workUnitId,
+        grantId,
+        workUnit,
+        binding,
+        resolved,
+        sourceEnv: env,
+      },
+      {
+        execFile: (_file, _args, _options, callback) => {
+          callback(null, [
+            'BEGIN_JARVIS_PATCH',
+            patch,
+            'END_JARVIS_PATCH',
+          ].join('\n'), '');
+        },
+      },
+    );
+
+    assert.equal(out.run.exit_code, 0);
+    assert.equal(out.ok, false);
+    assert.equal(out.status, 'FAILED');
+    assert.equal(out.durable_result.exit_code, 65);
+    assert.equal(out.durable_result.development_proposal_status, 'refused');
+    assert.equal(out.durable_result.recommended_next_action, 'reject');
+    assert.ok(out.durable_result.development_proposal_blockers
+      .some((b) => b.code === 'PATCH_PATH_OUTSIDE_AUTHORIZED_SCOPE'));
+
+    const loc = WUC.canonicalDevelopmentProposalLocation(workUnitId, grantId, env);
+    assert.equal(fs.existsSync(loc.file), false);
   } finally {
     cleanup(home);
   }

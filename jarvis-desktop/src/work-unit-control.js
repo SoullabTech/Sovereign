@@ -624,6 +624,28 @@ function persistCanonicalDurableResult(workUnitId, grantId, result, env = proces
   };
 }
 
+function canonicalDevelopmentProposalLocation(workUnitId, grantId, env = process.env) {
+  const dir = path.join(homeOf(env), 'work-units-v2', 'development-proposals', workUnitId);
+  return {
+    dir,
+    file: path.join(dir, grantId + '.patch'),
+    ref: 'canonical-development-proposal:' + workUnitId + ':' + grantId,
+  };
+}
+
+function persistCanonicalDevelopmentProposal(workUnitId, grantId, proposal, env = process.env) {
+  const loc = canonicalDevelopmentProposalLocation(workUnitId, grantId, env);
+  fs.mkdirSync(loc.dir, { recursive: true });
+  fs.writeFileSync(loc.file, proposal.patch + '\n', { mode: 0o600 });
+  return {
+    path: loc.file,
+    ref: loc.ref,
+    digest: proposal.digest,
+    paths: [...proposal.paths],
+    patch_bytes: proposal.patch_bytes,
+  };
+}
+
 function boundedCanonicalPaths(workUnit) {
   return (workUnit?.scope?.allowed_paths || []).filter((value) =>
     typeof value === 'string'
@@ -684,7 +706,7 @@ function materializeCanonicalEvidenceSandbox(root, workUnit) {
   return { workspace, files };
 }
 
-function canonicalProviderPrompt(workUnit, files, { inlineEvidence = false, workspace } = {}) {
+function canonicalProviderPrompt(workUnit, files, { inlineEvidence = false, workspace, developmentInstructions = null } = {}) {
   const acceptance = (workUnit?.evaluation?.acceptance_conditions || [])
     .map((v) => '- ' + v).join('\n') || '(none)';
   const stops = (workUnit?.evaluation?.stop_conditions || [])
@@ -714,6 +736,11 @@ function canonicalProviderPrompt(workUnit, files, { inlineEvidence = false, work
     '',
     'STOP CONDITIONS:',
     stops,
+    ...(developmentInstructions ? [
+      '',
+      'DEVELOPMENT PROPOSAL CONTRACT:',
+      developmentInstructions,
+    ] : []),
   ].join('\n');
 }
 
@@ -735,6 +762,21 @@ async function executeCanonicalResolvedProvider(
     sandbox = materializeCanonicalEvidenceSandbox(root, workUnit);
     const timeout = opts.timeoutMs || RUN_TIMEOUT_MS;
     let run;
+    let rawDevelopmentOutput = null;
+    const developmentProposal = workUnit.authority?.repository_write === 'worktree'
+      && binding.route_participant_id === workUnit.routing?.route_record?.primary?.participant_id
+      && binding.provider_id === 'qwen-local'
+      && binding.model_id === 'qwen3-coder:30b'
+      && binding.adapter_id === 'opencode';
+    let development = null;
+    if (developmentProposal) {
+      const devMod = await importBound(root, 'scripts/builder/canonical-development-v1.mjs');
+      const prompt = devMod.developmentPromptV1(workUnit, sandbox.files);
+      if (!prompt.ok) {
+        throw new Error('DEVELOPMENT_CONTRACT_REFUSED:' + (prompt.blockers?.[0]?.code || 'UNKNOWN'));
+      }
+      development = { mod: devMod, prompt: prompt.prompt };
+    }
 
     if (resolved.execution_adapter === 'opencode') {
       const canonicalQwenV2 = binding.provider_id === 'qwen-local'
@@ -758,6 +800,7 @@ async function executeCanonicalResolvedProvider(
           canonicalProviderPrompt(workUnit, sandbox.files, {
             inlineEvidence: false,
             workspace: sandbox.workspace,
+            developmentInstructions: development?.prompt || null,
           }),
         ]
         : [
@@ -776,12 +819,16 @@ async function executeCanonicalResolvedProvider(
           env,
           timeout,
           maxBuffer: 4 * 1024 * 1024,
-        }, (error, stdout, stderr) => resolve({
-          exit_code: error && typeof error.code === 'number' ? error.code : error ? -1 : 0,
-          signal: error?.signal || null,
-          stdout: String(stdout || '').slice(-MAX_LOG_CHARS),
-          stderr: String(stderr || '').slice(-MAX_LOG_CHARS),
-        }));
+        }, (error, stdout, stderr) => {
+          const fullStdout = String(stdout || '');
+          if (developmentProposal) rawDevelopmentOutput = fullStdout;
+          resolve({
+            exit_code: error && typeof error.code === 'number' ? error.code : error ? -1 : 0,
+            signal: error?.signal || null,
+            stdout: fullStdout.slice(-MAX_LOG_CHARS),
+            stderr: String(stderr || '').slice(-MAX_LOG_CHARS),
+          });
+        });
       });
     } else if (resolved.execution_adapter === 'tinker-direct') {
       const node = resolveNodeBinary();
@@ -820,6 +867,35 @@ async function executeCanonicalResolvedProvider(
     }
 
     const escalation = /ESCALATE_TO_CLAUDE:/i.test(run.stdout + '\n' + run.stderr);
+    let developmentProposalResult = null;
+    let persistedProposal = null;
+    let effectiveExitCode = run.exit_code;
+    if (developmentProposal && run.exit_code === 0 && !escalation) {
+      developmentProposalResult = development.mod.extractDevelopmentProposalV1(
+        rawDevelopmentOutput || '',
+        workUnit.scope?.allowed_paths || [],
+      );
+      if (developmentProposalResult.ok) {
+        persistedProposal = persistCanonicalDevelopmentProposal(
+          workUnitId,
+          grantId,
+          developmentProposalResult,
+          sourceEnv,
+        );
+      } else {
+        // Wrapper success cannot upgrade an invalid or out-of-scope patch proposal.
+        // DR1 will prefer this durable non-zero standing over wrapper exit 0.
+        effectiveExitCode = 65;
+      }
+    }
+
+    const proposalStatus = !developmentProposal
+      ? null
+      : persistedProposal
+        ? 'admitted'
+        : developmentProposalResult
+          ? 'refused'
+          : 'not_evaluated';
     const durableResult = {
       execution_version: 'E1.v1',
       work_unit_id: workUnitId,
@@ -829,12 +905,23 @@ async function executeCanonicalResolvedProvider(
       provider_id: binding.provider_id,
       model_id: binding.model_id,
       adapter_id: binding.adapter_id,
-      exit_code: run.exit_code,
+      exit_code: effectiveExitCode,
       test_results: 'not_run',
       escalation_required: escalation,
-      recommended_next_action: run.exit_code === 0 && !escalation ? 'review-evidence' : 'reject',
+      recommended_next_action: effectiveExitCode === 0 && !escalation
+        ? (persistedProposal ? 'review-development-proposal' : 'review-evidence')
+        : 'reject',
       output_excerpt: String(run.stdout || '').slice(-MAX_LOG_CHARS),
       stderr_excerpt: String(run.stderr || '').slice(-MAX_LOG_CHARS),
+      development_contract_version: developmentProposal ? 'D1.v1' : null,
+      development_proposal_status: proposalStatus,
+      development_proposal_ref: persistedProposal?.ref || null,
+      development_proposal_digest: persistedProposal?.digest || null,
+      development_proposal_paths: persistedProposal?.paths || [],
+      development_proposal_bytes: persistedProposal?.patch_bytes || null,
+      development_proposal_blockers: developmentProposalResult?.ok === false
+        ? developmentProposalResult.blockers
+        : [],
     };
     const persisted = persistCanonicalDurableResult(
       workUnitId,
@@ -843,13 +930,14 @@ async function executeCanonicalResolvedProvider(
       sourceEnv,
     );
     return {
-      ok: run.exit_code === 0 && !escalation,
-      status: run.exit_code === 0 && !escalation ? 'COMPLETED' : 'FAILED',
+      ok: effectiveExitCode === 0 && !escalation,
+      status: effectiveExitCode === 0 && !escalation ? 'COMPLETED' : 'FAILED',
       run,
       durable_result: durableResult,
       result_ref: persisted.ref,
       result_digest: persisted.digest,
       result_path: persisted.path,
+      development_proposal: persistedProposal,
     };
   } finally {
     if (sandbox?.workspace) fs.rmSync(sandbox.workspace, { recursive: true, force: true });
@@ -1366,6 +1454,7 @@ module.exports = {
   credentialAvailability, delegateLaneForProvider,
   modelFamilyFromAttempt, durableProviderOutcome,
   reconcileAttempts, providerChildEnv, canonicalQwenOpenCodeV2Env,
+  canonicalDevelopmentProposalLocation,
   providers, create, planRouting, planWorkUnitRouting,
   canonicalExecutionStatus, canonicalPrepareTransport,
   canonicalExecutionPreview, canonicalAuthorizeExecutionOnce, canonicalRevokeExecutionGrant,
