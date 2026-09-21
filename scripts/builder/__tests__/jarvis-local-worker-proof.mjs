@@ -69,4 +69,49 @@ await check("health refuses external host before any fetch occurs", async () => 
   }
 });
 
+await check("run disables redirects on the admitted loopback endpoint", async () => {
+  const originalFetch = globalThis.fetch;
+  let seen = null;
+  globalThis.fetch = async (url, options) => {
+    seen = { url: String(url), options };
+    return {
+      ok: true,
+      json: async () => ({
+        model: "qwen3-coder:30b",
+        response: "diff --git a/a b/a",
+        done_reason: "stop",
+      }),
+    };
+  };
+  try {
+    const out = await run({
+      prompt: "bounded task",
+      model: "qwen3-coder:30b",
+      host: "http://127.0.0.1:11434",
+    });
+    assert.equal(out.ok, true);
+    assert.equal(seen.url, "http://127.0.0.1:11434/api/generate");
+    assert.equal(seen.options.redirect, "error");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await check("health disables redirects on the admitted loopback endpoint", async () => {
+  const originalFetch = globalThis.fetch;
+  let seen = null;
+  globalThis.fetch = async (url, options) => {
+    seen = { url: String(url), options };
+    return { ok: true, json: async () => ({ models: [] }) };
+  };
+  try {
+    const out = await health("http://127.0.0.1:11434");
+    assert.equal(out.ok, true);
+    assert.equal(seen.url, "http://127.0.0.1:11434/api/tags");
+    assert.equal(seen.options.redirect, "error");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 console.log("\n" + passed + " passed · 0 failed");
