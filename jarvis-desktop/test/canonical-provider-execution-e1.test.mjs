@@ -241,6 +241,55 @@ test('E1 full canonical local flow: Authorize Once != Confirm Execute, DR1/W4 ev
   }
 });
 
+
+test('E1 executes a develop Work Unit through a read-only provider projection', async () => {
+  const { home, env } = tempEnv();
+  try {
+    const { id, status } = await routedReady(env, 3150, spec({
+      executionIntent: 'develop',
+      workClass: 'PATCH',
+    }));
+    assert.equal(status.work_unit.authority.repository_write, 'worktree');
+    assert.equal(status.work_unit.authority.shell, 'none');
+
+    const primary = status.routing.participants.find((p) =>
+      p.required_for_completion && p.participant_id === 'primary');
+    assert.ok(primary);
+
+    const issued = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, primary.participant_id,
+      { env, actorId: 'human:e1-proof' },
+    );
+    assert.equal(issued.ok, true, JSON.stringify(issued.blockers));
+
+    let seen = null;
+    const confirmed = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, issued.grant.grant_id,
+      {
+        env,
+        actorId: 'human:e1-proof',
+        executeCanonicalProvider: async (_root, args) => {
+          seen = args;
+          return stubResult(args, { exitCode: 0, testResults: 'not_run' });
+        },
+      },
+    );
+    assert.equal(confirmed.ok, true, JSON.stringify(confirmed.blockers));
+    assert.ok(seen);
+    assert.equal(seen.binding.provider_id, 'qwen-local');
+    assert.equal(seen.binding.model_id, 'qwen3-coder:30b');
+    assert.equal(seen.binding.adapter_id, 'opencode');
+    assert.equal(confirmed.work_unit.authority.repository_write, 'worktree');
+    const act = confirmed.final_admission.provider_acts
+      .find((entry) => entry.provider_id === 'qwen-local');
+    assert.ok(act);
+    assert.equal(act.disposition, 'ADMITTED');
+    assert.equal(act.required_authority.acts.includes('repo.write:worktree'), false);
+  } finally {
+    cleanup(home);
+  }
+});
+
 test('E1 provider failure consumes grant and DR1/W4 preserve failed attempt without automatic retry', async () => {
   const { home, env } = tempEnv();
   try {
