@@ -24,11 +24,14 @@ describe('SOURCE LEVEL-CALIBRATION-01 bounded implementation', () => {
     expect(reader).not.toContain('K00-06 PASS');
   });
 
-  it('uses the frozen SID entry batch instead of mutating historical output/source acts', () => {
-    expect(batch).toContain('--act entry --vp "$VP" --mode L --hold 15 --subject vpio-02-sid');
+  it('uses only the existing external SID driver method and never a historical output/source act', () => {
+    expect(batch).toContain('-only-testing:"DriverUITests/K00DriverTests/testOneSample"');
+    expect(batch).toContain('TEST_RUNNER_K00_SUBJECT=vpio-02-sid');
+    expect(batch).toContain('TEST_RUNNER_K00_VP="$VP"');
     expect(batch).not.toContain('--act output');
     expect(batch).not.toContain('--act duplex');
     expect(batch).not.toContain('testTerminateOnly');
+    expect(batch).not.toContain('k00-driver-batch.sh');
   });
 
   it('closes the ladder and does not change Mac system volume', () => {
@@ -42,11 +45,24 @@ describe('SOURCE LEVEL-CALIBRATION-01 bounded implementation', () => {
     expect(batch).not.toContain('xargs -0');
   });
 
+  it('builds before playback and gives every row its own bounded source-player lifetime', () => {
+    const build = batch.indexOf('xcodebuild build-for-testing');
+    const loop = batch.indexOf('for i in $(seq 1 "$N")');
+    const start = batch.indexOf('start_player "$i"');
+    const run = batch.indexOf('run_test > "$LEDGER/sample-$i-xcodebuild.log"');
+    const stop = batch.indexOf('stop_player "$i"');
+    expect(build).toBeGreaterThan(-1);
+    expect(loop).toBeGreaterThan(build);
+    expect(start).toBeGreaterThan(loop);
+    expect(run).toBeGreaterThan(start);
+    expect(stop).toBeGreaterThan(run);
+  });
+
   it('requires fixed geometry and fail-closed harness-zero custody before playback and after source settle', () => {
     expect(batch).toContain('GEOMETRY_SHA');
-    expect(batch).toContain('preplay-processes.json');
-    expect(batch).toContain('jit-processes.json');
-    expect(batch.match(/grep -ci VoiceKernelHarness/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(batch).toContain('process_guard "$i" preplay');
+    expect(batch).toContain('process_guard "$i" jit');
+    expect(batch).toContain('grep -ci VoiceKernelHarness');
   });
 
   it('passes both Python self-tests', () => {
