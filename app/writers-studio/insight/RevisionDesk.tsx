@@ -13,7 +13,7 @@ export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;
 }
 export default function RevisionDesk({
-  active = true, inline = false, onPreview, onEditOriginal, onReadContext, composedText, depth, onDepth, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
+  active = true, inline = false, onPreview, onEditOriginal, onReadContext, composedText, depth, onDepth, openDraftNonce, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
 }: {
   onEditOriginal?: () => void; onReadContext?: () => void;
@@ -21,6 +21,15 @@ export default function RevisionDesk({
    *  concluded about the writer. */
   depth?: EditorialDepth;
   onDepth?: (depth: EditorialDepth) => void;
+  /**
+   * ⭐⭐ C6R7 — `Change it` on a mark must OPEN the writer's draft, not point at
+   * a control they have to find. Each increment is one request from the page to
+   * open the current composition for rewriting.
+   * ⚠️ A nonce rather than a boolean: the writer may press `Change it`, close
+   * the draft, and press it again on the same mark, and a boolean would already
+   * be true the second time and do nothing.
+   */
+  openDraftNonce?: number;
   /** ⭐ C6R2 — the current composition of taken marks, when there is one. */
   composedText?: string | null;
   active?: boolean; inline?: boolean; onPreview?: (preview: { original: string; wording: string; changes: boolean } | null) => void;
@@ -115,6 +124,16 @@ export default function RevisionDesk({
     workingRange.current = { start: base.length, end: base.length };
     setLocalMessage(null);
   };
+  /* ⭐ The page asked for the draft. ⛔ `edit()` itself still refuses when there
+     is no version to revise or a draft is already open, so this opens nothing
+     that the desk's own control would not. */
+  const openedFor = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (openDraftNonce === undefined || openedFor.current === openDraftNonce) return;
+    openedFor.current = openDraftNonce;
+    edit();
+  }, [openDraftNonce]);
+
   const save = async () => {
     if (!draft || blocked || draft.threadId !== thread?.threadId) return;
     setSaving(true); setLocalMessage(null);

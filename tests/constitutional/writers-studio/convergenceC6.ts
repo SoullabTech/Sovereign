@@ -472,6 +472,32 @@ export function runC6(): readonly Check[] {
     /Changing how deeply you explain never changes how certain a claim is entitled to be/.test(depth),
     'the guard is composed into all three depths, not attached to one');
 
+  /* ⭐⭐ C6R7 — THE WALK FOUND THIS: `Change it` scrolled toward the desk, so
+     the only visible editable field stayed the one labelled *Discuss this
+     passage*. Four of accept · question · learn · rewrite · ignore were
+     coherent; rewriting still required finding another control. */
+  const changeBranch = rebuild.slice(rebuild.indexOf("if (action === 'change')"),
+                                     rebuild.indexOf("const ask ="));
+  add('C6R7-1-change-it-opens-the-draft',
+    /setOpenDraftNonce\(\(n\) => n \+ 1\)/.test(changeBranch) &&
+    /openDraftNonce=\{openDraftNonce\}/.test(rebuild),
+    'Change it asks the desk to open the writer’s draft, not merely to scroll to it');
+
+  add('C6R7-2-the-draft-opens-on-the-composition',
+    /const base = composedText \?\? version\.wording;/.test(desk),
+    'the writer rewrites what the page is showing, not MAIA’s whole proposal');
+
+  add('C6R7-3-change-it-still-calls-nothing-and-mutates-nothing',
+    !/sendEditorial|apiFetch|adoptBound|saveMemberRevision/.test(changeBranch),
+    'opening a draft is neither a model turn nor a manuscript change');
+
+  /* ⚠️ A counter, not a flag: press Change it, close the draft, press it again
+     on the same mark — a boolean would already be true and do nothing. */
+  add('C6R7-4-the-request-is-repeatable',
+    /openDraftNonce\?: number/.test(desk) &&
+    /openedFor\.current === openDraftNonce/.test(desk),
+    'the same mark can be reopened for rewriting more than once');
+
   const c5 = runC5();
   const reusableC5 = c5.filter(c => c.id !== 'C5-19-no-new-revision-substrate');
   add('C6-10-c5-still-green',

@@ -253,6 +253,8 @@ export default function RebuildStudioClient() {
      ⛔ Never assigned, never inferred, and the default is identical for every
      member rather than chosen from anything about this one. */
   const [editorialDepth, setEditorialDepth] = useState<EditorialDepth>(DEFAULT_EDITORIAL_DEPTH);
+  /* ⭐ C6R7 — one request from a mark to open the writer's draft. */
+  const [openDraftNonce, setOpenDraftNonce] = useState(0);
   const [reviewManifestRefusal, setReviewManifestRefusal] = useState<string | null>(null);
   const [reviewContinuityMessage, setReviewContinuityMessage] = useState<string | null>(null);
   const [reviewLens, setReviewLens] = useState<DevelopmentalLens | 'all'>('all');
@@ -1094,11 +1096,22 @@ export default function RebuildStudioClient() {
     /* ⭐ Change it opens the CURRENT COMPOSITION as the writer's own draft —
        what the page is showing them, not MAIA's full proposal, which they may
        never have taken whole. */
+    /* ⭐⭐ C6R7 — `Change it` OPENS THE WRITER'S DRAFT. It used to scroll toward
+       the desk, which left the only visible editable field the one labelled
+       *Discuss this passage* — so the plain promise *I see this edit → Change
+       it → now I rewrite this edit* was answered by a conversation box, and
+       rewriting still required finding another control.
+       ⭐ It opens the CURRENT COMPOSITION, which is what the page is showing:
+       the marks taken so far, ⛔ not MAIA's whole proposal, which the writer
+       may never have accepted entire.
+       ⛔ Still no model call and ⛔ still no mutation — the draft is the
+       writer's until they save it. */
     if (action === 'change') {
       setPassageTab('suggest');
       setEditorialFailure(null);
+      setOpenDraftNonce((n) => n + 1);
       requestAnimationFrame(() =>
-        document.querySelector('[data-revision-desk] textarea')
+        document.querySelector('[data-revision-desk] .wsi-revision')
           ?.scrollIntoView({ block: 'center' }));
       return;
     }
@@ -1906,6 +1919,7 @@ export default function RebuildStudioClient() {
         <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview}
           composedText={composition && composition.taken > 0 ? composition.text : null}
           depth={editorialDepth} onDepth={setEditorialDepth}
+          openDraftNonce={openDraftNonce}
           scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
           currentText={selectedPassage?.draftSectionId === focusId
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
