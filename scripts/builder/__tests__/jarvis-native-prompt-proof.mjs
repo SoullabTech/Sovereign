@@ -18,6 +18,11 @@ try {
   writeFileSync(path.join(repo, "target.txt"), "alpha\nbeta\n");
   execFileSync("git", ["add", "."], { cwd: repo });
   execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
+  const baseSha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim();
+  writeFileSync(path.join(repo, "marker.txt"), "second commit\n");
+  execFileSync("git", ["add", "marker.txt"], { cwd: repo });
+  execFileSync("git", ["commit", "-qm", "advance"], { cwd: repo });
+  const currentSha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim();
 
   const packet = {
     work_unit_id: "native-prompt-proof",
@@ -32,7 +37,13 @@ try {
     context_selectors: ["target.txt"],
     verification_commands: ["SECRET_VERIFIER_EXPECTATION"],
     verifier_notes: "SECRET_VERIFIER_NOTE",
+    canonical_sha: currentSha,
   };
+
+  assert.throws(
+    () => buildNativePrompt({ ...packet, canonical_sha: baseSha }, repo),
+    (error) => error?.code === "EXECUTION_HEAD_MISMATCH",
+  );
 
   const prompt = buildNativePrompt(packet, repo);
   assert.match(prompt, /MATERIALIZED CONTEXT/);
@@ -49,7 +60,7 @@ try {
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("14 passed · 0 failed");
+  console.log("15 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
