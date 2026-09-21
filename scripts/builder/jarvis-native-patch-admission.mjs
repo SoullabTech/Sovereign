@@ -287,7 +287,7 @@ export function applyNativePatch({
       });
     }
     if (!indexLine) continue; // ordinary new text file; git apply determines creation validity.
-    const mode = indexLine.split(/\\s+/, 1)[0];
+    const mode = indexLine.split(/\s+/, 1)[0];
     if (mode !== "100644" && mode !== "100755") {
       return recordRefusal("PATCH_TARGET_MODE_UNSUPPORTED", {
         path: patchPath,
