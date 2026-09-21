@@ -1,0 +1,87 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "I2",
+  "title": "Pure Constitutional Epistemic Join Evaluator",
+  "date": "2026-09-21",
+  "status": "EVIDENCE_READY",
+  "founder_authorized_base": "981b741b24924af7fc7e82d73a158be58fbff7d3",
+  "reconciled_canonical_base": "d0b51f1fb754b97b2f45cab955a978c85853b14b",
+  "freshness_reconciliation": {
+    "canonical_commits_advanced": 7,
+    "i2_implementation_path_overlap": 0,
+    "authorized_semantics_changed": false,
+    "reason": "Canonical advanced after authorization; intervening changes did not touch lib/ain/epistemic-join or the I2 test path, so I2 was implemented on actual current canonical without changing the authorized law."
+  },
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "operation_grammar": "REFERENCE -> REPORT/MOVE -> COMPARE/JUXTAPOSE -> HYPOTHESIZE -> WARRANTED JOIN -> PROMOTE/DISCHARGE",
+  "authority": "PURE_COMPUTATION_ONLY_NO_RUNTIME_AUTHORITY",
+  "implementation": {
+    "boundary": "lib/ain/epistemic-join/",
+    "types": "lib/ain/epistemic-join/types.ts",
+    "evaluator": "lib/ain/epistemic-join/evaluate.ts",
+    "falsification_matrix": "tests/constitutional/epistemic-join/i2-matrix.ts",
+    "properties": [
+      "explicit typed inputs and outputs",
+      "explicit warrant reliance",
+      "reference and reliance separated",
+      "jurisdiction exactness",
+      "component-scoped member adoption",
+      "first-class composite warrant validation",
+      "standing derived from append-only acts",
+      "lower-standing hypothesis preserved on failed promotion",
+      "downstreamRepresentationAuthorized fixed false",
+      "no database/network/provider/clock/random/filesystem dependency"
+    ]
+  },
+  "evidence": {
+    "implementation_head_before_evidence_records": "054b0356517a65656c6e3ad5bf92ba4771bf48f6",
+    "constitutional_falsification_matrix": "17/17 PASS",
+    "isolated_typescript_compile": "PASS",
+    "prohibited_import_scan": "CLEAN",
+    "working_tree_after_witness": "CLEAN",
+    "runtime_execution": "NONE",
+    "database_access": "NONE",
+    "schema_change": "NONE",
+    "production_data": "NONE",
+    "provider_model_calls": "NONE",
+    "downstream_representation_authority": "CLOSED"
+  },
+  "preserved_seams": {
+    "relational_practice_ledger": "UNTOUCHED",
+    "wisdom_graph": "UNTOUCHED",
+    "member_memory_atoms_crossing_allowed": "UNCHANGED",
+    "living_constellation": "UNTOUCHED",
+    "jarvis_ci_epistemic_ledger": "UNTOUCHED"
+  },
+  "forbidden": [
+    "schema changes",
+    "migrations",
+    "database writes",
+    "append-only persistence",
+    "feature-flag activation",
+    "graph-edge creation",
+    "Wisdom Graph semantic authority",
+    "Relational Practice Ledger semantic claims",
+    "Member Memory mutation",
+    "lifting crossing_allowed",
+    "Living Constellation semantic lines",
+    "MAIA prompt changes",
+    "MAIA behavioral changes",
+    "runtime context injection",
+    "automatic adoption",
+    "provider/model calls",
+    "routing changes",
+    "production shadow",
+    "production reads or writes",
+    "deployment"
+  ],
+  "disposition": "PURE CONSTITUTIONAL EVALUATOR EXECUTABLE WITHOUT PERSISTENCE, REPRESENTATION, OR RUNTIME AUTHORITY",
+  "artifacts": [
+    "lib/ain/epistemic-join/types.ts",
+    "lib/ain/epistemic-join/evaluate.ts",
+    "tests/constitutional/epistemic-join/i2-matrix.ts",
+    "docs/programme/JARVIS-KP-01_I2_WORK_UNIT_2026-09-21.json",
+    "docs/programme/evidence/JARVIS-KP-01/I2/LOCAL_FALSIFICATION_WITNESS_2026-09-21.md"
+  ],
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_EXACT_I2_CANDIDATE"
+}
