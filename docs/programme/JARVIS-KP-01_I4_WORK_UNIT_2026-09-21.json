@@ -161,5 +161,31 @@
     "merge": "NOT_AUTHORIZED",
     "deployment": "NONE",
     "next_gate": "HOSTED_PR_CI_THEN_SEPARATE_CANONICAL_MERGE_ADJUDICATION"
+  },
+  "i4r2": {
+    "status": "LOCAL_EVIDENCE_READY",
+    "canonical_base": "8dd6b93bb4faa6a32bb5c54af85dcebe0a0eda14",
+    "prior_green_pr": 1443,
+    "prior_green_head": "f263ed55f8a1c9ecc6f0be857993c08c487236ab",
+    "replay_head_before_i4r2_record": "e7fc447ae",
+    "canonical_advance_commits": 15,
+    "changed_file_overlap": [
+      "package.json"
+    ],
+    "package_overlap_disposition": "SEMANTICALLY_DISJOINT_AUTO_MERGE_CLEAN",
+    "governed_seam_overlap": 0,
+    "replay_conflicts": 0,
+    "manual_implementation_edits": 0,
+    "stable_patch_identity_all_four": true,
+    "tests": "118/118 PASS",
+    "matrix": "22/22 PASS",
+    "db_witness": "7/7 PASS",
+    "repository_typecheck": "229 vs baseline 239; 0 regressions; EXIT 0",
+    "blank_database_bootstrap": "PASS 5/5",
+    "first_i4_ingress": "MAIA_RELATIONAL_FIELD_SHADOW",
+    "now_what_disposition": "PARKED_NOT_PRESENT",
+    "merge": "NOT_AUTHORIZED",
+    "deployment": "NONE",
+    "next_gate": "FRESH_HOSTED_PR_CI_THEN_FOUNDER_CANONICAL_MERGE_ADJUDICATION"
   }
 }
