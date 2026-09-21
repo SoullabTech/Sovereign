@@ -10,7 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
-const BASE = '4c097b4c81402c62e42613e83ae28180fef46f08';
+const BASE = 'c346031f7241280982f56f0e4eb760728761c412';
 
 type BooleanFactName =
   | 'explicitIdentityInquiry'
