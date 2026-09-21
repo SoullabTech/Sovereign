@@ -185,6 +185,9 @@ export async function rehydrateChapterReview(
       payloads,
       findings: findingsFromPayloads(payloads),
       failures: [...manifest.failures],
+      /* Persisted manifests currently account for every canonical lens as
+         completed or failed; the route does not persist an unattempted set. */
+      remaining: [],
     },
   };
 }

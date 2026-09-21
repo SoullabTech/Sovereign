@@ -260,10 +260,11 @@ export function runC6(): readonly Check[] {
   /* ⭐ A reading lost at the storage boundary is not a reading MAIA could not
      do, and the writer who waited out the read is owed that difference. */
   add('C6R2-14-failure-copy-distinguishes-where-it-was-lost',
-    /failure\.stage === 'freeze'/.test(rebuild) &&
-    /could not be recorded/.test(rebuild) &&
-    /failure\.stage === 'capture' \|\| failure\.stage === 'recover'/.test(rebuild),
-    'a read that completed and failed to save no longer reads as a read that failed');
+    /freeze: '[^']*finished reading[^']*could not be finalized/.test(rebuild) &&
+    /store: '[^']*finished reading[^']*could not be recorded/.test(rebuild) &&
+    /capture: '[^']*could not open this part of your Work/.test(rebuild) &&
+    /recover: '[^']*could not open this part of your Work/.test(rebuild),
+    'a read that completed and failed after reading no longer reads as a read that never opened');
 
   add('C6R2-15-failure-copy-leaks-no-internals',
     !/trigger|validator|constraint|schema_migrations|postgres|SQLSTATE/i.test(
