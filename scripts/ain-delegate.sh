@@ -328,7 +328,7 @@ _run_lane() {
     # A REFUSAL (another writer already owns this branch/worktree, or Claude
     # capacity is unrelated but the worktree slot is taken) must STOP delegation,
     # not merely be logged — an unverified writer is not a writer.
-    local sid
+    local sid opened_here=false
     sid="$(jq -r '.builder_session_id // empty' "$f")"
     if [ -n "$sid" ]; then
         local check_out check_code
@@ -371,6 +371,7 @@ _run_lane() {
         # is exactly the final line, not the whole diagnostic blob.
         sid="$(printf '%s\n' "$open_out" | tail -1)"
         jq --arg sid "$sid" '.builder_session_id = $sid' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+        opened_here=true
         echo "[ain-delegate] Builder claim registered: $sid" >&2
     else
         echo "[ain-delegate] reusing existing Builder claim: $sid" >&2
@@ -379,7 +380,19 @@ _run_lane() {
     log="$(_log_file "$work_unit_id")"
     starting_sha="$(git -C "$wt" rev-parse --short HEAD)"
     if [ "$lane" = "local-native" ]; then
-        prompt="$(node "$NATIVE_PROMPT_SCRIPT" build "$f" --repo "$wt")" || exit $?
+        local native_prompt_code
+        set +e
+        prompt="$(node "$NATIVE_PROMPT_SCRIPT" build "$f" --repo "$wt")"
+        native_prompt_code=$?
+        set -e
+        if [ "$native_prompt_code" -ne 0 ]; then
+            if [ "$opened_here" = true ]; then
+                node "$SESSION_SCRIPT" close --session "$sid" --state paused >/dev/null 2>&1 || true
+                jq 'del(.builder_session_id)' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+                "$CLAIM_SCRIPT" release "$work_unit_id" >/dev/null 2>&1 || true
+            fi
+            exit "$native_prompt_code"
+        fi
     elif [ "$lane" = "opencode" ]; then
         prompt="$(_build_prompt "$f" "READ-ONLY PROVIDER EVALUATION: inspect the authorized repository evidence and return the requested analysis. Do not edit, run shell commands, browse, commit, or access outside this worktree.")"
     elif [ "$lane" = "tinker" ]; then
