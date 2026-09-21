@@ -1634,6 +1634,10 @@ export default function RebuildStudioClient() {
                               {adoptionOutcome.kind === 'applied' ? 'Applied to this exact place in the Work.'
                                 : adoptionOutcome.kind === 'work_moved' ? 'You have written here since this suggestion was made. Nothing was changed.'
                                   : adoptionOutcome.kind === 'legacy_locus' ? 'This older suggestion cannot be safely applied. Nothing was changed.'
+                                  /* ⭐ Says what it is in the writer's terms, and says plainly
+                                     that NOTHING was applied — not even the part of the change
+                                     that fell outside the quotation. */
+                                  : adoptionOutcome.kind === 'protected_quotation' ? 'This suggestion would change the words inside a quotation. Nothing was applied. MAIA can shorten it, move it, cut it, or revise your wording around it.'
                                     : 'The Studio could not apply this suggestion. Nothing was changed.'}
                             </div>}
                           </div>

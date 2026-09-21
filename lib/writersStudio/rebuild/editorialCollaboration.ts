@@ -138,7 +138,8 @@ export async function sendBoundEditorialTurn(
 }
 
 export interface AdoptionWireOutcome {
-  kind: 'applied' | 'work_moved' | 'system_refusal' | 'legacy_locus' | 'relationship_refusal';
+  kind: 'applied' | 'work_moved' | 'system_refusal' | 'legacy_locus'
+    | 'protected_quotation' | 'relationship_refusal';
   resultingVersion?: number;
   reason?: string;
   byThisGesture?: boolean;

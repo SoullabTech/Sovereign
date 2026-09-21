@@ -13,6 +13,9 @@
  */
 import { readFileSync } from 'fs';
 import { runC5 } from './convergenceC5';
+import {
+  editorialSegments, editIds, composeSelected, altersProtectedText,
+} from '../../../lib/writersStudio/editorialDiff';
 
 export interface Check { readonly id: string; readonly ok: boolean; readonly detail: string }
 const read = (p: string) => readFileSync(p, 'utf8');
@@ -25,6 +28,7 @@ const REBUILD = 'app/writers-studio/rebuild/RebuildStudioClient.tsx';
 const DIFF = 'lib/writersStudio/editorialDiff.ts';
 const PASSAGE = 'app/writers-studio/insight/ManuscriptPassage.tsx';
 const DESK = 'app/writers-studio/insight/RevisionDesk.tsx';
+const ADOPTION = 'lib/manuscript/editorialRuntime/adoption.ts';
 
 export function runC6(): readonly Check[] {
   const out: Check[] = [];
@@ -35,6 +39,7 @@ export function runC6(): readonly Check[] {
   const diff = src(DIFF);
   const passage = src(PASSAGE);
   const desk = src(DESK);
+  const adoption = src(ADOPTION);
 
   /* ⭐ ONE entry point for every observation-level response, so the five
      controls cannot drift apart. The gate asserts the shape, not the count of
@@ -158,6 +163,45 @@ export function runC6(): readonly Check[] {
   add('C6R1-10-related-workspace-closes-once-proposed',
     /<details className="wsi-related" open=\{!suggestedVersionId\}>/.test(rebuild),
     'the observation workspace is no longer forced open under the decision');
+
+  /* ⛔⛔ THE BLOCKER THIS CLOSES: the helper existed and NOTHING CALLED IT, so
+     a quotation could look protected on the page and still be applied. A
+     browser check is not a guard. */
+  const beforeAct1 = adoption.slice(0, adoption.indexOf('ACT 1 · THE PERMISSION'));
+  add('C6R2-1-adoption-calls-the-guard-before-authorizing',
+    /altersProtectedText\(/.test(beforeAct1) &&
+    /kind: 'protected_quotation'/.test(beforeAct1),
+    'the live adoption path refuses before authorizeVersion — no permission is minted');
+
+  add('C6R2-2-refusal-is-whole',
+    !/slice|substring|trim\(\)\.replace/.test(
+      adoption.slice(adoption.indexOf('altersProtectedText('),
+                     adoption.indexOf('ACT 1 · THE PERMISSION'))),
+    'the refusal returns; it never trims the proposal to its lawful remainder');
+
+  /* ⭐ BEHAVIOURAL, not textual. These execute the module. */
+  const orig = 'He wrote, \u201Cthe world is all that is the case,\u201D and left it there.';
+  const bad = 'He wrote, \u201Cthe world is all that was the case,\u201D and left it there.';
+  const good = 'He wrote, \u201Cthe world is all that is the case,\u201D then moved on.';
+  add('C6R2-3-one-character-inside-a-quotation-is-refused',
+    altersProtectedText(orig, bad) === true,
+    'a proposal differing by one character inside the quotation is caught');
+  add('C6R2-4-prose-around-a-quotation-stays-editable',
+    altersProtectedText(orig, good) === false,
+    'revising the writer’s own words around a quotation is not refused');
+
+  const o2 = 'The elements rarely exist separately, shaping one another.';
+  const p2 = 'The elements continually move in relationship, shaping one another.';
+  const segs = editorialSegments(o2, p2);
+  add('C6R2-5-selected-all-is-maia-proposal',
+    composeSelected(segs, new Set(editIds(segs))) === p2,
+    'taking every mark reproduces MAIA’s wording exactly');
+  add('C6R2-6-selected-none-is-byte-identical-original',
+    composeSelected(segs, new Set()) === o2,
+    'taking no mark returns the author’s words byte for byte — declining is not an edit');
+  add('C6R2-7-protected-edits-are-never-selectable',
+    editIds(editorialSegments(orig, bad)).length === 0,
+    'a change inside a quotation is offered as no member choice at all');
 
   const c5 = runC5();
   add('C6-10-c5-still-green',
