@@ -45,6 +45,7 @@ SESSION_SCRIPT="$PROJECT_DIR/scripts/builder/session.mjs"
 WORK_UNIT_SCRIPT="$PROJECT_DIR/scripts/builder/work-unit.mjs"
 OPENCODE_PROVIDER_SCRIPT="$PROJECT_DIR/scripts/builder/opencode-provider.mjs"
 OPENCODE_BUILDER_SCRIPT="$PROJECT_DIR/scripts/builder/opencode-builder.mjs"
+OLLAMA_TOOL_WORKER_SCRIPT="$PROJECT_DIR/scripts/builder/ollama-tool-worker.mjs"
 TINKER_DIRECT_SCRIPT="$PROJECT_DIR/scripts/builder/tinker-direct.mjs"
 EXTERNAL_CONTEXT_SCRIPT="$PROJECT_DIR/scripts/builder/external-context.mjs"
 
@@ -303,6 +304,8 @@ _run_lane() {
         model="$(echo "$opencode_resolution" | jq -r '.model_ref')"
     elif [ "$lane" = "opencode-build" ]; then
         model="$(echo "$opencode_builder_resolution" | jq -r '.model_ref')"
+    elif [ "$lane" = "qwen-direct" ]; then
+        model="ollama/qwen3-coder:30b"
     elif [ "$lane" = "tinker" ]; then
         model="$(echo "$tinker_resolution" | jq -r '.model_ref')"
     else model="UNKNOWN"; fi
@@ -370,6 +373,8 @@ _run_lane() {
         opencode_builder_agent="$(echo "$opencode_builder_resolution" | jq -r '.agent')"
         opencode_builder_config="$(echo "$opencode_builder_resolution" | jq -r '.config_dir')"
         prompt="$(_build_prompt "$f" "BOUNDED NATIVE OPENCODE IMPLEMENTATION: edit only ALLOWED FILES. Do not commit. Do not browse or launch subagents. Shell is restricted to git status/diff; JARVIS independently verifies scope and tests after you finish.")"
+    elif [ "$lane" = "qwen-direct" ]; then
+        prompt=""
     elif [ "$lane" = "tinker" ]; then
         prompt="$(_build_prompt "$f" "DIRECT EXTERNAL PROVIDER EVALUATION: JARVIS has bounded the evidence. You have no tools or filesystem access. Analyze only the prompt and the AUTHORIZED REPOSITORY EVIDENCE below.")"
         local external_context
@@ -431,6 +436,9 @@ _run_lane() {
             opencode run --pure --auto --agent "$opencode_builder_agent" --model "$model" "$prompt" ) > "$log" 2>&1
         exit_code=$?
         node "$OPENCODE_BUILDER_SCRIPT" cleanup "$work_unit_id" >/dev/null 2>&1 || true
+    elif [ "$lane" = "qwen-direct" ]; then
+        ( cd "$wt" && node "$OLLAMA_TOOL_WORKER_SCRIPT" run build "$work_unit_id" "$wt" "qwen3-coder:30b" ) > "$log" 2>&1
+        exit_code=$?
     elif [ "$lane" = "tinker" ]; then
         if [ -z "$opencode_credential_env" ] || [ -z "$opencode_credential_value" ]; then
             echo "🛑 Tinker credential missing after governed resolution" >&2
@@ -457,7 +465,7 @@ _run_lane() {
     # result from ever being persisted, regardless of what the worker did. `--name-only`
     # gives the file list directly; no stat-line parsing to break in the first place.
     local files_changed_json scope_deviations_json='[]' scope_ok=true
-    if [ "$lane" = "opencode-build" ]; then
+    if [ "$lane" = "opencode-build" ] || [ "$lane" = "qwen-direct" ]; then
         local scope_json scope_code
         set +e
         scope_json="$(node "$OPENCODE_BUILDER_SCRIPT" verify-scope "$work_unit_id" "$wt" "$starting_sha")"
@@ -503,7 +511,7 @@ _run_lane() {
     elif ! $scope_ok; then
         test_results="fail"
     fi
-    if [ "$lane" = "opencode-build" ] && [ "$test_results" = "fail" ] && [ "$exit_code" -eq 0 ]; then
+    if { [ "$lane" = "opencode-build" ] || [ "$lane" = "qwen-direct" ]; } && [ "$test_results" = "fail" ] && [ "$exit_code" -eq 0 ]; then
         exit_code=98
     fi
 
@@ -521,7 +529,7 @@ _run_lane() {
     # Native builder candidates are committed only by the JARVIS harness, after
     # model completion, scope verification, and independent checks. This remains
     # an isolated candidate commit: it is not merge or canonical integration.
-    if [ "$lane" = "opencode-build" ] && [ "$exit_code" -eq 0 ] && $scope_ok \
+    if { [ "$lane" = "opencode-build" ] || [ "$lane" = "qwen-direct" ]; } && [ "$exit_code" -eq 0 ] && $scope_ok \
         && { [ "$test_results" = "pass" ] || [ "$test_results" = "not_run" ]; } \
         && [ "$escalation_required" = false ] \
         && [ "$(printf '%s' "$files_changed_json" | jq 'length')" -gt 0 ]; then
@@ -605,6 +613,10 @@ cmd_opencode() {
     _run_lane "opencode" "$work_unit_id" "$model_override" "$provider_id"
 }
 
+cmd_qwen_build() {
+    local work_unit_id="${1:?work_unit_id required}"
+    _run_lane "qwen-direct" "$work_unit_id" "" "qwen-local"
+}
 cmd_opencode_build() {
     local work_unit_id="${1:?work_unit_id required}"
     local model_override="${2:-}"
@@ -681,13 +693,14 @@ case "${1:-}" in
     claude)   shift; cmd_claude "$@" ;;
     opencode) shift; cmd_opencode "$@" ;;
     opencode-build) shift; cmd_opencode_build "$@" ;;
+    qwen-build) shift; cmd_qwen_build "$@" ;;
     tinker)   shift; cmd_tinker "$@" ;;
     result)   shift; cmd_result "$@" ;;
     review)   shift; cmd_review "$@" ;;
     escalate) shift; cmd_escalate "$@" ;;
     release)  shift; cmd_release "$@" ;;
     *)
-        echo "usage: $0 {new|claim|local|kimi|claude|opencode|opencode-build|tinker|result|review|escalate|release} <work_unit_id> [args...]" >&2
+        echo "usage: $0 {new|claim|local|kimi|claude|opencode|opencode-build|qwen-build|tinker|result|review|escalate|release} <work_unit_id> [args...]" >&2
         exit 2
         ;;
 esac
