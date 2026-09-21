@@ -77,7 +77,8 @@ export type DisclosureBoundary =
    * boundary its disclosure actually crossed. Mirrors migration
    * `20260913000002`, one value and nothing else.
    */
-  | 'writers_studio.developmental_ask->maia_cognition';
+  | 'writers_studio.developmental_ask->maia_cognition'
+  | 'writers_studio.editorial_turn->maia_cognition';
 
 /** The SHAPE of the selection — never its location. */
 export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';
@@ -118,6 +119,8 @@ export interface ContextDisclosureAttempt {
    */
   readonly sectionRef?: string;
   readonly gesture: DisclosureGesture;
+  /** Logical provider destination; required for editorial external processing. */
+  readonly destination?: 'anthropic';
 }
 
 /**
@@ -193,15 +196,15 @@ export async function mintDisclosureAttempt(
       `INSERT INTO context_disclosure_receipts
          (disclosure_id, member_id, request_ref, boundary, source_class,
           participation_basis, source_ref, scope_kind, section_ref,
-          authorized_by, gesture, policy_version, state)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'member', $10, $11, 'attempted')
+          authorized_by, gesture, policy_version, state, destination)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'member', $10, $11, 'attempted', $12)
        ON CONFLICT (disclosure_id) DO NOTHING
        RETURNING id`,
       [
         attempt.disclosureId, attempt.memberId, attempt.requestRef, attempt.boundary,
         attempt.sourceClass, attempt.participationBasis, attempt.sourceRef,
         attempt.scopeKind, attempt.sectionRef ?? null,
-        attempt.gesture, DISCLOSURE_POLICY_VERSION,
+        attempt.gesture, DISCLOSURE_POLICY_VERSION, attempt.destination ?? null,
       ],
     );
 
@@ -213,7 +216,7 @@ export async function mintDisclosureAttempt(
     const existing = await query<Record<string, string | null>>(
       `SELECT id, member_id, request_ref, boundary, source_class, participation_basis,
               source_ref, scope_kind, section_ref, authorized_by, gesture,
-              policy_version, state
+              policy_version, state, destination
          FROM context_disclosure_receipts
         WHERE disclosure_id = $1`,
       [attempt.disclosureId],
@@ -235,6 +238,7 @@ export async function mintDisclosureAttempt(
       source_ref: attempt.sourceRef,
       scope_kind: attempt.scopeKind,
       section_ref: attempt.sectionRef ?? null,
+      destination: attempt.destination ?? null,
       authorized_by: 'member',
       gesture: attempt.gesture,
       policy_version: DISCLOSURE_POLICY_VERSION,

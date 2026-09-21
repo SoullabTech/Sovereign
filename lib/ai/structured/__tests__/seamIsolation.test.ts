@@ -129,7 +129,12 @@ const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
  * carries witness-side work, and no unrelated file gains constitutional status
  * by having travelled in the same commit — this guard resolves four paths.
  */
-const GOVERNED_SEAM_BASELINE = 'c4f96c853ba9246546383a93875b4ae5519e8c1b';
+// 2026-09-21: Kelly authorized the shared dispatch-evidence amendment and
+// continuation here. The adapter reports observed responses independently of
+// editorial validation; routing, model policy and fallback remain unchanged.
+// Prior schema-enforcement baseline remains historical evidence:
+// c4f96c853ba9246546383a93875b4ae5519e8c1b. No caller exception is introduced.
+const GOVERNED_SEAM_BASELINE = 'f793da9c719840e84da8ef77066217979ef094ee';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([

@@ -40,8 +40,10 @@
  *   strike-through over their own words for them to police.
  */
 
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { requireConsentState, consentEstablished } from '@/lib/provenance/requireConsentState';
 import { query } from '@/lib/db/postgres';
-import { runStructured } from '@/lib/ai/structured/router';
+import { runDisclosedEditorial, type EditorialDisclosureRefusal } from './disclosure';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
 import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers-studio/canonicalWriterTurn';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
@@ -98,6 +100,8 @@ export interface EditorialTurnInput {
   readonly currentDirectionId: string | null;
   readonly exchangeId: string;
   readonly sanctuary: boolean;
+  readonly externalProcessing?: 'anthropic';
+  readonly posture?: TurnPosture;
   /**
    * ⭐⭐ THE AUTHOR'S DECLARED EDITING LATITUDE for this exchange.
    *
@@ -115,6 +119,7 @@ export interface EditorialTurnInput {
 }
 
 export type EditorialTurnRefusal =
+  | EditorialDisclosureRefusal
   | AssemblyRefusal
   | 'current_turn_not_found'
   /** ⛔ A supplied candidate did not survive MIPA or the renderer. */
@@ -178,9 +183,18 @@ export type EditorialTurnResult =
 export async function runEditorialTurn(
   input: EditorialTurnInput,
 ): Promise<EditorialTurnResult> {
+  if (input.externalProcessing !== 'anthropic') return { ok: false, reason: 'external_authorization_required' };
   /* ⭐ DERIVED, never accepted. */
   const memberId: string = input.identity.memberId;
   const { threadId, currentTurnIndex } = input;
+
+  const posture = input.posture;
+  if (!(posture instanceof TurnPosture) || posture.sanctuary || input.sanctuary) {
+    return { ok: false, reason: 'disclosure_unavailable' };
+  }
+  const consent = await requireConsentState({ requestId: input.exchangeId, posture,
+    memberId, sessionId: threadId });
+  if (!consentEstablished(consent)) return { ok: false, reason: 'disclosure_unavailable' };
 
   /* 1 ⭐⭐ THE DURABLE TURN IS THE UTTERANCE. */
   const t = await query<{ body: string }>(
@@ -280,7 +294,12 @@ export async function runEditorialTurn(
         + 'Omit unused proposal/direction fields entirely; do not send null or both adjuncts.' }],
     toolChoice: { type: 'tool', name: EDITORIAL_TOOL_NAME },
   };
-  const structured = await runStructured(request);
+  const crossing = await runDisclosedEditorial({
+    authorization: input.externalProcessing, memberId, workId: assembly.workId,
+    requestRef: input.exchangeId, request, posture, threadId,
+  });
+  if (!crossing.ok) return crossing;
+  const structured = crossing.structured;
   if (!structured.ok) {
     return { ok: false, reason: 'structured_refused', detail: structured.refusal };
   }

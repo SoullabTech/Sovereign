@@ -45,7 +45,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * person to read their code would believe it too. The refusal names the keys so
  * the mistake is legible rather than mysterious.
  */
-const TOP_KEYS = ['threadId', 'act', 'sanctuary', 'scope'] as const;
+const TOP_KEYS = ['threadId', 'act', 'sanctuary', 'scope', 'externalProcessing'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
 /**
  * ⭐⭐ THE AUTHOR'S TWO CONTROLS, AND THEY ARE SEPARATE KEYS ON PURPOSE.
@@ -61,6 +61,7 @@ type Parsed =
       ok: true; threadId: string;
       act: { act: MemberActKind; text: string; refersTo: string | null };
       sanctuary: boolean;
+      externalProcessing?: 'anthropic';
       scope: EditorialScopeDeclaration;
       /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
       mayProposeImmediately: boolean;
@@ -78,6 +79,9 @@ function parseClosed(body: unknown): Parsed {
   }
   if (typeof b.threadId !== 'string' || b.threadId.length === 0) {
     return { ok: false, error: 'threadId is required' };
+  }
+  if (b.externalProcessing !== undefined && b.externalProcessing !== 'anthropic') {
+    return { ok: false, error: 'externalProcessing must name anthropic' };
   }
   const a = b.act;
   if (typeof a !== 'object' || a === null || Array.isArray(a)) {
@@ -142,6 +146,7 @@ function parseClosed(body: unknown): Parsed {
     /* ⛔ The member's text is carried EXACTLY. No trim, no normalisation. */
     act: { act: ao.act as MemberActKind, text: ao.text, refersTo: ao.refersTo ?? null },
     sanctuary: b.sanctuary === true,
+    externalProcessing: b.externalProcessing as 'anthropic' | undefined,
     scope,
     mayProposeImmediately,
   };
@@ -173,6 +178,10 @@ export async function POST(request: NextRequest) {
     }, { status: 409 });
   }
 
+  if (parsed.externalProcessing !== 'anthropic') {
+    return NextResponse.json({ error: 'external_authorization_required',
+      detail: 'Choose whether to send this passage and its editorial context to Anthropic. Nothing was sent or saved.' }, { status: 409 });
+  }
   const memberId = identity.memberId;
 
   const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act });
@@ -191,6 +200,8 @@ export async function POST(request: NextRequest) {
     /* ⭐ Server-minted act identity. ⛔ Never supplied by the client. */
     exchangeId: randomUUID(),
     sanctuary: false,
+    externalProcessing: parsed.externalProcessing,
+    posture,
     /* ⭐ The author's declaration, carried to the one place that enforces it. */
     scope: parsed.scope,
     mayProposeImmediately: parsed.mayProposeImmediately,

@@ -74,7 +74,7 @@ const matchingRow = () => ({
   boundary: 'writers_studio.focus->maia_cognition', source_class: 'work',
   participation_basis: 'member_invoked', source_ref: 'work-1', scope_kind: 'passage',
   section_ref: null, authorized_by: 'member', gesture: 'ask_maia',
-  policy_version: DISCLOSURE_POLICY_VERSION, state: 'attempted',
+  policy_version: DISCLOSURE_POLICY_VERSION, state: 'attempted', destination: null,
 });
 
 beforeEach(() => { calls.length = 0; mode = 'ok'; existingRow = matchingRow(); jest.spyOn(console, 'error').mockImplementation(() => {}); });

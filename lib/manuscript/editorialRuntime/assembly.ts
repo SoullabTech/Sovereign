@@ -66,6 +66,7 @@ export type EditorialAssemblyResult =
   | {
       readonly ok: true;
       readonly chainId: string;
+      readonly workId: string;
       readonly blocks: readonly EditorialCandidateBlock[];
       /** ⭐ The predecessor MAIA is being invoked against. ER-R3 carries it forward. */
       readonly invokedAgainstVersionId: string | null;
@@ -201,7 +202,7 @@ export async function assembleEditorialCognition(
   if (!participation.ok) return { ok: false, reason: 'chain_corrupt' };
 
   return {
-    ok: true, chainId,
+    ok: true, chainId, workId: locus.workId,
     blocks: participation.blocks,
     invokedAgainstVersionId: work.work.focused?.id ?? null,
     /* ⭐ THE SAME VALUE THE LOCUS BLOCK CARRIED INTO COGNITION, from the same

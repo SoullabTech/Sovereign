@@ -791,7 +791,9 @@ export default function RebuildStudioClient() {
            and what she produced went further than the writer allowed. Saying it
            plainly is what lets the writer learn the control. */
         setEditorialFailure(
-          out.reason === 'scope_refused'
+          out.detail === 'external_authorization_required'
+            ? 'Nothing was sent. You can keep writing or ask MAIA later.'
+            : out.reason === 'scope_refused'
             ? (out.detail ?? 'That suggestion went beyond your editing latitude. Nothing was changed.')
             : out.reason === 'unavailable'
               ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
@@ -810,7 +812,7 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting]);
+  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, editLatitude, mayRemoveParagraphs, mayProposeImmediately]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;

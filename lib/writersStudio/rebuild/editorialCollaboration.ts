@@ -1,3 +1,4 @@
+import { authorizeEditorialProcessing } from './editorialDisclosure';
 import { apiFetch } from '@/lib/http/apiBase';
 import { occurrences } from '@/lib/manuscript/exactText';
 
@@ -148,11 +149,13 @@ export async function sendBoundEditorialTurn(
   },
 ): Promise<EditorialTurnOutcome> {
   try {
+    const externalProcessing = authorizeEditorialProcessing();
+    if (!externalProcessing) return { ok: false, reason: 'turn_refused', detail: 'external_authorization_required' };
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        threadId, act: { act: 'discourse', text, refersTo: null },
+        threadId, externalProcessing, act: { act: 'discourse', text, refersTo: null },
         ...(scope ? { scope } : {}),
       }),
     });

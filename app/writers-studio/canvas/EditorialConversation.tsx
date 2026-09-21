@@ -28,6 +28,7 @@
  * comparison, and a member VersionComposer. An adjunct is DISPLAYED here; it is
  * never authored from prose by this component or any other.
  */
+import { authorizeEditorialProcessing } from '@/lib/writersStudio/rebuild/editorialDisclosure';
 import { useCallback, useEffect, useRef, useState } from 'react';
 /* ⭐ WS-EDITORIAL-SCOPE-01 · the same control and the same defaults as the desk.
    ⛔ Not a second implementation: this surface calls the same route, and a
@@ -260,6 +261,8 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
   const send = async () => {
     const text = draft;
     if (text.trim().length === 0 || busy) return;
+    const externalProcessing = authorizeEditorialProcessing();
+    if (!externalProcessing) return;
     setBusy(true); setFailure(null);
     try {
       const res = await apiFetch('/api/writers-studio/editorial/turn', {
@@ -268,7 +271,7 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
         /* ⛔ THE MEMBER'S TEXT, EXACTLY. No trim — the server stores what they
            wrote, and a Direction's instruction IS the turn body. */
         body: JSON.stringify({
-          threadId, act: { act: actKind, text, refersTo: null },
+          threadId, externalProcessing, act: { act: actKind, text, refersTo: null },
           /* ⭐ The writer's declared editing latitude for this exchange. */
           scope: { latitude, mayRemoveParagraphs, mayProposeImmediately },
         }),
