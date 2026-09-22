@@ -126,6 +126,35 @@ const badWriterRetrieval = mutableClone(APPLICATION_PROFILES.writers_studio);
 assert.ok(errorCodes(badWriterRetrieval).includes('WRITER_RETRIEVAL_WIDENING'));
 line('  ✅ permitted source classes do not manufacture Writer retrieval');
 
+/* ⭐ The combined mutant above changes BOTH fields, and the validator refuses
+   through one compound OR — so either clause could disappear while this test
+   stayed green, because the surviving clause still kills the double mutant.
+   A2 declares source-plane standing and retrieval authority to be SEPARATE
+   governance facts, so each load-bearing clause needs a mutant that depends on
+   that clause ALONE. The assert on the untouched field is part of the law, not
+   decoration: without it a single-field candidate could silently drift back
+   into a double mutant and the masking would return unnoticed. */
+
+const badWriterSourcePlaneOnly = mutableClone(APPLICATION_PROFILES.writers_studio);
+(badWriterSourcePlaneOnly as any).sourcePlane = 'INHERITED_SHARED_ROUTE';
+assert.equal(
+  (badWriterSourcePlaneOnly as any).retrievalAuthority,
+  'NO_NEW_ACQUISITION',
+  'G2-A must vary sourcePlane alone',
+);
+assert.ok(errorCodes(badWriterSourcePlaneOnly).includes('WRITER_RETRIEVAL_WIDENING'));
+line('  ✅ G2-A source-plane widening dies on its own clause');
+
+const badWriterRetrievalOnly = mutableClone(APPLICATION_PROFILES.writers_studio);
+(badWriterRetrievalOnly as any).retrievalAuthority = 'INHERITED_ONLY_NO_NEW_ACQUISITION';
+assert.equal(
+  (badWriterRetrievalOnly as any).sourcePlane,
+  'NO_GOVERNED_SOURCE_WIRING',
+  'G2-B must vary retrievalAuthority alone',
+);
+assert.ok(errorCodes(badWriterRetrievalOnly).includes('WRITER_RETRIEVAL_WIDENING'));
+line('  ✅ G2-B retrieval-authority widening dies on its own clause');
+
 line('');
 line('── G3 · practitioner terminality ─────────────────────────────────────');
 
