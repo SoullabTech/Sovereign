@@ -93,7 +93,7 @@ function mutatedSeamCommit() {
     sh('git', ['config', 'user.email', 'fixture@example.invalid'], wt);
     sh('git', ['config', 'user.name', 'fixture'], wt);
     appendFileSync(join(wt, 'lib/maia/relational-field-shadow/runner.ts'), '\n// seam fixture byte\n');
-    sh('git', ['commit', '-qam', 'fixture: one seam byte'], wt);
+    sh('git', ['-c', 'core.hooksPath=/dev/null', 'commit', '-qam', 'fixture: one seam byte'], wt);
     return sh('git', ['rev-parse', 'HEAD'], wt).trim();
   } finally {
     sh('git', ['worktree', 'remove', '--force', wt], PROJECT);
