@@ -143,14 +143,79 @@ function UndeclaredMap() {
  * commission a new reading — where none exists the surface says so and offers a
  * separate deliberate gesture. ⭐ No inferred commission from navigation (A2).
  */
-const DEVELOP_TABS = ['Overview', 'Structure', 'Themes', 'Voice', 'Continuity', 'Reader perspective'] as const;
+/**
+ * ⭐ THE SEVEN REAL LENSES, and the plain question each one answers.
+ *
+ * `themes` was never a lens — the ratified vocabulary in
+ * `lib/manuscript/developmentalReader/contract.ts` is exactly
+ * structure · development · continuity · arc · voice · coherence · reader.
+ * Drawing a `Themes` tab invents a destination, the same defect as
+ * `Notes · Research · Goals`.
+ *
+ * ⭐ THE PLAIN QUESTION IS THE LABEL. A person who is not an editor does not want
+ * *Continuity*; they want to know whether the thread holds. The editorial term is
+ * the secondary name, present for whoever wants it and ⛔ never required to
+ * operate the room. **V12 answered by naming.**
+ */
+export const LENSES = [
+  { id: 'structure',   plain: 'How it’s put together',            term: 'Structure' },
+  { id: 'development', plain: 'Where ideas grow',                 term: 'Development' },
+  { id: 'arc',         plain: 'How it moves',                     term: 'Arc' },
+  { id: 'continuity',  plain: 'Whether the thread holds',         term: 'Continuity' },
+  { id: 'coherence',   plain: 'Whether it stays consistent',      term: 'Coherence' },
+  { id: 'voice',       plain: 'How it sounds',                    term: 'Voice' },
+  { id: 'reader',      plain: 'How it might land',                term: 'Reader perspective' },
+] as const;
+export type LensId = (typeof LENSES)[number]['id'];
+
+/**
+ * ⭐ Derived from positive facts. ⛔ Never stored, ⛔ never inferred from a click.
+ * ⚠️ `read-nothing-noticed` and `not-read` MUST render differently — a completed
+ * reading that surfaced nothing is a RESULT; an absent reading is an ABSENCE.
+ */
+export type LensState = 'not-read' | 'partially-read' | 'read' | 'read-nothing-noticed';
+
+export interface LensStanding {
+  readonly id: LensId;
+  readonly state: LensState;
+  readonly count: number;
+  /** Sections remaining, where partially read. */
+  readonly remaining?: number;
+}
 
 export interface DevelopView {
   readonly work: string;
+  readonly kind: string;
   readonly pages: number; readonly sections: number; readonly words: number;
   readonly observations: readonly Observation[];
   readonly structure: WorkStructure;
-  readonly coverage: { readonly read: number; readonly total: number; readonly depth: string };
+  readonly lenses: readonly LensStanding[];
+  readonly coverage: {
+    readonly read: number; readonly total: number; readonly depth: string; readonly when: string;
+  };
+}
+
+/** ⭐ No empty state. Either a reading exists and said nothing, or it does not exist. */
+function LensRow({ l }: { l: LensStanding }) {
+  const meta = LENSES.find((x) => x.id === l.id);
+  if (!meta) return null;
+  const body =
+    l.state === 'not-read'
+      ? <>MAIA hasn’t read your Work for this yet.{' '}
+          <button type="button" className="fs-goto" data-commission={l.id}>Read for this →</button></>
+      : l.state === 'read-nothing-noticed'
+        ? <>MAIA read the whole Work for this and found nothing to bring you.</>
+        : l.state === 'partially-read'
+          ? <>{l.count} {l.count === 1 ? 'thing' : 'things'} so far · {l.remaining} sections not read yet{' '}
+              <button type="button" className="fs-goto" data-commission={l.id}>Read the rest →</button></>
+          : <>{l.count} {l.count === 1 ? 'thing' : 'things'} to look at</>;
+  return (
+    <div className="fs-lens" data-lens={l.id} data-lens-state={l.state}>
+      <div className="fs-lensq">{meta.plain}</div>
+      <div className="fs-lensterm">{meta.term}</div>
+      <div className="fs-lensbody">{body}</div>
+    </div>
+  );
 }
 
 export function DevelopRoom({ view, tab = 'Overview', facet = 'guided' }: {
