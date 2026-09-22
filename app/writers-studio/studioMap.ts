@@ -139,7 +139,7 @@ export const SOURCE_INTAKE_HREF = '/writers-studio/sources';
  * at Studio Home. The gathering/development arrival (walk amendment A6) is a
  * later slice and gets its own door only when it is real.
  */
-export const CANVAS_HREF = '/writers-studio/rebuild';
+export const REBUILD_HREF = '/writers-studio/rebuild';
 
 /** BUILD-07D — where a writer encounters MAIA's frozen developmental readings, by Work. */
 export const DEVELOP_HREF = '/writers-studio/develop';
@@ -166,7 +166,7 @@ export const DEVELOP_HREF = '/writers-studio/develop';
  *                 WRITE owns the draft and its contextual surfaces.
  *
  * NOTHING IS DELETED. Every href below the fold still exists and is still
- * exported — WRITE_HREF, SOURCE_HREF, IMPORT_HREF, CANVAS_HREF are unchanged
+ * exported — WRITE_HREF, SOURCE_HREF, IMPORT_HREF, REBUILD_HREF are unchanged
  * and their consumers are untouched. What changed is placement: they are
  * reached through Manuscript and through Work Home rather than standing in the
  * persistent rail. Canonising today's transitional routes as permanent
@@ -184,7 +184,7 @@ export const STUDIO_MAP: StudioGroup[] = [
         label: 'Manuscript',
         note: 'The room where your work develops.',
         availability: 'available',
-        href: CANVAS_HREF,
+        href: REBUILD_HREF,
         requiresManuscript: true,
       },
       /* Not built as destinations. Materials and Structure exist only as
@@ -516,7 +516,7 @@ export interface StudioMode {
 }
 
 export const STUDIO_MODES: StudioMode[] = [
-  { id: 'write', label: 'Write', availability: 'available', href: CANVAS_HREF },
+  { id: 'write', label: 'Write', availability: 'available', href: REBUILD_HREF },
   /* BUILD-07D built the room. The mode is no longer a promise: it is
      available and it goes somewhere. assertModesHonest enforces the pairing. */
   { id: 'develop', label: 'Develop', availability: 'available', href: DEVELOP_HREF },

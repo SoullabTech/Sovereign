@@ -212,6 +212,8 @@
     "verify:migrate-before-swap-ordering": "npx tsx tests/constitutional/migration-compatibility-gate/step3-ordering.ts",
     "typecheck:ws-observation-identity": "tsc -p tsconfig.ws-observation-identity.json",
     "matrix:ws-observation-identity": "tsx tests/constitutional/writers-studio/matrix.ts",
+    "typecheck:editorial-reading-contract": "tsc -p tsconfig.editorial-reading-contract.json",
+    "matrix:editorial-reading-contract": "tsx tests/constitutional/editorial-reading/matrix.ts",
     "matrix:ws-observation-identity-live": "tsx tests/constitutional/writers-studio/liveRunner.ts",
     "witness:ws-observation-address": "tsx tests/constitutional/writers-studio/addressRunner.ts",
     "gates:ws-convergence-c2-c4": "tsx tests/constitutional/writers-studio/convergenceRunner.ts",

@@ -43,7 +43,7 @@ import {
   requestedManuscriptIdFrom,
   resolveManuscript,
 } from '../canvasIdentity';
-import { CANVAS_HREF } from '../studioMap';
+import { REBUILD_HREF } from '../studioMap';
 
 const canvasSource = readFileSync(join(__dirname, '..', 'canvas', 'CanvasClient.tsx'), 'utf8');
 /** Comments quote the defect, so assertions about behaviour read only code. */
@@ -57,7 +57,7 @@ const OTHER = 'dca75052-2551-436f-92b9-7bbed65f86c8';
 
 describe('R1 · the route names the manuscript', () => {
   it('reads the id Home wrote, through the shared param name', () => {
-    const href = canvasForManuscript(CANVAS_HREF, FRESH);
+    const href = canvasForManuscript(REBUILD_HREF, FRESH);
     const params = new URLSearchParams(href.slice(href.indexOf('?')));
     expect(requestedManuscriptIdFrom(params)).toBe(FRESH);
     expect(href).toContain(`${CANVAS_MANUSCRIPT_PARAM}=${FRESH}`);
