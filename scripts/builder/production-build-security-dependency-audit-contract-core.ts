@@ -1,9 +1,24 @@
 /**
- * DEPLOYMENT-SAFETY-03 / STEP 4 — PRODUCTION DEPENDENCY AUDIT CONTRACT EVALUATOR
+ * PRODUCTION-BUILD-SECURITY-01 / B0 — DEPENDENCY-AUDIT CONTRACT EVALUATOR
  *
  * Pure deterministic evaluator for dependency audit evidence.
  * No IO. No deployment authority.
  */
+
+export type Severity = "low" | "moderate" | "high" | "critical";
+
+export type VulnerabilityCounts = {
+  critical: number;
+  high: number;
+  moderate: number;
+  low: number;
+};
+
+export type SourceClass = "PACKAGE_MANAGER_AUDIT" | "CI_AUDIT" | "EXTERNAL_ADVISORY";
+
+export type ExecutionDisposition = "EXECUTED" | "UNAVAILABLE" | "ERROR" | "BYPASSED";
+
+export type ParseDisposition = "PARSED" | "UNPARSEABLE" | "NOT_APPLICABLE";
 
 export type DependencyAuditEvidence = {
   target_commit: string;
@@ -12,24 +27,31 @@ export type DependencyAuditEvidence = {
   lockfile_path: string;
   lockfile_sha256: string;
   declared_package_manager: string;
+  source_class: SourceClass;
   audit_tool_identity: string;
-  command_scope: string;
-  execution_disposition: "SUCCESS" | "FAILURE";
-  parse_disposition: "PARSED" | "UNPARSEABLE";
-  parsed_vulnerability_counts: {
-    critical: number;
-    high: number;
-    moderate: number;
-    low: number;
-  };
-  evidence_source: string;
+  audit_tool_version: string;
+  command: string;
+  dependency_scope: "prod" | "dev" | "all";
+  execution_disposition: ExecutionDisposition;
+  parse_disposition: ParseDisposition;
+  parsed_vulnerability_counts: VulnerabilityCounts | null;
   recorded_timestamp: string;
+  provenance: string;
+  bypass_authority: string | null;
+};
+
+export type ExpectedDependencyBinding = {
+  target_commit: string;
+  manifest_path: string;
+  manifest_sha256: string;
+  lockfile_path: string;
+  lockfile_sha256: string;
+  declared_package_manager: string;
 };
 
 export type DependencyAuditPolicy = {
   dependency_scope: "prod" | "dev" | "all";
-  severity_threshold: "low" | "moderate" | "high" | "critical";
-  bypass_authority: string;
+  severity_threshold: Severity;
 };
 
 export type DependencyAuditOutcome =
@@ -46,69 +68,82 @@ export type DependencyAuditOutcome =
 
 export function evaluateDependencyAudit(
   evidence: DependencyAuditEvidence,
+  expected: ExpectedDependencyBinding,
   policy: DependencyAuditPolicy
 ): DependencyAuditOutcome {
-  // Check for missing policy inputs
-  if (!policy.severity_threshold || !policy.bypass_authority) {
+  // Validate policy inputs
+  if (!policy.dependency_scope || !policy.severity_threshold) {
     return { kind: "POLICY_INPUT_MISSING" };
   }
 
-  // Validate evidence binding
-  if (evidence.target_commit !== "7c58ad533") {
-    return { kind: "STALE_EVIDENCE" };
-  }
-  if (evidence.manifest_path !== "package.json" ||
-      evidence.manifest_sha256 !== "dd8612af09e63cba") {
-    return { kind: "STALE_EVIDENCE" };
-  }
-  if (evidence.lockfile_path !== "package-lock.json" ||
-      evidence.lockfile_sha256 !== "b4e56c7b7a382d0a") {
+  // Validate evidence binding against expected
+  if (evidence.target_commit !== expected.target_commit ||
+      evidence.manifest_path !== expected.manifest_path ||
+      evidence.manifest_sha256 !== expected.manifest_sha256 ||
+      evidence.lockfile_path !== expected.lockfile_path ||
+      evidence.lockfile_sha256 !== expected.lockfile_sha256 ||
+      evidence.declared_package_manager !== expected.declared_package_manager) {
     return { kind: "STALE_EVIDENCE" };
   }
 
-  // Validate source
-  if (evidence.evidence_source !== "scripts/deploy-production.sh") {
+  // Validate source class
+  if (evidence.source_class !== "PACKAGE_MANAGER_AUDIT") {
     return { kind: "SOURCE_MISMATCH" };
   }
 
-  // Validate scope
-  if (evidence.command_scope !== "--prod --audit-level=moderate") {
-    return { kind: "SCOPE_MISMATCH" };
+  // Validate audit tool identity matches expected package manager
+  const expectedManager = expected.declared_package_manager.split("@")[0];
+  if (evidence.audit_tool_identity !== expectedManager) {
+    return { kind: "SOURCE_MISMATCH" };
   }
 
-  // Validate execution and parse disposition
-  if (evidence.execution_disposition === "FAILURE") {
+  // Handle execution dispositions
+  if (evidence.execution_disposition === "UNAVAILABLE") {
+    return { kind: "AUDIT_UNAVAILABLE" };
+  }
+  if (evidence.execution_disposition === "ERROR") {
     return { kind: "EXECUTION_ERROR" };
   }
-  if (evidence.parse_disposition === "UNPARSEABLE") {
+  if (evidence.execution_disposition === "BYPASSED") {
+    return { kind: "BYPASSED" };
+  }
+
+  // Validate parse disposition and counts
+  if (evidence.parse_disposition !== "PARSED" ||
+      evidence.parsed_vulnerability_counts === null) {
     return { kind: "UNPARSEABLE" };
   }
 
-  // Check for bypass
-  if (evidence.execution_disposition === "SUCCESS" &&
-      evidence.parse_disposition === "PARSED" &&
-      evidence.parsed_vulnerability_counts.critical === 0 &&
-      evidence.parsed_vulnerability_counts.high === 0 &&
-      evidence.parsed_vulnerability_counts.moderate === 0 &&
-      evidence.parsed_vulnerability_counts.low === 0) {
-    return { kind: "PASS" };
-  }
-
-  // Severity threshold evaluation
-  const threshold = policy.severity_threshold;
   const counts = evidence.parsed_vulnerability_counts;
-
-  if (threshold === "critical" && (counts.critical > 0)) {
-    return { kind: "POLICY_VIOLATION" };
-  }
-  if (threshold === "high" && (counts.critical > 0 || counts.high > 0)) {
-    return { kind: "POLICY_VIOLATION" };
-  }
-  if (threshold === "moderate" &&
-      (counts.critical > 0 || counts.high > 0 || counts.moderate > 0)) {
-    return { kind: "POLICY_VIOLATION" };
+  // Validate that each count is a finite non-negative integer
+  for (const key of ["critical", "high", "moderate", "low"] as const) {
+    if (!Number.isInteger(counts[key]) ||
+        !Number.isFinite(counts[key]) ||
+        counts[key] < 0) {
+      return { kind: "UNPARSEABLE" };
+    }
   }
 
-  // If we reach here, no violations at or above threshold
+  // Validate dependency scope matches policy
+  if (evidence.dependency_scope !== policy.dependency_scope) {
+    return { kind: "SCOPE_MISMATCH" };
+  }
+
+  // Evaluate threshold
+  const threshold = policy.severity_threshold;
+  const hasViolation = (
+    (threshold === "critical" && counts.critical > 0) ||
+    (threshold === "high" && (counts.critical > 0 || counts.high > 0)) ||
+    (threshold === "moderate" &&
+     (counts.critical > 0 || counts.high > 0 || counts.moderate > 0)) ||
+    (threshold === "low" &&
+     (counts.critical > 0 || counts.high > 0 || counts.moderate > 0 || counts.low > 0))
+  );
+
+  if (hasViolation) {
+    return { kind: "POLICY_VIOLATION" };
+  }
+
+  // If we reach here, all checks passed and no violations
   return { kind: "PASS" };
 }
