@@ -21,9 +21,11 @@ import { mkdtempSync, rmSync, writeFileSync, mkdirSync, appendFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { seamIdentity, ancestry, checkBinding, Refusal } from './seam-identity.mjs';
+import { containerSeamIdentity, ContainerRefusal, ENTAILED_ONLY } from './seam-identity-container.mjs';
 
 const PROJECT = process.cwd();
 const EXPECTED = '195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b';
+const EXPECTED_IMAGE = 'a63cf931fe80227004ba9d8730c628bb0c0d65deae6e53e8c29b6bc3b3fd3b51';
 const results = [];
 
 function record(id, law, intent, fn) {
@@ -180,6 +182,66 @@ record('F8', 'L6', 'conforming binding is admitted (instrument is not trivially 
     expectedDigest: EXPECTED,
   });
   return r.ok ? { pass: true, note: 'BINDING SATISFIED' } : { pass: false, note: JSON.stringify(r.findings) };
+});
+
+// ── F9 ⭐ — the equivalence that makes the production side WITNESSED, not
+//           merely entailed: the filesystem computation (no git, no .git) must
+//           reproduce the git-side image-scope digest byte-for-byte. ──────────
+record('F9', 'L1', 'container-side filesystem digest equals git-side image scope', () => {
+  const gitSide = seamIdentity('HEAD', undefined, 'image');
+  const fsSide = containerSeamIdentity(PROJECT);
+  if (gitSide.pathCount !== fsSide.pathCount) {
+    return { pass: false, note: `path count differs: git ${gitSide.pathCount} vs fs ${fsSide.pathCount}` };
+  }
+  return gitSide.digest === fsSide.digest
+    ? { pass: true, note: `${fsSide.pathCount} files agree @ ${fsSide.digest.slice(0, 16)}…` }
+    : { pass: false, note: `git ${gitSide.digest} vs fs ${fsSide.digest}` };
+});
+
+// ── F10 — the container digest is not blind to a changed byte ────────────────
+record('F10', 'L1', 'one changed byte on the filesystem moves the container digest', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'seamfs-'));
+  try {
+    // Mirror only what the image scope declares, then perturb one byte.
+    sh('cp', ['-R', join(PROJECT, 'lib'), join(dir, 'lib')], PROJECT);
+    mkdirSync(join(dir, 'database', 'migrations'), { recursive: true });
+    for (const f of ['20260916211500_relational_field_shadow_runs.sql',
+      '20260921000001_epistemic_join_persistence.sql',
+      '20260921000002_epistemic_join_integration_shadow.sql']) {
+      sh('cp', [join(PROJECT, 'database/migrations', f), join(dir, 'database/migrations', f)], PROJECT);
+    }
+    const before = containerSeamIdentity(dir).digest;
+    appendFileSync(join(dir, 'lib/maia/relational-field-shadow/runner.ts'), '\n// fs fixture byte\n');
+    const after = containerSeamIdentity(dir).digest;
+    if (before !== EXPECTED_IMAGE) return { pass: false, note: `mirror baseline unexpected: ${before}` };
+    return before === after
+      ? { pass: false, note: 'container digest did NOT move — blind' }
+      : { pass: true, note: `moved to ${after.slice(0, 16)}…` };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── F11 — L2 on the container side: absent declared path refuses by name ────
+record('F11', 'L2', 'container side refuses an absent declared path', () => {
+  try {
+    containerSeamIdentity('/nonexistent-root-for-falsifier');
+    return { pass: false, note: 'no refusal raised' };
+  } catch (err) {
+    return err instanceof ContainerRefusal && err.code === 'SEAM_PATH_ABSENT'
+      ? { pass: true, note: err.message }
+      : { pass: false, note: `wrong failure: ${err.message}` };
+  }
+});
+
+// ── F12 ⭐ — the compiled-only path must be REPORTED as entailed, ⛔ never
+//            folded into the witnessed set. ──────────────────────────────────
+record('F12', 'L2', 'compiled-only seam path is reported entailed, not counted as witnessed', () => {
+  const r = containerSeamIdentity(PROJECT);
+  const leaked = r.covered.filter((p) => ENTAILED_ONLY.includes(p));
+  if (leaked.length) return { pass: false, note: `entailed path counted as witnessed: ${leaked.join(', ')}` };
+  if (!r.entailedOnly.length) return { pass: false, note: 'entailed-only set is empty — the gap is hidden, not reported' };
+  return { pass: true, note: `reported entailed: ${r.entailedOnly.join(', ')}` };
 });
 
 const passed = results.filter((r) => r.pass).length;

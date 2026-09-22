@@ -209,6 +209,7 @@
     "verify:migrate-before-swap-step3": "bash scripts/verify-migrate-before-swap-step3.sh",
     "verify:migrate-before-swap-ordering": "npx tsx tests/constitutional/migration-compatibility-gate/step3-ordering.ts",
     "witness:seam-identity": "node scripts/witness/seam-identity.mjs",
+    "witness:seam-identity:container": "node scripts/witness/seam-identity-container.mjs",
     "witness:seam-identity:matrix": "node scripts/witness/seam-identity-falsifiers.mjs && node scripts/witness/seam-identity-candidates.mjs"
   },
   "dependencies": {

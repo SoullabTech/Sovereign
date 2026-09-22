@@ -42,6 +42,22 @@ const SEAM_PATHS = [
   'database/migrations/20260921000002_epistemic_join_integration_shadow.sql',
 ];
 
+/**
+ * ⭐ The subset of the declared seam that is present AS SOURCE in the production
+ * runner image (Dockerfile.production copies /app/lib and /app/database into the
+ * runner stage; /app source is compiled into .next/standalone and is not copied).
+ *
+ * This matters because it is the boundary between WITNESSED and ENTAILED on the
+ * production side: files in this scope can be hashed inside the running container
+ * and compared byte-for-byte, while anything outside it is only entailed from the
+ * container's asserted GIT_COMMIT and the deploy provenance chain.
+ */
+const IMAGE_SCOPE_PREFIXES = ['lib/', 'database/', 'scripts/'];
+
+export function inImageScope(path) {
+  return IMAGE_SCOPE_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
 class Refusal extends Error {
   constructor(code, detail) {
     super(detail ? `${code}: ${detail}` : code);
@@ -68,7 +84,7 @@ function resolveRev(rev) {
 }
 
 /** Compute the seam identity digest at a commit. */
-export function seamIdentity(rev, seamPaths = SEAM_PATHS) {
+export function seamIdentity(rev, seamPaths = SEAM_PATHS, scope = 'full') {
   const commit = resolveRev(rev);
   const entries = [];
 
@@ -87,15 +103,18 @@ export function seamIdentity(rev, seamPaths = SEAM_PATHS) {
     for (const line of lines) {
       const m = /^(\d{6}) (blob|tree|commit) ([0-9a-f]{40})\t(.+)$/.exec(line);
       if (!m) throw new Refusal('SEAM_ENTRY_UNPARSEABLE', line); // L6
+      if (scope === 'image' && !inImageScope(m[4])) continue;
       entries.push(`${m[3]}  ${m[4]}`);
     }
   }
 
   // Deduplicate: declared paths may legitimately overlap; the digest is over
   // the SET of (blob, path) pairs, so an overlap must not double-count.
+  if (entries.length === 0) throw new Refusal('SEAM_SCOPE_EMPTY', `scope=${scope}`);
+
   const unique = [...new Set(entries)].sort();
   const digest = createHash('sha256').update(unique.join('\n') + '\n').digest('hex');
-  return { commit, digest, pathCount: unique.length };
+  return { commit, digest, pathCount: unique.length, scope };
 }
 
 /**
@@ -150,8 +169,8 @@ export function checkBinding({ productionSha, canonicalRev, expectedDigest }) {
 function usage() {
   return [
     'usage:',
-    '  seam-identity.mjs compute <rev>',
-    '  seam-identity.mjs verify <rev> --expect <sha256>',
+    '  seam-identity.mjs compute <rev> [--scope full|image]',
+    '  seam-identity.mjs verify <rev> --expect <sha256> [--scope full|image]',
     '  seam-identity.mjs check --production-sha <sha> --canonical-rev <rev> --expect <sha256>',
   ].join('\n');
 }
@@ -165,8 +184,11 @@ function main(argv) {
   const cmd = argv[0];
   if (cmd === 'compute') {
     if (!argv[1]) throw new Refusal('MISSING_ARGUMENT', '<rev>');
-    const r = seamIdentity(argv[1]);
+    const scope = arg(argv, '--scope') ?? 'full';
+    if (scope !== 'full' && scope !== 'image') throw new Refusal('UNKNOWN_SCOPE', scope);
+    const r = seamIdentity(argv[1], SEAM_PATHS, scope);
     console.log(`commit=${r.commit}`);
+    console.log(`scope=${r.scope}`);
     console.log(`paths=${r.pathCount}`);
     console.log(`seam_id=${r.digest}`);
     return 0;
@@ -174,8 +196,10 @@ function main(argv) {
   if (cmd === 'verify') {
     const rev = argv[1];
     const expect = arg(argv, '--expect');
+    const scope = arg(argv, '--scope') ?? 'full';
     if (!rev || !expect) throw new Refusal('MISSING_ARGUMENT', '<rev> --expect <sha256>');
-    const r = seamIdentity(rev);
+    if (scope !== 'full' && scope !== 'image') throw new Refusal('UNKNOWN_SCOPE', scope);
+    const r = seamIdentity(rev, SEAM_PATHS, scope);
     const ok = r.digest === expect;
     console.log(`commit=${r.commit}`);
     console.log(`paths=${r.pathCount}`);
@@ -219,4 +243,4 @@ if (invokedDirectly) {
   }
 }
 
-export { SEAM_PATHS, Refusal };
+export { SEAM_PATHS, IMAGE_SCOPE_PREFIXES, Refusal };

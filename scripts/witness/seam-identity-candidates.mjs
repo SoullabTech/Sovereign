@@ -15,9 +15,11 @@
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, rmSync, writeFileSync, appendFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, appendFileSync, readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
+import { seamIdentity as conformingSeamIdentity } from './seam-identity.mjs';
+import { IMAGE_SCOPE_SEAM, ENTAILED_ONLY } from './seam-identity-container.mjs';
 
 const EXPECTED = '195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b';
 const SEAM = [
@@ -82,6 +84,58 @@ const dc5 = {
     } catch {
       return { verdict: 'NOT_ANCESTOR' };
     }
+  },
+};
+
+/* ── container-side candidates ────────────────────────────────────────────── */
+const walk = (root, rel, out) => {
+  const abs = join(root, rel);
+  const st = statSync(abs);
+  if (st.isFile()) { out.push(rel); return; }
+  if (!st.isDirectory()) return;
+  for (const n of readdirSync(abs).sort()) walk(root, posix.join(rel, n), out);
+};
+
+/* DC-9 — claims the compiled-only path as witnessed coverage. */
+const dc9 = {
+  id: 'DC-9',
+  falsifier: 'F12',
+  error: 'the compiled-only seam path is counted as witnessed instead of reported as entailed',
+  containerSeamIdentity(root) {
+    const entries = [], covered = [];
+    for (const d of IMAGE_SCOPE_SEAM) {
+      if (!existsSync(join(root, d))) throw new Error(`SEAM_PATH_ABSENT: ${d}`);
+      const files = []; walk(root, d, files);
+      for (const rel of files) {
+        const b = readFileSync(join(root, rel));
+        entries.push(`${createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${b.length}\0`), b])).digest('hex')}  ${rel}`);
+        covered.push(rel);
+      }
+    }
+    // the modelled error: the entailed path is asserted as covered
+    covered.push(...ENTAILED_ONLY);
+    const u = [...new Set(entries)].sort();
+    return { digest: createHash('sha256').update(u.join('\n') + '\n').digest('hex'), pathCount: u.length, covered, entailedOnly: [] };
+  },
+};
+
+/* DC-10 — hashes raw bytes instead of git's blob envelope. */
+const dc10 = {
+  id: 'DC-10',
+  falsifier: 'F9',
+  error: 'content hashed as raw bytes, so the container digest cannot be compared with git',
+  containerSeamIdentity(root) {
+    const entries = [], covered = [];
+    for (const d of IMAGE_SCOPE_SEAM) {
+      if (!existsSync(join(root, d))) throw new Error(`SEAM_PATH_ABSENT: ${d}`);
+      const files = []; walk(root, d, files);
+      for (const rel of files) {
+        entries.push(`${createHash('sha1').update(readFileSync(join(root, rel))).digest('hex')}  ${rel}`);
+        covered.push(rel);
+      }
+    }
+    const u = [...new Set(entries)].sort();
+    return { digest: createHash('sha256').update(u.join('\n') + '\n').digest('hex'), pathCount: u.length, covered, entailedOnly: [...ENTAILED_ONLY] };
   },
 };
 
@@ -165,6 +219,18 @@ const PROP = {
       rmSync(fx.dir, { recursive: true, force: true });
     }
   },
+  F9(c) {
+    if (!c.containerSeamIdentity) return 'n/a';
+    const gitSide = conformingSeamIdentity('HEAD', undefined, 'image').digest;
+    const fsSide = c.containerSeamIdentity(process.cwd()).digest;
+    return gitSide === fsSide ? 'SURVIVED' : 'DEAD';
+  },
+  F12(c) {
+    if (!c.containerSeamIdentity) return 'n/a';
+    const r = c.containerSeamIdentity(process.cwd());
+    const leaked = r.covered.filter((p) => ENTAILED_ONLY.includes(p));
+    return leaked.length === 0 && r.entailedOnly.length > 0 ? 'SURVIVED' : 'DEAD';
+  },
   F7(c) {
     if (!c.seamIdentity) return 'n/a';
     const plain = c.seamIdentity('HEAD').digest;
@@ -173,8 +239,8 @@ const PROP = {
   },
 };
 
-const CANDIDATES = [dc1, dc2, dc5];
-const ORDER = ['F1', 'F2', 'F4', 'F5', 'F7'];
+const CANDIDATES = [dc1, dc2, dc5, dc9, dc10];
+const ORDER = ['F1', 'F2', 'F4', 'F5', 'F7', 'F9', 'F12'];
 let lethal = 0;
 const collateral = [];
 
@@ -195,6 +261,8 @@ const CLASSIFIED = {
   'DC-1': {},
   'DC-2': {},
   'DC-5': {},
+  'DC-9': {},
+  'DC-10': {},
 };
 let unclassified = 0;
 for (const c of collateral) {
