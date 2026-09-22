@@ -170,6 +170,67 @@ try {
     assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "before\n");
   });
 
+  check("runtime admits one exact-parent JARVIS commit spanning replacement + new file", () => {
+    writeFileSync(path.join(repo, "allowed.txt"), "after-multi\n");
+    writeFileSync(path.join(repo, "new.txt"), "created\n");
+    git(["add", "allowed.txt", "new.txt"]);
+    execFileSync("git", [
+      "-c", "user.name=JARVIS",
+      "-c", "user.email=jarvis@local.invalid",
+      "commit", "-qm", "chore(jarvis): native-runtime-multifile-newfile-proof",
+    ], { cwd: repo, stdio: ["ignore", "pipe", "pipe"] });
+    const multiHead = git(["rev-parse", "HEAD"]);
+
+    const multiPacket = {
+      ...packet,
+      work_unit_id: "native-runtime-multifile-newfile-proof",
+      objective: "Modify allowed.txt and create new.txt.",
+      allowed_files: ["allowed.txt", "new.txt"],
+      verification_commands: [
+        "grep -q '^after-multi$' allowed.txt",
+        "grep -q '^created$' new.txt",
+      ],
+    };
+    const multiDigest = "sha256:" + "b".repeat(64);
+    const multiLedger = path.join(
+      home, "native-patch-admission", multiPacket.work_unit_id + ".jsonl",
+    );
+    writeFileSync(multiLedger, JSON.stringify({
+      event_version: "NPA1.v1",
+      event: "APPLIED",
+      code: "PATCH_APPLIED",
+      applied: true,
+      work_unit_id: multiPacket.work_unit_id,
+      patch_digest: multiDigest,
+      patch_paths: ["allowed.txt", "new.txt"],
+      changed_paths: ["allowed.txt", "new.txt"],
+    }) + "\n");
+
+    const multiResult = {
+      ...result,
+      work_unit_id: multiPacket.work_unit_id,
+      starting_sha: base,
+      ending_sha: multiHead,
+      files_changed: ["allowed.txt", "new.txt"],
+      patch_admission: {
+        ok: true,
+        status: "APPLIED",
+        code: "PATCH_APPLIED",
+        patch_digest: multiDigest,
+        patch_paths: ["allowed.txt", "new.txt"],
+        changed_paths: ["allowed.txt", "new.txt"],
+        evidence_path: multiLedger,
+        event: { applied: true },
+      },
+    };
+
+    const verdict = validateNativePatchResult(multiPacket, multiResult, repo);
+    assert.equal(verdict.ok, true, JSON.stringify(verdict));
+    assert.equal(verdict.commit_sha, multiHead);
+    assert.deepEqual(verdict.changed_paths, ["allowed.txt", "new.txt"]);
+    assert.equal(verdict.verification.length, 2);
+  });
+
   console.log("\n" + passed + " passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
