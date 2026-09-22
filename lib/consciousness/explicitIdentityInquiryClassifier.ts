@@ -258,14 +258,6 @@ export function classifyExplicitIdentityInquiry(
   }
 
   const seeking = hasInformationSeekingAct(text);
-  const target = explicitTarget(text);
-
-  if (seeking && target) {
-    return resultExplicit(
-      target,
-      basisForQuestion(text, target === 'serving_substitution')
-    );
-  }
 
   if (seeking && (VOICE_DOMAIN.test(text) || VIDEO_DOMAIN.test(text) || MEMORY_DOMAIN.test(text))) {
     return resultNotExplicit('out_of_scope_identity_domain');
@@ -281,12 +273,20 @@ export function classifyExplicitIdentityInquiry(
   }
 
   if (
-    seeking &&
     (PROVIDER_WORD.test(text) || MODEL_WORD.test(text)) &&
     GENERAL_DISCUSSION.test(text) &&
     !CURRENT_SERVING_ANCHOR.test(text)
   ) {
     return resultNotExplicit('general_model_discussion');
+  }
+
+  const target = explicitTarget(text);
+
+  if (seeking && target) {
+    return resultExplicit(
+      target,
+      basisForQuestion(text, target === 'serving_substitution')
+    );
   }
 
   if (
