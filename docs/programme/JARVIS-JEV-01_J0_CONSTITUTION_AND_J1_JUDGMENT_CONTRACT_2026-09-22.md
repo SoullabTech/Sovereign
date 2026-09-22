@@ -1,17 +1,21 @@
 # JARVIS-ROUTING-INTELLIGENCE-01 · J2-R1 — JEV JUDGMENT LANE
 ## J0 Constitution + J1 Judgment Contract
 
-**Status:** ⭐ **J0 CONSTITUTION RATIFIED** (founder act 2026-09-22, §7) · ⛔ **J1 JUDGMENT
+**Status:** ⭐ **J0 CONSTITUTION RATIFIED · TEXT NORMALIZED AT `J0R2`** (founder acts
+2026-09-22, §7) · ⛔ **J1 JUDGMENT
 CONTRACT NOT RATIFIED AND NOT INCORPORATED BY J0** · ⛔ J2 NOT OPEN · ⛔ ADAPTER NOT
 AUTHORIZED · ⛔ PROVIDER EXECUTION NOT OPENED.
 **Informal name:** `JARVIS-JEV-01` (founder's name, preserved as this file's identity).
 **Parent flow:** `JARVIS-ROUTING-INTELLIGENCE-01` (manual §27 sub-lane).
 **Date:** 2026-09-22 · **Branch:** `claude/sovereign-governance-review-s8skj2`
-**Bound to canonical tip:** `6f11edcc29ea2de6efa025ecffd3ac3a948bc590` *(authored from
-`9da7195e`; rebind verified in-session — `9da7195e..6f11edcc` is **three Writer's Studio
-programme documents, 739 insertions, documentary only**, with ⛔ no change under `lib/`,
-`app/`, `scripts/`, `docs/canon/`, or any routing/provider surface. ⭐ Verified by path
-diff, ⛔ not accepted on report.)*
+**Bound to canonical tip:** `5a0b7328f689dda60f9f2c6c1a2a236cf6e62c12` *(rebound at J0R2;
+J0 was ratified against `6f11edcc`. Advance verified in-session by path diff, ⛔ not
+accepted on report: 4 commits — Writer's Studio `EDITORIAL-READING-01` A2 contract +
+constitutional tests, a dedicated `tsconfig.editorial-reading-contract.json`, and **two
+additive `package.json` script entries** (`typecheck:` / `matrix:editorial-reading-contract`)
+— ⛔ no dependency change, ⛔ no shared gate widened, ⛔ **zero JEV, routing-intelligence,
+provider-governance or JARVIS-adapter overlap**. ⚠️ Unlike the previous advance this one is
+not purely documentary, which is why it was inspected rather than assumed.)*
 
 ## Mandatory lane preamble (JARVIS manual §27)
 
@@ -21,8 +25,9 @@ Governing authority: founder rulings 2026-09-22 (placement + provenance)
                      + RATIFIED J5 routing law (2026-09-18)
                      + R1 / R4 / R5A / R5B contracts
                      + PROVIDER_GOVERNANCE.md + the 2026-09-20 dev-lane interim hold
-Current gate: J0 RATIFIED (founder act 2026-09-22, §7).
-              NEXT: canonical admission of the exact ratified J0 authority.
+Current gate: J0 RATIFIED; ratified text normalized at J0R2 (§7).
+              NEXT: current-canonical reconciliation, then canonical
+                    admission of the exact J0R2 ratified authority.
               ⛔ NOT J1 adjudication. ⛔ NOT OPENED FOR PROVIDER EXECUTION.
 Evidence subject: this repository's governing records only. ⛔ No provider was called.
                   ⛔ No judgment performed. ⛔ No packet constructed or sent.
@@ -196,6 +201,16 @@ wording cleanup.
 placement/permission separation · R-4 external advisory / fast-path withdrawal · R-5
 `repository_derived_metadata` · R-6 mechanical sovereign-runtime witness · Q-JEV-3…Q-JEV-7
 standing · A7 authority-lattice removal semantics and recurring-discharge requirement.
+
+**R-8 · `J0R2` — RATIFIED-TEXT SINGULARITY (founder clarification, 2026-09-22).** Ratification
+record `c8cf54eb72aee390591f9b14aeb9b54a578f2af7` accepted; **J0 preserved as RATIFIED**.
+The §7 precedence rule accepted **in principle** — *§7 is the sole ratified J0 text; §2 is
+subordinate exposition* — but ⛔ **any reading of it that silently removes substantive
+restrictions present in the adjudicated J0 articles, merely because the ratification
+restated them more compactly, is REJECTED.** Documentary normalization of §7 only: A1, A3
+and A4 restorations; ⛔ no semantic change to A2, A5, A6, A7; J1 non-incorporation preserved
+in substance; J5/R5 inherited provenance, review-topology, provider and execution law ⛔ not
+duplicated into J0. Details and the three-difference table: §7.
 
 **Founder's constitutional shape, recorded as the lane's operative summary:**
 
@@ -589,17 +604,23 @@ nor pre-ratifies the J1 contract; A1, A2, A3, A6, A7 were not reopened; retentio
 
 **A1 — Judgment is evidence, never permission.** A Jev judgment may inform deliberation but
 may not create or widen authority, authorize mutation, satisfy an authority requirement, or
-discharge a gate.
+discharge a gate. **A Jev judgment may not satisfy a review requirement merely by being a
+Jev judgment.** *(J0R2 restoration.)*
 
 **A2 — Confidence may constrain or close; it may never open.** No confidence value may
 create authority or make an otherwise unauthorized act available.
 
 **A3 — Abstention is fail-closed.** Missing, malformed, unrecognized, timed-out, or
-abstaining judgment cannot become assent or authorization.
+abstaining judgment cannot become assent or authorization. **Abstention escalates to the
+governing non-Jev path. Silence is never assent; an error or abstention is never itself a
+route.** *(J0R2 restoration.)*
 
 **A4 — Jev judges a bounded representation, never the underlying conversation or protected
-content.** Exact representation and packet-schema design remain J1-owned and receive no
-standing from J0.
+content.** ⛔ **Jev may not receive the member's message, repository source or prose, canon
+or constitutional text, prior turns, or free-text justification.** *(J0R2 restoration — the
+enumerated prohibition is the mechanically checkable form; `protected content` alone left
+undefined work.)* Exact representation and packet-schema design remain J1-owned and receive
+no standing from J0.
 
 **A5 — The eligibility membrane precedes every outbound representation.** Refusal occurs
 before construction, logging, hashing, caching, or disclosure of the prospective
@@ -636,15 +657,38 @@ and remains later J2 work.
 The founder's act states A1–A7 as above. **§2 of this document contains a longer authored
 exposition of the same articles** (inheritance tags, falsifiability notes, rationale).
 
-⭐ **The §7 statement is the ratified law. §2 is EXPOSITION and is subordinate to it.** Where
-the two diverge in any respect, **§7 governs**, and §2 is to be read as commentary that
-never adds to, narrows, or qualifies the ratified text.
+⭐ **The §7 statement is the sole ratified J0 text. §2 is EXPOSITION and is subordinate to
+it.** After the `J0R2` normalization, **§2 remains explanatory only and may not contradict,
+enlarge authority beyond, or override §7.**
 
-⚠️ *This precedence rule is applied by me to prevent two constitutional-looking texts
-existing side by side — the defect family this lane has refused before (two addresses for
-one observation; two things named Pro).* ⛔ If the founder intended §2's expanded text to be
-the ratified object instead, that is a correction to make explicitly, not to leave to a
-future reader.
+### ⚠️⚠️ J0R2 — MY PRECEDENCE RULE WAS DEFECTIVE, AND THE DEFECT WAS DE-RATIFICATION
+
+The rule I first wrote said §2 *"never adds to, narrows, or qualifies"* §7. ⛔ **That does
+more than order two texts — it silently DELETES substantive restrictions that were present
+in the adjudicated J0 articles and did not survive into the more compact ratification
+wording.** Three were found, each confirmed against the file before repair:
+
+| Article | Present in §2 | Compact §7 said | Why not equivalent |
+|---|---|---|---|
+| **A1** | may not *satisfy a **review** requirement* | *authority requirement* | ⭐ **A review requirement need not itself be an authority requirement.** |
+| **A3** | abstention **escalates**; *an error is never a route* | cannot become assent or authorization | ⛔ The explicit **fail-closed routing consequence** vanished. |
+| **A4** | enumerated exclusions (member message · repository source/prose · canon/constitutional text · prior turns · free-text justification) | *underlying conversation or protected content* | ⚠️ Broader in wording, **less mechanically checkable** — `protected content` was doing undefined work. |
+
+⭐⭐ **Singularity achieved by deletion is not singularity — it is repeal wearing a style
+edit.** A rule whose purpose is *one law, one text* must restore what the compaction
+dropped before it can claim the compact text is complete. All three are restored above;
+A2, A5, A6 and A7 were materially aligned and are ⛔ **unchanged**.
+
+⭐ **NOT A REOPENING OF J0'S SUBSTANCE.** J0 remains **RATIFIED**; this is ratification-text
+fidelity only. A1's J5-provenance language and *"judgment as sole basis for execution is a
+breach"* remain **inherited parent-law exposition** and are ⛔ deliberately **not duplicated
+into J0** — J5, R1/R4/R5 provenance, review-topology, provider and execution law govern
+where they already govern.
+
+⚠️ **The asymmetry in the restated rule is deliberate, not an oversight:** §2 may not
+*enlarge authority beyond* §7. It is not forbidden from reading more tightly, because
+exposition that constrains further fails safe, while exposition that grants further is the
+leak. ⛔ Do not later "balance" this clause into symmetry.
 
 ### INHERITED AND SETTLED — ⛔ not reopened
 
@@ -675,26 +719,32 @@ Q-JEV-5  MOOT
 Q-JEV-6  CLOSED — external advisory
 Q-JEV-7  CLOSED — mechanical sovereign-runtime witness
 
-J0 Constitution       RATIFIED
+J0 Constitution       RATIFIED · TEXT NORMALIZED (J0R2)
 J1 Judgment Contract  AUTHORED · NOT RATIFIED · NOT INCORPORATED BY J0
 J2                    NOT OPEN
 ADAPTER               NOT AUTHORIZED
 PROVIDER EXECUTION    NOT OPENED
 ```
 
-### Next boundary — ⭐ CANONICAL ADMISSION OF THE EXACT RATIFIED J0 AUTHORITY
+### Next boundary — ⭐ CURRENT-CANONICAL RECONCILIATION, THEN CANONICAL ADMISSION
 
-⛔ **NOT J1 adjudication yet.** The founder's sequencing, preserved:
+⛔ **NOT J1 adjudication yet.** The founder's sequencing, as amended at `J0R2`:
 
 ```text
-J0 founder ratification recorded          ← THIS ACT
+J0 RATIFICATION                remains valid
         ↓
-exact ratified J0 content authority established
+J0R2 textual fidelity          one bounded documentary correction  ← THIS ACT
         ↓
-canonical admission of that exact J0 authority     ← NEXT, its own bounded act
+current-canonical reconciliation
         ↓
-J1 Judgment Contract adjudication
+canonical admission of the exact J0R2 ratified authority
+        ↓
+only then J1 adjudication
 ```
+
+⚠️ **Reconciliation is named as its own step because canonical moved twice during this
+lane** — `9da7195e → 6f11edcc → 5a0b7328` — and the admission act must bind to whatever is
+live **at the moment it runs**, ⛔ never to a tip quoted earlier in the conversation.
 
 ⭐ **Why admission is its own act:** J1 must be judged against **one fixed canonical
 constitutional object**, ⛔ not a branch-local ratification that could still move while J1
