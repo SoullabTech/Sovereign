@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// M1 multi-file live witness: runtime-custody
 import assert from "node:assert/strict";
 import {
   mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync,

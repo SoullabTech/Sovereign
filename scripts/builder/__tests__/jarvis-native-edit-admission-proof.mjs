@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// M1 multi-file live witness: edit-admission
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
