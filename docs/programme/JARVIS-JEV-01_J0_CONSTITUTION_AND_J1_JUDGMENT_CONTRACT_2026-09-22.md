@@ -155,6 +155,44 @@ constitution.
 "self-hosted," screenshot, documentation claim, or provider attestation cannot satisfy this
 condition.**
 
+**R-7 · J0 ADJUDICATION — ⛔ NOT RATIFIED · RETURNED FOR ONE DOCUMENTARY REPAIR (`J0R1`).**
+Founder disposition 2026-09-22 on exact candidate
+`778fde98ff13aa9096f619adfdf00f22e5a04361` against exact canonical
+`6f11edcc29ea2de6efa025ecffd3ac3a948bc590`.
+
+⭐⭐ **THE FINDING — A CONSTITUTIONAL LEAK BY INCORPORATION.** A4 read *"Jev receives the §3
+packet and nothing else."* §3 **is the unratified J1 Judgment Contract**. ⛔ Ratifying J0 in
+that form would have given **J1's packet design constitutional standing by reference,
+before J1 was adjudicated** — precisely the inversion the "J0 only" boundary exists to
+prevent.
+
+⭐ *The constitution must constrain the contract without obtaining any of its meaning from
+the contract.* A law that borrows its content from the instrument it governs cannot later
+refuse that instrument.
+
+**Authorized: documentary repair only** — (1) A4's dependency on the §3 packet replaced
+with a contract-independent bounded-representation law; (2) explicit statement that the
+exact packet/schema belongs to J1 and takes no standing from J0; (3) A5 normalized from
+*packet* to *outbound representation*; (4) ⛔ no semantic change to A1–A3 or A6–A7; (5) ⛔ no
+J1 contract change; (6) ⛔ no capability-table mutation; (7) ⛔ no provider registration;
+(8) ⛔ no adapter; (9) ⛔ J2 not opened; (10) ⛔ no external inference, provider spend, merge,
+deploy, or production mutation.
+
+⭐ **LEAK EXTENT CONFIRMED MECHANICALLY, ⛔ not accepted on inspection alone.** A scan of the
+article block for `§3` · `packet` · `contract` · `JudgmentPacket` · the three judgment
+shapes · the `Q_*` question ids returns matches in **A4 and A5 only**. **A1, A2, A3, A6 and
+A7 carry no J1-derived term** and were not reopened.
+
+⚠️ **One deliberate retention inside the A5 normalization:** the rationale sentence *"A
+refusal is not an occasion to disclose"* is **kept**. It is A5's own law, ⛔ not J1-derived,
+and dropping it while normalizing vocabulary would have removed law under cover of a
+wording cleanup.
+
+**ACCEPTED AS SETTLED AND ⛔ NOT REOPENED:** R-1 placement · R-2 external provenance · R-3
+placement/permission separation · R-4 external advisory / fast-path withdrawal · R-5
+`repository_derived_metadata` · R-6 mechanical sovereign-runtime witness · Q-JEV-3…Q-JEV-7
+standing · A7 authority-lattice removal semantics and recurring-discharge requirement.
+
 **Founder's constitutional shape, recorded as the lane's operative summary:**
 
 ```text
@@ -258,13 +296,22 @@ evidence-backed task-class law, ⛔ not with this article.
 Unparseable, absent, timed-out, malformed, or unrecognised results are **abstentions**, and
 an abstention escalates. ⛔ Silence is never assent; an error is never a route.
 
-### A4 · Jev judges a representation, never a conversation *(largely inherited)*
-Jev receives the §3 packet and nothing else. ⛔ Not the member's message, ⛔ not repository
-prose, ⛔ not canon text, ⛔ not prior turns, ⛔ not free-text justification.
+### A4 · Jev judges a representation, never a conversation *(largely inherited · J0R1)*
+Jev may receive only a **bounded, non-content representation admitted under this
+constitution and the governing disclosure / provider law.**
 
-### A5 · The eligibility membrane precedes the packet *(NEW)*
-⛔ No packet is constructed until eligibility passes. A refusal must not construct, log,
-hash, or cache the packet it refused. *A refusal is not an occasion to disclose.*
+⛔ It may not receive the member's message, repository source or prose, canon or
+constitutional text, prior turns, or free-text justification.
+
+⛔⛔ **The exact representation and packet schema belong to J1 and are not ratified,
+incorporated, or implied by this article.**
+
+### A5 · The eligibility membrane precedes any outbound representation *(NEW · J0R1)*
+⛔ No outbound Jev representation may be constructed until eligibility passes. A refusal
+must not construct, log, hash, or cache the **prospective representation** it refused.
+*A refusal is not an occasion to disclose.*
+
+⛔ **Exact packet construction belongs to J1.**
 
 ### A6 · Jev may not judge its own standing *(NEW)*
 ⛔ Jev may not be asked whether Jev should be used, whether its confidence is adequate,
@@ -522,23 +569,26 @@ Q-JEV-5  MOOT
 Q-JEV-6  CLOSED — external advisory
 Q-JEV-7  CLOSED — mechanical sovereign-runtime witness
 
-J0 Constitution      AUTHORED · NOT YET RATIFIED
-J1 Judgment Contract AUTHORED · NOT YET RATIFIED
+J0 Constitution      REPAIRED (J0R1) · RETURNED · NOT RATIFIED
+J1 Judgment Contract AUTHORED · NOT RATIFIED · NOT INCORPORATED BY J0
 J2                   NOT OPEN
 ADAPTER              NOT AUTHORIZED
 PROVIDER EXECUTION   NOT OPENED
 ```
 
-### Next boundary — ⭐ FOUNDER ADJUDICATION OF THE J0 CONSTITUTION **ONLY**
+### Next boundary — ⭐ FOUNDER ADJUDICATION OF THE **REPAIRED** J0 CONSTITUTION ONLY
 
 ⛔ **Not** J1 · ⛔ **not** capability-table mutation · ⛔ **not** provider registration ·
-⛔ **not** adapter work.
+⛔ **not** adapter work · ⛔ **not** J2.
 
 ⭐ *Settle the law first; then adjudicate the judgment contract under that law.* Ratifying
 J1 alongside J0 would let the contract's convenience shape the constitution it is supposed
-to satisfy — the inversion this lane has refused at every previous step.
+to satisfy — the inversion this lane has refused at every previous step, and the one
+`J0R1` has now severed at its last remaining point of incorporation.
 
-**ALL FIVE QUESTIONS CLOSED WITHOUT OPENING J2 · J0 CONSTITUTION AUTHORED (A1–A7;
+**⭐ J0R1 DOCUMENTARY REPAIR APPLIED — A4/A5 DECOUPLED FROM THE UNRATIFIED J1 CONTRACT;
+LEAK EXTENT CONFIRMED MECHANICALLY (A4 + A5 ONLY); ⛔ J0 RETURNED, ⛔ NOT RATIFIED ·
+ALL FIVE QUESTIONS CLOSED WITHOUT OPENING J2 · J0 CONSTITUTION AUTHORED (A1–A7;
 A1/A3/A4 INHERITED FROM RATIFIED J5; A2 IN RULED FORM; ⚠️ A7 LOAD-BEARING, NO-OP SCOPED TO
 THE AUTHORITY LATTICE, RECURRING DISCHARGE OWED, CADENCE ⛔ NOT FIXED) · J1 CONTRACT
 AUTHORED AS CANDIDATE · ⛔ NEITHER RATIFIED · ⚠️ FIRST-COMMIT FINDING CORRECTED (routing law
