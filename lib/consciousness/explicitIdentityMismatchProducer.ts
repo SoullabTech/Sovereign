@@ -45,6 +45,8 @@ export type NonAuthoritativeCognitionCommitmentSource = {
     | 'operator_routing'
     | 'provider_name_in_prose'
     | 'unstructured_member_preference'
+    | 'serving_divergence'
+    | 'identity_inquiry_fact'
     | 'unknown_source';
 };
 
