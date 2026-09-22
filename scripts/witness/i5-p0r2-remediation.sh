@@ -18,10 +18,23 @@
 #
 # Usage (dry run, default):
 #   scripts/witness/i5-p0r2-remediation.sh --authorization docs/programme/<record>.md
+#     (add --instrument-dir <dir> when running from a copy outside the repo)
 # Usage (mutate):
 #   scripts/witness/i5-p0r2-remediation.sh --authorization <record> --apply [--reload compose-no-deps]
 
 set -euo pipefail
+
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Sibling instruments are resolved relative to THIS script, so the act runs from a
+# copy (e.g. /tmp) on a host whose checkout does not carry them. Override only to
+# point at a different materialization of the SAME authorized blobs.
+INSTRUMENT_DIR="${I5_INSTRUMENT_DIR:-$SELF_DIR}"
+GIT_WITNESS="$INSTRUMENT_DIR/seam-identity.mjs"
+CONTAINER_WITNESS="$INSTRUMENT_DIR/seam-identity-container.mjs"
+# Authorized blob hashes of the two sibling instruments. Verified before use, so
+# the act cannot run against a tampered or stale instrument.
+GIT_WITNESS_BLOB="b86a7e3982a0bf809022c2fdfe2b7f28c203d223"
+CONTAINER_WITNESS_BLOB="85bdba16753cceb4d5991ca4c8c69b57f79f1585"
 
 CONTAINER="${I5_CONTAINER:-maia-sovereign}"
 PG_CONTAINER="${I5_PG_CONTAINER:-maia-postgres}"
@@ -39,6 +52,8 @@ while [ $# -gt 0 ]; do
     --authorization) AUTHORIZATION="${2:-}"; shift 2 ;;
     --apply) APPLY=1; shift ;;
     --reload) RELOAD="${2:-}"; shift 2 ;;
+    --instrument-dir) INSTRUMENT_DIR="${2:-}"; GIT_WITNESS="$INSTRUMENT_DIR/seam-identity.mjs";
+      CONTAINER_WITNESS="$INSTRUMENT_DIR/seam-identity-container.mjs"; shift 2 ;;
     *) echo "REFUSED UNKNOWN_ARGUMENT: $1" >&2; exit 2 ;;
   esac
 done
@@ -48,10 +63,25 @@ refuse() { echo "REFUSED $1${2:+: $2}" >&2; exit 2; }
 
 [ -n "$AUTHORIZATION" ] || refuse MISSING_AUTHORIZATION "name the issued founder record with --authorization"
 [ -f "$AUTHORIZATION" ] || refuse AUTHORIZATION_NOT_FOUND "$AUTHORIZATION"
-if grep -qi 'DRAFT. NOT A FOUNDER ACT' "$AUTHORIZATION"; then
-  refuse AUTHORIZATION_IS_A_DRAFT "$AUTHORIZATION still declares itself a draft"
+# The draft guard is ANCHORED TO A STANDING/STATUS LINE, not to free prose.
+# A free-text grep would refuse a record precisely because it DISCUSSES the draft
+# guard — the C21 defect this project already met once (an instrument failing a
+# file because that file documented its own compliance). A record may talk about
+# drafts; it may not DECLARE itself one.
+if grep -qiE '^[[:space:]]*(\*\*)?(STATUS|STANDING)(\*\*)?[[:space:]]*:.*\bDRAFT\b' "$AUTHORIZATION"; then
+  refuse AUTHORIZATION_IS_A_DRAFT "$AUTHORIZATION declares DRAFT on its status line"
 fi
 case "$RELOAD" in none|compose-no-deps) ;; *) refuse UNKNOWN_RELOAD_MODE "$RELOAD" ;; esac
+
+# git's blob hash, computed without git so it works from /tmp outside a work tree.
+blob_hash() { { printf 'blob %s\0' "$(wc -c < "$1" | tr -d ' ')"; cat "$1"; } | sha1sum | cut -d' ' -f1; }
+
+for pair in "$GIT_WITNESS:$GIT_WITNESS_BLOB" "$CONTAINER_WITNESS:$CONTAINER_WITNESS_BLOB"; do
+  f="${pair%:*}"; want="${pair##*:}"
+  [ -f "$f" ] || refuse INSTRUMENT_MISSING "$f (use --instrument-dir to point at the authorized instruments)"
+  got="$(blob_hash "$f")"
+  [ "$got" = "$want" ] || refuse INSTRUMENT_BLOB_MISMATCH "$f is $got, authorized is $want"
+done
 
 say() { printf '%s\n' "$*"; }
 hdr() { printf '\n── %s ─────────────────────────────────────────\n' "$*"; }
@@ -68,15 +98,20 @@ say "running_sha=$RUNNING_SHA"
 git fetch origin clean-main-no-secrets >/dev/null 2>&1 || stop FETCH_FAILED
 say ""
 say "git-side binding check:"
-node scripts/witness/seam-identity.mjs check \
+node "$GIT_WITNESS" check \
   --production-sha "$RUNNING_SHA" \
   --canonical-rev origin/clean-main-no-secrets \
   --expect "$EXPECT_FULL" || stop SEAM_BINDING_REFUSED "see the refusal code above"
 
 say ""
 say "container-side seam witness (36 of 37 files; the 37th is entailed):"
-docker exec "$CONTAINER" node /app/scripts/witness/seam-identity-container.mjs \
-  --expect "$EXPECT_IMAGE" || stop CONTAINER_SEAM_REFUSED
+# ⭐ The instrument is STREAMED IN on stdin rather than read from /app/scripts.
+# The running image was built before this instrument existed, and §VIII forbids a
+# rebuild or deploy — so requiring the file inside the image would make the
+# authorization's own §I.3 unsatisfiable. Nothing is written into the container;
+# the bytes MEASURED are the container's own /app/lib and /app/database.
+docker exec -i "$CONTAINER" node --input-type=module - --expect "$EXPECT_IMAGE" \
+  < "$CONTAINER_WITNESS" || stop CONTAINER_SEAM_REFUSED
 
 # ── PHASE 2 — every flag must be OFF ────────────────────────────────────────
 hdr "PHASE 2 · flags"
@@ -192,11 +227,11 @@ say "row counts unchanged ($RESEARCH_AFTER / $TELEMETRY_AFTER)"
 
 say ""
 say "re-binding the substrate after the act:"
-node scripts/witness/seam-identity.mjs check \
+node "$GIT_WITNESS" check \
   --production-sha "$RUNNING_SHA" --canonical-rev origin/clean-main-no-secrets \
   --expect "$EXPECT_FULL" || stop SEAM_BINDING_REFUSED_AFTER
-docker exec "$CONTAINER" node /app/scripts/witness/seam-identity-container.mjs \
-  --expect "$EXPECT_IMAGE" || stop CONTAINER_SEAM_REFUSED_AFTER
+docker exec -i "$CONTAINER" node --input-type=module - --expect "$EXPECT_IMAGE" \
+  < "$CONTAINER_WITNESS" || stop CONTAINER_SEAM_REFUSED_AFTER
 
 hdr "RESULT"
 if [ "$COUNT_AFTER" = "1" ] \

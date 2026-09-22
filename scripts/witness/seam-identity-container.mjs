@@ -100,7 +100,15 @@ export function containerSeamIdentity(root = '/app', seam = IMAGE_SCOPE_SEAM) {
   return { digest, pathCount: unique.length, covered, entailedOnly: ENTAILED_ONLY };
 }
 
-const invokedDirectly = process.argv[1] && process.argv[1].endsWith('seam-identity-container.mjs');
+/**
+ * ⭐ Also fires when the program is piped in on stdin (`process.argv[1] === '-'`).
+ * That is how this instrument reaches a RUNNING container that was built before
+ * the instrument existed: `docker exec -i <c> node --input-type=module - --expect …`
+ * streams the authorized bytes in, writes nothing into the image, and requires no
+ * rebuild or deploy. The bytes MEASURED are still the container's own.
+ */
+const invokedDirectly = process.argv[1]
+  && (process.argv[1].endsWith('seam-identity-container.mjs') || process.argv[1] === '-');
 if (invokedDirectly) {
   const argv = process.argv.slice(2);
   const at = (n) => { const i = argv.indexOf(n); return i === -1 ? undefined : argv[i + 1]; };
