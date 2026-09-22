@@ -13,7 +13,9 @@
 # Progress lines go to stderr as each section starts, so a long du is
 # visibly alive. The report is written incrementally.
 #
-# Runs on macOS (Mac Studio) and Linux (minisforum). It never deletes, prunes,
+# Runs on macOS (Mac Studio) and Linux (minisforum). Every call into a
+# daemon (docker, ollama) is wall-clock bounded (CENSUS_PROBE_SECS, default
+# 10) and reports UNKNOWN on no answer; the census never stalls on one source. It never deletes, prunes,
 # moves, or writes anything except the optional CENSUS_OUT report. It does not
 # need sudo; directories it cannot read are reported as "unreadable", never
 # guessed. Network mounts are listed but never walked with find.
@@ -56,6 +58,24 @@ gb_sum_stdin() {
     total=$((total + kb)); n=$((n + 1))
   done
   awk -v k="$total" -v n="$n" 'BEGIN{printf "%.2f\t%d", k/1048576, n}'
+}
+# Bounded external probe: runs a command with a wall-clock limit so that a
+# hung daemon (Docker Desktop answering nothing to `docker info`, seen
+# 2026-09-22) cannot stall the whole census. Returns 124 on timeout.
+# No `timeout` binary on stock macOS, so this is done with a killer subshell;
+# `exec` makes the background pid the probe itself, not a wrapper shell.
+BOUND_SECS="${CENSUS_PROBE_SECS:-10}"
+bounded() {
+  local secs="$1"; shift
+  local out rc pid killer
+  out=$(mktemp -t census-bounded.XXXXXX)
+  ( exec "$@" >"$out" 2>/dev/null ) & pid=$!
+  ( sleep "$secs"; kill "$pid" 2>/dev/null ) 2>/dev/null & killer=$!
+  wait "$pid" 2>/dev/null; rc=$?
+  kill "$killer" 2>/dev/null; wait "$killer" 2>/dev/null
+  cat "$out"; rm -f "$out"
+  if [[ $rc -eq 143 || $rc -eq 137 ]]; then return 124; fi
+  return $rc
 }
 progress() { printf '[census] %s\n' "$1" >&2; }
 row() { printf '%-46s %10s  %s\n' "$1" "$2" "${3:-}"; }
@@ -133,19 +153,21 @@ else
 fi
 if [[ "${CENSUS_SKIP_DOCKER:-0}" == "1" ]]; then
   echo "  docker daemon calls skipped (CENSUS_SKIP_DOCKER=1)"
-elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+elif ! command -v docker >/dev/null 2>&1; then
+  echo "  docker CLI not installed"
+elif ! bounded "$BOUND_SECS" docker info >/dev/null; then
+  echo "  DOCKER = UNKNOWN: daemon gave no answer within ${BOUND_SECS}s (image/volume breakdown not asserted)"
+else
   echo "  docker system df:"
-  docker system df 2>/dev/null | sed 's/^/    /'
+  bounded "$((BOUND_SECS * 2))" docker system df | sed 's/^/    /' || echo "    UNKNOWN (no answer within $((BOUND_SECS * 2))s)"
   echo "  largest images:"
-  docker images --format '{{.Size}}\t{{.Repository}}:{{.Tag}}' 2>/dev/null | sort -hr | head -10 | sed 's/^/    /'
+  bounded "$BOUND_SECS" docker images --format '{{.Size}}\t{{.Repository}}:{{.Tag}}' | sort -hr | head -10 | sed 's/^/    /'
   if [[ "${CENSUS_DOCKER_VERBOSE:-0}" == "1" ]]; then
     echo "  volumes:"
-    docker system df -v 2>/dev/null | awk '/^VOLUME NAME/{f=1;next} f&&NF{print}' | sort -k3 -hr | head -10 | sed 's/^/    /'
+    bounded "$((BOUND_SECS * 6))" docker system df -v | awk '/^VOLUME NAME/{f=1;next} f&&NF{print}' | sort -k3 -hr | head -10 | sed 's/^/    /'
   else
     echo "  volumes: skipped (slow on Docker Desktop; CENSUS_DOCKER_VERBOSE=1 to include)"
   fi
-else
-  echo "  docker daemon not reachable from this shell — image/volume breakdown skipped"
 fi
 
 # --------------------------------------------------------------- models -----
@@ -161,7 +183,7 @@ for cand in /Volumes/*/ollama-models /Volumes/*/models "$HOME/models" /usr/share
   [[ -d "$cand" ]] && row "$cand" "$(gb_of "$cand") GB"
 done
 if command -v ollama >/dev/null 2>&1; then
-  echo "  ollama list:"; ollama list 2>/dev/null | sed 's/^/    /' | head -30
+  echo "  ollama list:"; bounded "$BOUND_SECS" ollama list | sed 's/^/    /' | head -30 || echo "    OLLAMA = UNKNOWN (no answer within ${BOUND_SECS}s)"
 fi
 for c in "$HOME/.cache/whisper" "$HOME/.cache/huggingface" "$HOME/.cache/torch" "$HOME/.cache/lm-studio" "$HOME/.lmstudio"; do
   [[ -e "$c" ]] && row "$c" "$(gb_of "$c") GB"
