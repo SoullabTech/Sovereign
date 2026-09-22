@@ -2,8 +2,10 @@
 ## Jev Judgment Contract — abstention provenance + schema exactness
 
 **Status:** ⛔ **CANDIDATE. NOT RATIFIED.** Produced under founder adjudication 2026-09-22:
-**J1R3 RETURNED**, repair `J1R4 — ABSTENTION PROVENANCE + SCHEMA EXACTNESS` authorized
-(documentary repair only).
+**J1R3 RETURNED**, repair `J1R4 — ABSTENTION PROVENANCE + SCHEMA EXACTNESS`; then
+**RETURNED FOR DOCUMENTARY FIDELITY ONLY** and normalized by
+`J1R4R1 — PROVENANCE-SPLIT TEXTUAL SINGULARITY` (⛔ no new semantic law).
+**Prior blob of this address:** `39cd730e…` (commit `ebc5a066…`) — preserved in history.
 
 **Supersedes as candidate:** `J1R3` (commit `474bca3f…`, blob `dfd422d3…`) — preserved as
 historical candidate evidence, ⛔ not edited. Earlier: `J1R1`, `J1R2`, and a non-conforming
@@ -40,8 +42,15 @@ J1 adjudication
 **Carried forward from J1R2 UNCHANGED** (⛔ not reopened, ⛔ not silently edited): the
 separate address; authority invariance **I1–I4, I6, I7**; the `TaskShape` blob binding; the
 removal of `requested_effect`, `affected_surface`, `candidate_routes`, `Q_ROUTE` and the
-`Choice` shape; the four questions and their asymmetries; the J1-owned vocabularies; the
-membrane ordering.
+`Choice` shape; the four questions and their asymmetries; the membrane ordering.
+
+⭐ **Vocabulary provenance, stated exactly** (J1R4R1 — the previous wording claimed all
+J1-owned vocabularies were carried unchanged, which was false):
+
+```text
+QuestionId is carried unchanged.
+The abstention vocabulary is revised by J1R4's provenance split.
+```
 
 **ACCEPTED FROM J1R3 AND ⛔ NOT REOPENED:** removal of Jev-visible `work_unit_ref` ·
 `question_id` inside the exact packet · packet-bound response admission · deterministic host
@@ -69,7 +78,7 @@ candidate.** ⛔ Recorded rather than routed around.
 
 ---
 
-## 1 · AUTHORITY-INVARIANT ADVISORY SEMANTICS *(carried from J1R2, unchanged)*
+## 1 · AUTHORITY-INVARIANT ADVISORY SEMANTICS *(I1–I4, I6, I7 carried from J1R2; ⚠️ I5 and the advice domain REVISED at J1R3)*
 
 Two disjoint domains, ⛔ never merged:
 
@@ -317,13 +326,16 @@ position; any value of `packet_version` other than `"jev-3"`.
 
 ---
 
-## 6 · Judgment shapes and J1-owned vocabularies *(carried from J1R2, unchanged)*
+## 6 · Judgment shapes and the J1R4 provenance-split vocabulary
+
+⚠️ ⛔ **This section is NOT carried unchanged.** It is where J1R4 replaces the flat
+abstention vocabulary. `QuestionId` is unchanged; the abstention vocabulary is revised.
 
 ### 6.1 · ⭐⭐ TWO UNIONS, NOT ONE — what a provider may SAY vs what a host may RECORD
 
 ```text
-ProviderResponse  := Score | YesNo | ProviderAbstain      // what may come back
-AdmittedJudgment  := Score | YesNo | AdmittedAbstain      // what may be recorded
+ProviderResponse  := Score | YesNo | ProviderAbstain   // lawful typed domain AFTER parsing
+AdmittedJudgment  := Score | YesNo | AdmittedAbstain   // what may be recorded
 
 Score   := { question_id: QuestionId, scale: { min: 0, max: 1 },
              score: Real in [0,1], confidence: Real in [0,1] }
@@ -336,6 +348,11 @@ AdmittedAbstain := { question_id: QuestionId, reason: AdmittedAbstainReason }
 
 QuestionId := Q_DEPTH | Q_RISK | Q_SUFFICIENT | Q_LLM_NEEDED
 ```
+
+⚠️ **`ProviderResponse` is the set of lawful *typed* responses, reached only after parsing
+succeeds.** ⛔ It is **not** a claim that malformed or raw transport bytes cannot arrive — they
+can, and §7.2 assigns them `PARSE_FAILURE`. ⭐ The union describes what a response may
+lawfully *be*, never what the wire may deliver.
 
 ### 6.2 · ⭐⭐ ABSTENTION PROVENANCE — the host is the sole author of host facts
 
@@ -409,7 +426,8 @@ admit(packet, response_or_failure) : AdmittedJudgment :=
       → AdmittedAbstain{ packet.question_id,
                          first HostFailureReason under §7.2 }
 
-  ⭐ response is a matching Abstain whose reason ∈ HostFailureReason
+  ⭐ response is Abstain-SHAPED, question matches,
+    but its reason ∈ HostFailureReason
       → AdmittedAbstain{ packet.question_id, OUT_OF_RANGE }
         // provider-originated host reason: REFUSED as a reason,
         // recorded as the host's own observation of an invalid response
@@ -430,7 +448,9 @@ the response.** The anti-fabrication guarantee is unchanged and now has a single
 absent, timed-out or unparseable response supplies nothing, and nothing is needed from it.
 ⛔ **No response identity is ever fabricated.**
 
-⭐ `Abstain` is admissible for **every** question.
+⭐ A `ProviderAbstain` is admissible for **every** question, and an `AdmittedAbstain` may be
+recorded for every question. ⛔ There is no generic `Abstain` type; *Abstain-shaped* below
+refers to object structure only, never to an admissible type.
 
 ### 7.2 · ⭐⭐ DETERMINISTIC FAILURE-REASON PRECEDENCE (defect 4)
 
@@ -445,12 +465,30 @@ implementation rather than about what happened.**
 1  TIMEOUT              deadline elapsed before a complete response
 2  NO_RESPONSE          transport completed, nothing returned
 3  PARSE_FAILURE        bytes present, not well-formed
-4  UNKNOWN_SHAPE        well-formed, not Score | YesNo | Abstain
-5  MISMATCHED_QUESTION  a declared shape, question_id ≠ packet.question_id
-6  OUT_OF_RANGE         shape and question correct, an invariant violated
+4  UNKNOWN_SHAPE        well-formed value whose object STRUCTURE is not
+                       Score-shaped, YesNo-shaped, or Abstain-shaped
+5  MISMATCHED_QUESTION  recognized structural shape, wrong question_id
+6  OUT_OF_RANGE         recognized structural shape + matching question,
+                       but a field/value is outside its lawful domain,
+                       INCLUDING a provider-originated HostFailureReason
 7  <model-supplied>     a well-formed, matching ProviderAbstain whose reason is a
                        ModelAbstainReason: that reason is taken
 ```
+
+⭐⭐ **STRUCTURE IS NOT VALUE, and the distinction is load-bearing.** *Abstain-shaped* means
+`{ question_id, reason }` — a structural test. A forged `{ matching question, reason:
+TIMEOUT }` **is** Abstain-shaped and **does** match the question, so it passes 4 and 5 and
+fails at 6 on the **value** of `reason`:
+
+```text
+provider sends { matching question, reason: TIMEOUT }
+    → OUT_OF_RANGE        ⛔ never UNKNOWN_SHAPE, ⛔ never TIMEOUT
+```
+
+⚠️ Had `UNKNOWN_SHAPE` been read as *"not a `ProviderAbstain`"*, a forged host reason would
+have been caught one step early as a **shape** error — losing the contract's intended
+`OUT_OF_RANGE` treatment and, with it, the record that the provider asserted a fact it
+cannot observe.
 
 ⭐ The order above applies to **actual host observations** and is unchanged from J1R3. ⛔ A
 provider-originated `HostFailureReason` does not enter this order at all — it is refused as a
@@ -470,7 +508,7 @@ reorders it is non-conforming even if every individual mapping looks sensible.
 
 ---
 
-## 8 · Membrane ordering and shape rule *(carried from J1R2, unchanged)*
+## 8 · Membrane ordering and shape rule *(⚠️ ordering REVISED at J1R3 — construction-failure branch added; shape rule carried from J1R2)*
 
 ```text
 eligibility decision → (pass) → packet construction → outbound representation
@@ -481,7 +519,15 @@ eligibility decision → (pass) → packet construction → outbound representat
 not logged, not hashed, not cached, not digested.**
 
 A packet conforms **iff every field** is a closed enum member, boolean, bounded integer,
-bounded real, or opaque fixed-width id. ⛔ Any free string, path, filename, symbol, commit
+bounded real, or opaque fixed-width id.
+
+⚠️ **OBSERVATION, ⛔ NOT CHANGED (J1R4R1).** *`opaque fixed-width id`* is now a **dead member
+of this permissive list**: `work_unit_ref` was the only field that used it and §2.1 removed
+it, so no conforming packet contains one. ⛔ It is **not** a contradiction — §2 admits no id
+field, so the list simply names a type nothing currently uses. ⛔ Removing it would **narrow
+what conforms**, which is a semantic change and outside a textual-normalization act. ⭐ Named
+here so the suite author does not read it as licence for an id field, and so a later act can
+retire it deliberately. ⛔ Any free string, path, filename, symbol, commit
 message, prose fragment or extension field is a class violation — detectable by a guard,
 ⛔ not by review. ⛔ Naming the class `repository_derived_metadata` neither adds it to the
 capability table nor grants it to any provider.
@@ -520,14 +566,15 @@ capability table nor grants it to any provider.
 | ⭐ `DC-CORRELATION-HANDLE` | any stable per-work-unit identifier reaches the packet | §2.1 |
 | `DC-WRAPPER-ENVELOPE` | the packet is wrapped in an object with its own fields | §2.2 / §4.1 |
 | `DC-QUESTION-FROM-RESPONSE` | expected question recovered from the response | §7.1 |
-| ⭐ `DC-NONDETERMINISTIC-REASON` | same failure yields different `AbstainReason` across runs | §7.2 |
+| ⭐ `DC-NONDETERMINISTIC-REASON` | same failure yields different `AdmittedAbstainReason` across runs | §7.2 |
 | `DC-MODEL-REASON-WINS` | a malformed response's self-declared `REFUSED` is recorded | §7.2 |
 | `DC-PRECEDENCE-REORDERED` | the §7.2 order changed while each mapping looks sensible | §7.2 |
 | ⭐ `DC-AGREEMENT-AS-AUTHORITY` | two agreeing judgments satisfy a review requirement | I5 |
 | `DC-ORPHAN-ADVICE-SURFACE` | an advice member with no question behind it | §1 |
-| ⭐⭐ `DC-MODEL-FORGES-HOST-REASON` | provider returns a matching `Abstain` with `TIMEOUT`, `PARSE_FAILURE` or another `HostFailureReason` → **must be refused as a provider-originated reason and admitted as host `OUT_OF_RANGE`, never trusted as the claimed host fact** | §6.2 / §7.1 |
+| ⭐⭐ `DC-MODEL-FORGES-HOST-REASON` | provider returns an Abstain-**shaped** matching response with `TIMEOUT`, `PARSE_FAILURE` or another `HostFailureReason` → **must be refused as a provider-originated reason and admitted as host `OUT_OF_RANGE`, never trusted as the claimed host fact** | §6.2 / §7.1 |
 | `DC-HOST-REASON-PASSTHROUGH` | a provider-supplied `HostFailureReason` recorded verbatim | §7.1 |
 | `DC-FORGERY-DISCARDED` | a forged host reason silently dropped instead of recorded as `OUT_OF_RANGE` | §7.1 |
+| ⭐ `DC-FORGERY-AS-UNKNOWN-SHAPE` | a forged host reason classified `UNKNOWN_SHAPE` by reading shape as type | §7.2 |
 | `DC-UNION-COLLAPSE` | `ProviderResponse` and `AdmittedJudgment` merged back into one union | §6.1 |
 
 ⛔ **If a candidate survives, the repair is the SUITE, never the candidate.**
