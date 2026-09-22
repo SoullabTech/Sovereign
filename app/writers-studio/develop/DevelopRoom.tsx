@@ -609,6 +609,9 @@ export default function DevelopRoom({
       workName={headline}
       workNamed={Boolean(title)}
       workNote="Developmental view"
+      /* ⭐ C3 — the room knows where the writer is; the return now carries it,
+         rather than depending on the address staying in sync. */
+      placeSectionId={placeId}
       rail={
         <DevelopManuscriptRail
           sections={sections ?? []}

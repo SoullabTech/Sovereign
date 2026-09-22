@@ -15,6 +15,7 @@ import { getMemberActiveRelationalContext } from '@/lib/relationships/relationsh
 import { formatRelationalContextForPrompt } from '@/lib/relationships/formatRelationalContextForPrompt';
 import { emitSignal } from '@/lib/observation/observationService';
 import { computeInterruptionMetadata } from '@/lib/consciousness/interruptionLedger';
+import { classifyExplicitIdentityInquiry } from '@/lib/consciousness/explicitIdentityInquiryClassifier';
 import { validatePlaceContext, buildPlaceAddendum } from '@/lib/maia/presence/place';
 import { logAgentRun } from '@/lib/services/corpusCallosumService';
 
@@ -440,6 +441,12 @@ export async function POST(req: NextRequest) {
         );
       }
     }
+
+    // F2-IQ runtime classifier: current accepted utterance only.
+    // Request-scoped and intentionally unused downstream in this lane:
+    // no D2/D1 invocation, persistence, logging, response metadata, or disclosure.
+    const explicitIdentityInquiryClassification = classifyExplicitIdentityInquiry(message);
+    void explicitIdentityInquiryClassification;
 
     // ⚡ LATENCY FIX: Parallelize session init with cognitive profile + name change detection.
     // Previously these ran sequentially (~200-500ms each).

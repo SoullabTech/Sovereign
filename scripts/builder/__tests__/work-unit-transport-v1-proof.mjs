@@ -60,12 +60,33 @@ check('QWEN route participant binds exact governed local transport',()=>{
   });
 });
 
-check('GPT_OSS independent participant has its own governed transport',()=>{
+check('GPT_OSS independent participant has its own governed direct transport',()=>{
   const env=routed();
   const g=governedTransportForParticipantV1(env.work_unit,'local-review-1');
   assert.equal(g.model_family,'GPT_OSS');
   assert.equal(g.provider_id,'gpt-oss-local');
   assert.equal(g.model_id,'gpt-oss:20b');
+  assert.equal(g.adapter_id,'ollama-direct');
+  assert.equal(g.transport_posture,'local');
+  assert.equal(g.execution_mode,'automatic');
+  const r=appendTransportBindingV1(
+    env,
+    req('local-review-1','gpt-oss-local','gpt-oss:20b','ollama-direct'),
+  );
+  assert.equal(r.ok,true,JSON.stringify(r.blockers));
+  assert.deepEqual(r.binding.authority_projection,{
+    repository_read:true,network_external:false,provider_spend:false,external_disclosure:'none',
+  });
+});
+
+check('GPT_OSS cannot fall back to OpenCode once MODEL MODE is canonical',()=>{
+  const env=routed();
+  const r=appendTransportBindingV1(
+    env,
+    req('local-review-1','gpt-oss-local','gpt-oss:20b','opencode'),
+  );
+  assert.equal(r.ok,false);
+  assert.ok(codes(r).includes('TRANSPORT_FAMILY_MISMATCH'));
 });
 
 check('transport binding to absent route participant is refused',()=>{

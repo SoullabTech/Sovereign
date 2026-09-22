@@ -21,6 +21,10 @@
  *                          says so where infrastructure can see it
  *     409 legacy_locus     ⚠️ the relationship predates the locus alignment and
  *                          cannot be adopted; ⛔ nothing about the Work moved
+ *     409 protected_quotation
+ *                          ⚠️ the named version would alter a detected source
+ *                          quotation; refused WHOLE before authorization, so
+ *                          ⛔ nothing was authorized and ⛔ nothing applied
  *     404 / 400            the relationship or the named version is unreadable
  *
  * The body carries `kind` in every case, and a client that read only the code
@@ -59,6 +63,11 @@ function statusFor(outcome: AdoptionOutcome): number {
        manuscript claim either. 409 keeps it visible without dressing it as a
        server error or as something the caller got wrong. */
     case 'legacy_locus':   return 409;
+    /* ⚠️ The proposal would rewrite a detected source quotation. Well-formed
+       request, refused by rule — so ⛔ not 400 (the caller did nothing wrong)
+       and ⛔ not 500 (nothing failed). ⛔ Nothing was authorized, nothing
+       applied, and ⛔ no part of it was applied either. */
+    case 'protected_quotation': return 409;
     case 'relationship_refusal':
       return outcome.reason === 'not_editorial' ? 400 : 404;
   }

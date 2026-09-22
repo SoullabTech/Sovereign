@@ -128,7 +128,9 @@
 .ws-insight .wsi-passage-grid .wsi-prose { max-height:none; overflow:visible; font-size:18px; line-height:1.75; }
 .ws-maia-listen { display:inline-flex; flex-wrap:wrap; align-items:center; gap:8px; margin:6px 0 10px; font:13px/1.5 system-ui; }
 .ws-maia-listen button { color:inherit; background:transparent; border:1px solid var(--ws-rule); border-radius:6px; padding:7px 10px; cursor:pointer; }
-.ws-section-observations { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+.ws-section-observations { margin:10px 0 18px; font:12px/1.5 system-ui; color:var(--ws-ink-secondary); }
+.ws-section-observations summary { cursor:pointer; padding:6px 0; }
+.ws-section-observation-list { display:flex; flex-wrap:wrap; gap:8px; padding:8px 0; }
 .ws-section-observations:empty { display:none; }
 .ws-section-observations button { border:1px solid var(--ws-rule); border-radius:20px; padding:7px 12px; color:var(--ws-ink-secondary); background:var(--ws-ground-raised); font:12px/1.4 system-ui; cursor:pointer; }
 
@@ -160,6 +162,15 @@
 .wsi-page-voice .ws-maia-listen { margin:0; }
 .ws-insight .wsi-page-voice .ws-maia-listen button { border:0; background:transparent; padding:3px 6px; }
 .wsi-purpose-label { margin-left:auto; border:1px solid var(--ws-rule); border-radius:20px; padding:2px 10px; color:var(--ws-gold-text); }
+.wsi-conversation-path { margin:0 0 16px; padding:0 0 12px; border-bottom:1px solid var(--wsi-line); }
+.wsi-conversation-path p { margin:0 0 8px; font:600 15px/1.4 var(--font-spectral,Georgia,serif); color:var(--ws-ink-primary); }
+.wsi-conversation-path ol { display:flex; flex-wrap:wrap; gap:8px; margin:0; padding:0; list-style:none; counter-reset:studio-step; }
+.wsi-conversation-path li { counter-increment:studio-step; color:var(--wsi-muted); font:11px/1.3 system-ui; letter-spacing:.04em; }
+.wsi-conversation-path li::before { content:counter(studio-step); display:inline-grid; place-items:center; width:19px; height:19px; margin-right:5px; border:1px solid var(--ws-rule); border-radius:50%; }
+.wsi-conversation-path li[data-state=complete] { color:var(--ws-ink-secondary); }
+.wsi-conversation-path li[data-state=complete]::before { content:'✓'; background:#60775d; border-color:#60775d; color:#fff; }
+.wsi-conversation-path li[data-state=current] { color:var(--ws-ink-primary); font-weight:700; }
+.wsi-conversation-path li[data-state=current]::before { border-color:var(--ws-gold-text); background:color-mix(in srgb,var(--ws-gold-fill,#d3bd7b) 42%,transparent); }
 .wsi-page-response p,.wsi-page-welcome { font:16px/1.55 var(--font-spectral,Georgia,serif); white-space:pre-wrap; margin:8px 0 10px; }
 .wsi-page-reply { display:flex; align-items:stretch; gap:8px; margin:4px 0 10px; }
 .ws-insight .wsi-page-reply textarea { min-height:42px; height:42px; margin:0; padding:9px 12px; font-size:15px; flex:1; }
@@ -219,4 +230,135 @@
   background: rgba(180, 160, 110, 0.06);
   font-size: 0.88rem;
   line-height: 1.45;
+/* Notes belong to their words. Collapsing a note leaves its manuscript marker. */
+.ws-locus-toggle { border:0; padding:0; cursor:pointer; box-shadow:0 0 0 3px var(--ws-ground-field); }
+.ws-locus-toggle[aria-expanded=true] { background:var(--ws-gold-text,#896c2e); }
+.ws-locus-toggle:focus-visible { outline:2px solid var(--ws-gold-text,#896c2e); outline-offset:4px; }
+.ws-locus-toggle:disabled { opacity:.55; cursor:wait; }
+.ws-insight .wsi-section-heading { list-style:none; }
+.ws-insight .wsi-section-heading::-webkit-details-marker { display:none; }
+.ws-insight .wsi-section-disclosure { margin-left:auto; }
+.ws-insight .wsi-section-disclosure::after { content:'Expand'; }
+.ws-insight details[open] > .wsi-section-heading .wsi-section-disclosure::after { content:'Collapse'; }
+.ws-insight .wsi-passage-grid .wsi-passage { scroll-margin-top:24px; }
+
+.ws-development-margin { position:absolute; right:calc(100% + 12px); top:0; display:flex; gap:3px; }
+.ws-development-margin button { border:1px solid var(--ws-rule); border-radius:50%; background:var(--ws-ground-raised); color:var(--ws-ink-primary); width:26px; height:26px; font:14px/24px system-ui; padding:0; cursor:pointer; }
+.ws-development-margin button:focus-visible { outline:2px solid var(--ws-gold-text); outline-offset:3px; }
+.ws-development-highlight { color:inherit; background:color-mix(in srgb,#869b78 23%,transparent); box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.ws-section-note-anchor { position:relative; }
+
+/* Editorial marks belong to the paragraph margin, not the selected word. */
+.ws-annotated-paragraph { position:relative; }
+.ws-locus-marker { top:3px; }
+.ws-import-marker { display:block; background:var(--ws-ground-field); color:var(--ws-ink-muted); font:11px/1.4 system-ui; padding:5px 0; }
+.ws-import-marker::before { content:"Import marker · "; }
+.wsi-inline .wsi-page-actions { padding-top:8px; margin-top:6px; border-top:1px solid var(--wsi-line); }
+.wsi-inline .wsi-page-actions .wsi-primary { background:var(--ws-gold-fill,#d3bd7b); border-color:var(--ws-gold-text,#957a39); color:var(--ws-ink-primary,#2e2a21); }
+.wsi-inline .wsi-page-actions .wsi-primary:disabled { opacity:.45; }
+
+.ws-page-note-strip { display:flex; flex-wrap:wrap; gap:8px 16px; margin:12px 0 18px; font:12px/1.4 system-ui; }
+.ws-page-note-strip button { display:flex; align-items:center; gap:7px; border:0; border-bottom:1px solid var(--ws-rule-soft); padding:5px 0; background:transparent; color:var(--ws-ink-secondary); cursor:pointer; }
+.ws-note-number { background:#60775d; color:white; border-radius:50%; width:24px; height:24px; display:inline-grid; place-items:center; font-size:11px; }
+[data-embedded-canvas=true] .wsr-grid { grid-template-columns:minmax(0,1fr) !important; height:100% !important; }
+[data-embedded-canvas=true] .wsr-manuscript { display:flex !important; }
+
+.wsi-request-error { padding:10px 12px; border-left:3px solid #a94e42; background:#a94e4214; }
+.wsi-page-conversation > [role=status] ins { background:#c7ad5d44; text-decoration:underline; }
+.wsi-page-conversation > [role=status] del { background:#bc696633; text-decoration:line-through; }
+
+/* The Work's direction accompanies the page without competing with the manuscript. */
+.wsi-direction { margin:0 0 18px; padding:18px; border:1px solid var(--wsi-line); border-left:3px solid #748b68; background:color-mix(in srgb,#e5eedf 78%,var(--wsi-paper)); }
+.wsi-direction [data-gold-line] { margin-bottom:12px; }
+.wsi-direction-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; }
+.wsi-direction-heading h3 { margin:3px 0 6px; font:500 24px/1.25 var(--font-spectral,Georgia,serif); }
+.wsi-direction-heading p { margin:0; max-width:66ch; line-height:1.5; }
+.wsi-kicker { margin:0 0 6px !important; color:#78622f; font:600 10px/1.4 system-ui; letter-spacing:.18em; text-transform:uppercase; }
+.wsi-direction-guide { display:grid; grid-template-columns:minmax(155px,.55fr) minmax(0,1.45fr); gap:24px; margin-top:20px; }
+.wsi-direction-guide nav { display:flex; flex-direction:column; gap:5px; }
+.wsi-direction-guide nav button { text-align:left; border:0; border-left:2px solid var(--wsi-line); background:transparent; padding:8px 10px; color:inherit; }
+.wsi-direction-guide nav button[aria-current=step] { border-left-color:#806525; background:#a58a4530; }
+.wsi-direction-guide nav button.is-held span { background:#60775d; color:#fff; }
+.wsi-direction-guide nav span { display:inline-grid; place-items:center; width:21px; height:21px; margin-right:8px; border:1px solid var(--wsi-line); border-radius:50%; font-size:10px; }
+.wsi-direction-question h4 { margin:2px 0 7px; font:500 28px/1.2 var(--font-spectral,Georgia,serif); }
+.wsi-direction-question > p { margin:0 0 15px; max-width:58ch; }
+.wsi-direction-question label span { display:block; margin-bottom:6px; font-size:12px; }
+.wsi-direction-question textarea { width:100%; min-height:120px; margin:0 0 8px; padding:12px; color:inherit; background:var(--wsi-paper,#f4efdf); border:1px solid var(--wsi-line,#b9af97); font:18px/1.55 var(--font-spectral,Georgia,serif); }
+.wsi-direction-kept { margin-top:16px; padding:18px; background:color-mix(in srgb,#dbe7d5 76%,transparent); }
+.wsi-direction-kept dl { margin:10px 0 16px; }
+.wsi-direction-kept dl div { display:grid; grid-template-columns:135px minmax(0,1fr); gap:16px; padding:9px 0; border-top:1px solid color-mix(in srgb,var(--wsi-line) 60%,transparent); }
+.wsi-direction-kept dt { color:#78622f; font:600 10px/1.5 system-ui; letter-spacing:.12em; text-transform:uppercase; }
+.wsi-direction-kept dd { margin:0; white-space:pre-wrap; font:15px/1.5 var(--font-spectral,Georgia,serif); }
+.wsi-direction-status { color:#4f6849; margin:10px 0 0; }
+.wsi-direction .wsi-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.wsi-direction button { border:1px solid var(--wsi-line,#6f746d); border-radius:5px; padding:8px 12px; color:inherit; background:transparent; cursor:pointer; }
+.wsi-direction button.wsi-primary { border-color:#71806a; color:#f4f0e5; background:#31483a; }
+.wsi-direction button:disabled { opacity:.45; cursor:wait; }
+@media(max-width:720px) {
+  .wsi-direction-heading { display:block; }
+  .wsi-direction-heading > button { margin-top:12px; }
+  .wsi-direction-guide { grid-template-columns:1fr; }
+  .wsi-direction-guide nav { display:grid; grid-template-columns:1fr 1fr; }
+  .wsi-direction-kept dl div { grid-template-columns:1fr; gap:3px; }
+}
+
+/* ⭐⭐ C6R1 — INLINE EDITORIAL MARKUP.
+   A teacher's marks, not a diff report: unchanged words stay ordinary prose,
+   and only what MAIA proposes changing carries a mark, in the place it occurs. */
+.ws-edit-mark { border: 0; background: none; padding: 0; font: inherit; cursor: pointer; }
+.ws-edit-mark del { text-decoration-thickness: 1px; opacity: 0.55; }
+.ws-edit-mark ins { text-decoration: none; box-shadow: inset 0 -0.55em 0 rgba(193, 154, 62, 0.22); }
+.ws-edit-mark[data-taken='true'] ins { box-shadow: inset 0 -0.55em 0 rgba(193, 154, 62, 0.5); }
+.ws-edit-mark[data-taken='true'] del { opacity: 0.3; }
+button.ws-edit-mark:hover ins,
+button.ws-edit-mark:focus-visible ins { box-shadow: inset 0 -0.6em 0 rgba(193, 154, 62, 0.4); }
+
+/* ⛔ Protected source text. Marked as evidence, never as editable markup —
+   and deliberately not interactive, because there is no member choice to
+   offer over words the source wrote. */
+.ws-protected-quote {
+  border-bottom: 1px dotted currentColor; opacity: 0.85; cursor: help;
+}
+
+/* ⭐ The reading, once it is the reason for an edit rather than a workspace. */
+.wsi-reading-behind > summary { cursor: pointer; opacity: 0.75; font-size: 0.95em; }
+
+/* ⭐⭐ C6R1 — the decision panel for ONE mark, beside the sentence it is about. */
+.ws-edit-panel {
+  margin: 0.5rem 0 0.75rem; padding: 0.6rem 0.75rem;
+  border-left: 2px solid rgba(193, 154, 62, 0.55); border-radius: 2px;
+  background: rgba(193, 154, 62, 0.06); font-size: 0.95em;
+}
+.ws-edit-change { margin: 0 0 0.35rem; }
+.ws-edit-change del { opacity: 0.6; }
+.ws-edit-change ins { text-decoration: none; font-weight: 600; }
+.ws-edit-why { margin: 0 0 0.5rem; opacity: 0.8; font-size: 0.95em; }
+.ws-edit-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.ws-edit-actions button {
+  padding: 0.25rem 0.6rem; border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 3px; background: transparent; font: inherit; cursor: pointer;
+}
+.ws-edit-actions .ws-edit-quiet { border-color: transparent; opacity: 0.7; }
+
+/* ⭐ C6R2 — how many of MAIA's marks the writer has taken, and the one control
+   that turns that decision into a version. */
+.ws-compose-bar {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  margin: 0.5rem 0 0.75rem; font-size: 0.9em; opacity: 0.95;
+}
+.ws-compose-bar button {
+  padding: 0.25rem 0.7rem; border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 3px; background: transparent; font: inherit; cursor: pointer;
+}
+.ws-compose-bar button:disabled { opacity: 0.45; cursor: default; }
+
+/* ⭐ C6R4 — how the writer asks MAIA to explain, not what MAIA concluded about them. */
+.wsi-depth-choices { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0; }
+.wsi-depth-choices button {
+  padding: 0.25rem 0.65rem; border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 999px; background: transparent; font: inherit;
+  font-size: 0.9em; cursor: pointer;
+}
+.wsi-depth-choices button[aria-pressed='true'] {
+  border-color: rgba(193, 154, 62, 0.75); background: rgba(193, 154, 62, 0.12);
 }
