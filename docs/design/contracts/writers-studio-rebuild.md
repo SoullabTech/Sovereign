@@ -14,6 +14,11 @@ surfaces:
   - app/writers-studio/sources/**
   - app/writers-studio/studioMap.ts
   - app/writers-studio/studio/StudioModeBar.tsx
+  # Shared orientation chrome used by the rebuild room. B0 repairs existing
+  # token references only; these surfaces already serve this room's place and
+  # movement awareness and acquire no new interaction or visual language here.
+  - app/writers-studio/studio/PlaceInWork.tsx
+  - app/writers-studio/studio/StudioMovements.tsx
   - app/writers-studio/workContext.ts
   # WS-EDITORIAL-SCOPE-01, 2026-09-20. The editorial thread conversation on the
   # Canvas was named by NO contract — the canvas contracts name explicit files

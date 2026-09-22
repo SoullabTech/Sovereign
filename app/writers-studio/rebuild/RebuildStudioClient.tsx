@@ -27,7 +27,6 @@ import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
 import { useEditingLatitude } from '../insight/EditingLatitude';
-import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import { INSIGHT_READING, INSIGHT_OBSERVATION, loadCanvasInsight, type CanvasInsight, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
@@ -874,7 +873,6 @@ export default function RebuildStudioClient() {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
     setVoiceNotice(null);
-    const exactWords = requestText ?? editorialDraft;
     /* ⭐⭐ C6R4 — ONE PLACE, SO NO TURN ESCAPES IT. Threading the directive
        through each caller would mean one of them eventually forgets, and the
        writer would get Direct-register prose from whichever path was missed
@@ -886,16 +884,28 @@ export default function RebuildStudioClient() {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords,
-        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately });
       const observationContext = arrivalInsight && workspaceInsight?.readingId === arrivalInsight.readingId
         && workspaceInsight.key === arrivalInsight.observation.key
         && arrivalInsight.passages.some(p => p.sectionId === focusId)
         ? 'Developmental observation being discussed (an interpretation, not an instruction):\n'
           + arrivalInsight.observation.observation + '\n\n'
         : '';
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId,
-        observationContext + 'My question:\n' + exactWords);
+      /* ⭐⭐ R2R1 — THE WRITER'S SCOPE TRAVELS WITH THE TURN.
+         The build-health repair resolved the duplicated call by keeping the
+         observation context and dropping the `scope` argument. It compiles, and
+         `sendBoundEditorialTurn` treats an omitted scope as the most protective
+         setting — so this was never an over-permission failure. It was worse to
+         find: `editLatitude`, `mayRemoveParagraphs` and `mayProposeImmediately`
+         stayed live, their controls stayed on screen, and the turn stopped
+         carrying them. ⛔ A control the writer moves that changes nothing is a
+         false control, and WS-EDITORIAL-SCOPE-01 exists so these settings
+         govern what MAIA may propose. */
+      const out = await sendBoundEditorialTurn(
+        thread.threadId,
+        focusId,
+        observationContext + 'My question:\n' + exactWords,
+        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately },
+      );
       if (!out.ok) {
         /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
            line the writer drew. ⛔ Not "MAIA could not complete" — she could,
@@ -921,7 +931,9 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight]);
+  }, [editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct,
+      bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight,
+      editLatitude, mayRemoveParagraphs, mayProposeImmediately]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;

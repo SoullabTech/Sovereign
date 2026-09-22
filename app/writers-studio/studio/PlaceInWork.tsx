@@ -33,13 +33,13 @@ export function PlaceInWork({
     <div
       data-place-in-work
       style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.snug,
-               borderBottom: `1px solid ${RULE.faint}`, paddingBottom: SPACE.tight }}
+               borderBottom: `1px solid ${RULE.soft}`, paddingBottom: SPACE.tight }}
     >
-      <StudioText role="metadata" data-place-line style={{ color: INK.soft }}>
+      <StudioText role="metadata" data-place-line style={{ color: INK.secondary }}>
         {placeLine(crumb)}
       </StudioText>
       {showBack && (
-        <Link href={backHref} data-back-to-manuscript style={{ marginLeft: 'auto', color: INK.soft }}>
+        <Link href={backHref} data-back-to-manuscript style={{ marginLeft: 'auto', color: INK.secondary }}>
           <StudioText role="metadata">Back to manuscript</StudioText>
         </Link>
       )}
