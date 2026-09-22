@@ -30,7 +30,7 @@ export function StudioMovements({
           title={m.note}
           onClick={() => onSelect(m.id)}
           style={{ background: 'transparent', border: 'none', cursor: 'pointer',
-                   color: current === m.id ? INK.strong : INK.soft, padding: 0 }}
+                   color: current === m.id ? INK.primary : INK.quiet, padding: 0 }}
         >
           <StudioText role="metadata">{m.label}</StudioText>
         </button>
