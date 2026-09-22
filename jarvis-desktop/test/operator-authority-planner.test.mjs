@@ -618,3 +618,58 @@ test('F50 — authority request bytes are deterministic for the same admitted da
   assert.equal(a, b);
   assert.deepEqual(O3.planAuthority(a), O3.planAuthority(b));
 });
+
+/* ⭐ F51–F53 close a falsifier gap found by independent attack: the aggregate
+   entry.operator_required is guarded by missing_authorities, so a per-requirement
+   record could carry decision = NEEDS_OPERATOR_AUTHORITY alongside
+   operatorRequired = false and no falsifier noticed. That is not an authority
+   escape today, because the aggregate still gates the Work Unit — but
+   requirement_decisions is part of the O3 API that O4 is about to consume, and a
+   field nothing pins is a field that can drift. F53 states the invariant these
+   records must satisfy; F51 and F52 pin each direction so neither can be
+   satisfied vacuously. */
+
+test('F51 — a missing authority makes its own requirement decision operator-required', () => {
+  const result = plan('Fix the passage conversation.', []);
+  assert.equal(result.ok, true);
+  const modify = byKind(result, O2.KIND.MODIFY);
+  assert.ok(modify.requirement_decisions.length > 0);
+  for (const decision of modify.requirement_decisions) {
+    assert.equal(modify.missing_authorities.includes(decision.authority), true);
+    assert.equal(decision.operatorRequired, true, `${decision.authority} must be operator-required when missing`);
+    assert.notEqual(decision.decision, O0.DECISION.CONTINUE);
+  }
+});
+
+test('F52 — a held authority leaves its own requirement decision not operator-required', () => {
+  const result = plan('Fix the passage conversation.', ['repo.read', 'repo.write:worktree', 'verify.run']);
+  assert.equal(result.ok, true);
+  const modify = byKind(result, O2.KIND.MODIFY);
+  assert.deepEqual(modify.missing_authorities, []);
+  assert.ok(modify.requirement_decisions.length > 0);
+  for (const decision of modify.requirement_decisions) {
+    assert.equal(decision.operatorRequired, false, `${decision.authority} is held and must not be operator-required`);
+    assert.equal(decision.decision, O0.DECISION.CONTINUE);
+  }
+});
+
+test('F53 — every requirement decision agrees with its own O0 decision', () => {
+  /* Both held and unheld populations, so neither branch of the invariant can
+     pass by never being exercised. */
+  for (const held of [[], ['repo.read'], ['repo.read', 'repo.write:worktree', 'verify.run']]) {
+    const result = plan('Fix the passage conversation.', held);
+    assert.equal(result.ok, true);
+    let seen = 0;
+    for (const entry of result.authority_plan.entries) {
+      for (const decision of entry.requirement_decisions) {
+        seen += 1;
+        assert.equal(
+          decision.operatorRequired,
+          decision.decision !== O0.DECISION.CONTINUE,
+          `${decision.authority}: operatorRequired must equal (decision !== CONTINUE)`,
+        );
+      }
+    }
+    assert.ok(seen > 0, 'invariant must be exercised, not vacuously satisfied');
+  }
+});
