@@ -42,14 +42,19 @@ if [ "\$1" = "compose" ]; then echo "COMPOSE INVOKED" >&2; exit 0; fi
 if [ "\$1" = "exec" ]; then
   shift
   if [ "\$1" = "-i" ]; then
-    shift; shift   # drop -i and the container
+    shift; shift   # drop -i and the container name
+    [ "\$1" = "node" ] && shift   # ...and the interpreter the script names
     # Run the real streamed witness against the repo, proving the plumbing.
     exec node "\$@" --root "$REPO"
   fi
   CONTAINER="\$1"; shift
   if [ "\$1" = "printenv" ]; then
     case "\$2" in
-      GIT_COMMIT) echo "4c097b4c81402c62e42613e83ae28180fef46f08" ;;
+      # FIXTURE ONLY. The stub claims production runs canonical's tip so the
+      # binding is satisfiable and Phases 1-5 become reachable. This matrix tests
+      # the NO-MUTATION BOUNDARY, not the binding — the binding has its own
+      # falsifiers and still executes for real against real git objects here.
+      GIT_COMMIT) echo "4ef9a1988f44394375526a78ca4db3694f5b51a5" ;;
       MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS) echo "$FIXTURE_CURRENT_ID" ;;
       *) : ;;   # every flag and the model set are unset -> OFF / empty
     esac
@@ -134,10 +139,15 @@ WSQL="$(grep -icE '\b(insert|update|delete|alter|truncate|drop|create)\b' "$LOG"
 
 # ── D7 ⭐ the raw Founder identifier never reaches stdout ────────────────────
 if gate D7 "the raw Founder identifier never reaches output"; then
+FP="$(grep -o 'founder_fingerprint=[0-9a-f]*' "$W/out.txt" | head -1)"
 if grep -q "$FIXTURE_FOUNDER_ID" "$W/out.txt"; then
   no D7 "the raw Founder identifier never reaches output" "LEAKED"
+elif [ -z "$FP" ]; then
+  # ⭐ Absence of the identifier is only evidence if the phase that HANDLES it ran.
+  # Without this, a run that dies in Phase 1 scores D7 green while proving nothing.
+  un D7 "the raw Founder identifier never reaches output" "VACUOUS: Phase 4 never emitted a fingerprint, so non-appearance proves nothing"
 else
-  ok D7 "the raw Founder identifier never reaches output" "fingerprint only: $(grep -o 'founder_fingerprint=[0-9a-f]*' "$W/out.txt" | head -1)"
+  ok D7 "the raw Founder identifier never reaches output" "fingerprint only: $FP"
 fi
 fi
 

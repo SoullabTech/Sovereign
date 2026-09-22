@@ -1,6 +1,11 @@
 # JARVIS-KP-01 / I5-P0R2 — FOUNDER AUTHORIZATION (ISSUED)
 
 STATUS: ISSUED
+**SUPERSEDED IN PART** — §I.2's expected full-scope digest `195b16bc…` was re-pinned
+to `b828400c…` by founder disposition (a), 2026-09-22, after review of the only
+movement in the declared seam. See
+`JARVIS-KP-01_I5-P0R2R2_REPIN_AND_BOUNDARY_WITNESS_2026-09-22.md`. Every other
+clause stands unchanged, and the text below is preserved verbatim.
 **Date**: 2026-09-22
 **Act**: `I5-P0R2` — Founder-scope configuration remediation + property-bound readiness witness
 **Instrument accepted at**: `e2f7d806d69576cc36a17f4ea6ba8747b1d877da`

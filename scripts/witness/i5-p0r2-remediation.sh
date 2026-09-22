@@ -39,7 +39,13 @@ CONTAINER_WITNESS_BLOB="85bdba16753cceb4d5991ca4c8c69b57f79f1585"
 CONTAINER="${I5_CONTAINER:-maia-sovereign}"
 PG_CONTAINER="${I5_PG_CONTAINER:-maia-postgres}"
 ENV_FILE="${I5_ENV_FILE:-/home/soullab/MAIA-SOVEREIGN/.env.production}"
-EXPECT_FULL="195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b"
+# Re-pinned by founder disposition (a), 2026-09-22, after review of the only
+# movement in the declared full seam: c6744f66 (Serving Identity F2-IQ), a
+# request-scoped classifier call whose result is discarded. Prior value
+# 195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b
+# is STALE BY LAWFUL SEAM MOVEMENT. Equality was NOT weakened: a future byte
+# change anywhere in the declared seam must still stop loudly.
+EXPECT_FULL="b828400c7aaceafbbfcc66144018a6b0fe538dab1c806bbe3de635b2fc6ff6b4"
 EXPECT_IMAGE="a63cf931fe80227004ba9d8730c628bb0c0d65deae6e53e8c29b6bc3b3fd3b51"
 MODEL="qwen2.5:14b-instruct"
 FLAGS=(MAIA_RELATIONAL_FIELD_SHADOW MAIA_EPISTEMIC_JOIN_INTEGRATION_SHADOW
@@ -176,11 +182,18 @@ FOUNDER_COUNT="$(q "SELECT count(*) FROM members WHERE admin_role = 'founder';")
 FOUNDER_ID="$(q "SELECT id::text FROM members WHERE admin_role = 'founder';")"
 [ -n "$FOUNDER_ID" ] || stop FOUNDER_ID_EMPTY
 fp() { printf '%s' "$1" | sha256sum | cut -c1-12; }
+# ⚠️ Counts entries in a comma-separated value. `printf '%s'` emits NO trailing
+# newline, and `wc -l` counts newlines — so the previous form reported ZERO for a
+# correctly configured single-identity allowlist, which skipped Phase 4's B1
+# report and, after a SUCCESSFUL --apply, failed the final gate and announced
+# I5-P0 NOT READY for a remediation that had in fact worked. Found by the
+# dry-run boundary matrix (D8) before any --apply was ever authorized.
+csv_count() { printf '%s\n' "$1" | tr ',' '\n' | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' '; }
 say "founder_count=1"
 say "founder_fingerprint=$(fp "$FOUNDER_ID")"
 
 CURRENT_IDS="$(dk exec "$CONTAINER" printenv MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS 2>/dev/null || true)"
-CURRENT_COUNT="$(printf '%s' "$CURRENT_IDS" | tr ',' '\n' | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')"
+CURRENT_COUNT="$(csv_count "$CURRENT_IDS")"
 say "configured_allowlist_count=$CURRENT_COUNT"
 if [ "$CURRENT_COUNT" = "1" ]; then
   say "configured_allowlist_fingerprint=$(fp "$(printf '%s' "$CURRENT_IDS" | tr -d '[:space:]')")"
@@ -251,9 +264,9 @@ done
 say "all five flags still OFF"
 
 IDS_AFTER="$(dk exec "$CONTAINER" printenv MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS 2>/dev/null || true)"
-COUNT_AFTER="$(printf '%s' "$IDS_AFTER" | tr ',' '\n' | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')"
+COUNT_AFTER="$(csv_count "$IDS_AFTER")"
 MODELS_AFTER="$(dk exec "$CONTAINER" printenv MAIA_RELATIONAL_FIELD_SHADOW_MODELS 2>/dev/null || true)"
-MODEL_COUNT="$(printf '%s' "$MODELS_AFTER" | tr ',' '\n' | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')"
+MODEL_COUNT="$(csv_count "$MODELS_AFTER")"
 say "allowlist_count=$COUNT_AFTER"
 say "allowlist_match=$([ "$(printf '%s' "$IDS_AFTER" | tr -d '[:space:]')" = "$FOUNDER_ID" ] && echo YES || echo NO)"
 say "model_count=$MODEL_COUNT  model=$MODELS_AFTER"
