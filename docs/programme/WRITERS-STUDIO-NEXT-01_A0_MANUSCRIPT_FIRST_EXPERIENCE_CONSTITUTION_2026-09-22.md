@@ -2,6 +2,7 @@
 
 **Status:** CONSTITUTION CANDIDATE · DOCUMENTARY ONLY · NO RUNTIME / SCHEMA / UI CHANGE
 **Opened by:** founder act, 2026-09-22 ("New A0 above it")
+**Carries:** founder ruling, 2026-09-22 — Convergence sequencing superseded, Convergence law preserved (§VIII)
 **Authorizes:** nothing beyond itself. A1 is **not** opened by this document.
 
 ---
@@ -79,7 +80,7 @@ This document creates no law that already exists. The following bind the whole p
 | `MAIA_OATH.md`, `MAIA_CANON_v1.1.md` | Governs every change. A change violating the Oath is invalid regardless of technical merit. |
 | `MAIA_SOVEREIGNTY_INVARIANTS.md` | All invariants, Invariant 14 (cultural sovereignty) explicitly. |
 | `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` | Authority moves upward through authored experience only. |
-| `WRITERS-STUDIO-CONVERGENCE-01` frozen laws **L1–L8** | Work primary · elemental opening foundational · MAIA carries complexity · relational default language · writer may agree, disagree, revise, apply, undo · one Commission layer · member-declared work state · reading coverage stays visible. |
+| `WRITERS-STUDIO-CONVERGENCE-01` frozen laws **L1–L8** (its future sequencing retired — see §VIII) | Work primary · elemental opening foundational · MAIA carries complexity · relational default language · writer may agree, disagree, revise, apply, undo · one Commission layer · member-declared work state · reading coverage stays visible. |
 | `WRITERS-STUDIO-FACETS-01` | GUIDED · LEARNING · DIRECT. One intelligence, one Work. Facets change translation and explanation, **never how much MAIA writes** (§9.3). Never assigned, never inferred, never a competence label. |
 | `WRITERS-STUDIO-OBSERVATION-IDENTITY-01` | One observation → one identity → three possible expressions. Identity minted at the single admission seam. |
 | `WRITERS-STUDIO-OBSERVATION-ADDRESS-01` | `observation_id` is canonical member-facing identity; existing standing custody keyed `(member_id, reading_id, observation_key)` remains authoritative. **Gate: no member action against `observation_id` until that lane closes.** |
@@ -133,7 +134,7 @@ Reading, discussing, comparing, applying, and undoing are all recoverable positi
 
 The writer is never asked to operate the machinery. Scope selection, range construction, pass orchestration, coverage accounting and lens configuration are MAIA's burden.
 
-A step that exists because the system could not decide is a defect, not a choice offered to the writer.
+**A step that exists only because the system has exposed its own operational machinery is a defect, not a choice to be delegated to the writer. Genuine questions of authorship, meaning, ownership, consent, or member authority remain the writer's to decide and must never be silently inferred.**
 
 ### E7 — A facet changes how much MAIA explains, never how much MAIA writes · APPLICATION (FACETS-01 §9.3)
 
@@ -165,19 +166,74 @@ Required by CLAUDE.md for any capability-increasing programme, answered at const
 
 ---
 
-## VIII. What this A0 does not decide
+## VIII. Founder ruling — Convergence sequencing superseded, Convergence law preserved
 
-Recorded so that absence is not later read as settlement:
+**Founder act, 2026-09-22.** `§VIII.1` of the drafted candidate is resolved as follows.
 
-1. **Relationship to `WRITERS-STUDIO-CONVERGENCE-01`'s execution order.** Its frozen laws L1–L8 are inherited here and remain law. Its **execution steps 2–8** (never started) cover overlapping ground with A1–A9. Whether this programme's sequence supersedes, absorbs, or runs beside that order is a **founder question**, deliberately not answered here. Until it is answered, neither sequence is authorized to consume the other.
-2. **Naming — Author Studio vs Writer's Studio.** Carried forward as open.
-3. **Whether the third facet's surfaced observation *set* varies by facet.** FACETS-01 §9.7 ruled reachability (one set, differing default depth, everything reachable). Presentation cut order is manuscript order. Nothing further is decided.
-4. **Beta reach.** Develop remains flag-gated and outside `COLAB-BETA-01 §5`.
-5. **The disagreement law.** *Evidence revises the reading; it does not delete it and does not automatically win.* Carried, **not ratified**.
+> **`WRITERS-STUDIO-NEXT-01` supersedes `WRITERS-STUDIO-CONVERGENCE-01` steps 2–8 as the sequencing authority for future Writer's Studio work.**
+>
+> It does **not** supersede, absorb, amend, or reopen:
+>
+> - frozen laws **L1–L8**;
+> - the convergence spine;
+> - the ranking dissolution;
+> - the named scope prohibitions;
+> - the defeat candidates;
+> - the Elemental Alchemy acceptance instrument;
+> - any evidence already earned;
+> - any canonical substrate already produced.
+>
+> Those become **inherited obligations and acceptance evidence** of the corresponding `WRITERS-STUDIO-NEXT-01` layer.
+>
+> The old step numbers remain **historical traceability only**. They are no longer independently executable lanes.
+
+This is deliberately neither *absorb* nor *run beside*. **Absorb** would sound like rewriting the earlier programme into this one; the earlier programme is preserved, not rewritten. **Run beside** would leave two live sequencing authorities over one product surface, which eventually contradict each other.
+
+```text
+CONVERGENCE-01
+    │
+    ├── L1–L8                        PRESERVED
+    ├── spine / acceptance law       PRESERVED
+    ├── defeat candidates            PRESERVED
+    ├── earned evidence              PRESERVED
+    │
+    └── steps 2–8 sequencing         RETIRED / SUPERSEDED
+                                      │
+                                      ▼
+WRITERS-STUDIO-NEXT-01
+    A1 → A9 = future sequencing authority
+```
+
+### Mapping of inherited obligations
+
+Recorded rather than left implicit, so that no obligation is retired along with the step number that carried it.
+
+| Convergence obligation | New home |
+| --- | --- |
+| Step 2 — Work-primary composition | **A1 Manuscript Canvas** |
+| Step 3 — place / breadcrumb / back-to-manuscript | **A1 Manuscript Canvas** |
+| Step 4 — remove the unavailable-capability shell | **A1**, under E8 map honesty |
+| Step 5 — Commission layer | **A2 Unified Editorial Conversation** |
+| Step 6 — coverage-licensed Editorial Reading | **A4 / `EDITORIAL-READING-01`** |
+| Step 7 — governed PASS unit | **A4**, reusable by **A5 Whole-Work Intelligence** |
+| Step 8 — Elemental Alchemy acceptance walk | **A9 acceptance**, original conditions preserved |
+
+Retiring a step number retires an execution slot, never an obligation. Where a mapped obligation carried a defeat candidate or an acceptance condition, that condition binds its new layer unchanged.
 
 ---
 
-## IX. Out of scope — this constitution authorizes no implementation
+## IX. What this A0 does not decide
+
+Recorded so that absence is not later read as settlement:
+
+1. **Naming — Author Studio vs Writer's Studio.** Carried forward as open.
+2. **Whether the third facet's surfaced observation *set* varies by facet.** FACETS-01 §9.7 ruled reachability (one set, differing default depth, everything reachable). Presentation cut order is manuscript order. Nothing further is decided.
+3. **Beta reach.** Develop remains flag-gated and outside `COLAB-BETA-01 §5`.
+4. **The disagreement law.** *Evidence revises the reading; it does not delete it and does not automatically win.* Carried, **not ratified**.
+
+---
+
+## X. Out of scope — this constitution authorizes no implementation
 
 A0 authorizes no code, no schema, and no surface. Specifically, it does not authorize:
 
@@ -196,7 +252,7 @@ Each requires its own bounded founder act.
 
 ---
 
-## X. Falsifiers for this constitution
+## XI. Falsifiers for this constitution
 
 A future implementation contradicts this constitution if any of the following is true:
 
@@ -216,9 +272,13 @@ Falsifier 11 is the one this document is most able to violate by its own existen
 
 ---
 
-## XI. Programme sequence
+## XII. Programme sequence
 
 If A0 is ratified, the bounded sequence is A1 → A9 as mapped in §IV. Each opens only on its own founder act.
+
+> **`WRITERS-STUDIO-NEXT-01` is the sequencing authority for composition of the new product. A1–A3 form its core critical path. Subordinate programmes named in later layers may proceed under their own bounded founder authority, but they are not composed into the new Studio until their corresponding layer is admitted. A9 is the final integrated acceptance boundary.**
+
+This is the §II rule applied to sequence: hierarchy orders meaning, not build order. `EDITORIAL-READING-01` is free to continue through its own A1–A6 while A1–A3 are unopened.
 
 The product milestone is **A3, not A9**: at A3 a writer can open their manuscript, select something, have an intelligent contextual conversation with MAIA, explore alternatives, understand the reasoning, read the change in context, apply it safely, and undo it. Everything after A3 deepens an experience that already exists.
 
@@ -226,7 +286,7 @@ The product milestone is **A3, not A9**: at A3 a writer can open their manuscrip
 
 ---
 
-## XII. A0 standing
+## XIII. A0 standing
 
 > **WRITERS-STUDIO-NEXT-01 / A0 — CONSTITUTION READY FOR FOUNDER ADJUDICATION**
 
