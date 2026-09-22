@@ -18,7 +18,8 @@ import { WriteRoom } from '../../../app/writers-studio/flagship/WriteRoom';
 import { DevelopRoom, ReviewRoom } from '../../../app/writers-studio/flagship/DevelopReview';
 import {
   MEMBER, PROJECT, MANUSCRIPT, VERSIONS, DEVELOP, REVIEW,
-  MAIA_DISCUSS, MAIA_REVISE, S_REST, S_HELD, S_ALTS, S_CTX, S_APPLIED,
+  MAIA_DISCUSS, MAIA_REVISE, MAIA_ARRIVED,
+  S_REST, S_HELD, S_ALTS, S_CTX, S_APPLIED, S_ARRIVED,
 } from './fixtures';
 import { inspectMemberCopy, inspectForMachinery } from '../../../lib/writersStudio/studio/language';
 
@@ -44,6 +45,8 @@ const STATES = [
   { id: '5-write-applied-undo', title: 'WRITE — applied + undo',
     node: <WriteRoom state={S_APPLIED} view={{ ...MANUSCRIPT, words: 1246, wordDelta: 0 }}
       copy={MAIA_REVISE} tab="Revise" history={VERSIONS} /> },
+  { id: '5b-arrived-from-review', title: 'WRITE — arrived from a finding',
+    node: <WriteRoom state={S_ARRIVED} view={MANUSCRIPT} copy={MAIA_ARRIVED} tab="Discuss" /> },
   { id: '6-develop', title: 'DEVELOP — overview', mode: 'develop' as const,
     node: <DevelopRoom view={DEVELOP} /> },
   { id: '7-review', title: 'REVIEW — everything', mode: 'review' as const,
@@ -190,6 +193,44 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
         var r = document.querySelector('[data-freshness]');
         return r ? { kind: r.getAttribute('data-freshness'), text: (r.textContent||'').trim() } : null;
       })(),
+      /* ⭐ Every analytical object invites a next move INTO the Work. */
+      analyticalObjects: q('[data-observation], [data-finding], [data-thread]').length,
+      objectsWithNoNextMove: q('[data-observation], [data-finding], [data-thread]').filter(function(e){
+        return !e.querySelector('[data-return-to], [data-action], .fs-cell'); }).length,
+      /* ⛔ Arriving from a finding must never strand the member. */
+      arrived: !!document.querySelector('[data-carried-observation]'),
+      /* ⭐ ADVENTURE WITHOUT GAMIFICATION. The reward is discovery — ⛔ never a
+         score. Nothing that turns a member's Work into a game board. */
+      gamification: (function(){
+        var t = (document.body.innerText||'').toLowerCase();
+        /* ⚠️ Matched on word boundaries: a substring scan flagged "xp" inside
+           "experience". A banned-word list that fires on fragments is noise. */
+        var banned = ['points','streak','streaks','leaderboard','badge','badges','level up',
+                      'achievement','achievements','score','scores','rank','ranked','xp',
+                      'daily goal','you earned','congratulations','well done'];
+        return banned.filter(function(w){
+          return new RegExp('\\b' + w.replace(' ', '\\s+') + '\\b', 'i').test(t); });
+      })(),
+      /* ⭐ Large, calm, obvious targets. Better for a 72-year-old memoirist and
+         better for everyone. 44px is the floor, on the smaller axis. */
+      smallTargets: q('button, [role="tab"], a[href]').filter(function(e){
+        var r = e.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) return false;
+        return Math.min(r.width, r.height) < 24;
+      }).map(function(e){
+        var r = e.getBoundingClientRect();
+        return ((e.textContent||'').trim().slice(0,18) || e.getAttribute('aria-label') || '?')
+          + ' ' + Math.round(r.width) + 'x' + Math.round(r.height);
+      }),
+      /* ⛔ Nothing important behind hover: every action is visible at rest. */
+      hiddenUntilHover: q('button, a[href]').filter(function(e){
+        var cs = getComputedStyle(e);
+        return cs.opacity === '0' || cs.visibility === 'hidden';
+      }).length,
+      /* ⭐ Every control reachable and named. */
+      unnamedControls: q('button, [role="tab"]').filter(function(e){
+        return !((e.textContent||'').trim()) && !e.getAttribute('aria-label'); }).length,
+      trailBack: q('[data-trail] [data-event="BACK_ALONG_TRAIL"]').length,
       movedCitations: q('[data-citation-changed]').length,
       movedWithoutFrozenText: q('[data-citation-changed]').filter(function(e){
         return !e.querySelector('blockquote'); }).length,
@@ -296,6 +337,34 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
         ? `${m.movedCitations} moved citation(s), each showing what MAIA read`
         : `${m.movedWithoutFrozenText} moved citation(s) disclosed without the text they were made against` });
   }
+  out.push({ id: 'NEXT-MOVE-every-object-leads-into-the-work',
+    ok: (m.objectsWithNoNextMove as number) === 0,
+    detail: (m.objectsWithNoNextMove as number) === 0
+      ? `${m.analyticalObjects} analytical object(s), each leading somewhere in the Work`
+      : `${m.objectsWithNoNextMove} object(s) that report and go nowhere` });
+  if (m.arrived) {
+    out.push({ id: 'ARRIVAL-is-never-a-trapdoor', ok: (m.trailBack as number) > 0,
+      detail: (m.trailBack as number) > 0 ? 'the way back is on the page'
+        : 'the member followed a finding here and cannot get back' });
+  }
+  {
+    const g = m.gamification as string[];
+    out.push({ id: 'NO-GAMIFICATION', ok: g.length === 0,
+      detail: g.length === 0 ? 'no points, streaks, scores, badges or achievements'
+        : `game mechanics in member copy: ${g.join(', ')}` });
+  }
+  {
+    const t = m.smallTargets as string[];
+    out.push({ id: 'TARGETS-are-generous', ok: t.length === 0,
+      detail: t.length === 0 ? 'every control clears the 24px floor on its smaller axis'
+        : `${t.length} small target(s): ${t.slice(0, 3).join(' · ')}` });
+  }
+  out.push({ id: 'NOTHING-BEHIND-HOVER', ok: (m.hiddenUntilHover as number) === 0,
+    detail: (m.hiddenUntilHover as number) === 0 ? 'every action is visible at rest'
+      : `${m.hiddenUntilHover} control(s) appear only on hover` });
+  out.push({ id: 'EVERY-CONTROL-IS-NAMED', ok: (m.unnamedControls as number) === 0,
+    detail: (m.unnamedControls as number) === 0 ? 'every control has a name a screen reader can read'
+      : `${m.unnamedControls} unnamed control(s)` });
   out.push({ id: 'TAB-never-commissions', ok: (m.commissionOnTabs as number) === 0,
     detail: (m.commissionOnTabs as number) === 0
       ? `${m.tabCount} tabs, none of which reads on click`
@@ -361,7 +430,27 @@ async function main() {
         }
       }
 
+      /* ⭐ ADJUSTABLE TEXT SIZE WITHOUT BREAKING THE COMPOSITION. A member who
+         turns their browser text up must get larger text, ⛔ not a broken page
+         and ⛔ not no change at all. */
+      const textScale = await p.evaluate(`(function(){
+        var before = { w: document.body.scrollWidth,
+          size: parseFloat(getComputedStyle(document.querySelector('.fs-p') || document.body).fontSize) };
+        document.documentElement.style.fontSize = '24px';
+        var after = { w: document.body.scrollWidth,
+          size: parseFloat(getComputedStyle(document.querySelector('.fs-p') || document.body).fontSize) };
+        document.documentElement.style.fontSize = '';
+        return { grew: after.size > before.size + 0.5, overflow: after.w > window.innerWidth + 2,
+                 before: before.size, after: after.size };
+      })()`) as { grew: boolean; overflow: boolean; before: number; after: number };
+
       const checks = await visualLaws(p, st.id);
+      checks.push({ id: 'TEXT-SIZE-responds-and-does-not-break',
+        ok: textScale.grew && !textScale.overflow,
+        detail: !textScale.grew
+          ? `prose stayed at ${textScale.before}px when the browser text size was raised 50% — px type ignores the member's setting`
+          : textScale.overflow ? `text scaled ${textScale.before}→${textScale.after}px but the page overflows sideways`
+          : `prose scaled ${textScale.before}→${textScale.after}px, no horizontal overflow` });
       if (v2) checks.push(v2);
       failures += checks.filter((c) => !c.ok).length;
       results.push({ state: st.id, viewport: vp.id, checks });

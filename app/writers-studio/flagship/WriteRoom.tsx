@@ -39,6 +39,8 @@ export type MaiaTab = 'Discuss' | 'Revise' | 'Teach' | 'Reason' | 'What MAIA rea
 const TABS: readonly MaiaTab[] = ['Discuss', 'Revise', 'Teach', 'Reason', 'What MAIA read'];
 
 export interface MaiaCopy {
+  /** ⭐ Set when the member arrived from a finding: the finding itself. */
+  readonly carriedFrom?: string;
   readonly memberAsk?: string;
   readonly opening: string;
   readonly noticed?: readonly string[];
@@ -118,6 +120,15 @@ export function MaiaPanel({ phase, copy, tab, heldEcho }: {
       <div className="fs-mbody">
         {heldEcho ? (
           <blockquote className="fs-heldquote" data-held-echo="true">{heldEcho}</blockquote>
+        ) : null}
+        {copy.carriedFrom ? (
+          /* ⭐ The observation the member clicked, arriving WITH them.
+             ⛔ Not regenerated — re-reading on arrival would be a commission
+             inferred from navigation. */
+          <div className="fs-carried" data-carried-observation="true">
+            <span className="fs-carriedlabel">What you followed here</span>
+            <p className="fs-carriedtext">{copy.carriedFrom}</p>
+          </div>
         ) : null}
         {copy.memberAsk ? <div className="fs-ask">{copy.memberAsk}</div> : null}
         <p className="fs-say">{copy.opening}</p>
@@ -243,6 +254,16 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
 
   return (
     <>
+      {/* ⭐ The trail out. ⛔ A finding that leads into the Work and strands the
+          member there has replaced a dashboard with a trapdoor. */}
+      {state.trail ? (
+        <div className="fs-trail" data-trail="true">
+          <button type="button" className="fs-trailback" data-event="BACK_ALONG_TRAIL">
+            <span aria-hidden="true">←</span> {state.trail.backLabel}
+          </button>
+          <span className="fs-trailfrom">You followed this here from {state.trail.from}.</span>
+        </div>
+      ) : null}
       <CrumbBar
         work={view.work} chapter={view.chapterTitle} place={place} facet={facet}
         saved={state.history.length > 0 ? `Saved · v${state.version}` : 'Saved 2m ago'}

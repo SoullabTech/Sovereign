@@ -74,6 +74,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "0 tabs, none of which reads on click"
@@ -97,6 +122,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       }
     ]
   },
@@ -185,6 +215,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -208,6 +263,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -301,6 +361,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -324,6 +409,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -417,6 +507,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -440,6 +555,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -533,6 +653,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -556,6 +701,162 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "5b-arrived-from-review",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "ARRIVAL-is-never-a-trapdoor",
+        "ok": true,
+        "detail": "the way back is on the page"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "8: ← Back to your review | Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -639,6 +940,31 @@
         "detail": "a result and an absence render differently"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "9 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "8 tabs, none of which reads on click"
@@ -662,6 +988,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -750,6 +1081,31 @@
         "detail": "1 moved citation(s), each showing what MAIA read"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "13 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -773,6 +1129,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -856,6 +1217,31 @@
         "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "5 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -879,6 +1265,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -962,6 +1353,31 @@
         "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "5 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -985,6 +1401,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -1063,6 +1484,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "0 tabs, none of which reads on click"
@@ -1086,6 +1532,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       }
     ]
   },
@@ -1174,6 +1625,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -1197,6 +1673,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -1290,6 +1771,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -1313,6 +1819,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -1406,6 +1917,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -1429,6 +1965,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -1522,6 +2063,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -1545,6 +2111,162 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "5b-arrived-from-review",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "ARRIVAL-is-never-a-trapdoor",
+        "ok": true,
+        "detail": "the way back is on the page"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "8: ← Back to your review | Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -1628,6 +2350,31 @@
         "detail": "a result and an absence render differently"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "9 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "8 tabs, none of which reads on click"
@@ -1651,6 +2398,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -1739,6 +2491,31 @@
         "detail": "1 moved citation(s), each showing what MAIA read"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "13 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -1762,6 +2539,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -1845,6 +2627,31 @@
         "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "5 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -1868,6 +2675,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -1951,6 +2763,31 @@
         "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "5 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -1974,6 +2811,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -2052,6 +2894,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "0 tabs, none of which reads on click"
@@ -2075,6 +2942,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       }
     ]
   },
@@ -2163,6 +3035,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -2186,6 +3083,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -2279,6 +3181,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -2302,6 +3229,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -2395,6 +3327,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -2418,6 +3375,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -2511,6 +3473,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -2534,6 +3521,162 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "5b-arrived-from-review",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "ARRIVAL-is-never-a-trapdoor",
+        "ok": true,
+        "detail": "the way back is on the page"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "8: ← Back to your review | Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 17→25.5px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -2617,6 +3760,31 @@
         "detail": "a result and an absence render differently"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "9 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "8 tabs, none of which reads on click"
@@ -2640,6 +3808,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -2728,6 +3901,31 @@
         "detail": "1 moved citation(s), each showing what MAIA read"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "13 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -2751,6 +3949,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -2834,6 +4037,31 @@
         "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "5 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -2857,6 +4085,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -2940,6 +4173,31 @@
         "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "5 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -2963,6 +4221,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -3041,6 +4304,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "0 tabs, none of which reads on click"
@@ -3064,6 +4352,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
       }
     ]
   },
@@ -3147,6 +4440,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -3170,6 +4488,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -3258,6 +4581,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -3281,6 +4629,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -3369,6 +4722,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -3392,6 +4770,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -3480,6 +4863,31 @@
         "detail": "both states not present on this surface"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -3503,6 +4911,157 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "5b-arrived-from-review",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "sheet carries the passage at its head"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "0 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "ARRIVAL-is-never-a-trapdoor",
+        "ok": true,
+        "detail": "the way back is on the page"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "8: ← Back to your review | Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -3586,6 +5145,31 @@
         "detail": "a result and an absence render differently"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "9 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "8 tabs, none of which reads on click"
@@ -3609,6 +5193,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -3697,6 +5286,31 @@
         "detail": "1 moved citation(s), each showing what MAIA read"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "13 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -3720,6 +5334,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -3803,6 +5422,31 @@
         "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "5 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -3826,6 +5470,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   },
@@ -3909,6 +5558,31 @@
         "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
       },
       {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "5 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "7 tabs, none of which reads on click"
@@ -3932,6 +5606,11 @@
         "id": "F13-permanent-utility-controls",
         "ok": true,
         "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scaled 16→24px, no horizontal overflow"
       }
     ]
   }

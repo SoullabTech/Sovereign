@@ -115,6 +115,21 @@ export const S_ALTS = drive([{ type: 'REQUEST_ALTERNATIVES', candidates: CANDIDA
 export const S_CTX = drive([{ type: 'SELECT_ALTERNATIVE', alternativeId: 'simpler' },
   { type: 'READ_IN_CONTEXT' }], S_ALTS);
 export const S_APPLIED = drive([{ type: 'APPLY' }], S_CTX);
+/* ⭐ THE LOOP CLOSING: Review → open a finding → arrive at the exact passage,
+   the finding travelling with you, and a way back. */
+export const S_ARRIVED = drive([{
+  type: 'ARRIVE_AT_PASSAGE',
+  place: { sectionId: 'ch-6', anchor: 'anchor:ch-6:0' },
+  passage: PASSAGE, observation: OBSERVATION,
+  trail: { from: 'your review', backLabel: 'Back to your review' },
+}]);
+
+export const MAIA_ARRIVED: MaiaCopy = {
+  carriedFrom: '“The current” changes meaning — in Ch 2 it names the river; in Ch 6 it names what Clara is living through. It is not renamed between them.',
+  opening: 'Here it is, in place. The sentence before it still means the river, which is what makes the turn quiet. Would you like to look at how it reads, or try it another way?',
+  coverage: 'Read: this chapter and the two around it, at full depth.',
+};
+
 export const S_APPLIED_HISTORY = drive([{ type: 'OPEN_OVERLAY', overlay: 'history' }], S_APPLIED);
 
 /* ⭐ A NOVEL, deliberately — not Elemental Alchemy. The room must work for a Work

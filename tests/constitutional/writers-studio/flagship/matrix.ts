@@ -11,7 +11,7 @@
  */
 
 import { REFERENCE, DEFEAT_CANDIDATES } from './candidates';
-import { runLaws, type LawResult } from './laws';
+import { runArrivalLaws, runLaws, type LawResult } from './laws';
 import type { Engine } from './engine';
 
 const NAMED_KILL: Readonly<Record<string, string>> = {
@@ -35,7 +35,7 @@ let exitCode = 0;
 
 function evaluate(engine: Engine): { failed: string[]; results: readonly LawResult[]; error?: string } {
   try {
-    const results = runLaws(engine);
+    const results = [...runLaws(engine), ...runArrivalLaws(engine)];
     return { failed: results.filter((r) => !r.ok).map((r) => r.id), results };
   } catch (err) {
     /* ⭐ A candidate that CRASHES the walk has not been killed by a law — it has

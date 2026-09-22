@@ -222,3 +222,52 @@ export function runLaws(e: Engine): readonly LawResult[] {
 
   return out;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ⭐ THE ADVENTURE LOOP — arriving at a passage from a finding
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export function runArrivalLaws(e: Engine): readonly LawResult[] {
+  const out: LawResult[] = [];
+  const TRAIL = { from: 'your review', backLabel: 'Back to your review' } as const;
+  const ELSEWHERE: Place = { sectionId: 'ch-6', anchor: 'anchor:ch-6:0' };
+
+  /* ── A1 · the observation travels; ⛔ nothing is re-read ─────────────────── */
+  out.push(law('A1-finding-travels-to-the-passage', () => {
+    const arrived = drive(e, e.initialState(PLACE, 1), [
+      { type: 'ARRIVE_AT_PASSAGE', place: ELSEWHERE, passage: PASSAGE,
+        observation: OBSERVATION, trail: TRAIL },
+    ]);
+    const p = arrived.phase;
+    const carried = p.name === 'conversation' && p.observation.observationId === OBSERVATION.observationId;
+    /* ⛔ `passage-held` would mean nothing is asserted — but the member chose an
+       observation, so landing there would either be false or require a re-read. */
+    return must('A1-finding-travels-to-the-passage',
+      carried && arrived.place.sectionId === ELSEWHERE.sectionId,
+      carried ? 'arrived in conversation carrying the observation the member clicked'
+        : `landed in ${p.name}${p.name === 'passage-held' ? ' — the observation was dropped or would need re-reading' : ''}`);
+  }));
+
+  /* ── A2 · ⛔ no dead end: there is always a way back ─────────────────────── */
+  out.push(law('A2-arrival-is-never-a-trapdoor', () => {
+    const arrived = drive(e, e.initialState(PLACE, 1), [
+      { type: 'ARRIVE_AT_PASSAGE', place: ELSEWHERE, passage: PASSAGE,
+        observation: OBSERVATION, trail: TRAIL },
+    ]);
+    if (!arrived.trail) return must('A2-arrival-is-never-a-trapdoor', false, 'arrived carrying no trail back');
+    const back = e.transition(arrived, { type: 'BACK_ALONG_TRAIL' });
+    const ok = !back.refused && back.state.trail === undefined;
+    return must('A2-arrival-is-never-a-trapdoor', ok,
+      ok ? `"${arrived.trail.backLabel}" leads out and clears the trail`
+        : 'the way back is refused or leaves a stale trail');
+  }));
+
+  /* ── A3 · ⛔ a trail cannot be walked when none exists ───────────────────── */
+  out.push(law('A3-no-phantom-trail', () => {
+    const r = e.transition(e.initialState(PLACE, 1), { type: 'BACK_ALONG_TRAIL' });
+    return must('A3-no-phantom-trail', r.refused,
+      r.refused ? 'refused with nothing to go back to' : 'walked a trail that was never laid');
+  }));
+
+  return out;
+}

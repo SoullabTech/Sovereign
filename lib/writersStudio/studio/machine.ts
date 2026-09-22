@@ -162,8 +162,29 @@ export const OVERLAY_ROLES: readonly OverlayRole[] = ['outline', 'review', 'hist
    STATE
    ══════════════════════════════════════════════════════════════════════════ */
 
+/**
+ * ⭐⭐ HOW THE MEMBER GOT HERE.
+ *
+ * Arriving at a passage from a finding is not the same as holding a sentence
+ * while writing, and the difference is load-bearing:
+ *
+ *   · the observation the member clicked TRAVELS WITH THEM — ⛔ it is not
+ *     regenerated, because re-reading on arrival is a commission inferred from
+ *     navigation, which the tab boundary already refuses;
+ *   · ⛔ there must be a way back. *Every analytical view invites a next move*
+ *     cuts both directions: a finding that leads into the Work and strands the
+ *     member there has replaced a dashboard with a trapdoor.
+ */
+export interface Trail {
+  /** e.g. "your review" · "the map". Member-facing, ⛔ never a route name. */
+  readonly from: string;
+  readonly backLabel: string;
+}
+
 export interface StudioState {
   readonly phase: Phase;
+  /** Present when the member arrived from an analytical view. */
+  readonly trail?: Trail;
   readonly place: Place;
   readonly overlay: OverlayRole | null;
   readonly version: number;
@@ -196,7 +217,18 @@ export type StudioEvent =
   | { readonly type: 'OPEN_OVERLAY'; readonly overlay: OverlayRole }
   | { readonly type: 'CLOSE_OVERLAY' }
   /** ⭐ THE ONLY PLACE-WRITING EVENT. */
-  | { readonly type: 'NAVIGATE_TO'; readonly place: Place };
+  | { readonly type: 'NAVIGATE_TO'; readonly place: Place }
+  /**
+   * ⭐ Arrive at a passage FROM a finding, carrying the finding with you.
+   * ⛔ Lands in `conversation`, ⛔ never `passage-held`: the member already has
+   * an observation — the one they chose — so pretending nothing is asserted
+   * would be false, and re-reading to produce one would be a commission.
+   */
+  | { readonly type: 'ARRIVE_AT_PASSAGE'; readonly place: Place;
+      readonly passage: PassageRef; readonly observation: Observation;
+      readonly trail: Trail }
+  /** ⭐ The way back. ⛔ A finding that strands the member is a trapdoor. */
+  | { readonly type: 'BACK_ALONG_TRAIL' };
 
 export type EventType = StudioEvent['type'];
 
@@ -220,6 +252,8 @@ const EVENT_CAPABILITY: Readonly<Record<EventType, CapabilityId>> = {
   OPEN_OVERLAY: 'manuscript.read',
   CLOSE_OVERLAY: 'manuscript.read',
   NAVIGATE_TO: 'manuscript.read',
+  ARRIVE_AT_PASSAGE: 'observation.read',
+  BACK_ALONG_TRAIL: 'manuscript.read',
 };
 
 const OVERLAY_CAPABILITY: Readonly<Record<OverlayRole, CapabilityId>> = {
@@ -253,7 +287,9 @@ export const TRANSITIONS: Readonly<Record<PhaseName, readonly EventType[]>> = {
 
 /** Events valid from every phase. Overlays are orthogonal; navigation is the
  *  writer moving in their own Work and is never refused by a conversation. */
-export const UNIVERSAL_EVENTS: readonly EventType[] = ['OPEN_OVERLAY', 'CLOSE_OVERLAY', 'NAVIGATE_TO'];
+export const UNIVERSAL_EVENTS: readonly EventType[] = [
+  'OPEN_OVERLAY', 'CLOSE_OVERLAY', 'NAVIGATE_TO', 'ARRIVE_AT_PASSAGE', 'BACK_ALONG_TRAIL',
+];
 
 /* ══════════════════════════════════════════════════════════════════════════
    REFUSALS
@@ -321,6 +357,19 @@ export function transition(state: StudioState, event: StudioEvent): Outcome {
     return ok({ ...state, overlay: event.overlay });
   }
   if (event.type === 'CLOSE_OVERLAY') return ok({ ...state, overlay: null });
+  if (event.type === 'ARRIVE_AT_PASSAGE') {
+    /* ⭐ Place moves because the member asked to be taken somewhere, and the
+       observation arrives WITH them — already admitted, ⛔ not re-read. */
+    return ok({
+      ...state, place: event.place, overlay: null, trail: event.trail,
+      phase: { name: 'conversation', passage: event.passage, observation: event.observation },
+    });
+  }
+  if (event.type === 'BACK_ALONG_TRAIL') {
+    if (!state.trail) return refuse('EVENT_NOT_IN_PHASE', 'nothing to go back to');
+    const { trail: _dropped, ...rest } = state;
+    return ok({ ...rest, phase: { name: 'writing' }, overlay: null });
+  }
   if (event.type === 'NAVIGATE_TO') {
     /* Moving in the Work releases the held passage — the writer went elsewhere,
        and carrying a conversation about a passage they left would be a lie
