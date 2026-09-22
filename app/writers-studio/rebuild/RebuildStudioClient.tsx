@@ -27,7 +27,6 @@ import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
 import { useEditingLatitude } from '../insight/EditingLatitude';
-import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import { INSIGHT_READING, INSIGHT_OBSERVATION, loadCanvasInsight, type CanvasInsight, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
@@ -874,7 +873,6 @@ export default function RebuildStudioClient() {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
     setVoiceNotice(null);
-    const exactWords = requestText ?? editorialDraft;
     /* ⭐⭐ C6R4 — ONE PLACE, SO NO TURN ESCAPES IT. Threading the directive
        through each caller would mean one of them eventually forgets, and the
        writer would get Direct-register prose from whichever path was missed
@@ -886,8 +884,6 @@ export default function RebuildStudioClient() {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords,
-        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately });
       const observationContext = arrivalInsight && workspaceInsight?.readingId === arrivalInsight.readingId
         && workspaceInsight.key === arrivalInsight.observation.key
         && arrivalInsight.passages.some(p => p.sectionId === focusId)
