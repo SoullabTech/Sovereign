@@ -51,13 +51,20 @@ export interface ProjectIdentity {
 
 export interface MemberIdentity { readonly initials: string; readonly name: string; readonly org: string }
 
-export function StudioRail({ current, project, member }: {
+/**
+ * C1A · ⭐ `destinations` lets a LIVE host render only the modes that genuinely
+ * exist in its runtime. A temporarily smaller set is lawful; a false
+ * destination is not. Default = the full approved three-mode reference, so the
+ * controlled witness is unchanged. ⛔ Never a link to a legacy room.
+ */
+export function StudioRail({ current, project, member, destinations = NAV_DESTINATIONS }: {
   current: NavDestination; project: ProjectIdentity; member: MemberIdentity;
+  destinations?: readonly NavDestination[];
 }) {
   return (
     <nav className="fs-rail" aria-label="Studio navigation">
       <div className="fs-mark" aria-hidden="true" />
-      {NAV_DESTINATIONS.map((d) => (
+      {destinations.map((d) => (
         <button key={d} type="button" className="fs-nav"
           aria-current={d === current ? 'page' : undefined} data-nav={d}>
           <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
@@ -88,10 +95,12 @@ export function AtmosphereBand() {
 }
 
 /** ⭐ Same semantic names as the rail. ⛔ Develop is never renamed to Explore. */
-export function MobileNav({ current }: { current: NavDestination }) {
+export function MobileNav({ current, destinations = NAV_DESTINATIONS }: {
+  current: NavDestination; destinations?: readonly NavDestination[];
+}) {
   return (
     <nav className="fs-mobilenav" aria-label="Studio navigation">
-      {MOBILE_PRIMARY.map((d) => (
+      {MOBILE_PRIMARY.filter((d) => destinations.includes(d)).map((d) => (
         <button key={d} type="button" className="fs-mn"
           aria-current={d === current ? 'page' : undefined} data-nav={d}>
           <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
@@ -101,18 +110,18 @@ export function MobileNav({ current }: { current: NavDestination }) {
   );
 }
 
-export function StudioShell({ current, project, member, focus = false, children }: {
+export function StudioShell({ current, project, member, focus = false, destinations = NAV_DESTINATIONS, children }: {
   current: NavDestination; project: ProjectIdentity; member: MemberIdentity;
-  focus?: boolean; children: React.ReactNode;
+  focus?: boolean; destinations?: readonly NavDestination[]; children: React.ReactNode;
 }) {
   return (
     <div className="fs-root" data-focus={focus ? 'true' : 'false'} data-studio-mode={current}>
-      <StudioRail current={current} project={project} member={member} />
+      <StudioRail current={current} project={project} member={member} destinations={destinations} />
       <div className="fs-content">
         <AtmosphereBand />
         {children}
       </div>
-      <MobileNav current={current} />
+      <MobileNav current={current} destinations={destinations} />
     </div>
   );
 }

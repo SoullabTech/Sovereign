@@ -214,6 +214,8 @@
     "matrix:ws-observation-identity": "tsx tests/constitutional/writers-studio/matrix.ts",
     "typecheck:ws-flagship": "tsc -p tsconfig.ws-flagship.json",
     "matrix:ws-flagship": "tsx tests/constitutional/writers-studio/flagship/matrix.ts",
+    "typecheck:ws-flagship-c1a": "node scripts/typecheck-ws-flagship-c1a.mjs",
+    "matrix:ws-flagship-c1a": "tsx --tsconfig tsconfig.ws-flagship-c1a.json tests/constitutional/writers-studio/flagship-c1a/matrix.ts",
     "matrix:ws-first-arrival": "tsx tests/constitutional/writers-studio/flagship/first-arrival/matrix.ts",
     "matrix:ws-concurrency": "tsx tests/constitutional/writers-studio/flagship/concurrency/matrix.ts",
     "matrix:ws-facets": "tsx tests/constitutional/writers-studio/flagship/facets/matrix.ts",

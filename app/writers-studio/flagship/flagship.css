@@ -9,6 +9,12 @@
    hold by construction rather than by care.
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* C1A · ⭐ TOKEN ROOT vs GEOMETRY ROOT. `.fs-tokens` carries every semantic
+   token and nothing else, so a live Write host can inherit the flagship's
+   colour/type/spacing roles WITHOUT acquiring the rail + content grid that
+   `.fs-root` also owns. `.fs-root` is `.fs-tokens` + the studio geometry.
+   ⛔ The tokens are declared ONCE, here. A second copy anywhere is a defect. */
+.fs-tokens,
 .fs-root{
   /* ═══════════════════════════════════════════════════════════════════════
      SEMANTIC TOKENS — VISUAL_SYSTEM_CANON_v1 §3 · §5 · §15 · §17 · §40.
@@ -92,6 +98,9 @@
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
 
   --rail-w:184px; --maia-w:336px; --band:44px;
+}
+/* ── GEOMETRY · the studio shell only ─────────────────────────────────── */
+.fs-root{
   display:grid;grid-template-columns:var(--rail-w) minmax(0,1fr);
   height:100%;min-height:100%;background:var(--ground-system);color:var(--text-primary);
   font-family:var(--sans);font-size:0.9375rem;line-height:1.6;
@@ -100,10 +109,10 @@
      which is an accessibility failure that looks like nothing at all. */
   -webkit-font-smoothing:antialiased;
 }
-.fs-root *{box-sizing:border-box}
+.fs-tokens *,.fs-root *{box-sizing:border-box}
 /* ⭐ A visible focus ring everywhere. §16 asks whether the focus indicator is
    visible; the answer must not depend on the browser default. */
-.fs-root :focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:3px}
+.fs-tokens :focus-visible,.fs-root :focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:3px}
 .fs-root[data-focus="true"]{--band:0px}
 
 /* ── RAIL · navigation chrome. ⛔ never a content region ─────────────────── */
