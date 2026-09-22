@@ -4,6 +4,8 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useSearchParams } from 'next/navigation';
 import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import { buildKeepRequestBody, interpretKeepReply } from './keepRequest';
 import { REBUILD_HREF } from '../../writers-studio/studioMap';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
@@ -238,6 +240,8 @@ function PressManuscriptRoom() {
   const [extracting, setExtracting] = useState(false);
   const [recogNote, setRecogNote] = useState<string | null>(null);
   const [keepError, setKeepError] = useState(false);
+  // S1: a non-error outcome the member should see (Sanctuary receipt, unresolved posture).
+  const [keepNotice, setKeepNotice] = useState<string | null>(null);
 
   const [newCollectionName, setNewCollectionName] = useState('');
   const [openCollection, setOpenCollection] = useState<string | null>(null);
@@ -464,6 +468,7 @@ function PressManuscriptRoom() {
 
   const advance = () => {
     setKeepError(false);
+    setKeepNotice(null);
     if (cardIdx + 1 < candidates.length) {
       setCardIdx(cardIdx + 1);
     } else if (sectionCursor + 1 < sections.length) {
@@ -479,13 +484,32 @@ function PressManuscriptRoom() {
   const keepCurrent = async () => {
     if (!active || !currentCard) return;
     setKeepError(false);
+    setKeepNotice(null);
+    // S1: the posture governing THIS keep is read now, at the gesture — never
+    // at mount, never from a closure. Unresolved is not "not Sanctuary": nothing
+    // is sent, and the member is told why.
+    const req = buildKeepRequestBody(
+      { sectionId: currentCard.sectionId, text: currentCard.text },
+      readCurrentSanctuaryPosture(),
+    );
+    if (!req.ok) {
+      setKeepNotice('Your Sanctuary setting could not be read on this device, so this line was not kept. Open MAIA here once, then try again.');
+      return;
+    }
     try {
       const res = await apiFetch(`/api/sovereign/manuscripts/${active}/keeps`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sectionId: currentCard.sectionId, text: currentCard.text }),
+        body: JSON.stringify(req.body),
       });
-      if (!res.ok) {
+      const json = await res.json().catch(() => null);
+      const outcome = interpretKeepReply(res.status, json);
+      if (outcome === 'not_persisted_sanctuary') {
+        // Held, not passed: nothing was kept, and the member decides what to do next.
+        setKeepNotice('Sanctuary is on — this line was not kept.');
+        return;
+      }
+      if (outcome !== 'kept') {
         // A failed keep must not read as a successful pass — hold the card for retry.
         setKeepError(true);
         return;
@@ -1008,6 +1032,9 @@ function PressManuscriptRoom() {
                   <p className="text-center text-[13px] opacity-70 mt-6">
                     Could not keep this line.
                   </p>
+                )}
+                {keepNotice && (
+                  <p className="text-center text-[13px] opacity-70 mt-6">{keepNotice}</p>
                 )}
                 <p className="text-center text-[12px] opacity-30 mt-10">
                   {sectionCursor + 1} of {sections.length} sections
