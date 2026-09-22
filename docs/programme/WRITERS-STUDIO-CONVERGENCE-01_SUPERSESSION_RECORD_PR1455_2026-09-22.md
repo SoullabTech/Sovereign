@@ -105,9 +105,15 @@ When the founder confirms the disposition, PR #1455 should be closed **without m
 
 ⚠️ **Closure is blocked on §VI, not by it.** The one path where #1455 is ahead is carried by that branch alone. Closing the PR does not delete the branch, and the blob survives closure — but the reconciliation would then live only on a closed PR's branch, which is custody by accident. The founder should dispose of §VI before or alongside the close, not after.
 
+> ⭐ **AMENDED 2026-09-22 — the §VI precondition is DISCHARGED.** TC1 is canonical at `4ef9a1988` (§X.2), so the reconciliation no longer lives on #1455's branch alone and closing the PR strands nothing. The paragraph above is preserved as the condition that governed until that admission; it is ⛔ not deleted, and it no longer blocks closure.
+>
+> ⛔ Closure is still not taken by this record. It remains a separate founder act, to follow this record's own canonical admission.
+
 ## VIII. Standing
 
 > **SUPERSESSION CENSUS COMPLETE · LINEAGE MAPPED · ⚠️ ONE AHEAD-OF-CANONICAL PATH RAISED · ⛔ PR #1455 NOT CLOSED · ⛔ NO REPAIR AUTHORIZED · ⛔ A1 NOT OPENED · PRODUCTION UNTOUCHED**
+
+⚠️ **This is the CENSUS-TIME standing, preserved as written.** It is superseded as present orientation by **§X.5**; it is ⛔ not edited to read as though it had always said otherwise. The ahead-of-canonical path it raises was disposed of by TC1 (§X.2).
 
 ---
 
@@ -161,3 +167,52 @@ close PR #1455 WITHOUT MERGE, pointing at the admitted record
 ```
 
 ⛔ This record is **not** to be opened as a PR before that final custody update: a closure that points at an unadmitted record has pointed at another temporary branch.
+
+---
+
+## X. Final admission custody — 2026-09-22
+
+⭐ **This is the final custody update §IX.3 reserved.** With it, the record may be opened as a PR.
+
+⚠️⚠️ **SEMANTIC AUTHORITY AND ADMISSION IDENTITY ARE DIFFERENT FACTS AND NEITHER REPLACES THE OTHER.** A semantic candidate answers *which content was adjudicated*; an admission commit answers *what entered canonical, and when*. The sections above name candidates because at census time nothing had been admitted. This section adds the admissions; ⛔ it does not overwrite the candidates, and a later reader must be able to recover both.
+
+### X.1 · R2R1 — the C5/C6 semantic custody repair
+
+| Fact | Identity |
+| --- | --- |
+| Semantic candidate (§IX.1, unchanged) | `6de25a451` |
+| Final reconciled head | `81b39f19b` |
+| **Admitted canonical** | **`c2bfd14e3`** (PR #1468) |
+
+⭐ **BYTE IDENTITY RECORDED, ⛔ not assumed.** Both files — `app/writers-studio/rebuild/RebuildStudioClient.tsx` and `tests/constitutional/writers-studio/convergenceC6.ts` — are **byte-identical in canonical to their content at `6de25a451`**, verified by blob comparison. *Four freshness reconciliations moved the base and changed not one byte of the repair.*
+
+The reconciliation chain, for lineage only: `6de25a451` → `96578f3be` / `cb1679eea` (R2R1R1) → `6355dc7a6` / `7805fa1f3` (R2R1R2) → `81b39f19b` (R2R1R3). ⚠️ Two of those steps have **two commit objects with identical trees**, produced by parallel sessions before the single-writer rule was taken; the witnessed object is named first in each pair.
+
+⚠️⚠️ **ADMISSION EVIDENCE, STATED AS IT WAS — ⛔ NOT AS "HOSTED CI GREEN".** R2R1R3 was admitted on its **exact local five-gate witness** at `81b39f19b`, run from a clean detached worktree: `gates:ws-convergence-c6` PASS · `matrix:migration-prefix-compatibility` PASS (STRICT 5/5, 5/5 defeat candidates DEAD) · `typecheck:migration-prefix-compatibility` PASS · `typecheck` PASS (4424 / 226 / 239 / 0) · `build` PASS (exit 0, 803/803). **Hosted CI was PARTIAL at merge: 7 of 9 green, 2 still running, zero failures** — and the two still running were `TypeScript no-regression gate` and `build`, precisely the two the local witness had already established on that SHA. ⛔ This must never be restated as *hosted CI green*.
+
+### X.2 · TC1 — the guided editorial loop test-custody repair
+
+| Fact | Identity |
+| --- | --- |
+| Historical candidate | `d0ff4f59b` |
+| **Admitted canonical** | **`4ef9a1988`** (PR #1467) |
+
+This is the §VI finding's disposition. ⚠️ TC1 was admitted with its jest / C5 / C6 / typecheck witness **owed**: hosted CI ran none of those (`canonical-pr-quality.yml` scopes itself to typecheck, `db:verify-bootstrap` and the JARVIS falsifiers), and the repaired assertions were **entailed by a static source read, ⛔ not witnessed by an executed run**. ⭐ Recorded because §VII's discharge rests on TC1's *admission*, and a later reader is owed the evidence class that admission carried.
+
+### X.3 · A0 — `WRITERS-STUDIO-NEXT-01 / A0`
+
+| Fact | Identity |
+| --- | --- |
+| **Admitted canonical** | **`8f3b15e62`** (PR #1466) |
+
+⛔ Admission is ⛔ **not ratification**. The canonical document's §XIII still reads `CONSTITUTION READY FOR FOUNDER ADJUDICATION`. The same holds for `WRITERS-STUDIO-EDITORIAL-READING-01 / A0`, admitted at `fa5274fd9` (PR #1460). Both ratifications are separate founder acts and are ⛔ not taken by this record.
+
+### X.4 · Canonical movement after admission
+
+Canonical advanced to **`578e5ee10`** (PR #1456, JARVIS D2R4R2) immediately after the R2R1R3 merge, and this branch was refreshed onto it before the PR opened.
+
+⭐ **That movement does not disturb any identity in §X.** An admission commit is a historical fact about what entered canonical; it does not expire when canonical advances. ⚠️ The distinction matters because this lane spent four cycles on *candidate* freshness, which is a live property — ⛔ do not carry that instinct across to admissions, which are not.
+
+### X.5 · Standing of PR #1455 after this record
+
+⛔ **Still OPEN. This record does not close it.** With §VII's precondition discharged (§X.2) and the admission identities frozen above, the closure act is unblocked and remains a **separate founder act, to follow this record's own canonical admission** — so the closure can point at an admitted record rather than at a branch.
