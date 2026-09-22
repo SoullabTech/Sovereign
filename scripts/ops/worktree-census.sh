@@ -13,7 +13,7 @@
 # canonical branch, and a classification:
 #
 #   HOLD        detached HEAD, unreadable, or not a registered worktree
-#   INSPECT     tracked files modified (someone's work in progress)
+#   INSPECT     tracked files modified or untracked files present (a person looks first)
 #   PRESERVE    clean tree but commits exist on no remote -> bundle before anything
 #   RETAIN      clean, pushed, NOT merged into canonical -> keep source, regenerable bytes reclaimable
 #   REMOVABLE   clean, pushed, merged into canonical -> whole worktree reclaimable
@@ -52,7 +52,7 @@ to_gb() { awk -v k="${1:-0}" 'BEGIN{printf "%.2f", k/1048576}'; }
 vol_of() {
   case "$1" in
     /Volumes/*) echo "$1" | cut -d/ -f3 ;;
-    "$HOME"*|/Users/*|/home/*) echo "internal" ;;
+    "$HOME"*|/Users/*|/home/*|/private/*|/tmp/*) echo "internal" ;;
     *) echo "other" ;;
   esac
 }
@@ -75,12 +75,10 @@ emit() {
   fi
   total=$(kb_of "$wt_path"); total=${total:-0}
   regen=0
-  for n in $REGEN_NAMES; do
-    while IFS= read -r d; do
-      [[ -n "$d" ]] || continue
-      k=$(kb_of "$d"); regen=$((regen + ${k:-0}))
-    done < <(find "$wt_path" -maxdepth 4 -type d -name "$n" -prune 2>/dev/null)
-  done
+  while IFS= read -r d; do
+    [[ -n "$d" ]] || continue
+    k=$(kb_of "$d"); regen=$((regen + ${k:-0}))
+  done < <(find "$wt_path" -maxdepth 4 -type d \( -name node_modules -o -name .next -o -name .turbo -o -name coverage -o -name dist \) -prune -print 2>/dev/null)
   source=$((total - regen)); [[ $source -lt 0 ]] && source=0
   if git -C "$wt_path" rev-parse --git-dir >/dev/null 2>&1; then
     modified=$(git -C "$wt_path" status --porcelain --untracked-files=no 2>/dev/null | wc -l | tr -d ' ')
@@ -92,6 +90,7 @@ emit() {
   fi
   if [[ "$wt_detached" == "1" || "$merged" == "?" ]]; then cls="HOLD"
   elif [[ "$modified" != "0" ]]; then cls="INSPECT"
+  elif [[ "$untracked" != "0" ]]; then cls="INSPECT"
   elif [[ "$unpushed" != "0" ]]; then cls="PRESERVE"
   elif [[ "$merged" == "yes" ]]; then cls="REMOVABLE"
   else cls="RETAIN"; fi
@@ -157,10 +156,12 @@ rm -f "$RAW"
   echo
   awk -F'\t' 'NR==1{next}
     { n++; if($5!="-"){t+=$5; r+=$6; s+=$7}
-      c[$12]++; v[$2]+=($5=="-"?0:$5); rv[$2]+=($6=="-"?0:$6) }
+      c[$12]++; v[$2]+=($5=="-"?0:$5); rv[$2]+=($6=="-"?0:$6)
+      if($12=="HOLD" && $3=="(detached)" && $8=="0" && $9=="0" && $10=="0" && $11=="yes") dcm++ }
     END{
       printf "worktrees: %d   total %.1f GB   regenerable %.1f GB   source %.1f GB\n", n, t, r, s
       printf "by class: "; for(k in c) printf "%s=%d  ", k, c[k]; printf "\n"
+      printf "HOLD rows that are detached, clean, pushed and merged (removal candidates once a person confirms): %d\n", dcm
       printf "by volume: "; for(k in v) printf "%s=%.1fGB(regen %.1f)  ", k, v[k], rv[k]; printf "\n"
     }' "$TSV"
   echo
