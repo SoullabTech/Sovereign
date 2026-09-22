@@ -45,33 +45,52 @@ export function FacetControl({ facet }: { facet: Facet }) {
  */
 export interface ProjectIdentity {
   readonly workTitle: string;
-  /** e.g. "Novel · 82,400 words". ⛔ A description, ⛔ never a destination. */
-  readonly workKind: string;
+  /** Optional because the live substrate has no canonical Work-kind fact yet. */
+  readonly workKind?: string;
 }
 
-export interface MemberIdentity { readonly initials: string; readonly name: string; readonly org: string }
+export interface MemberIdentity {
+  readonly initials: string;
+  readonly name: string;
+  readonly org?: string;
+}
 
-export function StudioRail({ current, project, member }: {
+export interface StudioNavigationProps {
+  readonly destinations?: readonly NavDestination[];
+  readonly onNavigate?: (destination: NavDestination) => void;
+  /** Controlled reference keeps button geometry; live hosts may request labels. */
+  readonly inertNavigation?: 'controls' | 'labels';
+}
+
+export function StudioRail({
+  current, project, member, destinations = NAV_DESTINATIONS, onNavigate,
+  inertNavigation = 'controls',
+}: {
   current: NavDestination; project: ProjectIdentity; member: MemberIdentity;
-}) {
+} & StudioNavigationProps) {
   return (
     <nav className="fs-rail" aria-label="Studio navigation">
       <div className="fs-mark" aria-hidden="true" />
-      {NAV_DESTINATIONS.map((d) => (
-        <button key={d} type="button" className="fs-nav"
-          aria-current={d === current ? 'page' : undefined} data-nav={d}>
-          <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
-        </button>
-      ))}
+      {destinations.map((d) => {
+        const content = <><span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}</>;
+        return onNavigate || inertNavigation === 'controls' ? (
+          <button key={d} type="button" className="fs-nav" data-clickable={onNavigate ? 'true' : 'false'}
+            aria-current={d === current ? 'page' : undefined} data-nav={d}
+            onClick={onNavigate ? () => onNavigate(d) : undefined}>{content}</button>
+        ) : (
+          <div key={d} className="fs-nav" data-clickable="false"
+            aria-current={d === current ? 'page' : undefined} data-nav={d}>{content}</div>
+        );
+      })}
       <div className="fs-railsep" />
       <div className="fs-railhead">Your work</div>
       <div className="fs-railwork">
         <div className="fs-railworkname">{project.workTitle}</div>
-        <div className="fs-railworkkind">{project.workKind}</div>
+        {project.workKind ? <div className="fs-railworkkind">{project.workKind}</div> : null}
       </div>
       <div className="fs-railfoot">
         <div className="fs-av" aria-hidden="true">{member.initials}</div>
-        <div className="fs-who">{member.name}<small>{member.org}</small></div>
+        <div className="fs-who">{member.name}{member.org ? <small>{member.org}</small> : null}</div>
       </div>
     </nav>
   );
@@ -87,32 +106,55 @@ export function AtmosphereBand() {
   return <div className="fs-band" aria-hidden="true" />;
 }
 
+/**
+ * Token/root seam for a live host that needs flagship visual roles without
+ * inheriting the final navigation grid. It contributes presentation only.
+ */
+export function FlagshipVisualRoot({ children, focus = false }: {
+  children: React.ReactNode; focus?: boolean;
+}) {
+  return <div className="fs-theme" data-focus={focus ? 'true' : 'false'}>{children}</div>;
+}
+
 /** ⭐ Same semantic names as the rail. ⛔ Develop is never renamed to Explore. */
-export function MobileNav({ current }: { current: NavDestination }) {
+export function MobileNav({
+  current, destinations = MOBILE_PRIMARY, onNavigate, inertNavigation = 'controls',
+}: { current: NavDestination } & StudioNavigationProps) {
+  const visible = MOBILE_PRIMARY.filter((d) => destinations.includes(d));
   return (
     <nav className="fs-mobilenav" aria-label="Studio navigation">
-      {MOBILE_PRIMARY.map((d) => (
-        <button key={d} type="button" className="fs-mn"
-          aria-current={d === current ? 'page' : undefined} data-nav={d}>
-          <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
-        </button>
-      ))}
+      {visible.map((d) => {
+        const content = <><i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}</>;
+        return onNavigate || inertNavigation === 'controls' ? (
+          <button key={d} type="button" className="fs-mn" data-clickable={onNavigate ? 'true' : 'false'}
+            aria-current={d === current ? 'page' : undefined} data-nav={d}
+            onClick={onNavigate ? () => onNavigate(d) : undefined}>{content}</button>
+        ) : (
+          <div key={d} className="fs-mn" data-clickable="false"
+            aria-current={d === current ? 'page' : undefined} data-nav={d}>{content}</div>
+        );
+      })}
     </nav>
   );
 }
 
-export function StudioShell({ current, project, member, focus = false, children }: {
+export function StudioShell({
+  current, project, member, focus = false, children,
+  destinations = NAV_DESTINATIONS, onNavigate, inertNavigation = 'controls',
+}: {
   current: NavDestination; project: ProjectIdentity; member: MemberIdentity;
   focus?: boolean; children: React.ReactNode;
-}) {
+} & StudioNavigationProps) {
   return (
     <div className="fs-root" data-focus={focus ? 'true' : 'false'} data-studio-mode={current}>
-      <StudioRail current={current} project={project} member={member} />
+      <StudioRail current={current} project={project} member={member}
+        destinations={destinations} onNavigate={onNavigate} inertNavigation={inertNavigation} />
       <div className="fs-content">
         <AtmosphereBand />
         {children}
       </div>
-      <MobileNav current={current} />
+      <MobileNav current={current} destinations={destinations} onNavigate={onNavigate}
+        inertNavigation={inertNavigation} />
     </div>
   );
 }

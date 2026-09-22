@@ -13,7 +13,7 @@ import * as React from 'react';
 import type {
   Alternative, AlternativeSet, Phase, RevisionEvent, StudioState,
 } from '../../../lib/writersStudio/studio/machine';
-import { CrumbBar } from './StudioChrome';
+import { WriteFrame } from './WriteFrame';
 import type { Facet } from './flagshipTokens';
 import { TrailPosition } from './ReviewPanels';
 
@@ -253,63 +253,66 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
   const candidateText = selected?.text ?? null;
   const place = `§ ${view.chapterLabel.replace(/^Chapter\s*/i, '')}`;
 
-  return (
-    <>
-      {/* ⭐ The trail out. ⛔ A finding that leads into the Work and strands the
-          member there has replaced a dashboard with a trapdoor. */}
-      {state.trail ? (
-        <div className="fs-trail" data-trail="true">
-          <button type="button" className="fs-trailback" data-event="BACK_ALONG_TRAIL">
-            <span aria-hidden="true">←</span> {state.trail.backLabel}
-          </button>
-          <TrailPosition index={state.trail.index} total={state.trail.total} />
-          <span className="fs-trailfrom">You followed this here from {state.trail.from}.</span>
-        </div>
-      ) : null}
-      <CrumbBar
-        work={view.work} chapter={view.chapterTitle} place={place} facet={facet}
-        saved={state.history.length > 0 ? `Saved · v${state.version}` : 'Saved 2m ago'}
-        actions={<>
-          {/* ⭐ Secondary tools collapse on a phone. Ten controls facing a member
-              on a 390px screen is a console; the audience law is the reason this
-              is a composition change rather than an exemption in the test. */}
-          <span className="fs-toolset">
-            <button type="button" className="fs-tool">Aa</button>
-            <button type="button" className="fs-tool" aria-label="Voice note">◍</button>
-            <button type="button" className="fs-tool">Comment</button>
-          </span>
-          <button type="button" className="fs-tool fs-toolmore" aria-label="More tools">⋯</button>
-          <button type="button" className="fs-tool fs-tool--key" data-event="HOLD_PASSAGE">Ask MAIA</button>
-        </>}
-      />
-      <div className="fs-stage" data-stage="write">
-        <article className="fs-ms" data-manuscript="true">
-          <div className="fs-chlabel">{view.chapterLabel}</div>
-          <h1 className="fs-chtitle">{view.chapterTitle}</h1>
-          {view.epigraph ? (
-            <>
-              <p className="fs-epi">{view.epigraph.text}</p>
-              <p className="fs-epiwho">— {view.epigraph.attribution}</p>
-            </>
-          ) : null}
-          {view.paragraphs.map((p) => renderParagraph(p, view, state, candidateText))}
-        </article>
+  const trail = state.trail ? (
+    <div className="fs-trail" data-trail="true">
+      <button type="button" className="fs-trailback" data-event="BACK_ALONG_TRAIL">
+        <span aria-hidden="true">←</span> {state.trail.backLabel}
+      </button>
+      <TrailPosition index={state.trail.index} total={state.trail.total} />
+      <span className="fs-trailfrom">You followed this here from {state.trail.from}.</span>
+    </div>
+  ) : null;
+  const actions = <>
+    {/* ⭐ Secondary tools collapse on a phone. Ten controls facing a member
+        on a 390px screen is a console; the audience law is the reason this
+        is a composition change rather than an exemption in the test. */}
+    <span className="fs-toolset">
+      <button type="button" className="fs-tool">Aa</button>
+      <button type="button" className="fs-tool" aria-label="Voice note">◍</button>
+      <button type="button" className="fs-tool">Comment</button>
+    </span>
+    <button type="button" className="fs-tool fs-toolmore" aria-label="More tools">⋯</button>
+    <button type="button" className="fs-tool fs-tool--key" data-event="HOLD_PASSAGE">Ask MAIA</button>
+  </>;
+  const manuscript = <>
+    <div className="fs-chlabel">{view.chapterLabel}</div>
+    <h1 className="fs-chtitle">{view.chapterTitle}</h1>
+    {view.epigraph ? (
+      <>
+        <p className="fs-epi">{view.epigraph.text}</p>
+        <p className="fs-epiwho">— {view.epigraph.attribution}</p>
+      </>
+    ) : null}
+    {view.paragraphs.map((p) => renderParagraph(p, view, state, candidateText))}
+  </>;
+  const footer = <>
+    <span>{view.chapterLabel}</span>
+    <span>·</span>
+    <span>
+      {view.words.toLocaleString('en-US')} words
+      {view.wordDelta ? <span className="fs-delta"> (+{view.wordDelta})</span> : null}
+    </span>
+    <span className="fs-sp" />
+    <button type="button" className="fs-tool">Focus</button>
+  </>;
 
-        {maiaOpen ? <MaiaPanel phase={phase} copy={copy} tab={tab} heldEcho={heldEcho} /> : null}
+  return (
+    <WriteFrame
+      work={view.work}
+      chapter={view.chapterTitle}
+      place={place}
+      facet={facet}
+      saved={state.history.length > 0 ? `Saved · v${state.version}` : 'Saved 2m ago'}
+      beforeBar={trail}
+      actions={actions}
+      manuscript={manuscript}
+      contextualLayer={maiaOpen ? <MaiaPanel phase={phase} copy={copy} tab={tab} heldEcho={heldEcho} /> : null}
+      floatingLayer={<>
         {phase.name === 'context-review' && selected ? <ReadInContextBar name={selected.name} /> : null}
         {phase.name === 'applied' ? <AppliedReceipt applied={phase.applied} place={place} /> : null}
-        {state.overlay === 'history' && history ? <VersionHistoryDrawer entries={history} /> : null}
-      </div>
-      <div className="fs-foot">
-        <span>{view.chapterLabel}</span>
-        <span>·</span>
-        <span>
-          {view.words.toLocaleString('en-US')} words
-          {view.wordDelta ? <span className="fs-delta"> (+{view.wordDelta})</span> : null}
-        </span>
-        <span className="fs-sp" />
-        <button type="button" className="fs-tool">Focus</button>
-      </div>
-    </>
+      </>}
+      overlayLayer={state.overlay === 'history' && history ? <VersionHistoryDrawer entries={history} /> : null}
+      footer={footer}
+    />
   );
 }
