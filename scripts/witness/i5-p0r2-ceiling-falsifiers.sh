@@ -63,7 +63,7 @@ else no F4 "non-timeout failure retains its original refusal reason" "got: $S2";
 # ── 5 · substantive checks unchanged vs the authorized bytes ─────────────────
 inv() { # inv <file> — print the substantive invariants, order-stable
   local f="$1"
-  grep -oE '^(EXPECT_FULL|EXPECT_IMAGE|MODEL)="[^"]*"' "$f"
+  grep -oE '^(EXPECT_FULL|EXPECT_PRODUCTION_FULL|EXPECT_CANONICAL_FULL|EXPECT_IMAGE|MODEL)="[^"]*"' "$f"
   grep -oE '^FLAGS=\(.*' "$f"
   sed -n '/^FLAGS=(/,/)$/p' "$f" | tr ' ' '\n' | grep -oE '(MAIA|AIN)_[A-Z0-9_]+' | sort
   grep -oE 'set_key [A-Z_]+' "$f" | sort
@@ -79,28 +79,29 @@ codes() { # every refusal identifier, however it is emitted
     grep -oE 'STOP [A-Z_]{4,}' "$1" | awk '{print $2}'
   } | sort -u; }
 
-# ⭐ Exactly ONE founder-authorized delta is allowed, keyed by NAME AND BOTH
-# VALUES. Anything else in the invariant set still fails. A mis-keyed allowance
-# fails rather than silently passing, and an allowance that STOPS firing is
-# reported so it is removed — the same discipline as the S3 substrate typecheck.
+# ⭐ R3 authorizes exactly one binding-law replacement: the historical single
+# EXPECT_FULL becomes explicit production + canonical identities. Everything
+# else in the substantive invariant set must remain byte-identical.
 AUTHORIZED_DELTA_FROM='EXPECT_FULL="195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b"'
-AUTHORIZED_DELTA_TO='EXPECT_FULL="b828400c7aaceafbbfcc66144018a6b0fe538dab1c806bbe3de635b2fc6ff6b4"'
+AUTHORIZED_DELTA_PROD='EXPECT_PRODUCTION_FULL="195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b"'
+AUTHORIZED_DELTA_CANON='EXPECT_CANONICAL_FULL="b828400c7aaceafbbfcc66144018a6b0fe538dab1c806bbe3de635b2fc6ff6b4"'
 diff <(inv "$WORK/authorized.sh") <(inv "$REPAIRED") > "$WORK/inv.diff.raw" 2>&1
-# Strip the single authorized pair, then require the remainder to be empty.
 grep -E '^[<>]' "$WORK/inv.diff.raw" \
   | grep -vFx "< $AUTHORIZED_DELTA_FROM" \
-  | grep -vFx "> $AUTHORIZED_DELTA_TO" > "$WORK/inv.diff" || true
+  | grep -vFx "> $AUTHORIZED_DELTA_PROD" \
+  | grep -vFx "> $AUTHORIZED_DELTA_CANON" > "$WORK/inv.diff" || true
 FIRED=0
 grep -qFx "< $AUTHORIZED_DELTA_FROM" "$WORK/inv.diff.raw" \
-  && grep -qFx "> $AUTHORIZED_DELTA_TO" "$WORK/inv.diff.raw" && FIRED=1
+  && grep -qFx "> $AUTHORIZED_DELTA_PROD" "$WORK/inv.diff.raw" \
+  && grep -qFx "> $AUTHORIZED_DELTA_CANON" "$WORK/inv.diff.raw" && FIRED=1
 if [ "$FIRED" = "0" ]; then
-  printf 'NOTE  the authorized EXPECT_FULL delta did not fire — if the re-pin was
-      reverted, REMOVE the allowance rather than leaving it standing.\n'
+  printf 'NOTE  the authorized R3 dual-binding delta did not fire — do not leave
+      a stale allowance standing.\n'
 fi
-if [ ! -s "$WORK/inv.diff" ]; then
-  ok F5a "substantive checks unchanged but for ONE founder-authorized re-pin" "residual invariant diff empty; EXPECT_FULL re-pin fired=$FIRED"
+if [ ! -s "$WORK/inv.diff" ] && [ "$FIRED" = "1" ]; then
+  ok F5a "substantive checks unchanged but for the Founder-authorized R3 binding replacement" "residual invariant diff empty; R3 delta fired=1"
 else
-  no F5a "substantive checks unchanged but for ONE founder-authorized re-pin" "$(head -12 "$WORK/inv.diff" | tr '\n' ' ')"
+  no F5a "substantive checks unchanged but for the Founder-authorized R3 binding replacement" "$(head -12 "$WORK/inv.diff" | tr '\n' ' ')"
 fi
 
 REMOVED="$(comm -23 <(codes "$WORK/authorized.sh") <(codes "$REPAIRED") | tr '\n' ' ')"
