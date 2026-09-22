@@ -89,6 +89,53 @@ rename the misleading CANVAS_HREF identifier
 
 ⚠️ **PR #1470** remains open, carrying a third account of the Editorial Reading A1 act that obtained canonical custody through **#1472**. Its CI is red on `covenant-gates`, which argues for disposition rather than repair. ⛔ Its closure is a **separate stale-account act** and is deliberately not mixed into this ruling.
 
+## VI-A. Freshness reconciliation appendix — A1B-R1, 2026-09-22
+
+⚠️ **Appended under a bounded founder reauthorization. §§I–VII are preserved unchanged; this appendix amends no substantive clause of the ruling.**
+
+### Canonical movement
+
+| | |
+| --- | --- |
+| Original A1B canonical | `d518c0b2f1cdb9fa4d7d6a428950f9f4cf669bb4` |
+| Current canonical | `29e038c725a449f9848534309f91a80f2fcd0149` |
+| Relation | **7 ahead · 0 behind** |
+
+**Endpoint net delta over the former A1B canonical — three programme/governance documents:**
+
+```
+A  docs/programme/MAIA-TEACHING-APPLICATIONS-01_A0_APPLICATION_CONSTITUTION_2026-09-21.md
+A  docs/programme/JARVIS-JEV-01_J0_CONSTITUTION_AND_J1_JUDGMENT_CONTRACT_2026-09-22.md
+M  docs/programme/JARVIS-ROUTING-INTELLIGENCE-01_CHARTER_2026-09-18.md
+```
+
+### ⚠️ The freshness finding is stated in its precise form
+
+⛔ **This interval is NOT described as commit-level zero-overlap.** The merged ancestry **contains constituent commits that touched Writer's Studio paths**; only the *endpoint* delta is free of them. ⭐ Saying otherwise would claim more than was measured — the distinction between an endpoint comparison and an ancestry claim is the whole of it.
+
+**The witnessed property is endpoint blob identity across the A1B evidence and dependency population:**
+
+```
+relevant paths compared        42
+blob-identity differences       0
+```
+
+Population: the complete `app/writers-studio/rebuild/` and `app/writers-studio/canvas/` surfaces · `app/writers-studio/studioTheme.ts` · the proposal-chain implementation and migration surfaces · the A1 census · the A1A audit packet.
+
+⚠️ **Two independent enumerations, one finding.** The founder's own comparison reported **39 compared · 0 differences**; this session's reported **42 compared · 0 differences**. The populations were enumerated slightly differently; ⭐ **the result is identical and the difference is in the count, not the conclusion.** Both are recorded rather than reconciled into one number, because neither is wrong and the agreement is on the fact that matters.
+
+### Uniqueness
+
+Exact current canonical contains **0** A1B host-room ruling records. This record remains the unique A1B candidate.
+
+### Conclusion
+
+⭐ **The endpoint state on which the A1B ruling depends has not drifted. The ruling requires no substantive revision.**
+
+⛔ This reconciliation is **not admission**. The prior 9/9-green CI on `630a7d0e6` is historical evidence for that stale head only and ⛔ does not transfer to the reconciled head, which must run hosted CI again.
+
+---
+
 ## VII. Standing
 
 > **`WRITERS-STUDIO-NEXT-01 / A1B` · HOST ROOM RULED — `rebuild/` · ⛔ COMPOSITION RULING ONLY · ⛔ NO IMPLEMENTATION AUTHORIZED · ⛔ NOTHING RETIRED · ⛔ NO CONTROL REMOVED · ⚠️ E4 UNRESOLVED (host-independent) · ⚠️ E6 DEPTH + SCOPE UNRESOLVED · ⚠️ E6 reviewLens + manifests INHERITED AS OWED DEBT · ⛔ A2 SHUT · PRODUCTION UNTOUCHED**
