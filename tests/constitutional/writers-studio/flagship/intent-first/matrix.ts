@@ -21,4 +21,5 @@ line(`  matrix               ${exit === 0 ? 'LETHAL + DISCRIMINATING' : '⛔ NOT
 line('  INTENT-FIRST LAW GREEN'); line('');
 line('  This proves:'); line('    intent and commission are separable'); line('    scope consent is mechanically expressible'); line('    defeat candidates are discriminated'); line('');
 line('  This does not prove:'); line('    an intent UI exists'); line('    a reading runtime is wired'); line('    non-professional writers understand it'); line('    the first ten minutes succeed'); line('');
+line('  GREEN LAW · INTENT-FIRST CAPABILITY NOT YET IMPLEMENTED'); line('');
 process.exit(exit);
