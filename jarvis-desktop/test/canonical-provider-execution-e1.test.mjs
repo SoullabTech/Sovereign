@@ -4,6 +4,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import {
+  acquireDiagnosticLease,
+  releaseDiagnosticLease,
+} from '../../scripts/builder/jarvis-ollama-generation-lease.mjs';
 
 const require = createRequire(import.meta.url);
 const C = require('../src/canonical-work-unit-v2.js');
@@ -126,6 +130,61 @@ function stubResult(args, {
     result_digest: 'sha256:' + 'a'.repeat(64),
   };
 }
+
+test('diagnostic isolation refuses canonical local Confirm Execute before CLAIMED and preserves ACTIVE grant', async () => {
+  const { home, env } = tempEnv();
+  let held = null;
+  try {
+    const { id, status } = await routedReady(env, 3050);
+    const primary = status.routing.participants.find((p) => p.required_for_completion
+      && p.participant_id === 'primary');
+    assert.ok(primary);
+
+    const issued = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, primary.participant_id,
+      { env, actorId: 'human:e1-proof' },
+    );
+    assert.equal(issued.ok, true);
+
+    held = acquireDiagnosticLease({
+      actId: 'E3R3/S0R1R2-canonical-preclaim-proof',
+      holderPid: process.pid,
+      env,
+      censusFn: () => [],
+      socketCensusFn: () => [],
+    });
+    assert.equal(held.ok, true);
+
+    let runnerCalls = 0;
+    const refused = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, issued.grant.grant_id,
+      {
+        env,
+        actorId: 'human:e1-proof',
+        executeCanonicalProvider: async (_root, args) => {
+          runnerCalls += 1;
+          return stubResult(args);
+        },
+      },
+    );
+    assert.equal(refused.ok, false);
+    assert.equal(refused.status, 'HELD_FOR_DIAGNOSTIC_ISOLATION');
+    assert.equal(refused.reason, 'OLLAMA_DIAGNOSTIC_LEASE_HELD');
+    assert.equal(refused.grant_standing, 'ACTIVE');
+    assert.equal(runnerCalls, 0);
+
+    const grantStore = await import('../../scripts/builder/canonical-provider-execution-grant-store-v1.mjs');
+    const standing = grantStore.canonicalGrantStandingV1(
+      id, issued.grant.grant_id, { home },
+    );
+    assert.equal(standing.standing, 'ACTIVE');
+    const after = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    assert.equal(after.lifecycle.state, 'ROUTED');
+  } finally {
+    if (held?.ok) releaseDiagnosticLease({ token: held.token, env });
+    cleanup(home);
+  }
+});
 
 test('E1 full canonical local flow: Authorize Once != Confirm Execute, DR1/W4 evidence, verifier, explicit evidence-ready', async () => {
   const { home, env } = tempEnv();
@@ -392,6 +451,73 @@ test('legacy R5B/run-provider surfaces still refuse canonical W0.v2 and cannot i
 });
 
 
+
+test('canonical local OpenCode transport refuses a held diagnostic lease before process spawn', async () => {
+  const { home } = tempEnv();
+  const env = {
+    ...process.env,
+    AIN_DELEGATION_HOME: home,
+  };
+  let held = null;
+  let spawnCalls = 0;
+  try {
+    held = acquireDiagnosticLease({
+      actId: 'E3R3/S0R1R2-opencode-spawn-proof',
+      holderPid: process.pid,
+      env,
+      censusFn: () => [],
+      socketCensusFn: () => [],
+    });
+    assert.equal(held.ok, true);
+
+    await assert.rejects(
+      WUC.executeCanonicalResolvedProvider(
+        REPO,
+        {
+          workUnitId: 'e3-v2-gpt-oss-isolation-proof',
+          grantId: 'e3-gpt-oss-isolation-grant-proof',
+          workUnit: {
+            identity: { objective: 'Prove diagnostic isolation precedes OpenCode spawn.' },
+            custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
+            scope: {
+              base_ref: SHA,
+              allowed_paths: ['scripts/builder/work-unit-v2.mjs'],
+            },
+            evaluation: {
+              acceptance_conditions: ['No provider process is created.'],
+              stop_conditions: ['Stop before provider spawn.'],
+            },
+          },
+          binding: {
+            route_participant_id: 'challenger',
+            transport_binding_id: 'tb-gpt-oss-isolation-proof',
+            provider_id: 'gpt-oss-local',
+            model_id: 'gpt-oss:20b',
+            adapter_id: 'opencode',
+          },
+          resolved: {
+            execution_adapter: 'opencode',
+            agent: 'jarvis-readonly',
+            model_ref: 'ollama/gpt-oss:20b',
+            model_id: 'gpt-oss:20b',
+          },
+          sourceEnv: env,
+        },
+        {
+          execFile: (_file, _args, _options, _callback) => {
+            spawnCalls += 1;
+            throw new Error('provider spawn must not be reached');
+          },
+        },
+      ),
+      /OLLAMA_DIAGNOSTIC_LEASE_HELD/,
+    );
+    assert.equal(spawnCalls, 0);
+  } finally {
+    if (held?.ok) releaseDiagnosticLease({ token: held.token, env });
+    cleanup(home);
+  }
+});
 
 test('explicit GPT-OSS AGENT MODE helper remains standalone and isolated from user config', async () => {
   const { home } = tempEnv();

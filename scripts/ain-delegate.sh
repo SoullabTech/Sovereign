@@ -47,6 +47,7 @@ OPENCODE_PROVIDER_SCRIPT="$PROJECT_DIR/scripts/builder/opencode-provider.mjs"
 TINKER_DIRECT_SCRIPT="$PROJECT_DIR/scripts/builder/tinker-direct.mjs"
 EXTERNAL_CONTEXT_SCRIPT="$PROJECT_DIR/scripts/builder/external-context.mjs"
 LOCAL_WORKER_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-local-worker.mjs"
+OLLAMA_GENERATION_LEASE_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-ollama-generation-lease.mjs"
 NATIVE_PROMPT_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-prompt.mjs"
 PATCH_ADMISSION_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-patch-admission.mjs"
 EDIT_ADMISSION_SCRIPT="$PROJECT_DIR/scripts/builder/jarvis-native-edit-admission.mjs"
@@ -246,6 +247,11 @@ _run_lane() {
         ' >/dev/null || {
             echo "🛑 [ain-delegate] LOCAL_NATIVE_AUTHORITY_REFUSED — V1 requires bounded local worktree-write authority only." >&2
             exit 3
+        }
+        node "$OLLAMA_GENERATION_LEASE_SCRIPT" check-consumer \
+            --consumer "ain-delegate:local-native" >/dev/null || {
+            echo "🛑 [ain-delegate] OLLAMA_DIAGNOSTIC_ISOLATION_REFUSED — diagnostic generation lease is held or unknown." >&2
+            exit 23
         }
     fi
 
@@ -450,8 +456,30 @@ _run_lane() {
         exit_code=$?
         rm -f "$native_prompt_file"
     elif [ "$lane" = "local" ]; then
-        ( cd "$wt" && maia-code -p "$prompt" --permission-mode bypassPermissions ) > "$log" 2>&1
-        exit_code=$?
+        local legacy_activity_json legacy_activity_code legacy_activity_id legacy_activity_token legacy_release_code
+        legacy_activity_json="$(node "$OLLAMA_GENERATION_LEASE_SCRIPT" begin-generation             --consumer "ain-delegate:local" --provider "ollama" --model "$model")"
+        legacy_activity_code=$?
+        if [ "$legacy_activity_code" -ne 0 ]; then
+            printf '%s
+' 'OLLAMA_DIAGNOSTIC_ISOLATION_REFUSED' > "$log"
+            exit_code=23
+        else
+            legacy_activity_id="$(printf '%s' "$legacy_activity_json" | jq -r '.activity_id // empty')"
+            legacy_activity_token="$(printf '%s' "$legacy_activity_json" | jq -r '.token // empty')"
+            if [ -z "$legacy_activity_id" ] || [ -z "$legacy_activity_token" ]; then
+                printf '%s
+' 'GENERATION_ACTIVITY_IDENTITY_MISSING' > "$log"
+                exit_code=23
+            else
+                ( cd "$wt" && maia-code -p "$prompt" --permission-mode bypassPermissions ) > "$log" 2>&1
+                exit_code=$?
+                node "$OLLAMA_GENERATION_LEASE_SCRIPT" end-generation                     --activity "$legacy_activity_id" --token "$legacy_activity_token" >/dev/null 2>&1
+                legacy_release_code=$?
+                if [ "$legacy_release_code" -ne 0 ] && [ "$exit_code" -eq 0 ]; then
+                    exit_code=24
+                fi
+            fi
+        fi
     elif [ "$lane" = "kimi" ]; then
         local class why
         class="$(jq -r '.execution_lane' "$f")"
@@ -648,14 +676,20 @@ _run_lane() {
                 tail -c 6000 "$log.verify" 2>/dev/null || true
             } > "$repair_prompt_file"
 
-            set +e
-            ( cd "$wt" && env \
-                JARVIS_OLLAMA_HOST="http://127.0.0.1:11434" \
-                JARVIS_NUM_CTX="${JARVIS_NUM_CTX:-32768}" \
-                JARVIS_LOCAL_TIMEOUT_MS="${JARVIS_LOCAL_TIMEOUT_MS:-120000}" \
-                node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$repair_prompt_file" --model "$model" ) > "$repair_log" 2>&1
-            repair_worker_code=$?
-            set -e
+            if ! node "$OLLAMA_GENERATION_LEASE_SCRIPT" check-consumer \
+                --consumer "ain-delegate:local-native:repair" >/dev/null; then
+                repair_worker_code=23
+                printf '%s\n' 'OLLAMA_DIAGNOSTIC_ISOLATION_REFUSED' > "$repair_log"
+            else
+                set +e
+                ( cd "$wt" && env \
+                    JARVIS_OLLAMA_HOST="http://127.0.0.1:11434" \
+                    JARVIS_NUM_CTX="${JARVIS_NUM_CTX:-32768}" \
+                    JARVIS_LOCAL_TIMEOUT_MS="${JARVIS_LOCAL_TIMEOUT_MS:-120000}" \
+                    node "$LOCAL_WORKER_SCRIPT" run --prompt-file "$repair_prompt_file" --model "$model" ) > "$repair_log" 2>&1
+                repair_worker_code=$?
+                set -e
+            fi
             rm -f "$repair_prompt_file"
 
             if [ "$repair_worker_code" -ne 0 ]; then

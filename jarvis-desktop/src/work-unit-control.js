@@ -37,6 +37,11 @@ function canonicalLocalOllamaDirectRealization(binding) {
   return realization;
 }
 
+function isCanonicalLocalOllamaBinding(binding) {
+  return ['qwen-local', 'gpt-oss-local'].includes(binding?.provider_id)
+    && ['ollama-direct', 'opencode'].includes(binding?.adapter_id);
+}
+
 const homeOf = (env = process.env) => env.AIN_DELEGATION_HOME || path.join(os.homedir(), '.claude', 'ain-delegation');
 const resultPath = (id, env = process.env) => path.join(homeOf(env), 'results', `${id}.json`);
 
@@ -760,7 +765,24 @@ async function executeCanonicalResolvedProvider(
 ) {
   let sandbox = null;
   let openCodeRuntime = null;
+  let generationActivity = null;
+  let generationLeaseMod = null;
   try {
+    if (isCanonicalLocalOllamaBinding(binding) && !opts.generationActivityHeld) {
+      generationLeaseMod = await importBound(
+        root,
+        'scripts/builder/jarvis-ollama-generation-lease.mjs',
+      );
+      generationActivity = generationLeaseMod.beginGenerationActivity({
+        consumer: 'canonical-e1:' + binding.adapter_id,
+        providerId: binding.provider_id,
+        modelId: binding.model_id,
+        env: sourceEnv,
+      });
+      if (!generationActivity.ok) {
+        throw new Error(generationActivity.code || 'OLLAMA_DIAGNOSTIC_ISOLATION_REFUSED');
+      }
+    }
     sandbox = materializeCanonicalEvidenceSandbox(root, workUnit);
     const timeout = opts.timeoutMs || RUN_TIMEOUT_MS;
     let run;
@@ -908,6 +930,13 @@ async function executeCanonicalResolvedProvider(
       result_path: persisted.path,
     };
   } finally {
+    if (generationActivity?.ok && generationLeaseMod) {
+      generationLeaseMod.endGenerationActivity({
+        activityId: generationActivity.activity_id,
+        token: generationActivity.token,
+        env: sourceEnv,
+      });
+    }
     if (sandbox?.workspace) fs.rmSync(sandbox.workspace, { recursive: true, force: true });
     if (openCodeRuntime) fs.rmSync(openCodeRuntime, { recursive: true, force: true });
   }
@@ -991,8 +1020,40 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
     };
   }
 
+  let generationActivity = null;
+  let generationLeaseMod = null;
+  if (isCanonicalLocalOllamaBinding(binding)) {
+    generationLeaseMod = await importBound(
+      root,
+      'scripts/builder/jarvis-ollama-generation-lease.mjs',
+    );
+    generationActivity = generationLeaseMod.beginGenerationActivity({
+      consumer: 'canonical-e1:preclaim:' + binding.adapter_id,
+      providerId: binding.provider_id,
+      modelId: binding.model_id,
+      env: sourceEnv,
+    });
+    if (!generationActivity.ok) {
+      return {
+        ok: false,
+        status: 'HELD_FOR_DIAGNOSTIC_ISOLATION',
+        reason: generationActivity.code || 'OLLAMA_DIAGNOSTIC_ISOLATION_REFUSED',
+        grant_standing: 'ACTIVE',
+      };
+    }
+  }
+
   const claimed = store.claimCanonicalExecutionGrantV1(workUnitId, grantId, { home });
-  if (!claimed.ok) return claimed;
+  if (!claimed.ok) {
+    if (generationActivity?.ok && generationLeaseMod) {
+      generationLeaseMod.endGenerationActivity({
+        activityId: generationActivity.activity_id,
+        token: generationActivity.token,
+        env: sourceEnv,
+      });
+    }
+    return claimed;
+  }
 
   if (envelope.work_unit.state.lifecycle_state === 'ROUTED') {
     const executing = await CWUV2.transitionCanonicalV2(root, workUnitId, 'EXECUTING', {
@@ -1004,6 +1065,13 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
         home,
         reason: executing.reason || 'W2_V2_EXECUTING_TRANSITION_REFUSED',
       });
+      if (generationActivity?.ok && generationLeaseMod) {
+        generationLeaseMod.endGenerationActivity({
+          activityId: generationActivity.activity_id,
+          token: generationActivity.token,
+          env: sourceEnv,
+        });
+      }
       return {
         ok: false,
         status: 'EXECUTING_TRANSITION_REFUSED',
@@ -1023,7 +1091,10 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
       binding,
       resolved,
       sourceEnv,
-    }, opts);
+    }, {
+      ...opts,
+      generationActivityHeld: generationActivity,
+    });
   } catch (error) {
     const durableResult = {
       execution_version: 'E1.v1',
@@ -1052,6 +1123,14 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
       result_digest: persisted.digest,
       result_path: persisted.path,
     };
+  } finally {
+    if (generationActivity?.ok && generationLeaseMod) {
+      generationLeaseMod.endGenerationActivity({
+        activityId: generationActivity.activity_id,
+        token: generationActivity.token,
+        env: sourceEnv,
+      });
+    }
   }
 
   const consumed = store.consumeCanonicalExecutionGrantV1(workUnitId, grantId, {
