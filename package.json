@@ -91,6 +91,7 @@
     "review:custody:migration-gate": "npx tsx scripts/review-custody-migration-gate.ts",
     "typecheck:review-custody": "tsc -p tsconfig.review-custody.json",
     "verify:review-custody-freeze": "npx tsx scripts/verify-review-custody-freeze.ts",
+    "verify:i5-p0-freeze": "node scripts/verify-i5-p0-freeze.mjs",
     "verify:review-custody-host-conformance": "npx tsx tests/constitutional/review-custody/step3-host-conformance.ts",
     "verify:review-custody-migration-binding": "bash scripts/verify-review-custody-migration-binding.sh",
     "verify:deploy-provenance": "bash scripts/verify-deploy-provenance.sh",

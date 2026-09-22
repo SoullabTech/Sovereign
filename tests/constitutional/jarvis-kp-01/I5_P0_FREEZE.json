@@ -1,0 +1,23 @@
+{
+  "instrument": "i5-p0-freeze/v1",
+  "lane": "JARVIS-KP-01 / I5-P0",
+  "frozen_at": "2026-09-22",
+  "freeze_subject_commit": "00714383dc95fc56b72c237f00263665a6e379ac",
+  "authority": "founder act, 2026-09-22 \u2014 'the successfully production-tested instrument should now be frozen by exact blob hash'; REVIEW-CUSTODY-01 / S3 Class-B freeze precedent",
+  "law": "These are the exact bytes that ran against production on 2026-09-22 and produced I5-P0 READY. Changing any of them changes what was tested. A repair, a convenience, a refactor or a rerun against a different substrate requires a NEW instrument at a NEW address with its own authorization \u2014 never an edit to these.",
+  "additive_law_permitted": "New instruments may be ADDED at their own address. Adding never edits a frozen file; the blob hash is the mechanical test.",
+  "frozen": {
+    "scripts/witness/i5-p0r2-remediation.sh": "bcdda9b550611daa57f830a3017967bcdd346d3e",
+    "scripts/witness/seam-identity.mjs": "dbd6e2257dca508502956ca8072f40f0deb9b704",
+    "scripts/witness/seam-identity-container.mjs": "85bdba16753cceb4d5991ca4c8c69b57f79f1585"
+  },
+  "why_these_three": "The remediation act mutated production configuration; the two seam witnesses are the property-bound gate it consulted before and after. The remediation script already hard-codes and verifies its two siblings' blob hashes before use, so the instrument was self-binding downward. Nothing bound the remediation script's own bytes. This manifest closes that, at the instrument's own address.",
+  "not_frozen_by_this_act": {
+    "ruling": "Founder act, 2026-09-22: freeze the three named files now so the I5/P1 path can proceed; adjudicate the falsifier scripts as a SEPARATE explicit act. An implementer does not widen a founder-defined freeze set, and the question is not left implicit either.",
+    "scripts/witness/i5-p0r2-ceiling-falsifiers.sh": "DEFERRED to its own named act. By the S3 Class-B law it is a falsifier of a now-frozen instrument, and an unfrozen falsifier is the surface on which an inconvenient test gets domesticated. Its role as a Class-B evidence instrument is to be adjudicated on its own terms.",
+    "scripts/witness/i5-p0r2-dryrun-boundary-falsifiers.sh": "DEFERRED to its own named act, same grounds.",
+    "scripts/witness/i5-host-plane-probe.sh": "Not part of the act. A diagnostic, named in the remediation script only as guidance after a control-plane timeout."
+  },
+  "scope": "This freeze binds BYTES. It establishes nothing about P1, about runtime-effective admission, or about whether the shadow path is correct. It does not authorize a rerun.",
+  "note": "Blob hashes, not a commit diff: blob identity survives history rewriting and names exactly which bytes are law."
+}
