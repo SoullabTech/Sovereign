@@ -44,15 +44,17 @@ if [[ "\${RECLAIM_AUTHORIZED:-0}" != "1" ]]; then
   exit 3
 fi
 REPO="$REPO"
-clean_or_stop() {  # refuse to touch a worktree whose state moved since the census
+# A worktree whose state differs from the census is never touched. Default
+# RECLAIM_ON_DRIFT=stop ends the act there (S4: stop on unexpected state);
+# RECLAIM_ON_DRIFT=skip leaves that worktree alone, continues with the rest,
+# and exits non-zero at the end naming every skipped path.
+ON_DRIFT="\${RECLAIM_ON_DRIFT:-stop}"; SKIPPED=""
+drift() { echo "DRIFT: \$1" >&2; if [[ "\$ON_DRIFT" == "skip" ]]; then SKIPPED="\$SKIPPED"$'\n'"\$1"; return 1; fi; exit 4; }
+clean_or_stop() {
   local wt="\$1"
-  if [[ ! -d "\$wt" ]]; then echo "STOP: \$wt no longer exists" >&2; exit 4; fi
-  if [[ -n "\$(git -C "\$wt" status --porcelain 2>/dev/null)" ]]; then
-    echo "STOP: \$wt is no longer clean (modified or untracked files). Re-run the census." >&2; exit 4
-  fi
-  if [[ "\$(git -C "\$wt" rev-list --count HEAD --not --remotes 2>/dev/null)" != "0" ]]; then
-    echo "STOP: \$wt now has commits on no remote." >&2; exit 4
-  fi
+  [[ -d "\$wt" ]] || { drift "\$wt no longer exists"; return; }
+  [[ -z "\$(git -C "\$wt" status --porcelain 2>/dev/null)" ]] || { drift "\$wt has modified or untracked files"; return; }
+  [[ "\$(git -C "\$wt" rev-list --count HEAD --not --remotes 2>/dev/null)" == "0" ]] || { drift "\$wt has commits on no remote"; return; }
 }
 freed_before=\$(df -k "\$HOME" | awk 'NR==2{print \$4}')
 EOG
@@ -61,6 +63,7 @@ epilogue() {
 cat <<'EOG'
 freed_after=$(df -k "$HOME" | awk 'NR==2{print $4}')
 awk -v a="$freed_before" -v b="$freed_after" 'BEGIN{printf "internal free: %.1f GB -> %.1f GB (+%.1f GB)\n", a/1048576, b/1048576, (b-a)/1048576}'
+if [[ -n "$SKIPPED" ]]; then echo "SKIPPED (state differed from the census; re-run the census before touching these):$SKIPPED" >&2; exit 5; fi
 EOG
 }
 
@@ -80,13 +83,14 @@ while IFS=$'\t' read -r path vol branch head total regen source mod unt unp merg
   case "$cls" in
     REMOVABLE|RETAIN)
       if [[ "$vol" == "internal" ]] && awk -v r="$regen" 'BEGIN{exit !(r>0)}'; then
-        printf '\n# %s  %s GB regenerable  [%s]\nclean_or_stop "%s"\n' "$path" "$regen" "$cls" "$path" >> "$A"
+        printf '\n# %s  %s GB regenerable  [%s]\nif clean_or_stop "%s"; then\n' "$path" "$regen" "$cls" "$path" >> "$A"
         find "$path" -maxdepth 4 -type d \( -name node_modules -o -name .next -o -name .turbo -o -name coverage -o -name dist \) -prune -print 2>/dev/null \
-          | while IFS= read -r d; do printf 'rm -rf "%s"\n' "$d" >> "$A"; done
+          | while IFS= read -r d; do printf '  rm -rf "%s"\n' "$d" >> "$A"; done
+        echo "fi" >> "$A"
         a_gb=$(awk -v x="$a_gb" -v y="$regen" 'BEGIN{print x+y}'); a_n=$((a_n+1))
       fi
       if [[ "$cls" == "REMOVABLE" && "$vol" == "internal" ]]; then
-        printf '\n# %s  %s GB  branch %s  merged into %s\nclean_or_stop "%s"\ngit -C "$REPO" worktree remove "%s"\n' \
+        printf '\n# %s  %s GB  branch %s  merged into %s\nif clean_or_stop "%s"; then git -C "$REPO" worktree remove "%s"; fi\n' \
           "$path" "$total" "$branch" "$CANON" "$path" "$path" >> "$B"
         b_gb=$(awk -v x="$b_gb" -v y="$total" 'BEGIN{print x+y}'); b_n=$((b_n+1))
       fi ;;
