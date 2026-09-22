@@ -1,0 +1,2490 @@
+[
+  {
+    "state": "1-write-rest",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      }
+    ]
+  },
+  {
+    "state": "2-write-maia",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "3-write-alternatives",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "4-write-read-in-context",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "5-write-applied-undo",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "6-develop",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "7-review",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "1-write-rest",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      }
+    ]
+  },
+  {
+    "state": "2-write-maia",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "3-write-alternatives",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "4-write-read-in-context",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "5-write-applied-undo",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "6-develop",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "7-review",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "1-write-rest",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      }
+    ]
+  },
+  {
+    "state": "2-write-maia",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "3-write-alternatives",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "4-write-read-in-context",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "5-write-applied-undo",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "anchored beside the prose, no overlap"
+      },
+      {
+        "id": "MAIA-does-not-occlude-the-manuscript",
+        "ok": true,
+        "detail": "panel sits in reserved space"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "6-develop",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "7-review",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "1-write-rest",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      }
+    ]
+  },
+  {
+    "state": "2-write-maia",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "sheet carries the passage at its head"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "3-write-alternatives",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "sheet carries the passage at its head"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "4-write-read-in-context",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "sheet carries the passage at its head"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "5-write-applied-undo",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "MAIA-never-hides-the-held-passage",
+        "ok": true,
+        "detail": "sheet carries the passage at its head"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+      },
+      {
+        "id": "V2-maia-does-not-move-the-manuscript",
+        "ok": true,
+        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+      }
+    ]
+  },
+  {
+    "state": "6-develop",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "7-review",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "100% of findings carry a return"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  }
+]
