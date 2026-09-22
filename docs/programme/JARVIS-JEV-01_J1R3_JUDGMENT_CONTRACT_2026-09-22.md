@@ -1,8 +1,14 @@
 # JARVIS-ROUTING-INTELLIGENCE-01 · J2-R1 · J1R3
-## Jev Judgment Contract — closed outbound representation + construction-failure law
+## Jev Judgment Contract — minimal outbound identity + closed question protocol
 
 **Status:** ⛔ **CANDIDATE. NOT RATIFIED.** Produced under founder adjudication 2026-09-22:
-**J1R2 RETURNED**, repair `J1R3` authorized (documentary repair only).
+**J1R2 RETURNED**, repair `J1R3 — MINIMAL OUTBOUND IDENTITY + CLOSED QUESTION PROTOCOL`
+authorized (documentary repair only).
+
+⚠️ **THIS REPLACES A NON-CONFORMING FIRST ATTEMPT AT J1R3** (commit `9576c584…`, blob
+`60366f5f…`), which addressed **one of the seven ruled J1R2 defects** because the
+seven-item ruling had not reached this session. That commit stays in history as the record
+of the error; ⛔ it has no candidate standing.
 **Supersedes as candidate:** `J1R2` (commit `d7b1098e…`, blob `bb2c1c82…`) — historical.
 **Bound to canonical at construction:** `0691cd3668c1ba0312e3578d5264a8b1abf90ec3`
 **J0 blob verified before mutation:** `494cd61973ed02c4453067716657631f3f9143e9` ✅
@@ -34,23 +40,32 @@ J1 adjudication
 ```
 
 **Carried forward from J1R2 UNCHANGED** (⛔ not reopened, ⛔ not silently edited): the
-separate address; authority-invariant semantics **I1–I7**; the `TaskShape` blob binding; the
+separate address; authority invariance **I1–I4, I6, I7**; the `TaskShape` blob binding; the
 removal of `requested_effect`, `affected_surface`, `candidate_routes`, `Q_ROUTE` and the
 `Choice` shape; the four questions and their asymmetries; the J1-owned vocabularies; the
-host-bound admission rule; the membrane ordering.
+membrane ordering.
 
-**REPAIRED HERE — two laws J1R2 left unstated:**
-1. §4 — the **outbound representation** was referenced once, in an ordering diagram, and
-   **never defined**. A representation with no declared contents cannot be constrained.
-2. §5 — the packet declared **bounded domains with no rule for what happens when a real
-   value falls outside them.** Silence there is an invitation to make the value fit.
+**REPAIRED HERE — the seven ruled J1R2 defects:**
 
-⚠️ **Provenance note — second occurrence, recorded as signal.** This message, like the one
-directing `J1R2`, referred to an act text "as written" and to formatting "in your pasted
-message"; **no such act was drafted in this session.** Both repairs below were instead
-derived from the two substantive constraints the message states directly, plus my own
-re-reading of `J1R2`. ⛔ Nothing else was inferred. ⭐ Twice now suggests messages may be
-going missing between us; worth checking rather than working around.
+| # | Defect | Repair |
+|---|---|---|
+| 1 | Jev-visible `work_unit_ref` | §2 — **removed**; the packet carries no identity at all |
+| 2 | `question_id` outside the outbound packet | §2 — **inside** the packet; the packet *is* the representation |
+| 3 | admission bound to a separate argument | §7 — bound to **`packet.question_id`** |
+| 4 | failure reason implementation-dependent | §7.2 — **deterministic total precedence** |
+| 5 | I5 understated on agreement | §1 — agreement is **advisory evidence, never authority** |
+| 6 | dead `recommended route` / generic `preference` advice surfaces | §1 — **removed**; advice surface is exactly the image of the question set |
+| 7 | no rule for unrepresentable values | §5 — **construction-refusal law** *(accepted from the first attempt)* |
+
+⭐ **Accepted and ⛔ not reopened:** the removal of the `Choice` shape.
+
+⚠️⚠️ **Provenance note — THIRD occurrence, and it caused a real defect.** Three successive
+directing messages referred to act texts "as written", to formatting "in your pasted
+message", and to a seven-item ruling on `J1R2` — **none of which reached this session.** The
+first attempt at `J1R3` was written from the two constraints that *were* stated directly and
+consequently addressed **one of seven** ruled defects. ⭐ This is no longer a formatting
+curiosity: **content is being lost between us, and it has already produced a non-conforming
+candidate.** ⛔ Recorded rather than routed around.
 
 ---
 
@@ -60,14 +75,21 @@ Two disjoint domains, ⛔ never merged:
 
 ```text
 AUTHORITY DOMAIN                    ADVICE DOMAIN
-authority lattice                   preference
-available authorized acts           recommended deliberation depth
-prohibited acts                     escalation recommendation
-governing requirements              clarification recommendation
-derivability of authority gates     model-necessity recommendation
+authority lattice                   recommended deliberation depth   (Q_DEPTH)
+available authorized acts           escalation recommendation        (Q_RISK)
+prohibited acts                     clarification recommendation     (Q_SUFFICIENT)
+governing requirements              model-necessity recommendation   (Q_LLM_NEEDED)
+derivability of authority gates
 
 INVARIANT under every J              MAY be altered by J
 ```
+
+⭐⭐ **The advice surface is EXACTLY the image of the question set — one member per
+question, no more.** ⛔ `recommended route` and a generic `preference` are **removed**: the
+first died with `Q_ROUTE`, and the second is an unbounded surface with no question behind
+it. ⭐ Stating the advice domain as the image of the questions makes a dead or unbounded
+advice surface **structurally impossible** rather than merely absent today — a new advice
+member now requires a new question, which requires a governed act.
 
 **I1 · AUTHORITY INVARIANCE.** For every state `s` and admitted judgment set `J`:
 
@@ -83,20 +105,26 @@ Requirements'(s, J)   = Requirements(s)
 **I2 · ADVICE IS THE ONLY MUTABLE OUTPUT.** ⛔ Nothing in `Advice` is an input to `Authority`.
 **I3 · ABSENCE IS THE IDENTITY (A7).** Removing Jev changes no authority outcome.
 **I4 · CONFIDENCE IS ADVICE-ONLY (A2).** ⛔ Never in any position computing `Authority`.
-**I5 · REPETITION AND ORDER ARE INERT.** ⛔ *"Ask again until it agrees"* reaches nothing;
-agreement confers no standing (ratified J5).
+**I5 · REPETITION AND ORDER ARE INERT; AGREEMENT IS ADVISORY EVIDENCE, NEVER AUTHORITY.**
+`Authority'` is unchanged by re-submitting, re-asking, re-sequencing or accumulating
+judgments. ⛔ *"Ask again until it agrees"* reaches nothing.
+⭐ **Agreement between two or more judgments is advisory evidence only.** It may inform
+`Advice`; ⛔ it may never enter `Authority`, satisfy a review requirement, substitute for an
+independent second opinion, or confer standing of any kind — ratified J5: *a retry is not an
+independent second opinion*, and *model agreement remains evidence only and may never create
+merge, deployment, production, constitutional, or founder authority.*
 **I6 · NO DISCHARGE (A1).** ⛔ Never marks a requirement satisfied; ⛔ never satisfies a review
 requirement merely by being a Jev judgment.
 **I7 · ABSTENTION IS AUTHORITY-INERT (A3).**
 
 ---
 
-## 2 · `JudgmentPacket` *(carried from J1R2, unchanged)*
+## 2 · `JudgmentPacket` — ⭐ REPAIRED (defects 1 and 2)
 
 ```text
 JudgmentPacket := {
-  packet_version          : "jev-2"                 // exact literal
-  work_unit_ref           : OpaqueId                // /^[0-9a-f]{32}$/
+  packet_version          : "jev-3"                 // exact literal
+  question_id             : QuestionId              // §6 — closed protocol selector
   task_shape              : TaskShape               // §3 — BOUND to canonical J5.v1
   contains_sensitive      : Boolean                 // computed by the membrane, never by Jev
   requires_external_info  : Boolean
@@ -111,8 +139,30 @@ ChangeScope := {
 }
 ```
 
-⭐ Every field is a closed enum member, bounded integer, boolean, or opaque fixed-width id.
-⛔ No free string, no path, no name, no prose, no extension point.
+⭐ Every field is a closed enum member, bounded integer, or boolean. ⛔ No free string, no
+path, no name, no prose, no identifier, no extension point.
+
+### 2.1 · ⭐⭐ `work_unit_ref` is REMOVED — the packet carries NO identity (defect 1)
+
+⛔ **Jev sees no identifier of any kind.** `work_unit_ref` was specified as opaque, and
+opacity was not enough: ⭐ **an opaque id is still a correlation handle.** A provider holding
+a stable per-work-unit token can link requests across time, count them, order them, and
+assemble a profile of Soullab's activity **without ever reading a single content field.**
+
+⭐ **Correlation is a host-side concern and must not travel.** The host pairs a response to
+its request through its own transport context; ⛔ nothing in the representation exists to
+help anyone else do so.
+
+⚠️ This also removes the last field whose *cardinality* was unbounded. Every remaining member
+draws from a finite set, so the total number of distinct lawful packets is finite and
+enumerable — ⭐ which is what makes §9's shape guard decidable rather than merely strict.
+
+### 2.2 · ⭐ `question_id` is IN the packet (defect 2)
+
+The question being asked is a **member of the packet**, not a sibling travelling beside it.
+⭐ **The packet IS the outbound representation** (§4) — one object, one boundary, one thing to
+guard. ⛔ A wrapper around the packet would be a second surface with its own admissible
+fields, and that is where an `instructions` member appears three months later.
 
 ---
 
@@ -136,13 +186,12 @@ silently follow.
 ### 4.1 · Exact definition
 
 ```text
-OutboundRepresentation := {
-  packet       : JudgmentPacket      // §2, exactly
-  question_id  : QuestionId          // §6, exactly — a closed protocol selector
-}
+OutboundRepresentation := JudgmentPacket      // §2, exactly — nothing wraps it
 ```
 
-⛔ **There is nothing else.** The representation has exactly two members.
+⭐⭐ **The representation IS the packet.** ⛔ There is no envelope, no wrapper, no sibling
+field, and no second object. The six members of §2 are the whole of what leaves the
+boundary.
 
 ### 4.2 · ⛔ `question_id` is NOT a prompt channel
 
@@ -157,7 +206,7 @@ system · examples · hint · description · note · comment · metadata
 guidance · criteria · background · justification
 ```
 
-⛔ Nor any field not named in §4.1, whatever it is called.
+⛔ Nor any member not named in §2, whatever it is called.
 
 ### 4.3 · ⭐ The line, stated precisely so it cannot be fudged
 
@@ -247,9 +296,9 @@ which nothing was asked.
 
 ### 5.5 · Applies to every bounded field
 
-Same law for: `work_unit_ref` failing `/^[0-9a-f]{32}$/`; a `task_shape` not in the bound
+Same law for: a `question_id` not in the closed set of §6; a `task_shape` not in the bound
 `TASK_SHAPES` blob; `file_count` outside `[0, 10000]`; any non-boolean in a boolean
-position; any value of `packet_version` other than `"jev-2"`.
+position; any value of `packet_version` other than `"jev-3"`.
 
 ---
 
@@ -285,24 +334,61 @@ AbstainReason := NO_RESPONSE | TIMEOUT | PARSE_FAILURE | UNKNOWN_SHAPE
 
 ---
 
-## 7 · Host-bound response admission *(carried from J1R2, unchanged)*
+## 7 · Response admission — ⭐ REPAIRED (defects 3 and 4)
+
+### 7.1 · Bound to `packet.question_id`
 
 ```text
-admit(expected_question_id, response_or_failure) :=
+admit(packet, response_or_failure) :=
 
   well-formed Score or YesNo
-    ∧ question_id = expected_question_id
-    ∧ shape = the shape declared for expected_question_id in §6
+    ∧ response.question_id = packet.question_id
+    ∧ shape = the shape declared for packet.question_id in §6
     ∧ all range invariants hold                → that Judgment
 
   well-formed Abstain
-    ∧ question_id = expected_question_id       → that Abstain
+    ∧ response.question_id = packet.question_id → that Abstain
 
-  otherwise → Abstain{ question_id: expected_question_id, reason: <mapped, §6> }
+  otherwise → Abstain{ question_id: packet.question_id,
+                       reason: precedence(§7.2) }
 ```
 
-⭐ The host supplies the expected id; ⛔ **no response identity is ever fabricated.**
+⭐⭐ **The expected question is read from the packet the host built and sent, ⛔ never from
+the response.** The anti-fabrication guarantee is unchanged and now has a single source: an
+absent, timed-out or unparseable response supplies nothing, and nothing is needed from it.
+⛔ **No response identity is ever fabricated.**
+
 ⭐ `Abstain` is admissible for **every** question.
+
+### 7.2 · ⭐⭐ DETERMINISTIC FAILURE-REASON PRECEDENCE (defect 4)
+
+Several failure conditions can hold at once — a response may be simultaneously late,
+malformed, and about the wrong question. ⛔ Without a fixed order the same failure yields
+different records on different runs, and **the record becomes a fact about the
+implementation rather than about what happened.**
+
+**Total order. The FIRST condition that holds determines the reason:**
+
+```text
+1  TIMEOUT              deadline elapsed before a complete response
+2  NO_RESPONSE          transport completed, nothing returned
+3  PARSE_FAILURE        bytes present, not well-formed
+4  UNKNOWN_SHAPE        well-formed, not Score | YesNo | Abstain
+5  MISMATCHED_QUESTION  a declared shape, question_id ≠ packet.question_id
+6  OUT_OF_RANGE         shape and question correct, an invariant violated
+7  <model-supplied>     a well-formed, matching Abstain: its own reason is taken
+```
+
+⭐ **Host-detected reasons (1–6) outrank model-supplied reasons (7), always.** A response
+claiming `REFUSED` while also being malformed is recorded as `PARSE_FAILURE`: ⛔ the
+malformation is the fact, and a model's account of itself does not override what the host
+observed.
+
+⭐ A well-formed matching `Abstain` carries exactly one reason, so ⛔ no precedence is needed
+*among* `INSUFFICIENT_STATE` and `REFUSED` — the host takes the one given.
+
+⚠️ This order is **part of the contract**, ⛔ not an implementation note. A candidate that
+reorders it is non-conforming even if every individual mapping looks sensible.
 
 ---
 
@@ -353,6 +439,14 @@ capability table nor grants it to any provider.
 | `DC-FAILURE-LOGS-VALUE` | the offending value logged or hashed | §5.3 |
 | `DC-FAILURE-CHANGES-AUTHORITY` | a construction failure blocks an authorized act | §5.3 / I1 |
 | `DC-UNBOUND-TASKSHAPE` | a shape outside the bound blob coerced to a member | §5.5 |
+| ⭐ `DC-CORRELATION-HANDLE` | any stable per-work-unit identifier reaches the packet | §2.1 |
+| `DC-WRAPPER-ENVELOPE` | the packet is wrapped in an object with its own fields | §2.2 / §4.1 |
+| `DC-QUESTION-FROM-RESPONSE` | expected question recovered from the response | §7.1 |
+| ⭐ `DC-NONDETERMINISTIC-REASON` | same failure yields different `AbstainReason` across runs | §7.2 |
+| `DC-MODEL-REASON-WINS` | a malformed response's self-declared `REFUSED` is recorded | §7.2 |
+| `DC-PRECEDENCE-REORDERED` | the §7.2 order changed while each mapping looks sensible | §7.2 |
+| ⭐ `DC-AGREEMENT-AS-AUTHORITY` | two agreeing judgments satisfy a review requirement | I5 |
+| `DC-ORPHAN-ADVICE-SURFACE` | an advice member with no question behind it | §1 |
 
 ⛔ **If a candidate survives, the repair is the SUITE, never the candidate.**
 
@@ -385,6 +479,7 @@ and ⛔ must not be described as a fast path or automatic path.
 J0 Constitution         RATIFIED · CANONICAL · IMMUTABLE @ blob 494cd619
 embedded §3             HISTORICAL CANDIDATE ONLY · ⛔ no standing
 J1R1 · J1R2             RETURNED · superseded as candidates · historical
+J1R3 first attempt      NON-CONFORMING @ blob 60366f5f · ⛔ no standing · historical
 J1R3 (this document)    CANDIDATE · NOT RATIFIED · sole object of J1 adjudication
 TaskShape binding       J5.v1 @ blob e840d705 · verified at canonical 0691cd36
 Falsifier suite         OWED · ⛔ NOT BUILT · lethality ⛔ NOT DEMONSTRATED
@@ -395,5 +490,6 @@ PROVIDER EXECUTION      NOT OPENED
 capability table        UNCHANGED
 ```
 
-⭐ *A protocol selector is not a prompt. A boundary is not a rounding error. And a packet
-that was never built is not a model that declined.*
+⭐ *A protocol selector is not a prompt. A boundary is not a rounding error. An opaque
+identifier is still a correlation handle. And a packet that was never built is not a model
+that declined.*
