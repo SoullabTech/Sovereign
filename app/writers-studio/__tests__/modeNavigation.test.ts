@@ -17,7 +17,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { CANVAS_HREF, DEVELOP_HREF, STUDIO_MODES, assertModesHonest } from '../studioMap';
+import { REBUILD_HREF, DEVELOP_HREF, STUDIO_MODES, assertModesHonest } from '../studioMap';
 import { canvasForManuscript, requestedManuscriptId } from '../canvasIdentity';
 
 const src = (...p: string[]) =>
@@ -33,7 +33,7 @@ describe('a mode switch carries the Work', () => {
   });
 
   it('Develop → Write: the same Work returns, not the most recent one', () => {
-    const href = canvasForManuscript(CANVAS_HREF, WORK);
+    const href = canvasForManuscript(REBUILD_HREF, WORK);
     expect(requestedManuscriptId(href.slice(href.indexOf('?')))).toBe(WORK);
   });
 

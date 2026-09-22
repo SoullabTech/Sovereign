@@ -22,7 +22,7 @@ import {
   requestedManuscriptId,
   selectManuscript,
 } from '../canvasIdentity';
-import { CANVAS_HREF } from '../studioMap';
+import { REBUILD_HREF } from '../studioMap';
 
 const M = (id: string) => ({ id });
 const ALCHEMY = M('ms-alchemy');
@@ -42,7 +42,7 @@ const followLink = (href: string) => {
 
 describe('Canvas identity — the round trip Home relies on', () => {
   it('lands on the work that was clicked, not the first in the list', () => {
-    const { selected, honoured } = followLink(canvasForManuscript(CANVAS_HREF, ALCHEMY.id));
+    const { selected, honoured } = followLink(canvasForManuscript(REBUILD_HREF, ALCHEMY.id));
     expect(selected).toBe(ALCHEMY);
     expect(honoured).toBe(true);
     /* The negative half: a fallback would have produced SECOND. If this ever
@@ -52,7 +52,7 @@ describe('Canvas identity — the round trip Home relies on', () => {
 
   it('lands on each work in turn — no single lucky case', () => {
     for (const wanted of LIBRARY) {
-      const { selected } = followLink(canvasForManuscript(CANVAS_HREF, wanted.id));
+      const { selected } = followLink(canvasForManuscript(REBUILD_HREF, wanted.id));
       expect(selected).toBe(wanted);
     }
   });
@@ -60,7 +60,7 @@ describe('Canvas identity — the round trip Home relies on', () => {
   it('FAILS the round trip when the producer uses a different parameter name', () => {
     /* This is the shipped defect, written down. `?id=` is what the rebuilt
        Home sent before the correction. */
-    const wrong = `${CANVAS_HREF}?id=${ALCHEMY.id}`;
+    const wrong = `${REBUILD_HREF}?id=${ALCHEMY.id}`;
     const { requested, selected, honoured } = followLink(wrong);
     expect(requested).toBeNull();
     expect(selected).toBe(SECOND); // silently the wrong manuscript
@@ -68,20 +68,20 @@ describe('Canvas identity — the round trip Home relies on', () => {
   });
 
   it('honours identity on a base that already carries a query', () => {
-    const href = canvasForManuscript(`${CANVAS_HREF}?tab=draft`, ALCHEMY.id);
+    const href = canvasForManuscript(`${REBUILD_HREF}?tab=draft`, ALCHEMY.id);
     expect(href).toContain('?tab=draft&');
     expect(followLink(href).selected).toBe(ALCHEMY);
   });
 
   it('degrades rather than stranding when the asked-for manuscript is gone', () => {
-    const { selected, honoured } = followLink(canvasForManuscript(CANVAS_HREF, 'ms-deleted'));
+    const { selected, honoured } = followLink(canvasForManuscript(REBUILD_HREF, 'ms-deleted'));
     expect(selected).toBe(SECOND);
     expect(honoured).toBe(false); // the ask was overridden — a defect, not a degradation
   });
 
   it('asks for nothing when there is no manuscript to ask for', () => {
-    expect(canvasForManuscript(CANVAS_HREF, null)).toBe(CANVAS_HREF);
-    expect(followLink(CANVAS_HREF).requested).toBeNull();
+    expect(canvasForManuscript(REBUILD_HREF, null)).toBe(REBUILD_HREF);
+    expect(followLink(REBUILD_HREF).requested).toBeNull();
   });
 
   it('selects nothing from an empty library rather than throwing', () => {

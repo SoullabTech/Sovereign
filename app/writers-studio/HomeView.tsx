@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { FilePlus2, FolderInput, Loader2, NotebookPen, Trash2 } from 'lucide-react';
 import { PRESS, SERIF } from './pressTheme';
-import { CANVAS_HREF, IMPORT_HREF, SOURCE_INTAKE_HREF } from './studioMap';
+import { REBUILD_HREF, IMPORT_HREF, SOURCE_INTAKE_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
 import { locationForSection } from '@/lib/writersStudio/placeInWork';
 import { useSectionActivity } from './useSectionActivity';
@@ -154,7 +154,7 @@ function returnHref(
   manuscriptId: string | null,
   activity: SectionActivity | null,
 ): string {
-  const base = canvasForManuscript(CANVAS_HREF, manuscriptId);
+  const base = canvasForManuscript(REBUILD_HREF, manuscriptId);
   if (activity?.kind !== 'distinct') return base;
   const cut = base.indexOf('?');
   return locationForSection(
@@ -871,7 +871,7 @@ export default function HomeView({
                           key={`w-${w.id}`}
                           itemKey={`work:${w.id}`}
                           target={{ workId: w.id, manuscriptId: manuscriptIdOf(w) }}
-                          href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                          href={canvasForManuscript(REBUILD_HREF, manuscriptIdOf(w))}
                           title={w.title ?? 'Untitled work'}
                           untitled={!w.title}
                           meta={workMeta(w)}
@@ -884,7 +884,7 @@ export default function HomeView({
                           itemKey={`writing:${m.id}`}
                           target={{ workId: null, manuscriptId: m.id }}
                           makeWorkFrom={m}
-                          href={canvasForManuscript(CANVAS_HREF, m.id)}
+                          href={canvasForManuscript(REBUILD_HREF, m.id)}
                           title={m.title ?? 'Untitled'}
                           untitled={!m.title}
                           meta={pagesLabel(m)}
@@ -993,7 +993,7 @@ export default function HomeView({
                           key={w.id}
                           itemKey={`work:${w.id}`}
                           target={{ workId: w.id, manuscriptId: manuscriptIdOf(w) }}
-                          href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                          href={canvasForManuscript(REBUILD_HREF, manuscriptIdOf(w))}
                           title={w.title ?? 'Untitled work'}
                           untitled={!w.title}
                           meta={workMeta(w)}
@@ -1018,7 +1018,7 @@ export default function HomeView({
                 <p className="text-[14.5px] opacity-50 mb-8">{pagesLabel(feature)}</p>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <Link
-                    href={canvasForManuscript(CANVAS_HREF, feature.id)}
+                    href={canvasForManuscript(REBUILD_HREF, feature.id)}
                     className={`${FILLED} w-full sm:w-auto`}
                     style={{ background: PRESS.accent, color: PRESS.ink }}
                   >
@@ -1187,7 +1187,7 @@ export default function HomeView({
                       key={w.id}
                       itemKey={`work:${w.id}`}
                       target={{ workId: w.id, manuscriptId: manuscriptIdOf(w) }}
-                      href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                      href={canvasForManuscript(REBUILD_HREF, manuscriptIdOf(w))}
                       title={w.title ?? 'Untitled work'}
                       untitled={!w.title}
                       meta={workMeta(w)}
@@ -1238,7 +1238,7 @@ export default function HomeView({
                       itemKey={`writing:${m.id}`}
                       target={{ workId: null, manuscriptId: m.id }}
                       makeWorkFrom={m}
-                      href={canvasForManuscript(CANVAS_HREF, m.id)}
+                      href={canvasForManuscript(REBUILD_HREF, m.id)}
                       title={m.title ?? 'Untitled'}
                       untitled={!m.title}
                       meta={pagesLabel(m)}

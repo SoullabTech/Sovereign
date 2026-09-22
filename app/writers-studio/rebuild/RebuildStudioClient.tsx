@@ -7,7 +7,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
 import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
 import { StudioModeBar } from '../studio/StudioModeBar';
-import { SERIF, SANS } from '../studioTheme';
+import { SERIF, SANS, writingFieldLayout } from '../studioTheme';
 import { useLivingWorks } from '../useLivingWorks';
 import { useStudioSources } from '../useStudioSources';
 import { SOURCE_INTAKE_HREF } from '../studioMap';
@@ -64,6 +64,25 @@ type PassageTab = 'interpret' | 'suggest' | 'explore' | 'ask';
 interface PassageSelection {
   draftSectionId: string; start: number; end: number; text: string; revisionNumber: number;
 }
+
+const REBUILD_LAYOUT_NOTIONAL = 100000;
+const REBUILD_HOST_LAYOUT = writingFieldLayout(
+  REBUILD_LAYOUT_NOTIONAL,
+  ['outlinePanel', 'writingField', 'maiaPanel'],
+);
+const REBUILD_EDITORIAL_LAYOUT = writingFieldLayout(
+  REBUILD_LAYOUT_NOTIONAL,
+  ['outlinePanel', 'writingField'],
+);
+const REBUILD_HOST_GRID = [
+  REBUILD_HOST_LAYOUT.outlinePanel,
+  REBUILD_HOST_LAYOUT.writingField,
+  REBUILD_HOST_LAYOUT.maiaPanel,
+].map((share) => `${share}fr`).join(' ');
+const REBUILD_EDITORIAL_GRID = [
+  REBUILD_EDITORIAL_LAYOUT.outlinePanel,
+  REBUILD_EDITORIAL_LAYOUT.writingField,
+].map((share) => `${share}fr`).join(' ');
 
 const C = {
   shell: 'var(--ws-ground-base, #F2F0EA)',
@@ -1380,7 +1399,7 @@ export default function RebuildStudioClient() {
         </div>
       )}
 
-      <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : workspaceOpen ? '250px minmax(0, 1fr)' : '286px minmax(520px, 1fr) 390px' }}>
+      <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : workspaceOpen ? REBUILD_EDITORIAL_GRID : REBUILD_HOST_GRID }}>
         {!canvasExpanded && (<aside className={`wsr-outline ${mobilePane !== 'outline' ? 'wsr-mobile-hidden' : ''}`} style={{ borderRight: `1px solid ${C.soft}`, background: C.panel, overflowY: 'auto', padding: 16 }}>
           <Link href="/writers-studio" aria-label="Return to all Writer’s Studio works" style={{ display: 'inline-block', color: C.muted, fontSize: 12, padding: '3px 2px 15px', textDecoration: 'none' }}>‹ All Works</Link>
           <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 14, marginBottom: 18 }}>
