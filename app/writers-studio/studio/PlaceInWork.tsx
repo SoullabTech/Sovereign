@@ -35,7 +35,7 @@ export function PlaceInWork({
       style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.snug,
                borderBottom: `1px solid ${RULE.soft}`, paddingBottom: SPACE.tight }}
     >
-      <StudioText role="metadata" data-place-line style={{ color: INK.secondary }}>
+      <StudioText role="metadata" data-place-line style={{ color: INK.muted }}>
         {placeLine(crumb)}
       </StudioText>
       {showBack && (

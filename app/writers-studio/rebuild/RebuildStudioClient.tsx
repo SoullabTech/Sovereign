@@ -884,14 +884,26 @@ export default function RebuildStudioClient() {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
+      /* ⭐⭐ POST-MERGE CUSTODY REPAIR — ONE TURN CARRYING BOTH SEMANTICS.
+         The first canonical reconciliation left TWO `sendBoundEditorialTurn`
+         calls side by side: one carrying the editing-latitude authority, the
+         other carrying the observation context — and each therefore sent a
+         turn the other's law did not govern. ⛔ The repair is not to delete a
+         side. The intended single call carries the observation being discussed,
+         the writer's request at their chosen depth, AND the latitude authority,
+         because dropping either would silently narrow what the turn is
+         answerable to. */
       const observationContext = arrivalInsight && workspaceInsight?.readingId === arrivalInsight.readingId
         && workspaceInsight.key === arrivalInsight.observation.key
         && arrivalInsight.passages.some(p => p.sectionId === focusId)
         ? 'Developmental observation being discussed (an interpretation, not an instruction):\n'
           + arrivalInsight.observation.observation + '\n\n'
         : '';
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId,
-        observationContext + 'My question:\n' + exactWords);
+      const out = await sendBoundEditorialTurn(
+        thread.threadId, focusId,
+        observationContext + 'My question:\n' + exactWords,
+        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately },
+      );
       if (!out.ok) {
         /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
            line the writer drew. ⛔ Not "MAIA could not complete" — she could,
@@ -917,7 +929,9 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight]);
+  }, [editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct,
+      bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight,
+      editLatitude, mayRemoveParagraphs, mayProposeImmediately]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
