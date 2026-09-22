@@ -9,7 +9,7 @@
  * JARVIS-NATIVE-PATCH-ADMISSION-01.
  */
 import {
-  appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync,
+  appendFileSync, chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync,
   readFileSync, rmSync, writeFileSync,
 } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -173,20 +173,63 @@ export function parseNativeEditOutput(outputText, allowedFiles = []) {
   const edits = [];
   for (let index = 0; index < body.length; index += 1) {
     const edit = body[index];
-    if (!edit || typeof edit !== "object" || Array.isArray(edit)
-      || !exactKeys(edit, ["new_text", "old_text", "path"])) {
+    if (!edit || typeof edit !== "object" || Array.isArray(edit)) {
       return refusal("EDIT_OBJECT_CLOSED", { index });
     }
     const file = normalizePath(edit.path);
     if (unsafePath(file)) return refusal("EDIT_PATH_UNSAFE", { index, path: file });
     if (!pathAllowed(file, allowedFiles)) return refusal("EDIT_PATH_NOT_AUTHORIZED", { index, path: file });
-    if (typeof edit.old_text !== "string" || !edit.old_text.length || typeof edit.new_text !== "string") {
-      return refusal("EDIT_TEXT_INVALID", { index, path: file });
+
+    if (exactKeys(edit, ["new_text", "old_text", "path"])) {
+      if (typeof edit.old_text !== "string" || !edit.old_text.length || typeof edit.new_text !== "string") {
+        return refusal("EDIT_TEXT_INVALID", { index, path: file });
+      }
+      if (edit.old_text === edit.new_text) return refusal("EDIT_NO_EFFECT", { index, path: file });
+      edits.push({ kind: "replace", path: file, old_text: edit.old_text, new_text: edit.new_text });
+      continue;
     }
-    if (edit.old_text === edit.new_text) return refusal("EDIT_NO_EFFECT", { index, path: file });
-    edits.push({ path: file, old_text: edit.old_text, new_text: edit.new_text });
+
+    if (exactKeys(edit, ["content", "create", "path"])) {
+      if (edit.create !== true || typeof edit.content !== "string" || !edit.content.length) {
+        return refusal("CREATE_TEXT_INVALID", { index, path: file });
+      }
+      if (edit.content.includes("\u0000")) return refusal("CREATE_BINARY_UNSUPPORTED", { index, path: file });
+      edits.push({ kind: "create", path: file, content: edit.content });
+      continue;
+    }
+
+    return refusal("EDIT_OBJECT_CLOSED", { index });
   }
   return { ok: true, status: "STRUCTURALLY_ADMITTED", raw, edits, output_digest: digest(raw) };
+}
+
+function pathHasSymlinkParent(worktree, file) {
+  const parts = normalizePath(file).split("/").slice(0, -1);
+  let current = worktree;
+  for (const part of parts) {
+    current = path.join(current, part);
+    const entry = lstatSync(current, { throwIfNoEntry: false });
+    if (!entry) continue;
+    if (entry.isSymbolicLink()) return true;
+  }
+  return false;
+}
+
+function renderNewFilePatch(tmp, file, content) {
+  const newFile = path.join(tmp, "b", file);
+  mkdirSync(path.dirname(newFile), { recursive: true });
+  writeFileSync(newFile, content, "utf8");
+  chmodSync(newFile, 0o644);
+  try {
+    execFileSync("git", ["diff", "--no-index", "--no-prefix", "--binary", "--no-renames", "--", "/dev/null", `b/${file}`], {
+      cwd: tmp, encoding: "utf8", maxBuffer: 4 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"],
+    });
+    return "";
+  } catch (error) {
+    if (error?.status !== 1) throw error;
+    const rendered = String(error.stdout || "");
+    return rendered.replace(`diff --git b/${file} b/${file}`, `diff --git a/${file} b/${file}`);
+  }
 }
 
 function renderFilePatch(tmp, file, before, after, mode) {
@@ -254,6 +297,19 @@ export function applyNativeEdits({
   const states = new Map();
   for (let index = 0; index < parsed.edits.length; index += 1) {
     const edit = parsed.edits[index];
+
+    if (edit.kind === "create") {
+      if (states.has(edit.path)) return recordRefusal("CREATE_PATH_DUPLICATE", { index, path: edit.path });
+      let tracked;
+      try { tracked = String(runGit(worktree, ["ls-tree", authorizedHead, "--", edit.path]) || "").trim(); }
+      catch (error) { return recordRefusal("CREATE_TARGET_UNREADABLE", { index, path: edit.path, error: String(error?.message || error) }); }
+      if (tracked) return recordRefusal("CREATE_TARGET_ALREADY_TRACKED", { index, path: edit.path });
+      if (existsSync(path.join(worktree, edit.path))) return recordRefusal("CREATE_TARGET_EXISTS", { index, path: edit.path });
+      if (pathHasSymlinkParent(worktree, edit.path)) return recordRefusal("CREATE_PARENT_SYMLINK_UNSUPPORTED", { index, path: edit.path });
+      states.set(edit.path, { mode: "100644", before: null, after: edit.content, create: true });
+      continue;
+    }
+
     if (!states.has(edit.path)) {
       let tracked;
       try { tracked = String(runGit(worktree, ["ls-tree", authorizedHead, "--", edit.path]) || "").trim(); }
@@ -265,9 +321,10 @@ export function applyNativeEdits({
       try { content = String(runGit(worktree, ["show", `${authorizedHead}:${edit.path}`]) || ""); }
       catch (error) { return recordRefusal("EDIT_TARGET_UNREADABLE", { index, path: edit.path, error: String(error?.message || error) }); }
       if (content.includes("\u0000")) return recordRefusal("EDIT_BINARY_UNSUPPORTED", { index, path: edit.path });
-      states.set(edit.path, { mode, before: content, after: content });
+      states.set(edit.path, { mode, before: content, after: content, create: false });
     }
     const state = states.get(edit.path);
+    if (state.create) return recordRefusal("CREATE_PATH_DUPLICATE", { index, path: edit.path });
     const occurrences = countOccurrences(state.after, edit.old_text);
     if (occurrences !== 1) return recordRefusal("OLD_TEXT_NOT_UNIQUE", { index, path: edit.path, occurrences });
     state.after = state.after.replace(edit.old_text, edit.new_text);
@@ -277,6 +334,10 @@ export function applyNativeEdits({
   try {
     let patchText = "";
     for (const [file, state] of [...states.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+      if (state.create) {
+        patchText += renderNewFilePatch(tmp, file, state.after);
+        continue;
+      }
       if (state.before === state.after) return recordRefusal("EDIT_FILE_NO_EFFECT", { path: file });
       patchText += renderFilePatch(tmp, file, state.before, state.after, state.mode);
     }

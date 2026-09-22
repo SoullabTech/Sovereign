@@ -66,9 +66,13 @@ try {
   assert.match(prompt, /EDIT_JSON:/);
   assert.match(prompt, /FIRST BYTES are exactly `EDIT_JSON: `/);
   assert.match(prompt, /old_text must be copied EXACTLY/);
-  assert.match(prompt, /edit ARRAY ITSELF/);
+  assert.match(prompt, /operation ARRAY ITSELF/);
   assert.match(prompt, /do not emit an edits key/);
-  assert.match(prompt, /TWO-EDIT SYNTAX EXAMPLE ONLY/);
+  assert.match(prompt, /Existing-file replacement shape/);
+  assert.match(prompt, /New-file creation shape/);
+  assert.match(prompt, /MULTI-FILE SYNTAX EXAMPLE ONLY/);
+  assert.match(prompt, /create:true is only for an explicitly allowed path/);
+  assert.match(prompt, /Never represent creation as old_text/);
   assert.match(prompt, /comma-separated INSIDE that single array/);
   assert.match(prompt, /smallest exact replacement/);
   assert.match(prompt, /JARVIS, not you, renders the git patch/);
@@ -80,7 +84,7 @@ try {
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("19 passed · 0 failed");
+  console.log("27 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
