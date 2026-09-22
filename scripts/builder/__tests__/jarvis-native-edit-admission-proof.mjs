@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// R3-LIVE-WITNESS: existing edit admission path
 import {
   existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync,
   symlinkSync, writeFileSync,

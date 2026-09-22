@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// R3-LIVE-WITNESS: prompt path
 import assert from "node:assert/strict";
 import {
   mkdtempSync, mkdirSync, writeFileSync, rmSync,
