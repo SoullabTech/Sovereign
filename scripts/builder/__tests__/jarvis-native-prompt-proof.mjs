@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// R3-LIVE-WITNESS: prompt path
 import assert from "node:assert/strict";
 import {
   mkdtempSync, mkdirSync, writeFileSync, rmSync,
@@ -68,19 +69,27 @@ try {
   assert.match(prompt, /old_text must be copied EXACTLY/);
   assert.match(prompt, /edit ARRAY ITSELF/);
   assert.match(prompt, /do not emit an edits key/);
-  assert.match(prompt, /TWO-EDIT SYNTAX EXAMPLE ONLY/);
+  assert.match(prompt, /MULTI-FILE SYNTAX EXAMPLE ONLY/);
+  assert.match(prompt, /MIXED SYNTAX EXAMPLE ONLY/);
+  assert.match(prompt, /replace text in multiple existing files/);
+  assert.match(prompt, /path must appear LITERALLY in ALLOWED FILES/);
+  assert.match(prompt, /wildcard authorization is insufficient/);
+  assert.match(prompt, /fixed mode 100644/);
+  assert.match(prompt, /existing non-symlink parent directory/);
+  assert.match(prompt, /created path may appear only once/i);
+  assert.match(prompt, /grounded in the OBJECTIVE, ESTABLISHED FACTS/);
   assert.match(prompt, /comma-separated INSIDE that single array/);
   assert.match(prompt, /smallest exact replacement/);
   assert.match(prompt, /JARVIS, not you, renders the git patch/);
   assert.match(prompt, /Do NOT echo `A\)`/);
-  assert.match(prompt, /every identifier you add is already in scope or is imported/);
-  assert.match(prompt, /include a separate exact edit that adds the required import/);
+  assert.match(prompt, /identifier you add to an existing file is already in scope/);
+  assert.match(prompt, /include a separate exact replacement that adds the required import/);
   assert.match(prompt, /follow that precedent exactly/);
   assert.match(prompt, /GOVERNANCE_GATE:/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_EXPECTATION/);
   assert.doesNotMatch(prompt, /SECRET_VERIFIER_NOTE/);
   assert.doesNotMatch(prompt, /irrelevant legacy output text/);
-  console.log("19 passed · 0 failed");
+  console.log("26 passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
