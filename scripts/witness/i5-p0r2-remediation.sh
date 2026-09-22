@@ -33,19 +33,18 @@ GIT_WITNESS="$INSTRUMENT_DIR/seam-identity.mjs"
 CONTAINER_WITNESS="$INSTRUMENT_DIR/seam-identity-container.mjs"
 # Authorized blob hashes of the two sibling instruments. Verified before use, so
 # the act cannot run against a tampered or stale instrument.
-GIT_WITNESS_BLOB="b86a7e3982a0bf809022c2fdfe2b7f28c203d223"
+GIT_WITNESS_BLOB="dbd6e2257dca508502956ca8072f40f0deb9b704"
 CONTAINER_WITNESS_BLOB="85bdba16753cceb4d5991ca4c8c69b57f79f1585"
 
 CONTAINER="${I5_CONTAINER:-maia-sovereign}"
 PG_CONTAINER="${I5_PG_CONTAINER:-maia-postgres}"
 ENV_FILE="${I5_ENV_FILE:-/home/soullab/MAIA-SOVEREIGN/.env.production}"
-# Re-pinned by founder disposition (a), 2026-09-22, after review of the only
-# movement in the declared full seam: c6744f66 (Serving Identity F2-IQ), a
-# request-scoped classifier call whose result is discarded. Prior value
-# 195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b
-# is STALE BY LAWFUL SEAM MOVEMENT. Equality was NOT weakened: a future byte
-# change anywhere in the declared seam must still stop loudly.
-EXPECT_FULL="b828400c7aaceafbbfcc66144018a6b0fe538dab1c806bbe3de635b2fc6ff6b4"
+# I5-P0R2R3 property rebind: production and canonical each carry an explicit,
+# Founder-adjudicated full-seam identity after the reviewed Serving Identity
+# F2-IQ canonical-only route addition. Neither digest substitutes for the other.
+# Unexpected movement at either substrate remains a STOP.
+EXPECT_PRODUCTION_FULL="195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b"
+EXPECT_CANONICAL_FULL="b828400c7aaceafbbfcc66144018a6b0fe538dab1c806bbe3de635b2fc6ff6b4"
 EXPECT_IMAGE="a63cf931fe80227004ba9d8730c628bb0c0d65deae6e53e8c29b6bc3b3fd3b51"
 MODEL="qwen2.5:14b-instruct"
 FLAGS=(MAIA_RELATIONAL_FIELD_SHADOW MAIA_EPISTEMIC_JOIN_INTEGRATION_SHADOW
@@ -144,7 +143,8 @@ step "git-side binding check (ancestry + full-scope digest)"
 node "$GIT_WITNESS" check \
   --production-sha "$RUNNING_SHA" \
   --canonical-rev origin/clean-main-no-secrets \
-  --expect "$EXPECT_FULL" || stop SEAM_BINDING_REFUSED "see the refusal code above"
+  --expect-production "$EXPECT_PRODUCTION_FULL" \
+  --expect-canonical "$EXPECT_CANONICAL_FULL" || stop SEAM_BINDING_REFUSED "see the refusal code above"
 
 say ""
 step "container-side seam witness, streamed in on stdin (36 of 37; the 37th is entailed)"
@@ -282,7 +282,8 @@ say ""
 say "re-binding the substrate after the act:"
 node "$GIT_WITNESS" check \
   --production-sha "$RUNNING_SHA" --canonical-rev origin/clean-main-no-secrets \
-  --expect "$EXPECT_FULL" || stop SEAM_BINDING_REFUSED_AFTER
+  --expect-production "$EXPECT_PRODUCTION_FULL" \
+  --expect-canonical "$EXPECT_CANONICAL_FULL" || stop SEAM_BINDING_REFUSED_AFTER
 dk exec -i "$CONTAINER" node --input-type=module - --expect "$EXPECT_IMAGE" \
   < "$CONTAINER_WITNESS" || stop CONTAINER_SEAM_REFUSED_AFTER
 
