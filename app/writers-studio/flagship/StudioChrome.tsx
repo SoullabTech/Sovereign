@@ -45,9 +45,20 @@ export function FacetControl({ facet }: { facet: Facet }) {
  */
 export interface ProjectIdentity {
   readonly workTitle: string;
-  /** e.g. "Novel · 82,400 words". ⛔ A description, ⛔ never a destination. */
-  readonly workKind: string;
+  /** e.g. "Novel · 82,400 words". ⛔ A description, ⛔ never a destination.
+   *  C1B: OPTIONAL — a live host that holds no such fact omits it. */
+  readonly workKind?: string;
 }
+
+/**
+ * C1B · how a navigation item is rendered.
+ *   'reference'   — the controlled witness: `<button data-nav>` (unchanged).
+ *   'orientation' — a LIVE host with no lawful navigation action yet renders
+ *                   the destination as non-interactive orientation. ⛔ A live
+ *                   surface never mounts a button-shaped control that does
+ *                   nothing merely because the reference draws one.
+ */
+export type NavAffordance = 'reference' | 'orientation';
 
 export interface MemberIdentity { readonly initials: string; readonly name: string; readonly org: string }
 
@@ -57,29 +68,41 @@ export interface MemberIdentity { readonly initials: string; readonly name: stri
  * destination is not. Default = the full approved three-mode reference, so the
  * controlled witness is unchanged. ⛔ Never a link to a legacy room.
  */
-export function StudioRail({ current, project, member, destinations = NAV_DESTINATIONS }: {
-  current: NavDestination; project: ProjectIdentity; member: MemberIdentity;
-  destinations?: readonly NavDestination[];
+export function StudioRail({ current, project, member, destinations = NAV_DESTINATIONS, affordance = 'reference' }: {
+  current: NavDestination; project?: ProjectIdentity; member?: MemberIdentity;
+  destinations?: readonly NavDestination[]; affordance?: NavAffordance;
 }) {
   return (
     <nav className="fs-rail" aria-label="Studio navigation">
       <div className="fs-mark" aria-hidden="true" />
-      {destinations.map((d) => (
+      {destinations.map((d) => affordance === 'reference' ? (
         <button key={d} type="button" className="fs-nav"
           aria-current={d === current ? 'page' : undefined} data-nav={d}>
           <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
         </button>
+      ) : (
+        <span key={d} className="fs-nav" data-nav={d} data-affordance="orientation"
+          aria-current={d === current ? 'page' : undefined}>
+          <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
+        </span>
       ))}
-      <div className="fs-railsep" />
-      <div className="fs-railhead">Your work</div>
-      <div className="fs-railwork">
-        <div className="fs-railworkname">{project.workTitle}</div>
-        <div className="fs-railworkkind">{project.workKind}</div>
-      </div>
-      <div className="fs-railfoot">
-        <div className="fs-av" aria-hidden="true">{member.initials}</div>
-        <div className="fs-who">{member.name}<small>{member.org}</small></div>
-      </div>
+      {/* C1B · identity blocks render only what the host actually holds. */}
+      {project ? (
+        <>
+          <div className="fs-railsep" />
+          <div className="fs-railhead">Your work</div>
+          <div className="fs-railwork">
+            <div className="fs-railworkname">{project.workTitle}</div>
+            {project.workKind ? <div className="fs-railworkkind">{project.workKind}</div> : null}
+          </div>
+        </>
+      ) : null}
+      {member ? (
+        <div className="fs-railfoot">
+          <div className="fs-av" aria-hidden="true">{member.initials}</div>
+          <div className="fs-who">{member.name}<small>{member.org}</small></div>
+        </div>
+      ) : null}
     </nav>
   );
 }
@@ -95,45 +118,51 @@ export function AtmosphereBand() {
 }
 
 /** ⭐ Same semantic names as the rail. ⛔ Develop is never renamed to Explore. */
-export function MobileNav({ current, destinations = NAV_DESTINATIONS }: {
-  current: NavDestination; destinations?: readonly NavDestination[];
+export function MobileNav({ current, destinations = NAV_DESTINATIONS, affordance = 'reference' }: {
+  current: NavDestination; destinations?: readonly NavDestination[]; affordance?: NavAffordance;
 }) {
   return (
     <nav className="fs-mobilenav" aria-label="Studio navigation">
-      {MOBILE_PRIMARY.filter((d) => destinations.includes(d)).map((d) => (
+      {MOBILE_PRIMARY.filter((d) => destinations.includes(d)).map((d) => affordance === 'reference' ? (
         <button key={d} type="button" className="fs-mn"
           aria-current={d === current ? 'page' : undefined} data-nav={d}>
           <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
         </button>
+      ) : (
+        <span key={d} className="fs-mn" data-nav={d} data-affordance="orientation"
+          aria-current={d === current ? 'page' : undefined}>
+          <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
+        </span>
       ))}
     </nav>
   );
 }
 
-export function StudioShell({ current, project, member, focus = false, destinations = NAV_DESTINATIONS, children }: {
-  current: NavDestination; project: ProjectIdentity; member: MemberIdentity;
-  focus?: boolean; destinations?: readonly NavDestination[]; children: React.ReactNode;
+export function StudioShell({ current, project, member, focus = false, destinations = NAV_DESTINATIONS, affordance = 'reference', children }: {
+  current: NavDestination; project?: ProjectIdentity; member?: MemberIdentity;
+  focus?: boolean; destinations?: readonly NavDestination[]; affordance?: NavAffordance; children: React.ReactNode;
 }) {
   return (
     <div className="fs-root" data-focus={focus ? 'true' : 'false'} data-studio-mode={current}>
-      <StudioRail current={current} project={project} member={member} destinations={destinations} />
+      <StudioRail current={current} project={project} member={member} destinations={destinations} affordance={affordance} />
       <div className="fs-content">
         <AtmosphereBand />
         {children}
       </div>
-      <MobileNav current={current} destinations={destinations} />
+      <MobileNav current={current} destinations={destinations} affordance={affordance} />
     </div>
   );
 }
 
 export function CrumbBar({ work, chapter, place, saved, actions, facet }: {
-  work: string; chapter?: string; place?: string; saved?: string;
+  /** C1B: optional — a host with no Work name and no manuscript title omits it. */
+  work?: string; chapter?: string; place?: string; saved?: string;
   actions?: React.ReactNode; facet?: Facet;
 }) {
   return (
     <div className="fs-bar">
       <div className="fs-crumb">
-        <b>{work}</b>
+        {work ? <b>{work}</b> : null}
         {facet ? <FacetControl facet={facet} /> : null}
         {chapter ? <><span className="sl" aria-hidden="true">/</span><span>{chapter}</span></> : null}
         {place ? <><span className="sl" aria-hidden="true">/</span><span className="now">{place}</span></> : null}

@@ -1,0 +1,13 @@
+/* FLAGSHIP-RUNTIME-CONVERGENCE-01 / C1B — live Write host styles.
+   ⛔ Declares NO semantic tokens: every colour and face is reached through the
+   ratified `.fs-tokens` / `.fs-root` roles in flagship.css. */
+.fsw-viewport{height:100vh;height:100dvh;min-height:100vh}
+/* ⭐ The serif lives on the SECTION so RebuildAuthoredBody's inline `font: inherit`
+   (textarea while editing, div while reading) takes the Work's face in both states —
+   the legacy host did this on its <article>; without it the face jumps to sans on edit. */
+.fsw-section{margin:0 0 30px;font-family:var(--serif)}
+.fsw-h2{font-family:var(--serif);font-weight:500;font-size:1.375rem;line-height:1.25;margin:34px 0 12px;color:var(--text-work)}
+.fsw-body [data-authored-body]{font-family:var(--serif);color:var(--text-work)}
+.fsw-body textarea[data-authored-body]{font-family:var(--serif)}
+.fsw-state{height:100vh;display:grid;place-items:center;padding:32px;text-align:center;
+  background:var(--ground-system);color:var(--text-secondary);font-family:var(--sans);font-size:0.9375rem}

@@ -27,7 +27,8 @@ import { CrumbBar } from './StudioChrome';
 import type { Facet } from './flagshipTokens';
 
 export interface WritePlace {
-  readonly work: string;
+  /** C1B: optional — absence renders as absence, never as "Untitled". */
+  readonly work?: string;
   readonly chapter?: string;
   readonly place?: string;
   readonly facet?: Facet;
