@@ -16,6 +16,25 @@ The present system has strong `DevelopmentalObservation` objects, evidence refer
 
 This programme opens that object.
 
+## I-A. Isolation from sibling programmes and inherited law
+
+This programme is distinct. It does **not** reopen, supersede, or silently amend:
+
+- `WS-EDITORIAL-SCOPE-01` or the admitted editorial runtime/scope laws;
+- `WRITERS-STUDIO-CONVERGENCE-01`;
+- `WRITERS-STUDIO-OBSERVATION-IDENTITY-01`;
+- `WRITERS-STUDIO-OBSERVATION-ADDRESS-01`.
+
+Where those programmes already govern an Editorial Reading seam, their ratified constraints bind this programme unless a later founder act explicitly changes them.
+
+A1 must therefore census not only reusable substrate, but also **which ratified sibling constraint binds which Editorial Reading seam**.
+
+Three carried constraints are already named for that census:
+
+1. **Observation address gate.** `observation_id` is canonical member-facing identity, but existing standing custody remains keyed by `(member_id, reading_id, observation_key)`; no member action against `observation_id` may be introduced until the Observation Address lane permits it.
+2. **Elemental Alchemy isolation.** When EA-as-manuscript is the Work under review, EA-as-governed-knowledge must remain unavailable to the reader. Otherwise a reading is not distinguishable from recollection and whole-Work claims are not falsifiable.
+3. **Existing read ceiling.** `DEVELOPMENTAL_READ_CEILING_CODE_POINTS = 500_000` stands. "Refused whole, nothing trimmed" remains law; later multi-pass work must compose bounded passes rather than weaken the ceiling.
+
 ## II. The primitive
 
 The new primitive is:
@@ -101,13 +120,30 @@ not:
 
 An Editorial Reading may synthesize across observations; it does not silently dissolve what those observations declared they do not establish.
 
-The following remain unavailable as direct factual conclusions unless separately constituted:
+A0 inherits the **closed eight-member `DEVELOPMENTAL_NON_CONCLUSIONS` vocabulary**. It does not replace that law with a prose approximation:
 
-- **author intent** — do not tell the writer what they meant;
-- **reader effect** — do not claim what readers will feel or understand as fact;
-- **editorial consequence as command** — do not turn a noticing into "therefore you should revise";
-- **external truth** — the manuscript is not source-verified by this capability;
-- **quality ranking** — no best/worst chapter, strongest/weakest passage, score, grade, or tier.
+- `outside-coverage`;
+- `across-unread-span`;
+- `whole-work-pattern`;
+- `authored-structure-relation`;
+- `chronology`;
+- `author-intent`;
+- `reader-effect`;
+- `editorial-consequence`.
+
+Their ratified meanings remain authoritative.
+
+In particular:
+
+- **`author-intent` is permanent.** Coverage does not license MAIA to tell the writer why they did or omitted something.
+- **`reader-effect` is permanent.** Coverage does not establish an actual reader effect; any later account of possible effect remains a contestable interpretation.
+- **`editorial-consequence` remains fully binding.** Evidence does not establish **defect, importance, priority, or that anything should change**.
+- **`authored-structure-relation` and `chronology` remain governed by their existing meanings.** Synthesis does not silently discharge either.
+- Coverage may discharge only **`whole-work-pattern`**, **`across-unread-span`**, and **`outside-coverage`**, and only under the complete body-depth whole-Work warrant already ratified by Convergence.
+
+A0 creates no ninth non-conclusion and weakens none of the eight.
+
+Separately from that closed vocabulary, this capability also does not authorize source-fact checking, external-truth adjudication, grading, scoring, or evaluative ranking.
 
 Lawful language describes the encounter with the text:
 
@@ -149,7 +185,7 @@ Compression may organize evidence.
 
 It may not silently discard it.
 
-## X. Writer mode and professional vocabulary
+## X. GUIDED · LEARNING · DIRECT — one observation, three support facets
 
 A future writer-facing experience may accept ordinary language such as:
 
@@ -158,11 +194,21 @@ A future writer-facing experience may accept ordinary language such as:
 - "Help me understand the arc."
 - "Reread this chapter for continuity."
 
-A professional surface may name lens and scope directly.
+The ratified support facets are **GUIDED · LEARNING · DIRECT**. **PRO is retired as a facet name.**
 
-Those are two ways of commissioning the same governed reading, not two intelligence systems.
+These facets name how MAIA accompanies the member; they do not create different editorial truths or different intelligence systems.
 
-Equivalent intent must resolve to equivalent governed work.
+For the **same Work, scope, and commission**, all three facets must carry:
+
+- the **same underlying observation**;
+- the same evidence;
+- the same `doesNotEstablish` boundaries;
+- the same authorial custody;
+- the same authority and certainty.
+
+GUIDED may carry more of the process in plain language. LEARNING may teach through the writer's own passage. DIRECT may expose the editorial vocabulary, evidence, coverage, scope, rationale, and provenance more explicitly.
+
+None may manufacture a different observation merely because the support vocabulary changed.
 
 ## XI. Manuscript primacy
 
@@ -212,7 +258,7 @@ A future implementation contradicts this constitution if any of the following is
 6. **Evidence suppression** — summarized patterns make their constituent observations unreachable.
 7. **Second mutation substrate** — Editorial Reading gains its own apply/edit mechanism instead of handing off to the existing governed revision system.
 8. **Manuscript displacement** — the reading becomes the place the writer must manage instead of a way back into the Work.
-9. **Writer/Pro divergence** — equivalent commissions produce materially different governed readings solely because one used ordinary language and one used professional labels.
+9. **Facet divergence** — the same Work, scope, and commission under GUIDED, LEARNING, and DIRECT do not carry the same underlying observation, evidence, and non-conclusion boundaries.
 
 ## XIV. Programme sequence
 
@@ -221,7 +267,8 @@ If A0 is ratified, the bounded sequence is:
 1. **A1 — Existing-substrate census**
    - identify the exact observations, coverage records, revision identities, and persistence seams already available;
    - prove what can be reused;
-   - identify what does not exist.
+   - identify what does not exist;
+   - identify **which ratified constraints from sibling programmes bind an Editorial Reading, and at which seam**.
 
 2. **A2 — Editorial Reading contract**
    - define the object shape, provenance, revision binding, coverage warrant, and non-conclusion inheritance;
