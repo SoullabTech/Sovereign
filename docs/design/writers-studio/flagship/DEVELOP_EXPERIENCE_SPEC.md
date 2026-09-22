@@ -910,3 +910,76 @@ the components inherits everything.**
 
 ⭐ Keep: *“A coherent story feels like a river — different at every turn, still itself.”* Attributed,
 true, and about stories rather than about this Work.
+
+---
+
+## §15 · STORY / SPIRAL MAP
+
+### 15.1 · ⭐⭐⭐ THE REFUSAL CONTROL LANDED
+
+> *“A **member-declared** map of your story's movement. **This is your lens — you can rename,
+> reorder, or revise it anytime.**”* · `✎ Edit your map`
+
+⭐ This is §12.2 discharged, and it is the most important single correction in the whole sequence.
+It converts the map from **MAIA's categorisation of your book** into **the member's own
+instrument** — and it does it in one sentence and one button.
+
+⭐ Also good: **Where This Chapter Lives** (positional, ⛔ not evaluative) · **Nearby Movements**
+(orientation, no loss of place) · **Full Manuscript ⌄** (scope in plain language) · *“based on your
+selected lens”* (attributes to the member's choice rather than asserting) · **Try a different lens**
+as an explicit gesture that names itself a perspective.
+
+### 15.2 · ⚠️⚠️ BUT THE EIGHT MOVEMENTS ARE SPIRALOGIC, NOT THIS NOVEL
+
+`I. Home · II. Descent · III. Threshold · IV. Transformation · V. Integration · VI. Belonging ·
+VII. Contribution · VIII. Renewal`
+
+⭐ **A member writing a novel about a river did not invent those eight names.** That is the
+Soullab developmental arc, applied to their Work and **labelled *member-declared***.
+
+⚠️ **Declaring by ACCEPTING A TEMPLATE is not the same act as NAMING YOUR OWN MOVEMENTS.** Both are
+lawful. ⛔ The second must not be presented as the first, and the label currently cannot tell them
+apart — which is the *never-declared rendered as declared-open* collapse in a new costume.
+
+⭐ **Two states, visibly different:**
+
+```text
+✅  You named these movements.                    →  Home · Descent · Threshold …
+✅  You chose the Spiral template, and adapted it →  same shape, provenance shown,
+                                                     "these names came from the template"
+```
+
+⛔ Otherwise the house framework arrives as the member's own reading of their book, which is exactly
+what Invariant 14 and FR-06 exist to prevent. ⭐ For *Elemental Alchemy* the Spiral **is** the Work's
+architecture and this is wonderful; ⛔ for a novel it is a frame offered and then attributed back.
+
+### 15.3 · ⭐⭐ NEW DEFECT CLASS — CHARTING AN INFERENCE
+
+Two charts sit in the same room and look identical in form:
+
+| Chart | What it plots | Status |
+|---|---|---|
+| **Continuity Map** (§14) | ⭐ **presence** — countable, verifiable, checkable cell by cell | ✅ evidence |
+| **Emotional Flow** — *Uncertainty → Reflection → Opening → Steadier* | ⛔ **feeling MAIA inferred** from the prose | ⛔ interpretation |
+
+> ⭐⭐ **A chart of an inference is still an inference — and the chart form lends it authority it
+> has not earned.**
+
+⛔ The member cannot see the difference. A line graph reads as *measured*; *“the feeling beneath the
+events”* is MAIA's reading of their emotional content, plotted as though it were data.
+
+⭐ **Lawful forms, either:** plot something countable that stands in for it and say so
+(*“questions per chapter”, “sentences in Clara's interior”*), **or** render it visibly as MAIA's
+reading — different treatment, dotted, attributed, and revisable like the map.
+
+⛔ **The general law:** a visualization must be **as verifiable as its form implies.** ⭐ Presence
+grids and counts may be charted; inferred interior states may not be charted **in the same visual
+language as counts.**
+
+### 15.4 · ⚠️ Carried
+
+- ⛔ *“This chapter **strengthens** your story's continuity”* · *“It **deepens** the sense of
+  Threshold”* — evaluative, and the second reads the chapter **through the imposed framework**.
+- ⛔ *“revealing the **emotional texture of transition**”* — interpretive claim about the member's text.
+- ⛔ `Themes in This Chapter` cards carry no addresses (§14.3 pattern).
+- ⛔ No coverage · ⛔ no facet control.
