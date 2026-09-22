@@ -179,6 +179,29 @@ E6   lenses            SYSTEM-CARRY (breach)
 
 ⚠️ **One thing the packet cannot answer and does not pretend to:** whether `rebuild/`'s bounded remainder is *experientially* deficient. E1's verdict is a source reading. Whether a writer at 1280px feels the manuscript squeezed is a human witness question.
 
+## 5a · Post-audit note — canonical movement, 2026-09-22
+
+⚠️ **Appended after the audits completed. §0's opening-integrity record is preserved exactly as the gate found it and is ⛔ not rewritten.**
+
+At the moment the gate ran, PR **#1478** was **open and self-marked not admission-ready**, and §0 records it that way. That statement was true then.
+
+**After the three audits completed, #1478 was admitted**, and canonical advanced to **`5a0b7328f689dda60f9f2c6c1a2a236cf6e62c12`**. Its delta is seven files:
+
+```
+A  docs/programme/WRITERS-STUDIO-EDITORIAL-READING-01_A2_PRIMITIVE_AND_WARRANT_CONTRACT_2026-09-22.md
+A  tests/constitutional/editorial-reading/{contract,falsifiers,candidates,matrix}.ts
+A  tsconfig.editorial-reading-contract.json
+M  package.json
+```
+
+⭐ **Zero overlap with the A1A audited source closure.** None of `app/writers-studio/rebuild/**`, `app/writers-studio/studioTheme.ts`, `lib/manuscript/proposalChain/**`, `lib/manuscript/editorialRuntime/adoption.ts` or `app/writers-studio/canvas/CanvasClient.tsx` is touched — verified by path comparison over the interval.
+
+⭐ **Therefore the three audit findings remain valid without re-execution.** E1, E4 and E6 are unchanged by this reconciliation; this branch carries a freshness merge and no finding was revisited.
+
+⛔ `EDITORIAL-READING-01 / A2` being canonical changes nothing in this packet. A1A is a NEXT-01 act; the two programmes compose only at NEXT A4, and that layer is not opened.
+
+---
+
 ## 6 · Standing
 
 > **`WRITERS-STUDIO-NEXT-01 / A1A` · THREE AUDITS COMPLETE · E1 DEFICIENT · E4 PARTIAL · E6 2 BREACHES + 2 UNRESOLVED · ⛔ HOST-ROOM RULING NOT TAKEN · ⛔ NO LAYOUT CHANGE · ⛔ NO CONTROL REMOVED · ⛔ NO PROVENANCE IMPLEMENTATION · ⛔ NO TESTS AUTHORED · ⛔ #1478 UNTOUCHED · PRODUCTION UNTOUCHED**
