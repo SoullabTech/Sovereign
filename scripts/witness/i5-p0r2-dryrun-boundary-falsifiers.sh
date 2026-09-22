@@ -50,11 +50,10 @@ if [ "\$1" = "exec" ]; then
   CONTAINER="\$1"; shift
   if [ "\$1" = "printenv" ]; then
     case "\$2" in
-      # FIXTURE ONLY. The stub claims production runs canonical's tip so the
-      # binding is satisfiable and Phases 1-5 become reachable. This matrix tests
-      # the NO-MUTATION BOUNDARY, not the binding — the binding has its own
-      # falsifiers and still executes for real against real git objects here.
-      GIT_COMMIT) echo "4ef9a1988f44394375526a78ca4db3694f5b51a5" ;;
+      # FIXTURE ONLY. The stub claims the exact deployed production SHA used by
+      # the R3 property rebind. Production and canonical intentionally carry
+      # different adjudicated full-seam identities; the binding remains live.
+      GIT_COMMIT) echo "4c097b4c81402c62e42613e83ae28180fef46f08" ;;
       MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS) echo "$FIXTURE_CURRENT_ID" ;;
       *) : ;;   # every flag and the model set are unset -> OFF / empty
     esac
