@@ -47,9 +47,9 @@ use RESTRICT; the I3 schema introduces no cascading deletion.
 
 ## Feature gate
 
-`AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED` is ON only for the literal value
-`1`. Missing, empty, `0`, and `true` are all OFF. No application/runtime
-surface imports the persistence adapter in I3.
+`AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED` is ON only for the exact literal
+`true`. Missing, empty, `false`, `0`, `1`, and malformed/unexpected values are
+all OFF. No application/runtime surface imports the persistence adapter in I3.
 
 ## Representation boundary
 
@@ -65,7 +65,7 @@ production deployment.
 ## Evidence
 
 - I2 + I3 Jest suite: **104/104 PASS**
-- I3 static constitutional matrix: **18/18 PASS**
+- I3 static constitutional matrix: **21/21 PASS**
 - strict `typecheck:epistemic-join`: **EXIT 0**
 - repository typecheck: **229 vs baseline 239 · 0 regressions · EXIT 0**
 - blank-database canonical bootstrap with the I3 migration: **PASS**
@@ -79,6 +79,18 @@ A later repeat of the entire platform blank bootstrap hit host disk exhaustion
 DB witness therefore uses a minimal empty PostgreSQL substrate plus `members`
 to test I3 itself. The earlier full canonical bootstrap PASS is retained as
 separate evidence.
+
+## I3C1 post-merge contract conformance
+
+I3C1 restores the Founder-authorized feature token to exact literal `true`,
+adds a genuine overlapping-writer PostgreSQL witness, proves direct persistence
+round-trip preservation, and reconciles every original required falsifier.
+
+- explicit original-falsifier accounting: **30/30 PASS**
+- true concurrent same-tip writers: **PASS — two advisory-lock waiters observed; one success, one stale refusal**
+- persistence → direct reconstruction round trip: **PASS**
+- lawful discharge preserves prior custody: **PASS**
+- persistence implementation/schema semantics: **UNCHANGED**
 
 ## Disposition
 
