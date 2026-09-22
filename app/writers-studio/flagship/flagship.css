@@ -45,6 +45,9 @@
 .fs-railsep{height:1px;background:rgba(255,255,255,.07);margin:12px 18px;flex:none}
 .fs-railhead{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
   color:rgba(255,255,255,.34);padding:0 18px 6px;font-weight:600}
+.fs-railwork{padding:2px 18px 0}
+.fs-railworkname{font-size:13px;color:var(--rail-on);font-weight:600;line-height:1.3}
+.fs-railworkkind{font-size:11px;color:var(--rail-ink);margin-top:2px}
 .fs-railfoot{margin-top:auto;display:flex;align-items:center;gap:9px;
   padding:12px 18px 2px;border-top:1px solid rgba(255,255,255,.07)}
 .fs-av{width:26px;height:26px;border-radius:50%;background:var(--goldfill);color:#2B2216;
@@ -228,6 +231,17 @@
 .fs-vchip[aria-pressed="true"]{background:var(--active);color:var(--ink);border-color:var(--soft);font-weight:600}
 .fs-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);padding-top:8px}
 .fs-legend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+/* ⭐ Plain question primary, editorial term secondary — V12 by naming. */
+.fs-lenses{display:flex;flex-direction:column}
+.fs-lens{border-top:1px solid var(--rule);padding:11px 0 10px}
+.fs-lens:first-child{border-top:0;padding-top:0}
+.fs-lensq{font-size:13.5px;font-weight:600;color:var(--ink)}
+.fs-lensterm{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--quiet);margin-top:1px}
+.fs-lensbody{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+.fs-lens[data-lens-state="not-read"] .fs-lensbody{color:var(--secondary)}
+/* ⭐ Sequence: the sections as written. ⛔ Asserts no shape. */
+.fs-seq{display:flex;align-items:flex-end;gap:3px;height:34px;padding-top:4px}
+.fs-seq i{flex:1;background:var(--goldfill);opacity:.55;border-radius:1px;min-width:2px}
 .fs-undeclared{border:1px dashed var(--rule);border-radius:9px;padding:22px 18px;text-align:center}
 .fs-undeclared .q{font-family:var(--serif);font-size:16px;line-height:1.55;color:var(--ink);margin:0 0 8px}
 .fs-undeclared .a{font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.55}

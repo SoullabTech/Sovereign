@@ -14,12 +14,12 @@ import type { ManuscriptView, MaiaCopy, VersionEntry } from '../../../app/writer
 import type { DevelopView, ReviewView } from '../../../app/writers-studio/flagship/DevelopReview';
 
 export const MEMBER = { initials: 'KN', name: 'Kelly', org: 'Soullab' };
-export const PROJECT = { workTitle: 'Elemental Alchemy', places: ['Chapters', 'Notes', 'Research'] };
+export const PROJECT = { workTitle: 'The River Between', workKind: 'Novel · 82,400 words' };
 
 const TARGET = 'The atoms that form our bodies were forged within stars.';
 
 export const MANUSCRIPT: ManuscriptView = {
-  work: 'Elemental Alchemy',
+  work: 'The River Between',
   chapterLabel: 'Chapter 10',
   chapterTitle: 'The Living Spiral',
   epigraph: {
@@ -116,44 +116,50 @@ export const S_CTX = drive([{ type: 'SELECT_ALTERNATIVE', alternativeId: 'simple
 export const S_APPLIED = drive([{ type: 'APPLY' }], S_CTX);
 export const S_APPLIED_HISTORY = drive([{ type: 'OPEN_OVERLAY', overlay: 'history' }], S_APPLIED);
 
+/* ⭐ A NOVEL, deliberately — not Elemental Alchemy. The room must work for a Work
+   with no declared movements and no elemental architecture, which is the common
+   case and the one that exposes an imposed house shape. */
 export const DEVELOP: DevelopView = {
-  work: 'Elemental Alchemy',
-  pages: 216, sections: 52, words: 78432,
-  coverage: { read: 52, total: 52, depth: 'full depth' },
-  structure: {
-    declared: true, centreLabel: 'The Living Spiral',
-    movements: [
-      { name: 'I. Awakening', range: '1–4' }, { name: 'II. Descent', range: '5–8' },
-      { name: 'III. Integration', range: '9–12' }, { name: 'IV. Embodiment', range: '13–16' },
-      { name: 'V. Radiance', range: '17–20' },
-    ],
-    elemental: [
-      { name: 'Earth', color: '#6E7A4E' }, { name: 'Water', color: '#4E6E86' },
-      { name: 'Fire', color: '#A85C36' }, { name: 'Air', color: '#8E8B7A' },
-      { name: 'Aether', color: '#7A6E96' },
-    ],
-  },
+  work: 'The River Between',
+  kind: 'novel',
+  pages: 284, sections: 41, words: 82400,
+  coverage: { read: 34, total: 41, depth: 'reading the full text', when: 'last read 12 minutes ago' },
+  /* ⛔ Undeclared: there is no declaration store, so the map is Sequence and no
+     "Name the movements" control is drawn. */
+  structure: { declared: false },
+  lenses: [
+    { id: 'structure',   state: 'read',                 count: 3 },
+    { id: 'development', state: 'partially-read',       count: 2, remaining: 7 },
+    { id: 'arc',         state: 'not-read',             count: 0 },
+    { id: 'continuity',  state: 'read-nothing-noticed', count: 0 },
+    { id: 'coherence',   state: 'read',                 count: 1 },
+    { id: 'voice',       state: 'read',                 count: 2 },
+    { id: 'reader',      state: 'read',                 count: 1 },
+  ],
   observations: [
-    { id: 'o-spiral', heading: 'The word “spiral”',
-      body: 'Appears 58 times. Forty-one of those fall in Parts I and II; Part IV uses it twice.',
-      evidence: ['§3–§18', '§41'], returnTo: { label: 'Go to §41', sectionId: 'ea-41' } },
-    { id: 'o-address', heading: 'Direct address to the reader',
-      body: 'You address the reader as “you” in 31 of 52 sections. Part IV contains none.',
-      evidence: ['§34–§41'], returnTo: { label: 'Go to §34', sectionId: 'ea-34' } },
-    { id: 'o-transition', heading: 'The Part III to Part IV transition',
-      body: 'This transition runs one sentence. The four earlier part transitions each occupy a full section.',
-      evidence: ['§16', '§17'], returnTo: { label: 'Go to §17', sectionId: 'ea-17' } },
-    { id: 'o-endings', heading: 'Where sections end',
-      body: 'Twenty-two sections close with a practice. Eighteen close mid-argument.',
-      evidence: ['§1–§52'], returnTo: { label: 'Go to §22', sectionId: 'ea-22' } },
+    { id: 'o-river', heading: 'The river returns',
+      body: 'The river appears in 11 of 41 sections. Nine of those are in the first half; it is absent between Ch 6 and Ch 9.',
+      evidence: ['Ch 1', 'Ch 4', 'Ch 6', 'Ch 10'], returnTo: { label: 'Go to Ch 6', sectionId: 'ch-6' } },
+    { id: 'o-interior', heading: 'Clara’s interior',
+      body: 'The narration moves inside Clara in 4 of the first 6 chapters, and in 9 of the last 12.',
+      evidence: ['Ch 1–6', 'Ch 30–41'], returnTo: { label: 'Go to Ch 30', sectionId: 'ch-30' } },
+    { id: 'o-inbetween', heading: '“The in-between”',
+      body: 'The phrase is spoken once, by Clara, in Ch 6. It is not used again.',
+      evidence: ['Ch 6'], returnTo: { label: 'Go to the passage', sectionId: 'ch-6-p4' } },
+    { id: 'o-chapters', heading: 'Where chapters end',
+      body: 'Twenty-nine chapters close on an image. Twelve close on dialogue.',
+      evidence: ['Ch 1–41'], returnTo: { label: 'Go to Ch 12', sectionId: 'ch-12' } },
+    { id: 'o-term', heading: '“The current” changes meaning',
+      body: 'In Ch 2 it names the river. In Ch 6 it names what Clara is living through. It is not renamed between them.',
+      evidence: ['Ch 2', 'Ch 6'], returnTo: { label: 'Go to Ch 2', sectionId: 'ch-2' } },
     { id: 'o-reader', heading: 'Reader perspective', hypothesis: true,
-      body: 'A reader may lose the thread at §17, where “the work” changes referent without being renamed.',
-      evidence: ['§17'], returnTo: { label: 'Go to §17', sectionId: 'ea-17' } },
+      body: 'A reader might lose the referent at Ch 6, because “the current” carries a meaning it did not have in Ch 2.',
+      evidence: ['Ch 6'], returnTo: { label: 'Go to the passage', sectionId: 'ch-6-p2' } },
   ],
 };
 
 export const REVIEW: ReviewView = {
-  work: 'Elemental Alchemy',
+  work: 'The River Between',
   coverage: { read: 14, total: 14, depth: 'full depth' },
   findings: [
     { id: 'f-bridge', glyph: '⇄', heading: 'The bridge between Chapter 9 and 10',

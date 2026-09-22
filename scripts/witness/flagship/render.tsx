@@ -140,6 +140,10 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
       observationsWithEvidence: obs.length > 0 ? q('[data-observation] .fs-chip').length > 0 : true,
       /* ⭐ Every SVG label must lie inside its own viewBox. A map that clips the
          member's own movement names is not a map of their book. */
+      /* ⛔ Anything clickable in the rail is a destination and must be real. */
+      railDestinations: q('.fs-rail button, .fs-rail a').filter(function(e){
+        return !e.hasAttribute('data-nav') && !e.closest('.fs-railfoot');
+      }).map(function(e){ return (e.textContent||'').trim().slice(0,24); }),
       navLabels: q('.fs-rail [data-nav], .fs-mobilenav [data-nav]').map(function(e){
         /* Strip the icon glyph; the label is what the member reads. */
         return (e.textContent||'').replace(/[^A-Za-z ]/g,'').trim(); }),
@@ -148,6 +152,22 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
         if (!f) return null;
         var label = (f.getAttribute('aria-label')||'') + ' ' + (f.textContent||'');
         return { present: true, text: label.toLowerCase() };
+      })(),
+      /* ⭐ THE WHERE TEST — can the member point at any claim and ask "where?"
+         and be taken there? Every observation and finding must carry an address. */
+      addressless: q('[data-observation], [data-finding]').filter(function(e){
+        return !e.querySelector('[data-return-to]') && !e.hasAttribute('data-return-to');
+      }).length,
+      /* ⛔ A commissioning control may exist ONLY where a reading is absent or
+         partial. Navigation is not consent. */
+      commissionControls: q('[data-commission]').length,
+      lensStatesDistinct: (function(){
+        var nr = q('[data-lens-state="not-read"]').length;
+        var rn = q('[data-lens-state="read-nothing-noticed"]').length;
+        if (nr === 0 || rn === 0) return 'n/a';
+        var a = document.querySelector('[data-lens-state="not-read"] .fs-lensbody');
+        var b = document.querySelector('[data-lens-state="read-nothing-noticed"] .fs-lensbody');
+        return (a && b && a.textContent !== b.textContent) ? 'distinct' : 'collapsed';
       })(),
       svgClipped: (function(){
         var bad = 0;
@@ -209,6 +229,10 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
   {
     const allowed = new Set(['Home', 'Write', 'Develop', 'Review']);
     const invented = (m.navLabels as string[]).filter((l) => l && !allowed.has(l));
+    const railExtra = m.railDestinations as string[];
+    out.push({ id: 'RAIL-no-invented-destinations', ok: railExtra.length === 0,
+      detail: railExtra.length === 0 ? 'the Work area is identity only'
+        : `clickable with no route: ${railExtra.join(', ')}` });
     out.push({ id: 'NAV-capability-honest', ok: invented.length === 0,
       detail: invented.length === 0 ? 'Home · Write · Develop · Review — no invented destinations'
         : `destinations with no substrate: ${[...new Set(invented)].join(', ')}` });
@@ -223,6 +247,14 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
         : leak.length ? `facet framed as competence: ${leak.join(', ')}`
         : 'quiet control beside the Work; names the relationship, not the member' });
   }
+  out.push({ id: 'WHERE-every-claim-has-an-address', ok: m.addressless === 0,
+    detail: m.addressless === 0 ? 'every observation and finding returns to the manuscript'
+      : `${m.addressless} claim(s) the member cannot ask "where?" about` });
+  out.push({ id: 'LENS-read-nothing-is-not-not-read', ok: m.lensStatesDistinct !== 'collapsed',
+    detail: m.lensStatesDistinct === 'collapsed'
+      ? 'a completed reading that noticed nothing renders the same as no reading at all'
+      : m.lensStatesDistinct === 'n/a' ? 'both states not present on this surface'
+      : 'a result and an absence render differently' });
   out.push({ id: 'MAP-no-clipped-labels', ok: m.svgClipped === 0,
     detail: m.svgClipped === 0 ? 'every label lies inside its viewBox'
       : `${m.svgClipped} label(s) clipped by the viewBox` });

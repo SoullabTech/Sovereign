@@ -666,3 +666,51 @@ is visibly secondary.
 
 ⛔ No coverage anywhere · ⛔ no facet control · ⛔ `Development`, `Arc`, `Coherence` still missing
 from the tab set · ⚠️ *“Explore how themes connect →”* must not commission (**L-B**).
+
+---
+
+## §11 · THE VOICE FRAME — and the defect only this lens can have
+
+### 11.1 · ⭐ The best single line in any reference
+
+> *“Not a style to replicate, but a voice to deepen.”* — MAIA
+
+⭐ That **is** the `voice` lens law, stated for a member: *the manuscript itself is the reference,
+never an external standard.* Keep it verbatim.
+
+### 11.2 · ⛔⛔ AND THE CARDS DIRECTLY CONTRADICT IT
+
+**Tone · Perspective · Language · Character Voice** — four named dimensions, each with a definition
+written from outside the Work:
+
+> *Tone — the emotional texture that runs through your story.*
+> *Perspective — the lens through which your story is experienced.*
+
+⭐ **That is an imported craft taxonomy, which is precisely what the `voice` lens forbids.** Scoring
+a Work on four axes brought from elsewhere is an external standard, however gently it is phrased —
+and the frame says so itself two inches above.
+
+⭐ **The lawful form describes what this voice actually DOES, in this Work:**
+
+```text
+⛔  Tone — the emotional texture that runs through your story.
+✅  Your sentences shorten when Clara is certain and lengthen into
+    subordinate clauses when she isn’t. Ch 2 and Ch 6 are the clearest cases.   Ch 2  Ch 6
+```
+
+⭐ The second needs no taxonomy, carries its evidence, and is about **this** novel. ⛔ The first
+would read identically under any manuscript — which is the test for an imported standard.
+
+### 11.3 · Carried, now systematic across Overview · Themes · Voice
+
+⭐ The same three defects recur on every lens frame, so **one fix applies to all of them**:
+
+1. ⛔ **Cards carry no address** while the chart beneath them knows exactly which chapters are
+   involved. ⭐ *Make the cards look more like the chart.*
+2. ⛔ **“What's Emerging” is a verdict generator** — *“a reflective, grounded tone”* · *“richer
+   sensory language”* · *“you're staying with Clara in **meaningful** ways.”* ⭐ The hedge is on the
+   section heading and never reaches the items.
+3. ⛔ **No coverage anywhere**, on any lens frame.
+
+Plus: *“see how **key** elements shift”* (barred word) · *“Your voice here feels **especially
+present**”* (property; ⭐ *“I find your voice especially present here”* is the lawful stance).

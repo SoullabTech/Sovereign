@@ -34,12 +34,19 @@ export function FacetControl({ facet }: { facet: Facet }) {
   );
 }
 
-/** ⭐ The rail's Project area is IDENTITY ONLY. Per the frozen boundary it may
- *  never carry an outline, findings, MAIA dialogue, analysis, version history
- *  or source content — so it takes labels, ⛔ never content. */
+/**
+ * ⭐ IDENTITY ONLY — the Work's name and what it is.
+ *
+ * ⚠️ An earlier version carried `places: ['Chapters', 'Notes', 'Research']`.
+ * ⛔ None of those has a route. It was the same defect this lane flagged in an
+ * external reference, reproduced here: **a plausible label costs nothing to
+ * write and reads as a promise.** The field is gone rather than emptied, so it
+ * cannot quietly refill.
+ */
 export interface ProjectIdentity {
   readonly workTitle: string;
-  readonly places: readonly string[];
+  /** e.g. "Novel · 82,400 words". ⛔ A description, ⛔ never a destination. */
+  readonly workKind: string;
 }
 
 export interface MemberIdentity { readonly initials: string; readonly name: string; readonly org: string }
@@ -57,11 +64,11 @@ export function StudioRail({ current, project, member }: {
         </button>
       ))}
       <div className="fs-railsep" />
-      <div className="fs-railhead">Project</div>
-      <button type="button" className="fs-nav"><span className="fs-ic" aria-hidden="true">▢</span>{project.workTitle}</button>
-      {project.places.map((p) => (
-        <button key={p} type="button" className="fs-nav"><span className="fs-ic" aria-hidden="true">·</span>{p}</button>
-      ))}
+      <div className="fs-railhead">Your work</div>
+      <div className="fs-railwork">
+        <div className="fs-railworkname">{project.workTitle}</div>
+        <div className="fs-railworkkind">{project.workKind}</div>
+      </div>
       <div className="fs-railfoot">
         <div className="fs-av" aria-hidden="true">{member.initials}</div>
         <div className="fs-who">{member.name}<small>{member.org}</small></div>

@@ -218,78 +218,117 @@ function LensRow({ l }: { l: LensStanding }) {
   );
 }
 
-export function DevelopRoom({ view, tab = 'Overview', facet = 'guided' }: {
-  view: DevelopView; tab?: string; facet?: Facet;
+export function DevelopRoom({ view, lens = 'overview', facet = 'guided' }: {
+  view: DevelopView; lens?: LensId | 'overview'; facet?: Facet;
 }) {
+  const cov = view.coverage;
   return (
     <>
       <CrumbBar work={view.work} place="Develop" facet={facet}
         actions={<button type="button" className="fs-tool fs-tool--gold">Ask MAIA</button>} />
-      {/* ⛔ No Export. Ruled out of the B2 target pending disclosure-authority reconciliation. */}
+      {/* ⛔ No Export. ⛔ No Themes — it has no lens. ⛔ No invented destination. */}
       <div className="fs-modetabs" role="tablist">
-        {DEVELOP_TABS.map((t) => (
-          <button key={t} type="button" role="tab" className="fs-modetab" aria-selected={t === tab}>{t}</button>
+        <button type="button" role="tab" className="fs-modetab" aria-selected={lens === 'overview'}>
+          Overview
+        </button>
+        {LENSES.map((l) => (
+          <button key={l.id} type="button" role="tab" className="fs-modetab" aria-selected={lens === l.id}>
+            {l.plain}
+          </button>
         ))}
       </div>
+
       <div className="fs-pane" data-stage="develop">
         <div className="fs-pgrid">
           <div className="fs-phead">
             <div>
-              <h2>Development</h2>
-              <p>What MAIA has read across your manuscript, and what she noticed in it.</p>
+              <h2>Your {view.kind}, seen whole</h2>
+              <p>
+                {view.pages} pages · {view.sections} sections · {view.words.toLocaleString('en-US')} words ·{' '}
+                {readTimeLabel(view.words)}
+              </p>
             </div>
           </div>
 
           <div className="fs-col">
+            {/* ⭐ RECOGNITION BEFORE ASSESSMENT — the shape of the Work comes first.
+                ⛔ Not observations, ⛔ not a score, ⛔ not a list of things to fix. */}
             <section className="fs-card">
-              <h3>Your manuscript</h3>
-              <div className="fs-glance">
-                <div className="fs-stat"><b>{view.pages}</b><span>pages</span></div>
-                <div className="fs-stat"><b>{view.sections}</b><span>sections</span></div>
-                <div className="fs-stat"><b>{view.words.toLocaleString('en-US')}</b><span>words</span></div>
-                {/* ⭐ The basis travels with the number. ⛔ No decorative estimate. */}
-                <div className="fs-stat"><b style={{ fontSize: 15 }}>{readTimeLabel(view.words)}</b><span>reading</span></div>
+              <h3>
+                The shape of your {view.kind}
+                <span className="fs-viewas">
+                  <button type="button" className="fs-vchip" aria-pressed="true">
+                    {view.structure.declared ? 'Your movements' : 'Sequence'}
+                  </button>
+                </span>
+              </h3>
+              {view.structure.declared
+                ? <SpiralMap s={view.structure} />
+                : <SequenceMap sections={view.sections} kind={view.kind} />}
+            </section>
+
+            {/* ⭐ TRUST BEFORE CLAIMS. Coverage bounds everything below it. */}
+            <section className="fs-card" data-coverage="true">
+              <h3>What MAIA read</h3>
+              <p className="fs-obsb" style={{ margin: '0 0 9px' }}>
+                {cov.read} of {cov.total} sections, {cov.depth}, {cov.when}.
+                Everything below cites something she read.
+              </p>
+              <div className="fs-ev">
+                <span className="fs-chip">{cov.read} / {cov.total}</span>
+                <span className="fs-chip">{cov.depth}</span>
+                {cov.read < cov.total
+                  ? <button type="button" className="fs-goto" data-commission="remaining">
+                      Read the remaining {cov.total - cov.read} →
+                    </button>
+                  : <button type="button" className="fs-goto" data-return-to="coverage">See what she read →</button>}
               </div>
             </section>
 
+            {/* ⭐ Plain question first; the editorial term beneath it, never required. */}
             <section className="fs-card">
-              <h3>What MAIA noticed</h3>
-              <p className="fs-obsnote">
-                In the order they occur in your book. Nothing here is ranked, and nothing is hidden.
-              </p>
-              {view.observations.map((o) => <ObservationRow key={o.id} o={o} />)}
+              <h3>Ways to look</h3>
+              <div className="fs-lenses">
+                {view.lenses.map((l) => <LensRow key={l.id} l={l} />)}
+              </div>
             </section>
           </div>
 
           <div className="fs-col">
             <section className="fs-card">
-              <h3>
-                Manuscript map
-                <span className="fs-viewas">
-                  <button type="button" className="fs-vchip" aria-pressed="true">Spiral</button>
-                  <button type="button" className="fs-vchip" aria-pressed="false">Linear</button>
-                  <button type="button" className="fs-vchip" aria-pressed="false">Table</button>
-                </span>
-              </h3>
-              {view.structure.declared ? <SpiralMap s={view.structure} /> : <UndeclaredMap />}
-            </section>
-
-            <section className="fs-card" data-coverage="true">
-              <h3>What MAIA read</h3>
-              <p className="fs-obsb" style={{ margin: '0 0 9px' }}>
-                {view.coverage.read} of {view.coverage.total} sections, at {view.coverage.depth}.
-                Every observation here cites text she read.
+              <h3>What MAIA noticed</h3>
+              <p className="fs-obsnote">
+                In the order they occur in your {view.kind}. Nothing here is ranked, and nothing is hidden.
               </p>
-              <div className="fs-ev">
-                <span className="fs-chip">{view.coverage.read} / {view.coverage.total} sections</span>
-                <span className="fs-chip">{view.coverage.depth}</span>
-                <button type="button" className="fs-goto">See what she read →</button>
-              </div>
+              {view.observations.map((o) => <ObservationRow key={o.id} o={o} />)}
             </section>
           </div>
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * ⭐ SEQUENCE — the honest map when nothing is declared.
+ *
+ * The sections in the order they were written, which is true of every Work.
+ * ⛔ No `Name the movements` control: `git grep` finds no declaration store, so
+ * drawing the button would be `assertStudioMapHonest()` broken by a button.
+ * ⛔ MAIA never names the shape; ⛔ absence never authorizes her to invent one.
+ */
+function SequenceMap({ sections, kind }: { sections: number; kind: string }) {
+  const ticks = Array.from({ length: Math.min(sections, 24) }, (_, i) => i);
+  return (
+    <div data-structure="sequence">
+      <div className="fs-seq">
+        {ticks.map((i) => <i key={i} style={{ height: 14 + ((i * 7) % 13) }} />)}
+      </div>
+      <p className="fs-obsnote" style={{ margin: '10px 0 0' }}>
+        {sections} sections, in the order you wrote them. You haven’t named the movements of this{' '}
+        {kind} — MAIA won’t name them for you.
+      </p>
+    </div>
   );
 }
 
