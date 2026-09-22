@@ -38,6 +38,9 @@ const mapData: ContinuityMapData = {
       presence: p(0,0,0,0,0,1,1,2,2,3,3,3), addressOf: addr },
     { id: 'thresholds', label: 'Moments of turning', provenance: { kind: 'maia-observation', readingId: 'r1', lens: 'continuity' },
       presence: p(1,0,2,0,1,3,0,2,0,3,0,2), addressOf: addr },
+    /* ⭐ A template the member adopted — ⛔ NOT the same act as naming it. */
+    { id: 'threshold-stage', label: 'Threshold', provenance: { kind: 'template-selected', templateName: 'the Spiral template', chosenWhen: 'Sep 14' },
+      presence: p(0,0,1,2,3,3,2,1,0,0,0,0), addressOf: addr },
   ],
 };
 

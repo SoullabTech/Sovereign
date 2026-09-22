@@ -14,8 +14,9 @@ import * as React from 'react';
 import { CrumbBar } from './StudioChrome';
 import { readTimeLabel, type Facet } from './flagshipTokens';
 import { ContinuityMap, CoverageLine, Observations } from './DevelopViews';
-import type {
-  ContinuityMapData, Coverage, DevelopObservation as GovernedObservation,
+import {
+  provenanceLabel,
+  type ContinuityMapData, type Coverage, type DevelopObservation as GovernedObservation,
 } from '../../../lib/writersStudio/studio/developObservation';
 import {
   availabilityLine, citationLine, commissionOffer, freshnessLine, scopeLine,
@@ -420,8 +421,7 @@ function FindingRow({ o, citation }: { o: GovernedObservation; citation?: Citati
         <div className="fs-obshead">
           <span className="fs-fh">{o.label}</span>
           <span className="fs-prov" data-provenance={o.provenance.kind}>
-            {o.provenance.kind === 'member-declared' ? 'you named this'
-              : o.provenance.kind === 'textual-entity' ? 'in your text' : 'MAIA noticed this'}
+            {provenanceLabel(o.provenance)}
           </span>
         </div>
         <p className="fs-fb">{o.description}</p>

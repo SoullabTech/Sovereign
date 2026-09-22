@@ -99,6 +99,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -131,7 +136,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -245,6 +250,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -277,7 +287,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -396,6 +406,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -428,7 +443,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -547,6 +562,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -579,7 +599,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -698,6 +718,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -730,7 +755,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -854,6 +879,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -886,7 +916,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -972,7 +1002,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "9 analytical object(s), each leading somewhere in the Work"
+        "detail": "10 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -995,9 +1025,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "TAB-never-commissions",
@@ -1027,7 +1062,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -1113,7 +1148,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "13 analytical object(s), each leading somewhere in the Work"
+        "detail": "14 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -1136,9 +1171,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -1178,7 +1218,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -1259,7 +1299,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "5 analytical object(s), each leading somewhere in the Work"
+        "detail": "6 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -1282,9 +1322,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -1324,7 +1369,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -1405,7 +1450,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "5 analytical object(s), each leading somewhere in the Work"
+        "detail": "6 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -1428,9 +1473,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -1470,7 +1520,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -1574,6 +1624,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -1606,7 +1661,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -1720,6 +1775,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -1752,7 +1812,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -1871,6 +1931,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -1903,7 +1968,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -2022,6 +2087,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -2054,7 +2124,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -2173,6 +2243,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -2205,7 +2280,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -2329,6 +2404,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -2361,7 +2441,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -2447,7 +2527,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "9 analytical object(s), each leading somewhere in the Work"
+        "detail": "10 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -2470,9 +2550,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "TAB-never-commissions",
@@ -2502,7 +2587,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -2588,7 +2673,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "13 analytical object(s), each leading somewhere in the Work"
+        "detail": "14 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -2611,9 +2696,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -2653,7 +2743,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -2734,7 +2824,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "5 analytical object(s), each leading somewhere in the Work"
+        "detail": "6 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -2757,9 +2847,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -2799,7 +2894,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -2880,7 +2975,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "5 analytical object(s), each leading somewhere in the Work"
+        "detail": "6 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -2903,9 +2998,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -2945,7 +3045,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -3049,6 +3149,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -3081,7 +3186,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -3195,6 +3300,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -3227,7 +3337,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -3346,6 +3456,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -3378,7 +3493,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -3497,6 +3612,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -3529,7 +3649,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -3648,6 +3768,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -3680,7 +3805,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -3804,6 +3929,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -3836,7 +3966,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 17→25.5px, no horizontal overflow"
+        "detail": "prose scales 17→29.75px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -3922,7 +4052,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "9 analytical object(s), each leading somewhere in the Work"
+        "detail": "10 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -3945,9 +4075,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "TAB-never-commissions",
@@ -3977,7 +4112,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -4063,7 +4198,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "13 analytical object(s), each leading somewhere in the Work"
+        "detail": "14 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -4086,9 +4221,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -4128,7 +4268,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -4209,7 +4349,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "5 analytical object(s), each leading somewhere in the Work"
+        "detail": "6 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -4232,9 +4372,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -4274,7 +4419,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -4355,7 +4500,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "5 analytical object(s), each leading somewhere in the Work"
+        "detail": "6 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -4378,9 +4523,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -4420,7 +4570,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -4524,6 +4674,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -4556,7 +4711,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
+        "detail": "prose scales 16.5→28.875px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -4665,6 +4820,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -4697,7 +4857,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
+        "detail": "prose scales 16.5→28.875px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -4811,6 +4971,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -4843,7 +5008,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
+        "detail": "prose scales 16.5→28.875px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -4957,6 +5122,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -4989,7 +5159,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
+        "detail": "prose scales 16.5→28.875px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -5103,6 +5273,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -5135,7 +5310,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
+        "detail": "prose scales 16.5→28.875px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -5254,6 +5429,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "0 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
         "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
@@ -5286,7 +5466,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16.5→24.75px, no horizontal overflow"
+        "detail": "prose scales 16.5→28.875px through 175%, no horizontal overflow"
       },
       {
         "id": "V2-maia-does-not-move-the-manuscript",
@@ -5372,7 +5552,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "9 analytical object(s), each leading somewhere in the Work"
+        "detail": "10 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -5395,9 +5575,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "TAB-never-commissions",
@@ -5427,7 +5612,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -5513,7 +5698,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "13 analytical object(s), each leading somewhere in the Work"
+        "detail": "14 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -5536,9 +5721,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -5578,7 +5768,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -5659,7 +5849,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "5 analytical object(s), each leading somewhere in the Work"
+        "detail": "6 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -5682,9 +5872,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -5724,7 +5919,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   },
@@ -5805,7 +6000,7 @@
       {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
-        "detail": "5 analytical object(s), each leading somewhere in the Work"
+        "detail": "6 analytical object(s), each leading somewhere in the Work"
       },
       {
         "id": "NO-GAMIFICATION",
@@ -5828,9 +6023,14 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
         "id": "V13-visualization-truth",
         "ok": true,
-        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
       },
       {
         "id": "V14-member-contribution",
@@ -5870,7 +6070,7 @@
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
-        "detail": "prose scaled 16→24px, no horizontal overflow"
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
       }
     ]
   }

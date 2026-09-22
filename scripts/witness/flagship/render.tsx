@@ -214,6 +214,20 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
       arrived: !!document.querySelector('[data-carried-observation]'),
       /* ⭐ V13 — visualization truth. Every row of a presence grid declares its
          kind, so an inference cannot be drawn in the visual language of a count. */
+      provenanceKinds: (function(){
+        var ks = {};
+        Array.prototype.forEach.call(document.querySelectorAll('[data-provenance]'), function(e){
+          ks[e.getAttribute('data-provenance')] = (e.textContent||'').trim(); });
+        return Object.keys(ks);
+      })(),
+      provenanceLabelsDistinct: (function(){
+        var seen = {}, labels = [];
+        Array.prototype.forEach.call(document.querySelectorAll('.fs-prov'), function(e){
+          var k = e.getAttribute('data-provenance'), t = (e.textContent||'').trim();
+          if (!seen[k]) { seen[k] = t; labels.push(t); }
+        });
+        return labels.length === new Set(labels).size;
+      })(),
       gridRows: q('[data-thread]').length,
       gridRowsWithoutProvenance: q('[data-thread]').filter(function(e){
         return !e.querySelector('[data-provenance]'); }).length,
@@ -398,6 +412,16 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
   out.push({ id: 'EVERY-CONTROL-IS-NAMED', ok: (m.unnamedControls as number) === 0,
     detail: (m.unnamedControls as number) === 0 ? 'every control has a name a screen reader can read'
       : `${m.unnamedControls} unnamed control(s)` });
+  /* ⭐ §13 — the four provenance kinds must remain four. ⛔ "You chose the
+     Spiral template" may never render as "you named this". */
+  {
+    const kinds = m.provenanceKinds as string[];
+    const collapsed = kinds.includes('template-selected') && kinds.includes('member-declared')
+      ? (m.provenanceLabelsDistinct as boolean) : true;
+    out.push({ id: 'PROVENANCE-four-kinds-never-collapse', ok: collapsed,
+      detail: collapsed ? `${kinds.length} kind(s) present, each with its own label`
+        : 'a template choice renders as the member naming it' });
+  }
   out.push({ id: 'V13-visualization-truth', ok: (m.gridRowsWithoutProvenance as number) === 0,
     detail: (m.gridRowsWithoutProvenance as number) === 0
       ? `${m.gridRows} grid row(s), each declaring whether it is countable or MAIA's reading`
@@ -488,11 +512,21 @@ async function main() {
       const textScale = await p.evaluate(`(function(){
         var before = { w: document.body.scrollWidth,
           size: parseFloat(getComputedStyle(document.querySelector('.fs-p') || document.body).fontSize) };
-        document.documentElement.style.fontSize = '24px';
+        /* ⭐ §16 of the usability protocol names 100 / 125 / 150 / 175. The
+           last one is where older writers actually live, and it is the one a
+           layout tuned at 150 quietly fails. */
+        var worst = null;
+        [20, 24, 28].forEach(function(px){
+          document.documentElement.style.fontSize = px + 'px';
+          var w = document.body.scrollWidth;
+          if (w > window.innerWidth + 2 && !worst) worst = { px: px, w: w };
+        });
+        document.documentElement.style.fontSize = '28px';
         var after = { w: document.body.scrollWidth,
           size: parseFloat(getComputedStyle(document.querySelector('.fs-p') || document.body).fontSize) };
         document.documentElement.style.fontSize = '';
-        return { grew: after.size > before.size + 0.5, overflow: after.w > window.innerWidth + 2,
+        return { grew: after.size > before.size + 0.5, overflow: !!worst,
+                 worstAt: worst ? worst.px : 0,
                  before: before.size, after: after.size };
       })()`) as { grew: boolean; overflow: boolean; before: number; after: number };
 
@@ -501,8 +535,8 @@ async function main() {
         ok: textScale.grew && !textScale.overflow,
         detail: !textScale.grew
           ? `prose stayed at ${textScale.before}px when the browser text size was raised 50% — px type ignores the member's setting`
-          : textScale.overflow ? `text scaled ${textScale.before}→${textScale.after}px but the page overflows sideways`
-          : `prose scaled ${textScale.before}→${textScale.after}px, no horizontal overflow` });
+          : textScale.overflow ? `overflows sideways at ${Math.round((textScale.worstAt / 16) * 100)}% browser text`
+          : `prose scales ${textScale.before}→${textScale.after}px through 175%, no horizontal overflow` });
       if (v2) checks.push(v2);
       failures += checks.filter((c) => !c.ok).length;
       results.push({ state: st.id, viewport: vp.id, checks });

@@ -325,6 +325,10 @@
 .fs-prov{font-size:0.625rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;
   padding:1px 6px;border-radius:3px;white-space:nowrap}
 .fs-prov[data-provenance="member-declared"]{background:var(--goldfill);color:#3A2E14}
+/* ⭐ A template choice is its own treatment — ⛔ never the same chip as
+   "you named this". Four kinds, four looks. */
+.fs-prov[data-provenance="template-selected"]{background:transparent;color:var(--gold);
+  border:1px dashed var(--goldfill)}
 .fs-prov[data-provenance="textual-entity"]{background:var(--active);color:var(--secondary)}
 .fs-prov[data-provenance="maia-observation"]{background:var(--maia-tint);color:var(--maia);
   border:1px solid var(--maia-rule)}

@@ -29,14 +29,41 @@ import { inspectMemberCopy, inspectForMachinery } from './language';
    ══════════════════════════════════════════════════════════════════════════ */
 
 export type Provenance =
-  /** ⭐ The member said so. Primary, solid, and theirs to revise. */
+  /** ⭐ The member NAMED it themselves. Primary, solid, theirs to revise. */
   | { readonly kind: 'member-declared'; readonly declaredWhen: string }
+  /**
+   * ⭐⭐ THE MEMBER CHOSE A SOULLAB TEMPLATE AND ADOPTED IT.
+   *
+   * ⚠️ A FOURTH KIND, added because the usability protocol §13 requires it
+   * explicitly: *“Never collapse them into `member-declared`.”*
+   *
+   * ⭐ Declaring by ACCEPTING A TEMPLATE is not the same act as NAMING YOUR OWN
+   * MOVEMENTS. Both are lawful. ⛔ Presenting the second as the first lets the
+   * house framework arrive as the member's own reading of their book, which is
+   * what Invariant 14 and FR-06 exist to prevent — a member writing a novel
+   * about a river did not invent *Threshold · Integration · Renewal*.
+   *
+   * ⭐ This build had exactly that collapse until the protocol named it.
+   */
+  | { readonly kind: 'template-selected'; readonly templateName: string; readonly chosenWhen: string }
   /** ⭐ A name or phrase literally present in the manuscript. Countable. */
   | { readonly kind: 'textual-entity' }
   /** ⭐ MAIA's reading. ⛔ Visibly secondary, always evidence-backed. */
   | { readonly kind: 'maia-observation'; readonly readingId: string; readonly lens: string };
 
-export const PROVENANCE_KINDS = ['member-declared', 'textual-entity', 'maia-observation'] as const;
+export const PROVENANCE_KINDS = [
+  'member-declared', 'template-selected', 'textual-entity', 'maia-observation',
+] as const;
+
+/** ⭐ What the member reads. ⛔ Four distinct sentences, never three. */
+export function provenanceLabel(p: Provenance): string {
+  switch (p.kind) {
+    case 'member-declared': return `you named this · ${p.declaredWhen}`;
+    case 'template-selected': return `you chose ${p.templateName}`;
+    case 'textual-entity': return 'in your text';
+    case 'maia-observation': return 'MAIA noticed this';
+  }
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    COVERAGE — ⭐ required wherever a claim is about the whole Work

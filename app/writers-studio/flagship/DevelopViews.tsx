@@ -9,18 +9,14 @@
 
 import * as React from 'react';
 import {
-  PRESENCE_LABEL, type ContinuityMapData, type Coverage,
+  PRESENCE_LABEL, provenanceLabel, type ContinuityMapData, type Coverage,
   type DevelopObservation, type Provenance, type ThreadRow,
 } from '../../../lib/writersStudio/studio/developObservation';
 
 /* ⭐ Three epistemically different things, three visibly different treatments.
    ⛔ They may never collapse into one. */
 function ProvenanceMark({ p }: { p: Provenance }) {
-  const text =
-    p.kind === 'member-declared' ? `you named this · ${p.declaredWhen}`
-      : p.kind === 'textual-entity' ? 'in your text'
-        : 'MAIA noticed this';
-  return <span className="fs-prov" data-provenance={p.kind}>{text}</span>;
+  return <span className="fs-prov" data-provenance={p.kind}>{provenanceLabel(p)}</span>;
 }
 
 export function CoverageLine({ c, compact = false }: { c: Coverage; compact?: boolean }) {
