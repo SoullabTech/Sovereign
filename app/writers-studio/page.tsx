@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { deleteWork, removeWork, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
-import { CANVAS_HREF } from './studioMap';
+import { REBUILD_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
 import { useCurrentManuscript } from './useCurrentManuscript';
 import { useLivingWorks } from './useLivingWorks';
@@ -82,7 +82,7 @@ export default function WritersStudioHome() {
       if (!manuscriptId) throw new Error('blank manuscript returned no id');
       await declare(workId, manuscriptId);
       await refresh();
-      router.push(canvasForManuscript(CANVAS_HREF, manuscriptId));
+      router.push(canvasForManuscript(REBUILD_HREF, manuscriptId));
     } catch (err) {
       await refresh();
       throw err;

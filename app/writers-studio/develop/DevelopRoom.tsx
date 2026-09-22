@@ -28,7 +28,7 @@ import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { PRESS, SERIF } from '../pressTheme';
-import { CANVAS_HREF } from '../studioMap';
+import { REBUILD_HREF } from '../studioMap';
 import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
@@ -942,7 +942,7 @@ export default function DevelopRoom({
                   )}
                   {commission.outcome.refusal === 'revision_not_current' && (
                     <Link
-                      href={canvasForManuscript(CANVAS_HREF, manuscriptId)}
+                      href={canvasForManuscript(REBUILD_HREF, manuscriptId)}
                       data-develop-keep-a-version
                       className="inline-block text-[12.5px] underline underline-offset-4 opacity-70 hover:opacity-100 mt-1.5"
                     >
