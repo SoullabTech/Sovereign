@@ -175,16 +175,46 @@ export const OVERLAY_ROLES: readonly OverlayRole[] = ['outline', 'review', 'hist
  *     cuts both directions: a finding that leads into the Work and strands the
  *     member there has replaced a dashboard with a trapdoor.
  */
+/**
+ * ⭐⭐ THREE KINDS THE MEMBER MAY AUTHOR.
+ *
+ * ⭐ `question` and `possibility` matter as much as `noticed`: a writer's most
+ * useful marks on their own book are often *I don't know yet* and *what if* —
+ * and a system that only accepts findings would force both into the shape of a
+ * conclusion. ⛔ MAIA has no equivalent of these: she may not record a
+ * possibility about the member's Work as though it were hers to hold.
+ */
+export type OwnNoteKind = 'noticed' | 'question' | 'possibility';
+
+export interface OwnNote {
+  readonly kind: OwnNoteKind;
+  readonly text: string;
+  /** Member-chosen links. ⛔ Never inferred from the text — FR-06. */
+  readonly themes: readonly string[];
+}
+
 export interface Trail {
   /** e.g. "your review" · "the map". Member-facing, ⛔ never a route name. */
   readonly from: string;
   readonly backLabel: string;
+  /**
+   * ⭐ Position in the set the member is travelling through — `1 of 4`.
+   *
+   * ⭐⭐ Traversal matters more than it looks. Without it, seeing the second
+   * finding means going back and re-entering, and the loop becomes
+   * *in, out, in, out* instead of movement THROUGH the Work. ⛔ A member
+   * exploring their own book should not have to leave it to keep exploring.
+   */
+  readonly index: number;
+  readonly total: number;
 }
 
 export interface StudioState {
   readonly phase: Phase;
   /** Present when the member arrived from an analytical view. */
   readonly trail?: Trail;
+  /** ⭐ The member's own observations, in their own words. ⛔ Never MAIA's. */
+  readonly ownNotes?: readonly OwnNote[];
   readonly place: Place;
   readonly overlay: OverlayRole | null;
   readonly version: number;
@@ -228,7 +258,21 @@ export type StudioEvent =
       readonly passage: PassageRef; readonly observation: Observation;
       readonly trail: Trail }
   /** ⭐ The way back. ⛔ A finding that strands the member is a trapdoor. */
-  | { readonly type: 'BACK_ALONG_TRAIL' };
+  | { readonly type: 'BACK_ALONG_TRAIL' }
+  /** ⭐ Move through the set without leaving the Work. */
+  | { readonly type: 'STEP_TRAIL'; readonly by: 1 | -1; readonly place: Place;
+      readonly passage: PassageRef; readonly observation: Observation }
+  /**
+   * ⭐⭐ THE MEMBER AUTHORS INTO THE ANALYTICAL LAYER.
+   *
+   * An observation the member wrote. ⛔ It is not MAIA's and must never be
+   * rendered as hers — `provenance` keeps them apart. ⭐ This is what makes the
+   * analytical view something the writer PARTICIPATES IN rather than receives:
+   * they can mark a passage, ask a question of their own, or record a
+   * possibility, and it sits beside MAIA's findings as an equal.
+   */
+  | { readonly type: 'ADD_OWN_OBSERVATION'; readonly kind: OwnNoteKind;
+      readonly text: string; readonly themes?: readonly string[] };
 
 export type EventType = StudioEvent['type'];
 
@@ -254,6 +298,8 @@ const EVENT_CAPABILITY: Readonly<Record<EventType, CapabilityId>> = {
   NAVIGATE_TO: 'manuscript.read',
   ARRIVE_AT_PASSAGE: 'observation.read',
   BACK_ALONG_TRAIL: 'manuscript.read',
+  STEP_TRAIL: 'observation.read',
+  ADD_OWN_OBSERVATION: 'manuscript.read',
 };
 
 const OVERLAY_CAPABILITY: Readonly<Record<OverlayRole, CapabilityId>> = {
@@ -288,7 +334,8 @@ export const TRANSITIONS: Readonly<Record<PhaseName, readonly EventType[]>> = {
 /** Events valid from every phase. Overlays are orthogonal; navigation is the
  *  writer moving in their own Work and is never refused by a conversation. */
 export const UNIVERSAL_EVENTS: readonly EventType[] = [
-  'OPEN_OVERLAY', 'CLOSE_OVERLAY', 'NAVIGATE_TO', 'ARRIVE_AT_PASSAGE', 'BACK_ALONG_TRAIL',
+  'OPEN_OVERLAY', 'CLOSE_OVERLAY', 'NAVIGATE_TO', 'ARRIVE_AT_PASSAGE',
+  'BACK_ALONG_TRAIL', 'STEP_TRAIL', 'ADD_OWN_OBSERVATION',
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -364,6 +411,30 @@ export function transition(state: StudioState, event: StudioEvent): Outcome {
       ...state, place: event.place, overlay: null, trail: event.trail,
       phase: { name: 'conversation', passage: event.passage, observation: event.observation },
     });
+  }
+  if (event.type === 'STEP_TRAIL') {
+    if (!state.trail) return refuse('EVENT_NOT_IN_PHASE', 'not travelling through a set');
+    const next = state.trail.index + event.by;
+    if (next < 1 || next > state.trail.total) {
+      return refuse('EVENT_NOT_IN_PHASE', `no finding ${next} of ${state.trail.total}`);
+    }
+    return ok({
+      ...state, place: event.place, overlay: null,
+      trail: { ...state.trail, index: next },
+      phase: { name: 'conversation', passage: event.passage, observation: event.observation },
+    });
+  }
+  if (event.type === 'ADD_OWN_OBSERVATION') {
+    /* ⛔ The member's own words are recorded, ⛔ never interpreted into a
+       category and ⛔ never attributed to MAIA. Place and phase are untouched:
+       writing a note is not navigation. */
+    if (event.text.trim().length === 0) {
+      return refuse('EVENT_NOT_IN_PHASE', 'an empty note records nothing');
+    }
+    const note: OwnNote = {
+      kind: event.kind, text: event.text.trim(), themes: event.themes ?? [],
+    };
+    return ok({ ...state, ownNotes: [...(state.ownNotes ?? []), note] });
   }
   if (event.type === 'BACK_ALONG_TRAIL') {
     if (!state.trail) return refuse('EVENT_NOT_IN_PHASE', 'nothing to go back to');

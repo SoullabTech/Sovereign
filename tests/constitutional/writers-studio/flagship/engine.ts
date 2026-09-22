@@ -51,6 +51,8 @@ export const CAPABILITY_OF: Readonly<Record<EventType, CapabilityId>> = {
   NAVIGATE_TO: 'manuscript.read',
   ARRIVE_AT_PASSAGE: 'observation.read',
   BACK_ALONG_TRAIL: 'manuscript.read',
+  STEP_TRAIL: 'observation.read',
+  ADD_OWN_OBSERVATION: 'manuscript.read',
 };
 
 /** The four directions from the D0 prototype. ⛔ No default. ⛔ No winner. */

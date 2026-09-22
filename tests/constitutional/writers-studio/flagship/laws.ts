@@ -229,7 +229,7 @@ export function runLaws(e: Engine): readonly LawResult[] {
 
 export function runArrivalLaws(e: Engine): readonly LawResult[] {
   const out: LawResult[] = [];
-  const TRAIL = { from: 'your review', backLabel: 'Back to your review' } as const;
+  const TRAIL = { from: 'your review', backLabel: 'Back to your review', index: 1, total: 4 } as const;
   const ELSEWHERE: Place = { sectionId: 'ch-6', anchor: 'anchor:ch-6:0' };
 
   /* ── A1 · the observation travels; ⛔ nothing is re-read ─────────────────── */
@@ -267,6 +267,46 @@ export function runArrivalLaws(e: Engine): readonly LawResult[] {
     const r = e.transition(e.initialState(PLACE, 1), { type: 'BACK_ALONG_TRAIL' });
     return must('A3-no-phantom-trail', r.refused,
       r.refused ? 'refused with nothing to go back to' : 'walked a trail that was never laid');
+  }));
+
+
+  /* ── A4 · move through the set without leaving the Work ─────────────────── */
+  out.push(law('A4-traverse-without-leaving', () => {
+    const arrived = drive(e, e.initialState(PLACE, 1), [
+      { type: 'ARRIVE_AT_PASSAGE', place: ELSEWHERE, passage: PASSAGE,
+        observation: OBSERVATION, trail: TRAIL },
+    ]);
+    const stepped = e.transition(arrived, {
+      type: 'STEP_TRAIL', by: 1, place: ELSEWHERE, passage: PASSAGE, observation: OBSERVATION });
+    if (stepped.refused) return must('A4-traverse-without-leaving', false, `stepping refused: ${stepped.code}`);
+    const at = stepped.state.trail;
+    /* ⛔ And it must stop at the edges rather than wrap or run off. */
+    const past = e.transition(
+      { ...stepped.state, trail: { ...TRAIL, index: 4 } },
+      { type: 'STEP_TRAIL', by: 1, place: ELSEWHERE, passage: PASSAGE, observation: OBSERVATION });
+    const ok2 = at?.index === 2 && at.total === 4 && past.refused;
+    return must('A4-traverse-without-leaving', ok2,
+      ok2 ? 'moved 1→2 of 4 without leaving the passage; refused stepping past the end'
+        : `index ${at?.index}/${at?.total}; past-end refused ${past.refused}`);
+  }));
+
+  /* ── A5 · ⭐ the member authors into the analytical layer ────────────────── */
+  out.push(law('A5-member-authors-their-own-observation', () => {
+    const start = e.initialState(PLACE, 1);
+    const kinds = ['noticed', 'question', 'possibility'] as const;
+    let cur = start;
+    for (const kind of kinds) {
+      const r = e.transition(cur, { type: 'ADD_OWN_OBSERVATION', kind, text: `a ${kind}`, themes: ['Pacing'] });
+      if (r.refused) return must('A5-member-authors-their-own-observation', false, `${kind} refused: ${r.code}`);
+      cur = r.state;
+    }
+    const empty = e.transition(cur, { type: 'ADD_OWN_OBSERVATION', kind: 'noticed', text: '   ' });
+    /* ⛔ Writing a note is not navigation: place and phase must not move. */
+    const stillHere = cur.place.sectionId === start.place.sectionId && cur.phase.name === start.phase.name;
+    const ok3 = cur.ownNotes?.length === 3 && empty.refused && stillHere;
+    return must('A5-member-authors-their-own-observation', ok3,
+      ok3 ? 'noticed · question · possibility recorded in the member’s words; empty refused; place unmoved'
+        : `notes ${cur.ownNotes?.length}; empty refused ${empty.refused}; place unmoved ${stillHere}`);
   }));
 
   return out;

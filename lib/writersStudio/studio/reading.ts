@@ -31,6 +31,48 @@ export type Freshness =
    *  what MAIA believed before a correction is part of the record. */
   | { readonly kind: 'superseded'; readonly when: string; readonly bySupersedingWhen: string };
 
+/**
+ * ⭐⭐ WHAT CHANGED, ITEMISED.
+ *
+ * *N sections have changed* is true and nearly useless. ⭐ **3 passages added ·
+ * 1 revised (including p. 112) · 2 moved** tells the member whether the change
+ * touches the finding they are looking at — which is the only question they
+ * actually have.
+ */
+export interface WorkChange {
+  readonly added: number;
+  readonly revised: number;
+  readonly moved: number;
+  /** ⭐ Named where a revised passage is one the current findings cite. */
+  readonly revisedIncludes?: readonly string[];
+}
+
+export function changeLines(c: WorkChange): readonly string[] {
+  const out: string[] = [];
+  const plural = (n: number) => (n === 1 ? 'passage' : 'passages');
+  if (c.added > 0) out.push(`${c.added} ${plural(c.added)} added`);
+  if (c.revised > 0) {
+    out.push(`${c.revised} ${plural(c.revised)} revised`
+      + (c.revisedIncludes?.length ? ` (including ${c.revisedIncludes.join(', ')})` : ''));
+  }
+  if (c.moved > 0) out.push(`${c.moved} ${plural(c.moved)} moved`);
+  return out;
+}
+
+/**
+ * ⭐⭐ THE TRUST LINE, and it is not decoration.
+ *
+ * The room enforces *no commission from navigation* mechanically. This says it
+ * **out loud, to the member, at the one moment it matters** — when MAIA's
+ * reading is visibly out of date and the obvious thing for software to do would
+ * be to quietly refresh itself.
+ *
+ * ⭐ Enforcement prevents harm; ⭐ saying it builds trust. The member learns the
+ * rule by being told it exactly where they would otherwise assume the opposite.
+ */
+export const REREAD_IS_THE_MEMBERS_CALL =
+  'MAIA will not read the new version without your request. Your work remains in your hands.';
+
 export function freshnessLine(f: Freshness): string {
   switch (f.kind) {
     case 'current':
