@@ -361,3 +361,136 @@ correct scope, or omitted.* The basis must be stated or derived, ⛔ never chose
 
 **TEMPLATE SET ✅ BOUND AS COMPOSITION AUTHORITY · §6 CONTENT RULINGS UNCHANGED AND GOVERNING ·
 FIVE DIVERGENCES RECORDED · ITEM (3) ⛔ BLOCKS THE B2 SHELL UNTIL RULED.**
+
+---
+
+## §9 · FOUNDER VISUAL RULINGS FOR B2 — 2026-09-22 · FROZEN
+
+### §9.1 · Corrections approved
+
+**F1 — APPROVED.** One permanent content region: **the manuscript**. A persistent Soullab
+app-navigation rail **is allowed** and may contain `Home / Write / Develop / Review / Library /
+Search`. ⛔ It may **not** become an outline, an analysis panel, a MAIA panel, or a content
+workspace.
+
+**F3 — APPROVED.** MAIA is **anchored beside the held passage**, ⛔ not permanently inline beneath
+it. Contextual · dismissible · **locus-bound**. ⛔ Opening or closing MAIA must not:
+
+- shift manuscript width;
+- move the selected prose vertically;
+- change scroll position;
+- lose the passage.
+
+✅ On narrow/mobile the contextual layer **may become a sheet/overlay**, because there is no room
+beside the passage.
+
+**ALTERNATIVES — APPROVED.** ⛔ The generated visual's direct `Apply` buttons are **NOT design
+authority**. Every alternative card says **`Read in context`**. `Apply` appears **only after that
+exact candidate is rendered in manuscript context** — then Apply → clear receipt → **immediate
+Undo** → history retained.
+
+**ONE FLAGSHIP FAMILY — APPROVED.** ⭐ `Write` · `Develop` · `Review` are **member-facing modes
+under one Soullab Studio shell**, ⛔ not three equal legacy products. ⛔ **Their underlying old
+route/component architecture is not automatically preserved.**
+
+### §9.2 · ⭐⭐ THE COMPOSITION LAW — FROZEN
+
+> ⭐ **A candidate may not pass visual acceptance merely because it contains the same functions.
+> Its COMPOSITION, HIERARCHY, ATMOSPHERE, DENSITY, TYPOGRAPHY and CONTEXTUAL BEHAVIOR must
+> materially conform to the approved flagship visual references.**
+
+⭐ *Otherwise the old controls are simply rearranged and called B2.*
+
+### §9.3 · Visual canon — the target family
+
+```text
+WRITE   — resting manuscript
+WRITE   — passage + anchored MAIA
+WRITE   — alternatives → Read in context
+WRITE   — applied + history + Undo
+DEVELOP — flagship overview
+REVIEW  — desktop  +  MOBILE Write
+```
+
+### §9.4 · Develop — observation language, ruled
+
+⭐ **DESCRIBE. ⛔ DO NOT GRADE.**
+
+| ✅ Permitted | ⛔ Barred |
+|---|---|
+| “The chapter changes mode here.” | “Distinctive and authentic.” |
+| “This image appears in four separated movements.” | “Engaging and thoughtful.” |
+| “The transition between these sections is abrupt.” | “Excellent voice.” |
+| “The voice becomes more explanatory in this passage.” | “Weak transition.” |
+| “MAIA read 11 of 14 sections for this observation.” | |
+
+⭐ Note both directions are barred: *excellent* and *weak* alike. The defect is **grading**, ⛔ not
+negativity — praise presented as a property of the Work is the same act as criticism presented as
+one.
+
+**READER PERSPECTIVE.** ✅ `Reader` may be an **inquiry lens**; findings stay **hypothesis-shaped**.
+
+> ✅ *“A reader may lose the thread here because the referent changes without being renamed.”*
+> ⛔ *“Readers will find this confusing.”*
+
+**SPIRAL / ELEMENTAL MAP.** ✅ Allowed when the structure is **member-declared**. For *Elemental
+Alchemy* a spiral/elemental visualization is especially apt **because the Work itself carries that
+architecture**. ⭐ The generic platform law:
+
+> ⭐ **Visualize declared structure; ⛔ do not silently manufacture archetypal or elemental
+> classification from prose.**
+
+For Works **without** a declared spiral, Develop renders another appropriate structure — sequence ·
+sections · relationship map · arc.
+
+**SOURCES.** ✅ `What MAIA read` · `Coverage` · `Materials` · `References attached to this Work`.
+⛔ Do **not** label something `Sources` where it implies MAIA **independently verified external
+claims**.
+
+**EXPORT.** ⛔ **OUT of the B2 target** until the existing disclosure/export authority is
+specifically reconciled.
+
+### §9.5 · ⭐ F13 — LEGACY AESTHETIC REGRESSION (new acceptance falsifier)
+
+> ⭐ **A candidate FAILS if it satisfies the structural rules but materially reproduces the old
+> Writer's Studio aesthetic: dense controls · permanent utility panels · technical vocabulary ·
+> workbench feel · visible implementation machinery.**
+
+⭐ **What F13 actually protects**, in the founder's words:
+
+> *creatives and helpers who are not professional writers need to walk in and feel **invited,
+> capable, and excited** — not like they have entered an **editing console**.*
+
+⚠️ F13 is **partly mechanical and partly human.** Mechanical: control density per region · presence
+of technical vocabulary in member-facing copy · permanent utility panels · legacy component
+signatures (**V9**). ⛔ **Not mechanical**: *invited · capable · excited.* That half is **V10** and
+⛔ may never be proxied.
+
+### §9.6 · B2 DELIVERABLE — required before B3
+
+```text
+B2 rendered candidate — 4 viewports × 7 states
+
+viewports    desktop 1920 · desktop 1440 · laptop/narrower · mobile
+states       WRITE at rest
+             WRITE + held passage + MAIA
+             WRITE alternatives
+             WRITE read in context
+             WRITE applied + undo
+             DEVELOP overview
+             REVIEW
+plus         side-by-side comparison against the visual canon
+```
+
+> ⛔ **B2 IS NOT GREEN UNTIL THE FOUNDER SEES IT.** ⛔ No machine test can proxy
+> *“Yes. This is the Soullab flagship Studio.”*
+
+### §9.7 · ⭐ Navigation vocabulary — READING TAKEN, cheap to correct
+
+§8.3(3) is resolved by §9.1: the rail carries `Home / Write / Develop / Review / Library / Search`
+and **Write · Develop · Review are the member-facing modes**.
+
+⭐ **Reading taken:** `Write · Explore · Refine · Become` is **outer brand and arc language, ⛔ never
+a navigation control**, and the mobile bottom nav therefore carries the same three modes as the
+desktop rail. ⚠️ ⛔ **Not explicitly ruled** — the mode names were ruled, the mobile bottom nav was
+not. It is implemented behind one named constant so a contrary ruling is a one-line change.
