@@ -24,7 +24,8 @@ import { seamIdentity, ancestry, checkBinding, Refusal } from './seam-identity.m
 import { containerSeamIdentity, ContainerRefusal, ENTAILED_ONLY } from './seam-identity-container.mjs';
 
 const PROJECT = process.cwd();
-const EXPECTED = '195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b';
+const EXPECTED_PRODUCTION = '195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b';
+const EXPECTED_CANONICAL = 'b828400c7aaceafbbfcc66144018a6b0fe538dab1c806bbe3de635b2fc6ff6b4';
 const EXPECTED_IMAGE = 'a63cf931fe80227004ba9d8730c628bb0c0d65deae6e53e8c29b6bc3b3fd3b51';
 const results = [];
 
@@ -105,8 +106,8 @@ record('F1', 'L1', 'a single changed seam byte is detected', () => {
   const mutated = mutatedSeamCommit();
   const base = seamIdentity('HEAD').digest;
   const after = seamIdentity(mutated).digest;
-  if (base !== EXPECTED) return { pass: false, note: `baseline digest unexpected: ${base}` };
-  if (after === EXPECTED) return { pass: false, note: 'digest did NOT move — instrument is blind' };
+  if (base !== EXPECTED_CANONICAL) return { pass: false, note: `baseline digest unexpected: ${base}` };
+  if (after === EXPECTED_CANONICAL) return { pass: false, note: 'digest did NOT move — instrument is blind' };
   return { pass: true, note: `moved to ${after.slice(0, 16)}…` };
 });
 
@@ -178,8 +179,9 @@ record('F7', 'L1', 'overlapping declared paths do not double-count', () => {
 record('F8', 'L6', 'conforming binding is admitted (instrument is not trivially refusing)', () => {
   const r = checkBinding({
     productionSha: '4c097b4c81402c62e42613e83ae28180fef46f08',
-    canonicalRev: '65bcb76bb38d4f57e816253fdbec0ea036d6c166',
-    expectedDigest: EXPECTED,
+    canonicalRev: 'fa5274fd9c8761bed4d07e8437bdd1fc36e13a9a',
+    expectedProductionDigest: EXPECTED_PRODUCTION,
+    expectedCanonicalDigest: EXPECTED_CANONICAL,
   });
   return r.ok ? { pass: true, note: 'BINDING SATISFIED' } : { pass: false, note: JSON.stringify(r.findings) };
 });
