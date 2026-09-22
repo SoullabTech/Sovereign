@@ -41,7 +41,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -72,6 +72,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "0 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -147,7 +152,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -178,6 +183,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -258,7 +268,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -289,6 +299,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -369,7 +384,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -400,6 +415,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -480,7 +500,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -511,6 +531,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -581,7 +606,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -612,6 +637,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "a result and an absence render differently"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "8 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -677,7 +707,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 8 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -708,6 +738,233 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "CITATION-moved-is-disclosed-with-frozen-text",
+        "ok": true,
+        "detail": "1 moved citation(s), each showing what MAIA read"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "8-review-not-read",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "9-review-nothing-noticed",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -773,7 +1030,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -804,6 +1061,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "0 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -879,7 +1141,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -910,6 +1172,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -990,7 +1257,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1021,6 +1288,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -1101,7 +1373,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1132,6 +1404,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -1212,7 +1489,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1243,6 +1520,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -1313,7 +1595,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1344,6 +1626,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "a result and an absence render differently"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "8 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -1409,7 +1696,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 8 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1440,6 +1727,233 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "CITATION-moved-is-disclosed-with-frozen-text",
+        "ok": true,
+        "detail": "1 moved citation(s), each showing what MAIA read"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "8-review-not-read",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "9-review-nothing-noticed",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -1505,7 +2019,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1536,6 +2050,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "0 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -1611,7 +2130,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1642,6 +2161,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -1722,7 +2246,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1753,6 +2277,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -1833,7 +2362,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1864,6 +2393,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -1944,7 +2478,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -1975,6 +2509,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -2045,7 +2584,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -2076,6 +2615,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "a result and an absence render differently"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "8 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -2141,7 +2685,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 8 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -2172,6 +2716,233 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "CITATION-moved-is-disclosed-with-frozen-text",
+        "ok": true,
+        "detail": "1 moved citation(s), each showing what MAIA read"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "8-review-not-read",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "9-review-nothing-noticed",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -2237,7 +3008,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -2268,6 +3039,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "0 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -2338,7 +3114,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -2369,6 +3145,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -2444,7 +3225,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -2475,6 +3256,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -2550,7 +3336,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -2581,6 +3367,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -2656,7 +3447,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -2687,6 +3478,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "5 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -2757,7 +3553,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 0 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -2788,6 +3584,11 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "a result and an absence render differently"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "8 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",
@@ -2853,7 +3654,7 @@
       {
         "id": "V7-findings-return-to-manuscript",
         "ok": true,
-        "detail": "100% of findings carry a return"
+        "detail": "all 8 findings return to the manuscript"
       },
       {
         "id": "OBS-carry-evidence",
@@ -2884,6 +3685,233 @@
         "id": "LENS-read-nothing-is-not-not-read",
         "ok": true,
         "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "CITATION-moved-is-disclosed-with-frozen-text",
+        "ok": true,
+        "detail": "1 moved citation(s), each showing what MAIA read"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "8-review-not-read",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      }
+    ]
+  },
+  {
+    "state": "9-review-nothing-noticed",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 0 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "READING-states-its-own-freshness",
+        "ok": true,
+        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
       },
       {
         "id": "MAP-no-clipped-labels",

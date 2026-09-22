@@ -334,3 +334,20 @@
 .fs-maplegend i[data-presence="3"]{background:var(--gold);opacity:.88}
 .fs-maplegend i[data-presence="2"]{background:var(--goldfill);opacity:.64}
 .fs-maplegend i[data-presence="1"]{background:var(--goldfill);opacity:.32}
+
+/* ── REVIEW ─────────────────────────────────────────────────────────────── */
+/* ⭐ Said before anything the reading claims. */
+.fs-reading{font-size:12.5px;color:var(--secondary);background:var(--panel);
+  border-radius:7px;padding:9px 12px;line-height:1.55}
+.fs-reading[data-freshness="stale"]{background:var(--held);
+  box-shadow:inset 3px 0 0 var(--held-edge)}
+.fs-reading[data-freshness="superseded"]{background:var(--soft);color:var(--muted)}
+.fs-find{display:flex;gap:14px;align-items:flex-start;border-top:1px solid var(--rule);padding:14px 0}
+.fs-factions{display:flex;flex-direction:column;gap:5px;flex:none}
+.fs-factions .fs-btn{white-space:nowrap;font-size:11.5px;padding:4px 11px}
+/* ⭐ Disclosure of a moved citation. ⛔ Never silent re-anchoring. */
+.fs-moved{margin-top:8px;border-left:2px solid var(--del);padding:6px 0 4px 10px}
+.fs-movedline{font-size:11.5px;color:var(--del);font-weight:600}
+.fs-movedq{font-family:var(--serif);font-size:13px;line-height:1.55;color:var(--muted);
+  margin:5px 0 2px;font-style:italic}
+.fs-movedwho{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--quiet)}

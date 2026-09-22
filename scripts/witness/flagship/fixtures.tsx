@@ -145,24 +145,30 @@ export const DEVELOP: DevelopView = {
   },
 };
 
+/* ⭐ Review deliberately shows the hard states: a STALE reading, a moved
+   citation, a lens read that found nothing, and a lens never read. ⛔ A fixture
+   that only shows the happy path proves the happy path. */
 export const REVIEW: ReviewView = {
   work: 'The River Between',
-  coverage: { read: 14, total: 14, depth: 'full depth' },
-  findings: [
-    { id: 'f-bridge', glyph: '⇄', heading: 'The bridge between Chapter 9 and 10',
-      body: 'Chapter 9 closes on the body; Chapter 10 opens on time. Nothing carries the reader across.',
-      evidence: ['§9.4', '§10.1'], returnTo: { label: 'Go to passage', sectionId: 'ea-10-1' } },
-    { id: 'f-theme', glyph: '↻', heading: 'Cycles and renewal recur through Part III',
-      body: 'The pairing appears in six of the eight sections in Part III, each time in the closing paragraph.',
-      evidence: ['§9–§16'], returnTo: { label: 'Go to passage', sectionId: 'ea-12' } },
-    { id: 'f-mode', glyph: '◐', heading: 'The chapter changes mode here',
-      body: 'The language moves from explanation into sensory detail at the third paragraph, and stays there.',
-      evidence: ['§10.3'], returnTo: { label: 'Go to passage', sectionId: 'ea-10-3' } },
-    { id: 'f-reader', glyph: '?', heading: 'Reader perspective', hypothesis: true,
-      body: 'A reader may read “the work” here as the manuscript rather than the inner work, because the referent changes without being renamed.',
-      evidence: ['§10.5'], returnTo: { label: 'Discuss', sectionId: 'ea-10-5' } },
-    { id: 'f-image', glyph: '◈', heading: 'This image returns in four separate movements',
-      body: 'The forge appears in §10, §18, §29 and §44, each time attached to a different element.',
-      evidence: ['§10', '§18', '§29', '§44'], returnTo: { label: 'Go to passage', sectionId: 'ea-18' } },
+  kind: 'novel',
+  scope: { kind: 'work' },
+  freshness: { kind: 'stale', when: 'on 18 September', changedSince: 3 },
+  coverage: COVERAGE,
+  findings: OBSERVATIONS,
+  citations: {
+    'o-current': {
+      kind: 'moved',
+      frozenText: '“The current had changed, and she had not noticed when.”',
+    },
+  },
+  lenses: [
+    { id: 'structure',   availability: { kind: 'read', found: 2 } },
+    { id: 'continuity',  availability: { kind: 'read', found: 2 } },
+    { id: 'voice',       availability: { kind: 'read', found: 2 } },
+    { id: 'themes',      availability: { kind: 'read', found: 1 } },
+    { id: 'coherence',   availability: { kind: 'read-nothing-noticed' } },
+    { id: 'arc',         availability: { kind: 'not-read' } },
+    { id: 'reader',      availability: { kind: 'read', found: 1 } },
   ],
+  map: CONTINUITY_MAP,
 };

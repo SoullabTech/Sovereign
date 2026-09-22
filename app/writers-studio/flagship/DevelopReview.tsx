@@ -17,6 +17,10 @@ import { ContinuityMap, CoverageLine, Observations } from './DevelopViews';
 import type {
   ContinuityMapData, Coverage, DevelopObservation as GovernedObservation,
 } from '../../../lib/writersStudio/studio/developObservation';
+import {
+  availabilityLine, citationLine, commissionOffer, freshnessLine, scopeLine,
+  type CitationState, type Freshness, type LensAvailability, type ReviewScope,
+} from '../../../lib/writersStudio/studio/reading';
 
 /* ══════════════════════════════════════════════════════════════════════════
    OBSERVATIONS — describe, ⛔ never grade
@@ -376,57 +380,140 @@ function SequenceMap({ sections, kind }: { sections: number; kind: string }) {
 
 /* ══════════════════════════════════════════════════════════════════════════
    REVIEW
+
+   ⭐ TWO REFERENCES, TWO AUTHORITIES, ⛔ neither discarded:
+     · Reference A governs the HUMAN EXPERIENCE — manuscript relationship,
+       hierarchy, atmosphere, the conversational feel of reviewing.
+     · Reference B governs the EVIDENCE ARCHITECTURE — the Continuity Map,
+       coverage, observed patterns, addressability, non-evaluative presentation.
+
+   ⭐ Findings ARE `DevelopObservation`s, so evidence, return address,
+   provenance, coverage and copy-law are inherited rather than re-earned. ⛔ A
+   Review surface cannot reintroduce a defect the constructor refuses.
    ══════════════════════════════════════════════════════════════════════════ */
 
-const REVIEW_TABS = ['Findings', 'Notes', 'Related passages', 'References', 'What MAIA read'] as const;
-
-export interface Finding extends Observation { readonly glyph: string }
 export interface ReviewView {
   readonly work: string;
-  readonly findings: readonly Finding[];
-  readonly coverage: { readonly read: number; readonly total: number; readonly depth: string };
+  readonly kind: string;
+  readonly scope: ReviewScope;
+  readonly freshness: Freshness;
+  readonly coverage: Coverage;
+  readonly findings: readonly GovernedObservation[];
+  /** Per-finding citation state, keyed by observation id. Absent ⇒ intact. */
+  readonly citations?: Readonly<Record<string, CitationState>>;
+  readonly lenses: readonly { id: LensId; availability: LensAvailability }[];
+  readonly map?: ContinuityMapData;
 }
 
-export function ReviewRoom({ view, tab = 'Findings', facet = 'guided' }: {
-  view: ReviewView; tab?: string; facet?: Facet;
+function FindingRow({ o, citation }: { o: GovernedObservation; citation?: CitationState }) {
+  const moved = citation && citation.kind !== 'intact' ? citation : null;
+  return (
+    <div className="fs-find" data-finding={o.id} data-domain={o.domain}
+      data-provenance={o.provenance.kind} data-citation={citation?.kind ?? 'intact'}>
+      <div className="fs-fbody">
+        <div className="fs-obshead">
+          <span className="fs-fh">{o.label}</span>
+          <span className="fs-prov" data-provenance={o.provenance.kind}>
+            {o.provenance.kind === 'member-declared' ? 'you named this'
+              : o.provenance.kind === 'textual-entity' ? 'in your text' : 'MAIA noticed this'}
+          </span>
+        </div>
+        <p className="fs-fb">{o.description}</p>
+
+        {/* ⭐ DISCLOSURE, ⛔ not silent re-anchoring and ⛔ not a silent re-read.
+            The frozen text is offered so the member can see what MAIA read. */}
+        {moved ? (
+          <div className="fs-moved" data-citation-changed="true">
+            <div className="fs-movedline">{citationLine(moved)}</div>
+            <blockquote className="fs-movedq">{moved.frozenText}</blockquote>
+            <span className="fs-movedwho">what MAIA read</span>
+          </div>
+        ) : null}
+
+        <div className="fs-ev" style={{ marginTop: 7 }}>
+          {o.evidence.map((e) => <span className="fs-chip" key={e}>{e}</span>)}
+        </div>
+        {o.doesNotEstablish.includes('reader-effect') ? (
+          <p className="fs-limit">A possibility, not a prediction — this doesn’t establish how a reader will respond.</p>
+        ) : null}
+      </div>
+      <div className="fs-factions">
+        <button type="button" className="fs-btn" data-return-to={o.returnTo.sectionId}>Go to passage</button>
+        <button type="button" className="fs-btn" data-action="discuss" data-return-to={o.returnTo.sectionId}>Discuss</button>
+        <button type="button" className="fs-btn" data-action="explore" data-return-to={o.returnTo.sectionId}>Explore</button>
+      </div>
+    </div>
+  );
+}
+
+export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
+  view: ReviewView; lens?: LensId | 'all'; facet?: Facet;
 }) {
+  const shown = lens === 'all' ? view.findings : view.findings.filter((f) => f.domain === lens);
+  const active = view.lenses.find((l) => l.id === lens);
+  const plain = LENSES.find((l) => l.id === lens)?.plain ?? '';
+  const offer = active ? commissionOffer(active.availability, plain) : null;
+
   return (
     <>
       <CrumbBar work={view.work} place="Review" facet={facet}
         actions={<button type="button" className="fs-tool fs-tool--gold">Ask MAIA</button>} />
+
+      {/* ⭐ Tabs FILTER an existing reading. ⛔ None of them commissions one. */}
       <div className="fs-modetabs" role="tablist">
-        {REVIEW_TABS.map((t) => (
-          <button key={t} type="button" role="tab" className="fs-modetab" aria-selected={t === tab}>{t}</button>
-        ))}
+        <button type="button" role="tab" className="fs-modetab" aria-selected={lens === 'all'}>
+          Everything
+        </button>
+        {view.lenses.map(({ id }) => {
+          const meta = LENSES.find((l) => l.id === id);
+          return meta ? (
+            <button key={id} type="button" role="tab" className="fs-modetab" aria-selected={lens === id}>
+              {meta.plain}
+            </button>
+          ) : null;
+        })}
       </div>
+
       <div className="fs-pane" data-stage="review">
-        <div className="fs-pgrid" style={{ gridTemplateColumns: 'minmax(0,1fr)', maxWidth: 780 }}>
+        <div className="fs-pgrid" style={{ gridTemplateColumns: 'minmax(0,1fr)', maxWidth: 860 }}>
           <div className="fs-phead">
             <div>
-              <h2>Review</h2>
-              <p>Findings, connections, and openings — each one grounded in what MAIA read.</p>
+              <h2>What MAIA found</h2>
+              <p>{scopeLine(view.scope, view.kind)}</p>
             </div>
           </div>
+
+          {/* ⭐⭐ A READING IS A READING AT A TIME, said before anything it claims. */}
+          <div className="fs-reading" data-freshness={view.freshness.kind}>
+            {freshnessLine(view.freshness)}
+          </div>
+
           <section className="fs-card">
-            <h3>Findings · {view.findings.length}</h3>
+            <h3>{lens === 'all' ? `Findings · ${shown.length}` : plain}</h3>
             <p className="fs-obsnote">
-              In the order they occur in your book. {view.coverage.read} of {view.coverage.total} sections read,
-              at {view.coverage.depth}.
+              In the order they occur in your {view.kind}. Nothing here is ranked, and nothing is hidden.
             </p>
-            {view.findings.map((f) => (
-              <div className="fs-find" key={f.id} data-finding={f.id} data-hypothesis={f.hypothesis ? 'true' : 'false'}>
-                <div className="fs-fic" aria-hidden="true">{f.glyph}</div>
-                <div className="fs-fbody">
-                  <div className="fs-fh">{f.heading}</div>
-                  <p className="fs-fb">{f.body}</p>
-                  <div className="fs-ev" style={{ marginTop: 7 }}>
-                    {f.evidence.map((e) => <span className="fs-chip" key={e}>{e}</span>)}
-                  </div>
-                </div>
-                <button type="button" className="fs-btn" data-return-to={f.returnTo.sectionId}>{f.returnTo.label}</button>
+            <CoverageLine c={view.coverage} />
+
+            {/* ⛔ No empty state. Either a reading exists and said nothing, or it
+                does not exist and the surface says which — ⛔ never one list for both. */}
+            {active && active.availability.kind === 'not-read' ? (
+              <div className="fs-lensbody" style={{ padding: '14px 0 2px' }}>
+                {availabilityLine(active.availability, plain)}{' '}
+                {offer ? <button type="button" className="fs-goto" data-commission={lens}>{offer} →</button> : null}
               </div>
-            ))}
+            ) : active && active.availability.kind === 'read-nothing-noticed' ? (
+              <div className="fs-lensbody" style={{ padding: '14px 0 2px' }}>
+                {availabilityLine(active.availability, plain)}
+              </div>
+            ) : (
+              shown.map((f) => (
+                <FindingRow key={f.id} o={f} citation={view.citations?.[f.id]} />
+              ))
+            )}
           </section>
+
+          {view.map ? <ContinuityMap d={view.map} title={`Across your ${view.kind}`} /> : null}
         </div>
       </div>
     </>

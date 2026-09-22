@@ -46,8 +46,12 @@ const STATES = [
       copy={MAIA_REVISE} tab="Revise" history={VERSIONS} /> },
   { id: '6-develop', title: 'DEVELOP — overview', mode: 'develop' as const,
     node: <DevelopRoom view={DEVELOP} /> },
-  { id: '7-review', title: 'REVIEW', mode: 'review' as const,
+  { id: '7-review', title: 'REVIEW — everything', mode: 'review' as const,
     node: <ReviewRoom view={REVIEW} /> },
+  { id: '8-review-not-read', title: 'REVIEW — a lens never read', mode: 'review' as const,
+    node: <ReviewRoom view={REVIEW} lens="arc" /> },
+  { id: '9-review-nothing-noticed', title: 'REVIEW — read, nothing noticed', mode: 'review' as const,
+    node: <ReviewRoom view={REVIEW} lens="coherence" /> },
 ];
 
 function page(inner: React.ReactElement, mode: 'write' | 'develop' | 'review') {
@@ -144,7 +148,12 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
               && !e.closest('.fs-viewas');
         }).map(function(e){ return (e.textContent||'').trim().slice(0,28) || e.getAttribute('aria-label') || '?'; }),
       stageArea: stageBox.width * stageBox.height || 1,
-      findingsWithReturn: findings.length > 0 ? q('[data-finding] [data-return-to]').length / findings.length : 1,
+      /* ⭐ AT LEAST one return per finding. The first version divided returns by
+         findings and asserted 1.0 — which failed the moment a finding offered
+         Go to passage AND Discuss AND Explore, i.e. the moment it got better. */
+      findingsWithoutReturn: findings.filter(function(f){
+        return !f.querySelector('[data-return-to]'); }).length,
+      findingCount: findings.length,
       observationsWithEvidence: obs.length > 0 ? q('[data-observation] .fs-chip').length > 0 : true,
       /* ⭐ Every SVG label must lie inside its own viewBox. A map that clips the
          member's own movement names is not a map of their book. */
@@ -177,6 +186,16 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
         var b = document.querySelector('[data-lens-state="read-nothing-noticed"] .fs-lensbody');
         return (a && b && a.textContent !== b.textContent) ? 'distinct' : 'collapsed';
       })(),
+      readingFreshness: (function(){
+        var r = document.querySelector('[data-freshness]');
+        return r ? { kind: r.getAttribute('data-freshness'), text: (r.textContent||'').trim() } : null;
+      })(),
+      movedCitations: q('[data-citation-changed]').length,
+      movedWithoutFrozenText: q('[data-citation-changed]').filter(function(e){
+        return !e.querySelector('blockquote'); }).length,
+      /* ⛔ A tab may not commission. Only an explicit offer may. */
+      commissionOnTabs: q('[role="tab"][data-commission]').length,
+      tabCount: q('[role="tab"]').length,
       svgClipped: (function(){
         var bad = 0;
         q('svg').forEach(function(svg){
@@ -227,8 +246,10 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
     detail: `${m.applyInAlternatives} Apply control(s) among the alternatives` });
   out.push({ id: 'ALTS-no-ordinals', ok: m.ordinals === 0,
     detail: `${m.ordinals} ordinal-numbered alternative name(s)` });
-  out.push({ id: 'V7-findings-return-to-manuscript', ok: m.findingsWithReturn === 1,
-    detail: `${Math.round(m.findingsWithReturn * 100)}% of findings carry a return` });
+  out.push({ id: 'V7-findings-return-to-manuscript', ok: (m.findingsWithoutReturn as number) === 0,
+    detail: (m.findingsWithoutReturn as number) === 0
+      ? `all ${m.findingCount} findings return to the manuscript`
+      : `${m.findingsWithoutReturn} finding(s) with no way back` });
   out.push({ id: 'OBS-carry-evidence', ok: m.observationsWithEvidence,
     detail: 'every observation cites evidence' });
   /* ⭐ The rail is a composition reference, ⛔ not permission to invent
@@ -263,6 +284,22 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
       ? 'a completed reading that noticed nothing renders the same as no reading at all'
       : m.lensStatesDistinct === 'n/a' ? 'both states not present on this surface'
       : 'a result and an absence render differently' });
+  if (m.readingFreshness) {
+    const f = m.readingFreshness as { kind: string; text: string };
+    out.push({ id: 'READING-states-its-own-freshness', ok: f.text.length > 20,
+      detail: `${f.kind}: ${f.text.slice(0, 72)}…` });
+  }
+  if ((m.movedCitations as number) > 0) {
+    out.push({ id: 'CITATION-moved-is-disclosed-with-frozen-text',
+      ok: (m.movedWithoutFrozenText as number) === 0,
+      detail: (m.movedWithoutFrozenText as number) === 0
+        ? `${m.movedCitations} moved citation(s), each showing what MAIA read`
+        : `${m.movedWithoutFrozenText} moved citation(s) disclosed without the text they were made against` });
+  }
+  out.push({ id: 'TAB-never-commissions', ok: (m.commissionOnTabs as number) === 0,
+    detail: (m.commissionOnTabs as number) === 0
+      ? `${m.tabCount} tabs, none of which reads on click`
+      : `${m.commissionOnTabs} tab(s) would commission a reading` });
   out.push({ id: 'MAP-no-clipped-labels', ok: m.svgClipped === 0,
     detail: m.svgClipped === 0 ? 'every label lies inside its viewBox'
       : `${m.svgClipped} label(s) clipped by the viewBox` });
