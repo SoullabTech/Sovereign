@@ -890,8 +890,22 @@ export default function RebuildStudioClient() {
         ? 'Developmental observation being discussed (an interpretation, not an instruction):\n'
           + arrivalInsight.observation.observation + '\n\n'
         : '';
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId,
-        observationContext + 'My question:\n' + exactWords);
+      /* ⭐⭐ R2R1 — THE WRITER'S SCOPE TRAVELS WITH THE TURN.
+         The build-health repair resolved the duplicated call by keeping the
+         observation context and dropping the `scope` argument. It compiles, and
+         `sendBoundEditorialTurn` treats an omitted scope as the most protective
+         setting — so this was never an over-permission failure. It was worse to
+         find: `editLatitude`, `mayRemoveParagraphs` and `mayProposeImmediately`
+         stayed live, their controls stayed on screen, and the turn stopped
+         carrying them. ⛔ A control the writer moves that changes nothing is a
+         false control, and WS-EDITORIAL-SCOPE-01 exists so these settings
+         govern what MAIA may propose. */
+      const out = await sendBoundEditorialTurn(
+        thread.threadId,
+        focusId,
+        observationContext + 'My question:\n' + exactWords,
+        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately },
+      );
       if (!out.ok) {
         /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
            line the writer drew. ⛔ Not "MAIA could not complete" — she could,
@@ -917,7 +931,9 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight]);
+  }, [editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct,
+      bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight,
+      editLatitude, mayRemoveParagraphs, mayProposeImmediately]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
