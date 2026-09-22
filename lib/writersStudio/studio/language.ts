@@ -21,12 +21,50 @@
  * which no word list alone could do.
  */
 
-/** ⛔ Barred where presented as an objective property of the writing.
- *  ⭐ Both directions: praise stated as a property is the same act as criticism
- *  stated as one — the defect is GRADING, ⛔ not negativity. */
+/**
+ * ⛔ Barred where presented as an objective property of the writing.
+ * ⭐ Both directions: praise stated as a property is the same act as criticism
+ * stated as one — the defect is GRADING, ⛔ not negativity.
+ *
+ * ⚠️⚠️ MATCHED AS STEMS, and the reason is a real escape this guard let through.
+ * `rich` was on the list and **`richer` was admitted** — *“your protagonist's
+ * inner world is growing richer”* passed cleanly, because `\brich\b` does not
+ * match an inflection. ⭐ A fixed word list is defeated by ordinary English
+ * morphology, and that failure is silent and in the shipping direction.
+ *
+ * Every entry below is a stem: `deep` catches deeper · deepens · deepening;
+ * `strong` catches stronger · strongest. The leading `\b` keeps `rich` from
+ * matching *enriched*.
+ *
+ * ⭐ Each word here was observed in an actual reference frame, ⛔ not imagined.
+ */
 export const BARRED_VERDICT_WORDS = [
-  'strong', 'good', 'authentic', 'engaging',
-  'beautiful', 'luminous', 'weak', 'effective',
+  'strong', 'good', 'authentic', 'engag', 'beautiful', 'luminous', 'weak',
+  'effective', 'rich', 'deepen', 'deeper', 'interesting', 'exciting',
+  'distinctive', 'meaningful', 'vivid', 'compelling', 'powerful', 'striking',
+  'key', 'important', 'excellent', 'coherent',
+] as const;
+
+/**
+ * ⚠️ NOT BARRED, and the distinction matters.
+ *
+ * `lyrical` was on this list and refused the alternative named *More lyrical* —
+ * ⭐ but **a direction label asserts nothing about the current text.** *More
+ * lyrical* proposes where a revision could go; it does not claim the writing
+ * is or is not lyrical. Style words naming a DIRECTION are not verdicts, and
+ * barring them would make it impossible to offer an alternative at all.
+ *
+ * ⭐ The line: a verdict describes the Work AS IT IS; a direction describes
+ * where a proposed change would take it.
+ */
+export const DIRECTION_WORDS_NOT_VERDICTS = [
+  'lyrical', 'embodied', 'simpler', 'clearer', 'quieter', 'direct', 'plainer',
+] as const;
+
+/** Multi-word importance claims. ⭐ `key` under another name. */
+export const BARRED_VERDICT_PHRASES = [
+  'stands out', 'worth your attention', 'especially present', 'may benefit from',
+  'opportunity for', 'what\u2019s emerging', 'needs work',
 ] as const;
 
 /** First-person openings that mark a sentence as MAIA's own response. */
@@ -78,8 +116,11 @@ export function inspectMemberCopy(text: string, budget = 1): readonly LanguageFi
     const stance = isStance(s);
     if (stance) stanceCount += 1;
 
-    const hits = BARRED_VERDICT_WORDS.filter((w) =>
-      new RegExp(`\\b${w}\\b`, 'i').test(lower));
+    /* ⭐ Stem match — an inflection is the same claim. */
+    const hits: string[] = [
+      ...BARRED_VERDICT_WORDS.filter((w) => new RegExp(`\\b${w}\\w*\\b`, 'i').test(lower)),
+      ...BARRED_VERDICT_PHRASES.filter((ph) => lower.includes(ph)),
+    ];
     /* ⭐ The same word is lawful inside a stance and barred as a fact. The guard
        therefore reads the SENTENCE, ⛔ never the word in isolation. */
     if (hits.length > 0 && !stance) {

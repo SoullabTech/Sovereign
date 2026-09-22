@@ -301,3 +301,36 @@
   padding:4px 0;cursor:pointer}
 .fs-mobilenav .fs-mn[aria-current="page"]{color:var(--rail-on);font-weight:700}
 .fs-mobilenav .fs-mn i{font-style:normal;font-size:14px;opacity:.85}
+
+/* ── DEVELOP · governed views ───────────────────────────────────────────── */
+/* ⭐ Three provenance kinds, three treatments. ⛔ Never one. */
+.fs-prov{font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;
+  padding:1px 6px;border-radius:3px;white-space:nowrap}
+.fs-prov[data-provenance="member-declared"]{background:var(--goldfill);color:#3A2E14}
+.fs-prov[data-provenance="textual-entity"]{background:var(--active);color:var(--secondary)}
+.fs-prov[data-provenance="maia-observation"]{background:var(--maia-tint);color:var(--maia);
+  border:1px solid var(--maia-rule)}
+.fs-obshead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fs-covwhen{font-size:11px;color:var(--quiet)}
+
+.fs-mapwrap2{overflow-x:auto;margin:2px -2px 10px}
+/* ⭐ Fixed label column; the cells share what is left evenly, so the grid reads
+   as a grid at every width instead of a label column with a strip beside it. */
+.fs-map{border-collapse:separate;border-spacing:3px;font-size:10.5px;width:100%;table-layout:fixed}
+.fs-map colgroup col:first-child{width:168px}
+.fs-map th{font-weight:500;color:var(--quiet);font-size:10px;padding:0 0 3px;text-align:center}
+.fs-maprowhead{text-align:left !important;width:168px;padding-right:12px !important;
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.fs-maprowname{font-size:12.5px;color:var(--ink);font-weight:600}
+.fs-map td{padding:0}
+.fs-cell{width:100%;min-width:14px;height:21px;border:0;border-radius:2px;cursor:pointer;
+  background:var(--soft);display:block}
+.fs-cell[data-presence="0"]{background:transparent;box-shadow:inset 0 0 0 1px var(--rule);opacity:.5}
+.fs-cell[data-presence="1"]{background:var(--goldfill);opacity:.32}
+.fs-cell[data-presence="2"]{background:var(--goldfill);opacity:.64}
+.fs-cell[data-presence="3"]{background:var(--gold);opacity:.88}
+.fs-maplegend{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);margin-bottom:11px}
+.fs-maplegend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:middle}
+.fs-maplegend i[data-presence="3"]{background:var(--gold);opacity:.88}
+.fs-maplegend i[data-presence="2"]{background:var(--goldfill);opacity:.64}
+.fs-maplegend i[data-presence="1"]{background:var(--goldfill);opacity:.32}

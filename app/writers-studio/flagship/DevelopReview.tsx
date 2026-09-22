@@ -13,6 +13,10 @@
 import * as React from 'react';
 import { CrumbBar } from './StudioChrome';
 import { readTimeLabel, type Facet } from './flagshipTokens';
+import { ContinuityMap, CoverageLine, Observations } from './DevelopViews';
+import type {
+  ContinuityMapData, Coverage, DevelopObservation as GovernedObservation,
+} from '../../../lib/writersStudio/studio/developObservation';
 
 /* ══════════════════════════════════════════════════════════════════════════
    OBSERVATIONS — describe, ⛔ never grade
@@ -237,13 +241,13 @@ export interface DevelopView {
   readonly work: string;
   readonly kind: string;
   readonly pages: number; readonly sections: number; readonly words: number;
-  readonly observations: readonly Observation[];
-  readonly structure: WorkStructure;
+  readonly observations: readonly GovernedObservation[];
+  readonly map: ContinuityMapData;
   readonly lenses: readonly LensStanding[];
+  readonly coverage: Coverage;
   readonly opening: WorkOpening;
-  readonly coverage: {
-    readonly read: number; readonly total: number; readonly depth: string; readonly when: string;
-  };
+  /** Set when the member has declared a shape; ⛔ absent renders Sequence. */
+  readonly structureDeclaredLabel?: string;
 }
 
 /** ⭐ No empty state. Either a reading exists and said nothing, or it does not exist. */
@@ -305,57 +309,40 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided' }: {
             <Opening o={view.opening} work={view.work} kind={view.kind} />
           </div>
 
+          {/* ⭐⭐ THE CONTINUITY MAP — promoted to the Overview by founder ruling.
+              The primary recognition object beneath the opening: entirely the
+              member's own Work, addressable at every cell, non-ranking, and it
+              exposes what is hard to perceive while drafting. */}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <ContinuityMap d={view.map} title={`Across your ${view.kind}`} />
+          </div>
+
           <div className="fs-col">
-            {/* ⭐ RECOGNITION BEFORE ASSESSMENT — the shape of the Work comes first.
-                ⛔ Not observations, ⛔ not a score, ⛔ not a list of things to fix. */}
+            <Observations items={view.observations.slice(0, 4)} />
+          </div>
+
+          <div className="fs-col">
             <section className="fs-card">
-              <h3>
-                The shape of your {view.kind}
-                <span className="fs-viewas">
-                  <button type="button" className="fs-vchip" aria-pressed="true">
-                    {view.structure.declared ? 'Your movements' : 'Sequence'}
-                  </button>
-                </span>
-              </h3>
-              {view.structure.declared
-                ? <SpiralMap s={view.structure} />
+              <h3>The shape of your {view.kind}</h3>
+              {view.structureDeclaredLabel
+                ? null
                 : <SequenceMap sections={view.sections} kind={view.kind} />}
             </section>
 
-            {/* ⭐ TRUST BEFORE CLAIMS. Coverage bounds everything below it. */}
             <section className="fs-card" data-coverage="true">
               <h3>What MAIA read</h3>
               <p className="fs-obsb" style={{ margin: '0 0 9px' }}>
-                {cov.read} of {cov.total} sections, {cov.depth}, {cov.when}.
-                Everything below cites something she read.
+                {view.coverage.read} of {view.coverage.total} sections, {view.coverage.depth},{' '}
+                {view.coverage.when}. Everything here cites something she read.
               </p>
-              <div className="fs-ev">
-                <span className="fs-chip">{cov.read} / {cov.total}</span>
-                <span className="fs-chip">{cov.depth}</span>
-                {cov.read < cov.total
-                  ? <button type="button" className="fs-goto" data-commission="remaining">
-                      Read the remaining {cov.total - cov.read} →
-                    </button>
-                  : <button type="button" className="fs-goto" data-return-to="coverage">See what she read →</button>}
-              </div>
+              <CoverageLine c={view.coverage} compact />
             </section>
 
-            {/* ⭐ Plain question first; the editorial term beneath it, never required. */}
             <section className="fs-card">
               <h3>Ways to look</h3>
               <div className="fs-lenses">
                 {view.lenses.map((l) => <LensRow key={l.id} l={l} />)}
               </div>
-            </section>
-          </div>
-
-          <div className="fs-col">
-            <section className="fs-card">
-              <h3>What MAIA noticed</h3>
-              <p className="fs-obsnote">
-                In the order they occur in your {view.kind}. Nothing here is ranked, and nothing is hidden.
-              </p>
-              {view.observations.map((o) => <ObservationRow key={o.id} o={o} />)}
             </section>
           </div>
         </div>

@@ -12,6 +12,7 @@ import type {
 import { initialState, transition, type StudioEvent } from '../../../lib/writersStudio/studio/machine';
 import type { ManuscriptView, MaiaCopy, VersionEntry } from '../../../app/writers-studio/flagship/WriteRoom';
 import type { DevelopView, ReviewView } from '../../../app/writers-studio/flagship/DevelopReview';
+import { CONTINUITY_MAP, COVERAGE, OBSERVATIONS } from './developData';
 
 export const MEMBER = { initials: 'KN', name: 'Kelly', org: 'Soullab' };
 export const PROJECT = { workTitle: 'The River Between', workKind: 'Novel · 82,400 words' };
@@ -123,47 +124,25 @@ export const DEVELOP: DevelopView = {
   work: 'The River Between',
   kind: 'novel',
   pages: 284, sections: 41, words: 82400,
-  coverage: { read: 34, total: 41, depth: 'reading the full text', when: 'last read 12 minutes ago' },
-  /* ⛔ Undeclared: there is no declaration store, so the map is Sequence and no
-     "Name the movements" control is drawn. */
-  structure: { declared: false },
-  /* ⭐ The opening is the member's own sentence, at an address. MAIA chose it and
-     says why as a FACT about the text — ⛔ not that it is good. */
+  coverage: COVERAGE,
+  map: CONTINUITY_MAP,
+  /* ⭐ Every one built through `observe()`, which refuses. */
+  observations: OBSERVATIONS,
+  lenses: [
+    { id: 'structure',   state: 'read',                 count: 2 },
+    { id: 'development', state: 'partially-read',       count: 1, remaining: 7 },
+    { id: 'arc',         state: 'not-read',             count: 0 },
+    { id: 'continuity',  state: 'read',                 count: 2 },
+    { id: 'coherence',   state: 'read-nothing-noticed', count: 0 },
+    { id: 'voice',       state: 'read',                 count: 2 },
+    { id: 'reader',      state: 'read',                 count: 1 },
+  ],
   opening: {
     kind: 'passage',
     text: '“Maybe this is what growing feels like,” she whispered. “Not arriving, but learning to stay with the in-between.”',
     because: 'The only time Clara says “the in-between” aloud',
     at: 'Ch 6', sectionId: 'ch-6-p4',
   },
-  lenses: [
-    { id: 'structure',   state: 'read',                 count: 3 },
-    { id: 'development', state: 'partially-read',       count: 2, remaining: 7 },
-    { id: 'arc',         state: 'not-read',             count: 0 },
-    { id: 'continuity',  state: 'read-nothing-noticed', count: 0 },
-    { id: 'coherence',   state: 'read',                 count: 1 },
-    { id: 'voice',       state: 'read',                 count: 2 },
-    { id: 'reader',      state: 'read',                 count: 1 },
-  ],
-  observations: [
-    { id: 'o-river', heading: 'The river returns',
-      body: 'The river appears in 11 of 41 sections. Nine of those are in the first half; it is absent between Ch 6 and Ch 9.',
-      evidence: ['Ch 1', 'Ch 4', 'Ch 6', 'Ch 10'], returnTo: { label: 'Go to Ch 6', sectionId: 'ch-6' } },
-    { id: 'o-interior', heading: 'Clara’s interior',
-      body: 'The narration moves inside Clara in 4 of the first 6 chapters, and in 9 of the last 12.',
-      evidence: ['Ch 1–6', 'Ch 30–41'], returnTo: { label: 'Go to Ch 30', sectionId: 'ch-30' } },
-    { id: 'o-inbetween', heading: '“The in-between”',
-      body: 'The phrase is spoken once, by Clara, in Ch 6. It is not used again.',
-      evidence: ['Ch 6'], returnTo: { label: 'Go to the passage', sectionId: 'ch-6-p4' } },
-    { id: 'o-chapters', heading: 'Where chapters end',
-      body: 'Twenty-nine chapters close on an image. Twelve close on dialogue.',
-      evidence: ['Ch 1–41'], returnTo: { label: 'Go to Ch 12', sectionId: 'ch-12' } },
-    { id: 'o-term', heading: '“The current” changes meaning',
-      body: 'In Ch 2 it names the river. In Ch 6 it names what Clara is living through. It is not renamed between them.',
-      evidence: ['Ch 2', 'Ch 6'], returnTo: { label: 'Go to Ch 2', sectionId: 'ch-2' } },
-    { id: 'o-reader', heading: 'Reader perspective', hypothesis: true,
-      body: 'A reader might lose the referent at Ch 6, because “the current” carries a meaning it did not have in Ch 2.',
-      evidence: ['Ch 6'], returnTo: { label: 'Go to the passage', sectionId: 'ch-6-p2' } },
-  ],
 };
 
 export const REVIEW: ReviewView = {

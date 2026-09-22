@@ -86,7 +86,15 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
     var stageBox = stage ? stage.getBoundingClientRect() : {width:1,height:1};
     return {
       cols: root ? getComputedStyle(root).gridTemplateColumns.split(' ').length : 0,
-      text: document.body.innerText,
+      /* ⭐ Scan what the member reads AS CLAIMS ABOUT THEIR WORK. Direction
+         labels on revision alternatives are excluded: "More lyrical" proposes
+         where a change could go and asserts nothing about the current text. */
+      text: (function(){
+        var clone = document.body.cloneNode(true);
+        Array.prototype.forEach.call(clone.querySelectorAll('.fs-altname, .fs-alttx'),
+          function(e){ e.remove(); });
+        return clone.innerText || clone.textContent || '';
+      })(),
       maiaInFlow: maia ? getComputedStyle(maia).position === 'static' : false,
       /* ⭐ OCCLUSION. Not implied by the V2 deltas: an overlay leaves width,
          vertical position and scroll untouched and still covers the prose. */
