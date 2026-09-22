@@ -124,10 +124,21 @@ export interface AuthoredStructure {
   readonly sectionIds: readonly string[];
 }
 
-/** ⚠️ Everything here except `readings`/`structure` is a trap. See header. */
+/** ⚠️ Everything here except `readings`/`structure`/`commissionedWarrant` is a
+ *  trap. See header. */
 export interface CompositionContext {
   readonly readings: readonly AdmittedReading[];
   readonly structure: AuthoredStructure;
+  /**
+   * ⭐ A2R1 — WHAT THE MEMBER ASKED FOR. Absent means the operation was not
+   * commissioned to a particular warrant and a `covered-span` result is a
+   * lawful answer to it.
+   *
+   * ⛔ This is REQUEST FIDELITY, not coverage semantics. The warrant predicate
+   * says what the evidence CAN support; this says what was ASKED. A result may
+   * be lawful as an object and still not be an answer to the question.
+   */
+  readonly commissionedWarrant?: Warrant['kind'];
   readonly rawProse?: string;
   readonly existingEditorialSynthesis?: { readonly thesis: string };
 }
@@ -291,6 +302,35 @@ export function inheritNonConclusions(
   return [...union].sort();
 }
 
+/**
+ * ⭐⭐ A2R1 — WHOLE-WORK COMMISSION FIDELITY (founder ruling, 2026-09-22).
+ *
+ *   requested covered-span + lawful covered-span evidence → may issue
+ *   requested whole-work  + predicate satisfied           → may issue
+ *   requested whole-work  + predicate NOT satisfied       → REFUSE
+ *
+ * ⛔⛔ NEVER: whole-work requested → silently downgrade to covered-span and
+ * return it as though the request had been fulfilled. A `covered-span` reading
+ * remains a perfectly lawful OBJECT; it is simply not an ANSWER to a whole-Work
+ * commission, and returning one as if it were misrepresents what was earned.
+ */
+export function commissionRefusal(
+  ctx: CompositionContext, derived: Warrant,
+): EditorialRefusal | null {
+  if (ctx.commissionedWarrant !== 'whole-work') return null;
+  if (derived.kind === 'whole-work') return null;
+  const bodyRead = new Set<string>();
+  for (const r of ctx.readings) {
+    for (const [sectionId, depth] of Object.entries(r.coverage)) {
+      if (depth === 'body') bodyRead.add(sectionId);
+    }
+  }
+  return {
+    code: 'INSUFFICIENT_WHOLE_WORK_COVERAGE',
+    offending: ctx.structure.sectionIds.filter((id) => !bodyRead.has(id)),
+  };
+}
+
 /** ⭐ The conforming composer. ⛔ A test double: no store, no model, no route. */
 export function composeEditorialReading(ctx: CompositionContext): CompositionOutcome {
   if (ctx.readings.length === 0) {
@@ -316,6 +356,9 @@ export function composeEditorialReading(ctx: CompositionContext): CompositionOut
   }
 
   const warrant = deriveWarrant(ctx);
+  const commission = commissionRefusal(ctx, warrant);
+  if (commission) return { outcome: 'refused', refusal: commission };
+
   const claims: EditorialClaim[] = [];
   const all: SourceRef[] = [];
   for (const r of ctx.readings) {

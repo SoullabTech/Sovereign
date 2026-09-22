@@ -20,8 +20,8 @@ import {
   type AdmittedObservation, type Composer, type CompositionContext,
   type CompositionOutcome, type EditorialClaim, type NonConclusion, type SourceRef,
   type Warrant, COVERAGE_DISCHARGEABLE, EDITORIAL_READING_KIND,
-  PERMANENT_NON_CONCLUSIONS, deriveWarrant, identityRefusal, returnPrecisionOf,
-  revisionRefusal,
+  PERMANENT_NON_CONCLUSIONS, commissionRefusal, deriveWarrant, identityRefusal,
+  returnPrecisionOf, revisionRefusal,
 } from './contract';
 
 interface Decisions {
@@ -39,6 +39,7 @@ interface Decisions {
   /** L12 */ readonly repairByInference?: boolean;
   /** L13 */ readonly rankClaims?: boolean;
   /** L14 */ readonly discloseInRefusal?: boolean;
+  /** L15 */ readonly downgradeOnWholeWorkCommission?: boolean;
 }
 
 function inherit(
@@ -109,6 +110,10 @@ export function buildComposer(d: Decisions): Composer {
     let warrant = deriveWarrant({ ...ctx, readings });
     if (d.wholeWorkOnPartial || (d.warrantFromProse && ctx.rawProse !== undefined)) {
       warrant = { kind: 'whole-work', revisionDigest: ctx.structure.revisionDigest };
+    }
+    if (!d.downgradeOnWholeWorkCommission) {
+      const commission = commissionRefusal({ ...ctx, readings }, warrant);
+      if (commission) return { outcome: 'refused', refusal: commission };
     }
 
     const claims: EditorialClaim[] = [];
@@ -185,6 +190,8 @@ export const CANDIDATES: readonly DefeatCandidate[] = [
     classifiedCollateral: {
       'ER-L6-dischargeable-only-under-whole-work':
         'a forged whole-Work warrant necessarily discharges the coverage terms that warrant licenses — removing this would mean the candidate no longer forges a warrant',
+      'ER-L15-whole-work-commission-refuses-never-downgrades':
+        'A2R1 collateral, found by the new law rather than assumed: the commission check consults the DERIVED warrant, and this candidate forges exactly that — so it satisfies a whole-Work commission it never earned. ⭐ The error is worse than first modelled: it does not merely overstate coverage, it defeats request fidelity too. Irreducible — a D2 that refused here would no longer be forging a warrant',
     } },
   { id: 'D3-warrant-from-prose', targets: 'ER-L3-warrant-never-from-prose',
     error: 'lets the presence of manuscript prose confer a whole-Work warrant',
@@ -233,6 +240,9 @@ export const CANDIDATES: readonly DefeatCandidate[] = [
   { id: 'D13-rank-claims', targets: 'ER-L13-no-ranking',
     error: 'orders claims by a consequentiality heuristic — breadth of cited evidence',
     composer: buildComposer({ rankClaims: true }) },
+  { id: 'D15-whole-work-downgrade', targets: 'ER-L15-whole-work-commission-refuses-never-downgrades',
+    error: 'silently returns a covered-span reading when whole-work was explicitly commissioned',
+    composer: buildComposer({ downgradeOnWholeWorkCommission: true }) },
   { id: 'D14-disclose-in-refusal', targets: 'ER-L14-refusal-discloses-no-authored-text',
     error: 'puts the members authored sentences into the refusal payload',
     composer: buildComposer({ discloseInRefusal: true }) },

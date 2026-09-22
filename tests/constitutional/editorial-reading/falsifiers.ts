@@ -266,6 +266,30 @@ export const FALSIFIERS: readonly Falsifier[] = [
     },
   },
   {
+    id: 'ER-L15-whole-work-commission-refuses-never-downgrades',
+    law: 'A2R1 — a commissioned whole-Work reading whose predicate is unsatisfied REFUSES;'
+      + ' it is never silently downgraded to covered-span and returned as fulfilled.',
+    run(c) {
+      const partial = { coverage: { s1: 'body', s2: 'position' } as const };
+      /* ⭐ The SAME evidence, asked two different ways. Unrequested, a
+         covered-span result is lawful; commissioned whole-work, it is a
+         misrepresentation of what was earned. */
+      const uncommissioned = c(ctx({ readings: [reading('r1', [obs('dobs_1')], partial)] }));
+      if (uncommissioned.outcome !== 'reading') return no('lawful covered-span result was refused');
+      if (uncommissioned.value.warrant.kind !== 'covered-span') return no('fixture did not yield covered-span');
+
+      const commissioned = c(ctx({
+        readings: [reading('r1', [obs('dobs_1')], partial)],
+        commissionedWarrant: 'whole-work',
+      }));
+      if (commissioned.outcome !== 'refused') {
+        return no(`commissioned whole-work returned a ${commissioned.value.warrant.kind} reading`);
+      }
+      return commissioned.refusal.code === 'INSUFFICIENT_WHOLE_WORK_COVERAGE'
+        ? ok() : no(`refused as ${commissioned.refusal.code}`);
+    },
+  },
+  {
     id: 'ER-L14-refusal-discloses-no-authored-text',
     law: 'A refusal is not an occasion to disclose — identities only, never prose.',
     run(c) {

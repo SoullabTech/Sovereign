@@ -2,6 +2,8 @@
 
 **2026-09-22 · CONTRACT + FALSIFIERS · ⛔ NON-EXECUTING · ⛔ NO IMPLEMENTATION**
 
+*Amended in place by `A2R1 — WHOLE-WORK COMMISSION FIDELITY` (founder ruling, same day). The amendment is additive: ⛔ no law below was weakened, and `D1–D14` were not reopened.*
+
 Against canonical `fe65f803922eda2683b7f1bc173e19d0809f0499`.
 
 ⛔ No runtime composer · ⛔ no persistence or migration · ⛔ no route or API · ⛔ no
@@ -87,6 +89,27 @@ reading *what it says*. ⛔ No prose, fluency, model intuition or confidence may
 substitute for the predicate. Short of it the warrant is `covered-span`, and the
 reading speaks from its actual coverage.
 
+### ⭐⭐ Whole-Work commission fidelity — A2R1
+
+The warrant predicate says what the evidence **can support**. The commission says
+what was **asked**. They are different questions, and a result may be lawful as
+an object while not being an answer to the question put.
+
+```
+requested covered-span + lawful covered-span evidence → may issue
+requested whole-work   + predicate satisfied          → may issue
+requested whole-work   + predicate NOT satisfied      → REFUSE
+                                       INSUFFICIENT_WHOLE_WORK_COVERAGE
+⛔ never: whole-work requested → silently downgrade to covered-span
+```
+
+⭐ A `covered-span` Editorial Reading remains a **perfectly lawful object**. What
+A2R1 forbids is returning one **as though a whole-Work commission had been
+fulfilled**. ⛔ That is request fidelity, not coverage semantics.
+
+An absent `commissionedWarrant` means the operation was not commissioned to a
+particular warrant, and a `covered-span` result answers it lawfully.
+
 ### Non-conclusion inheritance
 
 The union of every source's `doesNotEstablish` flows **upward**. Only
@@ -147,9 +170,10 @@ non-conclusions · `ER-L6` discharge only under whole-Work · `ER-L7` ambiguous
 identity refused · `ER-L8` identity distinct from `editorialSynthesis` · `ER-L9`
 exact provenance · `ER-L10` return precision never fabricated · `ER-L11` evidence
 not suppressed · `ER-L12` refuse never repair · `ER-L13` no ranking · `ER-L14`
-refusal discloses no authored text.
+refusal discloses no authored text · `ER-L15` whole-Work commission refuses,
+never downgrades.
 
-**Result — reference 14/14 PASS · all 14 candidates KILLED on their named
+**Result — reference 15/15 PASS · all 15 candidates KILLED on their named
 falsifier · collateral all CLASSIFIED · typecheck exit 0 · matrix exit 0.**
 
 ⚠️ **Lethality is DECISION-LEVEL, ⛔ not implementation-independent.** Every
@@ -178,7 +202,7 @@ was hard-coded in the core, not the decision).
 
 | candidate | also kills | why irreducible |
 |---|---|---|
-| `D2` | `ER-L6` | a forged whole-Work warrant necessarily discharges the terms that warrant licenses |
+| `D2` | `ER-L6`, `ER-L15` | a forged whole-Work warrant necessarily discharges the terms that warrant licenses — and, ⭐ found by A2R1 rather than assumed, satisfies a whole-Work **commission** it never earned, because the commission check consults exactly the warrant D2 forges. *The error is worse than first modelled: it does not merely overstate coverage, it defeats request fidelity too.* |
 | `D4` | `ER-L5`, `ER-L6` | an empty inheritance set cannot retain any term |
 | `D9` | `ER-L13` | no-ranking is read *through* source identities; a candidate with none exhibits no order |
 | `D12` | `ER-L14` | the disclosure law is checked on a refusal this candidate no longer issues |
@@ -194,12 +218,12 @@ was hard-coded in the core, not the decision).
 - ⛔ Nothing here authorizes a member-facing action against `observation_id`; the
   `OBSERVATION-ADDRESS-01` gate holds, and A5-class runtime may not claim closure
   before that lawful seam exists (Ruling 3). ⛔ No duplicate resolver is created.
-- ⛔ `INSUFFICIENT_WHOLE_WORK_COVERAGE` is declared in the refusal vocabulary but
-  is **not reachable in the reference**, which downgrades the warrant to
-  `covered-span` rather than refusing. Whether insufficient coverage for an
-  *explicitly commissioned* whole-Work reading refuses or downgrades is **a
-  founder question A2 does not answer** — the vocabulary is reserved, not spent.
-- ⚠️ **Claim composition itself is not modelled.** The reference emits one claim
+- ⭐ **RESOLVED by A2R1.** `INSUFFICIENT_WHOLE_WORK_COVERAGE` was reserved and
+  unreachable when this record was first written, with the refuse-or-downgrade
+  question left explicitly open. The founder ruled **refuse**, and the code is
+  now reachable, enforced by `ER-L15` and killed on `D15`. *The vocabulary is
+  spent, not merely reserved.*
+- ⚠️ **Claim composition itself is not modelled — CONFIRMED as A4's, by ruling.** The reference emits one claim
   per observation, which is the identity mapping, not synthesis. A2 governs what
   synthesis may *conclude and carry*; ⛔ it does not say how several observations
   become one claim. That is the substance of A4, and the laws here bind it
@@ -216,10 +240,12 @@ was hard-coded in the core, not the decision).
 ```
 WRITERS-STUDIO-EDITORIAL-READING-01 / A2
 CONTRACT AUTHORED · FALSIFIERS AUTHORED · CANDIDATES BUILT
-⭐ MATRIX LETHAL + DISCRIMINATING — reference 14/14 · 14/14 candidates KILLED
+⭐ MATRIX LETHAL + DISCRIMINATING — reference 15/15 · 15/15 candidates KILLED
 ⭐ TYPECHECK strict + noUncheckedIndexedAccess — exit 0
 FIVE A1→A2 RULINGS INHERITED · ⛔ NONE REOPENED
-⛔ NO FREEZE TAKEN · ⛔ NO IMPLEMENTATION · ⛔ NO RUNTIME · NO SCHEMA
+A2R1 WHOLE-WORK COMMISSION FIDELITY APPLIED · ⛔ D1–D14 NOT REOPENED
+⛔ NO FREEZE TAKEN — A FOUNDER ACT, AND OWED A PROJECT-NATIVE RUN FIRST
+⛔ NO IMPLEMENTATION · ⛔ NO RUNTIME · NO SCHEMA
 ⛔ NO ROUTE · NO PROMPT · NO UI · ⛔ A3+ NOT OPENED
 ⛔ editorialSynthesis NOT REUSED, NOT WRAPPED, NOT TOUCHED
 PRODUCTION UNTOUCHED
