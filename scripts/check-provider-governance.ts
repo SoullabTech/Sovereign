@@ -42,12 +42,101 @@ const BANNED: Array<{ rule: string; re: RegExp; forbidden?: boolean }> = [
 const ALLOW_EXT = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const IGNORE_PATH_RE = /(node_modules\/|\.next\/|dist\/|dist-minimal\/|build\/|coverage\/|artifacts\/|backups\/|ios\/|android\/|\.DISABLED\/|\.md$|\.mdx$)/;
 
+function policyError(message: string): never {
+  console.error(`❌ PROVIDER POLICY ERROR: ${message}`);
+  process.exit(2);
+}
+
+function validateCapabilityVocabulary(policy: any): void {
+  const classes = policy?.capability_classes;
+  if (!classes || typeof classes !== 'object' || Array.isArray(classes)) {
+    policyError('capability_classes must be a non-empty object.');
+  }
+  const names = Object.keys(classes);
+  if (names.length === 0) policyError('capability_classes must not be empty.');
+
+  for (const [name, spec] of Object.entries(classes) as Array<[string, any]>) {
+    if (!spec || typeof spec !== 'object') policyError(`capability ${name} is malformed.`);
+    if (!['function', 'data'].includes(spec.kind)) policyError(`capability ${name} has invalid kind.`);
+    if (typeof spec.description !== 'string' || spec.description.trim() === '') {
+      policyError(`capability ${name} requires a description.`);
+    }
+  }
+
+  for (const tierName of ['production', 'lab']) {
+    const providers = policy?.tiers?.[tierName]?.providers || {};
+    for (const [providerName, provider] of Object.entries(providers) as Array<[string, any]>) {
+      if (!Array.isArray(provider?.capabilities)) {
+        policyError(`${tierName}.${providerName} capabilities must be an array.`);
+      }
+      for (const capability of provider.capabilities) {
+        if (typeof capability !== 'string' || !Object.prototype.hasOwnProperty.call(classes, capability)) {
+          policyError(`${tierName}.${providerName} references unknown capability ${String(capability)}.`);
+        }
+      }
+    }
+  }
+}
+
+function validateDevelopmentBoundary(policy: any): void {
+  const boundary = policy?.development_boundary;
+  if (!boundary || typeof boundary !== 'object') {
+    policyError('development_boundary must be declared.');
+  }
+  if (!['candidate_not_ratified', 'ratified'].includes(boundary.canon_status)) {
+    policyError('development_boundary.canon_status is invalid.');
+  }
+  if (!['active', 'lifted'].includes(boundary.interim_hold)) {
+    policyError('development_boundary.interim_hold is invalid.');
+  }
+  if (boundary.interim_hold === 'lifted' && boundary.canon_status !== 'ratified') {
+    policyError('development hold cannot be lifted before the dev-lane canon is ratified.');
+  }
+
+  const classes = policy.capability_classes;
+  const held = Array.isArray(boundary.held_lab_data_classes)
+    ? boundary.held_lab_data_classes
+    : policyError('held_lab_data_classes must be an array.');
+  const unassigned = Array.isArray(boundary.unassigned_repository_classes)
+    ? boundary.unassigned_repository_classes
+    : policyError('unassigned_repository_classes must be an array.');
+
+  for (const name of [...held, ...unassigned]) {
+    if (!classes?.[name] || classes[name].kind !== 'data') {
+      policyError(`development boundary references unknown/non-data class ${String(name)}.`);
+    }
+  }
+
+  const assignments: Array<{ tier: string; provider: string; capability: string }> = [];
+  for (const tierName of ['production', 'lab']) {
+    const providers = policy?.tiers?.[tierName]?.providers || {};
+    for (const [providerName, provider] of Object.entries(providers) as Array<[string, any]>) {
+      for (const capability of provider.capabilities || []) {
+        assignments.push({ tier: tierName, provider: providerName, capability });
+      }
+    }
+  }
+
+  for (const assignment of assignments) {
+    if (unassigned.includes(assignment.capability)) {
+      policyError(`${assignment.capability} is declared unassigned but granted to ${assignment.tier}.${assignment.provider}.`);
+    }
+    if (boundary.interim_hold === 'active'
+        && assignment.tier === 'lab'
+        && held.includes(assignment.capability)) {
+      policyError(`active dev-lane hold forbids ${assignment.capability} on lab provider ${assignment.provider}.`);
+    }
+  }
+}
+
 function loadAllowlist(): { files: Set<string>; prefixes: string[] } {
   if (!fs.existsSync(POLICY_PATH)) {
     console.error(`❌ provider-policy.json not found at ${POLICY_PATH}`);
     process.exit(2);
   }
   const policy = JSON.parse(fs.readFileSync(POLICY_PATH, "utf8"));
+  validateCapabilityVocabulary(policy);
+  validateDevelopmentBoundary(policy);
   const files = new Set<string>();
   const prefixes: string[] = [];
   const groups = policy.openai_removal || {};
