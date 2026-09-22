@@ -4,7 +4,12 @@
 **Status:** ⛔ **CANDIDATE. NOT RATIFIED.** Authored on founder direction 2026-09-22.
 **Informal name:** `JARVIS-JEV-01` (founder's name, preserved as this file's identity).
 **Parent flow:** `JARVIS-ROUTING-INTELLIGENCE-01` (manual §27 sub-lane).
-**Date:** 2026-09-22 · **Base:** `9da7195e` · **Branch:** `claude/sovereign-governance-review-s8skj2`
+**Date:** 2026-09-22 · **Branch:** `claude/sovereign-governance-review-s8skj2`
+**Bound to canonical tip:** `6f11edcc29ea2de6efa025ecffd3ac3a948bc590` *(authored from
+`9da7195e`; rebind verified in-session — `9da7195e..6f11edcc` is **three Writer's Studio
+programme documents, 739 insertions, documentary only**, with ⛔ no change under `lib/`,
+`app/`, `scripts/`, `docs/canon/`, or any routing/provider surface. ⭐ Verified by path
+diff, ⛔ not accepted on report.)*
 
 ## Mandatory lane preamble (JARVIS manual §27)
 
@@ -85,6 +90,70 @@ TypeSafe releases genuinely sovereign/on-prem Jev
 reopen automatic fast-path question
 under the same parent routing constitution
 ```
+
+**R-5 · Q-JEV-3 — RULED: NEW NARROW CAPABILITY CLASS `repository_derived_metadata`.**
+
+⛔ **`repository_source` is REFUSED as the name.** It is far broader than what Jev receives
+and would create a future permission surface *capable of swallowing source code, diffs,
+paths, prose, or canon*. ⭐ **The name is the permission surface** — a class is later read
+by whoever needs it to be wide.
+
+> **`repository_derived_metadata`** means fixed-schema, **non-content** state derived from
+> repository-governed work: closed enums, booleans, bounded numeric counts, opaque
+> identifiers, and already-authorized route identifiers.
+>
+> It does **not** include repository source, source excerpts, diffs, filenames, paths,
+> symbols, commit messages, prompts, canon text, constitutional text, member content,
+> free-form prose, or arbitrary strings.
+
+**Separation, binding:** creating the vocabulary **does not grant the capability** to Jev,
+TypeSafe, or any provider. Provider assignment, disclosure permission, network authority,
+spend authority, and one-shot execution authorization remain **separate acts**.
+⛔ `repository_derived_metadata` **does not imply, subsume, or authorize**
+`repository_source` or `constitutional_canon`, and **does not discharge the 2026-09-20
+hold** on those classes.
+
+⭐⭐ **WHY THIS CLASS IS STRUCTURALLY SAFER, not merely narrower in wording:** it is defined
+by **SHAPE, not by subject matter**. `member_data` is semantic and can only be judged; this
+class is **mechanically checkable** — a packet conforms iff *every* field is a closed enum,
+boolean, bounded number, opaque id, or authorized route id. ⛔ Any free string, path, or
+prose field is a class violation detectable by a guard rather than by review. ⭐ *That is
+what stops the class widening by usage*, which is how `repository_source` would have failed.
+
+**R-6 · Q-JEV-7 — RULED: MECHANICAL SOVEREIGN-RUNTIME WITNESS.** *Independently verifiable
+local/on-prem Jev runtime* requires **all eight**:
+
+1. **Runtime custody** — executable runtime and all inference artifacts needed for the
+   judgment resident on Soullab-controlled infrastructure **before** the witness begins.
+2. **Network isolation** — internet egress denied at the **host/network boundary**, ⛔ not
+   by a Jev application preference.
+3. **No external execution credential** — no TypeSafe/API credential capable of remote
+   inference available to the witnessing process.
+4. **Cold execution** — runtime started or restarted **after** isolation is established.
+5. **Novel input** — a newly generated bounded packet, so a cached remote result cannot
+   satisfy the witness.
+6. **End-to-end result** — a syntactically and semantically valid judgment produced while
+   isolation remains **continuously** in force.
+7. **Evidence custody** — runtime/artifact identity or hashes, host identity, isolation
+   state, packet digest, judgment digest, and evidence that no external inference transport
+   occurred.
+8. **Repeatability** — reproducible after process restart under the same isolation.
+
+⚠️ **PRECISION ON CONDITION 7, so a later reader does not overclaim it:** *evidence that no
+external inference transport occurred* is discharged **by the isolation conditions
+(2 + 3 + 4) holding continuously**, ⛔ **not** by an independent proof of a negative. ⭐ The
+witness shows *no transport was possible*; it does not prove *none happened* — and those
+are different claims. ⛔ Never record it as the second.
+
+**Constitutional limit, binding:** passing this witness establishes **local execution
+only**. ⛔ It does not establish correctness, trustworthiness, automaticity, provider
+admission, disclosure permission, A7 removal safety, or authority. ⭐ It merely makes the
+question of automatic local Jev **eligible to be reopened** under the parent routing
+constitution.
+
+⛔ **A vendor announcement, contract term, pricing tier, product label such as
+"self-hosted," screenshot, documentation claim, or provider attestation cannot satisfy this
+condition.**
 
 **Founder's constitutional shape, recorded as the lane's operative summary:**
 
@@ -202,9 +271,40 @@ hash, or cache the packet it refused. *A refusal is not an occasion to disclose.
 whether a hold applies, or whether a work unit is eligible.
 
 ### A7 · Removing Jev must be a no-op on authority *(NEW — founder-named)*
-⭐ Deleting the lane entirely must leave every authority decision unchanged — slower and
-costlier, identical in what is permitted and refused. **A lane that cannot be removed
-without changing what the system may do has become authority**, whatever the ledger says.
+⭐ Deleting the lane entirely must leave every authority decision unchanged. **A lane that
+cannot be removed without changing what the system may do has become authority**, whatever
+the ledger says.
+
+⭐⭐ **WHAT "NO-OP" MEANS — the refinement that keeps the test honest (founder, R-6 pass):**
+
+```text
+remove Jev
+    ↓
+same authority lattice
+same available authorized acts
+same prohibited acts
+same authority gates
+
+NOT necessarily:
+same advice
+same latency
+same cost
+same route preference
+same amount of deliberation
+```
+
+⛔ **Without this, the removal test accidentally demands that an advisory instrument have
+no utility** — and an instrument that may not help is not a bounded instrument, it is a
+banned one. ⭐ **Jev is allowed to improve judgment. What it may never do is become the
+hidden prerequisite for deciding what the system is permitted to do.**
+
+⚠️ **The boundary is therefore not "did anything change" but "did the authority lattice
+change."** A7 fails when removal makes a previously-available act unavailable, a prohibited
+act reachable, or a gate underivable — ⛔ never merely because routing got slower or worse.
+
+⚠️ **RECURRING DISCHARGE OWED, cadence ⛔ NOT FIXED HERE.** The constitution requires A7 to
+be discharged repeatedly under advisory use; whether that is per release, per routing-law
+change, periodic sampling, or a combination is **J2 work**, and J2 is not opened.
 
 ---
 
@@ -325,7 +425,7 @@ removal test can.
 one-time design-time check. ⛔ Its cadence and form are **not specified here** — that is
 J2 work, and J2 is not opened.
 
-### 4.3 · The capability vocabulary still has no class for the packet
+### 4.3 · The capability vocabulary — gap NAMED, class RULED (R-5)
 
 Independently of the above: the packet is repository-derived, and the governing capability
 vocabulary is `member_data · member_audio · chat · embedding · tts · stt · benchmark`.
@@ -333,11 +433,23 @@ vocabulary is `member_data · member_audio · chat · embedding · tts · stt ·
 be **transport-lawful but semantically silent** — `chat` authorizes the *transport*, not
 the *data class*. ⚠️ **A permission that is silent is not a permission that was granted.**
 
-⛔ The 2026-09-20 interim hold remains operative with **both lift conditions undischarged**
-(dev-lane canon ratified; capability table admitting `repository_source` /
-`constitutional_canon`). ⭐ JEV is the **second instance of that defect class through a
-different door** — the finding was occasioned by a review CLI; this is a routing judge;
-same ungoverned dev-lane gap.
+⭐ **RULED (R-5):** the packet's class is **`repository_derived_metadata`**, defined in §0 —
+⛔ deliberately **not** `repository_source`. The class describes the **permitted shape of
+disclosure**; ⛔ it grants no provider permission by itself.
+
+⛔⛔ **THE CAPABILITY TABLE IS NOT EDITED BY THIS DOCUMENT.** Per
+`PROVIDER_GOVERNANCE.md` §"Adding / changing a provider", editing tiers or capabilities is
+a reviewed governance act; R-5 **defines the class and rules its name and meaning**, and
+the table mutation is a **separate founder act, explicitly excluded from the next
+boundary**. ⭐ *Naming a class is not adding it — the same distinction the 2026-09-20 ruling
+drew about `repository_source` / `constitutional_canon`, applied to its own successor.*
+
+⛔ **The 2026-09-20 interim hold remains operative with both lift conditions undischarged**,
+and ⛔ **R-5 does not discharge either.** `repository_derived_metadata` neither implies nor
+subsumes `repository_source` or `constitutional_canon`. ⚠️ *The narrow class must never
+become the argument that the old hold was "basically handled."* ⭐ JEV remains the **second
+instance of that defect class through a different door** — the finding was occasioned by a
+review CLI; this is a routing judge; same ungoverned dev-lane gap.
 
 ⛔ Adding Jev as an external provider is separately a governance act under
 `PROVIDER_GOVERNANCE.md` §"Adding / changing a provider", ⛔ not performed here.
@@ -374,11 +486,12 @@ genuinely unnecessary?* — ⛔ a different measurement from agreement.
 
 ---
 
-## 6 · OPEN — owed to a founder act
+## 6 · QUESTION LEDGER — all closed
 
-- **Q-JEV-3 · Vocabulary.** Does a repository-derived judgment packet need its own
-  capability class, and is it `repository_source` or a narrower fourth name? ⛔ Naming it
-  here would be the proposal-not-act error the 2026-09-20 ruling warned against.
+- **Q-JEV-3 · Vocabulary — ✅ CLOSED by R-5.** The packet belongs to a distinct capability /
+  data class **`repository_derived_metadata`**, intentionally narrower than
+  `repository_source`. The class may describe the permitted **shape** of disclosure; ⛔ it
+  grants no provider permission by itself. ⛔ Table mutation not performed.
 - **Q-JEV-4 · Standing within J2 — ✅ CLOSED by R-4.** J2-R1 *"may define a bounded external
   advisory judgment instrument only"*. JEV is an **input that conforms** to ratified
   routing law, ⛔ never a candidate for that law.
@@ -386,48 +499,57 @@ genuinely unnecessary?* — ⛔ a different measurement from agreement.
   eligibility sits with the parent lane's evidence-backed task-class law.
 - **Q-JEV-6 · Resolution — ✅ RULED (R-4).** External advisory; fast path withdrawn.
 
-### ⚠️ Q-JEV-7 · The reopen condition needs its own evidence standard *(NEW — raised, ⛔ not ruled)*
+- **Q-JEV-7 · Reopen evidence standard — ✅ CLOSED by R-6.** The future condition is
+  mechanically satisfiable **only** by an egress-denied, credential-independent,
+  cold-started, end-to-end local inference witness on Soullab-controlled infrastructure
+  with durable evidence (eight conditions, §0). ⭐ **This prevents the hold from expiring by
+  rhetoric.**
 
-R-4's future condition turns on *"independently verifiable local/on-prem Jev runtime"*.
-⭐ **`independently verifiable` is load-bearing and presently undefined**, and this lane's
-own history shows why that matters: a vendor blog post read in six months could be treated
-as the condition being met.
-
-⛔ **A vendor announcement, a product page, a pricing tier named "self-hosted", or a
-customer-agreement clause is NOT verification.** Consistent with ratified J5 (*model
-agreement remains evidence only*) and this repository's standing law (*a probe is not the
-record*), the reopen trigger should require, at minimum: a runtime that **runs**, observed
-**with network egress denied**, producing a judgment, on infrastructure Soullab controls.
-
-⭐ Until that standard is named, the reopen condition is **narratively satisfiable but not
-mechanically satisfiable** — which is the shape that lets a hold quietly lapse. ⛔ Naming
-the standard is a founder act; it is proposed here, not taken.
+⭐ **My proposed one-line test was insufficient and R-6 corrects it.** *"Runs with egress
+denied"* is necessary and ⛔ not sufficient: a cached response, a hidden local relay, or a
+preauthenticated cloud dependency all satisfy a loose reading of that sentence. Conditions
+1, 3, 4, 5 and 8 exist precisely to close those, and **novel input (5)** is the one that
+defeats the cached-result attack that egress denial alone cannot see.
 
 ---
 
 ## 7 · Standing
 
 ```text
-J2-R1
-PLACEMENT              CLOSED
-PROVENANCE             CLOSED — EXTERNAL
-PARENT-LAW CONFORMANCE ESTABLISHED
-FAST-PATH PROPOSAL     WITHDRAWN
-EXTERNAL ADVISORY      CONSTITUTIONALLY AVAILABLE
-PROVIDER EXECUTION     NOT OPENED HERE
-ADAPTER                NOT AUTHORIZED
+Q-JEV-3  CLOSED — repository_derived_metadata
+Q-JEV-4  CLOSED
+Q-JEV-5  MOOT
+Q-JEV-6  CLOSED — external advisory
+Q-JEV-7  CLOSED — mechanical sovereign-runtime witness
+
+J0 Constitution      AUTHORED · NOT YET RATIFIED
+J1 Judgment Contract AUTHORED · NOT YET RATIFIED
+J2                   NOT OPEN
+ADAPTER              NOT AUTHORIZED
+PROVIDER EXECUTION   NOT OPENED
 ```
 
-**J0 CONSTITUTION AUTHORED (A1–A7; A1/A3/A4 INHERITED FROM RATIFIED J5; A2 IN RULED FORM;
-⚠️ A7 NOW LOAD-BEARING AND OWED A RECURRING DISCHARGE) · J1 CONTRACT AUTHORED AS CANDIDATE ·
-⛔ NEITHER RATIFIED · ⚠️ FIRST-COMMIT FINDING CORRECTED (routing law is RATIFIED, not
-missing) · Q-JEV-4 ✅ CLOSED · Q-JEV-5 ✅ MOOT · Q-JEV-6 ✅ RULED · ⚠️ Q-JEV-3 OPEN ·
-⚠️ Q-JEV-7 RAISED, ⛔ NOT RULED · ⛔ J2 NOT OPENED · ⛔ 2026-09-20 HOLD UNLIFTED, BOTH
-CONDITIONS UNDISCHARGED · ⛔ NO SOVEREIGN JEV PRESUMED · ⛔ NO PROVIDER ADDED · ⛔ NO TIER
-TABLE EDITED · ⛔ NO ADAPTER · ⛔ NO PACKET CONSTRUCTED · ⛔ NO JUDGMENT PERFORMED · ⛔ NO
-PROVIDER CALLED · ⛔ NO ROUTING CHANGED · ⛔ NO PROVIDER SPEND · ⛔ NO `lib/`, `app/`,
-`scripts/`, `jarvis-desktop/` OR `database/` FILE MODIFIED · ⛔ NO MERGE · ⛔ NO DEPLOY ·
-PRODUCTION UNTOUCHED.**
+### Next boundary — ⭐ FOUNDER ADJUDICATION OF THE J0 CONSTITUTION **ONLY**
+
+⛔ **Not** J1 · ⛔ **not** capability-table mutation · ⛔ **not** provider registration ·
+⛔ **not** adapter work.
+
+⭐ *Settle the law first; then adjudicate the judgment contract under that law.* Ratifying
+J1 alongside J0 would let the contract's convenience shape the constitution it is supposed
+to satisfy — the inversion this lane has refused at every previous step.
+
+**ALL FIVE QUESTIONS CLOSED WITHOUT OPENING J2 · J0 CONSTITUTION AUTHORED (A1–A7;
+A1/A3/A4 INHERITED FROM RATIFIED J5; A2 IN RULED FORM; ⚠️ A7 LOAD-BEARING, NO-OP SCOPED TO
+THE AUTHORITY LATTICE, RECURRING DISCHARGE OWED, CADENCE ⛔ NOT FIXED) · J1 CONTRACT
+AUTHORED AS CANDIDATE · ⛔ NEITHER RATIFIED · ⚠️ FIRST-COMMIT FINDING CORRECTED (routing law
+is RATIFIED, not missing) · ⭐ CLASS `repository_derived_metadata` RULED, ⛔ TABLE NOT
+EDITED · ⭐ EIGHT-CONDITION SOVEREIGN-RUNTIME WITNESS RULED, ⛔ UNSPENT · ⛔ 2026-09-20 HOLD
+UNLIFTED, BOTH CONDITIONS UNDISCHARGED, ⛔ R-5 DISCHARGES NEITHER · ⛔ NO SOVEREIGN JEV
+PRESUMED · ⛔ J2 NOT OPENED · ⛔ NO PROVIDER ADDED · ⛔ NO TIER TABLE EDITED · ⛔ NO
+`PROVIDER_GOVERNANCE.md` CHANGE · ⛔ NO ADAPTER · ⛔ NO PACKET CONSTRUCTED · ⛔ NO JUDGMENT
+PERFORMED · ⛔ NO PROVIDER CALLED · ⛔ NO ROUTING CHANGED · ⛔ NO PROVIDER SPEND · ⛔ NO
+`lib/`, `app/`, `scripts/`, `jarvis-desktop/` OR `database/` FILE MODIFIED · ⛔ NO MERGE ·
+⛔ NO DEPLOY · PRODUCTION UNTOUCHED.**
 
 ⭐ *Jev may tell JARVIS what appears to be the case. It may never tell JARVIS what it is
 permitted to do — and the test of that is not the ledger's wording but whether removing
