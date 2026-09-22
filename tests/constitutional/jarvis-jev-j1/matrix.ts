@@ -68,10 +68,16 @@ const DECLARED_COLLATERAL: Readonly<Record<string, Readonly<Record<string, strin
       'A packet_version other than "jev-3" is by construction not a member of the parent class grammar\'s admitted string set, so the free-string law fires. Narrowing would require an off-contract version that is nonetheless class-eligible, i.e. not embodying the drift. IRREDUCIBLE.',
   },
   'DC-ABSTAIN-REJECTED': {
+    'DC-ABSTAIN-CONFIDENCE-ACCEPTED':
+      'Refusing every lawful ProviderAbstain necessarily mishandles the abstain-carrying-confidence case too: the candidate returns UNKNOWN_SHAPE where OUT_OF_RANGE is required. Narrowing would mean admitting lawful abstentions, i.e. ceasing to embody the error. IRREDUCIBLE.',
     'DC-MODEL-REASON-WINS':
       'Rejecting a LAWFUL ProviderAbstain means a well-formed REFUSED is never admitted as itself, which is exactly what MODEL-REASON-WINS checks in its non-malformed leg.',
     'DC-UNION-COLLAPSE':
       'UNION-COLLAPSE requires lawful model reasons to be admitted unchanged; refusing all abstentions necessarily breaks that. Irreducible — the error IS refusing lawful abstentions.',
+  },
+  'DC-MODEL-REASON-WINS': {
+    'DC-ABSTAIN-CONFIDENCE-ACCEPTED':
+      'Consulting the model self-report BEFORE the host structural checks is precisely what lets an abstention carrying confidence be accepted as REFUSED. The two laws police the same ordering decision from opposite sides. IRREDUCIBLE.',
   },
   'DC-ADDS-AUTHORIZED-ACT': {
     'DC-LLM-TRUE-GRANTS':

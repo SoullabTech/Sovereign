@@ -28,6 +28,23 @@ export type TaskShape = (typeof TASK_SHAPES)[number];
 export const QUESTION_IDS = ['Q_DEPTH', 'Q_RISK', 'Q_SUFFICIENT', 'Q_LLM_NEEDED'] as const;
 export type QuestionId = (typeof QUESTION_IDS)[number];
 
+/**
+ * §6 / §3.5 — the response shape DECLARED for each question.
+ * ⭐ F1R1 verified question identity and value ranges but NOT this mapping, so a Score
+ * was admitted for Q_RISK and a YesNo for Q_DEPTH. `ProviderAbstain` is lawful for EVERY
+ * question and is therefore not in this table.
+ */
+export const DECLARED_SHAPE: Readonly<Record<QuestionId, 'Score' | 'YesNo'>> = {
+  Q_DEPTH: 'Score',
+  Q_RISK: 'YesNo',
+  Q_SUFFICIENT: 'YesNo',
+  Q_LLM_NEEDED: 'YesNo',
+};
+
+/** §6.1 — Real in [0,1]. ⛔ NaN/Infinity are numbers but are not Reals in [0,1]. */
+export const inUnitInterval = (v: unknown): v is number =>
+  typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;
+
 /** §6.2 — ONLY the host may originate these. */
 export const HOST_FAILURE_REASONS = [
   'TIMEOUT',
@@ -291,6 +308,9 @@ export const referenceHostFailureReason = (obs: HostObservation): HostFailureRea
 
 // Structural shape predicates. §7.2: STRUCTURE, never admissible type.
 export const isAbstainShaped = (v: unknown): boolean => has(v, 'question_id') && has(v, 'reason');
+/** §6.1 — a lawful ProviderAbstain is EXACTLY { question_id, reason }. */
+export const isLawfulProviderAbstainShape = (v: unknown): boolean =>
+  isAbstainShaped(v) && !has(v, 'confidence');
 /** ⭐ §6.1 structure: a Score-shaped response carries question_id + scale + score + confidence. */
 export const isScoreShaped = (v: unknown): boolean =>
   has(v, 'question_id') && has(v, 'scale') && has(v, 'score') && has(v, 'confidence');
@@ -326,7 +346,16 @@ export const referenceAdmit = (
     return { question_id: q, reason: 'MISMATCHED_QUESTION' };
   }
   // 6 — value validity, including a provider-originated HostFailureReason.
+  // ⭐ 4b — DECLARED SHAPE for this question (§6 / §7.1). Abstain is lawful everywhere.
+  if (!abstainShaped) {
+    const declared = DECLARED_SHAPE[q];
+    if (scoreShaped && declared !== 'Score') return { question_id: q, reason: 'OUT_OF_RANGE' };
+    if (yesNoShaped && declared !== 'YesNo') return { question_id: q, reason: 'OUT_OF_RANGE' };
+  }
   if (abstainShaped) {
+    // ⭐ §6.1 — an abstention carries NO confidence. A confidence field is an
+    // inadmissible member of a recognized Abstain structure, never silently dropped.
+    if (!isLawfulProviderAbstainShape(raw)) return { question_id: q, reason: 'OUT_OF_RANGE' };
     const reason = (raw as { reason: unknown }).reason;
     if (isModelAbstainReason(reason)) return { question_id: q, reason };
     // ⭐ forged host reason (or any other bad value) → the host's own OUT_OF_RANGE.
@@ -340,14 +369,14 @@ export const referenceAdmit = (
     const sv = r.score;
     const cv = r.confidence;
     if (!scaleOk) return { question_id: q, reason: 'OUT_OF_RANGE' };
-    if (typeof sv !== 'number' || sv < 0 || sv > 1) return { question_id: q, reason: 'OUT_OF_RANGE' };
-    if (typeof cv !== 'number' || cv < 0 || cv > 1) return { question_id: q, reason: 'OUT_OF_RANGE' };
+    if (!inUnitInterval(sv)) return { question_id: q, reason: 'OUT_OF_RANGE' };
+    if (!inUnitInterval(cv)) return { question_id: q, reason: 'OUT_OF_RANGE' };
     // ⭐ the admitted record PRESERVES the contract-required scale.
     return { question_id: q, scale: CONTRACT_SCALE, score: sv, confidence: cv };
   }
   const a = (raw as { answer: unknown }).answer;
   const c2 = (raw as { confidence?: unknown }).confidence;
-  if (typeof a !== 'boolean' || typeof c2 !== 'number' || c2 < 0 || c2 > 1) {
+  if (typeof a !== 'boolean' || !inUnitInterval(c2)) {
     return { question_id: q, reason: 'OUT_OF_RANGE' };
   }
   return { question_id: q, answer: a, confidence: c2 };
@@ -466,6 +495,14 @@ export const providerScore = (q: QuestionId, over: Record<string, unknown> = {})
   question_id: q,
   scale: { min: 0, max: 1 },
   score: 0.8,
+  confidence: 0.9,
+  ...over,
+});
+
+/** A well-formed provider YesNo response. */
+export const providerYesNo = (q: QuestionId, over: Record<string, unknown> = {}): unknown => ({
+  question_id: q,
+  answer: true,
   confidence: 0.9,
   ...over,
 });

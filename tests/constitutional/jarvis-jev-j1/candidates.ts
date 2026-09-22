@@ -13,6 +13,11 @@
  */
 import {
   CONTRACT_SCALE,
+  DECLARED_SHAPE,
+  inUnitInterval,
+  isAbstainShaped,
+  isScoreShaped,
+  isYesNoShaped,
   FILE_COUNT_MAX,
   PACKET_VERSION,
   isAbstainValue,
@@ -20,7 +25,6 @@ import {
   isYesNoValue,
   TASK_SHAPES,
   derive,
-  isAbstainShaped,
   isModelAbstainReason,
   referenceAdmit,
   referenceClassShapeEligible,
@@ -336,6 +340,103 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
       return referenceAdmit(packet, o);
     },
   }),
+  // ── F1R2: declared question -> response shape ────────────────────────────
+  'DC-SCORE-FOR-YESNO-QUESTION': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      // admits a Score for ANY question — ignores the declared mapping
+      if (o.parsed && isScoreShaped(o.raw)) {
+        const r = o.raw as { question_id?: unknown; score?: unknown; confidence?: unknown };
+        if (r.question_id === packet.question_id && DECLARED_SHAPE[packet.question_id] !== 'Score') {
+          return {
+            question_id: packet.question_id,
+            scale: CONTRACT_SCALE,
+            score: r.score as number,
+            confidence: r.confidence as number,
+          };
+        }
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+  'DC-YESNO-FOR-SCORE-QUESTION': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      if (o.parsed && isYesNoShaped(o.raw)) {
+        const r = o.raw as { question_id?: unknown; answer?: unknown; confidence?: unknown };
+        if (r.question_id === packet.question_id && DECLARED_SHAPE[packet.question_id] !== 'YesNo') {
+          return {
+            question_id: packet.question_id,
+            answer: r.answer as boolean,
+            confidence: r.confidence as number,
+          };
+        }
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+
+  // ── F1R2: abstention carries no confidence ───────────────────────────────
+  'DC-ABSTAIN-CONFIDENCE-ACCEPTED': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const r = o.raw as { question_id?: unknown; reason?: unknown } | undefined;
+      // accepts the abstention and silently DROPS the inadmissible confidence
+      if (o.parsed && isAbstainShaped(o.raw) && r && r.question_id === packet.question_id
+          && isModelAbstainReason(r.reason)) {
+        return { question_id: packet.question_id, reason: r.reason };
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+
+  // ── F1R2: NaN / Infinity in a Real[0,1] position ─────────────────────────
+  'DC-SCORE-NAN-ACCEPTED': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const r = o.raw as { question_id?: unknown; score?: unknown; confidence?: unknown } | undefined;
+      // bare typeof/range comparisons — NaN and Infinity slip through
+      const sc = (o.raw as { scale?: { min?: unknown; max?: unknown } } | undefined)?.scale;
+      const scaleOk = typeof sc === 'object' && sc !== null && sc.min === 0 && sc.max === 1;
+      if (o.parsed && isScoreShaped(o.raw) && r && r.question_id === packet.question_id
+          && DECLARED_SHAPE[packet.question_id] === 'Score' && scaleOk
+          && inUnitInterval(r.confidence)
+          // ⭐ the ONLY loosened decision: a bare range comparison lets NaN/Infinity through
+          && typeof r.score === 'number' && !(r.score < 0) && !(r.score > 1)) {
+        return {
+          question_id: packet.question_id,
+          scale: CONTRACT_SCALE,
+          score: r.score,
+          confidence: r.confidence,
+        };
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+  'DC-CONFIDENCE-NAN-ACCEPTED': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const r = o.raw as { question_id?: unknown; confidence?: unknown; answer?: unknown; score?: unknown } | undefined;
+      // ⭐ the ONLY loosened decision: a bare range comparison on confidence.
+      const looseConf = typeof r?.confidence === 'number' && !(r.confidence < 0) && !(r.confidence > 1);
+      const sc = (o.raw as { scale?: { min?: unknown; max?: unknown } } | undefined)?.scale;
+      const scaleOk = typeof sc === 'object' && sc !== null && sc.min === 0 && sc.max === 1;
+      if (o.parsed && r && r.question_id === packet.question_id && looseConf) {
+        // the SHARED mechanism reached from BOTH response shapes
+        if (isScoreShaped(o.raw) && DECLARED_SHAPE[packet.question_id] === 'Score'
+            && scaleOk && inUnitInterval(r.score)) {
+          return {
+            question_id: packet.question_id, scale: CONTRACT_SCALE,
+            score: r.score, confidence: r.confidence as number,
+          };
+        }
+        if (isYesNoShaped(o.raw) && DECLARED_SHAPE[packet.question_id] === 'YesNo'
+            && typeof r.answer === 'boolean') {
+          return {
+            question_id: packet.question_id,
+            answer: r.answer, confidence: r.confidence as number,
+          };
+        }
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+
   // ── F1R1: Score fidelity ──────────────────────────────────────────────────
   'DC-SCORE-SCALE-OMITTED': derive({
     admit: (packet, o): AdmittedJudgment => {
@@ -354,14 +455,17 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
   }),
   'DC-SCORE-SCALE-ALTERED': derive({
     admit: (packet, o): AdmittedJudgment => {
-      const r = o.raw as { scale?: unknown; score?: unknown; confidence?: unknown } | undefined;
-      // accepts any scale object without judging min/max
-      if (r && typeof r.scale === 'object' && r.scale !== null && typeof r.score === 'number') {
+      const r = o.raw as { question_id?: unknown; scale?: unknown; score?: unknown; confidence?: unknown } | undefined;
+      // ⭐ the ONLY loosened decision: any scale OBJECT is accepted without judging min/max
+      if (o.parsed && isScoreShaped(o.raw) && r && r.question_id === packet.question_id
+          && DECLARED_SHAPE[packet.question_id] === 'Score'
+          && typeof r.scale === 'object' && r.scale !== null
+          && inUnitInterval(r.score) && inUnitInterval(r.confidence)) {
         return {
           question_id: packet.question_id,
           scale: CONTRACT_SCALE,
           score: r.score,
-          confidence: (r.confidence ?? 0.5) as number,
+          confidence: r.confidence,
         };
       }
       return referenceAdmit(packet, o);

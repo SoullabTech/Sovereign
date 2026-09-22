@@ -7,6 +7,8 @@
 import {
   ADVICE_MEMBERS,
   CONTRACT_SCALE,
+  DECLARED_SHAPE,
+  providerYesNo,
   INVALID_QUESTION,
   NONBOOLEAN_STATE,
   PACKET_VERSION as PV,
@@ -418,6 +420,65 @@ export const FALSIFIERS: Readonly<Record<string, Falsifier>> = {
       fail(`§7.2: wrong-question response must record MISMATCHED_QUESTION, got ${JSON.stringify(a)}`);
     }
   },
+  // ── F1R2: declared question -> response shape (§6 / §7.1) ────────────────
+  'DC-SCORE-FOR-YESNO-QUESTION': (m) => {
+    for (const q of QUESTION_IDS) {
+      if (DECLARED_SHAPE[q] === 'Score') continue;
+      const a = m.admit(okPacket(q), obs(providerScore(q)));
+      if (isScoreValue(a)) fail(`§7.1: a Score was admitted for ${q}, which declares YesNo`);
+      if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
+        fail(`§2 of the act: wrong declared shape must be OUT_OF_RANGE, got ${JSON.stringify(a)}`);
+      }
+    }
+  },
+  'DC-YESNO-FOR-SCORE-QUESTION': (m) => {
+    for (const q of QUESTION_IDS) {
+      if (DECLARED_SHAPE[q] === 'YesNo') continue;
+      const a = m.admit(okPacket(q), obs(providerYesNo(q)));
+      if (isYesNoValue(a)) fail(`§7.1: a YesNo was admitted for ${q}, which declares Score`);
+      if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
+        fail(`§2 of the act: wrong declared shape must be OUT_OF_RANGE, got ${JSON.stringify(a)}`);
+      }
+    }
+  },
+
+  // ── F1R2: abstention carries no confidence (§6.1) ────────────────────────
+  'DC-ABSTAIN-CONFIDENCE-ACCEPTED': (m) => {
+    const a = m.admit(okPacket('Q_RISK'),
+      obs({ question_id: 'Q_RISK', reason: 'REFUSED', confidence: 0.9 }));
+    if (isAbstainValue(a) && a.reason === 'REFUSED') {
+      fail('§6.1: an abstention carrying confidence was admitted as REFUSED');
+    }
+    if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
+      fail(`§3 of the act: ProviderAbstain + confidence must be OUT_OF_RANGE, got ${JSON.stringify(a)}`);
+    }
+    if ('confidence' in (a as object)) fail('§6.1: confidence survived into the admitted record');
+  },
+
+  // ── F1R2: Real in [0,1] excludes NaN / Infinity (§6.1) ───────────────────
+  'DC-SCORE-NAN-ACCEPTED': (m) => {
+    for (const bad of [NaN, Infinity, -Infinity]) {
+      const a = m.admit(okPacket('Q_DEPTH'), obs(providerScore('Q_DEPTH', { score: bad })));
+      if (isScoreValue(a)) fail(`§6.1: score ${String(bad)} admitted as a Real in [0,1]`);
+      if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
+        fail(`§4 of the act: score ${String(bad)} must be OUT_OF_RANGE, got ${JSON.stringify(a)}`);
+      }
+    }
+  },
+  'DC-CONFIDENCE-NAN-ACCEPTED': (m) => {
+    // ⭐ BOTH branches exercised: Score confidence AND YesNo confidence.
+    for (const bad of [NaN, Infinity, -Infinity]) {
+      const sc = m.admit(okPacket('Q_DEPTH'), obs(providerScore('Q_DEPTH', { confidence: bad })));
+      if (!isAbstainValue(sc) || sc.reason !== 'OUT_OF_RANGE') {
+        fail(`§4: Score confidence ${String(bad)} must be OUT_OF_RANGE, got ${JSON.stringify(sc)}`);
+      }
+      const yn = m.admit(okPacket('Q_RISK'), obs(providerYesNo('Q_RISK', { confidence: bad })));
+      if (!isAbstainValue(yn) || yn.reason !== 'OUT_OF_RANGE') {
+        fail(`§4: YesNo confidence ${String(bad)} must be OUT_OF_RANGE, got ${JSON.stringify(yn)}`);
+      }
+    }
+  },
+
   // ── F1R1: Score fidelity (§6.1) ───────────────────────────────────────────
   'DC-SCORE-SCALE-OMITTED': (m) => {
     const p = okPacket('Q_DEPTH');
