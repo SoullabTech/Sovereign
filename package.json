@@ -220,6 +220,8 @@
     "matrix:ws-member-place": "tsx tests/constitutional/writers-studio/member-place/matrix.ts",
     "matrix:ws-intent-first": "tsx tests/constitutional/writers-studio/flagship/intent-first/matrix.ts",
     "matrix:ws-work-root": "tsx tests/constitutional/writers-studio/flagship/work-root/matrix.ts",
+    "matrix:ws-sanctuary-keep": "jest --config jest.config.js tests/constitutional/writers-studio/sanctuary-keep",
+    "witness:sanctuary-keep": "jest --config jest.config.js --testPathIgnorePatterns /node_modules/ tests/__integration__/sanctuary-keep",
     "typecheck:editorial-reading-contract": "tsc -p tsconfig.editorial-reading-contract.json",
     "matrix:editorial-reading-contract": "tsx tests/constitutional/editorial-reading/matrix.ts",
     "matrix:ws-observation-identity-live": "tsx tests/constitutional/writers-studio/liveRunner.ts",
