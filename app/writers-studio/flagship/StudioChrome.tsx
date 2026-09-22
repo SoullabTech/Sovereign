@@ -17,7 +17,7 @@ import {
 } from './flagshipTokens';
 
 const ICON: Readonly<Record<NavDestination, string>> = {
-  home: '⌂', write: '✎', develop: '◈', review: '◉',
+  write: '✎', develop: '◈', review: '◉',
 };
 
 /**

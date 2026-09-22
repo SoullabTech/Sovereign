@@ -112,15 +112,28 @@ export type Mode = (typeof MODES)[number];
  * is the one entry whose presence depends on B7 landing — if Review ships without
  * a room behind it, this list is wrong and the rail is lying.
  */
-export const NAV_DESTINATIONS = ['home', 'write', 'develop', 'review'] as const;
+/**
+ * ⭐⭐ `home` REMOVED — founder ruling, Home/Arrival §2 + §11.3.
+ *
+ * It was a CAPABILITY-FALSE DESTINATION: rendered as a named button in every
+ * room on every viewport, with no room, no phase and no rendered state behind
+ * it. ⛔ The repair is removal, ⛔ NOT an improvised Home room built to satisfy
+ * a label — *a false destination is worse than a temporarily smaller
+ * navigation set.*
+ *
+ * ⚠️ The Work-root / arrival question is UNRESOLVED future product semantics
+ * (§5), and ⛔ the word `Home` is not assumed to survive that review. First
+ * Arrival is an arrival STATE over the Work; ⛔ no fourth room is authorized.
+ */
+export const NAV_DESTINATIONS = ['write', 'develop', 'review'] as const;
 export type NavDestination = (typeof NAV_DESTINATIONS)[number];
 
 export const NAV_LABEL: Readonly<Record<NavDestination, string>> = {
-  home: 'Home', write: 'Write', develop: 'Develop', review: 'Review',
+  write: 'Write', develop: 'Develop', review: 'Review',
 };
 
 /** ⭐ Same semantic names as the rail. ⛔ Develop is never renamed Explore. */
-export const MOBILE_PRIMARY: readonly NavDestination[] = ['home', 'write', 'develop', 'review'];
+export const MOBILE_PRIMARY: readonly NavDestination[] = ['write', 'develop', 'review'];
 export const MOBILE_BEHIND_MENU: readonly NavDestination[] = [];
 
 /* ══════════════════════════════════════════════════════════════════════════
