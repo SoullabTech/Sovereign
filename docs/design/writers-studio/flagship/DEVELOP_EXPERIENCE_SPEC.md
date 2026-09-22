@@ -779,3 +779,61 @@ Change and Transition                    Ch 1–8   ›
 Smaller: *“**Key** Moments”* — the barred word, in a place where the meaning is actually factual
 (where the theme is densest). ⭐ *“Where this theme appears most”* says the true thing without the
 importance claim.
+
+---
+
+## §13 · THE MANUSCRIPT FRAME WITH MAIA'S THEME PANEL
+
+### 13.1 · ⭐ What is new and good
+
+- ⭐⭐ **The outline carries declared PART structure** — `Part II · Crossing`, `Part III · Belonging`
+  — with chapters beneath. That is the WS2-08 authored hierarchy rendered, and it is the member's
+  own shape, ⛔ not an inferred one.
+- ⭐ *“A story doesn't take you somewhere else. It helps you see more clearly where you are.”* —
+  **Soullab**, correctly attributed to house voice.
+
+### 13.2 · ⭐⭐ THE REGRESSION — the address does not travel with the observation
+
+§12 fixed the theme cards: every row carried `Ch 1–8`, a presence bar and described moments.
+
+⛔ **Here the same three themes appear in MAIA's panel with no chapter reference at all.**
+
+⭐ **The same object lost its address by moving to a different surface.** That is the defect that
+will recur forever unless it is prevented at the object rather than fixed per screen:
+
+> ⭐ **An address is a property of the OBSERVATION, ⛔ never of the surface that renders it.**
+
+⭐ **Already structural in this build.** `Observation` in `app/writers-studio/flagship/DevelopReview.tsx`
+declares `evidence` and `returnTo` as **non-optional**, so an observation with nothing to point at
+**cannot be constructed** — and `WHERE-every-claim-has-an-address` asserts it over the rendered DOM
+on every surface, at every viewport. ⛔ A panel cannot drop what the type will not let it omit.
+
+### 13.3 · ⛔ Two author-intent claims
+
+> *“You're exploring what it means to stay with uncertainty, and to find steadiness within it.”*
+
+⛔ MAIA telling the member **what they are exploring**. `author-intent` is a **permanent
+non-conclusion** — no coverage discharges it, ever.
+
+> *“This moment **deepens** Clara's inner shift and connects to the larger **arc of becoming**.”*
+
+⛔ `deepens` is evaluative, and *“the larger arc of becoming”* is **MAIA's name for the Work's arc**,
+asserted as though the member had given it.
+
+⭐ Lawful, same length, same warmth:
+
+```text
+✅  This passage returns to change and transition. The phrase “the in-between”
+    appears here, in Ch 2, and in Ch 8 — and this is the only time Clara says it aloud.
+```
+
+⭐ Or, as a question rather than a claim: *“Is this one about staying with uncertainty?”* — which
+invites the declaration instead of making it.
+
+### 13.4 · ⚠️ Smaller
+
+| Item | |
+|---|---|
+| *“**What stands out** here”* | importance claim — the `key` family, third appearance |
+| Top nav shows **Develop** active on a surface with editing tools | ⚠️ orientation: the member is writing while the room says they are developing |
+| Coverage · facet control | ⛔ still absent |
