@@ -1,363 +1,328 @@
-# JARVIS-JEV-01 — J0 Constitution + J1 Judgment Contract
+# JARVIS-ROUTING-INTELLIGENCE-01 · J2-R1 — JEV JUDGMENT LANE
+## J0 Constitution + J1 Judgment Contract
 
-**Status:** ⛔ **CANDIDATE. NOT RATIFIED.** Authored on founder direction 2026-09-22
-("worth opening as a real programme, beginning with J0 Constitution + J1 Judgment
-Contract, before we write an adapter"). Ratification is a founder act; this document
-performs none.
-
-**Date:** 2026-09-22
-**Base:** `9da7195e` on `clean-main-no-secrets` lineage
-**Branch / custody:** `claude/sovereign-governance-review-s8skj2`
+**Status:** ⛔ **CANDIDATE. NOT RATIFIED.** Authored on founder direction 2026-09-22.
+**Informal name:** `JARVIS-JEV-01` (founder's name, preserved as this file's identity).
+**Parent flow:** `JARVIS-ROUTING-INTELLIGENCE-01` (manual §27 sub-lane).
+**Date:** 2026-09-22 · **Base:** `9da7195e` · **Branch:** `claude/sovereign-governance-review-s8skj2`
 
 ## Mandatory lane preamble (JARVIS manual §27)
 
 ```text
 Class: A
-Governing authority: founder direction 2026-09-22 + canonical JARVIS manual
+Governing authority: founder rulings 2026-09-22 (placement + provenance)
+                     + RATIFIED J5 routing law (2026-09-18)
+                     + R1 / R4 / R5A / R5B contracts
                      + PROVIDER_GOVERNANCE.md + the 2026-09-20 dev-lane interim hold
-Current gate: J0 — CONSTITUTION (J1 contract authored as candidate, not constituted)
+Current gate: J0 — CONSTITUTION. ⛔ PLACED, NOT OPENED FOR PROVIDER EXECUTION.
 Evidence subject: this repository's governing records only. ⛔ No provider was called.
-                  ⛔ No judgment was performed. ⛔ No packet was constructed or sent.
+                  ⛔ No judgment performed. ⛔ No packet constructed or sent.
 Stop boundary: no adapter, no provider registration, no external inference,
                no routing change, no provider spend, no merge, no deploy
 ```
 
-## What this document is, and is not
+---
 
-It is the **law a Jev lane would have to satisfy**, written before an adapter exists,
-so that the adapter is written to a constitution rather than the constitution being
-written to an adapter.
+## 0 · FOUNDER RULINGS — 2026-09-22
 
-⛔ It is **not** an authorization to build the adapter.
-⛔ It is **not** a verdict that Jev is valuable, or that fast-path routing is desirable.
-⛔ It does **not** add a provider, edit a tier table, or open a lane.
-⭐ Three findings below are **blocking as specified** — §1, §4 and §6 each name a gate
-the proposal must pass through before J2, and none of them is a preference.
+**R-1 · PLACEMENT — TAKEN.** JEV is a **sub-lane of `JARVIS-ROUTING-INTELLIGENCE-01`**,
+not a parallel programme. Governing invariant, founder's words: ***one authority over one
+decision.*** Jev may become a bounded evaluator/advisory instrument; ⛔ it may not acquire
+an independent routing jurisdiction.
+
+**R-2 · PROVENANCE — ANSWERED: Jev is EXTERNAL / hosted.**
+
+**R-3 · SEPARATION — STATED.** *Placement and permission are separate questions.* J2-R1 is
+**constitutionally placed** and remains **unopened for provider execution** until external-
+provider governance and the standing hold are satisfied.
+
+**Founder's constitutional shape, recorded as the lane's operative summary:**
+
+```text
+JARVIS-ROUTING-INTELLIGENCE-01
+        │
+        ├── existing routing law / authority
+        │
+        └── J2-R1 — Jev constitutional evaluator
+                    ├── may observe/evaluate bounded state
+                    ├── may return evidence/judgment
+                    ├── cannot authorize a route
+                    ├── cannot mutate a Work Unit
+                    ├── cannot execute
+                    └── deleting Jev must leave
+                        authority decisions unchanged
+```
+
+### ⚠️ CORRECTION — a finding in this document's first commit was WRONG
+
+`3f910109` asserted that the parent lane *"sits at J1 with its routing law (J2) unwritten"*
+and that JEV would therefore jump a gate. **That is false.** It was taken from the parent
+charter's `Current state: J1 — ROUTING-LAW DISCOVERY` line, **which is stale by six gates
+and was never updated.**
+
+The parent lane actually ran J1 census → **J2 candidate routing law** → J3A/J3B witnesses
+→ J4 falsification → **J5 FOUNDER RULING (RATIFIED 2026-09-18)** → J6 implementation
+witness (I1–I4) → contracts **R1 · R4 · R5A · R5B**. Implementation landed
+(`320c097a` pure routing intelligence · `4cc544fd` bind routing preview to Work Units ·
+`5d5f96c4` governed routing intelligence · `f0063747` / PR #1395 R5B).
+
+⭐ **The correction improves JEV's position rather than worsening it.** Routing law is not
+missing — **it is ratified**, so JEV's obligation is *conformance to existing law*, which is
+concrete and checkable, rather than *authoring law*, which it must never do.
+
+⚠️ *Note for the parent lane, ⛔ not repaired here:* the charter's `Current state:` line
+still reads J1. A governing record whose own status line is six gates stale is how a
+reader reaches a confident wrong conclusion — as this document's first commit did.
 
 ---
 
-## 1 · PLACEMENT FINDING — the governing question is already owned
+## 1 · WHAT IS ALREADY RATIFIED — JEV inherits, it does not propose
 
-⭐⭐ **`JARVIS-ROUTING-INTELLIGENCE-01` (charter 2026-09-18) already owns this exact
-question**, and its governing question is close to verbatim:
+⭐⭐ **The single most useful result of this pass: most of the proposed constitution is
+already law.** The J5 founder ruling (2026-09-18) binds JEV directly:
 
-> *How should JARVIS select model family, review topology, evidence membrane, and
-> provider transport without allowing model capability, provider availability, cost,
-> or agreement to become authority?*
+| Ratified J5 clause | Effect on JEV |
+|---|---|
+| *Routing … shall never create or widen Work Unit authority* | **A1 is inherited, not invented.** Judgment-≠-permission is already ratified. |
+| *Model agreement remains evidence only and may never create merge, deployment, production, constitutional, or founder authority* | A1 again, at full strength. |
+| *Model-authored state labels have no state-changing effect* | ⛔ No Jev output may be a Work Unit state. |
+| ⭐ **Deterministic capability remains first** | ⛔ **Jev may only be consulted after deterministic routing has failed to decide.** Jev can never be the first thing asked. |
+| ⭐ **Model families are eligible only for evidence-backed task classes** | A2's predeclared fast-path class must be **evidence-backed** — Q-JEV-5 is governed, not open-ended. |
+| *Model family is selected before transport; if no admissible transport, JARVIS shall HOLD rather than silently substitute* | **A3 fail-closed is inherited.** |
+| *A retry is not an independent second opinion* | Binds the witness design (§5). |
+| ⭐⭐ *External repository evidence requires a **distinct, load-bearing disclosure grant**, in addition to network and spend authority* | **The mechanism for §4 already exists and is ratified.** |
+| *Every automatic routing decision must preserve structured provenance* for evidence class, task shape, eligible model families, review topology, transport, authority grants, response-budget profile, and any held/refused state | **Supersedes my three-line ledger sketch** — the ratified provenance requirement is stricter and more detailed. JEV emits **this**. |
 
-A Jev judgment lane selects **model family and transport** and must not let
-**confidence become authority**. That is the parent question, not an adjacent one.
-
-⚠️ **And the parent lane is at J1, not J2.** Its charter records `Current state: J1 —
-ROUTING-LAW DISCOVERY`, and states plainly that `J2–J9 are a programme map, not present
-authorization`. Its J2 gate is **CONSTITUTE / CANDIDATE ROUTING LAW** — *the routing law
-does not yet exist*.
-
-⭐ **So JEV-01 as proposed would constitute a routing mechanism before the routing law
-it must satisfy has been constituted.** That is a gate jump in the parent flow, and this
-project has refused that shape repeatedly: the defect is not that Jev is wrong, it is
-that *the thing Jev must conform to has not been written yet*, so conformance could not
-be assessed even if the adapter worked perfectly.
-
-⚠️ Two further clauses of the parent charter bind directly. Its **explicit
-non-authorizations** already forbid, at J1:
-
-- *automatically selecting or executing any external provider*;
-- *disclosing repository … material*;
-- *adding a new provider*;
-- *treating vendor benchmark claims or model agreement as JARVIS authority*.
-
-If Jev is external, **JEV-01 as specified is blocked by its own parent lane's stop
-boundary**, independently of anything in §4.
-
-⭐ **RECOMMENDED, ⛔ NOT TAKEN** — placement is a founder call, not mine:
-record this as **`JARVIS-ROUTING-INTELLIGENCE-01 · J2-R1 — JEV JUDGMENT LANE`**, a
-bounded lane inside the parent flow under manual §27, rather than as a parallel
-programme. Rationale: a second programme over one governing question creates two
-authorities over one decision, and the 1:1 relation between them would be assumed
-rather than guarded — the same shape the observation-address law refused on 2026-09-21.
-
-⛔ The founder's chosen name `JARVIS-JEV-01` is preserved on this file and not
-unilaterally demoted.
+⭐ **Consequently JEV needs far less new law than the proposal assumed.** Of the seven
+articles below, **A1, A3 and A4 are substantially inherited**; only **A2, A5, A6 and A7**
+are genuinely new, and A7 is the one the founder independently named.
 
 ---
 
 ## 2 · J0 — CONSTITUTION
 
-Seven articles. Each is written so that a violation is *observable*, not merely
-disapproved of.
-
-### A1 · Judgment is evidence about a choice; it is never permission to perform it
-
-A Jev result enters the record as **evidence**. It may never widen a Work Unit's
+### A1 · Judgment is evidence about a choice; never permission to perform it *(inherited)*
+Ratified at J5. A Jev result enters as **evidence**. It may never widen Work Unit
 capability, authorize a mutation, satisfy a review requirement, or discharge a gate.
+Provenance is emitted in the **ratified J5 shape**, not a bespoke one.
+⛔ A record in which `judgment` is the only stated basis for execution is a breach.
 
-⭐ **Observable form:** the ledger records three separately-sourced facts and never
-collapses them —
+### A2 · Confidence may close a path. It may never open one *(NEW)*
+⭐⭐ **The sharpest correction to the proposal as drafted.** The draft's J3 read
+*strong → deterministic policy* — confidence **opens** the fast path. That is authority by
+degree: it does not widen what is *permitted*, but it widens what *happens*.
 
-```text
-judgment:   source=JEV          choice=LOCAL_QWEN   confidence=0.93
-authority:  source=JARVIS_POLICY permitted=true
-execution:  source=WORK_UNIT     capability=READ_ONLY_PROPOSAL
-```
+- The fast path opens **only** by membership in a **predeclared, evidence-backed class**
+  (J5: *model families are eligible only for evidence-backed task classes*);
+- within that class, confidence and abstention may only **close** it and escalate;
+- ⛔ no confidence value, at any magnitude, moves a work unit *into* the class.
 
-*What appears appropriate* → *what is permitted* → *what actually happened.*
-A record in which `judgment` is absent and `execution` occurred is lawful.
-A record in which `judgment` is the only stated basis for `execution` is a breach.
+⭐ **Falsifiable:** in a conforming candidate the eligible set is **invariant under every
+confidence value**. If raising a threshold changes the set, A2 is violated.
 
-### A2 · Confidence may close a path. It may never open one
+### A3 · Abstention is the fail-closed default *(inherited — J5 HOLD-not-substitute)*
+Unparseable, absent, timed-out, malformed, or unrecognised results are **abstentions**, and
+an abstention escalates. ⛔ Silence is never assent; an error is never a route.
 
-⭐⭐ **This is the sharpest correction to the proposal as drafted.**
+### A4 · Jev judges a representation, never a conversation *(largely inherited)*
+Jev receives the §3 packet and nothing else. ⛔ Not the member's message, ⛔ not repository
+prose, ⛔ not canon text, ⛔ not prior turns, ⛔ not free-text justification.
 
-The proposal's J3 reads *strong → deterministic policy*, i.e. high confidence **opens**
-the fast path. That makes confidence authority by degree: it does not widen what is
-*permitted*, but it widens what *happens*, which is the consequence the permission
-boundary exists to govern.
+### A5 · The eligibility membrane precedes the packet *(NEW)*
+⛔ No packet is constructed until eligibility passes. A refusal must not construct, log,
+hash, or cache the packet it refused. *A refusal is not an occasion to disclose.*
 
-**Constituted instead:**
-
-- the fast path is opened **only** by membership in a **predeclared class of work unit**,
-  enumerated in advance and reviewable;
-- within that class, confidence and abstention may only **close** the fast path and
-  escalate to full deliberation;
-- ⛔ no confidence value, at any magnitude, may move a work unit *into* the fast-path
-  class.
-
-⭐ **Falsifiable by construction:** a candidate in which raising a confidence threshold
-changes the *set* of work units eligible for the fast path violates A2. A conforming
-candidate's eligible set is invariant under every confidence value.
-
-### A3 · Abstention is the fail-closed default
-
-An unparseable result, an absent result, a timeout, a malformed packet, or an
-unrecognised choice value are all **abstentions**, and an abstention escalates to full
-deliberation. ⛔ Silence is never assent, and an error is never a route.
-
-### A4 · Jev judges a representation, never a conversation
-
-Jev receives the **typed packet of §3 and nothing else**. ⛔ Not the member's message,
-⛔ not repository prose, ⛔ not canon text, ⛔ not prior turns, ⛔ not free-text
-justification. The packet is constructed by JARVIS from state; it is never relayed.
-
-⭐ This is what keeps Jev from becoming a second conversational authority — the founder's
-own stated intent for J1, constituted here as law rather than as practice.
-
-### A5 · The eligibility membrane precedes the packet
-
-⛔ No packet is constructed until eligibility passes. A refusal at J0 must not construct,
-log, hash, or cache the packet it refused. *A refusal is not an occasion to disclose* —
-carried directly from the I0.5 receipt law.
-
-### A6 · Jev may not judge its own standing
-
+### A6 · Jev may not judge its own standing *(NEW)*
 ⛔ Jev may not be asked whether Jev should be used, whether its confidence is adequate,
-whether a hold applies, or whether a work unit is eligible. Eligibility, calibration and
-authority are **JARVIS policy questions**, adjudicated outside the judged path.
+whether a hold applies, or whether a work unit is eligible.
 
-### A7 · Removing Jev must be a no-op on authority
-
-⭐ At every stage, deleting the Jev lane entirely must leave every authority decision
-unchanged — slower, more expensive, but identical in what is permitted and what is
-refused. **A lane that cannot be removed without changing what the system may do has
-become authority**, whatever the ledger says.
-
-⭐ *This is the single acceptance test that survives every implementation detail.*
+### A7 · Removing Jev must be a no-op on authority *(NEW — founder-named)*
+⭐ Deleting the lane entirely must leave every authority decision unchanged — slower and
+costlier, identical in what is permitted and refused. **A lane that cannot be removed
+without changing what the system may do has become authority**, whatever the ledger says.
 
 ---
 
 ## 3 · J1 — JUDGMENT CONTRACT (candidate)
 
-⛔ **Authored as a document, deliberately not as committed source.** Landing this as
-`lib/**` or `scripts/**` TypeScript would be the first increment of the adapter the
-founder explicitly sequenced *after* the constitution. The schemas are exact enough to
-implement against and carry no runtime.
+⛔ **Authored as a document, deliberately not as committed source.** Landing it under
+`lib/**` or `scripts/**` would be the first increment of the adapter the founder sequenced
+*after* the constitution.
 
-### 3.1 · The packet — what Jev may receive
+### 3.1 · The packet
 
 ```text
 JudgmentPacket {
-  packet_version:        "jev-1"
-  work_unit_ref:         opaque id            # ⛔ never a path, never prose
-  task_kind:             enum                 # closed set, enumerated in policy
-  requested_effect:      enum                 # read | propose | repository_write | ...
-  affected_surface:      enum                 # closed set of surface names
-  contains_sensitive:    boolean              # computed by J0, never by Jev
+  packet_version:         "jev-1"
+  work_unit_ref:          opaque id          # ⛔ never a path, never prose
+  task_kind:              enum               # closed set, enumerated in policy
+  requested_effect:       enum               # read | propose | repository_write | ...
+  affected_surface:       enum               # closed set
+  contains_sensitive:     boolean            # computed by J0, never by Jev
   requires_external_info: boolean
-  candidate_routes:      enum[]               # already-authorized routes ONLY
-  change_scope: {
-    file_count:   integer                     # ⛔ counts, never names
-    migration:    boolean
-    auth:         boolean
-    production:   boolean
-  }
+  candidate_routes:       enum[]             # already-authorized routes ONLY
+  change_scope: { file_count: integer, migration: boolean,
+                  auth: boolean, production: boolean }   # ⛔ counts, never names
 }
 ```
 
-⭐ **Closed enums throughout, and counts rather than names.** An open string field is a
-relay channel wearing a schema's clothes — the §4 hazard arrives through free text long
-before it arrives through a declared field.
+⭐ **Closed enums and counts, never names or prose.** An open string field is a relay
+channel wearing a schema's clothes.
 
-⚠️ **`candidate_routes` contains only routes the Work Unit is *already* authorized to
-take.** Jev selects **among** authorized routes; it never nominates one. A packet whose
-candidate set contains an unauthorized route is malformed and refused at construction —
-this is A1 made structural rather than checked afterwards.
+⚠️ `candidate_routes` holds only routes the Work Unit is **already** authorized to take.
+Jev selects **among** authorized routes; ⛔ it never nominates one. This makes A1
+structural rather than checked afterwards.
+
+⚠️ **Residual the design does NOT close, named because it is easy to miss:** even with no
+prose and no paths, the `affected_surface` and `task_kind` enums disclose **Soullab's
+internal surface taxonomy** — that a surface exists, and that work is occurring on it — to
+whoever hosts Jev. ⛔ The packet narrows exposure; it does not eliminate it, and it does
+not authorize the crossing.
 
 ### 3.2 · The judgments — exactly three shapes
 
 ```text
 Choice  { question_id, options: enum[], choice: enum, confidence: 0..1 }
-Score   { question_id, scale: {min, max, meaning}, score: number, confidence: 0..1 }
+Score   { question_id, scale: {min,max,meaning}, score: number, confidence: 0..1 }
 YesNo   { question_id, answer: boolean, confidence: 0..1 }
-Abstain { question_id, reason: enum }          # A3 — always representable
+Abstain { question_id, reason: enum }        # A3 — representable on EVERY question
 ```
 
-⭐ **`Abstain` is representable on every question.** A contract in which abstention
-cannot be expressed forces a judgment where none is warranted, and the resulting
-confidence value is then a measurement of the contract rather than of the task.
+⭐ A contract where abstention cannot be expressed forces judgment where none is warranted;
+the resulting confidence then measures the contract, not the task.
 
 ### 3.3 · The questions (candidate set)
 
 | id | shape | question |
 |---|---|---|
 | `Q_ROUTE` | Choice | Which **already-authorized** route best fits this work unit? |
-| `Q_DEPTH` | Score | How much deliberative reasoning does this require? (0 mechanical → 1 deeply ambiguous) |
+| `Q_DEPTH` | Score | How much deliberative reasoning does this require? |
 | `Q_RISK` | YesNo | Does this appear to cross a structural-risk boundary? |
 | `Q_SUFFICIENT` | YesNo | Is the supplied state sufficient to proceed without clarification? |
 | `Q_LLM_NEEDED` | YesNo | Is a generative model required at all? |
 
-⭐ `Q_LLM_NEEDED` is the highest-leverage question in the set and the one most likely to
-be dropped: some JARVIS actions need no inference once the operation is identified.
-
-⚠️ **`Q_RISK` and `Q_SUFFICIENT` are advisory in the A1 sense and must not become
-gates.** A `false` on `Q_RISK` may never *lower* a guard — only a `true` may raise the
-escalation. ⛔ Otherwise a confident wrong negative silently removes a boundary, which is
-A2's failure mode arriving through a different field.
+⭐ `Q_LLM_NEEDED` is the highest-leverage question and the likeliest to be dropped.
+⚠️ `Q_RISK`/`Q_SUFFICIENT` are advisory: a `false` may never **lower** a guard; only a
+`true` may raise escalation. ⛔ Otherwise a confident wrong negative removes a boundary —
+A2's failure mode through a different field.
 
 ---
 
-## 4 · THE ELIGIBILITY MEMBRANE — and the blocking provider question
+## 4 · EXTERNAL ⇒ THE FAST PATH IS DEFEATED BY RATIFIED LAW
 
-⭐⭐ **FINDING: JEV-01 is the second instance of the defect class named on 2026-09-20,
-arriving from a different direction.**
+⭐⭐ **THE DECISIVE FINDING, following directly from R-2.**
 
-`DEV_LANE_PROVIDER_EXPOSURE_FINDING_2026-09-20.md` established that
-`PROVIDER_GOVERNANCE.md` scopes itself to *who may enter the **runtime***, and defers the
-**development** boundary to `../ai/MULTI_MODEL_SESSION_MODE.md` — **a document that does
-not exist and never has on any branch**. That finding was occasioned by a review CLI.
-JEV-01 is a routing judge. **Same gap, different door.**
+The proposal's stated value is automaticity — *"reduce unnecessary model calls"*, a fast
+path around full deliberation. Under ratified law, an **external** Jev cannot be automatic:
 
-⛔ **The founder interim hold of 2026-09-20 is still operative.** Routing repository
-source or constitutional text to a Lab-tier provider at development time is BLOCKED, with
-two predeclared lift conditions, **neither discharged**:
+- **J5 ruling, verbatim:** does **not** authorize *automatic external execution, provider
+  spend, repository disclosure*.
+- **J5 ruling:** *external repository evidence requires a **distinct, load-bearing
+  disclosure grant**, in addition to network and spend authority.*
+- **R5B** establishes the only admission path for external provider execution, and it is
+  **one-shot and human**: `routing recommendation != human authorization != execution`,
+  via `HELD_FOR_AUTHORITY → human reviews exact provider/model/evidence/authority facts →
+  AUTHORIZE THIS EXECUTION ONCE → append-only grant → R4 re-evaluates → ADMITTED →
+  CONFIRM EXECUTE → grant CONSUMED`. (R5B itself is **AWAITING FOUNDER ADJUDICATION**.)
 
-1. a dev-lane governance canon **authored AND ratified** — not authored;
-2. the capability table admitting explicit classes for repository source and
-   constitutional canon (`repository_source`, `constitutional_canon` proposed) — ⛔ the
-   tier table is unedited.
+⭐ **Therefore every external Jev call requires a one-shot human grant — which is precisely
+what a fast path exists to avoid.** A judgment lane that needs a human authorization per
+judgment cannot reduce deliberation; it adds a step.
 
-### 4.1 · The sharper problem: the packet has no capability class at all
+⛔ **This is not the hold delaying JEV. It is ratified routing law defeating the external
+form of JEV's purpose.** Two coherent resolutions, ⛔ neither taken:
 
-⭐⭐ The §3.1 packet is **derived from repository state** — surface names, change scope,
-effect class. The governing capability vocabulary is
-`member_data · member_audio · chat · embedding · tts · stt · benchmark`.
+1. **Sovereign-host Jev.** Automaticity becomes lawful because nothing crosses the
+   boundary; A1–A7 and the J5 provenance duty still bind. ⭐ This is the only shape in
+   which the original fast-path proposition survives.
+2. **Keep Jev external and retire the fast path.** Jev becomes the **bounded
+   evaluator/advisory instrument** the founder named in R-1 — used inside explicit,
+   human-authorized evaluation (the E1-class witness of §5), ⛔ never in the automatic
+   routing path.
 
-**None of these names what a judgment packet is.** And this is *not only* a Lab-tier
-problem:
+⭐ Option 2 is buildable under existing law once R5B is adjudicated. Option 1 requires no
+new provider law at all. ⛔ Option 2 is **not** a smaller version of option 1 — it is a
+different instrument, and calling it a fast path later would be the drift to refuse.
 
-- Sending it to a **Lab-tier** provider is blocked by the interim hold if the packet
-  counts as repository source — and whether it does is exactly the question the missing
-  vocabulary cannot answer.
-- Sending it to a **Production-tier** provider (Ollama, Anthropic) is **transport-lawful
-  but semantically silent**: `chat` authorizes the *transport*, not the *data class*.
-  The tier table would permit the call while saying nothing whatever about whether this
-  data may go there.
+### 4.1 · The capability vocabulary still has no class for the packet
 
-⚠️ **A permission that is silent is not a permission that was granted.** Reading `chat`
-as covering a repository-derived judgment packet is the convenient-adjacent-field move
-this project has refused at every previous encounter.
+Independently of the above: the packet is repository-derived, and the governing capability
+vocabulary is `member_data · member_audio · chat · embedding · tts · stt · benchmark`.
+**None names it.** Routing it through a Production-tier provider's `chat` capability would
+be **transport-lawful but semantically silent** — `chat` authorizes the *transport*, not
+the *data class*. ⚠️ **A permission that is silent is not a permission that was granted.**
 
-### 4.2 · The one question that decides whether this lane can act
+⛔ The 2026-09-20 interim hold remains operative with **both lift conditions undischarged**
+(dev-lane canon ratified; capability table admitting `repository_source` /
+`constitutional_canon`). ⭐ JEV is the **second instance of that defect class through a
+different door** — the finding was occasioned by a review CLI; this is a routing judge;
+same ungoverned dev-lane gap.
 
-⛔ **`Jev`'s provenance is not stated anywhere in this repository or in the founder
-direction, and I have not guessed it.** It decides the lane's entire shape:
-
-- **Sovereign-hosted** (local, on minisforum or equivalent, no egress): the interim hold
-  does not bind, because nothing leaves the boundary. §4.1's vocabulary gap still
-  applies, but it becomes a *naming* obligation rather than a custody hold, and J2 can
-  proceed behind it.
-- **External / hosted**: Jev is a **new provider**. It requires tier placement under
-  `PROVIDER_GOVERNANCE.md` §"Adding / changing a provider", it is refused at J1 by the
-  parent lane's own non-authorizations, and it sits squarely under the unlifted hold.
-
-⭐ **Everything in §2 and §3 above is provider-agnostic and stands under either answer.**
-That is why it was authored now rather than held — the constitution does not depend on
-the question, and only the membrane does.
+⛔ Adding Jev as an external provider is separately a governance act under
+`PROVIDER_GOVERNANCE.md` §"Adding / changing a provider", ⛔ not performed here.
 
 ---
 
-## 5 · E1 WITNESS — agreement is not accuracy
+## 5 · WITNESS — agreement is not accuracy
 
-⚠️ **The proposed shadow witness, as specified, is an agreement study wearing an accuracy
-study's clothes.** It measures Jev against the current JARVIS routing decision. That
-establishes how often Jev **reproduces current behaviour, including its errors**.
+⚠️ The proposed shadow study measures Jev against the current router, establishing how
+often Jev **reproduces current behaviour, including its errors**. ⭐ This repository's
+ratified discipline answers it (S3 Class B; TESTING-01 §0; REVIEW-CUSTODY-01 Step 1):
+*a suite written against an existing implementation passes by construction.* Lethality
+first. ⚠️ J5 also binds here: *a retry is not an independent second opinion.*
 
-⛔ And the current router is explicitly *not* a baseline: `JARVIS-ROUTING-INTELLIGENCE-01`
-J1 question 2 asks *"Which provider/model facts are mechanically established versus
-merely labeled in UI?"* — the current routing is **the subject under investigation**.
-Treating it as ground truth would settle by assumption the question the parent lane was
-opened to answer.
-
-⭐ **This repository's own ratified discipline already answers this** (S3 Class B;
-TESTING-01 §0; REVIEW-CUSTODY-01 Step 1): *a suite written against an existing
-implementation passes by construction and proves nothing.* Lethality first.
-
-**Required before E1 is evidence — each candidate must DIE on its named check:**
+**Required before the witness is evidence — each candidate must DIE on its named check:**
 
 | candidate | embodies | must fail |
 |---|---|---|
 | `DC-CONFIDENCE-OPENS` | threshold widens the eligible set | A2 |
 | `DC-ASSENT-ON-ERROR` | malformed result routes instead of abstaining | A3 |
 | `DC-PROSE-RELAY` | free-text field carries the member's message | A4 |
-| `DC-REFUSAL-LOGS-PACKET` | J0 refusal constructs and logs the packet | A5 |
+| `DC-REFUSAL-LOGS-PACKET` | refusal constructs and logs the packet | A5 |
 | `DC-SELF-STANDING` | Jev asked whether Jev should be used | A6 |
 | `DC-LOAD-BEARING` | removing Jev changes an authority outcome | A7 |
 | `DC-UNAUTHORIZED-ROUTE` | candidate set contains a non-authorized route | §3.1 |
-| `DC-AGREEMENT-IS-TRUTH` | witness scores agreement with current router as correctness | §5 |
+| `DC-DETERMINISTIC-BYPASS` | Jev consulted before deterministic capability | J5 |
+| `DC-AGREEMENT-IS-TRUTH` | witness scores agreement as correctness | §5 |
 
 ⭐ **If a candidate survives, the repair is the SUITE, never the candidate.**
 
-⭐ And the metric the founder named is the right one, preserved verbatim in substance:
-*when Jev is allowed to make a fast-path recommendation, how often is that recommendation
-safe enough that full deliberation was genuinely unnecessary?* — ⛔ which is a different
-measurement from agreement, and is the one that decides whether Jev earns a role.
+⭐ The founder's own metric is the right one and is preserved: *when Jev is allowed to make
+a fast-path recommendation, how often is it safe enough that full deliberation was
+genuinely unnecessary?* — ⛔ a different measurement from agreement.
 
 ---
 
-## 6 · OPEN — owed to a founder act, ⛔ none answered here
+## 6 · OPEN — owed to a founder act
 
-- **Q-JEV-1 · Placement.** Sub-lane of `JARVIS-ROUTING-INTELLIGENCE-01` (§1 recommended),
-  or a parallel programme? ⛔ Not taken.
-- **Q-JEV-2 · Provenance (BLOCKING).** Is Jev sovereign-hosted or external? §4.2. Until
-  answered, the membrane cannot be written and J2 cannot open.
-- **Q-JEV-3 · Vocabulary.** Does a repository-derived judgment packet require its own
+- **Q-JEV-3 · Vocabulary.** Does a repository-derived judgment packet need its own
   capability class, and is it `repository_source` or a narrower fourth name? ⛔ Naming it
-  here would be the proposal-not-act error the 2026-09-20 ruling explicitly warned about.
-- **Q-JEV-4 · Gate order.** May a routing mechanism be constituted while the parent lane's
-  routing law (its J2) is unwritten? §1 says no; the ruling is the founder's.
-- **Q-JEV-5 · Fast-path class.** Which work-unit classes are predeclared eligible under
-  A2? ⛔ Unenumerated; A2 is inert until they exist.
+  here would be the proposal-not-act error the 2026-09-20 ruling warned against.
+- **Q-JEV-4 · Standing within J2.** Is JEV *a* J2 routing-law candidate, or *one input to*
+  the already-ratified law? ⭐ Given §0's correction the answer is now nearly forced —
+  routing law is **ratified**, so JEV can only be an input that conforms. ⛔ Still a
+  founder act.
+- **Q-JEV-5 · Fast-path class.** Which evidence-backed task classes are predeclared
+  eligible under A2? ⛔ Unenumerated; A2 is inert until they exist. **Moot under §4
+  option 2.**
+- **Q-JEV-6 · Resolution (NEW, decisive).** §4 — sovereign-host Jev and keep the fast path,
+  or keep Jev external and retire the fast path in favour of a bounded advisory
+  instrument? ⛔ Not taken.
 
 ---
 
 ## 7 · Standing
 
-**J0 CONSTITUTION AUTHORED (A1–A7) · J1 CONTRACT AUTHORED AS CANDIDATE · ⛔ NEITHER
-RATIFIED · ⛔ NO LANE OPENED · ⛔ PLACEMENT NOT TAKEN · ⛔ Q-JEV-2 BLOCKING AND
-UNANSWERED · ⛔ 2026-09-20 INTERIM HOLD UNLIFTED, BOTH LIFT CONDITIONS UNDISCHARGED ·
-⛔ NO PROVIDER ADDED · ⛔ NO TIER TABLE EDITED · ⛔ NO ADAPTER · ⛔ NO PACKET CONSTRUCTED ·
-⛔ NO JUDGMENT PERFORMED · ⛔ NO PROVIDER CALLED · ⛔ NO ROUTING CHANGED · ⛔ NO PROVIDER
-SPEND · ⛔ NO `lib/`, `app/`, `scripts/` OR `database/` FILE MODIFIED · ⛔ NO MERGE ·
-⛔ NO DEPLOY · PRODUCTION UNTOUCHED.**
+**PLACEMENT ✅ RULED (sub-lane J2-R1) · PROVENANCE ✅ RULED (external) · PLACED, ⛔ NOT
+OPENED FOR PROVIDER EXECUTION · J0 CONSTITUTION AUTHORED (A1–A7; A1/A3/A4 INHERITED FROM
+RATIFIED J5) · J1 CONTRACT AUTHORED AS CANDIDATE · ⛔ NEITHER RATIFIED · ⚠️ FIRST-COMMIT
+FINDING CORRECTED (parent charter status line stale by six gates; routing law is RATIFIED,
+not missing) · ⭐ FAST PATH DEFEATED IN THE EXTERNAL FORM BY RATIFIED J5 + R5B · Q-JEV-6
+BLOCKING · ⛔ 2026-09-20 HOLD UNLIFTED, BOTH CONDITIONS UNDISCHARGED · ⛔ NO PROVIDER ADDED ·
+⛔ NO TIER TABLE EDITED · ⛔ NO ADAPTER · ⛔ NO PACKET CONSTRUCTED · ⛔ NO JUDGMENT PERFORMED ·
+⛔ NO PROVIDER CALLED · ⛔ NO ROUTING CHANGED · ⛔ NO PROVIDER SPEND · ⛔ NO `lib/`, `app/`,
+`scripts/`, `jarvis-desktop/` OR `database/` FILE MODIFIED · ⛔ NO MERGE · ⛔ NO DEPLOY ·
+PRODUCTION UNTOUCHED.**
 
 ⭐ *Jev may tell JARVIS what appears to be the case. It may never tell JARVIS what it is
 permitted to do — and the test of that is not the ledger's wording but whether removing
