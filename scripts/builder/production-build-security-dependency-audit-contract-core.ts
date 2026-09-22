@@ -66,13 +66,21 @@ export type DependencyAuditOutcome =
   | { kind: "POLICY_VIOLATION" }
   | { kind: "BYPASSED" };
 
+function isDependencyScope(value: unknown): value is DependencyAuditPolicy["dependency_scope"] {
+  return value === "prod" || value === "dev" || value === "all";
+}
+
+function isSeverity(value: unknown): value is Severity {
+  return value === "low" || value === "moderate" || value === "high" || value === "critical";
+}
+
 export function evaluateDependencyAudit(
   evidence: DependencyAuditEvidence,
   expected: ExpectedDependencyBinding,
   policy: DependencyAuditPolicy
 ): DependencyAuditOutcome {
-  // Validate policy inputs
-  if (!policy.dependency_scope || !policy.severity_threshold) {
+  // Validate policy inputs at runtime; TypeScript unions are not a runtime boundary.
+  if (!isDependencyScope(policy.dependency_scope) || !isSeverity(policy.severity_threshold)) {
     return { kind: "POLICY_INPUT_MISSING" };
   }
 
