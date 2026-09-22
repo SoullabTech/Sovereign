@@ -157,3 +157,112 @@ outside the enforced no-regression gate until an `app/**` file imports them at B
 ⛔ No member-visible change · ⛔ no composition changed · ⛔ no room retired or redirected ·
 ⛔ no schema · ⛔ no migration · ⛔ no consent, authorship, ranking or external-disclosure change ·
 ⛔ no merge · ⛔ no deploy · ⛔ no production read or write · canonical untouched.
+
+---
+
+## §6 · ⭐⭐ THE VISUAL CONTRACT — RATIFIED 2026-09-22 (founder act)
+
+> ⭐ **A functionally correct candidate that materially resembles the pre-flagship
+> Writer's Studio FAILS RELEASE ACCEPTANCE. Reuse of legacy components is permitted only
+> when their RENDERED RESULT conforms to the approved flagship visual contract.**
+
+**The division of authority, frozen:**
+
+> ⭐ The approved **D0 interaction law** governs **behavior**.
+> ⭐ The approved **Write / Develop visual references** govern **composition, atmosphere,
+> hierarchy and product feel**.
+> ⛔ **Existing Writer's Studio components have NO VISUAL AUTHORITY merely because they
+> already exist.**
+
+⭐ *This is the instrument that stops the implementation drifting back toward the old room
+while still passing functional tests.* A behavioural suite cannot see a room that is correct
+and looks like its predecessor; the visual gate can.
+
+**Visual references of record:**
+
+| Reference | Standing |
+|---|---|
+| Founder Write / Develop mockup, 2026-09-22 | ⭐ **APPROVED VISUAL AUTHORITY** |
+| `https://claude.ai/artifact/3seg4HKb3KmfGD438buGPT` — B2 target with corrections applied in place | ⭐ **APPROVED**, reconciles the above with D0 interaction law |
+| `https://claude.ai/artifact/FAxabK4gocrDyRsTJ7KeXj` — D0 interaction prototype | Behavior only. ⛔ Its inline-MAIA composition is **SUPERSEDED** by the anchored card. |
+
+### §6.1 · WRITE — visual rulings
+
+- Manuscript **owns the content area**. Warm, premium, literary presentation.
+- ✅ A permanent **app-navigation rail is allowed** — it is navigation chrome, ⛔ **not a
+  manuscript/content panel**.
+- ⛔ **No permanent outline rail.** ⛔ **No permanent MAIA panel.**
+- MAIA is **anchored to the held passage, dismissible**, and ⛔ **must not make the prose jump
+  vertically when she appears.**
+- Contents · History · Related · Review are **contextual overlays or drawers**.
+- Alternatives appear as **attractive peer possibilities with rationale**.
+- ⭐ The mockup's `Apply` buttons become **`Read in context`**. ⛔ `Apply` exists **only after**
+  the exact alternative has been reviewed in manuscript context.
+- Undo and history remain **immediately understandable**.
+- ⛔ Advanced editing machinery stays **hidden unless explicitly opened**.
+
+### §6.2 · DEVELOP — visual rulings
+
+- ⛔ Same flagship visual family — **not an analytics dashboard from another product.**
+- ✅ Big-picture visual intelligence **encouraged**: manuscript map, structural relationships,
+  themes, arc, continuity, voice patterns.
+- ✅ Insights must be **clickable back into the manuscript**.
+- ⛔ **No grading language** — *authentic · strong · engaging · good* or any other machine
+  judgment presented as fact.
+- ⛔ **Reader effects remain HYPOTHESES.**
+- ✅ A spiral/map may display **member-declared** structure and classifications. ⛔ It may **not
+  silently infer elemental identities** or other barred classifications from prose.
+- `Sources` may mean **attached source material** or **what MAIA read / coverage**. ⛔ It must not
+  imply **external verification** until that capability exists.
+- ⛔ `Export` stays out unless its **disclosure authority is separately verified**.
+- ⛔ Read-time numbers must be **genuinely computed from the correct scope, or omitted**.
+
+### §6.3 · ⭐ VISUAL ACCEPTANCE GATE — V1…V10 · HARD · PRE-DEPLOYMENT
+
+⛔ **No deployment without every row discharged.** V10 is a founder act and ⛔ may never be
+proxied by a machine result.
+
+| # | Proof | Discharged by |
+|---|---|---|
+| **V1** | **Write at rest** — screenshot at 1440 and 1920. ⭐ Must unmistakably resemble the approved flagship design, ⛔ **not Rebuild**. | screenshot |
+| **V2** | **Passage + MAIA** — selected passage with contextual MAIA. ⭐ **Manuscript position does not jump.** | screenshot + measured scroll/offset delta |
+| **V3** | **Alternatives** — named peer possibilities; ⛔ no ranking, ⛔ no direct Apply. | screenshot + F6/F5 |
+| **V4** | **Read in context** — the exact proposal visibly placed in manuscript context. | screenshot |
+| **V5** | **Applied + Undo** — clear receipt, clear recovery. | screenshot + F10 |
+| **V6** | **Develop overview** — polished flagship Develop screen with manuscript map and **evidence-grounded** observations. | screenshot |
+| **V7** | **Develop → manuscript** — click an insight, arrive at the **exact authored location**. | screenshot pair + F9 |
+| **V8** | **Narrow / mobile** — same product, manuscript primary, contextual layers — ⛔ **not squeezed desktop columns**. | screenshot at 390 |
+| **V9** | ⭐ **OLD-UI FALSIFIER** — ⛔ no `Rebuild preview` · ⛔ no permanent three-column layout · ⛔ no permanent MAIA content rail · ⛔ no old `StudioModeBar` architecture as the primary experience. | **mechanical**, over the rendered room |
+| **V10** | ⭐⭐ **FOUNDER VISUAL COMPARISON** — approved reference beside rendered candidate. ⛔ **No deployment unless the founder says it looks like the product we approved.** | ⛔ **FOUNDER ONLY** |
+
+⭐ **V9 is the one that can be made mechanical**, and it is the one that catches the drift the
+founder named: a candidate can satisfy F1–F12 and still render the old room. V9 asserts over the
+rendered output for the *specific legacy shapes*, so *technically equivalent* has nowhere to hide.
+
+⚠️ **V1–V8 require a browser and a running app.** ⛔ Not producible from this container. They are
+**OWED** and are the substance of the B9 integrated walk — together with the
+`change_class: experiential` screenshots and `experience_verification` the Experience Contract
+amendment owes (§3).
+
+### §6.4 · Method, ratified
+
+⭐ **Generate an ideal visual reference at the START of each major surface** — Write · Develop ·
+Review · mobile · the MAIA/revision interaction — then **require the real build to prove itself
+against it.** ⛔ The reference is authored before the build, never derived from it.
+
+---
+
+## §7 · Standing (updated 2026-09-22)
+
+```text
+branch         claude/trusting-fermat-ju3quz
+canonical      65aca24608b7ed63b44b2ee5d21b3f3ffb62ea79   · reconciled, 0 behind
+               delta: jarvis-desktop/test/**  +55/−0  · ZERO Writer's Studio or design overlap
+gates          typecheck:ws-flagship exit 0 · matrix:ws-flagship LETHAL + DISCRIMINATING (8/8, 8/8)
+```
+
+**B1 ✅ COMPLETE · VISUAL CONTRACT ✅ RATIFIED · V1–V10 GATE ✅ ESTABLISHED, ⛔ UNDISCHARGED · B2 IN PROGRESS.**
+
+⛔ No member-visible change yet · ⛔ no composition changed · ⛔ no room retired · ⛔ no schema ·
+⛔ no migration · ⛔ no consent, authorship, ranking or external-disclosure change · ⛔ no merge ·
+⛔ no deploy · ⛔ no production read or write.
