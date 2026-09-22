@@ -1,9 +1,10 @@
 # WRITERS-STUDIO-NEXT-01 · A0 — MANUSCRIPT-FIRST EXPERIENCE CONSTITUTION · 2026-09-22
 
-**Status:** CONSTITUTION CANDIDATE · DOCUMENTARY ONLY · NO RUNTIME / SCHEMA / UI CHANGE
+**Status:** **RATIFIED · 2026-09-22** · DOCUMENTARY ONLY · NO RUNTIME / SCHEMA / UI CHANGE
 **Opened by:** founder act, 2026-09-22 ("New A0 above it")
 **Carries:** founder ruling, 2026-09-22 — Convergence sequencing superseded, Convergence law preserved (§VIII)
-**Authorizes:** nothing beyond itself. A1 is **not** opened by this document.
+**Ratified by:** founder act, 2026-09-22 — record `WRITERS-STUDIO-NEXT-01_A0_FOUNDER_RATIFICATION_2026-09-22.md`
+**Authorizes:** `A1 — Manuscript Canvas` may now open on its own act. ⛔ Nothing further; A1 is **not** opened by this document.
 
 ---
 
@@ -288,7 +289,7 @@ The product milestone is **A3, not A9**: at A3 a writer can open their manuscrip
 
 ## XIII. A0 standing
 
-> **WRITERS-STUDIO-NEXT-01 / A0 — CONSTITUTION READY FOR FOUNDER ADJUDICATION**
+> **WRITERS-STUDIO-NEXT-01 / A0 — CONSTITUTION RATIFIED · 2026-09-22**
 
 The programme's governing sentence is:
 
