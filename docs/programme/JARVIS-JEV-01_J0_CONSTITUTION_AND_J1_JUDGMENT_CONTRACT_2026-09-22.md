@@ -1,7 +1,9 @@
 # JARVIS-ROUTING-INTELLIGENCE-01 · J2-R1 — JEV JUDGMENT LANE
 ## J0 Constitution + J1 Judgment Contract
 
-**Status:** ⛔ **CANDIDATE. NOT RATIFIED.** Authored on founder direction 2026-09-22.
+**Status:** ⭐ **J0 CONSTITUTION RATIFIED** (founder act 2026-09-22, §7) · ⛔ **J1 JUDGMENT
+CONTRACT NOT RATIFIED AND NOT INCORPORATED BY J0** · ⛔ J2 NOT OPEN · ⛔ ADAPTER NOT
+AUTHORIZED · ⛔ PROVIDER EXECUTION NOT OPENED.
 **Informal name:** `JARVIS-JEV-01` (founder's name, preserved as this file's identity).
 **Parent flow:** `JARVIS-ROUTING-INTELLIGENCE-01` (manual §27 sub-lane).
 **Date:** 2026-09-22 · **Branch:** `claude/sovereign-governance-review-s8skj2`
@@ -19,7 +21,9 @@ Governing authority: founder rulings 2026-09-22 (placement + provenance)
                      + RATIFIED J5 routing law (2026-09-18)
                      + R1 / R4 / R5A / R5B contracts
                      + PROVIDER_GOVERNANCE.md + the 2026-09-20 dev-lane interim hold
-Current gate: J0 — CONSTITUTION. ⛔ PLACED, NOT OPENED FOR PROVIDER EXECUTION.
+Current gate: J0 RATIFIED (founder act 2026-09-22, §7).
+              NEXT: canonical admission of the exact ratified J0 authority.
+              ⛔ NOT J1 adjudication. ⛔ NOT OPENED FOR PROVIDER EXECUTION.
 Evidence subject: this repository's governing records only. ⛔ No provider was called.
                   ⛔ No judgment performed. ⛔ No packet constructed or sent.
 Stop boundary: no adapter, no provider registration, no external inference,
@@ -264,7 +268,11 @@ are genuinely new, and A7 is the one the founder independently named.
 
 ---
 
-## 2 · J0 — CONSTITUTION
+## 2 · J0 — CONSTITUTION *(EXPOSITION — subordinate to the ratified §7 statement)*
+
+⚠️ **This section is commentary on the ratified articles, ⛔ not the ratified text.** The law
+is the A1–A7 statement in **§7**; where the two diverge, §7 governs and nothing here adds
+to, narrows, or qualifies it.
 
 ### A1 · Judgment is evidence about a choice; never permission to perform it *(inherited)*
 Ratified at J5. A Jev result enters as **evidence**. It may never widen Work Unit
@@ -560,7 +568,105 @@ defeats the cached-result attack that egress denial alone cannot see.
 
 ---
 
-## 7 · Standing
+## 7 · ⭐⭐ RATIFIED J0 CONSTITUTION — FOUNDER ACT, 2026-09-22
+
+**FOUNDER ADJUDICATION — `JARVIS-ROUTING-INTELLIGENCE-01 / J2-R1 / J0 — JEV CONSTITUTION`
+ONLY.**
+
+**Accepted exact repaired J0 candidate:** `a63c5bbbc70d09d681d7d772b5d9da6d0ab4b104`
+**Against exact canonical:** `6f11edcc29ea2de6efa025ecffd3ac3a948bc590`
+*(Both verified in-session at the moment of recording; working tree clean.)*
+
+`J0R1` accepted as the **complete** repair of the constitutional-incorporation defect
+returned from candidate `778fde98ff13aa9096f619adfdf00f22e5a04361`. Accepted: A4 and A5
+were the only J0 articles carrying J1-derived dependency; A4 is now contract-independent;
+A5 governs the membrane before any outbound representation exists; exact representation and
+packet-schema construction remain exclusively J1-owned; J0 neither incorporates, implies,
+nor pre-ratifies the J1 contract; A1, A2, A3, A6, A7 were not reopened; retention of
+*"A refusal is not an occasion to disclose"* is correct and remains operative A5 law.
+
+### ⭐ THE RATIFIED ARTICLES — this statement is the law
+
+**A1 — Judgment is evidence, never permission.** A Jev judgment may inform deliberation but
+may not create or widen authority, authorize mutation, satisfy an authority requirement, or
+discharge a gate.
+
+**A2 — Confidence may constrain or close; it may never open.** No confidence value may
+create authority or make an otherwise unauthorized act available.
+
+**A3 — Abstention is fail-closed.** Missing, malformed, unrecognized, timed-out, or
+abstaining judgment cannot become assent or authorization.
+
+**A4 — Jev judges a bounded representation, never the underlying conversation or protected
+content.** Exact representation and packet-schema design remain J1-owned and receive no
+standing from J0.
+
+**A5 — The eligibility membrane precedes every outbound representation.** Refusal occurs
+before construction, logging, hashing, caching, or disclosure of the prospective
+representation. *A refusal is not an occasion to disclose.*
+
+**A6 — Jev may not judge its own standing.** Jev may not determine whether Jev should be
+invoked, whether a hold applies, whether its own confidence is sufficient, or whether the
+Work Unit is eligible.
+
+**A7 — Removing Jev must be a no-op on authority.** Removal must preserve:
+
+```text
+authority lattice
+available authorized acts
+prohibited acts
+derivability of authority gates
+```
+
+It need not preserve:
+
+```text
+advice quality
+latency
+cost
+route preference
+amount of deliberation
+```
+
+A7 requires **recurring discharge** during advisory use. ⛔ Cadence is **not ratified here**
+and remains later J2 work.
+
+### ⚠️ PRECEDENCE — two texts, one law (raised, so it cannot become ambiguity later)
+
+The founder's act states A1–A7 as above. **§2 of this document contains a longer authored
+exposition of the same articles** (inheritance tags, falsifiability notes, rationale).
+
+⭐ **The §7 statement is the ratified law. §2 is EXPOSITION and is subordinate to it.** Where
+the two diverge in any respect, **§7 governs**, and §2 is to be read as commentary that
+never adds to, narrows, or qualifies the ratified text.
+
+⚠️ *This precedence rule is applied by me to prevent two constitutional-looking texts
+existing side by side — the defect family this lane has refused before (two addresses for
+one observation; two things named Pro).* ⛔ If the founder intended §2's expanded text to be
+the ratified object instead, that is a correction to make explicitly, not to leave to a
+future reader.
+
+### INHERITED AND SETTLED — ⛔ not reopened
+
+R-1 sub-lane placement · R-2 Jev presently external/hosted · R-3 placement and permission
+distinct · R-4 external Jev advisory, automatic fast path withdrawn · R-5
+`repository_derived_metadata` as the bounded capability-class name, defined by mechanically
+checkable shape, **⛔ not thereby added to the capability table or granted to a provider** ·
+R-6 eight-condition mechanical sovereign-runtime witness · Q-JEV-3 … Q-JEV-7 closed · A7
+removal semantics and recurring-discharge requirement settled.
+
+### ⛔ THIS RATIFICATION DOES NOT AUTHORIZE
+
+⛔ ratify J1 · ⛔ adopt `JudgmentPacket` · ⛔ adopt any J1 question, result shape, enum or
+schema · ⛔ edit `PROVIDER_GOVERNANCE.md` · ⛔ add `repository_derived_metadata` to the
+capability table · ⛔ admit TypeSafe/Jev as a provider · ⛔ authorize disclosure, network
+use, provider spend, or provider execution · ⛔ construct, log, hash, cache, or send a Jev
+representation · ⛔ build an adapter · ⛔ open J2 · ⛔ alter routing · ⛔ merge · ⛔ deploy ·
+⛔ mutate production.
+
+---
+
+## 8 · Standing
 
 ```text
 Q-JEV-3  CLOSED — repository_derived_metadata
@@ -569,25 +675,41 @@ Q-JEV-5  MOOT
 Q-JEV-6  CLOSED — external advisory
 Q-JEV-7  CLOSED — mechanical sovereign-runtime witness
 
-J0 Constitution      REPAIRED (J0R1) · RETURNED · NOT RATIFIED
-J1 Judgment Contract AUTHORED · NOT RATIFIED · NOT INCORPORATED BY J0
-J2                   NOT OPEN
-ADAPTER              NOT AUTHORIZED
-PROVIDER EXECUTION   NOT OPENED
+J0 Constitution       RATIFIED
+J1 Judgment Contract  AUTHORED · NOT RATIFIED · NOT INCORPORATED BY J0
+J2                    NOT OPEN
+ADAPTER               NOT AUTHORIZED
+PROVIDER EXECUTION    NOT OPENED
 ```
 
-### Next boundary — ⭐ FOUNDER ADJUDICATION OF THE **REPAIRED** J0 CONSTITUTION ONLY
+### Next boundary — ⭐ CANONICAL ADMISSION OF THE EXACT RATIFIED J0 AUTHORITY
 
-⛔ **Not** J1 · ⛔ **not** capability-table mutation · ⛔ **not** provider registration ·
-⛔ **not** adapter work · ⛔ **not** J2.
+⛔ **NOT J1 adjudication yet.** The founder's sequencing, preserved:
 
-⭐ *Settle the law first; then adjudicate the judgment contract under that law.* Ratifying
-J1 alongside J0 would let the contract's convenience shape the constitution it is supposed
-to satisfy — the inversion this lane has refused at every previous step, and the one
-`J0R1` has now severed at its last remaining point of incorporation.
+```text
+J0 founder ratification recorded          ← THIS ACT
+        ↓
+exact ratified J0 content authority established
+        ↓
+canonical admission of that exact J0 authority     ← NEXT, its own bounded act
+        ↓
+J1 Judgment Contract adjudication
+```
 
-**⭐ J0R1 DOCUMENTARY REPAIR APPLIED — A4/A5 DECOUPLED FROM THE UNRATIFIED J1 CONTRACT;
-LEAK EXTENT CONFIRMED MECHANICALLY (A4 + A5 ONLY); ⛔ J0 RETURNED, ⛔ NOT RATIFIED ·
+⭐ **Why admission is its own act:** J1 must be judged against **one fixed canonical
+constitutional object**, ⛔ not a branch-local ratification that could still move while J1
+is under consideration. *This act establishes what the law is; getting that exact law into
+canonical custody is a distinct repository action.*
+
+⛔ **Not** capability-table mutation · ⛔ **not** provider registration · ⛔ **not** adapter
+work · ⛔ **not** J2 · ⛔ **not** routing, execution, merge, deploy, or production.
+
+⭐ **The boundary now holds in both directions: J0 constrains J1, and J1 contributes nothing
+to the meaning of J0.** That is what `J0R1` was for.
+
+**⭐⭐ J0 A1–A7 RATIFIED (FOUNDER ACT, §7) ON CANDIDATE `a63c5bbb` AGAINST CANONICAL
+`6f11edcc` · ⚠️ §7 IS THE LAW, §2 IS SUBORDINATE EXPOSITION · ⭐ J0R1 ACCEPTED AS THE
+COMPLETE REPAIR; LEAK EXTENT CONFIRMED MECHANICALLY (A4 + A5 ONLY) ·
 ALL FIVE QUESTIONS CLOSED WITHOUT OPENING J2 · J0 CONSTITUTION AUTHORED (A1–A7;
 A1/A3/A4 INHERITED FROM RATIFIED J5; A2 IN RULED FORM; ⚠️ A7 LOAD-BEARING, NO-OP SCOPED TO
 THE AUTHORITY LATTICE, RECURRING DISCHARGE OWED, CADENCE ⛔ NOT FIXED) · J1 CONTRACT
