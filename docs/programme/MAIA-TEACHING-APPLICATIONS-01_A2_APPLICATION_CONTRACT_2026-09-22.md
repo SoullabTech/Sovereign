@@ -1,11 +1,11 @@
 # MAIA-TEACHING-APPLICATIONS-01 / A2 — Application Contract
 
-> **Programme:** MAIA-TEACHING-APPLICATIONS-01  
-> **Act:** A2 — APPLICATION CONTRACT  
-> **Class:** C — constitutional contract + falsification evidence only  
-> **Opening canonical:** `0691cd3668c1ba0312e3578d5264a8b1abf90ec3`  
-> **Canonical A1 content authority:** `e61971855bd759a43d5e5805146c8497de2f0df6`  
-> **Canonical A1 blob:** `9a68e24e6746602fd7893d38d554fb445d36575f`  
+> **Programme:** MAIA-TEACHING-APPLICATIONS-01
+> **Act:** A2 — APPLICATION CONTRACT
+> **Class:** C — constitutional contract + falsification evidence only
+> **Opening canonical:** `0691cd3668c1ba0312e3578d5264a8b1abf90ec3`
+> **Canonical A1 content authority:** `e61971855bd759a43d5e5805146c8497de2f0df6`
+> **Canonical A1 blob:** `9a68e24e6746602fd7893d38d554fb445d36575f`
 > **Status:** CONTRACT CANDIDATE · NON-RUNTIME · NO IMPLEMENTATION
 
 ---
