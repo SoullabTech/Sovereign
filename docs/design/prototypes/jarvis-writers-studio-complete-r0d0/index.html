@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Writer’s Studio · D0 Product Blueprint</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="prototype-note">
+    <strong>D0 prototype · not production.</strong>
+    Click the manuscript and controls to walk the target experience.
+  </div>
+  <main class="studio" data-state="manuscript">
+    <header class="topbar">
+      <button class="icon-button" data-action="toggle-outline" aria-label="Toggle outline">☰</button>
+      <div class="identity">
+        <span class="eyebrow">WRITER’S STUDIO</span>
+        <strong>Elemental Alchemy</strong>
+        <span class="place">Chapter 10 · The Living Spiral</span>
+      </div>
+      <nav class="movements" aria-label="Writer movements">
+        <button data-movement="work" class="active">Work</button>
+        <button data-action="review">Review</button>
+        <button data-action="ask">Ask MAIA</button>
+      </nav>
+      <button class="quiet-button" data-action="focus">Focus</button>
+    </header>
+    <div class="workspace">
+      <aside class="outline" aria-label="Manuscript outline">
+        <div class="outline-head">
+          <span>MANUSCRIPT</span>
+          <button class="icon-button" data-action="toggle-outline" aria-label="Close outline">×</button>
+        </div>
+        <div class="work-meta">
+          <strong>Chapter 10</strong>
+          <span>5 sections · 8,248 words</span>
+        </div>
+        <button class="outline-row active"><span>I</span><b>The Living Spiral</b></button>
+        <button class="outline-row"><span>II</span><b>The Life Force</b></button>
+        <button class="outline-row"><span>III</span><b>A Life Through Cycles</b></button>
+        <button class="outline-row"><span>IV</span><b>Developmental Intelligence</b></button>
+        <button class="outline-row"><span>V</span><b>Living the Spiral</b></button>
+        <div class="outline-foot">
+          <button data-action="versions">Versions</button>
+          <button data-action="sources">Sources</button>
+        </div>
+      </aside>
+
+      <section class="manuscript-shell">
+        <div class="manuscript-toolbar">
+          <div>
+            <span class="crumb">Elemental Alchemy / Chapter 10</span>
+            <span class="scope" id="scopeLabel">Working in this section</span>
+          </div>
+          <div class="manuscript-actions">
+            <button data-action="history">History</button>
+            <button data-action="listen">Listen</button>
+          </div>
+        </div>
+        <article class="manuscript" id="manuscript">
+          <p class="kicker">CHAPTER 10</p>
+          <h1>The Living Spiral</h1>
+          <p class="lede">Life does not move in straight lines. It circles, deepens, returns, and becomes newly visible from another place.</p>
+          <h2>I. The Living Spiral</h2>
+          <p>The spiral is one of the oldest images for change because it holds a paradox: we return to familiar ground, but we are never standing in exactly the same place.</p>
+          <p id="selectable" class="selectable" tabindex="0">
+            To live developmentally is to notice that every return carries memory, consequence, and possibility.
+            What once felt like repetition can become recognition when we meet it with enough presence.
+          </p>
+          <div id="inlineAnchor"></div>
+          <p>We begin to sense that growth is not escape from earlier versions of ourselves, but a widening capacity to remain in relationship with what has been lived.</p>
+          <p>This is why the living spiral matters. It lets continuity and change belong to the same movement.</p>
+
+          <section class="related" id="related" hidden>
+            <div class="section-label">RELATED PASSAGES</div>
+            <div class="related-grid">
+              <article><span>Chapter 3 · Fire</span><p>Transformation begins when movement becomes conscious enough to be chosen.</p><button>Open in manuscript</button></article>
+              <article><span>Chapter 7 · Water</span><p>Return is not regression when what returns can be felt differently.</p><button>Open in manuscript</button></article>
+            </div>
+          </section>
+        </article>
+      </section>
+
+      <aside class="review-drawer" id="reviewDrawer" hidden>
+        <div class="drawer-head"><div><span class="eyebrow">CHAPTER REVIEW</span><strong>What MAIA noticed</strong></div><button class="icon-button" data-action="close-review">×</button></div>
+        <p class="coverage">Read: all 5 sections in this chapter · current revision</p>
+        <button class="finding" data-action="open-finding">
+          <span>Movement</span>
+          <strong>The chapter turns from explanation toward lived recognition here.</strong>
+          <small>Show in manuscript →</small>
+        </button>
+        <button class="finding">
+          <span>Continuity</span>
+          <strong>The return to “spiral” is structurally clear, but the transition into consequence is abrupt.</strong>
+          <small>Show in manuscript →</small>
+        </button>
+        <button class="finding">
+          <span>Voice</span>
+          <strong>The strongest sentences stay concrete and relational rather than explanatory.</strong>
+          <small>Show in manuscript →</small>
+        </button>
+        <details>
+          <summary>What this review rests on</summary>
+          <p>Coverage, current revision, and the exact passages MAIA read remain visible here without becoming the primary interface.</p>
+        </details>
+      </aside>
+    </div>
+
+    <div class="toast" id="toast" hidden></div>
+  </main>
+
+  <template id="conversationTemplate">
+    <section class="inline-card conversation-card" data-card="conversation">
+      <div class="card-head">
+        <div><span class="maia-dot">✦</span><strong>MAIA · with this passage</strong></div>
+        <button class="icon-button" data-action="close-card">×</button>
+      </div>
+      <p class="maia-response">The second sentence shifts from the image of return into an explanation of what return means. That may be exactly what you want. If you want the passage to remain more embodied, we could let the image carry more of the thought.</p>
+      <div class="card-actions">
+        <button data-action="why">Why this?</button>
+        <button data-action="learn">Learn more</button>
+        <button data-action="alternatives" class="primary">Try a revision</button>
+      </div>
+      <form class="reply-form" data-form="reply">
+        <input aria-label="Reply to MAIA" placeholder="Tell MAIA what you mean, disagree, or ask another question…" />
+        <button>Send</button>
+      </form>
+    </section>
+  </template>
+  <template id="alternativesTemplate">
+    <section class="inline-card alternatives-card" data-card="alternatives">
+      <div class="card-head">
+        <div><span class="maia-dot">✦</span><strong>Possible directions</strong></div>
+        <button class="icon-button" data-action="close-card">×</button>
+      </div>
+      <p class="muted">These are alternatives, not a ranking. Your current wording remains unchanged.</p>
+      <div class="alternatives">
+        <button class="alt active" data-alt="embodied"><strong>More embodied</strong><span>Let the spiral image carry more of the meaning.</span></button>
+        <button class="alt" data-alt="quieter"><strong>Quieter ending</strong><span>Reduce explanation and leave more resonance.</span></button>
+        <button class="alt" data-alt="cadence"><strong>Closer to your cadence</strong><span>Preserve your syntax while tightening the turn.</span></button>
+        <button class="alt keep" data-action="keep"><strong>Keep mine</strong><span>Leave the manuscript exactly as it is.</span></button>
+      </div>
+      <div class="candidate">
+        <div class="candidate-label">MORE EMBODIED · NOT APPLIED</div>
+        <p>What once felt like repetition can become <del>recognition when we meet it with enough presence</del><ins>a place we recognize differently because we have changed while returning</ins>.</p>
+      </div>
+      <div class="card-actions">
+        <button data-action="discuss">Discuss this</button>
+        <button data-action="context" class="primary">Read in context</button>
+      </div>
+    </section>
+  </template>
+
+  <template id="contextTemplate">
+    <section class="inline-card context-card" data-card="context">
+      <div class="card-head"><strong>Read in context</strong><button class="icon-button" data-action="close-card">×</button></div>
+      <p class="muted">The candidate is shown in the manuscript above. Nothing has changed yet.</p>
+      <div class="context-status"><span>Original preserved</span><span>Exact passage</span><span>Undo available after apply</span></div>
+      <div class="card-actions">
+        <button data-action="back-alt">Back to alternatives</button>
+        <button data-action="apply" class="primary">Apply this version</button>
+      </div>
+    </section>
+  </template>
+  <template id="appliedTemplate">
+    <section class="inline-card applied-card" data-card="applied">
+      <div class="applied-mark">✓</div>
+      <div>
+        <strong>Applied to this exact passage.</strong>
+        <p>Your previous wording remains in history.</p>
+      </div>
+      <button data-action="undo" class="undo">Undo this change</button>
+    </section>
+  </template>
+
+  <div class="prototype-controls" aria-label="Prototype states">
+    <span>Prototype states</span>
+    <button data-jump="manuscript">Manuscript</button>
+    <button data-jump="conversation">Conversation</button>
+    <button data-jump="alternatives">Alternatives</button>
+    <button data-jump="review">Chapter review</button>
+    <button data-action="related">Related passages</button>
+  </div>
+
+  <script src="./prototype.js"></script>
+</body>
+</html>
