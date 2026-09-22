@@ -266,3 +266,98 @@ gates          typecheck:ws-flagship exit 0 · matrix:ws-flagship LETHAL + DISCR
 ⛔ No member-visible change yet · ⛔ no composition changed · ⛔ no room retired · ⛔ no schema ·
 ⛔ no migration · ⛔ no consent, authorship, ranking or external-disclosure change · ⛔ no merge ·
 ⛔ no deploy · ⛔ no production read or write.
+
+---
+
+## §8 · APPROVED TEMPLATE SET — 2026-09-22 (founder act) · seven frames
+
+Supersedes the single Write/Develop mockup as the **composition authority of record**. Seven
+frames, each naming the state it governs. The V-gate rows bind to these.
+
+| Frame | State | Binds |
+|---|---|---|
+| 1 | **Write — resting manuscript** | V1 |
+| 2 | **Write — passage + contextual MAIA** | V2 |
+| 3 | **Write — alternatives → read in context** | V3 · V4 |
+| 4 | **Write — applied + history + undo** | V5 |
+| 5 | **Develop — flagship overview** | V6 |
+| 6 | **Desktop Review** | V7 |
+| 7 | **Mobile Write** | V8 |
+
+### §8.1 · What the template set establishes that was previously unspecified
+
+- ⭐ **Atmosphere is composition, not decoration.** Every frame carries the landscape band behind
+  the top bar. The Soullab atmosphere system is load-bearing product feel, ⛔ not an optional skin.
+- ⭐ **The rail carries a PROJECT section** — Elemental Alchemy · Chapters · Notes · Research ·
+  Settings — beneath the app nav. Still chrome; still ⛔ not a manuscript content panel.
+- ⭐ **A quiet bottom status bar**: `Chapter 10 · 1,248 words` and, after a revision,
+  `1,252 words (+4)`. ⭐ The word delta is exemplary — concrete, factual, ⛔ carrying no judgment.
+- ⭐ **Version History is a dismissible right drawer** with `Compare versions`, and the applied
+  receipt sits *in the manuscript* carrying `Undo` and `View history`.
+- ⭐ **Review is a room**, tabbed `Findings · Notes · Related Passages · Citations · What MAIA Read`.
+- ⭐ **`What MAIA Read` is the coverage surface, named in the member's own language.** L8 and F12
+  are satisfied by the template itself.
+- ⭐ **Every Review finding carries a return** — `Go to passage` · `Explore` · `Discuss` · `View`.
+  **V7 is satisfied by design**, ⛔ not retrofitted.
+- ⭐ **Mobile is the same product**, not a squeezed desktop: one column, manuscript primary, MAIA a
+  summoned gold pill, bottom nav. **V8 is satisfied by design.**
+
+### §8.2 · Rulings the template set ADOPTED
+
+`Read in context` on every alternative · `Keep my original` as a first-class option ·
+`Reader (Hypotheses)` as a tab label · `(Hypothesis)` inline on a reader question ·
+`Elemental Themes (member-declared)` · `Exploration Areas` in place of `Development Focus` ·
+read time corrected from 8 min.
+
+### §8.3 · ⚠️ FIVE ITEMS WHERE THE TEMPLATE STILL DIVERGES FROM §6, RECORDED AGAINST IT
+
+⛔ The template set is composition authority. ⛔ It does **not** override §6's content rulings, and
+where the two differ §6 governs until the founder rules otherwise.
+
+**(1) ⭐⭐ GRADING LANGUAGE SURVIVED ITS OWN PROHIBITION.** §6.2 bars *authentic · strong ·
+engaging · good · or other machine judgments presented as fact*. The templates still carry:
+*"A **strong** spiral structure"* · *"**Good** momentum"* · *"**Rich and coherent**"* ·
+*"Distinctive and **authentic** in feeling"* · *"This is a **beautiful** passage"* ·
+*"This section is **especially luminous**"*.
+
+⭐ **The template contains its own answer, two inches away.** Frame 2's *"**Themes I notice** —
+a natural rhythm that invites expansion"* is first-person, observational and arguable. Frame 2's
+*"This is a beautiful passage"* is a verdict about the member's work stated as fact.
+
+⭐ **RECOMMENDED RESOLUTION — a stance is not a verdict, and it costs no warmth:**
+
+| ⛔ Verdict | ⭐ Stance |
+|---|---|
+| This is a beautiful passage. | I find this passage beautiful. |
+| This section is especially luminous. | This is the section I keep returning to. |
+| A strong spiral structure. | The five movements you named recur in the same order in Parts I, III and V. |
+| Good momentum. | Four of the five part transitions run a full section; the Part III→IV transition runs one sentence. |
+| Rich and coherent. | The elemental frame appears in 38 of 52 sections and is absent from Part IV. |
+| Distinctive and authentic in feeling. | You address the reader directly in 31 of 52 sections. |
+
+⭐ A first-person stance is **revisable, arguable and owned** — it is MAIA's response, which the
+writer may disagree with under the disagreement law. A verdict is an assessment of the writer's work
+presented as a property of the work. ⛔ The second is the one Invariant 14 and the `voice` lens bar
+(*the manuscript is the reference, never an external standard*).
+
+**(2) ⚠️ `Export ⌄` IS STILL RENDERED** in frame 5. §6.2 ruled it **out** pending separate
+disclosure-authority verification. ⛔ Not built until that act exists.
+
+**(3) ⚠️ NAVIGATION VOCABULARY COLLISION.** The brand line and mobile bottom nav read
+**Write · Explore · Refine · Become**. The desktop rail reads **Home · Write · Develop · Review ·
+Library · Search**. ⭐ A member moving between devices cannot tell whether *Develop* is *Explore* or
+*Refine*. Either the arc language is outer brand only and never a nav control, or the two converge.
+⛔ **NOT RULED** — needs one founder decision before B2 fixes the shell.
+
+**(4) ⚠️ THE ALTERNATIVES ARE NUMBERED 1–4.** Numerals read as ordinal to most people, and §4
+dissolved ranking. ⭐ Cheap fix: drop the numerals, or state *four directions, in no order*. The
+frame's own copy — *"a few possibilities"* — already does the right thing.
+
+**(5) ⚠️ `~11 hrs Est. read time` IMPLIES ≈119 wpm** against 78,432 words. Defensible for a
+contemplative book with practices, ⛔ but §6.2 requires the figure be *genuinely computed from the
+correct scope, or omitted.* The basis must be stated or derived, ⛔ never chosen for feel.
+
+### §8.4 · Standing
+
+**TEMPLATE SET ✅ BOUND AS COMPOSITION AUTHORITY · §6 CONTENT RULINGS UNCHANGED AND GOVERNING ·
+FIVE DIVERGENCES RECORDED · ITEM (3) ⛔ BLOCKS THE B2 SHELL UNTIL RULED.**
