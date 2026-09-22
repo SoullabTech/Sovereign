@@ -39,20 +39,45 @@ step**. It makes the references engineering inputs rather than admiration.
 | `06-review-and-mobile-write.png` | Frames 07 + 08 |
 | `ref-a-write-develop-mockup.png` | Earlier Write/Develop mockup. **Superseded as composition authority**, retained as lineage. |
 
-### ⚠️⚠️ ASSET GAP — THE CORRECTED BOARD IS NOT ON DISK
+### §1.0 · REFERENCE OF RECORD — **Flagship Visual Canon v2**
 
-A **corrected eight-panel board** was issued 2026-09-22 and is the **reference of record**. It
-supersedes `00-visual-canon-board.png` as composition authority.
+Packaged 2026-09-22 as an engineering artifact: corrected master board ·
+**eight individual reference frames** · visual-canon manifest
+(`FLAGSHIP_VISUAL_CANON_v2.md`) · **`FLAGSHIP_INTERACTION_AND_ACCEPTANCE_CONTRACT_v1.md`**
+covering anchored MAIA · proposal scope · `Read in context → Apply → Undo` · Develop · Review ·
+Reader perspective · member-declared structure · capability honesty · mobile · `Guided · Learning ·
+Direct` · gates **V1–V12**.
 
-⛔ **It could not be archived.** It is not present in this container's filesystem, so no PNG exists
-to copy. ⭐ *I can read it; I cannot write pixels I do not have.* The founder's own priority — *make
-the images impossible to lose* — is therefore **NOT YET DISCHARGED for the reference that matters
-most.**
+⭐ **V12 is the new gate and it is the sharpest one yet:**
 
-**OWED, one action:** save the corrected board to
-`docs/design/writers-studio/flagship/00-visual-canon-board.png` (replacing the six-panel file, which
-moves to `ref-b-six-panel-board.png`). Until then its content survives only as the transcription
-below — ⛔ which is a record of the laws, ⛔ never a substitute for the composition.
+> ⭐⭐ *A creative or helper who does not know editorial terminology must still understand the next
+> meaningful act — ⛔ without choosing lenses, passes, ranges or other machinery.*
+
+⭐ **What V12 implies structurally, and it is load-bearing for Develop:** the **Overview is the
+room**; the lenses are **optional depth**. A member who never touches a tab still reaches
+everything. That satisfies V12 and the §9.7 reachability ruling with one composition, ⛔ rather than
+trading them against each other.
+
+### ⚠️⚠️ ASSET GAP — THE v2 PACKAGE IS NOT ON DISK
+
+⛔ **The v2 package could not be archived.** It lives at `/mnt/data/` in the chat analysis sandbox;
+this Claude Code container has no such path, and its `sandbox:` links resolve in the founder's
+browser, ⛔ not in this filesystem. ⭐ *I can read the board; I cannot write pixels I do not have.*
+
+⚠️ The founder's own stated priority — *make the images impossible to lose* — is therefore **NOT
+DISCHARGED for the reference that matters most**, and the `FLAGSHIP_INTERACTION_AND_ACCEPTANCE_
+CONTRACT_v1.md` is **not in the repository at all**.
+
+**OWED — one of two actions, either sufficient:**
+
+1. **Attach the PNGs and the contract `.md` to a message in the Claude Code session.** Attachments
+   land in this container's filesystem — that is how the earlier boards were archived. ⚠️ A `.zip`
+   will not extract; ⭐ send loose files.
+2. **Commit them directly** to `docs/design/writers-studio/flagship/` on
+   `claude/trusting-fermat-ju3quz`. They will be reconciled at the next checkpoint.
+
+Until then the board's content survives only as the transcription below — ⛔ a record of the laws,
+⛔ never a substitute for the composition — and V1–V8 cannot be compared against their reference.
 
 ### §1.1 · Corrected board — content of record (transcribed)
 
@@ -372,4 +397,83 @@ VISUAL REFERENCES SATISFIED          candidate rendered   founder ruled
 | V9 | ⭐ **Old-UI falsifier** — ⛔ no `Rebuild preview`, ⛔ no permanent three-column layout, ⛔ no permanent MAIA content rail, ⛔ no legacy `StudioModeBar` as primary | **mechanical** |
 | V10 | ⭐⭐ **Founder visual comparison** | ⛔ **FOUNDER ONLY** |
 | V11 | ⭐ **Cross-mode family** — Write, Develop, Review and mobile unmistakably one Studio: shared typography, atmosphere, navigation semantics, surfaces, spacing rhythm, controls, interaction grammar | screenshot set + mechanical |
+| V12 | ⭐⭐ **NON-PROFESSIONAL-WRITER ACCESSIBILITY** — a creative or helper who does not know editorial terminology must still understand **the next meaningful act**, ⛔ without choosing lenses, passes, ranges or other machinery | partly mechanical; the felt half is V10 |
 | F13 | ⭐ **Legacy aesthetic regression** — ⛔ dense controls, permanent utility panels, technical vocabulary, workbench feel, visible machinery | partly mechanical; ⛔ *invited · capable · excited* is V10 |
+
+---
+
+## §6 · ⚠️⚠️ VISUAL CANON v2 BOARD — A MATERIAL DIVERGENCE IN VISUAL LANGUAGE
+
+A board titled **Flagship Visual Canon v2 · 8 Frames · 15 Laws · A Truer You** was issued
+2026-09-22, using **The Glass Kingdom** (a novel, 82,400 words) rather than *Elemental Alchemy*.
+
+⛔ **NOT ARCHIVED** — same gap as §1: not on disk in this container.
+
+### §6.1 · ⭐⭐ THE CENTRAL QUESTION, RAISED AND ⛔ NOT DECIDED
+
+**This board's visual language materially differs from the canon ratified in §2 and §9.**
+
+| Ratified (§9.1, §6.1, `studioTheme` earned guarantees) | The v2 board |
+|---|---|
+| ⭐ **Warm, premium, literary** — warm ground ramp `#F2F0EA → #EAE6DC → #F7F4ED` | cool white / light grey product surfaces |
+| ⭐ **Press serif for the writer's work** | the manuscript reads as sans / product type |
+| ⭐ **Bounded gold** — accent marks state and action, ⛔ never decoration (`GOLD_PERMITTED` / `GOLD_FORBIDDEN`) | a **multi-hue pastel palette** — blue · green · orange · purple, one per frame |
+| ⭐ **Atmosphere band** as binding composition authority (§9.1, ratified) | ⛔ absent |
+| ⛔ **No permanent outline rail**; one permanent content region | a **permanent second column** inside Write (`Manuscript · Outline · Notes · Research · Goals`) and inside Develop/Review (the lens list) |
+| MAIA anchored, summoned | anchored **plus** a permanent right icon rail (`MAIA · Chat · Notes · Map`) |
+
+⚠️ **These are not refinements of the same design. They are two design languages.**
+
+⛔ **I have not switched to it, and I have not defended the old one.** B2 as built conforms to the
+**ratified** language — warm ground, Spectral at the prose measure, bounded gold, atmosphere band,
+one permanent content region. ⭐ Building to whichever board arrived most recently is exactly the
+drift the composition law exists to prevent, and it would be drift in the *new* direction rather
+than the legacy one.
+
+**⛔ FOUNDER RULING REQUIRED, and it is consequential:**
+
+- **(a)** the ratified warm/literary language stands; the v2 board is explored composition, ⛔ not
+  authority — **B2 stands as built**;
+- **(b)** the v2 language supersedes; §9.1, §6.1 and the `studioTheme` provenance are **amended**,
+  and **B2's composition is rebuilt**;
+- **(c)** a reconciliation — v2's **structure** (Home doorway · lens sub-rail · Story Map · the
+  return card) over the ratified **atmosphere and typography**.
+
+⭐ **(c) is worth naming carefully**: most of what v2 contributes is *structural*, and most of what
+the ratified canon protects is *tonal*. They may not actually be in conflict once separated.
+
+### §6.2 · ⭐ WHAT v2 CONTRIBUTES THAT THE RATIFIED CANON DID NOT HAVE
+
+- ⭐⭐ **Frame 7 — Return to Manuscript** is the `DEVELOP_EXPERIENCE_SPEC` §5 behavior **drawn**:
+  *Passage insight* → the observation → ⭐ **the frozen quoted evidence** → `Go to passage →`.
+  Its tag is **EVIDENCE FIRST**, which is precisely *the observation travels with it, ⛔ it is not
+  regenerated.* Independent arrival at the same law.
+- ⭐ **Frame 6 — Story Map as an ARC CURVE**, ⛔ not a spiral, for a novel with five declared acts.
+  This is §2.5 satisfied by demonstration: *the visualization adapts to whatever structure actually
+  exists.* ⭐ A second Work form now has a reference.
+- ⭐ **Frame 1 — Home** as a doorway: *Land. Recognize your work. Continue with clarity.* The
+  ratified canon had **no Home frame at all**.
+- ⭐ **Frame 8 — All States, One Experience** is **V11 drawn** and printed as a tag:
+  `CONSISTENT · CAPABILITY-HONEST · LEARNABLE · YOURS`.
+- ⭐ `NO VERDICTS` printed as a tag on Develop; `Whole story / This section` scope expressed as
+  **two plain buttons** — ⭐ which is **V12 answered by composition**: scope without the word *range*.
+
+### §6.3 · ⚠️ What v2 still carries that §2 bars
+
+| Frame | Text | Why |
+|---|---|---|
+| Review | *“What **stands out**”* | an importance claim — the `key` family, ranking under another name |
+| Review | *“May **benefit from** further development”* | prescriptive; asserts consequence without a commission |
+| Review | *“Creates an **interesting** tension”* · *“presents an **interesting** contrast”* | evaluative, stated as a property of the Work |
+
+⭐ Lawful rewrites, keeping the frame intact: *“Places you may want to look”* · *“A question this
+passage opens”* · *“Outward calm and internal uncertainty sit in the same paragraph.”*
+
+⚠️ **The facet control (`Guided · Learning · Direct`) is absent from all eight frames**, having been
+ratified §2.7 as required beside the Work identity. ⛔ Its absence is recorded, ⛔ not treated as a
+repeal.
+
+### §6.4 · Standing
+
+**v2 BOARD RECEIVED · ⛔ NOT ARCHIVED · ⛔ NOT RATIFIED · ⛔ NOT BUILT TO · VISUAL-LANGUAGE QUESTION
+⛔ OPEN AND OWED TO THE FOUNDER · B2 REMAINS BUILT TO THE RATIFIED LANGUAGE.**
