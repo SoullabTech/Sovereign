@@ -45,16 +45,29 @@ echo
 echo "════ PART B · service liveness, INDEPENDENT of the Docker API ════"
 echo "  Traffic reaches MAIA through published ports and iptables, not through"
 echo "  dockerd's API. These calls therefore stay meaningful while Part A hangs."
+echo "  Route: --resolve ${HOSTNAME_PUBLIC}:443:127.0.0.1 — public name for TLS SNI,"
+echo "  loopback for the address. No DNS, no hairpin, no Docker API."
+echo "  ⚠️ This probe diagnoses THE HOST IT RUNS ON. Run it on minisforum;"
+echo "     elsewhere it reports that machine's Docker and localhost, not production."
 
-# ⚠️ Deliberately NOT https://soullab.life from this host: consumer routers
-# usually disable hairpin NAT, so an external-name probe from inside the LAN
-# returns HTTP 000 and is MISLEADING (CLAUDE.md, LAN IP drift trap). Address
-# Caddy locally and carry the public Host header instead.
-run "caddy-tls-health"  curl -sS -k -m "$T" -o /dev/null -w 'http=%{http_code} time=%{time_total}s\n' \
-                          -H "Host: ${HOSTNAME_PUBLIC}" "https://127.0.0.1/api/health"
-run "caddy-health-body"  bash -c "curl -sS -k -m $T -H 'Host: ${HOSTNAME_PUBLIC}' https://127.0.0.1/api/health | head -c 400; echo"
-run "caddy-version"      bash -c "curl -sS -k -m $T -H 'Host: ${HOSTNAME_PUBLIC}' https://127.0.0.1/api/version | head -c 200; echo"
-run "caddy-ready"        bash -c "curl -sS -k -m $T -H 'Host: ${HOSTNAME_PUBLIC}' https://127.0.0.1/api/ready | head -c 200; echo"
+# ⚠️ Two constraints must hold at once, and the first version satisfied only one.
+#  (1) Do NOT resolve soullab.life through DNS from inside the LAN: consumer
+#      routers usually disable hairpin NAT, so an external-name probe returns
+#      HTTP 000 and is MISLEADING (CLAUDE.md, LAN IP drift trap).
+#  (2) ⭐ The TLS handshake must still carry soullab.life as SNI. An HTTP
+#      `Host:` header does NOT do this — it is sent AFTER the handshake, so
+#      Caddy's SNI-based site matching never sees the public name and the
+#      request is judged against 127.0.0.1. That was a real defect: it made a
+#      HEALTHY production serving plane look broken.
+#      Corrected 2026-09-22 (founder finding).
+# --resolve satisfies both: the URL authority is the public name, so SNI is
+# correct, while only the ADDRESS is forced to loopback.
+RESOLVE="--resolve ${HOSTNAME_PUBLIC}:443:127.0.0.1"
+BASE="https://${HOSTNAME_PUBLIC}"
+run "caddy-tls-health"   bash -c "curl -sS -m $T $RESOLVE -o /dev/null -w 'http=%{http_code} time=%{time_total}s\n' $BASE/api/health"
+run "caddy-health-body"  bash -c "curl -sS -m $T $RESOLVE $BASE/api/health  | head -c 400; echo"
+run "caddy-version"      bash -c "curl -sS -m $T $RESOLVE $BASE/api/version | head -c 200; echo"
+run "caddy-ready"        bash -c "curl -sS -m $T $RESOLVE $BASE/api/ready   | head -c 200; echo"
 
 # Container processes are visible in the host PID namespace, so this reports
 # whether the app process is alive without asking dockerd anything.
